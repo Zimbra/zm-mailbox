@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Controls Jive properties. Jive properties are only meant to be set and retrieved
@@ -57,7 +58,7 @@ public class JiveGlobals {
     public static boolean failedLoading = false;
 
     private static XMLProperties xmlProperties = null;
-    private static JiveProperties properties = null;
+    private static ZimbraProperties properties = null;
 
     private static Locale locale = null;
     private static TimeZone timeZone = null;
@@ -105,6 +106,20 @@ public class JiveGlobals {
             }
         }
         return locale;
+    }
+    
+    private static synchronized ZimbraProperties getZimbraProperties() {
+    	if (properties == null) {
+    		properties = ZimbraProperties.getInstance();
+    		if (xmlProperties == null) {
+    			loadSetupProperties();  
+    		}
+    		for (Map.Entry<String, String> e : xmlProperties.MapIter()) {
+//    			System.out.println(e.toString());
+    			properties.put(e.getKey(), e.getValue());
+    		}
+    	}
+    	return properties;
     }
 
     /**
@@ -488,7 +503,7 @@ public class JiveGlobals {
             if (isSetupMode()) {
                 return null;
             }
-            properties = JiveProperties.getInstance();
+            properties = getZimbraProperties();
         }
         return (String)properties.get(name);
     }
@@ -506,7 +521,7 @@ public class JiveGlobals {
             if (isSetupMode()) {
                 return defaultValue;
             }
-            properties = JiveProperties.getInstance();
+            properties = getZimbraProperties();
         }
         String value = (String)properties.get(name);
         if (value != null) {
@@ -586,7 +601,7 @@ public class JiveGlobals {
             if (isSetupMode()) {
                 return new ArrayList<String>();
             }
-            properties = JiveProperties.getInstance();
+            properties = getZimbraProperties();
         }
         return new ArrayList<String>(properties.getChildrenNames(parent));
     }
@@ -606,7 +621,7 @@ public class JiveGlobals {
             if (isSetupMode()) {
                 return new ArrayList<String>();
             }
-            properties = JiveProperties.getInstance();
+            properties = getZimbraProperties();
         }
 
         Collection<String> propertyNames = properties.getChildrenNames(parent);
@@ -631,7 +646,7 @@ public class JiveGlobals {
             if (isSetupMode()) {
                 return new ArrayList<String>();
             }
-            properties = JiveProperties.getInstance();
+            properties = getZimbraProperties();
         }
         return new ArrayList<String>(properties.getPropertyNames());
     }
@@ -648,7 +663,7 @@ public class JiveGlobals {
             if (isSetupMode()) {
                 return;
             }
-            properties = JiveProperties.getInstance();
+            properties = getZimbraProperties();
         }
         properties.put(name, value);
     }
@@ -664,7 +679,7 @@ public class JiveGlobals {
             if (isSetupMode()) {
                 return;
             }
-            properties = JiveProperties.getInstance();
+            properties = getZimbraProperties();
         }
 
         properties.putAll(propertyMap);
@@ -681,7 +696,7 @@ public class JiveGlobals {
             if (isSetupMode()) {
                 return;
             }
-            properties = JiveProperties.getInstance();
+            properties = getZimbraProperties();
         }
         properties.remove(name);
     }
@@ -718,7 +733,7 @@ public class JiveGlobals {
      * Loads properties if necessary. Property loading must be done lazily so
      * that we give outside classes a chance to set <tt>home</tt>.
      */
-    private synchronized static void loadSetupProperties() {
+    public synchronized static void loadSetupProperties() {
         if (xmlProperties == null) {
             // If home is null then log that the application will not work correctly
             if (home == null && !failedLoading) {

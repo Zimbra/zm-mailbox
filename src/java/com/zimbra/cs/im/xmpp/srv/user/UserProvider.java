@@ -27,6 +27,7 @@ package com.zimbra.cs.im.xmpp.srv.user;
 
 import java.util.Date;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -34,7 +35,7 @@ import java.util.Set;
  *
  * @author Matt Tucker
  */
-public interface UserProvider {
+interface UserProvider {
 
     /**
      * Loads the specified user by username.
@@ -69,12 +70,12 @@ public interface UserProvider {
      */
     public void deleteUser(String username);
 
-    /**
-     * Returns the number of users in the system.
-     *
-     * @return the total number of users.
-     */
-    public int getUserCount();
+//    /**
+//     * Returns the number of users in the system.
+//     *
+//     * @return the total number of users.
+//     */
+//    public int getUserCount();
 
     /**
      * Returns an unmodifiable Collections of all users in the system. The
@@ -174,65 +175,65 @@ public interface UserProvider {
     public void setModificationDate(String username, Date modificationDate)
             throws UserNotFoundException;
 
-    /**
-     * Returns the set of fields that can be used for searching for users. Each field
-     * returned must support wild-card and keyword searching. For example, an
-     * implementation might send back the set {"Username", "Name", "Email"}. Any of
-     * those three fields can then be used in a search with the
-     * {@link #findUsers(Set,String)} method.<p>
-     *
-     * This method should throw an UnsupportedOperationException if this
-     * operation is not supported by the backend user store.
-     *
-     * @return the valid search fields.
-     * @throws UnsupportedOperationException if the provider does not
-     *      support the operation (this is an optional operation).
-     */
-    public Set<String> getSearchFields() throws UnsupportedOperationException;
-
-    /**
-     * Searches for users based on a set of fields and a query string. The fields must
-     * be taken from the values returned by {@link #getSearchFields()}. The query can
-     * include wildcards. For example, a search on the field "Name" with a query of "Ma*"
-     * might return user's with the name "Matt", "Martha" and "Madeline".<p>
-     *
-     * This method should throw an UnsupportedOperationException if this
-     * operation is not supported by the backend user store. 
-     *
-     * @param fields the fields to search on.
-     * @param query the query string.
-     * @return a Collection of users that match the search.
-     * @throws UnsupportedOperationException if the provider does not
-     *      support the operation (this is an optional operation).
-     */
-    public Collection<User> findUsers(Set<String> fields, String query)
-            throws UnsupportedOperationException;
-
-    /**
-     * Searches for users based on a set of fields and a query string. The fields must
-     * be taken from the values returned by {@link #getSearchFields()}. The query can
-     * include wildcards. For example, a search on the field "Name" with a query of "Ma*"
-     * might return user's with the name "Matt", "Martha" and "Madeline".<p>
-     *
-     * The startIndex and numResults parameters are used to page through search
-     * results. For example, if the startIndex is 0 and numResults is 10, the first
-     * 10 search results will be returned. Note that numResults is a request for the
-     * number of results to return and that the actual number of results returned
-     * may be fewer.<p>
-     *
-     * This method should throw an UnsupportedOperationException if this
-     * operation is not supported by the backend user store.
-     *
-     * @param fields the fields to search on.
-     * @param query the query string.
-     * @return a Collection of users that match the search.
-     * @return startIndex the starting index in the search result to return.
-     * @return numResults the number of users to return in the search result.
-     * @throws UnsupportedOperationException if the provider does not
-     *      support the operation (this is an optional operation).
-     */
-    public Collection<User> findUsers(Set<String> fields, String query, int startIndex,
-            int numResults) throws UnsupportedOperationException;
+//    /**
+//     * Returns the set of fields that can be used for searching for users. Each field
+//     * returned must support wild-card and keyword searching. For example, an
+//     * implementation might send back the set {"Username", "Name", "Email"}. Any of
+//     * those three fields can then be used in a search with the
+//     * {@link #findUsers(Set,String)} method.<p>
+//     *
+//     * This method should throw an UnsupportedOperationException if this
+//     * operation is not supported by the backend user store.
+//     *
+//     * @return the valid search fields.
+//     * @throws UnsupportedOperationException if the provider does not
+//     *      support the operation (this is an optional operation).
+//     */
+//    public Set<String> getSearchFields() throws UnsupportedOperationException;
+//
+//    /**
+//     * Searches for users based on a set of fields and a query string. The fields must
+//     * be taken from the values returned by {@link #getSearchFields()}. The query can
+//     * include wildcards. For example, a search on the field "Name" with a query of "Ma*"
+//     * might return user's with the name "Matt", "Martha" and "Madeline".<p>
+//     *
+//     * This method should throw an UnsupportedOperationException if this
+//     * operation is not supported by the backend user store. 
+//     *
+//     * @param fields the fields to search on.
+//     * @param query the query string.
+//     * @return a Collection of users that match the search.
+//     * @throws UnsupportedOperationException if the provider does not
+//     *      support the operation (this is an optional operation).
+//     */
+//    public Collection<User> findUsers(Set<String> fields, String query)
+//            throws UnsupportedOperationException;
+//
+//    /**
+//     * Searches for users based on a set of fields and a query string. The fields must
+//     * be taken from the values returned by {@link #getSearchFields()}. The query can
+//     * include wildcards. For example, a search on the field "Name" with a query of "Ma*"
+//     * might return user's with the name "Matt", "Martha" and "Madeline".<p>
+//     *
+//     * The startIndex and numResults parameters are used to page through search
+//     * results. For example, if the startIndex is 0 and numResults is 10, the first
+//     * 10 search results will be returned. Note that numResults is a request for the
+//     * number of results to return and that the actual number of results returned
+//     * may be fewer.<p>
+//     *
+//     * This method should throw an UnsupportedOperationException if this
+//     * operation is not supported by the backend user store.
+//     *
+//     * @param fields the fields to search on.
+//     * @param query the query string.
+//     * @return a Collection of users that match the search.
+//     * @return startIndex the starting index in the search result to return.
+//     * @return numResults the number of users to return in the search result.
+//     * @throws UnsupportedOperationException if the provider does not
+//     *      support the operation (this is an optional operation).
+//     */
+//    public Collection<User> findUsers(Set<String> fields, String query, int startIndex,
+//            int numResults) throws UnsupportedOperationException;
 
     /**
      * Returns true if this UserProvider is read-only. When read-only,
@@ -251,4 +252,25 @@ public interface UserProvider {
      *         backend user store.
      */
     public boolean supportsPasswordRetrieval();
+
+    public Map<String, String> loadProperties(String username);
+    
+    public void insertProperty(String username, String propName, String propValue);
+    
+    public void updateProperty(String username, String propName, String propValue);
+    
+    public void deleteProperty(String username, String propName);
+    
+    /**
+     * Returns the value of the specified property for the given username. This method is
+     * an optimization to avoid loading a user to get a specific property.
+     *
+     * @param username the username of the user to get a specific property value.
+     * @param propertyName the name of the property to return its value.
+     * @return the value of the specified property for the given username.
+     */
+    public String getPropertyValue(String username, String propertyName);
+    
+    
+    
 }

@@ -44,9 +44,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Encapsulates information about a user. New users are created using
  * {@link UserManager#createUser(String, String, String, String)}. All user
  * properties are loaded on demand and are read from the <tt>jiveUserProp</tt>
- * database table. The currently-installed {@link UserProvider} is used for
+ * database table. The currently-installed UserProvider is used for
  * setting all other user data and some operations may not be supported
- * depending on the capabilities of the {@link UserProvider}.
+ * depending on the capabilities of the UserProvider.
  *
  * @author Matt Tucker
  */

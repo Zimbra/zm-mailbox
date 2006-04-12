@@ -74,7 +74,7 @@ public class UserManager implements IQResultListener {
         }
         catch (Exception e) {
             Log.error("Error loading user provider: " + className, e);
-            provider = new DefaultUserProvider();
+            provider = null; // new DefaultUserProvider();
         }
     }
 
@@ -86,7 +86,7 @@ public class UserManager implements IQResultListener {
      *
      * @return the current UserProvider.
      */
-    public static UserProvider getUserProvider() {
+    static UserProvider getUserProvider() {
         return provider;
     }
 
@@ -101,6 +101,14 @@ public class UserManager implements IQResultListener {
 
     private UserManager() {
 
+    }
+
+    public static String getPassword(String username) throws UserNotFoundException {
+    	return getUserProvider().getPassword(username);
+    }
+    
+    public static boolean supportsPasswordRetrieval() {
+    	return getUserProvider().supportsPasswordRetrieval();
     }
 
     /**
@@ -190,14 +198,14 @@ public class UserManager implements IQResultListener {
         return user;
     }
 
-    /**
-     * Returns the total number of users in the system.
-     *
-     * @return the total number of users.
-     */
-    public int getUserCount() {
-        return provider.getUserCount();
-    }
+//    /**
+//     * Returns the total number of users in the system.
+//     *
+//     * @return the total number of users.
+//     */
+//    public int getUserCount() {
+//        return provider.getUserCount();
+//    }
 
     /**
      * Returns an unmodifiable Collection of all users in the system.
@@ -208,60 +216,60 @@ public class UserManager implements IQResultListener {
         return provider.getUsers();
     }
 
-    /**
-     * Returns an unmodifiable Collection of all users starting at <tt>startIndex</tt>
-     * with the given number of results. This is useful to support pagination in a GUI
-     * where you may only want to display a certain number of results per page. It is
-     * possible that the number of results returned will be less than that specified
-     * by <tt>numResults</tt> if <tt>numResults</tt> is greater than the number of
-     * records left to display.
-     *
-     * @param startIndex the beginning index to start the results at.
-     * @param numResults the total number of results to return.
-     * @return a Collection of users in the specified range.
-     */
-    public Collection<User> getUsers(int startIndex, int numResults) {
-        return provider.getUsers(startIndex, numResults);
-    }
+//    /**
+//     * Returns an unmodifiable Collection of all users starting at <tt>startIndex</tt>
+//     * with the given number of results. This is useful to support pagination in a GUI
+//     * where you may only want to display a certain number of results per page. It is
+//     * possible that the number of results returned will be less than that specified
+//     * by <tt>numResults</tt> if <tt>numResults</tt> is greater than the number of
+//     * records left to display.
+//     *
+//     * @param startIndex the beginning index to start the results at.
+//     * @param numResults the total number of results to return.
+//     * @return a Collection of users in the specified range.
+//     */
+//    public Collection<User> getUsers(int startIndex, int numResults) {
+//        return provider.getUsers(startIndex, numResults);
+//    }
 
-    /**
-     * Returns the set of fields that can be used for searching for users. Each field
-     * returned must support wild-card and keyword searching. For example, an
-     * implementation might send back the set {"Username", "Name", "Email"}. Any of
-     * those three fields can then be used in a search with the
-     * {@link #findUsers(Set,String)} method.<p>
-     *
-     * This method should throw an UnsupportedOperationException if this
-     * operation is not supported by the backend user store.
-     *
-     * @return the valid search fields.
-     * @throws UnsupportedOperationException if the provider does not
-     *      support the operation (this is an optional operation).
-     */
-    public Set<String> getSearchFields() throws UnsupportedOperationException {
-        return provider.getSearchFields();
-    }
-
-    /**
-     * Searches for users based on a set of fields and a query string. The fields must
-     * be taken from the values returned by {@link #getSearchFields()}. The query can
-     * include wildcards. For example, a search on the field "Name" with a query of "Ma*"
-     * might return user's with the name "Matt", "Martha" and "Madeline".<p>
-     *
-     * This method throws an UnsupportedOperationException if this operation is
-     * not supported by the user provider.
-     *
-     * @param fields the fields to search on.
-     * @param query the query string.
-     * @return a Collection of users that match the search.
-     * @throws UnsupportedOperationException if the provider does not
-     *      support the operation (this is an optional operation).
-     */
-    public Collection<User> findUsers(Set<String> fields, String query)
-            throws UnsupportedOperationException
-    {
-        return provider.findUsers(fields, query);
-    }
+//    /**
+//     * Returns the set of fields that can be used for searching for users. Each field
+//     * returned must support wild-card and keyword searching. For example, an
+//     * implementation might send back the set {"Username", "Name", "Email"}. Any of
+//     * those three fields can then be used in a search with the
+//     * {@link #findUsers(Set,String)} method.<p>
+//     *
+//     * This method should throw an UnsupportedOperationException if this
+//     * operation is not supported by the backend user store.
+//     *
+//     * @return the valid search fields.
+//     * @throws UnsupportedOperationException if the provider does not
+//     *      support the operation (this is an optional operation).
+//     */
+//    public Set<String> getSearchFields() throws UnsupportedOperationException {
+//        return provider.getSearchFields();
+//    }
+//
+//    /**
+//     * Searches for users based on a set of fields and a query string. The fields must
+//     * be taken from the values returned by {@link #getSearchFields()}. The query can
+//     * include wildcards. For example, a search on the field "Name" with a query of "Ma*"
+//     * might return user's with the name "Matt", "Martha" and "Madeline".<p>
+//     *
+//     * This method throws an UnsupportedOperationException if this operation is
+//     * not supported by the user provider.
+//     *
+//     * @param fields the fields to search on.
+//     * @param query the query string.
+//     * @return a Collection of users that match the search.
+//     * @throws UnsupportedOperationException if the provider does not
+//     *      support the operation (this is an optional operation).
+//     */
+//    public Collection<User> findUsers(Set<String> fields, String query)
+//            throws UnsupportedOperationException
+//    {
+//        return provider.findUsers(fields, query);
+//    }
 
     /**
      * Returns the value of the specified property for the given username. If the user
@@ -382,6 +390,12 @@ public class UserManager implements IQResultListener {
         return isRegistered;
     }
 
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.im.xmpp.srv.IQResultListener#receivedAnswer(org.xmpp.packet.IQ)
+     * 
+     * This is used when we get a response to the remote disco#info request that we send
+     * out in the isRegisteredUser(JID) call above. 
+     */
     public void receivedAnswer(IQ packet) {
         JID from = packet.getFrom();
         // Assume that the user is not a registered user

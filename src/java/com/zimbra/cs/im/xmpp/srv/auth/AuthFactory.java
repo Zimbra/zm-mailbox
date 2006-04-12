@@ -65,7 +65,7 @@ public class AuthFactory {
         }
         catch (Exception e) {
             Log.error("Error loading auth provider: " + className, e);
-            authProvider = new DefaultAuthProvider();
+            authProvider = null; // new DefaultAuthProvider();
         }
         // Create a message digest instance.
         try {
@@ -81,7 +81,7 @@ public class AuthFactory {
      * using plain-text passwords according to JEP-0078. Plain-text authentication is
      * not secure and should generally only be used over a TLS/SSL connection.
      *
-     * @return true if plain text password authentication is supported.
+      * @return true if plain text password authentication is supported.
      */
     public static boolean isPlainSupported() {
         return authProvider.isPlainSupported();
@@ -109,7 +109,7 @@ public class AuthFactory {
      */
     public static String getPassword(String username) throws UserNotFoundException,
             UnsupportedOperationException {
-        return UserManager.getUserProvider().getPassword(username);
+        return UserManager.getPassword(username);
     }
 
     /**

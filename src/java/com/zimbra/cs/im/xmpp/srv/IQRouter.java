@@ -58,8 +58,7 @@ public class IQRouter extends BasicModule {
     private String serverName;
     private List<IQHandler> iqHandlers = new ArrayList<IQHandler>();
     private Map<String, IQHandler> namespace2Handlers = new ConcurrentHashMap<String, IQHandler>();
-    private Map<String, IQResultListener> resultListeners =
-            new ConcurrentHashMap<String, IQResultListener>();
+    private Map<String, IQResultListener> resultListeners = new ConcurrentHashMap<String, IQResultListener>();
     private SessionManager sessionManager;
     private UserManager userManager;
 

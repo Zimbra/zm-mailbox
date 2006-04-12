@@ -57,7 +57,7 @@ import java.util.TreeMap;
  * actually performing the SASL authentication.<p>
  *
  * The list of available SASL mechanisms is determined by 1) the type of
- * {@link com.zimbra.cs.im.xmpp.srv.user.UserProvider} being used since some SASL mechanisms
+ * UserProvider being used since some SASL mechanisms
  * require the server to be able to retrieve user passwords; 2) whether anonymous logins are
  * enabled or not and 3) whether the underlying connection has been secured or not.
  *
@@ -129,7 +129,7 @@ public class SASLAuthentication {
         else {
             // Check if the user provider in use supports passwords retrieval. Accessing to the users
             // passwords will be required by the CallbackHandler
-            if (UserManager.getUserProvider().supportsPasswordRetrieval()) {
+            if (UserManager.supportsPasswordRetrieval()) {
                 sb.append("<mechanism>CRAM-MD5</mechanism>");
                 sb.append("<mechanism>DIGEST-MD5</mechanism>");
             }

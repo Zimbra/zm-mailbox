@@ -1,38 +1,33 @@
-/*
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1
+/**
+ * $RCSfile$
+ * $Revision: 2605 $
+ * $Date: 2005-04-12 03:23:23 -0300 (Tue, 12 Apr 2005) $
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 ("License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.zimbra.com/license
+ * Copyright 2005 Jive Software.
  *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
- * the License for the specific language governing rights and limitations
- * under the License.
- * 
- * Part of the Zimbra Collaboration Suite Server.
+ * All rights reserved. Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * The Original Code is Copyright (C) Jive Software. Used with permission
- * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
- * All Rights Reserved.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Contributor(s):
- *
- * ***** END LICENSE BLOCK *****
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-package com.zimbra.cs.im.xmpp.util;
+package org.jivesoftware.util;
 
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
+import org.dom4j.io.XMLWriter;
 
 import java.io.*;
 import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * Provides the the ability to use simple XML property files. Each property is
@@ -61,9 +56,7 @@ public class XMLProperties {
      * Parsing the XML file every time we need a property is slow. Therefore,
      * we use a Map to cache property values that are accessed more than once.
      */
-    private Map<String, String> propertyCache = new HashMap<String, String>();
-    
-    public Set<Entry<String, String>> MapIter() { return propertyCache.entrySet(); } 
+    private Map propertyCache = new HashMap();
 
     /**
      * Creates a new XMLPropertiesTest object.
@@ -103,7 +96,7 @@ public class XMLProperties {
             File tempFile;
             tempFile = new File(file.getParentFile(), file.getName() + ".tmp");
             if (tempFile.exists()) {
-                Log.error("WARNING: " + file.getName() + " was not found, but temp file from " +
+                System.err.println("WARNING: " + file.getName() + " was not found, but temp file from " +
                         "previous write operation was. Attempting automatic recovery." +
                         " Please check file for data consistency.");
                 tempFile.renameTo(file);
@@ -134,7 +127,7 @@ public class XMLProperties {
      * @return the value of the specified property.
      */
     public synchronized String getProperty(String name) {
-        String value = propertyCache.get(name);
+        String value = (String)propertyCache.get(name);
         if (value != null) {
             return value;
         }
@@ -199,7 +192,7 @@ public class XMLProperties {
         }
         // We found matching property, return names of children.
         Iterator iter = element.elementIterator(propName[propName.length - 1]);
-        List<String> props = new ArrayList<String>();
+        ArrayList props = new ArrayList();
         String value;
         while (iter.hasNext()) {
             // Empty strings are skipped.
@@ -209,7 +202,7 @@ public class XMLProperties {
             }
         }
         String[] childrenNames = new String[props.size()];
-        return props.toArray(childrenNames);
+        return (String[])props.toArray(childrenNames);
     }
 
     /**
@@ -335,10 +328,8 @@ public class XMLProperties {
         saveProperties();
 
         // Generate event.
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map params = new HashMap();
         params.put("value", values);
-        PropertyEventDispatcher.dispatchEvent(name,
-                PropertyEventDispatcher.EventType.xml_property_set, params);
     }
 
     /**
@@ -404,10 +395,8 @@ public class XMLProperties {
         saveProperties();
 
         // Generate event.
-        Map<String, String> params = new HashMap<String,String>();
+        Map params = new HashMap();
         params.put("value", value);
-        PropertyEventDispatcher.dispatchEvent(name,
-                PropertyEventDispatcher.EventType.xml_property_set, params);
     }
 
     /**
@@ -433,10 +422,6 @@ public class XMLProperties {
         element.remove(element.element(propName[propName.length - 1]));
         // .. then write to disk.
         saveProperties();
-
-        // Generate event.
-        PropertyEventDispatcher.dispatchEvent(name,
-                PropertyEventDispatcher.EventType.xml_property_deleted, Collections.emptyMap());
     }
 
     /**
@@ -446,22 +431,9 @@ public class XMLProperties {
         try {
             SAXReader xmlReader = new SAXReader();
             document = xmlReader.read(in);
-            
-            Element root = document.getRootElement();
-            
-            if (!root.getName().equals("jive")) {
-            	throw new IOException("Jive config has wrong root: expect <jive> got "+root.toString());
-            }
-            
-            for (Iterator iter = root.elementIterator("key"); iter.hasNext();) {
-                Element ekey = (Element) iter.next();
-                String key = ekey.attributeValue("name");
-                String value = (String) ekey.elementText("value");
-                propertyCache.put(key, value);
-            }
         }
         catch (Exception e) {
-            Log.error("Error reading XML properties", e);
+            e.printStackTrace();
             throw new IOException(e.getMessage());
         }
         finally {
@@ -482,13 +454,13 @@ public class XMLProperties {
         Writer writer = null;
         try {
             tempFile = new File(file.getParentFile(), file.getName() + ".tmp");
-            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tempFile)));
+            writer = new FileWriter(tempFile);
             OutputFormat prettyPrinter = OutputFormat.createPrettyPrint();
             XMLWriter xmlWriter = new XMLWriter(writer, prettyPrinter);
             xmlWriter.write(document);
         }
         catch (Exception e) {
-            Log.error(e);
+            e.printStackTrace();
             // There were errors so abort replacing the old property file.
             error = true;
         }
@@ -498,7 +470,7 @@ public class XMLProperties {
                     writer.close();
                 }
                 catch (IOException e1) {
-                    Log.error(e1);
+                    e1.printStackTrace();
                     error = true;
                 }
             }
@@ -508,7 +480,7 @@ public class XMLProperties {
         if (!error) {
             // Delete the old file so we can replace it.
             if (!file.delete()) {
-                Log.error("Error deleting property file: " + file.getAbsolutePath());
+                System.err.println("Error deleting property file: " + file.getAbsolutePath());
                 return;
             }
             // Copy new contents to the file.
@@ -516,7 +488,7 @@ public class XMLProperties {
                 copy(tempFile, file);
             }
             catch (Exception e) {
-                Log.error(e);
+                e.printStackTrace();
                 // There were errors so abort replacing the old property file.
                 error = true;
             }
@@ -536,18 +508,20 @@ public class XMLProperties {
      * @return an array representation of the given Jive property.
      */
     private String[] parsePropertyName(String name) {
-        List<String> propName = new ArrayList<String>(5);
+        List propName = new ArrayList(5);
         // Use a StringTokenizer to tokenize the property name.
         StringTokenizer tokenizer = new StringTokenizer(name, ".");
         while (tokenizer.hasMoreTokens()) {
             propName.add(tokenizer.nextToken());
         }
-        return propName.toArray(new String[propName.size()]);
+        return (String[])propName.toArray(new String[propName.size()]);
     }
 
-    public void setProperties(Map<String, String> propertyMap) {
-        for (String propertyName : propertyMap.keySet()) {
-            String propertyValue = propertyMap.get(propertyName);
+    public void setProperties(Map propertyMap) {
+        Iterator iter = propertyMap.keySet().iterator();
+        while (iter.hasNext()) {
+            String propertyName = (String) iter.next();
+            String propertyValue = (String) propertyMap.get(propertyName);
             setProperty(propertyName, propertyValue);
         }
     }
@@ -586,12 +560,12 @@ public class XMLProperties {
     /**
      * Copies data from an input stream to an output stream
      *
-     * @param in the stream to copy data from.
-     * @param out the stream to copy data to.
-     * @throws IOException if there's trouble during the copy.
+     * @param in  The stream to copy data from
+     * @param out The stream to copy data to
+     * @throws IOException if there's trouble during the copy
      */
     private static void copy(InputStream in, OutputStream out) throws IOException {
-        // Do not allow other threads to intrude on streams during copy.
+        // do not allow other threads to whack on in or out during copy
         synchronized (in) {
             synchronized (out) {
                 byte[] buffer = new byte[256];
