@@ -1430,7 +1430,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                             InputStream is = raw != null ? new ByteArrayInputStream(raw) : mMailbox.getMessageById(getContext(), i4msg.id).getRawMessage();
                             mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
                             if (mSession.isHackEnabled(EnabledHack.WM5))
-                                new ImapMessage.WindowsMobile5Converter().accept(mm);
+                                if (new ImapMessage.WindowsMobile5Converter().accept(mm)) {
+                                    // FIXME: terrible hack to work around JavaMail repulsiveness
+                                    ByteArrayOutputStream baosCopy = new ByteArrayOutputStream();
+                                    mm.writeTo(baosCopy);
+                                    mm = new Mime.FixedMimeMessage(JMSession.getSession(), new ByteArrayInputStream(baosCopy.toByteArray()));
+                                }
                             is.close();
                         } catch (IOException e) {
                             throw ServiceException.FAILURE("error fetching raw content for message " + i4msg.id, e);
