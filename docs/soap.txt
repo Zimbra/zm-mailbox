@@ -621,12 +621,14 @@ Folders:
 
 Mountpoints:
 
-  <link id="{folder-id}" name="{folder-name}" l="{parent-id}" d="{owner's-display-name}" [color="{color}"] [view="{default-type}"]/>
+  <link id="{folder-id}" name="{folder-name}" l="{parent-id}" d="{owner's-display-name}" zid="{owner's-zimbra-id}" rid="{id-of-shared-item}" [color="{color}"] [view="{default-type}"]/>
 
   {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
                    cannot contain ':', '"', '/', or any character below 0x20
   {parent-id}    = id of parent folder (absent for root folder)
   {owner's-display-name} = primary email address of the owner of the linked-to resource
+  {owner's-zimbra-id} = Zimbra id (guid) of the owner of the linked-to resource
+  {id-of-shared-item} = item id of the linked-to resource in the remote mailbox
   {color}        = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
   {default-type} = (optional) default type for the folder; used by web client to decide which view to use;
                    possible values are the same as <SearchRequest>'s {types}: conversation|message|contact|appointment|note

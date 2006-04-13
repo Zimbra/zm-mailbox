@@ -86,17 +86,13 @@ public class ToXML {
 	// no construction
 	private ToXML()  {}
 
-    public static Element encodeItem(Element parent, ZimbraContext lc,
-                                     MailItem item)
+    public static Element encodeItem(Element parent, ZimbraContext lc, MailItem item)
     throws ServiceException {
         return encodeItem(parent, lc, item, NOTIFY_FIELDS);
     }
-    public static Element encodeItem(Element parent, ZimbraContext lc,
-                                     MailItem item, int fields)
+    public static Element encodeItem(Element parent, ZimbraContext lc, MailItem item, int fields)
     throws ServiceException {
-        if (item instanceof SearchFolder)
-            return encodeSearchFolder(parent, lc, (SearchFolder) item, fields);
-        else if (item instanceof Folder)
+        if (item instanceof Folder)
             return encodeFolder(parent, lc, (Folder) item, fields);
         else if (item instanceof Tag)
             return encodeTag(parent, lc, (Tag) item, fields);
@@ -251,10 +247,14 @@ public class ToXML {
     public static Element encodeMountpoint(Element parent, ZimbraContext lc, Mountpoint mpt, int fields) {
         Element elem = parent.addElement(MailService.E_MOUNT);
         encodeFolderCommon(elem, lc, mpt, fields);
-        NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(mpt.getOwnerId(), ACL.GRANTEE_USER);
-        elem.addAttribute(MailService.A_DISPLAY, nentry == null ? null : nentry.getName());
-        if (fields == NOTIFY_FIELDS && mpt.getDefaultView() != MailItem.TYPE_UNKNOWN)
-            elem.addAttribute(MailService.A_DEFAULT_VIEW, MailItem.getNameForType(mpt.getDefaultView()));
+        if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
+            elem.addAttribute(MailService.A_ZIMBRA_ID, mpt.getOwnerId());
+            elem.addAttribute(MailService.A_REMOTE_ID, mpt.getRemoteId());
+            NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(mpt.getOwnerId(), ACL.GRANTEE_USER);
+            elem.addAttribute(MailService.A_DISPLAY, nentry == null ? null : nentry.getName());
+            if (mpt.getDefaultView() != MailItem.TYPE_UNKNOWN)
+                elem.addAttribute(MailService.A_DEFAULT_VIEW, MailItem.getNameForType(mpt.getDefaultView()));
+        }
         return elem;
     }
 
