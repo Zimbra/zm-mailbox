@@ -114,6 +114,11 @@
 		<not><os family="windows" /></not>
 	</condition>
 
+	<condition property="native.os" value="MacOSX"><os name="Mac OS X"/></condition>
+	<condition property="native.os" value="Linux"><os name="Linux"/></condition>
+	<condition property="native.so" value="jnilib"><os name="Mac OS X"/></condition>
+	<condition property="native.so" value="so"><not><os name="Linux"/></not></condition>
+
 	<condition property="ldapmodify" value="${zimbra.home.dir}/openldap/ldapmodify">
 		<isset property="is-windows" />
 	</condition>
@@ -371,9 +376,7 @@
 		<copy todir="${dist.openldap.schema.dir}" file="${config.dir}/ldap/amavisd.schema" />
 		<copy todir="${dist.db.dir}" file="${src.db.dir}/db.sql" />
 		<copy todir="${dist.db.dir}" file="${build.dir}/versions-init.sql" />
-		<copy todir="${dist.lib.dir}">
-			<fileset dir="${lib.dir}" includes="libzimbra-native.*" />
-		</copy>
+		<copy tofile="${zimbra.home.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" failonerror="false" verbose="true"/>
 		<copy todir="${dist.ext.dir}" >
 			<fileset dir="${ext.dir}" includes="*/*.jar" />
 		</copy>
@@ -806,9 +809,7 @@
 	</target>
 
 	<target name="tomcat-init-unix" if="is-unix">
-		<copy todir="${zimbra.home.dir}/lib">
-			<fileset dir="${lib.dir}" includes="libzimbra-native.*" />
-		</copy>
+		<copy tofile="${zimbra.home.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" verbose="true"/>
 		<copy todir="${zimbra.home.dir}/bin">
 			<fileset dir="${src.bin.dir}" includes="*" />
 		</copy>
