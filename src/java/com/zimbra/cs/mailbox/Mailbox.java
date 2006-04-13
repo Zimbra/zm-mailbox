@@ -108,8 +108,9 @@ public class Mailbox {
     public static final int ID_FOLDER_CONVERSATIONS = 9;
     public static final int ID_FOLDER_CALENDAR  = 10;
     public static final int ID_FOLDER_ROOT      = 11;
+    public static final int ID_FOLDER_NOTEBOOK  = 12;
 
-    public static final int HIGHEST_SYSTEM_ID = 11;
+    public static final int HIGHEST_SYSTEM_ID = 12;
     public static final int FIRST_USER_ID     = 256;
 
     static final int  ONE_MONTH_SECS   = 60 * 60 * 24 * 31;
@@ -1352,6 +1353,7 @@ public class Mailbox {
         Folder.create(ID_FOLDER_DRAFTS,   this, userRoot, "Drafts",   system, MailItem.TYPE_MESSAGE, null);
         Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.TYPE_CONTACT, null);
         Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, null);
+        Folder.create(ID_FOLDER_NOTEBOOK, this, userRoot, "Notebook", system, MailItem.TYPE_WIKI, null);
         mCurrentChange.itemId = FIRST_USER_ID;
 
         // and write a checkpoint to the tombstones table to help establish a change/date relationship

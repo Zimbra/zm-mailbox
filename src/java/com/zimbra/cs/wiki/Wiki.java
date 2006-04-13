@@ -55,8 +55,7 @@ public class Wiki {
 	
 	private static Map<Pair<String,String>,Wiki> wikiMap;
 	
-	//private static final String WIKI_FOLDER =  "wiki";
-	private static final String WIKI_FOLDER =  "inbox";
+	private static final String WIKI_FOLDER =  "notebook";
 	
 	static {
 		wikiMap = new HashMap<Pair<String,String>,Wiki>();
@@ -65,12 +64,7 @@ public class Wiki {
 	public static int getDefaultFolderId(Account acct) throws ServiceException {
 		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
 		OperationContext octxt = new OperationContext(acct);
-		Folder f;
-		try {
-			f = mbox.getFolderByPath(octxt, WIKI_FOLDER);
-		} catch (ServiceException se) {
-			f = mbox.createFolder(octxt, WIKI_FOLDER, Mailbox.ID_FOLDER_USER_ROOT, MailItem.TYPE_WIKI, null);
-		}
+		Folder f = mbox.getFolderByPath(octxt, WIKI_FOLDER);
 		return f.getId();
 	}
 	
