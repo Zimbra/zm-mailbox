@@ -282,12 +282,6 @@ public class Search extends DocumentHandler  {
                 e = addAppointmentHit(lc, response, ah, inline, params);
             } else if (hit instanceof DocumentHit) {
             	DocumentHit dh = (DocumentHit)hit;
-            	Document doc = dh.getDocument();
-            	if (doc.getVersion() != dh.getVersion()) {
-            		// show the search result only for the latest ver.
-            		// change the API in the future to accomodate search across all the versions.
-            		continue;
-            	}
                 e = addDocumentHit(lc, response, dh);
             } else {
                 mLog.error("Got an unknown hit type putting search hits: "+hit);

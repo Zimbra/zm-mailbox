@@ -312,6 +312,11 @@ public class Indexer
     public void indexDocument(IndexItem redo, MailboxIndex idx, int mailItemId, ParsedDocument pd)
     throws ServiceException {
         try {
+        	try {
+        	    idx.deleteDocuments(new int[] { mailItemId });
+        	} catch(IOException e) {
+        	    mLog.debug("indexDocument ignored IOException deleting documents (index does not exist yet)");
+        	}
             addDocument(redo, pd.getDocument(), idx, mailItemId, pd.getCreatedDate());
         	incrementNumIndexedBy(1);
         } catch (IOException e) {
