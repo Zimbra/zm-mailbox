@@ -54,8 +54,11 @@ public class AttributeManager {
     private static final String A_MIN = "min";
     private static final String A_CALLBACK = "callback";
     private static final String A_ID = "id";
+    private static final String A_CARDINALITY = "cardinality";
 
     private static AttributeManager mInstance;
+
+    public enum AttributeCardinality { single, multi; }
     
     private HashMap mAttrs = new HashMap();
 
@@ -108,7 +111,8 @@ public class AttributeManager {
                 boolean immutable = false;
                 boolean ignore = false;
                 int id = -1;
-                
+                AttributeCardinality cardinality = null;
+
                 for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
                     Attribute attr = (Attribute) attrIter.next();
                     String aname = attr.getName();
@@ -134,7 +138,13 @@ public class AttributeManager {
                     	try {
                     		id = Integer.parseInt(attr.getValue());
                     	} catch (NumberFormatException nfe) {
-                    		throw new DocumentException("attribute " + A_ID + " value is not a number: " + attr.getValue(), nfe);
+                    		throw new DocumentException("attrs file("+file+") " + aname + " is not a number: " + attr.getValue());
+                    	}
+                    } else if (aname.equals(A_CARDINALITY)) {
+                    	try {
+                    		cardinality = AttributeCardinality.valueOf(attr.getValue());
+                    	} catch (IllegalArgumentException iae) {
+                    		throw new DocumentException("attrs file("+file+") " + aname + " is not valid: " + attr.getValue());
                     	}
                     } else {
                         ZimbraLog.misc.warn("attrs file("+file+") unknown <attr> attr: "+aname);
