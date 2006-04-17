@@ -24,10 +24,13 @@
  */
 
 package com.zimbra.cs.account;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.dom4j.Attribute;
@@ -46,6 +49,7 @@ public class AttributeManager {
 
     private static final String E_ATTRS = "attrs";
     private static final String E_ATTR = "attr";
+    
     private static final String A_NAME = "name";
     private static final String A_IMMUTABLE = "immutable";
     private static final String A_TYPE = "type";
@@ -55,10 +59,18 @@ public class AttributeManager {
     private static final String A_CALLBACK = "callback";
     private static final String A_ID = "id";
     private static final String A_CARDINALITY = "cardinality";
-
+    private static final String A_REQUIRED_IN = "requiredIn";
+    private static final String A_OPTIONAL_IN = "optionalIn";
+    
     private static AttributeManager mInstance;
 
-    public enum AttributeCardinality { single, multi; }
+    public enum AttributeCardinality {
+    	single, multi;
+    }
+    
+    public enum AttributeClass {
+		mailrecipient, account, alias, dl, cos, config, domain, group, server, mimeentry, objectentry, timezone, zimletentry, calresource;
+	}	
     
     private HashMap mAttrs = new HashMap();
 
@@ -112,7 +124,9 @@ public class AttributeManager {
                 boolean ignore = false;
                 int id = -1;
                 AttributeCardinality cardinality = null;
-
+                List<AttributeClass> requiredIn = new LinkedList<AttributeClass>();
+                List<AttributeClass> optionalIn = new LinkedList<AttributeClass>();
+                               
                 for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
                     Attribute attr = (Attribute) attrIter.next();
                     String aname = attr.getName();
@@ -146,6 +160,10 @@ public class AttributeManager {
                     	} catch (IllegalArgumentException iae) {
                     		throw new DocumentException("attrs file("+file+") " + aname + " is not valid: " + attr.getValue());
                     	}
+                    } else if (aname.equals(A_REQUIRED_IN)) {
+                    	requiredIn = getAttributeClasses(file, aname, attr.getValue());
+                    } else if (aname.equals(A_OPTIONAL_IN)) {
+                    	optionalIn = getAttributeClasses(file, aname, attr.getValue());
                     } else {
                         ZimbraLog.misc.warn("attrs file("+file+") unknown <attr> attr: "+aname);
                     }
@@ -165,8 +183,22 @@ public class AttributeManager {
                 }
             }
     }
+    
+    private static List<AttributeClass> getAttributeClasses(String file, String attr, String value) throws DocumentException {
+		List<AttributeClass> result = new LinkedList<AttributeClass>();
+		String[] cnames = value.split(",");
+		for (String cname : cnames) {
+			try {
+				AttributeClass ac = AttributeClass.valueOf(cname);
+				result.add(ac);
+			} catch (IllegalArgumentException iae) {
+				throw new DocumentException("attrs file("+file+") " + attr + " invalid class name: " + value);
+			}
+		}
+		return result;
+	}
 
-  /**
+    /**
      * @param type
      * @return
      */
