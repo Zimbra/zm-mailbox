@@ -727,19 +727,22 @@ public class LdapProvisioning extends Provisioning {
     public List searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, int flags)  
         throws ServiceException
     {
-        return searchAccounts(query, returnAttrs, sortAttr, sortAscending, "", flags);          
+        //flags &= ~Provisioning.SA_DOMAIN_FLAG; // leaving on for now
+        return searchObjects(query, returnAttrs, sortAttr, sortAscending, "", flags);          
     }
-
+    
     private static String getObjectClassQuery(int flags) {
         boolean accounts = (flags & Provisioning.SA_ACCOUNT_FLAG) != 0; 
         boolean aliases = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
         boolean lists = (flags & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0;
+        boolean domains = (flags & Provisioning.SA_DOMAIN_FLAG) != 0;
         boolean calendarResources =
             (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
 
         int num = (accounts ? 1 : 0) +
                   (aliases ? 1 : 0) +
                   (lists ? 1 : 0) +
+                  (domains ? 1 : 0) +                  
                   (calendarResources ? 1 : 0);
         if (num == 0)
             accounts = true;
@@ -761,6 +764,7 @@ public class LdapProvisioning extends Provisioning {
         if (accounts) oc.append("(objectclass=zimbraAccount)");
         if (aliases) oc.append("(objectclass=zimbraAlias)");
         if (lists) oc.append("(objectclass=zimbraDistributionList)");
+        if (domains) oc.append("(objectclass=zimbraDomain)");        
         if (calendarResources)
             oc.append("(objectclass=zimbraCalendarResource)");
         if (num > 1) oc.append(")");
@@ -772,7 +776,7 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
-    List searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, String base, int flags)  
+    List searchObjects(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, String base, int flags)  
         throws ServiceException
     {
         final List result = new ArrayList();
@@ -783,38 +787,34 @@ public class LdapProvisioning extends Provisioning {
             }
         };
         
-        searchAccounts(query, returnAttrs, base, flags, visitor);
+        searchObjects(query, returnAttrs, base, flags, visitor);
 
-        if (sortAttr != null) {
-            final boolean byName = sortAttr.equals("name"); 
-            Comparator comparator = new Comparator() {
-                public int compare(Object oa, Object ob) {
-                    LdapNamedEntry a = (LdapNamedEntry) oa;
-                    LdapNamedEntry b = (LdapNamedEntry) ob;
-                    int result = 0;
-                    if (byName)
-                        result = a.getName().compareToIgnoreCase(b.getName());
-                    else {
-                        String sa = a.getAttr(sortAttr);
-                        String sb = b.getAttr(sortAttr);
-                        if (sa == null) sa = "";
-                        if (sb == null) sb = "";
-                        result = sa.compareToIgnoreCase(sb);
-                    }
-                    return sortAscending ? result : -result;
+        final boolean byName = sortAttr == null || sortAttr.equals("name"); 
+        Comparator comparator = new Comparator() {
+            public int compare(Object oa, Object ob) {
+                LdapNamedEntry a = (LdapNamedEntry) oa;
+                LdapNamedEntry b = (LdapNamedEntry) ob;
+                int result = 0;
+                if (byName)
+                    result = a.getName().compareToIgnoreCase(b.getName());
+                else {
+                    String sa = a.getAttr(sortAttr);
+                    String sb = b.getAttr(sortAttr);
+                    if (sa == null) sa = "";
+                    if (sb == null) sb = "";
+                    result = sa.compareToIgnoreCase(sb);
                 }
-            };
-            Collections.sort(result, comparator);        
-        } else {
-            Collections.sort(result);
-        }
+                return sortAscending ? result : -result;
+            }
+        };
+        Collections.sort(result, comparator);        
         return result;
     }
     
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
-    void searchAccounts(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor)
+    void searchObjects(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor)
         throws ServiceException
     {
         DirContext ctxt = null;
@@ -863,6 +863,7 @@ public class LdapProvisioning extends Provisioning {
                         if (objectclass == null || objectclass.contains(C_zimbraAccount)) visitor.visit(makeLdapAccount(dn, attrs, this));
                         else if (objectclass.contains(C_zimbraAlias)) visitor.visit(new LdapAlias(dn, attrs));
                         else if (objectclass.contains(C_zimbraMailList)) visitor.visit(new LdapDistributionList(dn, attrs));
+                        else if (objectclass.contains(C_zimbraDomain)) visitor.visit(new LdapDomain(dn, attrs, this));                        
                     }
                     cookie = getCookie(lctxt);
                 } while (cookie != null);
@@ -873,11 +874,11 @@ public class LdapProvisioning extends Provisioning {
             throw ServiceException.INVALID_REQUEST("invalid search filter "+e.getMessage(), e);
         } catch (NameNotFoundException e) {
             // happens when base doesn't exist
-            ZimbraLog.account.warn("uable to list all accounts", e);
+            ZimbraLog.account.warn("unable to list all objects", e);
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to list all accounts", e);
+            throw ServiceException.FAILURE("unable to list all objects", e);
         } catch (IOException e) {
-            throw ServiceException.FAILURE("unable to list all accounts", e);            
+            throw ServiceException.FAILURE("unable to list all objects", e);            
         } finally {
             LdapUtil.closeContext(ctxt);
         }
@@ -2831,7 +2832,7 @@ public class LdapProvisioning extends Provisioning {
         String base)
     throws ServiceException {
         String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
-        return searchAccounts(query, returnAttrs,
+        return searchObjects(query, returnAttrs,
                               sortAttr, sortAscending,
                               base,
                               Provisioning.SA_CALENDAR_RESOURCE_FLAG);

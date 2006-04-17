@@ -85,11 +85,15 @@ public class SearchAccounts extends AdminDocumentHandler {
         if (types.indexOf("aliases") != -1) flags |= Provisioning.SA_ALIAS_FLAG;
         if (types.indexOf("distributionlists") != -1) flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
         if (types.indexOf("resources") != -1) flags |= Provisioning.SA_CALENDAR_RESOURCE_FLAG;
-        
+        if (types.indexOf("domains") != -1) flags |= Provisioning.SA_DOMAIN_FLAG;
+
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
         // if we are a domain admin only, restrict to domain
         if (isDomainAdminOnly(lc)) {
+            if ((flags & Provisioning.SA_DOMAIN_FLAG) == Provisioning.SA_DOMAIN_FLAG)
+                throw ServiceException.PERM_DENIED("can not search for domains");
+
             if (domain == null) {
                 domain = getAuthTokenAccountDomain(lc).getName();
             } else {
@@ -128,7 +132,9 @@ public class SearchAccounts extends AdminDocumentHandler {
             } else if (entry instanceof DistributionList) {
                 doDistributionList(response, (DistributionList) entry);
             } else if (entry instanceof Alias) {
-                doAlias(response, (Alias) entry);                                    
+                doAlias(response, (Alias) entry);
+            } else if (entry instanceof Domain) {
+                GetDomain.doDomain(response, (Domain) entry, applyCos);
             }
         }          
 
@@ -165,5 +171,5 @@ public class SearchAccounts extends AdminDocumentHandler {
             } else if (value instanceof String)
                 e.addElement(AdminService.E_A).addAttribute(AdminService.A_N, name).setText((String) value);
         }       
-}   
+    }   
 }

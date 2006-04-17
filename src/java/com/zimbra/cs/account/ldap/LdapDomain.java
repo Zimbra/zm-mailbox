@@ -65,7 +65,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     private static final String DATA_GAL_ATTR_LIST = "GAL_ATTR_LIST";
 
     private LdapProvisioning mProv;
-
+   
     LdapDomain(String dn, Attributes attrs, LdapProvisioning prov) {
         super(dn, attrs);
         mProv = prov;
@@ -85,7 +85,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     }
 
     public void getAllAccounts(NamedEntry.Visitor visitor) throws ServiceException {
-        mProv.searchAccounts("(objectclass=zimbraAccount)", null, "ou=people,"+getDN(), Provisioning.SA_ACCOUNT_FLAG, visitor);
+        mProv.searchObjects("(objectclass=zimbraAccount)", null, "ou=people,"+getDN(), Provisioning.SA_ACCOUNT_FLAG, visitor);
     }
 
     public List getAllCalendarResources() throws ServiceException {
@@ -96,7 +96,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
 
     public void getAllCalendarResources(NamedEntry.Visitor visitor)
     throws ServiceException {
-        mProv.searchAccounts("(objectclass=zimbraCalendarResource)",
+        mProv.searchObjects("(objectclass=zimbraCalendarResource)",
                              null, "ou=people," + getDN(),
                              Provisioning.SA_CALENDAR_RESOURCE_FLAG,
                              visitor);
@@ -108,7 +108,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
 
     public List searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException
     {
-        return mProv.searchAccounts(query, returnAttrs, sortAttr, sortAscending, "ou=people,"+getDN(), flags);
+        return mProv.searchObjects(query, returnAttrs, sortAttr, sortAscending, "ou=people,"+getDN(), flags);
     }
 
     public List searchCalendarResources(

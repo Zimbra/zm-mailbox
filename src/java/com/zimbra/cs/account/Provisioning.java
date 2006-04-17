@@ -945,6 +945,9 @@ public abstract class Provisioning {
 
     /** return calendar resource accounts from searchAccounts */
     public static final int SA_CALENDAR_RESOURCE_FLAG = 0x8;
+    
+    /** return domains from searchAccounts. only valid with Provisioning.searchAccounts. */
+    public static final int SA_DOMAIN_FLAG = 0x10;    
 
     public static enum GAL_SEARCH_TYPE {
         ALL, USER_ACCOUNT, CALENDAR_RESOURCE
