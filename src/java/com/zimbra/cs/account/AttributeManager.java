@@ -61,6 +61,7 @@ public class AttributeManager {
     private static final String A_CARDINALITY = "cardinality";
     private static final String A_REQUIRED_IN = "requiredIn";
     private static final String A_OPTIONAL_IN = "optionalIn";
+    private static final String A_FLAGS = "flags";
     
     private static AttributeManager mInstance;
 
@@ -70,7 +71,11 @@ public class AttributeManager {
     
     public enum AttributeClass {
 		mailrecipient, account, alias, dl, cos, config, domain, group, server, mimeentry, objectentry, timezone, zimletentry, calresource;
-	}	
+	}
+    
+    public enum AttributeFlag {
+        accountInfo, inheritFromCOS, domainAdminModifiable, inheritFromDomain, inheritFromServer
+    }
     
     private HashMap mAttrs = new HashMap();
 
@@ -124,9 +129,10 @@ public class AttributeManager {
                 boolean ignore = false;
                 int id = -1;
                 AttributeCardinality cardinality = null;
-                List<AttributeClass> requiredIn = new LinkedList<AttributeClass>();
-                List<AttributeClass> optionalIn = new LinkedList<AttributeClass>();
-                               
+                List<AttributeClass> requiredIn = null;
+                List<AttributeClass> optionalIn = null;
+                List<AttributeFlag> flags = null;
+
                 for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
                     Attribute attr = (Attribute) attrIter.next();
                     String aname = attr.getName();
@@ -159,11 +165,13 @@ public class AttributeManager {
                     		cardinality = AttributeCardinality.valueOf(attr.getValue());
                     	} catch (IllegalArgumentException iae) {
                     		throw new DocumentException("attrs file("+file+") " + aname + " is not valid: " + attr.getValue());
-                    	}
+                     	}
                     } else if (aname.equals(A_REQUIRED_IN)) {
-                    	requiredIn = getAttributeClasses(file, aname, attr.getValue());
+                    	 requiredIn = getAttributeClasses(file, aname, attr.getValue());
                     } else if (aname.equals(A_OPTIONAL_IN)) {
-                    	optionalIn = getAttributeClasses(file, aname, attr.getValue());
+                        optionalIn = getAttributeClasses(file, aname, attr.getValue());
+                    } else if (aname.equals(A_FLAGS)) {
+                        flags = getAttributeFlags(file, aname, attr.getValue());
                     } else {
                         ZimbraLog.misc.warn("attrs file("+file+") unknown <attr> attr: "+aname);
                     }
@@ -185,18 +193,32 @@ public class AttributeManager {
     }
     
     private static List<AttributeClass> getAttributeClasses(String file, String attr, String value) throws DocumentException {
-		List<AttributeClass> result = new LinkedList<AttributeClass>();
-		String[] cnames = value.split(",");
-		for (String cname : cnames) {
-			try {
-				AttributeClass ac = AttributeClass.valueOf(cname);
-				result.add(ac);
-			} catch (IllegalArgumentException iae) {
-				throw new DocumentException("attrs file("+file+") " + attr + " invalid class name: " + value);
-			}
-		}
-		return result;
-	}
+        List<AttributeClass> result = new LinkedList<AttributeClass>();
+        String[] cnames = value.split(",");
+        for (String cname : cnames) {
+            try {
+                AttributeClass ac = AttributeClass.valueOf(cname);
+                result.add(ac);
+            } catch (IllegalArgumentException iae) {
+                throw new DocumentException("attrs file("+file+") " + attr + " invalid class: " + value);
+            }
+        }
+        return result;
+    }
+
+    private static List<AttributeFlag> getAttributeFlags(String file, String attr, String value) throws DocumentException {
+        List<AttributeFlag> result = new LinkedList<AttributeFlag>();
+        String[] flags = value.split(",");
+        for (String flag : flags) {
+            try {
+                AttributeFlag ac = AttributeFlag.valueOf(flag);
+                result.add(ac);
+            } catch (IllegalArgumentException iae) {
+                throw new DocumentException("attrs file("+file+") " + attr + " invalid flag: " + value);
+            }
+        }
+        return result;
+    }
 
     /**
      * @param type
