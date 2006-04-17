@@ -242,7 +242,10 @@ public class AdminService implements DocumentService {
     public static final QName MAIL_QUEUE_ACTION_RESPONSE = QName.get("MailQueueActionResponse", NAMESPACE);
     public static final QName MAIL_QUEUE_FLUSH_REQUEST = QName.get("MailQueueFlushRequest", NAMESPACE);
     public static final QName MAIL_QUEUE_FLUSH_RESPONSE = QName.get("MailQueueFlushResponse", NAMESPACE);
-
+    
+    public static final QName SEARCH_DIRECTORY_REQUEST = QName.get("SearchDirectoryRequest", NAMESPACE);
+    public static final QName SEARCH_DIRECTORY_RESPONSE = QName.get("SearchDirectoryResponse", NAMESPACE);
+    
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -386,7 +389,9 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(REMOVE_ACCOUNT_ALIAS_REQUEST, new RemoveAccountAlias());
         dispatcher.registerHandler(SEARCH_ACCOUNTS_REQUEST, new SearchAccounts());        
         dispatcher.registerHandler(RENAME_ACCOUNT_REQUEST, new RenameAccount());        
-        
+
+        dispatcher.registerHandler(SEARCH_DIRECTORY_REQUEST, new SearchDirectory());        
+
         dispatcher.registerHandler(CREATE_DOMAIN_REQUEST, new CreateDomain());
         dispatcher.registerHandler(GET_DOMAIN_REQUEST, new GetDomain());
         dispatcher.registerHandler(GET_ALL_DOMAINS_REQUEST, new GetAllDomains());
