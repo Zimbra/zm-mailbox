@@ -137,6 +137,10 @@ public class LmcSearchRequest extends LmcSoapRequest {
                 o = parseContact(e);
             } else if (elementType.equals(MailService.E_NOTE)) {
                 o = parseNote(e);
+            } else if (elementType.equals(MailService.E_DOC)) {
+                o = parseDocument(e);
+            } else if (elementType.equals(MailService.E_WIKIWORD)) {
+                o = parseWiki(e);
             } else {
                 // unknown element type as search result
                 throw new LmcSoapClientException("Unexpected element type " + elementType);

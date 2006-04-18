@@ -1,0 +1,19 @@
+<h2>Desired wikles:
+	<li>{{EDITPAGE|name}}<br>
+		- go into edit mode for this page (or another page if name is set)
+		
+	<li>{{SECTION|name|level}}<br>
+		- creates a collapsable section header (like in the SideBar example)<br>
+		- "name" can be a wiki-word<br>
+		- should eat everything until {{ENDSECTION}} ???<br>
+		
+	<li>{{TAGS}} to show the list of tags for this page
+	
+	<li>{{SHOWHISTORY|name}}<br>
+		- show history for this page (or another page if name is set)
+
+	<li>{{BREADCRUMBS}}<br>
+		- show the breadcrumb trail for this page (name????)
+		
+	<li>{{VERSION|-1,-2,etc}}<br>
+		- show the previous version number

@@ -305,7 +305,7 @@ public class SoapTestHarness {
         getURIs(SoapProtocol.SoapJS).put(prefix, uri);
     }
     
-	private void doTests(Element root) throws HarnessException, SoapFaultException, IOException
+	protected void doTests(Element root) throws HarnessException, SoapFaultException, IOException
 	{
 		if (!root.getQName().equals(E_TESTS))
 			throw new HarnessException("root document node must be " + E_TESTS.getQualifiedName());

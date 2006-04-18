@@ -501,6 +501,35 @@ public abstract class LmcSoapRequest {
 		return newTag;
 	}
 
+	protected LmcDocument parseDocument(Element doc)
+		throws ServiceException	{
+		LmcDocument result = new LmcDocument();
+
+		result.setID(doc.attributeValue(MailService.A_ID));
+		result.setName(doc.attributeValue(MailService.A_NAME));
+		result.setContentType(doc.attributeValue(MailService.A_CONTENT_TYPE));
+		result.setFolder(doc.attributeValue(MailService.A_FOLDER));
+		result.setRev(doc.attributeValue(MailService.A_VERSION));
+		result.setLastModifiedDate(doc.attributeValue(MailService.A_DATE));
+		result.setLastEditor(doc.attributeValue(MailService.A_LAST_EDITED_BY));
+		
+		return result;
+	}
+	
+	protected LmcDocument parseWiki(Element wiki)
+		throws ServiceException	{
+		LmcWiki result = new LmcWiki();
+
+		result.setID(wiki.attributeValue(MailService.A_ID));
+		result.setWikiWord(wiki.attributeValue(MailService.A_NAME));
+		result.setFolder(wiki.attributeValue(MailService.A_FOLDER));
+		result.setRev(wiki.attributeValue(MailService.A_VERSION));
+		result.setLastModifiedDate(wiki.attributeValue(MailService.A_DATE));
+		result.setLastEditor(wiki.attributeValue(MailService.A_LAST_EDITED_BY));
+		
+		return result;
+	}
+
 	/**
 	 * Add the XML representation of the message to the element.
 	 * @param e - the element at the root
