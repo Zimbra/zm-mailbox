@@ -45,21 +45,25 @@ import com.zimbra.soap.SoapParseException;
 
 public class ImportWiki {
 	
-	private static String sURL = "http://localhost:7070/service/soap";
+	private static final String sURL = "http://localhost:7070/service/soap";
 	
 	// XXX this is for the default Chrome hack.  should use Notebook folder id 12.
-	private static String sFOLDERID = "1";
-	private static String sUSERNAME = "user1";
-	private static String sPASSWORD = "test123";
+	private static final String sFOLDERID = "1";
+	private static final String sUSERNAME = "user1";
+	private static final String sPASSWORD = "test123";
 	
 	private LmcSession mSession;
+	
+	private String mUrl;
+	private String mUsername;
+	private String mPassword;
 	
 	private void auth() throws LmcSoapClientException, IOException, 
 			SoapFaultException, ServiceException, SoapParseException {
 		LmcAuthRequest auth = new LmcAuthRequest();
-		auth.setUsername(sUSERNAME);
-		auth.setPassword(sPASSWORD);
-		LmcAuthResponse resp = (LmcAuthResponse) auth.invoke(sURL);
+		auth.setUsername(mUsername);
+		auth.setPassword(mPassword);
+		LmcAuthResponse resp = (LmcAuthResponse) auth.invoke(mUrl);
 		mSession = resp.getSession();
 	}
 	
@@ -95,7 +99,7 @@ public class ImportWiki {
 				req.setSession(mSession);
 				req.setName(f.getName());
 				req.setParentID(parent.getFolderID());
-				LmcCreateFolderResponse resp = (LmcCreateFolderResponse) req.invoke(sURL);
+				LmcCreateFolderResponse resp = (LmcCreateFolderResponse) req.invoke(mUrl);
 				current = resp.getFolder();
 			}
 			createTree(current, f);
@@ -107,7 +111,7 @@ public class ImportWiki {
         LmcGetFolderRequest req = new LmcGetFolderRequest();
         req.setSession(mSession);
         req.setFolderToGet(sFOLDERID);
-        LmcGetFolderResponse resp = (LmcGetFolderResponse) req.invoke(sURL);
+        LmcGetFolderResponse resp = (LmcGetFolderResponse) req.invoke(mUrl);
         LmcFolder root = resp.getRootFolder();
 		createTree(root, file);
 	}
@@ -125,7 +129,7 @@ public class ImportWiki {
 		req.setSession(mSession);
 		req.setQuery("in:"+folderName);
 		req.setTypes("wiki,document");
-		LmcSearchResponse resp = (LmcSearchResponse) req.invoke(sURL);
+		LmcSearchResponse resp = (LmcSearchResponse) req.invoke(mUrl);
 		Iterator items = resp.getResults().listIterator();
 		if (items.hasNext()) {
 			String ids = "";
@@ -138,7 +142,7 @@ public class ImportWiki {
 			actReq.setSession(mSession);
 			actReq.setOp("delete");
 			actReq.setMsgList(ids);
-			actReq.invoke(sURL);
+			actReq.invoke(mUrl);
 		}
 		LmcFolder[] list = folder.getSubFolders();
 		if (list == null)
@@ -159,7 +163,7 @@ public class ImportWiki {
 		LmcSaveWikiRequest req = new LmcSaveWikiRequest();
 		req.setSession(mSession);
 		req.setWiki(wiki);
-		req.invoke(sURL);
+		req.invoke(mUrl);
 	}
 	
 	private void populateFolders(LmcFolder where, File file) throws LmcSoapClientException, IOException, 
@@ -187,7 +191,7 @@ public class ImportWiki {
         LmcGetFolderRequest req = new LmcGetFolderRequest();
         req.setSession(mSession);
         req.setFolderToGet(sFOLDERID);
-        LmcGetFolderResponse resp = (LmcGetFolderResponse) req.invoke(sURL);
+        LmcGetFolderResponse resp = (LmcGetFolderResponse) req.invoke(mUrl);
         LmcFolder root = resp.getRootFolder();
 
         deleteAllItemsInFolder(root, "");
@@ -199,12 +203,15 @@ public class ImportWiki {
         
         CommandLineParser parser = new GnuParser();
         Options options = new Options();
-        options.addOption("v", "verbose", false, "verbose");
+        options.addOption("v", "verbose",  false, "verbose");
+        options.addOption("s", "server",   true, "server URL");
+        options.addOption("u", "username", true, "username of the target account");
+        options.addOption("p", "password", true, "password of the target account");
         
-        Option fileOpt = new Option("d", "dir", true, "top level directory");
-        fileOpt.setArgName("top-level-dir");
-        fileOpt.setRequired(true);
-        options.addOption(fileOpt);
+        Option opt = new Option("d", "dir", true, "top level directory");
+        opt.setArgName("top-level-dir");
+        opt.setRequired(true);
+        options.addOption(opt);
 
         CommandLine cl = null;
         try {
@@ -218,6 +225,9 @@ public class ImportWiki {
         ImportWiki prog = new ImportWiki();
         if (cl.hasOption("v")) 
         	LmcSoapRequest.setDumpXML(true);
+        prog.mUrl = cl.getOptionValue("s", ImportWiki.sURL);
+        prog.mUsername = cl.getOptionValue("u", ImportWiki.sUSERNAME);
+        prog.mPassword = cl.getOptionValue("p", ImportWiki.sPASSWORD);
         prog.startImport(new File(dir));
 	}
 
