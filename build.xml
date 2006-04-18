@@ -446,6 +446,13 @@
 		</java>
 	</target>
 
+	<target name="import-wiki" description="Import Wiki documents into the system">
+		<echo>Importing Wiki documents for: user1@${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.cs.wiki.ImportWiki" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-d data/wiki" />
+		</java>
+	</target>
+
     <!-- Insert one directory (data/testmsgs) of mail -->
     <target name="inject1" depends="compile">
         <echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
