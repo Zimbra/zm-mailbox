@@ -99,6 +99,8 @@ public class ImportWiki {
 				req.setSession(mSession);
 				req.setName(f.getName());
 				req.setParentID(parent.getFolderID());
+				req.setName(f.getName());
+				req.setView("wiki");
 				LmcCreateFolderResponse resp = (LmcCreateFolderResponse) req.invoke(mUrl);
 				current = resp.getFolder();
 			}
@@ -174,6 +176,10 @@ public class ImportWiki {
         File[] list = file.listFiles();
         for (int i = 0; i < list.length; i++) {
         	File f = list[i];
+        	
+			// skip files and directories that start with "."
+       		if (f.getName().startsWith(".")) { continue;	}
+
         	if (f.isDirectory()) {
         		populateFolders(findFolder(where, f), f);
         	} else {

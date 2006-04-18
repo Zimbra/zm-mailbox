@@ -1,0 +1,244 @@
+<style type="text/css">
+	._chromeTable,
+	._tocTable {
+		width:100%;
+		height:100%;
+	}
+
+	._page {}
+
+	._breadcrumbHeader,
+	._pageHeader {
+		height:10px;
+		padding-top:2px;
+		background-color:#ffddbf;
+	}
+	._pageHeader {
+		padding-bottom:5px;
+		border-bottom:1px solid #cccccc;
+	}
+	
+	._pageFooter {
+		height:15px;
+		border-top:1px solid #cccccc;
+		border-bottom:1px solid #cccccc;
+	}
+	
+	._sidebarContainer {
+		background-color:#ffddbf;
+	}
+	
+	._contentContainer {
+		padding:5px;
+		height:"100%";
+		border-left:1px solid #cccccc;
+	}
+	
+	._pageName {
+		white-space:nowrap; overflow:hidden;
+		font-size:18px;
+		font-weight:bold;
+		vertical-align:bottom;
+	}
+
+	._author {
+		white-space:nowrap; overflow:hidden;
+		padding-left:10px;
+		padding-right:5px;
+		padding-bottom:2px;
+		vertical-align:bottom;
+		font-size:9px;
+		color:#666666;
+	}
+
+	._history {
+		text-align:right;
+		white-space:nowrap; overflow:hidden;
+		padding-right:5px;
+		font-size:9px;
+		color:#999999;
+	}
+	
+	._history A, ._author A,
+	._history span.Object-activated, ._author span.Object-activated,
+	._history span.Object-activated, ._author span.Object-activated {
+		font-size:9px;
+		color:#999999;
+	}
+	
+
+	._copyright {
+		white-space:nowrap; overflow:hidden;
+		font-size:9px;
+		color:#999999;
+	}
+	
+
+	._tags {
+		text-align:right;
+		font-size:9px;
+	}
+
+	
+	._breadcrumbs {
+		font-size:9px;		
+	}
+
+	._breadCrumbSeparator {
+		padding-left:3px;
+		padding-right:3px;
+		font-size:9px;	
+		color:#999999;
+	}
+	
+
+	/* container for the entire TOC */
+	._toc {
+		border:1px solid #cccccc;
+	}
+	
+	._tocAuthor {}
+	._tocHistory {}
+
+	
+
+	
+	._pageLink {
+		font-size:9px;	
+		cursor:pointer;
+	}
+	
+	._tag {
+		font-size:9px;
+		color:darkblue;
+		padding-right:10px;
+	}
+
+	._pageIcon {
+		padding-left:3px;
+		Xpadding-right:3px;
+		cursor:pointer;
+	}
+	
+	._attachments {
+		white-space:nowrap; overflow:hidden;
+		font-size:11px;
+		cursor:pointer;
+	}
+	
+	
+	._expandoSection {
+	}
+
+	._expandoSectionHead {
+		font-size:12px;
+		font-weight:bold;
+		background-color:#ffc795; 
+		border-bottom:1px solid #cccccc;
+		border-width:1 0 1 1;
+		height:16px;	
+		cursor:pointer;
+	}
+
+	._expandoSectionL1 {
+		border-left:1px solid #cccccc;
+		margin-left:3px;
+		margin-bottom:15px;
+		cursor:pointer; 
+		display:none;	
+	}
+
+	._expandoSectionSubHead	{	
+		background-color:#eeeeee; 
+		border-bottom:1px solid #cccccc;
+		height:16px;	
+		cursor:pointer;
+	}
+	
+	._expandoSectionL2 {	
+		border-bottom:1px solid #cccccc;
+		padding-bottom:2px;
+		padding-left:10px; 
+		padding-bottom:10px;
+		cursor:pointer; 
+		display:none;
+	}
+	
+	#tTOC {
+		border-bottom:1px solid #cccccc;
+	}
+	
+	._chromeDebugLinks,
+	._chromeDebugLinks span.Object,
+	._chromeDebugLinks span.Object-activated {
+		text-align:center;
+		font-size:9px;
+		color:#cccccc;		
+	}
+	._chromeDebugLinks span.Object-activated {
+		color:#999999;		
+	}
+
+
+	.WikiTOC ul {
+		margin-top:0px;
+		padding-left:10px;
+		list-style-type:none;
+	}
+	
+	.WikiTOC li {}
+</style>
+
+<div class="_page">
+	<table class="_chromeTable" cellpadding="0" cellspacing="0" width="100%">
+	<tbody><tr>
+		<td colspan="2" class="_breadcrumbHeader">
+			<table cellpadding="0" cellspacing="0" width="100%">
+				<tbody><tr>
+					<td class="_breadcrumbs" width="100%">{{BREADCRUMBS format="template"}}</td>
+					<td class="_tags" width="100%">{{INCLUDE page="_TAGS_" lookup="true"}}</td>
+				</tr>
+			</tbody></table>
+		</td>
+	</tr>
+	<tr>
+		<td colspan="2" class="_pageHeader">
+			<table border="0" cellpadding="0" cellspacing="0" width="100%">
+				<tbody><tr>
+					<td><div class="ImgBlank_9"></div><br></td>
+					<td class="_pageIcon">{{ICON}}</td>
+					<td class="_pageName" width="100">{{NAME}}</td>
+					<td class="_author" width="100%"><a href="#">{{MODIFIER}}</a></td>
+					<td><div class="ImgAttachment"></div></td>
+					<td class="_attachments">3 attachments</td>
+					<td><div class="ImgSelectPullDownArrow"></div></td>
+				</tr>
+			</tbody></table>
+		</td>
+	</tr>
+	<tr>
+		<td class="_sidebarContainer" valign="top" width="150">
+			{{INCLUDE page="_SIDEBAR_" lookup="true"}}
+		</td>
+		<td class="_contentContainer" valign="top" width="*">
+			{{CONTENT}}
+		</td>
+	</tr>
+	<tr>
+		<td colspan="2" class="_pageFooter">
+			<table width="100%">
+				<tbody><tr><td class="_copyright" width="*">Copyright &copy; 2006 Zimbra Inc.</td>
+					<td class="_chromeDebugLinks">
+						([[_SIDEBAR_]])
+						([[_TOC_BODY_TEMPLATE_]])
+						([[_TOC_ITEM_TEMPLATE_]])
+					</td>
+					<td class="_history">
+ 						<a href="#">{{MODIFYDATE}}</a> &bull; <a href="#">v. {{VERSION}}</a>
+					 </td>
+				</tr>
+			</tbody></table>
+		</td>
+	</tr>
+	</tbody></table>
+</div>

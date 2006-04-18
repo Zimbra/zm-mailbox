@@ -37,6 +37,7 @@ public class LmcCreateFolderRequest extends LmcSoapRequest {
 
     private String mName;
     private String mParentID;
+    private String mView;
     
 
     /**
@@ -51,15 +52,22 @@ public class LmcCreateFolderRequest extends LmcSoapRequest {
      */
     public void setName(String n) { mName = n; }
     
+    public void setView(String n) { mView = n; }
+
     public String getParentID() { return mParentID; }
 
     public String getName() { return mName; }
+
+    public String getView() { return mView; }
 
     protected Element getRequestXML() {
         Element request = DocumentHelper.createElement(MailService.CREATE_FOLDER_REQUEST);
         Element f = DomUtil.add(request, MailService.E_FOLDER, "");  
         DomUtil.addAttr(f, MailService.A_NAME, mName);
         DomUtil.addAttr(f, MailService.A_FOLDER, mParentID);
+        if (mView != null) {
+        	DomUtil.addAttr(f, MailService.A_DEFAULT_VIEW, mView);
+        }
         return request;
     }
 

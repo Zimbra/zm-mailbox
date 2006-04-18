@@ -1,0 +1,445 @@
+<div id='wiklet_syntax'>
+<style>
+	#wiklet_syntax *		{ 	font-family:Verdana; font-size:12px}
+	#wiklet_syntax .head	{	font-size:24px; background-color:#eeeeee;	}
+	#wiklet_syntax .wiklet	{	width:25%; vertical-align:top;	}
+	#wiklet_syntax .tag		{	width:25%; vertical-align:top;	}
+	#wiklet_syntax .notes	{	vertical-align:top;	}
+	#wiklet_syntax .code	{	font-family:monospace; padding-top:5px; }
+	#wiklet_syntax ul		{	padding-left:20px;	}
+	#wiklet_syntax ul li	{	padding-bottom:10px;	}
+	#wiklet_syntax td		{ 	padding:4px;	}
+</style>
+
+
+<table border=1 cellspacing=0>
+<tr><td class='head' colspan=3>Display Wiklets</td></tr>
+<tr><td class='wiklet'>
+		CamelCaseText
+	</td>
+	<td class='tag'></td>
+	<td class='notes'>
+		<li>CamelCaseText must be turned into a link
+		<li>Link action will be different for client and REST -- talk to Andy.
+		<li><a href='http://kb.liquidsys.com/twiki/bin/view.cgi/TWiki/WikiWord' target='_blank'>WikiWord syntax and examples</a>
+	</td>
+</tr>
+
+<tr><td class='wiklet'>
+		&#91;&#91;pagename&#93;<br>
+		&#91;&#91;pagename|anchor text&#93;<br>
+		&#91;&#91;pagename|anchor text|version&#93;<br>
+		&#91;&#91;pagename]&#91;anchor text&#93;<br>
+		&#91;&#91;pagename]&#91;anchor text]&#91;version&#93;<br>
+	</td>
+	<td class='tag'>
+		&lt;zm:pageLink<br>
+			&nbsp;&nbsp;name="page"<br>
+			&nbsp;&nbsp;version="" /&gt;<br><br>
+		&lt;zm:pageLink<br>&nbsp;&nbsp;name="page"<br>&nbsp;&nbsp;version=""<br>&gt;<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;Page Title<br>
+		&lt;/zm:pageLink&gt;
+
+	</td>
+	<td class='notes'>
+		<li>All of these must be turned into a link, as above
+		<li><b>Note</b>: Verify this with MediaWiki to make sure this is compatible
+	</td>
+</tr>
+
+<tr><td class='wiklet'>
+		&#123;&#123;CONTENT&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:pageContent/&gt;
+	</td>
+	<td class='notes'>
+		<li> insert HTML content of the page (or itemTemplate list) here
+	</td>
+</tr>
+
+<tr><td class='wiklet'>
+		&#123;&#123;NAME&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:pageName/&gt;
+	</td>
+	<td class='notes'>
+		<li> name of the page
+		<li> Server must turn this into a link for the client
+	</td>
+</tr>
+
+
+<tr><td class='wiklet'>
+		&#123;&#123;ICON&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:pageIcon/&gt;		
+	</td>
+	<td class='notes'>
+		<li> icon for the page, one of:
+		<ul>
+			<li>&lt;div class='ImgNotebook _icon'&gt;&lt;/div&gt;
+			<li>&lt;div class='ImgSection _icon'&gt;&lt;/div&gt;
+			<li>&lt;div class='ImgPage _icon'&gt;&lt;/div&gt;
+		</ul>
+	</td>
+</tr>
+<tr><td class='wiklet'>
+		&#123;&#123;FRAGMENT&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:pageFragment/&gt;
+	</td>
+	<td class='notes'>
+	<li>fragment for the page, output as straight text
+	</td>
+</tr>
+
+<tr><td class='wiklet'>
+		&#123;&#123;MSG msgKey&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:msg key="msgKey"/&gt;
+	</td>
+	<td class='notes'>
+	<li>outputs client message
+	<li>??? assumes the server has access to the client messages, as well as language ???
+	</td>
+</tr>
+	
+<tr><td class='wiklet'>
+		&#123;&#123;INCLUDE pageName&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:include page="pageName"/&gt;
+	</td>
+	<td class='notes'>
+	</td>
+</tr>
+
+<tr><td class='wiklet'>
+		&#123;&#123;CREATOR link="false"&#125;&#125;<br>
+		&#123;&#123;MODIFIER  link="false"&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:pageCreator link="false"/&gt;
+		&lt;zm:pageModifier link="false"/&gt;
+	</td>
+	<td class='notes'>
+	<li>Should output as:
+		<div class='code'>
+			&nbsp;&nbsp;&lt;a href='mailto:&#123;&#123;email&#125;&#125;' class='_userlink'&gt;&#123;&#123;username&#125;&#125;&lt;/a&gt;
+		</div>
+	
+	<li>Client will have to munge anchor into a zimlet
+	</td>
+</tr>
+
+
+<tr><td class='wiklet'>
+		&#123;&#123;CREATEDATE format&#125;&#125;<br>
+		&#123;&#123;CREATETIME format&#125;&#125;<br>
+		&#123;&#123;MODIFYDATE format&#125;&#125;<br>
+		&#123;&#123;MODIFYTIME format&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:pageCreateDate format="..."/&gt;
+		&lt;zm:pageCreateTime format="..."/&gt;
+		&lt;zm:pageModifyDate format="..."/&gt;
+		&lt;zm:pageModifyTime format="..."/&gt;
+	</td>
+	<td class='notes'>
+		<li>formats:
+			<ul>
+				<li>short
+				<li>medium
+				<li>long
+				<li>full
+				<li>MM-DD-YYYY HH:SS
+				<li>etc.
+	</td>
+</tr>
+
+
+<tr><td class='wiklet'>
+		&#123;&#123;VERSION&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:pageVersion/&gt;
+	</td>
+	<td class='notes'>
+		<li>Output version number as simple text
+		<li>Later implementations may need to make this a link to go to page history
+	</td>
+</tr>
+
+<tr><td class='wiklet'>
+		&#123;&#123;TOC  page="*" 
+		&nbsp;&nbsp;format="simple|list|template" 
+		&nbsp;&nbsp;bodyTemplate="pagename" 
+		&nbsp;&nbsp;itemTemplate="pagename"&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:pageTOC page="*" 
+			&nbsp;&nbsp;format="simple|list|template" 
+			&nbsp;&nbsp;bodyTemplate="pagename" 
+			&nbsp;&nbsp;itemTemplate="pagename"/&gt;
+	</td>
+	<td class='notes'>
+
+		<li>if no style specified, use "simple"
+		<li>formats look something like:
+		<ul>
+		<li>simple:<br>
+			<div class=code>
+			&lt;span class='_toc_simple'&gt;<br>
+			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName1&#93;&lt;/span&gt;<br>
+			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName2&#93;&lt;/span&gt;<br>
+			&lt;/span&gt;
+			</div>
+
+		<li>list:<br>
+			<div class=code>
+			&lt;ul class='_toc_list'&gt;<br>
+			&nbsp;&nbsp;&lt;li class='_pageLink'&gt;&#91;&#91;PageName1&#93;&lt;/li&gt;<br>
+			&nbsp;&nbsp;&lt;li class='_pageLink'&gt;&#91;&#91;PageName1&#93;&lt;/li&gt;<br>
+			&nbsp;&nbsp;....<br>
+			&lt;/ul&gt;<br>
+			</div>
+
+		<li>bodyTemplate (sample):<br>
+				<div class=code>
+					&lt;table class='_toc_icon_table'&gt;<br>
+					&nbsp;&nbsp;&lt;tr&gt;&lt;td colspan=4 class='_tocHead'&gt;Contents of &#123;&#123;NAME&#125;&#125;&lt;/td&gt;&lt;/tr&gt;<br>
+					&nbsp;&nbsp;&#123;&#123;CONTENT&#125;&#125;
+					&lt;/table&gt;<br>
+				</div>
+			
+		<li>itemTemplate (sample):<br>
+				<div class=code>
+						&lt;tr&gt;<br>
+						&nbsp;&nbsp;&lt;td class='_pageIcon'&gt;&#123;&#123;ICON&#125;&#125;&lt;/td&gt;<br>
+						&nbsp;&nbsp;&lt;td class='_pageLink'&gt;&#123;&#123;NAME&#125;&#125;&lt;/td&gt;<br>
+						&nbsp;&nbsp;&lt;td class='_author'&gt;&bull;&#123;&#123;MODIFIER&#125;&#125;&lt;/td&gt;<br>
+						&nbsp;&nbsp;&lt;td class='_history'&gt;&bull;&#123;&#123;MODIFYDATE&#125;&#125;&lt;/td&gt;<br>
+						&lt;/tr&gt;<br>
+						&lt;tr&gt;<br>
+						&nbsp;&nbsp;&lt;td&gt;&lt;/td&gt;<br>
+						&nbsp;&nbsp;&lt;td class='_fragment' colspan='4'&gt;&#123;&#123;FRAGMENT&#125;&#125;&lt;/td&gt;<br>
+						&lt;/tr&gt;<br>
+				</div>
+		</ul>
+	</td>
+</tr>
+
+
+<tr><td class='wiklet'>
+		&#123;&#123;BREADCRUMBS  page="" 
+			&nbsp;&nbsp;format="simple|template" 
+			&nbsp;&nbsp;bodyTemplate="pagename"
+			&nbsp;&nbsp;itemTemplate="pagename"
+		&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:pageBreadCrumbs page="" 
+			&nbsp;&nbsp;format="simple|template" 
+			&nbsp;&nbsp;bodyTemplate="pagename" 
+			&nbsp;&nbsp;itemTemplate="pagename"/&gt;
+	</td>
+	<td class='notes'>
+	<li>show the breadcrumb trail for a page
+	<li>if name is empty, assume current page
+	<li>if no style specified, use "simple"
+	<li>formats look something like:
+		<ul>
+			<li>simple:
+			<div class='code'>
+			&lt;span class='_breadcrumbs_simple'&gt;<br>
+			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName1&#93;&lt;/span&gt; &gt;<br>
+			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName2&#93;&lt;/span&gt;<br>
+			&lt;/span&gt;<br>
+			</div>
+		<li>bodyTemplate (sample):
+			<div class='code'>
+				&lt;table class='_breadcrumbs_table'&gt;<br>
+				&nbsp;&nbsp;&lt;tr&gt;&#123;&#123;CONTENT&#125;&#125;&lt;/tr&gt;<br>
+				&lt;/table&gt;<br>
+			</div>
+		<li>itemTemplate:
+			<div class='code'>
+					&lt;td class='_pageIcon'&gt;&#123;&#123;ICON&#125;&#125;&lt;/td&gt;<br>
+					&lt;td class='_pageLink'&gt;&#123;&#123;NAME&#125;&#125;&lt;/td&gt;<br>
+					&lt;td class='_breadcrumb_separator'&gt;&nbsp;&gt;&nbsp;&lt;/td&gt;<br>
+			</div>
+	</td>
+</tr>
+
+<tr><td class='head' colspan=3>Wiklets for dealing with attachments (if we do this)</td></tr>
+		
+<tr><td class='wiklet'>
+		&#123;&#123;ATTACHMENTCOUNT&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:pageAttachmentCount/&gt;
+	</td>
+	<td class='notes'>
+		<li>Show the number of attachments for the page
+	</td>
+</tr>
+	
+<tr><td class='wiklet'>
+		&#123;&#123;ATTACHMENTS  page="" 
+			&nbsp;&nbsp;format="simple|template" 
+			&nbsp;&nbsp;bodyTemplate="pagename"
+			&nbsp;&nbsp;itemTemplate="pagename"
+	&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:pageAttachments page="" 
+			&nbsp;&nbsp;format="simple|template" 
+			&nbsp;&nbsp;bodyTemplate="pagename" 
+			&nbsp;&nbsp;itemTemplate="pagename"/&gt;
+	</td>
+	<td class='notes'>
+	<li>show the list of attachments for a page
+	<li>if name is empty, assume current page
+	<li>if no style specified, use "simple"
+	<li>formats look something like:
+		<ul>
+		<li>simple:
+			<div class='code'>
+			&lt;span class='_attachments_simple'&gt;<br>
+			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName1&#93;&lt;/span&gt; &gt;<br>
+			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName2&#93;&lt;/span&gt;<br>
+			&lt;/span&gt;<br>
+			</div>
+			
+		<li>bodyTemplate (sample):
+			<div class='code'>
+				&lt;table class='_breadcrumb_table'&gt;<br>
+				&nbsp;&nbsp;&lt;tr&gt;&#123;&#123;CONTENT&#125;&#125;&lt;/tr&gt;<br>
+				&lt;/table&gt;<br>
+			</div>
+
+		<li>itemTemplate (sample):
+					&lt;td class='_pageIcon'&gt;&#123;&#123;ICON&#125;&#125;&lt;/td&gt;<br>
+					&lt;td class='_pageLink'&gt;&#123;&#123;NAME&#125;&#125;&lt;/td&gt;<br>
+					&lt;td class='_breadcrumb_separator'&gt;&nbsp;&gt;&nbsp;&lt;/td&gt;<br>
+			</div>
+		</ul>
+	</td>
+</tr>
+
+<tr><td class='wiklet'>
+		&#123;&#123;HISTORY 
+			&nbsp;&nbsp;format="simple|template" 
+			&nbsp;&nbsp;bodyTemplate="page" 
+			&nbsp;&nbsp;itemTemplate="page"&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:pageHistory page="" 
+			&nbsp;&nbsp;format="simple|template" 
+			&nbsp;&nbsp;bodyTemplate="pagename" 
+			&nbsp;&nbsp;itemTemplate="pagename"/&gt;
+	</td>
+	<td class='notes'>
+		<li>Show the history for a page
+		<li>formats look something like:
+		<ul>
+		<li>simple:
+			<div class='code'>
+					&lt;table class='_history_simple_table'&gt;<br>
+					&nbsp;&nbsp;&lt;tr&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_historyLink'&gt;<br>
+								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;a href="&#123;&#123;REST_LINK_TO_VERSION&#125;&#125;"&gt;Version &#123;&#123;VERSION&#125;&#125;&lt;/a&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;/td&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_author'&gt;&#123;&#123;MODIFIER&#125;&#125;&lt;/td&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_history'&gt;&#123;&#123;MODIFYDATE&#125;&#125; &#123;&#123;MODIFYTIME&#125;&#125;&lt;/td&gt;<br>
+					&nbsp;&nbsp;&lt;/tr&gt;<br>
+					&nbsp;&nbsp;&lt;tr&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_historyLink'&gt;<br>
+								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;a href="&#123;&#123;REST_LINK_TO_VERSION&#125;&#125;"&gt;Version &#123;&#123;VERSION&#125;&#125;&lt;/a&gt;<br>			
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;/td&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_author'&gt;&#123;&#123;MODIFIER&#125;&#125;&lt;/td&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_history'&gt;&#123;&#123;MODIFYDATE&#125;&#125; &#123;&#123;MODIFYTIME&#125;&#125;&lt;/td&gt;<br>
+					&nbsp;&nbsp;&lt;/tr&gt;<br>
+					&nbsp;&nbsp;...<br>
+					&lt;/table&gt;<br>
+			</div>
+			
+		<li>bodyTemplate is similar to above
+
+		<li>itemTemplate is similar to above
+		</ul>
+	</td>
+</tr>
+
+
+<tr><td class='head' colspan=3>Wiklets that Owen dreamed up</td></tr>
+<tr><td class='wiklet'>
+		&#123;&#123;SECTION<br>
+			&nbsp;&nbsp;title="title" <br>
+			&nbsp;&nbsp;src="pagename" <br>
+			&nbsp;&nbsp;titleIsLink="true"&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:section title="title"&gt;<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;...content...<br>
+		&lt;/zm:section&gt;<br>
+		<br>or<br><br>
+		
+		&lt;zm:section<br>
+			&nbsp;&nbsp;title="title"<br>
+			&nbsp;&nbsp;src="pagename" /&gt;
+		
+	</td>
+	<td class='notes'>
+		<li>Show a collapsable section, with "title" as the section header
+		<li>Contents come from the include of pagename
+		<li>If titleIsLink="true", title should be a wiki link
+	</td>
+</tr>
+
+<tr><td class='head' colspan=3>Action Wiklets</td></tr>
+
+<tr><td class='wiklet'>
+	&#123;&#123;EDITPAGE  page="pagename"
+				&nbsp;&nbsp;version="version"<br>
+				&nbsp;&nbsp;rename="true"
+			&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:editPage <br>
+				&nbsp;&nbsp;page="pageName"<br>
+				&nbsp;&nbsp;version="version"<br>
+				&nbsp;&nbsp;rename="true"		
+		/&gt;
+	</td>
+	<td class='notes'>
+		
+	<li>allows you to edit any page (and optionall any version)
+	<li>if pagename not specified, assume current page
+	<li>if version not specified, assume head version
+	<li>if rename="true", must save page as a different name (for templating)
+	</td>
+</tr>
+
+<tr><td class='wiklet'>
+		&#123;&#123;SHOWHISTORY  <br>
+			&nbsp;&nbsp;page="pagename"&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:pageShowHistory<br>
+			&nbsp;&nbsp;page="pageName"
+		/&gt;
+	</td>
+	<td class='notes'>
+	<li>show the history for a given page
+	<li>if pagename not specified, assume current page
+	</td>
+</tr>
+</table>
+
+</div>
