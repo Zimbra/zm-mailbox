@@ -70,11 +70,11 @@ public class AttributeManager {
     }
     
     public enum AttributeClass {
-		mailrecipient, account, alias, dl, cos, config, domain, group, server, mimeentry, objectentry, timezone, zimletentry, calresource;
+	mailRecipient, account, alias, distributionList, cos, globalConfig, domain, securityGroup, server, mimeEntry, objectEntry, timeZone, zimletEntry, calendarResource;
 	}
     
     public enum AttributeFlag {
-        accountInfo, inheritFromCOS, domainAdminModifiable, inheritFromDomain, inheritFromServer
+        accountInfo, inheritFromCOS, domainAdminModifiable, inheritFromDomain, inheritFromGlobalConfig
     }
     
     private HashMap mAttrs = new HashMap();
