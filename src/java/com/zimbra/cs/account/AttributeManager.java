@@ -107,89 +107,89 @@ public class AttributeManager {
     }
 
     private void loadAttrs(InputStream attrsFile, String file) throws DocumentException {
-            SAXReader reader = new SAXReader();
-            Document doc = reader.read(attrsFile);
-            Element root = doc.getRootElement();
-            if (!root.getName().equals(E_ATTRS)) {
-                throw new DocumentException("attr file " + file + " root tag is not "+E_ATTRS);
+        SAXReader reader = new SAXReader();
+        Document doc = reader.read(attrsFile);
+        Element root = doc.getRootElement();
+        if (!root.getName().equals(E_ATTRS)) {
+            throw new DocumentException("attr file " + file + " root tag is not "+E_ATTRS);
+        }
+        for (Iterator iter = root.elementIterator(); iter.hasNext();) {
+            Element eattr = (Element) iter.next();
+            if (!eattr.getName().equals(E_ATTR)) {
+                ZimbraLog.misc.warn("attrs file("+file+") unknown element: "+eattr.getName());
+                continue;
             }
-            for (Iterator iter = root.elementIterator(); iter.hasNext();) {
-                Element eattr = (Element) iter.next();
-                if (!eattr.getName().equals(E_ATTR)) {
-                    ZimbraLog.misc.warn("attrs file("+file+") unknown element: "+eattr.getName());
+            String name = null;
+            AttributeCallback callback = null;
+            int type = AttributeInfo.TYPE_UNKNOWN;
+            String value = null;
+            long min = Long.MIN_VALUE;
+            long max = Long.MAX_VALUE;
+            boolean immutable = false;
+            boolean ignore = false;
+            int id = -1;
+            AttributeCardinality cardinality = null;
+            List<AttributeClass> requiredIn = null;
+            List<AttributeClass> optionalIn = null;
+            List<AttributeFlag> flags = null;
+
+            for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
+                Attribute attr = (Attribute) attrIter.next();
+                String aname = attr.getName();
+                if (aname.equals(A_NAME)) {
+                    name = attr.getValue().toLowerCase();
+                } else if (aname.equals(A_CALLBACK)) {
+                    callback = loadCallback(attr.getValue());
+                } else if (aname.equals(A_IMMUTABLE)) {
+                    immutable = "1".equals(attr.getValue());
+                } else if (aname.equals(A_MAX)) {
+                    max = AttributeInfo.parseLong(attr.getValue(), Integer.MAX_VALUE);
+                } else if (aname.equals(A_MIN)) {
+                    min = AttributeInfo.parseLong(attr.getValue(), Integer.MIN_VALUE);
+                } else if (aname.equals(A_TYPE)) {
+                    type = AttributeInfo.getType(attr.getValue());
+                    if (type == AttributeInfo.TYPE_UNKNOWN) {
+                        ZimbraLog.misc.warn("attrs file("+file+") unknown <attr> type: "+attr.getValue());
+                        ignore = true;
+                    }
+                } else if (aname.equals(A_VALUE)) { 
+                    value = attr.getValue();
+                } else if (aname.equals(A_ID)) {
+                    try {
+                        id = Integer.parseInt(attr.getValue());
+                    } catch (NumberFormatException nfe) {
+                        throw new DocumentException("attrs file("+file+") " + aname + " is not a number: " + attr.getValue());
+                    }
+                } else if (aname.equals(A_CARDINALITY)) {
+                    try {
+                        cardinality = AttributeCardinality.valueOf(attr.getValue());
+                    } catch (IllegalArgumentException iae) {
+                        throw new DocumentException("attrs file("+file+") " + aname + " is not valid: " + attr.getValue());
+                    }
+                } else if (aname.equals(A_REQUIRED_IN)) {
+                    requiredIn = getAttributeClasses(file, aname, attr.getValue());
+                } else if (aname.equals(A_OPTIONAL_IN)) {
+                    optionalIn = getAttributeClasses(file, aname, attr.getValue());
+                } else if (aname.equals(A_FLAGS)) {
+                    flags = getAttributeFlags(file, aname, attr.getValue());
+                } else {
+                    ZimbraLog.misc.warn("attrs file("+file+") unknown <attr> attr: "+aname);
+                }
+            }
+
+            if (!ignore) {
+                if (name == null) {
+                    ZimbraLog.misc.warn("attrs file("+file+") no name specified for attr");
                     continue;
                 }
-                String name = null;
-                AttributeCallback callback = null;
-                int type = AttributeInfo.TYPE_UNKNOWN;
-                String value = null;
-                long min = Long.MIN_VALUE;
-                long max = Long.MAX_VALUE;
-                boolean immutable = false;
-                boolean ignore = false;
-                int id = -1;
-                AttributeCardinality cardinality = null;
-                List<AttributeClass> requiredIn = null;
-                List<AttributeClass> optionalIn = null;
-                List<AttributeFlag> flags = null;
-
-                for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
-                    Attribute attr = (Attribute) attrIter.next();
-                    String aname = attr.getName();
-                    if (aname.equals(A_NAME)) {
-                        name = attr.getValue().toLowerCase();
-                    } else if (aname.equals(A_CALLBACK)) {
-                        callback = loadCallback(attr.getValue());
-                    } else if (aname.equals(A_IMMUTABLE)) {
-                        immutable = "1".equals(attr.getValue());
-                    } else if (aname.equals(A_MAX)) {
-                        max = AttributeInfo.parseLong(attr.getValue(), Integer.MAX_VALUE);
-                    } else if (aname.equals(A_MIN)) {
-                        min = AttributeInfo.parseLong(attr.getValue(), Integer.MIN_VALUE);
-                    } else if (aname.equals(A_TYPE)) {
-                         type = AttributeInfo.getType(attr.getValue());
-                         if (type == AttributeInfo.TYPE_UNKNOWN) {
-                             ZimbraLog.misc.warn("attrs file("+file+") unknown <attr> type: "+attr.getValue());
-                             ignore = true;
-                         }
-                    } else if (aname.equals(A_VALUE)) { 
-                        value = attr.getValue();
-                    } else if (aname.equals(A_ID)) {
-                    	try {
-                    		id = Integer.parseInt(attr.getValue());
-                    	} catch (NumberFormatException nfe) {
-                    		throw new DocumentException("attrs file("+file+") " + aname + " is not a number: " + attr.getValue());
-                    	}
-                    } else if (aname.equals(A_CARDINALITY)) {
-                    	try {
-                    		cardinality = AttributeCardinality.valueOf(attr.getValue());
-                    	} catch (IllegalArgumentException iae) {
-                    		throw new DocumentException("attrs file("+file+") " + aname + " is not valid: " + attr.getValue());
-                     	}
-                    } else if (aname.equals(A_REQUIRED_IN)) {
-                    	 requiredIn = getAttributeClasses(file, aname, attr.getValue());
-                    } else if (aname.equals(A_OPTIONAL_IN)) {
-                        optionalIn = getAttributeClasses(file, aname, attr.getValue());
-                    } else if (aname.equals(A_FLAGS)) {
-                        flags = getAttributeFlags(file, aname, attr.getValue());
-                    } else {
-                        ZimbraLog.misc.warn("attrs file("+file+") unknown <attr> attr: "+aname);
-                    }
+                if (type == AttributeInfo.TYPE_UNKNOWN) {
+                    ZimbraLog.misc.warn("attrs file("+file+") no type specified for attr: "+name);
+                    continue;
                 }
-
-                if (!ignore) {
-                    if (name == null) {
-                        ZimbraLog.misc.warn("attrs file("+file+") no name specified for attr");
-                        continue;
-                    }
-                    if (type == AttributeInfo.TYPE_UNKNOWN) {
-                        ZimbraLog.misc.warn("attrs file("+file+") no type specified for attr: "+name);
-                        continue;
-                    }
-                    AttributeInfo info = new AttributeInfo(name, id, callback, type, value, immutable, min, max);
-                    mAttrs.put(name, info);
-                }
+                AttributeInfo info = new AttributeInfo(name, id, callback, type, value, immutable, min, max);
+                mAttrs.put(name, info);
             }
+        }
     }
     
     private static List<AttributeClass> getAttributeClasses(String file, String attr, String value) throws DocumentException {
