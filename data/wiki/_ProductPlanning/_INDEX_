@@ -1,0 +1,20 @@
+<H2>Product Planning</H2>
+
+ReleaseInfo [Priorities, requirements, status, etc.]<br>
+
+	* ArmstrongRelease -- RELEASED! 08/29/05<br>
+	* BirdseyeRelease -- RELEASED! 11/14/05<br>
+	* CrayRelease -- RELEASED! 02/07/06<br>
+	* DaimlerRelease --  RELEASED! 04/14/06<br>
+	* EdisonRelease<br>
+	* FranklinRelease<br>
+
+CherryPicks [prioritized small items not committed to any release]
+
+TopTenCustomerTestCases [Scenarios to focus on during testing]
+
+PrototypesAndMockUps [Priorities and postings of prototypes and mock ups]<br>
+
+IdeasAndEarlyStageRequirements [Freeform area for ideas and early stage requirements]<br>
+
+CustomerFeatureRequests [Missing features that are holding up deals]
