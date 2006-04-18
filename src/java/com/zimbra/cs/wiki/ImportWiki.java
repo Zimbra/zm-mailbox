@@ -129,7 +129,7 @@ public class ImportWiki {
 			folderName += "/" + folder.getName();
 		LmcSearchRequest req = new LmcSearchRequest();
 		req.setSession(mSession);
-		req.setQuery("in:"+folderName);
+		req.setQuery("in:\""+folderName+"\"");
 		req.setTypes("wiki,document");
 		LmcSearchResponse resp = (LmcSearchResponse) req.invoke(mUrl);
 		Iterator items = resp.getResults().listIterator();
