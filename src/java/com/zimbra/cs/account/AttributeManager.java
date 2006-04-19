@@ -25,14 +25,33 @@
 
 package com.zimbra.cs.account;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -62,66 +81,93 @@ public class AttributeManager {
     private static final String A_REQUIRED_IN = "requiredIn";
     private static final String A_OPTIONAL_IN = "optionalIn";
     private static final String A_FLAGS = "flags";
+
+    private static final String E_DESCRIPTION = "desc";
+    private static final String E_GLOBAL_CONFIG_VALUE = "globalConfigValue";
+    private static final String E_DEFAULT_COS_VALUE = "defaultCOSValue";
     
     private static AttributeManager mInstance;
 
-    public enum AttributeCardinality {
-    	single, multi;
-    }
-    
-    public enum AttributeClass {
-	mailRecipient, account, alias, distributionList, cos, globalConfig, domain, securityGroup, server, mimeEntry, objectEntry, timeZone, zimletEntry, calendarResource;
-	}
-    
-    public enum AttributeFlag {
-        accountInfo, inheritFromCOS, domainAdminModifiable, inheritFromDomain, inheritFromGlobalConfig
-    }
-    
-    private HashMap mAttrs = new HashMap();
+    private Map<String,AttributeInfo> mAttrs = new HashMap<String,AttributeInfo>();
 
-    public static AttributeManager getInstance() {
-        if (mInstance == null) synchronized(AttributeManager.class) {
-            if (mInstance == null)
-                mInstance = new AttributeManager();
+    public static AttributeManager getInstance() throws ServiceException {
+        synchronized(AttributeManager.class) {
+            if (mInstance == null) {
                 String file = ZIMBRA_ATTRS_RESOURCE;
-                
                 InputStream is = null;
                 try {
-                    is = mInstance.getClass().getResourceAsStream(file);
+                    is = AttributeManager.class.getResourceAsStream(file);
                     if (is == null) {
                         ZimbraLog.misc.warn("unable to find attr file resource: "+file);
                     } else {
-                        mInstance.loadAttrs(is, file);
+                        mInstance = new AttributeManager(is, file);
+                        if (mInstance.hasErrors()) {
+                            throw ServiceException.FAILURE(mInstance.getErrors(), null);
+                        }
                     }
                 } catch (DocumentException e) {
-                    ZimbraLog.misc.warn("unable to parse attr file: "+file+" "+e.getMessage(), e);
+                    throw ServiceException.FAILURE("unable to parse attr file: "+file+" "+e.getMessage(), e);
                 } catch (Exception e) {
                     // swallow all of them
-                    ZimbraLog.misc.warn("unable to load attr file: "+file+" "+e.getMessage(), e);                    
+                    throw ServiceException.FAILURE("unable to load attr file: "+file+" "+e.getMessage(), e);
                 } finally {
                     if (is != null)
                         try { is.close();}  catch (IOException e) { }
                 }
+            }
         }
         return mInstance;
     }
 
+    private AttributeManager(InputStream attrsFile, String file) throws DocumentException {
+        loadAttrs(attrsFile, file);
+    }
+    
+    private AttributeManager(String[] attrFiles) throws IOException, DocumentException {
+        for (String file : attrFiles) {
+            InputStream is = new BufferedInputStream(new FileInputStream(file));
+            loadAttrs(is, file);
+            is.close();
+        }
+    }
+
+    private List<String> mErrors = new LinkedList<String>();
+    
+    private boolean hasErrors() {
+        return mErrors.size() > 0;
+    }
+    
+    private String getErrors() {
+        StringBuilder result = new StringBuilder();
+        for (String error : mErrors) {
+            result.append(error).append("\n");
+        }
+        return result.toString();
+    }
+    
+    private void error(String file, String error) {
+        mErrors.add(file + ": " + error);  
+    }
+    
     private void loadAttrs(InputStream attrsFile, String file) throws DocumentException {
         SAXReader reader = new SAXReader();
         Document doc = reader.read(attrsFile);
         Element root = doc.getRootElement();
         if (!root.getName().equals(E_ATTRS)) {
-            throw new DocumentException("attr file " + file + " root tag is not "+E_ATTRS);
+            error(file, "root tag is not " + E_ATTRS);
+            return;
         }
-        for (Iterator iter = root.elementIterator(); iter.hasNext();) {
+        
+        NEXT_ATTR: for (Iterator iter = root.elementIterator(); iter.hasNext();) {
             Element eattr = (Element) iter.next();
             if (!eattr.getName().equals(E_ATTR)) {
-                ZimbraLog.misc.warn("attrs file("+file+") unknown element: "+eattr.getName());
+                error(file, "unknown element: " + eattr.getName());
                 continue;
             }
-            String name = null;
+
+            String canonicalName = null;
             AttributeCallback callback = null;
-            int type = AttributeInfo.TYPE_UNKNOWN;
+            AttributeType type = null;
             String value = null;
             long min = Long.MIN_VALUE;
             long max = Long.MAX_VALUE;
@@ -129,15 +175,17 @@ public class AttributeManager {
             boolean ignore = false;
             int id = -1;
             AttributeCardinality cardinality = null;
-            List<AttributeClass> requiredIn = null;
-            List<AttributeClass> optionalIn = null;
-            List<AttributeFlag> flags = null;
+            Set<AttributeClass> requiredIn = null;
+            Set<AttributeClass> optionalIn = null;
+            Set<AttributeFlag> flags = null;
+            String name = null;
 
             for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
                 Attribute attr = (Attribute) attrIter.next();
                 String aname = attr.getName();
                 if (aname.equals(A_NAME)) {
-                    name = attr.getValue().toLowerCase();
+                    name = attr.getValue();
+                    canonicalName = attr.getValue().toLowerCase();
                 } else if (aname.equals(A_CALLBACK)) {
                     callback = loadCallback(attr.getValue());
                 } else if (aname.equals(A_IMMUTABLE)) {
@@ -147,10 +195,10 @@ public class AttributeManager {
                 } else if (aname.equals(A_MIN)) {
                     min = AttributeInfo.parseLong(attr.getValue(), Integer.MIN_VALUE);
                 } else if (aname.equals(A_TYPE)) {
-                    type = AttributeInfo.getType(attr.getValue());
-                    if (type == AttributeInfo.TYPE_UNKNOWN) {
-                        ZimbraLog.misc.warn("attrs file("+file+") unknown <attr> type: "+attr.getValue());
-                        ignore = true;
+                    type = AttributeType.getType(attr.getValue());
+                    if (type == null) {
+                        error(file, "unknown <attr> type: "+attr.getValue());
+                        continue NEXT_ATTR;
                     }
                 } else if (aname.equals(A_VALUE)) { 
                     value = attr.getValue();
@@ -158,63 +206,86 @@ public class AttributeManager {
                     try {
                         id = Integer.parseInt(attr.getValue());
                     } catch (NumberFormatException nfe) {
-                        throw new DocumentException("attrs file("+file+") " + aname + " is not a number: " + attr.getValue());
+                        error(file, aname + " is not a number: " + attr.getValue());
                     }
                 } else if (aname.equals(A_CARDINALITY)) {
                     try {
                         cardinality = AttributeCardinality.valueOf(attr.getValue());
                     } catch (IllegalArgumentException iae) {
-                        throw new DocumentException("attrs file("+file+") " + aname + " is not valid: " + attr.getValue());
+                        error(file, aname + " is not valid: " + attr.getValue());
                     }
                 } else if (aname.equals(A_REQUIRED_IN)) {
-                    requiredIn = getAttributeClasses(file, aname, attr.getValue());
+                    requiredIn = parseClasses(file, name, attr.getValue());
                 } else if (aname.equals(A_OPTIONAL_IN)) {
-                    optionalIn = getAttributeClasses(file, aname, attr.getValue());
+                    optionalIn = parseClasses(file, name, attr.getValue());
                 } else if (aname.equals(A_FLAGS)) {
-                    flags = getAttributeFlags(file, aname, attr.getValue());
+                    flags = parseFlags(file, name, attr.getValue());
                 } else {
-                    ZimbraLog.misc.warn("attrs file("+file+") unknown <attr> attr: "+aname);
+                    error(file, "unknown <attr> attr: "+aname);
                 }
             }
 
-            if (!ignore) {
-                if (name == null) {
-                    ZimbraLog.misc.warn("attrs file("+file+") no name specified for attr");
-                    continue;
-                }
-                if (type == AttributeInfo.TYPE_UNKNOWN) {
-                    ZimbraLog.misc.warn("attrs file("+file+") no type specified for attr: "+name);
-                    continue;
-                }
-                AttributeInfo info = new AttributeInfo(name, id, callback, type, value, immutable, min, max);
-                mAttrs.put(name, info);
+            if (name == null) {
+                error(file, "no name specified for attr");
+                continue;
             }
+
+            List<String> globalConfigValues = new LinkedList<String>();
+            List<String> defaultCOSValues = new LinkedList<String>();
+            String description = null;
+            for (Iterator elemIter = eattr.elementIterator(); elemIter.hasNext();) {
+                Element elem = (Element)elemIter.next();
+                if (elem.getName().equals(E_GLOBAL_CONFIG_VALUE)) {
+                    globalConfigValues.add(elem.getText());
+                } else if (elem.getName().equals(E_DEFAULT_COS_VALUE)) {
+                    defaultCOSValues.add(elem.getText());
+                } else if (elem.getName().equals(E_DESCRIPTION)) {
+                    if (description != null) {
+                        error(file, "more than one description element for attr: " + name);
+                    }
+                    description = elem.getText();
+                } else {
+                    error(file, "unknown element: " + elem.getName() + " in attr: " + name);
+                }
+            }
+                
+            AttributeInfo info = new AttributeInfo(name, id, callback, type, value, immutable, min, max, cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues);
+            if (mAttrs.get(canonicalName) != null) {
+                error(file, "duplicate attr definiton: " + name);
+            }
+            mAttrs.put(canonicalName, info);
         }
     }
     
-    private static List<AttributeClass> getAttributeClasses(String file, String attr, String value) throws DocumentException {
-        List<AttributeClass> result = new LinkedList<AttributeClass>();
+    private Set<AttributeClass> parseClasses(String file, String attr, String value) throws DocumentException {
+        Set<AttributeClass> result = new HashSet<AttributeClass>();
         String[] cnames = value.split(",");
         for (String cname : cnames) {
             try {
                 AttributeClass ac = AttributeClass.valueOf(cname);
+                if (result.contains(ac)) {
+                    error(file, attr + " duplicate class: " + cname);
+                }
                 result.add(ac);
             } catch (IllegalArgumentException iae) {
-                throw new DocumentException("attrs file("+file+") " + attr + " invalid class: " + value);
+                error(file, attr + " invalid class: " + cname);
             }
         }
         return result;
     }
 
-    private static List<AttributeFlag> getAttributeFlags(String file, String attr, String value) throws DocumentException {
-        List<AttributeFlag> result = new LinkedList<AttributeFlag>();
+    private Set<AttributeFlag> parseFlags(String file, String attr, String value) throws DocumentException {
+        Set<AttributeFlag> result = new HashSet<AttributeFlag>();
         String[] flags = value.split(",");
         for (String flag : flags) {
             try {
                 AttributeFlag ac = AttributeFlag.valueOf(flag);
+                if (result.contains(ac)) {
+                    error(file, attr + " duplicate flag: " + flag);
+                }
                 result.add(ac);
             } catch (IllegalArgumentException iae) {
-                throw new DocumentException("attrs file("+file+") " + attr + " invalid flag: " + value);
+                error(file, attr + " invalid flag: " + flag);
             }
         }
         return result;
@@ -276,19 +347,161 @@ public class AttributeManager {
             }
        }
     }
+    
+    private static Log mLog = LogFactory.getLog(AttributeManager.class);
 
-    public static void main(String args[]) throws ServiceException {
-        Zimbra.toolSetup("INFO");
-        AttributeManager mgr = AttributeManager.getInstance();
-        HashMap attrs = new HashMap();
-        attrs.put(Provisioning.A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
-        attrs.put(Provisioning.A_zimbraImapBindPort, "143");
-        attrs.put("xxxzimbraImapBindPort", "143");
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReply, null);
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, "FALSE");
-        Map context = new HashMap();
-        mgr.preModify(attrs, null, context, false, true);
-        // modify
-        mgr.postModify(attrs, null, context, false);
+    private static Options mOptions = new Options();
+    
+    static {
+        mOptions.addOption("h", "help", false, "display this  usage info");
+        mOptions.addOption("o", "output", true, "output file (default it to generate output to stdout)");
+        mOptions.addOption("a", "action", true, "[generateLdapSchema | generateGlobalConfigLdif | generateDefaultCOSLdif]");
+        Option iopt = new Option("i", "input", true,"attrs definition xml input file (can repeat)");
+        iopt.setArgs(Option.UNLIMITED_VALUES);
+        mOptions.addOption(iopt);
+    }
+    
+    private static void usage(String errmsg) {
+        if (errmsg != null) { 
+            mLog.error(errmsg);
+        }
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("AttributeManager [options] where [options] are one of:", mOptions);
+        System.exit((errmsg == null) ? 0 : 1);
+    }
+
+    private static CommandLine parseArgs(String args[]) {
+        StringBuffer gotCL = new StringBuffer("cmdline: ");
+        for (int i = 0; i < args.length; i++) {
+            gotCL.append("'").append(args[i]).append("' ");
+        }
+        //mLog.info(gotCL);
+        
+        CommandLineParser parser = new GnuParser();
+        CommandLine cl = null;
+        try {
+            cl = parser.parse(mOptions, args);
+        } catch (ParseException pe) {
+            usage(pe.getMessage());
+        }
+        if (cl.hasOption('h')) {
+            usage(null);
+        }
+        return cl;
+    }
+
+    private enum Action { generateLdapSchema, generateGlobalConfigLdif, generateDefaultCOSLdif }
+    
+    public static void main(String[] args) throws IOException, DocumentException {
+        Zimbra.toolSetup();
+        CommandLine cl = parseArgs(args);
+
+        if (!cl.hasOption('i')) usage("no input attribute xml files specified");
+        if (!cl.hasOption('a')) usage("no action specified");
+        
+        AttributeManager am = new AttributeManager(cl.getOptionValues('i'));
+        if (am.hasErrors()) {
+            ZimbraLog.misc.warn(am.getErrors());
+            System.exit(1);
+        }
+        
+        OutputStream os = System.out;
+        if (cl.hasOption('o')) {
+            os = new FileOutputStream(cl.getOptionValue('o'));
+        }
+        PrintWriter pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf8")));
+
+        String actionStr = cl.getOptionValue('a');
+        Action action = null;
+        try {
+            action = Action.valueOf(actionStr);
+        } catch (IllegalArgumentException iae) {
+            usage("unknown action: " + actionStr);
+        }
+
+        switch (action) {
+        case generateDefaultCOSLdif:
+            am.generateDefaultCOSLdif(pw);
+            break;
+        case generateGlobalConfigLdif:
+            am.generateGlobalConfigLdif(pw);
+            break;
+        case generateLdapSchema:
+            am.generateLdapSchema(pw);
+            break;
+        }
+        
+        pw.close();
+    }
+
+    private String[] getAllAttributesWithFlag(AttributeFlag flag) {
+        List<String> attrs = new LinkedList<String>();
+        for (AttributeInfo info : mAttrs.values()) {
+            if (info.hasFlag(flag)) {
+                attrs.add(info.getName());
+            }
+        }
+        String[] result = (String[])attrs.toArray(new String[0]);
+        Arrays.sort(result);
+        return result;
+    }
+    
+    private void generateGlobalConfigLdif(PrintWriter pw) {
+        pw.println("# DO NOT MODIFY - generated by AttributeManager.");
+        pw.println("# LDAP entry that contains initial default Zimbra global config.");
+        pw.println("dn: cn=config,cn=zimbra");
+        pw.println("objectclass: organizationalRole");
+        pw.println("cn: config");
+        pw.println("objectclass: zimbraGlobalConfig");
+        
+        String[] attrs;
+        
+        attrs = getAllAttributesWithFlag(AttributeFlag.accountInfo);
+        for (String attr : attrs) {
+            pw.println(Provisioning.A_zimbraAccountClientAttr + ": " + attr);
+        }
+
+        attrs = getAllAttributesWithFlag(AttributeFlag.domainAdminModifiable);
+        for (String attr : attrs) {
+            pw.println(Provisioning.A_zimbraDomainAdminModifiableAttr + ": " + attr);
+        }
+
+        attrs = getAllAttributesWithFlag(AttributeFlag.inheritFromCOS);
+        for (String attr : attrs) {
+            pw.println(Provisioning.A_zimbraCOSInheritedAttr + ": " + attr);
+        }
+
+        attrs = getAllAttributesWithFlag(AttributeFlag.inheritFromDomain);
+        for (String attr : attrs) {
+            pw.println(Provisioning.A_zimbraDomainInheritedAttr + ": " + attr);
+        }
+
+        attrs = getAllAttributesWithFlag(AttributeFlag.inheritFromGlobalConfig);
+        for (String attr : attrs) {
+            pw.println(Provisioning.A_zimbraServerInheritedAttr + ": " + attr);
+        }
+        
+        List<String> out = new LinkedList<String>();
+        for (AttributeInfo attr : mAttrs.values()) {
+           List<String> gcv = attr.getGlobalConfigValues();
+           if (gcv != null) {
+               for (String v : gcv) {
+                   out.add(attr.getName() + ": " + v);
+               }
+           }
+        }
+        String[] outs = (String[])out.toArray(new String[0]);
+        Arrays.sort(outs);
+        for (String o : outs) {
+            pw.println(o);
+        }
+    }
+
+    private void generateLdapSchema(PrintWriter pw) {
+
+    }
+
+    private void generateDefaultCOSLdif(PrintWriter pw) {
+        
     }
 }

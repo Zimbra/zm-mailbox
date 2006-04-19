@@ -25,8 +25,9 @@
 
 package com.zimbra.cs.account;
 
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.mail.internet.AddressException;
@@ -36,34 +37,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 
 public class AttributeInfo {
-    
-    public static final int TYPE_BOOLEAN = 1;
-    public static final int TYPE_DURATION = 2;
-    public static final int TYPE_EMAIL = 3;
-    public static final int TYPE_ENUM = 4;
-    public static final int TYPE_GENTIME = 5; // ldap generalized time
-    public static final int TYPE_ID = 6;
-    public static final int TYPE_INTEGER = 7;
-    public static final int TYPE_PORT = 8;
-    public static final int TYPE_STRING = 9;  
-    public static final int TYPE_REGEX = 10;
-    public static final int TYPE_EMAILP = 11;
-    public static final int TYPE_LONG = 12;
-    
-    public static final String S_TYPE_BOOLEAN = "boolean";
-    public static final String S_TYPE_DURATION = "duration";
-    public static final String S_TYPE_GENTIME = "gentime";    
-    public static final String S_TYPE_EMAIL = "email";
-    public static final String S_TYPE_EMAILP = "emailp";    
-    public static final String S_TYPE_ENUM = "enum";
-    public static final String S_TYPE_ID = "id";
-    public static final String S_TYPE_INTEGER = "integer";
-    public static final String S_TYPE_PORT = "port";
-    public static final String S_TYPE_STRING = "string";
-    public static final String S_TYPE_REGEX = "regex";
-    public static final String S_TYPE_LONG = "long";    
-
-    public static int TYPE_UNKNOWN = -1;        
     
     //  8        4  4     4      12
     //8cf3db5d-cfd7-11d9-884f-e7b38f15492d
@@ -75,13 +48,11 @@ public class AttributeInfo {
 
     private static Pattern DURATION_PATTERN = Pattern.compile("^\\d+[hmsd]?$");
     
-    private static HashMap mTypeMap = new HashMap();
-    
     /** attribute name */
     private String mName;
     
     /** attribute type */
-    private int mType;
+    private AttributeType mType;
     
     /** for enums */
     private HashSet mEnumSet;
@@ -95,8 +66,21 @@ public class AttributeInfo {
     /** attribute callback */
     private AttributeCallback mCallback;
 
+    /** whether this attribute can be modified directly */
     private boolean mImmutable;
+    
+    private AttributeCardinality mCardinality;
+    
+    private Set<AttributeClass> mRequiredInClasses; 
 
+    private Set<AttributeClass> mOptionalInClasses;
+    
+    private Set<AttributeFlag> mFlags;
+    
+    private List<String> mGlobalConfigValues;
+    
+    private List<String> mDefaultCOSValues;
+    
     private long mMin = Long.MIN_VALUE, mMax = Long.MAX_VALUE;
 
     private int mId;
@@ -109,8 +93,11 @@ public class AttributeInfo {
         }
     }
 
-    public AttributeInfo (String attrName, int id, AttributeCallback callback, int type, String value, boolean immutable, 
-            long min, long max)
+    public AttributeInfo (String attrName, int id, AttributeCallback callback, AttributeType type,
+                          String value, boolean immutable, long min, long max,
+                          AttributeCardinality cardinality, Set<AttributeClass> requiredIn, 
+                          Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
+                          List<String> globalConfigValues, List<String> defaultCOSValues)
     {
         mName = attrName;
         mImmutable = immutable;
@@ -120,6 +107,12 @@ public class AttributeInfo {
         mMin = min;
         mMax = max;
         mId = id;
+        mCardinality = cardinality;
+        mRequiredInClasses = requiredIn;
+        mOptionalInClasses = optionalIn;
+        mFlags = flags;
+        mGlobalConfigValues = globalConfigValues;
+        mDefaultCOSValues = defaultCOSValues;
         
         switch (mType) {
         case TYPE_INTEGER:
@@ -139,41 +132,16 @@ public class AttributeInfo {
         }
     }
 
-    public static int getType(String type) {
-       Integer value = (Integer) mTypeMap.get(type);
-       return value == null ? TYPE_UNKNOWN : value.intValue();
-   }
-
-   private static int initType(String name, int value) {
-       mTypeMap.put(name, new Integer(value));
-       return value;
-   }
-
-   static {
-       initType(S_TYPE_BOOLEAN, TYPE_BOOLEAN);
-       initType(S_TYPE_DURATION, TYPE_DURATION);
-       initType(S_TYPE_EMAIL, TYPE_EMAIL);
-       initType(S_TYPE_EMAILP, TYPE_EMAILP);       
-       initType(S_TYPE_ENUM, TYPE_ENUM);
-       initType(S_TYPE_GENTIME, TYPE_GENTIME);       
-       initType(S_TYPE_ID, TYPE_ID);
-       initType(S_TYPE_INTEGER, TYPE_INTEGER);
-       initType(S_TYPE_LONG, TYPE_LONG);
-       initType(S_TYPE_PORT, TYPE_PORT);
-       initType(S_TYPE_STRING, TYPE_STRING);
-       initType(S_TYPE_REGEX, TYPE_REGEX);
-   }
-
-   public void checkValue(Object value, boolean checkImmutable) throws ServiceException
-   {
-       if ((value == null) || (value instanceof String)) {
-           checkValue((String) value, checkImmutable);
-       } else if (value instanceof String[]) {
-           String[] values = (String[]) value;
-           for (int i=0; i < values.length; i++)
-               checkValue(values[i], checkImmutable);
-       }
-   }
+    public void checkValue(Object value, boolean checkImmutable) throws ServiceException
+    {
+        if ((value == null) || (value instanceof String)) {
+            checkValue((String) value, checkImmutable);
+        } else if (value instanceof String[]) {
+            String[] values = (String[]) value;
+            for (int i=0; i < values.length; i++)
+                checkValue(values[i], checkImmutable);
+        }
+    }
 
    private void checkValue(String value, boolean checkImmutable) throws ServiceException
    {
@@ -282,15 +250,27 @@ public class AttributeInfo {
        }
    }
 
-   public AttributeCallback getCallback() {
+   AttributeCallback getCallback() {
        return mCallback;
    }
    
-   public String getName() {
+   String getName() {
        return mName;
    }
    
-   public int getType() {
+   boolean hasFlag(AttributeFlag flag) {
+       if (mFlags == null) {
+           return false;
+       }
+       boolean result = mFlags.contains(flag);
+       return result;
+   }
+   
+   AttributeType getType() {
        return mType;
+   }
+
+   List<String> getGlobalConfigValues() {
+       return mGlobalConfigValues;
    }
 }
