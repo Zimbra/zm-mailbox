@@ -8,6 +8,7 @@ public class LmcDocument {
 	protected String mFolder;
 	protected String mLastEditedBy;
 	protected String mLastModifiedDate;
+	protected String mAid;
 	
 	public void setID(String id)             { mId = id; }
 	public void setName(String filename)     { mName = filename; }
@@ -16,6 +17,7 @@ public class LmcDocument {
 	public void setFolder(String folder)     { mFolder = folder; }
 	public void setLastEditor(String str)    { mLastEditedBy = str; }
 	public void setLastModifiedDate(String d)  { mLastModifiedDate = d; }
+	public void setAttachmentId(String aid)  { mAid = aid; }
 	
 	public String getID()               { return mId; }
 	public String getName()             { return mName; }
@@ -24,6 +26,7 @@ public class LmcDocument {
 	public String getFolder()           { return mFolder; }
 	public String getLastEditor()       { return mLastEditedBy; }
 	public String getLastModifiedDate() { return mLastModifiedDate; }
+	public String getAttachmentId()     { return mAid; }
 	
 	public String toString() {
 		return "Document id=" + mId + " rev=" + mRev + " filename=" + mName +

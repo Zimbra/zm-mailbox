@@ -27,12 +27,14 @@ package com.zimbra.cs.client.soap;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLConnection;
 
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.MultipartPostMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.multipart.*;
 import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
@@ -100,22 +102,24 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
         Cookie cookie = new Cookie(domain, "ZM_AUTH_TOKEN", session.getAuthToken(), "/", -1, false);
         HttpState initialState = new HttpState();
         initialState.addCookie(cookie);
-        initialState.setCookiePolicy(CookiePolicy.COMPATIBILITY);
         HttpClient client = new HttpClient();
         client.setState(initialState);
+        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
         
         // make the post
-        MultipartPostMethod mPost = new MultipartPostMethod(uploadURL);
-        client.setConnectionTimeout(msTimeout);
+        PostMethod post = new PostMethod(uploadURL);
+        client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
         int statusCode = -1;
         try {
-        	mPost.addParameter(f.getName(), f);
-        	statusCode = client.executeMethod(mPost);
+    		String contentType = URLConnection.getFileNameMap().getContentTypeFor(f.getName());
+    		Part[] parts = { new FilePart(f.getName(), f, contentType, "UTF-8") };
+        	post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
+        	statusCode = client.executeMethod(post);
 
             // parse the response
             if (statusCode == 200) {
                 // paw through the returned HTML and get the attachment id
-                String response = mPost.getResponseBodyAsString();
+                String response = post.getResponseBodyAsString();
                 //System.out.println("response is\n" + response);
                 int lastQuote = response.lastIndexOf("'");
                 int firstQuote = response.indexOf("','") + 3;
@@ -130,7 +134,7 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
         	e.printStackTrace();
             throw e;
         } finally {
-        	mPost.releaseConnection();
+        	post.releaseConnection();
         }
 
         return aid;

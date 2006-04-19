@@ -26,6 +26,8 @@ package com.zimbra.cs.wiki;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Iterator;
 
 import org.apache.commons.cli.CommandLine;
@@ -55,6 +57,7 @@ public class ImportWiki {
 	private LmcSession mSession;
 	
 	private String mUrl;
+	private String mUploadUrl;
 	private String mUsername;
 	private String mPassword;
 	
@@ -80,46 +83,39 @@ public class ImportWiki {
 		}
 		return null;
 	}
-	
-	private void createTree(LmcFolder parent, File dir) throws LmcSoapClientException, IOException, 
-			SoapFaultException, ServiceException, SoapParseException {
-		if (!dir.isDirectory()) {
-			return;
-		}
-		File[] list = dir.listFiles();
-		for (int i = 0; i < list.length; i++) {
-			File f = list[i];
-			if (!f.isDirectory()) {
-				continue;
-			}
-			LmcFolder current = findFolder(parent, f);
-			if (current == null) {
-				System.out.println("Creating folder " + f.getName());
-				LmcCreateFolderRequest req = new LmcCreateFolderRequest();
-				req.setSession(mSession);
-				req.setName(f.getName());
-				req.setParentID(parent.getFolderID());
-				req.setName(f.getName());
-				req.setView("wiki");
-				LmcCreateFolderResponse resp = (LmcCreateFolderResponse) req.invoke(mUrl);
-				current = resp.getFolder();
-			}
-			createTree(current, f);
-		}
-	}
-	
-	private void initFolders(File file) throws LmcSoapClientException, IOException, 
-			SoapFaultException, ServiceException, SoapParseException {
-        LmcGetFolderRequest req = new LmcGetFolderRequest();
-        req.setSession(mSession);
-        req.setFolderToGet(sFOLDERID);
-        LmcGetFolderResponse resp = (LmcGetFolderResponse) req.invoke(mUrl);
-        LmcFolder root = resp.getRootFolder();
-		createTree(root, file);
-	}
 
+	private LmcFolder createFolder(LmcFolder parent, File dir) throws LmcSoapClientException, IOException, 
+			SoapFaultException, ServiceException, SoapParseException {
+		System.out.println("Creating folder " + dir.getName());
+		LmcCreateFolderRequest req = new LmcCreateFolderRequest();
+		req.setSession(mSession);
+		req.setName(dir.getName());
+		req.setParentID(parent.getFolderID());
+		req.setName(dir.getName());
+		req.setView("wiki");
+		LmcCreateFolderResponse resp = (LmcCreateFolderResponse) req.invoke(mUrl);
+		return resp.getFolder();
+	}
+	
+	private boolean purgeFolder(LmcFolder folder) throws LmcSoapClientException, IOException, 
+			SoapFaultException, ServiceException, SoapParseException {
+		if (folder.getView() == null ||
+			!folder.getView().equals("wiki") ||
+			folder.getName().equals("Notebook")) {
+			return false;
+		}
+		LmcFolderActionRequest req = new LmcFolderActionRequest();
+		req.setSession(mSession);
+		req.setFolderList(folder.getFolderID());
+		req.setOp("delete");
+		req.invoke(mUrl);
+		return true;
+	}
+	
 	private void deleteAllItemsInFolder(LmcFolder folder, String parent) throws LmcSoapClientException, IOException, 
 			SoapFaultException, ServiceException, SoapParseException {
+		if (purgeFolder(folder))
+			return;
 		String folderName = parent;
 		if (folderName.length() == 0)
 			folderName = "/";
@@ -150,15 +146,40 @@ public class ImportWiki {
 		if (list == null)
 			return;
 		for (int i = 0; i < list.length; i++) {
-			deleteAllItemsInFolder(list[i], folderName);
+			LmcFolder f = list[i];
+			if (f.getView() == null || !f.getView().equals("wiki"))
+				continue;
+			deleteAllItemsInFolder(f, folderName);
 		}
 	}
 	
-	private void createItem(LmcFolder where, File what) throws LmcSoapClientException, IOException, 
+	private void createDocument(LmcFolder where, File file) throws LmcSoapClientException, IOException, 
 	SoapFaultException, ServiceException, SoapParseException {
-		System.out.println("Creating item " + what.getName() + " in folder " + where.getName());
+		System.out.println("Creating file document " + file.getName() + " in folder " + where.getName());
+		
+		LmcSaveDocumentRequest req = new LmcSaveDocumentRequest();
+		req.setSession(mSession);
+
+		URL url = new URL(mUrl);
+		String domain = url.getHost();
+		
+		LmcDocument doc = new LmcDocument();
+		doc.setFolder(where.getFolderID());
+		String attachmentId = req.postAttachment(mUploadUrl, mSession, file, domain, 10000);
+		doc.setAttachmentId(attachmentId);
+		
+		req.setDocument(doc);
+		req.invoke(mUrl);
+	}
+	
+	private void createWiki(LmcFolder where, File what) throws LmcSoapClientException, IOException, 
+	SoapFaultException, ServiceException, SoapParseException {
+		String name = what.getName();
+		if (name.toLowerCase().endsWith(".html"))
+			name = name.substring(0, name.length() - 5);
+		System.out.println("Creating wiki document " + name + " in folder " + where.getName());
 		LmcWiki wiki = new LmcWiki();
-		wiki.setWikiWord(what.getName());
+		wiki.setWikiWord(name);
 		wiki.setFolder(where.getFolderID());
 		wiki.setContents(new String(ByteUtil.getContent(what), "utf-8"));
 		
@@ -166,6 +187,18 @@ public class ImportWiki {
 		req.setSession(mSession);
 		req.setWiki(wiki);
 		req.invoke(mUrl);
+	}
+	
+	private void createItem(LmcFolder where, File what) throws LmcSoapClientException, IOException, 
+	SoapFaultException, ServiceException, SoapParseException {
+		String contentType = URLConnection.getFileNameMap().getContentTypeFor(what.getName());
+		// assume wiki when no extension.
+		if (what.getName().indexOf('.') == -1)
+			contentType = "text/html";
+		if (contentType == null || !contentType.startsWith("text"))
+			createDocument(where, what);
+		else
+			createWiki(where, what);
 	}
 	
 	private void populateFolders(LmcFolder where, File file) throws LmcSoapClientException, IOException, 
@@ -181,7 +214,10 @@ public class ImportWiki {
        		if (f.getName().startsWith(".")) { continue;	}
 
         	if (f.isDirectory()) {
-        		populateFolders(findFolder(where, f), f);
+        		LmcFolder sub = findFolder(where, f);
+        		if (sub == null)
+        			sub = createFolder(where, f);
+        		populateFolders(sub, f);
         	} else {
         		createItem(where, f);
         	}
@@ -192,15 +228,25 @@ public class ImportWiki {
 	SoapFaultException, ServiceException, SoapParseException {
 		System.out.println("Initializing...");
 		auth();
-        initFolders(top);
-        
+
+		// get current folder hierarchy.
         LmcGetFolderRequest req = new LmcGetFolderRequest();
         req.setSession(mSession);
         req.setFolderToGet(sFOLDERID);
         LmcGetFolderResponse resp = (LmcGetFolderResponse) req.invoke(mUrl);
         LmcFolder root = resp.getRootFolder();
 
+        // delete all the items in wiki folders and then rmdir all wiki folders.
         deleteAllItemsInFolder(root, "");
+
+		// get new folder hierarchy.
+        req = new LmcGetFolderRequest();
+        req.setSession(mSession);
+        req.setFolderToGet(sFOLDERID);
+        resp = (LmcGetFolderResponse) req.invoke(mUrl);
+        root = resp.getRootFolder();
+
+        // start populating directories and files.
         populateFolders(root, top);
 	}
 	
@@ -232,6 +278,7 @@ public class ImportWiki {
         if (cl.hasOption("v")) 
         	LmcSoapRequest.setDumpXML(true);
         prog.mUrl = cl.getOptionValue("s", ImportWiki.sURL);
+        prog.mUploadUrl = prog.mUrl.substring(0, prog.mUrl.length() - 4) + "upload";
         prog.mUsername = cl.getOptionValue("u", ImportWiki.sUSERNAME);
         prog.mPassword = cl.getOptionValue("p", ImportWiki.sPASSWORD);
         prog.startImport(new File(dir));

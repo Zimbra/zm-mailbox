@@ -446,6 +446,7 @@ public abstract class LmcSoapRequest {
 		response.setName(f.attributeValue(MailService.A_NAME));
 		response.setParentID(f.attributeValue(MailService.A_FOLDER));
 		response.setNumUnread(f.attributeValue(MailService.A_UNREAD));
+		response.setView(f.attributeValue(MailService.A_DEFAULT_VIEW));
         
         // recurse if necessary
         ArrayList subFolders = new ArrayList();
