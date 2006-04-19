@@ -273,4 +273,8 @@ public class AttributeInfo {
    List<String> getGlobalConfigValues() {
        return mGlobalConfigValues;
    }
+   
+   List<String> getDefaultCosValues() {
+       return mDefaultCOSValues;
+   }
 }
