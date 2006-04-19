@@ -41,7 +41,7 @@ public class IMSendMessage extends IMDocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException 
     {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element response = lc.createElement(IMService.IM_SEND_MESSAGE_RESPONSE);
 

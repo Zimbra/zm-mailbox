@@ -57,7 +57,7 @@ public class SearchConv extends Search {
         if (sLog.isDebugEnabled())
             sLog.debug("**Start SearchConv");
         
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
         

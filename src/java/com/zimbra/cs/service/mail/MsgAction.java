@@ -42,7 +42,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class MsgAction extends ItemAction {
 
 	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();

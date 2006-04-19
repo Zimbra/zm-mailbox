@@ -41,7 +41,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class NoOp extends DocumentHandler  {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    return lc.createElement(MailService.NO_OP_RESPONSE);
 	}
 }

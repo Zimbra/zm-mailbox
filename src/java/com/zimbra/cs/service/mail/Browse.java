@@ -47,7 +47,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class Browse extends DocumentHandler  {
     
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         
         String browseBy = request.getAttribute("browseby", null);

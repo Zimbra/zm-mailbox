@@ -13,7 +13,7 @@ public class DumpSessions extends AdminDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
-		ZimbraSoapContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
 		Element response = lc.createElement(AdminService.DUMP_SESSIONS_RESPONSE);
 		
 		StringWriter sw = new StringWriter();

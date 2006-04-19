@@ -39,7 +39,7 @@ public class ListWiki extends WikiDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
 		Wiki wiki = getRequestedWikiNotebook(request, lc);
 
         Set<String> wikiWords = wiki.listWiki();

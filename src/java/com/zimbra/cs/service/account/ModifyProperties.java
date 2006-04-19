@@ -44,7 +44,7 @@ public class ModifyProperties extends WriteOpDocumentHandler {
 
 	public Element handle(Element request, Map context)
 			throws ServiceException, SoapFaultException {
-		ZimbraSoapContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
 
         ZimletUserProperties props = ZimletUserProperties.getProperties(acct);

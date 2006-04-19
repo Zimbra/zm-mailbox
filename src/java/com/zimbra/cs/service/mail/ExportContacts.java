@@ -42,7 +42,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class ExportContacts extends DocumentHandler  {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 
         String ct = request.getAttribute(MailService.A_CONTENT_TYPE);

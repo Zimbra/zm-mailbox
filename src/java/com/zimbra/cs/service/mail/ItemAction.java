@@ -76,7 +76,7 @@ public class ItemAction extends WriteOpDocumentHandler {
     public static final String OP_UPDATE      = "update";
 
     public Element handle(Element request, Map<String,Object> context) throws ServiceException, SoapFaultException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
@@ -92,7 +92,7 @@ public class ItemAction extends WriteOpDocumentHandler {
 
     String handleCommon(Map<String,Object> context, Element request, String opAttr, byte type) throws ServiceException, SoapFaultException {
         Element action = request.getElement(MailService.E_ACTION);
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 
         // determine the requested operation

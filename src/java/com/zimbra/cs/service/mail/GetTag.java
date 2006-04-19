@@ -46,7 +46,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetTag extends DocumentHandler  {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
 		// FIXME: need to check that mailbox exists
         Mailbox mbox = getRequestedMailbox(lc);
 		

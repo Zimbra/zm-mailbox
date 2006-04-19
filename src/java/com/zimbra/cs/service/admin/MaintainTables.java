@@ -43,7 +43,7 @@ public class MaintainTables extends AdminDocumentHandler {
 	public Element handle(Element request, Map context) throws ServiceException {
         int numTables = DbTableMaintenance.runMaintenance();
         
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AdminService.MAINTAIN_TABLES_RESPONSE);
         response.addAttribute(AdminService.A_NUM_TABLES, numTables);
     	return response;

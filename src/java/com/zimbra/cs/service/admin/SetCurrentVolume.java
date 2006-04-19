@@ -35,7 +35,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class SetCurrentVolume extends AdminDocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         short volType = (short) request.getAttributeLong(AdminService.A_VOLUME_TYPE);
         long idLong = request.getAttributeLong(AdminService.A_ID, Volume.ID_NONE);

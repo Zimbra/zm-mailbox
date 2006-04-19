@@ -61,7 +61,7 @@ public class Auth extends DocumentHandler  {
     }
 
 	public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
 
         Element acctEl = request.getElement(AccountService.E_ACCOUNT);

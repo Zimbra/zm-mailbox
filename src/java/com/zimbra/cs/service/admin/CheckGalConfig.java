@@ -45,7 +45,7 @@ public class CheckGalConfig extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element q = request.getElement(AdminService.E_QUERY);
         String query = q.getText();

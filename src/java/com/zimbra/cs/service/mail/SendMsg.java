@@ -67,7 +67,7 @@ public class SendMsg extends WriteOpDocumentHandler {
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();

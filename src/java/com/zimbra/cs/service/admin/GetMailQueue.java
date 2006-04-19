@@ -50,7 +50,7 @@ public class GetMailQueue extends AdminDocumentHandler {
     public static final int MAIL_QUEUE_SUMMARY_CUTOFF = 100;
     
 	public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         
         Element serverElem = request.getElement(AdminService.E_SERVER);

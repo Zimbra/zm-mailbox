@@ -53,9 +53,9 @@ public class SearchCalendarResources extends DocumentHandler {
 
     public Element handle(Element request, Map context)
     throws ServiceException, SoapFaultException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AccountService.SEARCH_CALENDAR_RESOURCES_RESPONSE);
-        Account acct = getRequestedAccount(getZimbraContext(context));
+        Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
         String sortBy = request.getAttribute(AccountService.A_SORT_BY, null);        
         boolean sortAscending =

@@ -47,7 +47,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetContacts extends DocumentHandler  {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
 

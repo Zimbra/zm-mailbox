@@ -47,7 +47,7 @@ public class SaveWiki extends WikiDocumentHandler {
 	@Override
 	public Element handle(Element request, Map<String, Object> context)
 			throws ServiceException, SoapFaultException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         OperationContext octxt = lc.getOperationContext();
 		Wiki wiki = getRequestedWikiNotebook(request, lc);
 

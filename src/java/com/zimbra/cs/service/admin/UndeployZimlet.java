@@ -36,7 +36,7 @@ public class UndeployZimlet extends AdminDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    String name = request.getAttribute(AdminService.A_NAME);
 
 	    Element response = lc.createElement(AdminService.UNDEPLOY_ZIMLET_RESPONSE);

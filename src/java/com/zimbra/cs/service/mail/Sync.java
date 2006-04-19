@@ -52,7 +52,7 @@ public class Sync extends DocumentHandler {
     private static final int DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_ROOT;
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
 

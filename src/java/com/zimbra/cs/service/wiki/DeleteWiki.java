@@ -43,7 +43,7 @@ public class DeleteWiki extends WikiDocumentHandler {
     
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
         OperationContext octxt = lc.getOperationContext();
         Element eword = request.getElement(MailService.E_WIKIWORD);
         String word = eword.getAttribute(MailService.A_NAME);

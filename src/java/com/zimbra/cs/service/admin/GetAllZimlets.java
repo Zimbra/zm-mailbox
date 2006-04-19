@@ -41,7 +41,7 @@ public class GetAllZimlets extends AdminDocumentHandler {
 
 	@Override
     public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
 		Provisioning prov = Provisioning.getInstance();
 		
         Element response = lc.createElement(AdminService.GET_ALL_ZIMLETS_RESPONSE);

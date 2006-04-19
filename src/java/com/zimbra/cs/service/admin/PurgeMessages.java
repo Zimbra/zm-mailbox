@@ -42,7 +42,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class PurgeMessages extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element mreq = request.getOptionalElement(AdminService.E_MAILBOX);
         String[] accounts;

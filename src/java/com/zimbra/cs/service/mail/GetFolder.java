@@ -58,7 +58,7 @@ public class GetFolder extends DocumentHandler {
     static final String DEFAULT_FOLDER_ID = "" + Mailbox.ID_FOLDER_USER_ROOT;
 
 	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
-		ZimbraSoapContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
 

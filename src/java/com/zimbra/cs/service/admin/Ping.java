@@ -44,7 +44,7 @@ public class Ping extends AdminDocumentHandler {
 	 */
 	public Element handle(Element document, Map context)
 			throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 		Element response = lc.createElement(AdminService.PING_RESPONSE);
 		return response;
 	}

@@ -50,7 +50,7 @@ public class CreateSearchFolder extends WriteOpDocumentHandler  {
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
 	public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 
         Element t = request.getElement(MailService.E_SEARCH);

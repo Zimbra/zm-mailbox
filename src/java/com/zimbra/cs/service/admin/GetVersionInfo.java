@@ -37,7 +37,7 @@ public class GetVersionInfo extends AdminDocumentHandler
 {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element response = lc.createElement(AdminService.GET_VERSION_INFO_RESPONSE);
         Element infoEl = response.addElement(AdminService.A_VERSION_INFO_INFO);

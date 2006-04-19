@@ -101,7 +101,7 @@ public class SaveDocument extends WikiDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Wiki wiki = getRequestedWikiNotebook(request, lc);
 
         Element docElem = request.getElement(MailService.E_DOC);

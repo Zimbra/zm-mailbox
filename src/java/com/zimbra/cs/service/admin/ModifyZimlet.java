@@ -36,7 +36,7 @@ public class ModifyZimlet extends AdminDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
         
 		Element z = request.getElement(AdminService.E_ZIMLET);
 

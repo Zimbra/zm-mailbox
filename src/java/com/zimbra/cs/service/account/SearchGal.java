@@ -50,9 +50,9 @@ public class SearchGal extends DocumentHandler {
     public Element handle(Element request, Map context) throws ServiceException {
         String n = request.getAttribute(AccountService.E_NAME);
 
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AccountService.SEARCH_GAL_RESPONSE);
-        Account acct = getRequestedAccount(getZimbraContext(context));
+        Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
         while (n.endsWith("*"))
             n = n.substring(0, n.length() - 1);

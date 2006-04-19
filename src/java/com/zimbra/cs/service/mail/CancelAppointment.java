@@ -62,7 +62,7 @@ public class CancelAppointment extends CalendarRequest {
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();

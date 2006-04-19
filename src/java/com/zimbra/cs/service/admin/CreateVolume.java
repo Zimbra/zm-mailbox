@@ -35,7 +35,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class CreateVolume extends AdminDocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element eVol = request.getElement(AdminService.E_VOLUME);
         String name  = eVol.getAttribute(AdminService.A_VOLUME_NAME);

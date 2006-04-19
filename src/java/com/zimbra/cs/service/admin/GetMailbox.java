@@ -54,7 +54,7 @@ public class GetMailbox extends AdminDocumentHandler {
     }
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext zc = getZimbraContext(context);
+        ZimbraSoapContext zc = getZimbraSoapContext(context);
 
         Element mreq = request.getElement(AdminService.E_MAILBOX);
         String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);

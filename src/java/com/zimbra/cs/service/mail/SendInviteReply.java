@@ -72,7 +72,7 @@ public class SendInviteReply extends CalendarRequest {
 
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Account acct = getRequestedAccount(lc);
         OperationContext octxt = lc.getOperationContext();

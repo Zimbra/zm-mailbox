@@ -34,7 +34,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetCurrentVolumes extends AdminDocumentHandler {
 
     public Element handle(Element request, Map context) {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element response = lc.createElement(AdminService.GET_CURRENT_VOLUMES_RESPONSE);
 

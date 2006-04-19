@@ -40,7 +40,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetMailQueueInfo extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 	    
 	    Element serverElem = request.getElement(AdminService.E_SERVER);

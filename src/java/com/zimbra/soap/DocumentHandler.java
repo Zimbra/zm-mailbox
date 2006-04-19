@@ -67,7 +67,7 @@ public abstract class DocumentHandler {
 
     public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException;
 
-    public static ZimbraSoapContext getZimbraContext(Map<String, Object> context) {
+    public static ZimbraSoapContext getZimbraSoapContext(Map<String, Object> context) {
         return (ZimbraSoapContext) context.get(SoapEngine.ZIMBRA_CONTEXT);
     }
 
@@ -177,7 +177,7 @@ public abstract class DocumentHandler {
      * @see SessionCache#SESSION_SOAP
      * @see SessionCache#SESSION_ADMIN */
     protected Session getSession(Map<String, Object> context, int sessionType) {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         return (lc == null ? null : lc.getSession(sessionType));
     }
 
@@ -243,7 +243,7 @@ public abstract class DocumentHandler {
         if (id == null)
             return null;
 
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         ItemId iid = new ItemId(id, lc);
 
         // if the "target item" is remote, proxy.
@@ -269,7 +269,7 @@ public abstract class DocumentHandler {
         Element response = proxyRequest(request, context, iidResolved.getAccountId(), mountpoint);
 
         // translate remote folder IDs back into local mountpoint IDs
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         String[] xpathResponse = getResponseItemPath();
         if (mountpoint && xpathResponse != null) 
             insertMountpointReferences(response, xpathResponse, iidRequested, iidResolved, lc);
@@ -281,7 +281,7 @@ public abstract class DocumentHandler {
     }
 
     private static Element proxyRequest(Element request, Map<String, Object> context, String acctId, boolean mountpoint) throws SoapFaultException, ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         // new context for proxied request has a different "requested account"
         ZimbraSoapContext lcTarget = new ZimbraSoapContext(lc, acctId);
         if (mountpoint)

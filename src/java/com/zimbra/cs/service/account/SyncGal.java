@@ -46,10 +46,10 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class SyncGal extends DocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AccountService.SYNC_GAL_RESPONSE);
         String tokenAttr = request.getAttribute(MailService.A_TOKEN, "");        
-        Account acct = getRequestedAccount(getZimbraContext(context));
+        Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
         SearchGalResult result = acct.getDomain().searchGal("", Provisioning.GAL_SEARCH_TYPE.ALL, tokenAttr);
         if (result.token != null)

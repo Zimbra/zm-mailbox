@@ -52,7 +52,7 @@ public class ReIndex extends AdminDocumentHandler {
     }
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext zc = getZimbraContext(context);
+        ZimbraSoapContext zc = getZimbraSoapContext(context);
 
         String action = request.getAttribute(MailService.E_ACTION);
         

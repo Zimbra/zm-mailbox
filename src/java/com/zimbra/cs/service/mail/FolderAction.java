@@ -84,7 +84,7 @@ public class FolderAction extends ItemAction {
     }));
 
 	public Element handle(Element request, Map<String,Object> context) throws ServiceException, SoapFaultException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
@@ -111,7 +111,7 @@ public class FolderAction extends ItemAction {
     throws ServiceException {
         Element action = request.getElement(MailService.E_ACTION);
 
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
         ItemId iid = new ItemId(action.getAttribute(MailService.A_ID), lc);

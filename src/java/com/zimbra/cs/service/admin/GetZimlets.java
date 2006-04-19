@@ -43,7 +43,7 @@ public class GetZimlets extends AdminDocumentHandler  {
     }
 
     public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
 		
         Element response = lc.createElement(AdminService.GET_ZIMLETS_RESPONSE);

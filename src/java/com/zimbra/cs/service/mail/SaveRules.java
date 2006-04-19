@@ -47,7 +47,7 @@ public class SaveRules extends WriteOpDocumentHandler {
      */
     public Element handle(Element document, Map context)
             throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         // FIXME: need to check that account exists
         Account account = super.getRequestedAccount(lc);
         

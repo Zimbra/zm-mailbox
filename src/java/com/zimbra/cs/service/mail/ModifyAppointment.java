@@ -87,7 +87,7 @@ public class ModifyAppointment extends CalendarRequest {
 
     
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();

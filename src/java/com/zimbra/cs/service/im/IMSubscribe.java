@@ -39,7 +39,7 @@ public class IMSubscribe extends IMDocumentHandler {
     @Override
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException 
     {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(IMService.IM_SUBSCRIBE_RESPONSE);
         
         String op = request.getAttribute(IMService.A_OPERATION);

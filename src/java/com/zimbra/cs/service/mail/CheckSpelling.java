@@ -52,7 +52,7 @@ public class CheckSpelling extends DocumentHandler  {
     
     public Element handle(Element request, Map context)
     throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(MailService.CHECK_SPELLING_RESPONSE);
 
         // Make sure that the spell server URL is specified

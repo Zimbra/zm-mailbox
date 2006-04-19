@@ -42,7 +42,7 @@ public class CheckAuthConfig extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
 	    String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
 	    String password = request.getAttribute(AdminService.E_PASSWORD);

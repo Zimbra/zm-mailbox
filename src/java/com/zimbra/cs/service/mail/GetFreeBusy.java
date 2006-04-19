@@ -70,7 +70,7 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
     
     public Element handle(Element request, Map context) throws ServiceException 
     {
-        ZimbraSoapContext zc = getZimbraContext(context);
+        ZimbraSoapContext zc = getZimbraSoapContext(context);
         
         long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME);
         long rangeEnd = request.getAttributeLong(MailService.A_APPT_END_TIME);

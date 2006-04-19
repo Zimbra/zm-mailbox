@@ -42,7 +42,7 @@ public class ConfigureZimlet extends AdminDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element content = request.getElement(MailService.E_CONTENT);
         String attachment = content.getAttribute(MailService.A_ATTACHMENT_ID, null);
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachment, lc.getRawAuthToken());

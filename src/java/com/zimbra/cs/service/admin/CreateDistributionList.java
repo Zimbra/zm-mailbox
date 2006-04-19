@@ -45,7 +45,7 @@ public class CreateDistributionList extends AdminDocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException {
 	    
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 	    
         String name = request.getAttribute(AdminService.E_NAME).toLowerCase();

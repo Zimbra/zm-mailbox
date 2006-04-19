@@ -52,7 +52,7 @@ public class AddAccountAlias extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getAttribute(AdminService.E_ID);

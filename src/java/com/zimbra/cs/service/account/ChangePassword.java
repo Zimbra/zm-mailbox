@@ -44,7 +44,7 @@ import com.zimbra.soap.WriteOpDocumentHandler;
 public class ChangePassword extends WriteOpDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         String name = request.getAttribute(AccountService.E_ACCOUNT);
         Provisioning prov = Provisioning.getInstance();

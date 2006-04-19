@@ -35,7 +35,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class DeleteVolume extends AdminDocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         long idLong = request.getAttributeLong(AdminService.A_ID);
         Volume.validateID(idLong);  // avoid Java truncation

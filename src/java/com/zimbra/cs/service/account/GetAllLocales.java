@@ -37,7 +37,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetAllLocales extends DocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         Locale locales[] = L10nUtil.getAllLocalesSorted();
         Element response = lc.createElement(AccountService.GET_ALL_LOCALES_RESPONSE);
         for (Locale locale : locales) {

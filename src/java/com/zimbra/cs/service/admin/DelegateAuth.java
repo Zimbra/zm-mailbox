@@ -52,7 +52,7 @@ public class DelegateAuth extends AdminDocumentHandler {
     public static final String BY_ID = "id";
 
 	public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element a = request.getElement(AdminService.E_ACCOUNT);
         String key = a.getAttribute(AdminService.A_BY);

@@ -48,7 +48,7 @@ public class GetAllServers extends AdminDocumentHandler {
     
 	public Element handle(Element request, Map context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
         String service = request.getAttribute(AdminService.A_SERVICE, null);

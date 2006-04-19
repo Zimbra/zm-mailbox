@@ -43,7 +43,7 @@ public class ModifyConfig extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
 	    Map attrs = AdminService.getAttrs(request);
