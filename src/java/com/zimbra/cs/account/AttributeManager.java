@@ -106,10 +106,11 @@ public class AttributeManager {
                         }
                     }
                 } catch (DocumentException e) {
+                    ZimbraLog.misc.error("unable to parse attr file: " + file, e);
                     throw ServiceException.FAILURE("unable to parse attr file: "+file+" "+e.getMessage(), e);
                 } catch (Exception e) {
-                    // swallow all of them
-                    throw ServiceException.FAILURE("unable to load attr file: "+file+" "+e.getMessage(), e);
+                    ZimbraLog.misc.error("unable to load attr file: " + file, e);
+                    throw ServiceException.FAILURE("unable to load attr file: " + file + " " + e.getMessage(), e);
                 } finally {
                     if (is != null)
                         try { is.close();}  catch (IOException e) { }
@@ -145,8 +146,12 @@ public class AttributeManager {
         return result.toString();
     }
     
-    private void error(String file, String error) {
-        mErrors.add(file + ": " + error);  
+    private void error(String attrName, String file, String error) {
+        if (attrName != null) {
+            mErrors.add("attr " + attrName + " in file " + file + ": " + error);
+        } else {
+            mErrors.add("file " + file + ": " + error);
+        }
     }
     
     private void loadAttrs(InputStream attrsFile, String file) throws DocumentException {
@@ -154,18 +159,17 @@ public class AttributeManager {
         Document doc = reader.read(attrsFile);
         Element root = doc.getRootElement();
         if (!root.getName().equals(E_ATTRS)) {
-            error(file, "root tag is not " + E_ATTRS);
+            error(null, file, "root tag is not " + E_ATTRS);
             return;
         }
         
         NEXT_ATTR: for (Iterator iter = root.elementIterator(); iter.hasNext();) {
             Element eattr = (Element) iter.next();
             if (!eattr.getName().equals(E_ATTR)) {
-                error(file, "unknown element: " + eattr.getName());
+                error(null, file, "unknown element: " + eattr.getName());
                 continue;
             }
 
-            String canonicalName = null;
             AttributeCallback callback = null;
             AttributeType type = null;
             String value = null;
@@ -178,14 +182,20 @@ public class AttributeManager {
             Set<AttributeClass> requiredIn = null;
             Set<AttributeClass> optionalIn = null;
             Set<AttributeFlag> flags = null;
-            String name = null;
+
+            String canonicalName = null;
+            String name = eattr.attributeValue(A_NAME);
+            if (name == null) {
+                error(null, file, "no name specified");
+                continue;
+            }
+            canonicalName = name.toLowerCase();
 
             for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
                 Attribute attr = (Attribute) attrIter.next();
                 String aname = attr.getName();
                 if (aname.equals(A_NAME)) {
-                    name = attr.getValue();
-                    canonicalName = attr.getValue().toLowerCase();
+                    // nothing to do - already processed
                 } else if (aname.equals(A_CALLBACK)) {
                     callback = loadCallback(attr.getValue());
                 } else if (aname.equals(A_IMMUTABLE)) {
@@ -197,7 +207,7 @@ public class AttributeManager {
                 } else if (aname.equals(A_TYPE)) {
                     type = AttributeType.getType(attr.getValue());
                     if (type == null) {
-                        error(file, "unknown <attr> type: "+attr.getValue());
+                        error(name, file, "unknown <attr> type: " + attr.getValue());
                         continue NEXT_ATTR;
                     }
                 } else if (aname.equals(A_VALUE)) { 
@@ -205,29 +215,27 @@ public class AttributeManager {
                 } else if (aname.equals(A_ID)) {
                     try {
                         id = Integer.parseInt(attr.getValue());
+                        if (id < 0)  {
+                            error(name, file, "invalid id " + id + ": must be positive");
+                        }
                     } catch (NumberFormatException nfe) {
-                        error(file, aname + " is not a number: " + attr.getValue());
+                        error(name, file, aname + " is not a number: " + attr.getValue());
                     }
                 } else if (aname.equals(A_CARDINALITY)) {
                     try {
                         cardinality = AttributeCardinality.valueOf(attr.getValue());
                     } catch (IllegalArgumentException iae) {
-                        error(file, aname + " is not valid: " + attr.getValue());
+                        error(name, file, aname + " is not valid: " + attr.getValue());
                     }
                 } else if (aname.equals(A_REQUIRED_IN)) {
-                    requiredIn = parseClasses(file, name, attr.getValue());
+                    requiredIn = parseClasses(name, file, attr.getValue());
                 } else if (aname.equals(A_OPTIONAL_IN)) {
-                    optionalIn = parseClasses(file, name, attr.getValue());
+                    optionalIn = parseClasses(name, file, attr.getValue());
                 } else if (aname.equals(A_FLAGS)) {
-                    flags = parseFlags(file, name, attr.getValue());
+                    flags = parseFlags(name, file, attr.getValue());
                 } else {
-                    error(file, "unknown <attr> attr: "+aname);
+                    error(name, file, "unknown <attr> attr: " + aname);
                 }
-            }
-
-            if (name == null) {
-                error(file, "no name specified for attr");
-                continue;
             }
 
             List<String> globalConfigValues = new LinkedList<String>();
@@ -241,54 +249,98 @@ public class AttributeManager {
                     defaultCOSValues.add(elem.getText());
                 } else if (elem.getName().equals(E_DESCRIPTION)) {
                     if (description != null) {
-                        error(file, "more than one description element for attr: " + name);
+                        error(name, file, "more than one description");
                     }
                     description = elem.getText();
                 } else {
-                    error(file, "unknown element: " + elem.getName() + " in attr: " + name);
+                    error(name, file, "unknown element: " + elem.getName());
                 }
             }
-                
+
+            // Check that if id is specified, then cardinality is specified.
+            if (id > 0  && cardinality == null) {
+                error(name, file, "cardinality not specified");
+            }
+            
+            // Check that if id is specified, then atleast one object class is
+            // defined
+            if (id > 0 && (optionalIn != null && optionalIn.isEmpty()) && (requiredIn != null && requiredIn.isEmpty())) {
+                error(name, file, "atleast one of " + A_REQUIRED_IN + " or " + A_OPTIONAL_IN + " must be specified");
+            }
+
+            // Check that if it is COS inheritable it is in account and COS
+            // classes
+            checkFlag(name, file, flags, AttributeFlag.inheritFromCOS, AttributeClass.account, AttributeClass.cos, requiredIn, optionalIn);
+
+            // Check that if it is domain inheritable it is in domain and
+            // account
+            checkFlag(name, file, flags, AttributeFlag.inheritFromDomain, AttributeClass.account, AttributeClass.domain, requiredIn, optionalIn);
+
+            // Check that if it is domain inheritable it is in domain and
+            // account
+            checkFlag(name, file, flags, AttributeFlag.inheritFromGlobalConfig, AttributeClass.server, AttributeClass.globalConfig, requiredIn, optionalIn);
+
+            // Check that is cardinality is single, then not more than one
+            // default value is specified
+            if (cardinality == AttributeCardinality.single) {
+                if (globalConfigValues.size() > 1) {
+                    error(name, file, "more than one global config value specified for cardinality " + AttributeCardinality.single);
+                }
+                if (defaultCOSValues.size() > 1) {
+                    error(name, file, "more than one default COS value specified for cardinality " + AttributeCardinality.single);
+                }
+            }
+
             AttributeInfo info = new AttributeInfo(name, id, callback, type, value, immutable, min, max, cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues);
             if (mAttrs.get(canonicalName) != null) {
-                error(file, "duplicate attr definiton: " + name);
+                error(name, file, "duplicate definiton");
             }
             mAttrs.put(canonicalName, info);
         }
     }
     
-    private Set<AttributeClass> parseClasses(String file, String attr, String value) throws DocumentException {
+    private Set<AttributeClass> parseClasses(String attrName, String file, String value) throws DocumentException {
         Set<AttributeClass> result = new HashSet<AttributeClass>();
         String[] cnames = value.split(",");
         for (String cname : cnames) {
             try {
                 AttributeClass ac = AttributeClass.valueOf(cname);
                 if (result.contains(ac)) {
-                    error(file, attr + " duplicate class: " + cname);
+                    error(attrName, file, "duplicate class: " + cname);
                 }
                 result.add(ac);
             } catch (IllegalArgumentException iae) {
-                error(file, attr + " invalid class: " + cname);
+                error(attrName, file, "invalid class: " + cname);
             }
         }
         return result;
     }
 
-    private Set<AttributeFlag> parseFlags(String file, String attr, String value) throws DocumentException {
+    private Set<AttributeFlag> parseFlags(String attrName, String file, String value) throws DocumentException {
         Set<AttributeFlag> result = new HashSet<AttributeFlag>();
         String[] flags = value.split(",");
         for (String flag : flags) {
             try {
                 AttributeFlag ac = AttributeFlag.valueOf(flag);
                 if (result.contains(ac)) {
-                    error(file, attr + " duplicate flag: " + flag);
+                    error(attrName, file, "duplicate flag: " + flag);
                 }
                 result.add(ac);
             } catch (IllegalArgumentException iae) {
-                error(file, attr + " invalid flag: " + flag);
+                error(attrName, file, "invalid flag: " + flag);
             }
         }
         return result;
+    }
+
+    private void checkFlag(String attrName, String file, Set<AttributeFlag> flags, AttributeFlag flag, AttributeClass c1, AttributeClass c2, Set<AttributeClass> required, Set<AttributeClass> optional) {
+        if (flags != null && flags.contains(flag)) {
+            boolean inC1 = (optional != null && optional.contains(c1)) || (required != null && required.contains(c1));
+            boolean inC2 = (optional != null && optional.contains(c2)) || (required != null && required.contains(c2));
+            if (!inC1 && !inC2) {
+                error(attrName, file, "flag " + flag + " requires that attr be in both these classes " + c1 + " and " + c2);
+            }
+        }
     }
 
     /**
