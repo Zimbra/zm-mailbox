@@ -34,7 +34,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author dkarp
@@ -42,7 +42,7 @@ import com.zimbra.soap.ZimbraContext;
 public class PurgeMessages extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
 
         Element mreq = request.getOptionalElement(AdminService.E_MAILBOX);
         String[] accounts;

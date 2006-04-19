@@ -58,7 +58,7 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 
 /**
@@ -70,7 +70,7 @@ public class Search extends DocumentHandler  {
     protected static final boolean DONT_CACHE_RESULTS = true;
     
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
         Mailbox mbox = getRequestedMailbox(lc);
         
@@ -117,7 +117,7 @@ public class Search extends DocumentHandler  {
         }
     }
     
-    protected SearchParams parseCommonParameters(Element request, ZimbraContext lc) throws ServiceException {
+    protected SearchParams parseCommonParameters(Element request, ZimbraSoapContext lc) throws ServiceException {
         String query = request.getAttribute(MailService.E_QUERY, null);
         if (query == null)
             query = getRequestedAccount(lc).getAttr(Provisioning.A_zimbraPrefMailInitialSearch);
@@ -183,7 +183,7 @@ public class Search extends DocumentHandler  {
     }
 
     // note that session may be null
-    protected ZimbraQueryResults getResults(Mailbox mbox, SearchParams params, ZimbraContext lc, SoapSession session)
+    protected ZimbraQueryResults getResults(Mailbox mbox, SearchParams params, ZimbraSoapContext lc, SoapSession session)
     throws ServiceException {
         ZimbraQueryResults results = null;
         boolean cacheResults = !DONT_CACHE_RESULTS && session != null;
@@ -238,7 +238,7 @@ public class Search extends DocumentHandler  {
     protected final boolean INCLUDE_MAILBOX_INFO = true;
     protected final boolean DONT_INCLUDE_MAILBOX_INFO = false;
     
-    protected Element putHits(ZimbraContext lc, Element response, ResultsPager pager, boolean includeMailbox, SearchParams params)
+    protected Element putHits(ZimbraSoapContext lc, Element response, ResultsPager pager, boolean includeMailbox, SearchParams params)
     throws ServiceException {
         int offset = params.getOffset();
         int limit  = params.getLimit();
@@ -308,7 +308,7 @@ public class Search extends DocumentHandler  {
     }
     
     
-    protected Element addConversationHit(ZimbraContext lc, Element response, ConversationHit ch, EmailElementCache eecache, SearchParams params)
+    protected Element addConversationHit(ZimbraSoapContext lc, Element response, ConversationHit ch, EmailElementCache eecache, SearchParams params)
     throws ServiceException {
         Conversation conv = ch.getConversation();
         MessageHit mh = ch.getFirstMessageHit();
@@ -328,7 +328,7 @@ public class Search extends DocumentHandler  {
         return c;
     }
 
-    protected Element addAppointmentHit(ZimbraContext lc, Element response, AppointmentHit ah, boolean inline, SearchParams params)
+    protected Element addAppointmentHit(ZimbraSoapContext lc, Element response, AppointmentHit ah, boolean inline, SearchParams params)
     throws ServiceException {
         Appointment appt = ah.getAppointment();
         Element m;
@@ -350,7 +350,7 @@ public class Search extends DocumentHandler  {
     }
     
     
-    protected Element addMessageHit(ZimbraContext lc, Element response, MessageHit mh, EmailElementCache eecache, boolean inline, SearchParams params)
+    protected Element addMessageHit(ZimbraSoapContext lc, Element response, MessageHit mh, EmailElementCache eecache, boolean inline, SearchParams params)
     throws ServiceException {
         Message msg = mh.getMessage();
         Element m;
@@ -389,7 +389,7 @@ public class Search extends DocumentHandler  {
         return m;
     }
     
-    protected Element addMessageHit(ZimbraContext lc, Element response, Message msg, EmailElementCache eecache, SearchParams params) {
+    protected Element addMessageHit(ZimbraSoapContext lc, Element response, Message msg, EmailElementCache eecache, SearchParams params) {
         Element m = ToXML.encodeMessageSummary(response, lc, msg, params.getWantRecipients());
         return m;
     }
@@ -417,11 +417,11 @@ public class Search extends DocumentHandler  {
         return mp;
     }
     
-    Element addContactHit(ZimbraContext lc, Element response, ContactHit ch, EmailElementCache eecache) throws ServiceException {
+    Element addContactHit(ZimbraSoapContext lc, Element response, ContactHit ch, EmailElementCache eecache) throws ServiceException {
         return ToXML.encodeContact(response, lc, ch.getContact(), null, true, null);
     }
     
-    Element addDocumentHit(ZimbraContext lc, Element response, DocumentHit dh) throws ServiceException {
+    Element addDocumentHit(ZimbraSoapContext lc, Element response, DocumentHit dh) throws ServiceException {
     	int ver = dh.getVersion();
     	if (dh.getItemType() == MailItem.TYPE_DOCUMENT)
     		return ToXML.encodeDocument(response, lc, dh.getDocument(), ver);
@@ -430,7 +430,7 @@ public class Search extends DocumentHandler  {
     	throw ServiceException.UNKNOWN_DOCUMENT("invalid document type "+dh.getItemType(), null);
     }
     
-    Element addNoteHit(ZimbraContext lc, Element response, NoteHit nh, EmailElementCache eecache) throws ServiceException {
+    Element addNoteHit(ZimbraSoapContext lc, Element response, NoteHit nh, EmailElementCache eecache) throws ServiceException {
         // TODO - does this need to be a summary, instead of the whole note?
         return ToXML.encodeNote(response, lc, nh.getNote());
     }

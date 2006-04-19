@@ -38,7 +38,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author tim
@@ -57,7 +57,7 @@ public class GetAppointment extends DocumentHandler {
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
 

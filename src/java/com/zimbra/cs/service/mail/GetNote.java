@@ -36,7 +36,7 @@ import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author dkarp
@@ -44,7 +44,7 @@ import com.zimbra.soap.ZimbraContext;
 public class GetNote extends DocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
 

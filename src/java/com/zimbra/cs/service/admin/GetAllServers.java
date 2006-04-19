@@ -36,7 +36,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -48,7 +48,7 @@ public class GetAllServers extends AdminDocumentHandler {
     
 	public Element handle(Element request, Map context) throws ServiceException {
 
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
         String service = request.getAttribute(AdminService.A_SERVICE, null);

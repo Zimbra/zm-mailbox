@@ -38,7 +38,7 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -50,7 +50,7 @@ public class GetCos extends AdminDocumentHandler {
     
 	public Element handle(Element request, Map context) throws ServiceException {
 	    
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         Element d = request.getElement(AdminService.E_COS);

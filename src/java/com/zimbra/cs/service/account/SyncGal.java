@@ -38,7 +38,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -46,7 +46,7 @@ import com.zimbra.soap.ZimbraContext;
 public class SyncGal extends DocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Element response = lc.createElement(AccountService.SYNC_GAL_RESPONSE);
         String tokenAttr = request.getAttribute(MailService.A_TOKEN, "");        
         Account acct = getRequestedAccount(getZimbraContext(context));

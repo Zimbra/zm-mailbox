@@ -41,7 +41,7 @@ import com.zimbra.cs.util.ArrayUtil;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author bburtin
@@ -52,7 +52,7 @@ public class CheckSpelling extends DocumentHandler  {
     
     public Element handle(Element request, Map context)
     throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Element response = lc.createElement(MailService.CHECK_SPELLING_RESPONSE);
 
         // Make sure that the spell server URL is specified

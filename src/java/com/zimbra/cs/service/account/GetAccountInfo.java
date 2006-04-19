@@ -38,7 +38,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -52,7 +52,7 @@ public class GetAccountInfo extends DocumentHandler  {
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
    
         Element a = request.getElement(AccountService.E_ACCOUNT);
         String key = a.getAttribute(AccountService.A_BY);

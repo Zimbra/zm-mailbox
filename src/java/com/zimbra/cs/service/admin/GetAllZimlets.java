@@ -35,13 +35,13 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetAllZimlets extends AdminDocumentHandler {
 
 	@Override
     public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
 		Provisioning prov = Provisioning.getInstance();
 		
         Element response = lc.createElement(AdminService.GET_ALL_ZIMLETS_RESPONSE);

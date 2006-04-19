@@ -33,7 +33,7 @@ import java.util.Map;
 import com.zimbra.cs.account.ldap.Check;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -42,7 +42,7 @@ public class CheckAuthConfig extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
 
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
 
 	    String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
 	    String password = request.getAttribute(AdminService.E_PASSWORD);

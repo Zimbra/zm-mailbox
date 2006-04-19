@@ -33,7 +33,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author jhahm
@@ -54,7 +54,7 @@ public class GetCalendarResource extends AdminDocumentHandler {
 
     public Element handle(Element request, Map context)
     throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         boolean applyCos =

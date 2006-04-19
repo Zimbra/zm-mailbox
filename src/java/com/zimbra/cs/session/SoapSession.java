@@ -43,7 +43,7 @@ import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -261,7 +261,7 @@ public class SoapSession extends Session {
      *  
      * @param ctxt  An existing SOAP header <context> element 
      * @param zc    The SOAP request's encapsulated context */
-    public void putRefresh(Element ctxt, ZimbraContext zc) throws ServiceException {
+    public void putRefresh(Element ctxt, ZimbraSoapContext zc) throws ServiceException {
         synchronized (this) {
             if (!mNotify)
                 return;
@@ -346,7 +346,7 @@ public class SoapSession extends Session {
      * @param lastKnownSeqno  The highest notification-sequence-number that the client has
      *         received (0 means none)
      * @return The passed-in <code>&lt;context></code> element */
-    public Element putNotifications(ZimbraContext zc, Element ctxt, int lastKnownSeqno) throws ServiceException {
+    public Element putNotifications(ZimbraSoapContext zc, Element ctxt, int lastKnownSeqno) throws ServiceException {
         if (ctxt == null)
             return null;
 
@@ -365,9 +365,9 @@ public class SoapSession extends Session {
             synchronized (this) {
                 // send the <change> block
                 // <change token="555" [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
-                ctxt.addUniqueElement(ZimbraContext.E_CHANGE)
-                    .addAttribute(ZimbraContext.A_CHANGE_ID, mbox.getLastChangeID())
-                    .addAttribute(ZimbraContext.A_ACCOUNT_ID, explicitAcct);
+                ctxt.addUniqueElement(ZimbraSoapContext.E_CHANGE)
+                    .addAttribute(ZimbraSoapContext.A_CHANGE_ID, mbox.getLastChangeID())
+                    .addAttribute(ZimbraSoapContext.A_ACCOUNT_ID, explicitAcct);
                 
                 if (mSentChanges.size() > 1000) {
                     // cover ourselves in case a client is doing something really stupid...
@@ -422,14 +422,14 @@ public class SoapSession extends Session {
      * @param mbox
      * @param explicitAcct
      */
-    private static void putPendingModifications(ZimbraContext zc, PendingModifications pm, Element parent, Mailbox mbox, String explicitAcct)
+    private static void putPendingModifications(ZimbraSoapContext zc, PendingModifications pm, Element parent, Mailbox mbox, String explicitAcct)
     {
         assert(pm.getSeqNo() > 0);
         
         // <notify [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
         Element eNotify = parent.addElement(E_NOTIFY)
-                              .addAttribute(ZimbraContext.A_ACCOUNT_ID, explicitAcct)
-                              .addAttribute(ZimbraContext.A_SEQNO, pm.getSeqNo());
+                              .addAttribute(ZimbraSoapContext.A_ACCOUNT_ID, explicitAcct)
+                              .addAttribute(ZimbraSoapContext.A_SEQNO, pm.getSeqNo());
                               
 
         if (pm.deleted != null && pm.deleted.size() > 0) {

@@ -43,7 +43,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class SearchCalendarResources extends DocumentHandler {
 
@@ -53,7 +53,7 @@ public class SearchCalendarResources extends DocumentHandler {
 
     public Element handle(Element request, Map context)
     throws ServiceException, SoapFaultException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Element response = lc.createElement(AccountService.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         Account acct = getRequestedAccount(getZimbraContext(context));
 

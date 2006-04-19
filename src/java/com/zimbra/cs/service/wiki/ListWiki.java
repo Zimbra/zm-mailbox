@@ -33,13 +33,13 @@ import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class ListWiki extends WikiDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
 		Wiki wiki = getRequestedWikiNotebook(request, lc);
 
         Set<String> wikiWords = wiki.listWiki();

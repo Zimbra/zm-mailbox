@@ -33,7 +33,7 @@ import com.zimbra.soap.SoapFaultException;
 import com.zimbra.cs.im.IMAddr;
 import com.zimbra.cs.im.IMChat;
 import com.zimbra.cs.im.IMPersona;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class IMModifyChat extends IMDocumentHandler 
 {
@@ -43,7 +43,7 @@ public class IMModifyChat extends IMDocumentHandler
 
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException 
     {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
 
         Element response = lc.createElement(IMService.IM_MODIFY_CHAT_RESPONSE);
         

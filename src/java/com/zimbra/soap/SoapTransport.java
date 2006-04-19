@@ -107,11 +107,11 @@ public abstract class SoapTransport {
     	if (raw)
     		return SoapProtocol.toString(document, mPrettyPrint);
         
-        Element context = ZimbraContext.toCtxt(mSoapProto, mAuthToken, mTargetAcctId, noSession);
-        ZimbraContext.addSessionToCtxt(context, mSessionId, noNotify);
+        Element context = ZimbraSoapContext.toCtxt(mSoapProto, mAuthToken, mTargetAcctId, noSession);
+        ZimbraSoapContext.addSessionToCtxt(context, mSessionId, noNotify);
 
         if (requestedAccountId != null) {
-            context.addElement(ZimbraContext.E_ACCOUNT).addAttribute(ZimbraContext.A_BY, ZimbraContext.BY_ID).setText(requestedAccountId);
+            context.addElement(ZimbraSoapContext.E_ACCOUNT).addAttribute(ZimbraSoapContext.A_BY, ZimbraSoapContext.BY_ID).setText(requestedAccountId);
         }
         Element envelope = mSoapProto.soapEnvelope(document, context);
         String soapMessage = SoapProtocol.toString(envelope, getPrettyPrint());
@@ -144,9 +144,9 @@ public abstract class SoapTransport {
         if (proto.isFault(e))
             throw proto.soapFault(e);
 
-        Element context = proto.getHeader(env, ZimbraContext.CONTEXT);
+        Element context = proto.getHeader(env, ZimbraSoapContext.CONTEXT);
         if (context != null) {
-            String sid = context.getAttribute(ZimbraContext.E_SESSION_ID, null);
+            String sid = context.getAttribute(ZimbraSoapContext.E_SESSION_ID, null);
             if (sid != null)
                 mSessionId = sid;
         }

@@ -40,7 +40,7 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -48,7 +48,7 @@ import com.zimbra.soap.ZimbraContext;
 public class GetServiceStatus extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws SoapFaultException, ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
 
         // this command can only execute on the monitor host, so proxy if necessary
         Provisioning prov = Provisioning.getInstance();
@@ -59,7 +59,7 @@ public class GetServiceStatus extends AdminDocumentHandler {
         if (monitorServer == null)
             throw ServiceException.FAILURE("could not find zimbraLogHostname server: " + monitorServer, null);
         if (!prov.getLocalServer().getId().equalsIgnoreCase(monitorServer.getId()))
-            return proxyRequest(request, context, monitorServer, new ZimbraContext(lc, lc.getRequestedAccountId()));
+            return proxyRequest(request, context, monitorServer, new ZimbraSoapContext(lc, lc.getRequestedAccountId()));
 
         Element response = lc.createElement(AdminService.GET_SERVICE_STATUS_RESPONSE);
         boolean loggerEnabled = false;

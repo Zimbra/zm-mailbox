@@ -47,7 +47,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author dkarp
@@ -84,7 +84,7 @@ public class FolderAction extends ItemAction {
     }));
 
 	public Element handle(Element request, Map<String,Object> context) throws ServiceException, SoapFaultException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
 
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
@@ -111,7 +111,7 @@ public class FolderAction extends ItemAction {
     throws ServiceException {
         Element action = request.getElement(MailService.E_ACTION);
 
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
         ItemId iid = new ItemId(action.getAttribute(MailService.A_ID), lc);
@@ -220,7 +220,7 @@ public class FolderAction extends ItemAction {
         return null;
     }
 
-    static NamedEntry lookupGranteeByName(String name, byte type, ZimbraContext lc) throws ServiceException {
+    static NamedEntry lookupGranteeByName(String name, byte type, ZimbraSoapContext lc) throws ServiceException {
         if (type == ACL.GRANTEE_AUTHUSER || type == ACL.GRANTEE_PUBLIC)
             return null;
 

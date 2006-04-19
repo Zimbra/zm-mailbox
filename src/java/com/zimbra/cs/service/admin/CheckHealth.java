@@ -34,7 +34,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbStatus;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author jhahm
@@ -46,7 +46,7 @@ public class CheckHealth extends AdminDocumentHandler {
      */
     public Element handle(Element document, Map context)
             throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Element response = lc.createElement(AdminService.CHECK_HEALTH_RESPONSE);
 
         boolean dir = Provisioning.getInstance().healthCheck();

@@ -46,7 +46,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.WriteOpDocumentHandler;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 
 /**
@@ -68,7 +68,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
     private static final long MAX_PERIOD_SIZE_IN_DAYS = 200; 
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Account acct = getRequestedAccount(lc);
         

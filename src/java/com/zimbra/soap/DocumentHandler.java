@@ -67,11 +67,11 @@ public abstract class DocumentHandler {
 
     public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException;
 
-    public static ZimbraContext getZimbraContext(Map<String, Object> context) {
-        return (ZimbraContext) context.get(SoapEngine.ZIMBRA_CONTEXT);
+    public static ZimbraSoapContext getZimbraContext(Map<String, Object> context) {
+        return (ZimbraSoapContext) context.get(SoapEngine.ZIMBRA_CONTEXT);
     }
 
-    public static Account getRequestedAccount(ZimbraContext lc) throws ServiceException {
+    public static Account getRequestedAccount(ZimbraSoapContext lc) throws ServiceException {
         String id = lc.getRequestedAccountId();
 
         Account acct = Provisioning.getInstance().getAccountById(id);
@@ -80,7 +80,7 @@ public abstract class DocumentHandler {
         return acct;
     }
 
-    public static Mailbox getRequestedMailbox(ZimbraContext lc) throws ServiceException {
+    public static Mailbox getRequestedMailbox(ZimbraSoapContext lc) throws ServiceException {
         String id = lc.getRequestedAccountId();
         Mailbox mbox = Mailbox.getMailboxByAccountId(id);
         if (mbox != null)
@@ -99,27 +99,27 @@ public abstract class DocumentHandler {
         return false;
     }
 
-    public boolean isDomainAdminOnly(ZimbraContext lc) {
+    public boolean isDomainAdminOnly(ZimbraSoapContext lc) {
         return AccessManager.getInstance().isDomainAdminOnly(lc.getAuthToken());
     }
 
-    public boolean canAccessAccount(ZimbraContext lc, Account target) throws ServiceException {
+    public boolean canAccessAccount(ZimbraSoapContext lc, Account target) throws ServiceException {
         return AccessManager.getInstance().canAccessAccount(lc.getAuthToken(), target);
     }
 
-    public Domain getAuthTokenAccountDomain(ZimbraContext lc) throws ServiceException {
+    public Domain getAuthTokenAccountDomain(ZimbraSoapContext lc) throws ServiceException {
         return AccessManager.getInstance().getDomain(lc.getAuthToken());
     }
 
-    public boolean canAccessDomain(ZimbraContext lc, String domainName) throws ServiceException {
+    public boolean canAccessDomain(ZimbraSoapContext lc, String domainName) throws ServiceException {
         return AccessManager.getInstance().canAccessDomain(lc.getAuthToken(), domainName);
     }
 
-    public boolean canAccessDomain(ZimbraContext lc, Domain domain) throws ServiceException {
+    public boolean canAccessDomain(ZimbraSoapContext lc, Domain domain) throws ServiceException {
         return canAccessDomain(lc, domain.getName());
     }
 
-    public boolean canAccessEmail(ZimbraContext lc, String email) throws ServiceException {
+    public boolean canAccessEmail(ZimbraSoapContext lc, String email) throws ServiceException {
         String parts[] = EmailUtil.getLocalPartAndDomain(email);
         if (parts == null)
             throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
@@ -172,12 +172,12 @@ public abstract class DocumentHandler {
      *                     SOAP request.
      * @param sessionType  The type of session needed.
      * @return An in-memory {@link Session} object of the specified type,
-     *         fetched from the request's {@link ZimbraContext} object, or
+     *         fetched from the request's {@link ZimbraSoapContext} object, or
      *         <code>null</code>.
      * @see SessionCache#SESSION_SOAP
      * @see SessionCache#SESSION_ADMIN */
     protected Session getSession(Map<String, Object> context, int sessionType) {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         return (lc == null ? null : lc.getSession(sessionType));
     }
 
@@ -199,7 +199,7 @@ public abstract class DocumentHandler {
         request.addAttribute(xpath[depth], value);
     }
 
-    private void insertMountpointReferences(Element response, String[] xpath, ItemId iidMountpoint, ItemId iidLocal, ZimbraContext lc) {
+    private void insertMountpointReferences(Element response, String[] xpath, ItemId iidMountpoint, ItemId iidLocal, ZimbraSoapContext lc) {
         int depth = 0;
         while (depth < xpath.length && response != null)
             response = response.getOptionalElement(xpath[depth++]);
@@ -214,7 +214,7 @@ public abstract class DocumentHandler {
         }
     }
 
-    protected static ItemId getProxyTarget(ZimbraContext lc, ItemId iid, boolean checkMountpoint) throws ServiceException {
+    protected static ItemId getProxyTarget(ZimbraSoapContext lc, ItemId iid, boolean checkMountpoint) throws ServiceException {
         if (lc == null || iid == null)
             return null;
         if (!iid.belongsTo(getRequestedAccount(lc)))
@@ -243,7 +243,7 @@ public abstract class DocumentHandler {
         if (id == null)
             return null;
 
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         ItemId iid = new ItemId(id, lc);
 
         // if the "target item" is remote, proxy.
@@ -269,7 +269,7 @@ public abstract class DocumentHandler {
         Element response = proxyRequest(request, context, iidResolved.getAccountId(), mountpoint);
 
         // translate remote folder IDs back into local mountpoint IDs
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         String[] xpathResponse = getResponseItemPath();
         if (mountpoint && xpathResponse != null) 
             insertMountpointReferences(response, xpathResponse, iidRequested, iidResolved, lc);
@@ -281,9 +281,9 @@ public abstract class DocumentHandler {
     }
 
     private static Element proxyRequest(Element request, Map<String, Object> context, String acctId, boolean mountpoint) throws SoapFaultException, ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         // new context for proxied request has a different "requested account"
-        ZimbraContext lcTarget = new ZimbraContext(lc, acctId);
+        ZimbraSoapContext lcTarget = new ZimbraSoapContext(lc, acctId);
         if (mountpoint)
             lcTarget.recordMountpointTraversal();
 
@@ -299,7 +299,7 @@ public abstract class DocumentHandler {
         return proxyRequest(request, context, serverTarget, lcTarget);
     }
 
-    protected static Element proxyRequest(Element request, Map<String, Object> context, Server server, ZimbraContext lc) throws SoapFaultException, ServiceException {
+    protected static Element proxyRequest(Element request, Map<String, Object> context, Server server, ZimbraSoapContext lc) throws SoapFaultException, ServiceException {
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
         boolean isLocal = LOCAL_HOST.equalsIgnoreCase(server.getName()) && engine != null;
 

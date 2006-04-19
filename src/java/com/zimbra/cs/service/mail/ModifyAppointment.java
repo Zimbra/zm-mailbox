@@ -52,7 +52,7 @@ import com.zimbra.cs.util.L10nUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.util.L10nUtil.MsgKey;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 
 public class ModifyAppointment extends CalendarRequest {
@@ -73,7 +73,7 @@ public class ModifyAppointment extends CalendarRequest {
             mInv = inv;
         }
         
-        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraContext lc, Account account, Element inviteElem) throws ServiceException {
+        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, Account account, Element inviteElem) throws ServiceException {
             List<ZAttendee> atsToCancel = new ArrayList<ZAttendee>();
 
             ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteForModify(account, inviteElem, mInv, atsToCancel, !mInv.hasRecurId());
@@ -87,7 +87,7 @@ public class ModifyAppointment extends CalendarRequest {
 
     
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Account acct = getRequestedAccount(lc);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
@@ -113,7 +113,7 @@ public class ModifyAppointment extends CalendarRequest {
         } // synchronized on mailbox                
     }
     
-    protected static Element modifyAppointment(ZimbraContext lc, Element request, Account acct, Mailbox mbox,
+    protected static Element modifyAppointment(ZimbraSoapContext lc, Element request, Account acct, Mailbox mbox,
             Appointment appt, Invite inv, Element response) throws ServiceException
     {
         // <M>
@@ -141,7 +141,7 @@ public class ModifyAppointment extends CalendarRequest {
     }
     
     protected static void updateRemovedInvitees(
-            ZimbraContext lc, Account acct, Mailbox mbox,
+            ZimbraSoapContext lc, Account acct, Mailbox mbox,
             Appointment appt, Invite inv,
             List<ZAttendee> toCancel)
     throws ServiceException {

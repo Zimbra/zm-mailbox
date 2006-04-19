@@ -36,7 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author dkarp
@@ -54,7 +54,7 @@ public class GetMailbox extends AdminDocumentHandler {
     }
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext zc = getZimbraContext(context);
+        ZimbraSoapContext zc = getZimbraContext(context);
 
         Element mreq = request.getElement(AdminService.E_MAILBOX);
         String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);

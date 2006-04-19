@@ -33,7 +33,7 @@ import java.util.Map;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -41,7 +41,7 @@ import com.zimbra.soap.ZimbraContext;
 public class NoOp extends DocumentHandler  {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
 	    return lc.createElement(MailService.NO_OP_RESPONSE);
 	}
 }

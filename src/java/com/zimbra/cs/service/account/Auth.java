@@ -37,7 +37,7 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -61,7 +61,7 @@ public class Auth extends DocumentHandler  {
     }
 
 	public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
 
 
         Element acctEl = request.getElement(AccountService.E_ACCOUNT);
@@ -120,7 +120,7 @@ public class Auth extends DocumentHandler  {
         if (acct.isCorrectHost()) {
             Session session = lc.getNewSession(acct.getId(), SessionCache.SESSION_SOAP);
             if (session != null)
-                ZimbraContext.encodeSession(response, session, true);
+                ZimbraSoapContext.encodeSession(response, session, true);
         } 
         response.addAttribute(AccountService.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.DISP_CONTENT);
 

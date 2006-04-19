@@ -50,7 +50,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
@@ -67,7 +67,7 @@ public class CreateContact extends WriteOpDocumentHandler  {
     private static final String DEFAULT_FOLDER = "" + Mailbox.ID_FOLDER_CONTACTS;
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
 
@@ -98,7 +98,7 @@ public class CreateContact extends WriteOpDocumentHandler  {
         return response;
     }
 
-    private static Map<String, String> parseAttachedVCard(ZimbraContext lc, Mailbox mbox, Element vcard)
+    private static Map<String, String> parseAttachedVCard(ZimbraSoapContext lc, Mailbox mbox, Element vcard)
     throws ServiceException {
         String text = null;
         String messageId = vcard.getAttribute(MailService.A_MESSAGE_ID, null);

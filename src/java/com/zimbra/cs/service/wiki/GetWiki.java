@@ -42,13 +42,13 @@ import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetWiki extends WikiDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
         OperationContext octxt = lc.getOperationContext();
         Element wElem = request.getElement(MailService.E_WIKIWORD);
         String word = wElem.getAttribute(MailService.A_NAME, null);

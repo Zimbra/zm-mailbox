@@ -44,7 +44,7 @@ import com.zimbra.cs.service.util.ParseMailboxID;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.WriteOpDocumentHandler;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetFreeBusy extends WriteOpDocumentHandler {
 
@@ -70,7 +70,7 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
     
     public Element handle(Element request, Map context) throws ServiceException 
     {
-        ZimbraContext zc = getZimbraContext(context);
+        ZimbraSoapContext zc = getZimbraContext(context);
         
         long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME);
         long rangeEnd = request.getAttributeLong(MailService.A_APPT_END_TIME);
@@ -109,7 +109,7 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
         return response;
     }
     
-    protected static void proxyRemoteItems(Map context,ZimbraContext zc,Element response,long rangeStart,long rangeEnd,Map /* Server, ParamStr */ remote)
+    protected static void proxyRemoteItems(Map context,ZimbraSoapContext zc,Element response,long rangeStart,long rangeEnd,Map /* Server, ParamStr */ remote)
     {
         for (Iterator it = remote.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Map.Entry) it.next();
@@ -150,7 +150,7 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
         }
     }
     
-    protected static void partitionItems(ZimbraContext zc, Element response, long rangeStart, long rangeEnd,
+    protected static void partitionItems(ZimbraSoapContext zc, Element response, long rangeStart, long rangeEnd,
             String idParam, List /* ParseMailboxID */local, Map /*String,StringBuffer*/ remote)
     {
         String[] idStrs = idParam.split(",");
@@ -192,7 +192,7 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
         elt.addAttribute(MailService.A_APPT_END_TIME, rangeEnd);
     }
     
-    protected static void getForOneMailbox(ZimbraContext zc, Element response, ParseMailboxID id, long start, long end)
+    protected static void getForOneMailbox(ZimbraSoapContext zc, Element response, ParseMailboxID id, long start, long end)
     throws ServiceException {
         if (id.isLocal()) {
             Element mbxResp = response.addElement(MailService.E_FREEBUSY_USER);

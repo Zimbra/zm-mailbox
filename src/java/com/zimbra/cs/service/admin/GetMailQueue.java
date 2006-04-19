@@ -41,7 +41,7 @@ import com.zimbra.cs.rmgmt.RemoteMailQueue.QueueAttr;
 import com.zimbra.cs.rmgmt.RemoteMailQueue.SummaryItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetMailQueue extends AdminDocumentHandler {
 
@@ -50,7 +50,7 @@ public class GetMailQueue extends AdminDocumentHandler {
     public static final int MAIL_QUEUE_SUMMARY_CUTOFF = 100;
     
 	public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Provisioning prov = Provisioning.getInstance();
         
         Element serverElem = request.getElement(AdminService.E_SERVER);

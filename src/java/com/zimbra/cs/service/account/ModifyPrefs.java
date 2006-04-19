@@ -36,7 +36,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
@@ -45,7 +45,7 @@ import com.zimbra.soap.WriteOpDocumentHandler;
 public class ModifyPrefs extends WriteOpDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
         Account acct = getRequestedAccount(lc);
 
         HashMap prefs = new HashMap();

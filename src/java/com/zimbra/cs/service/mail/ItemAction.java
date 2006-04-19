@@ -45,7 +45,7 @@ import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
@@ -76,7 +76,7 @@ public class ItemAction extends WriteOpDocumentHandler {
     public static final String OP_UPDATE      = "update";
 
     public Element handle(Element request, Map<String,Object> context) throws ServiceException, SoapFaultException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
 
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
@@ -92,7 +92,7 @@ public class ItemAction extends WriteOpDocumentHandler {
 
     String handleCommon(Map<String,Object> context, Element request, String opAttr, byte type) throws ServiceException, SoapFaultException {
         Element action = request.getElement(MailService.E_ACTION);
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 
         // determine the requested operation
@@ -164,7 +164,7 @@ public class ItemAction extends WriteOpDocumentHandler {
         return successes.toString();
     }
 
-    private void partitionItems(ZimbraContext lc, String ids, ArrayList<Integer> local, HashMap<String, StringBuffer> remote) throws ServiceException {
+    private void partitionItems(ZimbraSoapContext lc, String ids, ArrayList<Integer> local, HashMap<String, StringBuffer> remote) throws ServiceException {
         Account acct = getRequestedAccount(lc);
         String targets[] = ids.split(",");
         for (int i = 0; i < targets.length; i++) {

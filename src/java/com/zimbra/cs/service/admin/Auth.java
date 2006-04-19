@@ -36,7 +36,7 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -56,7 +56,7 @@ public class Auth extends AdminDocumentHandler {
     }
 
 	public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
 
         String name = request.getAttribute(AdminService.E_NAME);
 		String password = request.getAttribute(AdminService.E_PASSWORD);
@@ -106,7 +106,7 @@ public class Auth extends AdminDocumentHandler {
         response.addElement(AdminService.E_A).addAttribute(AdminService.A_N, Provisioning.A_zimbraIsDomainAdminAccount).setText(isDomainAdmin+"");
         Session session = lc.getNewSession(acct.getId(), SessionCache.SESSION_ADMIN);
         if (session != null)
-            ZimbraContext.encodeSession(response, session, true);
+            ZimbraSoapContext.encodeSession(response, session, true);
 		return response;
 	}
 

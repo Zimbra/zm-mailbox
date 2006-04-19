@@ -29,12 +29,12 @@ import java.util.Map;
 
 import com.zimbra.cs.store.Volume;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetCurrentVolumes extends AdminDocumentHandler {
 
     public Element handle(Element request, Map context) {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
 
         Element response = lc.createElement(AdminService.GET_CURRENT_VOLUMES_RESPONSE);
 

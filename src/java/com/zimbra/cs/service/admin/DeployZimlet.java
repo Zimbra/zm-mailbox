@@ -36,13 +36,13 @@ import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletFile;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class DeployZimlet extends AdminDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
         Element content = request.getElement(MailService.E_CONTENT);
         String attachment = content.getAttribute(MailService.A_ATTACHMENT_ID, null);
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachment, lc.getRawAuthToken());

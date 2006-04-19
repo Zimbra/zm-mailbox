@@ -31,18 +31,18 @@ import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class WikiDocumentHandler extends DocumentHandler {
     private static final String[] TARGET_WIKI_PATH = new String[] { MailService.E_WIKIWORD, MailService.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_WIKI_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
-	protected String getAuthor(ZimbraContext lc) throws ServiceException {
+	protected String getAuthor(ZimbraSoapContext lc) throws ServiceException {
 		return lc.getAuthtokenAccount().getName();
 	}
 	
-	protected Wiki getRequestedWikiNotebook(Element request, ZimbraContext lc) throws ServiceException {
+	protected Wiki getRequestedWikiNotebook(Element request, ZimbraSoapContext lc) throws ServiceException {
 		for (Element elem : request.listElements()) {
 	        int fid = (int)elem.getAttributeLong(MailService.A_FOLDER, 0);
 	        if (fid != 0)

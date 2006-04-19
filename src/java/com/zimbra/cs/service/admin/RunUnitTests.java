@@ -33,7 +33,7 @@ import junit.framework.TestResult;
 import com.zimbra.qa.unittest.ZimbraSuite;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.WriteOpDocumentHandler;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author bburtin
@@ -44,7 +44,7 @@ public class RunUnitTests extends WriteOpDocumentHandler {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         TestResult result = ZimbraSuite.runTestSuite(os);
         
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Element response = lc.createElement(AdminService.RUN_UNIT_TESTS_RESPONSE);
         response.addAttribute(AdminService.A_NUM_EXECUTED, Integer.toString(result.runCount()));
         response.addAttribute(AdminService.A_NUM_FAILED,

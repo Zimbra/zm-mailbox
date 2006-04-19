@@ -34,7 +34,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.formatter.ContactCSV;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -42,7 +42,7 @@ import com.zimbra.soap.ZimbraContext;
 public class ExportContacts extends DocumentHandler  {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 
         String ct = request.getAttribute(MailService.A_CONTENT_TYPE);

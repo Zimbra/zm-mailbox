@@ -7,13 +7,13 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class DumpSessions extends AdminDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
 		Element response = lc.createElement(AdminService.DUMP_SESSIONS_RESPONSE);
 		
 		StringWriter sw = new StringWriter();

@@ -30,13 +30,13 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class UndeployZimlet extends AdminDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
 	    String name = request.getAttribute(AdminService.A_NAME);
 
 	    Element response = lc.createElement(AdminService.UNDEPLOY_ZIMLET_RESPONSE);

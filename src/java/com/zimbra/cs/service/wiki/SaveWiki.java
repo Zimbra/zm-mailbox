@@ -35,7 +35,7 @@ import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class SaveWiki extends WikiDocumentHandler {
 
@@ -47,7 +47,7 @@ public class SaveWiki extends WikiDocumentHandler {
 	@Override
 	public Element handle(Element request, Map<String, Object> context)
 			throws ServiceException, SoapFaultException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         OperationContext octxt = lc.getOperationContext();
 		Wiki wiki = getRequestedWikiNotebook(request, lc);
 

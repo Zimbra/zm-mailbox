@@ -37,7 +37,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -48,7 +48,7 @@ public class GetPrefs extends DocumentHandler  {
 	 * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
 	 */
 	public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
         Account acct = getRequestedAccount(lc);
 
         Element response = lc.createElement(AccountService.GET_PREFS_RESPONSE);

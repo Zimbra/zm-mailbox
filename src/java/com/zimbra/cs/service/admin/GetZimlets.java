@@ -34,7 +34,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetZimlets extends AdminDocumentHandler  {
 
@@ -43,7 +43,7 @@ public class GetZimlets extends AdminDocumentHandler  {
     }
 
     public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
         Account acct = getRequestedAccount(lc);
 		
         Element response = lc.createElement(AdminService.GET_ZIMLETS_RESPONSE);

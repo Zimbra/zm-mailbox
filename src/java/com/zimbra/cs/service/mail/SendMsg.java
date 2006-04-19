@@ -51,7 +51,7 @@ import com.zimbra.cs.service.mail.ParseMimeMessage.MimeMessageData;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.WriteOpDocumentHandler;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 
 /**
@@ -67,7 +67,7 @@ public class SendMsg extends WriteOpDocumentHandler {
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Account acct = getRequestedAccount(lc);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
@@ -106,7 +106,7 @@ public class SendMsg extends WriteOpDocumentHandler {
         return response;
     }
 
-    static MimeMessage parseUploadedMessage(ZimbraContext lc, String attachId, MimeMessageData mimeData) throws ServiceException {
+    static MimeMessage parseUploadedMessage(ZimbraSoapContext lc, String attachId, MimeMessageData mimeData) throws ServiceException {
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getRawAuthToken());
         if (up == null)
             throw MailServiceException.NO_SUCH_UPLOAD(attachId);

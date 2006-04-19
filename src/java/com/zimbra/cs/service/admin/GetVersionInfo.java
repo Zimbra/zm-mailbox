@@ -29,7 +29,7 @@ import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 import com.zimbra.cs.util.BuildInfo;
 
@@ -37,7 +37,7 @@ public class GetVersionInfo extends AdminDocumentHandler
 {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
 
         Element response = lc.createElement(AdminService.GET_VERSION_INFO_RESPONSE);
         Element infoEl = response.addElement(AdminService.A_VERSION_INFO_INFO);

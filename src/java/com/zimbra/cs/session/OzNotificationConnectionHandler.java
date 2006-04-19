@@ -20,7 +20,7 @@ import com.zimbra.cs.ozserver.OzConnectionHandler;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.SoapProtocol;
 import com.zimbra.soap.SoapServlet;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author tim
@@ -39,12 +39,12 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
     
     private AuthToken mAuthToken = null;
     
-    private ZimbraContext mContext = null;
+    private ZimbraSoapContext mContext = null;
     
     private int mLastKnownSeqNo; // the highest seq no the client is known to have received
     public int getLastKnownSeqNo() { return mLastKnownSeqNo; }
     
-    public ZimbraContext getZimbraContext() { return mContext; }
+    public ZimbraSoapContext getZimbraContext() { return mContext; }
     
     public OzNotificationConnectionHandler(OzConnection connection) {
         mConnection = connection;
@@ -237,7 +237,7 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
             Map ctxt = new HashMap<String, String>();
             ctxt.put(SoapServlet.ZIMBRA_AUTH_TOKEN, authToken);
             
-            mContext = new ZimbraContext(null, ctxt, SoapProtocol.Soap12);
+            mContext = new ZimbraSoapContext(null, ctxt, SoapProtocol.Soap12);
         } catch(ServiceException e) {
             ZimbraLog.mailbox.info("Could not fetch ZimbraContext: acct="+mAuthToken.getAccountId()+" session="+sessionId);
             writeAsciiWithCRLF("Error getting ZimbraContext: "+e);

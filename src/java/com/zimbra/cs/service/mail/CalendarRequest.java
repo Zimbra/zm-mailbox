@@ -47,7 +47,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.WriteOpDocumentHandler;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 
 public abstract class CalendarRequest extends WriteOpDocumentHandler {
@@ -72,7 +72,7 @@ public abstract class CalendarRequest extends WriteOpDocumentHandler {
      * @return
      * @throws ServiceException
      */
-    protected static CalSendData handleMsgElement(ZimbraContext lc, Element msgElem, Account acct,
+    protected static CalSendData handleMsgElement(ZimbraSoapContext lc, Element msgElem, Account acct,
                                                   Mailbox mbox, ParseMimeMessage.InviteParser inviteParser)
     throws ServiceException {
         CalSendData csd = new CalSendData();
@@ -169,7 +169,7 @@ public abstract class CalendarRequest extends WriteOpDocumentHandler {
     }
 
     protected static Element sendCalendarMessage(
-        ZimbraContext lc,
+        ZimbraSoapContext lc,
         int apptFolderId,
         Account acct,
         Mailbox mbox,
@@ -199,7 +199,7 @@ public abstract class CalendarRequest extends WriteOpDocumentHandler {
      * @throws ServiceException
      */
     protected static Element sendCalendarCancelMessage(
-        ZimbraContext lc,
+        ZimbraSoapContext lc,
         int apptFolderId,
         Account acct,
         Mailbox mbox,
@@ -226,7 +226,7 @@ public abstract class CalendarRequest extends WriteOpDocumentHandler {
      * @throws ServiceException
      */
     private static Element sendCalendarMessageInternal(
-        ZimbraContext lc,
+        ZimbraSoapContext lc,
         int apptFolderId,
         Account acct,
         Mailbox mbox,

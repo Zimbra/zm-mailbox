@@ -44,7 +44,7 @@ import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class SaveDocument extends WikiDocumentHandler {
     private static final String[] TARGET_DOC_PATH = new String[] { MailService.E_DOC, MailService.A_ID };
@@ -78,7 +78,7 @@ public class SaveDocument extends WikiDocumentHandler {
 		return doc;
 	}
 	
-	protected Doc getDocumentDataFromUpload(ZimbraContext lc, String aid) throws ServiceException {
+	protected Doc getDocumentDataFromUpload(ZimbraSoapContext lc, String aid) throws ServiceException {
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), aid, lc.getRawAuthToken());
 
         Doc doc = new Doc();
@@ -101,7 +101,7 @@ public class SaveDocument extends WikiDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Wiki wiki = getRequestedWikiNotebook(request, lc);
 
         Element docElem = request.getElement(MailService.E_DOC);

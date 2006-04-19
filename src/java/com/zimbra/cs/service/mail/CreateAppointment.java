@@ -38,7 +38,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author tim
@@ -57,14 +57,14 @@ public class CreateAppointment extends CalendarRequest {
 
     // very simple: generate a new UID and send a REQUEST
     protected static class CreateAppointmentInviteParser extends ParseMimeMessage.InviteParser { 
-        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraContext lc, Account account, Element inviteElem) throws ServiceException 
+        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, Account account, Element inviteElem) throws ServiceException 
         {
             return CalendarUtils.parseInviteForCreate(account, inviteElem, null, null, false, CalendarUtils.RECUR_ALLOWED);
         }
     };
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Account acct = getRequestedAccount(lc);
         Mailbox mbox = getRequestedMailbox(lc);
         

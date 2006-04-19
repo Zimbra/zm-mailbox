@@ -32,7 +32,7 @@ import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateDistributionList extends AdminDocumentHandler {
 
@@ -45,7 +45,7 @@ public class CreateDistributionList extends AdminDocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException {
 	    
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Provisioning prov = Provisioning.getInstance();
 	    
         String name = request.getAttribute(AdminService.E_NAME).toLowerCase();

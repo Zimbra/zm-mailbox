@@ -52,7 +52,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.L10nUtil;
 import com.zimbra.cs.util.L10nUtil.MsgKey;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class CancelAppointment extends CalendarRequest {
 
@@ -62,7 +62,7 @@ public class CancelAppointment extends CalendarRequest {
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Account acct = getRequestedAccount(lc);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
@@ -112,7 +112,7 @@ public class CancelAppointment extends CalendarRequest {
         return response;
     }        
     
-    void cancelInstance(ZimbraContext lc, Element request, Account acct, Mailbox mbox, Appointment appt, Invite defaultInv, RecurId recurId) 
+    void cancelInstance(ZimbraSoapContext lc, Element request, Account acct, Mailbox mbox, Appointment appt, Invite defaultInv, RecurId recurId) 
     throws ServiceException {
         Locale locale = acct.getLocale();
         String text = L10nUtil.getMessage(MsgKey.calendarCancelAppointmentInstance, locale);
@@ -165,7 +165,7 @@ public class CancelAppointment extends CalendarRequest {
                                   acct, mbox, dat, true);
     }
 
-    protected void cancelInvite(ZimbraContext lc, Element request, Account acct, Mailbox mbox, Appointment appt, Invite inv)
+    protected void cancelInvite(ZimbraSoapContext lc, Element request, Account acct, Mailbox mbox, Appointment appt, Invite inv)
     throws ServiceException {
         Locale locale = acct.getLocale();
         String text = L10nUtil.getMessage(MsgKey.calendarCancelAppointment, locale);

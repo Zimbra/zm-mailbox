@@ -32,12 +32,12 @@ import java.util.Map;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetAllVolumes extends AdminDocumentHandler {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
 
         List vols = Volume.getAll();
         Element response = lc.createElement(AdminService.GET_ALL_VOLUMES_RESPONSE);

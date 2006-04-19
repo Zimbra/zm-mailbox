@@ -45,7 +45,7 @@ import com.zimbra.cs.service.formatter.ContactCSV.ParseException;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -53,7 +53,7 @@ import com.zimbra.soap.ZimbraContext;
 public class ImportContacts extends DocumentHandler  {
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
 
@@ -96,7 +96,7 @@ public class ImportContacts extends DocumentHandler  {
         return response;
     }
     
-    private static BufferedReader parseUploadedContent(ZimbraContext lc, String attachId, List uploads)
+    private static BufferedReader parseUploadedContent(ZimbraSoapContext lc, String attachId, List uploads)
     throws ServiceException {
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getRawAuthToken());
         if (up == null)

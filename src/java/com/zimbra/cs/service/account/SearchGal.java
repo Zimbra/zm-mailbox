@@ -40,7 +40,7 @@ import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -50,7 +50,7 @@ public class SearchGal extends DocumentHandler {
     public Element handle(Element request, Map context) throws ServiceException {
         String n = request.getAttribute(AccountService.E_NAME);
 
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Element response = lc.createElement(AccountService.SEARCH_GAL_RESPONSE);
         Account acct = getRequestedAccount(getZimbraContext(context));
 

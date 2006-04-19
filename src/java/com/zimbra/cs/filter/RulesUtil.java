@@ -43,7 +43,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapTransport;
 
@@ -105,7 +105,7 @@ public class RulesUtil {
         Element authReq = createAuthRequest(acctEmail, pwd);
         Element authResp = trans.invokeWithoutSession(authReq);
         String authToken = authResp.getAttribute(AdminService.E_AUTH_TOKEN);
-        String sessionId = authResp.getAttribute(ZimbraContext.E_SESSION_ID, null);
+        String sessionId = authResp.getAttribute(ZimbraSoapContext.E_SESSION_ID, null);
         trans.setAuthToken(authToken);
         if (sessionId != null)
             trans.setSessionId(sessionId);

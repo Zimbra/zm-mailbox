@@ -57,7 +57,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author tim
@@ -72,7 +72,7 @@ public class SendInviteReply extends CalendarRequest {
 
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Account acct = getRequestedAccount(lc);
         OperationContext octxt = lc.getOperationContext();

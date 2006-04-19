@@ -50,7 +50,7 @@ import com.zimbra.cs.util.FileUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ExceptionToString;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -111,9 +111,9 @@ public class ParseMimeMessage {
      *
      */
     static abstract class InviteParser {
-        abstract protected InviteParserResult parseInviteElement(ZimbraContext lc, Account account, Element invElement) throws ServiceException;
+        abstract protected InviteParserResult parseInviteElement(ZimbraSoapContext lc, Account account, Element invElement) throws ServiceException;
         
-        public final InviteParserResult parse(ZimbraContext lc, Account account, Element invElement) throws ServiceException {
+        public final InviteParserResult parse(ZimbraSoapContext lc, Account account, Element invElement) throws ServiceException {
             mResult = parseInviteElement(lc, account, invElement);
             return mResult;
         }
@@ -131,7 +131,7 @@ public class ParseMimeMessage {
     
     // by default, no invite allowed
     static InviteParser NO_INV_ALLOWED_PARSER = new InviteParser() {
-        public InviteParserResult parseInviteElement(ZimbraContext lc, Account account, Element inviteElem)
+        public InviteParserResult parseInviteElement(ZimbraSoapContext lc, Account account, Element inviteElem)
         throws ServiceException {
             throw ServiceException.INVALID_REQUEST("No <inv> element allowed for this request", null);
         }
@@ -149,7 +149,7 @@ public class ParseMimeMessage {
         public String iCalUUID = null;         // NULL unless there is an iCal part
     }
     
-    public static MimeMessage parseMimeMsgSoap(ZimbraContext lc, Mailbox mbox, Element msgElem, 
+    public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext lc, Mailbox mbox, Element msgElem, 
                                                MimeBodyPart[] additionalParts, MimeMessageData out) 
     throws ServiceException {
         return parseMimeMsgSoap(lc, mbox, msgElem, additionalParts, NO_INV_ALLOWED_PARSER, out);
@@ -170,7 +170,7 @@ public class ParseMimeMessage {
      * @return
      * @throws ServiceException
      */
-    public static MimeMessage parseMimeMsgSoap(ZimbraContext lc, Mailbox mbox, Element msgElem, MimeBodyPart[] additionalParts,
+    public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext lc, Mailbox mbox, Element msgElem, MimeBodyPart[] additionalParts,
                                                InviteParser inviteParser, MimeMessageData out) 
     throws ServiceException {
         /* msgElem == "<m>" E_MSG */
@@ -448,7 +448,7 @@ public class ParseMimeMessage {
         }
     }
 
-    private static List<Upload> attachUploads(Multipart mmp, ZimbraContext lc, String attachIds)
+    private static List<Upload> attachUploads(Multipart mmp, ZimbraSoapContext lc, String attachIds)
     throws ServiceException, MessagingException {
         List<Upload> uploads = new ArrayList<Upload>();
         String[] uploadIds = attachIds.split(FileUploadServlet.UPLOAD_DELIMITER);

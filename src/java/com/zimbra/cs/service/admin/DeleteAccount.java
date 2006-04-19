@@ -37,7 +37,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -59,7 +59,7 @@ public class DeleteAccount extends AdminDocumentHandler {
      */
     public Element handle(Element request, Map context) throws ServiceException {
         
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Provisioning prov = Provisioning.getInstance();
         
         String id = request.getAttribute(AdminService.E_ID);

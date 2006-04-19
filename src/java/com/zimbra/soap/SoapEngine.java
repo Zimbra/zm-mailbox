@@ -106,10 +106,10 @@ public class SoapEngine {
 
         // if (mLog.isDebugEnabled()) mLog.debug("dispatch: soapProto = " + soapProto.getVersion());
 
-        ZimbraContext lc = null;
-        Element ectxt = soapProto.getHeader(envelope, ZimbraContext.CONTEXT);
+        ZimbraSoapContext lc = null;
+        Element ectxt = soapProto.getHeader(envelope, ZimbraSoapContext.CONTEXT);
         try {
-            lc = new ZimbraContext(ectxt, context, soapProto);
+            lc = new ZimbraSoapContext(ectxt, context, soapProto);
         } catch (ServiceException e) {
             return soapProto.soapEnvelope(soapProto.soapFault(e));
         }
@@ -207,7 +207,7 @@ public class SoapEngine {
      * @param lc
      * @return
      */
-    Element dispatchRequest(Element request, Map<String, Object> context, ZimbraContext lc) {
+    Element dispatchRequest(Element request, Map<String, Object> context, ZimbraSoapContext lc) {
         SoapProtocol soapProto = lc.getResponseProtocol();
 
         if (request == null)

@@ -34,7 +34,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
@@ -43,7 +43,7 @@ import com.zimbra.soap.WriteOpDocumentHandler;
 public class CreateTag extends WriteOpDocumentHandler  {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
 		// FIXME: need to check that account and mailbox exist
         Mailbox mbox = getRequestedMailbox(lc);
 

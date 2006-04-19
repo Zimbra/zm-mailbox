@@ -32,7 +32,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class DeleteWiki extends WikiDocumentHandler {
 
@@ -43,7 +43,7 @@ public class DeleteWiki extends WikiDocumentHandler {
     
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
         OperationContext octxt = lc.getOperationContext();
         Element eword = request.getElement(MailService.E_WIKIWORD);
         String word = eword.getAttribute(MailService.A_NAME);

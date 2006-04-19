@@ -36,13 +36,13 @@ import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.cs.im.IMMessage.Lang;
 import com.zimbra.cs.im.IMMessage.TextPart;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class IMGetChat extends IMDocumentHandler {
     
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException 
     {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         
         Element response = lc.createElement(IMService.IM_GET_CHAT_RESPONSE);
         

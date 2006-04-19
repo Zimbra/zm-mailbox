@@ -458,11 +458,11 @@ public class SoapTestHarness {
 		if (mAuthToken == null)
 			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest);
 		else {
-			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ZimbraContext.toCtxt(mSoapProto, mAuthToken, mSessionId));
+			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ZimbraSoapContext.toCtxt(mSoapProto, mAuthToken, mSessionId));
             if (mResponseProto == SoapProtocol.SoapJS) {
-                Element context = mCurrent.mSoapRequest.getOptionalElement(mSoapProto.getHeaderQName()).getOptionalElement(ZimbraContext.CONTEXT);
+                Element context = mCurrent.mSoapRequest.getOptionalElement(mSoapProto.getHeaderQName()).getOptionalElement(ZimbraSoapContext.CONTEXT);
                 if (context != null)
-                    context.addElement(ZimbraContext.E_FORMAT).addAttribute(ZimbraContext.A_TYPE, ZimbraContext.TYPE_JAVASCRIPT);
+                    context.addElement(ZimbraSoapContext.E_FORMAT).addAttribute(ZimbraSoapContext.A_TYPE, ZimbraSoapContext.TYPE_JAVASCRIPT);
             }
 //            try {
 //                Element ctxt = mCurrent.mSoapRequest.getElement(SoapProtocol.Soap12.mHeaderQName).getElement(ZimbraContext.CONTEXT);

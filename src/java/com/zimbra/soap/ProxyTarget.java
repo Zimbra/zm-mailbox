@@ -110,7 +110,7 @@ public class ProxyTarget {
         return response;
     }
 
-    public Element dispatch(Element request, ZimbraContext lc) throws ServiceException, SoapFaultException {
+    public Element dispatch(Element request, ZimbraSoapContext lc) throws ServiceException, SoapFaultException {
         if (lc == null)
             return dispatch(request);
 

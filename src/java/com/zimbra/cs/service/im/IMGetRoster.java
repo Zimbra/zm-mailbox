@@ -35,12 +35,12 @@ import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class IMGetRoster extends IMDocumentHandler {
     
     public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
 
         Element response = lc.createElement(IMService.IM_GET_ROSTER_RESPONSE);
 

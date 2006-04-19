@@ -44,7 +44,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class SetAppointment extends CalendarRequest {
 
@@ -60,7 +60,7 @@ public class SetAppointment extends CalendarRequest {
         
         SetAppointmentInviteParser(boolean exceptOk) { mExceptOk = exceptOk; };
 
-        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraContext lc, Account account, Element inviteElem) throws ServiceException 
+        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, Account account, Element inviteElem) throws ServiceException 
         {
             Element content = inviteElem.getOptionalElement("content");
             if (content != null) {
@@ -74,7 +74,7 @@ public class SetAppointment extends CalendarRequest {
     
     
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Account acct = getRequestedAccount(lc);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
@@ -126,7 +126,7 @@ public class SetAppointment extends CalendarRequest {
         } // synchronized(mbox)
     }
     
-    static private SetAppointmentData getSetAppointmentData(ZimbraContext lc, Account acct, Mailbox mbox, 
+    static private SetAppointmentData getSetAppointmentData(ZimbraSoapContext lc, Account acct, Mailbox mbox, 
                                                             Element e, ParseMimeMessage.InviteParser parser)
     throws ServiceException {
         boolean needsReply = e.getAttributeBool(MailService.A_APPT_NEEDS_REPLY, true);

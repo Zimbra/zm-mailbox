@@ -52,7 +52,7 @@ import com.zimbra.cs.session.SessionCache;
 /**
  * @author schemers
  */
-public class ZimbraContext {
+public class ZimbraSoapContext {
 
     private final class SessionInfo {
         Session session;
@@ -74,7 +74,7 @@ public class ZimbraContext {
         public String toString()  { return session.getSessionId(); }
     }
 
-	private static Log sLog = LogFactory.getLog(ZimbraContext.class);
+	private static Log sLog = LogFactory.getLog(ZimbraSoapContext.class);
 
     private static final int MAX_HOP_COUNT = 5;
 
@@ -132,7 +132,7 @@ public class ZimbraContext {
     private boolean     mMountpointTraversed;
 
 
-    public ZimbraContext(ZimbraContext lc, String targetAccountId) throws ServiceException {
+    public ZimbraSoapContext(ZimbraSoapContext lc, String targetAccountId) throws ServiceException {
         mRawAuthToken = lc.mRawAuthToken;
         mAuthToken = lc.mAuthToken;
         mAuthTokenAccountId = lc.mAuthTokenAccountId;
@@ -156,7 +156,7 @@ public class ZimbraContext {
 	 * @param requestProtocol TODO
 	 * @throws ServiceException
 	 */
-	public ZimbraContext(Element ctxt, Map context, SoapProtocol requestProtocol) throws ServiceException {
+	public ZimbraSoapContext(Element ctxt, Map context, SoapProtocol requestProtocol) throws ServiceException {
 	    if (ctxt != null && !ctxt.getQName().equals(CONTEXT)) 
 	        throw new IllegalArgumentException("expected ctxt, got: " + ctxt.getQualifiedName());
 

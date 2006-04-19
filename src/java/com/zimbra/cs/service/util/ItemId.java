@@ -34,7 +34,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author dkarp
@@ -63,7 +63,7 @@ public class ItemId {
         mAccountId = acctId;  mId = id;  mSubpartId = subId;
     }
 
-    public ItemId(String encoded, ZimbraContext lc) throws ServiceException {
+    public ItemId(String encoded, ZimbraSoapContext lc) throws ServiceException {
         if (encoded == null || encoded.equals(""))
             throw ServiceException.INVALID_REQUEST("empty/missing item ID", null);
 
@@ -123,7 +123,7 @@ public class ItemId {
     public String toString(Account authAccount) {
         return toString(authAccount == null ? null : authAccount.getId());
     }
-    public String toString(ZimbraContext lc) {
+    public String toString(ZimbraSoapContext lc) {
         return toString(lc == null ? null : lc.getAuthtokenAccountId());
     }
     public String toString(String authAccountId) {

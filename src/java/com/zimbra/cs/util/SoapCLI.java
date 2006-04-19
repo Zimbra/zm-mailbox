@@ -48,7 +48,7 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapTransport;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * For command line interface utilities that are SOAP clients and need to authenticate with
@@ -168,7 +168,7 @@ public abstract class SoapCLI {
         try {
             Element authResp = mTrans.invokeWithoutSession(authReq);
             String authToken = authResp.getAttribute(AdminService.E_AUTH_TOKEN);
-            String sessionId = authResp.getAttribute(ZimbraContext.E_SESSION_ID, null);
+            String sessionId = authResp.getAttribute(ZimbraSoapContext.E_SESSION_ID, null);
             mTrans.setAuthToken(authToken);
             if (sessionId != null) {
                 mTrans.setSessionId(sessionId);

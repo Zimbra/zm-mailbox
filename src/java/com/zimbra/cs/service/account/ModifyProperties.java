@@ -32,7 +32,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.WriteOpDocumentHandler;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
 
 /**
@@ -44,7 +44,7 @@ public class ModifyProperties extends WriteOpDocumentHandler {
 
 	public Element handle(Element request, Map context)
 			throws ServiceException, SoapFaultException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
         Account acct = getRequestedAccount(lc);
 
         ZimletUserProperties props = ZimletUserProperties.getProperties(acct);

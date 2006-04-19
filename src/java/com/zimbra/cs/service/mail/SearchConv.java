@@ -45,7 +45,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author tim
@@ -57,7 +57,7 @@ public class SearchConv extends Search {
         if (sLog.isDebugEnabled())
             sLog.debug("**Start SearchConv");
         
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
         
@@ -111,7 +111,7 @@ public class SearchConv extends Search {
      * @return
      * @throws ServiceException
      */
-    Element putHits(ZimbraContext lc, Element response, Message[] msgs, ZimbraQueryResults results, SearchParams params)
+    Element putHits(ZimbraSoapContext lc, Element response, Message[] msgs, ZimbraQueryResults results, SearchParams params)
     throws ServiceException {
         int offset = params.getOffset();
         int limit  = params.getLimit();

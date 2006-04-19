@@ -42,7 +42,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author dkarp
@@ -52,7 +52,7 @@ public class Sync extends DocumentHandler {
     private static final int DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_ROOT;
 
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
 
@@ -76,7 +76,7 @@ public class Sync extends DocumentHandler {
         return response;
     }
 
-    private void initialFolderSync(ZimbraContext lc, Element response, Mailbox mbox, Folder folder) throws ServiceException {
+    private void initialFolderSync(ZimbraSoapContext lc, Element response, Mailbox mbox, Folder folder) throws ServiceException {
         boolean isSearch = folder instanceof SearchFolder;
         Mailbox.OperationContext octxt = lc.getOperationContext();
         Element f = ToXML.encodeFolder(response, lc, folder);
@@ -100,7 +100,7 @@ public class Sync extends DocumentHandler {
                     initialFolderSync(lc, f, mbox, subfolder);
     }
 
-    private void initialTagSync(ZimbraContext lc, Element response, Mailbox mbox) throws ServiceException {
+    private void initialTagSync(ZimbraSoapContext lc, Element response, Mailbox mbox) throws ServiceException {
         for (Tag tag : mbox.getTagList(lc.getOperationContext()))
             if (tag != null && !(tag instanceof Flag))
                 ToXML.encodeTag(response, lc, tag);
@@ -130,7 +130,7 @@ public class Sync extends DocumentHandler {
                                               Change.MODIFIED_NAME   | Change.MODIFIED_CONFLICT |
                                               Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION;
 
-    private void deltaSync(ZimbraContext lc, Element response, Mailbox mbox, long begin) throws ServiceException {
+    private void deltaSync(ZimbraSoapContext lc, Element response, Mailbox mbox, long begin) throws ServiceException {
         // first, handle deleted items
         String deleted = mbox.getTombstones(begin);
         if (deleted != null && !deleted.equals(""))

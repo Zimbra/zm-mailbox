@@ -41,7 +41,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
@@ -64,7 +64,7 @@ public class TagAction extends ItemAction  {
     }));
 
 	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
 
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
@@ -89,7 +89,7 @@ public class TagAction extends ItemAction  {
     private String handleTag(Map context, Element request, String operation) throws ServiceException {
         Element action = request.getElement(MailService.E_ACTION);
 
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
         ItemId iid = new ItemId(action.getAttribute(MailService.A_ID), lc);

@@ -35,12 +35,12 @@ import com.zimbra.cs.rmgmt.RemoteResult;
 import com.zimbra.cs.rmgmt.RemoteResultParser;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetMailQueueInfo extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map context) throws ServiceException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 	    
 	    Element serverElem = request.getElement(AdminService.E_SERVER);

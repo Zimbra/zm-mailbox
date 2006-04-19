@@ -42,7 +42,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author dkarp
@@ -58,7 +58,7 @@ public class GetFolder extends DocumentHandler {
     static final String DEFAULT_FOLDER_ID = "" + Mailbox.ID_FOLDER_USER_ROOT;
 
 	public Element handle(Element request, Map context) throws ServiceException, SoapFaultException {
-		ZimbraContext lc = getZimbraContext(context);
+		ZimbraSoapContext lc = getZimbraContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
 
@@ -84,7 +84,7 @@ public class GetFolder extends DocumentHandler {
         return response;
 	}
 
-	public static Element handleFolder(Mailbox mbox, Folder folder, Element response, ZimbraContext lc, OperationContext octxt)
+	public static Element handleFolder(Mailbox mbox, Folder folder, Element response, ZimbraSoapContext lc, OperationContext octxt)
     throws ServiceException {
 		Element respFolder = ToXML.encodeFolder(response, lc, folder);
 

@@ -39,7 +39,7 @@ import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.ZimbraContext;
+import com.zimbra.soap.ZimbraSoapContext;
 
 
 public class CreateAppointmentException extends CreateAppointment {
@@ -60,14 +60,14 @@ public class CreateAppointmentException extends CreateAppointment {
             mTzMap = tzMap;
         }
         
-        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraContext lc, Account account, Element inviteElem)
+        public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, Account account, Element inviteElem)
         throws ServiceException {
             return CalendarUtils.parseInviteForCreate(account, inviteElem, mTzMap, mUid, true, CalendarUtils.RECUR_NOT_ALLOWED);
         }
     };
     
     public Element handle(Element request, Map context) throws ServiceException {
-        ZimbraContext lc = getZimbraContext(context);
+        ZimbraSoapContext lc = getZimbraContext(context);
         Account acct = getRequestedAccount(lc);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
