@@ -1,6 +1,6 @@
 <tr>
 	<td class='_pageIcon'>{{ICON}}</td>
-	<td class='_pageLink'>{{NAME}}</td>
+	<td class='_pageLink'>[[{{NAME}}]]</td>
 	<td class='_tocAuthor'>{{MODIFIER}}</td>
 	<td class='_tocHistory' width='*'>{{MODIFYDATE}}</td>
 </tr>

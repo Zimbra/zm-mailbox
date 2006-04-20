@@ -1,4 +1,4 @@
 <table width=100%><tr><td class='_pageName'>Table of Content</td>
 	<td align=right>{{BREADCRUMBS}}</td></tr>
 </table>
-{TOC format="template" bodyTemplate="_TOC_BODY_TEMPLATE_" itemTemplate="_TOC_ITEM_TEMPLATE_"}}
+{{TOC format="template" bodyTemplate="_TOC_BODY_TEMPLATE_" itemTemplate="_TOC_ITEM_TEMPLATE_"}}

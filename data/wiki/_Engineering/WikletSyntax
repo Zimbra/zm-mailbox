@@ -1,196 +1,420 @@
 <div id='wiklet_syntax'>
 <style>
-	#wiklet_syntax *		{ 	font-family:Verdana; font-size:12px}
-	#wiklet_syntax .head	{	font-size:24px; background-color:#eeeeee;	}
+	#wiklet_syntax *		{ 	font-family:Verdana; font-size: 12px; }
+	#wiklet_syntax TR		{ 	vertical-align:top; }
+	#wiklet_syntax H1		{ 	margin: 0em; }
+	#wiklet_syntax .head	{	background-color:#eeeeee; font-size: 1.5em;	}
 	#wiklet_syntax .wiklet	{	width:25%; vertical-align:top;	}
-	#wiklet_syntax .tag		{	width:25%; vertical-align:top;	}
-	#wiklet_syntax .notes	{	vertical-align:top;	}
+	#wiklet_syntax .tag		{	width:25%; 	}
+	#wiklet_syntax .notes	{		}
+	#wiklet_syntax .notes UL { margin-left:-0.5em; }
+	#wiklet_syntax .notes LI { padding:0px; }
 	#wiklet_syntax .code	{	font-family:monospace; padding-top:5px; }
 	#wiklet_syntax ul		{	padding-left:20px;	}
 	#wiklet_syntax ul li	{	padding-bottom:10px;	}
 	#wiklet_syntax td		{ 	padding:4px;	}
+	#wiklet_syntax .issue { color:red; }
 </style>
 
-
+<p>
+<b class='issue'>Note:</b>
+Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
+<p>
 <table border=1 cellspacing=0>
-<tr><td class='head' colspan=3>Display Wiklets</td></tr>
-<tr><td class='wiklet'>
-		CamelCaseText
-	</td>
-	<td class='tag'></td>
-	<td class='notes'>
-		<li>CamelCaseText must be turned into a link
-		<li>Link action will be different for client and REST -- talk to Andy.
-		<li><a href='http://kb.liquidsys.com/twiki/bin/view.cgi/TWiki/WikiWord' target='_blank'>WikiWord syntax and examples</a>
-	</td>
+<tr><td class='head' colspan=4><h1>Display Wiklets</h1></td></tr>
+<tr>
+	<th>Done</th>
+	<th>Syntax 1</th>
+	<th>Syntax 2</th>
+	<th>Description</th>
 </tr>
-
-<tr><td class='wiklet'>
-		&#91;&#91;pagename&#93;<br>
-		&#91;&#91;pagename|anchor text&#93;<br>
-		&#91;&#91;pagename|anchor text|version&#93;<br>
-		&#91;&#91;pagename]&#91;anchor text&#93;<br>
-		&#91;&#91;pagename]&#91;anchor text]&#91;version&#93;<br>
+<tr>
+	<td>&nbsp;</td>
+	<td class='wiklet'>
+		&lt;nowiklet> ... &lt;/nowiklet>
 	</td>
 	<td class='tag'>
-		&lt;zm:pageLink<br>
-			&nbsp;&nbsp;name="page"<br>
-			&nbsp;&nbsp;version="" /&gt;<br><br>
-		&lt;zm:pageLink<br>&nbsp;&nbsp;name="page"<br>&nbsp;&nbsp;version=""<br>&gt;<br>
-			&nbsp;&nbsp;&nbsp;&nbsp;Page Title<br>
-		&lt;/zm:pageLink&gt;
-
+		&lt;zm:nowiklet> ... &lt;/zm:nowiklet>
 	</td>
 	<td class='notes'>
-		<li>All of these must be turned into a link, as above
-		<li><b>Note</b>: Verify this with MediaWiki to make sure this is compatible
-	</td>
-</tr>
-
-<tr><td class='wiklet'>
-		&#123;&#123;CONTENT&#125;&#125;
-	</td>
-	<td class='tag'>
-		&lt;zm:pageContent/&gt;
-	</td>
-	<td class='notes'>
-		<li> insert HTML content of the page (or itemTemplate list) here
-	</td>
-</tr>
-
-<tr><td class='wiklet'>
-		&#123;&#123;NAME&#125;&#125;
-	</td>
-	<td class='tag'>
-		&lt;zm:pageName/&gt;
-	</td>
-	<td class='notes'>
-		<li> name of the page
-		<li> Server must turn this into a link for the client
-	</td>
-</tr>
-
-
-<tr><td class='wiklet'>
-		&#123;&#123;ICON&#125;&#125;
-	</td>
-	<td class='tag'>
-		&lt;zm:pageIcon/&gt;		
-	</td>
-	<td class='notes'>
-		<li> icon for the page, one of:
 		<ul>
-			<li>&lt;div class='ImgNotebook _icon'&gt;&lt;/div&gt;
-			<li>&lt;div class='ImgSection _icon'&gt;&lt;/div&gt;
-			<li>&lt;div class='ImgPage _icon'&gt;&lt;/div&gt;
+		<li> Escape text so that it is not treated as a wiklet
 		</ul>
 	</td>
 </tr>
-<tr><td class='wiklet'>
-		&#123;&#123;FRAGMENT&#125;&#125;
+<tr>
+	<td>&nbsp;</td>
+	<td class='wiklet'>
+		&lt;nolink> ... &lt;/nolink>
 	</td>
 	<td class='tag'>
-		&lt;zm:pageFragment/&gt;
+		&lt;zm:nolink> ... &lt;/zm:nolink>
 	</td>
 	<td class='notes'>
-	<li>fragment for the page, output as straight text
+		<ul>
+		<li> Escape text so that it is not treated as a link
+		</ul>
+	</td>
+</tr>
+<tr>
+	<td>X</td>
+	<td class='wiklet'>
+		CamelCaseText
+	</td>
+	<td class='tag'>
+		CamelCaseText
+	</td>
+	<td class='notes'>
+		<ul>
+		<li>CamelCaseText must be turned into a link
+		<li>Link action will be different for client and REST -- talk to Andy.
+		<li><a href='http://twiki.org/cgi-bin/view/TWiki/WikiWord' target='_blank'>WikiWord syntax and 
+		examples</a>
+		</ul>
 	</td>
 </tr>
 
-<tr><td class='wiklet'>
-		&#123;&#123;MSG msgKey&#125;&#125;
+<tr>
+	<td class='issue'>X</td>
+	<td class='wiklet'>
+		&#91;&#91;pagename]]<br>
+		&#91;&#91;pagename|anchor text]]<br>
+		&#91;&#91;pagename|anchor text<span class='issue'>|version</span>]]<br>
+		&#91;&#91;pagename]&#91;anchor text]]<br>
+		&#91;&#91;pagename]&#91;anchor text]<span class='issue'>&#91;version</span>]]<br>
+	</td>
+	<td class='tag'>
+		&lt;zm:link<br>
+			&nbsp;&nbsp;name="pagename"<br>
+			&nbsp;&nbsp;version="#" /&gt;<br><br>
+		&lt;zm:link<br>&nbsp;&nbsp;name="pagename"<br>
+			&nbsp;&nbsp;version="#"<br>&gt;<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;Page Title<br>
+		&lt;/zm:link&gt;
+
+	</td>
+	<td class='notes'>
+		<ul>
+		<li>All of these must be turned into a link, as above
+		<li> In all cases, version is optional.
+		</ul>
+		<ul>
+		<li><b class='issue'>Issue:</b>
+			Verify this with MediaWiki to make sure this is compatible.
+		<li><b class='issue'>Issue:</b>
+			Do we support URL links? For example: mailto:, http:, etc.
+		<li><b class='issue'>Issue:</b>
+			We currently don't support version refs.
+		</ul>
+	</td>
+</tr>
+
+<tr>
+	<td>X</td>
+	<td class='wiklet'>
+		&#123;&#123;CONTENT&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:content/&gt;
+	</td>
+	<td class='notes'>
+		<ul>
+		<li> insert HTML content of the item
+		</ul>
+	</td>
+</tr>
+
+<tr>
+	<td>X</td>
+	<td class='wiklet'>
+		&#123;&#123;NAME&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:name/&gt;
+	</td>
+	<td class='notes'>
+		<ul>
+		<li> name of the item
+		<li> Server must turn this into a link for the client
+		</ul>
+		<ul>
+		<li><b class='issue'>Issue:</b> 
+			There may be cases
+			where the user explicitly doesn't want to make this a
+			link. I think it's better to make them put the link
+			syntax around it (e.g. &#91;&#91;&#123;&#123;NAME}}]]) to turn it into
+			a link.
+		</ul>
+	</td>
+</tr>
+
+<tr>
+	<td>&nbsp;</td>
+	<td class='wiklet'>
+		&#123;&#123;FULLNAME}}
+	</td>
+	<td class='tag'>
+		&lt;zm:fullname/&gt;
+	</td>
+	<td class='notes'>
+		<ul>
+		<li> full name of item, including location path
+		</ul>
+	</td>
+</tr>
+
+<tr>
+	<td>&nbsp;</td>
+	<td class='wiklet'>
+		&#123;&#123;PARENTNAME}}
+	</td>
+	<td class='tag'>
+		&lt;zm:parentname/&gt;
+	</td>
+	<td class='notes'>
+		<ul>
+		<li> name of parent item
+		</ul>
+	</td>
+</tr>
+
+<tr>
+	<td>&nbsp;</td>
+	<td class='wiklet'>
+		&#123;&#123;URL}}
+	</td>
+	<td class='tag'>
+		&lt;zm:url/&gt;
+	</td>
+	<td class='notes'>
+		<ul>
+		<li> REST URL to item
+		</ul>
+	</td>
+</tr>
+
+<tr>
+	<td>&nbsp;</td>
+	<td class='wiklet'>
+		&#123;&#123;URLPREFIX}}
+	</td>
+	<td class='tag'>
+		&lt;zm:urlprefix/&gt;
+	</td>
+	<td class='notes'>
+		<ul>
+		<li> REST URL prefix
+		</ul>
+	</td>
+</tr>
+
+<tr>
+	<td>X</td>
+	<td class='wiklet'>
+		&#123;&#123;ICON&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:icon/&gt;		
+	</td>
+	<td class='notes'>
+		<ul>
+		<li> icon for the item, one of:
+			<ul>
+			<li>&lt;div class='ImgNotebook _icon'&gt;&lt;/div&gt;
+			<li>&lt;div class='ImgSection _icon'&gt;&lt;/div&gt;
+			<li>&lt;div class='ImgPage _icon'&gt;&lt;/div&gt;
+			</ul>
+		</ul>
+	</td>
+</tr>
+<tr>
+	<td>X</td>
+	<td class='wiklet'>
+		&#123;&#123;FRAGMENT&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;zm:fragment/&gt;
+	</td>
+	<td class='notes'>
+		<ul>
+		<li>fragment for the item, output as straight text
+		</ul>
+		<ul>
+		<li><b class='issue'>Issue:</b>
+			Can we display fragments for other item types besides page?
+		<li><b class='issue'>Issue:</b>
+			Need to signal to object highlighter to not highlight this
+			content. Perhaps by surrounding the fragment with a known
+			element that the object highlighter can ignore.
+		<li><b class='issue'>Issue:</b>
+			We should evaluate everything in the fragment <em>except</em>
+			links. Otherwise, the user will see &#123;&#123;...}} in content.
+		</ul>
+	</td>
+</tr>
+
+<tr>
+	<td>X</td>
+	<td class='wiklet'>
+		&#123;&#123;MSG <span class='issue'>msgKey</span>&#125;&#125;
 	</td>
 	<td class='tag'>
 		&lt;zm:msg key="msgKey"/&gt;
 	</td>
 	<td class='notes'>
-	<li>outputs client message
-	<li>??? assumes the server has access to the client messages, as well as language ???
+		<ul>
+		<li>outputs client message
+		</ul>
+		<ul>
+		<li><b class='issue'>Issue:</b>
+			Does this assume the server has access to the client messages, as well as language?
+		<li><b class='issue'>Issue:</b>
+			Should the syntax 1 be a parameter and <em>not</em>
+			a simple text value? The simple format is convenient
+			but causes trouble if we ever add parameters.
+		</ul>
 	</td>
 </tr>
 	
-<tr><td class='wiklet'>
-		&#123;&#123;INCLUDE pageName&#125;&#125;
+<tr>
+	<td>X</td>
+	<td class='wiklet'>
+		&#123;&#123;INCLUDE <span class='issue'>pageName</span>&#125;&#125;
 	</td>
 	<td class='tag'>
 		&lt;zm:include page="pageName"/&gt;
 	</td>
 	<td class='notes'>
+		<ul>
+		<li> Includes the contents of another item into this page
+		</ul>
+		<ul>
+		<li><b class='issue'>Issue:</b>
+			Should the syntax 1 be a parameter and <em>not</em>
+			a simple text value? The simple format is convenient
+			but causes trouble if we ever add parameters.
+		</ul>
 	</td>
 </tr>
 
-<tr><td class='wiklet'>
-		&#123;&#123;CREATOR link="false"&#125;&#125;<br>
-		&#123;&#123;MODIFIER  link="false"&#125;&#125;
+<tr>
+	<td>X</td>
+	<td class='wiklet'>
+		&#123;&#123;CREATOR <span class='issue'>link="false"</span>&#125;&#125;<br>
+		&#123;&#123;MODIFIER  <span class='issue'>link="false"</span>&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:pageCreator link="false"/&gt;
-		&lt;zm:pageModifier link="false"/&gt;
+		&lt;zm:creator <span class='issue'>link="false"</span>/&gt;
+		&lt;zm:modifier <span class='issue'>link="false"</span>/&gt;
 	</td>
 	<td class='notes'>
-	<li>Should output as:
-		<div class='code'>
+		<ul>
+		<li>Should output as:
+			<div class='code'>
 			&nbsp;&nbsp;&lt;a href='mailto:&#123;&#123;email&#125;&#125;' class='_userlink'&gt;&#123;&#123;username&#125;&#125;&lt;/a&gt;
-		</div>
-	
-	<li>Client will have to munge anchor into a zimlet
+			</div>
+		<li>Client will have to munge anchor into a zimlet
+		</ul>
+		<ul>
+		<li><b class='issue'>Issue:</b>
+			Do we really want to hard-code that this turns into
+			a link? Perhaps if we extended the link syntax (from
+			above) we can support linking to other things like
+			external web pages and user emails. For example:
+			&#91;&#91;mailto:&#123;&#123;CREATOR}}]]
+		</ul>
 	</td>
 </tr>
 
 
-<tr><td class='wiklet'>
-		&#123;&#123;CREATEDATE format&#125;&#125;<br>
-		&#123;&#123;CREATETIME format&#125;&#125;<br>
-		&#123;&#123;MODIFYDATE format&#125;&#125;<br>
-		&#123;&#123;MODIFYTIME format&#125;&#125;
+<tr>
+	<td>X</td>
+	<td class='wiklet'>
+		&#123;&#123;CREATEDATE 
+			&nbsp;&nbsp;format="..."
+			&nbsp;&nbsp;pattern="..."
+			&#125;&#125;
+		<p>
+		&#123;&#123;MODIFYDATE 
+			&nbsp;&nbsp;format="..."
+			&nbsp;&nbsp;pattern="..."
+			&#125;&#125;<br>
 	</td>
 	<td class='tag'>
-		&lt;zm:pageCreateDate format="..."/&gt;
-		&lt;zm:pageCreateTime format="..."/&gt;
-		&lt;zm:pageModifyDate format="..."/&gt;
-		&lt;zm:pageModifyTime format="..."/&gt;
+		&lt;zm:createDate 
+			&nbsp;&nbsp;format="..." 
+			&nbsp;&nbsp;pattern="..."
+		/&gt;
+		<p>
+		&lt;zm:modifyDate 
+			&nbsp;&nbsp;format="..." 
+			&nbsp;&nbsp;pattern="..."
+		/&gt;
 	</td>
 	<td class='notes'>
-		<li>formats:
+		<ul>
+		<li> Displays a formatted create/last-modified date/time
+		<li>formats: (default in <i>italics</i>)
 			<ul>
-				<li>short
-				<li>medium
-				<li>long
-				<li>full
-				<li>MM-DD-YYYY HH:SS
-				<li>etc.
+			<li>shortdate, mediumdate, longdate, fulldate
+			<li>shorttime, mediumtime, longtime, fulltime
+			<li><i>shortdateandtime</i>, mediumdateandtime, longdateandtime, fulldateandtime
+			<li>pattern
+			</ul>
+		<li>patterns:
+			<ul>
+			<li>Java SimpleDateFormat patterns (e.g. MM-DD-YYYY HH:SS)
+			</ul>
+		</ul>
 	</td>
 </tr>
 
 
-<tr><td class='wiklet'>
+<tr>
+	<td>X</td>
+	<td class='wiklet'>
 		&#123;&#123;VERSION&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:pageVersion/&gt;
+		&lt;zm:version/&gt;
 	</td>
 	<td class='notes'>
+		<ul>
 		<li>Output version number as simple text
 		<li>Later implementations may need to make this a link to go to page history
+		</ul>
+		<ul>
+		<li><b class='issue'>Issue:</b>
+			Again, it may not be necessary for this wiklet to
+			generate a link.
+		</ul>
 	</td>
 </tr>
 
-<tr><td class='wiklet'>
-		&#123;&#123;TOC  page="*" 
+<tr>
+	<td>X</td>
+	<td class='wiklet'>
+		&#123;&#123;TOC  
+		&nbsp;&nbsp;pages="pattern"
+		&nbsp;&nbsp;sections="pattern"
+		&nbsp;&nbsp;files="pattern"
 		&nbsp;&nbsp;format="simple|list|template" 
 		&nbsp;&nbsp;bodyTemplate="pagename" 
 		&nbsp;&nbsp;itemTemplate="pagename"&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:pageTOC page="*" 
+		&lt;zm:toc 
+			&nbsp;&nbsp;page="pattern"
+			&nbsp;&nbsp;sections="pattern"
+			&nbsp;&nbsp;files="pattern"
 			&nbsp;&nbsp;format="simple|list|template" 
 			&nbsp;&nbsp;bodyTemplate="pagename" 
 			&nbsp;&nbsp;itemTemplate="pagename"/&gt;
 	</td>
 	<td class='notes'>
-
-		<li>if no style specified, use "simple"
-		<li>formats look something like:
+		<ul>
+		<li>Generates table of contents.
+		<li>formats: (default is in <i>italics</i>)
 		<ul>
 		<li>simple:<br>
 			<div class=code>
@@ -200,7 +424,7 @@
 			&lt;/span&gt;
 			</div>
 
-		<li>list:<br>
+		<li><i>list</i>:<br>
 			<div class=code>
 			&lt;ul class='_toc_list'&gt;<br>
 			&nbsp;&nbsp;&lt;li class='_pageLink'&gt;&#91;&#91;PageName1&#93;&lt;/li&gt;<br>
@@ -231,30 +455,37 @@
 						&lt;/tr&gt;<br>
 				</div>
 		</ul>
+		</ul>
 	</td>
 </tr>
 
 
-<tr><td class='wiklet'>
-		&#123;&#123;BREADCRUMBS  page="" 
+<tr>
+	<td class='issue'>X</td>
+	<td class='wiklet'>
+		&#123;&#123;BREADCRUMBS  page="name" 
 			&nbsp;&nbsp;format="simple|template" 
 			&nbsp;&nbsp;bodyTemplate="pagename"
 			&nbsp;&nbsp;itemTemplate="pagename"
+			&nbsp;&nbsp;separator="string"
 		&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:pageBreadCrumbs page="" 
+		&lt;zm:breadCrumbs page="name" 
 			&nbsp;&nbsp;format="simple|template" 
 			&nbsp;&nbsp;bodyTemplate="pagename" 
-			&nbsp;&nbsp;itemTemplate="pagename"/&gt;
+			&nbsp;&nbsp;itemTemplate="pagename"
+			&nbsp;&nbsp;separator="string"
+		/&gt;
 	</td>
 	<td class='notes'>
-	<li>show the breadcrumb trail for a page
+	<ul>
+	<li>Generates breadcrumb trail (or path) for an item
 	<li>if name is empty, assume current page
-	<li>if no style specified, use "simple"
-	<li>formats look something like:
+	<li> default separator is " &raquo; "
+	<li>formats: (default is in <i>italics</i>)
 		<ul>
-			<li>simple:
+		<li><i>simple</i>:
 			<div class='code'>
 			&lt;span class='_breadcrumbs_simple'&gt;<br>
 			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName1&#93;&lt;/span&gt; &gt;<br>
@@ -273,12 +504,26 @@
 					&lt;td class='_pageLink'&gt;&#123;&#123;NAME&#125;&#125;&lt;/td&gt;<br>
 					&lt;td class='_breadcrumb_separator'&gt;&nbsp;&gt;&nbsp;&lt;/td&gt;<br>
 			</div>
+		</ul>
+	</ul>
+	<ul>
+	<li><b class='issue'>Issue:</b>
+		Page parameter is not implemented.
+	</ul>
 	</td>
 </tr>
 
-<tr><td class='head' colspan=3>Wiklets for dealing with attachments (if we do this)</td></tr>
+<tr><td class='head' colspan=4><h1>Wiklets for dealing with attachments (if we do this)</h1></td></tr>
+<tr>
+	<th>Done</th>
+	<th>Syntax 1</th>
+	<th>Syntax 2</th>
+	<th>Description</th>
+</tr>
 		
-<tr><td class='wiklet'>
+<tr>
+	<td>&nbsp;</td>
+	<td class='wiklet'>
 		&#123;&#123;ATTACHMENTCOUNT&#125;&#125;
 	</td>
 	<td class='tag'>
@@ -289,7 +534,9 @@
 	</td>
 </tr>
 	
-<tr><td class='wiklet'>
+<tr>
+	<td>&nbsp;</td>
+	<td class='wiklet'>
 		&#123;&#123;ATTACHMENTS  page="" 
 			&nbsp;&nbsp;format="simple|template" 
 			&nbsp;&nbsp;bodyTemplate="pagename"
@@ -332,7 +579,9 @@
 	</td>
 </tr>
 
-<tr><td class='wiklet'>
+<tr>
+	<td>&nbsp;</td>
+	<td class='wiklet'>
 		&#123;&#123;HISTORY 
 			&nbsp;&nbsp;format="simple|template" 
 			&nbsp;&nbsp;bodyTemplate="page" 
@@ -377,8 +626,16 @@
 </tr>
 
 
-<tr><td class='head' colspan=3>Wiklets that Owen dreamed up</td></tr>
-<tr><td class='wiklet'>
+<tr><td class='head' colspan=4><h1>Wiklets that Owen dreamed up</h1></td></tr>
+<tr>
+	<th>Done</th>
+	<th>Syntax 1</th>
+	<th>Syntax 2</th>
+	<th>Description</th>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td class='wiklet'>
 		&#123;&#123;SECTION<br>
 			&nbsp;&nbsp;title="title" <br>
 			&nbsp;&nbsp;src="pagename" <br>
@@ -402,9 +659,17 @@
 	</td>
 </tr>
 
-<tr><td class='head' colspan=3>Action Wiklets</td></tr>
+<tr><td class='head' colspan=4><h1>Action Wiklets</h1></td></tr>
+<tr>
+	<th>Done</th>
+	<th>Syntax 1</th>
+	<th>Syntax 2</th>
+	<th>Description</th>
+</tr>
 
-<tr><td class='wiklet'>
+<tr>
+	<td>&nbsp;</td>
+	<td class='wiklet'>
 	&#123;&#123;EDITPAGE  page="pagename"
 				&nbsp;&nbsp;version="version"<br>
 				&nbsp;&nbsp;rename="true"
@@ -426,7 +691,9 @@
 	</td>
 </tr>
 
-<tr><td class='wiklet'>
+<tr>
+	<td>&nbsp;</td>
+	<td class='wiklet'>
 		&#123;&#123;SHOWHISTORY  <br>
 			&nbsp;&nbsp;page="pagename"&#125;&#125;
 	</td>
