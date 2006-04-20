@@ -34,7 +34,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -67,8 +70,10 @@ public class AttributeManager {
     private static final String ZIMBRA_ATTRS_RESOURCE = "zimbraattrs.xml";
 
     private static final String E_ATTRS = "attrs";
+    private static final String A_GROUP = "group";
+    private static final String A_GROUP_ID = "groupid";
+
     private static final String E_ATTR = "attr";
-    
     private static final String A_NAME = "name";
     private static final String A_IMMUTABLE = "immutable";
     private static final String A_TYPE = "type";
@@ -89,6 +94,8 @@ public class AttributeManager {
     private static AttributeManager mInstance;
 
     private Map<String,AttributeInfo> mAttrs = new HashMap<String,AttributeInfo>();
+
+    private static Map<Integer,String> mGroupMap = new HashMap<Integer,String>();
 
     public static AttributeManager getInstance() throws ServiceException {
         synchronized(AttributeManager.class) {
@@ -161,6 +168,31 @@ public class AttributeManager {
         if (!root.getName().equals(E_ATTRS)) {
             error(null, file, "root tag is not " + E_ATTRS);
             return;
+        }
+
+        String group = root.attributeValue(A_GROUP);
+        String groupIdStr = root.attributeValue(A_GROUP_ID);
+        if (group == null ^ groupIdStr == null) {
+            error(null, file, A_GROUP + " and " + A_GROUP_ID + " both have to be both specified");
+        }
+        int groupId = -1;
+        if (group != null) {
+            try {
+                groupId = Integer.valueOf(groupIdStr);
+            } catch (NumberFormatException nfe) {
+                error(null, file, A_GROUP_ID + " is not a number: " + groupIdStr);
+            }
+        }
+        if (groupId == 2) {
+            error(null, file, A_GROUP_ID + " is not valid (used by ZimbraObjectClass");
+        } else if (groupId > 0) {
+            if (mGroupMap.containsKey(groupId)) {
+                error(null, file, "duplicate group id: " + groupId);
+            } else if (mGroupMap.containsValue(group)) {
+                error(null, file, "duplicate group: " + group);
+            } else {
+                mGroupMap.put(groupId, group);
+            }
         }
         
         NEXT_ATTR: for (Iterator iter = root.elementIterator(); iter.hasNext();) {
@@ -291,7 +323,7 @@ public class AttributeManager {
                 }
             }
 
-            AttributeInfo info = new AttributeInfo(name, id, callback, type, value, immutable, min, max, cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues);
+            AttributeInfo info = new AttributeInfo(name, id, groupId, callback, type, value, immutable, min, max, cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues, description);
             if (mAttrs.get(canonicalName) != null) {
                 error(name, file, "duplicate definiton");
             }
@@ -408,6 +440,7 @@ public class AttributeManager {
         mOptions.addOption("h", "help", false, "display this  usage info");
         mOptions.addOption("o", "output", true, "output file (default it to generate output to stdout)");
         mOptions.addOption("a", "action", true, "[generateLdapSchema | generateGlobalConfigLdif | generateDefaultCOSLdif]");
+        mOptions.addOption("t", "template", true, "template for LDAP schema");
         Option iopt = new Option("i", "input", true,"attrs definition xml input file (can repeat)");
         iopt.setArgs(Option.UNLIMITED_VALUES);
         mOptions.addOption(iopt);
@@ -479,7 +512,10 @@ public class AttributeManager {
             am.generateGlobalConfigLdif(pw);
             break;
         case generateLdapSchema:
-            am.generateLdapSchema(pw);
+            if (!cl.hasOption('t')) {
+                usage("no schema template specified");
+            }
+            am.generateLdapSchema(pw, cl.getOptionValue('t'));
             break;
         }
         
@@ -574,7 +610,99 @@ public class AttributeManager {
         }
     }
 
-    private void generateLdapSchema(PrintWriter pw) {
+    private void generateLdapSchema(PrintWriter pw, String template) {
+        
+        StringBuilder GROUP_OIDS = new StringBuilder();
+        StringBuilder ATTRIBUTE_OIDS = new StringBuilder();
+        StringBuilder ATTRIBUTE_DEFINITIONS = new StringBuilder();
+        
+        for (Iterator<Integer> iter = mGroupMap.keySet().iterator(); iter.hasNext();) {
+            int i = iter.next();
 
+            //GROUP_OIDS
+            GROUP_OIDS.append("objectIdentifier " + mGroupMap.get(i) + " ZimbraLDAP:" + i + "\n");
+
+
+            // List all attrs which we define and which belong in this group
+            List<AttributeInfo> list = new ArrayList<AttributeInfo>(mAttrs.size());
+            for (AttributeInfo ai : mAttrs.values()) {
+                if (ai.getId() > -1 && ai.getGroupId() == i) {
+                    list.add(ai);
+                }
+            }
+            
+            // ATTRIBUTE_OIDS
+            Collections.sort(list, new Comparator() {
+                public int compare(Object a, Object b) {
+                    AttributeInfo a1 = (AttributeInfo)a, b1  = (AttributeInfo)b;
+                    return a1.getId() - b1.getId();
+                }
+            });
+            for (AttributeInfo ai : list) {
+                ATTRIBUTE_OIDS.append("objectIdentifier " + ai.getName() + " " + mGroupMap.get(i) + ':' + ai.getId() + "\n");
+            }
+
+            // ATTRIBUTE_DEFINITIONS: DESC EQUALITY NAME ORDERING SINGLE-VALUE SUBSTR SYNTAX
+            Collections.sort(list, new Comparator() {
+                public int compare(Object a, Object b) {
+                    AttributeInfo a1 = (AttributeInfo)a, b1  = (AttributeInfo)b;
+                    return a1.getName().compareTo(b1.getName());
+                }
+            });
+            for (AttributeInfo ai : list) {
+                ATTRIBUTE_DEFINITIONS.append("attributetype ( " + ai.getName() + "\n");
+                ATTRIBUTE_DEFINITIONS.append("\tNAME ( '" + ai.getName() + "' )\n");
+                ATTRIBUTE_DEFINITIONS.append("\tDESC ( '" + ai.getDescription() + "'\n");
+                String syntax = null, substr = null, equality = null, ordering = null; 
+                switch (ai.getType()) {
+                case TYPE_BOOLEAN:
+                    syntax = "1.3.6.1.4.1.1466.115.121.1.7";
+                    equality = "booleanMatch";
+                    break;
+                case TYPE_DURATION:
+                case TYPE_GENTIME:
+                case TYPE_EMAIL:
+                case TYPE_EMAILP:
+                case TYPE_ENUM:
+                case TYPE_ID:
+                    syntax = "1.3.6.1.4.1.1466.115.121.1.26{256}";
+                    equality = "caseIgnoreIA5Match";
+                    substr = "caseIgnoreSubstringsMatch";
+                    break;
+                        
+                case TYPE_INTEGER:
+                case TYPE_PORT:
+                case TYPE_LONG:
+                    syntax = "1.3.6.1.4.1.1466.115.121.1.27";
+                    equality = "integerMatch";
+                    ordering = "integerOrderingMatch";
+                    break;
+                    
+                case TYPE_STRING:
+                case TYPE_REGEX:
+                    syntax = "1.3.6.1.4.1.1466.115.121.1.15{" + ai.getMax() + "}";
+                    equality = "caseIgnoreIA5Match";
+                    substr = "caseIgnoreSubstringsMatch";
+                }
+
+                ATTRIBUTE_DEFINITIONS.append("\tSYNTAX " + syntax +  "\n");
+                ATTRIBUTE_DEFINITIONS.append("\tEQUALITY " + equality);
+                if (substr != null) {
+                    ATTRIBUTE_DEFINITIONS.append("\n\tSUBSTR " + substr);
+                }
+                if (ordering != null) {
+                    ATTRIBUTE_DEFINITIONS.append("\n\tORDERING " + ordering);
+                }
+                
+                if (ai.getCardinality() == AttributeCardinality.single) {
+                    ATTRIBUTE_DEFINITIONS.append("\n\tSINGLE-VALUE");
+                }
+                
+                ATTRIBUTE_DEFINITIONS.append(")\n\n");
+            }
+        }
+        pw.println(GROUP_OIDS); // TODO
+        pw.println(ATTRIBUTE_OIDS); // TODO
+        pw.println(ATTRIBUTE_DEFINITIONS); // TODO
     }
 }

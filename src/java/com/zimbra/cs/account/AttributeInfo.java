@@ -85,6 +85,10 @@ public class AttributeInfo {
 
     private int mId;
     
+    private int mGroupId;
+    
+    private String mDescription;
+    
     static int parseLong(String value, int def) {
         try {
             return Integer.parseInt(value);
@@ -93,11 +97,11 @@ public class AttributeInfo {
         }
     }
 
-    public AttributeInfo (String attrName, int id, AttributeCallback callback, AttributeType type,
-                          String value, boolean immutable, long min, long max,
+    public AttributeInfo (String attrName, int id, int groupId, AttributeCallback callback, AttributeType type,
+                          String value, boolean immutable, long min, long max, 
                           AttributeCardinality cardinality, Set<AttributeClass> requiredIn, 
                           Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
-                          List<String> globalConfigValues, List<String> defaultCOSValues)
+                          List<String> globalConfigValues, List<String> defaultCOSValues, String description)
     {
         mName = attrName;
         mImmutable = immutable;
@@ -107,12 +111,14 @@ public class AttributeInfo {
         mMin = min;
         mMax = max;
         mId = id;
+        mGroupId = groupId;
         mCardinality = cardinality;
         mRequiredInClasses = requiredIn;
         mOptionalInClasses = optionalIn;
         mFlags = flags;
         mGlobalConfigValues = globalConfigValues;
         mDefaultCOSValues = defaultCOSValues;
+        mDescription = description;
         
         switch (mType) {
         case TYPE_INTEGER:
@@ -266,10 +272,30 @@ public class AttributeInfo {
        return result;
    }
    
+   int getId() {
+       return mId;
+   }
+   
+   int getGroupId() {
+       return mGroupId;
+   }
+   
    AttributeType getType() {
        return mType;
    }
 
+   String getDescription() {
+       return mDescription;
+   }
+
+   long getMax() {
+       return mMax;
+   }
+   
+   AttributeCardinality getCardinality() {
+       return mCardinality;
+   }
+   
    List<String> getGlobalConfigValues() {
        return mGlobalConfigValues;
    }
