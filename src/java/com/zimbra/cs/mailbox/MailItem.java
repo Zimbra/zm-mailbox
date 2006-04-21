@@ -474,7 +474,22 @@ public abstract class MailItem implements Comparable {
     /** Returns the SHA-1 hash of the item's uncompressed blob.  Returns
      *  <code>""</code> for items that have no stored blob. */
     public String getDigest() {
-        return (mData.blobDigest == null ? "" : mData.blobDigest);
+        return getDigest(false);
+    }
+
+    /**
+     * Returns the SHA-1 hash of the item's uncompressed blob.  If item has
+     * no blob, the return value depends on preserveNull argument.  If
+     * preserveNull is true, null is returned.  If not, "" (empty string) is
+     * returned.
+     * @param preserveNull
+     * @return
+     */
+    public String getDigest(boolean preserveNull) {
+        if (preserveNull || mData.blobDigest != null)
+            return mData.blobDigest;
+        else
+            return "";
     }
 
     public long getDate() {
