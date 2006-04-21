@@ -947,14 +947,14 @@ class DBQueryOperation extends QueryOperation
     		if (dbOther.mAllResultsQuery)
     			return this;
     		
-    		if (mQueryTarget != null && dbOther.mQueryTarget != null) {
+    		if (mQueryTarget != QueryTarget.UNSPECIFIED && dbOther.mQueryTarget != QueryTarget.UNSPECIFIED) {
     			if (!mQueryTarget.equals(dbOther.mQueryTarget)) {
     				mLog.debug("ANDing two DBOps with different targets -- this is a no results query!");
     				return new NullQueryOperation();
     			}
-			}
+    		}
     		
-    		if (mQueryTarget == null) 
+    		if (mQueryTarget == QueryTarget.UNSPECIFIED) 
     			mQueryTarget = dbOther.mQueryTarget;
     		
     		if (mLuceneOp != null) {
