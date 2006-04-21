@@ -396,7 +396,7 @@ public class DbMailItem {
             	stmt.setInt(2, item.getParentId());
             stmt.setInt(3, (int) (item.getDate() / 1000));
             stmt.setInt(4, (int) size);
-            stmt.setString(5, item.getDigest());
+            stmt.setString(5, item.getDigest(true));
             stmt.setInt(6, item.getInternalFlagBitmask());
             stmt.setString(7, sender);
             stmt.setString(8, subject);
