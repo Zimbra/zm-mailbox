@@ -63,6 +63,7 @@
 	<property name="dist.openldap.schema.dir" location="${dist.openldap.etc.dir}/schema" />
 	<property name="dist.tarfile" value="dev-service.tar" />
 	<property name="dist.zimlet.dir" location="${dist.dir}/zimlets" />
+	<property name="dist.zimlet-extra.dir" location="${dist.dir}/zimlets-extra" />
 
 	<property name="config.dir" location="conf" />
 	<condition property="web.xml.source" value="${config.dir}/web.xml">
@@ -105,7 +106,8 @@
 
 	<property name="ical4j.jar" value="ical4j-0.9.16-patched.jar" />
 
-	<property name="zimlets" value="com_zimbra_phone,com_zimbra_tracking,com_zimbra_url,com_zimbra_email,com_zimbra_date"/>
+	<property name="zimlets" value="com_zimbra_phone,com_zimbra_tracking,com_zimbra_url,com_zimbra_ymaps,com_zimbra_wikipedia,com_zimbra_amzn"/>
+	<property name="zimlets-extra" value="com_zimbra_po,com_zimbra_sforce,com_zimbra_sms"/>
 
 	<condition property="is-windows">
 		<os family="windows" />
@@ -113,11 +115,6 @@
 	<condition property="is-unix">
 		<not><os family="windows" /></not>
 	</condition>
-
-	<condition property="native.os" value="MacOSX"><os name="Mac OS X"/></condition>
-	<condition property="native.os" value="Linux"><os name="Linux"/></condition>
-	<condition property="native.so" value="jnilib"><os name="Mac OS X"/></condition>
-	<condition property="native.so" value="so"><not><os name="Linux"/></not></condition>
 
 	<condition property="ldapmodify" value="${zimbra.home.dir}/openldap/ldapmodify">
 		<isset property="is-windows" />
@@ -202,6 +199,7 @@
 		<mkdir dir="${dist.openldap.schema.dir}" />
 		<mkdir dir="${generated.java.dir}" />
 		<mkdir dir="${dist.zimlet.dir}" />
+		<mkdir dir="${dist.zimlet-extra.dir}" />
 	</target>
 
     <target name="javadoc" depends="set-buildinfo-vars">
@@ -376,7 +374,9 @@
 		<copy todir="${dist.openldap.schema.dir}" file="${config.dir}/ldap/amavisd.schema" />
 		<copy todir="${dist.db.dir}" file="${src.db.dir}/db.sql" />
 		<copy todir="${dist.db.dir}" file="${build.dir}/versions-init.sql" />
-		<copy tofile="${zimbra.home.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" failonerror="false" verbose="true"/>
+		<copy todir="${dist.lib.dir}">
+			<fileset dir="${lib.dir}" includes="libzimbra-native.*" />
+		</copy>
 		<copy todir="${dist.ext.dir}" >
 			<fileset dir="${ext.dir}" includes="*/*.jar" />
 		</copy>
@@ -446,27 +446,7 @@
 		</java>
 	</target>
 
-	<target name="import-wiki" description="Import Wiki documents into the system">
-		<echo>Importing Wiki documents for: user1@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.wiki.ImportWiki" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-d data/wiki" />
-		</java>
-	</target>
-
-    <!-- Insert one directory (data/testmsgs) of mail -->
-    <target name="inject1" depends="compile">
-        <echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
-        <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
-            <socket server="${lmtp.host}" port="${lmtp.port}" />
-        </waitfor>
-        <echo>LmtpInject messages</echo>
-        <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${zimbra.server.hostname} -s ho@example.zimbra.com -d" />
-            <arg path="data/testmsg" />
-        </java>
-    </target>
-
-    <target name="localhost-ssl-cert" description="make a cert for ssl access">
+	<target name="localhost-ssl-cert" description="make a cert for ssl access">
 		<delete failonerror="no">
 			<fileset dir="${tomcat.home.dir}/conf" includes="keystore" />
 		</delete>
@@ -755,7 +735,7 @@
 
 	<target name="reload-zimlets" depends="install-zimlets,restart-tomcat"/>
 
-	<target name="package-zimlets" depends="build-init,package-zimlets-core"/>
+	<target name="package-zimlets" depends="build-init,package-zimlets-core,package-zimlets-extra"/>
 	<target name="package-zimlets-core">
 		<foreach list="${zimlets}" target="package-zimlet" param="zimlet"/>
 		<!-- todo:  remove these classes from service.jar -->
@@ -771,9 +751,20 @@
 		</zip>
 	</target>
 
+	<target name="package-zimlets-extra">
+		<foreach list="${zimlets-extra}" target="package-zimlet-extra" param="zimlet"/>
+	</target>
+	
 	<target name="package-zimlet">
 		<echo>${zimlet}</echo>
 		<zip destfile="${dist.zimlet.dir}/${zimlet}.zip" update="true" >
+			<fileset dir="${config.dir}/zimlets/${zimlet}" />
+		</zip>
+	</target>
+
+	<target name="package-zimlet-extra">
+		<echo>${zimlet}</echo>
+		<zip destfile="${dist.zimlet-extra.dir}/${zimlet}.zip" update="true" >
 			<fileset dir="${config.dir}/zimlets/${zimlet}" />
 		</zip>
 	</target>
@@ -783,13 +774,13 @@
 			<param name="action" value="deploy"/>
 		</foreach>
 	</target>
-
+	
 	<target name="install-zimlets" depends="package-zimlets">
 		<foreach list="${zimlets}" target="install-zimlet" param="zimlet">
 			<param name="action" value="install"/>
 		</foreach>
 	</target>
-
+	
 	<target name="install-zimlet">
 		<echo>${action} ${zimlet}</echo>
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
@@ -798,7 +789,7 @@
 			<arg file="${dist.zimlet.dir}/${zimlet}.zip" />
 		</java>
 	</target>
-
+	
     <target name="tomcat-init" depends="localhost-ssl-cert,tomcat-init-unix">
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/${ical4j.jar}" />
 		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/activation.jar" />
@@ -816,7 +807,9 @@
 	</target>
 
 	<target name="tomcat-init-unix" if="is-unix">
-		<copy tofile="${zimbra.home.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" verbose="true"/>
+		<copy todir="${zimbra.home.dir}/lib">
+			<fileset dir="${lib.dir}" includes="libzimbra-native.*" />
+		</copy>
 		<copy todir="${zimbra.home.dir}/bin">
 			<fileset dir="${src.bin.dir}" includes="*" />
 		</copy>
