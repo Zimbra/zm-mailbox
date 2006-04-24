@@ -31,6 +31,7 @@ package com.zimbra.cs.service.account;
 import java.util.Map;
 
 import com.zimbra.cs.account.*;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
@@ -117,12 +118,14 @@ public class Auth extends DocumentHandler  {
         Element response = lc.createElement(AccountService.AUTH_RESPONSE);
         response.addAttribute(AccountService.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
         response.addAttribute(AccountService.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.DISP_CONTENT);
-        if (acct.isCorrectHost()) {
+        boolean isCorrectHost = acct.isCorrectHost();
+        if (isCorrectHost) {
             Session session = lc.getNewSession(acct.getId(), SessionCache.SESSION_SOAP);
             if (session != null)
                 ZimbraContext.encodeSession(response, session, true);
-        } 
-        response.addAttribute(AccountService.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.DISP_CONTENT);
+        }
+        if (!isCorrectHost || LC.zimbra_auth_always_send_refer.booleanValue())
+            response.addAttribute(AccountService.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.DISP_CONTENT);
 
 		Element prefsRequest = request.getOptionalElement(AccountService.E_PREFS);
 		if (prefsRequest != null) {

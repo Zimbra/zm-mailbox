@@ -91,6 +91,7 @@ public class LC {
     public static final KnownKey zimbra_uid;
     public static final KnownKey zimbra_gid;
     public static final KnownKey zimbra_log4j_properties;
+    public static final KnownKey zimbra_auth_always_send_refer;
     public static final KnownKey localized_msgs_directory;
 
     public static final KnownKey zimbra_store_sweeper_max_age;
@@ -707,7 +708,10 @@ public class LC {
 		zimbra_mtareport_max_senders.setDefault("50");
 		zimbra_mtareport_max_senders.setDoc
 			("Number of senders to list in daily mta reports");
-
+        
+        zimbra_auth_always_send_refer = new KnownKey("zimbra_auth_always_send_refer");
+        zimbra_auth_always_send_refer.setDefault("false");
+        zimbra_auth_always_send_refer.setDoc("always send back a <refer> tag in an auth response to force a client redirect");
     }
 
 }
