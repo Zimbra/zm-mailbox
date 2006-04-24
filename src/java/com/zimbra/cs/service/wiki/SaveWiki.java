@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.service.wiki;
 
+import java.io.IOException;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Document;
@@ -67,7 +68,12 @@ public class SaveWiki extends WikiDocumentHandler {
         				msgElem.getAttributeLong(MailService.A_VERSION, 0),
         				subject);
         
-        byte[] rawData = msgElem.getText().getBytes();
+        byte[] rawData;
+        try {
+        	rawData = msgElem.getText().getBytes("UTF-8");
+        } catch (IOException ioe) {
+        	throw ServiceException.FAILURE("cannot convert", ioe);
+        }
         
         WikiWord ww = wiki.createWiki(octxt, subject, getAuthor(lc), rawData);
         Document wikiItem = ww.getWikiItem(octxt);
