@@ -31,6 +31,7 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
@@ -65,11 +66,11 @@ public class GetWiki extends WikiDocumentHandler {
             WikiWord w = wiki.lookupWiki(word);
             if (w == null) {
         		ZimbraLog.wiki.error("requested wiki word "+word+" does not exist");
-            	return response;
+            	throw WikiServiceException.NO_SUCH_WIKI(word);
             }
             Document doc = w.getWikiItem(octxt);
             if (doc.getType() != MailItem.TYPE_WIKI) {
-            	throw ServiceException.FAILURE("requested MailItem is not WikiItem", null);
+            	throw WikiServiceException.NOT_WIKI_ITEM(word);
             }
             wikiItem = (WikiItem)doc;
         } else if (id != null) {
@@ -101,6 +102,7 @@ public class GetWiki extends WikiDocumentHandler {
         		wikiElem.addAttribute(MailService.A_BODY, new String(raw, "UTF-8"), Element.DISP_CONTENT);
         	} catch (IOException ioe) {
         		ZimbraLog.wiki.error("cannot read the wiki message body", ioe);
+        		throw WikiServiceException.CANNOT_READ(wikiItem.getWikiWord());
         	}
         }
         return response;

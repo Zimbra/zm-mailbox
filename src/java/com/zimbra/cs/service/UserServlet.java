@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.RequestDispatcher;
@@ -144,6 +145,7 @@ public class UserServlet extends ZimbraServlet {
         addFormatter(new ZipFormatter());
         addFormatter(new IfbFormatter());
         addFormatter(new SyncFormatter());
+        addFormatter(new WikiFormatter());
 
         mDefaultFormatters = new HashMap<String, Formatter>();
         for (Formatter fmt : mFormatters.values())
@@ -290,6 +292,55 @@ public class UserServlet extends ZimbraServlet {
         return false;
     }
 
+    private MailItem findItem(Context context) throws ServiceException {
+    	try {
+    		return context.targetMailbox.getFolderByPath(context.opContext, context.itemPath);
+    	} catch (NoSuchItemException nse) {
+    		/*
+    		 * if path == /foo/bar/baz.html, then
+    		 * dir      -> /foo/bar
+    		 * name     -> baz
+    		 * fullName -> baz.html
+    		 * format   -> html
+    		 */
+    		String path = context.itemPath;
+    		String dir = null, name = null, fullName = null, format = null;
+    		
+    		int pos = path.lastIndexOf('/');
+            if (pos != -1) {
+            	dir = path.substring(0, pos);
+            	fullName = path.substring(pos + 1);
+            } else
+            	pos = 0;
+            if (context.format == null) {
+                int dot = path.lastIndexOf('.');
+                if (dot != -1) {
+                    format = path.substring(dot + 1);
+                    name = path.substring(pos + 1, dot);
+                	path = path.substring(0, dot);
+                }
+            }
+    		if (dir != null) {
+        		MailItem item = context.targetMailbox.getFolderByPath(context.opContext, dir);
+        		if (item instanceof Folder && ((Folder)item).getDefaultView() == MailItem.TYPE_WIKI) {
+        			Folder f = (Folder) item;
+        			List<? extends MailItem> itemList = context.targetMailbox.getWikiList(context.opContext, f.getId());
+        			MailItem matchedItem = null;
+        			for (MailItem mi : itemList) {
+        				if (mi.getSubject().toLowerCase().equals(fullName))
+        					return mi;
+        				if (mi.getSubject().toLowerCase().equals(name))
+        					matchedItem = mi;
+        			}
+        			if (matchedItem != null)
+        				return matchedItem;
+        		}
+    		}
+    		context.format = format;
+    		return context.targetMailbox.getFolderByPath(context.opContext, path);
+    	}
+    }
+    
     private void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Context context)
     throws ServletException, IOException, ServiceException, UserServletException {
         Mailbox mbox = context.targetMailbox = Mailbox.getMailboxByAccount(context.targetAccount);
@@ -305,20 +356,7 @@ public class UserServlet extends ZimbraServlet {
         if (context.itemId != null) {
             item = mbox.getItemById(context.opContext, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
         } else {
-            try {
-                item = mbox.getFolderByPath(context.opContext, context.itemPath);
-            } catch (NoSuchItemException nse) {
-                if (context.format == null) {
-                    int pos = context.itemPath.lastIndexOf('.');
-                    if (pos != -1) {
-                        context.format = context.itemPath.substring(pos + 1);
-                        context.itemPath = context.itemPath.substring(0, pos);
-                        item = mbox.getFolderByPath(context.opContext, context.itemPath);
-                    }
-                }
-                if (item == null)
-                    throw nse;
-            }
+        	item = findItem(context);
         }
 
         if (item == null && context.getQueryString() == null)
@@ -635,6 +673,9 @@ public class UserServlet extends ZimbraServlet {
                 return "ics";
             case MailItem.TYPE_CONTACT:
                 return item instanceof Folder? "csv" : "vcf";
+            case MailItem.TYPE_WIKI:
+            case MailItem.TYPE_DOCUMENT:
+                return "wiki";
             default:
                 return "native";
         }

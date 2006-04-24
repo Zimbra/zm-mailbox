@@ -39,7 +39,6 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Appointment;
-import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -75,8 +74,6 @@ public class NativeFormatter extends Formatter {
                 handleMessage(context, (Message) item);
             } else if (item instanceof Appointment) {
                 handleAppt(context, (Appointment) item);
-            } else if (item instanceof Document) {
-                handleDocument(context, (Document) item);
             } else {
                 throw UserServletException.notImplemented("can only handle messages/appts");
             }
@@ -111,12 +108,6 @@ public class NativeFormatter extends Formatter {
             InputStream is = appt.getRawMessage();
             ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
         }
-    }
-    
-    private void handleDocument(Context context, Document doc) throws IOException, ServiceException {
-        context.resp.setContentType(doc.getContentType());
-        InputStream is = doc.getRawDocument();
-        ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
     }
     
     private void handleMessagePart(Context context, MimePart mp, MailItem item) throws IOException, MessagingException, ServletException {

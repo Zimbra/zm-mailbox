@@ -79,6 +79,10 @@ public class Wiki {
 		return getInstance(Provisioning.getInstance().getAccountByName(acct));
 	}
 	
+	public static Wiki getInstance(String acct, int folderId) throws ServiceException {
+		return getInstance(Provisioning.getInstance().getAccountByName(acct), folderId);
+	}
+	
 	public static Wiki getInstance(Account acct) throws ServiceException {
 		return getInstance(acct, getDefaultFolderId(acct));
 	}
