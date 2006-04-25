@@ -117,7 +117,7 @@
 	<condition property="native.os" value="MacOSX"><os name="Mac OS X"/></condition>
 	<condition property="native.os" value="Linux"><os name="Linux"/></condition>
 	<condition property="native.so" value="jnilib"><os name="Mac OS X"/></condition>
-	<condition property="native.so" value="so"><not><os name="Linux"/></not></condition>
+	<condition property="native.so" value="so"><not><os name="Mac OS X"/></not></condition>
 
 	<condition property="ldapmodify" value="${zimbra.home.dir}/openldap/ldapmodify">
 		<isset property="is-windows" />
