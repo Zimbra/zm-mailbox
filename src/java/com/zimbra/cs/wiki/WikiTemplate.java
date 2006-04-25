@@ -25,6 +25,7 @@
 package com.zimbra.cs.wiki;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,8 +39,9 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.wiki.WikiTemplate.Token.TokenType;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class WikiTemplate {
 	
@@ -52,8 +54,11 @@ public class WikiTemplate {
 		mTokens = new ArrayList<Token>();
 	}
 	
-	public String toString(OperationContext octxt, MailItem item) throws ServiceException {
-		Context ctxt = new Context(octxt, item);
+	public String toString(OperationContext octxt, MailItem item) throws ServiceException, IOException {
+		return toString(new Context(octxt, item));
+	}
+	
+	public String toString(Context ctxt) throws ServiceException, IOException {
 		if (!mParsed) {
 			parse(ctxt);
 		}
@@ -64,7 +69,7 @@ public class WikiTemplate {
 		return mTokens.get(i);
 	}
 	
-	private void parse(Context ctxt) throws ServiceException {
+	private void parse(Context ctxt) throws ServiceException, IOException {
 		Token.parse(mTemplate, mTokens);
 		StringBuffer buf = new StringBuffer();
 		for (Token tok : mTokens) {
@@ -74,18 +79,23 @@ public class WikiTemplate {
 		mParsed = true;
 	}
 	
-	private String apply(Context ctxt, Token tok) throws ServiceException {
-		if (tok.getType() == TokenType.TEXT)
+	private String apply(Context ctxt, Token tok) throws ServiceException, IOException {
+		if (tok.getType() == Token.TokenType.TEXT)
 			return tok.getValue();
+		Wiklet w;
 		String tokenStr = tok.getValue();
-		String firstTok;
-		int index = tokenStr.indexOf(' ');
-		if (index != -1) {
-			firstTok = tokenStr.substring(0, index);
+		if (tok.getType() == Token.TokenType.WIKILINK) {
+			w = sWIKLETS.get("WIKILINK");
 		} else {
-			firstTok = tokenStr;
+			String firstTok;
+			int index = tokenStr.indexOf(' ');
+			if (index != -1) {
+				firstTok = tokenStr.substring(0, index);
+			} else {
+				firstTok = tokenStr;
+			}
+			w = sWIKLETS.get(firstTok);
 		}
-		Wiklet w = sWIKLETS.get(firstTok);
 		if (w != null) {
 			String ret = w.apply(ctxt, tokenStr);
 			List<Token> tokens = new ArrayList<Token>();
@@ -113,9 +123,16 @@ public class WikiTemplate {
 		addWiklet(new BreadcrumbsWiklet());
 		addWiklet(new IconWiklet());
 		addWiklet(new NameWiklet());
+		addWiklet(new CreatorWiklet());
 		addWiklet(new ModifierWiklet());
+		addWiklet(new CreateDateWiklet());
+		addWiklet(new CreateTimeWiklet());
 		addWiklet(new ModifyDateWiklet());
+		addWiklet(new ModifyTimeWiklet());
 		addWiklet(new VersionWiklet());
+		addWiklet(new ContentWiklet());
+		addWiklet(new IncludeWiklet());
+		addWiklet(new WikilinkWiklet());
 	}
 	
 	private static void addWiklet(Wiklet w) {
@@ -123,18 +140,31 @@ public class WikiTemplate {
 	}
 	
 	public static class Token {
-		public enum TokenType { TEXT, WIKLET };
+		public enum TokenType { TEXT, WIKLET, WIKILINK };
 		public static void parse(String str, List<Token> tokens) throws IllegalArgumentException {
-			int end;
+			int end = 0;
 			if (str.startsWith("{{")) {
 				end = str.indexOf("}}");
 				if (end == -1)
 					throw new IllegalArgumentException("parse error");
 				tokens.add(new Token(str.substring(2, end), TokenType.WIKLET));
 				end += 2;
-			} else {
-				end = str.indexOf("{{");
+			} else if (str.startsWith("[[")) {
+				end = str.indexOf("]]");
 				if (end == -1)
+					throw new IllegalArgumentException("parse error");
+				tokens.add(new Token(str.substring(2, end), TokenType.WIKILINK));
+				end += 2;
+			} else {
+				int lastPos = str.length() - 1;
+				while (end < lastPos) {
+					if (str.charAt(end) == '{' && str.charAt(end+1) == '{' ||
+						str.charAt(end) == '[' && str.charAt(end+1) == '[') {
+						break;
+					}
+					end++;
+				}
+				if (end == lastPos)
 					end = str.length();
 				tokens.add(new Token(str.substring(0, end), TokenType.TEXT));
 			}
@@ -168,15 +198,64 @@ public class WikiTemplate {
 		public MailItem item;
 		
 	}
-	public static interface Wiklet {
-		public String getName();
-		public String getPattern();
-		public String apply(Context ctxt, String text) throws ServiceException;
+	public static abstract class Wiklet {
+		public abstract String getName();
+		public abstract String getPattern();
+		public abstract String apply(Context ctxt, String text) throws ServiceException,IOException;
+		public Map<String,String> parseParam(String text) {
+			Map<String,String> map = new HashMap<String,String>();
+			int start = 0;
+			int end = text.indexOf(' ');
+			while (true) {
+				int equal = text.indexOf('=', start);
+				if (end == -1)
+					end = text.length();
+				if (equal == -1 || equal > end) {
+					String s = text.substring(start,end);
+					map.put(s, s);
+				} else {
+					String val;
+					if (text.charAt(equal+1) == '"' && text.charAt(end-1) == '"')
+						val = text.substring(equal+2,end-1);
+					else
+						val = text.substring(equal+1,end);
+					map.put(text.substring(start,equal), val);
+				}
+				if (end == text.length())
+					break;
+				start = end + 1;
+				end = text.indexOf(' ', start);
+			}
+			return map;
+		}
+		public String reportError(String errorMsg) {
+			String msg = "Error handling wiklet " + getName() + ": " + errorMsg;
+			ZimbraLog.wiki.error(msg);
+			return msg;
+		}
 	}
-	public static class TocWiklet implements Wiklet {
-		public static String format = "format";
-		public static String bodyTemplate = "bodyTemplate";
-		public static String itemTemplate = "itemTemplate";
+	public static class TocWiklet extends Wiklet {
+		public static final String sFORMAT = "format";
+		public static final String sBODYTEMPLATE = "bodyTemplate";
+		public static final String sITEMTEMPLATE = "itemTemplate";
+
+		public static final String sSIMPLE   = "simple";
+		public static final String sLIST     = "list";
+		public static final String sTEMPLATE = "template";
+
+		public static final String[][] sTAGS =
+		{
+			{ "_toc_list", "_toc_simple" },
+			{ "ul",        "span" },
+			{ "li",        "span" }
+		};
+		
+		public static final int sTAGLIST   = 0;
+		public static final int sTAGSIMPLE = 1;
+		
+		public static final int sCLASS = 0;
+		public static final int sOUTER = 1;
+		public static final int sINNER = 2;
 		
 		public String getName() {
 			return "Table of contents";
@@ -200,37 +279,67 @@ public class WikiTemplate {
 	    	buf.append("</a>");
 	    	return buf.toString();
 	    }
-		public String apply(Context ctxt, String text) throws ServiceException {
-			Folder folder = (Folder) ctxt.item;
+		public String generateList(Context ctxt, String text, int style) throws ServiceException {
+			Folder folder;
+			if (ctxt.item instanceof Folder)
+				folder = (Folder) ctxt.item;
+			else
+				folder = ctxt.item.getMailbox().getFolderById(ctxt.octxt, ctxt.item.getFolderId());
 	    	StringBuffer buf = new StringBuffer();
-	    	buf.append("<ul>");
+	    	buf.append("<");
+	    	buf.append(sTAGS[sOUTER][style]);
+	    	buf.append(" class='");
+	    	buf.append(sTAGS[sCLASS][style]);
+	    	buf.append("'>");
 	    	List<Folder> subfolders = folder.getSubfolders(ctxt.octxt);
 	    	if (subfolders != null) {
 	        	for (Folder f : subfolders) {
-	        		buf.append("<li>");
+	    	    	buf.append("<");
+	        		buf.append(sTAGS[sINNER][style]);
+	        		buf.append(" class='_pageLink'>");
 	        		buf.append(createLink(f.getName() + "/"));
-	        		buf.append("</li>");
+	        		buf.append("</");
+	        		buf.append(sTAGS[sINNER][style]);
+	        		buf.append(">");
 	        	}
 	    	}
 	    	Mailbox mbox = ctxt.item.getMailbox();
             for (Document doc : mbox.getWikiList(ctxt.octxt, folder.getId())) {
             	if (shouldSkipThis(doc))
             		continue;
-            	buf.append("<li>");
+            	buf.append("<");
+        		buf.append(sTAGS[sINNER][style]);
+            	buf.append(" class='_pageLink'>");
             	String name;
             	if (doc instanceof WikiItem)
             		name = ((WikiItem)doc).getWikiWord();
             	else
             		name = doc.getFilename();
             	buf.append(createLink(name));
-            	buf.append("</li>");
+        		buf.append("</");
+        		buf.append(sTAGS[sINNER][style]);
+        		buf.append(">");
             }
 
-	    	buf.append("</ul>");
+    		buf.append("</");
+    		buf.append(sTAGS[sOUTER][style]);
+    		buf.append(">");
 	        return buf.toString();
 		}
+		public String apply(Context ctxt, String text) throws ServiceException {
+			Map<String,String> params = parseParam(text);
+			String format = params.get(sFORMAT);
+			if (format == null) {
+				format = sLIST;
+			}
+			if (format.equals(sTEMPLATE)) {
+				
+			}
+			
+			return generateList(ctxt, text, format.equals(sSIMPLE) ? sTAGSIMPLE : sTAGLIST);
+		}
 	}
-	public static class BreadcrumbsWiklet implements Wiklet {
+	public static class BreadcrumbsWiklet extends Wiklet {
 		public String getName() {
 			return "Breadcrumbs";
 		}
@@ -238,10 +347,10 @@ public class WikiTemplate {
 			return "BREADCRUMBS";
 		}
 		public String apply(Context ctxt, String text) throws ServiceException {
-			return "";
+			return "Breakcrumbs here.";
 		}
 	}
-	public static class IconWiklet implements Wiklet {
+	public static class IconWiklet extends Wiklet {
 		public String getName() {
 			return "Icon";
 		}
@@ -249,12 +358,12 @@ public class WikiTemplate {
 			return "ICON";
 		}
 		public String apply(Context ctxt, String text) throws ServiceException {
-			return "";
+			return "<div class='ImgNotebook_pageIcon'></div>";
 		}
 	}
-	public static class NameWiklet implements Wiklet {
+	public static class NameWiklet extends Wiklet {
 		public String getName() {
-			return "name";
+			return "Name";
 		}
 		public String getPattern() {
 			return "NAME";
@@ -264,7 +373,31 @@ public class WikiTemplate {
 			return doc.getFilename();
 		}
 	}
-	public static class ModifierWiklet implements Wiklet {
+	public static class FragmentWiklet extends Wiklet {
+		public String getName() {
+			return "Fragment";
+		}
+		public String getPattern() {
+			return "FRAGMENT";
+		}
+		public String apply(Context ctxt, String text) throws ServiceException {
+			Document doc = (Document) ctxt.item;
+			return doc.getFragment();
+		}
+	}
+	public static class CreatorWiklet extends Wiklet {
+		public String getName() {
+			return "Creator";
+		}
+		public String getPattern() {
+			return "Creator";
+		}
+		public String apply(Context ctxt, String text) throws ServiceException {
+			Document doc = (Document) ctxt.item;
+			return doc.getRevision(1).getCreator();
+		}
+	}
+	public static class ModifierWiklet extends Wiklet {
 		public String getName() {
 			return "Modifier";
 		}
@@ -276,7 +409,33 @@ public class WikiTemplate {
 			return doc.getLastRevision().getCreator();
 		}
 	}
-	public static class ModifyDateWiklet implements Wiklet {
+	public static class CreateDateWiklet extends Wiklet {
+		public String getName() {
+			return "Create Date";
+		}
+		public String getPattern() {
+			return "CREATEDATE";
+		}
+		public String apply(Context ctxt, String text) throws ServiceException {
+			Document doc = (Document) ctxt.item;
+			Date modifyDate = new Date(doc.getRevision(1).getRevDate());
+			return DateFormat.getDateInstance(DateFormat.MEDIUM).format(modifyDate);
+		}
+	}
+	public static class CreateTimeWiklet extends Wiklet {
+		public String getName() {
+			return "Create Time";
+		}
+		public String getPattern() {
+			return "CREATETIME";
+		}
+		public String apply(Context ctxt, String text) throws ServiceException {
+			Document doc = (Document) ctxt.item;
+			Date modifyDate = new Date(doc.getRevision(1).getRevDate());
+			return DateFormat.getTimeInstance(DateFormat.MEDIUM).format(modifyDate);
+		}
+	}
+	public static class ModifyDateWiklet extends Wiklet {
 		public String getName() {
 			return "Modified Date";
 		}
@@ -285,10 +444,24 @@ public class WikiTemplate {
 		}
 		public String apply(Context ctxt, String text) throws ServiceException {
 			Document doc = (Document) ctxt.item;
-			return new Date(doc.getLastRevision().getRevDate()).toString();
+			Date modifyDate = new Date(doc.getLastRevision().getRevDate());
+			return DateFormat.getDateInstance(DateFormat.MEDIUM).format(modifyDate);
 		}
 	}
-	public static class VersionWiklet implements Wiklet {
+	public static class ModifyTimeWiklet extends Wiklet {
+		public String getName() {
+			return "Modified Time";
+		}
+		public String getPattern() {
+			return "MODIFYTIME";
+		}
+		public String apply(Context ctxt, String text) throws ServiceException {
+			Document doc = (Document) ctxt.item;
+			Date modifyDate = new Date(doc.getLastRevision().getRevDate());
+			return DateFormat.getTimeInstance(DateFormat.MEDIUM).format(modifyDate);
+		}
+	}
+	public static class VersionWiklet extends Wiklet {
 		public String getName() {
 			return "Version";
 		}
@@ -298,6 +471,88 @@ public class WikiTemplate {
 		public String apply(Context ctxt, String text) throws ServiceException {
 			Document doc = (Document) ctxt.item;
 			return Integer.toString(doc.getVersion());
+		}
+	}
+	public static class ContentWiklet extends Wiklet {
+		public String getName() {
+			return "Content";
+		}
+		public String getPattern() {
+			return "CONTENT";
+		}
+		public String apply(Context ctxt, String text) throws ServiceException {
+			Document doc = (Document) ctxt.item;
+			try {
+				return new String(ByteUtil.getContent(doc.getRawDocument(), 0), "UTF-8");
+			} catch (IOException ioe) {
+				throw WikiServiceException.CANNOT_READ(doc.getSubject());
+			}
+		}
+	}
+	public static class IncludeWiklet extends Wiklet {
+		public static final String sPAGE = "page";
+		
+		public String getName() {
+			return "Include";
+		}
+		public String getPattern() {
+			return "INCLUDE";
+		}
+		public String getPage(Context ctxt, String page) throws ServiceException, IOException {
+			WikiTemplate template;
+			if (page.startsWith("_")) {
+				// XXX this is how templates are named.
+		    	WikiTemplateStore wiki = WikiTemplateStore.getInstance(ctxt.item);
+		    	String tstr = wiki.getTemplate(ctxt.octxt, page);
+		    	template = new WikiTemplate(tstr);
+			} else {
+				Wiki wiki = Wiki.getInstance(ctxt.item.getMailbox().getAccount().getName(), ctxt.item.getFolderId());
+				WikiWord ww = wiki.lookupWiki(page);
+				if (ww == null) {
+					return reportError("cannot find page " + page);
+				}
+				Document doc = ww.getWikiItem(ctxt.octxt);
+				if (!(doc instanceof WikiItem)) {
+					return reportError("included page \"" + page + "\" is not of type Wiki");
+				}
+				template = new WikiTemplate((WikiItem)doc);
+			}
+			
+	    	return template.toString(ctxt);
+		}
+		public String apply(Context ctxt, String text) throws ServiceException, IOException {
+			Map<String,String> params = parseParam(text);
+			String page = params.get(sPAGE);
+			if (page == null) {
+				return reportError("missing name attribute");
+			}
+			return getPage(ctxt, page);
+		}
+	}
+	public static class WikilinkWiklet extends Wiklet {
+		public String getName() {
+			return "Wikilink";
+		}
+		public String getPattern() {
+			return "WIKILINK";
+		}
+		public String apply(Context ctxt, String text) throws ServiceException {
+			String link = text;
+			String title = text;
+			int pos = text.indexOf('|');
+			if (pos != -1) {
+				link = text.substring(0, pos);
+				title = text.substring(pos+1);
+			} else {
+				pos = text.indexOf("][");
+				if (pos != -1) {
+					link = text.substring(0, pos);
+					title = text.substring(pos+2);
+				}
+			}
+			StringBuffer buf = new StringBuffer();
+			buf.append("<a href='").append(link).append("'>").append(title).append("</a>");
+			return buf.toString();
 		}
 	}
 }

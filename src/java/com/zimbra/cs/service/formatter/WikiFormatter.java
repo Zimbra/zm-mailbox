@@ -59,12 +59,15 @@ public class WikiFormatter extends Formatter {
     }
     
     private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
-    	String content = new String(ByteUtil.getContent(wiki.getRawDocument(), 0), "UTF-8");
+    	Folder f = context.targetMailbox.getFolderById(context.opContext, wiki.getFolderId());
+    	String template = getTemplate(context, f, CHROME);
+    	WikiTemplate wt = new WikiTemplate(template);
     	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
-    	context.resp.getOutputStream().print(content);
+    	context.resp.getOutputStream().print(wt.toString(context.opContext, wiki));
     }
 
     private static final String TOC = "_INDEX_";
+    private static final String CHROME = "_CHROME_";
     
     private String getTemplate(Context context, Folder folder, String name) throws IOException, ServiceException {
     	WikiTemplateStore wiki = WikiTemplateStore.getInstance(context.authAccount.getName(), folder.getId());

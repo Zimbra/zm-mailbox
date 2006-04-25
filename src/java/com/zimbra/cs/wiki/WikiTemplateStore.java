@@ -32,6 +32,7 @@ import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Pair;
@@ -46,6 +47,10 @@ public class WikiTemplateStore {
 	
 	public static String getDefaultTOC() {
 		return "{{TOC}}";
+	}
+	
+	public static WikiTemplateStore getInstance(MailItem item) throws ServiceException {
+		return WikiTemplateStore.getInstance(item.getMailbox().getAccount().getName(), item.getFolderId());
 	}
 	
 	public static WikiTemplateStore getInstance(String account, int folderId) {
