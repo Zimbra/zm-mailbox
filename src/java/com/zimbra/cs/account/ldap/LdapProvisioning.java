@@ -37,10 +37,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.Stack;
 import java.util.regex.Pattern;
 
 import javax.mail.internet.AddressException;
@@ -2929,6 +2931,34 @@ public class LdapProvisioning extends Provisioning {
         }
         if (addrs.length > 1) sb.append(")");
         return (List<DistributionList>)searchAccounts(sb.toString(), null, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);        
+    }
+    
+    static List<DistributionList> getDistributionLists(String addrs[], boolean directOnly, Map<String, String> via) throws ServiceException {
+        List<DistributionList> directDLs = Provisioning.getInstance().getAllDistributionListsForAddresses(addrs); 
+        
+        HashSet<String> checked = new HashSet<String>();
+        List<DistributionList> result = new ArrayList<DistributionList>();        
+
+        Stack<DistributionList> dlsToCheck = new Stack<DistributionList>();
+        
+        for (DistributionList dl : directDLs) {
+            dlsToCheck.push(dl);
+        }
+
+        while (!dlsToCheck.isEmpty()) {
+            DistributionList dl = dlsToCheck.pop();
+            if (checked.contains(dl.getId())) continue; // skip if already in groups
+            result.add(dl);
+            checked.add(dl.getId());
+            if (directOnly) continue;
+            List<DistributionList> newLists = dl.getDistributionLists(true, null);
+            for (DistributionList newDl: newLists) {
+                if (via != null) via.put(newDl.getName(), dl.getName());
+                dlsToCheck.push(newDl);
+            }
+        }
+        Collections.sort(result);
+        return result;
     }
     
     public static void main(String args[]) {

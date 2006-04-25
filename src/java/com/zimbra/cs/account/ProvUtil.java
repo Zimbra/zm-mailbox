@@ -69,6 +69,7 @@ public class ProvUtil {
         System.out.println("  SearchGal(sg) {domain} {name}");
         System.out.println("  RenameAccount(ra) {name@domain|id} {newName@domain}");
         System.out.println("  GetAccountGroups(gag) {name@domain|id}");        
+        System.out.println("  GetAccountMembership(gam) {name@domain|id}");
         System.out.println();
 
         System.out.println("  CreateDomain(cd) {domain} [attr1 value1 [attr2 value2...]]");
@@ -111,6 +112,7 @@ public class ProvUtil {
         System.out.println("  RemoveDistributionListAlias(rdla) {list@domain|id} {alias@domain}");
         System.out.println("  RenameDistributionList(rdl) {list@domain|id} {newName@domain}");
         System.out.println("  DistributionListIsGroup(dlig) {list@domain|id} {0|1}");
+        System.out.println("  GetDistributionListMembership(gdlm) {name@domain|id}");                
         System.out.println();
 
         System.out.println("  CreateCalendarResource(ccr) {name@domain} [attr1 value1 [attr2 value2...]]");
@@ -153,6 +155,7 @@ public class ProvUtil {
     private static final int COPY_ACCOUNT = 111;
     private static final int CREATE_BULK_ACCOUNTS = 112;
     private static final int GET_ACCOUNT_GROUPS = 113;    
+    private static final int GET_ACCOUNT_MEMBERSHIP = 114;
 
     private static final int CREATE_DOMAIN = 201;
     private static final int GET_DOMAIN =  202;
@@ -193,6 +196,7 @@ public class ProvUtil {
     private static final int RENAME_DISTRIBUTION_LIST = 710;
     private static final int CREATE_DISTRIBUTION_LISTS_BULK = 711;
     private static final int DISTRIBUTION_LIST_IS_GROUP = 712;
+    private static final int GET_DISTRIBUTION_LIST_MEMBERSHIP = 713;    
     
     private static final int SEARCH_ACCOUNTS = 801;
     private static final int SEARCH_GAL = 802;
@@ -249,6 +253,7 @@ public class ProvUtil {
         addCommand("createBulkAccounts", "cabulk", CREATE_BULK_ACCOUNTS);
         addCommand("copyAccount", "cpa", COPY_ACCOUNT);        
         addCommand("getAccount", "ga", GET_ACCOUNT);        
+        addCommand("getAccountMembership", "gam", GET_ACCOUNT_MEMBERSHIP);
         addCommand("getAccountGroups", "gag", GET_ACCOUNT_GROUPS);        
         addCommand("getAllAccounts","gaa", GET_ALL_ACCOUNTS);
         addCommand("getAllAdminAccounts", "gaaa", GET_ALL_ADMIN_ACCOUNTS);
@@ -299,6 +304,7 @@ public class ProvUtil {
         addCommand("renameDistributionList", "rdl", RENAME_DISTRIBUTION_LIST);
         addCommand("createDistributionListsBulk", "cdlbulk", CREATE_DISTRIBUTION_LISTS_BULK);
         addCommand("distributionListIsGroup", "dlig", DISTRIBUTION_LIST_IS_GROUP);
+        addCommand("getDistributionListMembership", "gdlm", GET_DISTRIBUTION_LIST_MEMBERSHIP);        
         
         addCommand("createCalendarResource",  "ccr",  CREATE_CALENDAR_RESOURCE);
         addCommand("deleteCalendarResource",  "dcr",  DELETE_CALENDAR_RESOURCE);
@@ -363,6 +369,9 @@ public class ProvUtil {
         case GET_ACCOUNT:
             doGetAccount(args); 
             break;
+        case GET_ACCOUNT_MEMBERSHIP:
+            doGetAccountMembership(args);
+            break;
         case GET_ACCOUNT_GROUPS:
             doGetAccountGroups(args); 
             break;            
@@ -389,6 +398,9 @@ public class ProvUtil {
             break;                        
         case GET_COS:
             doGetCos(args); 
+            break;
+        case GET_DISTRIBUTION_LIST_MEMBERSHIP:
+            doGetDistributionListMembership(args);
             break;            
         case GET_DOMAIN:
             doGetDomain(args); 
@@ -791,7 +803,39 @@ public class ProvUtil {
             }
         }
     }
-    
+
+    private void doGetAccountMembership(String[] args) throws ServiceException {
+        if (args.length != 2) {
+            usage();
+        } else {
+            String key = args[1];
+            Account account = lookupAccount(key);
+            HashMap<String,String> via = new HashMap<String, String>();
+            List<DistributionList> lists = account.getDistributionLists(false, via);
+            for (DistributionList dl: lists) {
+                String viaDl = via.get(dl.getName());
+                if (viaDl != null) System.out.println(dl.getName()+" (via "+viaDl+")");
+                else System.out.println(dl.getName());
+            }
+        }
+    }
+
+    private void doGetDistributionListMembership(String[] args) throws ServiceException {
+        if (args.length != 2) {
+            usage();
+        } else {
+            String key = args[1];
+            DistributionList dist = lookupDistributionList(key);
+            HashMap<String,String> via = new HashMap<String, String>();
+            List<DistributionList> lists = dist.getDistributionLists(false, via);
+            for (DistributionList dl: lists) {
+                String viaDl = via.get(dl.getName());
+                if (viaDl != null) System.out.println(dl.getName()+" (via "+viaDl+")");
+                else System.out.println(dl.getName());
+            }
+        }
+    }
+
     private void doGetCos(String[] args) throws ServiceException {
         if (args.length != 2) {
             usage();

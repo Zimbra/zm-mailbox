@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.account;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -90,6 +91,16 @@ public interface Account extends NamedEntry {
      */
     public Set<String> getGroups() throws ServiceException; 
 
+    /**
+     *      
+     * @param directOnly return only DLs this account is a direct member of
+     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL name to the DL it was a member of, if 
+     *            member was indirect.
+     * @return all the DLs
+     * @throws ServiceException
+     */
+    public List<DistributionList> getDistributionLists(boolean directOnly, Map<String,String> via) throws ServiceException; 
+    
     /**
      * check whether this account's mailbox is supposed to be on this host
      * 

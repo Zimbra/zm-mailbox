@@ -25,6 +25,9 @@
 
 package com.zimbra.cs.account;
 
+import java.util.List;
+import java.util.Map;
+
 import com.zimbra.cs.service.ServiceException;
 
 public interface DistributionList extends NamedEntry {
@@ -40,7 +43,17 @@ public interface DistributionList extends NamedEntry {
     public boolean isSecurityGroup() throws ServiceException;
     
     public void setSecurityGroup(boolean enabled) throws ServiceException;
-    
+
+    /**
+     *      
+     * @param directOnly return only DLs this DL is a direct member of
+     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL name to the DL it was a member of, if 
+     *            member was indirect.
+     * @return all the DLs
+     * @throws ServiceException
+     */
+    public List<DistributionList> getDistributionLists(boolean directOnly, Map<String,String> via) throws ServiceException; 
+
     /**
      * @return group id if group, null otherwise.
      * @throws ServiceException

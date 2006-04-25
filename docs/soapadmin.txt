@@ -88,6 +88,22 @@ Access: domain admin sufficient
 
 -----------------------------
 
+<GetAccountMembershipRequest>
+  <account by="id|name|foreignPrincipal">...</account>
+</GetAccountMembershipRequest>  
+
+<GetAccountMembershipResponse>
+    <dl name="{name}" id="{id}"  isgroup="{is-group}" via="{via-dl-name}" />+
+</GetAccountMembershipResponse>    
+
+{via-dl-name} = is present if the account is a member of the returned list because they are either a direct
+                or indirect member of another list that is a member of the returned list. For example,
+                if a user is a member of engineering@domain.com, and engineering@domain.com is a member of all@domain.com,
+                then <dl name="all@domain.com" ... via="engineering@domain.com"/> would be returned.
+
+                
+-----------------------------
+
 <GetAllAdminAccountsRequest/>
 
 <GetAllAdminAccountsResponse>
@@ -983,6 +999,21 @@ Access: domain admin sufficient
 </RenameDistributionListResponse>
 
 Access: domain admin sufficient
+
+-----------------------------
+
+<GetDistributionListMembershipRequest>
+  <dl by="id|name">...</dl>
+</GetDistributionListMembershipRequest>  
+
+<GetDistributionListMembershipResponse>
+    <dl name="{name}" id="{id}"  isgroup="{is-group}" via="{via-dl-name}" />+
+</GetDistributionListMembershipResponse>    
+
+{via-dl-name} = is present if the dl is a member of the returned list because they are either a direct
+                or indirect member of another list that is a member of the returned list. For example,
+                if a dl is a member of engineering@domain.com, and engineering@domain.com is a member of all@domain.com,
+                then <dl name="all@domain.com" ... via="engineering@domain.com"/> would be returned.
 
 -----------------------------
 

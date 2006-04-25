@@ -37,7 +37,7 @@ import com.zimbra.cs.service.ServiceException;
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public interface NamedEntry extends Entry {
+public interface NamedEntry extends Entry, Comparable {
     
     public interface Visitor  {
         public void visit(NamedEntry entry) throws ServiceException;

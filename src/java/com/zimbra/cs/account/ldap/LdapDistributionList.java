@@ -28,6 +28,7 @@ package com.zimbra.cs.account.ldap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.naming.NamingException;
@@ -195,6 +196,15 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
     public String[] getAliases() throws ServiceException
     {
         return getMultiAttr(Provisioning.A_zimbraMailAlias);
+    }
+
+    public List<DistributionList> getDistributionLists(boolean directOnly, Map<String,String> via) throws ServiceException {
+        String aliases[] = this.getAliases();
+        String addrs[] = new String[aliases.length+1];
+        addrs[0] = this.getName();
+        for (int i=0; i < aliases.length; i++)
+            addrs[i+1] = aliases[i];
+        return LdapProvisioning.getDistributionLists(addrs, directOnly, via);
     }
 
 }

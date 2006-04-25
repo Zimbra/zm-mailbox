@@ -25,10 +25,12 @@
 
 package com.zimbra.cs.account.ldap;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -38,6 +40,7 @@ import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -291,5 +294,13 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     public boolean saveToSent() throws ServiceException {
         return getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, false);
     }
-    
+
+    public List<DistributionList> getDistributionLists(boolean directOnly, Map<String, String> via) throws ServiceException {
+        String aliases[] = this.getAliases();
+        String addrs[] = new String[aliases.length+1];
+        addrs[0] = this.getName();
+        for (int i=0; i < aliases.length; i++)
+            addrs[i+1] = aliases[i];
+        return LdapProvisioning.getDistributionLists(addrs, directOnly, via);
+    }
 }

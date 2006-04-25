@@ -246,6 +246,12 @@ public class AdminService implements DocumentService {
     public static final QName SEARCH_DIRECTORY_REQUEST = QName.get("SearchDirectoryRequest", NAMESPACE);
     public static final QName SEARCH_DIRECTORY_RESPONSE = QName.get("SearchDirectoryResponse", NAMESPACE);
     
+    public static final QName GET_ACCOUNT_MEMBERSHIP_REQUEST = QName.get("GetAccountMembershipRequest", NAMESPACE);
+    public static final QName GET_ACCOUNT_MEMBERSHIP_RESPONSE = QName.get("GetAccountMembershipResponse", NAMESPACE);
+    
+    public static final QName GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST = QName.get("GetDistributionListMembershipRequest", NAMESPACE);
+    public static final QName GET_DISTRIBUTION_LIST_MEMBERSHIP_RESPONSE = QName.get("GetDistributionListMembershipResponse", NAMESPACE);    
+
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -311,6 +317,7 @@ public class AdminService implements DocumentService {
     public static final String A_MAILBOXID = "mbxid";
     public static final String A_TOTAL = "total";
     public static final String A_ISGROUP = "isgroup";
+    public static final String A_VIA = "via";
 
     public static final String BY_ID = "id";
     public static final String BY_QUERY = "query";
@@ -391,7 +398,8 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(RENAME_ACCOUNT_REQUEST, new RenameAccount());        
 
         dispatcher.registerHandler(SEARCH_DIRECTORY_REQUEST, new SearchDirectory());        
-
+        dispatcher.registerHandler(GET_ACCOUNT_MEMBERSHIP_REQUEST, new GetAccountMembership());
+        
         dispatcher.registerHandler(CREATE_DOMAIN_REQUEST, new CreateDomain());
         dispatcher.registerHandler(GET_DOMAIN_REQUEST, new GetDomain());
         dispatcher.registerHandler(GET_ALL_DOMAINS_REQUEST, new GetAllDomains());
@@ -447,7 +455,8 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(ADD_DISTRIBUTION_LIST_ALIAS_REQUEST, new AddDistributionListAlias());
         dispatcher.registerHandler(REMOVE_DISTRIBUTION_LIST_ALIAS_REQUEST, new RemoveDistributionListAlias());
         dispatcher.registerHandler(RENAME_DISTRIBUTION_LIST_REQUEST, new RenameDistributionList());
-
+        dispatcher.registerHandler(GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST, new GetDistributionListMembership());
+        
         dispatcher.registerHandler(GET_VERSION_INFO_REQUEST, new GetVersionInfo());
         dispatcher.registerHandler(GET_LICENSE_INFO_REQUEST, new GetLicenseInfo());
         

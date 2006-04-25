@@ -38,6 +38,7 @@ import java.util.Set;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -120,6 +121,10 @@ public class ACL {
         public ICalTimeZone getTimeZone() throws ServiceException { return null; }
         public CalendarUserType getCalendarUserType() throws ServiceException { return null; }
         public boolean saveToSent() throws ServiceException { return false; }
+        public List<DistributionList> getDistributionLists(boolean directOnly, Map<String, String> via) throws ServiceException { return null; }
+        public int compareTo(Object o) {
+                return 0;
+        }
     }
     public static class Grant {
         /** The zimbraId of the entry being granted rights. */
