@@ -72,7 +72,7 @@ class RealtimeStats implements Accumulator {
         for (RealtimeStatsCallback callback : mCallbacks) {
             Map<String, Object> callbackData = callback.getStatData();
             if (callbackData != null) {
-                callbackResults.putAll(callback.getStatData());
+                callbackResults.putAll(callbackData);
             }
         }
         
