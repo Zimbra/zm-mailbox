@@ -47,7 +47,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetServiceStatus extends AdminDocumentHandler {
 
-	public Element handle(Element request, Map context) throws SoapFaultException, ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws SoapFaultException, ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         // this command can only execute on the monitor host, so proxy if necessary

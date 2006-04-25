@@ -37,7 +37,7 @@ public class GetLicenseInfo extends AdminDocumentHandler {
 
     static final String TRIAL_EXPIRATION_DATE_KEY = "trial_expiration_date";
     
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         String expirationDate = LC.get(TRIAL_EXPIRATION_DATE_KEY);
@@ -47,11 +47,11 @@ public class GetLicenseInfo extends AdminDocumentHandler {
         return response;
     }
 
-    public boolean needsAdminAuth(Map context) {
+    public boolean needsAdminAuth(Map<String, Object> context) {
         return false;
     }
 
-    public boolean needsAuth(Map context) {
+    public boolean needsAuth(Map<String, Object> context) {
         return false;
     }
 

@@ -331,7 +331,7 @@ public class AttributeManager {
         }
     }
     
-    private Set<AttributeClass> parseClasses(String attrName, String file, String value) throws DocumentException {
+    private Set<AttributeClass> parseClasses(String attrName, String file, String value) {
         Set<AttributeClass> result = new HashSet<AttributeClass>();
         String[] cnames = value.split(",");
         for (String cname : cnames) {
@@ -348,7 +348,7 @@ public class AttributeManager {
         return result;
     }
 
-    private Set<AttributeFlag> parseFlags(String attrName, String file, String value) throws DocumentException {
+    private Set<AttributeFlag> parseFlags(String attrName, String file, String value) {
         Set<AttributeFlag> result = new HashSet<AttributeFlag>();
         String[] flags = value.split(",");
         for (String flag : flags) {
@@ -529,7 +529,7 @@ public class AttributeManager {
                 attrs.add(info.getName());
             }
         }
-        String[] result = (String[])attrs.toArray(new String[0]);
+        String[] result = attrs.toArray(new String[0]);
         Arrays.sort(result);
         return result;
     }
@@ -578,7 +578,7 @@ public class AttributeManager {
                }
            }
         }
-        String[] outs = (String[])out.toArray(new String[0]);
+        String[] outs = out.toArray(new String[0]);
         Arrays.sort(outs);
         for (String o : outs) {
             pw.println(o);
@@ -603,7 +603,7 @@ public class AttributeManager {
                }
            }
         }
-        String[] outs = (String[])out.toArray(new String[0]);
+        String[] outs = out.toArray(new String[0]);
         Arrays.sort(outs);
         for (String o : outs) {
             pw.println(o);
@@ -632,9 +632,8 @@ public class AttributeManager {
             }
             
             // ATTRIBUTE_OIDS
-            Collections.sort(list, new Comparator() {
-                public int compare(Object a, Object b) {
-                    AttributeInfo a1 = (AttributeInfo)a, b1  = (AttributeInfo)b;
+            Collections.sort(list, new Comparator<AttributeInfo>() {
+                public int compare(AttributeInfo a1, AttributeInfo b1) {
                     return a1.getId() - b1.getId();
                 }
             });
@@ -643,9 +642,8 @@ public class AttributeManager {
             }
 
             // ATTRIBUTE_DEFINITIONS: DESC EQUALITY NAME ORDERING SINGLE-VALUE SUBSTR SYNTAX
-            Collections.sort(list, new Comparator() {
-                public int compare(Object a, Object b) {
-                    AttributeInfo a1 = (AttributeInfo)a, b1  = (AttributeInfo)b;
+            Collections.sort(list, new Comparator<AttributeInfo>() {
+                public int compare(AttributeInfo a1, AttributeInfo b1) {
                     return a1.getName().compareTo(b1.getName());
                 }
             });

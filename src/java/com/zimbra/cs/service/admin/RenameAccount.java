@@ -51,7 +51,7 @@ public class RenameAccount extends AdminDocumentHandler {
         return true;
     }
 
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();

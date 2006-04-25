@@ -56,7 +56,7 @@ public class GetAppointment extends DocumentHandler {
     protected boolean checkMountpointProxy(Element request)  { return false; }
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();

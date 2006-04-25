@@ -75,7 +75,7 @@ public class ItemAction extends WriteOpDocumentHandler {
     public static final String OP_SPAM        = "spam";
     public static final String OP_UPDATE      = "update";
 
-    public Element handle(Element request, Map<String,Object> context) throws ServiceException, SoapFaultException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element action = request.getElement(MailService.E_ACTION);

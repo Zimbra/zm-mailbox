@@ -67,7 +67,7 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
     private static final long MSEC_PER_DAY = 1000*60*60*24;
     private static final long MAX_PERIOD_SIZE_IN_DAYS = 200; 
 
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Account acct = getRequestedAccount(lc);

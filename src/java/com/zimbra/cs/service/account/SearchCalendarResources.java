@@ -47,11 +47,11 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class SearchCalendarResources extends DocumentHandler {
 
-    public boolean needsAuth(Map context) {
+    public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
 
-    public Element handle(Element request, Map context)
+    public Element handle(Element request, Map<String, Object> context)
     throws ServiceException, SoapFaultException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AccountService.SEARCH_CALENDAR_RESOURCES_RESPONSE);

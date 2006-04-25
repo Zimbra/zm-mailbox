@@ -43,11 +43,11 @@ import com.zimbra.soap.SoapFaultException;
 /** @author schemers */
 public abstract class AdminDocumentHandler extends DocumentHandler {
 
-    public boolean needsAuth(Map context) {
+    public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
     
-    public boolean needsAdminAuth(Map context) {
+    public boolean needsAdminAuth(Map<String, Object> context) {
         return true;
     }
     
@@ -57,7 +57,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
 
     protected String[] getProxiedAccountPath()  { return null; }
 
-    protected Element proxyIfNecessary(Element request, Map context) throws ServiceException, SoapFaultException {
+    protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         String[] xpath = getProxiedAccountPath();
         if (xpath == null)
             return super.proxyIfNecessary(request, context);
@@ -78,7 +78,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
     /** Fetches the in-memory {@link Session} object appropriate for this request.
      *  If none already exists, one is created.
      * @return An {@link com.zimbra.cs.session.AdminSession}. */
-    public Session getSession(Map context) {
+    public Session getSession(Map<String, Object> context) {
         return getSession(context, SessionCache.SESSION_ADMIN);
     }
 }

@@ -43,7 +43,7 @@ import com.zimbra.soap.WriteOpDocumentHandler;
  */
 public class ChangePassword extends WriteOpDocumentHandler {
 
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         String name = request.getAttribute(AccountService.E_ACCOUNT);
@@ -59,7 +59,7 @@ public class ChangePassword extends WriteOpDocumentHandler {
         return response;
 	}
 
-    public boolean needsAuth(Map context) {
+    public boolean needsAuth(Map<String, Object> context) {
         // This command can be sent before authenticating, so this method
         // should return false.  The Account.changePassword() method called
         // from handle() will internally make sure the old password provided

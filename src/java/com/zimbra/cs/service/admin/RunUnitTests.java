@@ -40,7 +40,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class RunUnitTests extends WriteOpDocumentHandler {
     
-	public Element handle(Element request, Map context) {
+	public Element handle(Element request, Map<String, Object> context) {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         TestResult result = ZimbraSuite.runTestSuite(os);
         

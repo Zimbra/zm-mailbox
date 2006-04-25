@@ -73,7 +73,7 @@ public class SetAppointment extends CalendarRequest {
     };
     
     
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
         Mailbox mbox = getRequestedMailbox(lc);

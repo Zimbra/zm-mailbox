@@ -50,7 +50,7 @@ public class CheckSpelling extends DocumentHandler  {
     
     private static Log sLog = LogFactory.getLog(CheckSpelling.class);
     
-    public Element handle(Element request, Map context)
+    public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(MailService.CHECK_SPELLING_RESPONSE);

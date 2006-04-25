@@ -36,7 +36,7 @@ import com.zimbra.cs.util.BuildInfo;
 public class GetVersionInfo extends AdminDocumentHandler 
 {
 
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element response = lc.createElement(AdminService.GET_VERSION_INFO_RESPONSE);
@@ -48,11 +48,11 @@ public class GetVersionInfo extends AdminDocumentHandler
         return response;
     }
 
-    public boolean needsAdminAuth(Map context) {
+    public boolean needsAdminAuth(Map<String, Object> context) {
         return false;
     }
 
-    public boolean needsAuth(Map context) {
+    public boolean needsAuth(Map<String, Object> context) {
         return false;
     }
 

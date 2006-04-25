@@ -49,7 +49,7 @@ public class GetMailQueue extends AdminDocumentHandler {
     public static final int MAIL_QUEUE_SCAN_DEFUALT_WAIT_SECONDS = 3;
     public static final int MAIL_QUEUE_SUMMARY_CUTOFF = 100;
     
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         

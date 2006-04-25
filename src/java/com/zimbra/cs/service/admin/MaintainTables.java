@@ -40,7 +40,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class MaintainTables extends AdminDocumentHandler {
     
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         int numTables = DbTableMaintenance.runMaintenance();
         
         ZimbraSoapContext lc = getZimbraSoapContext(context);

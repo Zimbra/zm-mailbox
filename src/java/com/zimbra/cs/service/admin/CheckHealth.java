@@ -44,7 +44,7 @@ public class CheckHealth extends AdminDocumentHandler {
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
-    public Element handle(Element document, Map context)
+    public Element handle(Element document, Map<String, Object> context)
             throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AdminService.CHECK_HEALTH_RESPONSE);
@@ -57,7 +57,7 @@ public class CheckHealth extends AdminDocumentHandler {
         return response;
     }
 
-    public boolean needsAuth(Map context) {
+    public boolean needsAuth(Map<String, Object> context) {
         // Must return false to leave the auth decision entirely up to
         // needsAdminAuth().
     	return false;
@@ -69,7 +69,7 @@ public class CheckHealth extends AdminDocumentHandler {
      * @param context
      * @return
      */
-    public boolean needsAdminAuth(Map context) {
+    public boolean needsAdminAuth(Map<String, Object> context) {
         return !clientIsLocal(context);
     }
 }

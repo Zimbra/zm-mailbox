@@ -61,7 +61,7 @@ public class Auth extends DocumentHandler  {
         return null;
     }
 
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
 
@@ -135,7 +135,7 @@ public class Auth extends DocumentHandler  {
 		return response;
 	}
 
-	public boolean needsAuth(Map context) {
+	public boolean needsAuth(Map<String, Object> context) {
 		return false;
 	}
 }

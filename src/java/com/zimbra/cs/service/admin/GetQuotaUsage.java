@@ -29,7 +29,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
     public static final String SORT_QUOTA_LIMIT = "quotaLimit";
         
     
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();

@@ -56,7 +56,7 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         return true;
     }
 
-    public Element handle(Element request, Map context)
+    public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();

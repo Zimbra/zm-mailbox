@@ -45,7 +45,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class SyncGal extends DocumentHandler {
 
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AccountService.SYNC_GAL_RESPONSE);
         String tokenAttr = request.getAttribute(MailService.A_TOKEN, "");        
@@ -59,7 +59,7 @@ public class SyncGal extends DocumentHandler {
         return response;
     }
 
-    public boolean needsAuth(Map context) {
+    public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
 }

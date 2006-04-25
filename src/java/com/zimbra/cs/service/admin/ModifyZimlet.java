@@ -35,7 +35,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class ModifyZimlet extends AdminDocumentHandler {
 
 	@Override
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         
 		Element z = request.getElement(AdminService.E_ZIMLET);

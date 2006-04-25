@@ -51,7 +51,7 @@ public class DelegateAuth extends AdminDocumentHandler {
     public static final String BY_NAME = "name";
     public static final String BY_ID = "id";
 
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element a = request.getElement(AdminService.E_ACCOUNT);
@@ -99,12 +99,12 @@ public class DelegateAuth extends AdminDocumentHandler {
 		return response;
 	}
 
-    public boolean needsAuth(Map context) {
+    public boolean needsAuth(Map<String, Object> context) {
         // can't require auth on auth request
         return false;
     }
 
-    public boolean needsAdminAuth(Map context) {
+    public boolean needsAdminAuth(Map<String, Object> context) {
         // can't require auth on auth request
         return false;
     }

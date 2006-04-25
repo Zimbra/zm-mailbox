@@ -55,7 +55,7 @@ public class Auth extends AdminDocumentHandler {
         return null;
     }
 
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         String name = request.getAttribute(AdminService.E_NAME);
@@ -110,12 +110,12 @@ public class Auth extends AdminDocumentHandler {
 		return response;
 	}
 
-    public boolean needsAuth(Map context) {
+    public boolean needsAuth(Map<String, Object> context) {
         // can't require auth on auth request
         return false;
     }
 
-    public boolean needsAdminAuth(Map context) {
+    public boolean needsAdminAuth(Map<String, Object> context) {
         // can't require auth on auth request
         return false;
     }

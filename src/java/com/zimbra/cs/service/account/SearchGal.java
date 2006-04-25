@@ -47,7 +47,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class SearchGal extends DocumentHandler {
 
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         String n = request.getAttribute(AccountService.E_NAME);
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
@@ -74,7 +74,7 @@ public class SearchGal extends DocumentHandler {
         return response;
     }
 
-    public boolean needsAuth(Map context) {
+    public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
 

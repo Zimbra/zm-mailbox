@@ -66,7 +66,7 @@ public class CreateContact extends WriteOpDocumentHandler  {
 
     private static final String DEFAULT_FOLDER = "" + Mailbox.ID_FOLDER_CONTACTS;
 
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();

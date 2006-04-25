@@ -83,7 +83,7 @@ public class FolderAction extends ItemAction {
         OP_RENAME, OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_GRANT, OP_REVOKE, OP_UPDATE
     }));
 
-	public Element handle(Element request, Map<String,Object> context) throws ServiceException, SoapFaultException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element action = request.getElement(MailService.E_ACTION);

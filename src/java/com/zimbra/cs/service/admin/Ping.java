@@ -42,20 +42,20 @@ public class Ping extends AdminDocumentHandler {
 	/* (non-Javadoc)
 	 * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
 	 */
-	public Element handle(Element document, Map context)
+	public Element handle(Element document, Map<String, Object> context)
 			throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 		Element response = lc.createElement(AdminService.PING_RESPONSE);
 		return response;
 	}
 	
-	public boolean needsAuth(Map context) {
+	public boolean needsAuth(Map<String, Object> context) {
         // return false because this may be called from Perl which
         // doesn't have auth token
 		return false;
 	}
 
-    public boolean needsAdminAuth(Map context) {
+    public boolean needsAdminAuth(Map<String, Object> context) {
         // return false because this may be called from Perl which
         // doesn't have auth token
     	return false;

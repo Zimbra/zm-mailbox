@@ -69,7 +69,7 @@ public class Search extends DocumentHandler  {
     
     protected static final boolean DONT_CACHE_RESULTS = true;
     
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
         Mailbox mbox = getRequestedMailbox(lc);

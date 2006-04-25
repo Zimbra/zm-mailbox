@@ -44,7 +44,7 @@ import com.zimbra.soap.WriteOpDocumentHandler;
  */
 public class ModifyPrefs extends WriteOpDocumentHandler {
 
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
 

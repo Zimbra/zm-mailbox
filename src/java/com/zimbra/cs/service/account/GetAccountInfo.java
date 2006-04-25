@@ -51,7 +51,7 @@ public class GetAccountInfo extends DocumentHandler  {
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
    
         Element a = request.getElement(AccountService.E_ACCOUNT);

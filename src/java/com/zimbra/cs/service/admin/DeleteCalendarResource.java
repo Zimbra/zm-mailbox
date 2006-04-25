@@ -51,7 +51,7 @@ public class DeleteCalendarResource extends AdminDocumentHandler {
     /**
      * Deletes a calendar resource account and its mailbox.
      */
-    public Element handle(Element request, Map context)
+    public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();

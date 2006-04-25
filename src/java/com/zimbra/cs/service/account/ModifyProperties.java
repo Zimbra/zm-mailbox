@@ -42,7 +42,7 @@ import com.zimbra.cs.zimlet.ZimletUserProperties;
  */
 public class ModifyProperties extends WriteOpDocumentHandler {
 
-	public Element handle(Element request, Map context)
+	public Element handle(Element request, Map<String, Object> context)
 			throws ServiceException, SoapFaultException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);

@@ -51,7 +51,7 @@ public class CreateNote extends WriteOpDocumentHandler {
     protected boolean checkMountpointProxy(Element request)  { return true; }
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
 

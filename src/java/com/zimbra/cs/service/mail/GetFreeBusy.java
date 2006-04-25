@@ -68,7 +68,7 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
     private static final long MAX_PERIOD_SIZE_IN_DAYS = 200;
     
     
-    public Element handle(Element request, Map context) throws ServiceException 
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException 
     {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
         

@@ -53,7 +53,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class SearchConv extends Search {
     private static Log sLog = LogFactory.getLog(Search.class);
 
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         if (sLog.isDebugEnabled())
             sLog.debug("**Start SearchConv");
         

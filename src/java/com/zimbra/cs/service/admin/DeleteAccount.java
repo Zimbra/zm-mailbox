@@ -57,7 +57,7 @@ public class DeleteAccount extends AdminDocumentHandler {
     /**
      * Deletes an account and its mailbox.
      */
-    public Element handle(Element request, Map context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();

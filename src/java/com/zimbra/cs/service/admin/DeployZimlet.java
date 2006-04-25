@@ -41,7 +41,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class DeployZimlet extends AdminDocumentHandler {
 
 	@Override
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element content = request.getElement(MailService.E_CONTENT);
         String attachment = content.getAttribute(MailService.A_ATTACHMENT_ID, null);

@@ -36,7 +36,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class MailQueueFlush extends AdminDocumentHandler {
 
-	public Element handle(Element request, Map context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
  
