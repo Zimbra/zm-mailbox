@@ -27,12 +27,9 @@ package com.zimbra.cs.mime;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Part;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -139,40 +136,6 @@ public abstract class MimeVisitor {
     protected abstract boolean visitBodyPart(MimeBodyPart bp) throws MessagingException;
 
 
-    /** Determines the "primary/subtype" part of a Part's Content-Type
-     *  header.  Uses a permissive, RFC2231-capable parser, and defaults
-     *  when appropriate. */
-    protected static final String getContentType(Part part) {
-        try {
-            return getContentType(part.getContentType());
-        } catch (MessagingException e) {
-            ZimbraLog.extensions.warn("could not fetch part's content-type; defaulting to " + Mime.CT_DEFAULT, e);
-            return Mime.CT_DEFAULT;
-        }
-    }
-
-    /** Determines the "primary/subtype" part of a Multipart's Content-Type
-     *  header.  Uses a permissive, RFC2231-capable parser, and defaults
-     *  when appropriate. */
-    protected static final String getContentType(Multipart multi) {
-        return getContentType(multi.getContentType());
-    }
-
-    private static final String getContentType(String cthdr) {
-        Map<String, String> ctattrs = Mime.decodeRFC2231(cthdr);
-        String ctype = (ctattrs == null ? null : ctattrs.get(null));
-        if (ctype != null)
-            ctype = ctype.trim();
-
-        if (ctype == null || ctype.equals(""))
-            return Mime.CT_DEFAULT;
-        else if (ctype.toLowerCase().equals("text"))
-            return Mime.CT_TEXT_PLAIN;
-        return ctype;
-    }
-
-    private static final String MULTIPART_PREFIX = Mime.CT_MULTIPART + '/';
-
     /** Walks the mail object tree depth-first, starting at the specified
      *  <code>MimePart</code>.  Invokes the various <code>MimeVisitor</code>
      *  methods in for each visited node.
@@ -185,8 +148,8 @@ public abstract class MimeVisitor {
         if (mp instanceof MimeMessage)
             modified |= visitMessage((MimeMessage) mp, VisitPhase.VISIT_BEGIN);
 
-        String ctype = getContentType(mp);
-        boolean isMultipart = ctype.startsWith(MULTIPART_PREFIX);
+        String ctype = Mime.getContentType(mp);
+        boolean isMultipart = ctype.startsWith(Mime.CT_MULTIPART_PREFIX);
         boolean isMessage = !isMultipart && ctype.equals(Mime.CT_MESSAGE_RFC822);
 
         Object content = null;

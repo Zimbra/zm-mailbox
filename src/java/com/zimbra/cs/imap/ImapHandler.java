@@ -1482,15 +1482,15 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     }
                     if ((attributes & FETCH_BODY) != 0) {
                         result.print(empty ? "" : " ");  result.print("BODY ");
-                        i4msg.getStructure(result, mm, false);  empty = false;
+                        i4msg.serializeStructure(result, mm, false);  empty = false;
                     }
                     if ((attributes & FETCH_BODYSTRUCTURE) != 0) {
                         result.print(empty ? "" : " ");  result.print("BODYSTRUCTURE ");
-                        i4msg.getStructure(result, mm, true);  empty = false;
+                        i4msg.serializeStructure(result, mm, true);  empty = false;
                     }
                     if ((attributes & FETCH_ENVELOPE) != 0) {
                         result.print(empty ? "" : " ");  result.print("ENVELOPE ");
-                        i4msg.getEnvelope(result, mm);  empty = false;
+                        i4msg.serializeEnvelope(result, mm);  empty = false;
                     }
                     for (ImapPartSpecifier pspec : parts) {
                         byte[] content = i4msg.getPart(mm, pspec);

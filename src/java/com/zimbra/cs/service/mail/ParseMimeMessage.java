@@ -349,7 +349,7 @@ public class ParseMimeMessage {
         boolean invalidCT = (slash <= 0 || slash == type.length() - 1);
 
         // is the client passing us a multipart?
-        if (type.startsWith(Mime.CT_MULTIPART + '/')) {
+        if (type.startsWith(Mime.CT_MULTIPART_PREFIX)) {
 
             // yes!  Find out what the subtype is (assume "mixed" if none or invalid one is specified)
             String subType = invalidCT ? "mixed" : type.substring(slash + 1);

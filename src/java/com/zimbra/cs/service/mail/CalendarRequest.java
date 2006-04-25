@@ -106,7 +106,7 @@ public abstract class CalendarRequest extends WriteOpDocumentHandler {
             for (Iterator it = parts.iterator(); it.hasNext(); ) {
                 MPartInfo mpi = (MPartInfo) it.next();
                 
-                if (mpi.getContentType().match(Mime.CT_TEXT_HTML))
+                if (mpi.getContentType().equals(Mime.CT_TEXT_HTML))
                     return (String)(mpi.getMimePart().getContent());
             }
             return null;
@@ -130,7 +130,7 @@ public abstract class CalendarRequest extends WriteOpDocumentHandler {
             for (Iterator it = parts.iterator(); it.hasNext(); ) {
                 MPartInfo mpi = (MPartInfo) it.next();
                 
-                if (mpi.getContentType().match(Mime.CT_TEXT_HTML)) {
+                if (mpi.getContentType().equals(Mime.CT_TEXT_HTML)) {
                     String str = htmlStr;
                     
                     str = str.replaceFirst("href=\"@@ACCEPT@@\"", accept);

@@ -36,10 +36,8 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.activation.DataSource;
@@ -47,10 +45,10 @@ import javax.mail.BodyPart;
 import javax.mail.Message.RecipientType;
 import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.internet.AddressException;
-import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -61,7 +59,9 @@ import javax.mail.internet.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author schemers
@@ -77,22 +77,21 @@ public class Mime {
     public static final String CT_TEXT_VCARD = "text/x-vcard";
 	public static final String CT_MESSAGE_RFC822 = "message/rfc822";
 	public static final String CT_APPLICATION_OCTET_STREAM = "application/octet-stream";
-    public static final String CT_MULTIPART = "multipart";
-    public static final String CT_MULTIPART_ALTERNATIVE = "multipart/alternative";
-	public static final String CT_MULTIPART_MIXED = "multipart/mixed";
-
 	public static final String CT_APPLICATION_MSWORD = "application/msword";
 	public static final String CT_APPLICATION_PDF = "application/pdf";
-	
+    public static final String CT_MULTIPART_ALTERNATIVE = "multipart/alternative";
+	public static final String CT_MULTIPART_MIXED = "multipart/mixed";
 	public static final String CT_XML_ZIMBRA_SHARE = "xml/x-zimbra-share";
-	
-	public static final String CT_APPPLICATION_WILD = "application/*";
-   	public static final String CT_IMAGE_WILD = "image/*";
-   	public static final String CT_AUDIO_WILD = "audio/*";
-   	public static final String CT_VIDEO_WILD = "video/*";
-   	public static final String CT_MULTIPART_WILD = "multipart/*";
-   	public static final String CT_TEXT_WILD = "text/*";
-   	public static final String CT_XML_WILD = "xml/*";
+
+    public static final String CT_MULTIPART_PREFIX = "multipart/";
+
+	public static final String CT_APPPLICATION_WILD = "application/.*";
+   	public static final String CT_IMAGE_WILD = "image/.*";
+   	public static final String CT_AUDIO_WILD = "audio/.*";
+   	public static final String CT_VIDEO_WILD = "video/.*";
+   	public static final String CT_MULTIPART_WILD = "multipart/.*";
+   	public static final String CT_TEXT_WILD = "text/.*";
+   	public static final String CT_XML_WILD = "xml/.*";
 	
 	public static final String CT_DEFAULT = CT_TEXT_PLAIN;
 	
@@ -150,43 +149,14 @@ public class Mime {
 	// so we get as many as possible
 	private static void handlePart(MimePart mp, String prefix, List<MPartInfo> partList, MPartInfo parent, int partNum)
     throws IOException, MessagingException {
-		String cts = mp.getContentType();
-		if (cts == null)
-			cts = CT_DEFAULT;
-		else {
-			// only use "type/subtype"
-			// This is a workaround for messages sent by some broken mailers
-			// that generate an invalid content type string which causes
-			// JavaMail ParseException.  The broken mailer that necessitated
-			// this hack is "X-Mailer: Balsa 2.0.17", which generated
-			// Content-Type of "Content-Type:   text/plain; charset=US-ASCII;\r\n"
-			// "\tFormat=Flowed   DelSp=Yes\r\n".  Notice it is missing ';' after
-			// "Flowed".
-			int semicolon = cts.indexOf(';');
-			if (semicolon != -1)
-				cts = cts.substring(0, semicolon);
-
-			// Some mailers don't specify subtype at all, e.g. "Content-Type: text"
-			// Special case "text" to "text/plain".
-			if (cts.equals("text"))
-				cts = CT_TEXT_PLAIN;
-		}
-		ContentType ct = null;
-		try {
-			ct = new ContentType(cts.toLowerCase());
-			cts = ct.getPrimaryType() + "/" + ct.getSubType();
-		} catch (ParseException e) {
-			if (mLog.isInfoEnabled())
-				mLog.info("Unrecognized Content-Type " + cts + "; assuming " + CT_DEFAULT);
-			ct = new ContentType(CT_DEFAULT);
-		}
-        boolean isMultipart = ct.match(CT_MULTIPART_WILD); 
-        boolean isMessage = !isMultipart && ct.match(CT_MESSAGE_RFC822);
+		String cts = getContentType(mp);
+        boolean isMultipart = cts.startsWith(CT_MULTIPART_PREFIX); 
+        boolean isMessage = !isMultipart && cts.equals(CT_MESSAGE_RFC822);
 
         String disp = null, filename = null;
         try {
             disp = mp.getDisposition();
-            filename = Mime.getFilename(mp);
+            filename = getFilename(mp);
         } catch (ParseException pe) { }
 
         // the top-level part of a non-multipart message is numbered "1"
@@ -196,8 +166,7 @@ public class Mime {
         MPartInfo mpart = new MPartInfo();
 		mpart.mPart = mp;
 		mpart.mParent = parent;
-		mpart.mContentType = ct;
-		mpart.mContentTypeString = cts;
+		mpart.mContentType = cts;
 		mpart.mPartName = prefix;
 		mpart.mPartNum = partNum;
 		mpart.mChildren = null;
@@ -248,7 +217,7 @@ public class Mime {
         if (content instanceof InputStream)
             try {
                 // handle unparsed content due to miscapitalization of content-type value
-                content = new Mime.FixedMimeMessage(JMSession.getSession(), (InputStream) content);
+                content = new FixedMimeMessage(JMSession.getSession(), (InputStream) content);
             } catch (Exception e) {}
             return content;
     }
@@ -264,7 +233,7 @@ public class Mime {
                 // handle unparsed content due to miscapitalization of content-type value
                 content = new MimeMultipart(new InputStreamDataSource((InputStream) content, contentType));
             } catch (Exception e) {}
-            return content;
+        return content;
     }
 
     private static final class InputStreamDataSource implements DataSource {
@@ -299,7 +268,7 @@ public class Mime {
             String ct = mp.getContentType().toLowerCase();
             if (ct == null)
                 return null;
-            if (ct.startsWith(CT_MULTIPART + '/')) {
+            if (ct.startsWith(CT_MULTIPART_PREFIX)) {
                 Object content = getMultipartContent(mp, ct);
                 if (content instanceof MimeMultipart && ((MimeMultipart) content).getCount() >= index) {
                     BodyPart bp = ((MimeMultipart) content).getBodyPart(index - 1);
@@ -340,16 +309,16 @@ public class Mime {
 	 static boolean isFilterableAttachment(MPartInfo part) {
 	    MPartInfo parent = part.getParent();
 	    
-	    if (part.getContentType().match(Mime.CT_MULTIPART_WILD))
+	    if (part.getContentType().startsWith(CT_MULTIPART_PREFIX))
 	        return false;
 	    
-	    if (part.getContentType().match(Mime.CT_TEXT_WILD)) {
-	        if (parent == null || (part.getPartNum() == 1 && parent.getContentType().match(Mime.CT_MESSAGE_RFC822))) {
+	    if (part.getContentType().matches(CT_TEXT_WILD)) {
+	        if (parent == null || (part.getPartNum() == 1 && parent.getContentType().equals(CT_MESSAGE_RFC822))) {
 	            // ignore top-level text/* types
 	            return false;
 	        }
 	        
-	        if (parent != null && parent.getContentType().match(Mime.CT_MULTIPART_ALTERNATIVE)) {
+	        if (parent != null && parent.getContentType().equals(CT_MULTIPART_ALTERNATIVE)) {
 	            // ignore body parts with a parent of multipart/alternative
 	            return false; 
 	        }
@@ -358,9 +327,9 @@ public class Mime {
 	        // parent, and that
 	        // multipart's parent is null or message/rfc822
 	        if (part.getPartNum() == 1) {
-	            if (parent != null && parent.getContentType().match(Mime.CT_MULTIPART_WILD)) {
+	            if (parent != null && parent.getContentType().startsWith(CT_MULTIPART_PREFIX)) {
 	                MPartInfo pp = parent.getParent();
-	                if (pp == null || pp.getContentType().match(Mime.CT_MESSAGE_RFC822)) { 
+	                if (pp == null || pp.getContentType().equals(CT_MESSAGE_RFC822)) { 
 	                    return false; 
 	                }
 	            }
@@ -379,7 +348,7 @@ public class Mime {
 	     HashSet<String> set = new HashSet<String>();
          for (MPartInfo mpi : parts)
 	         if (mpi.isFilterableAttachment())
-	             set.add(mpi.getContentTypeString());
+	             set.add(mpi.getContentType());
 	     return set;
 	 }
 	 
@@ -454,62 +423,31 @@ public class Mime {
         }
     }
 
-    /**
-	 * Given a content type (potentially with parameters), canonicalize
-	 * stripping off all parameters except charset for text/* parts.
-	 * 
-	 * TODO: is this really what we want? This function is used by the
-	 * BucketBlobStore to determine what value to stick in the db with a blob.
-	 * 
-	 * @param contentType
-	 * @return canonicalized content type
-	 */
-	public static String normalizeContentType(String contentType) {
-	    int index = contentType.indexOf(';');
-	    if (index != -1) {
-	        String newContentType = null;
-	        try {
-	            ContentType ct = new ContentType(contentType);
-	            if (ct.match(CT_TEXT_WILD)) {
-	                String charset = ct.getParameter(P_CHARSET);
-	                // if charset is specified, is not the default, and
-	                // there is more then one parameter (like format=flowed),
-	                // then strip out everything but the charset.
-	                if ((charset != null) && 
-	                        !charset.equalsIgnoreCase(P_CHARSET_DEFAULT) &&
-	                        (ct.getParameterList().size() > 1)) {
-	                    ContentType nct = new ContentType();
-	                    nct.setPrimaryType(ct.getPrimaryType());
-	                    nct.setSubType(ct.getSubType());
-	                    nct.setParameter(P_CHARSET, charset);
-	                    newContentType = nct.toString();
-	                } else {
-	                    // it is the default or not present...
-	                }
-	            }
-	        } catch (ParseException e) {
-	            // take everything before the ;
-	        }
-	        if (newContentType == null)
-	            newContentType = contentType.substring(0, index);
-	        return newContentType;
-	    } else {
-	        return contentType;
-	    }
-	}
-	 
-	 /**
-	  * Given a content type (potentially with parameters), return only
-	  * the lowercased "type/subtype" part.
-	  * @param contentType
-	  * @return
-	  */
-	public static String contentTypeOnly(String contentType) {
-	    int index = contentType.indexOf(';');
-	    if (index != -1)
-	        contentType = contentType.substring(0, index);
-	    return contentType.toLowerCase();
-	}
+    /** Determines the "primary/subtype" part of a Multipart's Content-Type
+     *  header.  Uses a permissive, RFC2231-capable parser, and defaults
+     *  when appropriate. */
+    public static final String getContentType(Multipart multi) {
+        return getContentType(multi.getContentType());
+    }
+
+    /** Determines the "primary/subtype" part of a Part's Content-Type
+     *  header.  Uses a permissive, RFC2231-capable parser, and defaults
+     *  when appropriate. */
+    public static final String getContentType(Part part) {
+        try {
+            return getContentType(part.getContentType());
+        } catch (MessagingException e) {
+            ZimbraLog.extensions.warn("could not fetch part's content-type; defaulting to " + CT_DEFAULT, e);
+            return CT_DEFAULT;
+        }
+    }
+
+    /** Determines the "primary/subtype" part of a Content-Type header
+     *  string.  Uses a permissive, RFC2231-capable parser, and defaults
+     *  when appropriate. */
+    public static final String getContentType(String cthdr) {
+        return new MimeCompoundHeader.ContentType(cthdr).getValue().trim();
+    }
 
 	/**
 	 * decode the specified InputStream into the supplied StringBuffer.
@@ -558,20 +496,14 @@ public class Mime {
     }
 
     public static String getCharset(String contentType) {
-        ContentType ct;
-        try {
-            ct = new ContentType(contentType);
-            // we shouldn't get called with anything other then text/*, but if we do...
-            if (!ct.match(CT_TEXT_WILD))
-                throw new IllegalArgumentException("unsupported content type: " + contentType);            
-        } catch (ParseException e1) {
-            // TODO: treat as text/plain? run some sanity checks on it?
-            ct = new ContentType("text", "plain", null);
-        }
+        ContentType ct = new ContentType(contentType);
+        // we shouldn't get called with anything other then text/*, but if we do...
+        if (!ct.getValue().matches(CT_TEXT_WILD))
+            throw new IllegalArgumentException("unsupported content type: " + contentType);  
    
-        String charset = ct.getParameter(Mime.P_CHARSET);
-        if (charset == null)
-            charset = Mime.P_CHARSET_DEFAULT;
+        String charset = ct.getParameter(P_CHARSET);
+        if (charset == null || charset.trim().equals(""))
+            charset = P_CHARSET_DEFAULT;
         return charset;
     }
 
@@ -583,9 +515,9 @@ public class Mime {
             String cd = mp.getHeader("Content-Disposition", null);
             if (cd != null && cd.indexOf('*') != -1) {
                 // catch things like filename*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3.rtf
-                Map<String, String> cdattrs = decodeRFC2231(cd);
-                if (cdattrs != null && cdattrs.containsKey("filename"))
-                    name = cdattrs.get("filename");
+                MimeCompoundHeader mhdr = new MimeCompoundHeader(cd);
+                if (mhdr.containsParameter("filename"))
+                    name = mhdr.getParameter("filename");
             }
         } catch (MessagingException me) { }
 
@@ -643,149 +575,13 @@ public class Mime {
         return sb.toString();
     }
 
-    private enum RFC2231State { PARAM, CONTINUED, EXTENDED, EQUALS, CHARSET, LANG, VALUE, QVALUE, SLOP };
-
-    private static class RFC2231Data {
-        RFC2231State state = RFC2231State.EQUALS;
-        StringBuilder key = null;
-        StringBuilder value = new StringBuilder();
-        boolean continued = false;
-        boolean encoded = false;
-        StringBuilder charset = null;
-
-        void setState(RFC2231State newstate) {
-            state = newstate;
-            if (newstate == RFC2231State.PARAM) {
-                key = new StringBuilder();  value = new StringBuilder();
-                continued = false;  encoded = false;
-            }
-        }
-
-        void setContinued()  { continued = true; }
-        void setEncoded() {
-            encoded = true;
-            if (!continued)
-                charset = new StringBuilder();
-        }
-
-        void addCharsetChar(char c)  { charset.append(c); }
-        void addKeyChar(char c)      { key.append(c); }
-        void addValueChar(char c)    { value.append(c); }
-
-        void saveToMap(Map<String, String> attrs) {
-            if (value == null)
-                return;
-            String pname = key == null ? null : key.toString().toLowerCase();
-            String pvalue = value.toString();
-            if ("".equals(pname) && "".equals(pvalue))
-                return;
-            if (encoded) {
-                if (charset.equals(""))
-                    charset.append("us-ascii");
-                try {
-                    pvalue = URLDecoder.decode(pvalue, charset.toString());
-                } catch (UnsupportedEncodingException uee) { 
-                    System.out.println(uee);
-                }
-            }
-            String existing = continued ? attrs.get(pname) : null;
-            attrs.put(pname, existing == null ? pvalue : existing + pvalue);
-            key = null;  value = null;
-        }
-    }
-
-    public static Map<String, String> decodeRFC2231(String header) {
-        if (header == null)
-            return null;
-        header = header.trim();
-
-        RFC2231Data rfc2231 = new RFC2231Data();
-        Map<String, String> attrs = new HashMap<String, String>();
-        boolean escaped = false;
-
-        for (int i = 0, count = header.length(); i < count; i++) {
-            char c = header.charAt(i);
-            if (rfc2231.state == RFC2231State.SLOP) {
-                if (c == ';' || c == '\n' || c == '\r')
-                    rfc2231.setState(RFC2231State.PARAM);
-            } else if (c == '\r' || c == '\n') {
-                if (!attrs.isEmpty() || rfc2231.value.length() > 0) {
-                    rfc2231.saveToMap(attrs);
-                    rfc2231.setState(RFC2231State.PARAM);
-                }
-                // otherwise, it's just folding and we can effectively just ignore the CR/LF
-            } else if (rfc2231.state == RFC2231State.PARAM) {
-                if (c == '=')
-                    rfc2231.setState(RFC2231State.EQUALS);
-                else if (c == '*')
-                    rfc2231.setState(RFC2231State.EXTENDED);
-                else if (c != ' ' && c != '\t')
-                    rfc2231.addKeyChar(c);
-            } else if (rfc2231.state == RFC2231State.VALUE) {
-                if (c != ';' && c != ' ' && c != '\t') {
-                    rfc2231.addValueChar(c);
-                } else {
-                    rfc2231.saveToMap(attrs);
-                    rfc2231.setState(c == ';' ? RFC2231State.PARAM : RFC2231State.SLOP);
-                }
-            } else if (rfc2231.state == RFC2231State.QVALUE) {
-                if (!escaped && c == '\\') {
-                    escaped = true;
-                } else if (escaped || c != '"') {
-                    rfc2231.addValueChar(c);  escaped = false;
-                } else {
-                    rfc2231.saveToMap(attrs);
-                    rfc2231.setState(RFC2231State.SLOP);
-                }
-            } else if (rfc2231.state == RFC2231State.EQUALS) {
-                if (c == ';') {
-                    rfc2231.saveToMap(attrs);
-                    rfc2231.setState(RFC2231State.PARAM);
-                } if (c == '"') {
-                    escaped = false;
-                    rfc2231.setState(RFC2231State.QVALUE);
-                } else {
-                    rfc2231.addValueChar(c);
-                    rfc2231.setState(RFC2231State.VALUE);
-                }
-            } else if (rfc2231.state == RFC2231State.EXTENDED) {
-                if (c >= '0' && c <= '9') {
-                    if (c != '0')
-                        rfc2231.setContinued();
-                    rfc2231.setState(RFC2231State.CONTINUED);
-                } else if (c == '=') {
-                    rfc2231.setEncoded();
-                    rfc2231.setState(rfc2231.continued ? RFC2231State.VALUE : RFC2231State.CHARSET);
-                }
-            } else if (rfc2231.state == RFC2231State.CONTINUED) {
-                if (c == '=')
-                    rfc2231.setState(RFC2231State.EQUALS);
-                else if (c == '*')
-                    rfc2231.setState(RFC2231State.EXTENDED);
-                else if (c >= '0' && c <= '9')
-                    rfc2231.setContinued();
-            } else if (rfc2231.state == RFC2231State.CHARSET) {
-                if (c == '\'')
-                    rfc2231.setState(RFC2231State.LANG);
-                else
-                    rfc2231.addCharsetChar(c);
-            } else if (rfc2231.state == RFC2231State.LANG) {
-                if (c == '\'')
-                    rfc2231.setState(RFC2231State.VALUE);
-            }
-        }
-
-        rfc2231.saveToMap(attrs);
-        return attrs;
-    }
-
     public static MPartInfo getBody(List parts, boolean preferHtml) {
      	if (parts.isEmpty())
      		return null;
      	
      	// if top-level has no children, then it is the body
      	MPartInfo top = (MPartInfo) parts.get(0);
-     	if (!top.getContentType().match(CT_MULTIPART_WILD))
+     	if (!top.getContentType().startsWith(CT_MULTIPART_PREFIX))
      		return top.getDisposition().equals(Part.ATTACHMENT) ? null : top;
 
         return getBodySubpart(top, preferHtml);
@@ -797,7 +593,7 @@ public class Mime {
             return null;
 
         List<MPartInfo> children;
-        if (base.getContentType().match(CT_MULTIPART_ALTERNATIVE))
+        if (base.getContentType().equals(CT_MULTIPART_ALTERNATIVE))
             children = base.getChildren();
         else {
             // for multipart/mixed (etc.), only the first part is really "body"
@@ -813,16 +609,16 @@ public class Mime {
             String wantType = preferHtml ? CT_TEXT_HTML  : CT_TEXT_PLAIN;
             String altType  = preferHtml ? CT_TEXT_PLAIN : CT_TEXT_HTML;
 
-            if (p.getContentType().match(wantType) && !isAttachment) {
+            if (p.getContentType().equals(wantType) && !isAttachment) {
                 return p;
-            } else if (p.getContentType().match(altType) && !isAttachment) {
+            } else if (p.getContentType().equals(altType) && !isAttachment) {
                 if (alternative == null)
                     alternative = p;
-            } else if (p.getContentType().match(CT_MULTIPART_WILD)) {
+            } else if (p.getContentType().startsWith(CT_MULTIPART_PREFIX)) {
                 MPartInfo subpart = getBodySubpart(p, preferHtml);
                 if (subpart == null)
                 	continue;
-                if (subpart.getContentType().match(wantType))
+                if (subpart.getContentType().equals(wantType))
                     return subpart;
                 if (alternative == null)
                     alternative = subpart;
@@ -835,12 +631,5 @@ public class Mime {
         String s = URLDecoder.decode("Zimbra%20&#26085;&#26412;&#35486;&#21270;&#12398;&#32771;&#24942;&#28857;.txt", "utf-8");
         System.out.println(s);
         System.out.println(expandNumericCharacterReferences("Zimbra%20&#26085;&#26412;&#35486;&#21270;&#12398;&#32771;&#24942;&#28857;.txt&#x40;&;&#;&#x;&#&#3876;&#55"));
-
-        System.out.println(decodeRFC2231("text/plain; charset=US-ASCII;\r\n\tFormat=Flowed   DelSp=Yes\r\n"));
-        System.out.println(decodeRFC2231("   \n  attachment;\n filename*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%83%AC%E3%82%A4.rtf\n  \n "));
-        System.out.println(decodeRFC2231("application/x-stuff; title*0*=us-ascii'en'This%20is%20even%20more%20; title*1*=%2A%2A%2Afun%2A%2A%2A%20; title*2=\"isn't it!\"\n"));
-        System.out.println(decodeRFC2231("multipart/mixed; charset=us-ascii;\n foo=\n  boundary=\"---\" \n"));
-        System.out.println(decodeRFC2231("message/external-body; access-type=URL;\n URL*0=\"ftp://\";\n URL*1=\"cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar\"\n"));
-        System.out.println(decodeRFC2231("application/x-stuff;\n\ttitle*=us-ascii'en-us'This%20is%20%2A%2A%2Afun%2A%2A%2A"));
     }
 }

@@ -110,7 +110,7 @@ public abstract class MimeHandler {
     public static MimeHandler getMimeHandler(String mimeType)
     	throws MimeHandlerException {
     	MimeHandler handler = null;
-    	mimeType = Mime.contentTypeOnly(mimeType);
+    	mimeType = Mime.getContentType(mimeType);
     	HandlerInfo handlerInfo = (HandlerInfo) mHandlers.get(mimeType);
     	if (handlerInfo == null)
     	    handlerInfo = loadHandler(mimeType);
