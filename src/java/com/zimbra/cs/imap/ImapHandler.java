@@ -646,10 +646,13 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         boolean writable = command.equals("SELECT");
         ImapFolder i4folder = null;
         try {
-            synchronized (mMailbox) {
-                i4folder = new ImapFolder(folderName, writable, mMailbox, getContext());
-                writable = i4folder.isWritable();
-            }
+//            synchronized (mMailbox) {
+//                i4folder = new ImapFolder(folderName, writable, mMailbox, getContext());
+//                writable = i4folder.isWritable();
+//            }
+        	GetImapFolderOperation op = new GetImapFolderOperation(mSession, getContext(), mMailbox, folderName, writable);
+        	i4folder = op.getResult();
+        	writable = op.getWritable();
         } catch (ServiceException e) {
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
                 ZimbraLog.imap.info(command + " failed: no such folder: " + folderName);

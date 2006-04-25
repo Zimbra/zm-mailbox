@@ -209,6 +209,12 @@ public class ZimbraLog {
      */
     public static final org.apache.commons.logging.Log wiki = LogFactory.getLog("zimbra.wiki");
     
+    /**
+     * the "zimbra.op" logger. Logs server operations
+     */
+    public static final org.apache.commons.logging.Log op = LogFactory.getLog("zimbra.op");
+    
+    
     public static String getContext() {
         return NDC.peek();
     }

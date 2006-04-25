@@ -41,9 +41,10 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.operation.SearchOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.session.SessionCache;
-import com.zimbra.cs.session.SoapSession;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -57,12 +58,12 @@ public class SearchConv extends Search {
         if (sLog.isDebugEnabled())
             sLog.debug("**Start SearchConv");
         
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        Mailbox.OperationContext octxt = lc.getOperationContext();
+        ZimbraSoapContext zc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zc);
+        Mailbox.OperationContext octxt = zc.getOperationContext();
+        Session session = getSession(context);
         
-        SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
-        SearchParams params = parseCommonParameters(request, lc);
+        SearchParams params = parseCommonParameters(request, zc);
         
         String cidStr = request.getAttribute(MailService.A_CONV_ID);
         int cid = 0;
@@ -72,7 +73,6 @@ public class SearchConv extends Search {
         
         //
         // append (conv:(convid)) onto the beginning of the queryStr
-        //
         StringBuffer queryBuffer = new StringBuffer("conv:\"");
         queryBuffer.append(cid);
         queryBuffer.append("\" (");
@@ -82,22 +82,26 @@ public class SearchConv extends Search {
         
         // 
         // force to group-by-message
-        // 
         params.setTypesStr(MailboxIndex.GROUP_BY_MESSAGE);
         
-        ZimbraQueryResults results = this.getResults(mbox, params, lc, session);
+        //ZimbraQueryResults results = this.getResults(mbox, params, lc, session);
+        ZimbraQueryResults results = new SearchOperation(session, zc.getOperationContext(), mbox, Requester.SOAP,  params).getResults();
         
-        Element response = lc.createElement(MailService.SEARCH_CONV_RESPONSE);
-        response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
-        
-        SortBy sb = results.getSortBy();
-        response.addAttribute(MailService.A_SORTBY, sb.toString());
-        
-        Message[] msgs = mbox.getMessagesByConversation(octxt, cid, sb.getDbMailItemSortByte());
-        
-        Element retVal = putHits(lc, response, msgs, results, params);
-        
-        return retVal;
+        try {
+        	Element response = zc.createElement(MailService.SEARCH_CONV_RESPONSE);
+        	response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
+        	
+        	SortBy sb = results.getSortBy();
+        	response.addAttribute(MailService.A_SORTBY, sb.toString());
+        	
+        	Message[] msgs = mbox.getMessagesByConversation(octxt, cid, sb.getDbMailItemSortByte());
+        	
+        	Element retVal = putHits(zc, response, msgs, results, params);
+        	
+        	return retVal;
+        } finally {
+        	results.doneWithSearchResults();
+        }
     }
     
     /**
@@ -111,7 +115,7 @@ public class SearchConv extends Search {
      * @return
      * @throws ServiceException
      */
-    Element putHits(ZimbraSoapContext lc, Element response, Message[] msgs, ZimbraQueryResults results, SearchParams params)
+    Element putHits(ZimbraSoapContext zc, Element response, Message[] msgs, ZimbraQueryResults results, SearchParams params)
     throws ServiceException {
         int offset = params.getOffset();
         int limit  = params.getLimit();
@@ -166,10 +170,10 @@ public class SearchConv extends Search {
             boolean inline = params.getFetchFirst();
             for (int i = offset; i < offset+iterLen; i++) {
                 if (matched[i-offset] != null) {
-                    addMessageHit(lc, response, (MessageHit) matched[i-offset], eecache, inline, params);
+                    addMessageHit(zc, response, (MessageHit) matched[i-offset], eecache, inline, params);
                     inline = false;
                 } else {
-                    addMessageHit(lc, response, msgs[i], eecache, params);
+                    addMessageHit(zc, response, msgs[i], eecache, params);
                 }
             }
         }

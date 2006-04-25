@@ -228,13 +228,6 @@ public class ResultsPager
         }
     }
     
-    public static class NewResultsAtHeadException extends ServiceException
-    {
-        NewResultsAtHeadException() {
-            super("There are new results at the front of the search results", "SERVICE.new_results", false);
-        }
-    }
-    
     private static class DummyHit extends ZimbraHit
     {
         private int mItemId;

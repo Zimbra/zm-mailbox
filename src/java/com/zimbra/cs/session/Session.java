@@ -34,7 +34,10 @@ package com.zimbra.cs.session;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -42,6 +45,7 @@ import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.StringUtil;
 
@@ -77,6 +81,35 @@ public abstract class Session
         }
         updateAccessTime();
     }
+    
+    public static class RecentOperation {
+    	   public long mTimestamp;
+    	   public Class mOperationClass;
+    	   public RecentOperation(long ts, Class oc) {
+    		   mTimestamp = ts;
+    		   mOperationClass = oc;
+    	   }
+    }
+    
+    public static final int OPERATION_HISTORY_LENGTH = 5;
+    public static final int OPERATION_HISTORY_TIME = 60 * 1000;
+    
+    private List<RecentOperation> mRecentOperations = new LinkedList<RecentOperation>();
+    
+    synchronized public void logOperation(Operation op) {
+    	  long now = System.currentTimeMillis();
+    	  long cutoff = now - OPERATION_HISTORY_TIME;
+    	  
+    	  if (mRecentOperations.size() >= OPERATION_HISTORY_LENGTH) 
+    		  mRecentOperations.remove(0);
+    	  
+    	  while (mRecentOperations.size() > 0 && mRecentOperations.get(0).mTimestamp < cutoff)
+    		  mRecentOperations.remove(0);
+    	  
+    	  mRecentOperations.add(new RecentOperation(now, op.getClass()));
+    }
+    
+    synchronized public List<RecentOperation> getRecentOperations() { return mRecentOperations; }
     
     public void dumpState(Writer w) {
     	try {

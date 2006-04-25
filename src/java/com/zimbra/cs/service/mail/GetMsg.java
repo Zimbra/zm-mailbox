@@ -30,15 +30,14 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.Appointment;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.operation.GetMsgOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -56,6 +55,7 @@ public class GetMsg extends WriteOpDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
+        Session session = getSession(context);
         
         Element eMsg = request.getElement(MailService.E_MSG);
         ItemId iid = new ItemId(eMsg.getAttribute(MailService.A_ID), lc);
@@ -63,27 +63,17 @@ public class GetMsg extends WriteOpDocumentHandler {
         boolean read = eMsg.getAttributeBool(MailService.A_MARK_READ, false);
         String part = eMsg.getAttribute(MailService.A_PART, null);
         
-        Message msg = null;
-        Appointment appt = null;
-        
-        if (!iid.hasSubpart()) {
-            msg = mbox.getMessageById(octxt, iid.getId());
-            
-            if (read && msg.isUnread() && !RedoLogProvider.getInstance().isSlave())
-                mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
-        } else {
-            appt = mbox.getAppointmentById(octxt, iid.getId());
-        }
+        GetMsgOperation op = new GetMsgOperation(session, octxt, mbox, Requester.SOAP, iid, raw, read, part);
         
         Element response = lc.createElement(MailService.GET_MSG_RESPONSE);
         if (raw) {
-            ToXML.encodeMessageAsMIME(response, lc, msg, part);
+            ToXML.encodeMessageAsMIME(response, lc, op.getMsg(), part);
         } else {
             boolean wantHTML = eMsg.getAttributeBool(MailService.A_WANT_HTML, false);
-            if (msg != null)
-                ToXML.encodeMessageAsMP(response, lc, msg, wantHTML, part);
-            else if (appt != null)
-                ToXML.encodeApptInviteAsMP(response, lc, appt, iid, wantHTML, part);
+            if (op.getMsg() != null)
+                ToXML.encodeMessageAsMP(response, lc, op.getMsg(), wantHTML, part);
+            else if (op.getAppt() != null)
+                ToXML.encodeApptInviteAsMP(response, lc, op.getAppt(), iid, wantHTML, part);
         }
         return response;
     }

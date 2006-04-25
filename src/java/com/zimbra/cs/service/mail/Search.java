@@ -28,7 +28,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -37,20 +36,30 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.*;
+import com.zimbra.cs.index.AppointmentHit;
+import com.zimbra.cs.index.ContactHit;
+import com.zimbra.cs.index.ConversationHit;
+import com.zimbra.cs.index.DocumentHit;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.MessageHit;
+import com.zimbra.cs.index.MessagePartHit;
+import com.zimbra.cs.index.NoteHit;
+import com.zimbra.cs.index.ProxiedHit;
+import com.zimbra.cs.index.ResultsPager;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.ZimbraHit;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
-import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Conversation;
-import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.operation.SearchOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;
@@ -61,66 +70,43 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
-/**
- * @author schemers
- */
 public class Search extends DocumentHandler  {
     protected static Log mLog = LogFactory.getLog(Search.class);
     
-    protected static final boolean DONT_CACHE_RESULTS = true;
-    
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
-        Mailbox mbox = getRequestedMailbox(lc);
+        ZimbraSoapContext zc = getZimbraSoapContext(context);
+        SoapSession session = (SoapSession) zc.getSession(SessionCache.SESSION_SOAP);
+        Mailbox mbox = getRequestedMailbox(zc);
+        SearchParams params = parseCommonParameters(request, zc);
         
-        SearchParams params = parseCommonParameters(request, lc);
-        ZimbraQueryResults results = getResults(mbox, params, lc, session);
+        ZimbraQueryResults results = new SearchOperation(session, zc.getOperationContext(), mbox, Requester.SOAP,  params).getResults();
         try {
-        
-        	Element response = lc.createElement(MailService.SEARCH_RESPONSE);
+        	ResultsPager pager = ResultsPager.create(results, params);
+        	
+        	// create the XML response Element
+        	Element response = zc.createElement(MailService.SEARCH_RESPONSE);
         	
         	// must use results.getSortBy() because the results might have ignored our sortBy
         	// request and used something else...
         	SortBy sb = results.getSortBy();
         	response.addAttribute(MailService.A_SORTBY, sb.toString());
         	
-        	//
-        	// create a "pager" which generate one page's worth of data for the client (using
-        	// the cursor data, etc)
-        	//
-        	// If the pager detects "new results at head" -- ie new data came into our search, then
-        	// we'll skip back to the beginning of the search
-        	//
-        	ResultsPager pager;            
-        	try {
-        		pager = ResultsPager.create(results, params);
-        		response.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
-        	} catch (ResultsPager.NewResultsAtHeadException e) {
-        		// NOTE: this branch is unused right now, TODO remove this depending on usability
-        		// decisions
-        		
-        		// FIXME!  workaround bug in resetIterator()
-        		results = getResults(mbox, params, lc, session);
-        		
-        		pager = new ResultsPager(results, sb, params.getLimit(), 0);
-        		response.addAttribute(MailService.A_QUERY_OFFSET, 0);
-        		response.addAttribute("newResults", true);
-        	}
+        	pager = ResultsPager.create(results, params);
+        	response.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
         	
-        	Element retVal = putHits(lc, response, pager, DONT_INCLUDE_MAILBOX_INFO, params);
+        	Element retVal = putHits(zc, response, pager, DONT_INCLUDE_MAILBOX_INFO, params);
         	
             return retVal;
         } finally {
-        	if (DONT_CACHE_RESULTS)
-        		results.doneWithSearchResults();
+        	results.doneWithSearchResults();
         }
     }
     
-    protected SearchParams parseCommonParameters(Element request, ZimbraSoapContext lc) throws ServiceException {
+    protected SearchParams parseCommonParameters(Element request, ZimbraSoapContext zc) throws ServiceException {
         String query = request.getAttribute(MailService.E_QUERY, null);
         if (query == null)
-            query = getRequestedAccount(lc).getAttr(Provisioning.A_zimbraPrefMailInitialSearch);
+            query = getRequestedAccount(zc).getAttr(Provisioning.A_zimbraPrefMailInitialSearch);
+        
         if (query == null)
             throw ServiceException.INVALID_REQUEST("no query submitted and no default query found", null);
 
@@ -152,24 +138,6 @@ public class Search extends DocumentHandler  {
         return params;
     }
     
-    protected Mailbox getMailboxFromParameter(String id) throws ServiceException {
-        Mailbox mbx = null;
-        if (id.indexOf('@') >= 0) {
-            // account
-            Account acct = Provisioning.getInstance().getAccountByName(id);
-            mbx = Mailbox.getMailboxByAccountId(acct.getId());
-        } else {
-            if (id.indexOf('-') >= 0) {
-                mbx = Mailbox.getMailboxByAccountId(id);
-            } else {
-                int mailboxId = Integer.parseInt(id);
-                mbx = Mailbox.getMailboxById(mailboxId);
-            }
-        }
-        return mbx;
-        
-    }
-    
     protected int getLimit(Element request) throws ServiceException {
         int limit = (int) request.getAttributeLong(MailService.A_QUERY_LIMIT, -1);
         if (limit <= 0 || limit > 1000)
@@ -182,63 +150,11 @@ public class Search extends DocumentHandler  {
         return (int) request.getAttributeLong(MailService.A_QUERY_OFFSET, 0);
     }
 
-    // note that session may be null
-    protected ZimbraQueryResults getResults(Mailbox mbox, SearchParams params, ZimbraSoapContext lc, SoapSession session)
-    throws ServiceException {
-        ZimbraQueryResults results = null;
-        boolean cacheResults = !DONT_CACHE_RESULTS && session != null;
-        if (cacheResults) {
-            session.getQueryResults(params.getQueryStr(), params.getTypesStr(), params.getSortByStr());
-        }
-
-        if (params.getOffset() > 0) {
-            if (results == null) {
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("Could not find cached results, re-running query.");
-                    mLog.debug("Paging in cached result set for query="+params.getQueryStr());
-                }
-            } else {
-            }
-        } else {
-            if (session != null) {
-                session.clearCachedQueryResults();
-            }
-            results = null;
-            if (mLog.isDebugEnabled()) {
-                mLog.debug("Re-running query because offset at 0");
-            }
-        }
-        
-        if (mLog.isDebugEnabled()) {
-            mLog.debug("Requesting results offset="+params.getOffset()+" limit="+params.getLimit());
-        }
-        
-        if (results == null) {
-            try {
-                byte[] types = MailboxIndex.parseGroupByString(params.getTypesStr());
-                
-                results = mbox.search(lc.getOperationContext(), params.getQueryStr(), types, params.getSortBy(), params.getLimit() + params.getOffset());
-                if (cacheResults) {
-                    session.putQueryResults(params.getQueryStr(), params.getTypesStr(), params.getSortByStr(), results);
-                }
-                
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw ServiceException.FAILURE("IO error", e);
-            } catch (ParseException e) {
-                if (e.currentToken != null)
-                    throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, e.currentToken.image, e.currentToken.beginLine, e.currentToken.beginColumn);
-                else 
-                    throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, "", -1, -1);
-            }
-        }
-        return results;
-    }
-    
+    // just to make the argument lists a bit more readable:
     protected final boolean INCLUDE_MAILBOX_INFO = true;
     protected final boolean DONT_INCLUDE_MAILBOX_INFO = false;
     
-    protected Element putHits(ZimbraSoapContext lc, Element response, ResultsPager pager, boolean includeMailbox, SearchParams params)
+    protected Element putHits(ZimbraSoapContext zc, Element response, ResultsPager pager, boolean includeMailbox, SearchParams params)
     throws ServiceException {
         int offset = params.getOffset();
         int limit  = params.getLimit();
@@ -259,19 +175,19 @@ public class Search extends DocumentHandler  {
             Element e = null;
             if (hit instanceof ConversationHit) {
                 ConversationHit ch = (ConversationHit) hit;
-                e = addConversationHit(lc, response, ch, eecache, params);
+                e = addConversationHit(zc, response, ch, eecache, params);
             } else if (hit instanceof MessageHit) {
                 MessageHit mh = (MessageHit) hit;
-                e = addMessageHit(lc, response, mh, eecache, inline, params);
+                e = addMessageHit(zc, response, mh, eecache, inline, params);
             } else if (hit instanceof MessagePartHit) {
                 MessagePartHit mph = (MessagePartHit) hit;
                 e = addMessagePartHit(response, mph, eecache);                
             } else if (hit instanceof ContactHit) {
                 ContactHit ch = (ContactHit) hit;
-                e = ToXML.encodeContact(response, lc, ch.getContact(), null, true, null);
+                e = ToXML.encodeContact(response, zc, ch.getContact(), null, true, null);
             } else if (hit instanceof NoteHit) {
                 NoteHit nh = (NoteHit) hit;
-                e = ToXML.encodeNote(response,lc, nh.getNote());
+                e = ToXML.encodeNote(response,zc, nh.getNote());
             } else if (hit instanceof ProxiedHit) {
                 ProxiedHit ph = (ProxiedHit) hit;
                 e = ph.getElement().detach();
@@ -279,10 +195,10 @@ public class Search extends DocumentHandler  {
                 addSortField = false;
             } else if (hit instanceof AppointmentHit) {
                 AppointmentHit ah = (AppointmentHit)hit;
-                e = addAppointmentHit(lc, response, ah, inline, params);
+                e = addAppointmentHit(zc, response, ah, inline, params);
             } else if (hit instanceof DocumentHit) {
             	DocumentHit dh = (DocumentHit)hit;
-                e = addDocumentHit(lc, response, dh);
+                e = addDocumentHit(zc, response, dh);
             } else {
                 mLog.error("Got an unknown hit type putting search hits: "+hit);
             }
@@ -308,11 +224,11 @@ public class Search extends DocumentHandler  {
     }
     
     
-    protected Element addConversationHit(ZimbraSoapContext lc, Element response, ConversationHit ch, EmailElementCache eecache, SearchParams params)
+    protected Element addConversationHit(ZimbraSoapContext zc, Element response, ConversationHit ch, EmailElementCache eecache, SearchParams params)
     throws ServiceException {
         Conversation conv = ch.getConversation();
         MessageHit mh = ch.getFirstMessageHit();
-        Element c = ToXML.encodeConversationSummary(response, lc, conv, mh == null ? null : mh.getMessage(), eecache, params.getWantRecipients());
+        Element c = ToXML.encodeConversationSummary(response, zc, conv, mh == null ? null : mh.getMessage(), eecache, params.getWantRecipients());
         if (ch.getScore() != 0)
             c.addAttribute(MailService.A_SCORE, ch.getScore());
 
@@ -328,16 +244,16 @@ public class Search extends DocumentHandler  {
         return c;
     }
 
-    protected Element addAppointmentHit(ZimbraSoapContext lc, Element response, AppointmentHit ah, boolean inline, SearchParams params)
+    protected Element addAppointmentHit(ZimbraSoapContext zc, Element response, AppointmentHit ah, boolean inline, SearchParams params)
     throws ServiceException {
         Appointment appt = ah.getAppointment();
         Element m;
         if (inline) {
-            m = ToXML.encodeApptSummary(response, lc, appt, PendingModifications.Change.ALL_FIELDS);
+            m = ToXML.encodeApptSummary(response, zc, appt, PendingModifications.Change.ALL_FIELDS);
 //            if (!msg.getFragment().equals(""))
 //                m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
         } else {
-            m = ToXML.encodeApptSummary(response, lc, appt, PendingModifications.Change.ALL_FIELDS);
+            m = ToXML.encodeApptSummary(response, zc, appt, PendingModifications.Change.ALL_FIELDS);
         }
         
         if (ah.getScore() != 0) {
@@ -350,16 +266,16 @@ public class Search extends DocumentHandler  {
     }
     
     
-    protected Element addMessageHit(ZimbraSoapContext lc, Element response, MessageHit mh, EmailElementCache eecache, boolean inline, SearchParams params)
+    protected Element addMessageHit(ZimbraSoapContext zc, Element response, MessageHit mh, EmailElementCache eecache, boolean inline, SearchParams params)
     throws ServiceException {
         Message msg = mh.getMessage();
         Element m;
         if (inline) {
-            m = ToXML.encodeMessageAsMP(response, lc, msg, params.getWantHtml(), null);
+            m = ToXML.encodeMessageAsMP(response, zc, msg, params.getWantHtml(), null);
             if (!msg.getFragment().equals(""))
                 m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
         } else
-            m = ToXML.encodeMessageSummary(response, lc, msg, params.getWantRecipients());
+            m = ToXML.encodeMessageSummary(response, zc, msg, params.getWantRecipients());
         if (mh.getScore() != 0)
             m.addAttribute(MailService.A_SCORE, mh.getScore());
         
@@ -381,7 +297,7 @@ public class Search extends DocumentHandler  {
         if (inline && msg.isUnread() && params.getMarkRead())
             try {
                 Mailbox mbox = msg.getMailbox();
-                mbox.alterTag(lc.getOperationContext(), msg.getId(), msg.getType(), Flag.ID_FLAG_UNREAD, false);
+                mbox.alterTag(zc.getOperationContext(), msg.getId(), msg.getType(), Flag.ID_FLAG_UNREAD, false);
             } catch (ServiceException e) {
                 mLog.warn("problem marking message as read (ignored): " + msg.getId(), e);
             }
@@ -389,8 +305,8 @@ public class Search extends DocumentHandler  {
         return m;
     }
     
-    protected Element addMessageHit(ZimbraSoapContext lc, Element response, Message msg, EmailElementCache eecache, SearchParams params) {
-        Element m = ToXML.encodeMessageSummary(response, lc, msg, params.getWantRecipients());
+    protected Element addMessageHit(ZimbraSoapContext zc, Element response, Message msg, EmailElementCache eecache, SearchParams params) {
+        Element m = ToXML.encodeMessageSummary(response, zc, msg, params.getWantRecipients());
         return m;
     }
     
@@ -417,21 +333,21 @@ public class Search extends DocumentHandler  {
         return mp;
     }
     
-    Element addContactHit(ZimbraSoapContext lc, Element response, ContactHit ch, EmailElementCache eecache) throws ServiceException {
-        return ToXML.encodeContact(response, lc, ch.getContact(), null, true, null);
+    Element addContactHit(ZimbraSoapContext zc, Element response, ContactHit ch, EmailElementCache eecache) throws ServiceException {
+        return ToXML.encodeContact(response, zc, ch.getContact(), null, true, null);
     }
     
-    Element addDocumentHit(ZimbraSoapContext lc, Element response, DocumentHit dh) throws ServiceException {
+    Element addDocumentHit(ZimbraSoapContext zc, Element response, DocumentHit dh) throws ServiceException {
     	int ver = dh.getVersion();
     	if (dh.getItemType() == MailItem.TYPE_DOCUMENT)
-    		return ToXML.encodeDocument(response, lc, dh.getDocument(), ver);
+    		return ToXML.encodeDocument(response, zc, dh.getDocument(), ver);
     	else if (dh.getItemType() == MailItem.TYPE_WIKI)
-            return ToXML.encodeWiki(response, lc, (WikiItem)dh.getDocument(), ver);
+            return ToXML.encodeWiki(response, zc, (WikiItem)dh.getDocument(), ver);
     	throw ServiceException.UNKNOWN_DOCUMENT("invalid document type "+dh.getItemType(), null);
     }
     
-    Element addNoteHit(ZimbraSoapContext lc, Element response, NoteHit nh, EmailElementCache eecache) throws ServiceException {
+    Element addNoteHit(ZimbraSoapContext zc, Element response, NoteHit nh, EmailElementCache eecache) throws ServiceException {
         // TODO - does this need to be a summary, instead of the whole note?
-        return ToXML.encodeNote(response, lc, nh.getNote());
+        return ToXML.encodeNote(response, zc, nh.getNote());
     }
 }
