@@ -46,12 +46,16 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetContacts extends DocumentHandler  {
 
+    private static final int ALL_FOLDERS = -1;
+
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        Mailbox.OperationContext octxt = lc.getOperationContext();
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        Mailbox.OperationContext octxt = zsc.getOperationContext();
 
         boolean sync = request.getAttributeBool(MailService.A_SYNC, false);
+        int folderId = (int) request.getAttributeLong(MailService.A_FOLDER, ALL_FOLDERS);
+
         byte sort = DbMailItem.SORT_NONE;
         String sortStr = request.getAttribute(MailService.A_SORTBY, "");
         if (sortStr.equals(MailboxIndex.SortBy.NAME_ASCENDING.toString()))
@@ -74,8 +78,8 @@ public class GetContacts extends DocumentHandler  {
                 ids.add(id);
             }
         
-        Element response = lc.createElement(MailService.GET_CONTACTS_RESPONSE);
-        ContactAttrCache cacache = null; //new ContactAttrCache();
+        Element response = zsc.createElement(MailService.GET_CONTACTS_RESPONSE);
+        ContactAttrCache cacache = null;
 
         // want to return modified date only on sync-related requests
         int fields = ToXML.NOTIFY_FIELDS;
@@ -85,13 +89,13 @@ public class GetContacts extends DocumentHandler  {
         if (ids != null) {
             for (int id : ids) {
             	Contact con = mbox.getContactById(octxt, id);
-                if (con != null)
-                    ToXML.encodeContact(response, lc, con, cacache, false, attrs, fields);
+                if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId()))
+                    ToXML.encodeContact(response, zsc, con, cacache, false, attrs, fields);
             }
         } else {
-        	for (Contact con : mbox.getContactList(octxt, -1, sort))
+        	for (Contact con : mbox.getContactList(octxt, folderId, sort))
                 if (con != null)
-                    ToXML.encodeContact(response, lc, con, cacache, false, attrs, fields);
+                    ToXML.encodeContact(response, zsc, con, cacache, false, attrs, fields);
         }
         return response;
     }
