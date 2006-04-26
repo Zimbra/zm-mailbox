@@ -30,7 +30,6 @@ import java.io.OutputStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 
 import junit.framework.Test;
@@ -48,20 +47,13 @@ import com.zimbra.cs.util.ZimbraLog;
 public class ZimbraSuite extends TestSuite
 {
     static final DecimalFormat TEST_TIME_FORMAT = new DecimalFormat("0.00");
-    private static List /* <TestSuite> */ sAdditionalSuites = new ArrayList();
+    private static List<TestSuite> sAdditionalSuites = new ArrayList<TestSuite>();
 
     public static TestSuite suite() {
         TestSuite suite = new TestSuite();
 
         suite.addTest(new TestSuite(TestUtilCode.class));
         suite.addTest(new TestSuite(TestEmailUtil.class));
-        
-        // FIXME: bburtin: commenting out failing tests for now.  Tim
-        // suggested waiting until he's done with his parser rewrite
-        // before reenabling this one.
-        // suite.addTest(new TestSuite(TestParseMailboxID.class));
-        // suite.addTest(new TestSuite(UnitTests.class));
-
         suite.addTest(new TestSuite(TestOutOfOffice.class));
         suite.addTest(new TestSuite(TestDbUtil.class));
         suite.addTest(new TestSuite(TestTableMaintenance.class));
@@ -72,17 +64,14 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestSpellCheck.class));
         suite.addTest(new TestSuite(TestAuthentication.class));
         suite.addTest(new TestSuite(TestAccount.class));
-        // xxx bburtin Commenting out conversion tests until TNEF code is in place
-        // suite.addTest(new TestSuite(TestConversion.class));
+        suite.addTest(new TestSuite(TestConversion.class));
         suite.addTest(new TestSuite(TestMailItem.class));
         suite.addTest(new TestSuite(TestConcurrency.class));
         
         synchronized (sAdditionalSuites) {
-           Iterator i = sAdditionalSuites.iterator();
-           while (i.hasNext()) {
-               TestSuite additional = (TestSuite) i.next();
-               suite.addTest(additional);
-           }
+            for (TestSuite additional : sAdditionalSuites) {
+                suite.addTest(additional);
+            }
         }
         
         return suite;
