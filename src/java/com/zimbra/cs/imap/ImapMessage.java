@@ -34,8 +34,10 @@ import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.LinkedList;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.internet.*;
 
@@ -356,43 +358,111 @@ class ImapMessage {
     }
 
     static class WindowsMobile5Converter extends MimeVisitor {
-        protected boolean visitMessage(MimeMessage mm, VisitPhase visitKind)  { return false; }
         protected boolean visitBodyPart(MimeBodyPart bp)  { return false; }
-        
-        protected boolean visitMultipart(MimeMultipart multi, VisitPhase visitKind) throws MessagingException {
-            if (visitKind != VisitPhase.VISIT_END)
+
+        protected boolean visitMessage(MimeMessage mm, VisitPhase visitKind) throws MessagingException {
+            if (visitKind != VisitPhase.VISIT_BEGIN)
                 return false;
-            // only want to kill the HTML part of multipart/alternative messages
-            if (!getContentType(multi).equals(Mime.CT_MULTIPART_ALTERNATIVE))
+            // only want to affect multipart/alternative messages
+            String ctype = getContentType(mm);
+            if (!ctype.equals(Mime.CT_MULTIPART_ALTERNATIVE))
                 return false;
 
-            LinkedList<Integer> htmlParts = null;
-            boolean hasPlain = false;
+            BodyPart bp = null;
             try {
-                for (int i = 0; i < multi.getCount(); i++) {
-                    String ctype = getContentType(multi.getBodyPart(i));
-                    if (ctype.equals(Mime.CT_TEXT_PLAIN)) {
-                        hasPlain = true;
-                    } else if (ctype.equals(Mime.CT_TEXT_HTML)) {
-                        if (htmlParts == null)
-                            htmlParts = new LinkedList<Integer>();
-                        htmlParts.add(0, i);
-                    }
-                }
+                Object content = Mime.getMultipartContent(mm, ctype);
+                if (content instanceof MimeMultipart)
+                    bp = getPrimaryPart((MimeMultipart) content);
+            } catch (IOException e) {
+                ZimbraLog.extensions.warn("exception while traversing message; skipping", e);
             } catch (MessagingException e) {
-                ZimbraLog.extensions.warn("exception while traversing multipart; skipping", e);
-                return false;
+                ZimbraLog.extensions.warn("exception while traversing message; skipping", e);
             }
-
-            if (hasPlain == false || htmlParts == null || htmlParts.isEmpty())
+            if (bp == null)
                 return false;
             // check to make sure that the caller's OK with altering the message
             if (mCallback != null && !mCallback.onModification())
                 return false;
-            // and put the new multipart/alternatives where the TNEF used to be
-            for (int position : htmlParts)
-                multi.removeBodyPart(position);
+            // and put the selected part where the multipart/alternative used to be
+            mm.setDataHandler(bp.getDataHandler());
             return true;
+        }
+        
+        protected boolean visitMultipart(MimeMultipart multi, VisitPhase visitKind) throws MessagingException {
+            if (visitKind != VisitPhase.VISIT_BEGIN)
+                return false;
+            // we should never hit a multipart/alternative part -- ever
+            if (getContentType(multi).equals(Mime.CT_MULTIPART_ALTERNATIVE)) {
+                ZimbraLog.extensions.warn("unexpected multipart/alternative found; skipping");
+                return false;
+            }
+
+            Map<Integer, BodyPart> replacements = null;
+            try {
+                for (int i = 0; i < multi.getCount(); i++) {
+                    BodyPart bp = multi.getBodyPart(i);
+                    String ctype = getContentType(bp);
+                    if (ctype.equals(Mime.CT_MULTIPART_ALTERNATIVE) && bp instanceof MimeBodyPart) {
+                        Object content = Mime.getMultipartContent((MimeBodyPart) bp, ctype);
+                        if (content instanceof MimeMultipart) {
+                            BodyPart subpart = getPrimaryPart((MimeMultipart) content);
+                            if (subpart != null) {
+                                if (replacements == null)
+                                    replacements = new HashMap<Integer, BodyPart>();
+                                replacements.put(i, subpart);
+                            }
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                ZimbraLog.extensions.warn("exception while traversing multipart; skipping", e);
+            } catch (MessagingException e) {
+                ZimbraLog.extensions.warn("exception while traversing multipart; skipping", e);
+            }
+            if (replacements == null || replacements.isEmpty())
+                return false;
+            // check to make sure that the caller's OK with altering the message
+            if (mCallback != null && !mCallback.onModification())
+                return false;
+            // and put the selected parts where the multipart/alternatives used to be
+            for (Map.Entry<Integer, BodyPart> entry : replacements.entrySet()) {
+                multi.removeBodyPart(entry.getKey());
+                multi.addBodyPart(entry.getValue(), entry.getKey());
+            }
+            return true;
+        }
+
+        private static Map<String, Integer> typeRankings = new HashMap<String, Integer>();
+            static {
+                typeRankings.put(Mime.CT_TEXT_HTML, 1);
+                typeRankings.put(Mime.CT_TEXT_PLAIN, 2);
+                typeRankings.put(Mime.CT_TEXT_CALENDAR, 3);
+            }
+
+        private BodyPart getPrimaryPart(MimeMultipart multi) throws MessagingException, IOException {
+            BodyPart primary = null;
+            int primaryRank = 0;
+            for (int i = 0; i < multi.getCount(); i++) {
+                BodyPart subpart = multi.getBodyPart(i);
+                String ctype = getContentType(subpart);
+                if (ctype.equals(Mime.CT_MULTIPART_ALTERNATIVE) && subpart instanceof MimeBodyPart) {
+                    Object content = Mime.getMultipartContent((MimeBodyPart) subpart, ctype);
+                    if (content instanceof MimeMultipart) {
+                        subpart = getPrimaryPart((MimeMultipart) content);
+                        if (subpart == null)
+                            continue;
+                        ctype = getContentType(subpart);
+                    }
+                }
+                Integer rank = typeRankings.get(ctype);
+                if (rank == null)
+                    rank = 0;
+                if (primary == null || rank > primaryRank) {
+                    primary = subpart;
+                    primaryRank = rank;
+                }
+            }
+            return primary;
         }
     }
 }
