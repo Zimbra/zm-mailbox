@@ -121,7 +121,7 @@ public class ZimbraSoapContext {
     
     private int mNotificationSeqNo = -1;
 
-    private List    mSessionInfo = new ArrayList();
+    private List<SessionInfo> mSessionInfo = new ArrayList<SessionInfo>();
     private boolean mSessionSuppressed;
     private boolean mHaltNotifications;
     private boolean mUnqualifiedItemIds;
@@ -376,11 +376,9 @@ public class ZimbraSoapContext {
      * @param type  One of the types defined in the {@link SessionCache} class.
      * @return A matching SessionInfo object or <code>null</code>. */
     private SessionInfo findSessionInfo(int type) {
-        for (Iterator it = mSessionInfo.iterator(); it.hasNext(); ) {
-            SessionInfo sinfo = (SessionInfo) it.next();
+        for (SessionInfo sinfo : mSessionInfo)
             if (sinfo.session.getSessionType() == type)
                 return sinfo;
-        }
         return null;
     }
 
@@ -440,8 +438,7 @@ public class ZimbraSoapContext {
     Element generateResponseHeader() {
         Element ctxt = null;
         try {
-            for (Iterator it = mSessionInfo.iterator(); it.hasNext(); ) {
-                SessionInfo sinfo = (SessionInfo) it.next();
+            for (SessionInfo sinfo : mSessionInfo) {
                 Session session = sinfo.session;
                 if (ctxt == null)
                     ctxt = createElement(CONTEXT);
