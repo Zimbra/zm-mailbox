@@ -365,6 +365,12 @@ public abstract class Provisioning {
      * Whether a domain is local or alias.
      */
     public static final String A_zimbraDomainType = "zimbraDomainType";
+    
+    /**
+     * Hostname visited by the client to domain name mapping, in order to make
+     * virtual hosting work.
+     */
+    public static final String A_zimbraVirtualHostname = "zimbraVirtualHostname";
 
     /**
      * multi-value attr. Each attr is the name of another attribute that is
