@@ -149,8 +149,8 @@ public class LdapProvisioning extends Provisioning {
                 LC.ldap_cache_cos_maxsize.intValue(),
                 LC.ldap_cache_cos_maxage.intValue() * Constants.MILLIS_PER_MINUTE); 
 
-    private static ZimbraLdapEntryCache sDomainCache =
-        new ZimbraLdapEntryCache(
+    private static ZimbraLdapDomainCache sDomainCache =
+        new ZimbraLdapDomainCache(
                 LC.ldap_cache_domain_maxsize.intValue(),
                 LC.ldap_cache_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE);     
 
@@ -167,9 +167,9 @@ public class LdapProvisioning extends Provisioning {
 
     private static boolean sTimeZoneInited = false;
     private static final Object sTimeZoneGuard = new Object();
-    private static Map /*<String tzId, WellKnownTimeZone>*/ sTimeZoneMap = new HashMap(LC.ldap_cache_timezone_maxsize.intValue());
+    private static Map<String, WellKnownTimeZone> sTimeZoneMap = new HashMap<String, WellKnownTimeZone>(LC.ldap_cache_timezone_maxsize.intValue());
     // list of time zones to preserve sort order
-    private static List /*<WellKnownTimeZone>*/ sTimeZoneList = new ArrayList(LC.ldap_cache_timezone_maxsize.intValue());
+    private static List<WellKnownTimeZone> sTimeZoneList = new ArrayList<WellKnownTimeZone>(LC.ldap_cache_timezone_maxsize.intValue());
 
     private static ZimbraLdapEntryCache sZimletCache = 
         new ZimbraLdapEntryCache(
@@ -308,7 +308,7 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getObjectType(java.lang.String)
      */
-    public synchronized List getObjectTypes() throws ServiceException {
+    public synchronized List<Zimlet> getObjectTypes() throws ServiceException {
     	return listAllZimlets();
     }
 
@@ -719,14 +719,20 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getAllDomains()
      */
-    public List getAllAdminAccounts() throws ServiceException {
-        return searchAccounts("(|(zimbraIsAdminAccount=TRUE)(zimbraIsDomainAdminAccount=TRUE))", null, null, true, Provisioning.SA_ACCOUNT_FLAG);
+    @SuppressWarnings("unchecked")    
+    public List<Account> getAllAdminAccounts() throws ServiceException {
+        return (List<Account>)searchAccountsInternal("(|(zimbraIsAdminAccount=TRUE)(zimbraIsDomainAdminAccount=TRUE))", null, null, true, Provisioning.SA_ACCOUNT_FLAG);
     }
 
+    @SuppressWarnings("unchecked")
+    public List<NamedEntry> searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, int flags) throws ServiceException {
+        return (List<NamedEntry>) searchAccountsInternal(query, returnAttrs, sortAttr, sortAscending, flags);  
+    }
+    
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
-    public List searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, int flags)  
+    private List<?> searchAccountsInternal(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, int flags)  
         throws ServiceException
     {
         //flags &= ~Provisioning.SA_DOMAIN_FLAG; // leaving on for now
@@ -1239,12 +1245,22 @@ public class LdapProvisioning extends Provisioning {
         }
         return domain;        
     }
+   
+   public Domain getDomainByVirtualHostname(String virtualHostname) throws ServiceException {
+        LdapDomain domain = (LdapDomain) sDomainCache.getByVirtualHostname(virtualHostname);
+        if (domain == null) {
+            virtualHostname = LdapUtil.escapeSearchFilterArg(virtualHostname);
+            domain = getDomainByQuery("(&(zimbraVirtualHostname="+virtualHostname+")(objectclass=zimbraDomain))", null);
+            sDomainCache.put(domain);
+        }
+        return domain;        
+    }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getAllDomains()
      */
-    public List getAllDomains() throws ServiceException {
-        List<LdapDomain> result = new ArrayList<LdapDomain>();
+    public List<Domain> getAllDomains() throws ServiceException {
+        List<Domain> result = new ArrayList<Domain>();
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
@@ -1442,8 +1458,8 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getAllCOS()
      */
-    public List getAllCos() throws ServiceException {
-        List result = new ArrayList();
+    public List<Cos> getAllCos() throws ServiceException {
+        List<Cos> result = new ArrayList<Cos>();
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
@@ -1742,12 +1758,12 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    public List getAllServers() throws ServiceException {
+    public List<Server> getAllServers() throws ServiceException {
         return getAllServers(null);
     }
     
-    public List getAllServers(String service) throws ServiceException {
-        List result = new ArrayList();
+    public List<Server> getAllServers(String service) throws ServiceException {
+        List<Server> result = new ArrayList<Server>();
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
@@ -1832,14 +1848,14 @@ public class LdapProvisioning extends Provisioning {
      * @return
      * @throws ServiceException
      */
-    public List /*<WellKnownTimeZone>*/ getAllTimeZones() throws ServiceException {
+    public List<WellKnownTimeZone> getAllTimeZones() throws ServiceException {
         initTimeZoneCache();
         return sTimeZoneList;
     }
 
     public WellKnownTimeZone getTimeZoneById(String tzId) throws ServiceException {
         initTimeZoneCache();
-        WellKnownTimeZone tz = (WellKnownTimeZone) sTimeZoneMap.get(tzId);
+        WellKnownTimeZone tz = sTimeZoneMap.get(tzId);
         return tz;
     }
 
@@ -2569,8 +2585,8 @@ public class LdapProvisioning extends Provisioning {
     	return zimlet;
     }
     
-    public List listAllZimlets() throws ServiceException {
-    	List result = new ArrayList();
+    public List<Zimlet> listAllZimlets() throws ServiceException {
+    	List<Zimlet> result = new ArrayList<Zimlet>();
     	DirContext ctxt = null;
     	try {
     		ctxt = LdapUtil.getDirContext();
@@ -2815,7 +2831,7 @@ public class LdapProvisioning extends Provisioning {
         return resource;
     }
 
-    public List searchCalendarResources(
+    public List<NamedEntry> searchCalendarResources(
         EntrySearchFilter filter,
         String returnAttrs[],
         String sortAttr,
@@ -2826,7 +2842,7 @@ public class LdapProvisioning extends Provisioning {
                                        "");
     }
 
-    List searchCalendarResources(
+    List<NamedEntry> searchCalendarResources(
         EntrySearchFilter filter,
         String returnAttrs[],
         String sortAttr,
@@ -2930,7 +2946,7 @@ public class LdapProvisioning extends Provisioning {
             sb.append(String.format("(%s=%s)", Provisioning.A_zimbraMailForwardingAddress, addrs[0]));    
         }
         if (addrs.length > 1) sb.append(")");
-        return (List<DistributionList>)searchAccounts(sb.toString(), null, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);        
+        return (List<DistributionList>)searchAccountsInternal(sb.toString(), null, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);        
     }
     
     static List<DistributionList> getDistributionLists(String addrs[], boolean directOnly, Map<String, String> via) throws ServiceException {

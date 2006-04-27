@@ -72,9 +72,17 @@ public class Auth extends DocumentHandler  {
         String password = request.getAttribute(AccountService.E_PASSWORD, null);
         Provisioning prov = Provisioning.getInstance();
         
+        Element virtualHostEl = request.getOptionalElement(AccountService.E_VIRTUAL_HOST);
+        String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
+        
         Account acct = null;
         
         if (by.equals(BY_NAME)) {
+            if (virtualHost != null  && value.indexOf('@') == -1) {
+                Domain d = prov.getDomainByVirtualHostname(virtualHost);
+                if (d != null)
+                    value = value + "@" + d.getName();
+            }
             acct = prov.getAccountByName(value);            
         } else if (by.equals(BY_ID)) {
             acct = prov.getAccountById(value);

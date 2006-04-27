@@ -101,6 +101,7 @@ public class AccountService implements DocumentService {
     public static final String E_ENTRY_SEARCH_FILTER_MULTICOND = "conds";
     public static final String E_ENTRY_SEARCH_FILTER_SINGLECOND = "cond";
     public static final String E_LOCALE = "locale";
+    public static final String E_VIRTUAL_HOST = "virtualHost";
 
     public static final String A_N = "n";
     public static final String A_NAME = "name";

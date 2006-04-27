@@ -876,7 +876,7 @@ public abstract class Provisioning {
     
     public abstract MimeTypeInfo getMimeTypeByExtension(String ext) throws ServiceException;
     
-    public abstract List /*<ObjectType>*/ getObjectTypes() throws ServiceException;
+    public abstract List<Zimlet> getObjectTypes() throws ServiceException;
     
     /**
      * Creates the specified account. The A_zimbraId and A_uid attributes are automatically
@@ -968,13 +968,13 @@ public abstract class Provisioning {
      * @return a list of all the accounts that matched.
      * @throws ServiceException
      */
-    public abstract List searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
+    public abstract List<NamedEntry> searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
 
     public abstract Account createAdminAccount(String name, String password, Map attrs) throws ServiceException;
     
     public abstract Account getAdminAccountByName(String name) throws ServiceException;
     
-    public abstract List getAllAdminAccounts()  throws ServiceException;
+    public abstract List<Account> getAllAdminAccounts()  throws ServiceException;
 
     public abstract void setCOS(Account acct, Cos cos) throws ServiceException;
     
@@ -1012,10 +1012,12 @@ public abstract class Provisioning {
 
     public abstract Domain getDomainByName(String name) throws ServiceException;
 
-    public abstract List getAllDomains()  throws ServiceException;
+    public abstract Domain getDomainByVirtualHostname(String virtualHostname) throws ServiceException;
+    
+    public abstract List<Domain> getAllDomains()  throws ServiceException;
 
     public abstract void deleteDomain(String zimbraId) throws ServiceException;
-    
+
     public abstract Cos createCos(String name, Map attrs) throws ServiceException;
 
     public abstract void renameCos(String zimbraId, String newName) throws ServiceException;
@@ -1024,7 +1026,7 @@ public abstract class Provisioning {
 
     public abstract Cos getCosByName(String name) throws ServiceException;
 
-    public abstract List getAllCos()  throws ServiceException;
+    public abstract List<Cos> getAllCos()  throws ServiceException;
     
     public abstract void deleteCos(String zimbraId) throws ServiceException;
     
@@ -1040,13 +1042,13 @@ public abstract class Provisioning {
 
     public abstract Server getServerByName(String name, boolean reload) throws ServiceException;
 
-    public abstract List getAllServers()  throws ServiceException;
+    public abstract List<Server> getAllServers()  throws ServiceException;
 
-    public abstract List getAllServers(String service)  throws ServiceException;
+    public abstract List<Server> getAllServers(String service)  throws ServiceException;
     
     public abstract void deleteServer(String zimbraId) throws ServiceException;
 
-    public abstract List /*<WellKnownTimeZone>*/ getAllTimeZones() throws ServiceException;
+    public abstract List<WellKnownTimeZone> getAllTimeZones() throws ServiceException;
 
     public abstract WellKnownTimeZone getTimeZoneById(String tzId) throws ServiceException;
 
@@ -1070,7 +1072,7 @@ public abstract class Provisioning {
     
     public abstract Zimlet getZimlet(String name) throws ServiceException;
     
-    public abstract List listAllZimlets() throws ServiceException;
+    public abstract List<Zimlet> listAllZimlets() throws ServiceException;
     
     public abstract Zimlet createZimlet(String name, Map attrs) throws ServiceException;
     
@@ -1135,7 +1137,7 @@ public abstract class Provisioning {
      * @return a List of all the calendar resources that matched.
      * @throws ServiceException
      */
-    public abstract List searchCalendarResources(EntrySearchFilter filter, String returnAttrs[], String sortAttr, boolean sortAscending) throws ServiceException;
+    public abstract List<NamedEntry> searchCalendarResources(EntrySearchFilter filter, String returnAttrs[], String sortAttr, boolean sortAscending) throws ServiceException;
 
     private static Locale getEntryLocale(Entry entry) {
         Locale lc = null;

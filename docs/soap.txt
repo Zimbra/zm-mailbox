@@ -277,6 +277,7 @@ global soap/system errors used with zimbra:Error/Code:
    <account by="name|id|foreignPrincipal">...</account>
    [<password>...</password>]
    [<preauth timestamp="{timestamp}" expires="{expires}">{computed-preauth-value}</preauth>]
+   [<virtualHost>{virtual-host}</virtualHost>]
   [<prefs>[<pref name="..."/>...]</prefs>]
  </AuthRequest>
  
@@ -288,9 +289,16 @@ global soap/system errors used with zimbra:Error/Code:
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
  </AuthResponse>
 
+Note:
+
 one of <password> or <preauth> must be specified. see preauth.txt for a discussion of preauth.
 
   {mail-host} = host additional SOAP requests should be directed to. Always returned, might be same as original host request was sent to.
+
+  {virtual-host} = if specified (in conjunction with by="name"), virtual-host is used to determine the domain of the account name, if it
+                   does not include a domain component. For example, if the domain foo.com has a zimbraVirtualHostname of "mail.foo.com", 
+                   and an auth request comes in for "joe" with a virtualHost of "mail.foo.com", then the request will be equivalent to
+                   logging in with "joe@foo.com".
 
 ---------
 
