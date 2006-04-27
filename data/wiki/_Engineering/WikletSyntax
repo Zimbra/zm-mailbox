@@ -18,7 +18,8 @@
 
 <p>
 <b class='issue'>Note:</b>
-Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
+Currently, only syntax 1 is implemented.
+But syntax 2 is under consideration and will likely become the primary syntax.
 <p>
 <table border=1 cellspacing=0>
 <tr><td class='head' colspan=4><h1>Display Wiklets</h1></td></tr>
@@ -34,7 +35,7 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&lt;nowiklet> ... &lt;/nowiklet>
 	</td>
 	<td class='tag'>
-		&lt;zm:nowiklet> ... &lt;/zm:nowiklet>
+		&lt;nowiklet> ... &lt;/nowiklet>
 	</td>
 	<td class='notes'>
 		<ul>
@@ -48,7 +49,7 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&lt;nolink> ... &lt;/nolink>
 	</td>
 	<td class='tag'>
-		&lt;zm:nolink> ... &lt;/zm:nolink>
+		&lt;nolink> ... &lt;/nolink>
 	</td>
 	<td class='notes'>
 		<ul>
@@ -84,14 +85,12 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&#91;&#91;pagename]&#91;anchor text]<span class='issue'>&#91;version</span>]]<br>
 	</td>
 	<td class='tag'>
-		&lt;zm:link<br>
-			&nbsp;&nbsp;name="pagename"<br>
-			&nbsp;&nbsp;version="#" /&gt;<br><br>
-		&lt;zm:link<br>&nbsp;&nbsp;name="pagename"<br>
-			&nbsp;&nbsp;version="#"<br>&gt;<br>
-			&nbsp;&nbsp;&nbsp;&nbsp;Page Title<br>
-		&lt;/zm:link&gt;
-
+		&lt;wiklet 
+			&nbsp;&nbsp;class="link"
+			&nbsp;&nbsp;name="pagename"
+			&nbsp;&nbsp;text="anchor text"
+			&nbsp;&nbsp;version="#" 
+		/&gt;
 	</td>
 	<td class='notes'>
 		<ul>
@@ -115,7 +114,9 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&#123;&#123;CONTENT&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:content/&gt;
+		&lt;wiklet 
+			&nbsp;&nbsp;class="content" 
+		/&gt;
 	</td>
 	<td class='notes'>
 		<ul>
@@ -130,7 +131,9 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&#123;&#123;NAME&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:name/&gt;
+		&lt;wiklet 
+			&nbsp;&nbsp;class="name" 
+		/&gt;
 	</td>
 	<td class='notes'>
 		<ul>
@@ -154,7 +157,9 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&#123;&#123;FULLNAME}}
 	</td>
 	<td class='tag'>
-		&lt;zm:fullname/&gt;
+		&lt;wiklet 
+			&nbsp;&nbsp;class="fullname" 
+		/&gt;
 	</td>
 	<td class='notes'>
 		<ul>
@@ -169,7 +174,9 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&#123;&#123;PARENTNAME}}
 	</td>
 	<td class='tag'>
-		&lt;zm:parentname/&gt;
+		&lt;wiklet 
+			&nbsp;&nbsp;class="parentname" 
+		/&gt;
 	</td>
 	<td class='notes'>
 		<ul>
@@ -184,7 +191,9 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&#123;&#123;URL}}
 	</td>
 	<td class='tag'>
-		&lt;zm:url/&gt;
+		&lt;wiklet 
+			&nbsp;&nbsp;class="url" 
+		/&gt;
 	</td>
 	<td class='notes'>
 		<ul>
@@ -199,7 +208,9 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&#123;&#123;URLPREFIX}}
 	</td>
 	<td class='tag'>
-		&lt;zm:urlprefix/&gt;
+		&lt;wiklet 
+			&nbsp;&nbsp;class="urlprefix" 
+		/&gt;
 	</td>
 	<td class='notes'>
 		<ul>
@@ -214,7 +225,9 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&#123;&#123;ICON&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:icon/&gt;		
+		&lt;wiklet 
+			&nbsp;&nbsp;class="icon" 
+		/&gt;		
 	</td>
 	<td class='notes'>
 		<ul>
@@ -230,10 +243,28 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 <tr>
 	<td>X</td>
 	<td class='wiklet'>
+		&#123;&#123;TAGS&#125;&#125;
+	</td>
+	<td class='tag'>
+		&lt;wiklet 
+			&nbsp;&nbsp;class="tags" 
+		/&gt;		
+	</td>
+	<td class='notes'>
+		<ul>
+		<li> Tags assigned to the item
+		</ul>
+	</td>
+</tr>
+<tr>
+	<td>X</td>
+	<td class='wiklet'>
 		&#123;&#123;FRAGMENT&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:fragment/&gt;
+		&lt;wiklet 
+			&nbsp;&nbsp;class="fragment" 
+		/&gt;
 	</td>
 	<td class='notes'>
 		<ul>
@@ -259,7 +290,10 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&#123;&#123;MSG <span class='issue'>msgKey</span>&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:msg key="msgKey"/&gt;
+		&lt;wiklet 
+			&nbsp;&nbsp;class="msg"
+			&nbsp;&nbsp;key="msgKey" 
+		/&gt;
 	</td>
 	<td class='notes'>
 		<ul>
@@ -282,7 +316,10 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&#123;&#123;INCLUDE <span class='issue'>pageName</span>&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:include page="pageName"/&gt;
+		&lt;wiklet 
+			&nbsp;&nbsp;class="include"
+			&nbsp;&nbsp;page="pageName" 
+		/&gt;
 	</td>
 	<td class='notes'>
 		<ul>
@@ -300,12 +337,20 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 <tr>
 	<td>X</td>
 	<td class='wiklet'>
-		&#123;&#123;CREATOR <span class='issue'>link="false"</span>&#125;&#125;<br>
+		&#123;&#123;CREATOR <span class='issue'>link="false"</span>&#125;&#125;
+		<br><br>
 		&#123;&#123;MODIFIER  <span class='issue'>link="false"</span>&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:creator <span class='issue'>link="false"</span>/&gt;
-		&lt;zm:modifier <span class='issue'>link="false"</span>/&gt;
+		&lt;wiklet 
+			&nbsp;&nbsp;class="creator" 
+			&nbsp;&nbsp;<span class='issue'>link="false"</span>
+		/&gt;
+		<br><br>
+		&lt;wiklet 
+			&nbsp;&nbsp;class="modifier" 
+			&nbsp;&nbsp;<span class='issue'>link="false"</span>
+		/&gt;
 	</td>
 	<td class='notes'>
 		<ul>
@@ -341,12 +386,14 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 			&#125;&#125;<br>
 	</td>
 	<td class='tag'>
-		&lt;zm:createDate 
+		&lt;wiklet 
+			&nbsp;&nbsp;class="createDate" 
 			&nbsp;&nbsp;format="..." 
 			&nbsp;&nbsp;pattern="..."
 		/&gt;
 		<p>
-		&lt;zm:modifyDate 
+		&lt;wiklet 
+			&nbsp;&nbsp;class="modifyDate"
 			&nbsp;&nbsp;format="..." 
 			&nbsp;&nbsp;pattern="..."
 		/&gt;
@@ -376,7 +423,9 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&#123;&#123;VERSION&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:version/&gt;
+		&lt;wiklet 
+			&nbsp;&nbsp;class="version" 
+		/&gt;
 	</td>
 	<td class='notes'>
 		<ul>
@@ -403,13 +452,15 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&nbsp;&nbsp;itemTemplate="pagename"&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:toc 
+		&lt;wiklet 
+			&nbsp;&nbsp;class="toc"
 			&nbsp;&nbsp;page="pattern"
 			&nbsp;&nbsp;sections="pattern"
 			&nbsp;&nbsp;files="pattern"
 			&nbsp;&nbsp;format="simple|list|template" 
 			&nbsp;&nbsp;bodyTemplate="pagename" 
-			&nbsp;&nbsp;itemTemplate="pagename"/&gt;
+			&nbsp;&nbsp;itemTemplate="pagename"
+		/&gt;
 	</td>
 	<td class='notes'>
 		<ul>
@@ -471,7 +522,9 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:breadCrumbs page="name" 
+		&lt;wiklet 
+			&nbsp;&nbsp;class="breadCrumbs"
+			&nbsp;&nbsp;page="name" 
 			&nbsp;&nbsp;format="simple|template" 
 			&nbsp;&nbsp;bodyTemplate="pagename" 
 			&nbsp;&nbsp;itemTemplate="pagename"
@@ -527,7 +580,9 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 		&#123;&#123;ATTACHMENTCOUNT&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:pageAttachmentCount/&gt;
+		&lt;wiklet 
+			&nbsp;&nbsp;class="pageAttachmentCount" 
+		/&gt;
 	</td>
 	<td class='notes'>
 		<li>Show the number of attachments for the page
@@ -544,10 +599,13 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 	&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:pageAttachments page="" 
+		&lt;wiklet 
+			&nbsp;&nbsp;class="pageAttachments"
+			&nbsp;&nbsp;page="" 
 			&nbsp;&nbsp;format="simple|template" 
 			&nbsp;&nbsp;bodyTemplate="pagename" 
-			&nbsp;&nbsp;itemTemplate="pagename"/&gt;
+			&nbsp;&nbsp;itemTemplate="pagename"
+		/&gt;
 	</td>
 	<td class='notes'>
 	<li>show the list of attachments for a page
@@ -588,10 +646,13 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 			&nbsp;&nbsp;itemTemplate="page"&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:pageHistory page="" 
+		&lt;wiklet 
+			&nbsp;&nbsp;class="pageHistory" 
+			&nbsp;&nbsp;page="" 
 			&nbsp;&nbsp;format="simple|template" 
 			&nbsp;&nbsp;bodyTemplate="pagename" 
-			&nbsp;&nbsp;itemTemplate="pagename"/&gt;
+			&nbsp;&nbsp;itemTemplate="pagename"
+		/&gt;
 	</td>
 	<td class='notes'>
 		<li>Show the history for a page
@@ -642,14 +703,18 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 			&nbsp;&nbsp;titleIsLink="true"&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:section title="title"&gt;<br>
+		&lt;wiklet 
+			&nbsp;&nbsp;class="section" 
+			&nbsp;&nbsp;title="title"
+		&gt;<br>
 			&nbsp;&nbsp;&nbsp;&nbsp;...content...<br>
-		&lt;/zm:section&gt;<br>
+		&lt;/wiklet&gt;<br>
 		<br>or<br><br>
 		
-		&lt;zm:section<br>
-			&nbsp;&nbsp;title="title"<br>
-			&nbsp;&nbsp;src="pagename" /&gt;
+		&lt;wiklet class="section"
+			&nbsp;&nbsp;title="title"
+			&nbsp;&nbsp;src="pagename" 
+		/&gt;
 		
 	</td>
 	<td class='notes'>
@@ -671,15 +736,16 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 	<td>&nbsp;</td>
 	<td class='wiklet'>
 	&#123;&#123;EDITPAGE  page="pagename"
-				&nbsp;&nbsp;version="version"<br>
+				&nbsp;&nbsp;version="version"
 				&nbsp;&nbsp;rename="true"
 			&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:editPage <br>
-				&nbsp;&nbsp;page="pageName"<br>
-				&nbsp;&nbsp;version="version"<br>
-				&nbsp;&nbsp;rename="true"		
+		&lt;wiklet 
+			&nbsp;&nbsp;class="editPage"
+			&nbsp;&nbsp;page="pageName"
+			&nbsp;&nbsp;version="version"
+			&nbsp;&nbsp;rename="true"		
 		/&gt;
 	</td>
 	<td class='notes'>
@@ -698,7 +764,8 @@ Syntax 2 is under consideration. Currently, only syntax 1 is implemented.
 			&nbsp;&nbsp;page="pagename"&#125;&#125;
 	</td>
 	<td class='tag'>
-		&lt;zm:pageShowHistory<br>
+		&lt;wiklet 
+			&nbsp;&nbsp;class="pageShowHistory"
 			&nbsp;&nbsp;page="pageName"
 		/&gt;
 	</td>
