@@ -1473,7 +1473,7 @@ any pending notifications.
 <SaveRulesRequest>
 <SaveRulesResponse>
 
-Sieve Mail Filtering manipluation.  See MailFiltering.doc for details
+Sieve Mail Filtering manipluation.  See MailFiltering.txt for details
 
 ---------------------------
 
