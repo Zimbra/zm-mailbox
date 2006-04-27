@@ -101,14 +101,18 @@
 </GetWikiResponse>
 
 //
-// DeleteWiki
-// deletes all the revision of the wiki document by moving to trash folder.
-// delete can be performed by anyone who has delete access to the folder the wiki document is stored.
-<DeleteWikiRequest>
-  <w name="{word}"/>
-</DeleteWikiRequest>
+// WikiAction
+// See ItemAction and MsgAction API for the usage.
+//
+<WikiActionRequest>
+  <!-- action can be preceeded by a "!" to negate it" -->
+  <action id="{list}" op="delete|read|flag|tag|move|update|spam" [tag="..."] [l="{folder}"]/>
+</WikiActionRequest>
 
-<DeleteWikiResponse/>
+<WikiActionResponse>
+  <action id="{list}" op="delete|read|flag|tag|move|update|spam"/>
+</WikiActionResponse>
+
 
 //
 // DiffWiki

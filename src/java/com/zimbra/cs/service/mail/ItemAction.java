@@ -92,7 +92,7 @@ public class ItemAction extends WriteOpDocumentHandler {
         return response;
     }
 
-    String handleCommon(Map<String,Object> context, Element request, String opAttr, byte type) throws ServiceException, SoapFaultException {
+    protected String handleCommon(Map<String,Object> context, Element request, String opAttr, byte type) throws ServiceException, SoapFaultException {
         Element action = request.getElement(MailService.E_ACTION);
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
@@ -200,7 +200,7 @@ public class ItemAction extends WriteOpDocumentHandler {
         return successes;
     }
 
-    String extractSuccesses(Element response) {
+    protected String extractSuccesses(Element response) {
         try {
             return response.getElement(MailService.E_ACTION).getAttribute(MailService.A_ID);
         } catch (ServiceException e) {
