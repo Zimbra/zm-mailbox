@@ -2,6 +2,8 @@ package com.zimbra.cs.operation;
 
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.Scheduler.IOperation;
@@ -210,6 +212,8 @@ public abstract class Operation implements IOperation
 			return (counted >= OPERATION_REPEAT_THRESHOLD);
 		}
 	}
+	
+	protected Log getLog() { return ZimbraLog.op; }
 	
 	public String getName() {
 		return this.getClass().getSimpleName();

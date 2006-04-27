@@ -323,69 +323,6 @@ public class Scheduler {
 		public int getLoad()      { return mOp.getLoad(); }
 	}
 
-//	/**
-//	 *   void doIt(parameters) {
-//	 *      Operation myOp = new Operation("type", pri, mem, lock);
-//	 *      Scheduler.schedule(myOp);
-//	 *      try {
-//	 *           // ...do operation here...
-//	 *      } finally {
-//	 *            Scheduler.runCompleted(myOp);
-//	 *      }
-//	 */
-//	public static class Operation implements IOperation {
-//		String mType;
-//		Priority mPri;
-//		int mMemLoad;
-//		
-//		Operation(String type, Priority pri, int memLoad) {
-//			mType = type;
-//			mPri = pri;
-//			mMemLoad = memLoad;
-//		}
-//		
-//		public void schedule(Scheduler sched) throws ServiceException {
-//			sched.schedule(this);
-//		}
-//
-//		public String getType()          { return mType; }
-//		public Priority getPriority() { return mPri; }
-//		public int getMemoryLoad()      { return mMemLoad; }
-//	}
-//
-//
-//	/**
-//	 * class myClass {
-//	 *    params storedParams;
-//	 *   
-//	 *    void doIt(parameters) {
-//	 *       storedParams = parameters;
-//	 *       Operation myOp = new CallbackOperation("type", pri, mem, lock);
-//	 *       Scheduler.scheduleCallback(myOp);
-//	 *    } 
-//	 *   
-//	 *    void execute() throws ServiceException {
-//	 *       // ...do work here...
-//	 *    }
-//	 */
-//	public static abstract class CallbackOperation extends Operation  implements ICallbackOperation {
-//		
-//		public CallbackOperation(String type, Priority pri, int memLoad) {
-//			super(type, pri, memLoad);
-//		}
-//
-//		public void schedule(Scheduler sched) throws ServiceException {
-//			sched.scheduleCallback(this);
-//		}
-//		
-//		public abstract void execute() throws ServiceException;
-//	}
-
-
-	
-
-	
-
 
 	protected Scheduler(int maxLoad, int targetLoad, int maxOps) {
 		mMaxLoad = maxLoad;
@@ -410,7 +347,6 @@ public class Scheduler {
 		assert(mLock.isHeldByCurrentThread());
 
 		if (SPEW) System.out.println("Thread: " + Thread.currentThread().getName() + " startRunning() "+mRunningOperations+" running");
-		assert(mRunningOperations < mMaxSimultaneousOperations);
 		mRunningOperations++;
 		assert(mRunningOperations <= mMaxSimultaneousOperations);
 		mCurLoad+=op.getLoad();
@@ -492,9 +428,8 @@ public class Scheduler {
 		
 		return null;
 	}
-	
 
-	public String toString() {
+	public String dumpQueues() {
 		mLock.lock();
 		try {
 			
@@ -543,7 +478,7 @@ public class Scheduler {
 	private static final Scheduler sScheduler[] = new Scheduler[1];
 	
 	static {
-		sScheduler[0] = new Scheduler(20, 10, 10);
+		sScheduler[0] = new Scheduler(10000, 10000, 1000);
 	}
 	
 	static boolean SPEW = false;
@@ -551,8 +486,6 @@ public class Scheduler {
 	ReentrantLock mLock = new ReentrantLock();
 	ReentrantLock getLock() { return mLock; }
 	List<AsyncOperation>[] mOpQueue = new ArrayList[Priority.NUM_PRIORITIES()];
-	
-	
 	
 	
 	/************************************
@@ -650,7 +583,7 @@ public class Scheduler {
 		while(true) {
 			try {
 				Thread.sleep(5000);
-				System.out.println("SCHEDULER:\n"+s.toString());
+				System.out.println("SCHEDULER:\n"+s.dumpQueues());
 			} catch (InterruptedException e) {}
 		}
 	}

@@ -33,11 +33,11 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
+import com.zimbra.cs.operation.CheckSpellingOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.util.RemoteServerRequest;
-import com.zimbra.cs.util.ArrayUtil;
+import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
@@ -52,17 +52,9 @@ public class CheckSpelling extends DocumentHandler  {
     
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(MailService.CHECK_SPELLING_RESPONSE);
-
-        // Make sure that the spell server URL is specified
-        Provisioning prov = Provisioning.getInstance();
-        Server localServer = prov.getLocalServer();
-        String[] urls = localServer.getMultiAttr(Provisioning.A_zimbraSpellCheckURL);
-        if (ArrayUtil.isEmpty(urls)) {
-            sLog.debug(Provisioning.A_zimbraSpellCheckURL + " is not specified");
-            return unavailable(response);
-        }
+        ZimbraSoapContext zc = getZimbraSoapContext(context);
+        Element response = zc.createElement(MailService.CHECK_SPELLING_RESPONSE);
+        SoapSession session = (SoapSession) zc.getSession(SessionCache.SESSION_SOAP);
         
         String text = request.getTextTrim();
         if (StringUtil.isNullOrEmpty(text)) {
@@ -71,20 +63,13 @@ public class CheckSpelling extends DocumentHandler  {
             return response;
         }
         
-        // Issue the request
-        Map params = null;
-        for (int i = 0; i < urls.length; i++) {
-            RemoteServerRequest req = new RemoteServerRequest();
-            req.addParameter("text", text);
-            String url = urls[i];
-            try {
-                sLog.debug("Attempting to check spelling at " + url);
-                req.invoke(url);
-                params = req.getResponseParameters();
-                break; // Successful request.  No need to check the other servers.
-            } catch (IOException ex) {
-                sLog.warn("An error occurred while contacting " + url, ex);
-            }
+        Map params = null;        
+        try {
+        	params = new CheckSpellingOperation(session, zc.getOperationContext(), null, Requester.SOAP, text).getResult();
+        } catch (ServiceException e) {
+        	if (e.getCause().equals(ServiceException.NO_SPELL_CHECK_URL)) {
+        		return unavailable(response);
+        	} else throw e;
         }
 
         if (params == null) {

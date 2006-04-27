@@ -51,6 +51,7 @@ public class ServiceException extends Exception {
     public static final String ALREADY_IN_PROGRESS = "service.ALREADY_IN_PROGRESS";
     public static final String NOT_IN_PROGRESS = "service.NOT_IN_PROGRESS";
     public static final String INTERRUPTED = "service.INTERRUPTED";
+    public static final String NO_SPELL_CHECK_URL = "service.NO_SPELL_CHECK_URL"; 
     
     private String mCode;
     private Argument[] mArgs = null;
@@ -201,4 +202,9 @@ public class ServiceException extends Exception {
     public static ServiceException INTERRUPTED(String str) {
         return new ServiceException("The operation has been interrupted "+str!=null?str:"", INTERRUPTED, RECEIVERS_FAULT);
     }
+    
+    public static ServiceException NO_SPELL_CHECK_URL(String str) {
+    	   return new ServiceException("Spell Checking Not Available "+str!=null?str:"", NO_SPELL_CHECK_URL, RECEIVERS_FAULT);
+    }
+    
 }

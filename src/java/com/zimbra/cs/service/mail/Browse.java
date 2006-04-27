@@ -28,7 +28,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +35,11 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.BrowseResult;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.operation.BrowseOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.SoapSession;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -47,21 +50,17 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class Browse extends DocumentHandler  {
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
+        ZimbraSoapContext zc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zc);
+        SoapSession session = (SoapSession) zc.getSession(SessionCache.SESSION_SOAP);
         
         String browseBy = request.getAttribute("browseby", null);
         if (browseBy == null)
             browseBy = request.getAttribute(MailService.A_BROWSE_BY);
         
-        BrowseResult browse;
-        try {
-            browse = mbox.browse(lc.getOperationContext(), browseBy);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("IO error", e);
-        }
+        BrowseResult browse = new BrowseOperation(session, zc.getOperationContext(), mbox, Requester.SOAP, browseBy).getResult();
         
-        Element response = lc.createElement(MailService.BROWSE_RESPONSE);
+        Element response = zc.createElement(MailService.BROWSE_RESPONSE);
         
         List result = browse.getResult();
         if (result != null) {
