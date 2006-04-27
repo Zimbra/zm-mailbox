@@ -59,34 +59,40 @@ public class WikiFormatter extends Formatter {
     }
     
     private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
+		//long t0 = System.currentTimeMillis();
     	Folder f = context.targetMailbox.getFolderById(context.opContext, wiki.getFolderId());
-    	String template = getTemplate(context, f, CHROME);
-    	WikiTemplate wt = new WikiTemplate(template);
+		//long t1 = System.currentTimeMillis();
+        //ZimbraLog.wiki.info("Get folder : " + (t1-t0) + "ms");
+    	WikiTemplate wt = getTemplate(context, f, CHROME);
+		//t1 = System.currentTimeMillis();
+        //ZimbraLog.wiki.info("Get chrome : " + (t1-t0) + "ms");
+    	String template = wt.toString(context.opContext, wiki);
+		//t1 = System.currentTimeMillis();
+        //ZimbraLog.wiki.info("Template generation : " + (t1-t0) + "ms");
     	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
-    	context.resp.getOutputStream().print(wt.toString(context.opContext, wiki));
+    	context.resp.getOutputStream().print(template);
     }
 
     private static final String TOC = "_INDEX_";
     private static final String CHROME = "_CHROME_";
     
-    private String getTemplate(Context context, Folder folder, String name) throws IOException, ServiceException {
+    private WikiTemplate getTemplate(Context context, Folder folder, String name) throws IOException, ServiceException {
     	WikiTemplateStore wiki = WikiTemplateStore.getInstance(context.authAccount.getName(), folder.getId());
     	return wiki.getTemplate(context.opContext, name);
     }
-    private String getDefaultTOC() {
+    private WikiTemplate getDefaultTOC() {
     	return WikiTemplateStore.getDefaultTOC();
     }
     
     private void handleWikiFolder(Context context, Folder folder) throws IOException, ServiceException {
     	StringBuffer ret = new StringBuffer();
     	
-    	String template = getTemplate(context, folder, TOC);
+    	WikiTemplate template = getTemplate(context, folder, TOC);
     	
     	if (template == null) {
     		template = getDefaultTOC();
     	}
-    	WikiTemplate wt = new WikiTemplate(template);
-    	ret.append(wt.toString(context.opContext, folder));
+    	ret.append(template.toString(context.opContext, folder));
     	
     	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
     	context.resp.getOutputStream().print(ret.toString());
@@ -96,6 +102,7 @@ public class WikiFormatter extends Formatter {
 	public void format(Context context, MailItem item)
 			throws UserServletException, ServiceException, IOException,
 			ServletException {
+		//long t0 = System.currentTimeMillis();
         if (item instanceof Folder && !context.itemPath.endsWith("/")) {
         	context.resp.sendRedirect(context.req.getRequestURI() + "/");
         	return;
@@ -109,6 +116,8 @@ public class WikiFormatter extends Formatter {
         } else {
             throw UserServletException.notImplemented("can only handle Wiki messages and Documents");
         }
+        //long t1 = System.currentTimeMillis() - t0;
+        //ZimbraLog.wiki.info("Formatting " + item.getSubject() + " : " + t1 + "ms");
 	}
 
 	@Override

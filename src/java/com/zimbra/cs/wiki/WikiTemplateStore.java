@@ -45,8 +45,8 @@ public class WikiTemplateStore {
 		sTemplates = new HashMap<Pair,WikiTemplateStore>();
 	}
 	
-	public static String getDefaultTOC() {
-		return "{{TOC}}";
+	public static WikiTemplate getDefaultTOC() {
+		return new WikiTemplate("{{TOC}}");
 	}
 	
 	public static WikiTemplateStore getInstance(MailItem item) throws ServiceException {
@@ -75,17 +75,18 @@ public class WikiTemplateStore {
 	private long   mExpiration;
 	private String mAccount;
 	private int    mFolderId;
-	private Map<String,String> mTemplateMap;
+	private int    mParentFolderId;
+	private Map<String,WikiTemplate> mTemplateMap;
 	
 	private WikiTemplateStore(Pair<String,String> key) {
 		mAccount  = key.getFirst();
 		mFolderId = Integer.parseInt(key.getSecond());
-		mTemplateMap = new HashMap<String,String>();
+		mTemplateMap = new HashMap<String,WikiTemplate>();
 		mExpiration = System.currentTimeMillis() + TTL;
 	}
 	
-	public String getTemplate(OperationContext octxt, String name) throws ServiceException, IOException {
-		String template = mTemplateMap.get(name);
+	public WikiTemplate getTemplate(OperationContext octxt, String name) throws ServiceException, IOException {
+		WikiTemplate template = mTemplateMap.get(name);
 		if (template != null)
 			return template;
 		
@@ -94,16 +95,18 @@ public class WikiTemplateStore {
 		
 		if (ww != null) {
 			Document item = ww.getWikiItem(octxt);
-			template = new String(ByteUtil.getContent(item.getRawDocument(), 0), "UTF-8");
+			template = new WikiTemplate(new String(ByteUtil.getContent(item.getRawDocument(), 0), "UTF-8"));
 			mTemplateMap.put(name, template);
 			return template;
 		}
 		
-		Mailbox mbox = Mailbox.getMailboxByAccountId(wiki.getWikiAccount());
-		Folder f = mbox.getFolderById(octxt, mFolderId);
-		int parentId = f.getFolderId();  // mountpoint should return its logical parent.
+		if (mParentFolderId == 0) {
+			Mailbox mbox = Mailbox.getMailboxByAccountId(wiki.getWikiAccount());
+			Folder f = mbox.getFolderById(octxt, mFolderId);
+			mParentFolderId = f.getFolderId();  // mountpoint should return its logical parent.
+		}
 		
-		WikiTemplateStore parentStore = WikiTemplateStore.getInstance(mAccount, parentId);
+		WikiTemplateStore parentStore = WikiTemplateStore.getInstance(mAccount, mParentFolderId);
 		return parentStore.getTemplate(octxt, name);
 	}
 }

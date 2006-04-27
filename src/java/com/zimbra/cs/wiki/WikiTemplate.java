@@ -97,7 +97,10 @@ public class WikiTemplate {
 			w = sWIKLETS.get(firstTok);
 		}
 		if (w != null) {
+			//long t0 = System.currentTimeMillis();
 			String ret = w.apply(ctxt, tokenStr);
+			//long t1 = System.currentTimeMillis() - t0;
+	        //com.zimbra.cs.util.ZimbraLog.wiki.info("Applying Wiklet " + w.getName() + " : " + t1 + "ms");
 			List<Token> tokens = new ArrayList<Token>();
 			Token.parse(ret, tokens);
 			StringBuffer buf = new StringBuffer();
@@ -503,8 +506,7 @@ public class WikiTemplate {
 			if (page.startsWith("_")) {
 				// XXX this is how templates are named.
 		    	WikiTemplateStore wiki = WikiTemplateStore.getInstance(ctxt.item);
-		    	String tstr = wiki.getTemplate(ctxt.octxt, page);
-		    	template = new WikiTemplate(tstr);
+		    	template = wiki.getTemplate(ctxt.octxt, page);
 			} else {
 				Wiki wiki = Wiki.getInstance(ctxt.item.getMailbox().getAccount().getName(), ctxt.item.getFolderId());
 				WikiWord ww = wiki.lookupWiki(page);
