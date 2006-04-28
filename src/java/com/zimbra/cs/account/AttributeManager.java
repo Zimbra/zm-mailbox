@@ -27,6 +27,7 @@ package com.zimbra.cs.account;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -46,6 +47,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.naming.NameClassPair;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.BasicAttribute;
+import javax.naming.directory.DirContext;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -61,7 +69,10 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -184,7 +195,7 @@ public class AttributeManager {
             }
         }
         if (groupId == 2) {
-            error(null, file, A_GROUP_ID + " is not valid (used by ZimbraObjectClass");
+            error(null, file, A_GROUP_ID + " is not valid (used by ZimbraObjectClass)");
         } else if (groupId > 0) {
             if (mGroupMap.containsKey(groupId)) {
                 error(null, file, "duplicate group id: " + groupId);
@@ -475,9 +486,9 @@ public class AttributeManager {
         return cl;
     }
 
-    private enum Action { generateLdapSchema, generateGlobalConfigLdif, generateDefaultCOSLdif }
+    private enum Action { generateLdapSchema, generateGlobalConfigLdif, generateDefaultCOSLdif, dumpSchema }
     
-    public static void main(String[] args) throws IOException, DocumentException {
+    public static void main(String[] args) throws IOException, DocumentException, ServiceException {
         Zimbra.toolSetup();
         CommandLine cl = parseArgs(args);
 
@@ -517,6 +528,8 @@ public class AttributeManager {
             }
             am.generateLdapSchema(pw, cl.getOptionValue('t'));
             break;
+        case dumpSchema:
+            dumpSchema(pw);
         }
         
         pw.close();
@@ -610,7 +623,9 @@ public class AttributeManager {
         }
     }
 
-    private void generateLdapSchema(PrintWriter pw, String template) {
+    private void generateLdapSchema(PrintWriter pw, String schemaTemplateFile) throws IOException {
+        byte[] templateBytes = ByteUtil.getContent(new File(schemaTemplateFile));
+        String templateString = new String(templateBytes, "utf-8");
         
         StringBuilder GROUP_OIDS = new StringBuilder();
         StringBuilder ATTRIBUTE_OIDS = new StringBuilder();
@@ -622,7 +637,6 @@ public class AttributeManager {
             //GROUP_OIDS
             GROUP_OIDS.append("objectIdentifier " + mGroupMap.get(i) + " ZimbraLDAP:" + i + "\n");
 
-
             // List all attrs which we define and which belong in this group
             List<AttributeInfo> list = new ArrayList<AttributeInfo>(mAttrs.size());
             for (AttributeInfo ai : mAttrs.values()) {
@@ -631,7 +645,7 @@ public class AttributeManager {
                 }
             }
             
-            // ATTRIBUTE_OIDS
+            // ATTRIBUTE_OIDS - sorted by OID
             Collections.sort(list, new Comparator<AttributeInfo>() {
                 public int compare(AttributeInfo a1, AttributeInfo b1) {
                     return a1.getId() - b1.getId();
@@ -642,6 +656,7 @@ public class AttributeManager {
             }
 
             // ATTRIBUTE_DEFINITIONS: DESC EQUALITY NAME ORDERING SINGLE-VALUE SUBSTR SYNTAX
+            // - sorted by name
             Collections.sort(list, new Comparator<AttributeInfo>() {
                 public int compare(AttributeInfo a1, AttributeInfo b1) {
                     return a1.getName().compareTo(b1.getName());
@@ -650,7 +665,7 @@ public class AttributeManager {
             for (AttributeInfo ai : list) {
                 ATTRIBUTE_DEFINITIONS.append("attributetype ( " + ai.getName() + "\n");
                 ATTRIBUTE_DEFINITIONS.append("\tNAME ( '" + ai.getName() + "' )\n");
-                ATTRIBUTE_DEFINITIONS.append("\tDESC ( '" + ai.getDescription() + "'\n");
+                ATTRIBUTE_DEFINITIONS.append("\tDESC '" + ai.getDescription() + "'\n");
                 String syntax = null, substr = null, equality = null, ordering = null; 
                 switch (ai.getType()) {
                 case TYPE_BOOLEAN:
@@ -678,8 +693,12 @@ public class AttributeManager {
                     
                 case TYPE_STRING:
                 case TYPE_REGEX:
-                    syntax = "1.3.6.1.4.1.1466.115.121.1.15{" + ai.getMax() + "}";
-                    equality = "caseIgnoreIA5Match";
+                    String length = "";
+                    if (ai.getMax() != Long.MAX_VALUE) {
+                        length = "{" + ai.getMax() + "}";
+                    }
+                    syntax = "1.3.6.1.4.1.1466.115.121.1.15" + length;
+                    equality = "caseIgnoreMatch";
                     substr = "caseIgnoreSubstringsMatch";
                 }
 
@@ -699,8 +718,112 @@ public class AttributeManager {
                 ATTRIBUTE_DEFINITIONS.append(")\n\n");
             }
         }
-        pw.println(GROUP_OIDS); // TODO
-        pw.println(ATTRIBUTE_OIDS); // TODO
-        pw.println(ATTRIBUTE_DEFINITIONS); // TODO
+        
+        Map<String,String> templateFillers = new HashMap<String,String>();
+        templateFillers.put("GROUP_OIDS", GROUP_OIDS.toString());
+        templateFillers.put("ATTRIBUTE_OIDS", ATTRIBUTE_OIDS.toString());
+        templateFillers.put("ATTRIBUTE_DEFINITIONS", ATTRIBUTE_DEFINITIONS.toString());
+        
+        for (AttributeClass cls : AttributeClass.values()) {
+            String key = "CLASS_MEMBERS_" + cls.toString().toUpperCase();
+            
+            List<String> must = new LinkedList<String>();
+            List<String> may = new LinkedList<String>();
+            for (AttributeInfo ai : mAttrs.values()) {
+                if (ai.requiredInClass(cls)) {
+                    must.add(ai.getName());
+                }
+                if (ai.optionalInClass(cls)) {
+                    may.add(ai.getName());
+                }
+            }
+            Collections.sort(must);
+            Collections.sort(may);
+            
+            StringBuilder value = new StringBuilder();
+            if (!must.isEmpty()) {
+                value.append("\tMUST (\n");
+                Iterator<String> mustIter = must.iterator();
+                while (true) {
+                    value.append("\t\t").append(mustIter.next());
+                    if (!mustIter.hasNext()) {
+                        break;
+                    }
+                    value.append(" $\n");
+                }
+                value.append("\n\t)\n");
+            }
+            if (!may.isEmpty()) {
+                value.append("\tMAY (\n");
+                Iterator<String> mayIter = may.iterator();
+                while (true) {
+                    value.append("\t\t").append(mayIter.next());
+                    if (!mayIter.hasNext()) {
+                        break;
+                    }
+                    value.append(" $\n");
+                }
+                value.append("\n\t)\n");
+            }
+            value.append('\t');
+            templateFillers.put(key, value.toString());
+        }
+
+        pw.print(StringUtil.fillTemplate(templateString, templateFillers));
+    }
+    
+    private static String sortCSL(String in) {
+        String[] ss = in.split("\\s*,\\s*");
+        Arrays.sort(ss);
+        StringBuilder sb = new StringBuilder(in.length());
+        for (int i = 0; i < ss.length; i++) {
+            sb.append(ss[i]);
+            if (i < (ss.length-1)) {
+                sb.append(", ");
+            }
+        }
+        return sb.toString();
+    }
+
+    private static void dumpSchemaItem(PrintWriter pw, String schemaItem, DirContext schema) throws NamingException {
+        NamingEnumeration<NameClassPair> iter = schema.list(schemaItem);
+        List<String> items = new LinkedList<String>();
+        while (iter.hasMore()) {
+            items.add(iter.next().getName());
+        }
+        Collections.sort(items);
+
+        for (String item : items) {
+            DirContext dc = (DirContext) schema.lookup(schemaItem + "/" + item);  
+            Attributes attrs = dc.getAttributes("");
+            NamingEnumeration<javax.naming.directory.Attribute> attrIter = (NamingEnumeration<javax.naming.directory.Attribute>)attrs.getAll();
+            while (attrIter.hasMore()) {
+                javax.naming.directory.Attribute attr = attrIter.next();
+                String s = attr.toString();
+                if (s.startsWith("MAY: ")) {
+                    s = "MAY: " + sortCSL(s.substring("MAY: ".length()));
+                } else if (s.startsWith("MUST: ")) {
+                    s = "MUST: " + sortCSL(s.substring("MUST: ".length()));
+                }
+                pw.println(schemaItem + ": " + item + ": " + s);
+            }
+        }
+    }
+    
+    private static void dumpSchema(PrintWriter pw) throws ServiceException {
+        DirContext dc = null;
+        try {
+          dc = LdapUtil.getDirContext(true);
+          DirContext schema = dc.getSchema(""); //ClassDefinition/zimbraAccount");
+
+          NamingEnumeration<NameClassPair> schIter = schema.list("");
+          while (schIter.hasMore()) {
+              dumpSchemaItem(pw, schIter.next().getName(), schema);
+          }
+        } catch (NamingException ne) {
+            ne.printStackTrace();
+        } finally {
+            LdapUtil.closeContext(dc);
+        }
     }
 }

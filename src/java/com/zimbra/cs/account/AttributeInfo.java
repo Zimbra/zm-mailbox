@@ -292,6 +292,14 @@ public class AttributeInfo {
        return mMax;
    }
    
+   boolean requiredInClass(AttributeClass cls) {
+       return mRequiredInClasses != null && mRequiredInClasses.contains(cls);
+   }
+
+   boolean optionalInClass(AttributeClass cls) {
+       return mOptionalInClasses != null && mOptionalInClasses.contains(cls);
+   }
+
    AttributeCardinality getCardinality() {
        return mCardinality;
    }
