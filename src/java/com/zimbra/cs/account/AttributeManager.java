@@ -51,7 +51,6 @@ import javax.naming.NameClassPair;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
-import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.DirContext;
 
 import org.apache.commons.cli.CommandLine;
@@ -486,27 +485,13 @@ public class AttributeManager {
         return cl;
     }
 
-    private enum Action { generateLdapSchema, generateGlobalConfigLdif, generateDefaultCOSLdif, dumpSchema }
+    private enum Action { generateLdapSchema, generateGlobalConfigLdif, generateDefaultCOSLdif, dump }
     
     public static void main(String[] args) throws IOException, DocumentException, ServiceException {
         Zimbra.toolSetup();
         CommandLine cl = parseArgs(args);
 
-        if (!cl.hasOption('i')) usage("no input attribute xml files specified");
         if (!cl.hasOption('a')) usage("no action specified");
-        
-        AttributeManager am = new AttributeManager(cl.getOptionValues('i'));
-        if (am.hasErrors()) {
-            ZimbraLog.misc.warn(am.getErrors());
-            System.exit(1);
-        }
-        
-        OutputStream os = System.out;
-        if (cl.hasOption('o')) {
-            os = new FileOutputStream(cl.getOptionValue('o'));
-        }
-        PrintWriter pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf8")));
-
         String actionStr = cl.getOptionValue('a');
         Action action = null;
         try {
@@ -515,6 +500,22 @@ public class AttributeManager {
             usage("unknown action: " + actionStr);
         }
 
+        AttributeManager am = null;
+        if (action != Action.dump) {
+            if (!cl.hasOption('i')) usage("no input attribute xml files specified");
+            am = new AttributeManager(cl.getOptionValues('i'));
+            if (am.hasErrors()) {
+                ZimbraLog.misc.warn(am.getErrors());
+                System.exit(1);
+            }
+        }
+        
+        OutputStream os = System.out;
+        if (cl.hasOption('o')) {
+            os = new FileOutputStream(cl.getOptionValue('o'));
+        }
+        PrintWriter pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf8")));
+        
         switch (action) {
         case generateDefaultCOSLdif:
             am.generateDefaultCOSLdif(pw);
@@ -528,10 +529,11 @@ public class AttributeManager {
             }
             am.generateLdapSchema(pw, cl.getOptionValue('t'));
             break;
-        case dumpSchema:
+        case dump:
             dumpSchema(pw);
+            break;
         }
-        
+
         pw.close();
     }
 
@@ -785,27 +787,27 @@ public class AttributeManager {
         return sb.toString();
     }
 
-    private static void dumpSchemaItem(PrintWriter pw, String schemaItem, DirContext schema) throws NamingException {
-        NamingEnumeration<NameClassPair> iter = schema.list(schemaItem);
-        List<String> items = new LinkedList<String>();
-        while (iter.hasMore()) {
-            items.add(iter.next().getName());
+    private static void dumpAttrs(PrintWriter pw, String name, Attributes attrs) throws NamingException {
+        NamingEnumeration<javax.naming.directory.Attribute> attrIter = (NamingEnumeration<javax.naming.directory.Attribute>)attrs.getAll();
+        List<javax.naming.directory.Attribute> attrsList = new LinkedList<javax.naming.directory.Attribute>();
+        while (attrIter.hasMore()) {
+            attrsList.add(attrIter.next());
         }
-        Collections.sort(items);
-
-        for (String item : items) {
-            DirContext dc = (DirContext) schema.lookup(schemaItem + "/" + item);  
-            Attributes attrs = dc.getAttributes("");
-            NamingEnumeration<javax.naming.directory.Attribute> attrIter = (NamingEnumeration<javax.naming.directory.Attribute>)attrs.getAll();
-            while (attrIter.hasMore()) {
-                javax.naming.directory.Attribute attr = attrIter.next();
-                String s = attr.toString();
-                if (s.startsWith("MAY: ")) {
-                    s = "MAY: " + sortCSL(s.substring("MAY: ".length()));
-                } else if (s.startsWith("MUST: ")) {
-                    s = "MUST: " + sortCSL(s.substring("MUST: ".length()));
-                }
-                pw.println(schemaItem + ": " + item + ": " + s);
+        Collections.sort(attrsList, new Comparator<javax.naming.directory.Attribute>() {
+            public int compare(javax.naming.directory.Attribute a1, javax.naming.directory.Attribute b1) {
+                return a1.getID().compareTo(b1.getID());
+            }
+        });
+        for (javax.naming.directory.Attribute attr : attrsList) {
+            String s = attr.toString();
+            NamingEnumeration valIter = attr.getAll();
+            List<String> values = new LinkedList<String>();
+            while (valIter.hasMore()) {
+                values.add((String)valIter.next());
+            }
+            Collections.sort(values);
+            for (String val : values) {
+                pw.println(name + ": " + attr.getID() + ": " + val);
             }
         }
     }
@@ -814,12 +816,27 @@ public class AttributeManager {
         DirContext dc = null;
         try {
           dc = LdapUtil.getDirContext(true);
-          DirContext schema = dc.getSchema(""); //ClassDefinition/zimbraAccount");
+          DirContext schema = dc.getSchema("");
 
-          NamingEnumeration<NameClassPair> schIter = schema.list("");
-          while (schIter.hasMore()) {
-              dumpSchemaItem(pw, schIter.next().getName(), schema);
+          // Enumerate over ClassDefinition, AttributeDefinition, MatchingRule, SyntaxDefinition
+          NamingEnumeration<NameClassPair> schemaTypeIter = schema.list("");
+          while (schemaTypeIter.hasMore()) {
+              String schemaType = schemaTypeIter.next().getName();
+              NamingEnumeration<NameClassPair> schemaEntryIter = schema.list(schemaType);
+              List<String> schemaEntries = new LinkedList<String>();
+              while (schemaEntryIter.hasMore()) {
+                  schemaEntries.add(schemaEntryIter.next().getName());
+              }
+              Collections.sort(schemaEntries);
+
+              for (String schemaEntry : schemaEntries) {
+                  DirContext sdc = (DirContext) schema.lookup(schemaType + "/" + schemaEntry);  
+                  dumpAttrs(pw, schemaType + ": " + schemaEntry, sdc.getAttributes(""));
+              }
           }
+
+          dumpAttrs(pw, "GlobalConfig", dc.getAttributes("cn=config,cn=zimbra"));
+          dumpAttrs(pw, "DefaultCOS", dc.getAttributes("cn=default,cn=cos,cn=zimbra"));
         } catch (NamingException ne) {
             ne.printStackTrace();
         } finally {
