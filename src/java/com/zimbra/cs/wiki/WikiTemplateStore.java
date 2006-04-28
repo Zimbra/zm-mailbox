@@ -64,7 +64,7 @@ public class WikiTemplateStore {
 		}
 		if (store == null) {
 			store = new WikiTemplateStore(key);
-			sTemplates.put(key, store);
+			//sTemplates.put(key, store);
 		}
 		
 		return store;
