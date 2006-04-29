@@ -204,7 +204,7 @@ NOTE: SearchAccountsRequest is deprecated. See SearchDirectoryRequest.
   <alias name="{name}" id="{id}">
     <a n="...">...</a>+  
   </alias>
-  <dl name="{name}" id="{id}">
+  <dl name="{name}" id="{id} isgroup="0|1">  
     <a n="...">...</a>+  
   </dl>
 </SearchAccountsResponse>
@@ -242,7 +242,7 @@ Access: domain admin sufficient (a domain admin can't specify "domains" as a typ
   <alias name="{name}" id="{id}">
     <a n="...">...</a>+  
   </alias>
-  <dl name="{name}" id="{id}">
+  <dl name="{name}" id="{id} isgroup="0|1">
     <a n="...">...</a>+  
   </dl>
   <domain name="{name}" id="{id}">

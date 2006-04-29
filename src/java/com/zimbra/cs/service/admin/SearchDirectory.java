@@ -146,7 +146,8 @@ public class SearchDirectory extends AdminDocumentHandler {
     static void doDistributionList(Element e, DistributionList list) throws ServiceException {
         Element elist = e.addElement(AdminService.E_DL);
         elist.addAttribute(AdminService.A_NAME, list.getName());
-        elist.addAttribute(AdminService.A_ID, list.getId());        
+        elist.addAttribute(AdminService.A_ID, list.getId());
+        elist.addAttribute(AdminService.A_ISGROUP, list.isSecurityGroup());
         Map attrs = list.getAttrs();
         doAttrs(elist, attrs);
     }
