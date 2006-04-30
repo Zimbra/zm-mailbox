@@ -65,7 +65,7 @@ public class LocalConfig {
         return mConfigFile;
     }
 
-    private Map mConfiguredKeys = new HashMap(); 
+    private Map<String, String> mConfiguredKeys = new HashMap<String, String>(); 
 
     void set(String key, String value) 
     {
@@ -75,7 +75,7 @@ public class LocalConfig {
     private String getRaw(String key) 
     {
         if (mConfiguredKeys.containsKey(key))
-            return (String)mConfiguredKeys.get(key);
+            return mConfiguredKeys.get(key);
         
         if (KnownKey.isKnown(key))
             return KnownKey.getDefaultValue(key);
@@ -83,8 +83,8 @@ public class LocalConfig {
         return null;
     }
 
-    private boolean expandOnce(StringBuffer value, Set seenKeys) throws ConfigException {
-        int len = value.length();
+    private boolean expandOnce(StringBuffer value, Set<String> seenKeys) throws ConfigException {
+//        int len = value.length();
 
         int begin = value.indexOf("${");
         if (begin == -1) {
@@ -101,26 +101,23 @@ public class LocalConfig {
         if (seenKeys.contains(key)) {
             StringBuffer sb = new StringBuffer(128);
             sb.append("recursive expansion of key '" + key + "':");
-            for (Iterator iter = seenKeys.iterator(); iter.hasNext();) {
-                String seen = (String)iter.next();
+            for (String seen : seenKeys)
                 sb.append(" ").append(seen);
-            }
             throw new ConfigException(sb.toString());
         }
         
         seenKeys.add(key);
         
         String replacement = getRaw(key);
-        if (replacement == null) {
+        if (replacement == null)
             throw new ConfigException("null valued key '" + key + "' referenced");
-        }
         value.replace(begin, end+1, replacement);
         
         return true;
     }
 
     private String expand(String key, String rawValue) throws ConfigException {
-        Set seenKeys = new HashSet();
+        Set<String> seenKeys = new HashSet<String>();
         seenKeys.add(key);
         StringBuffer result = new StringBuffer(rawValue);
         while (expandOnce(result, seenKeys));
@@ -129,9 +126,8 @@ public class LocalConfig {
 
     String get(String key) throws ConfigException {
         String raw = getRaw(key);
-        if (raw == null) {
+        if (raw == null)
             return null;
-        }
         return expand(key, raw);
     }
     
@@ -140,8 +136,7 @@ public class LocalConfig {
     //
     void save() throws IOException, ConfigException {
         ConfigWriter xmlWriter = ConfigWriter.getInstance("xml", false, false);
-        for (Iterator iter = mConfiguredKeys.keySet().iterator(); iter.hasNext();) {
-            String key = (String)iter.next();
+        for (String key : mConfiguredKeys.keySet()) {
             String value = getRaw(key);
             xmlWriter.add(key, value);
         }
@@ -169,14 +164,13 @@ public class LocalConfig {
             Document document = reader.read(cf);
             Element root = document.getRootElement();
             
-            if (!root.getName().equals(E_LOCALCONFIG)) {
+            if (!root.getName().equals(E_LOCALCONFIG))
                 throw new DocumentException("config file " + mConfigFile + " root tag is not " + E_LOCALCONFIG);
-            }
-            
-            for (Iterator iter = root.elementIterator(E_KEY); iter.hasNext();) {
+
+            for (Iterator iter = root.elementIterator(E_KEY); iter.hasNext(); ) {
                 Element ekey = (Element) iter.next();
                 String key = ekey.attributeValue(A_NAME);
-                String value = (String) ekey.elementText(E_VALUE);
+                String value = ekey.elementText(E_VALUE);
                 set(key, value);
             }
         } else {
@@ -216,7 +210,7 @@ public class LocalConfig {
 
     void printChanged(OutputStream out, ConfigWriter writer, String[] keys) throws ConfigException, IOException {
         if (keys.length == 0) {
-            keys = (String[])mConfiguredKeys.keySet().toArray(new String[0]);
+            keys = mConfiguredKeys.keySet().toArray(new String[0]);
             Arrays.sort(keys);
         }
         for (int i = 0; i < keys.length; i++) {
@@ -266,20 +260,18 @@ public class LocalConfig {
      * Return all keys - known or otherwise.
      */
     String[] allKeys() {
-        Set union = new HashSet();
+        Set<String> union = new HashSet<String>();
         
         // Add known keys.
         String[] knownKeys = KnownKey.getAll();
-        for (int i = 0; i < knownKeys.length; i++) {
+        for (int i = 0; i < knownKeys.length; i++)
             union.add(knownKeys[i]);
-        }
         
         // Add set keys (this might contain unknown keys)
-        for (Iterator iter = mConfiguredKeys.keySet().iterator(); iter.hasNext();) {
-            union.add((String)iter.next());
-        }
+        for (String key : mConfiguredKeys.keySet())
+            union.add(key);
         
-        return (String[])union.toArray(new String[0]);
+        return union.toArray(new String[0]);
     }
     
     void print(OutputStream out, ConfigWriter writer, String[] keys) throws IOException, ConfigException {
@@ -341,10 +333,8 @@ public class LocalConfig {
             value = expand(key, value);
         }
 
-        for (Iterator iter = mConfiguredKeys.keySet().iterator(); iter.hasNext();) {
-            String key = (String)iter.next();
-            String value = get(key);
-        }
+        for (String key : mConfiguredKeys.keySet())
+            get(key);
     }
 
     //
