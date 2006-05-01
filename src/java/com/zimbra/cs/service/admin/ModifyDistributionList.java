@@ -61,9 +61,9 @@ public class ModifyDistributionList extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access dl");
 
         if (isgroup != null) {
-            if (!isgroup.equals("0") || !isgroup.equals("1"))
+            if (!isgroup.equals("0") && !isgroup.equals("1"))
                 throw ServiceException.INVALID_REQUEST("isgroup must be 0 or 1", null);
-            distributionList.setSecurityGroup(isgroup.endsWith("1"));
+            distributionList.setSecurityGroup(isgroup.equals("1"));
         }
         // pass in true to checkImmutable
         distributionList.modifyAttrs(attrs, true);
