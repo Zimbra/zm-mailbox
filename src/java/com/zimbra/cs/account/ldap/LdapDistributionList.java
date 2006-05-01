@@ -79,17 +79,20 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         String groupId = getGroupId();
 
         if (updateOC) {
-            HashMap attrs = new HashMap();
+            HashMap<String, Object> attrs = new HashMap<String, Object>();
             attrs.put((enabled ? "+" : "-")+Provisioning.A_objectClass, Provisioning.OC_zimbraSecurityGroup);
             if (!enabled) {
                 attrs.put(Provisioning.A_zimbraMemberOf, "");
-                attrs.put(Provisioning.A_zimbraGroupId, "");
                 modifyAttrs(attrs);                
             } else {
                 // need to do a search for all DLs this DL is on that are also security groups, and update
                 // our zimbraMemberOf attr with their zimbraIds
-                groupId = UUID.randomUUID().toString();
-                attrs.put(Provisioning.A_zimbraGroupId, groupId);
+                // assign one only if we don't have one
+                String gid = getAttr(Provisioning.A_zimbraGroupId);
+                if (gid == null) {
+                    groupId = UUID.randomUUID().toString();
+                    attrs.put(Provisioning.A_zimbraGroupId, groupId);
+                }
                 modifyAttrs(attrs);                
                 String addrs[] = LdapProvisioning.getAllAddrsForDistributionList(this);
                 List<DistributionList> lists = Provisioning.getInstance().getAllDistributionListsForAddresses(addrs);

@@ -238,7 +238,7 @@ TURNING A DL GROUP capability on/off
 
 When enabling a DL as a group there are three things that need to be done:
 
-  1. add the zimbraSecurityGroup object class to the DL and assign it a new zimbraGroupId
+  1. add the zimbraSecurityGroup object class to the DL and assign it a new zimbraGroupId (if it doesn't have one)
 
   2. update the DL's zimbraMemberOf attr for each DL it is in that is also a group.
 
@@ -246,7 +246,7 @@ When enabling a DL as a group there are three things that need to be done:
 
 When disabling a DL as a group:
 
-  1. remove zimbraSecurityGroup object class, zimbraGroupId attr, and all zibraMemberOf attrs
+  1. remove zimbraSecurityGroup object class, and all zibraMemberOf attrs
 
   2. for all members in the DL local to Zimbra, update their zimbraMemberOf attr
 
@@ -279,10 +279,6 @@ due to groups being included in gropus):
     
 NOTES
 =======================
-
-Toggle a group on/off
----------------------
-Everytime you turn group support on for a DL, a new zimbraGroupId is assigned to it
 
 Remote Users
 ------------
