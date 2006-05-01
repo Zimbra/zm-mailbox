@@ -36,7 +36,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
@@ -88,43 +87,41 @@ public class ACL {
     	// useful fields
         public String getId() { return GUID_PUBLIC; }
         public String getUid() { return "public"; }
-        public boolean isCorrectHost() throws ServiceException { return true; }
+        public boolean isCorrectHost() { return true; }
         
         // empty fields
         public String getAttr(String name) { return null; }
         public String[] getMultiAttr(String name) { return null; }    
         public String getAttr(String name, String defaultValue) { return defaultValue; }
         public Set getMultiAttrSet(String name) { return null; }
-        public Map getAttrs() throws ServiceException { return null; }
-        public void modifyAttrs(Map attrs) throws ServiceException { return; }
-        public void modifyAttrs(Map attrs, boolean checkImmutable) throws ServiceException { return; }
+        public Map getAttrs() { return null; }
+        public void modifyAttrs(Map attrs) { return; }
+        public void modifyAttrs(Map attrs, boolean checkImmutable) { return; }
         public boolean getBooleanAttr(String name, boolean defaultValue) { return defaultValue; }
-        public void setBooleanAttr(String name, boolean value) throws ServiceException { return; }
+        public void setBooleanAttr(String name, boolean value) { return; }
         public int getIntAttr(String name, int defaultValue) { return 0; }
         public long getLongAttr(String name, long defaultValue) { return 0; }
-        public long getTimeInterval(String name, long defaultValue) throws AccountServiceException { return defaultValue; }
+        public long getTimeInterval(String name, long defaultValue) { return defaultValue; }
         public Date getGeneralizedTimeAttr(String name, Date defaultValue) { return defaultValue; }
-        public void reload() throws ServiceException { return; }
+        public void reload() { return; }
         public void setCachedData(Object key, Object value) { return; }
         public Object getCachedData(Object key) { return null; }
-        public Locale getLocale() throws ServiceException  { return null; }
+        public Locale getLocale()  { return null; }
         public String getName() { return null; }
         public String getDomainName() { return null; }
-        public Domain getDomain() throws ServiceException { return null; }
+        public Domain getDomain() { return null; }
         public String getAccountStatus() { return null; }
-        public Map getAttrs(boolean prefsOnly, boolean applyCos) throws ServiceException { return null; }
-        public Cos getCOS() throws ServiceException { return null; }
-        public String[] getAliases() throws ServiceException { return null; }
-        public boolean inGroup(String zimbraGroupId) throws ServiceException { return false; }
-        public Set<String> getGroups() throws ServiceException { return null; }
-        public Server getServer() throws ServiceException { return null; }
-        public ICalTimeZone getTimeZone() throws ServiceException { return null; }
-        public CalendarUserType getCalendarUserType() throws ServiceException { return null; }
-        public boolean saveToSent() throws ServiceException { return false; }
-        public List<DistributionList> getDistributionLists(boolean directOnly, Map<String, String> via) throws ServiceException { return null; }
-        public int compareTo(Object o) {
-                return 0;
-        }
+        public Map getAttrs(boolean prefsOnly, boolean applyCos) { return null; }
+        public Cos getCOS() { return null; }
+        public String[] getAliases() { return null; }
+        public boolean inGroup(String zimbraGroupId) { return false; }
+        public Set<String> getGroups() { return null; }
+        public Server getServer() { return null; }
+        public ICalTimeZone getTimeZone() { return null; }
+        public CalendarUserType getCalendarUserType() { return null; }
+        public boolean saveToSent() { return false; }
+        public List<DistributionList> getDistributionLists(boolean directOnly, Map<String, String> via) { return null; }
+        public int compareTo(Object o) { return 0; }
     }
     public static class Grant {
         /** The zimbraId of the entry being granted rights. */
