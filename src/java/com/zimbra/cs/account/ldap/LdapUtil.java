@@ -30,6 +30,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -490,15 +491,15 @@ public class LdapUtil {
     }
     
     /**
-     * modifies the specified entry. attrs should be a map consisting of keys that are Strings, and values that are
-     * either: null (in which case the attr is removed), a String (in which case the attr is modified), or a String[],
-     * (in which case a multi-valued attr is updated).
-     * @param ctxt
-     * @param dn
-     * @param attrs
-     * @param currentAttrs
-     * @throws NamingException
-     * @throws ServiceException 
+     * Modifies the specified entry.  <code>attrs</code> is a <code>Map</code> consisting of
+     * keys that are <code>String</code>s, and values that are either
+     * <ul>
+     *   <li><code>null</code>, in which case the attr is removed</li>
+     *   <li>a single <code>Object</code>, in which case the attr is modified
+     *     based on the object's <code>toString()</code> value</li>
+     *   <li>an <code>Object</code> array or <code>Collection</code>,
+     *     in which case a multi-valued attr is updated</li>
+     * </ul>
      */
     public static void modifyAttrs(DirContext ctxt, String dn, Map attrs, Attributes currentAttrs) throws NamingException, ServiceException {
         ArrayList<ModificationItem> modlist = new ArrayList<ModificationItem>();
@@ -516,28 +517,47 @@ public class LdapUtil {
                     throw ServiceException.INVALID_REQUEST("can't mix +attrName/-attrName with attrName", null);
             }
 
-            if (v == null || v instanceof String) {
-                if (doAdd) addAttr(modlist, key, (String)v, currentAttrs);
-                else if (doRemove) removeAttr(modlist, key, (String)v, currentAttrs);
-                else modifyAttr(modlist, key, (String)v, currentAttrs);
-            } else if (v instanceof String[]) {
-                String[] sa = (String[]) v;
-                if (sa.length == 0) {
+            // Convert array to List so it can be treated as a Collection
+            if (v instanceof Object[]) {
+                // Note: Object[] cast is required, so that asList() knows to create a List
+                // that contains the contents of the object array, as opposed to a List with one
+                // element, which is the entire Object[].  Ick.
+                v = Arrays.asList((Object[]) v);
+            }
+            
+            if (v instanceof Collection) {
+                Collection c = (Collection) v;
+                if (c.size() == 0) {
                     // make sure it exists
                     if (currentAttrs.get(key) != null) {
                         BasicAttribute ba = new BasicAttribute(key);
                         modlist.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));
                     }
                 } else {
+                    // Convert values Collection to a String array
+                    String[] sa = new String[c.size()];
+                    int i = 0;
+                    for (Object o : c) {
+                        sa[i++] = (o == null ? null : o.toString());
+                    }
+                    
+                    // Add attrs
                     if (doAdd) addAttr(modlist, key, sa, currentAttrs);
                     else if (doRemove) removeAttr(modlist, key, sa, currentAttrs);
                     else {
                         BasicAttribute ba = new BasicAttribute(key);
-                        for (int i=0; i < sa.length; i++)
-                                ba.add(sa[i]);
+                        for (i=0; i < sa.length; i++)
+                            ba.add(sa[i]);
                         modlist.add(new ModificationItem(DirContext.REPLACE_ATTRIBUTE, ba));
                     }
                 }
+            } else if (v instanceof Map) {
+                throw ServiceException.FAILURE("Map is not a supported value type", null);
+            } else {
+                String s = (v == null ? null : v.toString());
+                if (doAdd) addAttr(modlist, key, s, currentAttrs);
+                else if (doRemove) removeAttr(modlist, key, s, currentAttrs);
+                else modifyAttr(modlist, key, s, currentAttrs);
             }
         }
         ModificationItem[] mods = new ModificationItem[modlist.size()];

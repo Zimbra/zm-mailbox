@@ -35,8 +35,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.NamingException;
-
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -61,28 +59,31 @@ public interface Entry {
 
     public Map getAttrs() throws ServiceException;
     
-
     /**
-     * modifies the specified attrs. attrs should be a map consisting of keys that are Strings, and values that are
-     * either: null (in which case the attr is removed), a String (in which case the attr is modified), or a String[],
-     * (in which case a multi-valued attr is updated).
+     * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
+     * keys that are <code>String</code>s, and values that are either
+     * <ul>
+     *   <li><code>null</code>, in which case the attr is removed</li>
+     *   <li>a single <code>Object</code>, in which case the attr is modified
+     *     based on the object's <code>toString()</code> value</li>
+     *   <li>an <code>Object</code> array or <code>Collection</code>,
+     *     in which case a multi-valued attr is updated</li>
+     * </ul>
      * 
-     * calls modifyAttrs(attrs, false). 
-     * 
-     * @param attrs
-     * @throws NamingException
+     * Calls {@link #modifyAttrs(Map, boolean)} with <code>checkImmutable=false</code>.
      */
     public void modifyAttrs(Map attrs) throws ServiceException;
     
-
     /**
-     * modifies the specified attrs. attrs should be a map consisting of keys that are Strings, and values that are
-     * either: null (in which case the attr is removed), a String (in which case the attr is modified), or a String[],
-     * (in which case a multi-valued attr is updated).
-     * @param attrs 
-     * @param checkImmutable if set to true, don't allow attributes marked as immutable to be modified.
-     * @throws NamingException
-     * 
+     * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
+     * keys that are <code>String</code>s, and values that are either
+     * <ul>
+     *   <li><code>null</code>, in which case the attr is removed</li>
+     *   <li>a single <code>Object</code>, in which case the attr is modified
+     *     based on the object's <code>toString()</code> value</li>
+     *   <li>an <code>Object</code> array or <code>Collection</code>,
+     *     in which case a multi-valued attr is updated</li>
+     * </ul>
      */
     public void modifyAttrs(Map attrs, boolean checkImmutable) throws ServiceException;
 

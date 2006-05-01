@@ -121,16 +121,10 @@ public class LdapEntry implements Entry {
     }
 
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Account#modifyAccount(java.util.Map)
-     */
     public void modifyAttrs(Map attrs) throws ServiceException {
         modifyAttrs(attrs, false);
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Account#modifyAccount(java.util.Map)
-     */
     public void modifyAttrs(Map attrs, boolean checkImmutable) throws ServiceException {
         HashMap context = new HashMap();
         AttributeManager.getInstance().preModify(attrs, this, context, false, checkImmutable);
@@ -139,12 +133,6 @@ public class LdapEntry implements Entry {
     }
 
   
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Account#modifyAccount(java.util.Map)
-     */
-    private void modifyAttrsInternal(Map attrs) throws ServiceException {
-        modifyAttrsInternal(null, attrs);
-    }
     /**
      * should only be called internally.
      * 
