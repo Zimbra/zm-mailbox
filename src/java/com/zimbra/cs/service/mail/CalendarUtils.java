@@ -37,7 +37,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.WellKnownTimeZone;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -50,6 +49,7 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
+import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -131,8 +131,7 @@ public class CalendarUtils {
             create.setRecurId(recurId);
         } else {
             if (inviteElem.getOptionalElement("exceptId") != null) {
-                throw MailServiceException.INVALID_REQUEST(
-                        "May not specify an <exceptId> in this request", null);
+                throw ServiceException.INVALID_REQUEST("May not specify an <exceptId> in this request", null);
             }
         }
 
@@ -262,7 +261,7 @@ public class CalendarUtils {
             return ParsedDateTime.parse(d, invTzMap, zone, inv.getTimeZoneMap()
                     .getLocalTimeZone());
         } catch (ParseException ex) {
-            throw MailServiceException.INVALID_REQUEST("could not parse time "
+            throw ServiceException.INVALID_REQUEST("could not parse time "
                     + d + " in element " + eltName, ex);
         }
     }
@@ -296,8 +295,7 @@ public class CalendarUtils {
             }
 
             if (zone == null) {
-                throw MailServiceException.INVALID_REQUEST(
-                        "invalid time zone \"" + tzId + "\"", null);
+                throw ServiceException.INVALID_REQUEST("invalid time zone \"" + tzId + "\"", null);
             }
         }
         if (!inv.getTimeZoneMap().contains(zone))
@@ -305,7 +303,7 @@ public class CalendarUtils {
         return zone;
     }
 
-private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap invTzMap, Invite inv) 
+    private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap invTzMap, Invite inv) 
     throws ServiceException {
         
         ParsedDuration dur = inv.getDuration();
@@ -313,8 +311,8 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
             dur = inv.getEndTime().difference(inv.getStartTime());
         }
         
-        ArrayList addRules = new ArrayList();
-        ArrayList subRules = new ArrayList();
+        ArrayList<IRecurrence> addRules = new ArrayList<IRecurrence>();
+        ArrayList<IRecurrence> subRules = new ArrayList<IRecurrence>();
         
         for (Iterator iter= recurElt.elementIterator(); iter.hasNext();) {
             Element e = (Element)iter.next();
@@ -325,7 +323,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
                 exclude = true;
             } else {
                 if (!e.getName().equals(MailService.E_APPT_ADD)) {
-                    throw MailServiceException.INVALID_REQUEST("<add> or <exclude> expected inside <recur>", null);
+                    throw ServiceException.INVALID_REQUEST("<add> or <exclude> expected inside <recur>", null);
                 }
             }
             
@@ -380,7 +378,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
                         }
                         
                     } catch (Exception ex) {
-                        throw MailServiceException.INVALID_REQUEST("Exception parsing <recur><date> d="+
+                        throw ServiceException.INVALID_REQUEST("Exception parsing <recur><date> d="+
                                 intElt.getAttribute(MailService.A_APPT_DATETIME), ex);
                     }
                 } else if (intElt.getName().equals(MailService.E_APPT_RULE)) {
@@ -416,7 +414,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
                             if (num > 0) {
                                 recurBuf.append(";COUNT=").append(num);
                             } else {
-                                throw MailServiceException.INVALID_REQUEST(
+                                throw ServiceException.INVALID_REQUEST(
                                     "Expected positive num attribute in <recur> <rule> <count>", null);
                             }
                         } else if (ruleEltName.equals(MailService.E_APPT_RULE_INTERVAL)) {
@@ -445,7 +443,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
                                     recurBuf.append(ordwk);
                                 String day = wkdayElt.getAttribute(MailService.A_APPT_RULE_DAY);
                                 if (day == null || day.length() == 0)
-                                    throw MailServiceException.INVALID_REQUEST("Missing " +
+                                    throw ServiceException.INVALID_REQUEST("Missing " +
                                                                                MailService.A_APPT_RULE_DAY + " in <" +
                                                                                ruleEltName + ">",
                                                                                null);
@@ -488,11 +486,11 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
                             addRules.add(new Recurrence.SimpleRepeatingRule(inv.getStartTime(), dur, recur, null));
                         }
                     } catch (ServiceException ex) {
-                        throw MailServiceException.INVALID_REQUEST("Exception parsing <recur> <rule>", ex);
+                        throw ServiceException.INVALID_REQUEST("Exception parsing <recur> <rule>", ex);
                     }
                     
                 } else {
-                    throw MailServiceException.INVALID_REQUEST("Expected <date> or <rule> inside of "+e.getName()+", got "+
+                    throw ServiceException.INVALID_REQUEST("Expected <date> or <rule> inside of "+e.getName()+", got "+
                             intElt.getName(), null);
                 }
             }    // iterate inside <add> or <exclude>
@@ -545,8 +543,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
                 Element daylight = tzElem
                         .getOptionalElement(MailService.E_APPT_TZ_DAYLIGHT);
                 if (standard == null || daylight == null)
-                    throw MailServiceException
-                            .INVALID_REQUEST(
+                    throw ServiceException.INVALID_REQUEST(
                                     "DST time zone missing standard and/or daylight onset",
                                     null);
                 standardOnset = parseSimpleOnset(standard);
@@ -613,7 +610,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
         Element orgElt = element
                 .getOptionalElement(MailService.E_APPT_ORGANIZER);
         if (orgElt == null) {
-            throw MailServiceException.INVALID_REQUEST(
+            throw ServiceException.INVALID_REQUEST(
                     "Event must have an Organizer", null);
         } else {
             String cn = orgElt.getAttribute(MailService.A_DISPLAY, null);
@@ -632,15 +629,13 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
             ParsedDateTime dt = parseDtElement(s, tzMap, newInv);
             if (dt.hasTime()) {
                 if (allDay) {
-                    throw MailServiceException
-                            .INVALID_REQUEST(
+                    throw ServiceException.INVALID_REQUEST(
                                     "AllDay event must have DATE, not DATETIME for start time",
                                     null);
                 }
             } else {
                 if (!allDay) {
-                    throw MailServiceException
-                            .INVALID_REQUEST(
+                    throw ServiceException.INVALID_REQUEST(
                                     "Request must have allDay=\"1\" if using a DATE start time instead of DATETIME",
                                     null);
                 }
@@ -653,8 +648,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
             Element e = element.getOptionalElement(MailService.E_APPT_END_TIME);
             if (e != null) {
                 if (element.getOptionalElement(MailService.E_APPT_DURATION) != null) {
-                    throw MailServiceException
-                            .INVALID_REQUEST(
+                    throw ServiceException.INVALID_REQUEST(
                                     "<inv> may have <e> end or <d> duration but not both",
                                     null);
                 }
@@ -679,15 +673,13 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
                 }
                 if (dt.hasTime()) {
                     if (allDay) {
-                        throw MailServiceException
-                                .INVALID_REQUEST(
+                        throw ServiceException.INVALID_REQUEST(
                                         "AllDay event must have DATE, not DATETIME for start time",
                                         null);
                     }
                 } else {
                     if (!allDay) {
-                        throw MailServiceException
-                                .INVALID_REQUEST(
+                        throw ServiceException.INVALID_REQUEST(
                                         "Request must have allDay=\"1\" if using a DATE start time instead of DATETIME",
                                         null);
                     }
@@ -777,7 +769,7 @@ private static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap i
     private static void validateAttr(IcalXmlStrMap map, String attrName,
             String value) throws ServiceException {
         if (!map.validXml(value)) {
-            throw MailServiceException.INVALID_REQUEST("Invalid value '"
+            throw ServiceException.INVALID_REQUEST("Invalid value '"
                     + value + "' specified for attribute:" + attrName, null);
         }
 
