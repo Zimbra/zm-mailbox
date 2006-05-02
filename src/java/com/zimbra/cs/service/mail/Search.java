@@ -165,11 +165,15 @@ public class Search extends DocumentHandler  {
         
         int totalNumHits = 0;
         
-        for (Iterator iter = pager.getHits().iterator(); iter.hasNext();) {
-            ZimbraHit hit = (ZimbraHit)iter.next();
+        for (ZimbraHit hit : (java.util.List<ZimbraHit>)pager.getHits()) {
             
 //          for (ZimbraHit hit = results.skipToHit(offset); hit != null; hit = results.getNext()) {
-            totalNumHits++;
+            if (++totalNumHits > limit) {
+                if (mLog.isDebugEnabled()) {
+                    mLog.debug("Search results limited to " + limit + " hits.");
+                }
+                break;
+            }
             boolean inline = (totalNumHits == 1 && params.getFetchFirst());
             boolean addSortField = true;
             Element e = null;
@@ -190,7 +194,8 @@ public class Search extends DocumentHandler  {
                 e = ToXML.encodeNote(response,zc, nh.getNote());
             } else if (hit instanceof ProxiedHit) {
                 ProxiedHit ph = (ProxiedHit) hit;
-                e = ph.getElement().detach();
+                // XXX element may be in XML.  refer to bug 7046.
+                e = Element.convertDOM(ph.getElement().detach().toXML(), response.getFactory());
                 response.addElement(e);
                 addSortField = false;
             } else if (hit instanceof AppointmentHit) {
@@ -201,20 +206,15 @@ public class Search extends DocumentHandler  {
                 e = addDocumentHit(zc, response, dh);
             } else {
                 mLog.error("Got an unknown hit type putting search hits: "+hit);
+                continue;
             }
             if (e != null && addSortField) {
             	e.addAttribute(MailService.A_SORT_FIELD, hit.getSortField(pager.getSortOrder()).toString());
             }
-            if (includeMailbox) {
+            if (e != null && includeMailbox) {
 //                String idStr = hit.getMailboxIdStr() + "/" + hit.getItemId();
             	ItemId iid = new ItemId(hit.getAcctIdStr(), hit.getItemId());
                 e.addAttribute(MailService.A_ID, iid.toString());
-            }
-            if (totalNumHits >= limit) {
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("Search results limited to " + limit + " hits.");
-                }
-                break;
             }
         }
 
