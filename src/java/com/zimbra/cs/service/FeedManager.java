@@ -102,15 +102,6 @@ public class FeedManager {
 
         BufferedInputStream content = null;
         try {
-            // username and password are encoded in the URL as http://user:pass@host/...
-            if (url.indexOf('@') != -1) {
-                HttpURL httpurl = new HttpURL(url);
-                if (httpurl.getUser() != null) {
-                    UsernamePasswordCredentials creds = new UsernamePasswordCredentials(httpurl.getUser(), httpurl.getPassword());
-                    client.getState().setCredentials(AuthScope.ANY, creds);
-                }
-            }
-
             String charset = Mime.P_CHARSET_DEFAULT;
             int redirects = 0;
             do {
@@ -123,6 +114,15 @@ public class FeedManager {
                     url = "http:" + url.substring(5);
                 else if (!lcurl.startsWith("http:") && !lcurl.startsWith("https:"))
                     throw ServiceException.INVALID_REQUEST("url must begin with http: or https:", null);
+
+                // username and password are encoded in the URL as http://user:pass@host/...
+                if (url.indexOf('@') != -1) {
+                    HttpURL httpurl = new HttpURL(url);
+                    if (httpurl.getUser() != null) {
+                        UsernamePasswordCredentials creds = new UsernamePasswordCredentials(httpurl.getUser(), httpurl.getPassword());
+                        client.getState().setCredentials(AuthScope.ANY, creds);
+                    }
+                }
 
 
                 GetMethod get = new GetMethod(url);
