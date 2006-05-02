@@ -193,7 +193,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                         if (req.peekChar() == '"') {
                             date = req.readDate(mTimeFormat);  req.skipSpace();
                         }
-                        byte[] content = req.readLiteral();
+                        byte[] content = req.readLiteral8();
                         checkEOF(tag, req);
                         return doAPPEND(tag, folder, flags, date, content);
                     }
@@ -330,6 +330,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                         return doSEARCH(tag, search, insertions, byUID);
                     } else if (command.equals("SELECT")) {
                         req.skipSpace();  String folder = req.readFolder();
+                        checkEOF(tag, req);
                         return doSELECT(tag, folder);
                     } else if (command.equals("STARTTLS")) {
                         checkEOF(tag, req);
@@ -433,6 +434,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         // [LOGINDISABLED]    RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [STARTTLS]         RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [AUTH=PLAIN]       RFC 2595: Using TLS with IMAP, POP3 and ACAP
+        // [BINARY]           RFC 3516: IMAP4 Binary Content Extension
         // [CHILDREN]         RFC 3348: IMAP4 Child Mailbox Extension
         // [ID]               RFC 2971: IMAP4 ID Extension
         // [IDLE]             RFC 2177: IMAP4 IDLE command
@@ -446,7 +448,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         String nologin =  allowCleartextLogin() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
 //        String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN "; 
-        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + "CHILDREN ID IDLE LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA UIDPLUS UNSELECT");
+        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + "BINARY CHILDREN ID IDLE LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA UIDPLUS UNSELECT");
     }
 
     boolean doNOOP(String tag) throws IOException {
@@ -1369,7 +1371,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     static final int FETCH_FULL = FETCH_ALL   | FETCH_BODY;
     
 
-    boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID) throws IOException {
+    boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID) throws IOException, ImapParseException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
             return CONTINUE_PROCESSING;
 
@@ -1384,7 +1386,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         if (parts != null && !parts.isEmpty())
             for (Iterator it = parts.iterator(); it.hasNext(); ) {
                 ImapPartSpecifier pspec = (ImapPartSpecifier) it.next();
-                if (pspec.mPart.equals("") && pspec.mModifier.equals("")) {
+                if (pspec.isEntireMessage()) {
                     it.remove();  fullMessage.add(pspec);
                 }
             }
@@ -1404,10 +1406,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     boolean markMessage = markRead && (i4msg.flags & Flag.FLAG_UNREAD) != 0;
                     boolean empty = true;
                     byte[] raw = null;
-                    result.print('*');
-                    result.print(' ');
-                    result.print(i4msg.seq);
-                    result.print(" FETCH (");
+
+                    result.print('*');  result.print(' ');
+                    result.print(i4msg.seq);  result.print(" FETCH (");
                     if ((attributes & FETCH_UID) != 0) {
                         result.print(empty ? "" : " ");  result.print("UID "); result.print(i4msg.uid);  empty = false;
                     }
@@ -1453,8 +1454,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                             i4msg.serializeEnvelope(result, mm);  empty = false;
                         }
                         for (ImapPartSpecifier pspec : parts) {
-                            byte[] content = i4msg.getPart(mm, pspec);
-                            result.print(empty ? "" : " ");  pspec.write(result, content);  empty = false;
+                            result.print(empty ? "" : " ");  pspec.write(result, mm);  empty = false;
                         }
 			        }
                     // FIXME: optimize by doing a single mark-read op on multiple messages
@@ -1466,6 +1466,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                         mSession.getFolder().undirtyMessage(i4msg);
                         result.print(empty ? "" : " ");  result.print(i4msg.getFlags(mSession));  empty = false;
                     }
+                } catch (ImapPartSpecifier.BinaryDecodingException e) {
+                    // don't write this response line if we're returning NO
+                    baos = null;
+                    throw new ImapParseException(tag, "UNKNOWN-CTE", "unknown content-type-encoding");
                 } catch (ServiceException e) {
                     ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
                     continue;

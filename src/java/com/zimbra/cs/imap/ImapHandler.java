@@ -155,9 +155,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             if (req == null)
                 req = new ImapRequest(mInputStream, mSession);
             req.continuation();
-            
+
             long start = ZimbraPerf.STOPWATCH_IMAP.start();
-            
+
             // check account status before executing command
             if (mMailbox != null)
                 try {
@@ -235,7 +235,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         if (req.peekChar() == '"') {
                             date = req.readDate(mTimeFormat);  req.skipSpace();
                         }
-                        byte[] content = req.readLiteral();
+                        byte[] content = req.readLiteral8();
                         checkEOF(tag, req);
                         return doAPPEND(tag, folder, flags, date, content);
                     }
@@ -372,6 +372,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         return doSEARCH(tag, search, insertions, byUID);
                     } else if (command.equals("SELECT")) {
                         req.skipSpace();  String folder = req.readFolder();
+                        checkEOF(tag, req);
                         return doSELECT(tag, folder);
                     } else if (command.equals("STARTTLS")) {
                         checkEOF(tag, req);
@@ -471,6 +472,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         // [LOGINDISABLED]    RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [STARTTLS]         RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [AUTH=PLAIN]       RFC 2595: Using TLS with IMAP, POP3 and ACAP
+        // [BINARY]           RFC 3516: IMAP4 Binary Content Extension
         // [CHILDREN]         RFC 3348: IMAP4 Child Mailbox Extension
         // [ID]               RFC 2971: IMAP4 ID Extension
         // [IDLE]             RFC 2177: IMAP4 IDLE command
@@ -484,7 +486,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         String nologin = mServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
 //        String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN "; 
-        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + "CHILDREN ID LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA UIDPLUS UNSELECT");
+        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + "BINARY CHILDREN ID LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA UIDPLUS UNSELECT");
     }
 
     boolean doNOOP(String tag) throws IOException {
@@ -1410,7 +1412,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     static final int FETCH_FULL = FETCH_ALL   | FETCH_BODY;
     
 
-    boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID) throws IOException {
+    boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID) throws IOException, ImapParseException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
             return CONTINUE_PROCESSING;
 
@@ -1425,7 +1427,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         if (parts != null && !parts.isEmpty())
             for (Iterator<ImapPartSpecifier> it = parts.iterator(); it.hasNext(); ) {
                 ImapPartSpecifier pspec = it.next();
-                if (pspec.mPart.equals("") && pspec.mModifier.equals("")) {
+                if (pspec.isEntireMessage()) {
                     it.remove();  fullMessage.add(pspec);
                 }
             }
@@ -1449,6 +1451,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 boolean markMessage = markRead && (i4msg.flags & Flag.FLAG_UNREAD) != 0;
                 boolean empty = true;
                 byte[] raw = null;
+
                 result.print('*');  result.print(' ');
                 result.print(i4msg.seq);  result.print(" FETCH (");
                 if ((attributes & FETCH_UID) != 0) {
@@ -1496,8 +1499,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         i4msg.serializeEnvelope(result, mm);  empty = false;
                     }
                     for (ImapPartSpecifier pspec : parts) {
-                        byte[] content = i4msg.getPart(mm, pspec);
-                        result.print(empty ? "" : " ");  pspec.write(result, baos, content);  empty = false;
+                        result.print(empty ? "" : " ");  pspec.write(result, baos, mm);  empty = false;
                     }
 		        }
                 // FIXME: optimize by doing a single mark-read op on multiple messages
@@ -1509,6 +1511,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     mSession.getFolder().undirtyMessage(i4msg);
                     result.print(empty ? "" : " ");  result.print(i4msg.getFlags(mSession));  empty = false;
                 }
+            } catch (ImapPartSpecifier.BinaryDecodingException e) {
+                // don't write this response line if we're returning NO
+                baos = baosDebug = null;
+                throw new ImapParseException(tag, "UNKNOWN-CTE", "unknown content-type-encoding");
             } catch (ServiceException e) {
                 ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
                 continue;
@@ -1518,8 +1524,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             } finally {
                 result.write(')');
                 baos.write(LINE_SEPARATOR_BYTES);
-                if (mOutputStream != null)  mOutputStream.write(baos.toByteArray());
-                if (baosDebug != null)      ZimbraLog.imap.debug("  S: " + baosDebug);
+                if (mOutputStream != null && baos != null)
+                    mOutputStream.write(baos.toByteArray());
+                if (baosDebug != null)
+                    ZimbraLog.imap.debug("  S: " + baosDebug);
             }
         }
 

@@ -33,7 +33,6 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -51,7 +50,6 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.mime.MimeVisitor;
-import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 
@@ -305,56 +303,6 @@ class ImapMessage {
         ps.write(')');
     }
 
-    private static final byte[] NO_CONTENT = new byte[0];
-
-    byte[] getPart(MimePart mp, ImapPartSpecifier pspec) {
-        try {
-            mp = Mime.getMimePart(mp, pspec.mPart);
-            if (mp == null)
-                return null;
-            String modifier = pspec.mModifier;
-            // TEXT and HEADER* modifiers operate on rfc822 messages
-            if ((modifier.equals("TEXT") || modifier.startsWith("HEADER")) && !(mp instanceof MimeMessage)) {
-                Object content = Mime.getMessageContent(mp);
-                if (!(content instanceof MimeMessage))
-                    return null;
-                mp = (MimeMessage) content;
-            }
-            // get the content of the requested part
-            if (modifier.equals("")) {
-                if (mp instanceof MimeBodyPart)
-                    return ByteUtil.getRawContent((MimeBodyPart) mp);
-                else if (mp instanceof MimeMessage)
-                    return ByteUtil.getContent(((MimeMessage) mp).getRawInputStream(), mp.getSize());
-                sLog.warn("getting content of part; not MimeBodyPart: " + pspec);
-                return NO_CONTENT;
-            } else if (modifier.startsWith("HEADER")) {
-                MimeMessage mm = (MimeMessage) mp;
-                Enumeration headers;
-                if (pspec.mModifier.equals("HEADER"))              headers = mm.getAllHeaderLines();
-                else if (pspec.mModifier.equals("HEADER.FIELDS"))  headers = mm.getMatchingHeaderLines(pspec.getHeaders());
-                else                                               headers = mm.getNonMatchingHeaderLines(pspec.getHeaders());
-                StringBuffer result = new StringBuffer();
-                while (headers.hasMoreElements())
-                    result.append(headers.nextElement()).append(ImapHandler.LINE_SEPARATOR);
-                return result.append(ImapHandler.LINE_SEPARATOR).toString().getBytes();
-            } else if (modifier.equals("MIME")) {
-                Enumeration mime = mp.getAllHeaderLines();
-                StringBuffer result = new StringBuffer();
-                while (mime.hasMoreElements())
-                    result.append(mime.nextElement()).append(ImapHandler.LINE_SEPARATOR);
-                return result.append(ImapHandler.LINE_SEPARATOR).toString().getBytes();
-            } else if (modifier.equals("TEXT")) {
-                MimeMessage mm = (MimeMessage) mp;
-                return ByteUtil.getContent(mm.getRawInputStream(), mp.getSize());
-            }
-            return null;
-        } catch (IOException e) {
-            return null;
-        } catch (MessagingException e) {
-            return null;
-        }
-    }
 
     static class WindowsMobile5Converter extends MimeVisitor {
         protected boolean visitBodyPart(MimeBodyPart bp)  { return false; }

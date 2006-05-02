@@ -308,6 +308,12 @@ class ImapRequest {
         }
     }
 
+    byte[] readLiteral8() throws IOException, ImapException {
+        if (peekChar() == '~')
+            skipChar('~');
+        return readLiteral();
+    }
+
     String readAstring() throws IOException, ImapException {
         return readAstring(null);
     }
@@ -454,8 +460,21 @@ class ImapRequest {
             } else if (item.equals("RFC822.TEXT")) {
                 attributes |= ImapHandler.FETCH_MARK_READ;
                 parts.add(new ImapPartSpecifier(item, "", "TEXT"));
-            } else if (item.equals("BODY") || item.equals("BODY.PEEK")) {
-                if (item.equals("BODY"))
+            } else if (item.equals("BINARY.SIZE")) {
+                String sectionPart = "";
+                boolean dot = false;
+
+                skipChar('[');
+                while (Character.isDigit((char) peekChar()) || dot) {
+                    sectionPart += (sectionPart.equals("") ? "" : ".") + readNumber();
+                    if ((dot = peekChar() == '.'))
+                        skipChar('.');
+                }
+                skipChar(']');
+                parts.add(new ImapPartSpecifier(item, sectionPart, ""));
+            } else if (item.equals("BODY") || item.equals("BODY.PEEK") || item.equals("BINARY") || item.equals("BINARY.PEEK")) {
+                boolean binary = item.startsWith("BINARY");
+                if (!item.endsWith(".PEEK"))
                     attributes |= ImapHandler.FETCH_MARK_READ;
                 String sectionPart = "", sectionText = "";
                 int partialStart = -1, partialCount = -1;
@@ -469,6 +488,8 @@ class ImapRequest {
                         skipChar('.');
                 }
                 if (!done && peekChar() != ']') {
+                    if (binary)
+                        throw new ImapParseException(mTag, "section-text not permitted for BINARY");
                     sectionText = readAtom();
                     if (sectionText.equals("HEADER.FIELDS") || sectionText.equals("HEADER.FIELDS.NOT")) {
                         headers = new ArrayList<String>();
@@ -495,7 +516,7 @@ class ImapRequest {
                         throw new ImapParseException(mTag, "invalid partial fetch specifier");
                     }
                 }
-                ImapPartSpecifier pspec = new ImapPartSpecifier("BODY", sectionPart, sectionText, partialStart, partialCount);
+                ImapPartSpecifier pspec = new ImapPartSpecifier(binary ? "BINARY" : "BODY", sectionPart, sectionText, partialStart, partialCount);
                 pspec.setHeaders(headers);
                 parts.add(pspec);
             } else

@@ -3,6 +3,7 @@ IMAP protocol and extensions suppoted:
     [IMAP4rev1]        RFC 3501: Internet Message Access Protocol - Version 4rev1
     [LOGINDISABLED]    RFC 3501: Internet Message Access Protocol - Version 4rev1
     [STARTTLS]         RFC 3501: Internet Message Access Protocol - Version 4rev1
+    [BINARY]           RFC 3516: IMAP4 Binary Content Extension
     [CHILDREN]         RFC 3348: IMAP4 Child Mailbox Extension
     [ID]               RFC 2971: IMAP4 ID Extension
     [IDLE]             RFC 2177: IMAP4 IDLE command
