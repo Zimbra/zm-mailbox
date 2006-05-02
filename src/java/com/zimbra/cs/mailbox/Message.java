@@ -538,7 +538,7 @@ public class Message extends MailItem {
         }
     }
 
-    void delete(TargetConstraint tcon) throws ServiceException {
+    void delete() throws ServiceException {
 		MailItem parent = getParent();
 		if (parent instanceof Conversation && parent.mData.children.size() == 1)
 			parent.delete();
