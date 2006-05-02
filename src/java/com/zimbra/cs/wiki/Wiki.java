@@ -72,15 +72,16 @@ public class Wiki {
 		if (!LC.wiki_enabled.booleanValue()) {
 			throw ServiceException.FAILURE("wiki disabled", null);
 		}
-		return getInstance(LC.wiki_user.value());
+		Account acct = Provisioning.getInstance().getAccountByName(LC.wiki_user.value());
+		return getInstance(acct.getId());
 	}
 	
 	public static Wiki getInstance(String acct) throws ServiceException {
-		return getInstance(Provisioning.getInstance().getAccountByName(acct));
+		return getInstance(Provisioning.getInstance().getAccountById(acct));
 	}
 	
 	public static Wiki getInstance(String acct, int folderId) throws ServiceException {
-		return getInstance(Provisioning.getInstance().getAccountByName(acct), folderId);
+		return getInstance(Provisioning.getInstance().getAccountById(acct), folderId);
 	}
 	
 	public static Wiki getInstance(Account acct) throws ServiceException {
@@ -90,7 +91,7 @@ public class Wiki {
 	public static Wiki getInstance(Account acct, int folderId) throws ServiceException {
 		Wiki w;
 		synchronized (wikiMap) {
-			Pair<String,String> key = Pair.get(acct.getName(), Integer.toString(folderId));
+			Pair<String,String> key = Pair.get(acct.getId(), Integer.toString(folderId));
 			w = wikiMap.get(key);
 			if (w == null) {
 				w = new Wiki(acct, folderId);

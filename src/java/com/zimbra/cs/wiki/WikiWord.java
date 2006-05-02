@@ -58,6 +58,8 @@ public class WikiWord {
 		} else {
 			addWikiItem(mbox.addDocumentRevision(octxt, getWikiItem(octxt), data, author));
 		}
+		WikiTemplateStore templateStore = WikiTemplateStore.getInstance(acctid, fid);
+		templateStore.expireTemplate(mWikiWord);
 	}
 	
 	public void addWikiItem(Document newItem) throws ServiceException {

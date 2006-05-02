@@ -33,9 +33,11 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.cs.util.Pair;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class WikiTemplateStore {
 	
@@ -50,7 +52,7 @@ public class WikiTemplateStore {
 	}
 	
 	public static WikiTemplateStore getInstance(MailItem item) throws ServiceException {
-		return WikiTemplateStore.getInstance(item.getMailbox().getAccount().getName(), item.getFolderId());
+		return WikiTemplateStore.getInstance(item.getMailbox().getAccount().getId(), item.getFolderId());
 	}
 	
 	public static WikiTemplateStore getInstance(String account, int folderId) {
@@ -64,7 +66,7 @@ public class WikiTemplateStore {
 		}
 		if (store == null) {
 			store = new WikiTemplateStore(key);
-			//sTemplates.put(key, store);
+			sTemplates.put(key, store);
 		}
 		
 		return store;
@@ -73,32 +75,42 @@ public class WikiTemplateStore {
 	private static long TTL = 3600000;  // 1 hour
 	
 	private long   mExpiration;
-	private String mAccount;
+	private String mAccountId;
 	private int    mFolderId;
 	private int    mParentFolderId;
 	private Map<String,WikiTemplate> mTemplateMap;
 	
 	private WikiTemplateStore(Pair<String,String> key) {
-		mAccount  = key.getFirst();
+		mAccountId  = key.getFirst();
 		mFolderId = Integer.parseInt(key.getSecond());
 		mTemplateMap = new HashMap<String,WikiTemplate>();
 		mExpiration = System.currentTimeMillis() + TTL;
 	}
 	
 	public WikiTemplate getTemplate(OperationContext octxt, String name) throws ServiceException, IOException {
+		return getTemplate(octxt, name, true);
+	}
+	public WikiTemplate getTemplate(OperationContext octxt, String name, boolean checkParents) throws ServiceException, IOException {
 		WikiTemplate template = mTemplateMap.get(name);
-		if (template != null)
+		if (template != null) {
+			ZimbraLog.wiki.debug("found " + name + " from template cache");
 			return template;
+		}
 		
-		Wiki wiki = Wiki.getInstance(mAccount, mFolderId);
+		Wiki wiki = Wiki.getInstance(mAccountId, mFolderId);
 		WikiWord ww = wiki.lookupWiki(name);
 		
 		if (ww != null) {
 			Document item = ww.getWikiItem(octxt);
-			template = new WikiTemplate(new String(ByteUtil.getContent(item.getRawDocument(), 0), "UTF-8"));
+			if (!(item instanceof WikiItem))
+				throw WikiServiceException.NOT_WIKI_ITEM(item.getFilename());
+			template = new WikiTemplate((WikiItem)item);
 			mTemplateMap.put(name, template);
 			return template;
 		}
+		
+		if (!checkParents)
+			return null;
 		
 		if (mParentFolderId == 0) {
 			Mailbox mbox = Mailbox.getMailboxByAccountId(wiki.getWikiAccount());
@@ -106,7 +118,15 @@ public class WikiTemplateStore {
 			mParentFolderId = f.getFolderId();  // mountpoint should return its logical parent.
 		}
 		
-		WikiTemplateStore parentStore = WikiTemplateStore.getInstance(mAccount, mParentFolderId);
+		if (mParentFolderId == mFolderId) {
+			throw WikiServiceException.NO_SUCH_WIKI(name);
+		}
+		WikiTemplateStore parentStore = WikiTemplateStore.getInstance(mAccountId, mParentFolderId);
 		return parentStore.getTemplate(octxt, name);
+	}
+	
+	public void expireTemplate(String name) {
+		ZimbraLog.wiki.debug("removing " + name + " from template cache");
+		mTemplateMap.remove(name);
 	}
 }

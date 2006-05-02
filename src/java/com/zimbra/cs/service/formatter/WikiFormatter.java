@@ -77,7 +77,7 @@ public class WikiFormatter extends Formatter {
     private static final String CHROME = "_CHROME_";
     
     private WikiTemplate getTemplate(Context context, Folder folder, String name) throws IOException, ServiceException {
-    	WikiTemplateStore wiki = WikiTemplateStore.getInstance(context.authAccount.getName(), folder.getId());
+    	WikiTemplateStore wiki = WikiTemplateStore.getInstance(context.authAccount.getId(), folder.getId());
     	return wiki.getTemplate(context.opContext, name);
     }
     private WikiTemplate getDefaultTOC() {

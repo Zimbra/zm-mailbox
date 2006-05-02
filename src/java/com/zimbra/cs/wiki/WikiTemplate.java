@@ -39,19 +39,31 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.wiki.WikiServiceException;
-import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 public class WikiTemplate {
 	
-	public WikiTemplate(WikiItem item) throws IOException,ServiceException {
-		this(new String(ByteUtil.getContent(item.getRawMessage(), 0)));
+	public WikiTemplate(WikiItem item) throws ServiceException {
+		this(new String(item.getMessageContent()));
+		mCreateTime = System.currentTimeMillis();
 	}
 	
 	public WikiTemplate(String item) {
 		mTemplate = item;
 		mTokens = new ArrayList<Token>();
+		mCreateTime = 0;
+	}
+	
+	public static WikiTemplate findTemplate(Context ctxt, String name) throws IOException,ServiceException {
+    	WikiTemplateStore ts = WikiTemplateStore.getInstance(ctxt.item);
+    	WikiTemplate template;
+		if (name.startsWith("_")) {
+			// XXX this is how templates are named.
+			template = ts.getTemplate(ctxt.octxt, name);
+		} else {
+			template = ts.getTemplate(ctxt.octxt, name, false);
+		}
+		return template;
 	}
 	
 	public String toString(OperationContext octxt, MailItem item) throws ServiceException, IOException {
@@ -59,8 +71,9 @@ public class WikiTemplate {
 	}
 	
 	public String toString(Context ctxt) throws ServiceException, IOException {
-		if (!mParsed) {
+		if (!mParsed || isExpired(ctxt)) {
 			parse(ctxt);
+			mCreateTime = System.currentTimeMillis();
 		}
 		return mDocument;
 	}
@@ -68,20 +81,59 @@ public class WikiTemplate {
 	public Token getToken(int i) {
 		return mTokens.get(i);
 	}
+
+	public long getCreateTime() {
+		return mCreateTime;
+	}
+	
+	private boolean isExpired(Context ctxt) throws ServiceException, IOException {
+		for (Token tok : mTokens) {
+			if (tok.getType() == Token.TokenType.TEXT)
+				continue;
+			ctxt.token = tok;
+			Wiklet w = findWiklet(tok);
+			if (w != null && w.isExpired(this, ctxt)) {
+				//ZimbraLog.wiki.info("failed validation " + ctxt.item.getSubject() + " because " + tok.getValue());
+				return true;
+			}
+		}
+		return false;
+	}
 	
 	private void parse(Context ctxt) throws ServiceException, IOException {
-		Token.parse(mTemplate, mTokens);
+		if (!mParsed)
+			Token.parse(mTemplate, mTokens);
 		StringBuffer buf = new StringBuffer();
 		for (Token tok : mTokens) {
-			buf.append(apply(ctxt, tok));
+			ctxt.token = tok;
+			buf.append(apply(ctxt));
 		}
 		mDocument = buf.toString();
 		mParsed = true;
 	}
 	
-	private String apply(Context ctxt, Token tok) throws ServiceException, IOException {
-		if (tok.getType() == Token.TokenType.TEXT)
-			return tok.getValue();
+	private String apply(Context ctxt) throws ServiceException, IOException {
+		if (ctxt.token.getType() == Token.TokenType.TEXT)
+			return ctxt.token.getValue();
+		Wiklet w = findWiklet(ctxt.token);
+		if (w != null) {
+			//long t0 = System.currentTimeMillis();
+			String ret = w.apply(ctxt);
+			//long t1 = System.currentTimeMillis() - t0;
+	        //com.zimbra.cs.util.ZimbraLog.wiki.info("Applying Wiklet " + w.getName() + " : " + t1 + "ms");
+			List<Token> tokens = new ArrayList<Token>();
+			Token.parse(ret, tokens);
+			StringBuffer buf = new StringBuffer();
+			for (Token t : tokens) {
+				ctxt.token = t;
+				buf.append(apply(ctxt));
+			}
+			return buf.toString();
+		}
+		return "";
+	}
+	
+	private Wiklet findWiklet(Token tok) {
 		Wiklet w;
 		String tokenStr = tok.getValue();
 		if (tok.getType() == Token.TokenType.WIKILINK) {
@@ -96,22 +148,10 @@ public class WikiTemplate {
 			}
 			w = sWIKLETS.get(firstTok);
 		}
-		if (w != null) {
-			//long t0 = System.currentTimeMillis();
-			String ret = w.apply(ctxt, tokenStr);
-			//long t1 = System.currentTimeMillis() - t0;
-	        //com.zimbra.cs.util.ZimbraLog.wiki.info("Applying Wiklet " + w.getName() + " : " + t1 + "ms");
-			List<Token> tokens = new ArrayList<Token>();
-			Token.parse(ret, tokens);
-			StringBuffer buf = new StringBuffer();
-			for (Token t : tokens) {
-				buf.append(apply(ctxt, t));
-			}
-			return buf.toString();
-		}
-		return "";
+		return w;
 	}
 	
+	private long    mCreateTime;
 	private boolean mParsed;
 	
 	private List<Token> mTokens;
@@ -143,7 +183,7 @@ public class WikiTemplate {
 	}
 	
 	public static class Token {
-		public enum TokenType { TEXT, WIKLET, WIKILINK };
+		public enum TokenType { TEXT, WIKLET, WIKILINK }
 		public static void parse(String str, List<Token> tokens) throws IllegalArgumentException {
 			int end = 0;
 			if (str.startsWith("{{")) {
@@ -183,6 +223,7 @@ public class WikiTemplate {
 		
 		private TokenType mType;
 		private String mVal;
+		private String mData;
 		
 		public TokenType getType() {
 			return mType;
@@ -191,20 +232,30 @@ public class WikiTemplate {
 		public String getValue() {
 			return mVal;
 		}
+		
+		public String getData() {
+			return mData;
+		}
+		
+		public void setData(String str) {
+			mData = str;
+		}
 	}
 	
 	public static class Context {
 		public Context(OperationContext oc, MailItem it) {
-			octxt = oc; item = it;
+			octxt = oc; item = it; content = null;
 		}
 		public OperationContext octxt;
 		public MailItem item;
-		
+		public Token token;
+		public String content;
 	}
 	public static abstract class Wiklet {
 		public abstract String getName();
 		public abstract String getPattern();
-		public abstract String apply(Context ctxt, String text) throws ServiceException,IOException;
+		public abstract String apply(Context ctxt) throws ServiceException,IOException;
+		public abstract boolean isExpired(WikiTemplate template, Context ctxt) throws ServiceException,IOException;
 		public Map<String,String> parseParam(String text) {
 			Map<String,String> map = new HashMap<String,String>();
 			int start = 0;
@@ -215,7 +266,8 @@ public class WikiTemplate {
 					end = text.length();
 				if (equal == -1 || equal > end) {
 					String s = text.substring(start,end);
-					map.put(s, s);
+					if (!s.equals(getPattern()))
+						map.put(s, s);
 				} else {
 					String val;
 					if (text.charAt(equal+1) == '"' && text.charAt(end-1) == '"')
@@ -266,6 +318,9 @@ public class WikiTemplate {
 		public String getPattern() {
 			return "TOC";
 		}
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return true;  // always generate fresh TOC.
+		}
 	    private static final String TOC = "_INDEX_";
 	    private boolean shouldSkipThis(Document doc) {
 	    	// XXX skip the non visible items.
@@ -282,7 +337,7 @@ public class WikiTemplate {
 	    	buf.append("</a>");
 	    	return buf.toString();
 	    }
-		public String generateList(Context ctxt, String text, int style) throws ServiceException {
+		public String generateList(Context ctxt, int style) throws ServiceException {
 			Folder folder;
 			if (ctxt.item instanceof Folder)
 				folder = (Folder) ctxt.item;
@@ -329,8 +384,8 @@ public class WikiTemplate {
     		buf.append(">");
 	        return buf.toString();
 		}
-		public String apply(Context ctxt, String text) throws ServiceException {
-			Map<String,String> params = parseParam(text);
+		public String apply(Context ctxt) throws ServiceException {
+			Map<String,String> params = parseParam(ctxt.token.getValue());
 			String format = params.get(sFORMAT);
 			if (format == null) {
 				format = sLIST;
@@ -339,18 +394,91 @@ public class WikiTemplate {
 				
 			}
 			
-			return generateList(ctxt, text, format.equals(sSIMPLE) ? sTAGSIMPLE : sTAGLIST);
+			return generateList(ctxt, format.equals(sSIMPLE) ? sTAGSIMPLE : sTAGLIST);
 		}
 	}
 	public static class BreadcrumbsWiklet extends Wiklet {
+		public static final String sPAGE = "page";
+		public static final String sFORMAT = "format";
+		public static final String sBODYTEMPLATE = "bodyTemplate";
+		public static final String sITEMTEMPLATE = "itemTemplate";
+		public static final String sSEPARATOR = "separator";
+		
+		public static final String sSIMPLE   = "simple";
+		public static final String sTEMPLATE = "template";
+		
+		public static final String sDEFAULTBODYTEMPLATE = "_BREADCRUMB_BODY_TEMPLATE_";
+		public static final String sDEFAULTITEMTEMPLATE = "_BREADCRUMB_ITEM_TEMPLATE_";
+		
+		private List<MailItem> mList;
+		
 		public String getName() {
 			return "Breadcrumbs";
 		}
 		public String getPattern() {
 			return "BREADCRUMBS";
 		}
-		public String apply(Context ctxt, String text) throws ServiceException {
-			return "Breakcrumbs here.";
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return false;
+		}
+		private Folder getFolder(Context ctxt, MailItem item) throws ServiceException {
+			Mailbox mbox = item.getMailbox();
+			return mbox.getFolderById(ctxt.octxt, item.getFolderId());
+		}
+		private void getBreadcrumbs(Context ctxt) throws ServiceException {
+			mList = new ArrayList<MailItem>();
+			mList.add(ctxt.item);
+			Folder f = getFolder(ctxt, ctxt.item);
+			while (f.getId() != 1) {
+				mList.add(0, f);
+				f = getFolder(ctxt, f);
+			}
+		}
+		public String apply(Context ctxt) throws ServiceException, IOException {
+			getBreadcrumbs(ctxt);
+			Map<String,String> params = parseParam(ctxt.token.getValue());
+			String format = params.get(sFORMAT);
+			if (format == null || format.equals(sSIMPLE)) {
+				StringBuffer buf = new StringBuffer();
+				buf.append("<span class='_breadcrumbs_simple'>");
+				for (MailItem item : mList) {
+					String name;
+					if (item instanceof Folder)
+						name = ((Folder)item).getName();
+					else
+						name = item.getSubject();
+					buf.append("<span class='_pageLink'>");
+					buf.append("[[").append(name).append("]]");
+					buf.append("</span>");
+				}
+				buf.append("</span>");
+				return buf.toString();
+			} else if (format.equals(sTEMPLATE)) {
+				String bt = params.get(sBODYTEMPLATE);
+				String it = params.get(sITEMTEMPLATE);
+				if (bt == null)
+					bt = sDEFAULTBODYTEMPLATE;
+				if (it == null)
+					it = sDEFAULTITEMTEMPLATE;
+				return handleTemplates(ctxt, bt, it);
+			} else {
+				return reportError("format " + format + " not recognized");
+			}
+		}
+		private String handleTemplates(Context ctxt,
+										String bodyTemplate, 
+										String itemTemplate)
+		throws ServiceException, IOException {
+			StringBuffer buf = new StringBuffer();
+			for (MailItem item : mList) {
+				WikiTemplate t = WikiTemplate.findTemplate(ctxt, itemTemplate);
+				buf.append(t.toString(ctxt.octxt, item));
+			}
+			Context newCtxt = new Context(ctxt.octxt, ctxt.item);
+			newCtxt.content = buf.toString();
+			WikiTemplate body = WikiTemplate.findTemplate(newCtxt, bodyTemplate);
+
+			return body.toString(newCtxt);
 		}
 	}
 	public static class IconWiklet extends Wiklet {
@@ -360,7 +488,10 @@ public class WikiTemplate {
 		public String getPattern() {
 			return "ICON";
 		}
-		public String apply(Context ctxt, String text) throws ServiceException {
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return false;
+		}
+		public String apply(Context ctxt) throws ServiceException {
 			return "<div class='ImgNotebook_pageIcon'></div>";
 		}
 	}
@@ -371,9 +502,16 @@ public class WikiTemplate {
 		public String getPattern() {
 			return "NAME";
 		}
-		public String apply(Context ctxt, String text) throws ServiceException {
-			Document doc = (Document) ctxt.item;
-			return doc.getFilename();
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return false;
+		}
+		public String apply(Context ctxt) throws ServiceException {
+			if (ctxt.item instanceof Document)
+				return ((Document)ctxt.item).getFilename();
+			else if (ctxt.item instanceof Folder)
+				return ((Folder)ctxt.item).getName();
+			else
+				return ctxt.item.getSubject();
 		}
 	}
 	public static class FragmentWiklet extends Wiklet {
@@ -383,7 +521,10 @@ public class WikiTemplate {
 		public String getPattern() {
 			return "FRAGMENT";
 		}
-		public String apply(Context ctxt, String text) throws ServiceException {
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return false;
+		}
+		public String apply(Context ctxt) throws ServiceException {
 			Document doc = (Document) ctxt.item;
 			return doc.getFragment();
 		}
@@ -395,7 +536,10 @@ public class WikiTemplate {
 		public String getPattern() {
 			return "Creator";
 		}
-		public String apply(Context ctxt, String text) throws ServiceException {
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return false;
+		}
+		public String apply(Context ctxt) throws ServiceException {
 			Document doc = (Document) ctxt.item;
 			return doc.getRevision(1).getCreator();
 		}
@@ -407,7 +551,10 @@ public class WikiTemplate {
 		public String getPattern() {
 			return "MODIFIER";
 		}
-		public String apply(Context ctxt, String text) throws ServiceException {
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return false;
+		}
+		public String apply(Context ctxt) throws ServiceException {
 			Document doc = (Document) ctxt.item;
 			return doc.getLastRevision().getCreator();
 		}
@@ -419,7 +566,10 @@ public class WikiTemplate {
 		public String getPattern() {
 			return "CREATEDATE";
 		}
-		public String apply(Context ctxt, String text) throws ServiceException {
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return false;
+		}
+		public String apply(Context ctxt) throws ServiceException {
 			Document doc = (Document) ctxt.item;
 			Date modifyDate = new Date(doc.getRevision(1).getRevDate());
 			return DateFormat.getDateInstance(DateFormat.MEDIUM).format(modifyDate);
@@ -432,7 +582,10 @@ public class WikiTemplate {
 		public String getPattern() {
 			return "CREATETIME";
 		}
-		public String apply(Context ctxt, String text) throws ServiceException {
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return false;
+		}
+		public String apply(Context ctxt) throws ServiceException {
 			Document doc = (Document) ctxt.item;
 			Date modifyDate = new Date(doc.getRevision(1).getRevDate());
 			return DateFormat.getTimeInstance(DateFormat.MEDIUM).format(modifyDate);
@@ -445,7 +598,10 @@ public class WikiTemplate {
 		public String getPattern() {
 			return "MODIFYDATE";
 		}
-		public String apply(Context ctxt, String text) throws ServiceException {
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return false;
+		}
+		public String apply(Context ctxt) throws ServiceException {
 			Document doc = (Document) ctxt.item;
 			Date modifyDate = new Date(doc.getLastRevision().getRevDate());
 			return DateFormat.getDateInstance(DateFormat.MEDIUM).format(modifyDate);
@@ -458,7 +614,10 @@ public class WikiTemplate {
 		public String getPattern() {
 			return "MODIFYTIME";
 		}
-		public String apply(Context ctxt, String text) throws ServiceException {
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return false;
+		}
+		public String apply(Context ctxt) throws ServiceException {
 			Document doc = (Document) ctxt.item;
 			Date modifyDate = new Date(doc.getLastRevision().getRevDate());
 			return DateFormat.getTimeInstance(DateFormat.MEDIUM).format(modifyDate);
@@ -471,7 +630,10 @@ public class WikiTemplate {
 		public String getPattern() {
 			return "VERSION";
 		}
-		public String apply(Context ctxt, String text) throws ServiceException {
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return false;
+		}
+		public String apply(Context ctxt) throws ServiceException {
 			Document doc = (Document) ctxt.item;
 			return Integer.toString(doc.getVersion());
 		}
@@ -483,13 +645,20 @@ public class WikiTemplate {
 		public String getPattern() {
 			return "CONTENT";
 		}
-		public String apply(Context ctxt, String text) throws ServiceException {
-			Document doc = (Document) ctxt.item;
-			try {
-				return new String(ByteUtil.getContent(doc.getRawDocument(), 0), "UTF-8");
-			} catch (IOException ioe) {
-				throw WikiServiceException.CANNOT_READ(doc.getSubject());
+		public boolean isExpired(WikiTemplate template, Context ctxt) throws ServiceException, IOException {
+			if (ctxt.content == null) {
+				WikiItem wiki = (WikiItem) ctxt.item;
+				WikiTemplate t = WikiTemplate.findTemplate(ctxt, wiki.getWikiWord());
+				return t.isExpired(ctxt);
 			}
+			return false;
+		}
+		public String apply(Context ctxt) throws ServiceException, IOException {
+			if (ctxt.content != null)
+				return ctxt.content;
+			WikiItem wiki = (WikiItem) ctxt.item;
+			WikiTemplate template = WikiTemplate.findTemplate(ctxt, wiki.getWikiWord());
+			return template.toString(ctxt);
 		}
 	}
 	public static class IncludeWiklet extends Wiklet {
@@ -501,34 +670,24 @@ public class WikiTemplate {
 		public String getPattern() {
 			return "INCLUDE";
 		}
-		public String getPage(Context ctxt, String page) throws ServiceException, IOException {
-			WikiTemplate template;
-			if (page.startsWith("_")) {
-				// XXX this is how templates are named.
-		    	WikiTemplateStore wiki = WikiTemplateStore.getInstance(ctxt.item);
-		    	template = wiki.getTemplate(ctxt.octxt, page);
-			} else {
-				Wiki wiki = Wiki.getInstance(ctxt.item.getMailbox().getAccount().getName(), ctxt.item.getFolderId());
-				WikiWord ww = wiki.lookupWiki(page);
-				if (ww == null) {
-					return reportError("cannot find page " + page);
-				}
-				Document doc = ww.getWikiItem(ctxt.octxt);
-				if (!(doc instanceof WikiItem)) {
-					return reportError("included page \"" + page + "\" is not of type Wiki");
-				}
-				template = new WikiTemplate((WikiItem)doc);
-			}
-			
-	    	return template.toString(ctxt);
-		}
-		public String apply(Context ctxt, String text) throws ServiceException, IOException {
-			Map<String,String> params = parseParam(text);
+		public boolean isExpired(WikiTemplate template, Context ctxt) throws ServiceException, IOException {
+			Map<String,String> params = parseParam(ctxt.token.getValue());
 			String page = params.get(sPAGE);
 			if (page == null) {
-				return reportError("missing name attribute");
+				page = params.keySet().iterator().next();
 			}
-			return getPage(ctxt, page);
+			WikiTemplate includedTemplate = WikiTemplate.findTemplate(ctxt, page);
+			return includedTemplate.getCreateTime() > template.getCreateTime();
+		}
+		public String apply(Context ctxt) throws ServiceException, IOException {
+			Map<String,String> params = parseParam(ctxt.token.getValue());
+			String page = params.get(sPAGE);
+			if (page == null) {
+				page = params.keySet().iterator().next();
+			}
+			//ZimbraLog.wiki.info("including " + page);
+			WikiTemplate template = WikiTemplate.findTemplate(ctxt, page);
+			return template.toString(ctxt);
 		}
 	}
 	public static class WikilinkWiklet extends Wiklet {
@@ -538,7 +697,11 @@ public class WikiTemplate {
 		public String getPattern() {
 			return "WIKILINK";
 		}
-		public String apply(Context ctxt, String text) throws ServiceException {
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return false;
+		}
+		public String apply(Context ctxt) throws ServiceException {
+			String text = ctxt.token.getValue();
 			String link = text;
 			String title = text;
 			int pos = text.indexOf('|');
