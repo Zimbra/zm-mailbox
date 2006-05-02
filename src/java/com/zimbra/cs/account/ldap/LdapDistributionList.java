@@ -45,13 +45,11 @@ import com.zimbra.cs.service.ServiceException;
 
 public class LdapDistributionList extends LdapNamedEntry implements DistributionList {
     private String mName;
-    private boolean mIsSecurityGroup;
 
     LdapDistributionList(String dn, Attributes attrs)
     {
         super(dn, attrs);
         mName = LdapUtil.dnToEmail(mDn);
-        mIsSecurityGroup = hasZimbraSecurityGroupObjectClass();
     }
 
     public String getId() {
@@ -68,7 +66,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
     
     public boolean isSecurityGroup() throws ServiceException
     {
-        return mIsSecurityGroup;
+        return hasZimbraSecurityGroupObjectClass();
     }
     
     public void setSecurityGroup(boolean enabled) throws ServiceException
@@ -108,7 +106,6 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
                     attrs.put(Provisioning.A_zimbraMemberOf, members);
                 }
             }
-            
         }
         
         String members[] = getAllMembers();
