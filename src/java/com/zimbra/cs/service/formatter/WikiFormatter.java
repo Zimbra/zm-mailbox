@@ -59,16 +59,9 @@ public class WikiFormatter extends Formatter {
     }
     
     private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
-		//long t0 = System.currentTimeMillis();
     	Folder f = context.targetMailbox.getFolderById(context.opContext, wiki.getFolderId());
-		//long t1 = System.currentTimeMillis();
-        //ZimbraLog.wiki.info("Get folder : " + (t1-t0) + "ms");
-    	WikiTemplate wt = getTemplate(context, f, CHROME);
-		//t1 = System.currentTimeMillis();
-        //ZimbraLog.wiki.info("Get chrome : " + (t1-t0) + "ms");
-    	String template = wt.toString(context.opContext, wiki);
-		//t1 = System.currentTimeMillis();
-        //ZimbraLog.wiki.info("Template generation : " + (t1-t0) + "ms");
+    	WikiTemplate wt = getTemplate(context, f, wiki.getWikiWord());
+    	String template = wt.getDocument(context.opContext, wiki, CHROME);
     	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
     	context.resp.getOutputStream().print(template);
     }

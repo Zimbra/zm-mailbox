@@ -45,16 +45,18 @@ public class WikiTemplate {
 	
 	public WikiTemplate(WikiItem item) throws ServiceException {
 		this(new String(item.getMessageContent()));
-		mCreateTime = System.currentTimeMillis();
+		touch();
 	}
 	
 	public WikiTemplate(String item) {
 		mTemplate = item;
 		mTokens = new ArrayList<Token>();
-		mCreateTime = 0;
+		mDocument = null;
+		mModifiedTime = 0;
 	}
 	
-	public static WikiTemplate findTemplate(Context ctxt, String name) throws IOException,ServiceException {
+	public static WikiTemplate findTemplate(Context ctxt, String name)
+	throws IOException,ServiceException {
     	WikiTemplateStore ts = WikiTemplateStore.getInstance(ctxt.item);
     	WikiTemplate template;
 		if (name.startsWith("_")) {
@@ -66,49 +68,71 @@ public class WikiTemplate {
 		return template;
 	}
 	
-	public String toString(OperationContext octxt, MailItem item) throws ServiceException, IOException {
+	public String toString(OperationContext octxt, MailItem item)
+	throws ServiceException, IOException {
 		return toString(new Context(octxt, item));
 	}
 	
 	public String toString(Context ctxt) throws ServiceException, IOException {
-		if (!mParsed || isExpired(ctxt)) {
-			parse(ctxt);
-			mCreateTime = System.currentTimeMillis();
+		if (!mParsed) {
+			parse();
 		}
-		return mDocument;
+		StringBuffer buf = new StringBuffer();
+		for (Token tok : mTokens) {
+			ctxt.token = tok;
+			buf.append(apply(ctxt));
+		}
+		touch();
+		return buf.toString();
 	}
 	
 	public Token getToken(int i) {
 		return mTokens.get(i);
 	}
 
-	public long getCreateTime() {
-		return mCreateTime;
+	public long getModifiedTime() {
+		return mModifiedTime;
 	}
 	
-	private boolean isExpired(Context ctxt) throws ServiceException, IOException {
+	public void setDocument(String doc) {
+		mDocument = doc;
+		touch();
+	}
+	
+	public String getDocument(OperationContext octxt, MailItem item, String chrome)
+	throws ServiceException, IOException {
+		return getDocument(new Context(octxt, item), chrome);
+	}
+	
+	public String getDocument(Context ctxt, String chrome)
+	throws ServiceException, IOException {
+		WikiTemplateStore ts = WikiTemplateStore.getInstance(ctxt.item);
+		WikiTemplate chromeTemplate = ts.getTemplate(ctxt.octxt, chrome);
+		if (mDocument == null || chromeTemplate.isExpired(ctxt)) {
+			ZimbraLog.wiki.debug("generating new document " + ctxt.item.getSubject());
+			String doc = chromeTemplate.toString(ctxt);
+			setDocument(doc);
+		}
+		return mDocument;
+	}
+	
+	public boolean isExpired(Context ctxt) throws ServiceException, IOException {
 		for (Token tok : mTokens) {
 			if (tok.getType() == Token.TokenType.TEXT)
 				continue;
 			ctxt.token = tok;
 			Wiklet w = findWiklet(tok);
 			if (w != null && w.isExpired(this, ctxt)) {
-				//ZimbraLog.wiki.info("failed validation " + ctxt.item.getSubject() + " because " + tok.getValue());
+				ZimbraLog.wiki.debug("failed validation " + ctxt.item.getSubject() + " because " + tok.getValue());
 				return true;
 			}
 		}
 		return false;
 	}
 	
-	private void parse(Context ctxt) throws ServiceException, IOException {
+	public void parse() {
 		if (!mParsed)
 			Token.parse(mTemplate, mTokens);
-		StringBuffer buf = new StringBuffer();
-		for (Token tok : mTokens) {
-			ctxt.token = tok;
-			buf.append(apply(ctxt));
-		}
-		mDocument = buf.toString();
 		mParsed = true;
 	}
 	
@@ -117,18 +141,8 @@ public class WikiTemplate {
 			return ctxt.token.getValue();
 		Wiklet w = findWiklet(ctxt.token);
 		if (w != null) {
-			//long t0 = System.currentTimeMillis();
 			String ret = w.apply(ctxt);
-			//long t1 = System.currentTimeMillis() - t0;
-	        //com.zimbra.cs.util.ZimbraLog.wiki.info("Applying Wiklet " + w.getName() + " : " + t1 + "ms");
-			List<Token> tokens = new ArrayList<Token>();
-			Token.parse(ret, tokens);
-			StringBuffer buf = new StringBuffer();
-			for (Token t : tokens) {
-				ctxt.token = t;
-				buf.append(apply(ctxt));
-			}
-			return buf.toString();
+			return ret;
 		}
 		return "";
 	}
@@ -151,7 +165,11 @@ public class WikiTemplate {
 		return w;
 	}
 	
-	private long    mCreateTime;
+	private void touch() {
+		mModifiedTime = System.currentTimeMillis();
+	}
+	
+	private long    mModifiedTime;
 	private boolean mParsed;
 	
 	private List<Token> mTokens;
@@ -677,7 +695,7 @@ public class WikiTemplate {
 				page = params.keySet().iterator().next();
 			}
 			WikiTemplate includedTemplate = WikiTemplate.findTemplate(ctxt, page);
-			return includedTemplate.getCreateTime() > template.getCreateTime();
+			return includedTemplate.getModifiedTime() > template.getModifiedTime();
 		}
 		public String apply(Context ctxt) throws ServiceException, IOException {
 			Map<String,String> params = parseParam(ctxt.token.getValue());
