@@ -47,6 +47,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.util.StringUtil;
 
 
 /**
@@ -98,6 +99,10 @@ public class ZimbraSoapContext {
     public static final String E_CHANGE     = "change";
     public static final String A_CHANGE_ID  = "token";
     public static final String E_TARGET_SERVER = "targetServer";
+    public static final String E_USER_AGENT = "userAgent";
+    public static final String A_NAME       = "name";
+    public static final String A_VERSION    = "version";
+    public static final String E_CONTEXT    = "context";
 
     public static final String BY_NAME = "name";
     public static final String BY_ID   = "id";
@@ -131,6 +136,7 @@ public class ZimbraSoapContext {
     private int         mHopCount;
     private boolean     mMountpointTraversed;
 
+    private String mUserAgent;
 
     public ZimbraSoapContext(ZimbraSoapContext lc, String targetAccountId) throws ServiceException {
         mRawAuthToken = lc.mRawAuthToken;
@@ -263,6 +269,20 @@ public class ZimbraSoapContext {
 
         // temporary hack: don't qualify item ids in reponses, if so requested
         mUnqualifiedItemIds = (ctxt != null && ctxt.getOptionalElement(E_NO_QUALIFY) != null);
+        
+        // Handle user agent if specified by the client.  The user agent string is formatted
+        // as "name/version".
+        Element userAgent = (ctxt == null ? null : ctxt.getOptionalElement(E_USER_AGENT));
+        if (userAgent != null) {
+            String name = userAgent.getAttribute(A_NAME, null);
+            String version = userAgent.getAttribute(A_VERSION, null);
+            if (!StringUtil.isNullOrEmpty(name)) {
+                mUserAgent = name;
+                if (!StringUtil.isNullOrEmpty(version)) {
+                    mUserAgent = mUserAgent + "/" + version;
+                }
+            }
+        }
     }
 
     /** Parses a <code>&lt;sessionId></code> {@link Element} from the SOAP Header.<p>
@@ -570,6 +590,32 @@ public class ZimbraSoapContext {
             eSession.addAttribute(A_NOTIFY, false);
         return ctxt;
     }
+    
+    /** Adds user agent information to a <code>&lt;context></code> {@link Element}
+     *  created by a call to {@link #toCtxt}.
+     *  
+     * @param ctxt       A <code>&lt;context></code> Element as created by toCtxt.
+     * @param name       The name of the client application
+     * @param version    The version number of the client application
+     * 
+     * @return The passed-in <code>&lt;context></code> Element.
+     * @throws IllegalArgumentException if the given Element's name is not <code>context</code>
+     * @see #toCtxt */
+    public static Element addUserAgentToCtxt(Element ctxt, String name, String version) {
+        if (StringUtil.isNullOrEmpty(name))
+            return ctxt;
+        String elementName = ctxt.getName();
+        if (!elementName.equalsIgnoreCase(E_CONTEXT)) {
+            throw new IllegalArgumentException("Invalid element: " + elementName);
+        }
+
+        Element eUserAgent = ctxt.addElement(E_USER_AGENT);
+        eUserAgent.addAttribute(A_NAME, name).setText(name);
+        if (!StringUtil.isNullOrEmpty(version)) {
+            eUserAgent.addAttribute(A_VERSION, version).setText(version);
+        }
+        return ctxt;
+    }
 
     /** Creates a SOAP request <code>&lt;context></code> {@link Element} with
      *  an associated session.  (All requests except Auth and a few others must
@@ -612,6 +658,14 @@ public class ZimbraSoapContext {
         return mIsProxyRequest;
     }
 
+    /**
+     * Returns the name and version of the client that's making the current
+     * request, in the format "name/version".
+     */
+    public String getUserAgent() {
+        return mUserAgent;
+    }
+    
     /** Formats the {@link MailItem}'s ID into a <code>String</code> that's
      *  addressable by the request's originator.  In other words, if the owner
      *  of the item matches the auth token's principal, you just get a bare

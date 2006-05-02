@@ -112,6 +112,7 @@ public abstract class LmcSoapRequest {
 			trans = new SoapHttpTransport(targetURL);
 			trans.setTimeout(sTimeoutMillis);
             trans.setRetryCount(sRetryCount);
+            trans.setUserAgent("lmc", null);
 
 			// set the auth token and session id in the transport for this request to use
             String curSessionID = null;

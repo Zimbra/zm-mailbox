@@ -31,6 +31,7 @@ urn:zimbra  -- top-level namespace for global attributes/elements
        [<notify seq="{highest_notification_received}">]
        [<nonotify/>]
        [<targetServer>{proxy-target-server-id}</targetServer>]
+       [<userAgent name="{client-name}" [version="{client-version}"]/>]
     </context>
   </soap:Header>
   <soap:Body>
@@ -208,6 +209,11 @@ response:
  </soap:Body>
 </soap:Envelope>
 
+User Agent
+
+userAgent is an optional context element that is used for identifying the
+type of SOAP client that's making the request.  The user agent is written
+to zimbra.log messages with the context string "ua".
 
 -----------------------------
 

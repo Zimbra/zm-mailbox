@@ -83,6 +83,11 @@ public class ZimbraLog {
      * dealing with a mailbox.
      */
     private static final String C_MID = "mid";    
+
+    /**
+     * "ua" key for context.  The name of the client application. 
+     */
+    public static final String C_USER_AGENT = "ua";
     
     /**
      * the "zimbra.misc" logger. For all events that don't have a specific-catagory.

@@ -29,6 +29,7 @@
 
 package com.zimbra.soap;
 
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.SoapProtocol;
 import com.zimbra.soap.SoapFaultException;
 
@@ -46,7 +47,9 @@ public abstract class SoapTransport {
     private boolean mPrettyPrint;
     private String mAuthToken;
     private String mTargetAcctId = null;
-    private String mSessionId = null; 
+    private String mSessionId = null;
+    private String mUserAgentName;
+    private String mUserAgentVersion;
 
     protected SoapTransport() 
     {
@@ -86,6 +89,16 @@ public abstract class SoapTransport {
         mSessionId = sessionId;
     }
     public String getSessionId() { return mSessionId; }
+
+    /**
+     * Sets the SOAP client name and version number.
+     * @param name the SOAP client name
+     * @param version the SOAP client version number, or <code>null</code>
+     */
+    public void setUserAgent(String name, String version) {
+        mUserAgentName = name;
+        mUserAgentVersion = version;
+    }
     
     /**
      * Which version of Soap to use.
@@ -109,6 +122,9 @@ public abstract class SoapTransport {
         
         Element context = ZimbraSoapContext.toCtxt(mSoapProto, mAuthToken, mTargetAcctId, noSession);
         ZimbraSoapContext.addSessionToCtxt(context, mSessionId, noNotify);
+        if (mUserAgentName != null) {
+            ZimbraSoapContext.addUserAgentToCtxt(context, mUserAgentName, mUserAgentVersion);
+        }
 
         if (requestedAccountId != null) {
             context.addElement(ZimbraSoapContext.E_ACCOUNT).addAttribute(ZimbraSoapContext.A_BY, ZimbraSoapContext.BY_ID).setText(requestedAccountId);

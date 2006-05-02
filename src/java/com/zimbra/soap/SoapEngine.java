@@ -129,6 +129,9 @@ public class SoapEngine {
             String ip = (String) context.get(REQUEST_IP);
             if (ip != null)
                 ZimbraLog.addToContext(ZimbraLog.C_IP, ip);
+            if (lc.getUserAgent() != null) {
+                ZimbraLog.addToContext(ZimbraLog.C_USER_AGENT, lc.getUserAgent());
+            }
 
             context.put(ZIMBRA_CONTEXT, lc);
             context.put(ZIMBRA_ENGINE, this);
