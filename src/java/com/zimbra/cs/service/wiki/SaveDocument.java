@@ -132,14 +132,10 @@ public class SaveDocument extends WikiDocumentHandler {
         	itemId = iid.getId();
         }
 
-        /***
-        // REVISIT: This call fails when trying to save a new version of
-        //          an existing document.
         validateRequest(wiki,
         				itemId,
         				docElem.getAttributeLong(MailService.A_VERSION, 0),
         				name);
-		/***/
         
         WikiWord ww = wiki.createDocument(octxt, ctype, name, getAuthor(lc), doc.contents);
         Document docItem = ww.getWikiItem(octxt);
