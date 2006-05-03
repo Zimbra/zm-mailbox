@@ -24,35 +24,46 @@
  */
 package com.zimbra.cs.operation;
 
-import java.io.IOException;
+import java.util.Map;
 
-import com.zimbra.cs.mailbox.BrowseResult;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 
-public class BrowseOperation extends Operation {
-	static final int LOAD = 10; 
+public class CreateContactOperation extends Operation {
 	
-	private String mBrowseBy;
-	private BrowseResult mResult;
+	private static int LOAD = 5;
 	
-	public BrowseOperation(Session session, OperationContext oc, Mailbox mbox, 
-				Requester req, String browseBy) throws ServiceException {
-		super(session, oc, mbox, req, req.getPriority(), LOAD);
-		mBrowseBy = browseBy;
-		
-		schedule();
+	private ItemId mIidFolder;
+	private Map<String,String> mAttrs;
+	private String mTagsStr;
+	
+	private Contact mContact;
+
+	public CreateContactOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
+				ItemId iidFolder, Map<String,String> attrs, String tagsStr)
+	{
+		super(session, oc, mbox, req, LOAD);
+		mIidFolder = iidFolder;
+		mAttrs = attrs;
+		mTagsStr = tagsStr;
 	}
 	
 	protected void callback() throws ServiceException {
-		try {
-			mResult = mMailbox.browse(getOpCtxt(), mBrowseBy);
-		} catch (IOException e) {
-			throw ServiceException.FAILURE("IO error", e);
-		}
+		mContact = getMailbox().createContact(getOpCtxt(), mAttrs, mIidFolder.getId(), mTagsStr);
 	}
 	
-	public BrowseResult getResult() { return mResult; }
+	public Contact getContact() { 
+		return mContact;
+	}
+	
+	public String toString() {
+		StringBuilder toRet = new StringBuilder();
+		toRet.append("CreateContact(folder=").append(mIidFolder.toString()).append(")");
+		return toRet.toString();
+	}
+
 }

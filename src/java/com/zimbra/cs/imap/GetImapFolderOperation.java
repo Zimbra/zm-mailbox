@@ -23,7 +23,7 @@ public class GetImapFolderOperation extends Operation {
 		mFolderName = folderName;
 		mWritable = writable;
 		
-		run();
+		schedule();
 	}
 	
 	protected void callback() throws ServiceException 

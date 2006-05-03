@@ -43,11 +43,14 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.operation.CreateContactOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.formatter.VCard;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -70,6 +73,7 @@ public class CreateContact extends WriteOpDocumentHandler  {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
+        Session session = getSession(context);
 
         Element cn = request.getElement(MailService.E_CONTACT);
         ItemId iidFolder = new ItemId(cn.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER), lc);
@@ -91,7 +95,12 @@ public class CreateContact extends WriteOpDocumentHandler  {
             }
         }
 
-        Contact con = mbox.createContact(octxt, attrs, iidFolder.getId(), tagsStr);
+//        Contact con = mbox.createContact(octxt, attrs, iidFolder.getId(), tagsStr);
+        CreateContactOperation op = new CreateContactOperation(session, octxt, mbox, Requester.SOAP,
+        			iidFolder, attrs, tagsStr);
+        op.schedule();
+        Contact con = op.getContact();
+        
         Element response = lc.createElement(MailService.CREATE_CONTACT_RESPONSE);
         if (con != null)
             ToXML.encodeContact(response, lc, con, null, true, null);

@@ -33,7 +33,10 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.operation.CreateTagOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
@@ -45,14 +48,19 @@ public class CreateTag extends WriteOpDocumentHandler  {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
-		// FIXME: need to check that account and mailbox exist
         Mailbox mbox = getRequestedMailbox(lc);
+        Mailbox.OperationContext octxt = lc.getOperationContext();
+        Session session = getSession(context);
+        
 
         Element t = request.getElement(MailService.E_TAG);
         String name = t.getAttribute(MailService.A_NAME);
         byte color = (byte) t.getAttributeLong(MailService.A_COLOR, MailItem.DEFAULT_COLOR);
         
-        Tag tag = mbox.createTag(null, name, color);
+        CreateTagOperation op = new CreateTagOperation(session, octxt, mbox, Requester.SOAP,
+        			name, color);
+        op.schedule();
+        Tag tag = op.getTag();
         
         Element response = lc.createElement(MailService.CREATE_TAG_RESPONSE);
         if (tag != null)

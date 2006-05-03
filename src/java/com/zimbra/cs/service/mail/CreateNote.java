@@ -34,8 +34,11 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.Note.Rectangle;
+import com.zimbra.cs.operation.CreateNoteOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
@@ -54,6 +57,8 @@ public class CreateNote extends WriteOpDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
+        Mailbox.OperationContext octxt = lc.getOperationContext();
+        Session session = getSession(context);
 
         Element t = request.getElement(MailService.E_NOTE);
         ItemId iidFolder = new ItemId(t.getAttribute(MailService.A_FOLDER), lc);
@@ -62,7 +67,10 @@ public class CreateNote extends WriteOpDocumentHandler {
         String strBounds = t.getAttribute(MailService.A_BOUNDS, null);
         Rectangle bounds = new Rectangle(strBounds);
 
-        Note note = mbox.createNote(null, content, bounds, color, iidFolder.getId());
+        CreateNoteOperation op = new CreateNoteOperation(session, octxt, mbox, Requester.SOAP,
+        			content, bounds, color, iidFolder);
+        op.schedule();
+        Note note = op.getNote();
 
         Element response = lc.createElement(MailService.CREATE_NOTE_RESPONSE);
         if (note != null)

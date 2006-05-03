@@ -29,13 +29,13 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.operation.CreateMountpointOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -54,6 +54,8 @@ public class CreateMountpoint extends WriteOpDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
+        Mailbox.OperationContext octxt = lc.getOperationContext();
+        Session session = getSession(context);
 
         Element t = request.getElement(MailService.E_MOUNT);
         String name      = t.getAttribute(MailService.A_NAME);
@@ -61,20 +63,12 @@ public class CreateMountpoint extends WriteOpDocumentHandler {
         int    remoteId  = (int) t.getAttributeLong(MailService.A_REMOTE_ID);
         String view      = t.getAttribute(MailService.A_DEFAULT_VIEW, null);
         ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER), lc);
-
-        Mountpoint mpt;
-        try {
-            mpt = mbox.createMountpoint(lc.getOperationContext(), iidParent.getId(), name, ownerId, remoteId, MailItem.getTypeForName(view));
-        } catch (ServiceException se) {
-            if (se.getCode() == MailServiceException.ALREADY_EXISTS && t.getAttributeBool(MailService.A_FETCH_IF_EXISTS, false)) {
-                Folder folder = mbox.getFolderByName(lc.getOperationContext(), iidParent.getId(), name);
-                if (folder instanceof Mountpoint)
-                    mpt = (Mountpoint) folder;
-                else
-                    throw se;
-            } else
-                throw se;
-        }
+        boolean fetchIfExists = t.getAttributeBool(MailService.A_FETCH_IF_EXISTS, false);
+        
+        CreateMountpointOperation op = new CreateMountpointOperation(session, octxt, mbox, Requester.SOAP,
+        			iidParent, name, ownerId, remoteId, view, fetchIfExists);
+        op.schedule();
+        Mountpoint mpt = op.getMountpoint();
         
         Element response = lc.createElement(MailService.CREATE_MOUNTPOINT_RESPONSE);
         if (mpt != null)

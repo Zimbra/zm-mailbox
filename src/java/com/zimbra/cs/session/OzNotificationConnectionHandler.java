@@ -209,6 +209,10 @@ public class OzNotificationConnectionHandler implements OzConnectionHandler
             authToken = (String)request.getHeaders().get("ZimbraAuthToken");
         }
         
+        //
+        // They didn't give us a session, authtoken, or seqNo -- therefore they
+        // must not have the javascript yet: give it to them
+        //
         if (sessionId == null && authToken == null && seqNoStr == null) {
             byte[] js = getJSFileBytes();
             writeHttpResponse(200, "OK", "text/html", js);

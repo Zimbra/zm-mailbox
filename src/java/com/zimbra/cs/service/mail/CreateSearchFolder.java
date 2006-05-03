@@ -32,14 +32,16 @@ import java.util.Map;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.operation.CreateSearchFolderOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
- * @author schemers
  */
 public class CreateSearchFolder extends WriteOpDocumentHandler  {
 
@@ -52,6 +54,8 @@ public class CreateSearchFolder extends WriteOpDocumentHandler  {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
+        Mailbox.OperationContext octxt = lc.getOperationContext();
+        Session session = getSession(context);
 
         Element t = request.getElement(MailService.E_SEARCH);
         String name      = t.getAttribute(MailService.A_NAME);
@@ -60,7 +64,10 @@ public class CreateSearchFolder extends WriteOpDocumentHandler  {
         String sort      = t.getAttribute(MailService.A_SORTBY, null);
         ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER), lc);
 
-        SearchFolder search = mbox.createSearchFolder(lc.getOperationContext(), iidParent.getId(), name, query, types, sort);
+        CreateSearchFolderOperation op = new CreateSearchFolderOperation(session, octxt, mbox, Requester.SOAP,
+        			iidParent, name, query, types, sort);
+        op.schedule();
+        SearchFolder search = op.getSearchFolder();
 
         Element response = lc.createElement(MailService.CREATE_SEARCH_FOLDER_RESPONSE);
         if (search != null)

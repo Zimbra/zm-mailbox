@@ -28,7 +28,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.io.IOException;
 import java.util.Map;
 
 import javax.mail.internet.MimeMessage;
@@ -36,23 +35,22 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.operation.AddMsgOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
 /**
- * @author tim
  *
  */
 public class AddMsg extends WriteOpDocumentHandler {
@@ -69,6 +67,7 @@ public class AddMsg extends WriteOpDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
+        Session session = getSession(context);
         
         Element msgElem = request.getElement(MailService.E_MSG);
         
@@ -126,22 +125,17 @@ public class AddMsg extends WriteOpDocumentHandler {
         else
             mm = ParseMimeMessage.importMsgSoap(msgElem);
         
-        int messageId = -1;
-        try {
-            ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
-            Message msg = mbox.addMessage(octxt, pm, folder.getId(), noICal, Flag.flagsToBitmask(flagsStr), tagsStr);
-            if (msg != null)
-                messageId = msg.getId();
-        } catch(IOException ioe) {
-            throw ServiceException.FAILURE("Error While Delivering Message", ioe);
-        }
+        AddMsgOperation op = new AddMsgOperation(session, octxt, mbox, Requester.SOAP,
+        			date, tagsStr, folder, flagsStr, noICal, mm);
+        op.schedule();
+        int messageId = op.getMessageId();
         
         // we can now purge the uploaded attachments
         if (mimeData.uploads != null)
             FileUploadServlet.deleteUploads(mimeData.uploads);
         
         Element response = lc.createElement(MailService.ADD_MSG_RESPONSE);
-        if (messageId != -1)
+        if (messageId >= 0)
             response.addElement(MailService.E_MSG).addAttribute(MailService.A_ID, messageId);
         
         return response;
