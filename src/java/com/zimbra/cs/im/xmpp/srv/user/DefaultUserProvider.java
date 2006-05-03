@@ -11,7 +11,7 @@
 // * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
 // * the License for the specific language governing rights and limitations
 // * under the License.
-// * 
+// *
 // * Part of the Zimbra Collaboration Suite Server.
 // *
 // * The Original Code is Copyright (C) Jive Software. Used with permission
@@ -46,7 +46,7 @@
 // *
 // * @author Matt Tucker
 // */
-//public class DefaultUserPråovider implements UserProvider {
+//public class DefaultUserProvider implements UserProvider {
 //
 //    private static final String LOAD_USER =
 //            "SELECT name, email, creationDate, modificationDate FROM jiveUser WHERE username=?";
