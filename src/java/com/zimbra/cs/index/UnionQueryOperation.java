@@ -258,7 +258,7 @@ class UnionQueryOperation extends QueryOperation
     	}
 
     	if (hasRemoteOps) {
-        	// okay, if we actually have remote operations, then we need to call setup() once per --Ï
+        	// okay, if we actually have remote operations, then we need to call setup() once per --
         	// this actually runs the remote operation
     		for (QueryOperation toSetup : mQueryOperations) {
     			if (toSetup instanceof RemoteQueryOperation) {
