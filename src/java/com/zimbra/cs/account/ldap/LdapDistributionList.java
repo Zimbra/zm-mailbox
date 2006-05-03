@@ -154,7 +154,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
     private boolean inMemberOf(NamedEntry e, String groupId) {
         String[] memberOf = e.getMultiAttr(Provisioning.A_zimbraMemberOf);
         for (int i=0; i < memberOf.length; i++)
-            if (groupId.equalsIgnoreCase(memberOf[i])) return true;
+            if (memberOf[i].equalsIgnoreCase(groupId)) return true;
         return false;
     }
     
@@ -166,6 +166,8 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
     }
     
     private void updateZimbraMemberOf(String member, String groupId, boolean add) throws ServiceException {
+        if (groupId == null) return;
+
         Provisioning prov = Provisioning.getInstance();
         NamedEntry entry = prov.getAccountByName(member);
         if (entry == null){
