@@ -310,21 +310,20 @@ public class Folder extends MailItem {
 
     /** Returns an unmodifiable list of the folder's subfolders sorted by
      *  name.  The sort is case-insensitive.
-     * 
-     * @return The sorted List of subfolders, or <code>null</code>
-     *         if the folder has no subfolders. 
      * @throws ServiceException */
     public List<Folder> getSubfolders(Mailbox.OperationContext octxt) throws ServiceException {
         if (mSubfolders == null)
-            return null;
+            return Collections.emptyList();
+
         Collections.sort(mSubfolders, new SortByName());
         if (octxt == null || octxt.authuser == null)
             return Collections.unmodifiableList(mSubfolders);
+
         ArrayList<Folder> visible = new ArrayList<Folder>();
         for (Folder subfolder : mSubfolders)
             if (subfolder.canAccess(ACL.RIGHT_READ, octxt.authuser))
                 visible.add(subfolder);
-        return visible.isEmpty() ? null : visible;
+        return visible;
     }
 
     /** Returns a <code>List</code> that includes this folder and all its

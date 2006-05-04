@@ -415,13 +415,8 @@ public class DbTest {
         try {
     		Folder folder = mailbox.getFolderByPath(null, target);
 			System.out.println("./  [" + folder.getUnreadCount() + "]");
-			List subfolders = folder.getSubfolders(null);
-			if (subfolders != null) {
-				for (Iterator it = subfolders.iterator(); it.hasNext(); ) {
-					Folder subfolder = (Folder) it.next();
-					System.out.println(subfolder.getName() + "/  [" + subfolder.getUnreadCount() + "]");
-				}
-			}
+            for (Folder subfolder : folder.getSubfolders(null))
+				System.out.println(subfolder.getName() + "/  [" + subfolder.getUnreadCount() + "]");
         } catch (MailServiceException.NoSuchItemException nsie) { }
 	}
 

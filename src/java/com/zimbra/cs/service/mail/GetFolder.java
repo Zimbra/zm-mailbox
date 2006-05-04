@@ -88,13 +88,9 @@ public class GetFolder extends DocumentHandler {
     throws ServiceException {
 		Element respFolder = ToXML.encodeFolder(response, lc, folder);
 
-        List subfolders = folder.getSubfolders(octxt);
-        if (subfolders != null)
-	        for (Iterator it = subfolders.iterator(); it.hasNext(); ) {
-	        	Folder subfolder = (Folder) it.next();
-	        	if (subfolder != null)
-	        		handleFolder(mbox, subfolder, respFolder, lc, octxt);
-        }
+        for (Folder subfolder : folder.getSubfolders(octxt))
+        	if (subfolder != null)
+        		handleFolder(mbox, subfolder, respFolder, lc, octxt);
         return respFolder;
 	}
 

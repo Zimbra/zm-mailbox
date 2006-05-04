@@ -86,7 +86,7 @@ public class Sync extends DocumentHandler {
 
         // short-circuit if we know that this won't be in the output
         List<Folder> subfolders = folder.getSubfolders(null);
-        if (!isVisible && (subfolders == null || subfolders.isEmpty()))
+        if (!isVisible && subfolders.isEmpty())
             return false;
 
         // write this folder's data to the response
@@ -113,10 +113,9 @@ public class Sync extends DocumentHandler {
             return true;
 
         // write the subfolders' data to the response
-        if (subfolders != null)
-            for (Folder subfolder : subfolders)
-                if (subfolder != null)
-                    isVisible |= folderSync(zsc, f, mbox, subfolder, visible, initial);
+        for (Folder subfolder : subfolders)
+            if (subfolder != null)
+                isVisible |= folderSync(zsc, f, mbox, subfolder, visible, initial);
 
         // if this folder and all its subfolders are not visible (oops!), remove them from the response
         if (!isVisible)

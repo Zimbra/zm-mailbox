@@ -368,17 +368,15 @@ public class WikiTemplate {
 	    	buf.append(sTAGS[sCLASS][style]);
 	    	buf.append("'>");
 	    	List<Folder> subfolders = folder.getSubfolders(ctxt.octxt);
-	    	if (subfolders != null) {
-	        	for (Folder f : subfolders) {
-	    	    	buf.append("<");
-	        		buf.append(sTAGS[sINNER][style]);
-	        		buf.append(" class='_pageLink'>");
-	        		buf.append(createLink(f.getName() + "/"));
-	        		buf.append("</");
-	        		buf.append(sTAGS[sINNER][style]);
-	        		buf.append(">");
-	        	}
-	    	}
+        	for (Folder f : subfolders) {
+    	    	buf.append("<");
+        		buf.append(sTAGS[sINNER][style]);
+        		buf.append(" class='_pageLink'>");
+        		buf.append(createLink(f.getName() + "/"));
+        		buf.append("</");
+        		buf.append(sTAGS[sINNER][style]);
+        		buf.append(">");
+        	}
 	    	Mailbox mbox = ctxt.item.getMailbox();
             for (Document doc : mbox.getWikiList(ctxt.octxt, folder.getId())) {
             	if (shouldSkipThis(doc))
@@ -509,7 +507,7 @@ public class WikiTemplate {
 		public boolean isExpired(WikiTemplate template, Context ctxt) {
 			return false;
 		}
-		public String apply(Context ctxt) throws ServiceException {
+		public String apply(Context ctxt) {
 			return "<div class='ImgNotebook_pageIcon'></div>";
 		}
 	}
@@ -523,7 +521,7 @@ public class WikiTemplate {
 		public boolean isExpired(WikiTemplate template, Context ctxt) {
 			return false;
 		}
-		public String apply(Context ctxt) throws ServiceException {
+		public String apply(Context ctxt) {
 			if (ctxt.item instanceof Document)
 				return ((Document)ctxt.item).getFilename();
 			else if (ctxt.item instanceof Folder)
@@ -542,7 +540,7 @@ public class WikiTemplate {
 		public boolean isExpired(WikiTemplate template, Context ctxt) {
 			return false;
 		}
-		public String apply(Context ctxt) throws ServiceException {
+		public String apply(Context ctxt) {
 			Document doc = (Document) ctxt.item;
 			return doc.getFragment();
 		}
@@ -651,7 +649,7 @@ public class WikiTemplate {
 		public boolean isExpired(WikiTemplate template, Context ctxt) {
 			return false;
 		}
-		public String apply(Context ctxt) throws ServiceException {
+		public String apply(Context ctxt) {
 			Document doc = (Document) ctxt.item;
 			return Integer.toString(doc.getVersion());
 		}
@@ -718,7 +716,7 @@ public class WikiTemplate {
 		public boolean isExpired(WikiTemplate template, Context ctxt) {
 			return false;
 		}
-		public String apply(Context ctxt) throws ServiceException {
+		public String apply(Context ctxt) {
 			String text = ctxt.token.getValue();
 			String link = text;
 			String title = text;
