@@ -32,7 +32,7 @@ log4j.additivity.zimbra.security=false
 log4j.logger.zimbra.security=INFO,AUDIT
 
 # Appender STATS writes to the file "zimbrastats.csv".
-log4j.appender.STATS=com.zimbra.cs.stats.ZimbraStatsAppender
+log4j.appender.STATS=org.apache.log4j.ZimbraStatsAppender
 log4j.appender.STATS.File=/opt/zimbra/log/zimbrastats.csv
 log4j.appender.STATS.DatePattern='.'yyyy-MM-dd
 log4j.appender.STATS.Append=true
