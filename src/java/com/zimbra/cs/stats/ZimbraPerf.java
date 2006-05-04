@@ -477,7 +477,7 @@ public class ZimbraPerf {
     /**
      * Returns the names of the columns for zimbrastats.csv.
      */
-    static List<String> getZimbraStatsColumns() {
+    public static List<String> getZimbraStatsColumns() {
         List<String> columns = new ArrayList<String>();
         columns.add("timestamp");
         synchronized (sAccumulators) {
