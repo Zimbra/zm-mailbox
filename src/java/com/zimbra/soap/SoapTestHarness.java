@@ -32,7 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -86,12 +86,13 @@ public class SoapTestHarness {
 	private SoapProtocol mSoapProto;
     private SoapProtocol mResponseProto;
 	private SoapHttpTransport mTransport;
-	private String mAuthToken;
+    private String mTargetUser;
+    private String mAuthToken;
     private String mSessionId;
     private long mCounter = 0;
 	
 	/** any props we have set */
-	private HashMap mProps; 
+	private HashMap<String, String> mProps; 
 	private boolean mDebug;
 	
 	/** <uri> */
@@ -100,7 +101,7 @@ public class SoapTestHarness {
 	private int mTestNum;
 	
 	private Test mCurrent;
-	private ArrayList mTests;
+	private List<Test> mTests;
 
 	public static class Test {
 		/** the <test> element */
@@ -199,10 +200,10 @@ public class SoapTestHarness {
 	}
 
 	public SoapTestHarness() {
-		mProps = new HashMap();
+		mProps = new HashMap<String, String>();
         mSoapProto = SoapProtocol.Soap12;
         mResponseProto = SoapProtocol.Soap12;
-		mTests = new ArrayList();
+		mTests = new ArrayList<Test>();
 	}
 	
 	public void runTests(String args[]) 
@@ -261,6 +262,8 @@ public class SoapTestHarness {
         } else if (name.equals("sessionId")) {
             if (value != null)
                 mSessionId = value;
+        } else if (name.equals("target")) {
+            mTargetUser = (value == null || value.equals("") ? null : value);
         } else if (name.equals("protocol")) {
             mResponseProto = "js".equalsIgnoreCase(value) ? SoapProtocol.SoapJS : SoapProtocol.Soap12;
 		}
@@ -279,9 +282,8 @@ public class SoapTestHarness {
 	        doNamespace(e);
 	    }
     }
-	
-	private void doProperty(Element property) throws HarnessException
-	{
+
+	private void doProperty(Element property) throws HarnessException {
 		String name = property.getAttribute(A_NAME, null);
 		String value = property.getAttribute(A_VALUE, null);
 		if (name == null)
@@ -292,9 +294,7 @@ public class SoapTestHarness {
 		//System.out.println(name + "=" + value);
 	}
 
-    
-    private void doNamespace(Element property) throws HarnessException
-    {
+    private void doNamespace(Element property) throws HarnessException {
         String prefix = property.getAttribute(A_PREFIX, null);
         String uri = property.getAttribute(A_URI, null);
         if (prefix == null)
@@ -304,14 +304,12 @@ public class SoapTestHarness {
         getURIs(SoapProtocol.Soap12).put(prefix, uri);
         getURIs(SoapProtocol.SoapJS).put(prefix, uri);
     }
-    
-	protected void doTests(Element root) throws HarnessException, SoapFaultException, IOException
-	{
+
+	protected void doTests(Element root) throws HarnessException, SoapFaultException, IOException {
 		if (!root.getQName().equals(E_TESTS))
 			throw new HarnessException("root document node must be " + E_TESTS.getQualifiedName());
-	
-		for (Iterator it = root.elementIterator(); it.hasNext(); ) {
-			Element e = (Element) it.next();
+
+		for (Element e : root.listElements()) {
 //            e = expandProps(e.createCopy());
             e = expandProps(e);
 			if (e.getQName().equals(E_TEST)) {
@@ -321,11 +319,9 @@ public class SoapTestHarness {
 				checkGlobals(e);
 			}
 		}
-		
-		for (Iterator it = mTests.iterator(); it.hasNext(); ) {
-			Test t = (Test) it.next();
+
+        for (Test t : mTests)
 			System.out.println(t.getStatus());
-		}
 	}
 	
 	
@@ -334,9 +330,8 @@ public class SoapTestHarness {
 		mTests.add(mCurrent);
 		mCurrent.mTestNum = ++mTestNum;
 		mCurrent.mTest = test;
-		
-		for (Iterator it = test.elementIterator(); it.hasNext(); ) {
-			Element e = (Element) it.next();
+
+        for (Element e : test.listElements()) {
 			if (e.getQName().equals(E_REQUEST)) {
 				doRequest(e);
 			} else if (e.getQName().equals(E_RESPONSE)) {	
@@ -370,7 +365,7 @@ public class SoapTestHarness {
 		//System.out.println("("+text+")");
 		while (matcher.find()) {
             String name = matcher.group(2);
-			String replace = (String) mProps.get(name);
+			String replace = mProps.get(name);
             if (replace == null) {
                 if (name.equals("TIME")) {
                     replace = System.currentTimeMillis()+"";
@@ -393,12 +388,10 @@ public class SoapTestHarness {
 	}
 	
 	private Element expandProps(Element doc) throws HarnessException {
-		for (Iterator it = doc.elementIterator(); it.hasNext(); ) {
-			Element e = (Element) it.next();
+        for (Element e : doc.listElements()) {
 			expandProps(e);
 		}
-		for (Iterator it = doc.attributeIterator(); it.hasNext();) {
-			Element.Attribute attr = (Element.Attribute) it.next();
+        for (Element.Attribute attr : doc.listAttributes()) {
 			String text = attr.getValue();
 			if (text.indexOf("${") != -1)
 				attr.setValue(expandAllProps(text));
@@ -452,20 +445,22 @@ public class SoapTestHarness {
 	}
 
 	private void doRequest(Element request) throws SoapFaultException, IOException {
-//        mCurrent.mDocRequest = ((Element) request.elementIterator().next()).createCopy();
-        mCurrent.mDocRequest = (Element) request.elementIterator().next();
+//        mCurrent.mDocRequest = (request.elementIterator().next()).createCopy();
+        mCurrent.mDocRequest = request.elementIterator().next();
         mCurrent.mDocRequest.detach();
 		if (mAuthToken == null)
 			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest);
 		else {
-			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ZimbraSoapContext.toCtxt(mSoapProto, mAuthToken, mSessionId));
+            Element ctxt = ZimbraSoapContext.toCtxt(mSoapProto, mAuthToken, mSessionId);
+            if (mTargetUser != null)
+                ctxt.addUniqueElement(ZimbraSoapContext.E_ACCOUNT).addAttribute(ZimbraSoapContext.A_BY, ZimbraSoapContext.BY_NAME).setText(mTargetUser);
+			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ctxt);
             if (mResponseProto == SoapProtocol.SoapJS) {
                 Element context = mCurrent.mSoapRequest.getOptionalElement(mSoapProto.getHeaderQName()).getOptionalElement(ZimbraSoapContext.CONTEXT);
                 if (context != null)
                     context.addElement(ZimbraSoapContext.E_FORMAT).addAttribute(ZimbraSoapContext.A_TYPE, ZimbraSoapContext.TYPE_JAVASCRIPT);
             }
 //            try {
-//                Element ctxt = mCurrent.mSoapRequest.getElement(SoapProtocol.Soap12.mHeaderQName).getElement(ZimbraContext.CONTEXT);
 //                ctxt.addElement(ZimbraContext.E_CHANGE)
 //                    .addAttribute(ZimbraContext.A_TYPE, ZimbraContext.CHANGE_CREATED)
 //                    .addAttribute(ZimbraContext.A_CHANGE_ID, 190);
@@ -480,12 +475,12 @@ public class SoapTestHarness {
 		mCurrent.mDocResponse = mResponseProto.getBodyElement(mCurrent.mSoapResponse);
 	}
 
-    private static Map mURIs = null;
-    private static Map mJSURIs = null;
+    private static Map<String, String> mURIs = null;
+    private static Map<String, String> mJSURIs = null;
 
-    private static Map getURIs(SoapProtocol proto) {
+    private static Map<String, String> getURIs(SoapProtocol proto) {
         if (mURIs == null) {
-            mURIs = new HashMap();
+            mURIs = new HashMap<String, String>();
             mURIs.put("zimbra", "urn:zimbra");
             mURIs.put("acct", "urn:zimbraAccount");
             mURIs.put("mail", "urn:zimbraMail");
@@ -494,7 +489,7 @@ public class SoapTestHarness {
             mURIs.put("soap12", "http://www.w3.org/2003/05/soap-envelope");            
             mURIs.put("soap11", "http://schemas.xmlsoap.org/soap/envelope/");
 
-            mJSURIs = new HashMap();
+            mJSURIs = new HashMap<String, String>();
             mJSURIs.put("zimbra", "urn:zimbra");
             mJSURIs.put("acct", "urn:zimbraAccount");
             mJSURIs.put("mail", "urn:zimbraMail");
@@ -559,8 +554,7 @@ public class SoapTestHarness {
 		    setProperty(property, value);
 		}
 
-		for (Iterator it = parent.elementIterator(); it.hasNext(); ) {
-		    Element e = (Element) it.next();
+        for (Element e : parent.listElements()) {
 		    if (e.getQName().equals(E_SELECT)) {
 		        doSelect(se, e);
 		    } else {
@@ -570,8 +564,7 @@ public class SoapTestHarness {
 	}
 	
 	private void doResponse(Element test) throws SoapFaultException, IOException, HarnessException {
-		for (Iterator it = test.elementIterator(); it.hasNext(); ) {
-			Element e = (Element) it.next();
+        for (Element e : test.listElements()) {
 			if (e.getQName().equals(E_SELECT)) {
 				doSelect(mCurrent.mDocResponse, e);
 			} else {

@@ -35,6 +35,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -669,6 +670,7 @@ public class DbMailItem {
     public static List<Integer> markDeletionTargets(Folder folder) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
         Connection conn = mbox.getOperationConnection();
+
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -706,6 +708,7 @@ public class DbMailItem {
     public static List<Integer> markDeletionTargets(Mailbox mbox, List<Integer> ids) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
         String table = getMailItemTableName(mbox);
+
         PreparedStatement stmt = null;
         ResultSet rs = null;
         for (int i = 0; i < ids.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE)
@@ -735,7 +738,8 @@ public class DbMailItem {
 
     private static List<Integer> getPurgedConversations(Mailbox mbox) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
-        ArrayList<Integer> purgedConvs = new ArrayList<Integer>();
+        List<Integer> purgedConvs = new ArrayList<Integer>();
+
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -828,6 +832,7 @@ public class DbMailItem {
     }
     public static void writeTombstone(Mailbox mbox, PendingDelete info) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
+
         PreparedStatement stmt = null;
         try {
             StringBuilder ids = null;
@@ -857,9 +862,9 @@ public class DbMailItem {
         }
     }
 
-    public static String readTombstones(Mailbox mbox, long lastSync) throws ServiceException {
+    public static List<Integer> readTombstones(Mailbox mbox, long lastSync) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
-        StringBuilder result = new StringBuilder();
+        List<Integer> tombstones = new ArrayList<Integer>();
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -868,9 +873,18 @@ public class DbMailItem {
                     " WHERE sequence > ? AND ids IS NOT NULL ORDER BY sequence");
             stmt.setLong(1, lastSync);
             rs = stmt.executeQuery();
-            while (rs.next())
-                result.append(result.length() == 0 ? "" : ",").append(rs.getString(1));
-            return result.toString();
+            while (rs.next()) {
+                String row = rs.getString(1);
+                if (row == null || row.equals(""))
+                    continue;
+                for (String entry : row.split(","))
+                    try {
+                        tombstones.add(Integer.parseInt(entry));
+                    } catch (NumberFormatException nfe) {
+                        ZimbraLog.sync.warn("unparseable TOMBSTONE entry: " + entry);
+                    }
+            }
+            return tombstones;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("reading tombstones since change: " + lastSync, e);
         } finally {
@@ -1233,17 +1247,29 @@ public class DbMailItem {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
 
+        // figure out what folders are visible and thus also if we can short-circuit this query
+        Set<Folder> visible = mbox.getVisibleFolders();
+        if (visible != null && visible.isEmpty())
+            return Collections.emptyList();
+
         Connection conn = mbox.getOperationConnection();
-        ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
+        List<UnderlyingData> result = new ArrayList<UnderlyingData>();
+
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(mbox.getId(), "mi") +
                     " WHERE type IN " + typeConstraint(type) +
+                    (visible == null ? "" : " AND folder_id IN" + DbUtil.suitableNumberOfVariables(visible)) + 
                     " AND mi.mod_metadata > ? ORDER BY mi.mod_metadata");
-            stmt.setLong(1, lastSync);
+            int attr = 1;
+            stmt.setLong(attr++, lastSync);
+            if (visible != null)
+                for (Folder folder : visible)
+                    stmt.setInt(attr++, folder.getId());
             rs = stmt.executeQuery();
+
             while (rs.next())
                 result.add(constructItem(rs));
 

@@ -45,6 +45,9 @@
   <cn id="662" l="7" md="1078026270" ms="499"/>
 </SyncResponse>
 
+<-- note that the full visible folder hierarchy is returned in the delta sync if it's being done on another user's mailbox -->
+<--  sync on other mailbox is done via specifying target account in SOAP header -->
+
 
 <-- client resolves conflicts and passes back its changes -->
 <--   client goes through the front door (e.g. ConvAction, etc.) -->

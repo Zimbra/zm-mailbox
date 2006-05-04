@@ -2044,7 +2044,7 @@ public class Mailbox {
         }
     }
 
-    public synchronized String getTombstones(long lastSync) throws ServiceException {
+    public synchronized List<Integer> getTombstones(long lastSync) throws ServiceException {
         if (!isTrackingSync())
             throw ServiceException.FAILURE("not tracking sync", null);
 
@@ -2054,7 +2054,7 @@ public class Mailbox {
             if (!hasFullAccess())
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
-            String tombstones = DbMailItem.readTombstones(this, lastSync);
+            List<Integer> tombstones = DbMailItem.readTombstones(this, lastSync);
             success = true;
             return tombstones;
         } finally {
@@ -2062,46 +2062,79 @@ public class Mailbox {
         }
     }
 
-    /** @return a List of the MailItems of the given type modified since a given time */
-    public synchronized List<MailItem> getModifiedItems(byte type, long lastSync) throws ServiceException {
+    /** Returns a List of the MailItems of the given type modified since a
+     *  given change number.  Modified {@link Tag}s are only returned if the
+     *  caller owns the Mailbox or is an admin.  All other items are returned
+     *  if and only if the caller has {@link ACL#RIGHT_READ} on them. */
+    public synchronized List<MailItem> getModifiedItems(OperationContext octxt, byte type, long lastSync) throws ServiceException {
         if (type == MailItem.TYPE_UNKNOWN)
             return null;
         else if (lastSync >= getLastChangeID())
             return Collections.emptyList();
 
-        List<MailItem> result = new ArrayList<MailItem>();
+        List<MailItem> modified = new ArrayList<MailItem>();
         boolean success = false;
         try {
-            beginTransaction("getModifiedItems", null);
-            if (!hasFullAccess())
-                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+            beginTransaction("getModifiedItems", octxt);
 
             if (type == MailItem.TYPE_TAG) {
-                for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
-                    if (entry.getKey() instanceof String) {
-                        Tag tag = entry.getValue();
-                        if (tag.getModifiedSequence() > lastSync && !(tag instanceof Flag))
-                            result.add(tag);
-                    }
+                if (hasFullAccess())
+                    for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
+                        if (entry.getKey() instanceof String) {
+                            Tag tag = entry.getValue();
+                            if (tag.getModifiedSequence() > lastSync && !(tag instanceof Flag))
+                                modified.add(tag);
+                        }
             } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER || type == MailItem.TYPE_MOUNTPOINT) {
                 for (Folder subfolder : mFolderCache.values())
                     if (type == MailItem.TYPE_FOLDER || subfolder.getType() == type)
-                        if (subfolder.getModifiedSequence() > lastSync)
-                            result.add(subfolder);
-                Collections.sort(result);
+                        if (subfolder.getModifiedSequence() > lastSync && subfolder.canAccess(ACL.RIGHT_READ))
+                            modified.add(subfolder);
+                Collections.sort(modified);
             } else {
                 List<MailItem.UnderlyingData> dataList = DbMailItem.getModifiedItems(this, type, lastSync);
                 if (dataList == null)
                     return null;
                 for (MailItem.UnderlyingData data : dataList)
                     if (data != null)
-                        result.add(getItem(data));
+                        modified.add(getItem(data));
             }
             success = true;
-            return result;
+            return modified;
         } finally {
             endTransaction(success);
         }
+    }
+
+    public Set<Folder> getVisibleFolders(OperationContext octxt) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getVisibleFolders", octxt);
+            Set<Folder> visible = getVisibleFolders();
+            success = true;
+            return visible;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    /** Returns a list of all <code>Folder</code>s the authenticated user has
+     *  {@link ACL#RIGHT_READ} access to.  Returns <code>null</code> if the
+     *  authenticated user has read access to the entire Mailbox. */
+    public Set<Folder> getVisibleFolders() throws ServiceException {
+        if (!mCurrentChange.isActive())
+            throw ServiceException.FAILURE("cannot get visible hierarchy outside transaction", null);
+        if (hasFullAccess())
+            return null;
+
+        boolean incomplete = false;
+        Set<Folder> visible = new HashSet<Folder>();
+        for (Folder folder : mFolderCache.values())
+            if (folder.canAccess(ACL.RIGHT_READ))
+                visible.add(folder);
+            else
+                incomplete = true;
+        return incomplete ? visible : null;
     }
 
 

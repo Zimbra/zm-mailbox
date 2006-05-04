@@ -30,14 +30,15 @@ package com.zimbra.cs.service.mail;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.DocumentHandler;
@@ -52,13 +53,13 @@ public class Sync extends DocumentHandler {
     private static final int DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_ROOT;
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        Mailbox.OperationContext octxt = lc.getOperationContext();
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        Mailbox.OperationContext octxt = zsc.getOperationContext();
 
         long begin = request.getAttributeLong(MailService.A_TOKEN, 0);
 
-        Element response = lc.createElement(MailService.SYNC_RESPONSE);
+        Element response = zsc.createElement(MailService.SYNC_RESPONSE);
         response.addAttribute(MailService.A_CHANGE_DATE, System.currentTimeMillis() / 1000);
         synchronized (mbox) {
             mbox.beginTrackingSync(null);
@@ -66,51 +67,72 @@ public class Sync extends DocumentHandler {
             response.addAttribute(MailService.A_TOKEN, mbox.getLastChangeID());
             if (begin <= 0) {
                 response.addAttribute(MailService.A_SIZE, mbox.getSize());
-                Folder folder = mbox.getFolderById(octxt, DEFAULT_FOLDER_ID);
-                if (folder == null)
-                    throw MailServiceException.NO_SUCH_FOLDER(DEFAULT_FOLDER_ID);
-                initialFolderSync(lc, response, mbox, folder);
+                Set<Folder> visible = mbox.getVisibleFolders(octxt);
+                folderSync(zsc, response, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, true);
             } else
-                deltaSync(lc, response, mbox, begin);
+                deltaSync(zsc, response, mbox, begin);
         }
         return response;
     }
 
-    private void initialFolderSync(ZimbraSoapContext lc, Element response, Mailbox mbox, Folder folder) throws ServiceException {
-        boolean isSearch = folder instanceof SearchFolder;
-        Mailbox.OperationContext octxt = lc.getOperationContext();
-        Element f = ToXML.encodeFolder(response, lc, folder);
-        if (!isSearch) {
-            if (folder.getId() == Mailbox.ID_FOLDER_TAGS)
-                initialTagSync(lc, f, mbox);
-            else {
-                initialItemSync(f, MailService.E_MSG, mbox.listItemIds(octxt, MailItem.TYPE_MESSAGE, folder.getId()));
-                initialItemSync(f, MailService.E_CONTACT, mbox.listItemIds(octxt, MailItem.TYPE_CONTACT, folder.getId()));
-                initialItemSync(f, MailService.E_NOTE, mbox.listItemIds(octxt, MailItem.TYPE_NOTE, folder.getId()));
-                initialItemSync(f, MailService.E_APPOINTMENT, mbox.listItemIds(octxt, MailItem.TYPE_APPOINTMENT, folder.getId()));
+    private boolean folderSync(ZimbraSoapContext zsc, Element response, Mailbox mbox, Folder folder, Set<Folder> visible, boolean initial)
+    throws ServiceException {
+        if (visible != null && visible.isEmpty())
+            return false;
+        boolean isVisible = visible == null || visible.remove(folder);
+
+        // short-circuit if we know that this won't be in the output
+        List<Folder> subfolders = folder.getSubfolders(null);
+        if (!isVisible && (subfolders == null || subfolders.isEmpty()))
+            return false;
+
+        // write this folder's data to the response
+        Element f = ToXML.encodeFolder(response, zsc, folder, initial ? ToXML.NOTIFY_FIELDS : Change.ALL_FIELDS);
+        if (initial && isVisible) {
+            // we're in the middle of an initial sync, so serialize the item ids
+            boolean isSearch = folder instanceof SearchFolder;
+            Mailbox.OperationContext octxt = zsc.getOperationContext();
+            if (!isSearch) {
+                if (folder.getId() == Mailbox.ID_FOLDER_TAGS)
+                    initialTagSync(zsc, f, mbox);
+                else {
+                    initialItemSync(f, MailService.E_MSG, mbox.listItemIds(octxt, MailItem.TYPE_MESSAGE, folder.getId()));
+                    initialItemSync(f, MailService.E_CONTACT, mbox.listItemIds(octxt, MailItem.TYPE_CONTACT, folder.getId()));
+                    initialItemSync(f, MailService.E_NOTE, mbox.listItemIds(octxt, MailItem.TYPE_NOTE, folder.getId()));
+                    initialItemSync(f, MailService.E_APPOINTMENT, mbox.listItemIds(octxt, MailItem.TYPE_APPOINTMENT, folder.getId()));
+                }
+            } else {
+                // anything else to be done for searchfolders?
             }
-        } else {
-            // anything else to be done for searchfolders?
         }
 
-        List<Folder> subfolders = folder.getSubfolders(octxt);
+        if (isVisible && visible != null && visible.isEmpty())
+            return true;
+
+        // write the subfolders' data to the response
         if (subfolders != null)
-        	for (Folder subfolder : subfolders)
+            for (Folder subfolder : subfolders)
                 if (subfolder != null)
-                    initialFolderSync(lc, f, mbox, subfolder);
+                    isVisible |= folderSync(zsc, f, mbox, subfolder, visible, initial);
+
+        // if this folder and all its subfolders are not visible (oops!), remove them from the response
+        if (!isVisible)
+            f.detach();
+
+        return isVisible;
     }
 
-    private void initialTagSync(ZimbraSoapContext lc, Element response, Mailbox mbox) throws ServiceException {
-        for (Tag tag : mbox.getTagList(lc.getOperationContext()))
+    private void initialTagSync(ZimbraSoapContext zsc, Element response, Mailbox mbox) throws ServiceException {
+        for (Tag tag : mbox.getTagList(zsc.getOperationContext()))
             if (tag != null && !(tag instanceof Flag))
-                ToXML.encodeTag(response, lc, tag);
+                ToXML.encodeTag(response, zsc, tag);
     }
 
     private void initialItemSync(Element f, String ename, int[] items) {
         if (items == null || items.length == 0)
             return;
         Element e = f.addElement(ename);
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < items.length; i++)
             sb.append(i == 0 ? "" : ",").append(items[i]);
         e.addAttribute(MailService.A_IDS, sb.toString());
@@ -130,17 +152,37 @@ public class Sync extends DocumentHandler {
                                               Change.MODIFIED_NAME   | Change.MODIFIED_CONFLICT |
                                               Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION;
 
-    private void deltaSync(ZimbraSoapContext lc, Element response, Mailbox mbox, long begin) throws ServiceException {
-        // first, handle deleted items
-        String deleted = mbox.getTombstones(begin);
-        if (deleted != null && !deleted.equals(""))
-            response.addElement(MailService.E_DELETED).addAttribute(MailService.A_IDS, deleted);
-
-        // now, handle created/modified items
+    private void deltaSync(ZimbraSoapContext zsc, Element response, Mailbox mbox, long begin) throws ServiceException {
         if (begin >= mbox.getLastChangeID())
             return;
-        for (byte type : SYNC_ORDER)
-            for (MailItem item : mbox.getModifiedItems(type, begin)) {
+
+        // first, handle deleted items
+        List<Integer> tombstones = mbox.getTombstones(begin);
+        if (tombstones != null && !tombstones.isEmpty()) {
+            StringBuilder deleted = new StringBuilder();
+            for (Integer id : tombstones)
+                deleted.append(deleted.equals("") ? "" : ",").append(id);
+            response.addElement(MailService.E_DELETED).addAttribute(MailService.A_IDS, deleted.toString());
+        }
+
+        // now, handle created/modified items
+        OperationContext octxt = zsc.getOperationContext();
+        for (byte type : SYNC_ORDER) {
+            if (type == MailItem.TYPE_FOLDER && zsc.isDelegatedRequest()) {
+                // first, make sure that something changed...
+//                OperationContext octxtOwner = new OperationContext(mbox.getAccount());
+//                if (mbox.getModifiedItems(octxtOwner, type, begin).isEmpty())
+//                    continue;
+                // special-case the folder hierarchy for delegated delta sync
+                Set<Folder> visible = mbox.getVisibleFolders(octxt);
+                if (visible != null) {
+                    // admin folks get 
+                    folderSync(zsc, response, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, false);
+                    continue;
+                }
+            }
+
+            for (MailItem item : mbox.getModifiedItems(octxt, type, begin)) {
                 // For items in the system, if the content has changed since the user last sync'ed 
                 // (because it was edited or created), just send back the folder ID and saved date --
                 // the client will request the whole object out of band -- potentially using the 
@@ -150,9 +192,10 @@ public class Sync extends DocumentHandler {
 
                 boolean isMetadataOnly = type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_TAG;
                 if (!isMetadataOnly && item.getSavedSequence() > begin)
-                    ToXML.encodeItem(response, lc, item, Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT);
+                    ToXML.encodeItem(response, zsc, item, Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT);
                 else
-                    ToXML.encodeItem(response, lc, item, isMetadataOnly ? Change.ALL_FIELDS : MUTABLE_FIELDS);
+                    ToXML.encodeItem(response, zsc, item, isMetadataOnly ? Change.ALL_FIELDS : MUTABLE_FIELDS);
             }
+        }
     }
 }
