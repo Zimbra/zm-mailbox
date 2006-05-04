@@ -68,7 +68,10 @@ public class Sync extends DocumentHandler {
             if (begin <= 0) {
                 response.addAttribute(MailService.A_SIZE, mbox.getSize());
                 Set<Folder> visible = mbox.getVisibleFolders(octxt);
-                folderSync(zsc, response, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, true);
+                boolean anyFolders = folderSync(zsc, response, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, true);
+                // if no folders are visible, add an empty "<folder/>" as a hint
+                if (!anyFolders)
+                    response.addElement(MailService.E_FOLDER);
             } else
                 deltaSync(zsc, response, mbox, begin);
         }
@@ -170,16 +173,16 @@ public class Sync extends DocumentHandler {
         for (byte type : SYNC_ORDER) {
             if (type == MailItem.TYPE_FOLDER && zsc.isDelegatedRequest()) {
                 // first, make sure that something changed...
-//                OperationContext octxtOwner = new OperationContext(mbox.getAccount());
-//                if (mbox.getModifiedItems(octxtOwner, type, begin).isEmpty())
-//                    continue;
+                OperationContext octxtOwner = new OperationContext(mbox.getAccount());
+                if (mbox.getModifiedItems(octxtOwner, type, begin).isEmpty())
+                    continue;
                 // special-case the folder hierarchy for delegated delta sync
                 Set<Folder> visible = mbox.getVisibleFolders(octxt);
-                if (visible != null) {
-                    // admin folks get 
-                    folderSync(zsc, response, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, false);
-                    continue;
-                }
+                boolean anyFolders = folderSync(zsc, response, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, false);
+                // if no folders are visible, add an empty "<folder/>" as a hint
+                if (!anyFolders)
+                    response.addElement(MailService.E_FOLDER);
+                continue;
             }
 
             for (MailItem item : mbox.getModifiedItems(octxt, type, begin)) {
