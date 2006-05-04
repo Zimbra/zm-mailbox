@@ -1,0 +1,158 @@
+== Install Instructions for Intel Mac OS X ==
+
+The following instructions detail how to get a development
+environment setup for Zimbra on an Intel Mac running OS X. In
+each section below, links to the necessary software is provided.
+However, many of these packages are already downloaded and are
+available at http://depot/public/software/ so try there first. 
+
+Some notes on the software:
+
+   * Perforce - the PPC version will work fine
+   * MySQL - you MUST install the x86 version, version 5 (or higher)
+   * OpenLDAP - install the latest version
+   * Tomcat - install 5.5.15 or higher
+
+
+=== Perforce ===
+
+Download and install client from http://perforce.com/perforce/downloads/macosx102ppc.html
+
+Setup p4 client with following information:
+
+P4USER = {user_name}
+P4PORT = eric:1666
+P4CLIENT = {client_name}
+
+Views:
+
+<pre>
+//depot/main/ThirdParty/openldap/builds/MACOSXx86/... //{client_name}/ThirdParty/openldap/builds/MACOSXx86/...
+//depot/main/ZimbraServer/... //{client_name}/ZimbraServer/...
+</pre>
+
+After you setup Perforce, login and sync the client. This will get 
+you all of the files that you will need for the rest of the install.
+Afterwards you can update your p4 client information to include the 
+various views that you need for development.
+
+If you want to sync all of the necessary files to start working
+on the client code, then add the following to your list of views:
+
+<pre>
+//depot/main/Ajax/... //{client_name}/Ajax/...
+//depot/main/ZimbraWebClient/... //{client_name}/ZimbraWebClient/...
+</pre>
+
+Note: After you follow all of the steps in this guide, you will
+no longer need //depot/main/ThirdParty/... in your list of P4
+views.
+
+
+=== Setup /opt/zimbra ===
+
+Open a terminal shell and run the following commands:
+
+<pre>
+% sudo su -
+% mkdir -p /opt/zimbra
+% chown {user_name}:{user_name} /opt/zimbra
+% exit
+</pre>
+
+
+=== Install MySQL ===
+
+Download and install from http://dev.mysql.com/downloads/mysql/5.0.html
+
+Note: Install *both* packages so that MySQL will automatically start 
+when you boot.
+
+Run the following commands:
+
+<pre>
+% sudo ln -s /usr/local/mysql /opt/zimbra/mysql
+</pre>
+
+Then edit the file /opt/zimbra/mysql/data/my.cnf, type in the 
+following, and save:
+
+<pre>
+[mysqld]
+bind-address = localhost
+port = 7306
+</pre>
+
+Now you should be able to start MySQL with the following command:
+[Note: you may have to reboot in order for this to work]
+
+<pre>
+% sudo SystemStarter start MySQL
+</pre>
+
+
+=== Install OpenLDAP ===
+
+Extract .tar.gz from {p4_client_local_dir}/ThirdParty/openldap/builds/MACOSXx86/
+into /opt/zimbra/
+
+Run the following command:
+
+<pre>
+% ln -s /opt/zimbra/{openldap_extract_dir} /opt/zimbra/openldap
+</pre>
+
+Then run "sudo vi /etc/sudoers" and add the following at the
+end of the file and save:
+
+<pre>
+{user_name}{TAB}ALL=NOPASSWD:/opt/zimbra/openldap/libexec/slapd
+<pre>
+
+
+=== Install Ant ===
+
+Download from http://ant.apache.org/bindownload.cgi
+
+Extract the .tar.gz file to someplace useful and add to your
+PATH.
+
+
+=== Install Tomcat ===
+
+Download from http://tomcat.apache.org/download-55.cgi
+
+Extract the .tar.gz file into /opt/zimbra/ and run the following
+commands
+
+<pre>
+% ln -s /opt/zimbra/{tomcat_extract_dir} /opt/zimbra/tomcat
+% cd {p4_client_local_dir}/ZimbraServer/
+% ant tomcat-init
+</pre>
+
+
+=== Deploy Zimbra ===
+
+Deploy Zimbra with the following commands:
+
+<pre>
+% cd {p4_client_local_dir}/ZimbraServer
+% ant reset-the-world
+</pre>
+
+If you added the views needed for web client development in
+the Perforce step above, you can now deploy the application
+with the following commands:
+
+<pre>
+% cd {p4_client_local_dir}/ZimbraWebServer
+% ant deploy
+</pre>
+
+You should now be able to point your browser to the following
+URL and login with the username "user1" and password "test123":
+
+<pre>
+http://localhost:7070/zimbra/
+</pre>
