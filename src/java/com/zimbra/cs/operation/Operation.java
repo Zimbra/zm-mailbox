@@ -143,6 +143,16 @@ public abstract class Operation implements IOperation
 			}
 		}
 	}
+	
+	
+	/**
+	 * In some rare instances we need to run an operation immediately, because
+	 * we want to execute the logic in the Operation itself, but we can't schedule
+	 * (e.g. SoapSession.putRefresh() which is holding the mailbox lock
+	 */
+	public void runImmediately() throws ServiceException {
+		callback();
+	}
 
 	/**
 	 * This call is used to generate logging information which is logged to the 

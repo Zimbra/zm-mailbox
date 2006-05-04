@@ -33,7 +33,10 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.operation.GetConversationByIdOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -47,10 +50,14 @@ public class GetConv extends DocumentHandler  {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Mailbox.OperationContext octxt = lc.getOperationContext();
-
+        Session session = getSession(context);
+        
         Element econv = request.getElement(MailService.E_CONV);
         int id = (int) econv.getAttributeLong(MailService.A_ID);
-        Conversation conv = mbox.getConversationById(octxt, id);
+
+        GetConversationByIdOperation op = new GetConversationByIdOperation(session, octxt, mbox, Requester.SOAP, id);
+        op.schedule();
+        Conversation conv = op.getResult();
 
         Element response = lc.createElement(MailService.GET_CONV_RESPONSE);
         if (conv != null)

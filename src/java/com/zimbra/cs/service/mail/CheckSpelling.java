@@ -65,7 +65,9 @@ public class CheckSpelling extends DocumentHandler  {
         
         Map params = null;        
         try {
-        	params = new CheckSpellingOperation(session, zc.getOperationContext(), null, Requester.SOAP, text).getResult();
+        	CheckSpellingOperation op = new CheckSpellingOperation(session, zc.getOperationContext(), null, Requester.SOAP, text);
+        	op.schedule();
+        	params = op.getResult();
         } catch (ServiceException e) {
         	if (e.getCode().equals(ServiceException.NO_SPELL_CHECK_URL)) {
         		return unavailable(response);

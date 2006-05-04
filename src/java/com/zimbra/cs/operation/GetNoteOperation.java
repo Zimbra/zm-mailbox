@@ -18,39 +18,37 @@
  * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
  * All Rights Reserved.
  * 
- * Contributor(s):
+ * Contributor(s): 
  * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.operation;
 
-import java.io.IOException;
-
-import com.zimbra.cs.mailbox.BrowseResult;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 
-public class BrowseOperation extends Operation {
-	static final int LOAD = 10; 
+public class GetNoteOperation extends Operation {
 	
-	private String mBrowseBy;
-	private BrowseResult mResult;
+	private static final int LOAD = 1;
 	
-	public BrowseOperation(Session session, OperationContext oc, Mailbox mbox, 
-				Requester req, String browseBy) throws ServiceException {
-		super(session, oc, mbox, req, req.getPriority(), LOAD);
-		mBrowseBy = browseBy;
+	private int mNoteId;
+	private Note mNote;
+
+	public GetNoteOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, int noteId) {
+		super(session, oc, mbox, req, LOAD);
+		mNoteId = noteId;
+	}
+	
+	public String toString() {
+		return "GetNote("+mNoteId+")";
 	}
 	
 	protected void callback() throws ServiceException {
-		try {
-			mResult = mMailbox.browse(getOpCtxt(), mBrowseBy);
-		} catch (IOException e) {
-			throw ServiceException.FAILURE("IO error", e);
-		}
+		mNote = getMailbox().getNoteById(getOpCtxt(), mNoteId);
 	}
 	
-	public BrowseResult getResult() { return mResult; }
+	public Note getResult() { return mNote; }
 }

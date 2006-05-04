@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -38,11 +37,15 @@ import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.operation.CreateContactOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.formatter.ContactCSV;
 import com.zimbra.cs.service.formatter.ContactCSV.ParseException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -56,6 +59,7 @@ public class ImportContacts extends DocumentHandler  {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
+        Session session = getSession(context);
 
         String ct = request.getAttribute(MailService.A_CONTENT_TYPE);
         if (!ct.equals("csv"))
@@ -79,14 +83,17 @@ public class ImportContacts extends DocumentHandler  {
             if (attachment != null)
                 FileUploadServlet.deleteUploads(uploads);
         }
+        
+        ItemId iidFolder = new ItemId(mbox, Mailbox.ID_FOLDER_CONTACTS);
+        CreateContactOperation op = new CreateContactOperation(session, octxt, mbox, Requester.SOAP, iidFolder, contacts, null);
+        op.schedule();
+        List<Contact> results = op.getContacts();
 
         StringBuffer ids = new StringBuffer();
-        for (Iterator it = contacts.iterator(); it.hasNext(); ) {
-            Map cmap = (Map) it.next();
-            Contact contact = mbox.createContact(octxt, cmap, Mailbox.ID_FOLDER_CONTACTS, null);
-            if (ids.length() > 0)
-                ids.append(",");
-            ids.append(contact.getId());
+        for (Contact c : results) {
+        	if (ids.length() > 0)
+        		ids.append(",");
+        	ids.append(c.getId());
         }
 
         Element response = lc.createElement(MailService.IMPORT_CONTACTS_RESPONSE);

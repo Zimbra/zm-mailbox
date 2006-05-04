@@ -24,45 +24,67 @@
  */
 package com.zimbra.cs.operation;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.operation.Scheduler.Priority;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 
 public class CreateContactOperation extends Operation {
 	
-	private static int LOAD = 5;
+	private static int LOAD = 3;
 	
 	private ItemId mIidFolder;
-	private Map<String,String> mAttrs;
 	private String mTagsStr;
+	private List<Map<String, String>> mList;
 	
-	private Contact mContact;
+	private List<Contact> mContacts;
 
 	public CreateContactOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
 				ItemId iidFolder, Map<String,String> attrs, String tagsStr)
 	{
 		super(session, oc, mbox, req, LOAD);
 		mIidFolder = iidFolder;
-		mAttrs = attrs;
+		mList = new ArrayList<Map<String, String>>(1);
+		mList.add(attrs);
+		mTagsStr = tagsStr;
+	}
+	
+	public CreateContactOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
+				ItemId iidFolder, List<Map<String,String>> list, String tagsStr)
+	{
+		super(session, oc, mbox, req, Priority.BATCH, Math.max(LOAD * list.size(), 30));
+		mIidFolder = iidFolder;
+		mList = list;
 		mTagsStr = tagsStr;
 	}
 	
 	protected void callback() throws ServiceException {
-		mContact = getMailbox().createContact(getOpCtxt(), mAttrs, mIidFolder.getId(), mTagsStr);
+		mContacts = new ArrayList<Contact>();
+		synchronized(getMailbox()) {
+			for (Map<String, String> attrs : mList) 
+				mContacts.add(getMailbox().createContact(getOpCtxt(), attrs, mIidFolder.getId(), mTagsStr));
+		}
 	}
 	
-	public Contact getContact() { 
-		return mContact;
+	public List<Contact> getContacts() { 
+		return mContacts;
+	}
+	
+	public Contact getContact() {
+		return mContacts.get(0);
 	}
 	
 	public String toString() {
 		StringBuilder toRet = new StringBuilder();
-		toRet.append("CreateContact(folder=").append(mIidFolder.toString()).append(")");
+		toRet.append("CreateContact(folder=").append(mIidFolder.toString());
+		toRet.append(" ").append(mList.size()).append(" entries)");
 		return toRet.toString();
 	}
 

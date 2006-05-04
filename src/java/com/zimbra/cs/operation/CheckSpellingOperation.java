@@ -59,8 +59,6 @@ public class CheckSpellingOperation extends Operation {
 		}
 		
 		mText = text;
-		
-		schedule();
 	}
 
 	protected void callback() throws ServiceException {

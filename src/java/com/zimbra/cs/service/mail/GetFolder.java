@@ -33,12 +33,15 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.operation.GetFolderOperation;
+import com.zimbra.cs.operation.GetFolderOperation.FolderNode;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -59,55 +62,77 @@ public class GetFolder extends DocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        Mailbox.OperationContext octxt = lc.getOperationContext();
+		Mailbox mbox = getRequestedMailbox(lc);
+		Mailbox.OperationContext octxt = lc.getOperationContext();
+		Session session = getSession(context);
+		
+		String parentId = DEFAULT_FOLDER_ID;
+		Element eFolder = request.getOptionalElement(MailService.E_FOLDER);
+		if (eFolder != null)
+			parentId = eFolder.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER_ID);
+		ItemId iid = new ItemId(parentId, lc);
 
-        String parentId = DEFAULT_FOLDER_ID;
-        Element eFolder = request.getOptionalElement(MailService.E_FOLDER);
-        if (eFolder != null)
-        	parentId = eFolder.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER_ID);
-        ItemId iid = new ItemId(parentId, lc);
-
-        Folder folder = mbox.getFolderById(octxt, iid.getId());
-        if (folder == null)
-        	throw MailServiceException.NO_SUCH_FOLDER(iid.getId());
-
-        Element response = lc.createElement(MailService.GET_FOLDER_RESPONSE), eRoot;
-        synchronized (mbox) {
-            eRoot = handleFolder(mbox, folder, response, lc, octxt);
-        }
-
-        // if the requested root folder is a link, execute the request remotely
-        if (folder instanceof Mountpoint)
-            handleMountpoint(request, context, iid, (Mountpoint) folder, eRoot);
-
-        return response;
+		Element response = lc.createElement(MailService.GET_FOLDER_RESPONSE);
+		
+		GetFolderOperation op = new GetFolderOperation(session, octxt, mbox, Requester.SOAP, iid);
+		op.schedule();
+		FolderNode resultFolder = op.getResult();
+		
+		Element folderRoot = encodeFolderNode(lc, response, resultFolder);
+		if (resultFolder.mFolder instanceof Mountpoint) {
+			handleMountpoint(request, context, iid, (Mountpoint) resultFolder.mFolder, folderRoot);			
+		}
+		
+		return response;
+	}
+	
+	public static Element encodeFolderNode(ZimbraSoapContext lc, Element response, FolderNode node) {
+		Element toRet = ToXML.encodeFolder(response, lc, node.mFolder);
+		
+		for (FolderNode subNode : node.mSubFolders)
+			encodeFolderNode(lc, toRet, subNode);
+		
+		return toRet;
 	}
 
-	public static Element handleFolder(Mailbox mbox, Folder folder, Element response, ZimbraSoapContext lc, OperationContext octxt)
-    throws ServiceException {
-		Element respFolder = ToXML.encodeFolder(response, lc, folder);
+//	public static Element handleFolder(Mailbox mbox, Folder folder, Element response, ZimbraSoapContext lc, OperationContext octxt)
+//    throws ServiceException {
+//		Element respFolder = ToXML.encodeFolder(response, lc, folder);
+//
+//        for (Folder subfolder : folder.getSubfolders(octxt))
+//        	if (subfolder != null)
+//       		handleFolder(mbox, subfolder, respFolder, lc, octxt);
+//       return respFolder;
+//	}
 
-        for (Folder subfolder : folder.getSubfolders(octxt))
-        	if (subfolder != null)
-        		handleFolder(mbox, subfolder, respFolder, lc, octxt);
-        return respFolder;
-	}
-
-    private void handleMountpoint(Element request, Map context, ItemId iidLocal, Mountpoint mpt, Element eRoot)
-    throws ServiceException, SoapFaultException {
-        ItemId iidRemote = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
-        Element proxied = proxyRequest(request, context, iidLocal, iidRemote);
+//	public static Element handleFolder(Mailbox mbox, Folder folder, Element response, ZimbraSoapContext lc, OperationContext octxt)
+//	throws ServiceException {
+//		Element respFolder = ToXML.encodeFolder(response, lc, folder);
+//		
+//		List subfolders = folder.getSubfolders(octxt);
+//		if (subfolders != null)
+//			for (Iterator it = subfolders.iterator(); it.hasNext(); ) {
+//				Folder subfolder = (Folder) it.next();
+//				if (subfolder != null)
+//					handleFolder(mbox, subfolder, respFolder, lc, octxt);
+//			}
+//		return respFolder;
+//	}
+	
+	private void handleMountpoint(Element request, Map context, ItemId iidLocal, Mountpoint mpt, Element eRoot)
+	throws ServiceException, SoapFaultException {
+		ItemId iidRemote = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
+		Element proxied = proxyRequest(request, context, iidLocal, iidRemote);
         // return the children of the remote folder as children of the mountpoint
-        proxied = proxied.getOptionalElement(MailService.E_FOLDER);
-        if (proxied != null) {
-            eRoot.addAttribute(MailService.A_RIGHTS, proxied.getAttribute(MailService.A_RIGHTS, null));
-            for (Iterator it = proxied.elementIterator(); it.hasNext(); ) {
-                Element eRemote = (Element) it.next();
-                // skip the <acl> element, if any
-                if (!eRemote.getName().equals(MailService.E_ACL))
-                    eRoot.addElement(eRemote.detach());
-            }
-        }
-    }
+		proxied = proxied.getOptionalElement(MailService.E_FOLDER);
+		if (proxied != null) {
+			eRoot.addAttribute(MailService.A_RIGHTS, proxied.getAttribute(MailService.A_RIGHTS, null));
+			for (Iterator it = proxied.elementIterator(); it.hasNext(); ) {
+				Element eRemote = (Element) it.next();
+				// skip the <acl> element, if any
+				if (!eRemote.getName().equals(MailService.E_ACL))
+					eRoot.addElement(eRemote.detach());
+			}
+		}
+	}
 }

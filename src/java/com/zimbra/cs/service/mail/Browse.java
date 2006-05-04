@@ -58,7 +58,10 @@ public class Browse extends DocumentHandler  {
         if (browseBy == null)
             browseBy = request.getAttribute(MailService.A_BROWSE_BY);
         
-        BrowseResult browse = new BrowseOperation(session, zc.getOperationContext(), mbox, Requester.SOAP, browseBy).getResult();
+        BrowseOperation op = new BrowseOperation(session, zc.getOperationContext(), mbox, Requester.SOAP, browseBy);
+        op.schedule();
+        
+        BrowseResult browse =  op.getResult();
         
         Element response = zc.createElement(MailService.BROWSE_RESPONSE);
         

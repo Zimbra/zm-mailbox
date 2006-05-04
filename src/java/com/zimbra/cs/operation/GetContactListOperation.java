@@ -24,33 +24,50 @@
  */
 package com.zimbra.cs.operation;
 
-import java.io.IOException;
+import java.util.List;
 
-import com.zimbra.cs.mailbox.BrowseResult;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 
-public class BrowseOperation extends Operation {
-	static final int LOAD = 10; 
+public class GetContactListOperation extends Operation {
 	
-	private String mBrowseBy;
-	private BrowseResult mResult;
+	private static final int LOAD = 5;
 	
-	public BrowseOperation(Session session, OperationContext oc, Mailbox mbox, 
-				Requester req, String browseBy) throws ServiceException {
-		super(session, oc, mbox, req, req.getPriority(), LOAD);
-		mBrowseBy = browseBy;
+	private ItemId mIidFolder;
+	private byte mSort;
+	
+	private List<Contact> mList;
+
+	public GetContactListOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, ItemId iidFolder) {
+		super(session, oc, mbox, req, LOAD);
+		
+		mIidFolder = iidFolder;
+		mSort = -1;
 	}
 	
+	public GetContactListOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, ItemId iidFolder, byte sort) {
+		super(session, oc, mbox, req, LOAD);
+		
+		mIidFolder = iidFolder;
+		mSort = sort;
+	}
+	
+	
+	public String toString() {
+		return "GetContactList("+mIidFolder != null ? mIidFolder.toString() : "-1"+")";
+	}
+
 	protected void callback() throws ServiceException {
-		try {
-			mResult = mMailbox.browse(getOpCtxt(), mBrowseBy);
-		} catch (IOException e) {
-			throw ServiceException.FAILURE("IO error", e);
-		}
+		if (mSort == -1) 		
+			mList = getMailbox().getContactList(getOpCtxt(), mIidFolder != null ? mIidFolder.getId() : -1);
+		else 
+			mList = getMailbox().getContactList(getOpCtxt(), mIidFolder != null ? mIidFolder.getId() : -1, mSort);
 	}
 	
-	public BrowseResult getResult() { return mResult; }
+	public List<Contact> getResults() { return mList; }
+
 }

@@ -29,13 +29,19 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.operation.GetContactListOperation;
+import com.zimbra.cs.operation.GetContactOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
@@ -52,6 +58,7 @@ public class GetContacts extends DocumentHandler  {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         Mailbox.OperationContext octxt = zsc.getOperationContext();
+        Session session = getSession(context);
 
         boolean sync = request.getAttributeBool(MailService.A_SYNC, false);
         int folderId = (int) request.getAttributeLong(MailService.A_FOLDER, ALL_FOLDERS);
@@ -61,41 +68,49 @@ public class GetContacts extends DocumentHandler  {
         if (sortStr.equals(MailboxIndex.SortBy.NAME_ASCENDING.toString()))
             sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_ASCENDING;
         else if (sortStr.equals(MailboxIndex.SortBy.NAME_DESCENDING.toString()))
-            sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING;
-
+        	sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING;
+        
         ArrayList<String> attrs = null;
         ArrayList<Integer> ids = null;
         for (Element e : request.listElements())
-            if (e.getName().equals(MailService.E_ATTRIBUTE)) {
-                String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
-                if (attrs == null)
-                    attrs = new ArrayList<String>();
-                attrs.add(name);
-            } else if (e.getName().equals(MailService.E_CONTACT)) {
-                int id = (int) e.getAttributeLong(MailService.A_ID);
-                if (ids == null)
-                    ids = new ArrayList<Integer>();
-                ids.add(id);
-            }
+        	if (e.getName().equals(MailService.E_ATTRIBUTE)) {
+        		String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
+        		if (attrs == null)
+        			attrs = new ArrayList<String>();
+        		attrs.add(name);
+        	} else if (e.getName().equals(MailService.E_CONTACT)) {
+        		int id = (int) e.getAttributeLong(MailService.A_ID);
+        		if (ids == null)
+        			ids = new ArrayList<Integer>();
+        		ids.add(id);
+        	}
         
         Element response = zsc.createElement(MailService.GET_CONTACTS_RESPONSE);
         ContactAttrCache cacache = null;
-
+        
         // want to return modified date only on sync-related requests
         int fields = ToXML.NOTIFY_FIELDS;
         if (sync)
-            fields |= Change.MODIFIED_CONFLICT;
-
+        	fields |= Change.MODIFIED_CONFLICT;
+        
         if (ids != null) {
-            for (int id : ids) {
-            	Contact con = mbox.getContactById(octxt, id);
-                if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId()))
-                    ToXML.encodeContact(response, zsc, con, cacache, false, attrs, fields);
-            }
+        	GetContactOperation op = new GetContactOperation(session, octxt, mbox, Requester.SOAP, ids);
+        	op.schedule();
+        	List<Contact> contacts = op.getResults();
+        	
+        	for (Contact con : contacts) {
+        		if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId()))
+        			ToXML.encodeContact(response, zsc, con, cacache, false, attrs, fields);
+        	}
         } else {
-        	for (Contact con : mbox.getContactList(octxt, folderId, sort))
-                if (con != null)
-                    ToXML.encodeContact(response, zsc, con, cacache, false, attrs, fields);
+        	ItemId iidFolder = new ItemId(mbox, folderId);
+        	GetContactListOperation op = new GetContactListOperation(session, octxt, mbox, Requester.SOAP, iidFolder, sort);
+        	op.schedule();
+        	List<Contact> contacts = op.getResults();
+        	
+        	for (Contact con : contacts)
+        		if (con != null)
+        			ToXML.encodeContact(response, zsc, con, cacache, false, attrs, fields);
         }
         return response;
     }

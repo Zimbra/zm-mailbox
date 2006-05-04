@@ -24,33 +24,33 @@
  */
 package com.zimbra.cs.operation;
 
-import java.io.IOException;
-
-import com.zimbra.cs.mailbox.BrowseResult;
+import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 
-public class BrowseOperation extends Operation {
-	static final int LOAD = 10; 
+public class GetConversationByIdOperation extends Operation {
 	
-	private String mBrowseBy;
-	private BrowseResult mResult;
+	private static final int LOAD = 1;
 	
-	public BrowseOperation(Session session, OperationContext oc, Mailbox mbox, 
-				Requester req, String browseBy) throws ServiceException {
-		super(session, oc, mbox, req, req.getPriority(), LOAD);
-		mBrowseBy = browseBy;
+	private int mId;
+	
+	private Conversation mConv;
+
+	public GetConversationByIdOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
+				int id) {
+		super(session, oc, mbox, req, LOAD);
+		
+		mId = id;
 	}
+	
+	public String toString() { return "GetConvById("+mId+")"; }
+
 	
 	protected void callback() throws ServiceException {
-		try {
-			mResult = mMailbox.browse(getOpCtxt(), mBrowseBy);
-		} catch (IOException e) {
-			throw ServiceException.FAILURE("IO error", e);
-		}
+		mConv = getMailbox().getConversationById(getOpCtxt(), mId);
 	}
 	
-	public BrowseResult getResult() { return mResult; }
+	public Conversation getResult() { return mConv; }
 }
