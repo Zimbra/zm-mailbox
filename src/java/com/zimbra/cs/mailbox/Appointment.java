@@ -1630,7 +1630,8 @@ public class Appointment extends MailItem {
         RedoLogProvider redoProvider = RedoLogProvider.getInstance();
         boolean needResourceAutoReply =
             redoProvider.isMaster() &&
-            (player == null || redoProvider.getRedoLogManager().getInCrashRecovery());
+            (player == null || redoProvider.getRedoLogManager().getInCrashRecovery()) &&
+            !ICalTok.CANCEL.toString().equals(invite.getMethod());
 
         if (invite.thisAcctIsOrganizer(account)) {
             // Organizer always accepts.
