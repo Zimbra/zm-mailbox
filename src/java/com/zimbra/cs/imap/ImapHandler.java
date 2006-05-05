@@ -601,8 +601,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             synchronized (mailbox) {
                 session.setUsername(account.getName());
                 session.cacheFlags(mailbox);
-                for (Iterator it = mailbox.getTagList(session.getContext()).iterator(); it.hasNext(); )
-                    session.cacheTag((Tag) it.next());
+                for (Tag ltag : mailbox.getTagList(session.getContext()))
+                    session.cacheTag(ltag);
             }
         } catch (ServiceException e) {
             if (mSession != null)
@@ -1320,11 +1320,11 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 if (!insertions.isEmpty()) {
                     int count = insertions.size();
                     Map.Entry[] pieces = new Map.Entry[count];
-                    for (Iterator it = insertions.entrySet().iterator(); it.hasNext(); )
-                        pieces[--count] = (Map.Entry) it.next();
+                    for (Map.Entry<Integer, Object> entry : insertions.entrySet())
+                        pieces[--count] = entry;
                     for (int i = 0; i < pieces.length; i++) {
                         int point = (Integer) pieces[i].getKey();
-                        Set i4set;
+                        Set<ImapMessage> i4set;
                         if (pieces[i].getValue() instanceof String) {
                             String key = (String) pieces[i].getValue();
                             if (key.startsWith("-"))
@@ -1379,21 +1379,21 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private boolean isAllMessages(Set i4set) {
+    private boolean isAllMessages(Set<ImapMessage> i4set) {
         if (mSession == null || mSession.getFolder() == null)
             return false;
         int size = i4set.size() - (i4set.contains(null) ? 1 : 0);
         return size == mSession.getFolder().getSize();
     }
-    private String encodeSequence(Set i4set, boolean abbreviateAll) {
+    private String encodeSequence(Set<ImapMessage> i4set, boolean abbreviateAll) {
         i4set.remove(null);
         if (i4set.isEmpty())
             return "item:none";
         else if (abbreviateAll && isAllMessages(i4set))
             return "item:all";
         StringBuffer sb = new StringBuffer("item:{");
-        for (Iterator it = i4set.iterator(); it.hasNext(); )
-            sb.append(sb.length() == 6 ? "" : ",").append(((ImapMessage) it.next()).id);
+        for (ImapMessage i4msg : i4set)
+            sb.append(sb.length() == 6 ? "" : ",").append(i4msg.id);
         return sb.append('}').toString();
     }
 
@@ -1434,19 +1434,18 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
         String command = (byUID ? "UID FETCH" : "FETCH");
         boolean allPresent = true;
-        Set i4set;
 
+        Set<ImapMessage> i4set;
         synchronized (mMailbox) {
             i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
         }
         allPresent = byUID || !i4set.contains(null);
-        for (Iterator it = i4set.iterator(); it.hasNext(); ) {
+        for (ImapMessage i4msg : i4set) {
+            if (i4msg == null)
+                continue;
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ByteArrayOutputStream baosDebug = ZimbraLog.imap.isDebugEnabled() ? new ByteArrayOutputStream() : null;
 	        PrintStream result = new PrintStream(new ByteUtil.TeeOutputStream(baos, baosDebug), false, "utf-8");
-        	ImapMessage i4msg = (ImapMessage) it.next();
-        	if (i4msg == null)
-                continue;
         	try {
                 boolean markMessage = markRead && (i4msg.flags & Flag.FLAG_UNREAD) != 0;
                 boolean empty = true;
@@ -1566,12 +1565,11 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     mSession.getFolder().disableNotifications();
 
                 // get sets of relevant messages and tags
-                Set i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
-                List<ImapFlag> i4flags = findOrCreateTags(flagList, newTags);
+                Set<ImapMessage> i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
                 allPresent = byUID || !i4set.contains(null);
+                List<ImapFlag> i4flags = findOrCreateTags(flagList, newTags);
 
-                for (Iterator it = i4set.iterator(); it.hasNext(); ) {
-                    ImapMessage i4msg = (ImapMessage) it.next();
+                for (ImapMessage i4msg : i4set) {
                     if (i4msg == null)
                         continue;
 
@@ -1643,45 +1641,45 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         String copyuid = "";
         List<MailItem> newMessages = new ArrayList<MailItem>();
         try {
-            synchronized (mMailbox) {
-                Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
-                if (!ImapFolder.isFolderVisible(folder)) {
-                    ZimbraLog.imap.info(command + " failed: folder is hidden: " + folderName);
-                    sendNO(tag, command + " failed");
-                    return CONTINUE_PROCESSING;
-                } else if (!ImapFolder.isFolderWritable(folder)) {
-                    ZimbraLog.imap.info(command + " failed: folder is READ-ONLY: " + folderName);
-                    sendNO(tag, command + " failed: target mailbox is READ-ONLY");
-                    return CONTINUE_PROCESSING;
-                }
-
-                Set i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
-                // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
-                //                  accessed mailbox that contains expunged messages."
-                if (i4set.contains(null) && !byUID) {
-                    sendNO(tag, "COPY rejected because some of the requested messages were expunged");
-                    return CONTINUE_PROCESSING;
-                }
-
-                List<Integer> srcUIDs = new ArrayList<Integer>(), copyUIDs = new ArrayList<Integer>();
-                for (Iterator it = i4set.iterator(); it.hasNext(); ) {
-                    ImapMessage i4msg = (ImapMessage) it.next();
-                    if (i4msg == null)
-                        continue;
-                    // FIXME: should optimize to a move, as 95% of IMAP COPY ops are really moves...
-                    MailItem copy = mMailbox.copy(getContext(), i4msg.id, MailItem.TYPE_MESSAGE, folder.getId());
-                    if (copy == null)
-                        continue;
-                    newMessages.add(copy);
-                    srcUIDs.add(i4msg.uid);
-                    copyUIDs.add(copy.getId());
-                }
-
-                if (srcUIDs.size() > 0)
-                    copyuid = "[COPYUID " + ImapFolder.getUIDValidity(folder) + ' ' +
-                              ImapFolder.encodeSubsequence(srcUIDs) + ' ' +
-                              ImapFolder.encodeSubsequence(copyUIDs) + "] ";
+            Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
+            if (!ImapFolder.isFolderVisible(folder)) {
+                ZimbraLog.imap.info(command + " failed: folder is hidden: " + folderName);
+                sendNO(tag, command + " failed");
+                return CONTINUE_PROCESSING;
+            } else if (!ImapFolder.isFolderWritable(folder)) {
+                ZimbraLog.imap.info(command + " failed: folder is READ-ONLY: " + folderName);
+                sendNO(tag, command + " failed: target mailbox is READ-ONLY");
+                return CONTINUE_PROCESSING;
             }
+
+            Set<ImapMessage> i4set;
+            synchronized (mMailbox) {
+                i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
+            }
+            // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
+            //                  accessed mailbox that contains expunged messages."
+            if (!byUID && i4set.contains(null)) {
+                sendNO(tag, "COPY rejected because some of the requested messages were expunged");
+                return CONTINUE_PROCESSING;
+            }
+
+            List<Integer> srcUIDs = new ArrayList<Integer>(), copyUIDs = new ArrayList<Integer>();
+            for (ImapMessage i4msg : i4set) {
+                if (i4msg == null)
+                    continue;
+                // FIXME: should optimize to a move, as 95% of IMAP COPY ops are really moves...
+                MailItem copy = mMailbox.copy(getContext(), i4msg.id, MailItem.TYPE_MESSAGE, folder.getId());
+                if (copy == null)
+                    continue;
+                newMessages.add(copy);
+                srcUIDs.add(i4msg.uid);
+                copyUIDs.add(copy.getId());
+            }
+
+            if (srcUIDs.size() > 0)
+                copyuid = "[COPYUID " + ImapFolder.getUIDValidity(folder) + ' ' +
+                          ImapFolder.encodeSubsequence(srcUIDs) + ' ' +
+                          ImapFolder.encodeSubsequence(copyUIDs) + "] ";
         } catch (IOException e) {
             // 6.4.7: "If the COPY command is unsuccessful for any reason, server implementations
             //         MUST restore the destination mailbox to its state before the COPY attempt."
@@ -1736,8 +1734,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             ImapFolder i4folder = mSession.getFolder();
             boolean removed = false, received = i4folder.checkpointSize();
             if (notifyExpunges)
-                for (Iterator it = i4folder.collapseExpunged().iterator(); it.hasNext(); removed = true)
-                    sendUntagged(it.next() + " EXPUNGE");
+                for (Integer index : i4folder.collapseExpunged()) {
+                    sendUntagged(index + " EXPUNGE");  removed = true;
+                }
             i4folder.checkpointSize();
 
             // notify of any message flag changes
