@@ -968,7 +968,7 @@ public class ZRecur {
                         }
                     } else {
                         if (day.mOrdinal > 0) {
-                            if (day.mOrdinal < matching.size()) {
+                            if (day.mOrdinal <= matching.size()) {
                                 cur.set(Calendar.DAY_OF_MONTH, matching.get(day.mOrdinal-1));
                                 toRet.add((Calendar)(cur.clone()));
                             }
