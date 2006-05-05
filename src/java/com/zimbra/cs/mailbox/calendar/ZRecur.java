@@ -1219,7 +1219,11 @@ public class ZRecur {
                     case UNTIL:
                         ParsedDateTime until = ParsedDateTime.parse(rhs, tzmap);
                         if (until != null) {
-                            until.toUTC();
+                            // RFC2445 4.3.10 Recurrence Rule:
+                            // "If specified as a date-time value, then it MUST
+                            // be specified in an UTC time format."
+                            if (until.hasTime())
+                                until.toUTC();
                             mUntil = until;
                         }
                         break;
