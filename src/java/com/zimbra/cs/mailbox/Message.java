@@ -321,8 +321,11 @@ public class Message extends MailItem {
             //   boolean sentByMe = (flags & Flag.FLAG_FROM_ME) != 0;
             boolean sentByMe = false;
             try {
-                String sender = new InternetAddress(pm.getSender()).getAddress();
-                sentByMe = AccountUtil.addressMatchesAccount(acct, sender);
+                String pmSender = pm.getSender();
+                if (pmSender != null && pmSender.length() > 0) {
+                    String sender = new InternetAddress(pmSender).getAddress();
+                    sentByMe = AccountUtil.addressMatchesAccount(acct, sender);
+                }
             } catch (AddressException e) {
                 throw ServiceException.INVALID_REQUEST("unable to parse invite sender: " + pm.getSender(), e);
             }
