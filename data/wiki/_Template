@@ -1,0 +1,24 @@
+<style type="text/css">
+	{{INCLUDE page="_TemplateStyles" inherit="true"}}
+</style>
+
+<div class="_page">
+	<table class="_chromeTable" cellpadding="0" cellspacing="0"><tbody>
+	<tr><td class="_headerContainer" colspan=2>
+		{{INCLUDE page="_Header" inherit="true"}}
+	</td></tr>
+	<tr>
+
+		<td class="_sidebarContainer" valign="top">
+			{{INCLUDE page="_SideBar" inherit="true"}}
+		</td>
+
+		<td class="_contentContainer" valign="top">
+			{{CONTENT}}
+		</td>
+	</tr>
+	<tr><td class="_footerContainer" colspan=2>
+		{{INCLUDE page="_Footer" inherit="true"}}
+	</td>
+	</tbody></table>
+</div>

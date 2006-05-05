@@ -1,0 +1,11 @@
+<tr><td colspan=3 class='_tocLineSeparator'><div></div></td></tr>
+<tr>
+	<td class='_pageIcon' width=16>{{ICON}}</td>
+	<td class='_pageLink'>[[{{NAME}}]]</td>
+	<td class='_tocPageInfo _smallGrayLinks' width='*'
+		>{{MODIFIER}} &bull; {{MODIFYDATE}} &bull; <a href="#">v. {{VERSION}}</a></td>
+</tr>
+<tr>
+	<td></td>
+	<td class='_tocFragment _smallGrayLinks' colspan='3'>{{FRAGMENT}}</td>
+</tr>

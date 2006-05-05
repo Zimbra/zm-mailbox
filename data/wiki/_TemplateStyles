@@ -1,0 +1,223 @@
+	._chromeTable,
+	._tocTable {
+		width:100%;
+		height:100%;
+	}
+
+	._page {}
+
+	._headerContainer {
+		height:30px;
+	}
+
+	._breadcrumbHeader,
+	._logoHeader,
+	._titleHeader {
+		background-color:#ffddbf;
+	}
+
+	._logoHeader {
+		border-bottom:1px solid #cccccc;	
+	}
+
+	._breadcrumbHeader {
+		padding-top:2px;
+		height:10px;	
+	}
+	
+	._titleHeader {
+		padding-top:2px;
+		height:10px;
+		padding-bottom:5px;
+		border-bottom:1px solid #cccccc;
+	}
+	
+
+	._footerContainer {
+		height:15px;
+		border-top:1px solid #cccccc;
+		border-bottom:1px solid #cccccc;
+	}
+	
+	._sidebarContainer {
+		Xwidth:150px;
+		background-color:#ffddbf;
+	}
+	
+	._contentContainer {
+		padding:5px;
+		width:100%;
+		height:"100%";
+		border-left:1px solid #cccccc;
+	}
+	
+	._pageName {
+		white-space:nowrap; overflow:hidden;
+		font-size:18px;
+		font-weight:bold;
+		vertical-align:bottom;
+	}
+
+	._author {
+		white-space:nowrap; overflow:hidden;
+		padding-left:10px;
+		padding-right:5px;
+		padding-bottom:2px;
+		vertical-align:bottom;
+		font-size:9px;
+		color:#666666;
+	}
+
+	._history {
+		text-align:right;
+		white-space:nowrap; overflow:hidden;
+		padding-right:5px;
+		font-size:9px;
+		color:#999999;
+	}
+	
+	
+	/* Use the following to make links have a small, gray appearance when not rolled over */
+	._smallGrayLinks A,
+	._smallGrayLinks span.Object {
+		font-size:9px;
+		color:#999999;
+	}
+	._smallGrayLinks span.Object-activated {
+		font-size:9px;
+		color:#666666;
+	}
+
+	._copyright {
+		white-space:nowrap; overflow:hidden;
+		font-size:9px;
+		color:#999999;
+	}
+	
+
+	._tags {
+		text-align:right;
+		font-size:9px;
+	}
+
+	
+	._breadcrumbs {
+		font-size:9px;		
+	}
+
+	._breadCrumbSeparator {
+		padding-left:3px;
+		padding-right:3px;
+		font-size:9px;	
+		color:#999999;
+	}
+	
+
+	/* container for the entire TOC */
+	._toc {
+		margin:10px;	
+		border:1px solid #cccccc;
+	}
+	
+	._tocTable {
+		width:100%
+		padding:5px;	
+	}
+	
+	._tocHeader {
+		background-color:#ffddbf;
+		font-size:13px;
+		font-weight:bold;
+	}
+	
+	._tocLineSeparator {
+		border-top:1px dotted #cccccc;
+	}
+
+
+	._tocPageInfo {
+		font-size:9px;
+		color:#999999;
+	}
+
+	._tocFragment{
+		font-size:9px;
+		color:#999999;
+	}
+
+
+
+	
+	._pageLink {
+		font-size:9px;	
+		cursor:pointer;
+	}
+	
+	._tag {
+		font-size:9px;
+		color:darkblue;
+		padding-right:10px;
+	}
+
+	._pageIcon {
+		width:16;
+		padding-left:3px;
+		Xpadding-right:3px;
+		cursor:pointer;
+	}
+	
+	._attachments {
+		white-space:nowrap; overflow:hidden;
+		font-size:11px;
+		cursor:pointer;
+	}
+	
+	
+	._expandoSection {
+	}
+
+	._expandoSectionHead {
+		font-size:12px;
+		font-weight:bold;
+		background-color:#ffc795; 
+		border-bottom:1px solid #cccccc;
+		border-width:1 0 1 1;
+		height:16px;	
+		cursor:pointer;
+	}
+
+	._expandoSectionL1 {
+		border-left:1px solid #cccccc;
+		margin-left:3px;
+		margin-bottom:15px;
+		cursor:pointer; 
+		display:none;	
+	}
+
+	._expandoSectionSubHead	{	
+		background-color:#eeeeee; 
+		border-bottom:1px solid #cccccc;
+		height:16px;	
+		cursor:pointer;
+	}
+	
+	._expandoSectionL2 {	
+		border-bottom:1px solid #cccccc;
+		padding-bottom:2px;
+		padding-left:10px; 
+		padding-bottom:10px;
+		cursor:pointer; 
+		display:none;
+	}
+	
+	#tTOC {
+		border-bottom:1px solid #cccccc;
+	}
+	
+	.WikiTOC ul {
+		margin-top:0px;
+		padding-left:10px;
+		list-style-type:none;
+	}
+	
+	.WikiTOC li {}

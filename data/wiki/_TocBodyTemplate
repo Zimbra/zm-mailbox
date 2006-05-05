@@ -1,0 +1,7 @@
+<div class="_toc">
+	<table class="_tocTable" cellpadding="2" cellspacing="0">
+		<tbody><tr><td colspan="3" class="_tocHeader">{{MSG wikiToc}}</td></tr>
+		{{CONTENT}}
+	</tbody></table>
+</div>
+

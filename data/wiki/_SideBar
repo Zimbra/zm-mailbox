@@ -1,0 +1,94 @@
+<!-- MANUALLY CREATED LIST OF SIDEBARS -->
+<div style='width:150px'>
+	<div class='_expandoSection' onclick='var it = document.getElementById("tZW"); it.style.display = (it.style.display != "block" ? "block" : "none");'>
+		<div class=_expandoSectionHead><span class='ImgNodeCollapsed'>&nbsp;&nbsp;&nbsp;</span>&nbsp;ZimbraWeb</div>
+	</div>
+		<div id='tZW' class='_expandoSectionL1'>
+			<div class='_expandoSection' onclick='var it = document.getElementById("t1"); it.style.display = (it.style.display != "block" ? "block" : "none");'>
+				<div class=_expandoSectionSubHead><span class='ImgNodeCollapsed'>&nbsp;&nbsp;&nbsp;</span>&nbsp;[[Documents]]</div>
+				<div id='t1' class='_expandoSectionL2'>
+					WhitePapersAndPPTs<br>
+					DocumentsAndLegal
+				</div>
+			</div>
+			
+			<div class='_expandoSection' onclick='var it = document.getElementById("t2"); it.style.display = (it.style.display != "block" ? "block" : "none");'>
+				<div class=_expandoSectionSubHead><span class='ImgNodeCollapsed'>&nbsp;&nbsp;&nbsp;</span>&nbsp;[[Engineering]]</div>
+				<div id='t2' class='_expandoSectionL2'>
+			   [[Admin]]<br>
+			   [[Calendar]]<br>
+			   [[MAPI][MAPI&Mobility]]<br>
+			   ServerPerformance<br>
+			   ClientPerformance<br>
+			   [[HSM]]<br>
+			   SpellChecking<br>
+			   ServerConfig
+				</div>
+			</div>
+			
+			
+			<div class='_expandoSection' onclick='var it = document.getElementById("t3"); it.style.display = (it.style.display != "block" ? "block" : "none");'>
+				<div class=_expandoSectionSubHead><span class='ImgNodeCollapsed'>&nbsp;&nbsp;&nbsp;</span>&nbsp;MarketingAndPR</div>
+				<div id='t3' class='_expandoSectionL2'>
+			   MarketingNetwork<br>
+			   PricingPlan<br>
+			   [[PRLaunchReqs][What is needed for a PR Launch?]]<br>
+			   [[ReleaseMajorBuildReqs][What is needed for releasing a new major build?]]<br>
+			   CompetitiveAnalysis<br>
+				WebSiteInformation
+				</div>
+			</div>
+			
+			<div class='_expandoSection' onclick='var it = document.getElementById("t4"); it.style.display = (it.style.display != "block" ? "block" : "none");'>
+				<div class=_expandoSectionSubHead><span class='ImgNodeCollapsed'>&nbsp;&nbsp;&nbsp;</span>&nbsp;[[Personal]]</div>
+				<div id='t4' class='_expandoSectionL2'>
+			   LiquidPoker
+				</div>
+			</div>
+			
+			<div class='_expandoSection' onclick='var it = document.getElementById("t5"); it.style.display = (it.style.display != "block" ? "block" : "none");'>
+				<div class=_expandoSectionSubHead><span class='ImgNodeCollapsed'>&nbsp;&nbsp;&nbsp;</span>&nbsp;ProductPlanning</div>
+				<div id='t5' class='_expandoSectionL2'>
+			   EarlyStageRequirements<br>
+			   PrototypesAndMockups<br>
+			   DaimlerRelease<br>
+			   EdisonRelease<br>
+			   FranklinRelease
+				</div>
+			</div>
+			
+			<div class='_expandoSection' onclick='var it = document.getElementById("t6"); it.style.display = (it.style.display != "block" ? "block" : "none");'>
+				<div class=_expandoSectionSubHead><span class='ImgNodeCollapsed'>&nbsp;&nbsp;&nbsp;</span>&nbsp;[[QA]]</div>
+				<div id='t6' class='_expandoSectionL2'>
+			   UnitTesting<br>
+			   TestTools<br>
+			   TestPlans<br>
+			   TestCases<br>
+			   TestResults<br>
+			   TestDocs<br>
+			   LoadTesting<br>
+			   [[Bugzilla]]<br>
+			   StafStax<br>
+			   MobileSimulators
+				</div>
+			</div>
+			
+			<div class='_expandoSection' onclick='var it = document.getElementById("t7"); it.style.display = (it.style.display != "block" ? "block" : "none");'>
+				<div class=_expandoSectionSubHead><span class='ImgNodeCollapsed'>&nbsp;&nbsp;&nbsp;</span>&nbsp;[[Support]]</div>
+				<div id='t7' class='_expandoSectionL2'>
+			   ZCSServerVersions<br>
+			   OSSBetaCustomerPlan
+				</div>
+			</div>
+			
+		</div>
+	
+	<!-- SHOW THE TOC INLINE -->
+	
+	<div class='_expandoSection' onclick='var it = document.getElementById("tTOC"); it.style.display = (it.style.display != "block" ? "block" : "none");'>
+		<div class=_expandoSectionHead><span class='ImgNodeCollapsed'>&nbsp;&nbsp;&nbsp;</span>&nbsp;Table of Contents</div>
+	</div>
+	<div id='tTOC' class='_expandoSectionL1'>
+		{{TOC format="list"}}
+	</div>
+</div>

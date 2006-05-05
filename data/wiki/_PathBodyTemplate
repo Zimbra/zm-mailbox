@@ -1,0 +1,5 @@
+<table class='_breadcrumb_table' cellspacing="0" cellpadding="0">
+	<tr>
+		{{CONTENT}}
+	</tr>
+</table>
