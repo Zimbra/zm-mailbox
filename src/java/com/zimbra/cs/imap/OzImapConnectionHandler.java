@@ -695,8 +695,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             synchronized (mailbox) {
                 session.setUsername(account.getName());
                 session.cacheFlags(mailbox);
-                for (Iterator it = mailbox.getTagList(session.getContext()).iterator(); it.hasNext(); )
-                    session.cacheTag((Tag) it.next());
+                for (Tag ltag : mailbox.getTagList(session.getContext()))
+                    session.cacheTag(ltag);
             }
 
             // Session timeout will take care of closing an IMAP connection with
@@ -1783,44 +1783,45 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         String copyuid = "";
         List<MailItem> newMessages = new ArrayList<MailItem>();
         try {
-            synchronized (mMailbox) {
-                Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
-                if (!ImapFolder.isFolderVisible(folder)) {
-                    ZimbraLog.imap.info(command + " failed: folder is hidden: " + folderName);
-                    sendNO(tag, command + " failed");
-                    return CONTINUE_PROCESSING;
-                } else if (!ImapFolder.isFolderWritable(folder)) {
-                    ZimbraLog.imap.info(command + " failed: folder is READ-ONLY: " + folderName);
-                    sendNO(tag, command + " failed: target mailbox is READ-ONLY");
-                    return CONTINUE_PROCESSING;
-                }
-
-                Set<ImapMessage> i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
-                // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
-                //                  accessed mailbox that contains expunged messages."
-                if (i4set.contains(null) && !byUID) {
-                    sendNO(tag, "COPY rejected because some of the requested messages were expunged");
-                    return CONTINUE_PROCESSING;
-                }
-
-                List<Integer> srcUIDs = new ArrayList<Integer>(), copyUIDs = new ArrayList<Integer>();
-                for (ImapMessage i4msg : i4set) {
-                    if (i4msg == null)
-                        continue;
-                    // FIXME: should optimize to a move, as 95% of IMAP COPY ops are really moves...
-                    MailItem copy = mMailbox.copy(getContext(), i4msg.id, MailItem.TYPE_MESSAGE, folder.getId());
-                    if (copy == null)
-                        continue;
-                    newMessages.add(copy);
-                    srcUIDs.add(i4msg.uid);
-                    copyUIDs.add(copy.getId());
-                }
-
-                if (srcUIDs.size() > 0)
-                    copyuid = "[COPYUID " + ImapFolder.getUIDValidity(folder) + ' ' +
-                              ImapFolder.encodeSubsequence(srcUIDs) + ' ' +
-                              ImapFolder.encodeSubsequence(copyUIDs) + "] ";
+            Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
+            if (!ImapFolder.isFolderVisible(folder)) {
+                ZimbraLog.imap.info(command + " failed: folder is hidden: " + folderName);
+                sendNO(tag, command + " failed");
+                return CONTINUE_PROCESSING;
+            } else if (!ImapFolder.isFolderWritable(folder)) {
+                ZimbraLog.imap.info(command + " failed: folder is READ-ONLY: " + folderName);
+                sendNO(tag, command + " failed: target mailbox is READ-ONLY");
+                return CONTINUE_PROCESSING;
             }
+
+            Set<ImapMessage> i4set;
+            synchronized (mMailbox) {
+                i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
+            }
+            // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
+            //                  accessed mailbox that contains expunged messages."
+            if (i4set.contains(null) && !byUID) {
+                sendNO(tag, "COPY rejected because some of the requested messages were expunged");
+                return CONTINUE_PROCESSING;
+            }
+
+            List<Integer> srcUIDs = new ArrayList<Integer>(), copyUIDs = new ArrayList<Integer>();
+            for (ImapMessage i4msg : i4set) {
+                if (i4msg == null)
+                    continue;
+                // FIXME: should optimize to a move, as 95% of IMAP COPY ops are really moves...
+                MailItem copy = mMailbox.copy(getContext(), i4msg.id, MailItem.TYPE_MESSAGE, folder.getId());
+                if (copy == null)
+                    continue;
+                newMessages.add(copy);
+                srcUIDs.add(i4msg.uid);
+                copyUIDs.add(copy.getId());
+            }
+
+            if (srcUIDs.size() > 0)
+                copyuid = "[COPYUID " + ImapFolder.getUIDValidity(folder) + ' ' +
+                          ImapFolder.encodeSubsequence(srcUIDs) + ' ' +
+                          ImapFolder.encodeSubsequence(copyUIDs) + "] ";
         } catch (IOException e) {
             // 6.4.7: "If the COPY command is unsuccessful for any reason, server implementations
             //         MUST restore the destination mailbox to its state before the COPY attempt."
@@ -1875,8 +1876,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             ImapFolder i4folder = mSession.getFolder();
             boolean removed = false, received = i4folder.checkpointSize();
             if (notifyExpunges)
-                for (Iterator it = i4folder.collapseExpunged().iterator(); it.hasNext(); removed = true)
-                    sendUntagged(it.next() + " EXPUNGE");
+                for (Integer index : i4folder.collapseExpunged()) {
+                    sendUntagged(index + " EXPUNGE");  removed = true;
+                }
             i4folder.checkpointSize();
 
             // notify of any message flag changes
