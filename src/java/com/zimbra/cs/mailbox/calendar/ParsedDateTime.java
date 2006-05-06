@@ -269,6 +269,22 @@ public final class ParsedDateTime {
         return new ParsedDateTime(cal, mICalTimeZone, mHasTime);
     }
 
+    /**
+     * Returns a new ParsedDateTime object that has the same time values
+     * (hour, minutes, seconds, and millis) and time zone as this object and
+     * the same date values (year, month, date) as "date" object.
+     * @param other
+     * @return
+     */
+    public ParsedDateTime cloneWithNewDate(ParsedDateTime date) {
+        GregorianCalendar cal = (GregorianCalendar) mCal.clone();
+        GregorianCalendar calDate = (GregorianCalendar) date.mCal;
+        cal.set(calDate.get(java.util.Calendar.YEAR),
+                calDate.get(java.util.Calendar.MONTH),
+                calDate.get(java.util.Calendar.DAY_OF_MONTH));
+        return new ParsedDateTime(cal, mICalTimeZone, mHasTime);
+    }
+
     public int compareTo(Date other) {
         return getDate().compareTo(other);
     }

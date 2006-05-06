@@ -688,7 +688,12 @@ public class Recurrence
 //            }
             if (mRecur != null) {
                 ParsedDateTime until = mRecur.getUntil();
-                if (until != null) return until;
+                if (until != null) {
+                    assert(mDuration != null);
+                    ParsedDateTime endPdt = mDtStart.add(mDuration);
+                    ParsedDateTime end = endPdt.cloneWithNewDate(until);
+                    return end;
+                }
             }
             return ParsedDateTime.MAX_DATETIME;
         }
