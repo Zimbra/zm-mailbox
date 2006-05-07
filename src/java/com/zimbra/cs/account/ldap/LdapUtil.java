@@ -80,7 +80,10 @@ public class LdapUtil {
     private static String sLdapURL;
     private static String sLdapMasterURL;    
     
-    private static Hashtable<String, String> sEnv;
+    private static Hashtable<String, String> sEnvMasterAnon;
+    private static Hashtable<String, String> sEnvMasterAuth;
+    private static Hashtable<String, String> sEnvAnon;
+    private static Hashtable<String, String> sEnvAuth;
     private static String[] sEmptyMulti = new String[0];
 
     static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, false, false);
@@ -135,24 +138,41 @@ public class LdapUtil {
      * @return
      * @throws NamingException
      */
-    private static synchronized Hashtable getDefaultEnv(boolean master) {
-        if (sEnv == null) {
-            sEnv = new Hashtable<String, String>();
-            sEnv.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-            sEnv.put(Context.PROVIDER_URL, master ? sLdapMasterURL : sLdapURL);
+    private static synchronized Hashtable getDefaultEnv(boolean master, boolean anonymous) {
+        Hashtable<String, String> sEnv = null;
+        
+        if  (master && anonymous) {
+            if (sEnvMasterAnon != null) return sEnvMasterAnon;
+            else sEnv = sEnvMasterAnon = new Hashtable<String, String>();
+        } else if (master && !anonymous) {
+            if (sEnvMasterAuth != null) return sEnvMasterAuth;
+            else sEnv = sEnvMasterAuth = new Hashtable<String, String>(); 
+        } else if (!master && anonymous) {
+            if (sEnvAnon != null) return sEnvAnon;
+            else sEnv = sEnvAnon = new Hashtable<String, String>(); 
+        } else if (!master && !anonymous) {
+            if (sEnvAuth != null) return sEnvAuth;
+            else sEnv = sEnvAuth = new Hashtable<String, String>();             
+        }
+
+        sEnv.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        sEnv.put(Context.PROVIDER_URL, master ? sLdapMasterURL : sLdapURL);
+        if (!anonymous) {
             sEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
             sEnv.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
             sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
-            sEnv.put(Context.REFERRAL, "follow");
-            
-            // wait at most 10 seconds for a connection
-            sEnv.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
-            // enable connection pooling
-            sEnv.put("com.sun.jndi.ldap.connect.pool", "true");
-            // env.put("java.naming.ldap.derefAliases", "never");
-            //
-            // default: env.put("java.naming.ldap.version", "3");
+        } else {
+            sEnv.put(Context.SECURITY_AUTHENTICATION, "none");
         }
+        sEnv.put(Context.REFERRAL, "follow");
+            
+        // wait at most 10 seconds for a connection
+        sEnv.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
+        // enable connection pooling
+        sEnv.put("com.sun.jndi.ldap.connect.pool", "true");
+        // env.put("java.naming.ldap.derefAliases", "never");
+        //
+        // default: env.put("java.naming.ldap.version", "3");
         return sEnv;
     }
     
@@ -171,9 +191,18 @@ public class LdapUtil {
      * @throws NamingException
      */
     public static DirContext getDirContext(boolean master) throws ServiceException {
+        return getDirContext(master, false);
+    }
+
+    /**
+     * 
+     * @return
+     * @throws NamingException
+     */
+    public static DirContext getDirContext(boolean master, boolean anonymous) throws ServiceException {
         try {
             long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
-            DirContext dirContext = new InitialLdapContext(getDefaultEnv(master), null);
+            DirContext dirContext = new InitialLdapContext(getDefaultEnv(master, anonymous), null);
             ZimbraPerf.STOPWATCH_LDAP_DC.stop(start);
             //ZimbraLog.account.error("getDirContext", new RuntimeException("------------------- OPEN"));
             return dirContext;

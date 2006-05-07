@@ -279,7 +279,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         DirContext ctxt = null;
         NamingEnumeration ne = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(false, true);
             ne = ctxt.search("ou=people,"+getDN(), query, sc);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
