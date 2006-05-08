@@ -24,7 +24,9 @@
  */
 package com.zimbra.cs.wiki;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,6 +63,54 @@ public class Wiki {
 		wikiMap = new HashMap<Pair<String,String>,Wiki>();
 	}
 	
+	private static class WikiUrl {
+		public WikiUrl(String url) {
+			// url must be in absolute form
+			this(url, -1);
+		}
+		public WikiUrl(String url, int currentPos) {
+			// url can be in absolute or relative form.
+			mUrl = url;
+			mId = currentPos;
+			parse();
+		}
+		private int mId;
+		private String mUrl;
+		private List<String> mTokens;
+		
+		private void parse() {
+			mTokens = new ArrayList<String>();
+			int begin = 0, end = 0;
+			if (mUrl.startsWith("//")) {
+				begin = 2;
+				end = mUrl.indexOf('/', begin);
+				mTokens.add("//");
+				mTokens.add(mUrl.substring(begin, end));
+				begin = end;
+			} else if (mUrl.startsWith("/")) {
+				mTokens.add("/");
+			} else {
+				if (mId == -1)
+					throw new IllegalArgumentException("not absolute url: " + mUrl);
+				mTokens.add(Integer.toString(mId));
+			}
+			mTokens.add(mUrl.substring(begin));
+		}
+		public MailItem getItem(Mailbox mbox, OperationContext octxt) throws ServiceException {
+			Iterator<String> iter = mTokens.listIterator();
+			int fid = Mailbox.ID_FOLDER_USER_ROOT;
+			String root = iter.next();
+			if (root.equals("//")) {
+				Account acct = Provisioning.getInstance().getAccountByName(iter.next());
+				mbox = Mailbox.getMailboxByAccountId(acct.getId());
+			} else if (!root.equals("/")) {
+				fid = Integer.parseInt(root);
+			}
+			
+			return mbox.getItemByPath(octxt, iter.next(), fid);
+		}
+	}
+	
 	public static int getDefaultFolderId(Account acct) throws ServiceException {
 		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
 		OperationContext octxt = new OperationContext(acct);
@@ -73,11 +123,17 @@ public class Wiki {
 			throw ServiceException.FAILURE("wiki disabled", null);
 		}
 		Account acct = Provisioning.getInstance().getAccountByName(LC.wiki_user.value());
-		return getInstance(acct.getId());
+		return getInstance(acct);
 	}
 	
-	public static Wiki getInstance(String acct) throws ServiceException {
-		return getInstance(Provisioning.getInstance().getAccountById(acct));
+	public static MailItem findWikiByPath(OperationContext octxt, Mailbox mbox, int fid, String path) throws ServiceException {
+		WikiUrl url = new WikiUrl(path, fid);
+		return url.getItem(mbox, octxt);
+	}
+	
+	public static MailItem findWikiByPath(OperationContext octxt, MailItem item, String path) throws ServiceException {
+		WikiUrl url = new WikiUrl(path, item.getFolderId());
+		return url.getItem(item.getMailbox(), octxt);
 	}
 	
 	public static Wiki getInstance(String acct, int folderId) throws ServiceException {

@@ -4413,6 +4413,47 @@ public class Mailbox {
     	return doc;
     }
     
+    public MailItem getItemByPath(OperationContext octxt, String path, int fid) throws ServiceException {
+        boolean success = true;
+        try {
+            beginTransaction("getItemByPath", octxt);
+            if (path == null)
+                throw MailServiceException.NO_SUCH_FOLDER(path);
+            if (path.startsWith("/")) {
+                path = path.substring(1);
+                fid = ID_FOLDER_USER_ROOT;
+            }
+            Folder folder = getFolderById(fid);
+            if (!path.equals("")) {
+                StringTokenizer tok = new StringTokenizer(path, "/");
+                String lastToken = null;
+                Folder lastFolder = null;
+                while (folder != null && tok.hasMoreTokens()) {
+                	lastToken = tok.nextToken();
+                	lastFolder = folder;
+                	folder = lastFolder.findSubfolder(lastToken);
+                }
+                if (folder == null && 
+                		lastFolder != null && 
+                		lastFolder.canAccess(ACL.RIGHT_READ) && 
+                		lastToken != null && 
+                		!tok.hasMoreTokens()) {
+                	for (Document doc : getWikiList(octxt, lastFolder.getId()))
+                		if (doc.getFilename().equals(lastToken))
+                			return doc;
+                }
+            }
+            if (folder == null)
+                throw MailServiceException.NO_SUCH_FOLDER("/" + path);
+            if (!folder.canAccess(ACL.RIGHT_READ))
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder /" + path);
+            success = true;
+            return folder;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     public WikiItem getWikiById(OperationContext octxt, int id) throws ServiceException {
     	return (WikiItem) getItemById(octxt, id, MailItem.TYPE_WIKI);
     }

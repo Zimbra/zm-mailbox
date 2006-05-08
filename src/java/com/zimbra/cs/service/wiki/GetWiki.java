@@ -31,7 +31,6 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
@@ -41,7 +40,6 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -62,20 +60,17 @@ public class GetWiki extends WikiDocumentHandler {
         WikiItem wikiItem;
         
         if (word != null) {
-            Wiki wiki = getRequestedWikiNotebook(request, lc);
-            WikiWord w = wiki.lookupWiki(word);
-            if (w == null) {
-        		ZimbraLog.wiki.error("requested wiki word "+word+" does not exist");
-            	throw WikiServiceException.NO_SUCH_WIKI(word);
-            }
-            Document doc = w.getWikiItem(octxt);
-            if (doc.getType() != MailItem.TYPE_WIKI) {
-            	throw WikiServiceException.NOT_WIKI_ITEM(word);
-            }
-            wikiItem = (WikiItem)doc;
+        	MailItem item = Wiki.findWikiByPath(octxt, 
+        										 getRequestedMailbox(lc), 
+        										 getRequestedFolder(request), 
+        										 word);
+        	if (item.getType() != MailItem.TYPE_WIKI) {
+        		throw WikiServiceException.NOT_WIKI_ITEM(word);
+        	}
+            wikiItem = (WikiItem)item;
         } else if (id != null) {
         	ItemId iid = new ItemId(id, lc);
-            Mailbox mbox = getRequestedMailbox(lc);
+        	Mailbox mbox = getRequestedMailbox(lc);
         	wikiItem = mbox.getWikiById(octxt, iid.getId());
         } else {
         	throw ServiceException.FAILURE("missing attribute w or id", null);

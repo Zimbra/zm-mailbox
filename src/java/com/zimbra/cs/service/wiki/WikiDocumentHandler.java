@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.service.wiki;
 
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
@@ -40,6 +41,15 @@ public abstract class WikiDocumentHandler extends DocumentHandler {
 
 	protected String getAuthor(ZimbraSoapContext lc) throws ServiceException {
 		return lc.getAuthtokenAccount().getName();
+	}
+	
+	protected int getRequestedFolder(Element request) throws ServiceException {
+		for (Element elem : request.listElements()) {
+	        int fid = (int)elem.getAttributeLong(MailService.A_FOLDER, 0);
+	        if (fid != 0)
+	        	return fid;
+		}
+		return Mailbox.ID_FOLDER_USER_ROOT;
 	}
 	
 	protected Wiki getRequestedWikiNotebook(Element request, ZimbraSoapContext lc) throws ServiceException {
