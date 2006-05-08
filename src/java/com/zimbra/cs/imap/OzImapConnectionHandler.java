@@ -1620,6 +1620,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             }
 
             List<Integer> srcUIDs = new ArrayList<Integer>(), copyUIDs = new ArrayList<Integer>();
+            int copied = 0;
             for (ImapMessage i4msg : i4set) {
                 if (i4msg == null)
                     continue;
@@ -1630,6 +1631,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 newMessages.add(copy);
                 srcUIDs.add(i4msg.uid);
                 copyUIDs.add(copy.getId());
+                // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
+                if (++copied % 50 == 0)
+                    sendUntagged("NOOP", true);
             }
 
             if (srcUIDs.size() > 0)
