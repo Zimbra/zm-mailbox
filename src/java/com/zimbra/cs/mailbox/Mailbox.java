@@ -2007,9 +2007,6 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("listItemIds", octxt);
-            if (!hasFullAccess())
-                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
-
             Folder folder = getFolderById(folderId);
             List<DbMailItem.SearchResult> idList = DbMailItem.listByFolder(folder, type, true);
             if (idList == null)
@@ -2033,10 +2030,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("beginTrackingSync", octxt, redoRecorder);
-            if (!hasFullAccess())
-                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
-
-            mCurrentChange.sync = Boolean.TRUE;
+            mCurrentChange.sync = true;
             DbMailbox.startTrackingSync(this);
             success = true;
         } finally {
@@ -2051,9 +2045,6 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("getTombstones", null);
-            if (!hasFullAccess())
-                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
-
             List<Integer> tombstones = DbMailItem.readTombstones(this, lastSync);
             success = true;
             return tombstones;
