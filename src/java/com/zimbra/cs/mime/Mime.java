@@ -59,7 +59,6 @@ import javax.mail.internet.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -496,12 +495,7 @@ public class Mime {
     }
 
     public static String getCharset(String contentType) {
-        ContentType ct = new ContentType(contentType);
-        // we shouldn't get called with anything other then text/*, but if we do...
-        if (!ct.getValue().matches(CT_TEXT_WILD))
-            throw new IllegalArgumentException("unsupported content type: " + contentType);  
-   
-        String charset = ct.getParameter(P_CHARSET);
+        String charset = new MimeCompoundHeader.ContentType(contentType).getParameter(P_CHARSET);
         if (charset == null || charset.trim().equals(""))
             charset = P_CHARSET_DEFAULT;
         return charset;
