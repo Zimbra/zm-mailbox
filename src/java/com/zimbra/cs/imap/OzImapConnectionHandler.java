@@ -61,6 +61,7 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Config;
+import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -75,6 +76,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
     public static final String PROPERTY_ALLOW_CLEARTEXT_LOGINS = "imap.allows.cleartext.logins"; 
     public static final String PROPERTY_SECURE_SERVER = "imap.secure.server";
+
+    private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 15 * Constants.MILLIS_PER_SECOND;
 
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
@@ -1216,7 +1219,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             //         selected by an EXAMINE command or is otherwise selected read-only."
             ImapFolder i4folder = mSession.getFolder();
             if (i4folder.isWritable())
-                i4folder.expungeMessages(mMailbox, null);
+                expungeMessages(i4folder, null);
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("EXPUNGE failed", e);
             sendNO(tag, "EXPUNGE failed");
@@ -1253,7 +1256,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         
         String command = (byUID ? "UID EXPUNGE" : "EXPUNGE");
         try {
-            mSession.getFolder().expungeMessages(mMailbox, sequenceSet);
+            expungeMessages(mSession.getFolder(), sequenceSet);
         } catch (ServiceException e) {
             ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
@@ -1263,6 +1266,32 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         sendNotifications(true, false);
         sendOK(tag, command + " completed");
         return CONTINUE_PROCESSING;
+    }
+
+    void expungeMessages(ImapFolder i4folder, String sequenceSet) throws ServiceException, IOException {
+        Set i4set = (sequenceSet == null ? null : i4folder.getSubsequence(sequenceSet, true));
+        long checkpoint = System.currentTimeMillis();
+        synchronized (mMailbox) {
+            for (ImapMessage i4msg : i4folder)
+                if (i4msg != null && !i4msg.expunged && (i4msg.flags & Flag.FLAG_DELETED) > 0)
+                    if (i4set == null || i4set.contains(i4msg)) {
+                        // message tagged for deletion -- delete now
+                        // FIXME: should handle moves separately
+                        // FIXME: it'd be nice to have a bulk-delete Mailbox operation
+                        try {
+                            ZimbraLog.imap.debug("  ** deleting: " + i4msg.id);
+                            mMailbox.delete(null, i4msg.id, MailItem.TYPE_MESSAGE);
+                        } catch (ServiceException e) {
+                            if (!(e instanceof MailServiceException.NoSuchItemException))
+                                throw e;
+                        }
+                        // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
+                        long now = System.currentTimeMillis();
+                        if (now - checkpoint > MAXIMUM_IDLE_PROCESSING_MILLIS) {
+                            sendIdleUntagged();  checkpoint = now;
+                        }
+                    }
+        }
     }
 
     private static final int LARGEST_FOLDER_BATCH = 600;
@@ -1513,68 +1542,82 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         }
 
         String command = (byUID ? "UID STORE" : "STORE");
-        boolean allPresent = true;
         List<Tag> newTags = (operation != STORE_REMOVE ? new ArrayList<Tag>() : null);
+
+        Set<ImapMessage> i4set;
+        synchronized (mMailbox) {
+            i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
+        }
+        boolean allPresent = byUID || !i4set.contains(null);
+
         try {
+            // get set of relevant tags
+            List<ImapFlag> i4flags;
             synchronized (mMailbox) {
-                // if it was a STORE [+-]?FLAGS.SILENT, temporarily disable notifications
-                if (silent)
-                    mSession.getFolder().disableNotifications();
+                i4flags = findOrCreateTags(flagNames, newTags);
+            }
 
-                // get sets of relevant messages and tags
-                Set<ImapMessage> i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
-                List<ImapFlag> i4flags = findOrCreateTags(flagNames, newTags);
-                allPresent = byUID || !i4set.contains(null);
+            long checkpoint = System.currentTimeMillis();
+            for (ImapMessage i4msg : i4set) {
+                if (i4msg == null)
+                    continue;
 
-                for (ImapMessage i4msg : i4set) {
-                    if (i4msg == null)
-                        continue;
+                if (!i4flags.isEmpty() || operation == STORE_REPLACE) {
+                    // FIXME: for replace, changed tag/flag mask could be precomputed outside the i4set loop
+                    byte sflags = (operation != STORE_REPLACE ? i4msg.sflags : 0);
+                    int  flags  = (operation != STORE_REPLACE ? i4msg.flags : Flag.FLAG_UNREAD | (i4msg.flags & ~ImapMessage.IMAP_FLAGS));
+                    long tags   = (operation != STORE_REPLACE ? i4msg.tags : 0);
+                    for (ImapFlag i4flag : i4flags) {
+                        if (Tag.validateId(i4flag.mId))
+                            tags = (operation == STORE_REMOVE ^ !i4flag.mPositive ? tags & ~i4flag.mBitmask : tags | i4flag.mBitmask);
+                        else if (!i4flag.mPermanent)
+                            sflags = (byte) (operation == STORE_REMOVE ^ !i4flag.mPositive ? sflags & ~i4flag.mBitmask : sflags | i4flag.mBitmask);
+                        else
+                            flags = (int) (operation == STORE_REMOVE ^ !i4flag.mPositive ? flags & ~i4flag.mBitmask : flags | i4flag.mBitmask);
+                    }
 
-                    if (!i4flags.isEmpty() || operation == STORE_REPLACE) {
-                        // FIXME: changed tag/flag mask could be precomputed outside the i4set loop
-                        byte sflags = (operation != STORE_REPLACE ? i4msg.sflags : 0);
-                        int  flags  = (operation != STORE_REPLACE ? i4msg.flags : Flag.FLAG_UNREAD | (i4msg.flags & ~ImapMessage.IMAP_FLAGS));
-                        long tags   = (operation != STORE_REPLACE ? i4msg.tags : 0);
-                        for (ImapFlag i4flag : i4flags) {
-                            if (Tag.validateId(i4flag.mId))
-                                tags = (operation == STORE_REMOVE ^ !i4flag.mPositive ? tags & ~i4flag.mBitmask : tags | i4flag.mBitmask);
-                            else if (!i4flag.mPermanent)
-                                sflags = (byte) (operation == STORE_REMOVE ^ !i4flag.mPositive ? sflags & ~i4flag.mBitmask : sflags | i4flag.mBitmask);
-                            else
-                                flags = (int) (operation == STORE_REMOVE ^ !i4flag.mPositive ? flags & ~i4flag.mBitmask : flags | i4flag.mBitmask);
-                        }
+                    synchronized (mMailbox) {
                         if (tags != i4msg.tags || flags != i4msg.flags)
                             try {
+                                // if it was a STORE [+-]?FLAGS.SILENT, temporarily disable notifications
+                                if (silent)
+                                    mSession.getFolder().disableNotifications();
+                                // actually alter the item's flags
                                 mMailbox.setTags(getContext(), i4msg.id, MailItem.TYPE_MESSAGE, flags, tags);
+                                // i4msg's permanent flags/tags will be updated via notification
+                                i4msg.setSessionFlags(sflags);
                             } catch (MailServiceException.NoSuchItemException nsie) {
                                 i4msg.expunged = true;
+                            } finally {
+                                // if it was a STORE [+-]?FLAGS.SILENT, reenable notifications
+                                mSession.getFolder().enableNotifications();
                             }
-                        // i4msg's permanent flags/tags will be updated via notification
-                        i4msg.setSessionFlags(sflags);
-                    }
-
-                    if (!silent) {
-                        StringBuffer result = new StringBuffer();
-                        result.append(i4msg.seq).append(" FETCH (").append(i4msg.getFlags(mSession));
-                        // 6.4.8: "However, server implementations MUST implicitly include
-                        //         the UID message data item as part of any FETCH response
-                        //         caused by a UID command..."
-                        if (byUID)
-                            result.append(" UID ").append(i4msg.uid);
-                        result.append(')');
-                        sendUntagged(result.toString());
-                        mSession.getFolder().undirtyMessage(i4msg);
                     }
                 }
-                sendNotifications(false, false);
+
+                if (!silent) {
+                    mSession.getFolder().undirtyMessage(i4msg);
+                    StringBuffer ntfn = new StringBuffer();
+                    ntfn.append(i4msg.seq).append(" FETCH (").append(i4msg.getFlags(mSession));
+                    // 6.4.8: "However, server implementations MUST implicitly include
+                    //         the UID message data item as part of any FETCH response
+                    //         caused by a UID command..."
+                    if (byUID)
+                        ntfn.append(" UID ").append(i4msg.uid);
+                    sendUntagged(ntfn.append(')').toString());
+                } else {
+                    // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
+                    long now = System.currentTimeMillis();
+                    if (now - checkpoint > MAXIMUM_IDLE_PROCESSING_MILLIS) {
+                        sendIdleUntagged();  checkpoint = now;
+                    }
+                }
             }
         } catch (ServiceException e) {
             deleteTags(newTags);
             ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
             return canContinue(e);
-        } finally {
-            mSession.getFolder().enableNotifications();
         }
 
         // RFC 2180 4.2.1: "If the ".SILENT" suffix is used, and the STORE completed successfully for
@@ -1620,7 +1663,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             }
 
             List<Integer> srcUIDs = new ArrayList<Integer>(), copyUIDs = new ArrayList<Integer>();
-            int copied = 0;
+            long checkpoint = System.currentTimeMillis();
             for (ImapMessage i4msg : i4set) {
                 if (i4msg == null)
                     continue;
@@ -1632,8 +1675,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 srcUIDs.add(i4msg.uid);
                 copyUIDs.add(copy.getId());
                 // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
-                if (++copied % 50 == 0)
-                    sendUntagged("NOOP", true);
+                long now = System.currentTimeMillis();
+                if (now - checkpoint > MAXIMUM_IDLE_PROCESSING_MILLIS) {
+                    sendIdleUntagged();  checkpoint = now;
+                }
             }
 
             if (srcUIDs.size() > 0)
@@ -1715,6 +1760,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 sendUntagged(i4folder.getSize() + " EXISTS");
         }
     }
+
+    void sendIdleUntagged() throws IOException                   { sendUntagged("NOOP", true); }
 
     void sendOK(String tag, String response) throws IOException  { sendResponse(tag, response.equals("") ? "OK" : "OK " + response, true); }
     void sendNO(String tag, String response) throws IOException  { sendResponse(tag, response.equals("") ? "NO" : "NO " + response, true); }
