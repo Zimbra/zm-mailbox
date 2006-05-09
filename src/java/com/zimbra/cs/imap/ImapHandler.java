@@ -652,7 +652,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         boolean writable = command.equals("SELECT");
         ImapFolder i4folder = null;
         try {
-        	GetImapFolderOperation op = new GetImapFolderOperation(mSession, getContext(), mMailbox, folderName, writable);
+        	ImapGetFolderOperation op = new ImapGetFolderOperation(mSession, getContext(), mMailbox, folderName, writable);
         	op.schedule();
         	i4folder = op.getResult();
         	writable = op.getWritable();

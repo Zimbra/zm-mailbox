@@ -30,10 +30,10 @@ import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 
-public class GetImapFolderOperation extends Operation {
+public class ImapGetFolderOperation extends Operation {
 	private static int LOAD = 25;
 	static {
-		Operation.Config c = loadConfig(GetImapFolderOperation.class);
+		Operation.Config c = loadConfig(ImapGetFolderOperation.class);
 		if (c != null)
 			LOAD = c.mLoad;
 	}
@@ -45,7 +45,7 @@ public class GetImapFolderOperation extends Operation {
 	public ImapFolder getResult() { return mResult; }
 	public boolean getWritable()   { return mWritable; }
 	
-	public GetImapFolderOperation(Session session, OperationContext oc, Mailbox mbox, String folderName, boolean writable) throws ServiceException		
+	public ImapGetFolderOperation(Session session, OperationContext oc, Mailbox mbox, String folderName, boolean writable) throws ServiceException		
 	{
 		super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
 		

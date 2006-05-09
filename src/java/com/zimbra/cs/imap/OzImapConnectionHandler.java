@@ -621,7 +621,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 //                i4folder = new ImapFolder(folderName, writable, mMailbox, getContext());
 //                writable = i4folder.isWritable();
 //            }
-        	GetImapFolderOperation op = new GetImapFolderOperation(mSession, getContext(), mMailbox, folderName, writable);
+        	ImapGetFolderOperation op = new ImapGetFolderOperation(mSession, getContext(), mMailbox, folderName, writable);
         	op.schedule();
         	i4folder = op.getResult();
         	writable = op.getWritable();
