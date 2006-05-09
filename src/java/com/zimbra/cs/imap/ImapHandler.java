@@ -1309,28 +1309,28 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     }
 
     void expungeMessages(ImapFolder i4folder, String sequenceSet) throws ServiceException, IOException {
-        Set i4set = (sequenceSet == null ? null : i4folder.getSubsequence(sequenceSet, true));
-        long checkpoint = System.currentTimeMillis();
+        Set<ImapMessage> i4set;
         synchronized (mMailbox) {
-            for (ImapMessage i4msg : i4folder)
-                if (i4msg != null && !i4msg.expunged && (i4msg.flags & Flag.FLAG_DELETED) > 0)
-                    if (i4set == null || i4set.contains(i4msg)) {
-                        // message tagged for deletion -- delete now
-                        // FIXME: should handle moves separately
-                        // FIXME: it'd be nice to have a bulk-delete Mailbox operation
-                        try {
-                            ZimbraLog.imap.debug("  ** deleting: " + i4msg.id);
-                            mMailbox.delete(null, i4msg.id, MailItem.TYPE_MESSAGE);
-                        } catch (ServiceException e) {
-                            if (!(e instanceof MailServiceException.NoSuchItemException))
-                                throw e;
-                        }
-                        // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
-                        long now = System.currentTimeMillis();
-                        if (now - checkpoint > ImapHandler.MAXIMUM_IDLE_PROCESSING_MILLIS) {
-                            sendIdleUntagged();  checkpoint = now;
-                        }
+            i4set = (sequenceSet == null ? null : i4folder.getSubsequence(sequenceSet, true));
+        }
+        long checkpoint = System.currentTimeMillis();
+        for (int i = 0, max = i4folder.getSize(); i < max; i++) {
+            ImapMessage i4msg = i4folder.getBySequence(i);
+            if (i4msg != null && !i4msg.expunged && (i4msg.flags & Flag.FLAG_DELETED) > 0)
+                if (i4set == null || i4set.contains(i4msg)) {
+                    // message tagged for deletion -- delete now
+                    // FIXME: should handle moves separately
+                    // FIXME: it'd be nice to have a bulk-delete Mailbox operation
+                    try {
+                        ZimbraLog.imap.debug("  ** deleting: " + i4msg.id);
+                        mMailbox.delete(null, i4msg.id, MailItem.TYPE_MESSAGE);
+                    } catch (MailServiceException.NoSuchItemException nsie) { }
+                    // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
+                    long now = System.currentTimeMillis();
+                    if (now - checkpoint > MAXIMUM_IDLE_PROCESSING_MILLIS) {
+                        sendIdleUntagged();  checkpoint = now;
                     }
+                }
         }
     }
 
