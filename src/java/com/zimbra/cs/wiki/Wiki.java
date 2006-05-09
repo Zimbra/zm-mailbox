@@ -63,7 +63,7 @@ public class Wiki {
 		wikiMap = new HashMap<Pair<String,String>,Wiki>();
 	}
 	
-	private static class WikiUrl {
+	static class WikiUrl {
 		public WikiUrl(String url) {
 			// url must be in absolute form
 			this(url, -1);
@@ -108,6 +108,17 @@ public class Wiki {
 			}
 			
 			return mbox.getItemByPath(octxt, iter.next(), fid);
+		}
+		public boolean isAbsolute() {
+			return (mTokens != null &&
+					mTokens.get(0).startsWith("/"));
+		}
+		public boolean isRemote() {
+			return (mTokens != null &&
+					mTokens.get(0).equals("//"));
+		}
+		public String getToken(int pos) {
+			return mTokens.get(pos);
 		}
 	}
 	

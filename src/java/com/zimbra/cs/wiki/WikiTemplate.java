@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -40,6 +42,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.cs.wiki.Wiki.WikiUrl;
 
 public class WikiTemplate {
 	
@@ -68,9 +71,9 @@ public class WikiTemplate {
 		return template;
 	}
 	
-	public String toString(OperationContext octxt, MailItem item)
+	public String toString(OperationContext octxt, HttpServletRequest req, MailItem item)
 	throws ServiceException, IOException {
-		return toString(new Context(octxt, item));
+		return toString(new Context(octxt, req, item));
 	}
 	
 	public String toString(Context ctxt) throws ServiceException, IOException {
@@ -99,9 +102,9 @@ public class WikiTemplate {
 		touch();
 	}
 	
-	public String getDocument(OperationContext octxt, MailItem item, String chrome)
+	public String getDocument(OperationContext octxt, HttpServletRequest req, MailItem item, String chrome)
 	throws ServiceException, IOException {
-		return getDocument(new Context(octxt, item), chrome);
+		return getDocument(new Context(octxt, req, item), chrome);
 	}
 	
 	public String getDocument(Context ctxt, String chrome)
@@ -264,7 +267,11 @@ public class WikiTemplate {
 		public Context(OperationContext oc, MailItem it) {
 			octxt = oc; item = it; content = null;
 		}
+		public Context(OperationContext oc, HttpServletRequest request, MailItem it) {
+			octxt = oc; req = request; item = it; content = null;
+		}
 		public OperationContext octxt;
+		public HttpServletRequest req;
 		public MailItem item;
 		public Token token;
 		public String content;
@@ -289,6 +296,8 @@ public class WikiTemplate {
 				} else {
 					String val;
 					if (text.charAt(equal+1) == '"' && text.charAt(end-1) == '"')
+						val = text.substring(equal+2,end-1);
+					else if (text.charAt(equal+1) == '\'' && text.charAt(end-1) == '\'')
 						val = text.substring(equal+2,end-1);
 					else
 						val = text.substring(equal+1,end);
@@ -457,18 +466,22 @@ public class WikiTemplate {
 			if (format == null || format.equals(sSIMPLE)) {
 				StringBuffer buf = new StringBuffer();
 				buf.append("<span class='_breadcrumbs_simple'>");
+				StringBuffer path = new StringBuffer();
+				path.append("/");
 				for (MailItem item : mList) {
 					String name;
 					if (item instanceof Folder)
 						name = ((Folder)item).getName();
 					else
 						name = item.getSubject();
+					path.append(name);
 					buf.append("<span class='_pageLink'>");
-					buf.append("[[").append(name).append("]]");
+					buf.append("[[").append(name).append("][").append(path).append("]]");
 					buf.append("</span>");
+					path.append("/");
 				}
 				buf.append("</span>");
-				return buf.toString();
+				return new WikiTemplate(buf.toString()).toString(ctxt);
 			} else if (format.equals(sTEMPLATE)) {
 				String bt = params.get(sBODYTEMPLATE);
 				String it = params.get(sITEMTEMPLATE);
@@ -488,7 +501,7 @@ public class WikiTemplate {
 			StringBuffer buf = new StringBuffer();
 			for (MailItem item : mList) {
 				WikiTemplate t = WikiTemplate.findTemplate(ctxt, itemTemplate);
-				buf.append(t.toString(ctxt.octxt, item));
+				buf.append(t.toString(ctxt.octxt, ctxt.req, item));
 			}
 			Context newCtxt = new Context(ctxt.octxt, ctxt.item);
 			newCtxt.content = buf.toString();
@@ -707,6 +720,8 @@ public class WikiTemplate {
 		}
 	}
 	public static class WikilinkWiklet extends Wiklet {
+		private static final String URL_PREFIX = "/service/user/";
+		
 		public String getName() {
 			return "Wikilink";
 		}
@@ -716,7 +731,7 @@ public class WikiTemplate {
 		public boolean isExpired(WikiTemplate template, Context ctxt) {
 			return false;
 		}
-		public String apply(Context ctxt) {
+		public String apply(Context ctxt) throws ServiceException {
 			String text = ctxt.token.getValue();
 			String link = text;
 			String title = text;
@@ -727,12 +742,20 @@ public class WikiTemplate {
 			} else {
 				pos = text.indexOf("][");
 				if (pos != -1) {
-					link = text.substring(0, pos);
-					title = text.substring(pos+2);
+					title = text.substring(0, pos);
+					link = text.substring(pos+2);
 				}
 			}
+			WikiUrl wurl = new WikiUrl(link, ctxt.item.getFolderId());
 			StringBuffer buf = new StringBuffer();
-			buf.append("<a href='").append(link).append("'>").append(title).append("</a>");
+			buf.append("<a href='");
+			if (wurl.isRemote())
+				buf.append(URL_PREFIX).append(wurl.getToken(1)).append('/').append(wurl.getToken(2));
+			else if (wurl.isAbsolute())
+				buf.append(URL_PREFIX).append(ctxt.item.getMailbox().getAccount().getUid()).append(wurl.getToken(1));
+			else
+				buf.append(link);
+			buf.append("'>").append(title).append("</a>");
 			return buf.toString();
 		}
 	}

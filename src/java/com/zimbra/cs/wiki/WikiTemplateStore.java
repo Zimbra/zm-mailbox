@@ -91,6 +91,9 @@ public class WikiTemplateStore {
 		return getTemplate(octxt, name, true);
 	}
 	public WikiTemplate getTemplate(OperationContext octxt, String name, boolean checkParents) throws ServiceException, IOException {
+		if (name.indexOf('/') != -1) {
+			return getTemplateByPath(octxt, name);
+		}
 		WikiTemplate template = mTemplateMap.get(name);
 		if (template != null) {
 			ZimbraLog.wiki.debug("found " + name + " from template cache");
@@ -110,7 +113,7 @@ public class WikiTemplateStore {
 		}
 		
 		if (!checkParents)
-			return null;
+			return new WikiTemplate("<!-- missing template "+name+" -->");
 		
 		if (mParentFolderId == 0) {
 			Mailbox mbox = Mailbox.getMailboxByAccountId(wiki.getWikiAccount());
@@ -124,7 +127,17 @@ public class WikiTemplateStore {
 		WikiTemplateStore parentStore = WikiTemplateStore.getInstance(mAccountId, mParentFolderId);
 		return parentStore.getTemplate(octxt, name);
 	}
-	
+	public WikiTemplate getTemplateByPath(OperationContext octxt, String path) throws ServiceException {
+		MailItem item = Wiki.findWikiByPath(octxt, Mailbox.getMailboxByAccountId(mAccountId), mFolderId, path);
+		if (item instanceof Folder) {
+			return getDefaultTOC();
+		} else if (item instanceof WikiItem) {
+			WikiItem wiki = (WikiItem) item;
+			// XXX cache the template
+			return new WikiTemplate(wiki);
+		}
+		throw WikiServiceException.NOT_WIKI_ITEM(path);
+	}
 	public void expireTemplate(String name) {
 		ZimbraLog.wiki.debug("removing " + name + " from template cache");
 		mTemplateMap.remove(name);

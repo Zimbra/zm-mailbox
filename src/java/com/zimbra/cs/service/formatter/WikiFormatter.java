@@ -61,7 +61,7 @@ public class WikiFormatter extends Formatter {
     private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
     	Folder f = context.targetMailbox.getFolderById(context.opContext, wiki.getFolderId());
     	WikiTemplate wt = getTemplate(context, f, wiki.getWikiWord());
-    	String template = wt.getDocument(context.opContext, wiki, CHROME);
+    	String template = wt.getDocument(context.opContext, context.req, wiki, CHROME);
     	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
     	context.resp.getOutputStream().print(template);
     }
@@ -85,7 +85,7 @@ public class WikiFormatter extends Formatter {
     	if (template == null) {
     		template = getDefaultTOC();
     	}
-    	ret.append(template.toString(context.opContext, folder));
+    	ret.append(template.toString(context.opContext, context.req, folder));
     	
     	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
     	context.resp.getOutputStream().print(ret.toString());
