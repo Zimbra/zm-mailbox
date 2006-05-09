@@ -36,13 +36,33 @@ import com.zimbra.cs.session.Session;
 public class GetContactOperation extends Operation {
 	
 	private static int LOAD = 1;
+	private static int MAX = 20;
+	private static int SCALE = 100;
+	static {
+		Operation.Config c = loadConfig(GetContactListOperation.class);
+		if (c != null) {
+			LOAD = c.mLoad;
+			if (c.mScale > 0)
+				SCALE = c.mScale;
+			if (c.mMaxLoad > 0)
+				MAX = c.mMaxLoad;
+		}
+	}
+	
+	static void init(int load, int scale, int maxload) {
+		LOAD = load;
+		if (scale > 0)
+			SCALE = scale;
+		if (maxload > 0)
+			MAX = maxload;
+	}
 	
 	private List<Integer> mIds;
 	private List<Contact> mContacts;
 
 	public GetContactOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
 				List<Integer> ids) {
-		super(session, oc, mbox, req, 1 + (LOAD * (ids.size() / 100)));
+		super(session, oc, mbox, req, Math.min(1 + (LOAD * (ids.size() / SCALE)), MAX));
 		
 		mIds = ids;
 	}

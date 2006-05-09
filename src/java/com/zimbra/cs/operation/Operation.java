@@ -24,7 +24,10 @@
  */
 package com.zimbra.cs.operation;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 
@@ -39,6 +42,24 @@ import com.zimbra.cs.util.ZimbraLog;
 
 public abstract class Operation implements IOperation 
 {
+	public static class Config {
+		public int mLoad;
+		public int mScale;
+		public int mMaxLoad;
+	}
+	
+	public static Map<String, Config> mConfigMap = Collections.synchronizedMap(new  HashMap<String, Config>());
+	
+	protected static Config loadConfig(Class c) {
+		if (mConfigMap.containsKey(c.getCanonicalName()))
+			return mConfigMap.get(c.getCanonicalName());
+		
+		if (mConfigMap.containsKey(c.getSimpleName()))
+			return mConfigMap.get(c.getSimpleName());
+		
+		return null;
+	}
+	
 	/**
 	 * The Requester is used to denote what subsystem is calling a particular 
 	 * Operation.  Each Requester has a default Priority level, which can be used
@@ -226,7 +247,7 @@ public abstract class Operation implements IOperation
 		
 		return toRet;
 	}
-
+	
 	protected static final int OPERATION_REPEAT_THRESHOLD  = Session.OPERATION_HISTORY_LENGTH-2;
 	
 	/**

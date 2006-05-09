@@ -39,7 +39,13 @@ import com.zimbra.cs.session.Session;
 
 public class AddMsgOperation extends Operation {
 
-	private static final int LOAD = 20;
+	private static int LOAD = 15;
+	static {
+		Operation.Config c = loadConfig(AddMsgOperation.class);
+		if (c != null)
+			LOAD = c.mLoad;
+	}
+	
 	
 	long mDate;
 	String mTagsStr;

@@ -32,7 +32,12 @@ import com.zimbra.cs.session.Session;
 
 public class GetConversationByIdOperation extends Operation {
 	
-	private static final int LOAD = 1;
+	private static int LOAD = 2;
+	static {
+		Operation.Config c = loadConfig(GetConversationByIdOperation.class);
+		if (c != null)
+			LOAD = c.mLoad;
+	}
 	
 	private int mId;
 	

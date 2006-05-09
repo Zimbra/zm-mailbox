@@ -37,7 +37,12 @@ import com.zimbra.cs.session.Session;
 
 public class GetMsgOperation extends Operation {
 
-	private static final int LOAD = 5;
+	private static int LOAD = 5;
+	static {
+		Operation.Config c = loadConfig(GetMsgOperation.class);
+		if (c != null)
+			LOAD = c.mLoad;
+	}
 	
 	protected void callback() throws ServiceException {
 		if (!mIId.hasSubpart()) {

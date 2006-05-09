@@ -40,10 +40,15 @@ public class SearchOperation extends Operation {
 	SearchParams mParams;
 	ZimbraQueryResults mResults;
 	
-	private static final int BASE_LOAD = 5;
+	private static int LOAD = 5;
+	static {
+		Operation.Config c = loadConfig(SearchOperation.class);
+		if (c != null)
+			LOAD = c.mLoad;
+	}
 	
 	public SearchOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, SearchParams params) throws ServiceException {
-		super(session, oc, mbox, req, req.getPriority(), BASE_LOAD);
+		super(session, oc, mbox, req, req.getPriority(), LOAD);
 		mParams = params;
 		
 		schedule();

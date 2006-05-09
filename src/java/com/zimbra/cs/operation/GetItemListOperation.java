@@ -35,7 +35,12 @@ import com.zimbra.cs.session.Session;
 
 public class GetItemListOperation extends Operation {
 
-	private static final int LOAD = 5;
+	private static int LOAD = 5;
+	static {
+		Operation.Config c = loadConfig(GetItemListOperation.class);
+		if (c != null)
+			LOAD = c.mLoad;
+	}
 	
 	private byte mType;
 	private int mFolderId;

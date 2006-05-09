@@ -39,6 +39,11 @@ import com.zimbra.cs.session.Session;
 public class CreateContactOperation extends Operation {
 	
 	private static int LOAD = 3;
+	static {
+		Operation.Config c = loadConfig(CreateContactOperation.class);
+		if (c != null)
+			LOAD = c.mLoad;
+	}
 	
 	private ItemId mIidFolder;
 	private String mTagsStr;

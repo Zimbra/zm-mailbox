@@ -31,6 +31,13 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 
 public class GetImapFolderOperation extends Operation {
+	private static int LOAD = 25;
+	static {
+		Operation.Config c = loadConfig(GetImapFolderOperation.class);
+		if (c != null)
+			LOAD = c.mLoad;
+	}
+	
 	String mFolderName;
 	boolean mWritable;
 	ImapFolder mResult;
@@ -38,24 +45,46 @@ public class GetImapFolderOperation extends Operation {
 	public ImapFolder getResult() { return mResult; }
 	public boolean getWritable()   { return mWritable; }
 	
-	private final static int BASE_LOAD = 1000;
-	
 	public GetImapFolderOperation(Session session, OperationContext oc, Mailbox mbox, String folderName, boolean writable) throws ServiceException		
 	{
-		super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), BASE_LOAD);
+		super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
 		
 		mFolderName = folderName;
 		mWritable = writable;
+	}
+	
+	public static class MemEater {
+		public char mem[];
 		
-		schedule();
+		public MemEater() {
+			mem = new char[65536];
+			for (int i = 0; i < mem.length; i++)
+				mem[i] = (char)i;
+		}
 	}
 	
 	protected void callback() throws ServiceException 
 	{
+		System.out.println("Starting GetImapFolder !\n"+ this.toString());
 		synchronized(mMailbox) {
+			
+//			MemEater eater[] = new MemEater[100];
+//
+//			for (int i = 0; i < eater.length; i++) 
+//				eater[i] = new MemEater();
+			
 			mResult = new ImapFolder(mFolderName, mWritable, mMailbox, mOpCtxt);
+			
+//			int total = 0;
+//			for (int i = 0; i < 10000000; i++)
+//				for (int j = 0; j < 100; j++) 
+//					total+=i;
+//			try { Thread.sleep(10000); } catch (Exception e) {}
+//			System.out.println("Total is "+total+" mem0 "+eater[0].mem[64]);
+
 			mWritable = mResult.isWritable();
 		}
+		System.out.println("COMPLETED: GetImapFolder\n" + this.toString());
 	}
 	
 	public String toString() {

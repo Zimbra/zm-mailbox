@@ -38,7 +38,12 @@ import com.zimbra.cs.session.Session;
 
 public class CreateNoteOperation extends Operation {
 	
-	private static final int LOAD = 10;
+	private static int LOAD = 3;
+	static {
+		Operation.Config c = loadConfig(CreateNoteOperation.class);
+		if (c != null)
+			LOAD = c.mLoad;
+	}
 	
 	private String mContent;
 	private Rectangle mBounds;

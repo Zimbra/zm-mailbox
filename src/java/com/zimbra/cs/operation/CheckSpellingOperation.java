@@ -38,7 +38,13 @@ import com.zimbra.cs.util.ArrayUtil;
 
 public class CheckSpellingOperation extends Operation {
 	
-	private static final int LOAD = 10;
+	private static int LOAD = 10;
+	static {
+		Operation.Config c = loadConfig(CheckSpellingOperation.class);
+		if (c != null)
+			LOAD = c.mLoad;
+	}
+	
 	
 	private String[] mUrls;
 	private String mText;

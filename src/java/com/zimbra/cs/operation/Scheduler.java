@@ -348,8 +348,7 @@ public class Scheduler {
 	}
 
 
-	protected Scheduler(int maxLoad, int targetLoad, int maxOps) {
-		mMaxLoad = maxLoad;
+	protected Scheduler(int targetLoad, int maxOps) {
 		mMaxSimultaneousOperations = maxOps;
 		mTargetLoad = targetLoad;
 		mCurLoad = 0;
@@ -374,7 +373,6 @@ public class Scheduler {
 		mRunningOperations++;
 		assert(mRunningOperations <= mMaxSimultaneousOperations);
 		mCurLoad+=op.getLoad();
-		assert(mCurLoad < mMaxLoad);
 	}
 	
 	/**
@@ -458,7 +456,6 @@ public class Scheduler {
 		try {
 			
 			StringBuilder toRet = new StringBuilder();
-			toRet.append("MaxLoad=").append(mMaxLoad).append(' ');
 			toRet.append("TargetLoad=").append(mTargetLoad).append('\n');
 			toRet.append("MaxOps =").append(mMaxSimultaneousOperations).append(' ');
 			
@@ -484,7 +481,6 @@ public class Scheduler {
 	//////////////
 	// runtime parameters
 	//
-	int mMaxLoad;
 	int mTargetLoad;
 	int mMaxSimultaneousOperations;
 
@@ -502,7 +498,14 @@ public class Scheduler {
 	private static final Scheduler sScheduler[] = new Scheduler[1];
 	
 	static {
-		sScheduler[0] = new Scheduler(10000, 10000, 1000);
+		sScheduler[0] = new Scheduler(10000, 1000);
+	}
+	
+	public static void setSchedulerParams(int targetLoad, int maxOps) {
+		for (Scheduler s : sScheduler) {
+			s.mTargetLoad = targetLoad;
+			s.mMaxSimultaneousOperations = maxOps;
+		}
 	}
 	
 	static boolean SPEW = false;
@@ -594,7 +597,7 @@ public class Scheduler {
 	 */
 	public static void main(String[] args) {
 		
-		Scheduler s = new Scheduler(50, 30, 10);
+		Scheduler s = new Scheduler(30, 10);
 		
 		int NUMTHREADS = 30;
 		

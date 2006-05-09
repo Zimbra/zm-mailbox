@@ -49,6 +49,8 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.operation.CreateFolderOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.ozserver.OzByteArrayMatcher;
 import com.zimbra.cs.ozserver.OzByteBufferGatherer;
 import com.zimbra.cs.ozserver.OzConnection;
@@ -615,10 +617,14 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         boolean writable = command.equals("SELECT");
         ImapFolder i4folder = null;
         try {
-            synchronized (mMailbox) {
-                i4folder = new ImapFolder(folderName, writable, mMailbox, getContext());
-                writable = i4folder.isWritable();
-            }
+//            synchronized (mMailbox) {
+//                i4folder = new ImapFolder(folderName, writable, mMailbox, getContext());
+//                writable = i4folder.isWritable();
+//            }
+        	GetImapFolderOperation op = new GetImapFolderOperation(mSession, getContext(), mMailbox, folderName, writable);
+        	op.schedule();
+        	i4folder = op.getResult();
+        	writable = op.getWritable();
         } catch (ServiceException e) {
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
                 ZimbraLog.imap.info(command + " failed: no such folder: " + folderName);
@@ -662,7 +668,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         }
 
         try {
-            mMailbox.createFolder(getContext(), folderName, (byte) 0, MailItem.TYPE_MESSAGE);
+//            mMailbox.createFolder(getContext(), folderName, (byte) 0, MailItem.TYPE_MESSAGE);
+        	CreateFolderOperation createFolder = new CreateFolderOperation(mSession, getContext(), mMailbox,
+        				Requester.IMAP, folderName, MailItem.TYPE_MESSAGE, false);
+        	createFolder.schedule();
+        	
         } catch (ServiceException e) {
             String cause = "CREATE failed";
             if (e.getCode() == MailServiceException.CANNOT_CONTAIN)
@@ -687,32 +697,40 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
         int folderId = 0;
         try {
-            synchronized (mMailbox) {
-                Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
-                if (!ImapFolder.isFolderVisible(folder)) {
-                    ZimbraLog.imap.info("cannot delete IMAP-invisible folder: " + folder.getPath());
-                    sendNO(tag, "DELETE failed");
-                    return CONTINUE_PROCESSING;
-                } else if (!folder.isMutable()) {
-                    ZimbraLog.imap.info("cannot delete system folder: " + folder.getPath());
-                    sendNO(tag, "DELETE failed");
-                    return CONTINUE_PROCESSING;
-                }
-
-                folderId = folder.getId();
-                if (!folder.hasSubfolders())
-                    mMailbox.delete(getContext(), folderId, MailItem.TYPE_FOLDER);
-                else {
-                    // 6.3.4: "It is permitted to delete a name that has inferior hierarchical
-                    //         names and does not have the \Noselect mailbox name attribute.
-                    //         In this case, all messages in that mailbox are removed, and the
-                    //         name will acquire the \Noselect mailbox name attribute."
-                    mMailbox.emptyFolder(getContext(), folderId, false);
-                    // FIXME: add \Deleted flag to folder
-                }
-            }
+//          synchronized (mMailbox) {
+//          Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
+//          if (!ImapFolder.isFolderVisible(folder)) {
+//              ZimbraLog.imap.info("cannot delete IMAP-invisible folder: " + folder.getPath());
+//              sendNO(tag, "DELETE failed");
+//              return CONTINUE_PROCESSING;
+//          } else if (!folder.isMutable()) {
+//              ZimbraLog.imap.info("cannot delete system folder: " + folder.getPath());
+//              sendNO(tag, "DELETE failed");
+//              return CONTINUE_PROCESSING;
+//          }
+//
+//          folderId = folder.getId();
+//          if (!folder.hasSubfolders())
+//              mMailbox.delete(getContext(), folderId, MailItem.TYPE_FOLDER);
+//          else {
+//              // 6.3.4: "It is permitted to delete a name that has inferior hierarchical
+//              //         names and does not have the \Noselect mailbox name attribute.
+//              //         In this case, all messages in that mailbox are removed, and the
+//              //         name will acquire the \Noselect mailbox name attribute."
+//              mMailbox.emptyFolder(getContext(), folderId, false);
+//              // FIXME: add \Deleted flag to folder
+//          }
+//      }
+        	
+        	ImapDeleteOperation op = new ImapDeleteOperation(mSession, getContext(), mMailbox, folderName);
+        	op.schedule();
+        	folderId = op.getFolderId();
+        } catch (ImapServiceException e) {
+        	ZimbraLog.imap.info("DELETE failed: "+e.toString());
+        	sendNO(tag, "DELETE failed");
+        	return CONTINUE_PROCESSING;
         } catch (ServiceException e) {
-            if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
+        	if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
                 ZimbraLog.imap.info("DELETE failed: no such folder: " + folderName);
             else
                 ZimbraLog.imap.warn("DELETE failed", e);
@@ -736,30 +754,37 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             newName = '/' + newName;
 
         try {
-            synchronized (mMailbox) {
-                int folderId = mMailbox.getFolderByPath(getContext(), oldName).getId();
-                if (folderId != Mailbox.ID_FOLDER_INBOX)
-                    mMailbox.renameFolder(getContext(), folderId, newName);
-                else {
-                    // 6.3.5: "Renaming INBOX is permitted, and has special behavior.  It moves all
-                    //         messages in INBOX to a new mailbox with the given name, leaving INBOX
-                    //         empty.  If the server implementation supports inferior hierarchical
-                    //         names of INBOX, these are unaffected by a rename of INBOX."
-                    // FIXME: move the contents (but not the subfolders) of INBOX to the new folder
-                    ZimbraLog.imap.info("RENAME failed: RENAME of INBOX not supported");
-                    sendNO(tag, "RENAME failed: RENAME of INBOX not supported");
-                    return CONTINUE_PROCESSING;
-                }
-            }
+//      	synchronized (mMailbox) {
+//      	int folderId = mMailbox.getFolderByPath(getContext(), oldName).getId();
+//      	if (folderId != Mailbox.ID_FOLDER_INBOX)
+//      	mMailbox.renameFolder(getContext(), folderId, newName);
+//      	else {
+//      	// 6.3.5: "Renaming INBOX is permitted, and has special behavior.  It moves all
+//      	//         messages in INBOX to a new mailbox with the given name, leaving INBOX
+//      	//         empty.  If the server implementation supports inferior hierarchical
+//      	//         names of INBOX, these are unaffected by a rename of INBOX."
+//      	// FIXME: move the contents (but not the subfolders) of INBOX to the new folder
+//      	ZimbraLog.imap.info("RENAME failed: RENAME of INBOX not supported");
+//      	sendNO(tag, "RENAME failed: RENAME of INBOX not supported");
+//      	return CONTINUE_PROCESSING;
+//      	}
+//      	}
+        	ImapRenameOperation op = new ImapRenameOperation(mSession, getContext(), mMailbox, oldName, newName);
+        	op.schedule();
         } catch (ServiceException e) {
-            if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
-                ZimbraLog.imap.info("RENAME failed: no such folder: " + oldName);
-            else
-                ZimbraLog.imap.warn("RENAME failed", e);
-            sendNO(tag, "RENAME failed");
-            return canContinue(e);
+        	if (e instanceof ImapServiceException && e.getCode() == ImapServiceException.CANT_RENAME_INBOX) {
+        		ZimbraLog.imap.info("RENAME failed: RENAME of INBOX not supported");
+        		sendNO(tag, "RENAME failed: RENAME of INBOX not supported");
+        		return CONTINUE_PROCESSING;
+        	} else if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
+        		ZimbraLog.imap.info("RENAME failed: no such folder: " + oldName);
+        	else
+        		ZimbraLog.imap.warn("RENAME failed", e);
+        	
+        	sendNO(tag, "RENAME failed");
+        	return canContinue(e);
         }
-
+        
         // note: if ImapFolder contains a pathname, we may need to update mSelectedFolder
         sendNotifications(true, false);
         sendOK(tag, "RENAME completed");
@@ -774,15 +799,24 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             folderName = folderName.substring(1);
 
         try {
-            synchronized (mMailbox) {
-                Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
-                if (!ImapFolder.isFolderVisible(folder)) {
-                    ZimbraLog.imap.info("SUBSCRIBE failed: folder not visible: " + folderName);
-                    sendNO(tag, "SUBSCRIBE failed");
-                    return CONTINUE_PROCESSING;
-                }
-                mSession.subscribe(folder);
-            }
+//            synchronized (mMailbox) {
+//                Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
+//                if (!ImapFolder.isFolderVisible(folder)) {
+//                    ZimbraLog.imap.info("SUBSCRIBE failed: folder not visible: " + folderName);
+//                    sendNO(tag, "SUBSCRIBE failed");
+//                    return CONTINUE_PROCESSING;
+//                }
+//                mSession.subscribe(folder);
+//            }
+        	ImapSubscribeOperation op = new ImapSubscribeOperation(mSession, getContext(), mMailbox, folderName);
+        	op.schedule();
+        } catch (ImapServiceException e) {
+        	if (e.getCode() == ImapServiceException.FOLDER_NOT_VISIBLE) {
+        		ZimbraLog.imap.info("SUBSCRIBE failed: "+e.toString());
+        		sendNO(tag, "SUBSCRIBE failed");
+        		return CONTINUE_PROCESSING;
+        	} else 
+        		ZimbraLog.imap.warn("SUBSCRIBE failed", e);
         } catch (ServiceException e) {
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
                 ZimbraLog.imap.info("SUBSCRIBE failed: no such folder: " + folderName);
@@ -805,9 +839,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             folderName = folderName.substring(1);
 
         try {
-            synchronized (mMailbox) {
-                mSession.unsubscribe(mMailbox.getFolderByPath(getContext(), folderName));
-            }
+//            synchronized (mMailbox) {
+//                mSession.unsubscribe(mMailbox.getFolderByPath(getContext(), folderName));
+//            }
+        	ImapUnsubscribeOperation op = new ImapUnsubscribeOperation(mSession, getContext(), mMailbox, folderName);
+        	op.schedule();
         } catch (MailServiceException.NoSuchItemException nsie) {
             ZimbraLog.imap.info("UNSUBSCRIBE failure skipped: no such folder: " + folderName);
         } catch (ServiceException e) {
@@ -840,27 +876,32 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         }
         if (pattern.startsWith("/"))
             pattern = pattern.substring(1);
-        ArrayList<String> matches = new ArrayList<String>();
+        List<String> matches = null;
         try {
-            synchronized (mMailbox) {
-                Folder root = mMailbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT);
-                for (Folder folder : root.getSubfolderHierarchy()) {
-                    if (!ImapFolder.isFolderVisible(folder))
-                        continue;
-                    String path = folder.getPath().substring(1);
-                    // FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
-                    if (path.toUpperCase().matches(pattern))
-                        matches.add("LIST (" + getFolderAttributes(folder) + ") \"/\" " + ImapFolder.encodeFolder(path));
-                }
-            }
+//            synchronized (mMailbox) {
+//                Folder root = mMailbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT);
+//                for (Folder folder : root.getSubfolderHierarchy()) {
+//                    if (!ImapFolder.isFolderVisible(folder))
+//                        continue;
+//                    String path = folder.getPath().substring(1);
+//                    // FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
+//                    if (path.toUpperCase().matches(pattern))
+//                        matches.add("LIST (" + getFolderAttributes(folder) + ") \"/\" " + ImapFolder.encodeFolder(path));
+//                }
+//            }
+        	ImapListOperation op = new ImapListOperation(mSession, getContext(), mMailbox, 
+        				new GetFolderAttributes(), pattern);
+        	op.schedule();
+        	matches = op.getMatches();
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("LIST failed", e);
             sendNO(tag, "LIST failed");
             return canContinue(e);
         }
 
-        for (String match : matches)
-            sendUntagged(match);
+        if (matches != null)
+        	for (String match : matches)
+        		sendUntagged(match);
         sendNotifications(true, false);
         sendOK(tag, "LIST completed");
         return CONTINUE_PROCESSING;
@@ -871,6 +912,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         "\\HasNoChildren \\Noselect", "\\HasChildren \\Noselect",
         "\\HasNoChildren \\Noinferiors"
     };
+    
+    public class GetFolderAttributes implements IImapGetFolderAttributes {
+    	public String doGetFolderAttributes(Folder folder) {
+    		return getFolderAttributes(folder);
+    	}
+    }
 
     private String getFolderAttributes(Folder folder) {
         int attributes = (folder.hasSubfolders() ? 0x01 : 0x00);

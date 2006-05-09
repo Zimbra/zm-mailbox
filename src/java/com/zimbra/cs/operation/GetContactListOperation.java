@@ -35,7 +35,12 @@ import com.zimbra.cs.session.Session;
 
 public class GetContactListOperation extends Operation {
 	
-	private static final int LOAD = 5;
+	private static int LOAD = 5;
+	static {
+		Operation.Config c = loadConfig(GetContactListOperation.class);
+		if (c != null)
+			LOAD = c.mLoad;
+	}
 	
 	private ItemId mIidFolder;
 	private byte mSort;

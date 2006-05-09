@@ -33,7 +33,12 @@ import com.zimbra.cs.session.Session;
 
 public class CreateSearchFolderOperation extends Operation {
 	
-	private static final int LOAD = 8;
+	private static int LOAD = 8;
+	static {
+		Operation.Config c = loadConfig(CreateSearchFolderOperation.class);
+		if (c != null)
+			LOAD = c.mLoad;
+	}
 
 	private ItemId mIidParent;
 	private String mName;

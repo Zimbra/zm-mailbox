@@ -35,11 +35,17 @@ import com.zimbra.cs.session.Session;
 
 public class CreateFolderOperation extends Operation {
 	
-	private static final int LOAD = 10;
+	private static int LOAD = 3;
+	static {
+		Operation.Config c = loadConfig(CreateFolderOperation.class);
+		if (c != null)
+			LOAD = c.mLoad;
+	}
+	
 	
 	private String mName;
 	private ItemId mIidParent;
-	private String mView;
+	private byte mView;
 	private String mUrl;
 	private boolean mFetchIfExists;
 	
@@ -51,8 +57,19 @@ public class CreateFolderOperation extends Operation {
 		
 		mName = name;
 		mIidParent = iidParent;
-		mView = view;
+		mView = MailItem.getTypeForName(view);
 		mUrl = url;
+		mFetchIfExists = fetchIfExists;
+	}
+	
+	public CreateFolderOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
+				String name, byte view, boolean fetchIfExists) {
+		super(session, oc, mbox, req, LOAD);
+		
+		mName = name;
+		mIidParent = null;
+		mView = view;
+		mUrl = null;
 		mFetchIfExists = fetchIfExists;
 	}
 	
@@ -61,8 +78,7 @@ public class CreateFolderOperation extends Operation {
 		
 		toRet.append("name=").append(mName);
 		toRet.append(" parent=").append(mIidParent);
-		if (mView != null) 
-			toRet.append(" view=").append(mView);
+		toRet.append(" view=").append(mView);
 		
 		if (mUrl != null) 
 			toRet.append(" url=").append(mUrl);
@@ -74,7 +90,11 @@ public class CreateFolderOperation extends Operation {
 
 	protected void callback() throws ServiceException {
         try {
-        	mFolder = getMailbox().createFolder(getOpCtxt(), mName, mIidParent.getId(), MailItem.getTypeForName(mView), mUrl);
+        	if (mIidParent != null)
+        		mFolder = getMailbox().createFolder(getOpCtxt(), mName, mIidParent.getId(), mView, mUrl);
+        	else 
+        		mFolder = getMailbox().createFolder(getOpCtxt(), mName, (byte)0, mView);
+        		
         	if (!mFolder.getUrl().equals(""))
         		try {
         			getMailbox().synchronizeFolder(getOpCtxt(), mFolder.getId());

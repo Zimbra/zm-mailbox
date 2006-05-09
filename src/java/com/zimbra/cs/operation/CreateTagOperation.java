@@ -32,7 +32,12 @@ import com.zimbra.cs.session.Session;
 
 public class CreateTagOperation extends Operation {
 	
-	private static final int LOAD = 8;
+	private static int LOAD = 4;
+	static {
+		Operation.Config c = loadConfig(CreateTagOperation.class);
+		if (c != null)
+			LOAD = c.mLoad;
+	}
 	
 	private String mName;
 	private byte mColor;

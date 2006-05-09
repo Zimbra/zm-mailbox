@@ -38,10 +38,23 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class ItemActionOperation extends Operation {
 
-	// each of these is "per operation" -- real load is calculated as LOAD * local.size() 
-	static final int BASE_LOAD    = 1;
-	static final int DELETE_LOAD = 2;
-	static final int SPAM_LOAD    = 2;
+	// each of these is "per operation" -- real load is calculated as LOAD * local.size()
+	private static final int DELETE_MULT = 3;
+	private static final int SPAM_MULT = 4;
+	
+	private static int LOAD    = 3;
+	private static int MAX = 20;
+	private static int SCALE = 10;
+	static {
+		Operation.Config c = loadConfig(ItemActionOperation.class);
+		if (c != null) {
+			LOAD = c.mLoad;
+			if (c.mScale > 0)
+				SCALE = c.mScale;
+			if (c.mMaxLoad > 0)
+				MAX = c.mMaxLoad;
+		}
+	}
 	
 	public static ItemActionOperation TAG(ZimbraSoapContext zc, Session session, OperationContext oc,
 				Mailbox mbox, Requester req, 
@@ -49,7 +62,7 @@ public class ItemActionOperation extends Operation {
 				boolean flagValue, TargetConstraint tcon, 
 				int tagId) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					BASE_LOAD, local, Op.TAG,  type, flagValue, tcon);
+					LOAD, local, Op.TAG,  type, flagValue, tcon);
 		ia.setTagId(tagId);
 		ia.schedule();
 		return ia;
@@ -60,7 +73,7 @@ public class ItemActionOperation extends Operation {
 				ArrayList<Integer> local, byte type, 
 				boolean flagValue, TargetConstraint tcon) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					BASE_LOAD, local, Op.FLAG,  type, flagValue, tcon);
+					LOAD, local, Op.FLAG,  type, flagValue, tcon);
 		ia.schedule();
 		return ia;
 	}
@@ -70,7 +83,7 @@ public class ItemActionOperation extends Operation {
 				ArrayList<Integer> local, byte type, 
 				boolean flagValue, TargetConstraint tcon) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					BASE_LOAD, local, Op.READ,  type, flagValue, tcon);
+					LOAD, local, Op.READ,  type, flagValue, tcon);
 		ia.schedule();
 		return ia;
 	}
@@ -81,7 +94,7 @@ public class ItemActionOperation extends Operation {
 				boolean flagValue, TargetConstraint tcon,
 				byte color) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					BASE_LOAD, local, Op.COLOR,  type, flagValue, tcon);
+					LOAD, local, Op.COLOR,  type, flagValue, tcon);
 		ia.setColor(color);
 		ia.schedule();
 		return ia;
@@ -92,7 +105,7 @@ public class ItemActionOperation extends Operation {
 				ArrayList<Integer> local, byte type, 
 				boolean flagValue, TargetConstraint tcon) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					DELETE_LOAD, local, Op.HARD_DELETE,  type, flagValue, tcon);
+					DELETE_MULT*LOAD, local, Op.HARD_DELETE,  type, flagValue, tcon);
 		ia.schedule();
 		return ia;
 	}
@@ -103,7 +116,7 @@ public class ItemActionOperation extends Operation {
 				boolean flagValue, TargetConstraint tcon,
 				ItemId iidFolder) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					BASE_LOAD, local, Op.MOVE,  type, flagValue, tcon);
+					LOAD, local, Op.MOVE,  type, flagValue, tcon);
 		ia.setIidFolder(iidFolder);
 		ia.schedule();
 		return ia;
@@ -115,7 +128,7 @@ public class ItemActionOperation extends Operation {
 				boolean flagValue, TargetConstraint tcon,
 				int folderId) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					SPAM_LOAD, local, Op.SPAM,  type, flagValue, tcon);
+					SPAM_MULT*LOAD, local, Op.SPAM,  type, flagValue, tcon);
 		ia.setFolderId(folderId);
 		ia.schedule();
 		return ia;
@@ -127,7 +140,7 @@ public class ItemActionOperation extends Operation {
 				boolean flagValue, TargetConstraint tcon,
 				ItemId iidFolder, String flags, String tags, byte color) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					BASE_LOAD, local, Op.UPDATE,  type, flagValue, tcon);
+					LOAD, local, Op.UPDATE,  type, flagValue, tcon);
 		ia.setIidFolder(iidFolder);
 		ia.setFlags(flags);
 		ia.setTags(tags);
@@ -244,7 +257,7 @@ public class ItemActionOperation extends Operation {
 				Mailbox mbox, Requester req, int baseLoad, 
 				ArrayList<Integer> local, Op op, byte type, 
 				boolean flagValue, TargetConstraint tcon) throws ServiceException {
-		super(session, oc, mbox, req, req.getPriority(), local.size() > 0 ? local.size() * baseLoad : baseLoad);
+		super(session, oc, mbox, req, req.getPriority(), Math.min(local.size() > 0 ? local.size() * (baseLoad / SCALE): baseLoad, MAX));
 		mZc = zc;
 		mLocal = local;
 		mOp = op;

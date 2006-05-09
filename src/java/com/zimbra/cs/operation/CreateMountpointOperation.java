@@ -37,7 +37,12 @@ import com.zimbra.cs.session.Session;
 
 public class CreateMountpointOperation extends Operation {
 	
-	private static final int LOAD = 10;
+	private static int LOAD = 5;
+	static {
+		Operation.Config c = loadConfig(CreateMountpointOperation.class);
+		if (c != null)
+			LOAD = c.mLoad;
+	}
 	
 	private ItemId mIidParent;
 	private String mName;
