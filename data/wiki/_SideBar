@@ -89,6 +89,6 @@
 		<div class=_expandoSectionHead><span class='ImgNodeCollapsed'>&nbsp;&nbsp;&nbsp;</span>&nbsp;Table of Contents</div>
 	</div>
 	<div id='tTOC' class='_expandoSectionL1'>
-		{{TOC format="list"}}
+		<wiklet class='TOC' format="list" />
 	</div>
 </div>

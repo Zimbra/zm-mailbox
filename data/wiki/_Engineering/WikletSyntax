@@ -17,23 +17,17 @@
 </style>
 
 <p>
-<b class='issue'>Note:</b>
-Currently, only syntax 1 is implemented.
-But syntax 2 is under consideration and will likely become the primary syntax.
-<p>
 <table border=1 cellspacing=0>
 <tr><td class='head' colspan=4><h1>Display Wiklets</h1></td></tr>
 <tr>
-	<th>Done</th>
-	<th>Syntax 1</th>
-	<th>Syntax 2</th>
+	<th>Client</th>
+	<th>Server</th>
+	<th>Syntax</th>
 	<th>Description</th>
 </tr>
 <tr>
+	<td>X</td>
 	<td>&nbsp;</td>
-	<td class='wiklet'>
-		&lt;nowiklet> ... &lt;/nowiklet>
-	</td>
 	<td class='tag'>
 		&lt;nowiklet> ... &lt;/nowiklet>
 	</td>
@@ -45,9 +39,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 </tr>
 <tr>
 	<td>&nbsp;</td>
-	<td class='wiklet'>
-		&lt;nolink> ... &lt;/nolink>
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;nolink> ... &lt;/nolink>
 	</td>
@@ -59,9 +51,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 </tr>
 <tr>
 	<td>X</td>
-	<td class='wiklet'>
-		CamelCaseText
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		CamelCaseText
 	</td>
@@ -77,13 +67,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td class='issue'>X</td>
-	<td class='wiklet'>
-		&#91;&#91;pagename]]<br>
-		&#91;&#91;pagename|anchor text]]<br>
-		&#91;&#91;pagename|anchor text<span class='issue'>|version</span>]]<br>
-		&#91;&#91;pagename]&#91;anchor text]]<br>
-		&#91;&#91;pagename]&#91;anchor text]<span class='issue'>&#91;version</span>]]<br>
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="link"
@@ -110,9 +94,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td>X</td>
-	<td class='wiklet'>
-		&#123;&#123;CONTENT&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="content" 
@@ -127,9 +109,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td>X</td>
-	<td class='wiklet'>
-		&#123;&#123;NAME&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="name" 
@@ -153,9 +133,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td>&nbsp;</td>
-	<td class='wiklet'>
-		&#123;&#123;FULLNAME}}
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="fullname" 
@@ -170,9 +148,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td>&nbsp;</td>
-	<td class='wiklet'>
-		&#123;&#123;PARENTNAME}}
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="parentname" 
@@ -187,9 +163,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td>&nbsp;</td>
-	<td class='wiklet'>
-		&#123;&#123;URL}}
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="url" 
@@ -204,9 +178,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td>&nbsp;</td>
-	<td class='wiklet'>
-		&#123;&#123;URLPREFIX}}
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="urlprefix" 
@@ -221,9 +193,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td>X</td>
-	<td class='wiklet'>
-		&#123;&#123;ICON&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="icon" 
@@ -242,9 +212,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 </tr>
 <tr>
 	<td>X</td>
-	<td class='wiklet'>
-		&#123;&#123;TAGS&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="tags" 
@@ -258,9 +226,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 </tr>
 <tr>
 	<td>X</td>
-	<td class='wiklet'>
-		&#123;&#123;FRAGMENT&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="fragment" 
@@ -286,9 +252,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td>X</td>
-	<td class='wiklet'>
-		&#123;&#123;MSG <span class='issue'>msgKey</span>&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="msg"
@@ -312,9 +276,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 	
 <tr>
 	<td>X</td>
-	<td class='wiklet'>
-		&#123;&#123;INCLUDE <span class='issue'>pageName</span>&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="include"
@@ -336,11 +298,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td>X</td>
-	<td class='wiklet'>
-		&#123;&#123;CREATOR <span class='issue'>link="false"</span>&#125;&#125;
-		<br><br>
-		&#123;&#123;MODIFIER  <span class='issue'>link="false"</span>&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="creator" 
@@ -374,17 +332,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td>X</td>
-	<td class='wiklet'>
-		&#123;&#123;CREATEDATE 
-			&nbsp;&nbsp;format="..."
-			&nbsp;&nbsp;pattern="..."
-			&#125;&#125;
-		<p>
-		&#123;&#123;MODIFYDATE 
-			&nbsp;&nbsp;format="..."
-			&nbsp;&nbsp;pattern="..."
-			&#125;&#125;<br>
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="createDate" 
@@ -419,9 +367,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td>X</td>
-	<td class='wiklet'>
-		&#123;&#123;VERSION&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="version" 
@@ -442,15 +388,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td>X</td>
-	<td class='wiklet'>
-		&#123;&#123;TOC  
-		&nbsp;&nbsp;pages="pattern"
-		&nbsp;&nbsp;sections="pattern"
-		&nbsp;&nbsp;files="pattern"
-		&nbsp;&nbsp;format="simple|list|template" 
-		&nbsp;&nbsp;bodyTemplate="pagename" 
-		&nbsp;&nbsp;itemTemplate="pagename"&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="toc"
@@ -513,14 +451,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td class='issue'>X</td>
-	<td class='wiklet'>
-		&#123;&#123;BREADCRUMBS  page="name" 
-			&nbsp;&nbsp;format="simple|template" 
-			&nbsp;&nbsp;bodyTemplate="pagename"
-			&nbsp;&nbsp;itemTemplate="pagename"
-			&nbsp;&nbsp;separator="string"
-		&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="breadCrumbs"
@@ -568,17 +499,15 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr><td class='head' colspan=4><h1>Wiklets for dealing with attachments (if we do this)</h1></td></tr>
 <tr>
-	<th>Done</th>
-	<th>Syntax 1</th>
-	<th>Syntax 2</th>
+	<th>Client</th>
+	<th>Server</th>
+	<th>Syntax</th>
 	<th>Description</th>
 </tr>
 		
 <tr>
 	<td>&nbsp;</td>
-	<td class='wiklet'>
-		&#123;&#123;ATTACHMENTCOUNT&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="pageAttachmentCount" 
@@ -591,13 +520,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 	
 <tr>
 	<td>&nbsp;</td>
-	<td class='wiklet'>
-		&#123;&#123;ATTACHMENTS  page="" 
-			&nbsp;&nbsp;format="simple|template" 
-			&nbsp;&nbsp;bodyTemplate="pagename"
-			&nbsp;&nbsp;itemTemplate="pagename"
-	&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="pageAttachments"
@@ -639,12 +562,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td>&nbsp;</td>
-	<td class='wiklet'>
-		&#123;&#123;HISTORY 
-			&nbsp;&nbsp;format="simple|template" 
-			&nbsp;&nbsp;bodyTemplate="page" 
-			&nbsp;&nbsp;itemTemplate="page"&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="pageHistory" 
@@ -689,19 +607,14 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr><td class='head' colspan=4><h1>Wiklets that Owen dreamed up</h1></td></tr>
 <tr>
-	<th>Done</th>
-	<th>Syntax 1</th>
-	<th>Syntax 2</th>
+	<th>Client</th>
+	<th>Server</th>
+	<th>Syntax</th>
 	<th>Description</th>
 </tr>
 <tr>
 	<td>&nbsp;</td>
-	<td class='wiklet'>
-		&#123;&#123;SECTION<br>
-			&nbsp;&nbsp;title="title" <br>
-			&nbsp;&nbsp;src="pagename" <br>
-			&nbsp;&nbsp;titleIsLink="true"&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="section" 
@@ -726,20 +639,15 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr><td class='head' colspan=4><h1>Action Wiklets</h1></td></tr>
 <tr>
-	<th>Done</th>
-	<th>Syntax 1</th>
-	<th>Syntax 2</th>
+	<th>Client</th>
+	<th>Server</th>
+	<th>Syntax</th>
 	<th>Description</th>
 </tr>
 
 <tr>
 	<td>&nbsp;</td>
-	<td class='wiklet'>
-	&#123;&#123;EDITPAGE  page="pagename"
-				&nbsp;&nbsp;version="version"
-				&nbsp;&nbsp;rename="true"
-			&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="editPage"
@@ -759,10 +667,7 @@ But syntax 2 is under consideration and will likely become the primary syntax.
 
 <tr>
 	<td>&nbsp;</td>
-	<td class='wiklet'>
-		&#123;&#123;SHOWHISTORY  <br>
-			&nbsp;&nbsp;page="pagename"&#125;&#125;
-	</td>
+	<td>&nbsp;</td>
 	<td class='tag'>
 		&lt;wiklet 
 			&nbsp;&nbsp;class="pageShowHistory"
