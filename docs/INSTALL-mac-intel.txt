@@ -31,9 +31,9 @@ Views:
 //depot/main/ZimbraServer/... //{client_name}/ZimbraServer/...
 </pre>
 
-After you setup Perforce, login and sync the client. This will get 
+After you setup Perforce, login and sync the client. This will get
 you all of the files that you will need for the rest of the install.
-Afterwards you can update your p4 client information to include the 
+Afterwards you can update your p4 client information to include the
 various views that you need for development.
 
 If you want to sync all of the necessary files to start working
@@ -65,7 +65,7 @@ Open a terminal shell and run the following commands:
 
 Download and install from http://dev.mysql.com/downloads/mysql/5.0.html
 
-Note: Install *both* packages so that MySQL will automatically start 
+Note: Install *both* packages so that MySQL will automatically start
 when you boot.
 
 Run the following commands:
@@ -74,7 +74,7 @@ Run the following commands:
 % sudo ln -s /usr/local/mysql /opt/zimbra/mysql
 </pre>
 
-Then edit the file /opt/zimbra/mysql/data/my.cnf, type in the 
+Then edit the file /opt/zimbra/mysql/data/my.cnf, type in the
 following, and save:
 
 <pre>
@@ -192,11 +192,11 @@ Now you can run the Perl MTA with the following commands:
 
 <pre>
 % export ZIMBRA_HOSTNAME=`/opt/zimbra/bin/zmhostname`
-% perl {p4_client_local_dir}/ZimbraServer/src/perl/zMTAHack.pl
+% sudo perl {p4_client_local_dir}/ZimbraServer/src/perl/zMTAHack.pl
 </pre>
 
 NOTE: When sending mail, you need to fully qualify the
-address as {username}@{hostname}. The {username} is 
+address as {username}@{hostname}. The {username} is
 "user1" through "user5". The {hostname} is the same one
 that /opt/zimbra/bin/zmhostname displays.
 
