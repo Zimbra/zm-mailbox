@@ -24,20 +24,13 @@
  */
 package com.zimbra.cs.operation;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 
 public class GetFolderOperation extends Operation {
-	
 	private static int LOAD = 1;
 	static {
 		Operation.Config c = loadConfig(GetFolderOperation.class);
@@ -45,59 +38,20 @@ public class GetFolderOperation extends Operation {
 			LOAD = c.mLoad;
 	}
 	
-	private ItemId mIid;
+	private String mFolderName;
 	
-	private FolderNode mResult;
+	private Folder mFolder;
 	
-	public static class FolderNode {
-		public Folder mFolder;
-		public List<FolderNode> mSubFolders = new ArrayList<FolderNode>();
-	}
-
 	public GetFolderOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-				ItemId iid) {
+				String folderName) throws ServiceException {
 		super(session, oc, mbox, req, LOAD);
 		
-		mIid = iid;
+		mFolderName = folderName;
 	}
 	
-	public String toString() {
-		return "GetFolderOperation("+mIid != null ? mIid.toString() : Mailbox.ID_FOLDER_USER_ROOT+")";
-	}
-
 	protected void callback() throws ServiceException {
-		Mailbox mbox = getMailbox();
-		
-		
-		synchronized(mbox) {
-			// get the root node...
-			int folderId = mIid != null ? mIid.getId() : Mailbox.ID_FOLDER_USER_ROOT;
-			Folder folder = mbox.getFolderById(getOpCtxt(), folderId);
-			if (folder == null)
-				throw MailServiceException.NO_SUCH_FOLDER(folderId);
-			
-			mResult = new FolderNode();
-			mResult.mFolder = folder;
-			
-			// for each subNode...
-			handleFolder(mResult);
-		}
-			
+		mFolder = mMailbox.getFolderByPath(getOpCtxt(), mFolderName);
 	}
 	
-	private void handleFolder(FolderNode parent) throws ServiceException {
-		List subfolders = parent.mFolder.getSubfolders(getOpCtxt());
-		if (subfolders != null)
-			for (Iterator it = subfolders.iterator(); it.hasNext(); ) {
-				Folder subfolder = (Folder) it.next();
-				if (subfolder != null) {
-					FolderNode fn = new FolderNode();
-					parent.mSubFolders.add(fn);
-					fn.mFolder = subfolder;
-					handleFolder(fn);
-				}					
-			}
-	}
-
-	public FolderNode getResult() { return mResult; }
+	public Folder getFolder() { return mFolder; }
 }

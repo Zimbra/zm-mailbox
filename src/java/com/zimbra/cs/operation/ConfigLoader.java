@@ -11,16 +11,70 @@ import org.dom4j.io.SAXReader;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 
+/**
+ * Load scheduler configuration data from "schedconfig.xml".  This file is loaded once
+ * at system startup and the settings are used to control the prioritization/throttling
+ * subsystem.
+ * 
+ * 
+ *  The schedconfig.xml file should be formatted like this:
+ *  
+ *  <scheduler>
+ *     <config schedulers="NUM_SCHEDULERS" maxops="MAXOPS">
+ *         <maxload pri="PRIORITY" load="MAXLOAD"/>
+ *          ...(1 for each priority level)...
+ *      </config>
+ *      
+ *      NUM_SCHEDULERS is the number of Scheduler objects.  If it turns out that contention in 
+ *                  the Scheduler is a systemwide bottleneck, then increase the # schedulers here
+ *                  (Ops are routed to a specific scheduler based on the ID of the target mailbox)
+ *                  Note that the maxops and maxload values should be lowered if the # schedulers
+ *                  is increased.
+ *                  
+ *      MAXOPS is the maximum # simultaneous ops allowed to be running at one time.  This value
+ *                allows some coarse-grained concurrency control.
+ *                
+ *      MAXLOAD: one entry for each Priority level, where priority level is one of
+ *                { "admin", "interactive_high", "interactive_low", "batch", "low" }
+ *                The maxload for each priority tells the system the cutoff load level
+ *                (where system load is the sum of the load of all the running ops) above 
+ *                which the system will no longer schedule operations.
+ *                
+ *                 We use different max loads by priority to help aleviate priority inversion
+ *                 problems...the higher-priority (e.g. "admin") levels should have higher
+ *                 max loads than the lower priority levels -- this effectively causes
+ *                 the system to leave some "headroom" when scheduling low-priority operations
+ *                 just in case new higher-priority operations come in.
+ *      
+ *      <op name="CLASSNAME" load="LOAD" scale="SCALE" maxload="MAXLOAD"/>
+ *      ......(many ops).....
+ *      
+ *      CLASSNAME: the java classname, either a simple classname (e.g. GetFolderOperation)
+ *               or a fully qualified classname (e.g. com.zimbra.cs.operation.GetFolderOperation)
+ *               The server will check for both.
+ *               
+ *       LOAD: the load value of this operation
+ *       
+ *       SCALE: some operations take multiple targets.  Those operations calculate their load
+ *               value by scaling it up proportionally to the # operations passed.  The effective
+ *               load is calculated by the formula:  Math.min((LOAD * (numTargets/SCALE)), MAXLOAD)
+ *                
+ *       MAXLOAD: if the effective load of this operation is scaled up, this maximum is a cutoff
+ *  
+ *  </scheduler>
+ *
+ */
 public class ConfigLoader {
 	private static final String E_SCHEDULER = "scheduler";
 	
 	private static final String E_CONFIG = "config";
 	private static final String A_MAX_LOAD = "maxload";
+	private static final String E_MAX_LOAD = "maxload";
+	private static final String A_PRIORITY = "pri";
+	private static final String A_LOAD = "load";
 	private static final String A_MAX_OPS = "maxops";
-	
 	private static final String E_OP = "op";
 	private static final String A_NAME = "name";
-	private static final String A_LOAD = "load";
 	private static final String A_SCALE = "scale";
 	
 	private static String defaultConfigFile() {
@@ -28,7 +82,7 @@ public class ConfigLoader {
 		if (zmHome == null) {
 			zmHome = File.separator + "opt" + File.separator + "zimbra";
 		}
-		return zmHome + File.separator + "conf" + File.separator + "opconfig.xml";
+		return zmHome + File.separator + "conf" + File.separator + "schedconfig.xml";
 	}
 	
 	public static void loadConfig() throws ServiceException  {
@@ -47,10 +101,28 @@ public class ConfigLoader {
 				
 				Element eConfig = root.element(E_CONFIG);
 				if (eConfig != null) {
-					int targetLoad = 50;
 					int maxOps = 20;
 					
-					targetLoad = getAttrAsInt(eConfig, A_MAX_LOAD, 50);
+					int[] targetLoad = new int[Scheduler.Priority.NUM_PRIORITIES];
+					
+					for (Iterator iter = eConfig.elementIterator(E_MAX_LOAD); iter.hasNext();) {
+						Element e = (Element) iter.next();
+						
+						String pri = e.attributeValue(A_PRIORITY);
+						int value = getAttrAsInt(e, A_LOAD, 10000);
+						if (pri.equalsIgnoreCase("admin"))
+							targetLoad[0] = value;
+						else if (pri.equalsIgnoreCase("interactive_high"))
+							targetLoad[1] = value;
+						else if (pri.equalsIgnoreCase("interactive_low"))
+							targetLoad[2] = value;
+						else if (pri.equalsIgnoreCase("batch"))
+							targetLoad[3] = value;
+						else if (pri.equalsIgnoreCase("low"))
+							targetLoad[4] = value;
+						else ZimbraLog.system.warn("Operation ConfigLoader: read <maxload> block with unknown pri=\""+pri+"\"");
+					}
+					
 					maxOps = getAttrAsInt(eConfig, A_MAX_OPS, 25);
 					
 					Scheduler.setSchedulerParams(targetLoad, maxOps);
@@ -93,35 +165,4 @@ public class ConfigLoader {
 		
 		return Integer.parseInt(s);
 	}
-	
-//	private static void updateOp(String name, int load, int maxLoad, int scale) throws ServiceException {
-//		ZimbraLog.system.info("Setting config for Operation: "+name+"("+load+","+maxLoad+","+scale+")");
-//		if (name.indexOf('.') < 0)
-//			name = "com.zimbra.cs.operation."+name;
-//		
-//		Class c = null;
-//		try {
-//			c = Class.forName(name);
-//			
-//			Class[] paramTypes = new Class[] { Integer.TYPE, Integer.TYPE, Integer.TYPE };
-//			Method init = null;
-//			try {
-//				init = c.getDeclaredMethod("init", paramTypes);
-//			} catch (NoSuchMethodException e) { 
-//				ZimbraLog.system.info("Operation Config File specified settings for "+name+" but no init() method found in class");
-//			}
-//			if (init != null) {
-//				Object[] arguments = new Object[] { load, maxLoad, scale };
-//				try {
-//					init.invoke(null, arguments);
-//				} catch (IllegalAccessException e) {
-//					throw ServiceException.FAILURE("IllegalAccesException for class "+name, e);
-//				} catch (InvocationTargetException e) {
-//					throw ServiceException.FAILURE("TargetException for class "+name, e);
-//				}
-//			}
-//		} catch (ClassNotFoundException e) {
-//			ZimbraLog.system.info("Could not find class for '"+name+"' trying to set Operation config.  Ignoring");
-//		}
-//	}
 }

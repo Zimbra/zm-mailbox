@@ -51,6 +51,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.operation.CreateFolderOperation;
+import com.zimbra.cs.operation.GetFolderOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ThreadLocalData;
@@ -699,7 +700,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         }
 
         try {
-//            mMailbox.createFolder(getContext(), folderName, (byte) 0, MailItem.TYPE_MESSAGE);
         	CreateFolderOperation createFolder = new CreateFolderOperation(mSession, getContext(), mMailbox,
         				Requester.IMAP, folderName, MailItem.TYPE_MESSAGE, false);
         	createFolder.schedule();
@@ -936,7 +936,11 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
         StringBuffer data = new StringBuffer();
         try {
-            Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
+//            Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
+        	  GetFolderOperation op = new GetFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, folderName);
+      	  op.schedule();
+      	  Folder folder = op.getFolder();
+        	
             if (!ImapFolder.isFolderVisible(folder)) {
                 ZimbraLog.imap.info("STATUS failed: folder not visible: " + folderName);
                 sendNO(tag, "STATUS failed");

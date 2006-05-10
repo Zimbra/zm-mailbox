@@ -156,7 +156,6 @@ public abstract class Operation implements IOperation
 			//
 			// We must not miss this part, or else the Scheduler's
 			// bookkeeping will be messed up
-			//
 			mSched.runCompleted(this);
 			if (ZimbraLog.op.isInfoEnabled()) {
 				long end = System.currentTimeMillis();

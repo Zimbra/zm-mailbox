@@ -31,6 +31,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * 
@@ -60,12 +61,10 @@ public class Scheduler {
 		INTERACTIVE_LOW(2),
 		BATCH(3),
 		LOW(4);
+		public static final int NUM_PRIORITIES = 5;
 		
 		private int mLevel;
 		
-		static int NUM_PRIORITIES() {
-			return LOW.getLevel()+1;
-		}
 		
 		private Priority(int level) { 
 			mLevel = level;
@@ -348,17 +347,6 @@ public class Scheduler {
 	}
 
 
-	protected Scheduler(int targetLoad, int maxOps) {
-		mMaxSimultaneousOperations = maxOps;
-		mTargetLoad = targetLoad;
-		mCurLoad = 0;
-		mRunningOperations = 0;
-		
-		for (int i = 0; i < Priority.NUM_PRIORITIES(); i++ ){
-			mOpQueue[i] = new ArrayList<AsyncOperation>();
-		}
-	}
-	
 	/**
 	 * Caller is responsible for calling runCompleted() when this run is completed.
 	 * 
@@ -391,7 +379,7 @@ public class Scheduler {
                  see below for discussion) to see if we have too many
                  running at once.
 		 */
-		if (mRunningOperations == 0) {
+		if (mRunningOperations == 0 || mCurLoad==0) {
 			// Don't check load in this case, always all the operation to (try to) run.
 			// This just makes life easier -- if the system's max load gets set lower than 
 			// one of the operation's load values, then the result will be that the op will run
@@ -406,7 +394,7 @@ public class Scheduler {
 		} else {
 			// skip #running check for highest-level operations, always let them run!
 			if  (op.getPriority() == Priority.ADMIN|| mRunningOperations+1 < mMaxSimultaneousOperations) {
-				int loadLeft = mTargetLoad - mCurLoad;
+				int loadLeft = mTargetLoad[op.getPriority().getLevel()] - mCurLoad;
 				if (op.getLoad() < loadLeft) {
 					if (queue != null) {
 						IOperation removed = queue.remove(0);
@@ -456,7 +444,8 @@ public class Scheduler {
 		try {
 			
 			StringBuilder toRet = new StringBuilder();
-			toRet.append("TargetLoad=").append(mTargetLoad).append('\n');
+			for (int i = 0; i < mTargetLoad.length; i++) 
+				toRet.append("TargetLoad[").append(i).append("] = ").append(mTargetLoad).append('\n');
 			toRet.append("MaxOps =").append(mMaxSimultaneousOperations).append(' ');
 			
 			toRet.append("CurLoad=").append(mCurLoad).append(' ');
@@ -481,7 +470,7 @@ public class Scheduler {
 	//////////////
 	// runtime parameters
 	//
-	int mTargetLoad;
+	int[] mTargetLoad = new int[Priority.NUM_PRIORITIES];
 	int mMaxSimultaneousOperations;
 
 	
@@ -498,13 +487,52 @@ public class Scheduler {
 	private static final Scheduler sScheduler[] = new Scheduler[1];
 	
 	static {
-		sScheduler[0] = new Scheduler(10000, 1000);
+		int[] targetLoads = new int[]
+		{
+			10000, // admin
+			10000, // interactive_high,
+			10000, // interactive_low
+			10000, // batch
+			10000, // low
+		};
+					
+		sScheduler[0] = new Scheduler(targetLoads, 1000);
 	}
 	
-	public static void setSchedulerParams(int targetLoad, int maxOps) {
+	protected Scheduler(int[] targetLoad, int maxOps) {
+		setParams(targetLoad, maxOps);
+	}
+	
+	private void setParams(int[] targetLoad, int maxOps) {
+		mMaxSimultaneousOperations = maxOps;
+		
+		int numToSet = Math.min(targetLoad.length, mTargetLoad.length);
+		for (int i = 0; i < numToSet; i++)
+			mTargetLoad[i] = targetLoad[i];
+
+		mCurLoad = 0;
+		mRunningOperations = 0;
+		
+		for (int i = 0; i < Priority.NUM_PRIORITIES; i++ ){
+			mOpQueue[i] = new ArrayList<AsyncOperation>();
+		}
+	}
+	
+	public static void setSchedulerParams(int[] targetLoad, int maxOps) {
+		int curSched  = 0;
 		for (Scheduler s : sScheduler) {
-			s.mTargetLoad = targetLoad;
-			s.mMaxSimultaneousOperations = maxOps;
+			s.setParams(targetLoad, maxOps);
+			
+			StringBuilder str = new StringBuilder("Scheduler(");
+			str.append(curSched++).append(") : setting maxOps=").append(maxOps);
+			str.append(" MaxLoads={");
+			for (int i = 0; i < Priority.NUM_PRIORITIES; i++) {
+				if (i > 0)
+					str.append(", ");
+				str.append(s.mTargetLoad[i]);
+			}
+			str.append('}');
+			ZimbraLog.system.info(str.toString());
 		}
 	}
 	
@@ -512,7 +540,7 @@ public class Scheduler {
 	static final int MIN_LOAD = 1;
 	ReentrantLock mLock = new ReentrantLock();
 	ReentrantLock getLock() { return mLock; }
-	List<AsyncOperation>[] mOpQueue = new ArrayList[Priority.NUM_PRIORITIES()];
+	List<AsyncOperation>[] mOpQueue = new ArrayList[Priority.NUM_PRIORITIES];
 	
 	
 	/************************************
@@ -596,8 +624,17 @@ public class Scheduler {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+
+		int[] targetLoads = new int[]
+		                    		{
+		                    			30, // admin
+		                    			20, // interactive_high,
+		                    			10, // interactive_low
+		                    			5, // batch
+		                    			1, // low
+		                    		};
 		
-		Scheduler s = new Scheduler(30, 10);
+		Scheduler s = new Scheduler(targetLoads, 10);
 		
 		int NUMTHREADS = 30;
 		

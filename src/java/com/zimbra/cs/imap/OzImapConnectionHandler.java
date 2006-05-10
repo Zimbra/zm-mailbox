@@ -48,6 +48,8 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.operation.CreateFolderOperation;
+import com.zimbra.cs.operation.CreateTagOperation;
+import com.zimbra.cs.operation.GetFolderOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.ozserver.OzByteArrayMatcher;
 import com.zimbra.cs.ozserver.OzByteBufferGatherer;
@@ -661,7 +663,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         }
 
         try {
-//            mMailbox.createFolder(getContext(), folderName, (byte) 0, MailItem.TYPE_MESSAGE);
         	CreateFolderOperation createFolder = new CreateFolderOperation(mSession, getContext(), mMailbox,
         				Requester.IMAP, folderName, MailItem.TYPE_MESSAGE, false);
         	createFolder.schedule();
@@ -899,7 +900,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
         StringBuffer data = new StringBuffer();
         try {
-            Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
+//            Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
+        	  GetFolderOperation op = new GetFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, folderName);
+        	  op.schedule();
+        	  Folder folder = op.getFolder();
             if (!ImapFolder.isFolderVisible(folder)) {
                 ZimbraLog.imap.info("STATUS failed: folder not visible: " + folderName);
                 sendNO(tag, "STATUS failed");
@@ -970,7 +974,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
     private Tag createTag(String name) throws ServiceException {
         // notification will update mTags hash
-        return mMailbox.createTag(getContext(), name, MailItem.DEFAULT_COLOR);
+//        return mMailbox.createTag(getContext(), name, MailItem.DEFAULT_COLOR);
+    	  CreateTagOperation op = new CreateTagOperation(mSession, getContext(), mMailbox, Requester.IMAP, name, MailItem.DEFAULT_COLOR);
+    	  op.schedule();
+    	  return op.getTag();
     }
     
     class FindOrCreateTags implements IFindOrCreateTags {

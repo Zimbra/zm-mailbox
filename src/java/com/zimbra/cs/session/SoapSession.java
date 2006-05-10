@@ -37,7 +37,7 @@ import java.util.List;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.*;
-import com.zimbra.cs.operation.GetFolderOperation;
+import com.zimbra.cs.operation.GetFolderTreeOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.GetFolder;
@@ -299,7 +299,7 @@ public class SoapSession extends Session {
 //              GetFolder.handleFolder(mbox, root, eRefresh, zc, octxt);
             	
             	// use the operation here just so we can re-use the logic...
-            	GetFolderOperation op = new GetFolderOperation(this, octxt, mbox, Requester.SOAP, null);
+            	GetFolderTreeOperation op = new GetFolderTreeOperation(this, octxt, mbox, Requester.SOAP, null);
             	op.runImmediately();
             	GetFolder.encodeFolderNode(zc, eRefresh, op.getResult());
                 

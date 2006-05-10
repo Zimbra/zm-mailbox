@@ -36,8 +36,8 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.operation.GetFolderOperation;
-import com.zimbra.cs.operation.GetFolderOperation.FolderNode;
+import com.zimbra.cs.operation.GetFolderTreeOperation;
+import com.zimbra.cs.operation.GetFolderTreeOperation.FolderNode;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
@@ -74,7 +74,7 @@ public class GetFolder extends DocumentHandler {
 
 		Element response = lc.createElement(MailService.GET_FOLDER_RESPONSE);
 		
-		GetFolderOperation op = new GetFolderOperation(session, octxt, mbox, Requester.SOAP, iid);
+		GetFolderTreeOperation op = new GetFolderTreeOperation(session, octxt, mbox, Requester.SOAP, iid);
 		op.schedule();
 		FolderNode resultFolder = op.getResult();
 		

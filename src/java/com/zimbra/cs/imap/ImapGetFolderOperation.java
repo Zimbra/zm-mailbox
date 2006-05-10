@@ -65,7 +65,7 @@ public class ImapGetFolderOperation extends Operation {
 	
 	protected void callback() throws ServiceException 
 	{
-		System.out.println("Starting GetImapFolder !\n"+ this.toString());
+//		System.out.println("Starting GetImapFolder !\n"+ this.toString());
 		synchronized(mMailbox) {
 			
 //			MemEater eater[] = new MemEater[100];
@@ -84,7 +84,7 @@ public class ImapGetFolderOperation extends Operation {
 
 			mWritable = mResult.isWritable();
 		}
-		System.out.println("COMPLETED: GetImapFolder\n" + this.toString());
+//		System.out.println("COMPLETED: GetImapFolder\n" + this.toString());
 	}
 	
 	public String toString() {

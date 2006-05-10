@@ -84,8 +84,6 @@ public class LocalConfig {
     }
 
     private boolean expandOnce(StringBuffer value, Set<String> seenKeys) throws ConfigException {
-//        int len = value.length();
-
         int begin = value.indexOf("${");
         if (begin == -1) {
             return false;
