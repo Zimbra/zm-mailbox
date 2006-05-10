@@ -11,7 +11,7 @@ Some notes on the software:
    * Perforce - the PPC version will work fine
    * MySQL - you MUST install the x86 version, version 5 (or higher)
    * OpenLDAP - install the latest version
-   * Tomcat - install 5.5.15 or higher
+   * Tomcat - install 5.5.15 (or higher)
 
 
 === Perforce ===
@@ -156,4 +156,58 @@ URL and login with the username "user1" and password "test123":
 
 <pre>
 http://localhost:7070/zimbra/
+</pre>
+
+
+=== Install Mail Transfer Agent ===
+
+In order to send mail to/from users in the Zimbra product
+you will need a mail transfer agent. However, you do not need
+a full MTA such as Postfix in order for this to work. Instead,
+you can install a Perl script that acts as a simple MTA.
+
+NOTE: In order to continue with this step, you need to have
+installed the Mac OS X development tools. If you haven't done
+this yet, insert disc 1 and install Xcode Tools/XcodeTools.mpkg
+
+First, you need to install some Perl packages by running
+the following commands: [The first time you run CPAN, you
+will need to configure it -- use default settings where
+possible]
+
+<pre>
+% sudo cpan
+</pre>
+
+At the CPAN prompt, type the following commands:
+
+<pre>
+cpan> install Net::SMTP::Server
+cpan> install Net::LMTP
+cpan> install Net::DNS
+cpan> quit
+</pre>
+
+Now you can run the Perl MTA with the following commands:
+
+<pre>
+% export ZIMBRA_HOSTNAME=`/opt/zimbra/bin/zmhostname`
+% perl {p4_client_local_dir}/ZimbraServer/src/perl/zMTAHack.pl
+</pre>
+
+NOTE: When sending mail, you need to fully qualify the
+address as {username}@{hostname}. The {username} is 
+"user1" through "user5". The {hostname} is the same one
+that /opt/zimbra/bin/zmhostname displays.
+
+
+=== Configuring Services to Start at Boot ===
+
+At this point, only MySQL is configured to start at boot.
+If you want the other services (i.e. LDAP, Tomcat, and
+MTA) to start at boot, you need to run the following
+commands:
+
+<pre>
+TODO
 </pre>
