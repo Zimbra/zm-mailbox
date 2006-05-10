@@ -147,3 +147,22 @@ installers to your local machine before installing.
     and login as "admin@{hostname}" (the domain is mandatory), with
     the password "test123", where {hostname} is the name of your local
     machine.
+	
+11. Set up a local mail server. This will allow you to actually send 
+    mail from the development build.
+	
+	Install ActiveState Perl
+	
+	From a command window, run ppm and give it the following commands:
+		ppm> install Net-LMTP
+		ppm> install SMTP-Server 
+		ppm> install Net-DNS
+	
+	set the ZIMBRA_HOSTNAME environment variable to be the name of your computer.
+	
+	run ZimbraServer\src\perl\zMTAHack.pl
+	
+	
+
+	
+	
