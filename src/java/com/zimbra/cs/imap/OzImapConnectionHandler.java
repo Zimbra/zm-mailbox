@@ -939,23 +939,27 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             pattern = pattern.substring(1);
 
         try {
-            Map<String, String> subs;
-            synchronized (mMailbox) {
-                subs = mSession.getMatchingSubscriptions(mMailbox, pattern);
-                for (Map.Entry<String, String> hit : subs.entrySet()) {
-                    Folder folder = null;
-                    try {
-                        folder = mMailbox.getFolderByPath(getContext(), hit.getKey());
-                    } catch (MailServiceException.NoSuchItemException nsie) { }
-                    // FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
-                    boolean visible = hit.getValue() != null && ImapFolder.isFolderVisible(folder);
-                    String attributes = visible ? getFolderAttributes(folder) : "\\Noselect";
-                    hit.setValue("LSUB (" + attributes + ") \"/\" " + ImapFolder.encodeFolder(hit.getKey()));
-                }
-            }
-
-            for (String sub : subs.values())
-                sendUntagged(sub);
+//            Map<String, String> subs;
+//            synchronized (mMailbox) {
+//                subs = mSession.getMatchingSubscriptions(mMailbox, pattern);
+//                for (Map.Entry<String, String> hit : subs.entrySet()) {
+//                    Folder folder = null;
+//                    try {
+//                        folder = mMailbox.getFolderByPath(getContext(), hit.getKey());
+//                    } catch (MailServiceException.NoSuchItemException nsie) { }
+//                    // FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
+//                    boolean visible = hit.getValue() != null && ImapFolder.isFolderVisible(folder);
+//                    String attributes = visible ? getFolderAttributes(folder) : "\\Noselect";
+//                    hit.setValue("LSUB (" + attributes + ") \"/\" " + ImapFolder.encodeFolder(hit.getKey()));
+//                }
+//            }
+        	ImapLSubOperation op = new ImapLSubOperation(mSession, getContext(), mMailbox,
+        				new GetFolderAttributes(), pattern);
+        	op.schedule();
+        	Map<String, String> subs = op.getSubs();
+        	
+        	for (String sub : subs.values())
+        		sendUntagged(sub);
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("LSUB failed", e);
             sendNO(tag, "LSUB failed");
@@ -1022,58 +1026,62 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         }
 
         ArrayList<Tag> newTags = new ArrayList<Tag>();
-        StringBuffer appendHint = new StringBuffer();
+        StringBuilder appendHint = new StringBuilder();
+//        try {
+//            synchronized (mMailbox) {
+//                Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
+//                if (!ImapFolder.isFolderVisible(folder)) {
+//                    ZimbraLog.imap.info("APPEND failed: cannot APPEND to folder: " + folderName);
+//                    sendNO(tag, "APPEND failed");
+//                    return CONTINUE_PROCESSING;
+//                } else if (!ImapFolder.isFolderWritable(folder)) {
+//                    ZimbraLog.imap.info("APPEND failed: folder is READ-ONLY: " + folderName);
+//                    sendNO(tag, "APPEND failed: mailbox is READ-ONLY");
+//                    return CONTINUE_PROCESSING;
+//                }
+//
+//                byte sflags = 0;
+//                int flagMask = Flag.FLAG_UNREAD;
+//                StringBuffer tagStr = new StringBuffer();
+//                if (flagNames != null) {
+//                    for (ImapFlag i4flag : findOrCreateTags(flagNames, newTags)) {
+//                        if (!i4flag.mPermanent)
+//                            sflags |= i4flag.mBitmask;
+//                        else if (Tag.validateId(i4flag.mId))
+//                            tagStr.append(tagStr.length() == 0 ? "" : ",").append(i4flag.mId);
+//                        else if (i4flag.mPositive)
+//                            flagMask |= i4flag.mBitmask;
+//                        else
+//                            flagMask &= ~i4flag.mBitmask;
+//                    }
+//                }
+//
+//                boolean idxAttach = mMailbox.attachmentsIndexingEnabled();
+//                ParsedMessage pm = date != null ? new ParsedMessage(content, date.getTime(), idxAttach) :
+//                                                  new ParsedMessage(content, idxAttach);
+//                try {
+//                    if (!pm.getSender().equals("")) {
+//                        InternetAddress ia = new InternetAddress(pm.getSender());
+//                        if (AccountUtil.addressMatchesAccount(mMailbox.getAccount(), ia.getAddress()))
+//                            flagMask |= Flag.FLAG_FROM_ME;
+//                    }
+//                } catch (Exception e) { }
+//
+//                Message msg = mMailbox.addMessage(getContext(), pm, folder.getId(), true, flagMask, tagStr.toString());
+//                if (msg != null) {
+//                    appendHint.append("[APPENDUID ").append(ImapFolder.getUIDValidity(folder))
+//                              .append(' ').append(msg.getImapUID()).append("] ");
+//                    if (sflags != 0 && mSession.isSelected()) {
+//                        ImapMessage i4msg = mSession.getFolder().getById(msg.getId());
+//                        if (i4msg != null)
+//                            i4msg.setSessionFlags(sflags);
+//                    }
+//                }
+//            }
         try {
-            synchronized (mMailbox) {
-                Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
-                if (!ImapFolder.isFolderVisible(folder)) {
-                    ZimbraLog.imap.info("APPEND failed: cannot APPEND to folder: " + folderName);
-                    sendNO(tag, "APPEND failed");
-                    return CONTINUE_PROCESSING;
-                } else if (!ImapFolder.isFolderWritable(folder)) {
-                    ZimbraLog.imap.info("APPEND failed: folder is READ-ONLY: " + folderName);
-                    sendNO(tag, "APPEND failed: mailbox is READ-ONLY");
-                    return CONTINUE_PROCESSING;
-                }
-
-                byte sflags = 0;
-                int flagMask = Flag.FLAG_UNREAD;
-                StringBuffer tagStr = new StringBuffer();
-                if (flagNames != null) {
-                    for (ImapFlag i4flag : findOrCreateTags(flagNames, newTags)) {
-                        if (!i4flag.mPermanent)
-                            sflags |= i4flag.mBitmask;
-                        else if (Tag.validateId(i4flag.mId))
-                            tagStr.append(tagStr.length() == 0 ? "" : ",").append(i4flag.mId);
-                        else if (i4flag.mPositive)
-                            flagMask |= i4flag.mBitmask;
-                        else
-                            flagMask &= ~i4flag.mBitmask;
-                    }
-                }
-
-                boolean idxAttach = mMailbox.attachmentsIndexingEnabled();
-                ParsedMessage pm = date != null ? new ParsedMessage(content, date.getTime(), idxAttach) :
-                                                  new ParsedMessage(content, idxAttach);
-                try {
-                    if (!pm.getSender().equals("")) {
-                        InternetAddress ia = new InternetAddress(pm.getSender());
-                        if (AccountUtil.addressMatchesAccount(mMailbox.getAccount(), ia.getAddress()))
-                            flagMask |= Flag.FLAG_FROM_ME;
-                    }
-                } catch (Exception e) { }
-
-                Message msg = mMailbox.addMessage(getContext(), pm, folder.getId(), true, flagMask, tagStr.toString());
-                if (msg != null) {
-                    appendHint.append("[APPENDUID ").append(ImapFolder.getUIDValidity(folder))
-                              .append(' ').append(msg.getImapUID()).append("] ");
-                    if (sflags != 0 && mSession.isSelected()) {
-                        ImapMessage i4msg = mSession.getFolder().getById(msg.getId());
-                        if (i4msg != null)
-                            i4msg.setSessionFlags(sflags);
-                    }
-                }
-            }
+        	ImapAppendOperation op = new ImapAppendOperation(mSession, getContext(), mMailbox,
+        				new FindOrCreateTags(), folderName, flagNames, date, content,  newTags, appendHint);
+        	op.schedule();
         } catch (ServiceException e) {
             deleteTags(newTags);
             String msg = "APPEND failed";
@@ -1088,17 +1096,17 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 ZimbraLog.imap.warn("APPEND failed", e);
             sendNO(tag, msg);
             return canContinue(e);
-        } catch (IOException e) {
-            deleteTags(newTags);
-            ZimbraLog.imap.warn("APPEND failed", e);
-            sendNO(tag, "APPEND failed");
-            return CONTINUE_PROCESSING;
-        } catch (MessagingException e) {
-            deleteTags(newTags);
-            // FIXME: shouldn't fail if message parse fails; treat as a blob instead
-            ZimbraLog.imap.warn("APPEND failed", e);
-            sendNO(tag, "APPEND failed");
-            return CONTINUE_PROCESSING;
+//        } catch (IOException e) {
+//            deleteTags(newTags);
+//            ZimbraLog.imap.warn("APPEND failed", e);
+//            sendNO(tag, "APPEND failed");
+//            return CONTINUE_PROCESSING;
+//        } catch (MessagingException e) {
+//            deleteTags(newTags);
+//            // FIXME: shouldn't fail if message parse fails; treat as a blob instead
+//            ZimbraLog.imap.warn("APPEND failed", e);
+//            sendNO(tag, "APPEND failed");
+//            return CONTINUE_PROCESSING;
         }
 
         sendNotifications(true, false);
@@ -1110,6 +1118,13 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         // notification will update mTags hash
         return mMailbox.createTag(getContext(), name, MailItem.DEFAULT_COLOR);
     }
+    
+    class FindOrCreateTags implements IFindOrCreateTags {
+    	public List<ImapFlag> doFindOrCreateTags(List<String> flagNames, List<Tag> newTags) throws ServiceException {
+    		return findOrCreateTags(flagNames, newTags);
+    	}
+    }
+    
     private List<ImapFlag> findOrCreateTags(List<String> flagNames, List<Tag> newTags) throws ServiceException {
         if (flagNames == null || flagNames.size() == 0)
             return Collections.emptyList();
