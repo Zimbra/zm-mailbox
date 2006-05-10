@@ -85,7 +85,9 @@ public class SearchConv extends Search {
         params.setTypesStr(MailboxIndex.GROUP_BY_MESSAGE);
         
         //ZimbraQueryResults results = this.getResults(mbox, params, lc, session);
-        ZimbraQueryResults results = new SearchOperation(session, zc.getOperationContext(), mbox, Requester.SOAP,  params).getResults();
+        SearchOperation op = new SearchOperation(session, zc.getOperationContext(), mbox, Requester.SOAP,  params);
+        op.schedule();
+        ZimbraQueryResults results = op.getResults();        
         
         try {
         	Element response = zc.createElement(MailService.SEARCH_CONV_RESPONSE);

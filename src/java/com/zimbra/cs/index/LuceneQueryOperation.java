@@ -34,6 +34,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -132,7 +134,7 @@ class LuceneQueryOperation extends QueryOperation
     	}
     	
         Set<Integer> getIndexIds() { 
-        	Set<Integer>toRet = new HashSet<Integer>(mHits.keySet().size());
+        	Set<Integer>toRet = new LinkedHashSet<Integer>(mHits.keySet().size());
             for (Iterator iter = mHits.keySet().iterator(); iter.hasNext();) {
                 Integer curInt = (Integer)iter.next();
                 toRet.add(curInt);
@@ -160,7 +162,7 @@ class LuceneQueryOperation extends QueryOperation
         	return mHits.get(indexId);
         }
         
-        private HashMap <Integer /*indexId*/, ScoredLuceneHit> mHits = new HashMap<Integer, ScoredLuceneHit>();
+        private HashMap <Integer /*indexId*/, ScoredLuceneHit> mHits = new LinkedHashMap<Integer, ScoredLuceneHit>();
     }
     
     protected LuceneResultsChunk getNextResultsChunk(int maxChunkSize) throws ServiceException {

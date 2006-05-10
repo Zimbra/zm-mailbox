@@ -50,8 +50,6 @@ public class SearchOperation extends Operation {
 	public SearchOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, SearchParams params) throws ServiceException {
 		super(session, oc, mbox, req, req.getPriority(), LOAD);
 		mParams = params;
-		
-		schedule();
 	}
 	
 	public String toString() {

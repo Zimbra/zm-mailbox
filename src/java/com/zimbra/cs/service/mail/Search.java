@@ -79,10 +79,11 @@ public class Search extends DocumentHandler  {
         Mailbox mbox = getRequestedMailbox(zc);
         SearchParams params = parseCommonParameters(request, zc);
         
-        ZimbraQueryResults results = new SearchOperation(session, zc.getOperationContext(), mbox, Requester.SOAP,  params).getResults();
+        SearchOperation op = new SearchOperation(session, zc.getOperationContext(), mbox, Requester.SOAP,  params);
+        op.schedule();
+        ZimbraQueryResults results = op.getResults();
+        
         try {
-        	ResultsPager pager = ResultsPager.create(results, params);
-        	
         	// create the XML response Element
         	Element response = zc.createElement(MailService.SEARCH_RESPONSE);
         	
@@ -91,7 +92,7 @@ public class Search extends DocumentHandler  {
         	SortBy sb = results.getSortBy();
         	response.addAttribute(MailService.A_SORTBY, sb.toString());
         	
-        	pager = ResultsPager.create(results, params);
+        	ResultsPager pager = ResultsPager.create(results, params);
         	response.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
         	
         	Element retVal = putHits(zc, response, pager, DONT_INCLUDE_MAILBOX_INFO, params);
