@@ -1,6 +1,9 @@
 <-- initial sync request -->
 
-<SyncRequest/>   <-- no token = initial sync -->
+<SyncRequest [l="{root-folder-id}"]/>
+
+   <-- no token = initial sync -->
+   <--  if {root-folder-id} present, we start sync there rather than at folder 11 -->
 
 <SyncResponse token="403" md="1077924283" s="78624627">
   <folder id="11">

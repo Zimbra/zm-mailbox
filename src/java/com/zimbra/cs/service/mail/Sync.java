@@ -36,6 +36,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -52,6 +53,8 @@ public class Sync extends DocumentHandler {
 
     private static final int DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_ROOT;
 
+    private static enum SyncPhase { INITIAL, DELTA };
+
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
@@ -67,8 +70,15 @@ public class Sync extends DocumentHandler {
             response.addAttribute(MailService.A_TOKEN, mbox.getLastChangeID());
             if (begin <= 0) {
                 response.addAttribute(MailService.A_SIZE, mbox.getSize());
+                Folder root = null;
+                try {
+                    int folderId = (int) request.getAttributeLong(MailService.A_FOLDER, DEFAULT_FOLDER_ID);
+                    OperationContext octxtOwner = new OperationContext(mbox.getAccount());
+                    root = mbox.getFolderById(octxtOwner, folderId);
+                } catch (MailServiceException.NoSuchItemException nsie) { }
+
                 Set<Folder> visible = mbox.getVisibleFolders(octxt);
-                boolean anyFolders = folderSync(zsc, response, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, true);
+                boolean anyFolders = folderSync(zsc, response, mbox, root, visible, SyncPhase.INITIAL);
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     response.addElement(MailService.E_FOLDER);
@@ -78,8 +88,10 @@ public class Sync extends DocumentHandler {
         return response;
     }
 
-    private boolean folderSync(ZimbraSoapContext zsc, Element response, Mailbox mbox, Folder folder, Set<Folder> visible, boolean initial)
+    private boolean folderSync(ZimbraSoapContext zsc, Element response, Mailbox mbox, Folder folder, Set<Folder> visible, SyncPhase phase)
     throws ServiceException {
+        if (folder == null)
+            return false;
         if (visible != null && visible.isEmpty())
             return false;
         boolean isVisible = visible == null || visible.remove(folder);
@@ -90,6 +102,7 @@ public class Sync extends DocumentHandler {
             return false;
 
         // write this folder's data to the response
+        boolean initial = phase == SyncPhase.INITIAL;
         Element f = ToXML.encodeFolder(response, zsc, folder, initial ? ToXML.NOTIFY_FIELDS : Change.ALL_FIELDS);
         if (initial && isVisible) {
             // we're in the middle of an initial sync, so serialize the item ids
@@ -115,7 +128,7 @@ public class Sync extends DocumentHandler {
         // write the subfolders' data to the response
         for (Folder subfolder : subfolders)
             if (subfolder != null)
-                isVisible |= folderSync(zsc, f, mbox, subfolder, visible, initial);
+                isVisible |= folderSync(zsc, f, mbox, subfolder, visible, phase);
 
         // if this folder and all its subfolders are not visible (oops!), remove them from the response
         if (!isVisible)
@@ -177,7 +190,7 @@ public class Sync extends DocumentHandler {
                     continue;
                 // special-case the folder hierarchy for delegated delta sync
                 Set<Folder> visible = mbox.getVisibleFolders(octxt);
-                boolean anyFolders = folderSync(zsc, response, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, false);
+                boolean anyFolders = folderSync(zsc, response, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, SyncPhase.DELTA);
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     response.addElement(MailService.E_FOLDER);
