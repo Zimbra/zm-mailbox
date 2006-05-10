@@ -138,8 +138,6 @@ public class ToXML {
 
         Element elem = parent.addElement(MailService.E_FOLDER);
         encodeFolderCommon(elem, lc, folder, fields);
-        if (needToOutput(fields, Change.MODIFIED_FLAGS))
-            elem.addAttribute(MailService.A_EXCLUDE_FREEBUSY, folder.isTagged(folder.getMailbox().mExcludeFBFlag));
         if (needToOutput(fields, Change.MODIFIED_SIZE)) {
             long size = folder.getSize();
             if (size > 0 || fields != NOTIFY_FIELDS)
@@ -204,6 +202,11 @@ public class ToXML {
             }
             if (needToOutput(fields, Change.MODIFIED_FOLDER))
                 elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(folder.getFolderId()));
+        }
+        if (needToOutput(fields, Change.MODIFIED_FLAGS)) {
+            String flags = folder.getFlagString();
+            if (fields != NOTIFY_FIELDS || !flags.equals(""))
+                elem.addAttribute(MailService.A_FLAGS, flags);
         }
         if (needToOutput(fields, Change.MODIFIED_COLOR)) {
             byte color = folder.getColor();

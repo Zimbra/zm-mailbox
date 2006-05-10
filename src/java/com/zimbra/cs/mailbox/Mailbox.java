@@ -316,6 +316,8 @@ public class Mailbox {
     public Flag mSubscribeFlag;
     /** flag: Exclude folder from free-busy calculations */
     public Flag mExcludeFBFlag;
+    /** flag: folders "checked" for display in the web UI */
+    public Flag mCheckedFlag;
     
     /** the full set of message flags, in order */
     final Flag[] mFlags = new Flag[31];
@@ -1374,6 +1376,7 @@ public class Mailbox {
         mUnreadFlag    = Flag.instantiate(this, "\\Unread",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_UNREAD);
         mSubscribeFlag = Flag.instantiate(this, "\\Subscribed", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SUBSCRIBED);
         mExcludeFBFlag = Flag.instantiate(this, "\\ExcludeFB",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_EXCLUDE_FREEBUSY);
+        mCheckedFlag   = Flag.instantiate(this, "\\Checked",    Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_CHECKED);
     }
 
     private void loadFoldersAndTags() throws ServiceException {

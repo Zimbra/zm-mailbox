@@ -72,6 +72,8 @@ public class FolderAction extends ItemAction {
     public static final String OP_EMPTY    = "empty";
     public static final String OP_REFRESH  = "sync";
     public static final String OP_FREEBUSY = "fb";
+    public static final String OP_CHECK    = "check";
+    public static final String OP_UNCHECK  = '!' + OP_CHECK;
     public static final String OP_SET_URL  = "url";
     public static final String OP_IMPORT   = "import";
     public static final String OP_GRANT    = "grant";
@@ -80,7 +82,7 @@ public class FolderAction extends ItemAction {
     public static final String OP_UNTAG    = '!' + OP_TAG;
 
     private static final Set FOLDER_OPS = new HashSet<String>(Arrays.asList(new String[] {
-        OP_RENAME, OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_GRANT, OP_REVOKE, OP_UPDATE
+        OP_RENAME, OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_CHECK, OP_UNCHECK, OP_GRANT, OP_REVOKE, OP_UPDATE
     }));
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
@@ -126,6 +128,8 @@ public class FolderAction extends ItemAction {
         } else if (operation.equals(OP_FREEBUSY)) {
             boolean fb = action.getAttributeBool(MailService.A_EXCLUDE_FREEBUSY, false);
             mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, fb);
+        } else if (operation.equals(OP_CHECK) || operation.equals(OP_UNCHECK)) {
+            mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_CHECKED, operation.equals(OP_CHECK));
         } else if (operation.equals(OP_SET_URL)) {
             String url = action.getAttribute(MailService.A_URL, "");
             mbox.setFolderUrl(octxt, iid.getId(), url);

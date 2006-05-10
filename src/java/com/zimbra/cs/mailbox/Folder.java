@@ -693,10 +693,12 @@ public class Folder extends MailItem {
      * 
      * @perms {@link ACL#RIGHT_WRITE} on the folder */
     void alterTag(Tag tag, boolean add) throws ServiceException {
-        if (tag != mMailbox.mSubscribeFlag && tag != mMailbox.mExcludeFBFlag) {
+        // folder flags are applied to the folder, not the contents
+        if (!(tag instanceof Flag) || !((Flag) tag).isFolderOnly()) {
             super.alterTag(tag, add);
             return;
         }
+
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the necessary privileges on the folder");
         if (add == isTagged(tag))

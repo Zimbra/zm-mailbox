@@ -598,7 +598,7 @@ Conversations:
 
   {date}      = date (secs since epoch) of most recent message in converstation
   {tags}      = list of tag-ids on conv
-  {flags}     = (u)nread, (f)lagged, has (a)ttachmement (set if any msg in conv has that flag set)
+  {flags}     = (u)nread, (f)lagged, has (a)ttachment (set if any msg in conv has that flag set)
   {subject}   = subject of conversation
   {fragment}  = fragment of most recent msg in converstation
   {folder-id} = location of converstation (numeric folder id)
@@ -609,13 +609,14 @@ Conversations:
                  
 Folders:
 
-  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"] [url="{remote-url}"] [excludeFreeBusy="exclude-free-busy"]>
+  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"] [url="{remote-url}"]>
     [<acl> <grant perm="{rights}" gt="{grantee-type}" d="{grantee-name}" [inh="0|1"]/>* </acl>]
   </folder>
 
   {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
                    cannot contain ':', '"', '/', or any character below 0x20
   {parent-id}    = id of parent folder (absent for root folder)
+  {flags}        = checked in UI (#), exclude free/(b)usy info, IMAP subscribed (*)
   {color}        = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
   {unread}       = number of unread messages in folder
   {msg-count}    = number of messages/invites in folder
@@ -973,7 +974,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 ---------
 
 <FolderActionRequest>
-  <action id="{list}" op="read|delete|rename|move|empty|color|grant|url|import|sync|fb" name="..." [l="{target-folder}"]
+  <action id="{list}" op="read|delete|rename|move|empty|color|grant|url|import|sync|fb|[!]check" name="..." [l="{target-folder}"]
                       [name="{new-name}"] [color="{new-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]
                       [excludeFreeBusy="{exclude-free-busy-boolean}">
     [<grant perm="..." gt="..." d="..." [inh="0|1"]/>]
@@ -998,7 +999,8 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
     op="url" - set the synchronization url on the folder to {target-url}, empty the folder, and synchronize the folder's contents to the remote feed, also sets {exclude-free-busy-boolean} 
     op="sync" - synchronize the folder's contents to the remote feed specified by the folder's {url}
     op="import" - add the contents to the remote feed at {target-url} to the folder [1-time action]
-    op="fb" - set the excludeFreeBusy boolean for this folder
+    op="fb" - set the excludeFreeBusy boolean for this folder (must specify {exclude-free-busy-boolean})
+    op="check" (or "!check") - set or unset the "checked" state of the folder in the UI
 
   {list} = on input, list of folders to act on, on output, list of
            folders that were acted on;

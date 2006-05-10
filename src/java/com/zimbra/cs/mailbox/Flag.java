@@ -94,11 +94,15 @@ public class Flag extends Tag {
     public static final int ID_FLAG_SUBSCRIBED = -20;
     public static final int FLAG_SUBSCRIBED    = 1 << getIndex(ID_FLAG_SUBSCRIBED);
         static { FLAG_REP[getIndex(ID_FLAG_SUBSCRIBED)] = '*'; }
-        
+
     public static final int ID_FLAG_EXCLUDE_FREEBUSY = -21;
-    public static final int FLAG_EXCLUDE_FREEBUSY = 1 << getIndex(ID_FLAG_EXCLUDE_FREEBUSY);
+    public static final int FLAG_EXCLUDE_FREEBUSY    = 1 << getIndex(ID_FLAG_EXCLUDE_FREEBUSY);
          static { FLAG_REP[getIndex(ID_FLAG_EXCLUDE_FREEBUSY)] = 'b'; }
-        
+
+     public static final int ID_FLAG_CHECKED = -22;
+     public static final int FLAG_CHECKED    = 1 << getIndex(ID_FLAG_CHECKED);
+         static { FLAG_REP[getIndex(ID_FLAG_CHECKED)] = '#'; }
+
 
     static final String UNREAD_FLAG_ONLY = getAbbreviation(ID_FLAG_UNREAD) + "";
 
@@ -106,7 +110,7 @@ public class Flag extends Tag {
     public static final int FLAGS_ALL = FLAG_FROM_ME   | FLAG_ATTACHED | FLAG_REPLIED  |
                                         FLAG_FORWARDED | FLAG_COPIED   | FLAG_FLAGGED  |
                                         FLAG_DRAFT     | FLAG_DELETED  | FLAG_NOTIFIED |
-                                        FLAG_SUBSCRIBED | FLAG_EXCLUDE_FREEBUSY;
+                                        FLAG_CHECKED   | FLAG_SUBSCRIBED | FLAG_EXCLUDE_FREEBUSY;
 
     public static final byte FLAG_GENERIC         = 0x00;
     public static final byte FLAG_IS_MESSAGE_ONLY = 0x01;
@@ -127,6 +131,17 @@ public class Flag extends Tag {
         return (byte) (-flagId - 1);
     }
 
+    public char getAbbreviation() {
+        return getAbbreviation(mId);
+    }
+    public static char getAbbreviation(int flagId) {
+        return FLAG_REP[-flagId - 1];
+    }
+
+
+    boolean isFolderOnly() {
+        return (mAttributes & FLAG_IS_FOLDER_ONLY) != 0;
+    }
 
     boolean canTag(MailItem item) {
         if ((mAttributes & FLAG_IS_FOLDER_ONLY) != 0 && item instanceof Folder)
@@ -137,13 +152,6 @@ public class Flag extends Tag {
             return false;
 		return true;
 	}
-
-    public char getAbbreviation() {
-        return getAbbreviation(mId);
-    }
-    public static char getAbbreviation(int flagId) {
-        return FLAG_REP[-flagId - 1];
-    }
 
 
     static void validateFlags(int flags) throws ServiceException {
