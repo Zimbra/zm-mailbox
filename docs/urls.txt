@@ -6,9 +6,7 @@ Various special URLs/servlets
 Calendar   http://{server}/service/ical/cal.ics  
 
 # new form
-Calendar   http://{server}/{zimbra,service}/user/{username}/{calendar-folder}
-
-Using /zimbra causes the browser to do a redirect to /service.
+Calendar   http://{server}/home/{username}/{calendar-folder}
 
 ------------------------------------------------------------
 
@@ -68,7 +66,7 @@ END:VCALENDAR
 RSS  http://{server}/service/rss/index.rss[?query=...]
 
 # new form
-RSS  http://{server}/{zimbra,service}/user/{folder}.rss[?query=...]
+RSS  http://{server}/home/{user}/{folder}.rss[?query=...]
 
 ------------------------------------------------------------
 Spits out a "application/rss+xml" file, consisting of an RSS feed of email messages in the specified folder. 
@@ -100,7 +98,7 @@ curl -L -u user1:test123 http://localhost:7070/zimbra/user/user1/inbox.rss?query
 
 You can also specify a search query, such as:
 
-curl -u user1:test123 http://localhost:7070/service/rss/index.rss?query=tag:foobar
+curl -u user1:test123 http://localhost:7070/home/{user}/index.rss?query=tag:foobar
 
 Notes:
 
@@ -114,7 +112,7 @@ Notes:
 Contacts   http://{server}/service/csv/contacts.csv
 
 # new form
-Contacts   http://{server}/{zimbra,service}/user/{username}/contacts
+Contacts   http://{server}/home/{user}/contacts
 ------------------------------------------------------------
 
 Spits out a "text/plain" file, consisting of all the contacts an account has, in CSV (comma-separated values)
@@ -128,6 +126,3 @@ Notes:
 (1) probably would be nice to be able to use with basic auth as well
 
 (2) would be nice to be able to search for contacts to export instead of all of them
-
-
-
