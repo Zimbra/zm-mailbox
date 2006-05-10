@@ -727,30 +727,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
         int folderId = 0;
         try {
-//            synchronized (mMailbox) {
-//                Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
-//                if (!ImapFolder.isFolderVisible(folder)) {
-//                    ZimbraLog.imap.info("cannot delete IMAP-invisible folder: " + folder.getPath());
-//                    sendNO(tag, "DELETE failed");
-//                    return CONTINUE_PROCESSING;
-//                } else if (!folder.isMutable()) {
-//                    ZimbraLog.imap.info("cannot delete system folder: " + folder.getPath());
-//                    sendNO(tag, "DELETE failed");
-//                    return CONTINUE_PROCESSING;
-//                }
-//
-//                folderId = folder.getId();
-//                if (!folder.hasSubfolders())
-//                    mMailbox.delete(getContext(), folderId, MailItem.TYPE_FOLDER);
-//                else {
-//                    // 6.3.4: "It is permitted to delete a name that has inferior hierarchical
-//                    //         names and does not have the \Noselect mailbox name attribute.
-//                    //         In this case, all messages in that mailbox are removed, and the
-//                    //         name will acquire the \Noselect mailbox name attribute."
-//                    mMailbox.emptyFolder(getContext(), folderId, false);
-//                    // FIXME: add \Deleted flag to folder
-//                }
-//      	}
         	ImapDeleteOperation op = new ImapDeleteOperation(mSession, getContext(), mMailbox, folderName);
         	op.schedule();
         	folderId = op.getFolderId();
@@ -783,21 +759,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             newName = '/' + newName;
 
         try {
-//            synchronized (mMailbox) {
-//                int folderId = mMailbox.getFolderByPath(getContext(), oldName).getId();
-//                if (folderId != Mailbox.ID_FOLDER_INBOX)
-//                    mMailbox.renameFolder(getContext(), folderId, newName);
-//                else {
-//                    // 6.3.5: "Renaming INBOX is permitted, and has special behavior.  It moves all
-//                    //         messages in INBOX to a new mailbox with the given name, leaving INBOX
-//                    //         empty.  If the server implementation supports inferior hierarchical
-//                    //         names of INBOX, these are unaffected by a rename of INBOX."
-//                    // FIXME: move the contents (but not the subfolders) of INBOX to the new folder
-//                    ZimbraLog.imap.info("RENAME failed: RENAME of INBOX not supported");
-//                    sendNO(tag, "RENAME failed: RENAME of INBOX not supported");
-//                    return CONTINUE_PROCESSING;
-//                }
-//            }
         	ImapRenameOperation op = new ImapRenameOperation(mSession, getContext(), mMailbox, oldName, newName);
         	op.schedule();
         } catch (ServiceException e) {
@@ -827,15 +788,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             folderName = folderName.substring(1);
 
         try {
-//            synchronized (mMailbox) {
-//                Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
-//                if (!ImapFolder.isFolderVisible(folder)) {
-//                    ZimbraLog.imap.info("SUBSCRIBE failed: folder not visible: " + folderName);
-//                    sendNO(tag, "SUBSCRIBE failed");
-//                    return CONTINUE_PROCESSING;
-//                }
-//                mSession.subscribe(folder);
-//            }
         	ImapSubscribeOperation op = new ImapSubscribeOperation(mSession, getContext(), mMailbox, folderName);
         	op.schedule();
         } catch (ImapServiceException e) {
@@ -867,9 +819,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             folderName = folderName.substring(1);
 
         try {
-//            synchronized (mMailbox) {
-//                mSession.unsubscribe(mMailbox.getFolderByPath(getContext(), folderName));
-//            }
         	ImapUnsubscribeOperation op = new ImapUnsubscribeOperation(mSession, getContext(), mMailbox, folderName);
         	op.schedule();
         } catch (MailServiceException.NoSuchItemException nsie) {
@@ -906,17 +855,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             pattern = pattern.substring(1);
         List<String> matches = new ArrayList<String>();
         try {
-//            synchronized (mMailbox) {
-//                Folder root = mMailbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT);
-//                for (Folder folder : root.getSubfolderHierarchy()) {
-//                    if (!ImapFolder.isFolderVisible(folder))
-//                        continue;
-//                    String path = folder.getPath().substring(1);
-//                    // FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
-//                    if (path.toUpperCase().matches(pattern))
-//                        matches.add("LIST (" + getFolderAttributes(folder) + ") \"/\" " + ImapFolder.encodeFolder(path));
-//                }
-//            }
         	ImapListOperation op = new ImapListOperation(mSession, getContext(), mMailbox, 
         				new GetFolderAttributes(), pattern);
         	op.schedule();
@@ -968,20 +906,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             pattern = pattern.substring(1);
 
         try {
-//            Map<String, String> subs;
-//            synchronized (mMailbox) {
-//                subs = mSession.getMatchingSubscriptions(mMailbox, pattern);
-//                for (Map.Entry<String, String> hit : subs.entrySet()) {
-//                    Folder folder = null;
-//                    try {
-//                        folder = mMailbox.getFolderByPath(getContext(), hit.getKey());
-//                    } catch (MailServiceException.NoSuchItemException nsie) { }
-//                    // FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
-//                    boolean visible = hit.getValue() != null && ImapFolder.isFolderVisible(folder);
-//                    String attributes = visible ? getFolderAttributes(folder) : "\\Noselect";
-//                    hit.setValue("LSUB (" + attributes + ") \"/\" " + ImapFolder.encodeFolder(hit.getKey()));
-//                }
-//            }
         	ImapLSubOperation op = new ImapLSubOperation(mSession, getContext(), mMailbox,
         				new GetFolderAttributes(), pattern);
         	op.schedule();
@@ -1057,58 +981,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         ArrayList<Tag> newTags = new ArrayList<Tag>();
         StringBuilder appendHint = new StringBuilder();
         try {
-//            synchronized (mMailbox) {
-//                Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
-//                if (!ImapFolder.isFolderVisible(folder)) {
-//                    ZimbraLog.imap.info("APPEND failed: cannot APPEND to folder: " + folderName);
-//                    sendNO(tag, "APPEND failed");
-//                    return CONTINUE_PROCESSING;
-//                } else if (!ImapFolder.isFolderWritable(folder)) {
-//                    ZimbraLog.imap.info("APPEND failed: folder is READ-ONLY: " + folderName);
-//                    sendNO(tag, "APPEND failed: mailbox is READ-ONLY");
-//                    return CONTINUE_PROCESSING;
-//                }
-//
-//                byte sflags = 0;
-//                int flagMask = Flag.FLAG_UNREAD;
-//                StringBuffer tagStr = new StringBuffer();
-//                if (flagNames != null) {
-//                    List i4flags = findOrCreateTags(flagNames, newTags);
-//                    for (int i = 0; i < i4flags.size(); i++) {
-//                        ImapFlag i4flag = (ImapFlag) i4flags.get(i);
-//                        if (!i4flag.mPermanent)
-//                            sflags |= i4flag.mBitmask;
-//                        else if (Tag.validateId(i4flag.mId))
-//                            tagStr.append(tagStr.length() == 0 ? "" : ",").append(i4flag.mId);
-//                        else if (i4flag.mPositive)
-//                            flagMask |= i4flag.mBitmask;
-//                        else
-//                            flagMask &= ~i4flag.mBitmask;
-//                    }
-//                }
-//
-//                boolean idxAttach = mMailbox.attachmentsIndexingEnabled();
-//                ParsedMessage pm = date != null ? new ParsedMessage(content, date.getTime(), idxAttach) :
-//                                                  new ParsedMessage(content, idxAttach);
-//                try {
-//                    if (!pm.getSender().equals("")) {
-//                        InternetAddress ia = new InternetAddress(pm.getSender());
-//                        if (AccountUtil.addressMatchesAccount(mMailbox.getAccount(), ia.getAddress()))
-//                            flagMask |= Flag.FLAG_FROM_ME;
-//                    }
-//                } catch (Exception e) { }
-//
-//                Message msg = mMailbox.addMessage(getContext(), pm, folder.getId(), true, flagMask, tagStr.toString());
-//                if (msg != null) {
-//                    appendHint.append("[APPENDUID ").append(ImapFolder.getUIDValidity(folder))
-//                              .append(' ').append(msg.getImapUID()).append("] ");
-//                    if (sflags != 0 && mSession.isSelected()) {
-//                        ImapMessage i4msg = mSession.getFolder().getById(msg.getId());
-//                        if (i4msg != null)
-//                            i4msg.setSessionFlags(sflags);
-//                    }
-//                }
-//            }
         	ImapAppendOperation op = new ImapAppendOperation(mSession, getContext(), mMailbox,
         				new FindOrCreateTags(), folderName, flagNames, date, content,  newTags, appendHint);
         	op.schedule();
@@ -1126,17 +998,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 ZimbraLog.imap.warn("APPEND failed", e);
             sendNO(tag, msg);
             return canContinue(e);
-//        } catch (IOException e) {
-//            deleteTags(newTags);
-//            ZimbraLog.imap.warn("APPEND failed", e);
-//            sendNO(tag, "APPEND failed");
-//            return CONTINUE_PROCESSING;
-//        } catch (MessagingException e) {
-//            deleteTags(newTags);
-//            // FIXME: shouldn't fail if message parse fails; treat as a blob instead
-//            ZimbraLog.imap.warn("APPEND failed", e);
-//            sendNO(tag, "APPEND failed");
-//            return CONTINUE_PROCESSING;
         }
 
         sendNotifications(true, false);
