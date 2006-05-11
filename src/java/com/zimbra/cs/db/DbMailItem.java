@@ -1720,24 +1720,24 @@ public class DbMailItem {
             statement.append(" AND index_id IN").append(DbUtil.suitableNumberOfVariables(c.indexIds));
 
         if (!ListUtil.isEmpty(c.dates))
-            encodeRanges(c.dates, "date", statement);
+            encodeRanges(c.dates, "date", 1, statement);
         
         if (!ListUtil.isEmpty(c.modified))
-            encodeRanges(c.modified, "mod_metadata", statement);
+            encodeRanges(c.modified, "mod_metadata", 1, statement);
 
         if (!ListUtil.isEmpty(c.sizes))
-            encodeRanges(c.sizes, "size", statement);
+            encodeRanges(c.sizes, "size", 0, statement);
 
         statement.append(')');
     }
 
-    private static void encodeRanges(Collection<DbSearchConstraints.Range> ranges, String column, StringBuilder statement) {
+    private static void encodeRanges(Collection<DbSearchConstraints.Range> ranges, String column, long lowestValue, StringBuilder statement) {
         for (DbSearchConstraints.Range r : ranges) {
             statement.append(r.negated ? " AND NOT (" : " AND (");
-            if (r.lowest > 0)
+            if (r.lowest >= lowestValue)
                 statement.append(" " + column + " > ?");
-            if (r.highest > 0) {
-                if (r.lowest > 0)
+            if (r.highest >= lowestValue) {
+                if (r.lowest >= lowestValue)
                     statement.append(" AND");
                 statement.append(" " + column + " < ?");
             }
