@@ -68,13 +68,17 @@
 <tr>
 	<td class='issue'>X</td>
 	<td>&nbsp;</td>
-	<td class='tag'>
-		&lt;wiklet 
-			&nbsp;&nbsp;class="link"
-			&nbsp;&nbsp;name="pagename"
-			&nbsp;&nbsp;text="anchor text"
-			&nbsp;&nbsp;version="#" 
-		/&gt;
+	<td class='tag' style='white-space:nowrap'>
+		<ul>
+		<li><i>MediaWiki syntax:</i><br>
+			&#91;&#91;pagename]]<br>
+			&#91;&#91;pagename|anchor text]]<br>
+			&#91;&#91;pagename|anchor text<span class='issue'>|version</span>]]
+		<li><i>TWiki syntax:</i><br>
+			&#91;&#91;pagename]]<br>
+			&#91;&#91;pagename]&#91;anchor text]]<br>
+			&#91;&#91;pagename]&#91;anchor text<span class='issue'>]&#91;version</span>]]
+		</ul>
 	</td>
 	<td class='notes'>
 		<ul>
@@ -88,6 +92,8 @@
 			Do we support URL links? For example: mailto:, http:, etc.
 		<li><b class='issue'>Issue:</b>
 			We currently don't support version refs.
+			And the syntax specifying a version is a non-standard
+			extension of existing syntax.
 		</ul>
 	</td>
 </tr>
@@ -125,7 +131,7 @@
 			There may be cases
 			where the user explicitly doesn't want to make this a
 			link. I think it's better to make them put the link
-			syntax around it (e.g. &#91;&#91;&#123;&#123;NAME}}]]) to turn it into
+			syntax around it (e.g. &#91;&#91;&lt;wiklet class='NAME' />]]) to turn it into
 			a link.
 		</ul>
 	</td>
@@ -245,7 +251,7 @@
 			element that the object highlighter can ignore.
 		<li><b class='issue'>Issue:</b>
 			We should evaluate everything in the fragment <em>except</em>
-			links. Otherwise, the user will see &#123;&#123;...}} in content.
+			links.
 		</ul>
 	</td>
 </tr>
@@ -314,7 +320,7 @@
 		<ul>
 		<li>Should output as:
 			<div class='code'>
-			&nbsp;&nbsp;&lt;a href='mailto:&#123;&#123;email&#125;&#125;' class='_userlink'&gt;&#123;&#123;username&#125;&#125;&lt;/a&gt;
+			&nbsp;&nbsp;&lt;a href='mailto:&lt;wiklet class='CREATOR' />' class='_userlink'&gt;&lt;wiklet class='CREATOR' />&lt;/a&gt;
 			</div>
 		<li>Client will have to munge anchor into a zimlet
 		</ul>
@@ -324,7 +330,12 @@
 			a link? Perhaps if we extended the link syntax (from
 			above) we can support linking to other things like
 			external web pages and user emails. For example:
-			&#91;&#91;mailto:&#123;&#123;CREATOR}}]]
+			&#91;&#91;mailto:&lt;wiklet class='CREATOR' />]]
+		<li><b class='issue'>Issue:</b>
+			This highlights the problem with using a syntax that
+			is like HTML elements. When embedding inside of an
+			attribute, the client will serialize it as
+			&amp;lt;wiklet ... />
 		</ul>
 	</td>
 </tr>
@@ -408,16 +419,16 @@
 		<li>simple:<br>
 			<div class=code>
 			&lt;span class='_toc_simple'&gt;<br>
-			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName1&#93;&lt;/span&gt;<br>
-			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName2&#93;&lt;/span&gt;<br>
+			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/span&gt;<br>
+			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName2&#93;&#93;&lt;/span&gt;<br>
 			&lt;/span&gt;
 			</div>
 
 		<li><i>list</i>:<br>
 			<div class=code>
 			&lt;ul class='_toc_list'&gt;<br>
-			&nbsp;&nbsp;&lt;li class='_pageLink'&gt;&#91;&#91;PageName1&#93;&lt;/li&gt;<br>
-			&nbsp;&nbsp;&lt;li class='_pageLink'&gt;&#91;&#91;PageName1&#93;&lt;/li&gt;<br>
+			&nbsp;&nbsp;&lt;li class='_pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/li&gt;<br>
+			&nbsp;&nbsp;&lt;li class='_pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/li&gt;<br>
 			&nbsp;&nbsp;....<br>
 			&lt;/ul&gt;<br>
 			</div>
@@ -425,22 +436,22 @@
 		<li>bodyTemplate (sample):<br>
 				<div class=code>
 					&lt;table class='_toc_icon_table'&gt;<br>
-					&nbsp;&nbsp;&lt;tr&gt;&lt;td colspan=4 class='_tocHead'&gt;Contents of &#123;&#123;NAME&#125;&#125;&lt;/td&gt;&lt;/tr&gt;<br>
-					&nbsp;&nbsp;&#123;&#123;CONTENT&#125;&#125;
+					&nbsp;&nbsp;&lt;tr&gt;&lt;td colspan=4 class='_tocHead'&gt;Contents of &lt;wiklet class='NAME' />&lt;/td&gt;&lt;/tr&gt;<br>
+					&nbsp;&nbsp;&lt;wiklet class='CONTENT' />
 					&lt;/table&gt;<br>
 				</div>
 			
 		<li>itemTemplate (sample):<br>
 				<div class=code>
 						&lt;tr&gt;<br>
-						&nbsp;&nbsp;&lt;td class='_pageIcon'&gt;&#123;&#123;ICON&#125;&#125;&lt;/td&gt;<br>
-						&nbsp;&nbsp;&lt;td class='_pageLink'&gt;&#123;&#123;NAME&#125;&#125;&lt;/td&gt;<br>
-						&nbsp;&nbsp;&lt;td class='_author'&gt;&bull;&#123;&#123;MODIFIER&#125;&#125;&lt;/td&gt;<br>
-						&nbsp;&nbsp;&lt;td class='_history'&gt;&bull;&#123;&#123;MODIFYDATE&#125;&#125;&lt;/td&gt;<br>
+						&nbsp;&nbsp;&lt;td class='_pageIcon'&gt;&lt;wiklet class='ICON' />&lt;/td&gt;<br>
+						&nbsp;&nbsp;&lt;td class='_pageLink'&gt;&lt;wiklet class='NAME' />&lt;/td&gt;<br>
+						&nbsp;&nbsp;&lt;td class='_author'&gt;&bull;&lt;wiklet class='MODIFIER' />&lt;/td&gt;<br>
+						&nbsp;&nbsp;&lt;td class='_history'&gt;&bull;&lt;wiklet class='MODIFYDATE' />&lt;/td&gt;<br>
 						&lt;/tr&gt;<br>
 						&lt;tr&gt;<br>
 						&nbsp;&nbsp;&lt;td&gt;&lt;/td&gt;<br>
-						&nbsp;&nbsp;&lt;td class='_fragment' colspan='4'&gt;&#123;&#123;FRAGMENT&#125;&#125;&lt;/td&gt;<br>
+						&nbsp;&nbsp;&lt;td class='_fragment' colspan='4'&gt;&lt;wiklet class='FRAGMENT' />&lt;/td&gt;<br>
 						&lt;/tr&gt;<br>
 				</div>
 		</ul>
@@ -472,20 +483,20 @@
 		<li><i>simple</i>:
 			<div class='code'>
 			&lt;span class='_breadcrumbs_simple'&gt;<br>
-			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName1&#93;&lt;/span&gt; &gt;<br>
-			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName2&#93;&lt;/span&gt;<br>
+			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/span&gt; &gt;<br>
+			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName2&#93;&#93;&lt;/span&gt;<br>
 			&lt;/span&gt;<br>
 			</div>
 		<li>bodyTemplate (sample):
 			<div class='code'>
 				&lt;table class='_breadcrumbs_table'&gt;<br>
-				&nbsp;&nbsp;&lt;tr&gt;&#123;&#123;CONTENT&#125;&#125;&lt;/tr&gt;<br>
+				&nbsp;&nbsp;&lt;tr&gt;&lt;wiklet class='CONTENT' />&lt;/tr&gt;<br>
 				&lt;/table&gt;<br>
 			</div>
 		<li>itemTemplate:
 			<div class='code'>
-					&lt;td class='_pageIcon'&gt;&#123;&#123;ICON&#125;&#125;&lt;/td&gt;<br>
-					&lt;td class='_pageLink'&gt;&#123;&#123;NAME&#125;&#125;&lt;/td&gt;<br>
+					&lt;td class='_pageIcon'&gt;&lt;wiklet class='ICON' />&lt;/td&gt;<br>
+					&lt;td class='_pageLink'&gt;&lt;wiklet class='NAME' />&lt;/td&gt;<br>
 					&lt;td class='_breadcrumb_separator'&gt;&nbsp;&gt;&nbsp;&lt;/td&gt;<br>
 			</div>
 		</ul>
@@ -539,21 +550,21 @@
 		<li>simple:
 			<div class='code'>
 			&lt;span class='_attachments_simple'&gt;<br>
-			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName1&#93;&lt;/span&gt; &gt;<br>
-			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName2&#93;&lt;/span&gt;<br>
+			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/span&gt; &gt;<br>
+			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName2&#93;&#93;&lt;/span&gt;<br>
 			&lt;/span&gt;<br>
 			</div>
 			
 		<li>bodyTemplate (sample):
 			<div class='code'>
 				&lt;table class='_breadcrumb_table'&gt;<br>
-				&nbsp;&nbsp;&lt;tr&gt;&#123;&#123;CONTENT&#125;&#125;&lt;/tr&gt;<br>
+				&nbsp;&nbsp;&lt;tr&gt;&lt;wiklet class='CONTENT' />&lt;/tr&gt;<br>
 				&lt;/table&gt;<br>
 			</div>
 
 		<li>itemTemplate (sample):
-					&lt;td class='_pageIcon'&gt;&#123;&#123;ICON&#125;&#125;&lt;/td&gt;<br>
-					&lt;td class='_pageLink'&gt;&#123;&#123;NAME&#125;&#125;&lt;/td&gt;<br>
+					&lt;td class='_pageIcon'&gt;&lt;wiklet class='ICON' />&lt;/td&gt;<br>
+					&lt;td class='_pageLink'&gt;&lt;wiklet class='NAME' />&lt;/td&gt;<br>
 					&lt;td class='_breadcrumb_separator'&gt;&nbsp;&gt;&nbsp;&lt;/td&gt;<br>
 			</div>
 		</ul>
@@ -581,17 +592,17 @@
 					&lt;table class='_history_simple_table'&gt;<br>
 					&nbsp;&nbsp;&lt;tr&gt;<br>
 							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_historyLink'&gt;<br>
-								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;a href="&#123;&#123;REST_LINK_TO_VERSION&#125;&#125;"&gt;Version &#123;&#123;VERSION&#125;&#125;&lt;/a&gt;<br>
+								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;a href="&lt;wiklet class='URL' />?version=&lt;wiklet class='VERSION' />"&gt;Version &lt;wiklet class='VERSION' />&lt;/a&gt;<br>
 							&nbsp;&nbsp;&nbsp;&nbsp;&lt;/td&gt;<br>
-							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_author'&gt;&#123;&#123;MODIFIER&#125;&#125;&lt;/td&gt;<br>
-							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_history'&gt;&#123;&#123;MODIFYDATE&#125;&#125; &#123;&#123;MODIFYTIME&#125;&#125;&lt;/td&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_author'&gt;&lt;wiklet class='MODIFIER' />&lt;/td&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_history'&gt;&lt;wiklet class='MODIFYDATE' format='longdateandtime' /> &lt;/td&gt;<br>
 					&nbsp;&nbsp;&lt;/tr&gt;<br>
 					&nbsp;&nbsp;&lt;tr&gt;<br>
 							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_historyLink'&gt;<br>
-								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;a href="&#123;&#123;REST_LINK_TO_VERSION&#125;&#125;"&gt;Version &#123;&#123;VERSION&#125;&#125;&lt;/a&gt;<br>			
+								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;a href="&lt;wiklet class='URL' />?version=&lt;wiklet class='VERSION' />&lt;/a&gt;<br>
 							&nbsp;&nbsp;&nbsp;&nbsp;&lt;/td&gt;<br>
-							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_author'&gt;&#123;&#123;MODIFIER&#125;&#125;&lt;/td&gt;<br>
-							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_history'&gt;&#123;&#123;MODIFYDATE&#125;&#125; &#123;&#123;MODIFYTIME&#125;&#125;&lt;/td&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_author'&gt;&lt;wiklet class='MODIFIER' />&lt;/td&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_history'&gt;&lt;wiklet class='MODIFYDATE' format='longdateandtime' />&lt;/td&gt;<br>
 					&nbsp;&nbsp;&lt;/tr&gt;<br>
 					&nbsp;&nbsp;...<br>
 					&lt;/table&gt;<br>
