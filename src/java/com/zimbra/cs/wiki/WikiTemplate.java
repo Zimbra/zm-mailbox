@@ -190,7 +190,7 @@ public class WikiTemplate {
 					end = end - 1;
 				} else {
 					int endSection = str.indexOf("</wiklet>", end);
-					padding = endSection - end;
+					padding = endSection - end + 9;
 				}
 				if (end == -1)
 					throw new IllegalArgumentException("parse error: unmatched <wiklet");
