@@ -411,9 +411,11 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
    <name>...</name>
  </SearchGalRequest>
  
- <SearchGalResponse>
+ <SearchGalResponse more="{more}">
    <cn>...</cn>*
  </SearchGalResponse>
+
+  {more-flag} = 1 if the results were truncated.
 
   {type} = type of addresses to search
            "account" for regular user accounts, aliases and distribution lists

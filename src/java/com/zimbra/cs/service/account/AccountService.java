@@ -62,6 +62,9 @@ public class AccountService implements DocumentService {
     public static final QName SEARCH_GAL_REQUEST = QName.get("SearchGalRequest", NAMESPACE);
     public static final QName SEARCH_GAL_RESPONSE = QName.get("SearchGalResponse", NAMESPACE);	
     
+    public static final QName AUTO_COMPLETE_GAL_REQUEST = QName.get("AutoCompleteGalRequest", NAMESPACE);
+    public static final QName AUTO_COMPLETE_GAL_RESPONSE = QName.get("AutoCompleteGalResponse", NAMESPACE);  
+
     public static final QName SYNC_GAL_REQUEST = QName.get("SyncGalRequest", NAMESPACE);
     public static final QName SYNC_GAL_RESPONSE = QName.get("SyncGalResponse", NAMESPACE);  
 
@@ -107,6 +110,9 @@ public class AccountService implements DocumentService {
     public static final String A_NAME = "name";
     public static final String A_ID = "id";
     public static final String A_BY = "by";
+    public static final String A_TYPE = "type";
+    public static final String A_LIMIT = "limit";
+    public static final String A_MORE = "more";    
     public static final String A_ZIMLET = "zimlet";
     public static final String A_ZIMLET_BASE_URL = "baseUrl";
     public static final String A_ZIMLET_PRIORITY = "priority";
@@ -138,6 +144,7 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(GET_ACCOUNT_INFO_REQUEST, new GetAccountInfo());        
         
         dispatcher.registerHandler(SEARCH_GAL_REQUEST, new SearchGal());
+        dispatcher.registerHandler(AUTO_COMPLETE_GAL_REQUEST, new AutoCompleteGal());        
         dispatcher.registerHandler(SYNC_GAL_REQUEST, new SyncGal());        
         dispatcher.registerHandler(SEARCH_CALENDAR_RESOURCES_REQUEST, new SearchCalendarResources());
 

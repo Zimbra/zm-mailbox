@@ -215,6 +215,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
             if (ldapResults != null) {
                 results.matches.addAll(ldapResults.matches);
                 results.token = LdapUtil.getLaterTimestamp(results.token, ldapResults.token);
+                results.hadMore = results.hadMore || ldapResults.hadMore;
             }
         } else {
             results = searchZimbraGal(n, maxResults, null, true);
@@ -234,6 +235,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
             if (resourceResults != null) {
                 results.matches.addAll(resourceResults.matches);
                 results.token = LdapUtil.getLaterTimestamp(results.token, resourceResults.token);
+                results.hadMore = results.hadMore || resourceResults.hadMore;                
             }
         }
         return results;
@@ -350,7 +352,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
             ne.close();
             ne = null;
         } catch (SizeLimitExceededException sle) {
-            // ignore
+            result.hadMore = true;
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to search GAL", e);
         } finally {

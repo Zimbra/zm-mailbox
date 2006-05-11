@@ -880,7 +880,7 @@ public class LdapUtil {
             }
             ne.close();
         } catch (SizeLimitExceededException sle) {
-            // ignore
+            result.hadMore = true;
         } finally {
             closeContext(ctxt);
         }

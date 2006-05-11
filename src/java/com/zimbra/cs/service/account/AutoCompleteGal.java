@@ -45,19 +45,20 @@ import com.zimbra.soap.ZimbraSoapContext;
 /**
  * @author schemers
  */
-public class SearchGal extends DocumentHandler {
+public class AutoCompleteGal extends DocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         String n = request.getAttribute(AccountService.E_NAME);
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AccountService.SEARCH_GAL_RESPONSE);
+        Element response = lc.createElement(AccountService.AUTO_COMPLETE_GAL_RESPONSE);
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
         while (n.endsWith("*"))
             n = n.substring(0, n.length() - 1);
 
-        String typeStr = request.getAttribute(AccountService.A_TYPE, "all");
+        String typeStr = request.getAttribute(AccountService.A_TYPE, "account");
+        int max = (int) request.getAttributeLong(AccountService.A_LIMIT);
         Provisioning.GAL_SEARCH_TYPE type;
         if (typeStr.equals("all"))
             type = Provisioning.GAL_SEARCH_TYPE.ALL;
@@ -68,10 +69,13 @@ public class SearchGal extends DocumentHandler {
         else
             throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
 
-        SearchGalResult result = acct.getDomain().searchGal(n, type, null);
-        response.addAttribute(AccountService.A_MORE, result.hadMore);        
+        SearchGalResult result = acct.getDomain().autoCompleteGal(n, type, max);
+
+        response.addAttribute(AccountService.A_MORE, result.hadMore);
+        
         for (GalContact contact : result.matches)
             addContact(response, contact);
+
         return response;
     }
 
