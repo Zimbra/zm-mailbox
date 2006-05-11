@@ -927,7 +927,7 @@ public class LdapUtil {
         if (timeA == null) {
             return timeB;
         } else if (timeB == null) {
-            return null;
+            return timeA;
         }
         return timeA.compareTo(timeB) > 0 ? timeA : timeB;
     }
