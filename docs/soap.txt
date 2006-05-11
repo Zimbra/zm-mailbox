@@ -754,7 +754,8 @@ message result:
 
 contact result:
 ---------------
-DOCUMENT ME
+<SearchResponse offset="..." more="{more-flag}">
+   <cn id="id" l="folder" sf="SORT-FIELD-VALUE" rev="REVISION"/>
 
 note result:
 ------------
@@ -1307,11 +1308,12 @@ END:VCARD]
 
 NOTE: should we return modified attrs in response?
 
+
 ----------
 
 <GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"]>
   <a n="..."/>*
-  <cn id="{contact-id}"/>*
+  <cn id="{contact-id}[,{contact-id}...]"/>*
 </GetContactsRequest>
 
   if sync="1" present, return modified date (md) on contacts.

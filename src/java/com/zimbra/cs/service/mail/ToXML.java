@@ -299,8 +299,13 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_CONTENT))
             elem.addAttribute(MailService.A_REVISION, contact.getSavedSequence());
 
-        if (summary || !needToOutput(fields, Change.MODIFIED_CONTENT))
-            return elem;
+        if (summary || !needToOutput(fields, Change.MODIFIED_CONTENT)) {
+      	  try {
+      		  elem.addAttribute(MailService.A_FILE_AS_STR, contact.getFileAsString());
+      	  } catch (ServiceException e) { }
+      	  return elem;
+      }
+        
 
         Map<String, String> attrs = contact.getFields();
         if (attrFilter != null) {

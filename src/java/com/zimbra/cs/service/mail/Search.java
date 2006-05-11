@@ -189,7 +189,7 @@ public class Search extends DocumentHandler  {
                 e = addMessagePartHit(response, mph, eecache);                
             } else if (hit instanceof ContactHit) {
                 ContactHit ch = (ContactHit) hit;
-                e = ToXML.encodeContact(response, zc, ch.getContact(), null, true, null);
+                e = ToXML.encodeContact(response, zc, ch.getContact(), null, !inline, null);
             } else if (hit instanceof NoteHit) {
                 NoteHit nh = (NoteHit) hit;
                 e = ToXML.encodeNote(response,zc, nh.getNote());

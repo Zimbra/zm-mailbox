@@ -29,9 +29,12 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Contact;
@@ -45,73 +48,156 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
+import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author schemers
- */
 public class GetContacts extends DocumentHandler  {
 
-    private static final int ALL_FOLDERS = -1;
+	private static final int ALL_FOLDERS = -1;
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(zsc);
-        Mailbox.OperationContext octxt = zsc.getOperationContext();
-        Session session = getSession(context);
+	protected static final String[] TARGET_FOLDER_PATH = new String[] { MailService.A_FOLDER };
+	protected String[] getProxiedIdPath(Element request) {
+		return TARGET_FOLDER_PATH;
+	}
 
-        boolean sync = request.getAttributeBool(MailService.A_SYNC, false);
-        int folderId = (int) request.getAttributeLong(MailService.A_FOLDER, ALL_FOLDERS);
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+		Mailbox mbox = getRequestedMailbox(zsc);
+		Mailbox.OperationContext octxt = zsc.getOperationContext();
+		Session session = getSession(context);
 
-        byte sort = DbMailItem.SORT_NONE;
-        String sortStr = request.getAttribute(MailService.A_SORTBY, "");
-        if (sortStr.equals(MailboxIndex.SortBy.NAME_ASCENDING.toString()))
-            sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_ASCENDING;
-        else if (sortStr.equals(MailboxIndex.SortBy.NAME_DESCENDING.toString()))
-        	sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING;
-        
-        ArrayList<String> attrs = null;
-        ArrayList<Integer> ids = null;
-        for (Element e : request.listElements())
-        	if (e.getName().equals(MailService.E_ATTRIBUTE)) {
-        		String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
-        		if (attrs == null)
-        			attrs = new ArrayList<String>();
-        		attrs.add(name);
-        	} else if (e.getName().equals(MailService.E_CONTACT)) {
-        		int id = (int) e.getAttributeLong(MailService.A_ID);
-        		if (ids == null)
-        			ids = new ArrayList<Integer>();
-        		ids.add(id);
-        	}
-        
-        Element response = zsc.createElement(MailService.GET_CONTACTS_RESPONSE);
-        ContactAttrCache cacache = null;
-        
-        // want to return modified date only on sync-related requests
-        int fields = ToXML.NOTIFY_FIELDS;
-        if (sync)
-        	fields |= Change.MODIFIED_CONFLICT;
-        
-        if (ids != null) {
-        	GetContactOperation op = new GetContactOperation(session, octxt, mbox, Requester.SOAP, ids);
-        	op.schedule();
-        	List<Contact> contacts = op.getResults();
-        	
-        	for (Contact con : contacts) {
-        		if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId()))
-        			ToXML.encodeContact(response, zsc, con, cacache, false, attrs, fields);
-        	}
-        } else {
-        	ItemId iidFolder = new ItemId(mbox, folderId);
-        	GetContactListOperation op = new GetContactListOperation(session, octxt, mbox, Requester.SOAP, iidFolder, sort);
-        	op.schedule();
-        	List<Contact> contacts = op.getResults();
-        	
-        	for (Contact con : contacts)
-        		if (con != null)
-        			ToXML.encodeContact(response, zsc, con, cacache, false, attrs, fields);
-        }
-        return response;
-    }
+		boolean sync = request.getAttributeBool(MailService.A_SYNC, false);
+		String folderIdStr  = request.getAttribute(MailService.A_FOLDER, null);
+		int folderId = ALL_FOLDERS;
+		if (folderIdStr != null) { 
+			ItemId iidFolder = new ItemId(folderIdStr, zsc);
+			if (iidFolder.belongsTo(mbox))
+				folderId = iidFolder.getId();
+			else 
+				throw ServiceException.FAILURE("Got remote folderId: "+folderIdStr+" but did not proxy", null);
+		}
+
+		byte sort = DbMailItem.SORT_NONE;
+		String sortStr = request.getAttribute(MailService.A_SORTBY, "");
+		if (sortStr.equals(MailboxIndex.SortBy.NAME_ASCENDING.toString()))
+			sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_ASCENDING;
+		else if (sortStr.equals(MailboxIndex.SortBy.NAME_DESCENDING.toString()))
+			sort = DbMailItem.SORT_BY_SENDER | DbMailItem.SORT_DESCENDING;
+
+		ArrayList<String> attrs = null;
+		ArrayList<ItemId> ids = null;
+		
+		for (Element e : request.listElements())
+			if (e.getName().equals(MailService.E_ATTRIBUTE)) {
+				String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
+				if (attrs == null)
+					attrs = new ArrayList<String>();
+				attrs.add(name);
+			} else if (e.getName().equals(MailService.E_CONTACT)) {
+				String idStr =  e.getAttribute(MailService.A_ID);
+				String targets[] = idStr.split(",");
+				for (String target : targets) { 
+					ItemId iid = new ItemId(target, zsc);
+					if (ids == null)
+						ids = new ArrayList<ItemId>();
+					ids.add(iid);
+				}
+				
+				// remove it from the request, so we can re-use the request for proxying below
+				e.detach();
+			}
+
+		Element response = zsc.createElement(MailService.GET_CONTACTS_RESPONSE);
+		ContactAttrCache cacache = null;
+
+		// want to return modified date only on sync-related requests
+		int fields = ToXML.NOTIFY_FIELDS;
+		if (sync)
+			fields |= Change.MODIFIED_CONFLICT;
+
+
+		if (ids != null) {
+			ArrayList<Integer> local = new ArrayList<Integer>();
+			HashMap<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
+			partitionItems(zsc, ids, local, remote);
+			
+			if (remote.size() > 0) {
+				if (folderId >0)
+					throw ServiceException.INVALID_REQUEST("Cannot specify a folder with mixed-mailbox items", null);
+
+				List<Element> responses = proxyRemote(request, attrs, sync, sortStr, folderId, remote, context);
+				for (Element e : responses) {
+					response.addElement(e);
+				}
+			}
+			
+			if (local.size() > 0) {
+				GetContactOperation op = new GetContactOperation(session, octxt, mbox, Requester.SOAP, local);
+				op.schedule();
+				List<Contact> contacts = op.getResults();
+				
+				for (Contact con : contacts) {
+					if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId()))
+						ToXML.encodeContact(response, zsc, con, cacache, false, attrs, fields);
+				}
+			}
+			
+		} else {
+			ItemId iidFolder = new ItemId(mbox, folderId);
+			GetContactListOperation op = new GetContactListOperation(session, octxt, mbox, Requester.SOAP, iidFolder, sort);
+			op.schedule();
+			List<Contact> contacts = op.getResults();
+
+			for (Contact con : contacts)
+				if (con != null)
+					ToXML.encodeContact(response, zsc, con, cacache, false, attrs, fields);
+		}
+		return response;
+	}
+
+
+	private void partitionItems(ZimbraSoapContext lc, ArrayList<ItemId> ids, ArrayList<Integer> local, HashMap<String, StringBuffer> remote) throws ServiceException {
+		Account acct = getRequestedAccount(lc);
+		for (ItemId iid : ids) {
+			if (iid.belongsTo(acct))
+				local.add(iid.getId());
+			else {
+				StringBuffer sb = remote.get(iid.getAccountId());
+				if (sb == null)
+					remote.put(iid.getAccountId(), new StringBuffer(iid.toString()));
+				else
+					sb.append(',').append(iid.toString());
+			}
+		}
+	}
+	
+	private List<Element> proxyRemote(Element request, ArrayList<String> attrs, boolean sync, String sortStr, int folderId, Map<String, StringBuffer>  remote, Map<String,Object> context)
+	throws ServiceException {
+		Element cn = request.addElement(MailService.E_CONTACT);
+		
+		List<Element> responses = new ArrayList<Element>();
+		
+		for (Iterator it = remote.entrySet().iterator(); it.hasNext(); ) {
+			Map.Entry entry = (Map.Entry) it.next();
+			
+			cn.addAttribute(MailService.A_ID, entry.getValue().toString());
+			
+			try {
+				Element response = proxyRequest(request, context, entry.getKey().toString());
+				extractResponses(response, responses);
+			} catch (SoapFaultException e) {
+				throw ServiceException.FAILURE("SoapFaultException: "+e.toString(), e);
+			}
+		}
+	
+		return responses;
+	}
+	
+	protected void extractResponses(Element responseElt, List<Element> responses) {
+		for (Element e : responseElt.listElements(MailService.E_CONTACT)) {
+			e.detach();
+			responses.add(e);
+		}
+	}
+
 }

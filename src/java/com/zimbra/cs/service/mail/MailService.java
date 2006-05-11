@@ -265,7 +265,8 @@ public class MailService implements DocumentService {
     public static final String A_STATUS = "status";
     public static final String A_EXCLUDE_FREEBUSY = "excludeFreeBusy";
     public static final String A_SORT_FIELD = "sf";    
-
+    public static final String A_FILE_AS_STR = "fileAsStr";
+    
     // object actions
     public static final String A_OBJECT = "obj";
     public static final String A_OBJECT_TYPE = "ot";
