@@ -194,7 +194,7 @@ public class MimeCompoundHeader {
             if (value == null)
                 setValue(Mime.CT_DEFAULT);
             else {
-                value = value.trim();
+                value = value.trim().toLowerCase();
                 int slash = value.indexOf('/');
                 if (slash <= 0 || slash >= value.length() - 1)
                     setValue(Mime.CT_DEFAULT);
