@@ -66,8 +66,8 @@ public class WikiFormatter extends Formatter {
     	context.resp.getOutputStream().print(template);
     }
 
-    private static final String TOC = "_INDEX_";
-    private static final String CHROME = "_CHROME_";
+    private static final String TOC = "_Index";
+    private static final String CHROME = "_Template";
     
     private WikiTemplate getTemplate(Context context, Folder folder, String name) throws IOException, ServiceException {
     	WikiTemplateStore wiki = WikiTemplateStore.getInstance(context.authAccount.getId(), folder.getId());
