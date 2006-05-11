@@ -162,29 +162,36 @@ public class ToXML {
                 elem.addAttribute(MailService.A_URL, url);
             }
         }
-        if (lc.isDelegatedRequest())
+        boolean remote = lc.isDelegatedRequest(), canAdminister = !remote;
+        if (remote) {
+            // return only effective permissions for remote folders
             try {
                 Mailbox.OperationContext octxt = lc.getOperationContext();
                 short perms = folder.getMailbox().getEffectivePermissions(octxt, folder.getId(), MailItem.TYPE_FOLDER);
                 elem.addAttribute(MailService.A_RIGHTS, ACL.rightsToString(perms));
+                canAdminister = (perms & ACL.RIGHT_ADMIN) != 0;
             } catch (ServiceException e) {
                 mLog.warn("ignoring exception while fetching effective permissions for folder " + folder.getId(), e);
             }
-        if (needToOutput(fields, Change.MODIFIED_ACL)) {
-            ACL acl = folder.getPermissions();
-            if (acl != null || fields != NOTIFY_FIELDS) {
-                Element eACL = elem.addUniqueElement(MailService.E_ACL);
-                if (acl != null)
-                    for (Iterator it = acl.grantIterator(); it.hasNext(); ) {
-                        ACL.Grant grant = (ACL.Grant) it.next();
-                        NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
-                        eACL.addElement(MailService.E_GRANT)
-                            .addAttribute(MailService.A_ZIMBRA_ID, grant.getGranteeId())
-                            .addAttribute(MailService.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
-                            .addAttribute(MailService.A_INHERIT, grant.isGrantInherited())
-                            .addAttribute(MailService.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
-                            .addAttribute(MailService.A_DISPLAY, nentry == null ? null : nentry.getName());
-                    }
+        }
+        if (canAdminister) {
+            // return full ACLs for folders we have admin rights on
+            if (needToOutput(fields, Change.MODIFIED_ACL)) {
+                ACL acl = folder.getPermissions();
+                if (acl != null || fields != NOTIFY_FIELDS) {
+                    Element eACL = elem.addUniqueElement(MailService.E_ACL);
+                    if (acl != null)
+                        for (Iterator it = acl.grantIterator(); it.hasNext(); ) {
+                            ACL.Grant grant = (ACL.Grant) it.next();
+                            NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
+                            eACL.addElement(MailService.E_GRANT)
+                                .addAttribute(MailService.A_ZIMBRA_ID, grant.getGranteeId())
+                                .addAttribute(MailService.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
+                                .addAttribute(MailService.A_INHERIT, grant.isGrantInherited())
+                                .addAttribute(MailService.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
+                                .addAttribute(MailService.A_DISPLAY, nentry == null ? null : nentry.getName());
+                        }
+                }
             }
         }
         return elem;

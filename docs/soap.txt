@@ -609,7 +609,7 @@ Conversations:
                  
 Folders:
 
-  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"] [url="{remote-url}"]>
+  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"] [url="{remote-url}"] [perm="{effective-perms}"]>
     [<acl> <grant perm="{rights}" gt="{grantee-type}" d="{grantee-name}" [inh="0|1"]/>* </acl>]
   </folder>
 
@@ -623,11 +623,12 @@ Folders:
   {default-type} = (optional) default type for the folder; used by web client to decide which view to use;
                    possible values are the same as <SearchRequest>'s {types}: conversation|message|contact|appointment|note
   {remote-url}   = url (RSS, iCal, etc.) this folder syncs its contents to
-  {exclude-free-busy} = 1 if this folder is set (via FolderAction) to be excluded from Free-Busy calculations
+  {effective-perms} = for remote folders, the access rights the authenticated user has on the folder
 
-  folders can have an optional ACL set on them for sharing.  if they do, an <acl> element
-    will be returned containing 1 or more <grant> elements, with the following attributes:
-    
+  folders can have an optional ACL set on them for sharing.  if they do (and the authenticated
+    user has (a)dminister rights on the folder), an <acl> element will be returned containing
+    1 or more <grant> elements, with the following attributes:
+
     {rights}       = some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister, workflow action (x)
     {grantee-type} = the type of grantee: "usr", "grp", "dom" (domain), "cos", "all" (all authenticated users), "pub" (public authenticated and unauthenticated access)
     {grantee-name} = the display name (*not* the zimbra id) of the principal being granted rights;
