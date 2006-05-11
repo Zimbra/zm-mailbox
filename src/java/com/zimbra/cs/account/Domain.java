@@ -75,12 +75,24 @@ public interface Domain extends NamedEntry {
                                      String token)
     throws ServiceException;
     
-    public Map getAttrs(boolean applyConfig) throws ServiceException;
     
     public static class SearchGalResult {
         public String token;
         public List<GalContact> matches;
+        public boolean hadMore; // for auto-complete only
     }
+
+    /**
+     * 
+     * @param query LDAP search query
+     * @param type address type to auto complete
+     * @param limit max number to return
+     * @return List of GalContact objects
+     * @throws ServiceException
+     */
+    public SearchGalResult autoCompleteGal(String query, Provisioning.GAL_SEARCH_TYPE type, int limit) throws ServiceException;
+
+    public Map getAttrs(boolean applyConfig) throws ServiceException;
 
     /**
      * @param filter search filter

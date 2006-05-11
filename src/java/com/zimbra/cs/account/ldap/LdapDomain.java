@@ -64,6 +64,12 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
     private static final String DATA_GAL_ATTR_MAP = "GAL_ATTRS_MAP";
     private static final String DATA_GAL_ATTR_LIST = "GAL_ATTR_LIST";
 
+    private static final String GAL_FILTER_ZIMBRA_ACCOUNTS = "zimbraAccounts";
+    private static final String GAL_FILTER_ZIMBRA_CALENDAR_RESOURCES = "zimbraResources";
+    
+    private static final String GAL_FILTER_ZIMBRA_ACCOUNT_AUTO_COMPLETE = "zimbraAccountAutoComplete";
+    private static final String GAL_FILTER_ZIMBRA_CALENDAR_RESOURCE_AUTO_COMPLETE = "zimbraResourceAutoComplete";    
+
     private LdapProvisioning mProv;
    
     LdapDomain(String dn, Attributes attrs, LdapProvisioning prov) {
@@ -136,12 +142,12 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
 
         int maxResults = token != null ? 0 : getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS);
         if (type == Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE)
-            return searchResourcesGal(n, maxResults, token);
+            return searchResourcesGal(n, maxResults, token, false);
 
         String mode = getAttr(Provisioning.A_zimbraGalMode);
         SearchGalResult results = null;
         if (mode == null || mode.equals(Provisioning.GM_ZIMBRA)) {
-            results = searchZimbraGal(n, maxResults, token);
+            results = searchZimbraGal(n, maxResults, token, false);
         } else if (mode.equals(Provisioning.GM_LDAP)) {
             results = searchLdapGal(n, maxResults, token);
         } else if (mode.equals(Provisioning.GM_BOTH)) {
@@ -152,14 +158,14 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
             }
             if (tokens == null) tokens = new String[] {null, null}; 
                 
-            results = searchZimbraGal(n, maxResults/2, tokens[0]);
+            results = searchZimbraGal(n, maxResults/2, tokens[0], false);
             SearchGalResult ldapResults = searchLdapGal(n, maxResults/2, tokens[1]);
             if (ldapResults != null) {
                 results.matches.addAll(ldapResults.matches);
                 results.token = LdapUtil.getLaterTimestamp(results.token, ldapResults.token);
             }
         } else {
-            results = searchZimbraGal(n, maxResults, token);
+            results = searchZimbraGal(n, maxResults, token, false);
         }
         if (results == null) results = new SearchGalResult();
         if (results.matches == null) results.matches = new ArrayList<GalContact>();
@@ -167,23 +173,71 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         if (type == Provisioning.GAL_SEARCH_TYPE.ALL) {
             SearchGalResult resourceResults = null;
             if (maxResults == 0)
-                resourceResults = searchResourcesGal(n, 0, token);
+                resourceResults = searchResourcesGal(n, 0, token, false);
             else {
                 int room = maxResults - results.matches.size();
                 if (room > 0)
-                    resourceResults = searchResourcesGal(n, room, token);
+                    resourceResults = searchResourcesGal(n, room, token, false);
             }
             if (resourceResults != null) {
                 results.matches.addAll(resourceResults.matches);
                 results.token = LdapUtil.getLaterTimestamp(results.token, resourceResults.token);
             }
         }
-
         return results;
     }
     
-    private static final String GAL_FILTER_ZIMBRA_ACCOUNTS = "zimbraAccounts";
-    private static final String GAL_FILTER_ZIMBRA_CALENDAR_RESOURCES = "zimbraResources";
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see com.zimbra.cs.account.Provisioning#searchGal(java.lang.String)
+     */
+    public SearchGalResult autoCompleteGal(String n, Provisioning.GAL_SEARCH_TYPE type, int max) throws ServiceException 
+    {
+        // escape user-supplied string
+        n = LdapUtil.escapeSearchFilterArg(n);
+
+        int maxResults = max; //token != null ? 0 : getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS);
+        if (type == Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE)
+            return searchResourcesGal(n, maxResults, null, true);
+
+        String mode = getAttr(Provisioning.A_zimbraGalMode);
+        SearchGalResult results = null;
+        if (mode == null || mode.equals(Provisioning.GM_ZIMBRA)) {
+            results = searchZimbraGal(n, maxResults, null, true);
+        } else if (mode.equals(Provisioning.GM_LDAP)) {
+            results = searchLdapGal(n, maxResults, null);
+        } else if (mode.equals(Provisioning.GM_BOTH)) {
+            String tokens[] = null;
+            results = searchZimbraGal(n, maxResults/2, null, true);
+            SearchGalResult ldapResults = searchLdapGal(n, maxResults/2, null);
+            if (ldapResults != null) {
+                results.matches.addAll(ldapResults.matches);
+                results.token = LdapUtil.getLaterTimestamp(results.token, ldapResults.token);
+            }
+        } else {
+            results = searchZimbraGal(n, maxResults, null, true);
+        }
+        if (results == null) results = new SearchGalResult();
+        if (results.matches == null) results.matches = new ArrayList<GalContact>();
+
+        if (type == Provisioning.GAL_SEARCH_TYPE.ALL) {
+            SearchGalResult resourceResults = null;
+            if (maxResults == 0)
+                resourceResults = searchResourcesGal(n, 0, null, true);
+            else {
+                int room = maxResults - results.matches.size();
+                if (room > 0)
+                    resourceResults = searchResourcesGal(n, room, null, true);
+            }
+            if (resourceResults != null) {
+                results.matches.addAll(resourceResults.matches);
+                results.token = LdapUtil.getLaterTimestamp(results.token, resourceResults.token);
+            }
+        }
+        return results;
+    }
 
     public static String getFilterDef(String name) throws ServiceException {
         String queryExprs[] = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraGalLdapFilterDef);
@@ -221,16 +275,16 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         return (Map) getCachedData(DATA_GAL_ATTR_MAP);
     }
 
-    private SearchGalResult searchResourcesGal(String n, int maxResults, String token)
+    private SearchGalResult searchResourcesGal(String n, int maxResults, String token, boolean autoComplete)
     throws ServiceException {
         return searchZimbraWithNamedFilter(
-                GAL_FILTER_ZIMBRA_CALENDAR_RESOURCES, n, maxResults, token);
+                autoComplete ? GAL_FILTER_ZIMBRA_CALENDAR_RESOURCE_AUTO_COMPLETE : GAL_FILTER_ZIMBRA_CALENDAR_RESOURCES, n, maxResults, token);
     }
 
-    private SearchGalResult searchZimbraGal(String n, int maxResults, String token)
+    private SearchGalResult searchZimbraGal(String n, int maxResults, String token, boolean autoComplete)
     throws ServiceException {
         return searchZimbraWithNamedFilter(
-                GAL_FILTER_ZIMBRA_ACCOUNTS, n, maxResults, token);
+                autoComplete ? GAL_FILTER_ZIMBRA_ACCOUNT_AUTO_COMPLETE : GAL_FILTER_ZIMBRA_ACCOUNTS, n, maxResults, token);
     }
 
     private SearchGalResult searchZimbraWithNamedFilter(

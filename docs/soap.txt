@@ -420,6 +420,26 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
            "resource" for calendar resources
            "all" for combination of both types
            if omitted, defaults to "all"
+           
+----------------------------
+
+ <AutoCompleteGalRequest [type="{type}"] limit="limit-returned">
+   <name>...</name>
+ </AutoCompleteGalRequest>
+ 
+ <AutoCompleteGalResponse more="{more}">
+   <cn>...</cn>*
+ </AutoCompleteGalResponse>
+
+  {limit} = an integer specifying the maximum number of results to return
+
+  {type} = type of addresses to auto-complete on
+           "account" for regular user accounts, aliases and distribution lists
+           "resource" for calendar resources
+           "all" for combination of both types
+           if omitted, defaults to "accounts"
+           
+  {more-flag} = 1 if the results were truncated.
 
 ----------------------------
 

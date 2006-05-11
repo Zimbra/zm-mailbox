@@ -67,6 +67,7 @@ public class ProvUtil {
         System.out.println("  SetAccountCos(sac) {name@domain|id} {cos-name|cos-id}");        
         System.out.println("  SearchAccounts(sa) [-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [applyCos [0|1*] [domain {domain}]");
         System.out.println("  SearchGal(sg) {domain} {name}");
+        System.out.println("  AutoCompleteGal(acg) {domain} {name}");
         System.out.println("  RenameAccount(ra) {name@domain|id} {newName@domain}");
         System.out.println("  GetAccountGroups(gag) {name@domain|id}");        
         System.out.println("  GetAccountMembership(gam) {name@domain|id}");
@@ -201,9 +202,10 @@ public class ProvUtil {
     private static final int SEARCH_ACCOUNTS = 801;
     private static final int SEARCH_GAL = 802;
     private static final int SYNC_GAL = 803;
+    private static final int AUTO_COMPLETE_GAL = 804;    
     
-    private static final int GENERATE_DOMAIN_PRE_AUTH_KEY =  804;
-    private static final int GENERATE_DOMAIN_PRE_AUTH =  805;
+    private static final int GENERATE_DOMAIN_PRE_AUTH_KEY =  820;
+    private static final int GENERATE_DOMAIN_PRE_AUTH =  821;
 
     private static final int CREATE_CALENDAR_RESOURCE   = 901;
     private static final int DELETE_CALENDAR_RESOURCE   = 902;
@@ -265,6 +267,7 @@ public class ProvUtil {
         addCommand("searchAccounts", "sa", SEARCH_ACCOUNTS);                
         addCommand("renameAccount", "ra", RENAME_ACCOUNT);
         addCommand("searchGal", "sg", SEARCH_GAL);                                
+        addCommand("autoCompleteGal", "acg", AUTO_COMPLETE_GAL);        
         addCommand("syncGal", "syg", SYNC_GAL);
     
         addCommand("createDomain", "cd", CREATE_DOMAIN);
@@ -342,6 +345,9 @@ public class ProvUtil {
         case ADD_ACCOUNT_ALIAS:
             doAddAccountAlias(args); 
             break;
+        case AUTO_COMPLETE_GAL:
+            doAutoCompleteGal(args); 
+            break;            
         case COPY_ACCOUNT:
             doCopyAccount(args); 
             break;            
@@ -1045,6 +1051,39 @@ public class ProvUtil {
             dumpContact(contact);
     }    
 
+    private void doAutoCompleteGal(String[] args) throws ServiceException {
+        boolean verbose = false;
+        int i = 1;
+        
+        if (args.length < i+1) {
+            usage();
+            return;
+        }
+
+        if (args[i].equals("-v")) {
+            verbose = true;
+            i++;
+            if (args.length < i-1) {
+                usage();
+                return;
+            }
+        }
+        
+        if (args.length < i+2) {
+            usage();
+            return;
+        }
+
+        String domain = args[i];
+        String query = args[i+1];
+        
+        Domain d = lookupDomain(domain);
+
+        SearchGalResult result = d.autoCompleteGal(query, Provisioning.GAL_SEARCH_TYPE.ALL, 100);
+        for (GalContact contact : result.matches)
+            dumpContact(contact);
+    }    
+    
     private void doSyncGal(String[] args) throws ServiceException {
         boolean verbose = false;
         int i = 1;
