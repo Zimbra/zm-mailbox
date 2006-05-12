@@ -304,7 +304,7 @@ public class UserServlet extends ZimbraServlet {
     		 * format   -> html
     		 */
     		String path = context.itemPath;
-    		String dir = null, name = null, fullName = null, format = null;
+    		String dir = "/", name = path, fullName = path, format = null;
     		
     		int pos = path.lastIndexOf('/');
             if (pos != -1) {
@@ -320,22 +320,22 @@ public class UserServlet extends ZimbraServlet {
                 	path = path.substring(0, dot);
                 }
             }
-    		if (dir != null) {
-        		MailItem item = context.targetMailbox.getFolderByPath(context.opContext, dir);
-        		if (item instanceof Folder && ((Folder)item).getDefaultView() == MailItem.TYPE_WIKI) {
-        			Folder f = (Folder) item;
-        			List<? extends MailItem> itemList = context.targetMailbox.getWikiList(context.opContext, f.getId());
-        			MailItem matchedItem = null;
-        			for (MailItem mi : itemList) {
-        				if (mi.getSubject().toLowerCase().equals(fullName))
-        					return mi;
-        				if (mi.getSubject().toLowerCase().equals(name))
-        					matchedItem = mi;
-        			}
-        			if (matchedItem != null)
-        				return matchedItem;
-        		}
+
+    		MailItem item = context.targetMailbox.getFolderByPath(context.opContext, dir);
+    		if (item instanceof Folder) {
+    			Folder f = (Folder) item;
+    			List<? extends MailItem> itemList = context.targetMailbox.getWikiList(context.opContext, f.getId());
+    			MailItem matchedItem = null;
+    			for (MailItem mi : itemList) {
+    				if (mi.getSubject().toLowerCase().equals(fullName))
+    					return mi;
+    				if (mi.getSubject().toLowerCase().equals(name))
+    					matchedItem = mi;
+    			}
+    			if (matchedItem != null)
+    				return matchedItem;
     		}
+
     		context.format = format;
     		return context.targetMailbox.getFolderByPath(context.opContext, path);
     	}
