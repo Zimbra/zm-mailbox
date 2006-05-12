@@ -316,15 +316,16 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         return searchZimbraWithQuery(query, maxResults, token);
     }
 
-    private SearchGalResult searchZimbraWithQuery(
-        String query,
-        int maxResults,
-        String token)
-    throws ServiceException {
+    private SearchGalResult searchZimbraWithQuery(String query, int maxResults, String token)
+        throws ServiceException 
+    {
         SearchGalResult result = new SearchGalResult();
         result.matches = new ArrayList<GalContact>();
         if (query == null)
             return result;
+
+        // filter out hidden entries
+        query = "(&("+query+")(!(zimbraHideInGal=TRUE)))";
 
         Map galAttrMap = getGalAttrMap();
         String[] galAttrList = getGalAttrList();
@@ -335,7 +336,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         DirContext ctxt = null;
         NamingEnumeration ne = null;
         try {
-            ctxt = LdapUtil.getDirContext(false, true);
+            ctxt = LdapUtil.getDirContext(false);
             ne = ctxt.search("ou=people,"+getDN(), query, sc);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();

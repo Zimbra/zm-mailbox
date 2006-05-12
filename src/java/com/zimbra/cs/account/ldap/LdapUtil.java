@@ -80,9 +80,7 @@ public class LdapUtil {
     private static String sLdapURL;
     private static String sLdapMasterURL;    
     
-    private static Hashtable<String, String> sEnvMasterAnon;
     private static Hashtable<String, String> sEnvMasterAuth;
-    private static Hashtable<String, String> sEnvAnon;
     private static Hashtable<String, String> sEnvAuth;
     private static String[] sEmptyMulti = new String[0];
 
@@ -138,32 +136,22 @@ public class LdapUtil {
      * @return
      * @throws NamingException
      */
-    private static synchronized Hashtable getDefaultEnv(boolean master, boolean anonymous) {
+    private static synchronized Hashtable getDefaultEnv(boolean master) {
         Hashtable<String, String> sEnv = null;
         
-        if  (master && anonymous) {
-            if (sEnvMasterAnon != null) return sEnvMasterAnon;
-            else sEnv = sEnvMasterAnon = new Hashtable<String, String>();
-        } else if (master && !anonymous) {
+        if (master) {
             if (sEnvMasterAuth != null) return sEnvMasterAuth;
             else sEnv = sEnvMasterAuth = new Hashtable<String, String>(); 
-        } else if (!master && anonymous) {
-            if (sEnvAnon != null) return sEnvAnon;
-            else sEnv = sEnvAnon = new Hashtable<String, String>(); 
-        } else if (!master && !anonymous) {
+        } else {
             if (sEnvAuth != null) return sEnvAuth;
             else sEnv = sEnvAuth = new Hashtable<String, String>();             
         }
 
         sEnv.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         sEnv.put(Context.PROVIDER_URL, master ? sLdapMasterURL : sLdapURL);
-        if (!anonymous) {
-            sEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
-            sEnv.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
-            sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
-        } else {
-            sEnv.put(Context.SECURITY_AUTHENTICATION, "none");
-        }
+        sEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
+        sEnv.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
+        sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
         sEnv.put(Context.REFERRAL, "follow");
             
         // wait at most 10 seconds for a connection
@@ -184,25 +172,16 @@ public class LdapUtil {
     public static DirContext getDirContext() throws ServiceException {
         return getDirContext(false);
     }
- 
-    /**
-     * 
-     * @return
-     * @throws NamingException
-     */
-    public static DirContext getDirContext(boolean master) throws ServiceException {
-        return getDirContext(master, false);
-    }
 
     /**
      * 
      * @return
      * @throws NamingException
      */
-    public static DirContext getDirContext(boolean master, boolean anonymous) throws ServiceException {
+    public static DirContext getDirContext(boolean master) throws ServiceException {
         try {
             long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
-            DirContext dirContext = new InitialLdapContext(getDefaultEnv(master, anonymous), null);
+            DirContext dirContext = new InitialLdapContext(getDefaultEnv(master), null);
             ZimbraPerf.STOPWATCH_LDAP_DC.stop(start);
             //ZimbraLog.account.error("getDirContext", new RuntimeException("------------------- OPEN"));
             return dirContext;
