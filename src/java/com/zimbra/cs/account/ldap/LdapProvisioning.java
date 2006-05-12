@@ -2951,7 +2951,7 @@ public class LdapProvisioning extends Provisioning {
     
     static List<DistributionList> getDistributionLists(String addrs[], boolean directOnly, Map<String, String> via) throws ServiceException {
         List<DistributionList> directDLs = Provisioning.getInstance().getAllDistributionListsForAddresses(addrs); 
-        
+        HashSet<String> directDLSet = new HashSet<String>();
         HashSet<String> checked = new HashSet<String>();
         List<DistributionList> result = new ArrayList<DistributionList>();        
 
@@ -2959,6 +2959,7 @@ public class LdapProvisioning extends Provisioning {
         
         for (DistributionList dl : directDLs) {
             dlsToCheck.push(dl);
+            directDLSet.add(dl.getName());
         }
 
         while (!dlsToCheck.isEmpty()) {
@@ -2969,7 +2970,7 @@ public class LdapProvisioning extends Provisioning {
             if (directOnly) continue;
             List<DistributionList> newLists = dl.getDistributionLists(true, null);
             for (DistributionList newDl: newLists) {
-                if (via != null) via.put(newDl.getName(), dl.getName());
+                if (via != null && !directDLSet.contains(newDl.getName())) via.put(newDl.getName(), dl.getName());
                 dlsToCheck.push(newDl);
             }
         }
