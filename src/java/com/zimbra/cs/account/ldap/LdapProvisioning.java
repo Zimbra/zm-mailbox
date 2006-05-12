@@ -2970,8 +2970,10 @@ public class LdapProvisioning extends Provisioning {
             if (directOnly) continue;
             List<DistributionList> newLists = dl.getDistributionLists(true, null);
             for (DistributionList newDl: newLists) {
-                if (via != null && !directDLSet.contains(newDl.getName())) via.put(newDl.getName(), dl.getName());
-                dlsToCheck.push(newDl);
+                if (!directDLSet.contains(newDl.getName())) {
+                    if (via != null) via.put(newDl.getName(), dl.getName());
+                    dlsToCheck.push(newDl);
+                }
             }
         }
         Collections.sort(result);
