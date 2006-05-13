@@ -13,7 +13,7 @@
 	._breadcrumbHeader,
 	._logoHeader,
 	._titleHeader {
-		background-color:#ffddbf;
+		background-color:#cccccc;
 	}
 
 	._logoHeader {
@@ -41,7 +41,7 @@
 	
 	._sidebarContainer {
 		Xwidth:150px;
-		background-color:#ffddbf;
+		background-color:#cccccc;
 	}
 	
 	._contentContainer {
@@ -125,7 +125,7 @@
 	}
 	
 	._tocHeader {
-		background-color:#ffddbf;
+		background-color:#cccccc;
 		font-size:13px;
 		font-weight:bold;
 	}

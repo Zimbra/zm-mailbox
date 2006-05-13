@@ -461,7 +461,7 @@
         </waitfor>
         <echo>LmtpInject messages</echo>
         <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${zimbra.server.hostname} -s ho@example.zimbra.com -d" />
+            <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${zimbra.server.hostname} -s user1@example.zimbra.com -d" />
             <arg path="data/testmsg" />
         </java>
     </target>
