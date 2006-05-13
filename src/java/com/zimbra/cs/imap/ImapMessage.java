@@ -29,15 +29,14 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.internet.*;
 
@@ -49,8 +48,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
-import com.zimbra.cs.mime.MimeVisitor;
-import com.zimbra.cs.util.ZimbraLog;
 
 
 class ImapMessage {
@@ -296,8 +293,7 @@ class ImapMessage {
                 // 7.4.2: "A body type of type TEXT contains, immediately after the basic fields, the
                 //         size of the body in text lines.  Note that this size is the size in its
                 //         content transfer encoding and not the resulting size after any decoding."
-                // FIXME: JavaMail's implementation of this always returns -1
-                ps.write(' ');  ps.print(Math.max(mp.getLineCount(), 0));
+                ps.write(' ');  ps.print(getLineCount(mp));
             }
             if (extensions && !rfc822)
                 ;   // FIXME: not implementing BODYSTRUCTURE extensions yet
@@ -305,113 +301,22 @@ class ImapMessage {
         ps.write(')');
     }
 
+    private static int getLineCount(MimePart mp) {
+        InputStream is = null;
+        try {
+            if (mp instanceof MimeBodyPart)      is = ((MimeBodyPart) mp).getRawInputStream();
+            else if (mp instanceof MimeMessage)  is = ((MimeMessage) mp).getRawInputStream();
+            else                                 return 0;
 
-    static class WindowsMobile5Converter extends MimeVisitor {
-        protected boolean visitBodyPart(MimeBodyPart bp)  { return false; }
-
-        protected boolean visitMessage(MimeMessage mm, VisitPhase visitKind) throws MessagingException {
-            if (visitKind != VisitPhase.VISIT_BEGIN)
-                return false;
-            // only want to affect multipart/alternative messages
-            String ctype = Mime.getContentType(mm);
-            if (!ctype.equals(Mime.CT_MULTIPART_ALTERNATIVE))
-                return false;
-
-            BodyPart bp = null;
-            try {
-                Object content = Mime.getMultipartContent(mm, ctype);
-                if (content instanceof MimeMultipart)
-                    bp = getPrimaryPart((MimeMultipart) content);
-            } catch (IOException e) {
-                ZimbraLog.extensions.warn("exception while traversing message; skipping", e);
-            } catch (MessagingException e) {
-                ZimbraLog.extensions.warn("exception while traversing message; skipping", e);
-            }
-            if (bp == null)
-                return false;
-            // check to make sure that the caller's OK with altering the message
-            if (mCallback != null && !mCallback.onModification())
-                return false;
-            // and put the selected part where the multipart/alternative used to be
-            mm.setDataHandler(bp.getDataHandler());
-            return true;
-        }
-        
-        protected boolean visitMultipart(MimeMultipart multi, VisitPhase visitKind) throws MessagingException {
-            if (visitKind != VisitPhase.VISIT_BEGIN)
-                return false;
-            // we should never hit a multipart/alternative part -- ever
-            if (Mime.getContentType(multi).equals(Mime.CT_MULTIPART_ALTERNATIVE)) {
-                ZimbraLog.extensions.warn("unexpected multipart/alternative found; skipping");
-                return false;
-            }
-
-            Map<Integer, BodyPart> replacements = null;
-            try {
-                for (int i = 0; i < multi.getCount(); i++) {
-                    BodyPart bp = multi.getBodyPart(i);
-                    String ctype = Mime.getContentType(bp);
-                    if (ctype.equals(Mime.CT_MULTIPART_ALTERNATIVE) && bp instanceof MimeBodyPart) {
-                        Object content = Mime.getMultipartContent((MimeBodyPart) bp, ctype);
-                        if (content instanceof MimeMultipart) {
-                            BodyPart subpart = getPrimaryPart((MimeMultipart) content);
-                            if (subpart != null) {
-                                if (replacements == null)
-                                    replacements = new HashMap<Integer, BodyPart>();
-                                replacements.put(i, subpart);
-                            }
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                ZimbraLog.extensions.warn("exception while traversing multipart; skipping", e);
-            } catch (MessagingException e) {
-                ZimbraLog.extensions.warn("exception while traversing multipart; skipping", e);
-            }
-            if (replacements == null || replacements.isEmpty())
-                return false;
-            // check to make sure that the caller's OK with altering the message
-            if (mCallback != null && !mCallback.onModification())
-                return false;
-            // and put the selected parts where the multipart/alternatives used to be
-            for (Map.Entry<Integer, BodyPart> entry : replacements.entrySet()) {
-                multi.removeBodyPart(entry.getKey());
-                multi.addBodyPart(entry.getValue(), entry.getKey());
-            }
-            return true;
-        }
-
-        private static Map<String, Integer> typeRankings = new HashMap<String, Integer>();
-            static {
-                typeRankings.put(Mime.CT_TEXT_HTML, 1);
-                typeRankings.put(Mime.CT_TEXT_PLAIN, 2);
-                typeRankings.put(Mime.CT_TEXT_CALENDAR, 3);
-            }
-
-        private BodyPart getPrimaryPart(MimeMultipart multi) throws MessagingException, IOException {
-            BodyPart primary = null;
-            int primaryRank = 0;
-            for (int i = 0; i < multi.getCount(); i++) {
-                BodyPart subpart = multi.getBodyPart(i);
-                String ctype = Mime.getContentType(subpart);
-                if (ctype.equals(Mime.CT_MULTIPART_ALTERNATIVE) && subpart instanceof MimeBodyPart) {
-                    Object content = Mime.getMultipartContent((MimeBodyPart) subpart, ctype);
-                    if (content instanceof MimeMultipart) {
-                        subpart = getPrimaryPart((MimeMultipart) content);
-                        if (subpart == null)
-                            continue;
-                        ctype = Mime.getContentType(subpart);
-                    }
-                }
-                Integer rank = typeRankings.get(ctype);
-                if (rank == null)
-                    rank = 0;
-                if (primary == null || rank > primaryRank) {
-                    primary = subpart;
-                    primaryRank = rank;
-                }
-            }
-            return primary;
+            int lines = 0, c;
+            while ((c = is.read()) != -1)
+                if (c == '\n')
+                    lines++;
+            return lines;
+        } catch (MessagingException e) {
+            return 0;
+        } catch (IOException e) {
+            return 0;
         }
     }
 }
