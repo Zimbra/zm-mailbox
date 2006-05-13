@@ -251,53 +251,6 @@ public class ImapSession extends Session {
         return mHandler.getZimbraFormat();
     }
 
-    void subscribe(Folder folder) throws ServiceException {
-        Mailbox mbox = folder.getMailbox();
-        if (!folder.isTagged(mbox.mSubscribeFlag))
-            mbox.alterTag(null, folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, true);
-    }
-    void unsubscribe(Folder folder) throws ServiceException {
-        Mailbox mbox = folder.getMailbox();
-        if (folder.isTagged(mbox.mSubscribeFlag))
-            mbox.alterTag(null, folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, false);
-    }
-    Map<String, String> getMatchingSubscriptions(Mailbox mbox, String pattern) throws ServiceException {
-        String childPattern = pattern + "/.*";
-        HashMap<String, String> hits = new HashMap<String, String>();
-        ArrayList<String> children = new ArrayList<String>();
-
-        // 6.3.9: "A special situation occurs when using LSUB with the % wildcard. Consider 
-        //         what happens if "foo/bar" (with a hierarchy delimiter of "/") is subscribed
-        //         but "foo" is not.  A "%" wildcard to LSUB must return foo, not foo/bar, in
-        //         the LSUB response, and it MUST be flagged with the \Noselect attribute."
-
-        // figure out the set of subscribed mailboxes that match the pattern
-        Folder root = mbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT);
-        for (Folder folder : root.getSubfolderHierarchy()) {
-            if (!folder.isTagged(mbox.mSubscribeFlag))
-                continue;
-            String path = folder.getPath().substring(1);
-            if (path.toUpperCase().matches(pattern))
-                hits.put(path, path);
-            else if (path.toUpperCase().matches(childPattern))
-                children.add(path);
-        }
-        if (children.isEmpty())
-            return hits;
-
-        // figure out the set of unsubscribed mailboxes that match the pattern and are parents of subscribed mailboxes
-        for (String partName : children) {
-            int delimiter = partName.lastIndexOf('/');
-            while (delimiter > 0) {
-                partName = partName.substring(0, delimiter);
-                if (!hits.containsKey(partName) && partName.toUpperCase().matches(pattern))
-                    hits.put(partName, null);
-                delimiter = partName.lastIndexOf('/');
-            }
-        }
-        return hits;
-    }
-
     public void notifyIM(IMNotification imn) { }
     protected boolean shouldRegisterWithIM() { return false; }
     

@@ -24,6 +24,8 @@
  */
 package com.zimbra.cs.imap;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Folder;
@@ -35,43 +37,77 @@ import com.zimbra.cs.service.ServiceException;
 
 public class ImapLSubOperation extends Operation {
 	private static int LOAD = 25;
-	static {
-		Operation.Config c = loadConfig(ImapLSubOperation.class);
-		if (c != null)
-			LOAD = c.mLoad;
-	}
-	
-	private ImapSession mImapSession;
+    	static {
+    		Operation.Config c = loadConfig(ImapLSubOperation.class);
+    		if (c != null)
+    			LOAD = c.mLoad;
+    	}
+
 	private IImapGetFolderAttributes mIGetFolderAttributes; 	
 	private String mPattern;
 	
 	private Map<String, String> mSubs;
 	
 	ImapLSubOperation(ImapSession session, OperationContext oc, Mailbox mbox, 
-				IImapGetFolderAttributes getFolderAttributes, String pattern) throws ServiceException		
-	{
+				      IImapGetFolderAttributes getFolderAttributes, String pattern) {
 		super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
 
-		mImapSession = session;
 		mIGetFolderAttributes = getFolderAttributes;
 		mPattern = pattern;
 	}
 	
 	protected void callback() throws ServiceException {
 		synchronized (mMailbox) {
-			mSubs = mImapSession.getMatchingSubscriptions(mMailbox, mPattern);
+			mSubs = getMatchingSubscriptions(getMailbox(), mPattern);
 			for (Map.Entry<String, String> hit : mSubs.entrySet()) {
 				Folder folder = null;
 				try {
-					folder = mMailbox.getFolderByPath(this.getOpCtxt(), hit.getKey());
+					folder = getMailbox().getFolderByPath(getOpCtxt(), hit.getKey());
 				} catch (MailServiceException.NoSuchItemException nsie) { }
 				// FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
 				boolean visible = hit.getValue() != null && ImapFolder.isFolderVisible(folder);
 				String attributes = visible ? mIGetFolderAttributes.doGetFolderAttributes(folder) : "\\Noselect";
-				hit.setValue("LSUB (" + attributes + ") \"/\" " + ImapFolder.encodeFolder(hit.getKey()));
+				hit.setValue("LSUB (" + attributes + ") \"/\" " + ImapFolder.formatPath(hit.getKey(), (ImapSession) mSession));
 			}
 		}
 	}
-	
+
+    Map<String, String> getMatchingSubscriptions(Mailbox mbox, String pattern) throws ServiceException {
+        String childPattern = pattern + "/.*";
+        HashMap<String, String> hits = new HashMap<String, String>();
+        ArrayList<String> children = new ArrayList<String>();
+
+        // 6.3.9: "A special situation occurs when using LSUB with the % wildcard. Consider 
+        //         what happens if "foo/bar" (with a hierarchy delimiter of "/") is subscribed
+        //         but "foo" is not.  A "%" wildcard to LSUB must return foo, not foo/bar, in
+        //         the LSUB response, and it MUST be flagged with the \Noselect attribute."
+
+        // figure out the set of subscribed mailboxes that match the pattern
+        Folder root = mbox.getFolderById(mOpCtxt, Mailbox.ID_FOLDER_USER_ROOT);
+        for (Folder folder : root.getSubfolderHierarchy()) {
+            if (!folder.isTagged(mbox.mSubscribeFlag))
+                continue;
+            String path = ImapFolder.exportPath(folder.getPath(), (ImapSession) mSession);
+            if (path.toUpperCase().matches(pattern))
+                hits.put(path, path);
+            else if (path.toUpperCase().matches(childPattern))
+                children.add(path);
+        }
+        if (children.isEmpty())
+            return hits;
+
+        // figure out the set of unsubscribed mailboxes that match the pattern and are parents of subscribed mailboxes
+        for (String partName : children) {
+            int delimiter = partName.lastIndexOf('/');
+            while (delimiter > 0) {
+                partName = partName.substring(0, delimiter);
+                if (!hits.containsKey(partName) && partName.toUpperCase().matches(pattern))
+                    hits.put(partName, null);
+                delimiter = partName.lastIndexOf('/');
+            }
+        }
+        return hits;
+    }
+
 	Map<String, String> getSubs() { return mSubs; }
 }

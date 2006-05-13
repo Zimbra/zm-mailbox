@@ -36,11 +36,11 @@ import com.zimbra.cs.service.ServiceException;
 public class ImapListOperation extends Operation {
 	
 	private static int LOAD = 25;
-	static {
-		Operation.Config c = loadConfig(ImapListOperation.class);
-		if (c != null)
-			LOAD = c.mLoad;
-	}
+    	static {
+    		Operation.Config c = loadConfig(ImapListOperation.class);
+    		if (c != null)
+    			LOAD = c.mLoad;
+    	}
 	
 	private IImapGetFolderAttributes mIGetFolderAttributes;
 	private String mPattern;
@@ -48,10 +48,9 @@ public class ImapListOperation extends Operation {
 	private List<String> mMatches;
 
 	ImapListOperation(ImapSession session, OperationContext oc, Mailbox mbox, 
-				IImapGetFolderAttributes getFolderAttributes, String pattern) throws ServiceException		
-	{
+				      IImapGetFolderAttributes getFolderAttributes, String pattern) {
 		super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
-		
+
 		mIGetFolderAttributes = getFolderAttributes;
 		mPattern = pattern;
 	}
@@ -64,14 +63,13 @@ public class ImapListOperation extends Operation {
 			for (Folder folder : root.getSubfolderHierarchy()) {
 				if (!ImapFolder.isFolderVisible(folder))
 					continue;
-				String path = folder.getPath().substring(1);
+				String path = ImapFolder.exportPath(folder.getPath(), (ImapSession) mSession);
 				// FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
 				if (path.toUpperCase().matches(mPattern))
-					mMatches.add("LIST (" + mIGetFolderAttributes.doGetFolderAttributes(folder) + ") \"/\" " + ImapFolder.encodeFolder(path));
+					mMatches.add("LIST (" + mIGetFolderAttributes.doGetFolderAttributes(folder) + ") \"/\" " + ImapFolder.formatPath(folder.getPath(), (ImapSession) mSession));
 			}
 		}
 	}
-	
-	public List<String> getMatches() { return mMatches; }
 
+	public List<String> getMatches() { return mMatches; }
 }

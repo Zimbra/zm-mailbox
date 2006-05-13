@@ -28,7 +28,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.session.Session;
 
 public class ImapGetFolderOperation extends Operation {
 	private static int LOAD = 25;
@@ -41,14 +40,13 @@ public class ImapGetFolderOperation extends Operation {
 	String mFolderName;
 	boolean mWritable;
 	ImapFolder mResult;
-	
-	public ImapFolder getResult() { return mResult; }
+
+	public ImapFolder getResult()  { return mResult; }
 	public boolean getWritable()   { return mWritable; }
 	
-	public ImapGetFolderOperation(Session session, OperationContext oc, Mailbox mbox, String folderName, boolean writable) throws ServiceException		
-	{
+	public ImapGetFolderOperation(ImapSession session, OperationContext oc, Mailbox mbox, String folderName, boolean writable) {
 		super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
-		
+
 		mFolderName = folderName;
 		mWritable = writable;
 	}
@@ -63,8 +61,7 @@ public class ImapGetFolderOperation extends Operation {
 		}
 	}
 	
-	protected void callback() throws ServiceException 
-	{
+	protected void callback() throws ServiceException {
 //		System.out.println("Starting GetImapFolder !\n"+ this.toString());
 		synchronized(mMailbox) {
 			
@@ -73,7 +70,7 @@ public class ImapGetFolderOperation extends Operation {
 //			for (int i = 0; i < eater.length; i++) 
 //				eater[i] = new MemEater();
 			
-			mResult = new ImapFolder(mFolderName, mWritable, mMailbox, mOpCtxt);
+			mResult = new ImapFolder(mFolderName, mWritable, mMailbox, (ImapSession) mSession);
 			
 //			int total = 0;
 //			for (int i = 0; i < 10000000; i++)

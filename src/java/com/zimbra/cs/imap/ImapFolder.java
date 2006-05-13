@@ -57,53 +57,63 @@ class ImapFolder implements Iterable<ImapMessage> {
     private boolean              mNotificationsSuspended;
     private HashSet<ImapMessage> mDirtyMessages = new HashSet<ImapMessage>();
 
-    ImapFolder(String name, boolean select, Mailbox mbox, OperationContext octxt) throws ServiceException {
+    /** Initializes an ImapFolder from a {@link Folder}, specified by path.
+     *  Search folders are treated as folders containing all messages matching
+     *  the search.
+     * @param name     The target folder's path.
+     * @param select   Whether the user wants to open the folder for writing.
+     * @param mbox     The mailbox in which the target folder is found.
+     * @param session  The authenticated user's current IMAP session.
+     * @see #loadVirtualFolder(SearchFolder, Mailbox, OperationContext) */
+    ImapFolder(String name, boolean select, Mailbox mbox, ImapSession session) throws ServiceException {
+        name = importPath(name, session);
+
         boolean debug = ZimbraLog.imap.isDebugEnabled();
         if (debug)  ZimbraLog.imap.debug("  ** loading folder: " + name);
 
-        synchronized (mbox) {
-            Folder folder = mbox.getFolderByPath(octxt, name);
-            if (!isFolderSelectable(folder))
-                throw ServiceException.PERM_DENIED("cannot select folder: /" + name);
-            mPath = name;
-            mFolderId = folder.getId();
-            if (folder instanceof SearchFolder) {
-                String types = ((SearchFolder) folder).getReturnTypes().toLowerCase();
-                if (types.indexOf("conversation") != -1 || types.indexOf("message") != -1)
-                    mQuery = ((SearchFolder) folder).getQuery();
-                else
-                    mQuery = "item:none";
-            }
-            mWritable = select && isFolderWritable(folder);
-            mUIDValidityValue = getUIDValidity(folder);
-
-            List msgs;
-            if (!isVirtual())
-                msgs = mbox.getItemList(octxt, MailItem.TYPE_MESSAGE, folder.getId());
+        OperationContext octxt = session.getContext();
+        Folder folder = mbox.getFolderByPath(octxt, name);
+        if (!isFolderSelectable(folder))
+            throw ServiceException.PERM_DENIED("cannot select folder: /" + name);
+        mPath = name;
+        mFolderId = folder.getId();
+        if (folder instanceof SearchFolder) {
+            String types = ((SearchFolder) folder).getReturnTypes().toLowerCase();
+            if (types.indexOf("conversation") != -1 || types.indexOf("message") != -1)
+                mQuery = ((SearchFolder) folder).getQuery();
             else
-                msgs = loadVirtualFolder((SearchFolder) folder, mbox, octxt);
-            // FIXME: need to check messages for flag "IMAP dirty" and assign new IMAP IDs if necessary
-            Collections.sort(msgs, new Message.SortImapUID());
-            StringBuffer added = debug ? new StringBuffer("  ** added: ") : null;
-            for (Message msg : (List<Message>) msgs) {
-                ImapMessage i4msg = cache(msg);
-                if (mFirstUnread == -1 && (msg).isUnread())
-                    mFirstUnread = i4msg.seq;
-                if (debug)  added.append(' ').append(i4msg.id);
-            }
-            if (debug)  ZimbraLog.imap.debug(added);
-
-            mLastSize = mSequence.size();
+                mQuery = "item:none";
         }
+        mWritable = select && isFolderWritable(folder);
+        mUIDValidityValue = getUIDValidity(folder);
+
+        List msgs;
+        if (!isVirtual())
+            msgs = mbox.getItemList(octxt, MailItem.TYPE_MESSAGE, folder.getId());
+        else
+            msgs = loadVirtualFolder((SearchFolder) folder, mbox, octxt);
+        // FIXME: need to check messages for flag "IMAP dirty" and assign new IMAP IDs if necessary
+        Collections.sort(msgs, new Message.SortImapUID());
+        StringBuffer added = debug ? new StringBuffer("  ** added: ") : null;
+        for (Message msg : (List<Message>) msgs) {
+            ImapMessage i4msg = cache(msg);
+            if (mFirstUnread == -1 && (msg).isUnread())
+                mFirstUnread = i4msg.seq;
+            if (debug)  added.append(' ').append(i4msg.id);
+        }
+        if (debug)  ZimbraLog.imap.debug(added);
+
+        mLastSize = mSequence.size();
     }
+
     /** Fetches the messages contained within a search folder.  When a search
      *  folder is IMAP-visible, it appears in folder listings, is SELECTable
      *  READ-ONLY, and appears to have all matching messages as its contents.
      *  If it is not visible, it will be completely hidden from all IMAP
      *  commands.
-     * 
      * @param search  The search folder being exposed.
-     * @param mbox    The {@link Mailbox} belonging to the user. */
+     * @param mbox    The {@link Mailbox} belonging to the user.
+     * @param octxt   Encapsulation of the authenticated user. */
     private List<MailItem> loadVirtualFolder(SearchFolder search, Mailbox mbox, OperationContext octxt) throws ServiceException {
         List<MailItem> msgs = new ArrayList<MailItem>();
         try {
@@ -145,9 +155,17 @@ class ImapFolder implements Iterable<ImapMessage> {
     /** Returns the folder's IMAP UID validity value.
      * @see #getUIDValidity(Folder) */
     int getUIDValidity()  { return mUIDValidityValue; }
+    /** Returns the "sequence number" of the first unread message in the
+     *  folder, or -1 if none are unread.  This is <b>only</b> valid
+     *  immediately after the folder is initialized and is not updated
+     *  as messages are marked read and unread. */
     int getFirstUnread()  { return mFirstUnread; }
     int getHighwaterUID() { return mHighwaterUID; }
+    /** Returns whether this folder is a "virtual" folder (i.e. a search
+     *  folder).
+     * @see #loadVirtualFolder(SearchFolder, Mailbox, OperationContext) */
     boolean isVirtual()   { return mQuery != null; }
+    /** Returns whether this folder was opened for write. */
     boolean isWritable()  { return mWritable; }
 
     public Iterator<ImapMessage> iterator()  { return mSequence.iterator(); }
@@ -172,18 +190,50 @@ class ImapFolder implements Iterable<ImapMessage> {
                !path.toLowerCase().matches("/\\s*calendar\\s*(/.*)?");
     }
 
-    static String encodeFolder(String folderName) {
-        // make sure that the Inbox is called "INBOX", regarless of how we capitalize it
-        if (folderName.length() == 5 && folderName.equalsIgnoreCase("INBOX"))
-            folderName = "INBOX";
-        else if (folderName.length() > 5 && folderName.substring(0, 6).equalsIgnoreCase("INBOX/"))
-            folderName = "INBOX" + folderName.substring(5);
+    /** Formats a folder path as an IMAP-UTF-7 quoted-string.  Applies all
+     *  special hack-specific path transforms.
+     * @param path     The Zimbra-local folder pathname.
+     * @param session  The authenticated user's current session.
+     * @see #importPath(String, ImapSession) */
+    static String exportPath(String path, ImapSession session) {
+        if (path.startsWith("/") && path.length() > 1)
+            path = path.substring(1);
+        String lcname = path.toLowerCase();
+        // make sure that the Inbox is called "INBOX", regardless of how we capitalize it
+        if (lcname.startsWith("inbox") && (lcname.length() == 5 || lcname.charAt(5) == '/'))
+            path = "INBOX" + path.substring(5);
+        else if (session.isHackEnabled(ImapSession.EnabledHack.WM5))
+            if (lcname.startsWith("sent") && (lcname.length() == 4 || lcname.charAt(4) == '/'))
+                path = "Sent Items" + path.substring(4);
+        return path;
+    }
+
+    static String formatPath(String path, ImapSession session) {
+        path = exportPath(path, session);
         try {
-            folderName = '"' + new String(folderName.getBytes("imap-utf-7"), "US-ASCII") + '"';
+            path = '"' + new String(path.getBytes("imap-utf-7"), "US-ASCII") + '"';
         } catch (UnsupportedEncodingException e) {
-            folderName = '"' + folderName + '"';
+            path = '"' + path + '"';
         }
-        return folderName.replaceAll("\\\\", "\\\\\\\\");
+        return path.replaceAll("\\\\", "\\\\\\\\");
+    }
+
+    /** Takes a user-supplied IMAP mailbox path and converts it to a Zimbra
+     *  folder pathname.  Applies all special, hack-specific folder mappings.
+     *  Does <b>not</b> do IMAP-UTF-7 decoding; this is assumed to have been
+     *  already done by the appropriate method in {@link ImapRequest}.
+     * @param path     The client-provided logical IMAP pathname.
+     * @param session  The authenticated user's current session.
+     * @see #exportPath(String, ImapSession) */
+    static String importPath(String path, ImapSession session) {
+        if (path.startsWith("/") && path.length() > 1)
+            path = path.substring(1);
+        String lcname = path.toLowerCase();
+        // Windows Mobile 5 hack: server must map "Sent Items" to "Sent"
+        if (session.isHackEnabled(ImapSession.EnabledHack.WM5))
+            if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/'))
+                path = "Sent" + path.substring(10);
+        return path;
     }
 
     String getPath()                { return mPath; }

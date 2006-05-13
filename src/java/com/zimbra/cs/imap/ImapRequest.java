@@ -54,7 +54,7 @@ class ImapRequest {
     static final boolean[] SEQUENCE_CHARS = new boolean[128];
     static final boolean[] SEARCH_CHARS   = new boolean[128];
     static final boolean[] REGEXP_ESCAPED = new boolean[128];
-    static {
+        static {
             for (int i = 0x21; i < 0x7F; i++)
                 if (i != '(' && i != ')' && i != '{' && i != '%' && i != '*' && i != '"' && i != '\\')
                     SEARCH_CHARS[i] = FETCH_CHARS[i] = PATTERN_CHARS[i] = ASTRING_CHARS[i] = ATOM_CHARS[i] = TAG_CHARS[i] = true;

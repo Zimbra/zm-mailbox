@@ -3584,7 +3584,7 @@ public class Mailbox {
         if (path != null) {
             path = path.trim();
             if (!path.startsWith("/"))
-                path = path + "/";
+                path = '/' + path;
             if (path.endsWith("/") && path.length() > 1)
                 path = path.substring(0, path.length() - 1);
         }

@@ -89,7 +89,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
     private ImapSession mSession;
     private Mailbox     mMailbox;
-    private OzImapRequest mIncompleteRequest = null;
     private boolean     mStartedTLS;
     private boolean     mGoodbyeSent;
 
@@ -101,9 +100,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     
     public void dumpState(Writer w) {
     	StringBuilder s = new StringBuilder("\n\tOzImapConnectionHandler ").append(this.toString()).append("\n");
-    	if (mIncompleteRequest != null) 
-    		s.append("\t\tIncompleteRequest: ").append(mIncompleteRequest.toString()).append('\n');
-    	
     	if (mConnection == null) {
     		s.append("\t\tCONNECTION IS NULL\n");
     	} else {
@@ -654,8 +650,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        if (!folderName.startsWith("/"))
-            folderName = '/' + folderName;
+        folderName = ImapFolder.importPath(folderName, mSession);
         if (!ImapFolder.isPathCreatable(folderName)) {
             ZimbraLog.imap.info("CREATE failed: hidden folder or parent: " + folderName, null);
             sendNO(tag, "CREATE failed");
@@ -689,6 +684,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
+        folderName = ImapFolder.importPath(folderName, mSession);
+
         int folderId = 0;
         try {
         	ImapDeleteOperation op = new ImapDeleteOperation(mSession, getContext(), mMailbox, folderName);
@@ -719,8 +716,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        if (!newName.startsWith("/"))
-            newName = '/' + newName;
+        oldName = ImapFolder.importPath(oldName, mSession);
+        newName = ImapFolder.importPath(newName, mSession);
 
         try {
         	ImapRenameOperation op = new ImapRenameOperation(mSession, getContext(), mMailbox, oldName, newName);
@@ -749,8 +746,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        if (folderName.startsWith("/"))
-            folderName = folderName.substring(1);
+        folderName = ImapFolder.importPath(folderName, mSession);
 
         try {
         	ImapSubscribeOperation op = new ImapSubscribeOperation(mSession, getContext(), mMailbox, folderName);
@@ -780,8 +776,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        if (folderName.startsWith("/"))
-            folderName = folderName.substring(1);
+        folderName = ImapFolder.importPath(folderName, mSession);
 
         try {
         	ImapUnsubscribeOperation op = new ImapUnsubscribeOperation(mSession, getContext(), mMailbox, folderName);
@@ -850,7 +845,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     	}
     }
 
-    private String getFolderAttributes(Folder folder) {
+    String getFolderAttributes(Folder folder) {
         int attributes = (folder.hasSubfolders() ? 0x01 : 0x00);
         attributes    |= (!ImapFolder.isFolderSelectable(folder) ? 0x02 : 0x00);
         attributes    |= (folder.getId() == Mailbox.ID_FOLDER_SPAM ? 0x04 : 0x00);
@@ -898,12 +893,14 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
+        folderName = ImapFolder.importPath(folderName, mSession);
+
         StringBuffer data = new StringBuffer();
         try {
-//            Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
-        	  GetFolderOperation op = new GetFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, folderName);
-        	  op.schedule();
-        	  Folder folder = op.getFolder();
+            GetFolderOperation op = new GetFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, folderName);
+            op.schedule();
+            Folder folder = op.getFolder();
+
             if (!ImapFolder.isFolderVisible(folder)) {
                 ZimbraLog.imap.info("STATUS failed: folder not visible: " + folderName);
                 sendNO(tag, "STATUS failed");
@@ -928,7 +925,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             return canContinue(e);
         }
 
-        sendUntagged("STATUS " + ImapFolder.encodeFolder(folderName) + " (" + data + ')');
+        sendUntagged("STATUS " + ImapFolder.formatPath(folderName, mSession) + " (" + data + ')');
         sendNotifications(true, false);
         sendOK(tag, "STATUS completed");
         return CONTINUE_PROCESSING;
@@ -986,7 +983,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     	}
     }
     
-    private List<ImapFlag> findOrCreateTags(List<String> flagNames, List<Tag> newTags) throws ServiceException {
+    List<ImapFlag> findOrCreateTags(List<String> flagNames, List<Tag> newTags) throws ServiceException {
         if (flagNames == null || flagNames.size() == 0)
             return Collections.emptyList();
         List<ImapFlag> result = new ArrayList<ImapFlag>();
@@ -1082,6 +1079,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
+        path = ImapFolder.importPath(path, mSession);
+
         try {
             // make sure the folder exists and is visible
             Folder folder = mMailbox.getFolderByPath(getContext(), path);
@@ -1093,7 +1092,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
             // see if there's any quota on the account
             long quota = mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraMailQuota, 0);
-            sendUntagged("QUOTAROOT " + ImapFolder.encodeFolder(path) + (quota > 0 ? " \"\"" : ""));
+            sendUntagged("QUOTAROOT " + ImapFolder.formatPath(path, mSession) + (quota > 0 ? " \"\"" : ""));
             if (quota > 0)
                 sendUntagged("QUOTA \"\" (STORAGE " + (mMailbox.getSize() / 1024) + ' ' + (quota / 1024) + ')');
         } catch (ServiceException e) {
@@ -1558,6 +1557,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     boolean doCOPY(String tag, String sequenceSet, String folderName, boolean byUID) throws IOException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
             return CONTINUE_PROCESSING;
+
+        folderName = ImapFolder.importPath(folderName, mSession);
 
         String command = (byUID ? "UID COPY" : "COPY");
         String copyuid = "";
