@@ -31,31 +31,31 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 
 public class ImapRenameOperation extends Operation {
-	private static int LOAD = 10;
-	static {
-		Operation.Config c = loadConfig(ImapRenameOperation.class);
-		if (c != null)
-			LOAD = c.mLoad;
-	}
-	
-	private String mOldName;
-	private String mNewName;
-	
-	ImapRenameOperation(Session session, OperationContext oc, Mailbox mbox, String oldName, String newName) throws ServiceException
-	{
-		super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
-		mOldName = oldName;
-		mNewName = newName;
-	}
-	
-	protected void callback() throws ServiceException {
-		synchronized (mMailbox) {
-			int folderId = mMailbox.getFolderByPath(this.getOpCtxt(), mOldName).getId();
-			if (folderId != Mailbox.ID_FOLDER_INBOX) {
-				mMailbox.renameFolder(this.getOpCtxt(), folderId, mNewName);
-			} else {
-				throw ImapServiceException.CANT_RENAME_INBOX();
-			}
-		}
-	}
+    private static int LOAD = 10;
+        static {
+            Operation.Config c = loadConfig(ImapRenameOperation.class);
+            if (c != null)
+                LOAD = c.mLoad;
+        }
+
+    private String mOldName;
+    private String mNewName;
+
+    ImapRenameOperation(Session session, OperationContext oc, Mailbox mbox, String oldName, String newName) {
+        super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
+        mOldName = oldName;
+        // the new folder name must begin with '/' to trigger the appropriate server behavior
+        mNewName = (newName.startsWith("/") ? newName : '/' + newName);
+    }
+
+    protected void callback() throws ServiceException {
+        synchronized (mMailbox) {
+            int folderId = mMailbox.getFolderByPath(getOpCtxt(), mOldName).getId();
+            if (folderId != Mailbox.ID_FOLDER_INBOX) {
+                mMailbox.renameFolder(getOpCtxt(), folderId, mNewName);
+            } else {
+                throw ImapServiceException.CANT_RENAME_INBOX();
+            }
+        }
+    }
 }
