@@ -66,8 +66,6 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
     private static final long MSEC_PER_DAY = 1000*60*60*24;
     
     private static final long MAX_PERIOD_SIZE_IN_DAYS = 200;
-    
-    private static int bogus = 0;
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
@@ -110,7 +108,7 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
             String[] idStrs = paramStr.split(",");
 
             try {
-                Element req = new Element.XMLElement(MailService.GET_FREE_BUSY_REQUEST);
+                Element req = zc.getRequestProtocol().getFactory().createElement(MailService.GET_FREE_BUSY_REQUEST);
                 req.addAttribute(MailService.A_APPT_START_TIME, rangeStart);
                 req.addAttribute(MailService.A_APPT_END_TIME, rangeEnd);
                 req.addAttribute(MailService.A_UID, paramStr);
@@ -139,7 +137,7 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
             try {
                 ParseMailboxID id = ParseMailboxID.parse(idStrs[i]);
                 if (id != null) {
-                    if (id.isLocal() && ++bogus % 2 == 0) {
+                    if (id.isLocal()) {
                         local.add(id);
                     } else {
                         String serverId = id.getServer();

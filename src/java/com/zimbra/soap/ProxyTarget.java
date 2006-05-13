@@ -95,19 +95,16 @@ public class ProxyTarget {
     }
 
     public Element dispatch(Element request) throws ServiceException, SoapFaultException {
-        Element response = null;
-        SoapHttpTransport transport = null;
+        SoapHttpTransport transport = new SoapHttpTransport(mURL);
         try {
-            transport = new SoapHttpTransport(mURL);
             transport.setAuthToken(mAuthToken);
-            response = transport.invokeWithoutSession(request);
+            transport.setSoapProtocol(request instanceof Element.JavaScriptElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12);
+            return transport.invokeWithoutSession(request);
         } catch (IOException e) {
             throw ServiceException.PROXY_ERROR(e, mURL);
         } finally {
-            if (transport != null)
-                transport.shutdown();
+            transport.shutdown();
         }
-        return response;
     }
 
     public Element dispatch(Element request, ZimbraSoapContext lc) throws ServiceException, SoapFaultException {
