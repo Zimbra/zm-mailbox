@@ -37,8 +37,6 @@ import org.apache.commons.httpclient.HttpRecoverableException;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.soap.SoapProtocol;
 
@@ -47,7 +45,7 @@ import com.zimbra.soap.SoapProtocol;
 
 public class SoapHttpTransport extends SoapTransport {
 
-	private static Log mLog = LogFactory.getLog(SoapHttpTransport.class);
+//	private static Log mLog = LogFactory.getLog(SoapHttpTransport.class);
 	
     private boolean mKeepAlive;
     private int mRetryCount;
@@ -63,8 +61,7 @@ public class SoapHttpTransport extends SoapTransport {
      * Multiple threads using this transport must do their own
      * synchronization.
      */
-    public SoapHttpTransport(String uri)
-    {
+    public SoapHttpTransport(String uri) {
     	super();
     	mClient = new HttpClient();
     	commonInit(uri);
@@ -111,8 +108,7 @@ public class SoapHttpTransport extends SoapTransport {
     /**
      *  Gets the URI
      */
-    public String getURI()
-    {
+    public String getURI() {
         return mUri;
     }
     
@@ -171,8 +167,7 @@ public class SoapHttpTransport extends SoapTransport {
     }
 
     public Element invoke(Element document, boolean raw, boolean noSession, boolean noNotify, String requestedAccountId) 
-    	throws SoapFaultException, IOException, HttpException
-	{
+	throws SoapFaultException, IOException, HttpException {
     	int statusCode = -1;
 
     	// the content-type charset will determine encoding used

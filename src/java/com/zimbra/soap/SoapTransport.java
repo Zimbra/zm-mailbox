@@ -29,7 +29,6 @@
 
 package com.zimbra.soap;
 
-import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.SoapProtocol;
 import com.zimbra.soap.SoapFaultException;
 
@@ -51,8 +50,7 @@ public abstract class SoapTransport {
     private String mUserAgentName;
     private String mUserAgentVersion;
 
-    protected SoapTransport() 
-    {
+    protected SoapTransport() {
         mSoapProto = SoapProtocol.Soap12;
         mPrettyPrint = false;
     }
