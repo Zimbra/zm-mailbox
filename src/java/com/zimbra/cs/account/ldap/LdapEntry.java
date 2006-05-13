@@ -59,9 +59,9 @@ public class LdapEntry implements Entry {
 
     protected Attributes mAttrs;
     protected String mDn;
-    private Map mMultiAttrCache;
-    private Map mMultiAttrSetCache;
-    private Map mData;
+    private Map<String, String[]> mMultiAttrCache;
+    private Map<String, Set<String>> mMultiAttrSetCache;
+    private Map<Object, Object> mData;
     private long mLoadtime;
     
     protected static final String[] sEmptyMulti = new String[0];
@@ -121,11 +121,11 @@ public class LdapEntry implements Entry {
     }
 
 
-    public void modifyAttrs(Map attrs) throws ServiceException {
+    public void modifyAttrs(Map<String, ? extends Object> attrs) throws ServiceException {
         modifyAttrs(attrs, false);
     }
 
-    public void modifyAttrs(Map attrs, boolean checkImmutable) throws ServiceException {
+    public void modifyAttrs(Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
         HashMap context = new HashMap();
         AttributeManager.getInstance().preModify(attrs, this, context, false, checkImmutable);
         modifyAttrsInternal(null, attrs);
@@ -162,7 +162,7 @@ public class LdapEntry implements Entry {
     }
 
     public void setBooleanAttr(String name, boolean value) throws ServiceException {
-        HashMap attrs = new HashMap(1);
+        HashMap<String, String> attrs = new HashMap<String, String>(1);
         attrs.put(name, value ? LdapUtil.LDAP_TRUE : LdapUtil.LDAP_FALSE);
         modifyAttrs(attrs);
     }
@@ -179,21 +179,21 @@ public class LdapEntry implements Entry {
 
     public synchronized void setCachedData(Object key, Object value) {
         if (mData == null)
-            mData = new HashMap();
+            mData = new HashMap<Object, Object>();
         mData.put(key, value);
     }
 
     public synchronized Object getCachedData(Object key) {
         if (mData == null)
-            mData = new HashMap();
+            mData = new HashMap<Object, Object>();
         return mData.get(key);
     }
 
     public synchronized String[] getMultiAttr(String name) {
         if (mMultiAttrCache == null)
-            mMultiAttrCache = new HashMap();
+            mMultiAttrCache = new HashMap<String, String[]>();
         try {
-            String[] result = (String[]) mMultiAttrCache.get(name);
+            String[] result = mMultiAttrCache.get(name);
             if (result == null) {
                 result = LdapUtil.getMultiAttrString(mAttrs, name); 
                 if (result != null)
@@ -205,12 +205,12 @@ public class LdapEntry implements Entry {
         }        
     }
 
-    public synchronized Set getMultiAttrSet(String name) {
+    public synchronized Set<String> getMultiAttrSet(String name) {
         if (mMultiAttrSetCache == null)        
-            mMultiAttrSetCache = new HashMap();        
-        Set result = (Set) mMultiAttrSetCache.get(name);
+            mMultiAttrSetCache = new HashMap<String, Set<String>>();        
+        Set<String> result = mMultiAttrSetCache.get(name);
         if (result == null) {
-            result = new HashSet();            
+            result = new HashSet<String>();            
             String values[] = getMultiAttr(name);
             if (values != null && values.length != 0) {
                 for (int i=0; i < values.length; i++) {
@@ -307,8 +307,8 @@ public class LdapEntry implements Entry {
         return d == null ? defaultValue : d;
     }
 
-    public synchronized Map getAttrs() throws ServiceException {
-        HashMap attrs = new HashMap();
+    public synchronized Map<String, Object> getAttrs() throws ServiceException {
+        HashMap<String, Object> attrs = new HashMap<String, Object>();
         try {
             LdapUtil.getAttrs(mAttrs, attrs, null);
         } catch (NamingException e) {

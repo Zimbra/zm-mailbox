@@ -55,7 +55,7 @@ public class AttributeInfo {
     private AttributeType mType;
     
     /** for enums */
-    private HashSet mEnumSet;
+    private HashSet<String> mEnumSet;
     
     /** for regex */
     private Pattern mRegex;
@@ -127,7 +127,7 @@ public class AttributeInfo {
             break;
         case TYPE_ENUM:
             String enums[] = value.split(",");
-            mEnumSet = new HashSet(enums.length);
+            mEnumSet = new HashSet<String>(enums.length);
             for (int i=0; i < enums.length; i++) {
                 mEnumSet.add(enums[i]);
             }

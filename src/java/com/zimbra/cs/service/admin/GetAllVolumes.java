@@ -29,14 +29,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetAllVolumes extends AdminDocumentHandler {
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         List vols = Volume.getAll();

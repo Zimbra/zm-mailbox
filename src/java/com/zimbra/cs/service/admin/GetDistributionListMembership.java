@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
@@ -67,7 +66,7 @@ public class GetDistributionListMembership extends AdminDocumentHandler {
         if (offset < 0) {
             throw ServiceException.INVALID_REQUEST("offset" + offset + " is negative", null);
         }
-        boolean sortAscending = request.getAttributeBool(AdminService.A_SORT_ASCENDING, true);        
+//        boolean sortAscending = request.getAttributeBool(AdminService.A_SORT_ASCENDING, true);        
 
         Element d = request.getElement(AdminService.E_DL);
         String key = d.getAttribute(AdminService.A_BY);

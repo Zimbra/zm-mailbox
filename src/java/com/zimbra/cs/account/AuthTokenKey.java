@@ -39,14 +39,9 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 import com.zimbra.cs.service.ServiceException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * @author schemers
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
  */
 public class AuthTokenKey {
     
@@ -54,10 +49,8 @@ public class AuthTokenKey {
     private byte[] mKey;
     private long mVersion;
     private long mCreated;
-    private static HashMap mCache = new HashMap();
+    private static HashMap<String, AuthTokenKey> mCache = new HashMap<String, AuthTokenKey>();
     private static AuthTokenKey sLatestKey;
-
-    private static Log mLog = LogFactory.getLog(AuthTokenKey.class); 
     
     public byte[] getKey() {
         return mKey;
@@ -129,18 +122,18 @@ public class AuthTokenKey {
      * @throws ServiceException
      */
     static AuthTokenKey getVersion(String version) throws ServiceException {
-        AuthTokenKey key = (AuthTokenKey) mCache.get(version);
+        AuthTokenKey key = mCache.get(version);
         // if not found, refresh our map. The config object will get reloaded if it is older
         // then the TTL
         if (key == null) 
             refresh(false);
         
-        key = (AuthTokenKey) mCache.get(version);
+        key = mCache.get(version);
 
         // still null, force config reload from LDAP
         if (key == null) 
             refresh(true);
-        key = (AuthTokenKey) mCache.get(version);
+        key = mCache.get(version);
         
         // return it, even if null
         return key;
@@ -162,14 +155,14 @@ public class AuthTokenKey {
         // bootstrap. automatically create new random key
         if (keys.length == 0) {
             AuthTokenKey key = new AuthTokenKey(0, null);
-            HashMap attrs = new HashMap();
+            HashMap<String, String> attrs = new HashMap<String, String>();
             attrs.put(Provisioning.A_zimbraAuthTokenKey, key.getEncoded());
             config.modifyAttrs(attrs);
             keys = config.getMultiAttr(Provisioning.A_zimbraAuthTokenKey);
         }
 
         for (int i=0; i < keys.length; i++) {
-            AuthTokenKey key = (AuthTokenKey) mCache.get(keys[i]);
+            AuthTokenKey key = mCache.get(keys[i]);
             if (key == null) {
                 key = new AuthTokenKey(keys[i]);
                 mCache.put(keys[i], key);

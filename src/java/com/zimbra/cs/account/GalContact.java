@@ -35,6 +35,5 @@ public interface GalContact {
     
     public String getId();
 
-    public Map getAttrs() throws ServiceException;
-
+    public Map<String, Object> getAttrs() throws ServiceException;
 }

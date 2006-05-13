@@ -66,14 +66,15 @@ public class ImportContacts extends DocumentHandler  {
             throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
         
         Element content = request.getElement(MailService.E_CONTENT);
-        List contacts = null, uploads = null;
+        List<Map<String, String>> contacts = null;
+        List<Upload> uploads = null;
         BufferedReader reader = null;
         String attachment = content.getAttribute(MailService.A_ATTACHMENT_ID, null);
         try {
             if (attachment == null)
                 reader = new BufferedReader(new StringReader(content.getText()));
             else
-                reader = parseUploadedContent(lc, attachment, uploads = new ArrayList());
+                reader = parseUploadedContent(lc, attachment, uploads = new ArrayList<Upload>());
             contacts = ContactCSV.getContacts(reader);
         } catch (ParseException e) {
             throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS(e.getMessage(), e);
@@ -83,7 +84,7 @@ public class ImportContacts extends DocumentHandler  {
             if (attachment != null)
                 FileUploadServlet.deleteUploads(uploads);
         }
-        
+
         ItemId iidFolder = new ItemId(mbox, Mailbox.ID_FOLDER_CONTACTS);
         CreateContactOperation op = new CreateContactOperation(session, octxt, mbox, Requester.SOAP, iidFolder, contacts, null);
         op.schedule();
@@ -103,7 +104,7 @@ public class ImportContacts extends DocumentHandler  {
         return response;
     }
     
-    private static BufferedReader parseUploadedContent(ZimbraSoapContext lc, String attachId, List uploads)
+    private static BufferedReader parseUploadedContent(ZimbraSoapContext lc, String attachId, List<Upload> uploads)
     throws ServiceException {
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getRawAuthToken());
         if (up == null)

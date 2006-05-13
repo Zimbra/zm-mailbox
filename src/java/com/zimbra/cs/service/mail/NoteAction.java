@@ -58,7 +58,7 @@ public class NoteAction extends ItemAction {
 	public static final String OP_EDIT       = "edit";
 	public static final String OP_REPOSITION = "pos";
 
-    private static final Set NOTE_OPS = new HashSet(Arrays.asList(new String[] {
+    private static final Set<String> NOTE_OPS = new HashSet<String>(Arrays.asList(new String[] {
         OP_EDIT, OP_REPOSITION
     }));
 
@@ -83,7 +83,7 @@ public class NoteAction extends ItemAction {
         return response;
 	}
 
-    private String handleNote(Map context, Element request, String operation) throws ServiceException {
+    private String handleNote(Map<String, Object> context, Element request, String operation) throws ServiceException {
         Element action = request.getElement(MailService.E_ACTION);
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);

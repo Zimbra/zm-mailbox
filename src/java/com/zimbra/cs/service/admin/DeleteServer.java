@@ -49,7 +49,6 @@ public class DeleteServer extends AdminDocumentHandler {
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getAttribute(AdminService.E_ID);
-	    Map attrs = AdminService.getAttrs(request);
 	    
 	    Server server = prov.getServerById(id);
         if (server == null)

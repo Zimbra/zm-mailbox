@@ -46,7 +46,7 @@ public class ModifyConfig extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
-	    Map attrs = AdminService.getAttrs(request);
+	    Map<String, Object> attrs = AdminService.getAttrs(request);
 	    
         // pass in true to checkImmutable
 	    prov.getConfig().modifyAttrs(attrs, true);

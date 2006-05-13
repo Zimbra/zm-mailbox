@@ -49,7 +49,6 @@ public class DeleteCos extends AdminDocumentHandler {
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getAttribute(AdminService.E_ID);
-	    Map attrs = AdminService.getAttrs(request);
 	    
 	    Cos cos = prov.getCosById(id);
         if (cos == null)

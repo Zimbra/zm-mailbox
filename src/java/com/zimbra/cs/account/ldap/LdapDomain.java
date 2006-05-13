@@ -35,7 +35,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.SizeLimitExceededException;
@@ -54,8 +53,6 @@ import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
- *
- * Window - Preferences - Java - Code Style - Code Templates
  */
 public class LdapDomain extends LdapNamedEntry implements Domain {
 
@@ -209,7 +206,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         } else if (mode.equals(Provisioning.GM_LDAP)) {
             results = searchLdapGal(n, maxResults, null);
         } else if (mode.equals(Provisioning.GM_BOTH)) {
-            String tokens[] = null;
+//            String tokens[] = null;
             results = searchZimbraGal(n, maxResults/2, null, true);
             SearchGalResult ldapResults = searchLdapGal(n, maxResults/2, null);
             if (ldapResults != null) {
@@ -255,11 +252,11 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
 
     private synchronized void initGalAttrs() {
         String[] attrs = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
-        ArrayList<String> list = new ArrayList<String>(attrs.length);
-        HashMap<String, String> map = new HashMap<String, String>();
+        List<String> list = new ArrayList<String>(attrs.length);
+        Map<String, String> map = new HashMap<String, String>();
         LdapUtil.initGalAttrs(attrs, list, map);
         setCachedData(DATA_GAL_ATTR_MAP, map);
-        String[] attr_list = (String[]) list.toArray(new String[list.size()]);
+        String[] attr_list = list.toArray(new String[list.size()]);
         setCachedData(DATA_GAL_ATTR_LIST, attr_list);
     }
 
@@ -340,7 +337,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
             ne = ctxt.search("ou=people,"+getDN(), query, sc);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                Context srctxt = null;
+//                Context srctxt = null;
 
                 String dn = sr.getNameInNamespace();
                 LdapGalContact lgc = new LdapGalContact(dn, sr.getAttributes(), galAttrList, galAttrMap);
@@ -412,12 +409,12 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         }
     }
 
-    public Map getAttrs() throws ServiceException {
+    public Map<String, Object> getAttrs() throws ServiceException {
         return getAttrs(true);
     }
 
-    public Map getAttrs(boolean applyConfig) throws ServiceException {
-        HashMap attrs = new HashMap();
+    public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
         try {
             // get all the server attrs
             LdapUtil.getAttrs(mAttrs, attrs, null);

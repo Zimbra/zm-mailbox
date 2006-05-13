@@ -43,8 +43,6 @@ import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
- *
- * Window - Preferences - Java - Code Style - Code Templates
  */
 public class LdapServer extends LdapNamedEntry implements Server {
 
@@ -93,12 +91,12 @@ public class LdapServer extends LdapNamedEntry implements Server {
         }
     }
 
-    public Map getAttrs() throws ServiceException {
+    public Map<String, Object> getAttrs() throws ServiceException {
         return getAttrs(true);
     }    
 
-    public Map getAttrs(boolean applyConfig) throws ServiceException {
-        HashMap attrs = new HashMap();
+    public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
         try {
             // get all the server attrs
             LdapUtil.getAttrs(mAttrs, attrs, null);

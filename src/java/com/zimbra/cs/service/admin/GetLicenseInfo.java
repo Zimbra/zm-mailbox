@@ -27,7 +27,6 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -37,7 +36,7 @@ public class GetLicenseInfo extends AdminDocumentHandler {
 
     static final String TRIAL_EXPIRATION_DATE_KEY = "trial_expiration_date";
     
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         String expirationDate = LC.get(TRIAL_EXPIRATION_DATE_KEY);

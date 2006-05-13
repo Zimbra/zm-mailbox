@@ -62,7 +62,7 @@ public class GetAccountMembership extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        boolean applyCos = request.getAttributeBool(AdminService.A_APPLY_COS, true);        
+//        boolean applyCos = request.getAttributeBool(AdminService.A_APPLY_COS, true);        
         Element a = request.getElement(AdminService.E_ACCOUNT);
         String key = a.getAttribute(AdminService.A_BY);
         String value = a.getText();

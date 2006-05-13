@@ -740,10 +740,10 @@ public class LdapUtil {
     }
 
     static String[] removeMultiValue(String values[], String value) {
-        ArrayList list = new ArrayList(Arrays.asList(values));
+        List<String> list = new ArrayList<String>(Arrays.asList(values));
         boolean updated = list.remove(value);
         if (updated) {
-            return (String[]) list.toArray(new String[list.size()]);
+            return list.toArray(new String[list.size()]);
         } else {
             return values;
         }

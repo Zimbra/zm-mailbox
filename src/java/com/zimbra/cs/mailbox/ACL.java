@@ -93,10 +93,10 @@ public class ACL {
         public String getAttr(String name) { return null; }
         public String[] getMultiAttr(String name) { return null; }    
         public String getAttr(String name, String defaultValue) { return defaultValue; }
-        public Set getMultiAttrSet(String name) { return null; }
-        public Map getAttrs() { return null; }
-        public void modifyAttrs(Map attrs) { return; }
-        public void modifyAttrs(Map attrs, boolean checkImmutable) { return; }
+        public Set<String> getMultiAttrSet(String name) { return null; }
+        public Map<String, Object> getAttrs() { return null; }
+        public void modifyAttrs(Map<String, ? extends Object> attrs) { return; }
+        public void modifyAttrs(Map<String, ? extends Object> attrs, boolean checkImmutable) { return; }
         public boolean getBooleanAttr(String name, boolean defaultValue) { return defaultValue; }
         public void setBooleanAttr(String name, boolean value) { return; }
         public int getIntAttr(String name, int defaultValue) { return 0; }
@@ -111,7 +111,7 @@ public class ACL {
         public String getDomainName() { return null; }
         public Domain getDomain() { return null; }
         public String getAccountStatus() { return null; }
-        public Map getAttrs(boolean prefsOnly, boolean applyCos) { return null; }
+        public Map<String, Object> getAttrs(boolean prefsOnly, boolean applyCos) { return null; }
         public Cos getCOS() { return null; }
         public String[] getAliases() { return null; }
         public boolean inGroup(String zimbraGroupId) { return false; }

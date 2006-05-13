@@ -49,7 +49,7 @@ public class SaveRules extends WriteOpDocumentHandler {
             throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         // FIXME: need to check that account exists
-        Account account = super.getRequestedAccount(lc);
+        Account account = getRequestedAccount(lc);
         
         RuleManager mgr = RuleManager.getInstance();
         Element rulesElem = document.getElement(MailService.E_RULES);

@@ -68,37 +68,30 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
     private static final long MAX_PERIOD_SIZE_IN_DAYS = 200;
     
     
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException 
-    {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
         
         long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME);
         long rangeEnd = request.getAttributeLong(MailService.A_APPT_END_TIME);
         
-        if (rangeEnd < rangeStart) {
+        if (rangeEnd < rangeStart)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
-        }
-        
+
         long days = (rangeEnd-rangeStart)/MSEC_PER_DAY;
-        if (days > MAX_PERIOD_SIZE_IN_DAYS) {
+        if (days > MAX_PERIOD_SIZE_IN_DAYS)
             throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum "+MAX_PERIOD_SIZE_IN_DAYS+" days)", null);
-        }
-        
-        
-        
+
         Element response = zc.createElement(MailService.GET_FREE_BUSY_RESPONSE);
         
         String idParam = request.getAttribute(MailService.A_UID);
         
-        ArrayList /*ParseItemId*/local = new ArrayList();
-        HashMap /*Server,ParamStr*/remote = new HashMap();
+        List<ParseMailboxID> local = new ArrayList<ParseMailboxID>();
+        Map<String, StringBuilder> remote = new HashMap<String, StringBuilder>();
         partitionItems(zc, response, rangeStart, rangeEnd, idParam, local, remote);
         proxyRemoteItems(context, zc, response, rangeStart, rangeEnd, remote);
         
         if (!local.isEmpty()) {
-            for (Iterator iter = local.iterator(); iter.hasNext();)
-            {
-                ParseMailboxID id = (ParseMailboxID)(iter.next());
+            for (ParseMailboxID id : local) {
                 try {
                     getForOneMailbox(zc, response, id, rangeStart, rangeEnd);
                 } catch (ServiceException e) {
@@ -109,14 +102,12 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
         return response;
     }
     
-    protected static void proxyRemoteItems(Map context,ZimbraSoapContext zc,Element response,long rangeStart,long rangeEnd,Map /* Server, ParamStr */ remote)
+    protected static void proxyRemoteItems(Map<String, Object> context, ZimbraSoapContext zc, Element response, long rangeStart, long rangeEnd, Map<String, StringBuilder> remote)
     {
-        for (Iterator it = remote.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
-            
-            String server = (String)(entry.getKey());
-            String paramStr = ((StringBuffer)(entry.getValue())).toString();
-            
+        for (Map.Entry<String, StringBuilder> entry : remote.entrySet()) {
+            // String server = entry.getKey();
+            String paramStr = entry.getValue().toString();
+
             try {
                 Element req = zc.createElement(MailService.GET_FREE_BUSY_REQUEST);
                 req.addAttribute(MailService.A_APPT_START_TIME, rangeStart);
@@ -129,12 +120,9 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
                 Account acct = Provisioning.getInstance().getAccountByName(idStrs[0]);
                 
                 Element remoteResponse = proxyRequest(req, context, acct.getId());
-                
-                for (Iterator respIter = remoteResponse.elementIterator(); respIter.hasNext();)
-                {
-                    Element thisElt = (Element)(respIter.next());
-                    thisElt.detach();
-                    response.addElement(thisElt);
+
+                for (Element thisElt : remoteResponse.listElements()) {
+                    response.addElement(thisElt.detach());
                 }
             } catch (ServiceException e) {
                 String[] idStrs = paramStr.split(",");
@@ -151,7 +139,7 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
     }
     
     protected static void partitionItems(ZimbraSoapContext zc, Element response, long rangeStart, long rangeEnd,
-            String idParam, List /* ParseMailboxID */local, Map /*String,StringBuffer*/ remote)
+                                         String idParam, List<ParseMailboxID> local, Map<String, StringBuilder> remote)
     {
         String[] idStrs = idParam.split(",");
         for (int i = 0; i < idStrs.length; i++) {
@@ -165,9 +153,9 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
                         
                         assert(serverId != null);
                             
-                        StringBuffer remoteStr = (StringBuffer)remote.get(serverId);
+                        StringBuilder remoteStr = remote.get(serverId);
                         if (remoteStr == null) {
-                            remoteStr = new StringBuffer(idStrs[i]);
+                            remoteStr = new StringBuilder(idStrs[i]);
                             remote.put(serverId, remoteStr);
                         } else {
                             remoteStr.append(",").append(idStrs[i]);

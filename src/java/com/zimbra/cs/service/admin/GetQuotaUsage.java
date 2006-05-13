@@ -64,16 +64,16 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         int offset = (int) request.getAttributeLong(AdminService.A_OFFSET, 0);        
         String domain = request.getAttribute(AdminService.A_DOMAIN, null);
         String cos = request.getAttribute(AdminService.A_COS, null);
-        String attrsStr = request.getAttribute(AdminService.A_ATTRS, null);
+//        String attrsStr = request.getAttribute(AdminService.A_ATTRS, null);
         String sortBy = request.getAttribute(AdminService.A_SORT_BY, SORT_TOTAL_USED);        
         final boolean sortAscending = request.getAttributeBool(AdminService.A_SORT_ASCENDING, false);        
 
         if (!(sortBy.equals(SORT_TOTAL_USED) || sortBy.equals(SORT_PERCENT_USED) || sortBy.equals(SORT_QUOTA_LIMIT)))
             throw ServiceException.INVALID_REQUEST("sortBy must be percentUsed or totalUsed", null);
 
-        int flags = Provisioning.SA_ACCOUNT_FLAG;
+//        int flags = Provisioning.SA_ACCOUNT_FLAG;
         
-        String[] attrs = attrsStr == null ? null : attrsStr.split(",");
+//        String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
         // if we are a domain admin only, restrict to domain
         if (isDomainAdminOnly(lc)) {
@@ -214,22 +214,20 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             final boolean sortByTotal = mSortBy.equals(SORT_TOTAL_USED);
             final boolean sortByQuota = mSortBy.equals(SORT_QUOTA_LIMIT);
 
-            Comparator comparator = new Comparator() {
-                public int compare(Object oa, Object ob) {
-                    AccountQuota a = (AccountQuota) oa;
-                    AccountQuota b = (AccountQuota) ob;
-                    int result = 0;
+            Comparator<AccountQuota> comparator = new Comparator<AccountQuota>() {
+                public int compare(AccountQuota a, AccountQuota b) {
+                    int comp = 0;
                     if (sortByTotal) {
-                        if (a.quotaUsed > b.quotaUsed) result = 1;
-                        else if (a.quotaUsed < b.quotaUsed) result = -1;
+                        if (a.quotaUsed > b.quotaUsed) comp = 1;
+                        else if (a.quotaUsed < b.quotaUsed) comp = -1;
                     } else if (sortByQuota) {
-                        if (a.sortQuotaLimit > b.sortQuotaLimit) result = 1;
-                        else if (a.sortQuotaLimit < b.sortQuotaLimit) result = -1;                            
+                        if (a.sortQuotaLimit > b.sortQuotaLimit) comp = 1;
+                        else if (a.sortQuotaLimit < b.sortQuotaLimit) comp = -1;                            
                     } else {
-                        if (a.percentQuotaUsed > b.percentQuotaUsed) result = 1;
-                        else if (a.percentQuotaUsed < b.percentQuotaUsed) result = -1;
+                        if (a.percentQuotaUsed > b.percentQuotaUsed) comp = 1;
+                        else if (a.percentQuotaUsed < b.percentQuotaUsed) comp = -1;
                     }
-                    return mSortAscending ? result : -result;
+                    return mSortAscending ? comp : -comp;
                 }
             };
             Collections.sort(result, comparator);

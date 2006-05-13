@@ -48,9 +48,6 @@ import com.zimbra.cs.util.Constants;
 
 /**
  * @author schemers
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
  */
 public class PreAuthKey {
     
@@ -94,7 +91,7 @@ public class PreAuthKey {
         private byte[] mKey;
         
         ByteKey(byte[] key) {
-            mKey = (byte[]) key.clone();;
+            mKey = key.clone();
         }
         
         public byte[] getEncoded() {

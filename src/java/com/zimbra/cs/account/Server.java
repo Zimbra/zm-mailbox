@@ -40,5 +40,5 @@ import com.zimbra.cs.service.ServiceException;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public interface Server extends NamedEntry {
-    public Map getAttrs(boolean applyConfig) throws ServiceException;
+    public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException;
 }

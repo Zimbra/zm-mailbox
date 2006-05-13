@@ -31,7 +31,6 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.Check;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -44,7 +43,6 @@ public class CheckHostnameResolve extends AdminDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-	    Provisioning prov = Provisioning.getInstance();
 
 	    String host = request.getAttribute(AdminService.E_HOSTNAME).toLowerCase();
 

@@ -25,8 +25,6 @@
 
 package com.zimbra.cs.account.ldap;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -85,8 +83,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         return getGroups().contains(zimbraGroupId);
     }
     
-    public Set<String> getGroups() throws ServiceException 
-    {      
+    public Set<String> getGroups() throws ServiceException {      
         Set<String> groups = (Set<String>) getCachedData(DATA_GROUP_SET);
         if (groups != null) return groups;
      
@@ -205,7 +202,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     }
 
     public Map getPrefs() throws ServiceException {
-        HashMap prefs = new HashMap();
+        Map<String, Object> prefs = new HashMap<String, Object>();
         try {
             LdapCos cos = (LdapCos) getCOS();
             // get the COS prefs first
@@ -218,12 +215,12 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         return prefs;
     }
     
-    public Map getAttrs() throws ServiceException {
+    public Map<String, Object> getAttrs() throws ServiceException {
         return getAttrs(false, true);
     }
 
-    public Map getAttrs(boolean prefsOnly, boolean applyCos) throws ServiceException {
-        HashMap attrs = new HashMap();
+    public Map<String, Object> getAttrs(boolean prefsOnly, boolean applyCos) throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
         try {
             // get all the account attrs
             LdapUtil.getAttrs(mAttrs, attrs, prefsOnly ? "zimbraPref" : null);
@@ -285,13 +282,13 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         return mTimeZone;
     }
 
-    public CalendarUserType getCalendarUserType() throws ServiceException {
+    public CalendarUserType getCalendarUserType() {
         String cutype = getAttr(Provisioning.A_zimbraAccountCalendarUserType,
                                 CalendarUserType.USER.toString());
         return CalendarUserType.valueOf(cutype);
     }
 
-    public boolean saveToSent() throws ServiceException {
+    public boolean saveToSent() {
         return getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, false);
     }
 

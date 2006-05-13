@@ -38,11 +38,11 @@ import com.zimbra.soap.Element;
 public class ContactAttrCache {
 
 	public int mId;
-	public HashMap mCache;
+	public HashMap<String, Long> mCache;
 
 	public ContactAttrCache() {
 		mId = 0;
-		mCache = new HashMap();
+		mCache = new HashMap<String, Long>();
 	}
 
 	public Element makeAttr(Element parent, String name, String value) {
@@ -52,7 +52,7 @@ public class ContactAttrCache {
 		    
 		Element e = parent.addElement(MailService.E_ATTRIBUTE);
 		
-		Long id = (Long) mCache.get(name);
+		Long id = mCache.get(name);
 		if (id == null) {
 		    id = new Long(mId++);
 			mCache.put(name, id);

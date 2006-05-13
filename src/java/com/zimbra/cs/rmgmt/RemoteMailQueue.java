@@ -44,7 +44,6 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -96,9 +95,9 @@ public class RemoteMailQueue {
 
     public static final int MAIL_QUEUE_INDEX_FLUSH_THRESHOLD = 1000;
         
-    private static AtomicInteger mVisitorIdCounter = new AtomicInteger(0);
+    static AtomicInteger mVisitorIdCounter = new AtomicInteger(0);
 
-    private AtomicInteger mNumMessages = new AtomicInteger(0);
+    AtomicInteger mNumMessages = new AtomicInteger(0);
 
     public int getNumMessages() {
         return mNumMessages.get();
@@ -106,7 +105,7 @@ public class RemoteMailQueue {
     
     private class QueueItemVisitor implements RemoteResultParser.Visitor {
 
-        private final int mId;
+        final int mId;
         
         QueueItemVisitor() {
             mId = mVisitorIdCounter.incrementAndGet();
@@ -161,14 +160,14 @@ public class RemoteMailQueue {
         }
     }
         
-    private void addSimpleField(Document doc, Map<String,String> map, QueueAttr attr) {
+    void addSimpleField(Document doc, Map<String,String> map, QueueAttr attr) {
         String value = map.get(attr.toString());
         if (value != null && value.length() > 0) {
             doc.add(new Field(attr.toString(), value.toLowerCase(), true, true, false, false));
         }
     }
         
-    private void addEmailAddress(Document doc, String id, String address, QueueAttr addressAttr, QueueAttr domainAttr) {
+    void addEmailAddress(Document doc, String id, String address, QueueAttr addressAttr, QueueAttr domainAttr) {
         address = address.toLowerCase();
         doc.add(new Field(addressAttr.toString(), address, true, true, false, false));
         String[] parts = address.split("@");
@@ -211,13 +210,10 @@ public class RemoteMailQueue {
         }
     }
 
-    private Object mScanLock = new Object();
-    
-    private boolean mScanInProgress;
-    
-    private long mScanStartTime;
-    
-    private long mScanEndTime;
+    Object mScanLock = new Object();
+    boolean mScanInProgress;
+    long mScanStartTime;
+    long mScanEndTime;
 
     public long getScanTime() {
         synchronized (mScanLock) {
@@ -229,7 +225,7 @@ public class RemoteMailQueue {
         }
     }
     
-    private void clearIndexInternal() throws IOException {
+    void clearIndexInternal() throws IOException {
         IndexWriter writer = null;
         try {
             if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("clearing index (" + mIndexPath + ") for " + this);
@@ -301,11 +297,9 @@ public class RemoteMailQueue {
         }
     }
     
-    private final String mQueueName;
-        
-    private final String mServerName;
-
-    private final String mDescription;
+    final String mQueueName;
+    final String mServerName;
+    final String mDescription;
     
     public String toString() {
         return mDescription;
@@ -321,27 +315,27 @@ public class RemoteMailQueue {
         }
     }
 
-    private IndexWriter mIndexWriter;
+    IndexWriter mIndexWriter;
     
     private final File mIndexPath;
 
-    private void openIndexWriter() throws IOException {
+    void openIndexWriter() throws IOException {
         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("opening indexwriter " + this);
         mIndexWriter = new IndexWriter(mIndexPath, new StandardAnalyzer(), true);
     }
     
-    private void closeIndexWriter() throws IOException {
+    void closeIndexWriter() throws IOException {
         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("closing indexwriter " + this);
         mIndexWriter.close();
     }
     
-    private void reopenIndexWriter() throws IOException {
+    void reopenIndexWriter() throws IOException {
         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("reopening indexwriter " + this);
         mIndexWriter.close();
         mIndexWriter = new IndexWriter(mIndexPath, new StandardAnalyzer(), false);
     }
     
-    public static final class SummaryItem implements Comparable {
+    public static final class SummaryItem implements Comparable<SummaryItem> {
         private String mTerm;
         private int mCount;
         
@@ -358,8 +352,7 @@ public class RemoteMailQueue {
             return mCount;
         }
        
-        public int compareTo(Object o) {
-            SummaryItem other = (SummaryItem)o;
+        public int compareTo(SummaryItem other) {
             return other.mCount - mCount;
         }
     }
@@ -468,7 +461,7 @@ public class RemoteMailQueue {
         result.hits = getNumMessages();
     }
     
-    private void search0(SearchResult result, IndexReader indexReader, Query query, int offset, int limit) throws ParseException, IOException {
+    private void search0(SearchResult result, IndexReader indexReader, Query query, int offset, int limit) throws IOException {
         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("searching query=" + query + " offset=" + offset + " limit=" + limit + " " + this);
         Searcher searcher = null;
         try {
@@ -530,7 +523,7 @@ public class RemoteMailQueue {
 
     public void action(Server server, QueueAction action, String[] ids) throws ServiceException {
         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("action=" + action + " ids=" + Arrays.deepToString(ids) + " " + this);
-    	boolean firstTime = true;
+//    	boolean firstTime = true;
     	RemoteManager rm = RemoteManager.getRemoteManager(server);
     	IndexReader indexReader = null;
 
@@ -593,7 +586,7 @@ public class RemoteMailQueue {
         System.exit(1);
     }
 
-    public static void main(String[] args) throws ServiceException, IOException, DocumentException {
+    public static void main(String[] args) throws ServiceException, DocumentException {
         Zimbra.toolSetup("DEBUG");
         Provisioning prov = Provisioning.getInstance();
 

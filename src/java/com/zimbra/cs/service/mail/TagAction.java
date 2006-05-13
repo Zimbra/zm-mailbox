@@ -59,7 +59,7 @@ public class TagAction extends ItemAction  {
     public static final String OP_UNTAG  = '!' + OP_TAG;
 	public static final String OP_RENAME = "rename";
 
-    private static final Set TAG_OPS = new HashSet(Arrays.asList(new String[] {
+    private static final Set<String> TAG_OPS = new HashSet<String>(Arrays.asList(new String[] {
         OP_RENAME
     }));
 
@@ -86,7 +86,7 @@ public class TagAction extends ItemAction  {
         return response;
 	}
 
-    private String handleTag(Map context, Element request, String operation) throws ServiceException {
+    private String handleTag(Map<String, Object> context, Element request, String operation) throws ServiceException {
         Element action = request.getElement(MailService.E_ACTION);
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);

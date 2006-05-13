@@ -50,7 +50,7 @@ public class CreateDistributionList extends AdminDocumentHandler {
 	    
         String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
         String isgroup = request.getAttribute(AdminService.E_ISGROUP, "0");
-        Map attrs = AdminService.getAttrs(request, true);
+        Map<String, Object> attrs = AdminService.getAttrs(request, true);
 
         if (!canAccessEmail(lc, name))
             throw ServiceException.PERM_DENIED("can not access address: "+name);

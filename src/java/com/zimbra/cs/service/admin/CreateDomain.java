@@ -48,7 +48,7 @@ public class CreateDomain extends AdminDocumentHandler {
 	    Provisioning prov = Provisioning.getInstance();
 	    
 	    String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
-	    Map attrs = AdminService.getAttrs(request, true);
+	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 	    
 	    Domain domain = prov.createDomain(name, attrs);
 

@@ -309,10 +309,11 @@ class ImapMessage {
             else                                 return 0;
 
             int lines = 0, c;
+            boolean complete = false;
             while ((c = is.read()) != -1)
-                if (c == '\n')
+                if ((complete = (c == '\n')) == true)
                     lines++;
-            return lines;
+            return complete ? lines : lines + 1;
         } catch (MessagingException e) {
             return 0;
         } catch (IOException e) {

@@ -35,7 +35,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.Map.Entry;
 
 import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
@@ -249,7 +248,7 @@ public class ProvUtil {
     }
 
     private void initCommands() {
-        mCommandIndex = new HashMap();
+        mCommandIndex = new HashMap<String, Integer>();
         addCommand("addAccountAlias", "aaa", ADD_ACCOUNT_ALIAS);
         addCommand("createAccount", "ca", CREATE_ACCOUNT);
         addCommand("createBulkAccounts", "cabulk", CREATE_BULK_ACCOUNTS);
@@ -322,7 +321,7 @@ public class ProvUtil {
     }
     
     private int lookupCommand(String command) {
-        Integer i = (Integer) mCommandIndex.get(command.toLowerCase());
+        Integer i = mCommandIndex.get(command.toLowerCase());
         if (i == null)
             return UNKNOWN_COMMAND;
         else
@@ -572,7 +571,7 @@ public class ProvUtil {
         }
     }
 
-    private void doHelp(String[] args) throws ServiceException {
+    private void doHelp(String[] args) {
         usage();
     }
 
@@ -649,7 +648,7 @@ public class ProvUtil {
         } else {
             String name = args[1];
             String password = args[2];
-            Map attrs = getMap(args, 3);
+            Map<String, Object> attrs = getMap(args, 3);
             if (password != null && password.equals(""))
                 password = null;
             Account account = mProvisioning.createAccount(name, password, attrs);
@@ -667,7 +666,7 @@ public class ProvUtil {
             int numAccounts = Integer.parseInt(args[3]);            
             for(int ix=0; ix < numAccounts; ix++) {
             	String name = nameMask + Integer.toString(ix) + "@" + domain;
-            	HashMap attrs = new HashMap();
+            	Map<String, Object> attrs = new HashMap<String, Object>();
             	String displayName = nameMask + " N. " + Integer.toString(ix);
             	StringUtil.addToMultiMap(attrs, "displayName", displayName);
                 Account account = mProvisioning.createAccount(name, password, attrs);
@@ -694,7 +693,7 @@ public class ProvUtil {
             usage();
         } else {
             String key = args[1];
-            Map attrs = getMap(args, 2);
+            Map<String, Object> attrs = getMap(args, 2);
             Account account = lookupAccount(key);
             account.modifyAttrs(attrs, true);
         }
@@ -705,7 +704,7 @@ public class ProvUtil {
             usage();
         } else {
             String key = args[1];
-            Map attrs = getMap(args, 2);
+            Map<String, Object> attrs = getMap(args, 2);
             Cos cos = lookupCos(key);
             cos.modifyAttrs(attrs, true);
         }
@@ -715,7 +714,7 @@ public class ProvUtil {
         if (args.length < 3) {
             usage();
         } else {
-            Map attrs = getMap(args, 1);
+            Map<String, Object> attrs = getMap(args, 1);
             mProvisioning.getConfig().modifyAttrs(attrs, true);
         }
     }
@@ -725,7 +724,7 @@ public class ProvUtil {
             usage();
         } else {
             String key = args[1];
-            Map attrs = getMap(args, 2);
+            Map<String, Object> attrs = getMap(args, 2);
             Domain domain = lookupDomain(key);
             domain.modifyAttrs(attrs, true);
         }
@@ -736,7 +735,7 @@ public class ProvUtil {
             usage();
         } else {
             String key = args[1];
-            Map attrs = getMap(args, 2);
+            Map<String, Object> attrs = getMap(args, 2);
             Server server = lookupServer(key);
             server.modifyAttrs(attrs, true);
         }
@@ -859,7 +858,7 @@ public class ProvUtil {
             String key = args[1];
             String value[] = mProvisioning.getConfig().getMultiAttr(key);
             if (value != null && value.length != 0) {
-                HashMap map = new HashMap();
+                Map<String, Object> map = new HashMap<String, Object>();
                 map.put(key, value);
                 dumpAttrs(map);
             }
@@ -958,8 +957,8 @@ public class ProvUtil {
         String query = args[i];
 
         Map attrs = getMap(args, i+1);
-        int iPageNum = 0;
-        int iPerPage = 0;        
+//        int iPageNum = 0;
+//        int iPerPage = 0;        
 
         String limitStr = (String) attrs.get("limit");
         int limit = limitStr == null ? Integer.MAX_VALUE : Integer.parseInt(limitStr);
@@ -1145,7 +1144,7 @@ public class ProvUtil {
 
     private void dumpCos(Cos cos) throws ServiceException {
         System.out.println("# name "+cos.getName());
-        Map attrs = cos.getAttrs();
+        Map<String, Object> attrs = cos.getAttrs();
         dumpAttrs(attrs);
         System.out.println();
     }
@@ -1169,7 +1168,7 @@ public class ProvUtil {
 
     private void dumpDomain(Domain domain) throws ServiceException {
         System.out.println("# name "+domain.getName());
-        Map attrs = domain.getAttrs();
+        Map<String, Object> attrs = domain.getAttrs();
         dumpAttrs(attrs);
         System.out.println();
     }
@@ -1178,13 +1177,13 @@ public class ProvUtil {
         String[] members = dl.getAllMembers();
         int count = members == null ? 0 : members.length; 
         System.out.println("# distributionList " + dl.getName() + " memberCount=" + count);
-        Map attrs = dl.getAttrs();
+        Map<String, Object> attrs = dl.getAttrs();
         dumpAttrs(attrs);        
     }
 
     private void dumpAlias(Alias alias) throws ServiceException {
         System.out.println("# alias " + alias.getName());
-        Map attrs = alias.getAttrs();
+        Map<String, Object> attrs = alias.getAttrs();
         dumpAttrs(attrs);        
     }
 
@@ -1216,46 +1215,45 @@ public class ProvUtil {
 
     private void dumpServer(Server server) throws ServiceException {
         System.out.println("# name "+server.getName());
-        Map attrs = server.getAttrs(true);
+        Map<String, Object> attrs = server.getAttrs(true);
         dumpAttrs(attrs);
         System.out.println();
     }
 
-    private void dumpAccount(Account account) throws ServiceException {
+    void dumpAccount(Account account) throws ServiceException {
         dumpAccount(account, true);
     }
 
     private void dumpAccount(Account account, boolean expandCos) throws ServiceException {
         System.out.println("# name "+account.getName());
-        Map attrs = account.getAttrs(false, expandCos);
+        Map<String, Object> attrs = account.getAttrs(false, expandCos);
         dumpAttrs(attrs);
         System.out.println();
     }
     
-    private void dumpCalendarResource(CalendarResource  resource) throws ServiceException {
+    void dumpCalendarResource(CalendarResource  resource) throws ServiceException {
         dumpCalendarResource(resource, true);
     }
 
     private void dumpCalendarResource(CalendarResource resource, boolean expandCos) throws ServiceException {
         System.out.println("# name "+resource.getName());
-        Map attrs = resource.getAttrs(false, expandCos);
+        Map<String, Object> attrs = resource.getAttrs(false, expandCos);
         dumpAttrs(attrs);
         System.out.println();
     }
     
     private void dumpContact(GalContact contact) throws ServiceException {
         System.out.println("# name "+contact.getId());
-        Map attrs = contact.getAttrs();
+        Map<String, Object> attrs = contact.getAttrs();
         dumpAttrs(attrs);
         System.out.println();
     }
     
-    private void dumpAttrs(Map attrsIn) {
-        TreeMap attrs = new TreeMap(attrsIn);
-        
-        for (Iterator mit=attrs.entrySet().iterator(); mit.hasNext(); ) {
-            Map.Entry entry = (Entry) mit.next();
-            String name = (String) entry.getKey();
+    private void dumpAttrs(Map<String, Object> attrsIn) {
+        TreeMap<String, Object> attrs = new TreeMap<String, Object>(attrsIn);
+
+        for (Map.Entry<String, Object> entry : attrs.entrySet()) {
+            String name = entry.getKey();
             Object value = entry.getValue();
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
@@ -1273,8 +1271,8 @@ public class ProvUtil {
             usage();
         } else {
             String name = args[1];
-            Map attrs = getMap(args, 2);
-            Cos cos = mProvisioning.createCos(name,attrs);
+            Map<String, Object> attrs = getMap(args, 2);
+            Cos cos = mProvisioning.createCos(name, attrs);
             System.out.println(cos.getId());
         }
     }
@@ -1284,7 +1282,7 @@ public class ProvUtil {
             usage();
         } else {
             String name = args[1];
-            Map attrs = getMap(args, 2);
+            Map<String, Object> attrs = getMap(args, 2);
             Domain domain = mProvisioning.createDomain(name,attrs);
             System.out.println(domain.getId());
         }
@@ -1295,8 +1293,8 @@ public class ProvUtil {
             usage();
         } else {
             String name = args[1];
-            Map attrs = getMap(args, 2);
-            Server server = mProvisioning.createServer(name,attrs);
+            Map<String, Object> attrs = getMap(args, 2);
+            Server server = mProvisioning.createServer(name, attrs);
             System.out.println(server.getId());
         }
     }    
@@ -1307,7 +1305,7 @@ public class ProvUtil {
         } else {
             String name = args[1];
             String password = args[2];
-            Map attrs = getMap(args, 3);
+            Map<String, Object> attrs = getMap(args, 3);
             Account account = mProvisioning.createAdminAccount(name, password, attrs);
             System.out.println(account.getId());
         }
@@ -1318,7 +1316,7 @@ public class ProvUtil {
             usage();
         } else {
             String name = args[1];
-            Map attrs = getMap(args, 2);
+            Map<String, Object> attrs = getMap(args, 2);
             DistributionList dl = mProvisioning.createDistributionList(name, attrs);
             System.out.println(dl.getId());
         }
@@ -1333,10 +1331,10 @@ public class ProvUtil {
             int numAccounts = Integer.parseInt(args[3]);            
             for(int ix=0; ix < numAccounts; ix++) {
             	String name = nameMask + Integer.toString(ix) + "@" + domain;
-            	HashMap attrs = new HashMap();
+            	Map<String, Object> attrs = new HashMap<String, Object>();
             	String displayName = nameMask + " N. " + Integer.toString(ix);
             	StringUtil.addToMultiMap(attrs, "displayName", displayName);
-            	DistributionList dl  = mProvisioning.createDistributionList(name,attrs);
+            	DistributionList dl  = mProvisioning.createDistributionList(name, attrs);
             	System.out.println(dl.getId());
            }
         }
@@ -1404,13 +1402,13 @@ public class ProvUtil {
             usage();
         } else {
             String key = args[1];
-            Map attrs = getMap(args, 2);
+            Map<String, Object> attrs = getMap(args, 2);
             DistributionList dl = lookupDistributionList(key);
             dl.modifyAttrs(attrs, true);
         }
     }
 
-    private void doDistributionListIsGroup(String[] args) throws ServiceException, ArgException {
+    private void doDistributionListIsGroup(String[] args) throws ServiceException {
         if (args.length != 3) {
             usage();
         } else {
@@ -1491,9 +1489,8 @@ public class ProvUtil {
             usage();
         } else {
             String name = args[1];
-            Map attrs = getMap(args, 2);
-            CalendarResource resource =
-                mProvisioning.createCalendarResource(name, attrs);
+            Map<String, Object> attrs = getMap(args, 2);
+            CalendarResource resource = mProvisioning.createCalendarResource(name, attrs);
             System.out.println(resource.getId());
         }
     }
@@ -1515,7 +1512,7 @@ public class ProvUtil {
             usage();
         } else {
             String key = args[1];
-            Map attrs = getMap(args, 2);
+            Map<String, Object> attrs = getMap(args, 2);
             CalendarResource res = lookupCalendarResource(key);
             res.modifyAttrs(attrs, true);
         }
@@ -1594,8 +1591,7 @@ public class ProvUtil {
         domain.getAllCalendarResources(visitor);
     }
 
-    private void doSearchCalendarResources(String[] args)
-    throws ServiceException, ArgException {
+    private void doSearchCalendarResources(String[] args) throws ServiceException {
         boolean verbose = false;
         int i = 1;
 
@@ -1746,8 +1742,8 @@ public class ProvUtil {
             return dl;
     }
 
-    private Map getMap(String[] args, int offset) throws ArgException {
-        HashMap attrs = new HashMap();
+    private Map<String, Object> getMap(String[] args, int offset) throws ArgException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
         for (int i = offset; i < args.length; i+=2) {
             String n = args[i];
             if (i+1 >= args.length)

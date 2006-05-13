@@ -51,7 +51,7 @@ public class ModifyDistributionList extends AdminDocumentHandler {
 
         String id = request.getAttribute(AdminService.E_ID);
         String isgroup = request.getAttribute(AdminService.E_ISGROUP, null);        
-        Map attrs = AdminService.getAttrs(request);
+        Map<String, Object> attrs = AdminService.getAttrs(request);
 	    
         DistributionList distributionList = prov.getDistributionListById(id);
         if (distributionList == null)

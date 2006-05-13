@@ -57,7 +57,7 @@ public class CreateAccount extends AdminDocumentHandler {
 
 	    String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
 	    String password = request.getAttribute(AdminService.E_PASSWORD, null);
-	    Map attrs = AdminService.getAttrs(request, true);
+	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 
         if (!canAccessEmail(lc, name))
             throw ServiceException.PERM_DENIED("can not access account:"+name);

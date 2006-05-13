@@ -48,7 +48,7 @@ public class CreateServer extends AdminDocumentHandler {
 	    Provisioning prov = Provisioning.getInstance();
 	    
 	    String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
-	    Map attrs = AdminService.getAttrs(request, true);
+	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 	    
 	    Server server = prov.createServer(name, attrs);
 

@@ -34,7 +34,7 @@ public class AttributeTest {
     public static void main(String args[]) throws ServiceException {
         Zimbra.toolSetup("INFO");
         AttributeManager mgr = AttributeManager.getInstance();
-        HashMap attrs = new HashMap();
+        HashMap<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
         attrs.put(Provisioning.A_zimbraImapBindPort, "143");
         attrs.put("xxxzimbraImapBindPort", "143");

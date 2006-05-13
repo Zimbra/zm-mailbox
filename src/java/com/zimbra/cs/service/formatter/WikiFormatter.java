@@ -27,8 +27,6 @@ package com.zimbra.cs.service.formatter;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.servlet.ServletException;
-
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -92,9 +90,7 @@ public class WikiFormatter extends Formatter {
     }
     
 	@Override
-	public void format(Context context, MailItem item)
-			throws UserServletException, ServiceException, IOException,
-			ServletException {
+	public void format(Context context, MailItem item) throws UserServletException, ServiceException, IOException {
 		//long t0 = System.currentTimeMillis();
         if (item instanceof Folder && !context.itemPath.endsWith("/")) {
         	context.resp.sendRedirect(context.req.getRequestURI() + "/");
@@ -114,9 +110,7 @@ public class WikiFormatter extends Formatter {
 	}
 
 	@Override
-	public void save(byte[] body, Context context, Folder folder)
-			throws UserServletException, ServiceException, IOException,
-			ServletException {
+	public void save(byte[] body, Context context, Folder folder) throws UserServletException {
         throw UserServletException.notImplemented("saving documents via POST not yet supported.");
 	}
 

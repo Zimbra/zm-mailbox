@@ -185,7 +185,7 @@ public class Check {
         ArrayList<String> list = new ArrayList<String>(galAttrs.length);
         HashMap<String, String> map = new HashMap<String, String>();
         LdapUtil.initGalAttrs(galAttrs, list, map);
-        String[] attr_list = (String[]) list.toArray(new String[list.size()]);
+        String[] attr_list = list.toArray(new String[list.size()]);
         
         try {
             SearchGalResult result = LdapUtil.searchLdapGal(url, bindDn, bindPassword, searchBase, filter, query, limit, attr_list, map, null); 

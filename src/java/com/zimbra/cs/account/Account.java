@@ -66,7 +66,7 @@ public interface Account extends NamedEntry {
      * @return
      * @throws ServiceException
      */
-    public Map getAttrs(boolean prefsOnly, boolean applyCos) throws ServiceException;    
+    public Map<String, Object> getAttrs(boolean prefsOnly, boolean applyCos) throws ServiceException;    
     
 
     /**

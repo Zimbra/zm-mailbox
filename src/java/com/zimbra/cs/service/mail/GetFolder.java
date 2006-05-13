@@ -29,13 +29,10 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.GetFolderTreeOperation;
 import com.zimbra.cs.operation.GetFolderTreeOperation.FolderNode;
 import com.zimbra.cs.operation.Operation.Requester;
@@ -119,7 +116,7 @@ public class GetFolder extends DocumentHandler {
 //		return respFolder;
 //	}
 	
-	private void handleMountpoint(Element request, Map context, ItemId iidLocal, Mountpoint mpt, Element eRoot)
+	private void handleMountpoint(Element request, Map<String, Object> context, ItemId iidLocal, Mountpoint mpt, Element eRoot)
 	throws ServiceException, SoapFaultException {
 		ItemId iidRemote = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
 		Element proxied = proxyRequest(request, context, iidLocal, iidRemote);

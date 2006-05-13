@@ -1244,7 +1244,7 @@ public class ToXML {
         addEmails(m, eecache, recipients, emailType, null);
     }
     private static void addEmails(Element m, EmailElementCache eecache,
-    		                      InternetAddress[] recipients, int emailType, HashSet unique) {
+    		                      InternetAddress[] recipients, int emailType, HashSet<String> unique) {
         if (recipients == null || recipients.length == 0)
             return;
         for (int i = 0; i < recipients.length; i++)

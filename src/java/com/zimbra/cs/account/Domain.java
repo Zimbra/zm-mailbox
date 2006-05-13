@@ -92,7 +92,7 @@ public interface Domain extends NamedEntry {
      */
     public SearchGalResult autoCompleteGal(String query, Provisioning.GAL_SEARCH_TYPE type, int limit) throws ServiceException;
 
-    public Map getAttrs(boolean applyConfig) throws ServiceException;
+    public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException;
 
     /**
      * @param filter search filter

@@ -31,7 +31,6 @@ package com.zimbra.cs.service.admin;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Server;
@@ -99,9 +98,9 @@ public class GetServer extends AdminDocumentHandler {
         Element server = e.addElement(AdminService.E_SERVER);
         server.addAttribute(AdminService.A_NAME, s.getName());
         server.addAttribute(AdminService.A_ID, s.getId());
-        Map attrs = s.getAttrs(applyConfig);
-        for (Map.Entry entry : (Set<Map.Entry>) attrs.entrySet()) {
-            String name = (String) entry.getKey();
+        Map<String, Object> attrs = s.getAttrs(applyConfig);
+        for (Map.Entry<String, Object> entry : attrs.entrySet()) {
+            String name = entry.getKey();
             Object value = entry.getValue();
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;

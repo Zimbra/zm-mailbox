@@ -35,21 +35,20 @@ import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.GalContact;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
  */
 public class LdapGalContact implements GalContact {
 
-    private Map mAttrs;
+    private Map<String, Object> mAttrs;
     private String mId;
     
-    public LdapGalContact(String dn, Attributes attrs, String[] galList, Map galMap) {
+    public LdapGalContact(String dn, Attributes attrs, String[] galList, Map<String, String> galMap) {
         mId = dn;
-        mAttrs = new HashMap();
-        for (int i=0; i < galList.length; i++)
-            addAttr(attrs, galList[i], (String)galMap.get(galList[i]));        
+        mAttrs = new HashMap<String, Object>();
+        for (int i = 0; i < galList.length; i++)
+            addAttr(attrs, galList[i], galMap.get(galList[i]));        
     }
 
     private void addAttr(Attributes attrs, String accountAttr, String contactAttr) {
@@ -78,7 +77,7 @@ public class LdapGalContact implements GalContact {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.GalContact#getAttrs()
      */
-    public Map getAttrs() throws ServiceException {
+    public Map<String, Object> getAttrs() {
         return mAttrs;
     }
 

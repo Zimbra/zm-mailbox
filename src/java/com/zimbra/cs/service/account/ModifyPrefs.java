@@ -29,7 +29,6 @@
 package com.zimbra.cs.service.account;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
@@ -48,17 +47,16 @@ public class ModifyPrefs extends WriteOpDocumentHandler {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
 
-        HashMap prefs = new HashMap();
-        HashMap specialPrefs = new HashMap();
-        
-        for (Iterator it = request.elementIterator(AccountService.E_PREF); it.hasNext(); ) {
-            Element e = (Element) it.next();
+        HashMap<String, String> prefs = new HashMap<String, String>();
+//        HashMap specialPrefs = new HashMap();
+
+        for (Element e : request.listElements(AccountService.E_PREF)) {
             String name = e.getAttribute(AccountService.A_NAME);
             String value = e.getText();
-    		    if (!name.startsWith("zimbraPref")) {
-    		        throw ServiceException.INVALID_REQUEST("pref name must start with zimbraPref", null);
-    		    }
-    		    prefs.put(name, value);
+		    if (!name.startsWith("zimbraPref")) {
+		        throw ServiceException.INVALID_REQUEST("pref name must start with zimbraPref", null);
+		    }
+		    prefs.put(name, value);
         }
         if (prefs.containsKey(Provisioning.A_zimbraPrefMailForwardingAddress)) {
             if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureMailForwardingEnabled, false)) {

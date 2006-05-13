@@ -83,7 +83,7 @@ public class StringUtil {
      * @param name
      * @param value
      */
-    public static void addToMultiMap(Map result, String name, String value) {
+    public static void addToMultiMap(Map<String, Object> result, String name, String value) {
         Object currentValue = result.get(name);
         if (currentValue == null) {
             result.put(name, value);
@@ -109,7 +109,7 @@ public class StringUtil {
      * @return
      */
     public static String[] parseLine(String line) {
-        ArrayList result = new ArrayList();
+        ArrayList<String> result = new ArrayList<String>();
         
         int i=0;
         
@@ -194,7 +194,7 @@ public class StringUtil {
         if (sb.length() > 0)
             result.add(sb.toString());
         
-        return (String[]) result.toArray(new String[result.size()]);
+        return result.toArray(new String[result.size()]);
     }
 
     private static void dump(String line) {

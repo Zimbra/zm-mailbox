@@ -54,7 +54,7 @@ public class CreateCalendarResource extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
 
         String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
-        Map attrs = AdminService.getAttrs(request, true);
+        Map<String, Object> attrs = AdminService.getAttrs(request, true);
 
         if (!canAccessEmail(lc, name))
             throw ServiceException.PERM_DENIED(

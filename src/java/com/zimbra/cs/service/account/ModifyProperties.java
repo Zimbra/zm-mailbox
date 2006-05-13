@@ -24,13 +24,11 @@
  */
 package com.zimbra.cs.service.account;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
@@ -43,14 +41,13 @@ import com.zimbra.cs.zimlet.ZimletUserProperties;
 public class ModifyProperties extends WriteOpDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context)
-			throws ServiceException, SoapFaultException {
+			throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
 
         ZimletUserProperties props = ZimletUserProperties.getProperties(acct);
-        
-        for (Iterator it = request.elementIterator(AccountService.E_PROPERTY); it.hasNext(); ) {
-            Element e = (Element) it.next();
+
+        for (Element e : request.listElements(AccountService.E_PROPERTY)) {
             props.setProperty(e.getAttribute(AccountService.A_ZIMLET),
             					e.getAttribute(AccountService.A_NAME),
             					e.getText());

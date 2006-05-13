@@ -900,7 +900,7 @@ public abstract class Provisioning {
      * @return
      * @throws ServiceException
      */
-    public abstract Account createAccount(String emailAddress, String password, Map attrs) throws ServiceException;
+    public abstract Account createAccount(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException;
     
     /**
      * copy an account from the remote system to the local system. The local domain must already exist.
@@ -970,7 +970,7 @@ public abstract class Provisioning {
      */
     public abstract List<NamedEntry> searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
 
-    public abstract Account createAdminAccount(String name, String password, Map attrs) throws ServiceException;
+    public abstract Account createAdminAccount(String name, String password, Map<String, Object> attrs) throws ServiceException;
     
     public abstract Account getAdminAccountByName(String name) throws ServiceException;
     
@@ -1006,7 +1006,7 @@ public abstract class Provisioning {
      * @param attrs extra attrs
      * @return
      */
-    public abstract Domain createDomain(String name, Map attrs) throws ServiceException;
+    public abstract Domain createDomain(String name, Map<String, Object> attrs) throws ServiceException;
 
     public abstract Domain getDomainById(String zimbraId) throws ServiceException;
 
@@ -1018,7 +1018,7 @@ public abstract class Provisioning {
 
     public abstract void deleteDomain(String zimbraId) throws ServiceException;
 
-    public abstract Cos createCos(String name, Map attrs) throws ServiceException;
+    public abstract Cos createCos(String name, Map<String, Object> attrs) throws ServiceException;
 
     public abstract void renameCos(String zimbraId, String newName) throws ServiceException;
     
@@ -1032,7 +1032,7 @@ public abstract class Provisioning {
     
     public abstract Server getLocalServer() throws ServiceException;
     
-    public abstract Server createServer(String name, Map attrs) throws ServiceException;
+    public abstract Server createServer(String name, Map<String, Object> attrs) throws ServiceException;
 
     public abstract Server getServerById(String zimbraId) throws ServiceException;
 
@@ -1052,7 +1052,7 @@ public abstract class Provisioning {
 
     public abstract WellKnownTimeZone getTimeZoneById(String tzId) throws ServiceException;
 
-    public abstract DistributionList createDistributionList(String listAddress, Map listAttrs) throws ServiceException;
+    public abstract DistributionList createDistributionList(String listAddress, Map<String, Object> listAttrs) throws ServiceException;
 
     public abstract DistributionList getDistributionListById(String zimbraId) throws ServiceException;
     
@@ -1074,7 +1074,7 @@ public abstract class Provisioning {
     
     public abstract List<Zimlet> listAllZimlets() throws ServiceException;
     
-    public abstract Zimlet createZimlet(String name, Map attrs) throws ServiceException;
+    public abstract Zimlet createZimlet(String name, Map<String, Object> attrs) throws ServiceException;
     
     public abstract void deleteZimlet(String name) throws ServiceException;
     
@@ -1105,7 +1105,7 @@ public abstract class Provisioning {
      * @return
      * @throws ServiceException
      */
-    public abstract CalendarResource createCalendarResource(String emailAddress, Map attrs) throws ServiceException;
+    public abstract CalendarResource createCalendarResource(String emailAddress, Map<String, Object> attrs) throws ServiceException;
 
     /**
      * deletes the specified calendar resource, removing the account and all email aliases.

@@ -46,15 +46,15 @@ public class ZimletUserProperties {
 	private static final long   TTL = 30 * 60 * 1000;  // 30 mins TTL for cache
 	private long mCreateTime;
 
-	private static Map sUserPropMap;
+	private static Map<String, ZimletUserProperties> sUserPropMap;
 	
 	static {
-		sUserPropMap = new HashMap();
+		sUserPropMap = new HashMap<String, ZimletUserProperties>();
 	}
 	
 	public static ZimletUserProperties getProperties(Account ac) {
 		String id = ac.getId();
-		ZimletUserProperties prop = (ZimletUserProperties) sUserPropMap.get(id);
+		ZimletUserProperties prop = sUserPropMap.get(id);
 		if (prop != null) {
 			if (prop.mCreateTime + TTL < System.currentTimeMillis()) {
 				prop = null;
@@ -70,7 +70,7 @@ public class ZimletUserProperties {
 	
 	private ZimletUserProperties(Account ac) {
 		String[] props = ac.getMultiAttr(Provisioning.A_zimbraZimletUserProperties);
-		mPropSet = new HashSet();
+		mPropSet = new HashSet<ZimletProp>();
 		for (int i = 0; i < props.length; i++) {
 			try {
 				ZimletProp zp = new ZimletProp(props[i]);
@@ -95,24 +95,24 @@ public class ZimletUserProperties {
 		mPropSet.add(newProp);
 	}
 
-	public Set getAllProperties() {
+	public Set<ZimletProp> getAllProperties() {
 		return mPropSet;
 	}
 	
 	public void saveProperties(Account ac) throws ServiceException {
 		String[] props = new String[mPropSet.size()];
-		Iterator iter = mPropSet.iterator();
+		Iterator<ZimletProp> iter = mPropSet.iterator();
 		int index = 0;
 		while (iter.hasNext()) {
-			ZimletProp zp = (ZimletProp) iter.next();
+			ZimletProp zp = iter.next();
 			props[index++] = zp.prop;
 		}
-		Map propMap = new HashMap();
+		Map<String, String[]> propMap = new HashMap<String, String[]>();
 		propMap.put(Provisioning.A_zimbraZimletUserProperties, props);
 		ac.modifyAttrs(propMap);
 	}
 	
-	private Set mPropSet;
+	private Set<ZimletProp> mPropSet;
 		
 	public static class ZimletProp implements ZimletProperty {
 		public ZimletProp(String zimlet, String key, String value) {
@@ -132,14 +132,14 @@ public class ZimletUserProperties {
 			key = prop.substring(sep1+1, sep2);
 			value = prop.substring(sep2+1);
 		}
-		public boolean matches(ZimletProp prop) {
-			return (zimlet.equals(prop.zimlet) && key.equals(prop.key));
+		public boolean matches(ZimletProp other) {
+			return (zimlet.equals(other.zimlet) && key.equals(other.key));
 		}
-		public void replace(ZimletProp prop) {
-			this.zimlet = prop.zimlet;
-			this.key = prop.key;
-			this.value = prop.value;
-			this.prop = prop.prop;
+		public void replace(ZimletProp other) {
+			this.zimlet = other.zimlet;
+			this.key = other.key;
+			this.value = other.value;
+			this.prop = other.prop;
 		}
 		public String getZimletName() {
 			return zimlet;

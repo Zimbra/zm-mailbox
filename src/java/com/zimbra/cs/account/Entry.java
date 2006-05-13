@@ -55,9 +55,9 @@ public interface Entry {
      * @param name
      * @return
      */
-    public Set getMultiAttrSet(String name);
+    public Set<String> getMultiAttrSet(String name);
 
-    public Map getAttrs() throws ServiceException;
+    public Map<String, Object> getAttrs() throws ServiceException;
     
     /**
      * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
@@ -72,7 +72,7 @@ public interface Entry {
      * 
      * Calls {@link #modifyAttrs(Map, boolean)} with <code>checkImmutable=false</code>.
      */
-    public void modifyAttrs(Map attrs) throws ServiceException;
+    public void modifyAttrs(Map<String, ? extends Object> attrs) throws ServiceException;
     
     /**
      * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
@@ -85,7 +85,7 @@ public interface Entry {
      *     in which case a multi-valued attr is updated</li>
      * </ul>
      */
-    public void modifyAttrs(Map attrs, boolean checkImmutable) throws ServiceException;
+    public void modifyAttrs(Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException;
 
     /**
      * 

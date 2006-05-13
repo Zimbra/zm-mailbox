@@ -103,7 +103,7 @@ public class AttributeManager {
     
     private static AttributeManager mInstance;
 
-    private Map<String,AttributeInfo> mAttrs = new HashMap<String,AttributeInfo>();
+    private Map<String, AttributeInfo> mAttrs = new HashMap<String, AttributeInfo>();
 
     private static Map<Integer,String> mGroupMap = new HashMap<Integer,String>();
 
@@ -218,7 +218,7 @@ public class AttributeManager {
             long min = Long.MIN_VALUE;
             long max = Long.MAX_VALUE;
             boolean immutable = false;
-            boolean ignore = false;
+//            boolean ignore = false;
             int id = -1;
             AttributeCardinality cardinality = null;
             Set<AttributeClass> requiredIn = null;
@@ -403,14 +403,13 @@ public class AttributeManager {
         return cb;
     }
 
-    public void preModify(Map attrs, Entry entry, Map context, boolean isCreate, boolean checkImmutable) throws ServiceException
-    {
-    	String[] keys = (String[]) attrs.keySet().toArray(new String[0]);
+    public void preModify(Map<String, ? extends Object> attrs, Entry entry, Map context, boolean isCreate, boolean checkImmutable) throws ServiceException {
+    	String[] keys = attrs.keySet().toArray(new String[0]);
 		for (int i = 0; i < keys.length; i++) {
 		    String name = keys[i];
             Object value = attrs.get(name);
             if (name.charAt(0) == '-' || name.charAt(0) == '+') name = name.substring(1);
-            AttributeInfo info = (AttributeInfo) mAttrs.get(name.toLowerCase());
+            AttributeInfo info = mAttrs.get(name.toLowerCase());
             if (info != null) {
                 info.checkValue(value, checkImmutable);
                 if (info.getCallback() != null)
@@ -421,14 +420,13 @@ public class AttributeManager {
 		}
     }
 
-    public void postModify(Map attrs, Entry entry, Map context, boolean isCreate)
-    {
-    	String[] keys = (String[]) attrs.keySet().toArray(new String[0]);
+    public void postModify(Map<String, ? extends Object> attrs, Entry entry, Map context, boolean isCreate) {
+    	String[] keys = attrs.keySet().toArray(new String[0]);
 		for (int i = 0; i < keys.length; i++) {
 			String name = keys[i];
-            Object value = attrs.get(name);
+//            Object value = attrs.get(name);
             if (name.charAt(0) == '-' || name.charAt(0) == '+') name = name.substring(1);
-            AttributeInfo info = (AttributeInfo) mAttrs.get(name.toLowerCase());
+            AttributeInfo info = mAttrs.get(name.toLowerCase());
             if (info != null) {
                 if (info.getCallback() != null) {
                     try {
@@ -788,7 +786,7 @@ public class AttributeManager {
     }
 
     private static void dumpAttrs(PrintWriter pw, String name, Attributes attrs) throws NamingException {
-        NamingEnumeration<javax.naming.directory.Attribute> attrIter = (NamingEnumeration<javax.naming.directory.Attribute>)attrs.getAll();
+        NamingEnumeration<javax.naming.directory.Attribute> attrIter = (NamingEnumeration<javax.naming.directory.Attribute>) attrs.getAll();
         List<javax.naming.directory.Attribute> attrsList = new LinkedList<javax.naming.directory.Attribute>();
         while (attrIter.hasMore()) {
             attrsList.add(attrIter.next());
@@ -799,7 +797,7 @@ public class AttributeManager {
             }
         });
         for (javax.naming.directory.Attribute attr : attrsList) {
-            String s = attr.toString();
+//            String s = attr.toString();
             NamingEnumeration valIter = attr.getAll();
             List<String> values = new LinkedList<String>();
             while (valIter.hasMore()) {

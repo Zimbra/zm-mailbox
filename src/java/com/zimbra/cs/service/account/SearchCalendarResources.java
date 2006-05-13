@@ -38,11 +38,9 @@ import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class SearchCalendarResources extends DocumentHandler {
@@ -52,7 +50,7 @@ public class SearchCalendarResources extends DocumentHandler {
     }
 
     public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException, SoapFaultException {
+    throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AccountService.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         Account acct = getRequestedAccount(getZimbraSoapContext(context));

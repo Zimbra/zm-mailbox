@@ -66,10 +66,10 @@ public class GetPrefs extends DocumentHandler  {
 	 * @throws ServiceException
 	 */
 	public static void handle(Element request, Element response, Account acct) throws ServiceException {
-		HashSet specificPrefs = null;
+		HashSet<String> specificPrefs = null;
 		for (Iterator it = request.elementIterator(AccountService.E_PREF); it.hasNext(); ) {
 			if (specificPrefs == null)
-				specificPrefs = new HashSet();
+				specificPrefs = new HashSet<String>();
 			Element e = (Element) it.next();
 			String name = e.getAttribute(AccountService.A_NAME);
 			if (name != null)

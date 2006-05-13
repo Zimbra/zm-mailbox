@@ -27,16 +27,14 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import com.zimbra.cs.util.BuildInfo;
 
-public class GetVersionInfo extends AdminDocumentHandler 
-{
+public class GetVersionInfo extends AdminDocumentHandler {
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
         Element response = lc.createElement(AdminService.GET_VERSION_INFO_RESPONSE);

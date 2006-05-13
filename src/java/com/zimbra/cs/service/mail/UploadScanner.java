@@ -40,7 +40,7 @@ public abstract class UploadScanner {
     public static final class Result {
         private String mDesc;
         
-        private Result(String desc) {
+        Result(String desc) {
             mDesc = desc;
         }
         
@@ -53,7 +53,7 @@ public abstract class UploadScanner {
     public static final Result REJECT = new Result("REJECT");
     public static final Result ERROR = new Result("ERROR");
     
-    private static List sRegisteredScanners = new LinkedList();
+    private static List<UploadScanner> sRegisteredScanners = new LinkedList<UploadScanner>();
     
     public static void registerScanner(UploadScanner scanner) {
     	sRegisteredScanners.add(scanner);

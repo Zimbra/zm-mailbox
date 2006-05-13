@@ -51,7 +51,7 @@ public class EmailElementCache {
     public static final int EMAIL_TYPE_SENDER = 6;
 
 	public int mId;
-	public HashMap mCache;
+	public HashMap<String, CacheNode> mCache;
 
     public static class CacheNode extends ParsedAddress {
         public String id;
@@ -76,10 +76,10 @@ public class EmailElementCache {
 
 	public EmailElementCache() {
 		mId = 0;
-		mCache = new HashMap();
+		mCache = new HashMap<String, CacheNode>();
 	}
 
-	public CacheNode add(String address, Set unique, boolean matchEmail) {
+	public CacheNode add(String address, Set<String> unique, boolean matchEmail) {
         if (address == null)
             return null;
         address = StringUtil.stripControlCharacters(address).trim();
@@ -89,7 +89,7 @@ public class EmailElementCache {
         if (unique != null && unique.contains(address))
             return null;
 
-        CacheNode node = (CacheNode) mCache.get(address);
+        CacheNode node = mCache.get(address);
         boolean nodePresent = node != null;
         if (!nodePresent)
             node = new CacheNode(address, mId++);
@@ -101,26 +101,26 @@ public class EmailElementCache {
             mCache.put(address, node);
         return node;
     }
-    public CacheNode add(InternetAddress ia, Set unique, boolean matchEmail) {
+    public CacheNode add(InternetAddress ia, Set<String> unique, boolean matchEmail) {
         if (ia == null)
             return null;
 
         CacheNode node = null;
         if (ia.getAddress() != null)
-            node = (CacheNode) mCache.get(ia.getAddress());
+            node = mCache.get(ia.getAddress());
         boolean nodePresent = node != null;
         if (!nodePresent)
             node = new CacheNode(ia, mId++);
 
         return addImplementation(node, unique, matchEmail, nodePresent);
     }
-    public CacheNode add(CacheNode externalNode, Set unique, boolean matchEmail) {
+    public CacheNode add(CacheNode externalNode, Set<String> unique, boolean matchEmail) {
         if (externalNode == null)
             return null;
 
         CacheNode node = null;
         if (externalNode.emailPart != null)
-        	node = (CacheNode) mCache.get(externalNode.emailPart);
+        	node = mCache.get(externalNode.emailPart);
         boolean nodePresent = node != null;
         if (!nodePresent)
             node = new CacheNode(externalNode, mId++);
@@ -128,7 +128,7 @@ public class EmailElementCache {
         return addImplementation(node, unique, matchEmail, nodePresent);
     }
     
-    private CacheNode addImplementation(CacheNode node, Set unique, boolean matchEmail, boolean nodePresent) {
+    private CacheNode addImplementation(CacheNode node, Set<String> unique, boolean matchEmail, boolean nodePresent) {
         if (unique != null && node.emailPart != null) {
             if (unique.contains(node.emailPart))
                 return null;
@@ -137,7 +137,7 @@ public class EmailElementCache {
 
         if (!nodePresent && matchEmail && node.emailPart != null) {
             if (mCache.containsKey(node.emailPart))
-                node = (CacheNode) mCache.get(node.emailPart);
+                node = mCache.get(node.emailPart);
             else
                 mCache.put(node.emailPart, node);
         }
@@ -145,19 +145,19 @@ public class EmailElementCache {
         return node;
     }
 
-    public Element makeEmail(Element parent, String address, int type, Set unique) {
+    public Element makeEmail(Element parent, String address, int type, Set<String> unique) {
         CacheNode node = add(address, unique, false);
         if (node == null)
             return null;
         return encode(parent, node, type);
     }
-    public Element makeEmail(Element parent, InternetAddress ia, int type, Set unique) {
+    public Element makeEmail(Element parent, InternetAddress ia, int type, Set<String> unique) {
         CacheNode node = add(ia, unique, false);
         if (node == null)
             return null;
         return encode(parent, node, type);
     }
-    public Element makeEmail(Element parent, CacheNode externalNode, int type, Set unique) {
+    public Element makeEmail(Element parent, CacheNode externalNode, int type, Set<String> unique) {
         CacheNode node = add(externalNode, unique, false);
         if (node == null)
             return null;

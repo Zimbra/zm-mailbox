@@ -30,7 +30,6 @@ package com.zimbra.cs.service.admin;
 
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.dom4j.Namespace;
@@ -495,7 +494,7 @@ public class AdminService implements DocumentService {
      * @return
      * @throws ServiceException
      */
-    public static Map getAttrs(Element request) throws ServiceException {
+    public static Map<String, Object> getAttrs(Element request) throws ServiceException {
         return getAttrs(request, false);
     }
     
@@ -504,10 +503,9 @@ public class AdminService implements DocumentService {
      * @return
      * @throws ServiceException
      */
-    public static Map getAttrs(Element request, boolean ignoreEmptyValues) throws ServiceException {
-        HashMap result = new HashMap();
-        for (Iterator ait = request.elementIterator(AdminService.E_A); ait.hasNext(); ) {
-            Element a = (Element) ait.next();
+    public static Map<String, Object> getAttrs(Element request, boolean ignoreEmptyValues) throws ServiceException {
+        Map<String, Object> result = new HashMap<String, Object>();
+        for (Element a : request.listElements(AdminService.E_A)) {
             String name = a.getAttribute(AdminService.A_N);
             String value = a.getText();
             if (!ignoreEmptyValues || (value != null && value.length() > 0))

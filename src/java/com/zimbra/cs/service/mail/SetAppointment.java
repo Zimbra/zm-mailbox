@@ -84,7 +84,7 @@ public class SetAppointment extends CalendarRequest {
         sLog.info("<SetAppointment> " + lc.toString());
         
         SetAppointmentData defaultData;
-        ArrayList /* SetAppointmentData */ exceptions = new ArrayList();
+        ArrayList<SetAppointmentData> exceptions = new ArrayList<SetAppointmentData>();
         
         synchronized (mbox) {
             // First, the <default>
@@ -163,7 +163,7 @@ public class SetAppointment extends CalendarRequest {
         
         boolean sentByMe = false; // not applicable in the SetAppointment case
         
-        Invite inv = (Invite)(Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe).get(0));
+        Invite inv = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe).get(0);
         
         inv.modifyPartStatInMemory(needsReply, partStatStr);
         

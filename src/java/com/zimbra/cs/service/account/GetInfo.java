@@ -162,7 +162,7 @@ public class GetInfo extends DocumentHandler  {
     		Element elem = response.addElement(AccountService.E_PROPERTY);
     		elem.addAttribute(AccountService.A_ZIMLET, prop.getZimletName());
     		elem.addAttribute(AccountService.A_NAME, prop.getKey());
-    		elem.setText((String) prop.getValue());
+    		elem.setText(prop.getValue());
     	}
     }
 }

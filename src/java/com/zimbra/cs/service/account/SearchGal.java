@@ -29,14 +29,12 @@
 package com.zimbra.cs.service.account;
 
 import java.util.Map;
-import java.util.Set;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
@@ -82,8 +80,8 @@ public class SearchGal extends DocumentHandler {
     public static void addContact(Element response, GalContact contact) throws ServiceException {
         Element cn = response.addElement(MailService.E_CONTACT);
         cn.addAttribute(MailService.A_ID, contact.getId());
-        Map attrs = contact.getAttrs();
-        for (Map.Entry entry : (Set<Map.Entry>) attrs.entrySet()) {
+        Map<String, Object> attrs = contact.getAttrs();
+        for (Map.Entry entry : attrs.entrySet()) {
             Object value = entry.getValue();
             // can't use DISP_ELEMENT because some GAL contact attributes
             //   (e.g. "objectClass") are multi-valued

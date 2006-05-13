@@ -50,7 +50,7 @@ public class ModifyServer extends AdminDocumentHandler {
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getAttribute(AdminService.E_ID);
-	    Map attrs = AdminService.getAttrs(request);
+	    Map<String, Object> attrs = AdminService.getAttrs(request);
 	    
 	    Server server = prov.getServerById(id);
         if (server == null)
