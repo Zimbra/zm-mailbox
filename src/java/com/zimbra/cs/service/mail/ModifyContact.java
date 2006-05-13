@@ -34,8 +34,11 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.operation.ModifyContactOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
@@ -48,11 +51,12 @@ public class ModifyContact extends WriteOpDocumentHandler  {
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_CONTACT, MailService.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }
-    
+
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
+        Session session = getSession(context);
 
         boolean replace = request.getAttributeBool(MailService.A_REPLACE, false);
 
@@ -66,12 +70,15 @@ public class ModifyContact extends WriteOpDocumentHandler  {
             attrs.put(name, e.getText());
         }
 
-        mbox.modifyContact(octxt, iid.getId(), attrs, replace);
+        ModifyContactOperation op = new ModifyContactOperation(session, octxt, mbox, Requester.SOAP,
+                    iid, attrs, replace);
+        op.schedule();
+
 
         Contact con = mbox.getContactById(octxt, iid.getId());
         Element response = lc.createElement(MailService.MODIFY_CONTACT_RESPONSE);
         if (con != null)
-        	ToXML.encodeContact(response, lc, con, null, true, null);
+            ToXML.encodeContact(response, lc, con, null, true, null);
         return response;
     }
 }

@@ -1,3 +1,27 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ * 
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ * 
+ * The Original Code is: Zimbra Collaboration Suite Server.
+ * 
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
+ * All Rights Reserved.
+ * 
+ * Contributor(s):
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.operation;
 
 import java.io.File;
@@ -20,7 +44,7 @@ import com.zimbra.cs.util.ZimbraLog;
  *  The schedconfig.xml file should be formatted like this:
  *  
  *  <scheduler>
- *     <config schedulers="NUM_SCHEDULERS" maxops="MAXOPS">
+ *     <config schedulers="NUM_SCHEDULERS" maxops="MAXOPS" maxload="MAXLOAD">
  *         <maxload pri="PRIORITY" load="MAXLOAD"/>
  *          ...(1 for each priority level)...
  *      </config>
@@ -34,18 +58,10 @@ import com.zimbra.cs.util.ZimbraLog;
  *      MAXOPS is the maximum # simultaneous ops allowed to be running at one time.  This value
  *                allows some coarse-grained concurrency control.
  *                
- *      MAXLOAD: one entry for each Priority level, where priority level is one of
- *                { "admin", "interactive_high", "interactive_low", "batch", "low" }
- *                The maxload for each priority tells the system the cutoff load level
- *                (where system load is the sum of the load of all the running ops) above 
- *                which the system will no longer schedule operations.
+ *      MAXLOAD: Tells the system the cutoff load level (where system load is the sum of the 
+ *                 load of all the running ops) above which the system will no longer schedule 
+ *                 operations.
  *                
- *                 We use different max loads by priority to help aleviate priority inversion
- *                 problems...the higher-priority (e.g. "admin") levels should have higher
- *                 max loads than the lower priority levels -- this effectively causes
- *                 the system to leave some "headroom" when scheduling low-priority operations
- *                 just in case new higher-priority operations come in.
- *      
  *      <op name="CLASSNAME" load="LOAD" scale="SCALE" maxload="MAXLOAD"/>
  *      ......(many ops).....
  *      
@@ -65,104 +81,80 @@ import com.zimbra.cs.util.ZimbraLog;
  *
  */
 public class ConfigLoader {
-	private static final String E_SCHEDULER = "scheduler";
-	
-	private static final String E_CONFIG = "config";
-	private static final String A_MAX_LOAD = "maxload";
-	private static final String E_MAX_LOAD = "maxload";
-	private static final String A_PRIORITY = "pri";
-	private static final String A_LOAD = "load";
-	private static final String A_MAX_OPS = "maxops";
-	private static final String E_OP = "op";
-	private static final String A_NAME = "name";
-	private static final String A_SCALE = "scale";
-	
-	private static String defaultConfigFile() {
-		String zmHome = System.getProperty("zimbra.home");
-		if (zmHome == null) {
-			zmHome = File.separator + "opt" + File.separator + "zimbra";
-		}
-		return zmHome + File.separator + "conf" + File.separator + "schedconfig.xml";
-	}
-	
-	public static void loadConfig() throws ServiceException  {
-		String configFile = defaultConfigFile();
-			
-		try {
-			File cf = new File(configFile);
-			if (cf.exists() && cf.canRead()) {
-				SAXReader reader = new SAXReader();
-				Document document = reader.read(cf);
-				Element root = document.getRootElement();
-				
-				if (!root.getName().equals(E_SCHEDULER))
-					throw new DocumentException("config file " + configFile + " root tag is not " + E_SCHEDULER);
-				
-				
-				Element eConfig = root.element(E_CONFIG);
-				if (eConfig != null) {
-					int maxOps = 20;
-					
-					int[] targetLoad = new int[Scheduler.Priority.NUM_PRIORITIES];
-					
-					for (Iterator iter = eConfig.elementIterator(E_MAX_LOAD); iter.hasNext();) {
-						Element e = (Element) iter.next();
-						
-						String pri = e.attributeValue(A_PRIORITY);
-						int value = getAttrAsInt(e, A_LOAD, 10000);
-						if (pri.equalsIgnoreCase("admin"))
-							targetLoad[0] = value;
-						else if (pri.equalsIgnoreCase("interactive_high"))
-							targetLoad[1] = value;
-						else if (pri.equalsIgnoreCase("interactive_low"))
-							targetLoad[2] = value;
-						else if (pri.equalsIgnoreCase("batch"))
-							targetLoad[3] = value;
-						else if (pri.equalsIgnoreCase("low"))
-							targetLoad[4] = value;
-						else ZimbraLog.system.warn("Operation ConfigLoader: read <maxload> block with unknown pri=\""+pri+"\"");
-					}
-					
-					maxOps = getAttrAsInt(eConfig, A_MAX_OPS, 25);
-					
-					Scheduler.setSchedulerParams(targetLoad, maxOps);
-				}
-				
-				for (Iterator iter = root.elementIterator(E_OP); iter.hasNext();) {
-					Element e = (Element) iter.next();
-					
-					String name = e.attributeValue(A_NAME);
-					if (name == null || name.length() ==0)  {
-						ZimbraLog.system.warn("Operation ConfigLoader - cannot read name attribute for element " + e.toString());
-					} else {
-						int load = getAttrAsInt(e, A_LOAD, -1);
-						int maxLoad =  getAttrAsInt(e, A_MAX_LOAD, -1);
-						int scale =  getAttrAsInt(e, A_SCALE , -1);
-						
-						Operation.Config newConfig = new Operation.Config();
-						newConfig.mLoad = load;
-						newConfig.mScale = scale;
-						newConfig.mMaxLoad = maxLoad;
-						
-//						updateOp(name, load, maxLoad, scale);
-						if (Operation.mConfigMap.containsKey(name))
-							Operation.mConfigMap.remove(name);
-						Operation.mConfigMap.put(name, newConfig);
-					}
-				}
-			} else {
-				ZimbraLog.system.warn("Operation ConfigLoader: local config file `" + cf + "' is not readable");
-			}
-		} catch (DocumentException e) {
-			throw ServiceException.FAILURE("Caught document exception loading Operation Config file: "+configFile, e);
-		}	
-	}
-	
-	private static int getAttrAsInt(Element e, String attName, int defaultValue) {
-		String s = e.attributeValue(attName, null);
-		if (s == null)
-			return defaultValue;
-		
-		return Integer.parseInt(s);
-	}
+    private static final String E_SCHEDULER = "scheduler";
+
+    private static final String E_CONFIG = "config";
+    private static final String A_MAX_LOAD = "maxload";
+    private static final String A_LOAD = "load";
+    private static final String A_MAX_OPS = "maxops";
+    private static final String E_OP = "op";
+    private static final String A_NAME = "name";
+    private static final String A_SCALE = "scale";
+
+    private static String defaultConfigFile() {
+        String zmHome = System.getProperty("zimbra.home");
+        if (zmHome == null) {
+            zmHome = File.separator + "opt" + File.separator + "zimbra";
+        }
+        return zmHome + File.separator + "conf" + File.separator + "schedconfig.xml";
+    }
+
+    public static void loadConfig() throws ServiceException  {
+        String configFile = defaultConfigFile();
+
+        try {
+            File cf = new File(configFile);
+            if (cf.exists() && cf.canRead()) {
+                SAXReader reader = new SAXReader();
+                Document document = reader.read(cf);
+                Element root = document.getRootElement();
+
+                if (!root.getName().equals(E_SCHEDULER))
+                    throw new DocumentException("config file " + configFile + " root tag is not " + E_SCHEDULER);
+
+                Element eConfig = root.element(E_CONFIG);
+                if (eConfig != null) {
+                    int maxLoad = getAttrAsInt(eConfig, A_MAX_LOAD, 10000); 
+                    int maxOps = getAttrAsInt(eConfig, A_MAX_OPS, 25);
+
+                    Scheduler.setSchedulerParams(maxLoad, maxOps);
+                }
+
+                for (Iterator iter = root.elementIterator(E_OP); iter.hasNext();) {
+                    Element e = (Element) iter.next();
+
+                    String name = e.attributeValue(A_NAME);
+                    if (name == null || name.length() ==0)  {
+                        ZimbraLog.system.warn("Operation ConfigLoader - cannot read name attribute for element " + e.toString());
+                    } else {
+                        int load = getAttrAsInt(e, A_LOAD, -1);
+                        int maxLoad =  getAttrAsInt(e, A_MAX_LOAD, -1);
+                        int scale =  getAttrAsInt(e, A_SCALE , -1);
+
+                        Operation.Config newConfig = new Operation.Config();
+                        newConfig.mLoad = load;
+                        newConfig.mScale = scale;
+                        newConfig.mMaxLoad = maxLoad;
+
+//                      updateOp(name, load, maxLoad, scale);
+                        if (Operation.mConfigMap.containsKey(name))
+                            Operation.mConfigMap.remove(name);
+                        Operation.mConfigMap.put(name, newConfig);
+                    }
+                }
+            } else {
+                ZimbraLog.system.warn("Operation ConfigLoader: local config file `" + cf + "' is not readable");
+            }
+        } catch (DocumentException e) {
+            throw ServiceException.FAILURE("Caught document exception loading Operation Config file: "+configFile, e);
+        }	
+    }
+
+    private static int getAttrAsInt(Element e, String attName, int defaultValue) {
+        String s = e.attributeValue(attName, null);
+        if (s == null)
+            return defaultValue;
+
+        return Integer.parseInt(s);
+    }
 }

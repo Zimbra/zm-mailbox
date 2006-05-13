@@ -33,8 +33,11 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.operation.ModifySearchFolderOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.WriteOpDocumentHandler;
@@ -50,18 +53,21 @@ public class ModifySearchFolder extends WriteOpDocumentHandler  {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
-
+		Mailbox mbox = getRequestedMailbox(lc);
+		OperationContext octxt = lc.getOperationContext();
+		Session session = getSession(context);
+		
         Element t = request.getElement(MailService.E_SEARCH);
         ItemId iid = new ItemId(t.getAttribute(MailService.A_ID), lc);
         String query = t.getAttribute(MailService.A_QUERY);
         String types = t.getAttribute(MailService.A_SEARCH_TYPES, null);
         String sort = t.getAttribute(MailService.A_SORTBY, null);
-
-        mbox.modifySearchFolder(octxt, iid.getId(), query, types, sort);
-
-    	SearchFolder sf = mbox.getSearchFolderById(octxt, iid.getId());
+        
+        ModifySearchFolderOperation op = new ModifySearchFolderOperation(session, octxt, mbox, Requester.SOAP,
+        			iid, query, types, sort);
+        op.schedule();
+        SearchFolder sf = op.getSf();
+        
         Element response = lc.createElement(MailService.MODIFY_SEARCH_FOLDER_RESPONSE);
     	ToXML.encodeSearchFolder(response, lc, sf);
         return response;

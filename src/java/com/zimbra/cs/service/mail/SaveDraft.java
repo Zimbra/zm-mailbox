@@ -28,7 +28,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
 
@@ -40,8 +39,11 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.operation.SaveDraftOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -57,6 +59,7 @@ public class SaveDraft extends WriteOpDocumentHandler {
         Account acct = getRequestedAccount(lc);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
+        Session session = getSession(context);
 
         Element msgElem = request.getElement(MailService.E_MSG);
 
@@ -88,20 +91,20 @@ public class SaveDraft extends WriteOpDocumentHandler {
             throw ServiceException.FAILURE("completing MIME message object", me);
         }
 
-		try {
-		    ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
-			Message msg = mbox.saveDraft(octxt, pm, id, origId, replyType);
+        ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
 
-            // we can now purge the uploaded attachments
-            if (mimeData.uploads != null)
-                FileUploadServlet.deleteUploads(mimeData.uploads);
+        SaveDraftOperation op = new SaveDraftOperation(session, octxt, mbox, Requester.SOAP,
+                    pm, id, origId, replyType);
+        op.schedule();
+        Message msg = op.getMsg();
 
-            Element response = lc.createElement(MailService.SAVE_DRAFT_RESPONSE);
-            // FIXME: inefficient -- this recalculates the MimeMessage (but SaveDraft is called rarely)
-            ToXML.encodeMessageAsMP(response, lc, msg, false, null);
-            return response;
-		} catch (IOException ioe) {
-			throw ServiceException.FAILURE("IOException while saving draft", ioe);
-        }
+        // we can now purge the uploaded attachments
+        if (mimeData.uploads != null)
+            FileUploadServlet.deleteUploads(mimeData.uploads);
+
+        Element response = lc.createElement(MailService.SAVE_DRAFT_RESPONSE);
+        // FIXME: inefficient -- this recalculates the MimeMessage (but SaveDraft is called rarely)
+        ToXML.encodeMessageAsMP(response, lc, msg, false, null);
+        return response;
     }
 }
