@@ -65,7 +65,7 @@ public class ImapLSubOperation extends Operation {
 					folder = getMailbox().getFolderByPath(getOpCtxt(), hit.getKey());
 				} catch (MailServiceException.NoSuchItemException nsie) { }
 				// FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
-				boolean visible = hit.getValue() != null && ImapFolder.isFolderVisible(folder);
+				boolean visible = hit.getValue() != null && ImapFolder.isFolderVisible(folder, (ImapSession) mSession);
 				String attributes = visible ? mIGetFolderAttributes.doGetFolderAttributes(folder) : "\\Noselect";
 				hit.setValue("LSUB (" + attributes + ") \"/\" " + ImapFolder.formatPath(hit.getKey(), (ImapSession) mSession));
 			}

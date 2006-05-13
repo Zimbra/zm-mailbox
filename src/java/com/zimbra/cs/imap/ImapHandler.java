@@ -885,7 +885,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
     String getFolderAttributes(Folder folder) {
         int attributes = (folder.hasSubfolders() ? 0x01 : 0x00);
-        attributes    |= (!ImapFolder.isFolderSelectable(folder) ? 0x02 : 0x00);
+        attributes    |= (!ImapFolder.isFolderSelectable(folder, mSession) ? 0x02 : 0x00);
         attributes    |= (folder.getId() == Mailbox.ID_FOLDER_SPAM ? 0x04 : 0x00);
         return FOLDER_ATTRIBUTES[attributes];
     }
@@ -939,7 +939,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             op.schedule();
             Folder folder = op.getFolder();
         	
-            if (!ImapFolder.isFolderVisible(folder)) {
+            if (!ImapFolder.isFolderVisible(folder, mSession)) {
                 ZimbraLog.imap.info("STATUS failed: folder not visible: " + folderName);
                 sendNO(tag, "STATUS failed");
                 return CONTINUE_PROCESSING;
@@ -1119,7 +1119,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         try {
             // make sure the folder exists and is visible
             Folder folder = mMailbox.getFolderByPath(getContext(), path);
-            if (!ImapFolder.isFolderVisible(folder)) {
+            if (!ImapFolder.isFolderVisible(folder, mSession)) {
                 ZimbraLog.imap.info("GETQUOTAROOT failed: folder not visible: " + path);
                 sendNO(tag, "GETQUOTAROOT failed");
                 return CONTINUE_PROCESSING;
@@ -1603,11 +1603,11 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
         try {
             Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
-            if (!ImapFolder.isFolderVisible(folder)) {
+            if (!ImapFolder.isFolderVisible(folder, mSession)) {
                 ZimbraLog.imap.info(command + " failed: folder is hidden: " + folderName);
                 sendNO(tag, command + " failed");
                 return CONTINUE_PROCESSING;
-            } else if (!ImapFolder.isFolderWritable(folder)) {
+            } else if (!ImapFolder.isFolderWritable(folder, mSession)) {
                 ZimbraLog.imap.info(command + " failed: folder is READ-ONLY: " + folderName);
                 sendNO(tag, command + " failed: target mailbox is READ-ONLY");
                 return CONTINUE_PROCESSING;

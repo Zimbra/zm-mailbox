@@ -44,89 +44,88 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.AccountUtil;
 
 public class ImapAppendOperation extends Operation  {
-	private static int LOAD = 10;
-	static {
-		Operation.Config c = loadConfig(ImapAppendOperation.class);
-		if (c != null)
-			LOAD = c.mLoad;
-	}
-	
-	private ImapSession mImapSession;
-	private IFindOrCreateTags mIFindOrCreateTags;	
-	private String mFolderName;
-	private List<String> mFlagNames;
-	private Date mDate;
-	private byte[] mContent;
-	private List<Tag> mNewTags;
-	private StringBuilder mAppendHint;
-	
-	public ImapAppendOperation(ImapSession session, OperationContext oc, Mailbox mbox,
-				IFindOrCreateTags findOrCreateTags, String folderName, List<String> flagNames,
-				Date date, byte[] content, List<Tag> newTags, StringBuilder appendHint) throws ServiceException {
-		super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
-		mImapSession = session;
-		mIFindOrCreateTags = findOrCreateTags;
-		mFolderName = folderName;
-		mFlagNames = flagNames;
-		mDate = date;
-		mContent = content;
-		mNewTags = newTags;
-		mAppendHint = appendHint;
-	}
-	
-	protected void callback() throws ServiceException {
-		synchronized (mMailbox) {
-			Folder folder = mMailbox.getFolderByPath(this.getOpCtxt(), mFolderName);
-			if (!ImapFolder.isFolderVisible(folder)) {
-				throw ImapServiceException.FOLDER_NOT_VISIBLE(mFolderName);
-			} else if (!ImapFolder.isFolderWritable(folder)) {
-				throw ImapServiceException.FOLDER_NOT_WRITABLE(mFolderName);
-			}
-			
-			byte sflags = 0;
-			int flagMask = Flag.FLAG_UNREAD;
-			StringBuffer tagStr = new StringBuffer();
-			if (mFlagNames != null) {
-				for (ImapFlag i4flag : mIFindOrCreateTags.doFindOrCreateTags(mFlagNames, mNewTags)) {
-					if (!i4flag.mPermanent)
-						sflags |= i4flag.mBitmask;
-					else if (Tag.validateId(i4flag.mId))
-						tagStr.append(tagStr.length() == 0 ? "" : ",").append(i4flag.mId);
-					else if (i4flag.mPositive)
-						flagMask |= i4flag.mBitmask;
-					else
-						flagMask &= ~i4flag.mBitmask;
-				}
-			}
-			
-			try {
-				boolean idxAttach = mMailbox.attachmentsIndexingEnabled();
-				ParsedMessage pm = mDate != null ? new ParsedMessage(mContent, mDate.getTime(), idxAttach) :
-					new ParsedMessage(mContent, idxAttach);
-				try {
-					if (!pm.getSender().equals("")) {
-						InternetAddress ia = new InternetAddress(pm.getSender());
-						if (AccountUtil.addressMatchesAccount(mMailbox.getAccount(), ia.getAddress()))
-							flagMask |= Flag.FLAG_FROM_ME;
-					}
-				} catch (Exception e) { }
-				
-				Message msg = mMailbox.addMessage(this.getOpCtxt(), pm, folder.getId(), true, flagMask, tagStr.toString());
-				if (msg != null) {
-					mAppendHint.append("[APPENDUID ").append(ImapFolder.getUIDValidity(folder))
-					.append(' ').append(msg.getImapUID()).append("] ");
-					if (sflags != 0 && mImapSession.isSelected()) {
-						ImapMessage i4msg = mImapSession.getFolder().getById(msg.getId());
-						if (i4msg != null)
-							i4msg.setSessionFlags(sflags);
-					}
-				}
-			} catch (IOException e) {
-				throw ServiceException.FAILURE(e.toString(), e);
-			} catch (MessagingException e) {
-				throw ServiceException.FAILURE(e.toString(), e);
-			}
-		}
-	}	
-	
+    private static int LOAD = 10;
+        static {
+            Operation.Config c = loadConfig(ImapAppendOperation.class);
+            if (c != null)
+                LOAD = c.mLoad;
+        }
+
+    private ImapSession mImapSession;
+    private IFindOrCreateTags mIFindOrCreateTags;   
+    private String mFolderName;
+    private List<String> mFlagNames;
+    private Date mDate;
+    private byte[] mContent;
+    private List<Tag> mNewTags;
+    private StringBuilder mAppendHint;
+
+    public ImapAppendOperation(ImapSession session, OperationContext oc, Mailbox mbox,
+            				   IFindOrCreateTags findOrCreateTags, String folderName, List<String> flagNames,
+            				   Date date, byte[] content, List<Tag> newTags, StringBuilder appendHint) {
+        super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
+        mImapSession = session;
+        mIFindOrCreateTags = findOrCreateTags;
+        mFolderName = folderName;
+        mFlagNames = flagNames;
+        mDate = date;
+        mContent = content;
+        mNewTags = newTags;
+        mAppendHint = appendHint;
+    }
+
+    protected void callback() throws ServiceException {
+        synchronized (mMailbox) {
+            Folder folder = mMailbox.getFolderByPath(this.getOpCtxt(), mFolderName);
+            if (!ImapFolder.isFolderVisible(folder, (ImapSession) mSession)) {
+                throw ImapServiceException.FOLDER_NOT_VISIBLE(mFolderName);
+            } else if (!ImapFolder.isFolderWritable(folder, (ImapSession) mSession)) {
+                throw ImapServiceException.FOLDER_NOT_WRITABLE(mFolderName);
+            }
+
+            byte sflags = 0;
+            int flagMask = Flag.FLAG_UNREAD;
+            StringBuffer tagStr = new StringBuffer();
+            if (mFlagNames != null) {
+                for (ImapFlag i4flag : mIFindOrCreateTags.doFindOrCreateTags(mFlagNames, mNewTags)) {
+                    if (!i4flag.mPermanent)
+                        sflags |= i4flag.mBitmask;
+                    else if (Tag.validateId(i4flag.mId))
+                        tagStr.append(tagStr.length() == 0 ? "" : ",").append(i4flag.mId);
+                    else if (i4flag.mPositive)
+                        flagMask |= i4flag.mBitmask;
+                    else
+                        flagMask &= ~i4flag.mBitmask;
+                }
+            }
+
+            try {
+                boolean idxAttach = mMailbox.attachmentsIndexingEnabled();
+                ParsedMessage pm = mDate != null ? new ParsedMessage(mContent, mDate.getTime(), idxAttach) :
+                    new ParsedMessage(mContent, idxAttach);
+                try {
+                    if (!pm.getSender().equals("")) {
+                        InternetAddress ia = new InternetAddress(pm.getSender());
+                        if (AccountUtil.addressMatchesAccount(mMailbox.getAccount(), ia.getAddress()))
+                            flagMask |= Flag.FLAG_FROM_ME;
+                    }
+                } catch (Exception e) { }
+
+                Message msg = mMailbox.addMessage(this.getOpCtxt(), pm, folder.getId(), true, flagMask, tagStr.toString());
+                if (msg != null) {
+                    mAppendHint.append("[APPENDUID ").append(ImapFolder.getUIDValidity(folder))
+                    .append(' ').append(msg.getImapUID()).append("] ");
+                    if (sflags != 0 && mImapSession.isSelected()) {
+                        ImapMessage i4msg = mImapSession.getFolder().getById(msg.getId());
+                        if (i4msg != null)
+                            i4msg.setSessionFlags(sflags);
+                    }
+                }
+            } catch (IOException e) {
+                throw ServiceException.FAILURE(e.toString(), e);
+            } catch (MessagingException e) {
+                throw ServiceException.FAILURE(e.toString(), e);
+            }
+        }
+    }   
 }

@@ -73,7 +73,7 @@ class ImapFolder implements Iterable<ImapMessage> {
 
         OperationContext octxt = session.getContext();
         Folder folder = mbox.getFolderByPath(octxt, name);
-        if (!isFolderSelectable(folder))
+        if (!isFolderSelectable(folder, session))
             throw ServiceException.PERM_DENIED("cannot select folder: /" + name);
         mPath = name;
         mFolderId = folder.getId();
@@ -84,7 +84,7 @@ class ImapFolder implements Iterable<ImapMessage> {
             else
                 mQuery = "item:none";
         }
-        mWritable = select && isFolderWritable(folder);
+        mWritable = select && isFolderWritable(folder, session);
         mUIDValidityValue = getUIDValidity(folder);
 
         List msgs;
@@ -170,13 +170,18 @@ class ImapFolder implements Iterable<ImapMessage> {
 
     public Iterator<ImapMessage> iterator()  { return mSequence.iterator(); }
 
-    static boolean isFolderWritable(Folder folder) {
-        return isFolderSelectable(folder) && !(folder instanceof SearchFolder);
+    static boolean isFolderWritable(Folder folder, ImapSession session) {
+        return isFolderSelectable(folder, session) && !(folder instanceof SearchFolder);
     }
-    static boolean isFolderSelectable(Folder folder) {
-        return isFolderVisible(folder) && !folder.isTagged(folder.getMailbox().mDeletedFlag);
+    static boolean isFolderSelectable(Folder folder, ImapSession session) {
+        return isFolderVisible(folder, session) && !folder.isTagged(folder.getMailbox().mDeletedFlag);
     }
-    static boolean isFolderVisible(Folder folder) {
+    static boolean isFolderVisible(Folder folder, ImapSession session) {
+        if (session.isHackEnabled(ImapSession.EnabledHack.WM5)) {
+            String lcname = folder.getPath().substring(1).toLowerCase();
+            if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/'))
+                return false;
+        }
         return folder != null &&
                folder.getId() != Mailbox.ID_FOLDER_CONTACTS &&
                folder.getId() != Mailbox.ID_FOLDER_CALENDAR &&

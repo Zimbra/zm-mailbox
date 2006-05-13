@@ -61,7 +61,7 @@ public class ImapListOperation extends Operation {
 			
 			Folder root = mMailbox.getFolderById(this.getOpCtxt(), Mailbox.ID_FOLDER_USER_ROOT);
 			for (Folder folder : root.getSubfolderHierarchy()) {
-				if (!ImapFolder.isFolderVisible(folder))
+				if (!ImapFolder.isFolderVisible(folder, (ImapSession) mSession))
 					continue;
 				String path = ImapFolder.exportPath(folder.getPath(), (ImapSession) mSession);
 				// FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)

@@ -50,7 +50,7 @@ public class ImapSubscribeOperation extends Operation {
     protected void callback() throws ServiceException {
         synchronized (mMailbox) {
             Folder folder = mMailbox.getFolderByPath(this.getOpCtxt(), mFolderName);
-            if (!ImapFolder.isFolderVisible(folder))
+            if (!ImapFolder.isFolderVisible(folder, (ImapSession) mSession))
                 throw ImapServiceException.FOLDER_NOT_VISIBLE(mFolderName);
             if (!folder.isTagged(mMailbox.mSubscribeFlag))
                 mMailbox.alterTag(mOpCtxt, folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, true);
