@@ -287,7 +287,6 @@ public abstract class DocumentHandler {
         if (mountpoint)
             lcTarget.recordMountpointTraversal();
 
-        // figure out whether we can just re-dispatch or if we need to proxy via HTTP
         Account acctTarget = Provisioning.getInstance().getAccountById(acctId);
         if (acctTarget == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
@@ -300,6 +299,7 @@ public abstract class DocumentHandler {
     }
 
     protected static Element proxyRequest(Element request, Map<String, Object> context, Server server, ZimbraSoapContext lc) throws SoapFaultException, ServiceException {
+        // figure out whether we can just re-dispatch or if we need to proxy via HTTP
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
         boolean isLocal = LOCAL_HOST.equalsIgnoreCase(server.getName()) && engine != null;
 
