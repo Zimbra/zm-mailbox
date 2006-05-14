@@ -315,6 +315,8 @@ public class MailSender {
         if (msg == null)
             return;
         try {
+            // make sure the Mailbox will allow us to delete that message...
+            octxt = new OperationContext(octxt).setChangeConstraint(OperationContext.CHECK_CREATED, msg.getSavedSequence());
             mbox.delete(octxt, msg.getId(), msg.getType());
         } catch (Exception e) {
             mLog.warn("ignoring error while deleting saved sent message: " +

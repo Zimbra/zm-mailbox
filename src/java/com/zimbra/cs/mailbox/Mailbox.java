@@ -258,9 +258,13 @@ public class Mailbox {
             if (authuser == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
         }
+        public OperationContext(OperationContext octxt) {
+            authuser   = octxt.authuser;    player = octxt.player;
+            changetype = octxt.changetype;  change = octxt.change;
+        }
 
-        public void setChangeConstraint(boolean checkCreated, int changeId) {
-            changetype = checkCreated;  change = changeId;
+        public OperationContext setChangeConstraint(boolean checkCreated, int changeId) {
+            changetype = checkCreated;  change = changeId;  return this;
         }
 
         public RedoableOp getPlayer() { return player; }
