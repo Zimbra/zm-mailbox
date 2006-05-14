@@ -267,7 +267,6 @@ public class SoapSession extends Session {
         synchronized (this) {
             if (!mNotify)
                 return;
-            mChanges.clear();
             mSentChanges.clear();
         }
 
@@ -354,7 +353,7 @@ public class SoapSession extends Session {
      * @param lastKnownSeqno  The highest notification-sequence-number that the client has
      *         received (0 means none)
      * @return The passed-in <code>&lt;context></code> element */
-    public Element putNotifications(ZimbraSoapContext zc, Element ctxt, int lastKnownSeqno) throws ServiceException {
+    public Element putNotifications(ZimbraSoapContext zc, Element ctxt, int lastKnownSeqno) {
         if (ctxt == null)
             return null;
 
@@ -384,25 +383,21 @@ public class SoapSession extends Session {
                 }
                 
                 // first, clear any PM's we now know the client has received
-                for (Iterator<PendingModifications> iter = mSentChanges.iterator(); iter.hasNext();)
-                {
+                for (Iterator<PendingModifications> iter = mSentChanges.iterator(); iter.hasNext(); ) {
                     PendingModifications pm = iter.next();
                     if (pm.getSeqNo() <= lastKnownSeqno)
                         iter.remove();
-                }
-                for (PendingModifications pm : mSentChanges) {
                     assert(pm.getSeqNo() > lastKnownSeqno);
                 }
                 
                 if (mNotify) {
-                    
                     if (mChanges.hasNotifications()) {
                         assert(mChanges.getSeqNo() >= 1);
-                        int newSeqNo = mChanges.getSeqNo()+1;
+                        int newSeqNo = mChanges.getSeqNo() + 1;
                         mSentChanges.add(mChanges);
                         mChanges = new PendingModifications(newSeqNo); 
                     }
-                
+
                     // drop out if notify is off or if there is nothing to send
                     if (mSentChanges.isEmpty())
                         return ctxt;
@@ -411,9 +406,8 @@ public class SoapSession extends Session {
                     assert(!mChanges.hasNotifications());
                 
                     // send all the old changes
-                    for (PendingModifications pm : mSentChanges) {
+                    for (PendingModifications pm : mSentChanges)
                         putPendingModifications(zc, pm, ctxt, mbox, explicitAcct);
-                    }
                 }
             }
         }

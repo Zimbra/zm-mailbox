@@ -15,7 +15,7 @@
  * The Original Code is: Zimbra Collaboration Suite Server.
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
- * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2005, 2006 Zimbra, Inc.
  * All Rights Reserved.
  * 
  * Contributor(s): 
@@ -251,16 +251,17 @@ public class SoapEngine {
         
         Element response;
         try {
-            // first, try to proxy the request if necessary
+            // fault in a session for this handler (if necessary) before executing the command
+            handler.getSession(context);
+            // try to proxy the request if necesary
             response = handler.proxyIfNecessary(request, context);
             // if no proxy, execute the request locally
             if (response == null)
                 response = handler.handle(request, context);
-            // fault in a session for this handler after executing the command
-            handler.getSession(context);
         } catch (ServiceException e) {
             response = soapProto.soapFault(e);
             mLog.info("handler exception", e);
+            // XXX: if the session was new, do we want to delete it?
         } catch (SoapFaultException e) {
             response = e.getFault().detach();
             mLog.debug("handler exception", e);
@@ -270,6 +271,7 @@ public class SoapEngine {
             if (e instanceof OutOfMemoryError)
                 Zimbra.halt("handler exception", e);
             mLog.warn("handler exception", e);
+            // XXX: if the session was new, do we want to delete it?
         }
         return response;
     }
