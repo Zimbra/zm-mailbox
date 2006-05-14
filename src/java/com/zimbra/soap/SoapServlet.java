@@ -28,7 +28,6 @@ package com.zimbra.soap;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -69,14 +68,14 @@ public class SoapServlet extends ZimbraServlet {
     // Used by sExtraServices
     private static Factory sListFactory = new Factory() {
         public Object create() {
-            return new ArrayList();
+            return new ArrayList<DocumentService>();
         }
     };
     
     /**
      * Keeps track of extra services added by extensions.
      */
-    private static Map /* <String, DocumentService> */ sExtraServices =
+    private static Map<String, List<DocumentService>> sExtraServices =
         LazyMap.decorate(new HashMap(), sListFactory);
     
     private static Log sLog = LogFactory.getLog(SoapServlet.class);
@@ -102,10 +101,8 @@ public class SoapServlet extends ZimbraServlet {
         
         // See if any extra services were perviously added by extensions 
         synchronized (sExtraServices) {
-            List services = (List) sExtraServices.get(getServletName());
-            Iterator iter = services.iterator();
-            while (iter.hasNext()) {
-                DocumentService service = (DocumentService) iter.next();
+            List<DocumentService> services = sExtraServices.get(getServletName());
+            for (DocumentService service : services) {
                 addService(service);
                 i++;
             }
@@ -154,11 +151,9 @@ public class SoapServlet extends ZimbraServlet {
         try {
             dispatcher = dispatcherClass.newInstance();
         } catch (InstantiationException ie) {
-            throw new ServletException("can't instantiate class "+cname,
-                                       ie);
+            throw new ServletException("can't instantiate class "+cname, ie);
         } catch (IllegalAccessException iae) {
-            throw new ServletException("can't instantiate class "+cname,
-                                       iae);
+            throw new ServletException("can't instantiate class "+cname, iae);
         }
 
         if (!(dispatcher instanceof DocumentService)) {
@@ -166,7 +161,7 @@ public class SoapServlet extends ZimbraServlet {
                    "class not an instanceof HandlerInitializer: "+cname);
         }
 
-        DocumentService hi = (DocumentService)dispatcher;
+        DocumentService hi = (DocumentService) dispatcher;
         addService(hi);
     }
     
@@ -183,7 +178,7 @@ public class SoapServlet extends ZimbraServlet {
             } else {
                 sLog.debug("addService(" + servletName + ", " +
                     StringUtil.getSimpleClassName(service) + "): servlet has not been initialized");
-                List services = (List) sExtraServices.get(servletName);
+                List<DocumentService> services = sExtraServices.get(servletName);
                 services.add(service);
             }
         }

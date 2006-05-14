@@ -40,10 +40,10 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class DocumentDispatcher {
 
-	Map mHandlers;
+	Map<QName, DocumentHandler> mHandlers;
 	
 	public DocumentDispatcher() {
-		mHandlers = new HashMap();
+		mHandlers = new HashMap<QName, DocumentHandler>();
 	}
 	
 	public void registerHandler(QName qname, DocumentHandler handler) {
@@ -51,12 +51,12 @@ public class DocumentDispatcher {
 	}
 	
 	public DocumentHandler getHandler(Element doc) {
-		DocumentHandler handler = (DocumentHandler) mHandlers.get(doc.getQName());
+		DocumentHandler handler = mHandlers.get(doc.getQName());
 		return handler;
 	}
 
-	public Element dispatch(Element doc, Map context) throws ServiceException, SoapFaultException {
-		DocumentHandler handler = (DocumentHandler) mHandlers.get(doc.getQName());
+	public Element dispatch(Element doc, Map<String, Object> context) throws ServiceException, SoapFaultException {
+		DocumentHandler handler = mHandlers.get(doc.getQName());
 		if (handler == null) 
 			throw ServiceException.UNKNOWN_DOCUMENT(doc.getQualifiedName(), null);
 		return handler.handle(doc, context);
