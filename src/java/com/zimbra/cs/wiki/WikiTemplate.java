@@ -61,14 +61,7 @@ public class WikiTemplate {
 	public static WikiTemplate findTemplate(Context ctxt, String name)
 	throws IOException,ServiceException {
     	WikiTemplateStore ts = WikiTemplateStore.getInstance(ctxt.item);
-    	WikiTemplate template;
-		if (name.startsWith("_")) {
-			// XXX this is how templates are named.
-			template = ts.getTemplate(ctxt.octxt, name);
-		} else {
-			template = ts.getTemplate(ctxt.octxt, name, false);
-		}
-		return template;
+    	return ts.getTemplate(ctxt.octxt, name);
 	}
 	
 	public String toString(OperationContext octxt, HttpServletRequest req, MailItem item)

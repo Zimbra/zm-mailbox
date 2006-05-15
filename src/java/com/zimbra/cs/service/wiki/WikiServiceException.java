@@ -24,10 +24,7 @@
  */
 package com.zimbra.cs.service.wiki;
 
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.ServiceException.Argument;
 
 public class WikiServiceException extends ServiceException {
 	
@@ -40,8 +37,10 @@ public class WikiServiceException extends ServiceException {
     private WikiServiceException(String message, String code, boolean isReceiversFault, Argument... args) {
         super(message, code, isReceiversFault, args);
     }
-    public static WikiServiceException NO_SUCH_WIKI(String w) {
-        return new WikiServiceException("no such wiki: "+ w, NO_SUCH_WIKI, SENDERS_FAULT, new Argument(WIKI_ID, w));
+    public static class NoSuchWikiException extends WikiServiceException {
+    	public NoSuchWikiException(String w) {
+    		super("no such wiki: "+ w, NO_SUCH_WIKI, SENDERS_FAULT, new Argument(WIKI_ID, w));
+    	}
     }
     public static WikiServiceException NOT_WIKI_ITEM(String w) {
         return new WikiServiceException("not WikiItem: "+ w, NO_SUCH_WIKI, SENDERS_FAULT, new Argument(WIKI_ID, w));

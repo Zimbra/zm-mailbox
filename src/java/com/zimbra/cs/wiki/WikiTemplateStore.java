@@ -36,6 +36,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.wiki.WikiServiceException;
+import com.zimbra.cs.service.wiki.WikiServiceException.NoSuchWikiException;
 import com.zimbra.cs.util.Pair;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -55,23 +56,30 @@ public class WikiTemplateStore {
 		return WikiTemplateStore.getInstance(item.getMailbox().getAccount().getId(), item.getFolderId());
 	}
 	
-	public static WikiTemplateStore getInstance(String account, int folderId) {
-		Pair<String,String> key = Pair.get(account, Integer.toString(folderId));
-		WikiTemplateStore store = sTemplates.get(key);
-		long now = System.currentTimeMillis();
-		
-		if (store != null && store.mExpiration < now) {
-			sTemplates.remove(key);
-			store = null;
-		}
-		if (store == null) {
-			store = new WikiTemplateStore(key);
-			sTemplates.put(key, store);
-		}
-		
-		return store;
+	public static WikiTemplateStore getInstance() throws ServiceException {
+		Wiki w = Wiki.getInstance();
+		return WikiTemplateStore.getInstance(w.getWikiAccount(), w.getWikiFolderId());
 	}
 	
+	public static WikiTemplateStore getInstance(String account, int folderId) {
+		Pair<String,String> key = Pair.get(account, Integer.toString(folderId));
+		WikiTemplateStore store;
+		long now = System.currentTimeMillis();
+		
+		synchronized (WikiTemplateStore.class) {
+			store = sTemplates.get(key);
+			if (store != null && store.mExpiration < now) {
+				sTemplates.remove(key);
+				store = null;
+			}
+			if (store == null) {
+				store = new WikiTemplateStore(key);
+				sTemplates.put(key, store);
+			}
+		}
+		return store;
+	}
+
 	private static long TTL = 3600000;  // 1 hour
 	
 	private long   mExpiration;
@@ -88,7 +96,15 @@ public class WikiTemplateStore {
 	}
 	
 	public WikiTemplate getTemplate(OperationContext octxt, String name) throws ServiceException, IOException {
-		return getTemplate(octxt, name, true);
+		boolean checkParents = name.startsWith("_");
+		try {
+			return getTemplate(octxt, name, checkParents);
+		} catch (NoSuchWikiException e) {
+			if (!checkParents)
+				throw e;
+			WikiTemplateStore defaultStore = getInstance();
+			return defaultStore.getTemplate(octxt, name, checkParents);
+		}
 	}
 	public WikiTemplate getTemplate(OperationContext octxt, String name, boolean checkParents) throws ServiceException, IOException {
 		if (name.indexOf('/') != -1) {
@@ -122,7 +138,7 @@ public class WikiTemplateStore {
 		}
 		
 		if (mParentFolderId == mFolderId) {
-			throw WikiServiceException.NO_SUCH_WIKI(name);
+			throw new NoSuchWikiException(name);
 		}
 		WikiTemplateStore parentStore = WikiTemplateStore.getInstance(mAccountId, mParentFolderId);
 		return parentStore.getTemplate(octxt, name);
