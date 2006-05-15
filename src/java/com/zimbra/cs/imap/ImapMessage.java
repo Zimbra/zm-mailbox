@@ -28,11 +28,12 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.text.DateFormat;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
@@ -40,69 +41,107 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.*;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.codec.net.QCodec;
 
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.formatter.VCard;
 
 
-class ImapMessage {
+public class ImapMessage implements Comparable<ImapMessage> {
     static final byte FLAG_RECENT       = 0x01;
     static final byte FLAG_SPAM         = 0x02;
     static final byte FLAG_NONSPAM      = 0x04;
     static final byte FLAG_JUNKRECORDED = 0x08;
+    static final byte FLAG_IS_CONTACT   = 0x10;
 
     static final int IMAP_FLAGS = Flag.FLAG_UNREAD | Flag.FLAG_FLAGGED | Flag.FLAG_DELETED |
                                   Flag.FLAG_DRAFT  | Flag.FLAG_REPLIED | Flag.FLAG_FORWARDED |
                                   Flag.FLAG_NOTIFIED;
-    static final byte SESSION_FLAGS = FLAG_RECENT | FLAG_SPAM | FLAG_NONSPAM | FLAG_JUNKRECORDED;
+    static final byte SESSION_FLAGS = FLAG_RECENT | FLAG_SPAM | FLAG_NONSPAM | FLAG_JUNKRECORDED | FLAG_IS_CONTACT;
 
-    static Log sLog = LogFactory.getLog(ImapMessage.class);
-
-
-    int     seq;
-    int     id;
-    int     uid;
-    byte    sflags;
+    int     sequence;
+    int     msgId;
+    int     imapUid;
     int     flags;
     long    tags;
+    byte    sflags;
     boolean added    = false;
     boolean expunged = false;
-    private int    size;
-    private long   date;
-    private int    revision;
-    private short  volumeId = -1;
-    private String dateString;
-    private ImapFolder parent;
+    ImapFolder parent;
 
-    ImapMessage(Message msg, ImapFolder i4folder) {
-        id       = msg.getId();
-        uid      = msg.getImapUID();
-        sflags   = i4folder.getId() == Mailbox.ID_FOLDER_SPAM ? (byte) (FLAG_SPAM | FLAG_JUNKRECORDED) : 0;
-        flags    = msg.getFlagBitmask();
-        tags     = msg.getTagBitmask();
-        size     = (int) msg.getSize();
-        date     = msg.getDate();
-        revision = msg.getSavedSequence();
-        volumeId = msg.getVolumeId();
-        parent   = i4folder;
+    public ImapMessage(int id, byte type, int imapId, int flag, long tag) {
+        msgId   = id;
+        imapUid = imapId;
+        flags   = flag;
+        tags    = tag;
+        sflags  = (type == MailItem.TYPE_CONTACT ? FLAG_IS_CONTACT : 0);
     }
 
-    int getSize()           { return size; }
-    int getRevision()       { return revision; }
-    short getVolumeId()     { return volumeId; }
-    ImapFolder getParent()  { return parent; }
+    ImapMessage(MailItem item) {
+        this(item.getId(), item.getType(), item.getImapUid(), item.getFlagBitmask(), item.getTagBitmask());
+    }
+
+    public int compareTo(ImapMessage i4msg) {
+        if (imapUid == i4msg.imapUid)  return 0;
+        return (imapUid < i4msg.imapUid ? -1 : 1);
+    }
+
+    byte getType() {
+        return (sflags & FLAG_IS_CONTACT) == 0 ? MailItem.TYPE_MESSAGE : MailItem.TYPE_CONTACT;
+    }
+
+    long getSize(MailItem item) throws ServiceException {
+        if (item instanceof Message)
+            return item.getSize();
+        // FIXME: need to generate the representation of the item to do this correctly...
+        return getContent(item).length;
+    }
+
+    private static final byte[] EMPTY_CONTENT = new byte[0];
+
+    byte[] getContent(MailItem item) throws ServiceException {
+        if (item instanceof Message) {
+            return ((Message) item).getMessageContent();
+        } else if (item instanceof Contact) {
+            try {
+                VCard vcard = VCard.formatContact((Contact) item);
+                QCodec qcodec = new QCodec();
+                StringBuilder header = new StringBuilder();
+                header.append("Subject: ").append(qcodec.encode(vcard.fn, Mime.P_CHARSET_UTF8)).append(ImapHandler.LINE_SEPARATOR);
+                header.append("Date: ").append(new MailDateFormat().format(new Date(item.getDate()))).append(ImapHandler.LINE_SEPARATOR);
+                header.append("Content-Type: text/x-vcard; charset=\"utf-8\"").append(ImapHandler.LINE_SEPARATOR);
+                header.append("Content-Transfer-Encoding: 8bit").append(ImapHandler.LINE_SEPARATOR);
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                baos.write(header.toString().getBytes(Mime.P_CHARSET_ASCII));
+                baos.write(ImapHandler.LINE_SEPARATOR_BYTES);
+                baos.write(vcard.formatted.getBytes(Mime.P_CHARSET_UTF8));
+                return baos.toByteArray();
+            } catch (Exception e) {
+                throw ServiceException.FAILURE("problems serializing contact " + msgId, e);
+            }
+        } else
+            return EMPTY_CONTENT;
+    }
+
+    InputStream getContentStream(MailItem item) throws ServiceException {
+        if (item instanceof Message)
+            return ((Message) item).getRawMessage();
+        return new ByteArrayInputStream(getContent(item));
+    }
 
     private static final String NO_FLAGS = "FLAGS ()";
 
     String getFlags(ImapSession session) {
         if ((flags & IMAP_FLAGS) == Flag.FLAG_UNREAD && tags == 0 && sflags == 0)
             return NO_FLAGS;
-        StringBuffer result = new StringBuffer("FLAGS (");
+        StringBuilder result = new StringBuilder("FLAGS (");
         int empty = result.length();
 
         if ((flags & Flag.FLAG_DELETED) != 0)
@@ -156,12 +195,6 @@ class ImapMessage {
         parent.dirtyMessage(this);
     }
 
-    String getDate(DateFormat dateFormat) {
-        if (dateString == null)
-            dateString = "INTERNALDATE \"" + dateFormat.format(new Date(date)) + '"';
-        return dateString;
-    }
-
     private static final byte[] NIL = { 'N', 'I', 'L' };
 
     private void nstring(PrintStream ps, String value) { if (value == null)  ps.write(NIL, 0, 3);  else astring(ps, value); }
@@ -169,11 +202,11 @@ class ImapMessage {
     private void aSTRING(PrintStream ps, String value) { astring(ps, value, true); }
     private void astring(PrintStream ps, String value, boolean upcase) {
         boolean literal = false;
-        StringBuffer nonulls = null;
+        StringBuilder nonulls = null;
         for (int i = 0, length = value.length(), lastNull = -1; i < length; i++) {
             char c = value.charAt(i);
             if (c == '\0') {
-                if (nonulls == null)  nonulls = new StringBuffer();
+                if (nonulls == null)  nonulls = new StringBuilder();
                 nonulls.append(value.substring(lastNull + 1, i));
                 lastNull = i;
             } else if (c == '"' || c == '\\' || c > 0x7f)
@@ -185,7 +218,7 @@ class ImapMessage {
             ps.write('"');  ps.print(content);  ps.write('"');
         } else {
             try {
-                byte[] bytes = content.getBytes("utf-8");
+                byte[] bytes = content.getBytes(Mime.P_CHARSET_UTF8);
                 ps.write('{');  ps.print(bytes.length);  ps.write('}');  ps.write(ImapHandler.LINE_SEPARATOR_BYTES, 0, 2);
                 ps.write(bytes, 0, bytes.length);
             } catch (UnsupportedEncodingException uee) {

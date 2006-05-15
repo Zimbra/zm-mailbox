@@ -339,8 +339,8 @@ public class VCard {
         List<String> emails = con.getEmailAddresses();
 
         StringBuilder sb = new StringBuilder();
-        sb.append("BEGIN:VCARD\n");
-        sb.append("VERSION:3.0\n");
+        sb.append("BEGIN:VCARD\r\n");
+        sb.append("VERSION:3.0\r\n");
 
         // FN is the only mandatory component of the vCard -- try our best to find or generate one
         String fn = fields.get(Contact.A_fullName);
@@ -348,7 +348,7 @@ public class VCard {
             try { fn = con.getFileAsString(); } catch (ServiceException e) { fn = ""; }
         if (fn.trim().equals("") && !emails.isEmpty())
             fn = emails.get(0);
-        sb.append("FN:").append(vcfEncode(fn)).append('\n');
+        sb.append("FN:").append(vcfEncode(fn)).append("\r\n");
 
         String n = vcfEncode(fields.get(Contact.A_lastName)) + ';' +
                    vcfEncode(fields.get(Contact.A_firstName)) + ';' +
@@ -356,14 +356,14 @@ public class VCard {
                    vcfEncode(fields.get(Contact.A_namePrefix)) + ';' +
                    vcfEncode(fields.get(Contact.A_nameSuffix));
         if (!n.equals(";;;;"))
-            sb.append("N:").append(n).append('\n');
+            sb.append("N:").append(n).append("\r\n");
 
         encodeField(sb, "NICKNAME", fields.get(Contact.A_nickname));
         String bday = fields.get(Contact.A_birthday);
         if (bday != null) {
             Date date = DateUtil.parseDateSpecifier(bday);
             if (date != null)
-                sb.append("BDAY;VALUE=date:").append(new SimpleDateFormat("yyyy-MM-dd").format(date)).append('\n');
+                sb.append("BDAY;VALUE=date:").append(new SimpleDateFormat("yyyy-MM-dd").format(date)).append("\r\n");
         }
 
         encodeAddress(sb, "home,postal,parcel", fields.get(Contact.A_homeStreet),
@@ -402,7 +402,7 @@ public class VCard {
             String dept = fields.get(Contact.A_department);
             if (dept != null && !dept.trim().equals(""))
                 org += ';' + vcfEncode(dept);
-            sb.append("ORG:").append(org).append('\n');
+            sb.append("ORG:").append(org).append("\r\n");
         }
         encodeField(sb, "TITLE", fields.get(Contact.A_jobTitle));
 
@@ -414,21 +414,21 @@ public class VCard {
                 StringBuilder sbtags = new StringBuilder();
                 for (Tag tag : tags)
                     sbtags.append(sbtags.length() == 0 ? "" : ",").append(vcfEncode(tag.getName()));
-                sb.append("CATEGORIES:").append(sbtags).append('\n');
+                sb.append("CATEGORIES:").append(sbtags).append("\r\n");
             }
         } catch (ServiceException e) { }
 
-        sb.append("REV:").append(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date(con.getDate()))).append('\n');
-        sb.append("UID:").append(con.getMailbox().getAccountId()).append(':').append(con.getId()).append('\n');
-        // sb.append("MAILER:Zimbra ").append(BuildInfo.VERSION).append("\n");
-        sb.append("END:VCARD\n");
+        sb.append("REV:").append(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date(con.getDate()))).append("\r\n");
+        sb.append("UID:").append(con.getMailbox().getAccountId()).append(':').append(con.getId()).append("\r\n");
+        // sb.append("MAILER:Zimbra ").append(BuildInfo.VERSION).append("\r\n");
+        sb.append("END:VCARD\r\n");
         return new VCard(fn, sb.toString(), fields);
     }
 
     private static void encodeField(StringBuilder sb, String name, String value) {
         if (sb == null || name == null || value == null)
             return;
-        sb.append(name).append(':').append(vcfEncode(value)).append('\n');
+        sb.append(name).append(':').append(vcfEncode(value)).append("\r\n");
     }
 
     private static void encodeAddress(StringBuilder sb, String type, String street, String city, String state, String zip, String country) {
@@ -442,14 +442,14 @@ public class VCard {
                       ';'  + vcfEncode(zip) +
                       ';'  + vcfEncode(country);
         if (!addr.equals(";;;;;;"))
-            sb.append("ADR;TYPE=").append(type).append(':').append(addr).append('\n');
+            sb.append("ADR;TYPE=").append(type).append(':').append(addr).append("\r\n");
     }
     
     private static void encodePhone(StringBuilder sb, String type, String phone) {
         if (sb == null || type == null || phone == null || phone.equals(""))
             return;
         // FIXME: really are supposed to reformat the phone to some standard
-        sb.append("TEL;TYPE=").append(type).append(':').append(phone).append('\n');
+        sb.append("TEL;TYPE=").append(type).append(':').append(phone).append("\r\n");
     }
 
     private static String vcfEncode(String value) {

@@ -388,6 +388,7 @@ public class Contact extends MailItem {
         data.type        = TYPE_CONTACT;
         data.folderId    = folder.getId();
         data.indexId     = id;
+        data.imapId      = id;
         data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
         data.tags        = Tag.tagsToBitmask(tags);

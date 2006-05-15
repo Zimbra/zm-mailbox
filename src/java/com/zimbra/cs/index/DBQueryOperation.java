@@ -385,7 +385,7 @@ class DBQueryOperation extends QueryOperation
      * Hits iteration
      *
      *******************/    
-    public void resetIterator() throws ServiceException {
+    public void resetIterator() {
         if (mLuceneOp != null) {
             mLuceneOp.resetDocNum();
         }
@@ -417,7 +417,7 @@ class DBQueryOperation extends QueryOperation
     	ZimbraHit toRet = null;
         if (mNextHits.size() > 0) {
         	// already have some hits, so our job is easy!
-        	toRet = (ZimbraHit)mNextHits.get(0);
+        	toRet = mNextHits.get(0);
         } else {
         	// we don't have any SearchResults
             if (mDBHitsIter == null || !mDBHitsIter.hasNext()) {
@@ -457,7 +457,7 @@ class DBQueryOperation extends QueryOperation
                         mNextHits.add(toAdd);
                     }
         		}
-    			toRet = (ZimbraHit)mNextHits.get(0);
+    			toRet = mNextHits.get(0);
             }
         }
         
@@ -472,7 +472,7 @@ class DBQueryOperation extends QueryOperation
         if (mNextHits.size() == 0) {
             return null;
         }
-        ZimbraHit toRet = (ZimbraHit)mNextHits.remove(0);
+        ZimbraHit toRet = mNextHits.remove(0);
         return toRet;
     }
     
@@ -611,9 +611,11 @@ class DBQueryOperation extends QueryOperation
                     	mOffset = mCurHitsOffset;
                         mLimit = mHitsPerChunk;
                         
-                        boolean getFullRows = this.isTopLevelQueryOp();
+                        DbMailItem.SearchResult.ExtraData extra = DbMailItem.SearchResult.ExtraData.NONE;
+                        if (this.isTopLevelQueryOp())
+                            extra = DbMailItem.SearchResult.ExtraData.MAIL_ITEM;
                         mDBHits = new ArrayList<SearchResult>();
-                        DbMailItem.search(mDBHits, conn, mConstraints, mboxId, sort, mOffset, mLimit, getFullRows);
+                        DbMailItem.search(mDBHits, conn, mConstraints, mboxId, sort, mOffset, mLimit, extra);
                     } else {
                     	boolean success = false;
                         
@@ -630,10 +632,12 @@ class DBQueryOperation extends QueryOperation
                     		// do DB op first, pass results to Lucene op
                             mOffset = 0;
                             mLimit = MAX_DBFIRST_RESULTS;
-                            
-                            boolean getFullRows = this.isTopLevelQueryOp();
+
+                            DbMailItem.SearchResult.ExtraData extra = DbMailItem.SearchResult.ExtraData.NONE;
+                            if (this.isTopLevelQueryOp())
+                                extra = DbMailItem.SearchResult.ExtraData.MAIL_ITEM;
                             Collection<SearchResult> dbRes = new ArrayList<SearchResult>();
-                            DbMailItem.search(dbRes, conn, mConstraints, mboxId, sort, mOffset, mLimit, getFullRows);
+                            DbMailItem.search(dbRes, conn, mConstraints, mboxId, sort, mOffset, mLimit, extra);
                             
                             if (dbRes.size() == MAX_DBFIRST_RESULTS) {
                             	mLog.info("FAILED DB-FIRST: Too many results");
@@ -715,14 +719,15 @@ class DBQueryOperation extends QueryOperation
                             	
                             	mDBHits = new ArrayList<SearchResult>(); 
                             } else {
-                                boolean getFullRows = this.isTopLevelQueryOp();
+                                DbMailItem.SearchResult.ExtraData extra = DbMailItem.SearchResult.ExtraData.NONE;
+                                if (this.isTopLevelQueryOp())
+                                    extra = DbMailItem.SearchResult.ExtraData.MAIL_ITEM;
                                 mDBHits = new ArrayList<SearchResult>();
-                                DbMailItem.search(mDBHits, conn, mConstraints, mboxId, sort, mOffset, mLimit, getFullRows);
-                                
+                                DbMailItem.search(mDBHits, conn, mConstraints, mboxId, sort, mOffset, mLimit, extra);
                             	
-                    				if (getSortBy() == SortBy.SCORE_DESCENDING) {
-                    					// We have to re-sort the chunk by score here b/c the DB doesn't
-                    					// know about scores
+                				if (getSortBy() == SortBy.SCORE_DESCENDING) {
+                					// We have to re-sort the chunk by score here b/c the DB doesn't
+                					// know about scores
                             		ScoredDBHit[] scHits = new ScoredDBHit[mDBHits.size()];
                             		int offset = 0;
                             		for (SearchResult sr : mDBHits) {
@@ -804,7 +809,7 @@ class DBQueryOperation extends QueryOperation
 	/* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#optimize(com.zimbra.cs.mailbox.Mailbox)
      */
-    QueryOperation optimize(Mailbox mbox) throws ServiceException {
+    QueryOperation optimize(Mailbox mbox) {
         return this;
     }
     
@@ -874,7 +879,7 @@ class DBQueryOperation extends QueryOperation
     	}
     }
     
-    public Object clone(LuceneQueryOperation caller) throws CloneNotSupportedException {
+    public Object clone(LuceneQueryOperation caller) {
     	DBQueryOperation toRet = cloneInternal();
     	toRet.mLuceneOp = caller;
     	return toRet;

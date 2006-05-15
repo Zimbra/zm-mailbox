@@ -37,6 +37,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -142,6 +143,7 @@ public abstract class MailItem implements Comparable {
         public int    parentId = -1;
         public int    folderId = -1;
         public int    indexId  = -1;
+        public int    imapId   = -1;
         public short  volumeId = -1;
         public String blobDigest;
         public int    date;
@@ -366,18 +368,26 @@ public abstract class MailItem implements Comparable {
         return mData.folderId;
     }
 
-    /** Returns the ID of the {@link Volume} the item's blob is stored on.
-     *  Returns -1 for items that have no stored blob. */
-    public short getVolumeId() {
-    	return mData.volumeId;
-    }
-
     /** Returns the ID the item is referenced by in the index.  Returns -1
      *  for non-indexed items.  For indexed items, the "index ID" will be the
      *  same as the item ID unless the item is a copy of another item; in that
      *  case, the "index ID" is the same as the original item's "index ID". */
     int getIndexId() {
         return mData.indexId;
+    }
+
+    /** Returns the UID the item is referenced by in the IMAP server.  Returns
+     *  <code>0</code> for items that require renumbering because of moves.
+     *  The "IMAP UID" will be the same as the item ID unless the item has
+     *  been moved after the mailbox owner's first IMAP session. */
+    public int getImapUid() {
+        return mData.imapId;
+    }
+
+    /** Returns the ID of the {@link Volume} the item's blob is stored on.
+     *  Returns -1 for items that have no stored blob. */
+    public short getVolumeId() {
+        return mData.volumeId;
     }
 
     /** Returns the SHA-1 hash of the item's uncompressed blob.  Returns
@@ -401,20 +411,32 @@ public abstract class MailItem implements Comparable {
             return "";
     }
 
+    /** Returns the date the item's content was last modified.  For immutable
+     *  objects (e.g. received messages), this will be the same as the date
+     *  the item was created. */
     public long getDate() {
         return mData.date * 1000L;
     }
-
-    public int getModifiedSequence() {
-        return mData.modMetadata;
+    
+    /** Returns the change ID corresponding to the last time the item's
+     *  content was modified.  For immutable objects (e.g. received messages),
+     *  this will be the same change ID as when the item was created. */
+    public int getSavedSequence() {
+        return mData.modContent;
     }
-
+    
+    /** Returns the date the item's metadata and/or content was last modified.
+     *  This includes changes in tags and flags as well as folder-to-folder
+     *  moves and recoloring. */
     public long getChangeDate() {
         return mData.dateChanged * 1000L;
     }
 
-    public int getSavedSequence() {
-        return mData.modContent;
+    /** Returns the change ID corresponding to the last time the item's
+     *  metadata and/or content was modified.  This includes changes in tags
+     *  and flags as well as folder-to-folder moves and recoloring. */
+    public int getModifiedSequence() {
+        return mData.modMetadata;
     }
 
     public long getSize() {
@@ -623,6 +645,17 @@ public abstract class MailItem implements Comparable {
             if (t1 < t2)        return 1;
             else if (t1 == t2)  return 0;
             else                return -1;
+        }
+    }
+    
+    public static final class SortImapUid implements Comparator<MailItem> {
+        public int compare(MailItem m1, MailItem m2) {
+            long t1 = m1.getImapUid();
+            long t2 = m2.getImapUid();
+
+            if (t1 < t2)        return -1;
+            else if (t1 == t2)  return 0;
+            else                return 1;
         }
     }
 
@@ -873,6 +906,67 @@ public abstract class MailItem implements Comparable {
         markItemModified(Change.MODIFIED_COLOR);
         mColor = color;
         saveMetadata();
+    }
+
+    void setImapUid(int imapId) throws ServiceException {
+        if (mData.imapId == imapId)
+            return;
+        markItemModified(Change.MODIFIED_IMAP_UID);
+        mData.imapId = imapId;
+        DbMailItem.saveImapUid(this);
+    }
+
+    Blob setContent(byte[] data, String digest, short volumeId, Object content)
+    throws ServiceException, IOException {
+        // catch the "was no blob, is no blob" case
+        if (digest == null && mData.blobDigest == null)
+            return null;
+
+        // delete the old blob *unless* we've already rewritten it in this transaction
+        if (getSavedSequence() != mMailbox.getOperationChangeID()) {
+            // mark the old blob as ready for deletion
+            PendingDelete info = getDeletionInfo();
+            info.itemIds.clear();  info.unreadIds.clear();
+            mMailbox.markOtherItemDirty(info);
+        }
+
+        // remove the content from the cache
+        MessageCache.purge(this);
+
+        // update the item's relevant attributes
+        markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
+                         Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
+
+        int size = (data == null ? 0 : data.length);
+        if (mData.size != size) {
+            mMailbox.updateSize(size - mData.size, false);
+            getFolder().updateSize(size - mData.size);
+            mData.size = size;
+        }
+        mData.blobDigest = digest;
+        mData.date       = mMailbox.getOperationTimestamp();
+        mData.volumeId   = volumeId;
+        mData.imapId     = mMailbox.isTrackingImap() ? 0 : mData.id;
+        mData.contentChanged(mMailbox);
+        mBlob = null;
+
+        // rewrite the DB row to reflect our new view
+        reanalyze(content);
+
+        if (data == null)
+            return null;
+
+        // write the content to the store
+        StoreManager sm = StoreManager.getInstance();
+        Blob blob = sm.storeIncoming(data, digest, null, volumeId);
+        MailboxBlob mb = sm.renameTo(blob, mMailbox, mId, getSavedSequence(), volumeId);
+        mMailbox.markOtherItemDirty(mb);
+
+        return blob;
+    }
+
+    void reanalyze(Object obj) throws ServiceException {
+        saveData(null);
     }
 
     void detach() throws ServiceException  { }
@@ -1209,6 +1303,7 @@ public abstract class MailItem implements Comparable {
 		markItemModified(Change.MODIFIED_FOLDER);
         mData.metadataChanged(mMailbox);
 		mData.folderId = newFolder.getId();
+        mData.imapId   = mMailbox.isTrackingImap() ? 0 : mData.imapId;
 	}
 
 	void addChild(MailItem child) throws ServiceException {
@@ -1458,20 +1553,21 @@ public abstract class MailItem implements Comparable {
     }
 
 
-    private static final String CN_ID             = "id";
-    private static final String CN_TYPE           = "type";
-    private static final String CN_PARENT_ID      = "parent_id";
-    private static final String CN_FOLDER_ID      = "folder_id";
-    private static final String CN_DATE           = "date";
-    private static final String CN_SIZE           = "size";
-    private static final String CN_REVISION       = "rev";
-    private static final String CN_BLOB_DIGEST    = "digest";
-    private static final String CN_UNREAD_COUNT   = "unread";
-    private static final String CN_FLAGS          = "flags";
-    private static final String CN_TAGS           = "tags";
-    private static final String CN_SUBJECT        = "subject";
-    private static final String CN_CHILDREN       = "children";
-    private static final String CN_COLOR          = "color";
+    private static final String CN_ID           = "id";
+    private static final String CN_TYPE         = "type";
+    private static final String CN_PARENT_ID    = "parent_id";
+    private static final String CN_FOLDER_ID    = "folder_id";
+    private static final String CN_DATE         = "date";
+    private static final String CN_SIZE         = "size";
+    private static final String CN_REVISION     = "rev";
+    private static final String CN_BLOB_DIGEST  = "digest";
+    private static final String CN_UNREAD_COUNT = "unread";
+    private static final String CN_FLAGS        = "flags";
+    private static final String CN_TAGS         = "tags";
+    private static final String CN_SUBJECT      = "subject";
+    private static final String CN_CHILDREN     = "children";
+    private static final String CN_COLOR        = "color";
+    private static final String CN_IMAP_ID      = "imap_id";
 
     protected StringBuffer appendCommonMembers(StringBuffer sb) {
         sb.append(CN_ID).append(": ").append(mId).append(", ");
@@ -1494,6 +1590,8 @@ public abstract class MailItem implements Comparable {
         	sb.append(CN_CHILDREN).append(": [").append(mData.children.toString()).append("], ");
         if (mData.blobDigest != null)
             sb.append(CN_BLOB_DIGEST).append(": ").append(mData.blobDigest);
+        if (mData.imapId > 0)
+            sb.append(CN_IMAP_ID).append(": ").append(mData.imapId).append(", ");
         return sb;
     }
 }

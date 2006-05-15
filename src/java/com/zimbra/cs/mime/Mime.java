@@ -108,18 +108,19 @@ public class Mime {
     public static final String MF_KEYWORDS = "keywords";
     public static final String MF_COMPANY = "company";
     public static final String MF_METADATA = "metadata";
-    
+
     // parameters
     public static final String P_CHARSET = "charset";
     // default value for charset
+    public static final String P_CHARSET_ASCII = "us-ascii";
     public static final String P_CHARSET_UTF8 = "utf-8";
-    public static final String P_CHARSET_DEFAULT = "us-ascii";
-    
+    public static final String P_CHARSET_DEFAULT = P_CHARSET_ASCII;
+
     private static final int MAX_DECODE_BUFFER = 2048;
 
     public static class FixedMimeMessage extends MimeMessage {
-        public FixedMimeMessage(Session session)  { super(session); }
-        public FixedMimeMessage(Session session, InputStream is) throws MessagingException  { super(session, is); }
+        public FixedMimeMessage(Session s)  { super(s); }
+        public FixedMimeMessage(Session s, InputStream is) throws MessagingException  { super(s, is); }
         public FixedMimeMessage(MimeMessage mm) throws MessagingException  { super(mm); }
 
         protected void updateHeaders() throws MessagingException {

@@ -75,6 +75,7 @@ public class ImapSession extends Session {
 
     public ImapSession(String accountId, String contextId) throws ServiceException {
         super(accountId, contextId, SessionCache.SESSION_IMAP);
+        getMailbox().beginTrackingImap(getContext());
         mState = STATE_AUTHENTICATED;
         try {
             Provisioning prov = Provisioning.getInstance();
@@ -125,8 +126,8 @@ public class ImapSession extends Session {
     boolean isSelected()  { return mState == STATE_SELECTED; }
     void selectFolder(ImapFolder folder) {
         if (mState != STATE_LOGOUT) {
-            mState = STATE_SELECTED;
             mSelectedFolder = folder;
+            mState = STATE_SELECTED;
         }
     }
     void deselectFolder() {
@@ -228,7 +229,7 @@ public class ImapSession extends Session {
     }
     String getFlagList(boolean permanentOnly) {
         boolean first = true;
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         Map[] flagSets = new Map[] { mFlags, mTags };
         for (int i = 0; i < flagSets.length; i++)
             for (Iterator it = flagSets[i].entrySet().iterator(); it.hasNext(); first = false) {
@@ -253,7 +254,18 @@ public class ImapSession extends Session {
 
     public void notifyIM(IMNotification imn) { }
     protected boolean shouldRegisterWithIM() { return false; }
-    
+
+    private static class AddedItems {
+        List<ImapMessage> numbered = new ArrayList<ImapMessage>();
+        List<ImapMessage> unnumbered = new ArrayList<ImapMessage>();
+
+        boolean isEmpty()  { return numbered.isEmpty() && unnumbered.isEmpty(); }
+        void add(MailItem item) {
+            (item.getImapUid() > 0 ? numbered : unnumbered).add(new ImapMessage(item));
+        }
+        void sort()  { Collections.sort(numbered);  Collections.sort(unnumbered); }
+    }
+
     public void notifyPendingChanges(PendingModifications pns) {
         if (!pns.hasNotifications())
             return;
@@ -261,46 +273,46 @@ public class ImapSession extends Session {
         if (pns.deleted != null)
             if (!handleDeletes(pns.deleted))
                 return;
-        ArrayList<Message> newMessages = (mSelectedFolder == null ? null : new ArrayList<Message>());
+        AddedItems added = (mSelectedFolder == null ? null : new AddedItems());
         if (pns.created != null)
-            if (!handleCreates(pns.created, newMessages))
+            if (!handleCreates(pns.created, added))
                 return;
         if (pns.modified != null)
-            if (!handleModifies(pns.modified, newMessages))
+            if (!handleModifies(pns.modified, added))
                 return;
 
         // add new messages to the currently selected mailbox
-        if (mSelectedFolder != null && newMessages != null && newMessages.size() != 0) {
+        if (added != null && !added.isEmpty()) {
+            added.sort();
             boolean debug = ZimbraLog.imap.isDebugEnabled();
-            Collections.sort(newMessages, new Message.SortImapUID());
-            boolean renumber = newMessages.get(0).getImapUID() < mSelectedFolder.getHighwaterUID();
 
-            if (!renumber) {
+            if (!added.numbered.isEmpty()) {
                 // if messages have acceptable UIDs, just add 'em
-                StringBuffer added = debug ? new StringBuffer("  ** adding messages (ntfn):") : null;
-                for (Message msg : newMessages) {
-                    ImapMessage i4msg = mSelectedFolder.cache(msg);
-                    if (debug)  added.append(' ').append(i4msg.id);
+                StringBuilder addlog = debug ? new StringBuilder("  ** adding messages (ntfn):") : null;
+                for (ImapMessage i4msg : added.numbered) {
+                    mSelectedFolder.cache(i4msg);
+                    if (debug)  addlog.append(' ').append(i4msg.msgId);
                     i4msg.added = true;
                     mSelectedFolder.dirtyMessage(i4msg);
                 }
-                if (debug)  ZimbraLog.imap.debug(added);
-            } else {
+                if (debug)  ZimbraLog.imap.debug(addlog);
+            }
+            if (!added.unnumbered.isEmpty()) {
                 // 2.3.1.1: "Unique identifiers are assigned in a strictly ascending fashion in
                 //           the mailbox; as each message is added to the mailbox it is assigned
                 //           a higher UID than the message(s) which were added previously."
-                StringBuffer added = debug ? new StringBuffer() : null;
-                int[] msgIds = new int[newMessages.size()];
-                for (int i = 0; i < msgIds.length; i++) {
-                    msgIds[i] = newMessages.get(i).getId();
-                    if (debug)  added.append(' ').append(msgIds[i]);
+                List<Integer> renumber = new ArrayList<Integer>();
+                StringBuilder chglog = debug ? new StringBuilder("  ** moved; changing imap uid (ntfn):") : null;
+                for (ImapMessage i4msg : added.unnumbered) {
+                    renumber.add(i4msg.msgId);
+                    if (debug)  chglog.append(' ').append(i4msg.msgId);
                 }
                 try {
-                    if (debug)  ZimbraLog.imap.debug("  ** moved; changing imap uid (ntfn):" + added);
+                    if (debug)  ZimbraLog.imap.debug(chglog);
                     // notification will take care of adding to mailbox
-                    getMailbox().resetImapUid(null, msgIds);
+                    getMailbox().resetImapUid(getContext(), renumber);
                 } catch (ServiceException e) {
-                    if (debug)  ZimbraLog.imap.debug("  ** moved; imap uid change failed; msg hidden (ntfn): " + msgIds);
+                    if (debug)  ZimbraLog.imap.debug("  ** moved; imap uid change failed; msg hidden (ntfn): " + renumber);
                 }
             }
         }
@@ -337,14 +349,14 @@ public class ImapSession extends Session {
                 ImapMessage i4msg = mSelectedFolder.getById(id);
                 if (i4msg != null) {
                     i4msg.expunged = true;
-                    ZimbraLog.imap.debug("  ** deleted (ntfn): " + i4msg.id);
+                    ZimbraLog.imap.debug("  ** deleted (ntfn): " + i4msg.msgId);
                 }
             }
         }
         return true;
     }
 
-    private boolean handleCreates(Map<Integer, MailItem> created, List<Message> newMessages) {
+    private boolean handleCreates(Map<Integer, MailItem> created, AddedItems newItems) {
         boolean selected = mSelectedFolder != null;
         for (MailItem item : created.values()) {
             if (item instanceof Tag)
@@ -356,14 +368,14 @@ public class ImapSession extends Session {
                 // make sure this message hasn't already been detected in the folder
                 if (mSelectedFolder.getById(msgId) != null)
                     continue;
-                newMessages.add((Message) item);
+                newItems.add(item);
                 ZimbraLog.imap.debug("  ** created (ntfn): " + msgId);
             }
         }
         return true;
     }
 
-    private boolean handleModifies(Map<Integer, Change> modified, List<Message> newMessages) {
+    private boolean handleModifies(Map<Integer, Change> modified, AddedItems newItems) {
         boolean selected = mSelectedFolder != null;
         boolean virtual = selected && mSelectedFolder.isVirtual();
         boolean debug = ZimbraLog.imap.isDebugEnabled();
@@ -405,7 +417,7 @@ public class ImapSession extends Session {
                 ImapMessage i4msg = mSelectedFolder.getById(msg.getId());
                 if (i4msg == null) {
                     if (inFolder && !virtual) {
-                        newMessages.add(msg);
+                        newItems.add(msg);
                         if (debug)  ZimbraLog.imap.debug("  ** moved (ntfn): " + msg.getId());
                     }
                 } else if (!inFolder && !virtual)
@@ -416,7 +428,7 @@ public class ImapSession extends Session {
                     // if the IMAP uid changed, need to bump it to the back of the sequence!
                     i4msg.expunged = true;
                     if (!virtual)
-                        newMessages.add(msg);
+                        newItems.add(msg);
                     if (debug)  ZimbraLog.imap.debug("  ** imap uid changed (ntfn): " + msg.getId());
                 }
             }

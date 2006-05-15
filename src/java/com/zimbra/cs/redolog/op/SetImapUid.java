@@ -31,8 +31,9 @@ package com.zimbra.cs.redolog.op;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Mailbox;
@@ -42,25 +43,25 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public class SetImapUid extends RedoableOp {
 
-    private Map mImapUids = new HashMap();
+    private Map<Integer, Integer> mImapUids = new HashMap<Integer, Integer>();
 
     public SetImapUid() {
     }
 
-    public SetImapUid(int mailboxId, int[] msgIds) {
+    public SetImapUid(int mailboxId, List<Integer> msgIds) {
         setMailboxId(mailboxId);
-        for (int i = 0; i < msgIds.length; i++)
-            mImapUids.put(new Integer(msgIds[i]), new Integer(UNKNOWN_ID));
+        for (int id : msgIds)
+            mImapUids.put(id, UNKNOWN_ID);
     }
 
     public int getImapUid(int msgId) {
-        Integer imapUid = (Integer) mImapUids.get(new Integer(msgId));
-        int uid = imapUid == null ? Mailbox.ID_AUTO_INCREMENT : imapUid.intValue();
+        Integer imapUid = mImapUids.get(msgId);
+        int uid = imapUid == null ? Mailbox.ID_AUTO_INCREMENT : imapUid;
         return uid == UNKNOWN_ID ? Mailbox.ID_AUTO_INCREMENT : uid;
     }
 
     public void setImapUid(int msgId, int imapId) {
-        mImapUids.put(new Integer(msgId), new Integer(imapId));
+        mImapUids.put(msgId, imapId);
     }
 
     /* (non-Javadoc)
@@ -74,20 +75,17 @@ public class SetImapUid extends RedoableOp {
      * @see com.zimbra.cs.redolog.Redoable#getRedoContent()
      */
     protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer();
-        for (Iterator it = mImapUids.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<Integer, Integer> entry : mImapUids.entrySet())
             sb.append(sb.length() == 0 ? "" : ", ").append(entry.getKey()).append('=').append(entry.getValue());
-        }
         return sb.toString();
     }
 
     protected void serializeData(DataOutput out) throws IOException {
         out.writeInt(mImapUids.size());
-        for (Iterator it = mImapUids.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
-            out.writeInt(((Integer) entry.getKey()).intValue());
-            out.writeInt(((Integer) entry.getValue()).intValue());
+        for (Map.Entry<Integer, Integer> entry : mImapUids.entrySet()) {
+            out.writeInt(entry.getKey());
+            out.writeInt(entry.getValue());
         }
     }
 
@@ -95,15 +93,12 @@ public class SetImapUid extends RedoableOp {
         int count = in.readInt();
         for (int i = 0; i < count; i++) {
             int msgId = in.readInt();
-            mImapUids.put(new Integer(msgId), new Integer(in.readInt()));
+            mImapUids.put(msgId, in.readInt());
         }
     }
 
     public void redo() throws Exception {
         Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
-        int i = 0, msgIds[] = new int[mImapUids.size()];
-        for (Iterator it = mImapUids.keySet().iterator(); it.hasNext(); )
-            msgIds[i++] = ((Integer) it.next()).intValue();
-        mbox.resetImapUid(getOperationContext(), msgIds);
+        mbox.resetImapUid(getOperationContext(), new ArrayList<Integer>(mImapUids.values()));
     }
 }

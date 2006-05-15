@@ -211,13 +211,31 @@ public class DbMailbox {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE mailbox SET tracking_sync = 1, size_checkpoint = ? WHERE id = ?");
+            stmt = conn.prepareStatement("UPDATE mailbox SET tracking_sync = ?, size_checkpoint = ? " +
+                    "WHERE id = ? AND tracking_sync <= 0");
+            stmt.setInt(1, mbox.getLastChangeID());
+            stmt.setLong(2, mbox.getSize());
+            stmt.setInt(3, mbox.getId());
+            int num = stmt.executeUpdate();
+            assert(num == 1);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("turning on sync tracking for mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void startTrackingImap(Mailbox mbox) throws ServiceException {
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE mailbox SET tracking_imap = 1, size_checkpoint = ? WHERE id = ?");
             stmt.setLong(1, mbox.getSize());
             stmt.setInt(2, mbox.getId());
             int num = stmt.executeUpdate();
             assert(num == 1);
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("turning on sync tracking for mailbox " + mbox.getId(), e);
+            throw ServiceException.FAILURE("turning on imap tracking for mailbox " + mbox.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -310,8 +328,8 @@ public class DbMailbox {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(
-                    "SELECT account_id, item_id_checkpoint, size_checkpoint, change_checkpoint, tracking_sync, " +
-                    "index_volume_id, config " +
+                    "SELECT account_id, item_id_checkpoint, size_checkpoint, change_checkpoint, tracking_sync," +
+                    " tracking_imap, index_volume_id, config " +
                     "FROM mailbox mb " +
                     "WHERE mb.id = ?");
             stmt.setInt(1, mailboxId);
@@ -326,10 +344,11 @@ public class DbMailbox {
             mbd.contacts      = 0;
             mbd.lastItemId    = rs.getInt(2) + ITEM_CHECKPOINT_INCREMENT - 1;
             mbd.lastChangeId  = rs.getInt(4) + CHANGE_CHECKPOINT_INCREMENT - 1;
-            mbd.trackSync     = rs.getBoolean(5);
-            mbd.indexVolumeId = rs.getShort(6);
+            mbd.trackSync     = rs.getInt(5);
+            mbd.trackImap     = rs.getBoolean(6);
+            mbd.indexVolumeId = rs.getShort(7);
             try {
-                mbd.config = new Metadata(rs.getString(7)); 
+                mbd.config = new Metadata(rs.getString(8)); 
             } catch (ServiceException e) {
                 ZimbraLog.misc.warn("unparseable config metadata in mailbox " + mailboxId);
                 mbd.config = new Metadata();
@@ -414,9 +433,8 @@ public class DbMailbox {
             stmt = conn.prepareStatement("SELECT DISTINCT tags " +
                 "FROM " + DbMailItem.getMailItemTableName(mailboxId));
             rs = stmt.executeQuery();
-            while (rs.next()) {
+            while (rs.next())
                 tagsets.add(rs.getLong(1));
-            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting distinct tagsets", e);
         } finally {
@@ -437,9 +455,8 @@ public class DbMailbox {
             stmt = conn.prepareStatement("SELECT DISTINCT flags " +
                 "FROM " + DbMailItem.getMailItemTableName(mailboxId));
             rs = stmt.executeQuery();
-            while (rs.next()) {
+            while (rs.next())
                 flagsets.add(rs.getLong(1));
-            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting distinct flagsets", e);
         } finally {

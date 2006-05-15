@@ -111,10 +111,10 @@ public class ImapAppendOperation extends Operation  {
                     }
                 } catch (Exception e) { }
 
-                Message msg = mMailbox.addMessage(this.getOpCtxt(), pm, folder.getId(), true, flagMask, tagStr.toString());
+                Message msg = mMailbox.addMessage(getOpCtxt(), pm, folder.getId(), true, flagMask, tagStr.toString());
                 if (msg != null) {
                     mAppendHint.append("[APPENDUID ").append(ImapFolder.getUIDValidity(folder))
-                    .append(' ').append(msg.getImapUID()).append("] ");
+                               .append(' ').append(msg.getImapUid()).append("] ");
                     if (sflags != 0 && mImapSession.isSelected()) {
                         ImapMessage i4msg = mImapSession.getFolder().getById(msg.getId());
                         if (i4msg != null)

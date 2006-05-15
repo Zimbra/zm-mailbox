@@ -73,7 +73,6 @@ import com.zimbra.cs.redolog.op.CreateAppointmentPlayer;
 import com.zimbra.cs.redolog.op.CreateAppointmentRecorder;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.DateTimeUtil;
@@ -187,6 +186,7 @@ public class Appointment extends MailItem {
         data.type     = TYPE_APPOINTMENT;
         data.folderId = folder.getId();
         data.indexId  = id;
+        data.imapId   = id;
         data.volumeId = volumeId;
         data.date     = mbox.getOperationTimestamp();
         data.tags     = Tag.tagsToBitmask(tags);
@@ -699,30 +699,6 @@ public class Appointment extends MailItem {
             }
         }
     }
-
-    void setContent(ParsedMessage pm, String digest, int size, short volumeId)
-    throws ServiceException {
-        //
-        // WARNING: this code is currently duplicated in Message.java -- until the two
-        // functions are unified in MailItem, make sure you keep both versions in sync!
-        //
-        MessageCache.purge(this);
-
-        markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
-                         Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
-        mData.blobDigest = digest;
-        mData.size       = size;
-        mData.date       = mMailbox.getOperationTimestamp();
-        mData.volumeId   = volumeId;
-        mData.contentChanged(mMailbox);
-        mBlob = null;
-        
-        // rewrite the DB row to reflect our new view
-        saveData(pm.getParsedSender().getSortString());
-
-        // and, finally, uncache this item since it may be dirty
-        mMailbox.uncache(this);
-    }
     
     private static class PMDataSource implements DataSource {
         
@@ -770,41 +746,20 @@ public class Appointment extends MailItem {
     private void storeUpdatedBlob(MimeMessage mm, short volumeId)
     throws ServiceException, IOException {
         ParsedMessage pm = new ParsedMessage(mm, true);
-        
-        byte[] data;
-        String digest;
-        int size;
         try {
-            data = pm.getRawData();  digest = pm.getRawDigest();  size = pm.getRawSize();
+            setContent(pm.getRawData(), pm.getRawDigest(), volumeId, pm);
         } catch (MessagingException me) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(me);
         }
-
-        // tim: sooo, if it turns out we end up modifying the same appointment
-        // twice in one transaction (e.g. SetAppointment with exception) then
-        // our modContent will be the same as the current transaction (since we 
-        // just wrote the blob) --- in that case we do NOT want to mark out current
-        // blob for deletion here because it's ID is the same as the new one being 
-        // written!
-        if (getSavedSequence() != mMailbox.getOperationChangeID()) {
-            // mark the old blob as ready for deletion
-            PendingDelete info = getDeletionInfo();
-            info.itemIds.clear();  info.unreadIds.clear();
-            mMailbox.markOtherItemDirty(info);
-        }
-        
-        setContent(pm, digest, size, volumeId);
-
-        StoreManager sm = StoreManager.getInstance();
-        Blob blob = sm.storeIncoming(data, digest, null, volumeId);
-        sm.renameTo(blob, getMailbox(), getId(), getSavedSequence(), volumeId);
-        //
-        // shouldn't need to markOtherItemDirty here because this write is transactioned
-        // in the Mailbox caller, not here
-        //
     }
     
-    
+    void reanalyze(Object obj) throws ServiceException {
+        if (!(obj instanceof ParsedMessage))
+            throw ServiceException.FAILURE("cannot reanalyze non-ParsedMessage object", null);
+        ParsedMessage pm = (ParsedMessage) obj;
+        saveData(pm.getParsedSender().getSortString());
+    }
+
     /**
      * The Blob for the appointment is currently single Mime multipart/digest which has
      * each invite's MimeMessage stored as a part.  

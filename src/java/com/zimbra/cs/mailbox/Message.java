@@ -31,11 +31,9 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -83,7 +81,6 @@ public class Message extends MailItem {
             mAppointmentId = apptId;
             mComponentNo = componentNo;
         }
-
         public int getAppointmentId()  { return mAppointmentId; }
         public int getComponentNo()    { return mComponentNo; }
 
@@ -109,7 +106,6 @@ public class Message extends MailItem {
 
 	private String mSender;
     private String mRecipients;
-    private int    mImapUID;
 	private String mFragment;
     private String mRawSubject;
 
@@ -150,14 +146,6 @@ public class Message extends MailItem {
      *  was sent by the user.  Retuns <code>""</code> otherwise. */
     public String getRecipients() {
         return (mRecipients == null ? "" : mRecipients);
-    }
-
-    /** Returns the IMAP UID for the message.  This will usually be the same
-     *  as the Message's ID; it will differ only if the message has ever been
-     *  {@link #move moved} to a folder that was currently SELECTed in an
-     *  active IMAP session. */
-    public int getImapUID() {
-        return (mImapUID > 0 ? mImapUID : mId);
     }
 
     /** Returns the first 100 characters of the message's content.  The system
@@ -280,15 +268,6 @@ public class Message extends MailItem {
         return MessageCache.getMimeMessage(this);
     }
 
-    public static final class SortImapUID implements Comparator<Message> {
-        public int compare(Message m1, Message m2) {
-            int uid1 = m1.getImapUID();
-            int uid2 = m2.getImapUID();
-
-            return uid1 - uid2;
-        }
-    }
-
     boolean isTaggable()      { return true; }
     boolean isCopyable()      { return true; }
     boolean isMovable()       { return true; }
@@ -309,10 +288,8 @@ public class Message extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
         
         Mailbox mbox = folder.getMailbox();
-        
-//        TimeZoneMap tzmap = null;
-        
-        List /* Invite */ components = null;
+
+        List<Invite> components = null;
         String methodStr = null;
         if (cal != null) {
             Account acct = mbox.getAccount();
@@ -330,10 +307,7 @@ public class Message extends MailItem {
                 throw ServiceException.INVALID_REQUEST("unable to parse invite sender: " + pm.getSender(), e);
             }
 
-//            tzmap = new TimeZoneMap(acct.getTimeZone());
-//            components = Invite.parseCalendarComponentsForNewMessage(sentByMe, mbox, cal, id, pm.getFragment(), tzmap);
             components = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe, mbox, id);
-//            method = (Method) cal.getProperties().getProperty(Property.METHOD);
             methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
         }
 
@@ -344,6 +318,7 @@ public class Message extends MailItem {
             data.parentId = conv.getId();
         data.folderId    = folder.getId();
         data.indexId     = id;
+        data.imapId      = id;
         data.volumeId    = volumeId;
         data.date        = (int) (pm.getReceivedDate() / 1000);
         data.size        = msgSize;
@@ -372,23 +347,19 @@ public class Message extends MailItem {
     * @param invites
     */
    private void processInvitesAfterCreate(String method, int folderId, short volumeId, boolean createAppt,
-                                          ParsedMessage pm, List /* Invite */ invites) 
+                                          ParsedMessage pm, List<Invite> invites) 
    throws ServiceException {
        // since this is the first time we've seen this Invite Message, we need to process it
        // and see if it updates an existing Appointment in the Appointments table, or whatever...
        boolean updatedMetadata = false;
-       
-       Iterator /*<Invite>*/ iter = invites.iterator();
-       while (iter.hasNext()) {
-           Invite cur = (Invite) iter.next();
 
-           Mailbox mbox = getMailbox();
-           Appointment appt = mbox.getAppointmentByUid(cur.getUid());
+       for (Invite cur : invites) {
+           Appointment appt = mMailbox.getAppointmentByUid(cur.getUid());
            if (createAppt) {
                if (appt == null) { 
                    // ONLY create an appointment if this is a REQUEST method...otherwise don't.
                    if (method.equals(ICalTok.REQUEST.toString())) {
-                       appt = mbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur);
+                       appt = mMailbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur);
                    } else {
                        sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no Appointment could be found");
                        return; // for now, just ignore this Invitation
@@ -414,14 +385,6 @@ public class Message extends MailItem {
        if (updatedMetadata)
            saveMetadata();
    }
-
-    void setImapUid(int imapId) throws ServiceException {
-        if (mImapUID == imapId)
-            return;
-        markItemModified(Change.MODIFIED_IMAP_UID);
-        mImapUID = imapId;
-        saveMetadata();
-    }
 
     MailItem copy(Folder folder, int id, short destVolumeId)
     throws IOException, ServiceException {
@@ -455,22 +418,30 @@ public class Message extends MailItem {
             Indexer.GetInstance().indexMessage(redo, mMailbox.getMailboxIndex(), mId, pm);
     }
 
-    public void reanalyze() throws ServiceException, IOException {
+    public void reanalyze() throws ServiceException {
         ParsedMessage pm = new ParsedMessage(getMimeMessage(), getDate(), getMailbox().attachmentsIndexingEnabled());
-        try {
-			reanalyze(pm, pm.getRawSize());
-		} catch (MessagingException me) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-		}
+		reanalyze(pm);
     }
-    public void reanalyze(ParsedMessage pm, int size) throws ServiceException {
+    void reanalyze(Object obj) throws ServiceException {
+        if (!(obj instanceof ParsedMessage))
+            throw ServiceException.FAILURE("cannot reanalyze non-ParsedMessage object", null);
+
+        ParsedMessage pm = (ParsedMessage) obj;
+        int size;
+        try {
+            size = pm.getRawSize();
+        } catch (Exception e) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(e);
+        }
+
         // make sure the "attachments" FLAG is correct
         mData.flags &= ~Flag.FLAG_ATTACHED;
         if (pm.hasAttachments())
             mData.flags |= Flag.FLAG_ATTACHED;
 
         // make sure the SUBJECT is correct
-        boolean subjectChanged = !getSubject().equals(pm.getNormalizedSubject());
+        boolean subjectChanged = !getSubject().equals(pm.getSubject());
+        mRawSubject = pm.getSubject();
         mData.subject = pm.getNormalizedSubject();
 
         // handle the message's PARENT
@@ -497,31 +468,6 @@ public class Message extends MailItem {
             parent.removeChild(this);
 //        else if (parent != null)
 //        	mMailbox.recalculateSenderList(parent.getId(), true);
-    }
-
-    void setContent(ParsedMessage pm, String digest, int size,
-                    short volumeId, int imapId)
-    throws ServiceException {
-        //
-        // WARNING: this code is currently duplicated in Appointment.java -- until the two
-        // functions are unified in MailItem, make sure you keep both versions in sync!
-        //
-        
-        // mark the old blob as ready for deletion
-        PendingDelete info = getDeletionInfo();
-        info.itemIds.clear();  info.unreadIds.clear();
-        mMailbox.markOtherItemDirty(info);
-        MessageCache.purge(this);
-
-        markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
-                         Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
-        mData.blobDigest = digest;
-        mData.date       = mMailbox.getOperationTimestamp();
-        mData.volumeId   = volumeId;
-        mData.contentChanged(mMailbox);
-        mImapUID = imapId;
-        mBlob = null;
-        reanalyze(pm, size);
     }
 
     void detach() throws ServiceException {
@@ -556,7 +502,6 @@ public class Message extends MailItem {
         mSender = meta.get(Metadata.FN_SENDER, null);
         mRecipients = meta.get(Metadata.FN_RECIPIENTS, null);
         mFragment = meta.get(Metadata.FN_FRAGMENT, null);
-        mImapUID = (int) meta.getLong(Metadata.FN_IMAP_ID, 0);
 
         if (meta.containsKey(Metadata.FN_APPT_IDS)) {
             mApptInfos = new ArrayList<ApptInfo>();
@@ -581,14 +526,14 @@ public class Message extends MailItem {
 	}
 
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mSender, mRecipients, mFragment, mData.subject, mRawSubject, mImapUID, mDraftInfo, mApptInfos);
+        return encodeMetadata(meta, mColor, mSender, mRecipients, mFragment, mData.subject, mRawSubject, mDraftInfo, mApptInfos);
     }
-    private static String encodeMetadata(byte color, ParsedMessage pm, int flags, DraftInfo dinfo, ArrayList /*ApptInfo*/ apptInfos) {
+    private static String encodeMetadata(byte color, ParsedMessage pm, int flags, DraftInfo dinfo, List<ApptInfo> apptInfos) {
         // cache the "To" header only for messages sent by the user
         String recipients = ((flags & Flag.FLAG_FROM_ME) == 0 ? null : pm.getRecipients());
-        return encodeMetadata(new Metadata(), color, pm.getSender(), recipients, pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), 0, dinfo, apptInfos).toString();
+        return encodeMetadata(new Metadata(), color, pm.getSender(), recipients, pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), dinfo, apptInfos).toString();
     }
-    static Metadata encodeMetadata(Metadata meta, byte color, String sender, String recipients, String fragment, String subject, String rawSubject, int imapID, DraftInfo dinfo, ArrayList /*ApptInfo*/ apptInfos) {
+    static Metadata encodeMetadata(Metadata meta, byte color, String sender, String recipients, String fragment, String subject, String rawSubject, DraftInfo dinfo, List<ApptInfo> apptInfos) {
         // try to figure out a simple way to make the raw subject from the normalized one
         String prefix = null;
         if (rawSubject == null || rawSubject.equals(subject))
@@ -606,15 +551,11 @@ public class Message extends MailItem {
         
         if (apptInfos != null) {
             MetadataList mdList = new MetadataList();
-            for (Iterator iter = apptInfos.iterator(); iter.hasNext();) {
-                ApptInfo info = (ApptInfo)iter.next();
+            for (ApptInfo info : apptInfos)
                 mdList.add(info.encodeMetadata());
-            }
             meta.put(Metadata.FN_APPT_IDS, mdList); 
         }
-                
-        if (imapID > 0)
-            meta.put(Metadata.FN_IMAP_ID, imapID);
+
         if (dinfo != null) {
             Metadata dmeta = new Metadata();
             dmeta.put(Metadata.FN_REPLY_ORIG, dinfo.origId);
@@ -629,14 +570,11 @@ public class Message extends MailItem {
     private static final String CN_SENDER     = "sender";
     private static final String CN_RECIPIENTS = "to";
     private static final String CN_FRAGMENT   = "fragment";
-    private static final String CN_IMAP_ID    = "imap_id";
 
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("message: {");
         appendCommonMembers(sb).append(", ");
-        if (mImapUID > 0)
-            sb.append(CN_IMAP_ID).append(": ").append(mImapUID).append(", ");
         sb.append(CN_SENDER).append(": ").append(mSender).append(", ");
         if (mRecipients != null)
             sb.append(CN_RECIPIENTS).append(": ").append(mRecipients).append(", ");

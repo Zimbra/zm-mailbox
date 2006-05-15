@@ -48,6 +48,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
@@ -86,9 +87,9 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mbox) +
-                    "(id, type, parent_id, folder_id, index_id, date, size, volume_id, blob_digest, unread," +
-                    " flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
-                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "(id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
+                    " unread, flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
+                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             stmt.setInt(pos++, data.id);
             stmt.setByte(pos++, data.type);
@@ -102,6 +103,10 @@ public class DbMailItem {
                 stmt.setNull(pos++, Types.INTEGER);
             else
                 stmt.setInt(pos++, data.indexId);
+            if (data.imapId <= 0)
+                stmt.setNull(pos++, Types.INTEGER);
+            else
+                stmt.setInt(pos++, data.imapId);
             stmt.setInt(pos++, data.date);
             stmt.setInt(pos++, (int) data.size);
             if (data.volumeId >= 0)
@@ -156,26 +161,26 @@ public class DbMailItem {
         try {
             String table = getMailItemTableName(mbox);
             stmt = conn.prepareStatement("INSERT INTO " + table +
-                    "(id, type, parent_id, folder_id, index_id, date, size, volume_id, blob_digest," +
+                    "(id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
                     " unread, flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
-                    "(SELECT ?, type, ?, ?, index_id, date, size, ?, blob_digest, unread," +
+                    "(SELECT ?, type, ?, ?, index_id, ?, date, size, ?, blob_digest, unread," +
                     " flags, tags, sender, subject, ?, ?, ?, ? FROM " + table + " WHERE id = ?)");
             int pos = 1;
-            stmt.setInt(pos++, id);
+            stmt.setInt(pos++, id);                            // ID
             if (parentId <= 0)
-                // Messages in virtual conversations are stored with a null parent_id
-                stmt.setNull(pos++, Types.INTEGER);
+                stmt.setNull(pos++, Types.INTEGER);            // PARENT_ID null for messages in virtual convs
             else
-                stmt.setInt(pos++, parentId);
-            stmt.setInt(pos++, folderId);
+                stmt.setInt(pos++, parentId);                  //   or, PARENT_ID specified by caller
+            stmt.setInt(pos++, folderId);                      // FOLDER_ID
+            stmt.setInt(pos++, id);                            // IMAP_ID is initially the same as ID
             if (volumeId >= 0)
-                stmt.setShort(pos++, volumeId);
+                stmt.setShort(pos++, volumeId);                // VOLUME_ID specified by caller
             else
-                stmt.setNull(pos++, Types.TINYINT);
-            stmt.setString(pos++, metadata);
-            stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
-            stmt.setInt(pos++, mbox.getOperationChangeID());
+                stmt.setNull(pos++, Types.TINYINT);            //   or, no VOLUME_ID
+            stmt.setString(pos++, metadata);                   // METADATA
+            stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
+            stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
+            stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
             stmt.setInt(pos++, item.getId());
             int num = stmt.executeUpdate();
             if (num != 1)
@@ -215,23 +220,28 @@ public class DbMailItem {
 
         PreparedStatement stmt = null;
         try {
+            String imapRenumber = mbox.isTrackingImap() ? ", imap_id = IF(imap_id IS NULL, NULL, 0)" : "";
             int attr = 1;
             if (item instanceof Folder) {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET parent_id = ?, folder_id = ?, mod_metadata = ?, change_date = ? WHERE id = ?");
+                        " SET parent_id = ?, folder_id = ?, mod_metadata = ?, change_date = ?" +
+                        " WHERE id = ? AND folder_id != ?");
                 stmt.setInt(attr++, folder.getId());
-            } else if (item instanceof Conversation && !(item instanceof VirtualConversation))
+            } else if (item instanceof Conversation && !(item instanceof VirtualConversation)) {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET folder_id = ?, mod_metadata = ?, change_date = ? WHERE parent_id = ?");
-            else
+                        " SET folder_id = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
+                        " WHERE parent_id = ? AND folder_id != ?");
+            } else {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET folder_id = ?, mod_metadata = ?, change_date = ? WHERE id = ?");
+                        " SET folder_id = ?, mod_metadata = ?, change_date = ? " + imapRenumber +
+                        " WHERE id = ? AND folder_id != ?");
+            }
             stmt.setInt(attr++, folder.getId());
             stmt.setInt(attr++, mbox.getOperationChangeID());
             stmt.setInt(attr++, mbox.getOperationTimestamp());
             stmt.setInt(attr++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
+            stmt.setInt(attr++, folder.getId());
             stmt.executeUpdate();
-//            return (num > 0);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("writing new folder data for item " + item.getId(), e);
         } finally {
@@ -247,8 +257,10 @@ public class DbMailItem {
 
         PreparedStatement stmt = null;
         try {
+            String imapRenumber = mbox.isTrackingImap() ? ", imap_id = IF(imap_id IS NULL, NULL, 0)" : "";
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
-                    " SET folder_id = ?, mod_metadata = ?, change_date = ? WHERE id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
+                    " SET folder_id = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
+                    " WHERE id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
             int arg = 1;
             stmt.setInt(arg++, folder.getId());
             stmt.setInt(arg++, mbox.getOperationChangeID());
@@ -472,6 +484,23 @@ public class DbMailItem {
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("switching open conversation association for item " + oldTarget.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void saveImapUid(MailItem item) throws ServiceException {
+        Mailbox mbox = item.getMailbox();
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox.getId()) +
+                " SET imap_id = ? WHERE id = ?");
+            stmt.setInt(1, item.getImapUid());
+            stmt.setInt(2, item.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("setting IMAP UID for item " + item.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -1528,8 +1557,8 @@ public class DbMailItem {
     public static void resolveSharedIndex(Mailbox mbox, PendingDelete info) throws ServiceException {
         if (info.sharedIndex == null || info.sharedIndex.isEmpty())
             return;
+        
         Connection conn = mbox.getOperationConnection();
-
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1552,17 +1581,52 @@ public class DbMailItem {
         }
     }
     
+
+    private static final String IMAP_FIELDS = "mi.id, mi.type, mi.imap_id, mi.unread, mi.flags, mi.tags";
+    private static final String IMAP_TYPES = "(" + MailItem.TYPE_MESSAGE + "," + MailItem.TYPE_CONTACT + ")";
+
+    public static List<ImapMessage> loadImapFolder(Folder folder) throws ServiceException {
+        Mailbox mbox = folder.getMailbox();
+        List<ImapMessage> result = new ArrayList<ImapMessage>();
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT " + IMAP_FIELDS +
+                    " FROM " + getMailItemTableName(folder.getMailboxId(), " mi") +
+                    " WHERE folder_id = ? AND type IN " + IMAP_TYPES);
+            stmt.setInt(1, folder.getId());
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                int flags = rs.getBoolean(4) ? Flag.FLAG_UNREAD | rs.getInt(5) : rs.getInt(5);
+                result.add(new ImapMessage(rs.getInt(1), rs.getByte(2), rs.getInt(3), flags, rs.getLong(6)));
+            }
+            return result;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("loading IMAP folder data: " + folder.getPath(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+
     public static final class SearchResult {
         public int    id;
         public int    indexId;
         public byte   type;
         public Object sortkey;
         public UnderlyingData data; // OPTIONAL
+        public ImapMessage i4msg; // OPTIONAL
+
+        public enum ExtraData { NONE, MAIL_ITEM, IMAP_MSG };
 
         public static SearchResult createResult(ResultSet rs, byte sort) throws SQLException {
-            return createResult(rs, sort, false);
+            return createResult(rs, sort, ExtraData.NONE);
         }
-        public static SearchResult createResult(ResultSet rs, byte sort, boolean fullRow) throws SQLException {
+        public static SearchResult createResult(ResultSet rs, byte sort, ExtraData extra) throws SQLException {
             SearchResult result = new SearchResult();
             result.id      = rs.getInt(1);
             result.indexId = rs.getInt(2);
@@ -1572,8 +1636,12 @@ public class DbMailItem {
             else
                 result.sortkey = new Long(rs.getInt(4) * 1000L);
 
-            if (fullRow)
+            if (extra == ExtraData.MAIL_ITEM) {
                 result.data = constructItem(rs, 4);
+            } else if (extra == ExtraData.IMAP_MSG) {
+                int flags = rs.getBoolean(6) ? Flag.FLAG_UNREAD | rs.getInt(7) : rs.getInt(7);
+                result.i4msg = new ImapMessage(result.id, result.type, rs.getInt(5), flags, rs.getLong(8));
+            }
             return result;
         }
 
@@ -1592,24 +1660,26 @@ public class DbMailItem {
     }
 
     public static Collection<SearchResult> search(Connection conn, DbSearchConstraints c) throws ServiceException {
-        return search(new ArrayList<SearchResult>(), conn, c, false);
+        return search(new ArrayList<SearchResult>(), conn, c, SearchResult.ExtraData.NONE);
     }
-    public static Collection<SearchResult> search(Connection conn, DbSearchConstraints c, boolean fullRows) throws ServiceException {
-        return search(new ArrayList<SearchResult>(), conn, c, fullRows);
+    public static Collection<SearchResult> search(Connection conn, DbSearchConstraints c, SearchResult.ExtraData extra) throws ServiceException {
+        return search(new ArrayList<SearchResult>(), conn, c, extra);
     }
     public static Collection<SearchResult> search(Collection<SearchResult> result, Connection conn, DbSearchConstraints c) throws ServiceException {
-        return search(result, conn, c, false);
+        return search(result, conn, c, SearchResult.ExtraData.NONE);
     }
-    public static Collection<SearchResult> search(Collection<SearchResult> result, Connection conn, DbSearchConstraints c, boolean fullRows) throws ServiceException {
-        return search(result, conn, c, c.mailboxId, c.sort, c.offset, c.limit, fullRows);
+    public static Collection<SearchResult> search(Collection<SearchResult> result, Connection conn, DbSearchConstraints c, SearchResult.ExtraData extra) throws ServiceException {
+        return search(result, conn, c, c.mailboxId, c.sort, c.offset, c.limit, extra);
     }
     public static Collection<SearchResult> search(Collection<SearchResult> result, Connection conn, DbSearchConstraintsNode node, 
-                                                  int mailboxId, byte sort, int offset, int limit, boolean fullRows)
+                                                  int mailboxId, byte sort, int offset, int limit, SearchResult.ExtraData extra)
     throws ServiceException {
         // Assemble the search query
         StringBuilder statement = new StringBuilder("SELECT id, index_id, type, " + sortField(sort));
-        if (fullRows)
+        if (extra == SearchResult.ExtraData.MAIL_ITEM)
             statement.append(", " + DB_FIELDS);
+        else if (extra == SearchResult.ExtraData.IMAP_MSG)
+            statement.append(", mi.imap_id, mi.unread, mi.flags, mi.tags");
         statement.append(" FROM " + getMailItemTableName(mailboxId, "mi"));
         statement.append(" WHERE ");
 
@@ -1642,7 +1712,7 @@ public class DbMailItem {
 
             rs = stmt.executeQuery();
             while (rs.next())
-                result.add(SearchResult.createResult(rs, sort, fullRows));
+                result.add(SearchResult.createResult(rs, sort, extra));
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching search metadata", e);
@@ -1913,23 +1983,25 @@ public class DbMailItem {
     private static final int CI_PARENT_ID   = 3;
     private static final int CI_FOLDER_ID   = 4;
     private static final int CI_INDEX_ID    = 5;
-    private static final int CI_DATE        = 6;
-    private static final int CI_SIZE        = 7;
-    private static final int CI_VOLUME_ID   = 8;
-    private static final int CI_BLOB_DIGEST = 9;
-    private static final int CI_UNREAD      = 10;
-    private static final int CI_FLAGS       = 11;
-    private static final int CI_TAGS        = 12;
-//    private static final int CI_SENDER      = 13;
-    private static final int CI_SUBJECT     = 13;
-    private static final int CI_METADATA    = 14;
-    private static final int CI_MODIFIED    = 15;
-    private static final int CI_MODIFY_DATE = 16;
-    private static final int CI_SAVED       = 17;
+    private static final int CI_IMAP_ID     = 6;
+    private static final int CI_DATE        = 7;
+    private static final int CI_SIZE        = 8;
+    private static final int CI_VOLUME_ID   = 9;
+    private static final int CI_BLOB_DIGEST = 10;
+    private static final int CI_UNREAD      = 11;
+    private static final int CI_FLAGS       = 12;
+    private static final int CI_TAGS        = 13;
+//    private static final int CI_SENDER      = 14;
+    private static final int CI_SUBJECT     = 14;
+    private static final int CI_METADATA    = 15;
+    private static final int CI_MODIFIED    = 16;
+    private static final int CI_MODIFY_DATE = 17;
+    private static final int CI_SAVED       = 18;
 
-    private static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.index_id, mi.date, " +
-                                            "mi.size, mi.volume_id, mi.blob_digest, mi.unread, mi.flags, mi.tags, " +
-                                            "mi.subject, mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content";
+    private static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.index_id, " +
+                                            "mi.imap_id, mi.date, mi.size, mi.volume_id, mi.blob_digest, " +
+                                            "mi.unread, mi.flags, mi.tags, mi.subject, mi.metadata, " +
+                                            "mi.mod_metadata, mi.change_date, mi.mod_content";
 
     private static UnderlyingData constructItem(ResultSet rs) throws SQLException {
         return constructItem(rs, 0);
@@ -1941,6 +2013,9 @@ public class DbMailItem {
         data.parentId    = rs.getInt(CI_PARENT_ID + offset);
         data.folderId    = rs.getInt(CI_FOLDER_ID + offset);
         data.indexId     = rs.getInt(CI_INDEX_ID + offset);
+        data.imapId      = rs.getInt(CI_IMAP_ID + offset);
+        if (rs.wasNull())
+            data.imapId = -1;
         data.date        = rs.getInt(CI_DATE + offset);
         data.size        = rs.getInt(CI_SIZE + offset);
         data.volumeId    = rs.getShort(CI_VOLUME_ID + offset);
@@ -2252,8 +2327,8 @@ public class DbMailItem {
         orClause.addSubNode(andClause);
 
         // "is:unread" (first 5 results)
-        System.out.println(search(new ArrayList<SearchResult>(), DbPool.getConnection(), isUnread, 1, DEFAULT_SORT_ORDER, 0, 5, false));
+        System.out.println(search(new ArrayList<SearchResult>(), DbPool.getConnection(), isUnread, 1, DEFAULT_SORT_ORDER, 0, 5, SearchResult.ExtraData.NONE));
         // "has:tags or (in:trash is:unread)" (first 5 results)
-        System.out.println(search(new ArrayList<SearchResult>(), DbPool.getConnection(), orClause, 1, DEFAULT_SORT_ORDER, 0, 5, false));
+        System.out.println(search(new ArrayList<SearchResult>(), DbPool.getConnection(), orClause, 1, DEFAULT_SORT_ORDER, 0, 5, SearchResult.ExtraData.NONE));
     }
 }

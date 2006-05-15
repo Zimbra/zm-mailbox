@@ -178,15 +178,17 @@ public class Document extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
 
 		Mailbox mbox = folder.getMailbox();
-        UnderlyingData data = new UnderlyingData();
     	MetadataList revisions = new MetadataList();
     	Metadata rev = getRevisionMetadata(mbox.getOperationChangeID(), creator, pd);
     	rev.put(Metadata.FN_VERSION, 1);
     	revisions.add(rev);
+
+    	UnderlyingData data = new UnderlyingData();
         data.id          = id;
         data.type        = tp;
         data.folderId    = folder.getId();
         data.indexId     = id;
+        data.imapId      = id;
         data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
         data.size        = pd.getSize();

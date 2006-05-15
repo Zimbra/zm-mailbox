@@ -47,6 +47,7 @@ import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.im.IMNotification;
+import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.ZimbraQuery;
@@ -155,7 +156,8 @@ public class Mailbox {
         public int     lastItemId;
         public int     lastChangeId;
         public long    lastChangeDate;
-        public boolean trackSync;
+        public int     trackSync;
+        public boolean trackImap;
         public Metadata config;
         public short   indexVolumeId;
     }
@@ -174,7 +176,8 @@ public class Mailbox {
         OperationContext octxt = null;
         TargetConstraint tcon  = null;
 
-        Boolean  sync     = null;
+        Integer  sync     = null;
+        Boolean  imap     = null;
         long     size     = NO_CHANGE;
         int      itemId   = NO_CHANGE;
         int      changeId = NO_CHANGE;
@@ -410,13 +413,21 @@ public class Mailbox {
         //   the listener, but empty the list here just to be sure
         mListeners.clear();
     }
-    
+
     /** Returns whether the server is keeping track of message deletes
      *  (etc.) for sync clients.  By default, sync tracking is off.
      * 
      * @see #beginTrackingSync */
     boolean isTrackingSync() {
-        return (mCurrentChange.sync == null ? mData.trackSync : mCurrentChange.sync.booleanValue());
+        return (mCurrentChange.sync == null ? mData.trackSync : mCurrentChange.sync) > 0;
+    }
+
+    /** Returns whether the server is keeping track of message moves
+     *  for imap clients.  By default, imap tracking is off.
+     * 
+     * @see #beginTrackingImap */
+    public boolean isTrackingImap() {
+        return (mCurrentChange.imap == null ? mData.trackImap : mCurrentChange.imap);
     }
 
     /** Returns the operation timestamp as a UNIX int with 1-second
@@ -2028,6 +2039,39 @@ public class Mailbox {
         }
     }
 
+    public synchronized List<ImapMessage> openImapFolder(OperationContext octxt, int folderId) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("openImapFolder", octxt);
+
+            Folder folder = getFolderById(folderId);
+            List<ImapMessage> i4list = DbMailItem.loadImapFolder(folder);
+            success = true;
+            return i4list;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+
+    public void beginTrackingImap(OperationContext octxt) throws ServiceException {
+        if (isTrackingImap())
+            return;
+
+        TrackImap redoRecorder = new TrackImap(mId);
+        boolean success = false;
+        try {
+            beginTransaction("beginTrackingImap", octxt, redoRecorder);
+            if (!hasFullAccess())
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+
+            DbMailbox.startTrackingImap(this);
+            mCurrentChange.imap = Boolean.TRUE;
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
 
     public void beginTrackingSync(OperationContext octxt) throws ServiceException {
         if (isTrackingSync())
@@ -2037,8 +2081,8 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("beginTrackingSync", octxt, redoRecorder);
-            mCurrentChange.sync = true;
             DbMailbox.startTrackingSync(this);
+            mCurrentChange.sync = getLastChangeID();
             success = true;
         } finally {
             endTransaction(success);
@@ -3101,7 +3145,6 @@ public class Mailbox {
 
         SaveDraft redoRecorder = new SaveDraft(mId, id, digest, size);
         boolean success = false;
-        Blob blob = null;
         try {
             beginTransaction("saveDraft", octxt, redoRecorder);
             SaveDraft redoPlayer = (SaveDraft) mCurrentChange.getRedoPlayer();
@@ -3116,19 +3159,12 @@ public class Mailbox {
             int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
             redoRecorder.setImapId(imapID);
 
-            short volumeId =
-                redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
-                                   : redoPlayer.getVolumeId();
+            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
+                                                : redoPlayer.getVolumeId();
 
             // update the content and increment the revision number
-            msg.setContent(pm, digest, size, volumeId, imapID);
-
-            // write the content to the store
-            StoreManager sm = StoreManager.getInstance();
-            blob = sm.storeIncoming(data, digest, null, volumeId);
-            MailboxBlob mb = sm.renameTo(blob, this, id, msg.getSavedSequence(), volumeId);
+            Blob blob = msg.setContent(data, digest, volumeId, pm);
             redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
-            markOtherItemDirty(mb);
 
             // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
             mCurrentChange.setIndexedItem(msg, pm);
@@ -3179,21 +3215,24 @@ public class Mailbox {
         }
     }
 
-    public synchronized void resetImapUid(OperationContext octxt, int[] msgIds) throws ServiceException {
-        SetImapUid redoRecorder = new SetImapUid(mId, msgIds);
+    public synchronized List<Integer> resetImapUid(OperationContext octxt, List<Integer> itemIds) throws ServiceException {
+        SetImapUid redoRecorder = new SetImapUid(mId, itemIds);
 
+        List<Integer> newIds = new ArrayList<Integer>();
         boolean success = false;
         try {
             beginTransaction("resetImapUid", octxt, redoRecorder);
             SetImapUid redoPlayer = (SetImapUid) mCurrentChange.getRedoPlayer();
 
-            for (int id : msgIds) {
-                Message msg = getMessageById(id);
+            for (int id : itemIds) {
+                MailItem item = getItemById(id, MailItem.TYPE_UNKNOWN);
                 int imapId = redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapUid(id);
-                msg.setImapUid(getNextItemId(imapId));
-                redoRecorder.setImapUid(msg.getId(), msg.getImapUID());
+                item.setImapUid(getNextItemId(imapId));
+                redoRecorder.setImapUid(item.getId(), item.getImapUid());
+                newIds.add(item.getImapUid());
             }
             success = true;
+            return newIds;
         } finally {
             endTransaction(success);
         }
@@ -4063,7 +4102,9 @@ public class Mailbox {
         try {
             // the mailbox data has changed, so commit the changes
             if (change.sync != null)
-                mData.trackSync = change.sync.booleanValue();
+                mData.trackSync = change.sync;
+            if (change.imap != null)
+                mData.trackImap = change.imap;
             if (change.size != MailboxChange.NO_CHANGE)
                 mData.size = change.size;
             if (change.itemId != MailboxChange.NO_CHANGE)

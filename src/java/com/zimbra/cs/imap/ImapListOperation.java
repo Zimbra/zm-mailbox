@@ -59,7 +59,7 @@ public class ImapListOperation extends Operation {
 		synchronized (mMailbox) {
 			mMatches = new ArrayList<String>();
 			
-			Folder root = mMailbox.getFolderById(this.getOpCtxt(), Mailbox.ID_FOLDER_USER_ROOT);
+			Folder root = mMailbox.getFolderById(getOpCtxt(), Mailbox.ID_FOLDER_USER_ROOT);
 			for (Folder folder : root.getSubfolderHierarchy()) {
 				if (!ImapFolder.isFolderVisible(folder, (ImapSession) mSession))
 					continue;

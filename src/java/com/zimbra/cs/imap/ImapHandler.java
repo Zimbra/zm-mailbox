@@ -97,13 +97,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     	} catch(IOException e) {};
     }
 
-    public DateFormat getDateFormat() {
-        return mDateFormat;
-    }
-
-    public DateFormat getZimbraFormat() {
-        return mZimbraFormat;
-    }
+    public DateFormat getTimeFormat()   { return mTimeFormat; }
+    public DateFormat getDateFormat()   { return mDateFormat; }
+    public DateFormat getZimbraFormat() { return mZimbraFormat; }
 
     protected boolean setupConnection(Socket connection) throws IOException {
         mRemoteAddress = connection.getInetAddress().getHostAddress();
@@ -852,8 +848,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             pattern = pattern.substring(1);
         List<String> matches = new ArrayList<String>();
         try {
-        	ImapListOperation op = new ImapListOperation(mSession, getContext(), mMailbox, 
-        				                                 new GetFolderAttributes(), pattern);
+        	ImapListOperation op = new ImapListOperation(mSession, getContext(), mMailbox, new GetFolderAttributes(), pattern);
         	op.schedule();
         	matches = op.getMatches();
         } catch (ServiceException e) {
@@ -933,7 +928,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
         folderName = ImapFolder.importPath(folderName, mSession);
 
-        StringBuffer data = new StringBuffer();
+        StringBuilder data = new StringBuilder();
         try {
             GetFolderOperation op = new GetFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, folderName);
             op.schedule();
@@ -1007,10 +1002,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private Tag createTag(String name) throws ServiceException {
-        // notification will update mTags hash
-        return mMailbox.createTag(getContext(), name, MailItem.DEFAULT_COLOR);
-    }
      
     class FindOrCreateTags implements IFindOrCreateTags {
     	public List<ImapFlag> doFindOrCreateTags(List<String> flagNames, List<Tag> newTags) throws ServiceException {
@@ -1021,7 +1012,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     List<ImapFlag> findOrCreateTags(List<String> tagNames, List<Tag> newTags) throws ServiceException {
         if (tagNames == null || tagNames.size() == 0)
             return Collections.emptyList();
-        ArrayList<ImapFlag> result = new ArrayList<ImapFlag>();
+        ArrayList<ImapFlag> flags = new ArrayList<ImapFlag>();
         for (String name : tagNames) {
             ImapFlag i4flag = mSession.getFlagByName(name);
             if (i4flag == null) {
@@ -1032,14 +1023,15 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 } catch (MailServiceException.NoSuchItemException nsie) {
                     if (newTags == null)
                         continue;
-                    Tag ltag = createTag(name);  // mTags is updated via notification...
+                    // notification will update mTags hash
+                    Tag ltag = mMailbox.createTag(getContext(), name, MailItem.DEFAULT_COLOR);
                     newTags.add(ltag);
                     i4flag = mSession.getFlagByName(name);
                 }
             }
-            result.add(i4flag);
+            flags.add(i4flag);
         }
-        return result;
+        return flags;
     }
     private void deleteTags(List<Tag> ltags) {
         if (mMailbox != null && ltags != null)
@@ -1239,8 +1231,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     // FIXME: should handle moves separately
                     // FIXME: it'd be nice to have a bulk-delete Mailbox operation
                     try {
-                        ZimbraLog.imap.debug("  ** deleting: " + i4msg.id);
-                        mMailbox.delete(null, i4msg.id, MailItem.TYPE_MESSAGE);
+                        ZimbraLog.imap.debug("  ** deleting: " + i4msg.msgId);
+                        mMailbox.delete(getContext(), i4msg.msgId, i4msg.getType());
                     } catch (MailServiceException.NoSuchItemException nsie) { }
                     // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                     long now = System.currentTimeMillis();
@@ -1252,7 +1244,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     }
 
     private static final int LARGEST_FOLDER_BATCH = 600;
-    static final byte[] MESSAGE_TYPES = new byte[] { MailItem.TYPE_MESSAGE };
+    static final byte[] ITEM_TYPES = new byte[] { MailItem.TYPE_MESSAGE, MailItem.TYPE_CONTACT };
 
     boolean doSEARCH(String tag, String search, TreeMap<Integer, Object> insertions, boolean byUID) throws IOException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
@@ -1292,12 +1284,12 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     search = '(' + i4folder.getQuery() + ") (" + search + ')';
                 ZimbraLog.imap.info("[ search is: " + search + " ]");
 
-                ZimbraQueryResults zqr = mMailbox.search(getContext(), search, MESSAGE_TYPES, MailboxIndex.SortBy.DATE_ASCENDING, 1000);
+                ZimbraQueryResults zqr = mMailbox.search(getContext(), search, ITEM_TYPES, MailboxIndex.SortBy.DATE_ASCENDING, 1000);
                 try {
                     for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
                         ImapMessage i4msg = mSession.getFolder().getById(hit.getItemId());
                         if (i4msg != null)
-                        	hits.add(byUID ? i4msg.uid : i4msg.seq);
+                        	hits.add(byUID ? i4msg.imapUid : i4msg.sequence);
                     }
                 } finally {
                     zqr.doneWithSearchResults();
@@ -1314,7 +1306,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 		}
 
         Collections.sort(hits);
-        StringBuffer result = new StringBuffer("SEARCH");
+        StringBuilder result = new StringBuilder("SEARCH");
         for (int i = 0; i < hits.size(); i++)
             result.append(' ').append(hits.get(i));
 
@@ -1336,9 +1328,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             return "item:none";
         else if (abbreviateAll && isAllMessages(i4set))
             return "item:all";
-        StringBuffer sb = new StringBuffer("item:{");
+        StringBuilder sb = new StringBuilder("item:{");
         for (ImapMessage i4msg : i4set)
-            sb.append(sb.length() == 6 ? "" : ",").append(i4msg.id);
+            sb.append(sb.length() == 6 ? "" : ",").append(i4msg.msgId);
         return sb.append('}').toString();
     }
 
@@ -1350,12 +1342,13 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     static final int FETCH_RFC822_SIZE   = 0x0020;
     static final int FETCH_UID           = 0x0040;
     static final int FETCH_MARK_READ     = 0x1000;
-    private static final int FETCH_FROM_CACHE = FETCH_FLAGS | FETCH_INTERNALDATE | FETCH_RFC822_SIZE | FETCH_UID;
+    private static final int FETCH_FROM_CACHE = FETCH_FLAGS | FETCH_UID;
+    private static final int FETCH_FROM_MIME  = FETCH_FLAGS | FETCH_INTERNALDATE | FETCH_RFC822_SIZE | FETCH_UID;
 
     static final int FETCH_FAST = FETCH_FLAGS | FETCH_INTERNALDATE | FETCH_RFC822_SIZE;
     static final int FETCH_ALL  = FETCH_FAST  | FETCH_ENVELOPE;
     static final int FETCH_FULL = FETCH_ALL   | FETCH_BODY;
-    
+
 
     boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID) throws IOException, ImapParseException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
@@ -1366,6 +1359,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         //         of whether a UID was specified as a message data item to the FETCH."
         if (byUID)
             attributes |= FETCH_UID;
+        String command = (byUID ? "UID FETCH" : "FETCH");
         boolean markRead = mSession.getFolder().isWritable() && (attributes & FETCH_MARK_READ) != 0;
 
         List<ImapPartSpecifier> fullMessage = new ArrayList<ImapPartSpecifier>();
@@ -1377,14 +1371,12 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 }
             }
 
-        String command = (byUID ? "UID FETCH" : "FETCH");
-        boolean allPresent = true;
-
         Set<ImapMessage> i4set;
         synchronized (mMailbox) {
             i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
         }
-        allPresent = byUID || !i4set.contains(null);
+        boolean allPresent = byUID || !i4set.contains(null);
+
         for (ImapMessage i4msg : i4set) {
             if (i4msg == null)
                 continue;
@@ -1395,53 +1387,55 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 boolean markMessage = markRead && (i4msg.flags & Flag.FLAG_UNREAD) != 0;
                 boolean empty = true;
                 byte[] raw = null;
+                MailItem item = null;
+                if (!fullMessage.isEmpty() || !parts.isEmpty() || (attributes & ~FETCH_FROM_CACHE) != 0)
+                    item = mMailbox.getItemById(getContext(), i4msg.msgId, i4msg.getType());
+                MimeMessage mm = null;
 
-                result.print('*');  result.print(' ');
-                result.print(i4msg.seq);  result.print(" FETCH (");
+                result.print("* " + i4msg.sequence + " FETCH (");
                 if ((attributes & FETCH_UID) != 0) {
-                    result.print(empty ? "" : " ");  result.print("UID "); result.print(i4msg.uid);  empty = false;
+                    result.print((empty ? "" : " ") + "UID " + i4msg.imapUid);  empty = false;
                 }
                 if ((attributes & FETCH_INTERNALDATE) != 0) {
-		        	result.print(empty ? "" : " ");  result.print(i4msg.getDate(mTimeFormat));  empty = false;
+                    result.print((empty ? "" : " ") + "INTERNALDATE \"" + mTimeFormat.format(new Date(item.getDate())) + '"');  empty = false;
                 }
-		        if ((attributes & FETCH_RFC822_SIZE) != 0) {
-		        	result.print(empty ? "" : " ");  result.print("RFC822.SIZE ");  result.print(i4msg.getSize());  empty = false;
+                if ((attributes & FETCH_RFC822_SIZE) != 0) {
+                    result.print((empty ? "" : " ") + "RFC822.SIZE " + i4msg.getSize(item));  empty = false;
                 }
                 if (!fullMessage.isEmpty()) {
-                    raw = mMailbox.getMessageById(getContext(), i4msg.id).getMessageContent();
+                    raw = i4msg.getContent(item);
                     for (ImapPartSpecifier pspec : fullMessage) {
                         result.print(empty ? "" : " ");  pspec.write(result, baos, raw);  empty = false;
                     }
                 }
-		        if (!parts.isEmpty() || (attributes & ~FETCH_FROM_CACHE) != 0) {
-                    // don't use msg.getMimeMessage() because it implicitly expands TNEF attachments
-                    MimeMessage mm;
+		        if (!parts.isEmpty() || (attributes & ~FETCH_FROM_MIME) != 0) {
                     try {
-                        InputStream is = raw != null ? new ByteArrayInputStream(raw) : mMailbox.getMessageById(getContext(), i4msg.id).getRawMessage();
+                        // don't use msg.getMimeMessage() because it implicitly expands TNEF/uuencode attachments
+                        InputStream is = raw != null ? new ByteArrayInputStream(raw) : i4msg.getContentStream(item);
                         mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
                         is.close();
                     } catch (IOException e) {
-                        throw ServiceException.FAILURE("error closing stream for message " + i4msg.id, e);
+                        throw ServiceException.FAILURE("error closing stream for message " + i4msg.msgId, e);
                     }
-                    if ((attributes & FETCH_BODY) != 0) {
-                        result.print(empty ? "" : " ");  result.print("BODY ");
-                        i4msg.serializeStructure(result, mm, false);  empty = false;
-                    }
-                    if ((attributes & FETCH_BODYSTRUCTURE) != 0) {
-                        result.print(empty ? "" : " ");  result.print("BODYSTRUCTURE ");
-                        i4msg.serializeStructure(result, mm, true);  empty = false;
-                    }
-                    if ((attributes & FETCH_ENVELOPE) != 0) {
-                        result.print(empty ? "" : " ");  result.print("ENVELOPE ");
-                        i4msg.serializeEnvelope(result, mm);  empty = false;
-                    }
-                    for (ImapPartSpecifier pspec : parts) {
-                        result.print(empty ? "" : " ");  pspec.write(result, baos, mm);  empty = false;
-                    }
-		        }
+                }
+                if ((attributes & FETCH_BODY) != 0) {
+                    result.print(empty ? "" : " ");  result.print("BODY ");
+                    i4msg.serializeStructure(result, mm, false);  empty = false;
+                }
+                if ((attributes & FETCH_BODYSTRUCTURE) != 0) {
+                    result.print(empty ? "" : " ");  result.print("BODYSTRUCTURE ");
+                    i4msg.serializeStructure(result, mm, true);  empty = false;
+                }
+                if ((attributes & FETCH_ENVELOPE) != 0) {
+                    result.print(empty ? "" : " ");  result.print("ENVELOPE ");
+                    i4msg.serializeEnvelope(result, mm);  empty = false;
+                }
+                for (ImapPartSpecifier pspec : parts) {
+                    result.print(empty ? "" : " ");  pspec.write(result, baos, mm);  empty = false;
+                }
                 // FIXME: optimize by doing a single mark-read op on multiple messages
                 if (markMessage)
-                    mMailbox.alterTag(getContext(), i4msg.id, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
+                    mMailbox.alterTag(getContext(), i4msg.msgId, i4msg.getType(), Flag.ID_FLAG_UNREAD, false);
                 // 6.4.5: "The \Seen flag is implicitly set; if this causes the flags to
                 //         change, they SHOULD be included as part of the FETCH responses."
                 if ((attributes & FETCH_FLAGS) != 0 || markMessage) {
@@ -1534,7 +1528,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                                 if (silent)
                                     mSession.getFolder().disableNotifications();
                                 // actually alter the item's flags
-                                mMailbox.setTags(getContext(), i4msg.id, MailItem.TYPE_MESSAGE, flags, tags);
+                                mMailbox.setTags(getContext(), i4msg.msgId, i4msg.getType(), flags, tags);
                                 // i4msg's permanent flags/tags will be updated via notification
                                 i4msg.setSessionFlags(sflags);
                             } catch (MailServiceException.NoSuchItemException nsie) {
@@ -1549,12 +1543,12 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 if (!silent) {
                     mSession.getFolder().undirtyMessage(i4msg);
                     StringBuffer ntfn = new StringBuffer();
-                    ntfn.append(i4msg.seq).append(" FETCH (").append(i4msg.getFlags(mSession));
+                    ntfn.append(i4msg.sequence).append(" FETCH (").append(i4msg.getFlags(mSession));
                     // 6.4.8: "However, server implementations MUST implicitly include
                     //         the UID message data item as part of any FETCH response
                     //         caused by a UID command..."
                     if (byUID)
-                        ntfn.append(" UID ").append(i4msg.uid);
+                        ntfn.append(" UID ").append(i4msg.imapUid);
                     sendUntagged(ntfn.append(')').toString());
                 } else {
                     // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
@@ -1623,11 +1617,11 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 if (i4msg == null)
                     continue;
                 // FIXME: should optimize to a move, as 95% of IMAP COPY ops are really moves...
-                MailItem copy = mMailbox.copy(getContext(), i4msg.id, MailItem.TYPE_MESSAGE, folder.getId());
+                MailItem copy = mMailbox.copy(getContext(), i4msg.msgId, i4msg.getType(), folder.getId());
                 if (copy == null)
                     continue;
                 newMessages.add(copy);
-                srcUIDs.add(i4msg.uid);
+                srcUIDs.add(i4msg.imapUid);
                 copyUIDs.add(copy.getId());
                 // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                 long now = System.currentTimeMillis();
@@ -1676,7 +1670,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         if (messages != null && !messages.isEmpty()) {
             for (MailItem item : messages)
                 try {
-                    mMailbox.delete(getContext(), item.getId(), MailItem.TYPE_MESSAGE);
+                    mMailbox.delete(getContext(), item.getId(), item.getType());
                 } catch (ServiceException e) {
                     ZimbraLog.imap.warn("could not roll back creation of message", e);
                 }
@@ -1705,7 +1699,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 if (i4msg.added)
                     i4msg.added = false;
                 else
-                	sendUntagged(i4msg.seq + " FETCH (" + i4msg.getFlags(mSession) + ')');
+                	sendUntagged(i4msg.sequence + " FETCH (" + i4msg.getFlags(mSession) + ')');
             }
             i4folder.clearDirty();
 
@@ -1804,10 +1798,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         if (ZimbraLog.imap.isInfoEnabled()) ZimbraLog.imap.info(withClientInfo(message));
     }
 
-    private StringBuffer withClientInfo(String message) {
+    private StringBuilder withClientInfo(String message) {
         int length = 64;
         if (message != null) length += message.length();
-        return new StringBuffer(length).append("[").append(mRemoteAddress).append("] ").append(message);
+        return new StringBuilder(length).append("[").append(mRemoteAddress).append("] ").append(message);
     }
 
 

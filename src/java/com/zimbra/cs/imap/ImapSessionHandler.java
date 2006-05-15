@@ -30,6 +30,7 @@ import java.text.DateFormat;
 
 interface ImapSessionHandler {
     void dropConnection(boolean sendBanner);
+    DateFormat getTimeFormat();
     DateFormat getDateFormat();
     DateFormat getZimbraFormat();
     void sendNotifications(boolean notifyExpunges, boolean flush) throws IOException;
