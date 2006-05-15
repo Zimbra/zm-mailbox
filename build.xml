@@ -525,7 +525,7 @@
 		<mkdir dir="${tomcat.home.dir}/common" />
 		<mkdir dir="${tomcat.home.dir}/common/lib" />
 		<mkdir dir="${zimbra.home.dir}/db" />
-		<copy todir="${zimbra.home.dir}/db">
+		<copy todir="${zimbra.home.dir}/db" overwrite="true">
 			<fileset dir="${src.db.dir}" />
 		</copy>
 	</target>
