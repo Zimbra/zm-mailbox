@@ -215,12 +215,12 @@ public class FolderAction extends ItemAction {
     }
 
     static String typeToString(byte type) {
-        if (type == ACL.GRANTEE_USER)    return "usr";
-        if (type == ACL.GRANTEE_GROUP)   return "grp";
-        if (type == ACL.GRANTEE_COS)     return "cos";
-        if (type == ACL.GRANTEE_DOMAIN)  return "dom";
-        if (type == ACL.GRANTEE_AUTHUSER)return "all";
-        if (type == ACL.GRANTEE_PUBLIC)  return "pub";
+        if (type == ACL.GRANTEE_USER)      return "usr";
+        if (type == ACL.GRANTEE_GROUP)     return "grp";
+        if (type == ACL.GRANTEE_PUBLIC)    return "pub";
+        if (type == ACL.GRANTEE_AUTHUSER)  return "all";
+        if (type == ACL.GRANTEE_COS)       return "cos";
+        if (type == ACL.GRANTEE_DOMAIN)    return "dom";
         return null;
     }
 
@@ -229,39 +229,42 @@ public class FolderAction extends ItemAction {
             return null;
 
         Provisioning prov = Provisioning.getInstance();
+        // for addresses, default to the authenticated user's domain
+        if ((type == ACL.GRANTEE_USER || type == ACL.GRANTEE_GROUP) && name.indexOf('@') == -1) {
+            Account authacct = prov.getAccountById(lc.getAuthtokenAccountId());
+            String authname = (authacct == null ? null : authacct.getName());
+            if (authacct != null)
+                name += authname.substring(authname.indexOf('@'));
+        }
+
         NamedEntry nentry = null;
         if (name != null)
             switch (type) {
-                case ACL.GRANTEE_USER:    if (name.indexOf('@') == -1) {
-                                              Account authacct = prov.getAccountById(lc.getAuthtokenAccountId());
-                                              String authname = (authacct == null ? null : authacct.getName());
-                                              if (authacct != null)
-                                                  name += authname.substring(authname.indexOf('@'));
-                                          }
-                                          nentry = prov.getAccountByName(name);  break;
-                case ACL.GRANTEE_COS:     nentry = prov.getCosByName(name);      break;
-                case ACL.GRANTEE_DOMAIN:  nentry = prov.getDomainByName(name);   break;
-                case ACL.GRANTEE_GROUP:   nentry = null;                                               break;
+                case ACL.GRANTEE_COS:     nentry = prov.getCosByName(name);               break;
+                case ACL.GRANTEE_DOMAIN:  nentry = prov.getDomainByName(name);            break;
+                case ACL.GRANTEE_USER:    nentry = prov.getAccountByName(name);           break;
+                case ACL.GRANTEE_GROUP:   nentry = prov.getDistributionListByName(name);  break;
             }
 
         if (nentry != null)
             return nentry;
         switch (type) {
-            case ACL.GRANTEE_USER:    throw AccountServiceException.NO_SUCH_ACCOUNT(name);
             case ACL.GRANTEE_COS:     throw AccountServiceException.NO_SUCH_COS(name);
             case ACL.GRANTEE_DOMAIN:  throw AccountServiceException.NO_SUCH_DOMAIN(name);
-            case ACL.GRANTEE_GROUP:   throw AccountServiceException.NO_SUCH_GROUP(name);
+            case ACL.GRANTEE_USER:    throw AccountServiceException.NO_SUCH_ACCOUNT(name);
+            case ACL.GRANTEE_GROUP:   throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(name);
             default:  throw ServiceException.FAILURE("LDAP entry not found for " + name + " : " + type, null);
         }
     }
 
     static NamedEntry lookupGranteeByZimbraId(String zid, byte type) {
+        Provisioning prov = Provisioning.getInstance();
         try {
             switch (type) {
-                case ACL.GRANTEE_USER:    return Provisioning.getInstance().getAccountById(zid);
-                case ACL.GRANTEE_COS:     return Provisioning.getInstance().getCosById(zid);
-                case ACL.GRANTEE_DOMAIN:  return Provisioning.getInstance().getDomainById(zid);
-                case ACL.GRANTEE_GROUP:   return null;
+                case ACL.GRANTEE_COS:     return prov.getCosById(zid);
+                case ACL.GRANTEE_DOMAIN:  return prov.getDomainById(zid);
+                case ACL.GRANTEE_USER:    return prov.getAccountById(zid);
+                case ACL.GRANTEE_GROUP:   return prov.getDistributionListById(zid);
                 case ACL.GRANTEE_AUTHUSER:
                 case ACL.GRANTEE_PUBLIC:
                 default:                  return null;

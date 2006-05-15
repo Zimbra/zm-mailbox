@@ -40,7 +40,6 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
@@ -65,7 +64,7 @@ public class ACL {
 
     /** The grantee of these rights is the zimbraId for a user. */
 	public static final byte GRANTEE_USER     = 1;
-    /** The grantee of these rights is the zimbraId for a group. */
+    /** The grantee of these rights is the zimbraId for a distribution list. */
 	public static final byte GRANTEE_GROUP    = 2;
     /** The grantee of these rights is all authenticated users. */
 	public static final byte GRANTEE_AUTHUSER = 3;
@@ -85,44 +84,45 @@ public class ACL {
     
     private static class AnonymousAccount implements Account {
     	// useful fields
-        public String getId() { return GUID_PUBLIC; }
-        public String getUid() { return "public"; }
-        public boolean isCorrectHost() { return true; }
+        public String getId()           { return GUID_PUBLIC; }
+        public String getUid()          { return "public"; }
+        public boolean isCorrectHost()  { return true; }
         
         // empty fields
-        public String getAttr(String name) { return null; }
-        public String[] getMultiAttr(String name) { return null; }    
+        public String getAttr(String name)                      { return null; }
+        public String[] getMultiAttr(String name)               { return null; }    
         public String getAttr(String name, String defaultValue) { return defaultValue; }
-        public Set<String> getMultiAttrSet(String name) { return null; }
-        public Map<String, Object> getAttrs() { return null; }
+        public Set<String> getMultiAttrSet(String name)         { return null; }
+        public Map<String, Object> getAttrs()                   { return null; }
         public void modifyAttrs(Map<String, ? extends Object> attrs) { return; }
         public void modifyAttrs(Map<String, ? extends Object> attrs, boolean checkImmutable) { return; }
-        public boolean getBooleanAttr(String name, boolean defaultValue) { return defaultValue; }
-        public void setBooleanAttr(String name, boolean value) { return; }
-        public int getIntAttr(String name, int defaultValue) { return 0; }
-        public long getLongAttr(String name, long defaultValue) { return 0; }
-        public long getTimeInterval(String name, long defaultValue) { return defaultValue; }
+        public boolean getBooleanAttr(String name, boolean defaultValue)   { return defaultValue; }
+        public void setBooleanAttr(String name, boolean value)             { return; }
+        public int getIntAttr(String name, int defaultValue)               { return 0; }
+        public long getLongAttr(String name, long defaultValue)            { return 0; }
+        public long getTimeInterval(String name, long defaultValue)        { return defaultValue; }
         public Date getGeneralizedTimeAttr(String name, Date defaultValue) { return defaultValue; }
-        public void reload() { return; }
-        public void setCachedData(Object key, Object value) { return; }
-        public Object getCachedData(Object key) { return null; }
-        public Locale getLocale()  { return null; }
-        public String getName() { return null; }
-        public String getDomainName() { return null; }
-        public Domain getDomain() { return null; }
-        public String getAccountStatus() { return null; }
+        public void reload()                      { return; }
+        public void setCachedData(Object key, Object value)  { return; }
+        public Object getCachedData(Object key)   { return null; }
+        public Locale getLocale()                 { return null; }
+        public String getName()                   { return null; }
+        public String getDomainName()             { return null; }
+        public Domain getDomain()                 { return null; }
+        public String getAccountStatus()          { return null; }
         public Map<String, Object> getAttrs(boolean prefsOnly, boolean applyCos) { return null; }
-        public Cos getCOS() { return null; }
-        public String[] getAliases() { return null; }
+        public Cos getCOS()                       { return null; }
+        public String[] getAliases()              { return null; }
         public boolean inDistributionList(String zimbraGroupId) { return false; }
         public Set<String> getDistributionLists() { return null; }
-        public Server getServer() { return null; }
-        public ICalTimeZone getTimeZone() { return null; }
+        public Server getServer()                 { return null; }
+        public ICalTimeZone getTimeZone()         { return null; }
         public CalendarUserType getCalendarUserType() { return null; }
-        public boolean saveToSent() { return false; }
+        public boolean saveToSent()               { return false; }
         public List<DistributionList> getDistributionLists(boolean directOnly, Map<String, String> via) { return null; }
-        public int compareTo(Object o) { return 0; }
+        public int compareTo(Object o)            { return 0; }
     }
+
     public static class Grant {
         /** The zimbraId of the entry being granted rights. */
         private String mGrantee;
@@ -190,8 +190,8 @@ public class ACL {
                 case ACL.GRANTEE_AUTHUSER: return !acct.equals(ANONYMOUS_ACCT);
                 case ACL.GRANTEE_COS:      return mGrantee.equals(getId(acct.getCOS()));
                 case ACL.GRANTEE_DOMAIN:   return mGrantee.equals(getId(acct.getDomain()));
-                case ACL.GRANTEE_USER:     return mGrantee.equals(acct.getId());
                 case ACL.GRANTEE_GROUP:    return acct.inDistributionList(mGrantee);
+                case ACL.GRANTEE_USER:     return mGrantee.equals(acct.getId());
                 default:  throw ServiceException.FAILURE("unknown ACL grantee type: " + mType, null);
             }
         }
