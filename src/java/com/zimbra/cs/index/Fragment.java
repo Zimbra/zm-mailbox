@@ -40,6 +40,7 @@ public class Fragment {
     private static final String STOPWORD_REPLY_1   = "--Original Message--";
     private static final String STOPWORD_REPLY_2   = "-- Original Message --";
     private static final String STOPWORD_REPLY_3   = "________________________________";
+    private static final String STOPWORD_REPLY_4   = "--Original Invite--";
     private static final String STOPWORD_FORWARD_1 = "--Forwarded Message--";
     private static final String STOPWORD_FORWARD_2 = "-- Forwarded Message --";
 
@@ -207,8 +208,8 @@ public class Fragment {
             line = compressLine(line);
             // check for stopwords that mean that what follows is a quoted message
             if (line.equalsIgnoreCase(STOPWORD_REPLY_1) || line.equalsIgnoreCase(STOPWORD_REPLY_2) ||
-                    line.equalsIgnoreCase(STOPWORD_REPLY_3) || line.equalsIgnoreCase(STOPWORD_FORWARD_1) ||
-                    line.equalsIgnoreCase(STOPWORD_FORWARD_2)) {
+                    line.equalsIgnoreCase(STOPWORD_REPLY_3) || line.equalsIgnoreCase(STOPWORD_REPLY_4) ||
+                    line.equalsIgnoreCase(STOPWORD_FORWARD_1) || line.equalsIgnoreCase(STOPWORD_FORWARD_2)) {
                 if (fragment.length() != 0 || returnIndex == -1)
                     break;
                 // if we're here, the message was nothing but quoted text, so leave in the "-- Original Message --" and add a few more lines
