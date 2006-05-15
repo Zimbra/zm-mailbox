@@ -1,4 +1,4 @@
-Tim's short-short summary of the query grammar as of now (updated)
+Tim's short-short summary of the query grammar as of now (updated )
 --------------------------------------------------------
    content:{TEXT}
    from:{TEXT|EMAIL_ADDR|DOMAIN} 
