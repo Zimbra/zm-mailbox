@@ -39,7 +39,7 @@ import com.zimbra.cs.mailbox.Message;
  * @author schemers
  *
  */
-class Pop3Msg {
+public class Pop3Message {
     boolean mDeleted;
     private int mId;
     private int mSize; // raw size from blob store
@@ -47,13 +47,17 @@ class Pop3Msg {
     
     /**
      * save enough info from the Message so we don't have to keep a reference to it.
-     * @param m
+     * @param msg
      */
-    Pop3Msg(Message m) {
-        mId = m.getId();
-        mSize = (int) m.getSize();
+    public Pop3Message(Message msg) {
+        this(msg.getId(), (int) msg.getSize(), msg.getDigest());
+    }
+
+    public Pop3Message(int id, int size, String digest) {
+        mId = id;
+        mSize = size;
         mDeleted = false;
-        mDigest = m.getDigest();
+        mDigest = digest;
     }
     
     int getSize() {

@@ -52,6 +52,7 @@ import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
+import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.Constants;
@@ -1606,6 +1607,34 @@ public class DbMailItem {
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("loading IMAP folder data: " + folder.getPath(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    private static final String POP3_FIELDS = "mi.id, mi.size, mi.blob_digest";
+    private static final String POP3_TYPES = "(" + MailItem.TYPE_MESSAGE + ")";
+
+    public static List<Pop3Message> loadPop3Folder(Folder folder) throws ServiceException {
+        Mailbox mbox = folder.getMailbox();
+        List<Pop3Message> result = new ArrayList<Pop3Message>();
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT " + POP3_FIELDS +
+                    " FROM " + getMailItemTableName(folder.getMailboxId(), " mi") +
+                    " WHERE folder_id = ? AND type IN " + POP3_TYPES);
+            stmt.setInt(1, folder.getId());
+            rs = stmt.executeQuery();
+
+            while (rs.next())
+                result.add(new Pop3Message(rs.getInt(1), rs.getInt(2), rs.getString(3)));
+            return result;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("loading POP3 folder data: " + folder.getPath(), e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);

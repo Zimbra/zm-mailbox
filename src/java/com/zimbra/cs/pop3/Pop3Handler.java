@@ -35,7 +35,6 @@ import java.io.OutputStream;
 import java.io.PushbackInputStream;
 import java.net.Socket;
 
-import javax.mail.MessagingException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -76,7 +75,7 @@ public class Pop3Handler extends ProtocolHandler {
     private String mQuery;
     private String mAccountId;
     private String mAccountName;
-    private Pop3Mbx mMbx;
+    private Pop3Mailbox mMbx;
     
     private int mState;
 
@@ -123,7 +122,7 @@ public class Pop3Handler extends ProtocolHandler {
     /* (non-Javadoc)
      * @see com.zimbra.cs.tcpserver.ProtocolHandler#authenticate()
      */
-    protected boolean authenticate() throws IOException {
+    protected boolean authenticate() {
         // we auth with the USER/PASS commands
         return true;
     }
@@ -149,11 +148,7 @@ public class Pop3Handler extends ProtocolHandler {
         } catch (ServiceException e) {
             sendERR(Pop3CmdException.getResponse(e.getMessage()));
             DEBUG(e.getMessage(), e);
-            return dropConnection == false;            
-        } catch (MessagingException e) {
-            sendERR(Pop3CmdException.getResponse(e.getMessage()));
-            DEBUG(e.getMessage(), e);
-            return dropConnection == false;            
+            return dropConnection == false;
         } finally {
             if (dropConnection)
                 dropConnection();
@@ -161,7 +156,7 @@ public class Pop3Handler extends ProtocolHandler {
         }
     }
     
-    protected boolean processCommandInternal() throws Pop3CmdException, MessagingException, IOException, ServiceException {
+    protected boolean processCommandInternal() throws Pop3CmdException, IOException, ServiceException {
         mCurrentCommandLine = mInputStream.readLine();
         //INFO("command("+mCurrentCommandLine+")");
         String cmd = mCurrentCommandLine;
@@ -520,7 +515,7 @@ public class Pop3Handler extends ProtocolHandler {
             mAccountId = acct.getId();
             mAccountName = acct.getName();
             Mailbox mailbox = Mailbox.getMailboxByAccountId(mAccountId);
-            mMbx = new Pop3Mbx(mailbox, acct, mQuery);
+            mMbx = new Pop3Mailbox(mailbox, acct, mQuery);
             mState = STATE_TRANSACTION;
             mExpire = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / (1000*60*60*24));
             if (mExpire > 0 && mExpire < MIN_EXPIRE_DAYS) mExpire = MIN_EXPIRE_DAYS;
@@ -540,13 +535,13 @@ public class Pop3Handler extends ProtocolHandler {
         }
     }
     
-    private void doSTAT() throws Pop3CmdException, ServiceException, IOException {
+    private void doSTAT() throws Pop3CmdException, IOException {
         if (mState != STATE_TRANSACTION) 
             throw new Pop3CmdException("this command is only valid after a login");
         sendOK(mMbx.getNumMessages()+" "+mMbx.getSize());
     }
     
-    private void doSTLS() throws Pop3CmdException, ServiceException, IOException {
+    private void doSTLS() throws Pop3CmdException, IOException {
         if (mServer.isConnectionSSL())
             throw new Pop3CmdException("command not valid over TLS");
 
@@ -564,17 +559,17 @@ public class Pop3Handler extends ProtocolHandler {
         mOutputStream = new BufferedOutputStream(mTlsConnection.getOutputStream());        
     }
     
-    private void doLIST(String msg) throws Pop3CmdException, ServiceException, IOException {
+    private void doLIST(String msg) throws Pop3CmdException, IOException {
         if (mState != STATE_TRANSACTION) 
             throw new Pop3CmdException("this command is only valid after a login");
         if (msg != null) {
-            Pop3Msg pm = mMbx.getPop3Msg(msg);
+            Pop3Message pm = mMbx.getPop3Msg(msg);
             sendOK(msg+" "+pm.getSize());
         } else {
             sendOK(mMbx.getNumMessages()+" messages", false);
             int totNumMsgs = mMbx.getTotalNumMessages();
             for (int n=0; n < totNumMsgs; n++) {
-                Pop3Msg pm = mMbx.getMsg(n);                
+                Pop3Message pm = mMbx.getMsg(n);                
                 if (!pm.isDeleted())
                     sendLine((n+1)+" "+pm.getSize(), false);
             }
@@ -582,17 +577,17 @@ public class Pop3Handler extends ProtocolHandler {
         }
     }
     
-    private void doUIDL(String msg) throws Pop3CmdException, ServiceException, IOException {
+    private void doUIDL(String msg) throws Pop3CmdException, IOException {
         if (mState != STATE_TRANSACTION) 
             throw new Pop3CmdException("this command is only valid after a login");
         if (msg != null) {
-            Pop3Msg pm = mMbx.getPop3Msg(msg);
+            Pop3Message pm = mMbx.getPop3Msg(msg);
             sendOK(msg+" "+pm.getId()+"."+pm.getDigest());
         } else {
             sendOK(mMbx.getNumMessages()+" messages", false);
             int totNumMsgs = mMbx.getTotalNumMessages();
             for (int n=0; n < totNumMsgs; n++) {
-                Pop3Msg pm = mMbx.getMsg(n);                
+                Pop3Message pm = mMbx.getMsg(n);                
                 if (!pm.isDeleted())
                     sendLine((n+1)+" "+pm.getId()+"."+pm.getDigest(), false);
             }
@@ -608,7 +603,7 @@ public class Pop3Handler extends ProtocolHandler {
         }
     }
 
-    private void doRETR(String msg) throws Pop3CmdException, MessagingException, IOException, ServiceException {
+    private void doRETR(String msg) throws Pop3CmdException, IOException, ServiceException {
         if (mState != STATE_TRANSACTION) 
             throw new Pop3CmdException("this command is only valid after a login");
 
@@ -627,7 +622,7 @@ public class Pop3Handler extends ProtocolHandler {
         }
     }
 
-    private void doTOP(String arg) throws Pop3CmdException, IOException, MessagingException, ServiceException {
+    private void doTOP(String arg) throws Pop3CmdException, IOException, ServiceException {
         if (mState != STATE_TRANSACTION) 
             throw new Pop3CmdException("this command is only valid after a login");
         
@@ -656,19 +651,19 @@ public class Pop3Handler extends ProtocolHandler {
         }        
     }
 
-    private void doDELE(String msg) throws Pop3CmdException, ServiceException, IOException {
+    private void doDELE(String msg) throws Pop3CmdException, IOException {
         if (mState != STATE_TRANSACTION) 
             throw new Pop3CmdException("this command is only valid after a login");
 
         if (msg == null)
             throw new Pop3CmdException("please specify a message");
 
-        Pop3Msg pm = mMbx.getPop3Msg(msg);
+        Pop3Message pm = mMbx.getPop3Msg(msg);
         mMbx.delete(pm);
         sendOK("message "+msg+" marked for deletion");
     }    
 
-    private void doCAPA() throws Pop3CmdException, ServiceException, IOException {
+    private void doCAPA() throws IOException {
         sendOK("Capability list follows", false);
         sendLine("TOP", false);
         sendLine("USER", false);

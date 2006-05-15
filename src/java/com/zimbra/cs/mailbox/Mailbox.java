@@ -69,6 +69,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.ServiceException;
@@ -2048,6 +2049,20 @@ public class Mailbox {
             List<ImapMessage> i4list = DbMailItem.loadImapFolder(folder);
             success = true;
             return i4list;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public synchronized List<Pop3Message> openPop3Folder(OperationContext octxt, int folderId) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("openPop3Folder", octxt);
+
+            Folder folder = getFolderById(folderId);
+            List<Pop3Message> p3list = DbMailItem.loadPop3Folder(folder);
+            success = true;
+            return p3list;
         } finally {
             endTransaction(success);
         }

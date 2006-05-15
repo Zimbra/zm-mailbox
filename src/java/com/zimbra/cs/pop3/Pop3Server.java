@@ -29,9 +29,6 @@ import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.localconfig.LC;
@@ -54,7 +51,6 @@ implements RealtimeStatsCallback {
     private static Pop3Server sPopServer;
     private static Pop3Server sPopSSLServer;
     
-	private Log mLog;
     private boolean mAllowCleartextLogins;
     private boolean mConnectionSSL;
 
@@ -63,7 +59,6 @@ implements RealtimeStatsCallback {
     
 	public Pop3Server(int numThreads, ServerSocket serverSocket, boolean loginOK, boolean ssl) {
 		super("Pop3Server", numThreads, serverSocket);
-		mLog = LogFactory.getLog(Pop3Server.class.getName() + "/" + serverSocket.getLocalPort());
         mAllowCleartextLogins = loginOK;
         mConnectionSSL = ssl;
         ZimbraPerf.addStatsCallback(this);

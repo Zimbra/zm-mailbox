@@ -33,7 +33,6 @@ package com.zimbra.cs.pop3;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import com.zimbra.cs.account.Account;
@@ -48,44 +47,39 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.ServiceException;
 
 
-class Pop3Mbx {
+class Pop3Mailbox {
     private int mId; // id of the mailbox
     private int mNumDeleted; // number of messages deleted
     private long mTotalSize; // raw size from blob store
     private long mDeletedSize; // raw size from blob store    
-    private ArrayList<Pop3Msg> mMessages; // array of pop messages
+    private List<Pop3Message> mMessages; // array of pop messages
     private Mailbox.OperationContext mOpContext;
-    
+
+    private static final byte[] POP3_TYPES = new byte[] { MailItem.TYPE_MESSAGE };
+
     /**
-     * initialize the Pop3Mbx, without keeping a reference to either the Mailbox object or
+     * initialize the Pop3Mailbox, without keeping a reference to either the Mailbox object or
      * any of the Message objects in the inbox.
-     * @param mailbox
+     * @param mbox
      * @param acct TODO
      * 
      * @throws ServiceException
      */
-    Pop3Mbx(Mailbox mailbox, Account acct, String query) throws ServiceException {
-        mId = mailbox.getId();
+    Pop3Mailbox(Mailbox mbox, Account acct, String query) throws ServiceException {
+        mId = mbox.getId();
         mNumDeleted = 0;
         mDeletedSize = 0;
         mOpContext = new Mailbox.OperationContext(acct);
 
         if (query == null || query.equals("")) {
-           List items = mailbox.getItemList(mOpContext, MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_INBOX);
-           mMessages = new ArrayList<Pop3Msg>(items.size());           
-           for (Iterator it=items.iterator(); it.hasNext(); ) {
-               Object obj = it.next();
-               if (obj instanceof Message) {
-                   Message m = (Message) obj;
-                   mTotalSize += m.getSize();
-                   mMessages.add(new Pop3Msg(m));
-               }
-           }
+            mMessages = mbox.openPop3Folder(mOpContext, Mailbox.ID_FOLDER_INBOX);
+            for (Pop3Message p3m : mMessages)
+                mTotalSize += p3m.getSize();
         } else {
             ZimbraQueryResults results = null;
-            mMessages = new ArrayList<Pop3Msg>(500);            
+            mMessages = new ArrayList<Pop3Message>(500);            
             try {
-                results = mailbox.search(mOpContext, query, new byte[] { MailItem.TYPE_MESSAGE }, MailboxIndex.SortBy.DATE_DESCENDING, 500);
+                results = mbox.search(mOpContext, query, POP3_TYPES, MailboxIndex.SortBy.DATE_DESCENDING, 500);
 
                 while (results.hasNext()) {
                     ZimbraHit hit = results.getNext();
@@ -93,7 +87,7 @@ class Pop3Mbx {
                         MessageHit mh = (MessageHit) hit;
                         Message m = mh.getMessage();
                         mTotalSize += m.getSize();
-                        mMessages.add(new Pop3Msg(m));
+                        mMessages.add(new Pop3Message(m));
                     }
                 }
             } catch (IOException e) {
@@ -150,10 +144,10 @@ class Pop3Mbx {
      * @return
      * @throws Pop3CmdException
      */
-    Pop3Msg getMsg(int index) throws Pop3CmdException {
+    Pop3Message getMsg(int index) throws Pop3CmdException {
         if (index < 0 || index >= mMessages.size()) 
             throw new Pop3CmdException("invalid message");
-        Pop3Msg p3m = mMessages.get(index);
+        Pop3Message p3m = mMessages.get(index);
         //if (p3m.isDeleted()) 
         //    throw new Pop3CmdException("message is deleted");
         return p3m;
@@ -168,15 +162,15 @@ class Pop3Mbx {
     }
 
     /**
-     * get the undeleted Pop3Msg for the specified msg number (external, starting at 1 index).
+     * get the undeleted Pop3Message for the specified msg number (external, starting at 1 index).
      * @param msg
      * @return
      * @throws Pop3CmdException
      * @throws ServiceException
      */
-    Pop3Msg getPop3Msg(String msg) throws Pop3CmdException {
+    Pop3Message getPop3Msg(String msg) throws Pop3CmdException {
         int index = parseInt(msg, "unable to parse msg");
-        Pop3Msg p3m = getMsg(index - 1);
+        Pop3Message p3m = getMsg(index - 1);
         if (p3m.isDeleted())
             throw new Pop3CmdException("message is deleted");
         return p3m;
@@ -190,7 +184,7 @@ class Pop3Mbx {
      * @throws ServiceException
      */
     Message getMessage(String msg) throws Pop3CmdException, ServiceException {
-        Pop3Msg p3m = getPop3Msg(msg);
+        Pop3Message p3m = getPop3Msg(msg);
         Mailbox mbox = Mailbox.getMailboxById(mId);
         return mbox.getMessageById(mOpContext, p3m.getId());
     }
@@ -199,7 +193,7 @@ class Pop3Mbx {
      * Mark the message as deleted and update counts and mailbox size.
      * @param p3m
      */
-    public void delete(Pop3Msg p3m) {
+    public void delete(Pop3Message p3m) {
         if (!p3m.isDeleted()) {
             p3m.mDeleted = true;
             mNumDeleted++;
@@ -213,7 +207,7 @@ class Pop3Mbx {
     public int undeleteMarked() {
         int count = 0;
         for (int i = 0; i < mMessages.size(); i++) {
-            Pop3Msg p3m = mMessages.get(i);
+            Pop3Message p3m = mMessages.get(i);
             if (p3m.isDeleted()) {
                 mNumDeleted--;
                 mDeletedSize -= p3m.getSize();
@@ -235,7 +229,7 @@ class Pop3Mbx {
         int count = 0;
         int failed = 0;
         for (int i = 0; i < mMessages.size(); i++) {
-            Pop3Msg p3m = mMessages.get(i);
+            Pop3Message p3m = mMessages.get(i);
             if (p3m.isDeleted()) {
                 try {
                     if (hard) {

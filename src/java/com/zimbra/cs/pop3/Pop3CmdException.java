@@ -33,9 +33,6 @@ package com.zimbra.cs.pop3;
 
 /**
  * @author schemers
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
  */
 public class Pop3CmdException extends Exception {
     
@@ -48,7 +45,7 @@ public class Pop3CmdException extends Exception {
     }
     
     /**
-     * sanatize the result of getMessage for use in an -ERR response
+     * sanitize the result of getMessage for use in an -ERR response
      * 
      * @return
      */
@@ -57,7 +54,7 @@ public class Pop3CmdException extends Exception {
     }
     
     /**
-     * sanatize the specified message for use in an -ERR response
+     * sanitize the specified message for use in an -ERR response
      * 
      * @return
      */
