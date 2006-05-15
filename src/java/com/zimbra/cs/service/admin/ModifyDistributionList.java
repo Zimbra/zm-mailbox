@@ -50,7 +50,6 @@ public class ModifyDistributionList extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
 
         String id = request.getAttribute(AdminService.E_ID);
-        String isgroup = request.getAttribute(AdminService.E_ISGROUP, null);        
         Map<String, Object> attrs = AdminService.getAttrs(request);
 	    
         DistributionList distributionList = prov.getDistributionListById(id);
@@ -60,16 +59,11 @@ public class ModifyDistributionList extends AdminDocumentHandler {
         if (!canAccessEmail(lc, distributionList.getName()))
             throw ServiceException.PERM_DENIED("can not access dl");
 
-        if (isgroup != null) {
-            if (!isgroup.equals("0") && !isgroup.equals("1"))
-                throw ServiceException.INVALID_REQUEST("isgroup must be 0 or 1", null);
-            distributionList.setSecurityGroup(isgroup.equals("1"));
-        }
         // pass in true to checkImmutable
         distributionList.modifyAttrs(attrs, true);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                  new String[] {"cmd", "ModifyDistributionList","name", distributionList.getName(), "isgroup", isgroup}, attrs));	    
+                  new String[] {"cmd", "ModifyDistributionList","name", distributionList.getName()}, attrs));	    
 
         Element response = lc.createElement(AdminService.MODIFY_DISTRIBUTION_LIST_RESPONSE);
         GetDistributionList.doDistributionList(response, distributionList);

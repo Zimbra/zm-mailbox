@@ -96,7 +96,6 @@ public class GetDistributionListMembership extends AdminDocumentHandler {
             Element dlEl = response.addElement(AdminService.E_DL);
             dlEl.addAttribute(AdminService.A_NAME, dl.getName());
             dlEl.addAttribute(AdminService.A_ID,dl.getId());
-            dlEl.addAttribute(AdminService.A_ISGROUP,dl.isSecurityGroup());
             String viaDl = via.get(dl.getName());
             if (viaDl != null) dlEl.addAttribute(AdminService.A_VIA, viaDl);
         }

@@ -122,7 +122,6 @@ public class EntrySearchFilter {
         sIndexedAttrs.add(Provisioning.A_objectClass.toLowerCase());
         sIndexedAttrs.add(Provisioning.A_zimbraForeignPrincipal.toLowerCase());
         sIndexedAttrs.add(Provisioning.A_zimbraId.toLowerCase());
-        sIndexedAttrs.add(Provisioning.A_zimbraGroupId.toLowerCase());
         sIndexedAttrs.add(Provisioning.A_zimbraMailCatchAllAddress.toLowerCase());
         sIndexedAttrs.add(Provisioning.A_zimbraMailDeliveryAddress.toLowerCase());
         sIndexedAttrs.add(Provisioning.A_zimbraMailForwardingAddress.toLowerCase());

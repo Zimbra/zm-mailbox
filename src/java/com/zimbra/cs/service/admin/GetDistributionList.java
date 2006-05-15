@@ -118,7 +118,6 @@ public class GetDistributionList extends AdminDocumentHandler {
         Element distributionList = e.addElement(AdminService.E_DL);
         distributionList.addAttribute(AdminService.A_NAME, d.getName());
         distributionList.addAttribute(AdminService.A_ID,d.getId());
-        distributionList.addAttribute(AdminService.A_ISGROUP,d.isSecurityGroup());
         doAttrs(distributionList, d.getAttrs());
         return distributionList;
     }

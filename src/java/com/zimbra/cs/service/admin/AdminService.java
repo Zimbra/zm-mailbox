@@ -292,8 +292,7 @@ public class AdminService implements DocumentService {
 	public static final String E_NUM_OF_PAGES = "numpages";
     public static final String E_VOLUME = "volume";
     public static final String E_PROGRESS = "progress";
-    public static final String E_ISGROUP = "isgroup";
-	
+
     public static final String A_APPLY_CONFIG = "applyConfig";
     public static final String A_APPLY_COS = "applyCos";
     public static final String A_ID = "id";
@@ -315,7 +314,6 @@ public class AdminService implements DocumentService {
     public static final String A_ACCOUNTID = "id";
     public static final String A_MAILBOXID = "mbxid";
     public static final String A_TOTAL = "total";
-    public static final String A_ISGROUP = "isgroup";
     public static final String A_VIA = "via";
 
     public static final String BY_ID = "id";

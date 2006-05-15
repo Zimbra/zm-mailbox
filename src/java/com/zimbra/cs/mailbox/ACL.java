@@ -114,8 +114,8 @@ public class ACL {
         public Map<String, Object> getAttrs(boolean prefsOnly, boolean applyCos) { return null; }
         public Cos getCOS() { return null; }
         public String[] getAliases() { return null; }
-        public boolean inGroup(String zimbraGroupId) { return false; }
-        public Set<String> getGroups() { return null; }
+        public boolean inDistributionList(String zimbraGroupId) { return false; }
+        public Set<String> getDistributionLists() { return null; }
         public Server getServer() { return null; }
         public ICalTimeZone getTimeZone() { return null; }
         public CalendarUserType getCalendarUserType() { return null; }
@@ -191,13 +191,7 @@ public class ACL {
                 case ACL.GRANTEE_COS:      return mGrantee.equals(getId(acct.getCOS()));
                 case ACL.GRANTEE_DOMAIN:   return mGrantee.equals(getId(acct.getDomain()));
                 case ACL.GRANTEE_USER:     return mGrantee.equals(acct.getId());
-                case ACL.GRANTEE_GROUP:
-                    String[] groups = acct.getMultiAttr(Provisioning.A_zimbraMemberOf);
-                    if (groups != null)
-                        for (int i = 0; i < groups.length; i++)
-                            if (mGrantee.equals(groups[i]))
-                                return true;
-                    return false;
+                case ACL.GRANTEE_GROUP:    return acct.inDistributionList(mGrantee);
                 default:  throw ServiceException.FAILURE("unknown ACL grantee type: " + mType, null);
             }
         }

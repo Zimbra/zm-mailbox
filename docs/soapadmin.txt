@@ -93,7 +93,7 @@ Access: domain admin sufficient
 </GetAccountMembershipRequest>  
 
 <GetAccountMembershipResponse>
-    <dl name="{name}" id="{id}"  isgroup="{is-group}" via="{via-dl-name}" />+
+    <dl name="{name}" id="{id}"  via="{via-dl-name}" />+
 </GetAccountMembershipResponse>    
 
 {via-dl-name} = is present if the account is a member of the returned list because they are either a direct
@@ -204,7 +204,7 @@ NOTE: SearchAccountsRequest is deprecated. See SearchDirectoryRequest.
   <alias name="{name}" id="{id}">
     <a n="...">...</a>+  
   </alias>
-  <dl name="{name}" id="{id} isgroup="0|1">  
+  <dl name="{name}" id="{id}">  
     <a n="...">...</a>+  
   </dl>
 </SearchAccountsResponse>
@@ -242,7 +242,7 @@ Access: domain admin sufficient (a domain admin can't specify "domains" as a typ
   <alias name="{name}" id="{id}">
     <a n="...">...</a>+  
   </alias>
-  <dl name="{name}" id="{id} isgroup="0|1">
+  <dl name="{name}" id="{id}>
     <a n="...">...</a>+  
   </dl>
   <domain name="{name}" id="{id}">
@@ -847,7 +847,6 @@ Notes:
 
 <CreateDistributionListRequest>
   <name>...</name>
-  <isgroup>0|1</isgroup>
   <a n="...">...</a>+
 </CreateDistributionListRequest>
 
@@ -874,7 +873,7 @@ Access: domain admin sufficient
 </GetDistributionListRequest>
 
 <GetDistributionListResponse more="{more-flag}" [total="{total}"]>
-  <dl name="{name}" id="{id}"  isgroup="{is-group}" >
+  <dl name="{name}" id="{id}">
     <dlm>{member}</dlm>+
     <a n="...">...</a>+
   </dl>
@@ -890,7 +889,6 @@ Notes:
 
     more-flag = true if more accounts left to return
     total = total number of distribution lists (not affected by limit/offset)
-    is-group - set to 1 if the distribution list is also a security group, 0 otherwise
 
 Access: domain admin sufficient
 
@@ -936,7 +934,6 @@ Access: domain admin sufficient
 
 <ModifyDistributionListRequest>
   <id>{value-of-zimbraId}</id>
-  <isgroup>0|1</isgroup>
   <a n="...">...</a>+
 </ModifyDistributionListRequest>
   
@@ -1007,7 +1004,7 @@ Access: domain admin sufficient
 </GetDistributionListMembershipRequest>  
 
 <GetDistributionListMembershipResponse>
-    <dl name="{name}" id="{id}"  isgroup="{is-group}" via="{via-dl-name}" />+
+    <dl name="{name}" id="{id}"  via="{via-dl-name}" />+
 </GetDistributionListMembershipResponse>    
 
 {via-dl-name} = is present if the dl is a member of the returned list because they are either a direct

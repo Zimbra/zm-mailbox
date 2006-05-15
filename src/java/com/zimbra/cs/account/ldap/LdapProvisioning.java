@@ -75,7 +75,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.*;
-import com.zimbra.cs.account.ldap.LdapGroupEntryCache.LdapGroupEntry;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -109,15 +108,7 @@ public class LdapProvisioning extends Provisioning {
     private static final SearchControls sObjectSC = new SearchControls(SearchControls.OBJECT_SCOPE, 0, 0, null, false, false);
 
     static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, false, false);
-    
-    
-    private final static String[] sGroupReturnAttrs = 
-        { Provisioning.A_zimbraId, Provisioning.A_zimbraGroupId, Provisioning.A_zimbraMemberOf };
 
-    private final static SearchControls sGroupSearchControls = 
-                new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, sGroupReturnAttrs, false, false);
-    
-    
     private static Log mLog = LogFactory.getLog(LdapProvisioning.class);
     
     private static LdapConfig sConfig = null;
@@ -156,12 +147,6 @@ public class LdapProvisioning extends Provisioning {
         new ZimbraLdapEntryCache(
                 LC.ldap_cache_server_maxsize.intValue(),
                 LC.ldap_cache_server_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-
-    // we are only caching zimbraGroupId/zimbraMemberOf
-    private static LdapGroupEntryCache sGroupCache = 
-        new LdapGroupEntryCache(
-                LC.ldap_cache_group_maxsize.intValue(),
-                LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);                
 
     private static boolean sTimeZoneInited = false;
     private static final Object sTimeZoneGuard = new Object();
@@ -2008,58 +1993,15 @@ public class LdapProvisioning extends Provisioning {
         //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
         return getDistributionListByQuery("","(&(zimbraId="+zimbraId+")(objectclass=zimbraDistributionList))", ctxt);
     }
-    
-    LdapGroupEntry getGroupEntryById(String zimbraGroupId, DirContext initCtxt) throws ServiceException {
-        //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
-        LdapGroupEntry group = sGroupCache.getByGroupId(zimbraGroupId);
-        if (group != null) return group;
-        
-        String query = "(&(zimbraGroupId="+zimbraGroupId+")(objectclass=zimbraDistributionList)(objectclass=zimbraSecurityGroup))";
-
-        DirContext ctxt = initCtxt;
-        try {
-            if (ctxt == null)
-                ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = ctxt.search("", query, sGroupSearchControls);            
-            
-            if (ne.hasMore()) {
-                SearchResult sr = (SearchResult) ne.next();
-                ne.close();
-                group = sGroupCache.put(new LdapDistributionList(sr.getNameInNamespace(), sr.getAttributes()));
-            }
-        } catch (NameNotFoundException e) {
-            return null;
-        } catch (InvalidNameException e) {
-            return null;                        
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to lookup distribution list via query: "+query, e);
-        } finally {
-            if (initCtxt == null)
-                LdapUtil.closeContext(ctxt);
-        }
-        return group;        
-    }
 
     public DistributionList getDistributionListById(String zimbraId) throws ServiceException {
         return getDistributionListById(zimbraId, null);
     }
 
-    public DistributionList getDistributionListByGroupId(String zimbraGroupId) throws ServiceException {
-        return getDistributionListByQuery("","(&(zimbraGroupId="+zimbraGroupId+")(objectclass=zimbraDistributionList))", null);
-    }
-    
     public void deleteDistributionList(String zimbraId) throws ServiceException {
         LdapDistributionList dl = (LdapDistributionList) getDistributionListById(zimbraId);
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
-
-        // if it is a security group, turn of security group to update zimbraMemberOf on all members
-        try {
-            if (dl.isSecurityGroup())
-                dl.setSecurityGroup(false);
-        } catch (ServiceException se) {
-            ZimbraLog.account.warn("exception while clearing security group", se);
-        }
         
         removeAddressFromAllDistributionLists(dl.getName()); // this doesn't throw any exceptions
         
@@ -2956,7 +2898,7 @@ public class LdapProvisioning extends Provisioning {
 
         while (!dlsToCheck.isEmpty()) {
             DistributionList dl = dlsToCheck.pop();
-            if (checked.contains(dl.getId())) continue; // skip if already in groups
+            if (checked.contains(dl.getId())) continue;
             result.add(dl);
             checked.add(dl.getId());
             if (directOnly) continue;

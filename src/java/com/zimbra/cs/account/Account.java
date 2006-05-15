@@ -79,17 +79,17 @@ public interface Account extends NamedEntry {
     public String[] getAliases() throws ServiceException;
     
     /**
-     * @param zimbraGroupId the zimbraGroupId of the group we are checking for
-     * @return true if this account (or one of the gropus it belongs to) is a member of the specified group.
+     * @param zimbraId the zimbraId of the dl we are checking for
+     * @return true if this account (or one of the dl it belongs to) is a member of the specified dl.
      * @throws ServiceException
      */
-    public boolean inGroup(String zimbraGroupId) throws ServiceException;
+    public boolean inDistributionList(String zimbraId) throws ServiceException;
 
     /**
-     * @return set of all groups this account (including any groups in other groups)
+     * @return set of all the zimbraId's of lists this account belongs to, including any list in other list. The 
      * @throws ServiceException
      */
-    public Set<String> getGroups() throws ServiceException; 
+    public Set<String> getDistributionLists() throws ServiceException; 
 
     /**
      *      

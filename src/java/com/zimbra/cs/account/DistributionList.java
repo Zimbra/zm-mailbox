@@ -40,10 +40,6 @@ public interface DistributionList extends NamedEntry {
 
     public String[] getAliases() throws ServiceException;
     
-    public boolean isSecurityGroup() throws ServiceException;
-    
-    public void setSecurityGroup(boolean enabled) throws ServiceException;
-
     /**
      *      
      * @param directOnly return only DLs this DL is a direct member of
@@ -53,10 +49,4 @@ public interface DistributionList extends NamedEntry {
      * @throws ServiceException
      */
     public List<DistributionList> getDistributionLists(boolean directOnly, Map<String,String> via) throws ServiceException; 
-
-    /**
-     * @return group id if group, null otherwise.
-     * @throws ServiceException
-     */
-    public String getGroupId() throws ServiceException;
 }

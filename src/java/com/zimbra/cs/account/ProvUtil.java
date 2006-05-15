@@ -68,7 +68,6 @@ public class ProvUtil {
         System.out.println("  SearchGal(sg) {domain} {name}");
         System.out.println("  AutoCompleteGal(acg) {domain} {name}");
         System.out.println("  RenameAccount(ra) {name@domain|id} {newName@domain}");
-        System.out.println("  GetAccountGroups(gag) {name@domain|id}");        
         System.out.println("  GetAccountMembership(gam) {name@domain|id}");
         System.out.println();
 
@@ -111,7 +110,6 @@ public class ProvUtil {
         System.out.println("  AddDistributionListAlias(adla) {list@domain|id} {alias@domain}");
         System.out.println("  RemoveDistributionListAlias(rdla) {list@domain|id} {alias@domain}");
         System.out.println("  RenameDistributionList(rdl) {list@domain|id} {newName@domain}");
-        System.out.println("  DistributionListIsGroup(dlig) {list@domain|id} {0|1}");
         System.out.println("  GetDistributionListMembership(gdlm) {name@domain|id}");                
         System.out.println();
 
@@ -154,7 +152,6 @@ public class ProvUtil {
     private static final int RENAME_ACCOUNT = 110;
     private static final int COPY_ACCOUNT = 111;
     private static final int CREATE_BULK_ACCOUNTS = 112;
-    private static final int GET_ACCOUNT_GROUPS = 113;    
     private static final int GET_ACCOUNT_MEMBERSHIP = 114;
 
     private static final int CREATE_DOMAIN = 201;
@@ -195,7 +192,6 @@ public class ProvUtil {
     private static final int REMOVE_DISTRIBUTION_LIST_ALIAS = 709;
     private static final int RENAME_DISTRIBUTION_LIST = 710;
     private static final int CREATE_DISTRIBUTION_LISTS_BULK = 711;
-    private static final int DISTRIBUTION_LIST_IS_GROUP = 712;
     private static final int GET_DISTRIBUTION_LIST_MEMBERSHIP = 713;    
     
     private static final int SEARCH_ACCOUNTS = 801;
@@ -255,7 +251,6 @@ public class ProvUtil {
         addCommand("copyAccount", "cpa", COPY_ACCOUNT);        
         addCommand("getAccount", "ga", GET_ACCOUNT);        
         addCommand("getAccountMembership", "gam", GET_ACCOUNT_MEMBERSHIP);
-        addCommand("getAccountGroups", "gag", GET_ACCOUNT_GROUPS);        
         addCommand("getAllAccounts","gaa", GET_ALL_ACCOUNTS);
         addCommand("getAllAdminAccounts", "gaaa", GET_ALL_ADMIN_ACCOUNTS);
         addCommand("modifyAccount", "ma", MODIFY_ACCOUNT);
@@ -305,7 +300,6 @@ public class ProvUtil {
         addCommand("removeDistributionListAlias", "rdla", REMOVE_DISTRIBUTION_LIST_ALIAS);
         addCommand("renameDistributionList", "rdl", RENAME_DISTRIBUTION_LIST);
         addCommand("createDistributionListsBulk", "cdlbulk", CREATE_DISTRIBUTION_LISTS_BULK);
-        addCommand("distributionListIsGroup", "dlig", DISTRIBUTION_LIST_IS_GROUP);
         addCommand("getDistributionListMembership", "gdlm", GET_DISTRIBUTION_LIST_MEMBERSHIP);        
         
         addCommand("createCalendarResource",  "ccr",  CREATE_CALENDAR_RESOURCE);
@@ -377,9 +371,6 @@ public class ProvUtil {
         case GET_ACCOUNT_MEMBERSHIP:
             doGetAccountMembership(args);
             break;
-        case GET_ACCOUNT_GROUPS:
-            doGetAccountGroups(args); 
-            break;            
         case GET_ALL_ACCOUNTS:
             doGetAllAccounts(args); 
             break;            
@@ -472,9 +463,6 @@ public class ProvUtil {
             break;
         case CREATE_DISTRIBUTION_LISTS_BULK:
             doCreateDistributionListsBulk(args);
-            break;            
-        case DISTRIBUTION_LIST_IS_GROUP:
-            doDistributionListIsGroup(args);
             break;            
         case GET_ALL_DISTRIBUTION_LISTS:
             doGetAllDistributionLists(args);
@@ -788,24 +776,6 @@ public class ProvUtil {
             String key = args[1];
             Account account = lookupAccount(key);
             dumpAccount(account);
-        }
-    }
-
-    private void doGetAccountGroups(String[] args) throws ServiceException {
-        if (args.length != 2) {
-            usage();
-        } else {
-            String key = args[1];
-            Account account = lookupAccount(key);
-            Set<String> groups = account.getGroups();
-            for (String gid: groups) {
-                DistributionList dl = mProvisioning.getDistributionListByGroupId(gid);
-                if (dl != null) {
-                    System.out.println(dl.getName());
-                } else {
-                    System.out.println(gid);                    
-                }
-            }
         }
     }
 
@@ -1405,16 +1375,6 @@ public class ProvUtil {
             Map<String, Object> attrs = getMap(args, 2);
             DistributionList dl = lookupDistributionList(key);
             dl.modifyAttrs(attrs, true);
-        }
-    }
-
-    private void doDistributionListIsGroup(String[] args) throws ServiceException {
-        if (args.length != 3) {
-            usage();
-        } else {
-            String key = args[1];
-            DistributionList dl = lookupDistributionList(key);
-            dl.setSecurityGroup(args[2].equals("1") || args[2].equalsIgnoreCase("TRUE"));
         }
     }
 

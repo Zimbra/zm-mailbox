@@ -149,10 +149,6 @@ public abstract class Provisioning {
      */
     public enum MAIL_MODE { http, https, mixed, both }
 
-    // object classes
-    
-    public static final String OC_zimbraSecurityGroup = "zimbraSecurityGroup";
-
     // attributes
 
     public static final String A_zimbraServiceEnabled = "zimbraServiceEnabled";
@@ -323,11 +319,6 @@ public abstract class Provisioning {
      * UUID for the entry
      */
     public static final String A_zimbraId = "zimbraId";
-
-    /**
-     * UUID for the group
-     */
-    public static final String A_zimbraGroupId = "zimbraGroupId";
 
     /**
      * pointer to the aliased id
@@ -631,12 +622,6 @@ public abstract class Provisioning {
      * TODO add to schema! 
      */
     public static final String A_zimbraPrefDeleteInviteOnReply = "zimbraPrefDeleteInviteOnReply";
-    
-    /**
-     * An attribute present on accounts for each group the account is a member of. Its value
-     * is the liquiId of the zimbraGroup the account is a member of. 
-     */
-    public static final String A_zimbraMemberOf = "zimbraMemberOf";
     
     /**
      * for accounts, the zimbraId of the COS that this account belongs to.
@@ -1055,8 +1040,6 @@ public abstract class Provisioning {
     public abstract DistributionList createDistributionList(String listAddress, Map<String, Object> listAttrs) throws ServiceException;
 
     public abstract DistributionList getDistributionListById(String zimbraId) throws ServiceException;
-    
-    public abstract DistributionList getDistributionListByGroupId(String zimbraGroupId) throws ServiceException;    
     
     public abstract DistributionList getDistributionListByName(String name) throws ServiceException;
     

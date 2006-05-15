@@ -126,8 +126,6 @@ public class LC {
     public static final KnownKey ldap_cache_domain_maxage;
     public static final KnownKey ldap_cache_server_maxsize;
     public static final KnownKey ldap_cache_server_maxage;
-    public static final KnownKey ldap_cache_group_maxsize;
-    public static final KnownKey ldap_cache_group_maxage;
     public static final KnownKey ldap_cache_timezone_maxsize;
     public static final KnownKey ldap_cache_zimlet_maxsize;
     public static final KnownKey ldap_cache_zimlet_maxage;
@@ -453,12 +451,6 @@ public class LC {
 
         ldap_cache_server_maxage =
             new KnownKey("ldap_cache_server_maxage", "15", "maximum age (in minutes) of group object in cache");        
-
-        ldap_cache_group_maxsize = 
-            new KnownKey("ldap_cache_group_maxsize", "500", "Maximum number of group objects to cache");
-        
-        ldap_cache_group_maxage =
-            new KnownKey("ldap_cache_group_maxage", "15", "maximum age (in minutes) of group object in cache");        
 
         ldap_cache_timezone_maxsize =
             new KnownKey("ldap_cache_timezone_maxsize", "100", "Maximum number of timezone objects to cache");

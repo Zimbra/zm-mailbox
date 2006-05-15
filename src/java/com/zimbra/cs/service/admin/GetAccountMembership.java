@@ -95,11 +95,9 @@ public class GetAccountMembership extends AdminDocumentHandler {
             Element distributionList = response.addElement(AdminService.E_DL);
             distributionList.addAttribute(AdminService.A_NAME, dl.getName());
             distributionList.addAttribute(AdminService.A_ID,dl.getId());
-            distributionList.addAttribute(AdminService.A_ISGROUP,dl.isSecurityGroup());
             String viaDl = via.get(dl.getName());
             if (viaDl != null) distributionList.addAttribute(AdminService.A_VIA, viaDl);
         }
-
         return response;
     }
 }
