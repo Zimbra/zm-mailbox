@@ -45,6 +45,8 @@
 	<property name="build.dir" location="build" />
 	<property name="build.classes.dir" location="${build.dir}/classes" />
 	<property name="build.metainf.dir" location="${build.dir}/classes/META-INF/services" />
+	<property name='build.wiki.dir' location='${build.dir}/wiki' />
+
 	<property name="dist.dir" location="build/dist" />
 	<property name="dist.bin.dir" location="${dist.dir}/bin" />
 	<property name="dist.libexec.dir" location="${dist.dir}/libexec" />
@@ -86,6 +88,9 @@
 	<property name="src.bin.dir" location="${src.dir}/bin" />
 	<property name="src.db.dir" location="${src.dir}/db" />
 
+	<property name='data.dir' location='data' />
+	<property name='data.wiki.dir' location='${data.dir}/wiki-prod' />
+
 	<property name="deploy.war" value="${warfile}" />
 	<property name="deploy.host" value="localhost" />
 	<property name="deploy.port" value="7070" />
@@ -106,6 +111,10 @@
 	<property name="ical4j.jar" value="ical4j-0.9.16-patched.jar" />
 
 	<property name="zimlets" value="com_zimbra_phone,com_zimbra_tracking,com_zimbra_url,com_zimbra_email,com_zimbra_date"/>
+
+	<property name='wiki.url' value='http://localhost:7070/service/soap' />
+	<property name='wiki.user' value='user1' />
+	<property name='wiki.password' value='test123' />
 
 	<condition property="is-windows">
 		<os family="windows" />
@@ -447,13 +456,21 @@
 	</target>
 
 	<target name="import-wiki" description="Import Wiki documents into the system">
+		<mkdir dir='${build.wiki.dir}'/>
+		<filter token="USER" value="${wiki.user}"/>
+		<copy todir='${build.wiki.dir}' filtering='true'>
+			<fileset dir='${data.wiki.dir}' />
+		</copy>
 		<echo>Importing Wiki documents for: user1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.wiki.ImportWiki" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-d data/wiki" />
+			<arg line="-s ${wiki.url}" />
+			<arg line="-u ${wiki.user}" />
+			<arg line="-p ${wiki.password}" />
+			<arg line="-d ${build.wiki.dir}" />
 		</java>
 	</target>
 
-    <!-- Insert one directory (data/testmsgs) of mail -->
+	<!-- Insert one directory (data/testmsgs) of mail -->
     <target name="inject1" depends="compile">
         <echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
         <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
