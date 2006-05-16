@@ -41,6 +41,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.ZimbraLog;
 
 
 /**
@@ -170,6 +171,26 @@ public class Document extends MailItem {
         mBlob = null;
     }
     
+    public synchronized void purgeOldRevisions(int revToKeep) throws ServiceException, IOException {
+    	int last = mRevisionList.size() - revToKeep;
+    	StoreManager sm = StoreManager.getInstance();
+    	while (last > 0) {
+    		last--;
+    		Metadata rev = mRevisionList.getMap(last);
+    		if (rev == null) {
+    			ZimbraLog.wiki.error("cannot find revision " + last + " in metadata " + getFilename());
+    			continue;
+    		}
+    		int revid = (int)rev.getLong(Metadata.FN_REV_ID);
+    		if (revid == 0)
+    			break;
+	        sm.delete(sm.getMailboxBlob(getMailbox(), getId(), revid, getVolumeId()));
+	        rev.put(Metadata.FN_REV_ID, 0);
+	        mRevisionList.mList.set(last, rev.mMap);  // rev is a copy.
+    	}
+        DbMailItem.saveMetadata(this, getSize(), encodeMetadata(new Metadata()).toString());
+    }
+    
     protected static UnderlyingData prepareCreate(byte tp, int id, Folder folder, short volumeId, String subject, String creator, String type, ParsedDocument pd, Document parent, Metadata meta) 
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_DOCUMENT))
@@ -202,7 +223,6 @@ public class Document extends MailItem {
     static Document create(int id, Folder folder, short volumeId, String filename, String creator, String type, ParsedDocument pd, MailItem parent)
     throws ServiceException {
     	assert(id != Mailbox.ID_AUTO_INCREMENT);
-    	assert(parent instanceof Document);
 
         UnderlyingData data = prepareCreate(TYPE_DOCUMENT, id, folder, volumeId, filename, creator, type, pd, (Document) parent, null);
         if (parent != null)
@@ -242,12 +262,14 @@ public class Document extends MailItem {
 
     private static final String CN_FRAGMENT  = "fragment";
     private static final String CN_MIME_TYPE = "mime_type";
+    private static final String CN_FILE_NAME = "filename";
 
     @Override 
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("message: {");
+        sb.append("document: {");
         appendCommonMembers(sb).append(", ");
+        sb.append(CN_FILE_NAME).append(": ").append(getFilename()).append(", ");
         sb.append(CN_MIME_TYPE).append(": ").append(mContentType).append(", ");
         sb.append(CN_FRAGMENT).append(": ").append(mFragment);
         sb.append("}");

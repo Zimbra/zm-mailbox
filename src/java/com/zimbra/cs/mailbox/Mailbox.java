@@ -4461,6 +4461,7 @@ public class Mailbox {
         	mCurrentChange.setIndexedItem(doc, pd);
 
         	sm.link(blob, this, doc.getId(), doc.getLastRevision().getRevId(), volumeId);
+        	doc.purgeOldRevisions(1);  // purge all but 1 revisions.
         	success = true;
        	} catch (IOException ioe) {
         	throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
