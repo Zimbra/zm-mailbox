@@ -456,12 +456,17 @@
 	</target>
 
 	<target name="import-wiki" description="Import Wiki documents into the system">
+		<delete dir='${build.wiki.dir}' quiet='true' />
 		<mkdir dir='${build.wiki.dir}'/>
+		<property name='import-wiki.binary-files' value='**/*.jpg,**/*.gif' />
 		<filter token="USER" value="${wiki.user}"/>
 		<copy todir='${build.wiki.dir}' filtering='true'>
-			<fileset dir='${data.wiki.dir}' />
+			<fileset dir='${data.wiki.dir}' excludes='${import-wiki.binary-files}'/>
 		</copy>
-		<echo>Importing Wiki documents for: user1@${zimbra.server.hostname}</echo>
+		<copy todir='${build.wiki.dir}' filtering='false'>
+			<fileset dir='${data.wiki.dir}' includes='${import-wiki.binary-files}'/>
+		</copy>
+		<echo>Importing Wiki documents for: ${wiki.user}</echo>
 		<java classname="com.zimbra.cs.wiki.ImportWiki" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-s ${wiki.url}" />
 			<arg line="-u ${wiki.user}" />
