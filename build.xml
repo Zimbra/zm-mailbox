@@ -606,8 +606,15 @@
 			<arg line="mcf zimbraDefaultDomainName ${zimbra.server.hostname}" />
 		</java>
 	</target>
-	
-	<target name="ldap-load-accounts">
+
+    <target name="ldap-setup-preauth">
+        <echo>Creating preauth key: ${zimbra.server.hostname}</echo>
+        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="gdpak ${zimbra.server.hostname}" />
+        </java>
+    </target>
+
+    <target name="ldap-load-accounts">
 		<echo>Creating account: admin@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="mc default zimbraFeatureIMEnabled TRUE" />
