@@ -780,17 +780,31 @@ public class ProvUtil {
     }
 
     private void doGetAccountMembership(String[] args) throws ServiceException {
-        if (args.length != 2) {
+        if (args.length < 2) {
             usage();
         } else {
-            String key = args[1];
+            String key = null;
+            boolean idsOnly = false;
+            if (args.length > 2) {
+                idsOnly = args[1].equals("-g");
+                key = args[2];
+            } else {
+                key = args[1];
+            }
             Account account = lookupAccount(key);
-            HashMap<String,String> via = new HashMap<String, String>();
-            List<DistributionList> lists = account.getDistributionLists(false, via);
-            for (DistributionList dl: lists) {
-                String viaDl = via.get(dl.getName());
-                if (viaDl != null) System.out.println(dl.getName()+" (via "+viaDl+")");
-                else System.out.println(dl.getName());
+            if (idsOnly) {
+                Set<String> lists = account.getDistributionLists();
+                for (String id: lists) {
+                    System.out.println(id);
+                }    
+            } else {
+                HashMap<String,String> via = new HashMap<String, String>();
+                List<DistributionList> lists = account.getDistributionLists(false, via);
+                for (DistributionList dl: lists) {
+                    String viaDl = via.get(dl.getName());
+                    if (viaDl != null) System.out.println(dl.getName()+" (via "+viaDl+")");
+                    else System.out.println(dl.getName());
+                }
             }
         }
     }

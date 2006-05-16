@@ -86,7 +86,7 @@ public interface Account extends NamedEntry {
     public boolean inDistributionList(String zimbraId) throws ServiceException;
 
     /**
-     * @return set of all the zimbraId's of lists this account belongs to, including any list in other list. The 
+     * @return set of all the zimbraId's of lists this account belongs to, including any list in other list. 
      * @throws ServiceException
      */
     public Set<String> getDistributionLists() throws ServiceException; 

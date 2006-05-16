@@ -1045,8 +1045,6 @@ public abstract class Provisioning {
     
     public abstract DistributionList getDistributionListByName(String name) throws ServiceException;
     
-    public abstract List<DistributionList> getAllDistributionListsForAddresses(String addrs[]) throws ServiceException;
-    
     public abstract void deleteDistributionList(String zimbraId) throws ServiceException;
 
     public abstract void addAlias(DistributionList dl, String alias) throws ServiceException;

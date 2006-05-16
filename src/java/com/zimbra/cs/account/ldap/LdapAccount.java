@@ -31,7 +31,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
@@ -87,7 +86,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
      
         dls = new HashSet<String>();
         
-        List<DistributionList> lists = getDistributionLists(false, null);
+        List<DistributionList> lists = getDistributionLists(false, null, true);
         
         for (DistributionList dl : lists) {
             dls.add(dl.getId());
@@ -275,11 +274,15 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     }
 
     public List<DistributionList> getDistributionLists(boolean directOnly, Map<String, String> via) throws ServiceException {
+        return getDistributionLists(directOnly, via, false);
+    }
+    
+    private List<DistributionList> getDistributionLists(boolean directOnly, Map<String, String> via, boolean minimal) throws ServiceException {
         String aliases[] = this.getAliases();
         String addrs[] = new String[aliases.length+1];
         addrs[0] = this.getName();
         for (int i=0; i < aliases.length; i++)
             addrs[i+1] = aliases[i];
-        return LdapProvisioning.getDistributionLists(addrs, directOnly, via);
+        return LdapProvisioning.getDistributionLists(addrs, directOnly, via, minimal);
     }
 }

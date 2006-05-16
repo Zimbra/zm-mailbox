@@ -39,7 +39,6 @@ import javax.naming.directory.NoSuchAttributeException;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 
@@ -103,12 +102,8 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
     }
 
     public List<DistributionList> getDistributionLists(boolean directOnly, Map<String, String> via) throws ServiceException {
-        String aliases[] = this.getAliases();
-        String addrs[] = new String[aliases.length+1];
-        addrs[0] = this.getName();
-        for (int i=0; i < aliases.length; i++)
-            addrs[i+1] = aliases[i];
-        return LdapProvisioning.getDistributionLists(addrs, directOnly, via);
+        String addrs[] = LdapProvisioning.getAllAddrsForDistributionList(this);
+        return LdapProvisioning.getDistributionLists(addrs, directOnly, via, false);
     }
 
 }

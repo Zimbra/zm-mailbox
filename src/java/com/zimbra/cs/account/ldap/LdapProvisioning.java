@@ -122,6 +122,12 @@ public class LdapProvisioning extends Provisioning {
             Provisioning.A_userPassword
     };
 
+    private static final String[] sMinimalDlAttrs = {
+            Provisioning.A_zimbraMailAlias,
+            Provisioning.A_zimbraId,
+            Provisioning.A_uid
+    };
+
     private static final String FILTER_ACCOUNT_OBJECTCLASS =
         //"(objectclass=zimbraAccount)(!(objectclass=zimbraCalendarResource))";
         "(objectclass=zimbraAccount)";
@@ -2826,7 +2832,7 @@ public class LdapProvisioning extends Provisioning {
         Map<String, String> attrs = null;
         
         try {
-            lists = getAllDistributionListsForAddresses(addrs);
+            lists = getAllDistributionListsForAddresses(addrs, false);
         } catch (ServiceException se) {
             ZimbraLog.account.warn("unable to rename addr "+oldName+" in all DLs ", se);
             return;
@@ -2858,7 +2864,7 @@ public class LdapProvisioning extends Provisioning {
         String addrs[] = new String[] { address } ;
         List<DistributionList> lists = null; 
         try {
-            lists = getAllDistributionListsForAddresses(addrs);
+            lists = getAllDistributionListsForAddresses(addrs, false);
         } catch (ServiceException se) {
             ZimbraLog.account.warn("unable to remove "+address+" from all DLs ", se);
             return;
@@ -2875,15 +2881,15 @@ public class LdapProvisioning extends Provisioning {
     }
 
     static String[] getAllAddrsForDistributionList(DistributionList list) throws ServiceException {
-        String aliases[] =list.getAliases();
+        String aliases[] = list.getAliases();
         String addrs[] = new String[aliases.length+1];
         addrs[0] = list.getName();
         for (int i=0; i < aliases.length; i++)
             addrs[i+1] = aliases[i];
         return addrs;
     }
-
-    public List<DistributionList> getAllDistributionListsForAddresses(String addrs[]) throws ServiceException {
+    
+    private List<DistributionList> getAllDistributionListsForAddresses(String addrs[], boolean minimalData) throws ServiceException {
         if (addrs == null || addrs.length == 0)
             return new ArrayList<DistributionList>();
         StringBuilder sb = new StringBuilder();
@@ -2894,11 +2900,17 @@ public class LdapProvisioning extends Provisioning {
         }
         if (addrs.length > 1)
             sb.append(")");
-        return (List<DistributionList>) searchAccountsInternal(sb.toString(), null, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);        
+        String [] attrs = minimalData ? sMinimalDlAttrs : null;
+        
+        return (List<DistributionList>) searchAccountsInternal(sb.toString(), attrs, null, true, Provisioning.SA_DISTRIBUTION_LIST_FLAG);
+        
     }
-    
-    static List<DistributionList> getDistributionLists(String addrs[], boolean directOnly, Map<String, String> via) throws ServiceException {
-        List<DistributionList> directDLs = Provisioning.getInstance().getAllDistributionListsForAddresses(addrs); 
+
+    static List<DistributionList> getDistributionLists(String addrs[], boolean directOnly, Map<String, String> via, boolean minimalData)
+        throws ServiceException 
+    {
+        LdapProvisioning prov = (LdapProvisioning) Provisioning.getInstance(); // GROSS
+        List<DistributionList> directDLs = prov.getAllDistributionListsForAddresses(addrs, true); 
         HashSet<String> directDLSet = new HashSet<String>();
         HashSet<String> checked = new HashSet<String>();
         List<DistributionList> result = new ArrayList<DistributionList>();        
@@ -2916,7 +2928,10 @@ public class LdapProvisioning extends Provisioning {
             result.add(dl);
             checked.add(dl.getId());
             if (directOnly) continue;
-            List<DistributionList> newLists = dl.getDistributionLists(true, null);
+     
+            String[] dlAddrs = getAllAddrsForDistributionList(dl);
+            List<DistributionList> newLists = prov.getAllDistributionListsForAddresses(dlAddrs, true);
+
             for (DistributionList newDl: newLists) {
                 if (!directDLSet.contains(newDl.getName())) {
                     if (via != null) via.put(newDl.getName(), dl.getName());
