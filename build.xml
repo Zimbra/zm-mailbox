@@ -306,7 +306,7 @@
 	</target>
 
 	<target name="jar" depends="compile" description="Creates the jar file">
-		<copy todir="${build.classes.dir}/com/zimbra/cs/account/">
+		<copy todir="${build.classes.dir}/com/zimbra/cs/account/" overwrite="true">
 			<fileset dir="${config.dir}" includes="zimbraattrs.xml" />
 		</copy>
 		<jar destfile="${dist.jars.dir}/zimbrastore.jar" basedir="${build.classes.dir}" />
@@ -341,7 +341,7 @@
 	
 	<target name="service-deploy" depends="war">
 		<echo message="Updating ${zimbra.home.dir}/conf/log4j.properties; if it fails on windows, try again." />
-		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" />
+		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" overwrite="true" />
 		<echo message="Updating localized message files" />
 		<copy todir="${zimbra.home.dir}/conf/msgs" overwrite="true">
 			<fileset dir="${config.dir}/msgs"/>
@@ -357,17 +357,17 @@
 		description="Build tar file of basic dev build to unpack over RPM install"/>
 	
 	<target name="dev-dist-files">
-		<copy todir="${dist.openldap.etc.dir}" file="${config.dir}/ldap/zimbra_mimehandlers.ldif" />
+		<copy todir="${dist.openldap.etc.dir}" file="${config.dir}/ldap/zimbra_mimehandlers.ldif" overwrite="true" />
 	</target>
 	
 	<target name="dev-dist-core">
 		<delete>
 			<fileset dir="${dist.dir}" includes="${dist.tarfile}" />
 		</delete>
-		<copy todir="${dist.bin.dir}">
+		<copy todir="${dist.bin.dir}" overwrite="true">
 			<fileset dir="${src.bin.dir}" includes="*" excludes="*.bat,zm*init" />
 		</copy>
-		<copy todir="${dist.libexec.dir}">
+		<copy todir="${dist.libexec.dir}" overwrite="true">
 			<fileset dir="${src.bin.dir}" includes="zm*init" excludes="*.bat" />
 		</copy>
 		<fixcrlf srcdir="${dist.bin.dir}" eol="unix" includes="**" />
@@ -380,26 +380,26 @@
 			<fileset dir="${config.dir}/msgs"/>
 		</copy>
 
-		<copy todir="${dist.openldap.etc.dir}" file="${config.dir}/ldap/zimbra.ldif" />
-		<copy todir="${dist.openldap.schema.dir}" file="${config.dir}/ldap/zimbra.schema" />
-		<copy todir="${dist.openldap.schema.dir}" file="${config.dir}/ldap/amavisd.schema" />
-		<copy todir="${dist.db.dir}" file="${src.db.dir}/db.sql" />
-		<copy todir="${dist.db.dir}" file="${build.dir}/versions-init.sql" />
-		<copy tofile="${zimbra.home.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" failonerror="false" verbose="true"/>
-		<copy todir="${dist.ext.dir}" >
+		<copy todir="${dist.openldap.etc.dir}" file="${config.dir}/ldap/zimbra.ldif" overwrite="true" />
+		<copy todir="${dist.openldap.schema.dir}" file="${config.dir}/ldap/zimbra.schema" overwrite="true" />
+		<copy todir="${dist.openldap.schema.dir}" file="${config.dir}/ldap/amavisd.schema" overwrite="true" />
+		<copy todir="${dist.db.dir}" file="${src.db.dir}/db.sql" overwrite="true" />
+		<copy todir="${dist.db.dir}" file="${build.dir}/versions-init.sql" overwrite="true" />
+		<copy tofile="${zimbra.home.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" failonerror="false" verbose="true" overwrite="true"/>
+		<copy todir="${dist.ext.dir}" overwrite="true" >
 			<fileset dir="${ext.dir}" includes="*/*.jar" />
 		</copy>
-		<copy todir="${dist.jars.dir}">
+		<copy todir="${dist.jars.dir}" overwrite="true">
 			<fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" />
 		</copy>
-		<copy todir="${dist.tomcat.conf.dir}">
+		<copy todir="${dist.tomcat.conf.dir}" overwrite="true">
 			<fileset dir="${config.dir}" includes="server.xml,tomcat-users.xml" />
 		</copy>
 		<fixcrlf srcdir="${dist.conf.dir}" eol="unix" includes="**" />
-		<copy todir="${dist.tomcat.commonlib.dir}">
+		<copy todir="${dist.tomcat.commonlib.dir}" overwrite="true">
 			<fileset dir="${jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar" />
 		</copy>
-		<copy file="${config.dir}/localconfig.xml" todir="${dist.conf.dir}"/>
+		<copy file="${config.dir}/localconfig.xml" todir="${dist.conf.dir}" overwrite="true"/>
 		<!--
   	<tar destfile="${dist.dir}/test-msgs.tar">
   	  <tarfileset dir="data/TestMailRaw"
@@ -460,7 +460,7 @@
 		<mkdir dir='${build.wiki.dir}'/>
 		<property name='import-wiki.binary-files' value='**/*.jpg,**/*.gif' />
 		<filter token="USER" value="${wiki.user}"/>
-		<copy todir='${build.wiki.dir}' filtering='true'>
+		<copy todir='${build.wiki.dir}' filtering='true' overwrite="true">
 			<fileset dir='${data.wiki.dir}' excludes='${import-wiki.binary-files}'/>
 		</copy>
 		<copy todir='${build.wiki.dir}' filtering='false'>
@@ -540,7 +540,7 @@
 		<mkdir dir="${zimbra.home.dir}/backup" />
 		<mkdir dir="${zimbra.home.dir}/conf" />
 		<copy tofile="${zimbra.home.dir}/conf/localconfig.xml" file="${config.dir}/localconfig-dev.xml" overwrite="true"/>
-		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" />
+		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" overwrite="true" />
 		<mkdir dir="${tomcat.home.dir}" />
 		<mkdir dir="${tomcat.home.dir}/conf" />
 		<mkdir dir="${tomcat.home.dir}/conf/msgs" />
