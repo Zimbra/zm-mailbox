@@ -144,7 +144,7 @@ public class WikiTemplateStore {
 		return parentStore.getTemplate(octxt, name);
 	}
 	public WikiTemplate getTemplateByPath(OperationContext octxt, String path) throws ServiceException {
-		MailItem item = Wiki.findWikiByPath(octxt, Mailbox.getMailboxByAccountId(mAccountId), mFolderId, path);
+		MailItem item = Wiki.findWikiByPath(octxt, mAccountId, mFolderId, path);
 		if (item instanceof Folder) {
 			return getDefaultTOC();
 		} else if (item instanceof WikiItem) {

@@ -52,6 +52,7 @@ public class GetWiki extends WikiDocumentHandler {
         Element wElem = request.getElement(MailService.E_WIKIWORD);
         String word = wElem.getAttribute(MailService.A_NAME, null);
         String id = wElem.getAttribute(MailService.A_ID, null);
+        String traverse = wElem.getAttribute(MailService.A_TRAVERSE, "no").toLowerCase();
         int rev = (int)wElem.getAttributeLong(MailService.A_VERSION, -1);
         int count = (int)wElem.getAttributeLong(MailService.A_COUNT, -1);
 
@@ -61,9 +62,10 @@ public class GetWiki extends WikiDocumentHandler {
         
         if (word != null) {
         	MailItem item = Wiki.findWikiByPath(octxt, 
-        										 getRequestedMailbox(lc), 
+        										 lc.getRequestedAccountId(), 
         										 getRequestedFolder(request), 
-        										 word);
+        										 word,
+        										 traverse.equals("yes"));
         	if (item.getType() != MailItem.TYPE_WIKI) {
         		throw WikiServiceException.NOT_WIKI_ITEM(word);
         	}

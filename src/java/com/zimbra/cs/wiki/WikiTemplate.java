@@ -295,6 +295,23 @@ public class WikiTemplate {
 			ZimbraLog.wiki.error(msg);
 			return msg;
 		}
+		protected String handleTemplates(Context ctxt,
+											List<MailItem> list,
+											String bodyTemplate, 
+											String itemTemplate)
+		throws ServiceException, IOException {
+			StringBuffer buf = new StringBuffer();
+			for (MailItem item : list) {
+				WikiTemplate t = WikiTemplate.findTemplate(ctxt, itemTemplate);
+				buf.append(t.toString(ctxt.octxt, ctxt.req, item));
+			}
+			Context newCtxt = new Context(ctxt.octxt, ctxt.item);
+			newCtxt.content = buf.toString();
+			WikiTemplate body = WikiTemplate.findTemplate(newCtxt, bodyTemplate);
+
+			return body.toString(newCtxt);
+		}
+		
 		private static Map<String,Wiklet> sWIKLETS;
 		
 		static {
@@ -359,6 +376,9 @@ public class WikiTemplate {
 		public static final String sBODYTEMPLATE = "bodyTemplate";
 		public static final String sITEMTEMPLATE = "itemTemplate";
 
+		public static final String sDEFAULTBODYTEMPLATE = "_TocBodyTemplate";
+		public static final String sDEFAULTITEMTEMPLATE = "_TocItemTemplate";
+		
 		public static final String sSIMPLE   = "simple";
 		public static final String sLIST     = "list";
 		public static final String sTEMPLATE = "template";
@@ -386,10 +406,9 @@ public class WikiTemplate {
 		public boolean isExpired(WikiTemplate template, Context ctxt) {
 			return true;  // always generate fresh TOC.
 		}
-	    private static final String TOC = "_INDEX_";
 	    private boolean shouldSkipThis(Document doc) {
 	    	// XXX skip the non visible items.
-    		if (doc.getFilename().equals(TOC))
+    		if (doc.getFilename().startsWith("_"))
     			return true;
 	    	return false;
 	    }
@@ -447,14 +466,35 @@ public class WikiTemplate {
     		buf.append(">");
 	        return buf.toString();
 		}
-		public String apply(Context ctxt) throws ServiceException {
+		public String applyTemplates(Context ctxt, Map<String,String> params) throws ServiceException, IOException {
+			List<MailItem> list = new ArrayList<MailItem>();
+			Folder folder;
+			if (ctxt.item instanceof Folder)
+				folder = (Folder) ctxt.item;
+			else
+				folder = ctxt.item.getMailbox().getFolderById(ctxt.octxt, ctxt.item.getFolderId());
+	    	list.addAll(folder.getSubfolders(ctxt.octxt));
+	    	
+	    	Mailbox mbox = ctxt.item.getMailbox();
+	    	list.addAll(mbox.getWikiList(ctxt.octxt, folder.getId()));
+
+			String bt = params.get(sBODYTEMPLATE);
+			String it = params.get(sITEMTEMPLATE);
+			if (bt == null)
+				bt = sDEFAULTBODYTEMPLATE;
+			if (it == null)
+				it = sDEFAULTITEMTEMPLATE;
+			return handleTemplates(ctxt, list, bt, it);
+		}
+		
+		public String apply(Context ctxt) throws ServiceException, IOException {
 			Map<String,String> params = ctxt.token.parseParam();
 			String format = params.get(sFORMAT);
 			if (format == null) {
 				format = sLIST;
 			}
 			if (format.equals(sTEMPLATE)) {
-				
+				return applyTemplates(ctxt, params);
 			}
 			
 			return generateList(ctxt, format.equals(sSIMPLE) ? sTAGSIMPLE : sTAGLIST);
@@ -473,8 +513,6 @@ public class WikiTemplate {
 		public static final String sDEFAULTBODYTEMPLATE = "_PathBodyTemplate";
 		public static final String sDEFAULTITEMTEMPLATE = "_PathItemTemplate";
 		
-		private List<MailItem> mList;
-		
 		public String getName() {
 			return "Breadcrumbs";
 		}
@@ -488,17 +526,18 @@ public class WikiTemplate {
 			Mailbox mbox = item.getMailbox();
 			return mbox.getFolderById(ctxt.octxt, item.getFolderId());
 		}
-		private void getBreadcrumbs(Context ctxt) throws ServiceException {
-			mList = new ArrayList<MailItem>();
-			mList.add(ctxt.item);
+		private List<MailItem> getBreadcrumbs(Context ctxt) throws ServiceException {
+			List<MailItem> list = new ArrayList<MailItem>();
+			list.add(ctxt.item);
 			Folder f = getFolder(ctxt, ctxt.item);
 			while (f.getId() != 1) {
-				mList.add(0, f);
+				list.add(0, f);
 				f = getFolder(ctxt, f);
 			}
+			return list;
 		}
 		public String apply(Context ctxt) throws ServiceException, IOException {
-			getBreadcrumbs(ctxt);
+			List<MailItem> list = getBreadcrumbs(ctxt);
 			Map<String,String> params = ctxt.token.parseParam();
 			String format = params.get(sFORMAT);
 			if (format == null || format.equals(sSIMPLE)) {
@@ -506,7 +545,7 @@ public class WikiTemplate {
 				buf.append("<span class='_breadcrumbs_simple'>");
 				StringBuffer path = new StringBuffer();
 				path.append("/");
-				for (MailItem item : mList) {
+				for (MailItem item : list) {
 					String name;
 					if (item instanceof Folder)
 						name = ((Folder)item).getName();
@@ -527,25 +566,10 @@ public class WikiTemplate {
 					bt = sDEFAULTBODYTEMPLATE;
 				if (it == null)
 					it = sDEFAULTITEMTEMPLATE;
-				return handleTemplates(ctxt, bt, it);
+				return handleTemplates(ctxt, list, bt, it);
 			} else {
 				return reportError("format " + format + " not recognized");
 			}
-		}
-		private String handleTemplates(Context ctxt,
-										String bodyTemplate, 
-										String itemTemplate)
-		throws ServiceException, IOException {
-			StringBuffer buf = new StringBuffer();
-			for (MailItem item : mList) {
-				WikiTemplate t = WikiTemplate.findTemplate(ctxt, itemTemplate);
-				buf.append(t.toString(ctxt.octxt, ctxt.req, item));
-			}
-			Context newCtxt = new Context(ctxt.octxt, ctxt.item);
-			newCtxt.content = buf.toString();
-			WikiTemplate body = WikiTemplate.findTemplate(newCtxt, bodyTemplate);
-
-			return body.toString(newCtxt);
 		}
 	}
 	public static class IconWiklet extends Wiklet {
@@ -592,6 +616,8 @@ public class WikiTemplate {
 			return false;
 		}
 		public String apply(Context ctxt) {
+			if (!(ctxt.item instanceof Document)) 
+				return "";
 			Document doc = (Document) ctxt.item;
 			return doc.getFragment();
 		}
@@ -607,6 +633,8 @@ public class WikiTemplate {
 			return false;
 		}
 		public String apply(Context ctxt) throws ServiceException {
+			if (!(ctxt.item instanceof Document)) 
+				return "";
 			Document doc = (Document) ctxt.item;
 			return doc.getRevision(1).getCreator();
 		}
@@ -622,6 +650,8 @@ public class WikiTemplate {
 			return false;
 		}
 		public String apply(Context ctxt) throws ServiceException {
+			if (!(ctxt.item instanceof Document)) 
+				return "";
 			Document doc = (Document) ctxt.item;
 			return doc.getLastRevision().getCreator();
 		}
@@ -637,9 +667,13 @@ public class WikiTemplate {
 			return false;
 		}
 		public String apply(Context ctxt) throws ServiceException {
-			Document doc = (Document) ctxt.item;
-			Date modifyDate = new Date(doc.getRevision(1).getRevDate());
-			return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(modifyDate);
+			Date createDate;
+			if (ctxt.item instanceof Document) {
+				Document doc = (Document) ctxt.item;
+				createDate = new Date(doc.getLastRevision().getRevDate());
+			} else
+				createDate = new Date(ctxt.item.getDate());
+			return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(createDate);
 		}
 	}
 	public static class CreateTimeWiklet extends Wiklet {
@@ -653,6 +687,8 @@ public class WikiTemplate {
 			return false;
 		}
 		public String apply(Context ctxt) throws ServiceException {
+			if (!(ctxt.item instanceof Document)) 
+				return "";
 			Document doc = (Document) ctxt.item;
 			Date modifyDate = new Date(doc.getRevision(1).getRevDate());
 			return DateFormat.getTimeInstance(DateFormat.MEDIUM).format(modifyDate);
@@ -669,8 +705,12 @@ public class WikiTemplate {
 			return false;
 		}
 		public String apply(Context ctxt) throws ServiceException {
-			Document doc = (Document) ctxt.item;
-			Date modifyDate = new Date(doc.getLastRevision().getRevDate());
+			Date modifyDate;
+			if (ctxt.item instanceof Document) {
+				Document doc = (Document) ctxt.item;
+				modifyDate = new Date(doc.getLastRevision().getRevDate());
+			} else
+				modifyDate = new Date(ctxt.item.getDate());
 			return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(modifyDate);
 		}
 	}
@@ -685,6 +725,8 @@ public class WikiTemplate {
 			return false;
 		}
 		public String apply(Context ctxt) throws ServiceException {
+			if (!(ctxt.item instanceof Document)) 
+				return "";
 			Document doc = (Document) ctxt.item;
 			Date modifyDate = new Date(doc.getLastRevision().getRevDate());
 			return DateFormat.getTimeInstance(DateFormat.MEDIUM).format(modifyDate);
@@ -701,6 +743,8 @@ public class WikiTemplate {
 			return false;
 		}
 		public String apply(Context ctxt) {
+			if (!(ctxt.item instanceof Document)) 
+				return "1";
 			Document doc = (Document) ctxt.item;
 			return Integer.toString(doc.getVersion());
 		}

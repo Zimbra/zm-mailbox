@@ -77,6 +77,7 @@ public class Wiki {
 		private int mId;
 		private String mUrl;
 		private List<String> mTokens;
+		private String mFilename;
 		
 		private void parse() {
 			mTokens = new ArrayList<String>();
@@ -95,19 +96,31 @@ public class Wiki {
 				mTokens.add(Integer.toString(mId));
 			}
 			mTokens.add(mUrl.substring(begin));
+			begin = mUrl.lastIndexOf("/");
+			if (begin > 0)
+				mFilename = mUrl.substring(begin+1);
+			else
+				mFilename = mUrl;
 		}
-		public MailItem getItem(Mailbox mbox, OperationContext octxt) throws ServiceException {
+		public Folder getFolder(OperationContext octxt, String accountId) throws ServiceException {
+			return (Folder)getItemByPath(octxt, accountId, true);
+		}
+		public MailItem getItem(OperationContext octxt, String accountId) throws ServiceException {
+			return getItemByPath(octxt, accountId, false);
+		}
+		public MailItem getItemByPath(OperationContext octxt, String accountId, boolean getFolder) throws ServiceException {
 			Iterator<String> iter = mTokens.listIterator();
 			int fid = Mailbox.ID_FOLDER_USER_ROOT;
 			String root = iter.next();
 			if (root.equals("//")) {
 				Account acct = Provisioning.getInstance().getAccountByName(iter.next());
-				mbox = Mailbox.getMailboxByAccountId(acct.getId());
+				accountId = acct.getId();
 			} else if (!root.equals("/")) {
 				fid = Integer.parseInt(root);
 			}
 			
-			return mbox.getItemByPath(octxt, iter.next(), fid);
+			Mailbox mbox = Mailbox.getMailboxByAccountId(accountId);
+			return mbox.getItemByPath(octxt, iter.next(), fid, getFolder);
 		}
 		public boolean isAbsolute() {
 			return (mTokens != null &&
@@ -119,6 +132,9 @@ public class Wiki {
 		}
 		public String getToken(int pos) {
 			return mTokens.get(pos);
+		}
+		public String getFilename() {
+			return mFilename;
 		}
 	}
 	
@@ -134,14 +150,45 @@ public class Wiki {
 		return getInstance(acct);
 	}
 	
-	public static MailItem findWikiByPath(OperationContext octxt, Mailbox mbox, int fid, String path) throws ServiceException {
+	public static MailItem findWikiByPathTraverse(OperationContext octxt, String accountId, int fid, String path) throws ServiceException {
 		WikiUrl url = new WikiUrl(path, fid);
-		return url.getItem(mbox, octxt);
+		Folder f = url.getFolder(octxt, accountId);
+		String name = url.getFilename();
+
+		MailItem item = findWikiByNameTraverse(octxt, accountId, f.getId(), name);
+		if (item == null) {
+			Wiki w = getInstance();
+			item = findWikiByNameTraverse(octxt, w.getWikiAccount(), w.getWikiFolderId(), name);
+		}
+		return item;
 	}
 	
-	public static MailItem findWikiByPath(OperationContext octxt, MailItem item, String path) throws ServiceException {
-		WikiUrl url = new WikiUrl(path, item.getFolderId());
-		return url.getItem(item.getMailbox(), octxt);
+	public static MailItem findWikiByNameTraverse(OperationContext octxt, String accountId, int fid, String name) throws ServiceException {
+		Mailbox mbox = Mailbox.getMailboxByAccountId(accountId);
+		Wiki w = getInstance(accountId, fid);
+		while (w != null) {
+			WikiWord ww = w.lookupWiki(name);
+			if (ww != null)
+				return ww.getWikiItem(octxt);
+			if (fid == Mailbox.ID_FOLDER_USER_ROOT)
+				break;
+			Folder f = mbox.getFolderById(octxt, fid);
+			fid = f.getFolderId();
+			w = getInstance(accountId, fid);
+		}
+		return null;
+	}
+	
+	public static MailItem findWikiByPath(OperationContext octxt, String accountId, int fid, String path, boolean traverse) throws ServiceException {
+		if (traverse)
+			return findWikiByPathTraverse(octxt, accountId, fid, path);
+		
+		return findWikiByPath(octxt, accountId, fid, path);
+	}
+	
+	public static MailItem findWikiByPath(OperationContext octxt, String accountId, int fid, String path) throws ServiceException {
+		WikiUrl url = new WikiUrl(path, fid);
+		return url.getItem(octxt, accountId);
 	}
 	
 	public static Wiki getInstance(String acct, int folderId) throws ServiceException {

@@ -4477,7 +4477,22 @@ public class Mailbox {
     	return doc;
     }
     
-    public MailItem getItemByPath(OperationContext octxt, String path, int fid) throws ServiceException {
+    /**
+     * if path == /foo/bar, returns Mailitem bar in folder foo.
+     * if path == foo/bar, locates the folder identified by fid, looks for subfolder foo, then
+     *    returns MailItem in folder foo.
+     * 
+     * if getFolder is set to true, returns the innermost Folder containing
+     *    the MailItem identified by the path.
+     *    
+     * @param octxt
+     * @param path
+     * @param fid
+     * @param getFolder
+     * @return Folder or Document identified by path
+     * @throws ServiceException
+     */
+    public MailItem getItemByPath(OperationContext octxt, String path, int fid, boolean getFolder) throws ServiceException {
         boolean success = true;
         try {
             beginTransaction("getItemByPath", octxt);
@@ -4502,6 +4517,8 @@ public class Mailbox {
                 		lastFolder.canAccess(ACL.RIGHT_READ) && 
                 		lastToken != null && 
                 		!tok.hasMoreTokens()) {
+                	if (getFolder)
+                		return lastFolder;
                 	for (Document doc : getWikiList(octxt, lastFolder.getId()))
                 		if (doc.getFilename().equals(lastToken))
                 			return doc;
