@@ -138,7 +138,7 @@ public class Auth extends DocumentHandler  {
 		Element prefsRequest = request.getOptionalElement(AccountService.E_PREFS);
 		if (prefsRequest != null) {
 			Element prefsResponse = response.addElement(AccountService.E_PREFS);
-			GetPrefs.handle(request, prefsResponse, acct);
+			GetPrefs.handle( prefsRequest, prefsResponse, acct);
 		}
 		return response;
 	}
