@@ -55,6 +55,7 @@ public class PreAuthServlet extends ZimbraServlet {
     public static final String PARAM_ACCOUNT = "account";
     public static final String PARAM_ISREDIRECT = "isredirect";
     public static final String PARAM_BY = "by";
+    public static final String PARAM_REDIRECT_URL = "redirectURL";
     public static final String PARAM_TIMESTAMP = "timestamp";
     public static final String PARAM_EXPIRES = "expires";    
     
@@ -68,6 +69,7 @@ public class PreAuthServlet extends ZimbraServlet {
         sPreAuthParams.add(PARAM_ACCOUNT);
         sPreAuthParams.add(PARAM_ISREDIRECT);
         sPreAuthParams.add(PARAM_BY);
+        sPreAuthParams.add(PARAM_REDIRECT_URL);
         sPreAuthParams.add(PARAM_TIMESTAMP);
         sPreAuthParams.add(PARAM_EXPIRES);
     }
@@ -90,7 +92,7 @@ public class PreAuthServlet extends ZimbraServlet {
         else return param;
     }
 
-    private String getOptionalParam(HttpServletRequest req, String paramName, String def) throws ServiceException {
+    private String getOptionalParam(HttpServletRequest req, String paramName, String def) {
         String param = req.getParameter(paramName);
         if (param == null) return def;
         else return param;
@@ -106,7 +108,6 @@ public class PreAuthServlet extends ZimbraServlet {
             String authToken = getOptionalParam(req, PARAM_AUTHTOKEN, null);            
             if (isRedirect.equals("1") && authToken != null) {
                 setCookieAndRedirect(req, resp, authToken);
-                return;
             } else if (authToken != null) {
                 // see if we need a redirect to the correct server
                 AuthToken at = AuthToken.getAuthToken(authToken);
@@ -140,11 +141,10 @@ public class PreAuthServlet extends ZimbraServlet {
                 AuthToken at = (expires ==  0) ? new AuthToken(acct) : new AuthToken(acct, expires);
                 try {
                     authToken = at.getEncoded();
-                    
                     if (acct.isCorrectHost()) {
-                        setCookieAndRedirect(req, resp, at.getEncoded());
+                        setCookieAndRedirect(req, resp, authToken);
                     } else {
-                        redirectToCorrectServer(req, resp, acct, at.getEncoded());
+                        redirectToCorrectServer(req, resp, acct, authToken);
                     }
                 } catch (AuthTokenException e) {
                     throw  ServiceException.FAILURE("unable to encode auth token", e);
@@ -152,10 +152,8 @@ public class PreAuthServlet extends ZimbraServlet {
             }
         } catch (ServiceException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-            return;
         } catch (AuthTokenException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-            return;
         }
     }
 
@@ -191,13 +189,18 @@ public class PreAuthServlet extends ZimbraServlet {
         Cookie c = new Cookie(COOKIE_ZM_AUTH_TOKEN, authToken);
         c.setPath("/");
         resp.addCookie(c);
-        StringBuilder sb = new StringBuilder();
-        addNonPreAuthParams(req, sb, true);
-        if (sb.length() > 0) {
-            resp.sendRedirect(DEFAULT_MAIL_URL+"?"+sb.toString());
-        } else { 
-            resp.sendRedirect(DEFAULT_MAIL_URL);
+
+        String redirectURL = getOptionalParam(req, PARAM_REDIRECT_URL, null);
+        if (redirectURL != null) {
+            resp.sendRedirect(redirectURL);
+        } else {
+            StringBuilder sb = new StringBuilder();
+            addNonPreAuthParams(req, sb, true);
+            if (sb.length() > 0) {
+                resp.sendRedirect(DEFAULT_MAIL_URL + "?" + sb.toString());
+            } else {
+                resp.sendRedirect(DEFAULT_MAIL_URL);
+            }
         }
     }
-
 }
