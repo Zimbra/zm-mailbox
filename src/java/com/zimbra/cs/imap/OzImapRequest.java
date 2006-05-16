@@ -24,7 +24,6 @@
  */
 package com.zimbra.cs.imap;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -393,7 +392,7 @@ class OzImapRequest {
                 skipChar('[');
                 while (Character.isDigit((char) peekChar()) || dot) {
                     sectionPart += (sectionPart.equals("") ? "" : ".") + readNumber();
-                    if ((dot = peekChar() == '.'))
+                    if ((dot = (peekChar() == '.')) == true)
                         skipChar('.');
                 }
                 skipChar(']');

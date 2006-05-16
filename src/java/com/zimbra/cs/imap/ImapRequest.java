@@ -467,7 +467,7 @@ class ImapRequest {
                 skipChar('[');
                 while (Character.isDigit((char) peekChar()) || dot) {
                     sectionPart += (sectionPart.equals("") ? "" : ".") + readNumber();
-                    if ((dot = peekChar() == '.'))
+                    if ((dot = (peekChar() == '.')) == true)
                         skipChar('.');
                 }
                 skipChar(']');
