@@ -41,8 +41,6 @@ import java.util.Map;
 import javax.activation.DataSource;
 
 import org.apache.commons.collections.map.LRUMap;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
@@ -58,6 +56,7 @@ import com.zimbra.cs.object.ObjectHandler;
 import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.BlobMetaData;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author schemers
@@ -74,8 +73,6 @@ public abstract class MimeHandler {
     
     public static final String CATCH_ALL_TYPE = "all";
 
-    private static Log mLog = LogFactory.getLog(MimeHandler.class);
-  
     private static Map mHandlers = new HashMap();
     
     /**
@@ -141,32 +138,38 @@ public abstract class MimeHandler {
                 // All unhandled text types default to text/plain handler.
                 if (isTextType) {
                     mt = Provisioning.getInstance().getMimeType(Mime.CT_DEFAULT);
-                    mLog.debug("falling back to " + Mime.CT_DEFAULT + " for: " + mimeType);
-                } else {
+                    ZimbraLog.index.debug("falling back to " + Mime.CT_DEFAULT + " for: " + mimeType);
+                }
+                if (mt == null || mt.getHandlerClass() == null) {
                     mt = Provisioning.getInstance().getMimeType(CATCH_ALL_TYPE);
                     assert(mt != null);
-                    if (mLog.isDebugEnabled())
-                        mLog.debug("falling back to catch-all handler: " + 
-                                mt.getHandlerClass() + " for unknown mime type: " + mimeType);
+                    if (ZimbraLog.index.isDebugEnabled())
+                        ZimbraLog.index.debug("falling back to catch-all handler (" + 
+                        		CATCH_ALL_TYPE + ") for unknown mime type: " + mimeType);
                 }
             }
-            String clazz = mt.getHandlerClass();
-            assert(clazz != null);
-            if (clazz.indexOf('.') == -1)
-                clazz = "com.zimbra.cs.mime.handler." + clazz;
-            try {
-                handlerInfo = new HandlerInfo();
-                handlerInfo.mClass = ExtensionUtil.loadClass(mt.getExtension(), clazz);
-                handlerInfo.mMimeType = mt;
-                handlerInfo.mRealMimeType = mimeType;
-                mHandlers.put(mimeType, handlerInfo);
-            } catch (Exception e) {
-                if (mLog.isWarnEnabled())
-                    mLog.warn("loadHandler caught exception", e);
+
+            if (mt == null || mt.getHandlerClass() == null) {
+            	ZimbraLog.index.warn("no catch-all MIME handler (" + CATCH_ALL_TYPE + ") found");
+            } else {
+	            String clazz = mt.getHandlerClass();
+	            assert(clazz != null);
+	            if (clazz.indexOf('.') == -1)
+	                clazz = "com.zimbra.cs.mime.handler." + clazz;
+	            try {
+	                handlerInfo = new HandlerInfo();
+	                handlerInfo.mClass = ExtensionUtil.loadClass(mt.getExtension(), clazz);
+	                handlerInfo.mMimeType = mt;
+	                handlerInfo.mRealMimeType = mimeType;
+	                mHandlers.put(mimeType, handlerInfo);
+	            } catch (Exception e) {
+	                if (ZimbraLog.index.isWarnEnabled())
+	                    ZimbraLog.index.warn("loadHandler caught exception", e);
+	            }
             }
         } catch (ServiceException e) {
-            if (mLog.isErrorEnabled())
-                mLog.error("loadHandler caught SQLException", e);
+            if (ZimbraLog.index.isErrorEnabled())
+                ZimbraLog.index.error("loadHandler caught SQLException", e);
         } 
         return handlerInfo;
     } 
@@ -436,7 +439,7 @@ public abstract class MimeHandler {
             mExtToType.put(ext.toLowerCase(), t);
             return t;
         } catch (ServiceException e) {
-            mLog.error("Cannot get mime type for extension " + ext);
+            ZimbraLog.index.error("Cannot get mime type for extension " + ext);
             return CATCH_ALL_TYPE;
         }
     }
