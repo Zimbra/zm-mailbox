@@ -105,6 +105,10 @@ public class LdapUtil {
         System.setProperty("com.sun.jndi.ldap.connect.pool.timeout", LC.ldap_connect_pool_timeout.value());
         System.setProperty("com.sun.jndi.ldap.connect.pool.protocol", "plain ssl");
     }
+    
+    public static String getLdapURL() {
+        return sLdapURL;
+    }
 
     public static void closeContext(Context ctxt) {
         try {
@@ -280,7 +284,11 @@ public class LdapUtil {
         if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("search filter matched: "+resultDn);
         ldapAuthenticate(url, resultDn, password); 
     }
-
+    
+    public static boolean isSSHA(String encodedPassword) {
+        return encodedPassword.startsWith(ENCODING);
+    }
+    
     public static boolean verifySSHA(String encodedPassword, String password) {
         if (!encodedPassword.startsWith(ENCODING))
             return false;

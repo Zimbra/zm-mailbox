@@ -2269,8 +2269,26 @@ public class LdapProvisioning extends Provisioning {
         if (encodedPassword == null)
             throw AccountServiceException.AUTH_FAILED(acct.getName());
 
-        if (!LdapUtil.verifySSHA(encodedPassword, password))
-            throw AccountServiceException.AUTH_FAILED(acct.getName());
+        if (LdapUtil.isSSHA(encodedPassword)) {
+
+            if (LdapUtil.verifySSHA(encodedPassword, password)) {
+                return; // good password, RETURN
+            }
+
+        } else if (acct instanceof LdapAccount) {
+            String[] urls = new String[] { LdapUtil.getLdapURL() };
+            try {
+                LdapUtil.ldapAuthenticate(urls, ((LdapAccount)acct).getDN(), password);
+                return; // good password, RETURN                
+            } catch (AuthenticationException e) {
+                throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
+            } catch (AuthenticationNotSupportedException e) {
+                throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
+            } catch (NamingException e) {
+                throw ServiceException.FAILURE(e.getMessage(), e);
+            }
+        }
+        throw AccountServiceException.AUTH_FAILED(acct.getName());        
     }
  
      /**
