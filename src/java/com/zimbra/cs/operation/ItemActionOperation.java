@@ -24,7 +24,7 @@
  */
 package com.zimbra.cs.operation;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -41,8 +41,8 @@ public class ItemActionOperation extends Operation {
 	// each of these is "per operation" -- real load is calculated as LOAD * local.size()
 	private static final int DELETE_MULT = 3;
 	private static final int SPAM_MULT = 4;
-	
-	private static int LOAD    = 3;
+
+	protected static int LOAD = 3;
 	private static int MAX = 20;
 	private static int SCALE = 10;
 	static {
@@ -58,11 +58,11 @@ public class ItemActionOperation extends Operation {
 	
 	public static ItemActionOperation TAG(ZimbraSoapContext zc, Session session, OperationContext oc,
 				Mailbox mbox, Requester req, 
-				ArrayList<Integer> local, byte type, 
+				List<Integer> ids, byte type, 
 				boolean flagValue, TargetConstraint tcon, 
 				int tagId) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					LOAD, local, Op.TAG,  type, flagValue, tcon);
+					LOAD, ids, Op.TAG,  type, flagValue, tcon);
 		ia.setTagId(tagId);
 		ia.schedule();
 		return ia;
@@ -70,31 +70,31 @@ public class ItemActionOperation extends Operation {
 	
 	public static ItemActionOperation FLAG(ZimbraSoapContext zc, Session session, OperationContext oc,
 				Mailbox mbox, Requester req, 
-				ArrayList<Integer> local, byte type, 
+				List<Integer> ids, byte type, 
 				boolean flagValue, TargetConstraint tcon) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					LOAD, local, Op.FLAG,  type, flagValue, tcon);
+					LOAD, ids, Op.FLAG,  type, flagValue, tcon);
 		ia.schedule();
 		return ia;
 	}
 	
 	public static ItemActionOperation READ(ZimbraSoapContext zc, Session session, OperationContext oc,
 				Mailbox mbox, Requester req, 
-				ArrayList<Integer> local, byte type, 
+				List<Integer> ids, byte type, 
 				boolean flagValue, TargetConstraint tcon) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					LOAD, local, Op.READ,  type, flagValue, tcon);
+					LOAD, ids, Op.READ,  type, flagValue, tcon);
 		ia.schedule();
 		return ia;
 	}
 	
 	public static ItemActionOperation COLOR(ZimbraSoapContext zc, Session session, OperationContext oc,
 				Mailbox mbox, Requester req, 
-				ArrayList<Integer> local, byte type, 
+				List<Integer> ids, byte type, 
 				boolean flagValue, TargetConstraint tcon,
 				byte color) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					LOAD, local, Op.COLOR,  type, flagValue, tcon);
+					LOAD, ids, Op.COLOR,  type, flagValue, tcon);
 		ia.setColor(color);
 		ia.schedule();
 		return ia;
@@ -102,21 +102,21 @@ public class ItemActionOperation extends Operation {
 
 	public static ItemActionOperation HARD_DELETE(ZimbraSoapContext zc, Session session, OperationContext oc,
 				Mailbox mbox, Requester req, 
-				ArrayList<Integer> local, byte type, 
+				List<Integer> ids, byte type, 
 				boolean flagValue, TargetConstraint tcon) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					DELETE_MULT*LOAD, local, Op.HARD_DELETE,  type, flagValue, tcon);
+					DELETE_MULT*LOAD, ids, Op.HARD_DELETE,  type, flagValue, tcon);
 		ia.schedule();
 		return ia;
 	}
 	
 	public static ItemActionOperation MOVE(ZimbraSoapContext zc, Session session, OperationContext oc,
 				Mailbox mbox, Requester req, 
-				ArrayList<Integer> local, byte type, 
+				List<Integer> ids, byte type, 
 				boolean flagValue, TargetConstraint tcon,
 				ItemId iidFolder) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					LOAD, local, Op.MOVE,  type, flagValue, tcon);
+					LOAD, ids, Op.MOVE,  type, flagValue, tcon);
 		ia.setIidFolder(iidFolder);
 		ia.schedule();
 		return ia;
@@ -124,23 +124,22 @@ public class ItemActionOperation extends Operation {
 
 	public static ItemActionOperation SPAM(ZimbraSoapContext zc, Session session, OperationContext oc,
 				Mailbox mbox, Requester req, 
-				ArrayList<Integer> local, byte type, 
+				List<Integer> ids, byte type, 
 				boolean flagValue, TargetConstraint tcon,
 				int folderId) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					SPAM_MULT*LOAD, local, Op.SPAM,  type, flagValue, tcon);
+					SPAM_MULT*LOAD, ids, Op.SPAM,  type, flagValue, tcon);
 		ia.setFolderId(folderId);
 		ia.schedule();
 		return ia;
 	}
 	
 	public static ItemActionOperation UPDATE(ZimbraSoapContext zc, Session session, OperationContext oc,
-				Mailbox mbox, Requester req, 
-				ArrayList<Integer> local, byte type, 
-				boolean flagValue, TargetConstraint tcon,
-				ItemId iidFolder, String flags, String tags, byte color) throws ServiceException {
+				Mailbox mbox, Requester req, List<Integer> ids, byte type, 
+				TargetConstraint tcon, ItemId iidFolder,
+				String flags, String tags, byte color) throws ServiceException {
 		ItemActionOperation ia = new ItemActionOperation(zc, session, oc, mbox, req, 
-					LOAD, local, Op.UPDATE,  type, flagValue, tcon);
+					LOAD, ids, Op.UPDATE, type, true, tcon);
 		ia.setIidFolder(iidFolder);
 		ia.setFlags(flags);
 		ia.setTags(tags);
@@ -170,36 +169,36 @@ public class ItemActionOperation extends Operation {
 		private String mStr;
 	}
 	
-	private String mResult;
+    protected String mResult;
 	
-	private ArrayList<Integer> mLocal;
-	private Op mOp;
-	private byte mType;
-	private boolean mFlagValue;
-	private TargetConstraint mTcon;
+    protected List<Integer> mIds;
+	protected Op mOp;
+    protected byte mType;
+    protected boolean mFlagValue;
+    protected TargetConstraint mTcon;
 
 	// only when Op=TAG
-	private int mTagId;
+    protected int mTagId;
 	 
 	// only when OP=COLOR or OP=UPDATE
-	private byte mColor;
+    protected byte mColor;
 	
 	// only when OP=MOVE or OP=UPDATE
-	private ItemId mIidFolder; 
+    protected ItemId mIidFolder; 
 	
 	// only when OP=SPAM
-	private int mFolderId;
+    protected int mFolderId;
 
 	// only when OP=UPDATE
-	private String mFlags;
-	private String mTags;
+    protected String mFlags;
+    protected String mTags;
 	
 	// TEMPORARY -- just until dan implements the ItemIdFormatter
-	private ZimbraSoapContext mZc;
+    protected ZimbraSoapContext mZc;
 	
 	
 	public String toString() {
-		StringBuffer toRet = new StringBuffer(super.toString());
+		StringBuilder toRet = new StringBuilder(super.toString());
 		
 		toRet.append(" Op=").append(mOp.toString());
 		toRet.append(" Type=").append(mType);
@@ -253,13 +252,13 @@ public class ItemActionOperation extends Operation {
 		mTags = tags; 
 	}
 	
-	public ItemActionOperation(ZimbraSoapContext zc, Session session, OperationContext oc,
+	ItemActionOperation(ZimbraSoapContext zc, Session session, OperationContext oc,
 				Mailbox mbox, Requester req, int baseLoad, 
-				ArrayList<Integer> local, Op op, byte type, 
+				List<Integer> ids, Op op, byte type, 
 				boolean flagValue, TargetConstraint tcon) throws ServiceException {
-		super(session, oc, mbox, req, req.getPriority(), Math.min(local.size() > 0 ? local.size() * (baseLoad / SCALE): baseLoad, MAX));
+		super(session, oc, mbox, req, req.getPriority(), Math.min(ids.size() > 0 ? ids.size() * (baseLoad / SCALE): baseLoad, MAX));
 		mZc = zc;
-		mLocal = local;
+		mIds = ids;
 		mOp = op;
 		if (mOp == null) {
 			throw ServiceException.INVALID_REQUEST("unknown operation: null", null);
@@ -269,16 +268,12 @@ public class ItemActionOperation extends Operation {
 		mTcon = tcon;
 	}
 	
-	public void schedule() throws ServiceException {
-		super.schedule();
-	}
-	
 	protected void callback() throws ServiceException {
-		StringBuffer successes = new StringBuffer();
+		StringBuilder successes = new StringBuilder();
 		
 		// iterate over the local items and perform the requested operation
-		for (int id: mLocal) {
-			switch(mOp) {
+		for (int id : mIds) {
+			switch (mOp) {
 				case FLAG:
 					getMailbox().alterTag(getOpCtxt(), id, mType, Flag.ID_FLAG_FLAGGED, mFlagValue, mTcon);
 					break;
@@ -324,5 +319,4 @@ public class ItemActionOperation extends Operation {
 	public String getResult() {
 		return mResult;
 	}
-
 }

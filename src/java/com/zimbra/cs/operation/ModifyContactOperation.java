@@ -24,7 +24,7 @@
  */
 package com.zimbra.cs.operation;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -42,19 +42,18 @@ public class ModifyContactOperation extends Operation {
     }
 
     ItemId mIid;
-    HashMap<String, String> mAttrs;	
+    Map<String, String> mFields;	
     boolean mReplace;
 
     public ModifyContactOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, 
-                ItemId iid, HashMap<String, String> attrs, boolean replace) {
+                ItemId iid, Map<String, String> fields, boolean replace) {
         super(session, oc, mbox, req, LOAD);
         mIid = iid;
-        mAttrs = attrs;
+        mFields = fields;
         mReplace = replace;
     }	
 
     protected void callback() throws ServiceException {
-        getMailbox().modifyContact(getOpCtxt(), mIid.getId(), mAttrs, mReplace);
+        getMailbox().modifyContact(getOpCtxt(), mIid.getId(), mFields, mReplace);
     }
-
 }

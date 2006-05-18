@@ -29,6 +29,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Contact;
@@ -61,17 +62,10 @@ public class ModifyContact extends WriteOpDocumentHandler  {
         boolean replace = request.getAttributeBool(MailService.A_REPLACE, false);
 
         Element cn = request.getElement(MailService.E_CONTACT);
-
         ItemId iid = new ItemId(cn.getAttribute(MailService.A_ID), lc);
+        Map<String, String> fields = parseFields(cn.listElements(MailService.E_ATTRIBUTE));
 
-        HashMap<String, String> attrs = new HashMap<String, String>();
-        for (Element e : cn.listElements(MailService.E_ATTRIBUTE)) {
-            String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
-            attrs.put(name, e.getText());
-        }
-
-        ModifyContactOperation op = new ModifyContactOperation(session, octxt, mbox, Requester.SOAP,
-                    iid, attrs, replace);
+        ModifyContactOperation op = new ModifyContactOperation(session, octxt, mbox, Requester.SOAP, iid, fields, replace);
         op.schedule();
 
 
@@ -80,5 +74,17 @@ public class ModifyContact extends WriteOpDocumentHandler  {
         if (con != null)
             ToXML.encodeContact(response, lc, con, null, true, null);
         return response;
+    }
+
+    static Map<String, String> parseFields(List<Element> elist) throws ServiceException {
+        if (elist == null || elist.isEmpty())
+            return null;
+
+        HashMap<String, String> attrs = new HashMap<String, String>();
+        for (Element e : elist) {
+            String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
+            attrs.put(name, e.getText());
+        }
+        return attrs;
     }
 }

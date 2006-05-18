@@ -28,10 +28,22 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.operation.ContactActionOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.SoapSession;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -41,6 +53,10 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ContactAction extends ItemAction {
 
+    private static final Set CONTACT_OPS = new HashSet<String>(Arrays.asList(new String[] {
+        OP_UPDATE
+    }));
+
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
@@ -49,12 +65,55 @@ public class ContactAction extends ItemAction {
 
         if (operation.endsWith(OP_READ) || operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on contact: " + operation, null);
-        String successes = handleCommon(context, request, operation, MailItem.TYPE_CONTACT);
+        String successes;
+        if (CONTACT_OPS.contains(operation))
+            successes = handleContact(context, request, operation);
+        else
+            successes = handleCommon(context, request, operation, MailItem.TYPE_CONTACT);
 
         Element response = lc.createElement(MailService.CONTACT_ACTION_RESPONSE);
         Element actionOut = response.addUniqueElement(MailService.E_ACTION);
         actionOut.addAttribute(MailService.A_ID, successes);
         actionOut.addAttribute(MailService.A_OPERATION, operation);
         return response;
+    }
+
+    private String handleContact(Map<String,Object> context, Element request, String operation)
+    throws ServiceException, SoapFaultException {
+        Element action = request.getElement(MailService.E_ACTION);
+
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(lc);
+        SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
+        OperationContext octxt = lc.getOperationContext();
+
+
+        // figure out which items are local and which ones are remote, and proxy accordingly
+        ArrayList<Integer> local = new ArrayList<Integer>();
+        HashMap<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
+        partitionItems(lc, action.getAttribute(MailService.A_ID), local, remote);
+        StringBuffer successes = proxyRemoteItems(action, remote, request, context);
+
+        if (!local.isEmpty()) {
+            String localResults;
+            if (operation.equals(OP_UPDATE)) {
+                // duplicating code from ItemAction.java for now...
+                ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, "-1"), lc);
+                if (!iidFolder.belongsTo(mbox))
+                    throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
+                String flags = action.getAttribute(MailService.A_FLAGS, null);
+                String tags  = action.getAttribute(MailService.A_TAGS, null);
+                byte color = (byte) action.getAttributeLong(MailService.A_COLOR, -1);
+                Map<String, String> fields = ModifyContact.parseFields(action.listElements(MailService.E_ATTRIBUTE));
+
+                localResults = ContactActionOperation.UPDATE(lc, session, octxt, mbox, Requester.SOAP,
+                                                             local, iidFolder, flags, tags, color, fields).getResult();
+            } else {
+                throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
+            }
+            successes.append(successes.length() > 0 ? "," : "").append(localResults);
+        }
+
+        return successes.toString();
     }
 }

@@ -1341,7 +1341,11 @@ NOTE: should we return modified attrs in response?
   {list} = on input, list of contacts to act on, on output, list of
            contacts that were acted on
 
-  for op="update", caller can specify any or all of: l="{folder}", t="{tag-list}", f="{flags}"
+for op="update", caller can specify any or all of: l="{folder}", t="{tag-list}", f="{flags}", color="{color}", <a> attribute list:
+
+  <action id="{list}" op="update" [l="{folder}"] [tag="{tag-list}"] [f="{flags}"] [color="{color}"]>
+    [<a n="fieldName">fieldValue</a>]*
+  </action>
 
 ----------
 
