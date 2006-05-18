@@ -157,7 +157,7 @@
     post.releaseConnection();
     // Allow global config to hard-code a user for testing/demo use
     // Hack hack hack
-    String redirect_user = "kevinh@roadshow.zimbra.com";
+    String redirect_user = "sample@roadshow.zimbra.com";
     String domain_key = "3f22c69abb92ce8d0b5bd30bd4cc3acd4ecd535783490e8722f9903ced6c61ee";
     if (redirect_user != null) {
         email = redirect_user;
