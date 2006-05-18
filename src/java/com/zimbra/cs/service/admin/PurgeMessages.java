@@ -53,14 +53,17 @@ public class PurgeMessages extends AdminDocumentHandler {
 
         Element response = lc.createElement(AdminService.PURGE_MESSAGES_RESPONSE);
         for (int i = 0; i < accounts.length; i++) {
-            Mailbox mbox = Mailbox.getMailboxByAccountId(accounts[i]);
+            Mailbox mbox = null;
             try {
+                mbox = Mailbox.getMailboxByAccountId(accounts[i]);
                 mbox.purgeMessages(null);
             } catch (AccountServiceException ase) {
                 // ignore NO_SUCH_ACCOUNT errors (logged by the mailbox)
                 if (ase.getCode() != AccountServiceException.NO_SUCH_ACCOUNT)
                     throw ase;
             }
+            if (mbox == null)
+                continue;
 
             Element mresp = response.addElement(AdminService.E_MAILBOX);
             mresp.addAttribute(AdminService.A_MAILBOXID, mbox.getId());
