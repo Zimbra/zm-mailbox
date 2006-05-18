@@ -58,7 +58,7 @@ public class ResultsPager
     {
         ResultsPager toRet;
         
-        if (!params.hasCursor() || params.getOffset()==0) {
+        if (!params.hasCursor()) {
             // must use results.getSortBy() because the results might have ignored our sortBy
             // request and used something else...
             toRet = new ResultsPager(results, results.getSortBy(), params.getLimit(), params.getOffset());

@@ -387,7 +387,7 @@ public class SoapSession extends Session {
                     PendingModifications pm = iter.next();
                     if (pm.getSeqNo() <= lastKnownSeqno)
                         iter.remove();
-                    assert(pm.getSeqNo() > lastKnownSeqno);
+//                     assert(pm.getSeqNo() > lastKnownSeqno);
                 }
                 
                 if (mNotify) {
