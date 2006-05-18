@@ -129,6 +129,15 @@ public class Contact extends MailItem {
         if (mData.type != TYPE_CONTACT)
             throw new IllegalArgumentException();
     }
+    
+    /**
+     * Returns a single field from the contact's field/value pairs
+     * @param fieldName
+     * @return 
+     */
+    public String get(String fieldName) {
+        return mFields.get(fieldName);
+    }
 
     /** Returns a new <code>Map</code> containing all the contact's
      *  field/value pairs. */

@@ -83,8 +83,8 @@ public class ToXML {
 
     private static Log mLog = LogFactory.getLog(ToXML.class);
 
-	// no construction
-	private ToXML()  {}
+    // no construction
+    private ToXML()  {}
 
     public static Element encodeItem(Element parent, ZimbraSoapContext lc, MailItem item)
     throws ServiceException {
@@ -159,7 +159,7 @@ public class ToXML {
                             url = httpurl.toString();
                         }
                     } catch (org.apache.commons.httpclient.URIException urie) { }
-                elem.addAttribute(MailService.A_URL, url);
+                    elem.addAttribute(MailService.A_URL, url);
             }
         }
         boolean remote = lc.isDelegatedRequest(), canAdminister = !remote;
@@ -185,17 +185,17 @@ public class ToXML {
                             ACL.Grant grant = (ACL.Grant) it.next();
                             NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
                             eACL.addElement(MailService.E_GRANT)
-                                .addAttribute(MailService.A_ZIMBRA_ID, grant.getGranteeId())
-                                .addAttribute(MailService.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
-                                .addAttribute(MailService.A_INHERIT, grant.isGrantInherited())
-                                .addAttribute(MailService.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
-                                .addAttribute(MailService.A_DISPLAY, nentry == null ? null : nentry.getName());
+                            .addAttribute(MailService.A_ZIMBRA_ID, grant.getGranteeId())
+                            .addAttribute(MailService.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
+                            .addAttribute(MailService.A_INHERIT, grant.isGrantInherited())
+                            .addAttribute(MailService.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
+                            .addAttribute(MailService.A_DISPLAY, nentry == null ? null : nentry.getName());
                         }
                 }
             }
         }
         return elem;
-	}
+    }
 
     private static Element encodeFolderCommon(Element elem, ZimbraSoapContext lc, Folder folder, int fields) {
         int folderId = folder.getId();
@@ -270,8 +270,8 @@ public class ToXML {
 
     public static void recordItemTags(Element elem, MailItem item, int fields) {
         if (needToOutput(fields, Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) {
-        	String flags = item.getFlagString();
-        	if (fields != NOTIFY_FIELDS || !flags.equals(""))
+            String flags = item.getFlagString();
+            if (fields != NOTIFY_FIELDS || !flags.equals(""))
                 elem.addAttribute(MailService.A_FLAGS, flags);
         }
         if (needToOutput(fields, Change.MODIFIED_TAGS)) {
@@ -282,39 +282,52 @@ public class ToXML {
     }
 
     public static Element encodeContact(Element parent, ZimbraSoapContext lc, Contact contact,
-										ContactAttrCache cacache, boolean summary, List<String> attrFilter) {
+                ContactAttrCache cacache, boolean summary, List<String> attrFilter) {
         return encodeContact(parent, lc, contact, cacache, summary, attrFilter, NOTIFY_FIELDS);
     }
     public static Element encodeContact(Element parent, ZimbraSoapContext lc, Contact contact,
-            ContactAttrCache cacache, boolean summary, List<String> attrFilter, int fields) {
+                ContactAttrCache cacache, boolean summary, List<String> attrFilter, int fields) {
         Element elem = parent.addElement(MailService.E_CONTACT);
         elem.addAttribute(MailService.A_ID, lc.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
             elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(contact.getFolderId()));
         recordItemTags(elem, contact, fields);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
-        	elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
-        	elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
+            elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
+            elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
         }
         if (needToOutput(fields, Change.MODIFIED_CONTENT))
             elem.addAttribute(MailService.A_REVISION, contact.getSavedSequence());
 
         if (summary || !needToOutput(fields, Change.MODIFIED_CONTENT)) {
-      	  try {
-      		  elem.addAttribute(MailService.A_FILE_AS_STR, contact.getFileAsString());
-      	  } catch (ServiceException e) { }
-      	  return elem;
-      }
-        
+            try {
+                elem.addAttribute(MailService.A_FILE_AS_STR, contact.getFileAsString());
+
+                String email = contact.get(Contact.A_email);
+                if (email != null)
+                    elem.addAttribute(Contact.A_email, email);
+
+                email = contact.get(Contact.A_email2);
+                if (email != null)
+                    elem.addAttribute(Contact.A_email2, email);
+
+                email = contact.get(Contact.A_email3);
+                if (email != null)
+                    elem.addAttribute(Contact.A_email3, email);
+
+            } catch (ServiceException e) { }
+            return elem;
+        }
+
 
         Map<String, String> attrs = contact.getFields();
         if (attrFilter != null) {
             for (String name : attrFilter) {
-            	// XXX: How to distinguish between a non-existent attribute and
-            	//      an existing attribute with null or empty string value?
+                // XXX: How to distinguish between a non-existent attribute and
+                //      an existing attribute with null or empty string value?
                 String value = attrs.get(name);
-				if (value == null || value.equals(""))
-				    continue;
+                if (value == null || value.equals(""))
+                    continue;
                 if (cacache != null)
                     cacache.makeAttr(elem, name, value);
                 else
@@ -324,8 +337,8 @@ public class ToXML {
             for (Map.Entry<String, String> me : attrs.entrySet()) {
                 String name = me.getKey();
                 String value = me.getValue();
-				if (name == null || name.trim().equals("") || value == null || value.equals(""))
-				    continue;
+                if (name == null || name.trim().equals("") || value == null || value.equals(""))
+                    continue;
                 if (cacache != null)
                     cacache.makeAttr(elem, name, value);
                 else
@@ -335,7 +348,7 @@ public class ToXML {
         return elem;
     }
 
-	public static Element encodeNote(Element parent, ZimbraSoapContext lc, Note note) {
+    public static Element encodeNote(Element parent, ZimbraSoapContext lc, Note note) {
         return encodeNote(parent, lc, note, NOTIFY_FIELDS);
     }
     public static Element encodeNote(Element parent, ZimbraSoapContext lc, Note note, int fields) {
@@ -359,29 +372,29 @@ public class ToXML {
             elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, note.getModifiedSequence());
         }
         return elem;
-	}
+    }
 
-	public static Element encodeTag(Element parent, ZimbraSoapContext lc, Tag tag) {
+    public static Element encodeTag(Element parent, ZimbraSoapContext lc, Tag tag) {
         return encodeTag(parent, lc, tag, NOTIFY_FIELDS);
     }
     public static Element encodeTag(Element parent, ZimbraSoapContext lc, Tag tag, int fields) {
-		Element elem = parent.addElement(MailService.E_TAG);
-		elem.addAttribute(MailService.A_ID, lc.formatItemId(tag));
-		if (needToOutput(fields, Change.MODIFIED_NAME))
+        Element elem = parent.addElement(MailService.E_TAG);
+        elem.addAttribute(MailService.A_ID, lc.formatItemId(tag));
+        if (needToOutput(fields, Change.MODIFIED_NAME))
             elem.addAttribute(MailService.A_NAME, tag.getName());
-		if (needToOutput(fields, Change.MODIFIED_COLOR))
+        if (needToOutput(fields, Change.MODIFIED_COLOR))
             elem.addAttribute(MailService.A_COLOR, tag.getColor());
         if (needToOutput(fields, Change.MODIFIED_UNREAD)) {
-    		int unreadCount = tag.getUnreadCount();
-    		if (unreadCount > 0 || fields != NOTIFY_FIELDS)
+            int unreadCount = tag.getUnreadCount();
+            if (unreadCount > 0 || fields != NOTIFY_FIELDS)
                 elem.addAttribute(MailService.A_UNREAD, unreadCount);
         }
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailService.A_CHANGE_DATE, tag.getChangeDate() / 1000);
             elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, tag.getModifiedSequence());
         }
-		return elem;
-	}
+        return elem;
+    }
 
 
     public static Element encodeConversation(Element parent, ZimbraSoapContext lc, Conversation conv) throws ServiceException {
@@ -400,7 +413,7 @@ public class ToXML {
             m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
             eecache.makeEmail(m, msg.getSender(), EmailElementCache.EMAIL_TYPE_FROM, null);
         }
-		return c;
+        return c;
     }
 
     /**
@@ -416,18 +429,18 @@ public class ToXML {
         return encodeConversationSummary(parent, lc, conv, null, null, OutputParticipants.PUT_SENDERS, fields);
     }
     public static Element encodeConversationSummary(Element parent, ZimbraSoapContext lc, Conversation conv, Message msgHit,
-                                                   EmailElementCache eecache, OutputParticipants output) {
+                EmailElementCache eecache, OutputParticipants output) {
         return encodeConversationSummary(parent, lc, conv, msgHit, eecache, output, NOTIFY_FIELDS);
     }
     private static Element encodeConversationSummary(Element parent, ZimbraSoapContext lc, Conversation conv, Message msgHit,
-                                                     EmailElementCache eecache, OutputParticipants output, int fields) {
+                EmailElementCache eecache, OutputParticipants output, int fields) {
         Element c = encodeConversationCommon(parent, lc, conv, fields);
         if (needToOutput(fields, Change.MODIFIED_DATE))
             c.addAttribute(MailService.A_DATE, msgHit != null ? msgHit.getDate() : conv.getDate());
         if (needToOutput(fields, Change.MODIFIED_SUBJECT))
             c.addAttribute(MailService.E_SUBJECT, conv.getSubject());
         if (fields == NOTIFY_FIELDS && msgHit != null)
-        	c.addAttribute(MailService.E_FRAG, msgHit.getFragment(), Element.DISP_CONTENT);
+            c.addAttribute(MailService.E_FRAG, msgHit.getFragment(), Element.DISP_CONTENT);
 
         boolean addRecips  = msgHit != null && msgHit.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
         boolean addSenders = output == OutputParticipants.PUT_BOTH || !addRecips;
@@ -436,34 +449,34 @@ public class ToXML {
                 InternetAddress[] addrs = InternetAddress.parseHeader(msgHit.getRecipients(), false);
                 addEmails(c, eecache, addrs, EmailElementCache.EMAIL_TYPE_TO);
             } catch (AddressException e1) { }
-        if (addSenders && needToOutput(fields, Change.MODIFIED_SENDERS)) {
-            if (eecache == null)
-                eecache = new EmailElementCache();
-            SenderList sl;
-			try {
-				sl = conv.getMailbox().getConversationSenderList(conv.getId());
-			} catch (ServiceException e) {
-				return c;
-			}
-			CacheNode fa = sl.getFirstAddress();
-            if (fa != null) {
-                eecache.makeEmail(c, fa, EmailElementCache.EMAIL_TYPE_FROM, null);
-                // "<e/>" indicates that some senders may be omitted...
-                if (sl.isElided())
-                    c.addElement(MailService.E_EMAIL);
+            if (addSenders && needToOutput(fields, Change.MODIFIED_SENDERS)) {
+                if (eecache == null)
+                    eecache = new EmailElementCache();
+                SenderList sl;
+                try {
+                    sl = conv.getMailbox().getConversationSenderList(conv.getId());
+                } catch (ServiceException e) {
+                    return c;
+                }
+                CacheNode fa = sl.getFirstAddress();
+                if (fa != null) {
+                    eecache.makeEmail(c, fa, EmailElementCache.EMAIL_TYPE_FROM, null);
+                    // "<e/>" indicates that some senders may be omitted...
+                    if (sl.isElided())
+                        c.addElement(MailService.E_EMAIL);
+                }
+                CacheNode[] la = sl.getLastAddresses();
+                for (int i = 0; i < la.length; i++) {
+                    if (la[i] != null)
+                        eecache.makeEmail(c, la[i], EmailElementCache.EMAIL_TYPE_FROM, null);
+                }
             }
-            CacheNode[] la = sl.getLastAddresses();
-            for (int i = 0; i < la.length; i++) {
-                if (la[i] != null)
-                    eecache.makeEmail(c, la[i], EmailElementCache.EMAIL_TYPE_FROM, null);
-            }
-        }
 
-        if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
-            c.addAttribute(MailService.A_CHANGE_DATE, conv.getChangeDate() / 1000);
-            c.addAttribute(MailService.A_MODIFIED_SEQUENCE, conv.getModifiedSequence());
-        }
-        return c;
+            if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
+                c.addAttribute(MailService.A_CHANGE_DATE, conv.getChangeDate() / 1000);
+                c.addAttribute(MailService.A_MODIFIED_SEQUENCE, conv.getModifiedSequence());
+            }
+            return c;
     }
 
     private static Element encodeConversationCommon(Element parent, ZimbraSoapContext lc, Conversation conv, int fields) {
@@ -477,19 +490,19 @@ public class ToXML {
         return c;
     }
 
-	/**
-	 * Encodes a Message object into <m> element with <mp> elements
-	 * for message body.
-	 * @param lc TODO
-	 * @param msg
-	 * @param metaDataOnly
-	 * @return
-	 * @throws ServiceException
-	 */
-	public static Element encodeMessageAsMP(Element parent, ZimbraSoapContext lc, Message msg, boolean wantHTML, String part)
-	throws ServiceException {
+    /**
+     * Encodes a Message object into <m> element with <mp> elements
+     * for message body.
+     * @param lc TODO
+     * @param msg
+     * @param metaDataOnly
+     * @return
+     * @throws ServiceException
+     */
+    public static Element encodeMessageAsMP(Element parent, ZimbraSoapContext lc, Message msg, boolean wantHTML, String part)
+    throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().equals(""));
-        
+
         Element m;
         if (wholeMessage) {
             m = encodeMessageCommon(parent, lc, msg, NOTIFY_FIELDS);
@@ -543,10 +556,10 @@ public class ToXML {
             java.util.Date sent = mm.getSentDate();
             if (sent != null)
                 m.addAttribute(MailService.A_SENT_DATE, sent.getTime());
-            
+
             if (msg.isInvite())
                 encodeInvitesForMessage(m, lc, msg, NOTIFY_FIELDS);
-            
+
             List parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
                 MPartInfo body = Mime.getBody(parts, wantHTML);
@@ -558,8 +571,8 @@ public class ToXML {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
         }
         return m;
-	}
-    
+    }
+
     /**
      * Encode the metadata for the appointment.
      * 
@@ -582,14 +595,14 @@ public class ToXML {
      * @return
      */
     public static Element encodeApptSummary(Element parent, ZimbraSoapContext lc,
-                                            Appointment appt, int fields)
+                Appointment appt, int fields)
     throws ServiceException {
         Element apptElt = parent.addElement(MailService.E_APPOINTMENT);
-        
+
         apptElt.addAttribute(MailService.A_UID, appt.getUid());
         apptElt.addAttribute(MailService.A_ID, lc.formatItemId(appt));
         apptElt.addAttribute(MailService.A_FOLDER, lc.formatItemId(appt.getFolderId()));
-        
+
         if (needToOutput(fields, Change.MODIFIED_CONTENT) && appt.getSavedSequence() != 0)
             apptElt.addAttribute(MailService.A_REVISION, appt.getSavedSequence());
         if (needToOutput(fields, Change.MODIFIED_SIZE))
@@ -611,7 +624,7 @@ public class ToXML {
             encodeTimeZoneMap(ie, appt.getTimeZoneMap());
 
             encodeReplies(ie, appt, inv);
-            
+
             ie.addAttribute(MailService.A_ID, lc.formatItemId(inv.getMailItemId()));
             ie.addAttribute(MailService.A_APPT_COMPONENT_NUM, inv.getComponentNum());
             if (inv.hasRecurId())
@@ -619,10 +632,10 @@ public class ToXML {
 
             encodeInvite(ie, lc, appt, inv, NOTIFY_FIELDS, false);
         }
-        
+
         return apptElt;
     }
-    
+
     private static void encodeReplies(Element parent, Appointment appt, Invite inv) {
         Element repliesElt = parent.addElement(MailService.A_APPT_REPLIES);
 
@@ -641,8 +654,8 @@ public class ToXML {
             curElt.addAttribute("at", repInfo.mAttendee.getAddress());
         }
     }
-    
-    
+
+
     /**
      * Encodes an Invite stored within an Appointment object into <m> element with <mp> elements
      * for message body.
@@ -658,7 +671,7 @@ public class ToXML {
         boolean wholeMessage = (part == null || part.trim().equals(""));
 
         boolean repliesWithInvites = true;
-        
+
         Element m;
         if (wholeMessage) {
             m = encodeMessageCommon(parent, lc, appt, NOTIFY_FIELDS);
@@ -668,7 +681,7 @@ public class ToXML {
             m.addAttribute(MailService.A_ID, lc.formatItemId(appt, invId));
             m.addAttribute(MailService.A_PART, part);
         }
-        
+
         try {
             MimeMessage mm = appt.getMimeMessage(invId);
             if (mm == null)
@@ -698,15 +711,15 @@ public class ToXML {
             if (messageID != null && !messageID.trim().equals(""))
                 m.addAttribute(MailService.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.DISP_CONTENT);
 
-//            if (wholeMessage && msg.isDraft()) {
-//                if (msg.getDraftOrigId() > 0)
-//                    m.addAttribute(MailService.A_ORIG_ID, msg.getDraftOrigId());
-//                if (!msg.getDraftReplyType().equals(""))
-//                    m.addAttribute(MailService.A_REPLY_TYPE, msg.getDraftReplyType());
-//                String inReplyTo = mm.getHeader("In-Reply-To", null);
-//                if (inReplyTo != null && !inReplyTo.equals(""))
-//                    m.addAttribute(MailService.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo), Element.DISP_CONTENT);
-//            }
+//          if (wholeMessage && msg.isDraft()) {
+//          if (msg.getDraftOrigId() > 0)
+//          m.addAttribute(MailService.A_ORIG_ID, msg.getDraftOrigId());
+//          if (!msg.getDraftReplyType().equals(""))
+//          m.addAttribute(MailService.A_REPLY_TYPE, msg.getDraftReplyType());
+//          String inReplyTo = mm.getHeader("In-Reply-To", null);
+//          if (inReplyTo != null && !inReplyTo.equals(""))
+//          m.addAttribute(MailService.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo), Element.DISP_CONTENT);
+//          }
 
             if (!wholeMessage)
                 m.addAttribute(MailService.A_SIZE, mm.getSize());
@@ -732,22 +745,22 @@ public class ToXML {
         }
         return m;
     }
-    
+
 
     private static final int    MAX_INLINE_MSG_SIZE = 40000;
     private static final String CONTENT_SERVLET_URI = "/service/content/get?id=";
     private static final String PART_PARAM_STRING   = "&part=";
 
-	/**
-	 * Encodes a Message object into <m> element with standard MIME content.
-	 * @param lc TODO
-	 * @param msg
-	 * @param part TODO
-	 * @return
-	 * @throws ServiceException
-	 */
-	public static Element encodeMessageAsMIME(Element parent, ZimbraSoapContext lc, Message msg, String part)
-	throws ServiceException {
+    /**
+     * Encodes a Message object into <m> element with standard MIME content.
+     * @param lc TODO
+     * @param msg
+     * @param part TODO
+     * @return
+     * @throws ServiceException
+     */
+    public static Element encodeMessageAsMIME(Element parent, ZimbraSoapContext lc, Message msg, String part)
+    throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().equals(""));
 
         Element m;
@@ -767,9 +780,9 @@ public class ToXML {
         else if (size > MAX_INLINE_MSG_SIZE)
             content.addAttribute(MailService.A_URL, CONTENT_SERVLET_URI + lc.formatItemId(msg));
         else
-			try {
-				byte[] raw = msg.getMessageContent();
-    			if (!ByteUtil.isASCII(raw))
+            try {
+                byte[] raw = msg.getMessageContent();
+                if (!ByteUtil.isASCII(raw))
                     content.addAttribute(MailService.A_URL, CONTENT_SERVLET_URI + lc.formatItemId(msg));
                 else
                     content.setText(new String(raw, "US-ASCII"));
@@ -777,8 +790,8 @@ public class ToXML {
                 throw ServiceException.FAILURE(ex.getMessage(), ex);
             }
 
-        return m;
-	}
+            return m;
+    }
 
     public static final class OutputParticipants {
         public static final OutputParticipants PUT_SENDERS    = new OutputParticipants();
@@ -801,29 +814,29 @@ public class ToXML {
         boolean addRecips  = msg.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
         boolean addSenders = output == OutputParticipants.PUT_BOTH || !addRecips;
         if (addRecips)
-			try {
-				addEmails(e, eecache, InternetAddress.parseHeader(msg.getRecipients(), false), EmailElementCache.EMAIL_TYPE_TO);
-			} catch (AddressException e1) { }
-		if (addSenders)
-            eecache.makeEmail(e, msg.getSender(), EmailElementCache.EMAIL_TYPE_FROM, null);
-
-        e.addAttribute(MailService.E_SUBJECT, StringUtil.stripControlCharacters(msg.getSubject()), Element.DISP_CONTENT);
-
-        // fragment has already been sanitized...
-        String fragment = msg.getFragment();
-        if (!fragment.equals(""))
-            e.addAttribute(MailService.E_FRAG, fragment, Element.DISP_CONTENT);
-        
-        if (msg.isInvite()) 
             try {
-                encodeInvitesForMessage(e, lc, msg, fields);
-            } catch (ServiceException ex) {
-                mLog.debug("Caught exception while encoding Invites for msg " + msg.getId(), ex);
-            }
-        
-        return e;
+                addEmails(e, eecache, InternetAddress.parseHeader(msg.getRecipients(), false), EmailElementCache.EMAIL_TYPE_TO);
+            } catch (AddressException e1) { }
+            if (addSenders)
+                eecache.makeEmail(e, msg.getSender(), EmailElementCache.EMAIL_TYPE_FROM, null);
+
+            e.addAttribute(MailService.E_SUBJECT, StringUtil.stripControlCharacters(msg.getSubject()), Element.DISP_CONTENT);
+
+            // fragment has already been sanitized...
+            String fragment = msg.getFragment();
+            if (!fragment.equals(""))
+                e.addAttribute(MailService.E_FRAG, fragment, Element.DISP_CONTENT);
+
+            if (msg.isInvite()) 
+                try {
+                    encodeInvitesForMessage(e, lc, msg, fields);
+                } catch (ServiceException ex) {
+                    mLog.debug("Caught exception while encoding Invites for msg " + msg.getId(), ex);
+                }
+
+                return e;
     }
-    
+
     private static Element encodeMessageCommon(Element parent, ZimbraSoapContext lc, MailItem mi, int fields) {
         Element elem = parent.addElement(MailService.E_MSG);
         // DO NOT encode the item-id here, as some Invite-Messages-In-Appointments have special item-id's
@@ -889,14 +902,14 @@ public class ToXML {
     }
 
     public static Element encodeInvite(Element parent,
-                                       ZimbraSoapContext lc,
-                                       Appointment appt,
-                                       Invite invite,
-                                       int fields,
-                                       boolean includeReplies)
+                ZimbraSoapContext lc,
+                Appointment appt,
+                Invite invite,
+                int fields,
+                boolean includeReplies)
     throws ServiceException {
         boolean allFields = true;
-        
+
         if (fields != NOTIFY_FIELDS) {
             allFields = false;
             if (!needToOutput(fields, Change.MODIFIED_INVITE)) {
@@ -907,20 +920,20 @@ public class ToXML {
         Element e = parent.addElement(MailService.E_INVITE_COMPONENT);
 
         e.addAttribute(MailService.A_APPT_COMPONENT_NUM, invite.getComponentNum());
-        
+
         e.addAttribute(MailService.A_APPT_RSVP, invite.getRsvp());
 
         Account acct = appt.getMailbox().getAccount();
         if (allFields) {
             try {
                 e.addAttribute("x_uid", invite.getUid());
-                
+
                 e.addAttribute(MailService.A_APPT_ID, lc.formatItemId(appt));
-                
+
                 if (invite.thisAcctIsOrganizer(acct)) {
                     e.addAttribute(MailService.A_APPT_ISORG, true);
                 }
-                
+
                 Recurrence.IRecurrence recur = invite.getRecurrence();
                 if (recur != null) {
                     Element recurElt = e.addElement(MailService.E_APPT_RECUR);
@@ -929,17 +942,17 @@ public class ToXML {
             } catch(ServiceException ex) {
                 ex.printStackTrace();
             }
-            
+
             e.addAttribute(MailService.A_APPT_TYPE, invite.getType());
-            
+
             e.addAttribute(MailService.A_APPT_STATUS, invite.getStatus());
 
             e.addAttribute(MailService.A_APPT_FREEBUSY, invite.getFreeBusy());
 
             Instance inst = Instance.fromInvite(appt, invite);
             e.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL,
-                           appt.getEffectiveFreeBusyActual(invite, inst));
-            
+                        appt.getEffectiveFreeBusyActual(invite, inst));
+
             if (includeReplies) {
                 List /*Appointment.ReplyInfo */ fbas = appt.getReplyInfo(invite);
 
@@ -952,7 +965,7 @@ public class ToXML {
                         repInfo.mRecurId.toXml(curElt);
                     }
 
-//                        PartStat ps = (PartStat)(repInfo.mAttendee.getParameters().getParameter(Parameter.PARTSTAT));
+//                  PartStat ps = (PartStat)(repInfo.mAttendee.getParameters().getParameter(Parameter.PARTSTAT));
                     if (repInfo.mAttendee.hasPartStat()) {
                         String psStr = repInfo.mAttendee.getPartStat();
                         curElt.addAttribute(MailService.A_APPT_PARTSTAT, psStr);
@@ -966,14 +979,14 @@ public class ToXML {
             }
 
             e.addAttribute(MailService.A_APPT_TRANSPARENCY, invite.getTransparency());
-            
+
             if (invite.getRecurId() != null) {
                 e.addAttribute(MailService.A_APPT_IS_EXCEPTION, true);
             }
-            
+
             if (invite.isAllDayEvent())
                 e.addAttribute(MailService.A_APPT_ALLDAY, true);
-            
+
             if (invite.getStartTime() != null) {
                 Element startElt = e.addElement(MailService.E_APPT_START_TIME);
                 ParsedDateTime dtStart = invite.getStartTime();
@@ -983,7 +996,7 @@ public class ToXML {
                     startElt.addAttribute(MailService.A_APPT_TIMEZONE, tzName);
                 }
             }
-            
+
             ParsedDateTime dtEnd = invite.getEndTime();
             if (dtEnd != null) {
                 Element endElt = e.addElement(MailService.E_APPT_END_TIME);
@@ -998,34 +1011,34 @@ public class ToXML {
                     endElt.addAttribute(MailService.A_APPT_TIMEZONE, tzName);
                 }
             }
-            
+
             ParsedDuration dur = invite.getDuration();
             if (dur != null) {
                 dur.toXml(e);
             }
-            
+
             e.addAttribute(MailService.A_NAME, invite.getName());
             e.addAttribute(MailService.A_APPT_LOCATION, invite.getLocation());
-            
+
             // Organizer
             ZOrganizer org = invite.getOrganizer();
             if (org != null) {
                 Element orgElt = e.addUniqueElement(MailService.E_APPT_ORGANIZER);
-                
+
                 if (org.hasCn()) {
                     orgElt.addAttribute(MailService.A_DISPLAY, org.getCn());
                 }
                 String str = org.getAddress();
                 orgElt.addAttribute(MailService.A_URL, str);
             }
-            
+
             // Attendee(s)
             Collection /*Invite.ZAttendee*/ ats = invite.getAttendees();
             for (Iterator atsIter = ats.iterator();atsIter.hasNext();) {
                 Element atElt = e.addElement(MailService.E_APPT_ATTENDEE);
-                
+
                 ZAttendee at = (ZAttendee)atsIter.next();
-                
+
                 // display name 
                 if (at.hasCn()) {
                     atElt.addAttribute(MailService.A_DISPLAY, at.getCn());
@@ -1033,19 +1046,19 @@ public class ToXML {
 
                 // calendar user type
                 if (at.hasCUType()) {
-                	atElt.addAttribute(MailService.A_APPT_CUTYPE, at.getCUType());
+                    atElt.addAttribute(MailService.A_APPT_CUTYPE, at.getCUType());
                 }
 
                 // role
                 if (at.hasRole()) {
                     atElt.addAttribute(MailService.A_APPT_ROLE, at.getRole());
                 }
-                
+
                 // participation status
                 if (at.hasPartStat()) {
                     atElt.addAttribute(MailService.A_APPT_PARTSTAT, at.getPartStat());
                 }
-                
+
                 // uri
                 atElt.addAttribute(MailService.A_URL, at.getAddress());
             }
@@ -1059,25 +1072,25 @@ public class ToXML {
         if (fields != NOTIFY_FIELDS)
             if (!needToOutput(fields, Change.MODIFIED_INVITE))
                 return parent;
-        
+
         Element ie = parent.addElement(MailService.E_INVITE);
-        
+
         boolean addedMethod = false;
         Mailbox mbox = msg.getMailbox();
-        
+
         for (Iterator iter = msg.getApptInfoIterator(); iter.hasNext(); ) {
             Message.ApptInfo info = (Message.ApptInfo) iter.next();
-            
+
             Appointment appt = null;
             try {
                 appt = mbox.getAppointmentById(lc.getOperationContext(), info.getAppointmentId());
             } catch (MailServiceException.NoSuchItemException e) {}
             if (appt != null) {
                 Invite inv = appt.getInvite(msg.getId(), info.getComponentNo());
-                
+
                 if (inv != null) {
                     if (!addedMethod) {
-//                        ie.addAttribute("method", inv.getMethod());
+//                      ie.addAttribute("method", inv.getMethod());
                         addedMethod = true;
                     }
                     encodeTimeZoneMap(ie, appt.getTimeZoneMap());
@@ -1088,21 +1101,21 @@ public class ToXML {
             } else {
                 // couldn't find appointment
             }
-            
+
         }
-        
+
         return ie;
     }
 
-    
+
     private static void addParts(Element parent, MPartInfo mpi, MPartInfo body, String prefix) {
         Element elem = parent.addElement(MailService.E_MIMEPART);
         MimePart mp = mpi.getMimePart();
-        
+
         String part = mpi.getPartName();
         part = prefix + (prefix.equals("") || part.equals("") ? "" : ".") + part;
         elem.addAttribute(MailService.A_PART, part);
-        
+
         String contentTypeString = StringUtil.stripControlCharacters(mpi.getContentType());
         if (Mime.CT_XML_ZIMBRA_SHARE.equals(contentTypeString)) {
             Element shr = parent.getParent().addElement("shr");
@@ -1114,9 +1127,9 @@ public class ToXML {
             } catch (MessagingException e) {
             }
         }
-        
+
         elem.addAttribute(MailService.A_CONTENT_TYPE, contentTypeString);
-        
+
         // figure out attachment size
         try {
             int size = mp.getSize();
@@ -1127,7 +1140,7 @@ public class ToXML {
         } catch (MessagingException me) {
             // don't put out size if we get exception
         }
-        
+
         // figure out attachment disposition
         try {
             String disp = mp.getHeader("Content-Disposition", null);
@@ -1138,7 +1151,7 @@ public class ToXML {
         } catch (MessagingException me) {
         } catch (UnsupportedEncodingException uee) {
         }
-        
+
         // figure out attachment name
         try {
             String fname = Mime.getFilename(mp);
@@ -1153,15 +1166,15 @@ public class ToXML {
         } catch (MessagingException me) {
         } catch (IOException ioe) {
         }
-        
+
         // figure out content-id (used in displaying attached images)
         try {
             String cid = mp.getContentID();
             if (cid != null)
                 elem.addAttribute(MailService.A_CONTENT_ID, StringUtil.stripControlCharacters(cid));
         } catch (MessagingException me) { }
-        
-        
+
+
         // figure out content-location (used in displaying attached images)
         try {
             String cl = mp.getHeader("Content-Location", null);
@@ -1180,7 +1193,7 @@ public class ToXML {
             } catch (MessagingException me) {
             }
         }
-        
+
         // recurse to child parts, if any
         if (mpi.hasChildren()) {
             for (Iterator it = mpi.getChildren().iterator(); it.hasNext();) {
@@ -1226,49 +1239,49 @@ public class ToXML {
             //content.addAttribute(MailService.A_CONTENT_TYPE, )
             //content.addText((String) part.getContent());
             // TODO: CDATA worth the effort?
-//            if (isHtml && data.indexOf("]]>") == -1)
-//                content.addCDATA(data);
-//            else
-//                content.addText(data);
+//          if (isHtml && data.indexOf("]]>") == -1)
+//          content.addCDATA(data);
+//          else
+//          content.addText(data);
         }
     }
 
-	/**
+    /**
      * @param m
      * @param eecache
      * @param recipients
      * @param email_type_to
      */
     private static void addEmails(Element m, EmailElementCache eecache,
-    							  InternetAddress[] recipients, int emailType) {
+                InternetAddress[] recipients, int emailType) {
         addEmails(m, eecache, recipients, emailType, null);
     }
     private static void addEmails(Element m, EmailElementCache eecache,
-    		                      InternetAddress[] recipients, int emailType, HashSet<String> unique) {
+                InternetAddress[] recipients, int emailType, HashSet<String> unique) {
         if (recipients == null || recipients.length == 0)
             return;
         for (int i = 0; i < recipients.length; i++)
             eecache.makeEmail(m, recipients[i], emailType, unique);
     }
-    
-	public static Element encodeWiki(Element parent, ZimbraSoapContext lc, WikiItem wiki, int rev) {
-		return encodeWiki(parent, lc, wiki, NOTIFY_FIELDS, rev);
-	}
-	public static Element encodeWiki(Element parent, ZimbraSoapContext lc, WikiItem wiki, int fields, int rev) {
+
+    public static Element encodeWiki(Element parent, ZimbraSoapContext lc, WikiItem wiki, int rev) {
+        return encodeWiki(parent, lc, wiki, NOTIFY_FIELDS, rev);
+    }
+    public static Element encodeWiki(Element parent, ZimbraSoapContext lc, WikiItem wiki, int fields, int rev) {
         Element m = parent.addElement(MailService.E_WIKIWORD);
         encodeDocumentCommon(m, lc, wiki, fields, rev);
         return m;
-	}
-	public static Element encodeDocument(Element parent, ZimbraSoapContext lc, Document doc, int rev) {
+    }
+    public static Element encodeDocument(Element parent, ZimbraSoapContext lc, Document doc, int rev) {
         Element m = parent.addElement(MailService.E_DOC);
         encodeDocumentCommon(m, lc, doc, NOTIFY_FIELDS, rev);
         m.addAttribute(MailService.A_CONTENT_TYPE, doc.getContentType());
         return m;
-	}
-	public static Element encodeDocumentCommon(Element m, ZimbraSoapContext lc, Document doc, int fields, int rev) {
+    }
+    public static Element encodeDocumentCommon(Element m, ZimbraSoapContext lc, Document doc, int fields, int rev) {
 
-    	m.addAttribute(MailService.A_ID, lc.formatItemId(doc));
-    	m.addAttribute(MailService.A_NAME, doc.getSubject());
+        m.addAttribute(MailService.A_ID, lc.formatItemId(doc));
+        m.addAttribute(MailService.A_NAME, doc.getSubject());
         if (needToOutput(fields, Change.MODIFIED_SIZE))
             m.addAttribute(MailService.A_SIZE, doc.getSize());
         if (needToOutput(fields, Change.MODIFIED_DATE))
@@ -1276,26 +1289,26 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
             m.addAttribute(MailService.A_FOLDER, lc.formatItemId(doc.getFolderId()));
         recordItemTags(m, doc, fields);
-        
+
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
-        	
+
             try {
-            	Document.DocumentRevision revision = doc.getRevision(1);
-            	m.addAttribute(MailService.A_CREATOR, revision.getCreator());
-            	m.addAttribute(MailService.A_CREATED_DATE, revision.getRevDate());
-            	
-            	revision = (rev > 0) ? doc.getRevision(rev) : doc.getLastRevision(); 
-            	m.addAttribute(MailService.A_VERSION, revision.getVersion());
-            	m.addAttribute(MailService.A_LAST_EDITED_BY, revision.getCreator());
-            	m.addAttribute(MailService.A_MODIFIED_DATE, revision.getRevDate());
-            	String frag = revision.getFragment();
-            	if (frag != null && !frag.equals(""))
-            		m.addAttribute(MailService.E_FRAG, frag, Element.DISP_CONTENT);
+                Document.DocumentRevision revision = doc.getRevision(1);
+                m.addAttribute(MailService.A_CREATOR, revision.getCreator());
+                m.addAttribute(MailService.A_CREATED_DATE, revision.getRevDate());
+
+                revision = (rev > 0) ? doc.getRevision(rev) : doc.getLastRevision(); 
+                m.addAttribute(MailService.A_VERSION, revision.getVersion());
+                m.addAttribute(MailService.A_LAST_EDITED_BY, revision.getCreator());
+                m.addAttribute(MailService.A_MODIFIED_DATE, revision.getRevDate());
+                String frag = revision.getFragment();
+                if (frag != null && !frag.equals(""))
+                    m.addAttribute(MailService.E_FRAG, frag, Element.DISP_CONTENT);
             } catch (Exception ex) {
                 mLog.warn("ignoring exception while fetching revision for document " + doc.getSubject(), ex);
             }
         }
 
         return m;
-	}
+    }
 }
