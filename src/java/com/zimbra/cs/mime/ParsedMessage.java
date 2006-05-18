@@ -38,7 +38,6 @@ import java.text.ParseException;
 import java.util.*;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.ContentType;
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
@@ -509,17 +508,17 @@ public class ParsedMessage {
             } catch (MimeHandlerException e) {
                 numParseErrors++;
                 String pn = mpi.getPartName();
-                String ct = mpi.getContentType().getBaseType();
+                String ctype = mpi.getContentType();
                 String msgid = getMessageID();
                 sLog.warn("Parse error on MIME part " + pn +
-                          " (" + ct + ", Message-ID: " + msgid + ")", e);
+                          " (" + ctype + ", Message-ID: " + msgid + ")", e);
                 if (ConversionException.isTemporaryCauseOf(e) && conversionError == null) {
                     conversionError = ServiceException.FAILURE("failed to analyze part", e.getCause());
                 }
             } catch (ObjectHandlerException e) {
                 numParseErrors++;
                 String pn = mpi.getPartName();
-                String ct = mpi.getContentType().getBaseType();
+                String ct = mpi.getContentType();
                 String msgid = getMessageID();
                 sLog.warn("Parse error on MIME part " + pn +
                           " (" + ct + ", Message-ID: " + msgid + ")", e);
@@ -554,16 +553,16 @@ public class ParsedMessage {
 
     private void analyzePart(MPartInfo mpi, MPartInfo mpiBody, TopLevelMessageHandler allTextHandler)
     throws MimeHandlerException, ObjectHandlerException, MessagingException, ServiceException {
-        ContentType ct = mpi.getContentType();
+        String ctype = mpi.getContentType();
         // ignore multipart "container" parts
-        if (ct.match(Mime.CT_MULTIPART_WILD))
+        if (ctype.startsWith(Mime.CT_MULTIPART_PREFIX))
             return;
 
-        MimeHandler handler = MimeHandler.getMimeHandler(ct.getBaseType());
+        MimeHandler handler = MimeHandler.getMimeHandler(ctype);
         assert(handler != null);
 
-        boolean isTextType = ct.match(Mime.CT_TEXT_WILD);
-        boolean isMessageType = ct.match(Mime.CT_MESSAGE_RFC822);
+        boolean isTextType = ctype.matches(Mime.CT_TEXT_WILD);
+        boolean isMessageType = ctype.equals(Mime.CT_MESSAGE_RFC822);
 
         if (handler.isIndexingEnabled()) {
             handler.init(mpi.getMimePart().getDataHandler().getDataSource());
@@ -605,15 +604,14 @@ public class ParsedMessage {
         }
 
         // make sure we've got the text/calendar handler installed
-        if (miCalendar == null && ct.match(Mime.CT_TEXT_CALENDAR)) {
+        if (miCalendar == null && ctype.equals(Mime.CT_TEXT_CALENDAR)) {
             if (handler.isIndexingEnabled())
                 ZimbraLog.index.warn("TextCalendarHandler not correctly installed");
             try {
-                String charset = ct.getParameter(Mime.P_CHARSET);
-                if (charset == null) charset = Mime.P_CHARSET_DEFAULT;
-                Reader reader =
-                    new InputStreamReader(mpi.getMimePart().getInputStream(),
-                                          charset);
+                String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);
+                if (charset == null || charset.trim().equals(""))
+                    charset = Mime.P_CHARSET_DEFAULT;
+                Reader reader = new InputStreamReader(mpi.getMimePart().getInputStream(), charset);
                 miCalendar = ZCalendarBuilder.build(reader);
             } catch (IOException ioe) {
                 ZimbraLog.index.warn("error reading text/calendar mime part", ioe);

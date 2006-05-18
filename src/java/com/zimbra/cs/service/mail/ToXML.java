@@ -1076,7 +1076,7 @@ public class ToXML {
         part = prefix + (prefix.equals("") || part.equals("") ? "" : ".") + part;
         elem.addAttribute(MailService.A_PART, part);
         
-        String contentTypeString = StringUtil.stripControlCharacters(mpi.getContentTypeString());
+        String contentTypeString = StringUtil.stripControlCharacters(mpi.getContentType());
         if (Mime.CT_XML_ZIMBRA_SHARE.equals(contentTypeString)) {
             Element shr = parent.getParent().addElement("shr");
             try {
@@ -1171,8 +1171,8 @@ public class ToXML {
      */
     private static void getContent(Element mp, MPartInfo pi) throws IOException, MessagingException {
         // TODO: support other parts
-        ContentType ct = pi.getContentType();
-        if (ct.match(Mime.CT_TEXT_WILD) || ct.match(Mime.CT_XML_WILD)) {
+        String ct = pi.getContentType();
+        if (ct.matches(Mime.CT_TEXT_WILD) || ct.matches(Mime.CT_XML_WILD)) {
             MimePart part = pi.getMimePart();
 
             Object o = part.getContent();
@@ -1189,7 +1189,7 @@ public class ToXML {
             //mLog.info("before strip: "+cstr);
             String data = StringUtil.stripControlCharacters(cstr);
             //mLog.info("after strip: "+data);
-            boolean isHtml = pi.getContentType().match(Mime.CT_TEXT_HTML);
+            boolean isHtml = pi.getContentType().equals(Mime.CT_TEXT_HTML);
             if (isHtml) {
                 data = HtmlDefang.defang(data, true);
                 //mLog.info("after defang: "+data);

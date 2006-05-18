@@ -35,6 +35,7 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.mail.BodyPart;
@@ -48,6 +49,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.ZimbraLog;
@@ -225,7 +227,7 @@ class ImapMessage {
         else             ps.write(')');
     }
 
-    void getEnvelope(PrintStream ps, MimeMessage mm) throws MessagingException {
+    void serializeEnvelope(PrintStream ps, MimeMessage mm) throws MessagingException {
         // 7.4.2: "The fields of the envelope structure are in the following order: date, subject,
         //         from, sender, reply-to, to, cc, bcc, in-reply-to, and message-id.  The date,
         //         subject, in-reply-to, and message-id fields are strings.  The from, sender,
@@ -247,7 +249,7 @@ class ImapMessage {
 
     private String nATOM(String value) { return value == null ? "NIL" : '"' + value.toUpperCase() + '"'; }
 
-    void getStructure(PrintStream ps, MimePart mp, boolean extensions) throws IOException, MessagingException {
+    void serializeStructure(PrintStream ps, MimePart mp, boolean extensions) throws IOException, MessagingException {
         ps.write('(');
         ContentType ct = new ContentType(mp.getContentType());
         String primary = nATOM(ct.getPrimaryType()), subtype = nATOM(ct.getSubType());
@@ -258,7 +260,7 @@ class ImapMessage {
             //         list is the multipart subtype (mixed, digest, parallel, alternative, etc.)."
             MimeMultipart multi = (MimeMultipart) Mime.getMultipartContent(mp, mp.getContentType());
             for (int i = 0; i < multi.getCount(); i++)
-                getStructure(ps, (MimePart) multi.getBodyPart(i), extensions);
+                serializeStructure(ps, (MimePart) multi.getBodyPart(i), extensions);
             if (multi.getCount() <= 0)
                 ps.print("NIL");
             ps.write(' ');  ps.print(subtype);
@@ -272,13 +274,10 @@ class ImapMessage {
             cte = (cte == null || cte.trim().equals("") ? "7bit" : cte);
             boolean rfc822 = primary.equals("\"MESSAGE\"") && subtype.equals("\"RFC822\"");
             aSTRING(ps, ct.getPrimaryType());  ps.write(' ');  aSTRING(ps, ct.getSubType());  ps.write(' ');
-            ParameterList pl = ct.getParameterList();
             boolean first = true;
-            if (pl != null) {
-                for (Enumeration en = pl.getNames(); en.hasMoreElements(); first = false) {
-                    String name = (String) en.nextElement();
-                    ps.print(first ? '(' : ' ');  aSTRING(ps, name);  ps.write(' ');  astring(ps, pl.get(name));
-                }
+            for (Iterator<Map.Entry<String, String>> it = ct.getParameterIterator(); it.hasNext(); first = false) {
+                Map.Entry<String, String> param = it.next();
+                ps.print(first ? '(' : ' ');  aSTRING(ps, param.getKey());  ps.write(' ');  astring(ps, param.getValue());
             }
             ps.print(first ? "NIL" : ")");
             ps.write(' ');  nstring(ps, mp.getContentID());
@@ -290,8 +289,8 @@ class ImapMessage {
                 //         after the basic fields, the envelope structure, body structure, and
                 //         size in text lines of the encapsulated message."
                 Object content = Mime.getMessageContent(mp);
-                ps.write(' ');  getEnvelope(ps, (MimeMessage) content);
-                ps.write(' ');  getStructure(ps, (MimePart) content, extensions);
+                ps.write(' ');  serializeEnvelope(ps, (MimeMessage) content);
+                ps.write(' ');  serializeStructure(ps, (MimePart) content, extensions);
             }
             if (rfc822 || primary.equals("\"TEXT\"")) {
                 // 7.4.2: "A body type of type TEXT contains, immediately after the basic fields, the
@@ -364,7 +363,7 @@ class ImapMessage {
             if (visitKind != VisitPhase.VISIT_BEGIN)
                 return false;
             // only want to affect multipart/alternative messages
-            String ctype = getContentType(mm);
+            String ctype = Mime.getContentType(mm);
             if (!ctype.equals(Mime.CT_MULTIPART_ALTERNATIVE))
                 return false;
 
@@ -392,7 +391,7 @@ class ImapMessage {
             if (visitKind != VisitPhase.VISIT_BEGIN)
                 return false;
             // we should never hit a multipart/alternative part -- ever
-            if (getContentType(multi).equals(Mime.CT_MULTIPART_ALTERNATIVE)) {
+            if (Mime.getContentType(multi).equals(Mime.CT_MULTIPART_ALTERNATIVE)) {
                 ZimbraLog.extensions.warn("unexpected multipart/alternative found; skipping");
                 return false;
             }
@@ -401,7 +400,7 @@ class ImapMessage {
             try {
                 for (int i = 0; i < multi.getCount(); i++) {
                     BodyPart bp = multi.getBodyPart(i);
-                    String ctype = getContentType(bp);
+                    String ctype = Mime.getContentType(bp);
                     if (ctype.equals(Mime.CT_MULTIPART_ALTERNATIVE) && bp instanceof MimeBodyPart) {
                         Object content = Mime.getMultipartContent((MimeBodyPart) bp, ctype);
                         if (content instanceof MimeMultipart) {
@@ -444,14 +443,14 @@ class ImapMessage {
             int primaryRank = 0;
             for (int i = 0; i < multi.getCount(); i++) {
                 BodyPart subpart = multi.getBodyPart(i);
-                String ctype = getContentType(subpart);
+                String ctype = Mime.getContentType(subpart);
                 if (ctype.equals(Mime.CT_MULTIPART_ALTERNATIVE) && subpart instanceof MimeBodyPart) {
                     Object content = Mime.getMultipartContent((MimeBodyPart) subpart, ctype);
                     if (content instanceof MimeMultipart) {
                         subpart = getPrimaryPart((MimeMultipart) content);
                         if (subpart == null)
                             continue;
-                        ctype = getContentType(subpart);
+                        ctype = Mime.getContentType(subpart);
                     }
                 }
                 Integer rank = typeRankings.get(ctype);

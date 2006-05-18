@@ -30,7 +30,7 @@ package com.zimbra.cs.mime;
 
 import java.util.List;
 
-import javax.mail.internet.ContentType;
+import javax.mail.MessagingException;
 import javax.mail.internet.MimePart;
 
 
@@ -39,8 +39,7 @@ public class MPartInfo {
 	MPartInfo mParent;
 	List<MPartInfo> mChildren;
 	String mPartName;
-	ContentType mContentType;
-	String mContentTypeString;
+	String mContentType = "";
     String mDisposition = "";
     String mFilename = "";
 	int mPartNum;
@@ -54,7 +53,7 @@ public class MPartInfo {
         StringBuffer sb = new StringBuffer();
         sb.append("MPartInfo: {");
         sb.append("partName: ").append(mPartName).append(", ");
-        sb.append("contentType: ").append(mContentTypeString).append(", ");
+        sb.append("contentType: ").append(mContentType).append(", ");
         sb.append("disposition: ").append(mDisposition).append(", ");
         sb.append("filename: ").append(mFilename).append(", ");
         sb.append("partNum: ").append(mPartNum).append(", ");
@@ -102,13 +101,17 @@ public class MPartInfo {
 	public int getPartNum() {
 		return mPartNum;
 	}
-	
-	public ContentType getContentType() {
-		return mContentType;
-	}
 
-    public String getContentTypeString() {
-        return mContentTypeString;
+    public String getContentType() {
+        return mContentType;
+    }
+
+    public String getContentTypeParameter(String name) {
+        try {
+            return new MimeCompoundHeader(mPart.getContentType()).getParameter(name);
+        } catch (MessagingException e) {
+            return null;
+        }
     }
 
     public String getDisposition() {
