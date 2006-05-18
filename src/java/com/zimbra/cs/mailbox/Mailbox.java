@@ -111,6 +111,7 @@ public class Mailbox {
     public static final int ID_FOLDER_CALENDAR  = 10;
     public static final int ID_FOLDER_ROOT      = 11;
     public static final int ID_FOLDER_NOTEBOOK  = 12;
+    public static final int ID_FOLDER_AUTO_CONTACTS = 13;
 
     public static final int HIGHEST_SYSTEM_ID = 12;
     public static final int FIRST_USER_ID     = 256;
@@ -1372,6 +1373,7 @@ public class Mailbox {
         Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.TYPE_CONTACT, null);
         Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, null);
         Folder.create(ID_FOLDER_NOTEBOOK, this, userRoot, "Notebook", system, MailItem.TYPE_WIKI, null);
+        Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.TYPE_CONTACT, null);
         mCurrentChange.itemId = FIRST_USER_ID;
 
         // and write a checkpoint to the tombstones table to help establish a change/date relationship
@@ -3981,7 +3983,7 @@ public class Mailbox {
             if (conn != null)
                 DbPool.quietRollback(conn);
             rollbackCache(mCurrentChange);
-            
+
             return;
         }
 
@@ -3996,7 +3998,6 @@ public class Mailbox {
         //    indexing entry will do fsync, which will fsync
         //    this entry at the same time.
         if (redoRecorder != null)
-        
             redoRecorder.log(!indexingNeeded);
 
         boolean allGood = false;

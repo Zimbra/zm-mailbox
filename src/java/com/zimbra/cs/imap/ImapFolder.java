@@ -188,7 +188,8 @@ class ImapFolder implements Iterable<ImapMessage> {
 
     static boolean isFolderWritable(Folder folder, ImapSession session) {
         return isFolderSelectable(folder, session) && !(folder instanceof SearchFolder) &&
-               folder.getId() != Mailbox.ID_FOLDER_CONTACTS;
+               folder.getId() != Mailbox.ID_FOLDER_CONTACTS &&
+               folder.getId() != Mailbox.ID_FOLDER_AUTO_CONTACTS;
     }
     static boolean isFolderSelectable(Folder folder, ImapSession session) {
         return isFolderVisible(folder, session) && !folder.isTagged(folder.getMailbox().mDeletedFlag);

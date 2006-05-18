@@ -69,8 +69,7 @@ public class MailSender {
         int folderId = Mailbox.ID_FOLDER_SENT;
 
         Account acct = mbox.getAccount();
-        String sentFolder = acct.getAttr(
-                Provisioning.A_zimbraPrefSentMailFolder, null);
+        String sentFolder = acct.getAttr(Provisioning.A_zimbraPrefSentMailFolder, null);
         if (sentFolder != null)
             try {
                 folderId = mbox.getFolderByPath(octxt, sentFolder).getId();
@@ -78,8 +77,7 @@ public class MailSender {
         return folderId;
     }
 
-    private static Address[] removeInvalidAddresses(Address[] orig,
-                                                    Address[] invalidAddrs) {
+    private static Address[] removeInvalidAddresses(Address[] orig, Address[] invalidAddrs) {
         if (orig == null || invalidAddrs == null) 
             return orig;
 
@@ -95,9 +93,8 @@ public class MailSender {
             if (!invalid)
                 newTo.add(orig[i]);
         }
-        Address[] toRet = new Address[newTo.size()];
-        toRet = newTo.toArray(toRet);
-        return toRet;
+        Address[] valid = newTo.toArray(new Address[newTo.size()]);
+        return valid;
     }
 
 
@@ -119,10 +116,7 @@ public class MailSender {
     throws ServiceException {
         int sentFolderId =
             saveToSent ? MailSender.getSentFolder(octxt, mbox) : 0;
-        return sendMimeMessage(octxt, mbox, sentFolderId,
-                               mm, newContacts, uploads,
-                               origMsgId, replyType,
-                               ignoreFailedAddresses);
+        return sendMimeMessage(octxt, mbox, sentFolderId, mm, newContacts, uploads, origMsgId, replyType, ignoreFailedAddresses);
     }
 
     /**
@@ -186,8 +180,7 @@ public class MailSender {
                 ParsedMessage pm = new ParsedMessage(mm, mm.getSentDate().getTime(),
                                                      mbox.attachmentsIndexingEnabled());
                 // save it to the requested folder
-                msg = mbox.addMessage(octxt, pm, saveToFolder, true,
-                                      flags, null, convId);
+                msg = mbox.addMessage(octxt, pm, saveToFolder, true, flags, null, convId);
             }
 
             // send the message via SMTP
@@ -203,15 +196,9 @@ public class MailSender {
                             if (!retry)
                                 throw sfe;
 
-                            Address[] to = removeInvalidAddresses(
-                                    mm.getRecipients(RecipientType.TO),
-                                    invalidAddrs);
-                            Address[] cc = removeInvalidAddresses(
-                                    mm.getRecipients(RecipientType.CC),
-                                    invalidAddrs);
-                            Address[] bcc = removeInvalidAddresses(
-                                    mm.getRecipients(RecipientType.BCC),
-                                    invalidAddrs);
+                            Address[] to = removeInvalidAddresses(mm.getRecipients(RecipientType.TO), invalidAddrs);
+                            Address[] cc = removeInvalidAddresses(mm.getRecipients(RecipientType.CC), invalidAddrs);
+                            Address[] bcc = removeInvalidAddresses(mm.getRecipients(RecipientType.BCC), invalidAddrs);
 
                             // if there are NO valid addrs, then give up!
                             if ((to == null || to.length == 0) &&
@@ -237,11 +224,9 @@ public class MailSender {
             if (origMsgId > 0) {
                 try {
                     if (MSGTYPE_REPLY.equals(replyType))
-                        mbox.alterTag(octxt, origMsgId, MailItem.TYPE_MESSAGE,
-                                      Flag.ID_FLAG_REPLIED, true);
+                        mbox.alterTag(octxt, origMsgId, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_REPLIED, true);
                     else if (MSGTYPE_FORWARD.equals(replyType))
-                        mbox.alterTag(octxt, origMsgId, MailItem.TYPE_MESSAGE,
-                                      Flag.ID_FLAG_FORWARDED, true);
+                        mbox.alterTag(octxt, origMsgId, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_FORWARDED, true);
                 } catch (ServiceException e) {
                     // this is not an error case: when accepting/declining an
                     // appointment, the original message may be gone
@@ -258,11 +243,9 @@ public class MailSender {
                 for (InternetAddress inetaddr : newContacts) {
                     ParsedAddress addr = new ParsedAddress(inetaddr);
                     try {
-                        mbox.createContact(octxt, addr.getAttributes(),
-                                           Mailbox.ID_FOLDER_CONTACTS, null);
+                        mbox.createContact(octxt, addr.getAttributes(), Mailbox.ID_FOLDER_AUTO_CONTACTS, null);
                     } catch (ServiceException e) {
-                        mLog.warn("ignoring error while auto-adding contact",
-                                  e);
+                        mLog.warn("ignoring error while auto-adding contact", e);
                     }
                 }
             }
@@ -274,30 +257,22 @@ public class MailSender {
             Address[] invalidAddrs = sfe.getInvalidAddresses();
             Address[] validUnsentAddrs = sfe.getValidUnsentAddresses();
             if (invalidAddrs != null && invalidAddrs.length > 0) { 
-                StringBuffer msg =
-                    new StringBuffer("Invalid address").
-                    append(invalidAddrs.length > 1 ? "es: " : ": ");
+                StringBuffer msg = new StringBuffer("Invalid address").append(invalidAddrs.length > 1 ? "es: " : ": ");
                 if (invalidAddrs != null && invalidAddrs.length > 0) {
                     for (int i = 0; i < invalidAddrs.length; i++) {
-                        if (i > 0) {
+                        if (i > 0)
                             msg.append(",");
-                        }
                         msg.append(invalidAddrs[i]);
                     }
                 }
                 if (JMSession.getSmtpConfig().getSendPartial()) {
-                    throw MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE(
-                            msg.toString(), sfe,
-                            invalidAddrs, validUnsentAddrs);
+                    throw MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
                 } else {
-                    throw MailServiceException.SEND_ABORTED_ADDRESS_FAILURE(
-                            msg.toString(), sfe,
-                            invalidAddrs, validUnsentAddrs);
+                    throw MailServiceException.SEND_ABORTED_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
                 }
             } else {
-                throw MailServiceException.SEND_FAILURE(
-                        "SMTP server reported: " + sfe.getMessage().trim(),
-                        sfe, invalidAddrs, validUnsentAddrs);
+                throw MailServiceException.SEND_FAILURE("SMTP server reported: " + sfe.getMessage().trim(),
+                                                        sfe, invalidAddrs, validUnsentAddrs);
             }
         } catch (IOException ioe) {
             mLog.warn("exception occured during send msg", ioe);
@@ -308,9 +283,7 @@ public class MailSender {
         }
     }
 
-    private static void rollbackMessage(OperationContext octxt,
-                                        Mailbox mbox,
-                                        Message msg) {
+    private static void rollbackMessage(OperationContext octxt, Mailbox mbox, Message msg) {
         // clean up save-to-sent if needed
         if (msg == null)
             return;
@@ -319,8 +292,7 @@ public class MailSender {
             octxt = new OperationContext(octxt).setChangeConstraint(OperationContext.CHECK_CREATED, msg.getSavedSequence());
             mbox.delete(octxt, msg.getId(), msg.getType());
         } catch (Exception e) {
-            mLog.warn("ignoring error while deleting saved sent message: " +
-                      msg.getId(), e);
+            mLog.warn("ignoring error while deleting saved sent message: " + msg.getId(), e);
         }
     }
 }
