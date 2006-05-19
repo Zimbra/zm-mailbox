@@ -1540,8 +1540,25 @@ public class LdapProvisioning extends Provisioning {
             String name = d.getName();
 
             ctxt.unbind("ou=people,"+d.getDN());
-            ctxt.unbind(d.getDN());
-            sDomainCache.remove(d);
+            
+            try {
+                ctxt.unbind(d.getDN());
+            } catch (ContextNotEmptyException e) {
+                // remove from cache before nuking all attrs
+                sDomainCache.remove(d);
+                // assume subdomains exist and turn into plain dc object
+                Map<String, String> attrs = new HashMap<String, String>();
+                attrs.put("-"+A_objectClass, "zimbraDomain");
+                // remove all zimbra attrs
+                for (Object key : d.getAttrs(false).keySet()) {
+                    if (key instanceof String) {
+                        String skey = (String) key;
+                        if (skey.startsWith("zimbra"))
+                            attrs.put(skey, "");
+                    }
+                }
+                d.modifyAttrs(attrs, false);
+            }
             
             String defaultDomain = getConfig().getAttr(A_zimbraDefaultDomainName, null);
             if (name.equalsIgnoreCase(defaultDomain)) {
