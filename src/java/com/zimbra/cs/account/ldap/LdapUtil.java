@@ -816,8 +816,8 @@ public class LdapUtil {
             String filter, 
             String n,
             int maxResults,
-            String[] galAttrList,
-            Map galAttrMap, String token) throws NamingException, ServiceException {
+            LdapGalMapRules rules,
+            String token) throws NamingException, ServiceException {
     
         SearchGalResult result = new SearchGalResult();
         result.matches = new ArrayList<GalContact>();
@@ -851,7 +851,7 @@ public class LdapUtil {
             }                
         }
         ZimbraLog.misc.debug("searchLdapGal query:"+query);
-        SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, galAttrList, false, false);
+        SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, rules.getLdapAttrs(), false, false);
         result.token = token != null ? token : EARLIEST_SYNC_TOKEN;
         DirContext ctxt = null;
         try {
@@ -860,7 +860,7 @@ public class LdapUtil {
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 String dn = sr.getNameInNamespace();
-                LdapGalContact lgc = new LdapGalContact(dn, sr.getAttributes(), galAttrList, galAttrMap); 
+                LdapGalContact lgc = new LdapGalContact(dn, rules.apply(sr.getAttributes()));
                 String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
                 result.token = getLaterTimestamp(result.token, mts);
                 result.matches.add(lgc);
@@ -872,33 +872,6 @@ public class LdapUtil {
             closeContext(ctxt);
         }
         return result;
-    }
-
-    /**
-     * 
-     * @param ldapAttrMap value of zimbraGalLdapAttrMap
-     * @param attrsList list of ldap attributes to populate
-     * @param attrMap map of ldap attr to address book field to populate
-     */
-    public static void initGalAttrs(String[] ldapAttrMap, List<String> attrsList, Map<String, String> attrMap) {
-        for (int i = 0; i < ldapAttrMap.length; i++) {
-            String val = ldapAttrMap[i];
-            int p = val.indexOf('=');
-            if (p != -1) {
-                String ldapAttr = val.substring(0, p);
-                String abookAttr = val.substring(p+1);
-                if (ldapAttr.indexOf(',') != -1) {
-                    String[] lattrs = ldapAttr.split(",");
-                    for (int j=0; j < lattrs.length; j++) {
-                        attrsList.add(lattrs[j]);
-                        attrMap.put(lattrs[j], abookAttr);
-                    }
-                } else {
-                    attrsList.add(ldapAttr);
-                    attrMap.put(ldapAttr, abookAttr);
-                }
-            }
-        }
     }
 
     /**

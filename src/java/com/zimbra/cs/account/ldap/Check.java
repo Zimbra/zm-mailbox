@@ -182,13 +182,10 @@ public class Check {
 
 
         String[] galAttrs = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
-        ArrayList<String> list = new ArrayList<String>(galAttrs.length);
-        HashMap<String, String> map = new HashMap<String, String>();
-        LdapUtil.initGalAttrs(galAttrs, list, map);
-        String[] attr_list = list.toArray(new String[list.size()]);
-        
+        LdapGalMapRules rules = new LdapGalMapRules(galAttrs);
+
         try {
-            SearchGalResult result = LdapUtil.searchLdapGal(url, bindDn, bindPassword, searchBase, filter, query, limit, attr_list, map, null); 
+            SearchGalResult result = LdapUtil.searchLdapGal(url, bindDn, bindPassword, searchBase, filter, query, limit, rules, null); 
             List contacts = result.matches;
             return new Result(STATUS_OK, "", contacts);
         } catch (NamingException e) {

@@ -28,12 +28,7 @@
  */
 package com.zimbra.cs.account.ldap;
 
-import java.util.HashMap;
 import java.util.Map;
-
-import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
-
 import com.zimbra.cs.account.GalContact;
 
 /**
@@ -44,27 +39,9 @@ public class LdapGalContact implements GalContact {
     private Map<String, Object> mAttrs;
     private String mId;
     
-    public LdapGalContact(String dn, Attributes attrs, String[] galList, Map<String, String> galMap) {
+    public LdapGalContact(String dn, Map<String,Object> attrs) {
         mId = dn;
-        mAttrs = new HashMap<String, Object>();
-        for (int i = 0; i < galList.length; i++)
-            addAttr(attrs, galList[i], galMap.get(galList[i]));        
-    }
-
-    private void addAttr(Attributes attrs, String accountAttr, String contactAttr) {
-        if (mAttrs.containsKey(contactAttr))
-            return;
-        try {
-            // doesn't handle multi-value attrs
-            String val[] = LdapUtil.getMultiAttrString(attrs, accountAttr);
-            if (val.length == 1) {
-                mAttrs.put(contactAttr, val[0]);
-            } else if (val.length > 1) {
-                mAttrs.put(contactAttr, val);
-            }
-        } catch (NamingException e) {
-            // ignore
-        }
+        mAttrs = attrs;
     }
 
     /* (non-Javadoc)
