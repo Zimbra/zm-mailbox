@@ -78,7 +78,8 @@ public class LdapUtil {
     private static String sLdapURL;
     private static String sLdapMasterURL;    
     
-    private static Hashtable sEnv;
+    private static Hashtable sEnvAuth;
+    private static Hashtable sEnvMasterAuth;    
     private static String[] sEmptyMulti = new String[0];
 
     static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, false, false);
@@ -134,23 +135,30 @@ public class LdapUtil {
      * @throws NamingException
      */
     private static synchronized Hashtable getDefaultEnv(boolean master) {
-        if (sEnv == null) {
-            sEnv = new Hashtable();
-            sEnv.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-            sEnv.put(Context.PROVIDER_URL, master ? sLdapMasterURL : sLdapURL);
-            sEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
-            sEnv.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
-            sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
-            sEnv.put(Context.REFERRAL, "follow");
-            
-            // wait at most 10 seconds for a connection
-            sEnv.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
-            // enable connection pooling
-            sEnv.put("com.sun.jndi.ldap.connect.pool", "true");
-            // env.put("java.naming.ldap.derefAliases", "never");
-            //
-            // default: env.put("java.naming.ldap.version", "3");
+        Hashtable sEnv = null;
+
+        if (master) {
+            if (sEnvMasterAuth != null) return sEnvMasterAuth;
+            else sEnv = sEnvMasterAuth = new Hashtable();
+        } else {
+            if (sEnvAuth != null) return sEnvAuth;
+            else sEnv = sEnvAuth = new Hashtable();
         }
+         
+        sEnv.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        sEnv.put(Context.PROVIDER_URL, master ? sLdapMasterURL : sLdapURL);
+        sEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
+        sEnv.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
+        sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
+        sEnv.put(Context.REFERRAL, "follow");
+
+        // wait at most 10 seconds for a connection
+        sEnv.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
+        // enable connection pooling
+        sEnv.put("com.sun.jndi.ldap.connect.pool", "true");
+        // env.put("java.naming.ldap.derefAliases", "never");
+        // 
+        // default: env.put("java.naming.ldap.version", "3");
         return sEnv;
     }
     
