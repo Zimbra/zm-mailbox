@@ -62,6 +62,7 @@ public final class SessionCache {
     public static final int SESSION_SOAP  = 1;
     public static final int SESSION_IMAP  = 2;
     public static final int SESSION_ADMIN = 3;
+    public static final int SESSION_WIKI  = 4;
 
     /** Creates a new {@link Session} of the specified type and starts its
      *  expiry timeout.

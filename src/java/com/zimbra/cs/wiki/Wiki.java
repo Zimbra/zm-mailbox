@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.session.WikiSession;
 import com.zimbra.cs.util.Pair;
 
 /**
@@ -145,9 +146,12 @@ public class Wiki {
 		return f.getId();
 	}
 	
+	public static Account getDefaultWikiAccount() throws ServiceException {
+		return Provisioning.getInstance().getAccountByName(LC.wiki_user.value());
+	}
+	
 	public static Wiki getInstance() throws ServiceException {
-		Account acct = Provisioning.getInstance().getAccountByName(LC.wiki_user.value());
-		return getInstance(acct);
+		return getInstance(Wiki.getDefaultWikiAccount());
 	}
 	
 	public static MailItem findWikiByPathTraverse(OperationContext octxt, String accountId, int fid, String path) throws ServiceException {
@@ -198,7 +202,7 @@ public class Wiki {
 	public static Wiki getInstance(Account acct) throws ServiceException {
 		return getInstance(acct, getDefaultFolderId(acct));
 	}
-	
+
 	public static Wiki getInstance(Account acct, int folderId) throws ServiceException {
 		Wiki w;
 		synchronized (wikiMap) {
@@ -206,11 +210,15 @@ public class Wiki {
 			w = wikiMap.get(key);
 			if (w == null) {
 				w = new Wiki(acct, folderId);
-				// XXX should be able to handle delete before start caching.
-				//wikiMap.put(key, w);
+				wikiMap.put(key, w);
 			}
 		}
 		return w;
+	}
+	
+	public static void remove(String acctId, int folderId) {
+		Pair<String,String> key = Pair.get(acctId, Integer.toString(folderId));
+		wikiMap.remove(key);
 	}
 	
 	private Wiki(Account acct, int fid) throws ServiceException {
@@ -221,6 +229,7 @@ public class Wiki {
 		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
 		OperationContext octxt = new OperationContext(acct);
 		loadWiki(octxt, mbox);
+		mbox.addListener(WikiSession.getInstance());
 	}
 	
 	private void loadWiki(OperationContext octxt, Mailbox mbox) throws ServiceException {

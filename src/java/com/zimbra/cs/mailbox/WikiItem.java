@@ -89,4 +89,23 @@ public class WikiItem extends Document {
         pd.setVersion(wiki.getVersion());
         return wiki;
     }
+
+    private static final String CN_WIKIWORD = "wikiword";
+    private static final String CN_EDITOR    = "edited_by";
+    private static final String CN_VERSION   = "version";
+    
+    @Override 
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        try {
+            sb.append("wikiitem: {");
+            sb.append(CN_WIKIWORD).append(": ").append(getWikiWord()).append(", ");
+            sb.append(CN_EDITOR).append(": ").append(getCreator()).append(", ");
+            sb.append(CN_VERSION).append(": ").append(getVersion()).append(", ");
+            appendCommonMembers(sb).append(", ");
+            sb.append("}");
+        } catch (ServiceException se) {
+        }
+        return sb.toString();
+    }
 }

@@ -48,7 +48,6 @@ public class WikiTemplate {
 	
 	public WikiTemplate(WikiItem item) throws ServiceException {
 		this(new String(item.getMessageContent()));
-		touch();
 	}
 	
 	public WikiTemplate(String item) {
@@ -56,6 +55,7 @@ public class WikiTemplate {
 		mTokens = new ArrayList<Token>();
 		mDocument = null;
 		mModifiedTime = 0;
+		touch();
 	}
 	
 	public static WikiTemplate findTemplate(Context ctxt, String name)
@@ -119,7 +119,7 @@ public class WikiTemplate {
 			ctxt.token = tok;
 			Wiklet w = Wiklet.get(tok);
 			if (w != null && w.isExpired(this, ctxt)) {
-				ZimbraLog.wiki.debug("failed validation " + ctxt.item.getSubject() + " because " + tok.getValue());
+				ZimbraLog.wiki.debug("failed validation " + ctxt.item.getSubject() + " because of " + tok);
 				return true;
 			}
 		}
@@ -270,6 +270,10 @@ public class WikiTemplate {
 			mParams = map;
 			return map;
 		}
+		
+		public String toString() {
+			return "Token: type=" + mType + ", text=" + mVal;
+		}
 	}
 	
 	public static class Context {
@@ -311,7 +315,9 @@ public class WikiTemplate {
 
 			return body.toString(newCtxt);
 		}
-		
+		public String toString() {
+			return "Wiklet: " + getName();
+		}
 		private static Map<String,Wiklet> sWIKLETS;
 		
 		static {
@@ -323,9 +329,7 @@ public class WikiTemplate {
 			addWiklet(new CreatorWiklet());
 			addWiklet(new ModifierWiklet());
 			addWiklet(new CreateDateWiklet());
-			addWiklet(new CreateTimeWiklet());
 			addWiklet(new ModifyDateWiklet());
-			addWiklet(new ModifyTimeWiklet());
 			addWiklet(new VersionWiklet());
 			addWiklet(new ContentWiklet());
 			addWiklet(new IncludeWiklet());
@@ -656,7 +660,60 @@ public class WikiTemplate {
 			return doc.getLastRevision().getCreator();
 		}
 	}
-	public static class CreateDateWiklet extends Wiklet {
+	public static abstract class DateTimeWiklet extends Wiklet {
+		private static final String sFORMAT = "format";
+		
+		private static final String sSHORTDATE  = "shortdate";
+		private static final String sMEDIUMDATE = "mediumdate";
+		private static final String sLONGDATE   = "longdate";
+		private static final String sFULLDATE   = "fulldate";
+		
+		private static final String sSHORTTIME  = "shorttime";
+		private static final String sMEDIUMTIME = "mediumtime";
+		private static final String sLONGTIME   = "longtime";
+		private static final String sFULLTIME   = "fulltime";
+		
+		private static final String sSHORTDATETIME  = "shortdateandtime";
+		private static final String sMEDIUMDATETIME = "mediumdateandtime";
+		private static final String sLONGDATETIME   = "longdateandtime";
+		private static final String sFULLDATETIME   = "fulldateandtime";
+		
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return false;
+		}
+		protected DateFormat getDateFormat(Context ctxt) {
+			Map<String,String> params = ctxt.token.parseParam();
+			String format = params.get(sFORMAT);
+			if (format == null)
+				format = sSHORTDATETIME;
+			if (format.equals(sSHORTDATE))
+				return DateFormat.getDateInstance(DateFormat.SHORT);
+			else if (format.equals(sMEDIUMDATE))
+				return DateFormat.getDateInstance(DateFormat.MEDIUM);
+			else if (format.equals(sLONGDATE))
+				return DateFormat.getDateInstance(DateFormat.LONG);
+			else if (format.equals(sFULLDATE))
+				return DateFormat.getDateInstance(DateFormat.FULL);
+			else if (format.equals(sSHORTTIME))
+				return DateFormat.getTimeInstance(DateFormat.SHORT);
+			else if (format.equals(sMEDIUMTIME))
+				return DateFormat.getTimeInstance(DateFormat.MEDIUM);
+			else if (format.equals(sLONGTIME))
+				return DateFormat.getTimeInstance(DateFormat.LONG);
+			else if (format.equals(sFULLTIME))
+				return DateFormat.getTimeInstance(DateFormat.FULL);
+			else if (format.equals(sSHORTDATETIME))
+				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
+			else if (format.equals(sMEDIUMDATETIME))
+				return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM);
+			else if (format.equals(sLONGDATETIME))
+				return DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
+			else if (format.equals(sFULLDATETIME))
+				return DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL);
+			return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
+		}
+	}
+	public static class CreateDateWiklet extends DateTimeWiklet {
 		public String getName() {
 			return "Create Date";
 		}
@@ -673,28 +730,10 @@ public class WikiTemplate {
 				createDate = new Date(doc.getLastRevision().getRevDate());
 			} else
 				createDate = new Date(ctxt.item.getDate());
-			return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(createDate);
+			return getDateFormat(ctxt).format(createDate);
 		}
 	}
-	public static class CreateTimeWiklet extends Wiklet {
-		public String getName() {
-			return "Create Time";
-		}
-		public String getPattern() {
-			return "CREATETIME";
-		}
-		public boolean isExpired(WikiTemplate template, Context ctxt) {
-			return false;
-		}
-		public String apply(Context ctxt) throws ServiceException {
-			if (!(ctxt.item instanceof Document)) 
-				return "";
-			Document doc = (Document) ctxt.item;
-			Date modifyDate = new Date(doc.getRevision(1).getRevDate());
-			return DateFormat.getTimeInstance(DateFormat.MEDIUM).format(modifyDate);
-		}
-	}
-	public static class ModifyDateWiklet extends Wiklet {
+	public static class ModifyDateWiklet extends DateTimeWiklet {
 		public String getName() {
 			return "Modified Date";
 		}
@@ -711,25 +750,7 @@ public class WikiTemplate {
 				modifyDate = new Date(doc.getLastRevision().getRevDate());
 			} else
 				modifyDate = new Date(ctxt.item.getDate());
-			return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(modifyDate);
-		}
-	}
-	public static class ModifyTimeWiklet extends Wiklet {
-		public String getName() {
-			return "Modified Time";
-		}
-		public String getPattern() {
-			return "MODIFYTIME";
-		}
-		public boolean isExpired(WikiTemplate template, Context ctxt) {
-			return false;
-		}
-		public String apply(Context ctxt) throws ServiceException {
-			if (!(ctxt.item instanceof Document)) 
-				return "";
-			Document doc = (Document) ctxt.item;
-			Date modifyDate = new Date(doc.getLastRevision().getRevDate());
-			return DateFormat.getTimeInstance(DateFormat.MEDIUM).format(modifyDate);
+			return getDateFormat(ctxt).format(modifyDate);
 		}
 	}
 	public static class VersionWiklet extends Wiklet {

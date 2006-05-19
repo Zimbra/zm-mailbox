@@ -263,16 +263,23 @@ public class Document extends MailItem {
     private static final String CN_FRAGMENT  = "fragment";
     private static final String CN_MIME_TYPE = "mime_type";
     private static final String CN_FILE_NAME = "filename";
+    private static final String CN_EDITOR    = "edited_by";
+    private static final String CN_VERSION   = "version";
 
     @Override 
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("document: {");
-        appendCommonMembers(sb).append(", ");
-        sb.append(CN_FILE_NAME).append(": ").append(getFilename()).append(", ");
-        sb.append(CN_MIME_TYPE).append(": ").append(mContentType).append(", ");
-        sb.append(CN_FRAGMENT).append(": ").append(mFragment);
-        sb.append("}");
+        try {
+            sb.append("document: {");
+            sb.append(CN_FILE_NAME).append(": ").append(getFilename()).append(", ");
+            sb.append(CN_EDITOR).append(": ").append(getCreator()).append(", ");
+            sb.append(CN_VERSION).append(": ").append(getVersion()).append(", ");
+            sb.append(CN_MIME_TYPE).append(": ").append(mContentType).append(", ");
+            sb.append(CN_FRAGMENT).append(": ").append(mFragment);
+            appendCommonMembers(sb).append(", ");
+            sb.append("}");
+        } catch (ServiceException se) {
+        }
         return sb.toString();
     }
 }

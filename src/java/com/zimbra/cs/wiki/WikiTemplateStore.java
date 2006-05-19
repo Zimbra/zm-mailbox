@@ -42,10 +42,10 @@ import com.zimbra.cs.util.ZimbraLog;
 
 public class WikiTemplateStore {
 	
-	private static Map<Pair,WikiTemplateStore> sTemplates;
+	private static Map<Pair<String,String>,WikiTemplateStore> sTemplates;
 	
 	static {
-		sTemplates = new HashMap<Pair,WikiTemplateStore>();
+		sTemplates = new HashMap<Pair<String,String>,WikiTemplateStore>();
 	}
 	
 	public static WikiTemplate getDefaultTOC() {
@@ -157,5 +157,6 @@ public class WikiTemplateStore {
 	public void expireTemplate(String name) {
 		ZimbraLog.wiki.debug("removing " + name + " from template cache");
 		mTemplateMap.remove(name);
+		Wiki.remove(mAccountId, mFolderId);
 	}
 }
