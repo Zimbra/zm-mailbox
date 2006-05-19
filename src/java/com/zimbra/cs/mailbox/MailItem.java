@@ -1400,6 +1400,7 @@ public abstract class MailItem implements Comparable {
 
         // get the full list of things that are being removed
         PendingDelete info = getDeletionInfo();
+        assert(info != null && info.itemIds != null);
         if (childrenOnly || info.incomplete) {
             // make sure to take the container's ID out of the list of deleted items
             info.itemIds.remove(new Integer(mId));
@@ -1410,8 +1411,10 @@ public abstract class MailItem implements Comparable {
                 parent.removeChild(this);
         }
 
-        assert(info != null && info.itemIds != null);
         mMailbox.markItemDeleted(info.itemIds);
+        // when applicable, record the deleted MailItem (rather than just its id)
+        if (!childrenOnly && !info.incomplete)
+            markItemDeleted();
 
         // update the mailbox's size
 		mMailbox.updateSize(-info.size);
