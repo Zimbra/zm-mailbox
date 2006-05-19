@@ -112,7 +112,8 @@
 
 	<property name="zimlets" value="com_zimbra_phone,com_zimbra_tracking,com_zimbra_url,com_zimbra_email,com_zimbra_date"/>
 
-	<property name='wiki.url' value='http://localhost:7070/service/soap' />
+	<property name='wiki.host' value='http://localhost:7070' />
+	<property name='wiki.url' value='${wiki.host}/service/soap' />
 	<property name='wiki.user' value='user1' />
 	<property name='wiki.password' value='test123' />
 
@@ -459,7 +460,8 @@
 		<delete dir='${build.wiki.dir}' quiet='true' />
 		<mkdir dir='${build.wiki.dir}'/>
 		<property name='import-wiki.binary-files' value='**/*.jpg,**/*.gif' />
-		<filter token="USER" value="${wiki.user}"/>
+		<filter token='HOST' value='${wiki.host}' />
+		<filter token="USER" value="${wiki.user}" />
 		<copy todir='${build.wiki.dir}' filtering='true' overwrite="true">
 			<fileset dir='${data.wiki.dir}' excludes='${import-wiki.binary-files}'/>
 		</copy>
