@@ -61,11 +61,14 @@ public class DeleteMailbox extends AdminDocumentHandler {
         String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);
         
         Account account = Provisioning.getInstance().getAccountById(accountId);
-        if (account == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
-        
-        if (!canAccessAccount(zc, account))
+        if (account == null) {
+            if (isDomainAdminOnly(zc)) {
+                throw ServiceException.PERM_DENIED("account doesn't exist, unable to determine authorization");
+            }
+            ZimbraLog.account.warn("DeleteMailbox: account doesn't exist: "+accountId+" (still deleting mailbox)");
+        } else if (!canAccessAccount(zc, account)) {
             throw ServiceException.PERM_DENIED("can not access account");
+        }
         
         Mailbox mbox = Mailbox.getMailboxByAccountId(accountId, false);
         int mailboxId = -1;
