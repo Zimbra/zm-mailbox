@@ -63,7 +63,13 @@ public class GetContactListOperation extends Operation {
 	
 	
 	public String toString() {
-		return "GetContactList("+mIidFolder != null ? mIidFolder.toString() : "-1"+")";
+        StringBuilder toRet = new StringBuilder(super.toString());
+        toRet.append(" GetContactList(");
+        if (mIidFolder != null)
+            toRet.append(mIidFolder.toString()).append(")");
+        else 
+            toRet.append("-1)");
+        return toRet.toString();
 	}
 
 	protected void callback() throws ServiceException {
