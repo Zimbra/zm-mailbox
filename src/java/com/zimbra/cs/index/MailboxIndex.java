@@ -1805,22 +1805,23 @@ public final class MailboxIndex
      */
     synchronized public void reIndexItem(int msgId, byte type) throws ServiceException
     {
-        Mailbox mbx = Mailbox.getMailboxById(mMailboxId);
+        Mailbox mbox = Mailbox.getMailboxById(mMailboxId);
         
         MailItem item = null;
         try {
-            item = mbx.getItemById(null, msgId, type);
+            item = mbox.getItemById(null, msgId, type);
             ParsedMessage pm = null;
             if (item instanceof Message) {
                 Message msg = (Message)item;
 
                 // force the pm's received-date to be the correct one
                 long msgDate = item.getDate();
-                Mailbox mbox = Mailbox.getMailboxById(mMailboxId);
                 pm = new ParsedMessage(msg.getMimeMessage(), msgDate, mbox.attachmentsIndexingEnabled());
             }
             
-            item.reindex(null, pm);
+            synchronized(mbox) {
+                item.reindex(null, pm);
+            }
             
         } catch (java.lang.RuntimeException e) {
             throw ServiceException.FAILURE("Error re-indexing message "+msgId, e);
