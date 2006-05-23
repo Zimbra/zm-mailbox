@@ -190,6 +190,11 @@ public class ZimbraLog {
     public static final org.apache.commons.logging.Log sync = LogFactory.getLog("zimbra.sync");
     
     /**
+     * the "zimbra.synctrace" logger. For sync client interface logs.
+     */
+    public static final org.apache.commons.logging.Log synctrace = LogFactory.getLog("zimbra.synctrace");
+    
+    /**
      * the "zimbra.syncstate" logger. For sync client interface logs.
      */
     public static final org.apache.commons.logging.Log syncstate = LogFactory.getLog("zimbra.syncstate");

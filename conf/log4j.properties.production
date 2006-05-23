@@ -58,6 +58,14 @@ log4j.appender.SYNC.Append=true
 log4j.appender.SYNC.layout=org.apache.log4j.PatternLayout
 log4j.appender.SYNC.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m%n
 
+# Appender SYNCTRACE writes to the file "synctrace.log".
+log4j.appender.SYNCTRACE=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.SYNCTRACE.File=/opt/zimbra/log/synctrace.log
+log4j.appender.SYNCTRACE.DatePattern='.'yyyy-MM-dd
+log4j.appender.SYNCTRACE.Append=true
+log4j.appender.SYNCTRACE.layout=org.apache.log4j.PatternLayout
+log4j.appender.SYNCTRACE.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m%n
+
 # Appender SYNCSTATE writes to the file "syncstate.log".
 log4j.appender.SYNCSTATE=org.apache.log4j.DailyRollingFileAppender
 log4j.appender.SYNCSTATE.File=/opt/zimbra/log/syncstate.log
@@ -76,6 +84,8 @@ log4j.appender.WBXML.layout.ConversionPattern=%d %-5p [%t] [%x] %c{1} - %m%n
 
 log4j.additivity.zimbra.sync=false
 log4j.logger.zimbra.sync=DEBUG,SYNC
+log4j.additivity.zimbra.synctrace=false
+log4j.logger.zimbra.synctrace=TRACE,SYNCTRACE
 log4j.additivity.zimbra.syncstate=false
 log4j.logger.zimbra.syncstate=DEBUG,SYNCSTATE
 log4j.additivity.zimbra.wbxml=false
