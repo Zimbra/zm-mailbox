@@ -54,10 +54,11 @@ public class DeleteDomain extends AdminDocumentHandler {
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(id);
         
-        prov.deleteDomain(domain.getId());
+        String name = domain.getName();
+        
+        prov.deleteDomain(id);
 
-        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "DeleteDomain","name", domain.getName(), "id", domain.getId()}));
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(new String[] {"cmd", "DeleteDomain","name", name, "id", id}));
 
 	    Element response = lc.createElement(AdminService.DELETE_DOMAIN_RESPONSE);
 	    return response;
