@@ -219,7 +219,8 @@ public class Message extends MailItem {
     }
 
     public ApptInfo getApptInfo(int componentId) {
-        if (componentId < 0 || componentId < mApptInfos.size())
+        if (mApptInfos != null &&
+            (componentId < 0 || componentId < mApptInfos.size()))
             return mApptInfos.get(componentId);
         else
             return null;
