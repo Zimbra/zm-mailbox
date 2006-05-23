@@ -301,8 +301,14 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             return toRet;
         }
 
-        Set<T> intersect(Set<T> lhs, Set<T> rhs) {
+        Set<T> intersectIfNonempty(Set<T> lhs, Set<T> rhs) {
             assert(lhs != null && rhs != null);
+            
+            if (lhs.size() == 0)
+                return clone(rhs);
+            if (rhs.size() == 0)
+                return lhs;
+            
 
             if (rhs == null) {
                 return lhs;
@@ -367,8 +373,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         // these we have to intersect:
         //
         //   Folder{A or B or C} AND Folder{B or C or D} --> Folder{IN-BOTH}
-        if (other.folders.size() > 0)
-            folders = fu.intersect(folders, other.folders);
+        folders = fu.intersectIfNonempty(folders, other.folders);
         
         excludeFolders = fu.union(excludeFolders, other.excludeFolders);
 
@@ -391,8 +396,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         // these we have to intersect:
         //
         //   Item{A or B or C} AND Item{B or C or D} --> Item{IN-BOTH}
-        if (other.itemIds.size() > 0)
-            itemIds = iu.intersect(itemIds, other.itemIds);
+        itemIds = iu.intersectIfNonempty(itemIds, other.itemIds);
 
         // these we can just union, since:
         //
@@ -403,13 +407,11 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
 
         // indexId
         //   IndexId{A or B or C} AND IndexId{B or C or D} --> IndexId{IN-BOTH}
-        if (other.indexIds.size() > 0)
-            indexIds = iu.intersect(indexIds, other.indexIds);
+        indexIds = iu.intersectIfNonempty(indexIds, other.indexIds);
 
         // types
         // see comments above
-        if (other.types.size() > 0)
-            types = bu.intersect(types, other.types);
+        types = bu.intersectIfNonempty(types, other.types);
         
         // see comments above
         excludeTypes = bu.union(excludeTypes, other.excludeTypes);
