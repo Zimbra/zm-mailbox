@@ -979,15 +979,13 @@ public class ToXML {
             
             e.addAttribute(MailService.A_NAME, invite.getName());
             e.addAttribute(MailService.A_APPT_LOCATION, invite.getLocation());
-            
+
             // Organizer
-            ZOrganizer org = invite.getOrganizer();
-            if (org != null) {
-                Element orgElt = e.addUniqueElement(MailService.E_APPT_ORGANIZER);
-                
-                if (org.hasCn()) {
+            if (invite.hasOrganizer()) {
+                ZOrganizer org = invite.getOrganizer();
+                Element orgElt = e.addUniqueElement(MailService.E_APPT_ORGANIZER);                
+                if (org.hasCn())
                     orgElt.addAttribute(MailService.A_DISPLAY, org.getCn());
-                }
                 String str = org.getAddress();
                 orgElt.addAttribute(MailService.A_URL, str);
             }

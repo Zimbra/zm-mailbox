@@ -137,7 +137,10 @@ public class CalendarMailSender {
                     AccountUtil.getFriendlyEmailAddress(organizer);
             } else {
                 lc = fromAccount.getLocale();
-                organizerAddress = inv.getOrganizer().getFriendlyAddress();
+                if (inv.hasOrganizer())
+                    organizerAddress = inv.getOrganizer().getFriendlyAddress();
+                else
+                    organizerAddress = null;
             }
 
             String fromDisplayName =
@@ -183,7 +186,8 @@ public class CalendarMailSender {
                 attachInviteSummary(replyText, mmInv, lc);
 
             List<Address> toList = new ArrayList<Address>(1);
-            toList.add(organizerAddress);
+            if (organizerAddress != null)
+                toList.add(organizerAddress);
             return createDefaultCalendarMessage(
                     AccountUtil.getFriendlyEmailAddress(fromAccount),
                     toList, replySubject,

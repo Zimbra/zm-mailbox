@@ -141,7 +141,7 @@ public class SendInviteReply extends CalendarRequest {
                 exceptDt = oldInv.getRecurId().getDt();
             }
 
-            if (updateOrg) {
+            if (updateOrg && oldInv.hasOrganizer()) {
                 Locale locale;
                 Account organizer = oldInv.getOrganizerAccount();
                 if (organizer != null)

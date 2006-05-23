@@ -1560,8 +1560,9 @@ public class Appointment extends MailItem {
                         sb.append("\r\n   - ").append(end);
                     }
 
-                    ZOrganizer organizer = instance.getAppointment().getDefaultInvite().getOrganizer();
-                    if (organizer != null) {
+                    Invite defInv = instance.getAppointment().getDefaultInvite();
+                    if (defInv.hasOrganizer()) {
+                        ZOrganizer organizer = defInv.getOrganizer();
                         String orgDispName;
                         if (organizer.hasCn())
                             orgDispName = organizer.getCn() + " <" + organizer.getAddress() + ">";
@@ -1641,34 +1642,40 @@ public class Appointment extends MailItem {
                 partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
                 if (isRecurring() && resource.autoDeclineRecurring()) {
                     partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
-                    String reason =
-                        L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonRecurring, lc);
-                    CalendarMailSender.sendReply(
-                            octxt, mbox, false,
-                            CalendarMailSender.VERB_DECLINE,
-                            reason + "\r\n",
-                            this, invite, mmInv);
+                    if (invite.hasOrganizer()) {
+                        String reason =
+                            L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonRecurring, lc);
+                        CalendarMailSender.sendReply(
+                                octxt, mbox, false,
+                                CalendarMailSender.VERB_DECLINE,
+                                reason + "\r\n",
+                                this, invite, mmInv);
+                    }
                 } else if (resource.autoDeclineIfBusy()) {
                     List<Availability> avail = checkAvailability();
                     if (!Availability.isAvailable(avail)) {
                         partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
-                        String msg =
-                            L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonConflict, lc) +
-                            "\r\n\r\n" +
-                            Availability.getBusyTimesString(avail, invite.getStartTime().getTimeZone(), lc);
-                        CalendarMailSender.sendReply(
-                                octxt, mbox, false,
-                                CalendarMailSender.VERB_DECLINE,
-                                msg,
-                                this, invite, mmInv);
+                        if (invite.hasOrganizer()) {
+                            String msg =
+                                L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonConflict, lc) +
+                                "\r\n\r\n" +
+                                Availability.getBusyTimesString(avail, invite.getStartTime().getTimeZone(), lc);
+                            CalendarMailSender.sendReply(
+                                    octxt, mbox, false,
+                                    CalendarMailSender.VERB_DECLINE,
+                                    msg,
+                                    this, invite, mmInv);
+                        }
                     }
                 }
                 if (IcalXmlStrMap.PARTSTAT_ACCEPTED.equals(partStat)) {
-                    CalendarMailSender.sendReply(
-                            octxt, mbox, false,
-                            CalendarMailSender.VERB_ACCEPT,
-                            null,
-                            this, invite, mmInv);
+                    if (invite.hasOrganizer()) {
+                        CalendarMailSender.sendReply(
+                                octxt, mbox, false,
+                                CalendarMailSender.VERB_ACCEPT,
+                                null,
+                                this, invite, mmInv);
+                    }
                 }
             }
         }
