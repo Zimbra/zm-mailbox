@@ -41,6 +41,8 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.wiki.WikiServiceException;
+import com.zimbra.cs.service.wiki.WikiServiceException.NoSuchWikiException;
 import com.zimbra.cs.session.WikiSession;
 import com.zimbra.cs.util.Pair;
 
@@ -205,6 +207,8 @@ public class Wiki {
 
 	public static Wiki getInstance(Account acct, int folderId) throws ServiceException {
 		Wiki w;
+		if (acct == null || folderId < 1)
+			throw new WikiServiceException.NoSuchWikiException("no such account");
 		synchronized (wikiMap) {
 			Pair<String,String> key = Pair.get(acct.getId(), Integer.toString(folderId));
 			w = wikiMap.get(key);

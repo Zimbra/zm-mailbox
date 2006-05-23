@@ -57,8 +57,7 @@ public class WikiFormatter extends Formatter {
     }
     
     private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
-    	Folder f = context.targetMailbox.getFolderById(context.opContext, wiki.getFolderId());
-    	WikiTemplate wt = getTemplate(context, f, wiki.getWikiWord());
+    	WikiTemplate wt = getTemplate(context, wiki);
     	String template = wt.getDocument(context.opContext, context.req, wiki, CHROME);
     	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
     	context.resp.getOutputStream().print(template);
@@ -67,8 +66,14 @@ public class WikiFormatter extends Formatter {
     private static final String TOC = "_Index";
     private static final String CHROME = "_Template";
     
+    private WikiTemplate getTemplate(Context context, WikiItem item) throws IOException, ServiceException {
+    	return getTemplate(context, item.getMailbox().getAccountId(), item.getFolderId(), item.getWikiWord());
+    }
     private WikiTemplate getTemplate(Context context, Folder folder, String name) throws IOException, ServiceException {
-    	WikiTemplateStore wiki = WikiTemplateStore.getInstance(context.authAccount.getId(), folder.getId());
+    	return getTemplate(context, context.authAccount.getId(), folder.getId(), name);
+    }
+    private WikiTemplate getTemplate(Context context, String accountId, int folderId, String name) throws IOException, ServiceException {
+    	WikiTemplateStore wiki = WikiTemplateStore.getInstance(accountId, folderId);
     	return wiki.getTemplate(context.opContext, name);
     }
     private WikiTemplate getDefaultTOC() {
