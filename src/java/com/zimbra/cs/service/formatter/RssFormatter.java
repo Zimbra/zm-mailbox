@@ -117,7 +117,8 @@ public class RssFormatter extends Formatter {
             item.addElement("description").setText(sb.toString());
             */
             rssItem.addElement("description").setText(inv.getFragment());
-            rssItem.addElement("author").setText(inv.getOrganizer().getAddress());
+            if (inv.hasOrganizer())
+                rssItem.addElement("author").setText(inv.getOrganizer().getAddress());
         }                    
         
     }

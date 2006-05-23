@@ -516,6 +516,7 @@
 		<echo message="If the following deletes fail, wait for your tomcat" />
 		<echo message="to stop (or stop your tomcat as the case may be)" />
 		<echo message="and try again later." />
+		<delete dir="${zimbra.home.dir}/db" />
 		<delete dir="${zimbra.home.dir}/store" />
 		<delete dir="${zimbra.home.dir}/index" />
 		<delete dir="${zimbra.home.dir}/redolog" />

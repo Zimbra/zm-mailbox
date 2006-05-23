@@ -101,10 +101,12 @@ public class AtomFormatter extends Formatter {
             entry.addElement("title").setText(inv.getName());
             entry.addElement("updated").setText(DateUtil.toISO8601(new Date(inst.getStart())));
             entry.addElement("summary").setText(inv.getFragment());
-            Element author = entry.addElement("author");
-            // TODO: only personal part in name            
-            author.addElement("name").setText(inv.getOrganizer().getCn());            
-            author.addElement("email").setText(inv.getOrganizer().getAddress());
+            // TODO: only personal part in name
+            if (inv.hasOrganizer()) {
+                Element author = entry.addElement("author");
+                author.addElement("name").setText(inv.getOrganizer().getCn());
+                author.addElement("email").setText(inv.getOrganizer().getAddress());
+            }
         }                    
         
     }

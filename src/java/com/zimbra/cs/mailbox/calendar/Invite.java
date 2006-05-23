@@ -315,7 +315,7 @@ public class Invite {
         meta.put(FN_DTSTAMP, inv.getDTStamp());
         meta.put(FN_SEQ_NO, inv.getSeqNo());
         
-        if (inv.getOrganizer() != null) {
+        if (inv.hasOrganizer()) {
             meta.put(FN_ORGANIZER, inv.getOrganizer().encodeAsMetadata());
         }
         
@@ -787,6 +787,7 @@ public class Invite {
     public String getLocation() { return mLocation; }
     public void setLocation(String location) { mLocation = location; }
     public boolean isAllDayEvent() { return ((mFlags & APPT_FLAG_ALLDAY)!=0); }
+    public boolean hasOrganizer() { return mOrganizer != null; }
     public boolean hasOtherAttendees() {
     	return ((mAttendees != null) && (mAttendees.size() > 0));
     }
@@ -920,11 +921,15 @@ public class Invite {
      * @throws ServiceException
      */
     public boolean thisAcctIsOrganizer(Account acct) throws ServiceException {
-        if (getOrganizer() == null) {
-            return true; // assume we are...is this right?
+        if (hasOrganizer()) {
+            String addr = getOrganizer().getAddress();
+            return AccountUtil.addressMatchesAccount(acct, addr);
+        } else {
+            // If there are other attendees, it's an Outlook POP/IMAP bug.  If not,
+            // it's a properly formatted single-user event.  See isOrganizer()
+            // method for more info.
+            return !hasOtherAttendees();
         }
-        String addr = getOrganizer().getAddress();
-        return AccountUtil.addressMatchesAccount(acct, addr);
     }
     
     /**
@@ -1219,6 +1224,7 @@ public class Invite {
     
     
     public ZOrganizer getOrganizer() {
+        // Be careful!  Don't assume this is non-null.
         return mOrganizer;
     }
 
@@ -1230,8 +1236,8 @@ public class Invite {
      */
     public Account getOrganizerAccount() throws ServiceException {
         Account account = null;
-        if (mOrganizer != null) {
-            String address = mOrganizer.getAddress();
+        if (hasOrganizer()) {
+            String address = getOrganizer().getAddress();
             if (address != null) {
                 account = Provisioning.getInstance().getAccountByName(address);
             }
@@ -1240,7 +1246,22 @@ public class Invite {
     }
 
     public boolean isOrganizer(ZAttendee attendee) {
-        return attendee.addressMatches(mOrganizer.getAddress());
+        if (hasOrganizer())
+            return attendee.addressMatches(getOrganizer().getAddress());
+        else {
+            // According to RFC2445 a non-group event (e.g. a single user's
+            // event with no other attendee) MUST NOT have an organizer.  That
+            // means we should return true in this method.  However, an Outlook
+            // bug prevents us from doing so.  Outlook running in POP/IMAP mode
+            // omits ORGANIZER line from the iCalendar part when forwarding an
+            // email that is a previous invitation to another user.  In light of
+            // this behavior, we have to adjust the logic a bit.  If there's no
+            // organizer and no attendee, assume it's a properly formatted
+            // single-user event.  If organizer is missing but there are
+            // attendees, assume it's an instance of Outlook bug, which means
+            // the current attendee is not the organizer.
+            return !hasOtherAttendees();
+        }
     }
     
     public String getType() {
@@ -1797,9 +1818,8 @@ public class Invite {
         
         
         // ORGANIZER
-        ZOrganizer org = getOrganizer();
-        if (org != null)
-            event.addProperty(org.toProperty());
+        if (hasOrganizer())
+            event.addProperty(getOrganizer().toProperty());
         
         // allDay
         if (isAllDayEvent())
