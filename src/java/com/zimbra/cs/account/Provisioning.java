@@ -396,6 +396,13 @@ public abstract class Provisioning {
     public static final String A_zimbraGalMaxResults = "zimbraGalMaxResults";
     
     /**
+     * search base for internal GAL searches.
+     * special values: "ROOT" for top, "DOMAIN" for domain only, "SUBDOMAINS" for domain and subdomains 
+     * 
+     */
+    public static final String A_zimbraGalInternalSearchBase = "zimbraGalInternalSearchBase";
+
+    /**
      * GAL mode. should be internal, external, or both. 
      */
     public static final String A_zimbraGalMode = "zimbraGalMode";

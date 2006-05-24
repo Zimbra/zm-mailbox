@@ -319,7 +319,15 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         NamingEnumeration ne = null;
         try {
             ctxt = LdapUtil.getDirContext(false);
-            ne = ctxt.search("ou=people,"+getDN(), query, sc);
+            String searchBase = getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
+            if (searchBase.equalsIgnoreCase("DOMAIN"))
+                searchBase = "ou=people,"+getDN();
+            else if (searchBase.equalsIgnoreCase("SUBDOMAINS"))
+                searchBase = getDN();
+            else if (searchBase.equalsIgnoreCase("ROOT"))
+                searchBase = "";
+
+            ne = ctxt.search(searchBase, query, sc);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 String dn = sr.getNameInNamespace();
