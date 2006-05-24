@@ -179,6 +179,8 @@ public class MimeCompoundHeader {
                     mSubType = value.substring(slash + 1).trim();
                     if (mPrimaryType.equals("") || mSubType.equals(""))
                         setValue(Mime.CT_DEFAULT);
+                    else 
+                        super.setValue(value.toLowerCase());
                 }
             }
         }
