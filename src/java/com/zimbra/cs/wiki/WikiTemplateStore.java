@@ -99,7 +99,7 @@ public class WikiTemplateStore {
 		boolean checkParents = name.startsWith("_");
 		try {
 			return getTemplate(octxt, name, checkParents);
-		} catch (NoSuchWikiException e) {
+		} catch (ServiceException e) {
 			if (!checkParents)
 				throw e;
 			WikiTemplateStore defaultStore = getInstance();

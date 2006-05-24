@@ -530,13 +530,18 @@ public class WikiTemplate {
 			Mailbox mbox = item.getMailbox();
 			return mbox.getFolderById(ctxt.octxt, item.getFolderId());
 		}
-		private List<MailItem> getBreadcrumbs(Context ctxt) throws ServiceException {
+		private List<MailItem> getBreadcrumbs(Context ctxt) {
 			List<MailItem> list = new ArrayList<MailItem>();
 			list.add(ctxt.item);
-			Folder f = getFolder(ctxt, ctxt.item);
-			while (f.getId() != 1) {
-				list.add(0, f);
-				f = getFolder(ctxt, f);
+			try {
+				Folder f = getFolder(ctxt, ctxt.item);
+				while (f.getId() != 1) {
+					list.add(0, f);
+					f = getFolder(ctxt, f);
+				}
+			} catch (ServiceException se) {
+				// most likely permission problem trying to load the parent folder.
+				// ignore and continue.
 			}
 			return list;
 		}
