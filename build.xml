@@ -89,6 +89,7 @@
 	<property name="src.db.dir" location="${src.dir}/db" />
 
 	<property name='data.dir' location='data' />
+	<property name='data.soap.dir' location='${data.dir}/soap' />
 	<property name='data.wiki.dir' location='${data.dir}/wiki-prod' />
 
 	<property name="deploy.war" value="${warfile}" />
@@ -115,6 +116,7 @@
 	<property name='wiki.host' value='http://localhost:7070' />
 	<property name='wiki.url' value='${wiki.host}/service/soap' />
 	<property name='wiki.user' value='user1' />
+	<property name='wiki.user.default' value='wiki' /> <!-- domain notebook user -->
 	<property name='wiki.password' value='test123' />
 
 	<condition property="is-windows">
@@ -439,11 +441,11 @@
 	<target name="inject" depends="compile" description="Insert messages into the system">
 		<echo>Inserting default contacts: user1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-f data/soap/samplecontacts.xml" />
+			<arg line="-f ${data.soap.dir}/samplecontacts.xml" />
 		</java>
 		<echo>Creating default search folders: user1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-f data/soap/samplesearchfolders.xml" />
+			<arg line="-f ${data.soap.dir}/samplesearchfolders.xml" />
 		</java>
 		<echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
 		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
@@ -453,6 +455,17 @@
 		<java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${zimbra.server.hostname} -s ho@example.zimbra.com -d" />
 			<arg path="data/TestMailRaw" />
+		</java>
+		<echo>Granting domain access to Domain Notebook: ${wiki.user.default}@{zimbra.server.hostname}</echo>
+		<filter token='WIKI_URL' value='${wiki.url}' />
+		<filter token='WIKI_USER_DEFAULT' value='${wiki.user.default}' />
+		<filter token='ZIMBRA_SERVER_HOSTNAME' value='${zimbra.server.hostname}' />
+		<copy todir='${build.dir}' filtering='true'>
+			<fileset dir='${data.soap.dir}' includes='wiki-grant.xml' />
+		</copy>
+		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
+			<!--arg line="-d" /--> <!-- DEBUG -->
+			<arg line='-f ${build.dir}/wiki-grant.xml' />
 		</java>
 	</target>
 
@@ -622,7 +635,7 @@
         </java>
     </target>
 
-    <target name="ldap-load-accounts">
+	<target name="ldap-load-accounts">
 		<echo>Creating account: admin@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="mc default zimbraFeatureIMEnabled TRUE" />
@@ -646,6 +659,10 @@
 		<echo>Creating account: user4@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ca user4@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Four' displayName 'Demo User Four' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-07.00) Arizona' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 4444'"/>
+		</java>
+		<echo>Creating account: ${wiki.user.default}@${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="ca ${wiki.user.default}@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Domain Notebook' displayName 'Domain Notebook' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-07.00) Arizona' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 4444'"/>
 		</java>
 
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
@@ -775,7 +792,6 @@
 				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
 				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
 		</java>
-
 	</target>
 
 	<target name="ldap-load-mime-handlers">
