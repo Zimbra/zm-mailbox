@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.account.ldap;
 
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -53,9 +54,11 @@ import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
+import javax.naming.ldap.LdapContext;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Domain.SearchGalResult;
@@ -243,8 +246,6 @@ public class LdapUtil {
         DirContext context = null;
         try {
             context = new InitialLdapContext(env, null);
-        } catch (NamingException e) {
-            throw e;
         } finally {
             closeContext(context);
         }
@@ -656,6 +657,21 @@ public class LdapUtil {
         return domainToDN(domain.split("\\."), 0);
     }
 
+
+    /**
+     * Given an email like blah@foo.com, return the domain dn: dc=foo,dc=com
+     * @param domain
+     * @return the dn
+     * @throws ServiceException 
+     */
+    public static String emailToDomainDN(String email) throws ServiceException {
+        int index = email.indexOf('@');
+        if (index == -1) 
+            throw ServiceException.INVALID_REQUEST("must be an email address: "+email, null);
+        String domain = email.substring(index+1);
+        return domainToDN(domain.split("\\."), 0);
+    }
+
     /**
      * given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the string "widgets.com".
      * 
@@ -733,18 +749,6 @@ public class LdapUtil {
             dns[i] = domainToDN(parts, i);
         }
         return dns;
-    }
-    
-    public static void main(String args[]) throws NamingException {
-        ldapAuthenticate(new String[] { "ldap://exch1/"}, "schemers@liquidsys.com", "");
-/*
-        Date now = new Date();
-        String gts = generalizedTime(now);
-        System.out.println(now);
-        System.out.println(gts);
-        Date pnow = generalizedTime(gts);
-        System.out.println(pnow);        
-        */
     }
 
     static String[] removeMultiValue(String values[], String value) {
@@ -891,4 +895,80 @@ public class LdapUtil {
         }
         return timeA.compareTo(timeB) > 0 ? timeA : timeB;
     }
+
+    public static void changeExchangePassword(String urls[], String email, String oldPassword, String newPassword)
+        throws NamingException, ServiceException
+    {
+        Hashtable<String, String> env = new Hashtable<String, String>();
+ 
+        //set security credentials, note using simple cleartext authentication
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");        
+        env.put(Context.SECURITY_AUTHENTICATION,"simple");
+        env.put(Context.SECURITY_PRINCIPAL, email);
+        env.put(Context.SECURITY_CREDENTIALS, oldPassword);
+        //specify use of ssl
+        //env.put(Context.SECURITY_PROTOCOL,"ssl");
+ 
+        env.put(Context.PROVIDER_URL, joinURLS(urls));
+        
+        LdapContext ctxt = null;
+        NamingEnumeration ne = null;        
+        try {
+            // Create the initial directory context
+            ctxt = new InitialLdapContext(env,null);
+
+            // find the DN
+            SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, 1, 0, null, false, false);
+            String query = "(userPrincipalName="+LdapUtil.escapeSearchFilterArg(email)+")";
+            String base = emailToDomainDN(email);
+            String dn = null;
+            ne = ctxt.search(base, query, sc);
+            if (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                dn = sr.getNameInNamespace();
+            }
+            
+            if (dn == null) throw AccountServiceException.AUTH_FAILED("authn failed");
+        
+            System.out.println("DN = "+ dn);
+            
+            //if (true) return;
+            
+            //change password is a single ldap modify operation
+            //that deletes the old password and adds the new password
+            ModificationItem[] mods = new ModificationItem[2];
+
+            //Firstly delete the "unicdodePwd" attribute, using the old password
+            //Then add the new password,Passwords must be both Unicode and a quoted string
+            String oldQuotedPassword = "\"" + oldPassword + "\"";
+            byte[] oldUnicodePassword = oldQuotedPassword.getBytes("UTF-16LE");
+            String newQuotedPassword = "\"" + newPassword + "\"";
+            byte[] newUnicodePassword = newQuotedPassword.getBytes("UTF-16LE");
+
+            mods[0] = new ModificationItem(DirContext.REMOVE_ATTRIBUTE, new BasicAttribute("unicodePwd", oldUnicodePassword));
+            mods[1] = new ModificationItem(DirContext.ADD_ATTRIBUTE, new BasicAttribute("unicodePwd", newUnicodePassword));
+
+            // Perform the update
+            ctxt.modifyAttributes(dn, mods);
+        } catch (UnsupportedEncodingException e) {
+            throw ServiceException.FAILURE("encoding exception", e);
+        } finally {
+            closeContext(ctxt);
+            closeEnumContext(ne);            
+        }
+    }
+    
+
+    public static void main(String args[]) throws NamingException, ServiceException {
+        changeExchangePassword(new String[] {"ldaps://host/"}, "email", "old", "new");
+/*
+        Date now = new Date();
+        String gts = generalizedTime(now);
+        System.out.println(now);
+        System.out.println(gts);
+        Date pnow = generalizedTime(gts);
+        System.out.println(pnow);        
+        */
+    }
+
 }
