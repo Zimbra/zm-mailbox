@@ -1582,29 +1582,28 @@ public class Mailbox {
             //      lock mailbox, re-index msg, release lock
             //
             for (Iterator iter = msgs.iterator(); iter.hasNext();) {
+                if (ZimbraLog.mailbox.isDebugEnabled() && ((mReIndexStatus.mNumProcessed % 2000) == 0)) {
+                    ZimbraLog.mailbox.debug("Re-Indexing: Mailbox "+getId()+" on msg "+mReIndexStatus.mNumProcessed+" out of "+msgs.size());
+                }
+
                 synchronized(this) {
-                    // loop 40 times with the lock held
-                    for (int i = 0; i < 40 && iter.hasNext(); i++) { 
-                        if (ZimbraLog.mailbox.isDebugEnabled() && ((mReIndexStatus.mNumProcessed % 2000) == 0)) {
-                            ZimbraLog.mailbox.debug("Re-Indexing: Mailbox "+getId()+" on msg "+mReIndexStatus.mNumProcessed+" out of "+msgs.size());
-                        }
-                        
-                        if (mReIndexStatus.mCancel) {
-                            ZimbraLog.mailbox.warn("CANCELLING re-index of Mailbox "+getId()+" before it is complete.  ("+mReIndexStatus.mNumProcessed+" processed out of "+msgs.size()+")");                            
-                            throw ServiceException.INTERRUPTED("ReIndexing Canceled");
-                        }
-                        
-                        mReIndexStatus.mNumProcessed++;
-                        MailboxIndex idx = getMailboxIndex();
-                        SearchResult sr = (SearchResult) iter.next();
-                        
-                        try {
-                            idx.reIndexItem(sr.id, sr.type);
-                        } catch(ServiceException e) {
-                            mReIndexStatus.mNumFailed++;
-                            ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on msg "+sr.id+".  Message will not be indexed.", e);
-                        }
+                    if (mReIndexStatus.mCancel) {
+                        ZimbraLog.mailbox.warn("CANCELLING re-index of Mailbox "+getId()+" before it is complete.  ("+mReIndexStatus.mNumProcessed+" processed out of "+msgs.size()+")");                            
+                        throw ServiceException.INTERRUPTED("ReIndexing Canceled");
                     }
+                    mReIndexStatus.mNumProcessed++;
+                }
+                
+                SearchResult sr = (SearchResult) iter.next();
+                
+                try {
+                    MailboxIndex idx = getMailboxIndex();
+                    idx.reIndexItem(sr.id, sr.type);
+                } catch(ServiceException e) {
+                    synchronized(this) {
+                        mReIndexStatus.mNumFailed++;
+                    }
+                    ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on msg "+sr.id+".  Message will not be indexed.", e);
                 }
             }
             
