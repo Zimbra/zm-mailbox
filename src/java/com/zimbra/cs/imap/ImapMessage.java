@@ -93,7 +93,7 @@ class ImapMessage {
         size     = (int) msg.getSize();
         date     = msg.getDate();
         revision = msg.getSavedSequence();
-        volumeId   = msg.getVolumeId();
+        volumeId = msg.getVolumeId();
         parent   = i4folder;
     }
 
@@ -148,15 +148,17 @@ class ImapMessage {
         return result.append(')').toString();
     }
     void setPermanentFlags(int f, long t) {
-        if (parent.notificationsEnabled() && (t != tags || (f & IMAP_FLAGS) != (flags & IMAP_FLAGS)))
-            parent.dirtyMessage(this);
+        if (t == tags && (f & IMAP_FLAGS) == (flags & IMAP_FLAGS))
+            return;
         flags = (f & IMAP_FLAGS) | (flags & ~IMAP_FLAGS);
         tags  = t;
+        parent.dirtyMessage(this);
     }
     void setSessionFlags(byte s) {
-        if (parent.notificationsEnabled() && s != sflags)
-            parent.dirtyMessage(this);
+        if (s == sflags)
+            return;
         sflags = s;
+        parent.dirtyMessage(this);
     }
 
     String getDate(DateFormat dateFormat) {

@@ -40,7 +40,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 
 
-class ImapFolder {
+class ImapFolder implements Iterable<ImapMessage> {
     private int     mFolderId;
     private String  mPath;
     private boolean mWritable;
@@ -57,12 +57,12 @@ class ImapFolder {
     private boolean              mNotificationsSuspended;
     private HashSet<ImapMessage> mDirtyMessages = new HashSet<ImapMessage>();
 
-    ImapFolder(String name, boolean select, Mailbox mailbox, OperationContext octxt) throws ServiceException {
+    ImapFolder(String name, boolean select, Mailbox mbox, OperationContext octxt) throws ServiceException {
         boolean debug = ZimbraLog.imap.isDebugEnabled();
         if (debug)  ZimbraLog.imap.debug("  ** loading folder: " + name);
 
-        synchronized (mailbox) {
-            Folder folder = mailbox.getFolderByPath(octxt, name);
+        synchronized (mbox) {
+            Folder folder = mbox.getFolderByPath(octxt, name);
             if (!isFolderSelectable(folder))
                 throw ServiceException.PERM_DENIED("cannot select folder: /" + name);
             mPath = name;
@@ -79,9 +79,9 @@ class ImapFolder {
 
             List msgs;
             if (!isVirtual())
-                msgs = mailbox.getItemList(octxt, MailItem.TYPE_MESSAGE, folder.getId());
+                msgs = mbox.getItemList(octxt, MailItem.TYPE_MESSAGE, folder.getId());
             else
-                msgs = loadVirtualFolder((SearchFolder) folder, mailbox, octxt);
+                msgs = loadVirtualFolder((SearchFolder) folder, mbox, octxt);
             // FIXME: need to check messages for flag "IMAP dirty" and assign new IMAP IDs if necessary
             Collections.sort(msgs, new Message.SortImapUID());
             StringBuffer added = debug ? new StringBuffer("  ** added: ") : null;
@@ -102,18 +102,18 @@ class ImapFolder {
      *  If it is not visible, it will be completely hidden from all IMAP
      *  commands.
      * 
-     * @param search   The search folder being exposed.
-     * @param mailbox  The {@link Mailbox} belonging to the user. */
-    private List<MailItem> loadVirtualFolder(SearchFolder search, Mailbox mailbox, OperationContext octxt) throws ServiceException {
+     * @param search  The search folder being exposed.
+     * @param mbox    The {@link Mailbox} belonging to the user. */
+    private List<MailItem> loadVirtualFolder(SearchFolder search, Mailbox mbox, OperationContext octxt) throws ServiceException {
         List<MailItem> msgs = new ArrayList<MailItem>();
         try {
-            ZimbraQueryResults zqr = mailbox.search(octxt, mQuery, ImapHandler.MESSAGE_TYPES, MailboxIndex.SortBy.DATE_ASCENDING, 1000);
+            ZimbraQueryResults zqr = mbox.search(octxt, mQuery, ImapHandler.MESSAGE_TYPES, MailboxIndex.SortBy.DATE_ASCENDING, 1000);
             int i = 0, hitIds[] = new int[100];
             Arrays.fill(hitIds, Mailbox.ID_AUTO_INCREMENT);
             try {
                 for (ZimbraHit hit = zqr.getFirstHit(); hit != null || i > 0; ) {
                     if (hit == null || i == 100) {
-                        msgs.addAll(Arrays.asList(mailbox.getItemById(octxt, hitIds, MailItem.TYPE_MESSAGE)).subList(0, i));
+                        msgs.addAll(Arrays.asList(mbox.getItemById(octxt, hitIds, MailItem.TYPE_MESSAGE)).subList(0, i));
                         Arrays.fill(hitIds, Mailbox.ID_AUTO_INCREMENT);
                         i = 0;
                     }
@@ -149,6 +149,8 @@ class ImapFolder {
     int getHighwaterUID() { return mHighwaterUID; }
     boolean isVirtual()   { return mQuery != null; }
     boolean isWritable()  { return mWritable; }
+
+    public Iterator<ImapMessage> iterator()  { return mSequence.iterator(); }
 
     static boolean isFolderWritable(Folder folder) {
         return isFolderSelectable(folder) && !(folder instanceof SearchFolder);
@@ -214,15 +216,14 @@ class ImapFolder {
         mUIDs.remove(new Integer(-i4msg.id));
         mDirtyMessages.remove(i4msg);
     }
-
-    void disableNotifications()     { mNotificationsSuspended = true; }
-    void enableNotifications()      { mNotificationsSuspended = false; }
-    boolean notificationsEnabled()  { return !mNotificationsSuspended; }
-
+    
     boolean checkpointSize()  { int last = mLastSize;  return last != (mLastSize = getSize()); }
 
+    void disableNotifications()  { mNotificationsSuspended = true; }
+    void enableNotifications()   { mNotificationsSuspended = false; }
+
     void dirtyMessage(ImapMessage i4msg) {
-        if (i4msg.getParent() == this && i4msg.seq <= getSize() && i4msg == getBySequence(i4msg.seq))
+        if (!mNotificationsSuspended && i4msg.getParent() == this && i4msg.seq <= getSize() && i4msg == getBySequence(i4msg.seq))
             mDirtyMessages.add(i4msg);
     }
     void undirtyMessage(ImapMessage i4msg) {
@@ -323,26 +324,7 @@ class ImapFolder {
         } while (!done);
         return sb.toString();
     }
-    
-    void expungeMessages(Mailbox mailbox, String sequenceSet) throws ServiceException {
-        Set i4set = (sequenceSet == null ? null : getSubsequence(sequenceSet, true));
-        synchronized (mailbox) {
-            for (ImapMessage i4msg : mSequence)
-                if (i4msg != null && !i4msg.expunged && (i4msg.flags & Flag.FLAG_DELETED) > 0)
-                    if (i4set == null || i4set.contains(i4msg)) {
-                        // message tagged for deletion -- delete now
-                        // FIXME: should handle moves separately
-                        // FIXME: it'd be nice to have a bulk-delete Mailbox operation
-                        try {
-                            ZimbraLog.imap.debug("  ** deleting: " + i4msg.id);
-                            mailbox.delete(null, i4msg.id, MailItem.TYPE_MESSAGE);
-                        } catch (ServiceException e) {
-                            if (!(e instanceof MailServiceException.NoSuchItemException))
-                                throw e;
-                        }
-                    }
-        }
-    }
+
     List<Integer> collapseExpunged() {
         // FIXME: need synchronization
         boolean debug = ZimbraLog.imap.isDebugEnabled();
