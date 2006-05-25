@@ -86,6 +86,7 @@
 	<property name="src.dir" location="src" />
 	<property name="src.java.dir" location="${src.dir}/java" />
 	<property name="src.bin.dir" location="${src.dir}/bin" />
+	<property name="src.libexec.dir" location="${src.dir}/libexec" />
 	<property name="src.db.dir" location="${src.dir}/db" />
 
 	<property name='data.dir' location='data' />
@@ -868,8 +869,12 @@
 		<copy todir="${zimbra.home.dir}/bin">
 			<fileset dir="${src.bin.dir}" includes="*" />
 		</copy>
+		<copy todir="${zimbra.home.dir}/libexec">
+			<fileset dir="${src.libexec.dir}" includes="*" />
+		</copy>
 		<chmod perm="a+rx">
 			<fileset dir="${zimbra.home.dir}/bin" includes="*" />
+			<fileset dir="${zimbra.home.dir}/libexec" includes="*" />
 		</chmod>
 	</target>
 
