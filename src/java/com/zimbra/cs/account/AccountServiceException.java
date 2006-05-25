@@ -54,8 +54,8 @@ public class AccountServiceException extends ServiceException {
     public static final String NO_SUCH_SERVER     = "account.NO_SUCH_SERVER";        
     public static final String NO_SUCH_DISTRIBUTION_LIST = "account.NO_SUCH_DISTRIBUTION_LIST";
     public static final String NO_SUCH_CALENDAR_RESOURCE = "account.NO_SUCH_CALENDAR_RESOURCE";
-    public static final String NO_SUCH_MEMBER     = "account.NO_SUCH_MEMBER";
     public static final String MEMBER_EXISTS      = "account.MEMBER_EXISTS";
+    public static final String NO_SUCH_MEMBER     = "account.NO_SUCH_MEMBER";
     public static final String ACCOUNT_EXISTS     = "account.ACCOUNT_EXISTS";        
     public static final String DOMAIN_EXISTS      = "account.DOMAIN_EXISTS";
     public static final String DOMAIN_NOT_EMPTY   = "account.DOMAIN_NOT_EMPTY";
@@ -142,13 +142,8 @@ public class AccountServiceException extends ServiceException {
                 SENDERS_FAULT, null);
     }
 
-    public static AccountServiceException NO_SUCH_MEMBER(String dlName, String mName, Exception e) {
-        return new AccountServiceException("no such member: " + mName + " in distribution list: " + dlName, NO_SUCH_MEMBER, 
-                SENDERS_FAULT, e);   
-    }
-    
-    public static AccountServiceException MEMBER_EXISTS(String dlName, Exception e) {
-        return new AccountServiceException("member already exists in distribution list: " + dlName, MEMBER_EXISTS, SENDERS_FAULT, e);   
+    public static AccountServiceException NO_SUCH_MEMBER(String dlName, String members) {
+        return new AccountServiceException("non-existent members: " + members + " in distribution list: " + dlName, NO_SUCH_MEMBER, SENDERS_FAULT, null);   
     }
     
     public static AccountServiceException ACCOUNT_EXISTS(String name) {

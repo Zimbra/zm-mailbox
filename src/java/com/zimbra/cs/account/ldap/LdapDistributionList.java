@@ -25,14 +25,14 @@
 
 package com.zimbra.cs.account.ldap;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import javax.naming.NamingException;
-import javax.naming.directory.AttributeInUseException;
 import javax.naming.directory.Attributes;
-import javax.naming.directory.DirContext;
-import javax.naming.directory.NoSuchAttributeException;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
@@ -57,6 +57,9 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
     }
     
     public void addMembers(String[] members) throws ServiceException {
+    	Set<String> existing = getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
+    	Set<String> mods = new HashSet<String>();
+    	
         for (int i = 0; i < members.length; i++) { 
         	members[i] = members[i].toLowerCase();
         	String[] parts = members[i].split("@");
@@ -66,38 +69,60 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         	if (!EmailUtil.validDomain(parts[1])) {
         		throw ServiceException.INVALID_REQUEST("invalid domain in member email address: " + members[i], null);
         	}
+        	if (!existing.contains(members[i])) {
+        		mods.add(members[i]);
+        	}
         }
-        DirContext ctxt = null;
-        try {
-            ctxt = LdapUtil.getDirContext(true);
-            addAttrMulti(ctxt, Provisioning.A_zimbraMailForwardingAddress, members);
-        } catch (AttributeInUseException aiue) {
-            throw AccountServiceException.MEMBER_EXISTS(getName(), aiue);
-        } catch (NamingException ne) {
-            throw ServiceException.FAILURE("error adding to distribution list: " + getName(), ne);
-        } finally {
-            LdapUtil.closeContext(ctxt);
+
+        if (mods.isEmpty()) {
+        	// nothing to do...
+        	return;
         }
+        
+        Map<String,String[]> modmap = new HashMap<String,String[]>();
+        modmap.put("+" + Provisioning.A_zimbraMailForwardingAddress, (String[])mods.toArray(new String[0]));
+        modifyAttrs(modmap);
     }
 
     public void removeMembers(String[] members) throws ServiceException {
-        for (int i = 0; i < members.length; i++) { 
+    	Set<String> existing = getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
+    	Set<String> mods = new HashSet<String>();
+    	HashSet<String> failed = new HashSet<String>();
+    	
+    	for (int i = 0; i < members.length; i++) { 
         	members[i] = members[i].toLowerCase();
         	if (members[i].length() == 0) {
         		throw ServiceException.INVALID_REQUEST("invalid member email address: " + members[i], null);
         	}
+        	// We do not do any further validation of the remove address for
+			// syntax - removes should be liberal so any bad entries added by
+			// some other means can be removed
+        	if (existing.contains(members[i])) {
+            	mods.add(members[i]);
+        	} else {
+        		failed.add(members[i]);
+        	}
         }
-        DirContext ctxt = null;
-        try {
-            ctxt = LdapUtil.getDirContext(true);
-            removeAttrMulti(ctxt, Provisioning.A_zimbraMailForwardingAddress, members);
-        } catch (NoSuchAttributeException nsae) {
-            throw AccountServiceException.NO_SUCH_MEMBER(getName(), "attempted to remove non-existent member", nsae);
-        } catch (NamingException ne) {
-            throw ServiceException.FAILURE("error removing from distribution list: " + getName(), ne);
-        } finally {
-            LdapUtil.closeContext(ctxt);
+
+    	if (!failed.isEmpty()) {
+    		StringBuilder sb = new StringBuilder();
+    		Iterator<String> iter = failed.iterator();
+    		while (true) {
+    			sb.append(iter.next());
+    			if (!iter.hasNext())
+    				break;
+    			sb.append(",");
+    		}
+    		throw AccountServiceException.NO_SUCH_MEMBER(getName(), sb.toString());
+    	}
+    	
+    	if (mods.isEmpty()) {
+    		throw ServiceException.INVALID_REQUEST("empty remove set", null);
         }
+        
+        Map<String,String[]> modmap = new HashMap<String,String[]>();
+        modmap.put("-" + Provisioning.A_zimbraMailForwardingAddress, (String[])mods.toArray(new String[0]));
+        modifyAttrs(modmap);
     }
 
     public String[] getAllMembers() {
@@ -112,5 +137,4 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         String addrs[] = LdapProvisioning.getAllAddrsForDistributionList(this);
         return LdapProvisioning.getDistributionLists(addrs, directOnly, via, false);
     }
-
 }

@@ -172,21 +172,10 @@ public class LdapEntry implements Entry {
         refresh(ctxt, 0);
     }
     
-    protected synchronized void addAttrMulti(DirContext ctxt, String name, String[] values) throws NamingException, ServiceException {
-    	LdapUtil.addAttrMulti(ctxt, mDn, name, values);
-    	refresh(ctxt, 0);
-    }
-    
     protected synchronized void removeAttr(DirContext ctxt, String name, String value) throws NamingException, ServiceException {
         LdapUtil.removeAttr(ctxt, mDn,  name, value);
         refresh(ctxt, 0);        
     }
-
-    protected synchronized void removeAttrMulti(DirContext ctxt, String name, String[] values) throws NamingException, ServiceException {
-    	LdapUtil.removeAttrMulti(ctxt, mDn, name, values);
-    	refresh(ctxt, 0);
-    }
-    
     
     public synchronized void setCachedData(Object key, Object value) {
         if (mData == null)

@@ -918,8 +918,8 @@ Access: domain admin sufficient
 
 Access: domain admin sufficient
 
-Note that if any one member is already present, the entire operation
-fails, and no members are added.
+Adding existing members is allowed, even if it may result in this request
+being a no-op because all <dlm> addrs are already members.
 
 -----------------------------
 
@@ -933,8 +933,8 @@ fails, and no members are added.
 
 Access: domain admin sufficient
 
-Note that if any one member is not a present, the entire operation
-fails, and no members are removed.
+Unlike add, remove of a non-existent member causes an exception and no
+modification to the list.
 
 -----------------------------
 
