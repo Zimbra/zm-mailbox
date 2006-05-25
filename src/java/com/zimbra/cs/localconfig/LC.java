@@ -652,7 +652,7 @@ public class LC {
 		postfix_smtpd_tls_key_file.setDoc("postfix_smtpd_tls_key_file");
 
 		postfix_smtpd_tls_loglevel  = new KnownKey("postfix_smtpd_tls_loglevel");
-		postfix_smtpd_tls_loglevel.setDefault("3");
+		postfix_smtpd_tls_loglevel.setDefault("1");
 		postfix_smtpd_tls_loglevel.setDoc("postfix_smtpd_tls_loglevel");
 
 		postfix_transport_maps  = new KnownKey("postfix_transport_maps");
