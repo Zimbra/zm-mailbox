@@ -38,6 +38,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.EmailUtil;
 
 public class LdapDistributionList extends LdapNamedEntry implements DistributionList {
     private String mName;
@@ -55,18 +56,17 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         return mName;
     }
     
-    private void validateMembers(String[] members) throws ServiceException {
+    public void addMembers(String[] members) throws ServiceException {
         for (int i = 0; i < members.length; i++) { 
         	members[i] = members[i].toLowerCase();
         	String[] parts = members[i].split("@");
         	if (parts.length != 2) {
         		throw ServiceException.INVALID_REQUEST("invalid member email address: " + members[i], null);
         	}
+        	if (!EmailUtil.validDomain(parts[1])) {
+        		throw ServiceException.INVALID_REQUEST("invalid domain in member email address: " + members[i], null);
+        	}
         }
-    }
-    
-    public void addMembers(String[] members) throws ServiceException {
-        validateMembers(members);
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
@@ -81,7 +81,12 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
     }
 
     public void removeMembers(String[] members) throws ServiceException {
-        validateMembers(members);
+        for (int i = 0; i < members.length; i++) { 
+        	members[i] = members[i].toLowerCase();
+        	if (members[i].length() == 0) {
+        		throw ServiceException.INVALID_REQUEST("invalid member email address: " + members[i], null);
+        	}
+        }
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
