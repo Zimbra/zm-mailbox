@@ -241,6 +241,7 @@ public class AttributeInfo {
                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid port: "+value, null);
            }
        case TYPE_STRING:
+       case TYPE_ASTRING:
            if (value.length() > mMax)
                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger then max allowed: "+mMax, null);   
            // TODO
