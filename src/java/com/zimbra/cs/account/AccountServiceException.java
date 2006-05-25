@@ -147,9 +147,8 @@ public class AccountServiceException extends ServiceException {
                 SENDERS_FAULT, e);   
     }
     
-    public static AccountServiceException MEMBER_EXISTS(String dlName, String mName, Exception e) {
-        return new AccountServiceException("member already exists: " + mName + " in distribution list: " + dlName, MEMBER_EXISTS, 
-                SENDERS_FAULT, e);   
+    public static AccountServiceException MEMBER_EXISTS(String dlName, Exception e) {
+        return new AccountServiceException("member already exists in distribution list: " + dlName, MEMBER_EXISTS, SENDERS_FAULT, e);   
     }
     
     public static AccountServiceException ACCOUNT_EXISTS(String name) {
