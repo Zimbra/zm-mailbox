@@ -312,15 +312,15 @@ public class AttributeManager {
 
             // Check that if it is COS inheritable it is in account and COS
             // classes
-            checkFlag(name, file, flags, AttributeFlag.inheritFromCOS, AttributeClass.account, AttributeClass.cos, requiredIn, optionalIn);
+            checkFlag(name, file, flags, AttributeFlag.accountInherited, AttributeClass.account, AttributeClass.cos, requiredIn, optionalIn);
 
             // Check that if it is domain inheritable it is in domain and
             // account
-            checkFlag(name, file, flags, AttributeFlag.inheritFromDomain, AttributeClass.account, AttributeClass.domain, requiredIn, optionalIn);
+            checkFlag(name, file, flags, AttributeFlag.domainInherited, AttributeClass.account, AttributeClass.domain, requiredIn, optionalIn);
 
             // Check that if it is domain inheritable it is in domain and
             // account
-            checkFlag(name, file, flags, AttributeFlag.inheritFromGlobalConfig, AttributeClass.server, AttributeClass.globalConfig, requiredIn, optionalIn);
+            checkFlag(name, file, flags, AttributeFlag.serverInherited, AttributeClass.server, AttributeClass.globalConfig, requiredIn, optionalIn);
 
             // Check that is cardinality is single, then not more than one
             // default value is specified
@@ -567,17 +567,17 @@ public class AttributeManager {
             pw.println(Provisioning.A_zimbraDomainAdminModifiableAttr + ": " + attr);
         }
 
-        attrs = getAllAttributesWithFlag(AttributeFlag.inheritFromCOS);
+        attrs = getAllAttributesWithFlag(AttributeFlag.accountInherited);
         for (String attr : attrs) {
             pw.println(Provisioning.A_zimbraCOSInheritedAttr + ": " + attr);
         }
 
-        attrs = getAllAttributesWithFlag(AttributeFlag.inheritFromDomain);
+        attrs = getAllAttributesWithFlag(AttributeFlag.domainInherited);
         for (String attr : attrs) {
             pw.println(Provisioning.A_zimbraDomainInheritedAttr + ": " + attr);
         }
 
-        attrs = getAllAttributesWithFlag(AttributeFlag.inheritFromGlobalConfig);
+        attrs = getAllAttributesWithFlag(AttributeFlag.serverInherited);
         for (String attr : attrs) {
             pw.println(Provisioning.A_zimbraServerInheritedAttr + ": " + attr);
         }
@@ -676,9 +676,15 @@ public class AttributeManager {
                 case TYPE_GENTIME:
                 case TYPE_EMAIL:
                 case TYPE_EMAILP:
-                case TYPE_ENUM:
                 case TYPE_ID:
                     syntax = "1.3.6.1.4.1.1466.115.121.1.26{256}";
+                    equality = "caseIgnoreIA5Match";
+                    substr = "caseIgnoreSubstringsMatch";
+                    break;
+
+                case TYPE_ENUM:
+                    int maxLen = Math.max(32, ai.getEnumValueMaxLength());
+                    syntax = "1.3.6.1.4.1.1466.115.121.1.26{" + maxLen + "}";
                     equality = "caseIgnoreIA5Match";
                     substr = "caseIgnoreSubstringsMatch";
                     break;

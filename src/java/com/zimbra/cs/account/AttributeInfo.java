@@ -97,11 +97,11 @@ public class AttributeInfo {
         }
     }
 
-    public AttributeInfo (String attrName, int id, int groupId, AttributeCallback callback, AttributeType type,
-                          String value, boolean immutable, long min, long max, 
-                          AttributeCardinality cardinality, Set<AttributeClass> requiredIn, 
-                          Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
-                          List<String> globalConfigValues, List<String> defaultCOSValues, String description)
+    AttributeInfo (String attrName, int id, int groupId, AttributeCallback callback, AttributeType type,
+                   String value, boolean immutable, long min, long max, 
+                   AttributeCardinality cardinality, Set<AttributeClass> requiredIn, 
+                   Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
+                   List<String> globalConfigValues, List<String> defaultCOSValues, String description)
     {
         mName = attrName;
         mImmutable = immutable;
@@ -138,8 +138,19 @@ public class AttributeInfo {
         }
     }
 
-    public void checkValue(Object value, boolean checkImmutable) throws ServiceException
-    {
+    public int getEnumValueMaxLength() {
+        assert(mType == AttributeType.TYPE_ENUM);
+        int max = 0;
+        for (String s : mEnumSet) {
+            int l = s.length();
+            if (l > max) {
+                max = l;
+            }
+        }
+        return max;
+    }
+    
+    public void checkValue(Object value, boolean checkImmutable) throws ServiceException {
         if ((value == null) || (value instanceof String)) {
             checkValue((String) value, checkImmutable);
         } else if (value instanceof String[]) {

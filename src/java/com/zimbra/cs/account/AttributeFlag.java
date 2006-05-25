@@ -26,5 +26,5 @@
 package com.zimbra.cs.account;
 
 public enum AttributeFlag {
-    accountInfo, inheritFromCOS, domainAdminModifiable, inheritFromDomain, inheritFromGlobalConfig
+    accountInfo, accountInherited, domainAdminModifiable, domainInherited, serverInherited
 }
