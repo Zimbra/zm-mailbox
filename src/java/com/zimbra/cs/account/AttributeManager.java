@@ -673,6 +673,9 @@ public class AttributeManager {
                     return a1.getName().compareTo(b1.getName());
                 }
             });
+            
+            String lengthSuffix;
+            
             for (AttributeInfo ai : list) {
                 ATTRIBUTE_DEFINITIONS.append("attributetype ( " + ai.getName() + "\n");
                 ATTRIBUTE_DEFINITIONS.append("\tNAME ( '" + ai.getName() + "' )\n");
@@ -683,20 +686,33 @@ public class AttributeManager {
                     syntax = "1.3.6.1.4.1.1466.115.121.1.7";
                     equality = "booleanMatch";
                     break;
-                case TYPE_DURATION:
-                case TYPE_GENTIME:
                 case TYPE_EMAIL:
                 case TYPE_EMAILP:
-                case TYPE_ID:
                     syntax = "1.3.6.1.4.1.1466.115.121.1.26{256}";
                     equality = "caseIgnoreIA5Match";
                     substr = "caseIgnoreSubstringsMatch";
                     break;
 
+                case TYPE_GENTIME:
+                	syntax = "1.3.6.1.4.1.1466.115.121.1.24";
+                    equality = "generalizedTimeMatch";
+                    break;
+
+                case TYPE_ID:
+                    syntax = "1.3.6.1.4.1.1466.115.121.1.15{256}";
+                    equality = "caseIgnoreMatch";
+                    substr = "caseIgnoreSubstringsMatch";
+                    break;
+
+                case TYPE_DURATION:
+                    syntax = "1.3.6.1.4.1.1466.115.121.1.26{32}";
+                    equality = "caseIgnoreIA5Match";
+                    break;
+
                 case TYPE_ENUM:
                     int maxLen = Math.max(32, ai.getEnumValueMaxLength());
-                    syntax = "1.3.6.1.4.1.1466.115.121.1.26{" + maxLen + "}";
-                    equality = "caseIgnoreIA5Match";
+                    syntax = "1.3.6.1.4.1.1466.115.121.1.15{" + maxLen + "}";
+                    equality = "caseIgnoreMatch";
                     substr = "caseIgnoreSubstringsMatch";
                     break;
                         
@@ -709,23 +725,56 @@ public class AttributeManager {
                     
                 case TYPE_STRING:
                 case TYPE_REGEX:
-                    String length = "";
+                    lengthSuffix = "";
                     if (ai.getMax() != Long.MAX_VALUE) {
-                        length = "{" + ai.getMax() + "}";
+                        lengthSuffix = "{" + ai.getMax() + "}";
                     }
-                    syntax = "1.3.6.1.4.1.1466.115.121.1.15" + length;
+                    syntax = "1.3.6.1.4.1.1466.115.121.1.15" + lengthSuffix;
                     equality = "caseIgnoreMatch";
                     substr = "caseIgnoreSubstringsMatch";
                     break;
                     
                 case TYPE_ASTRING:
-                	String alength = "";
+                    lengthSuffix = "";
                 	if (ai.getMax() != Long.MAX_VALUE) {
-                		length = "{" + ai.getMax() + "}";
+                		lengthSuffix = "{" + ai.getMax() + "}";
                 	}
-                	syntax = "1.3.6.1.4.1.1466.115.121.1.26" + alength;
+                	syntax = "1.3.6.1.4.1.1466.115.121.1.26" + lengthSuffix;
                 	equality = "caseIgnoreIA5Match";
                 	substr = "caseIgnoreSubstringsMatch";
+                	break;
+
+                case TYPE_OSTRING:
+                    lengthSuffix = "";
+                	if (ai.getMax() != Long.MAX_VALUE) {
+                		lengthSuffix = "{" + ai.getMax() + "}";
+                	}
+                	syntax = "1.3.6.1.4.1.1466.115.121.1.40" + lengthSuffix;
+                	equality = "octetStringMatch";
+                	break;
+
+                case TYPE_CSTRING:
+                    lengthSuffix = "";
+                	if (ai.getMax() != Long.MAX_VALUE) {
+                		lengthSuffix = "{" + ai.getMax() + "}";
+                	}
+                	syntax = "1.3.6.1.4.1.1466.115.121.1.15" + lengthSuffix;
+                	equality = "caseExactMatch";
+                	substr = "caseExactSubstringsMatch";
+                	break;
+                	
+                case TYPE_PHONE:
+                    lengthSuffix = "";
+                	if (ai.getMax() != Long.MAX_VALUE) {
+                		lengthSuffix = "{" + ai.getMax() + "}";
+                	}
+                	syntax = "1.3.6.1.4.1.1466.115.121.1.50" + lengthSuffix;
+                	equality = "telephoneNumberMatch";
+                	substr = "telephoneNumberSubstringsMatch";
+                	break;
+                	
+               	default:
+               		throw new RuntimeException("unknown type encountered!");
                 }
 
                 ATTRIBUTE_DEFINITIONS.append("\tSYNTAX " + syntax +  "\n");

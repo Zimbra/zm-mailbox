@@ -242,6 +242,9 @@ public class AttributeInfo {
            }
        case TYPE_STRING:
        case TYPE_ASTRING:
+       case TYPE_OSTRING:
+       case TYPE_CSTRING:
+       case TYPE_PHONE:
            if (value.length() > mMax)
                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger then max allowed: "+mMax, null);   
            // TODO

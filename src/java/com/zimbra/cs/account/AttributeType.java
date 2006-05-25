@@ -38,8 +38,11 @@ public enum AttributeType {
     TYPE_ID("id"),
     TYPE_INTEGER("integer"),
     TYPE_PORT("port"),
+    TYPE_PHONE("phone"),
     TYPE_STRING("string"),
     TYPE_ASTRING("astring"),
+    TYPE_OSTRING("ostring"),
+    TYPE_CSTRING("cstring"),
     TYPE_REGEX("regex"),
     TYPE_LONG("long");
 
