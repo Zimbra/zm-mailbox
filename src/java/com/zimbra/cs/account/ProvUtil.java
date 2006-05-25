@@ -1407,9 +1407,10 @@ public class ProvUtil {
             usage();
         } else {
             String key = args[1];
-            String member = args[2];
             DistributionList dl = lookupDistributionList(key);
-            dl.addMember(member);
+            String [] members = new String[args.length - 2];
+            System.arraycopy(args, 2, members, 0, args.length - 2);
+            dl.addMembers(members);
         }        
     }
 
@@ -1418,9 +1419,10 @@ public class ProvUtil {
             usage();
         } else {
             String key = args[1];
-            String member = args[2];
             DistributionList dl = lookupDistributionList(key);
-            dl.removeMember(member);
+            String [] members = new String[args.length - 2];
+            System.arraycopy(args, 2, members, 0, args.length - 2);
+            dl.removeMembers(members);
         }
     }
 

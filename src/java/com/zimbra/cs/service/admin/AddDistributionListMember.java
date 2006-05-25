@@ -25,6 +25,9 @@
 
 package com.zimbra.cs.service.admin;
 
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
@@ -50,8 +53,11 @@ public class AddDistributionListMember extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         
         String id = request.getAttribute(AdminService.E_ID);
-        String member = request.getAttribute(AdminService.E_DLM);
-
+        List<String> memberList = new LinkedList<String>();
+        for (Element elem : request.listElements(AdminService.E_DLM)) {
+        	memberList.add(elem.getTextTrim());
+        }
+        
         DistributionList dl = prov.getDistributionListById(id);
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
@@ -59,9 +65,10 @@ public class AddDistributionListMember extends AdminDocumentHandler {
         if (!canAccessEmail(lc, dl.getName()))
             throw ServiceException.PERM_DENIED("can not access dl");
 
-        dl.addMember(member);
+        String[] members = (String[]) memberList.toArray(new String[0]); 
+        dl.addMembers(members);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                                                      new String[] {"cmd", "AddDistributionListMember","name", dl.getName(), "member", member})); 
+                                                      new String[] {"cmd", "AddDistributionListMember","name", dl.getName(), "members", Arrays.deepToString(members)})); 
         
         Element response = lc.createElement(AdminService.ADD_DISTRIBUTION_LIST_MEMBER_RESPONSE);
         return response;

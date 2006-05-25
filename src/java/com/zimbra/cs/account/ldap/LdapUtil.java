@@ -600,6 +600,21 @@ public class LdapUtil {
     }
 
     /**
+     * Add all given attribute values.
+     */
+    public static void addAttrMulti(DirContext ctxt, String dn, String name, String[] values) throws NamingException {
+    	ModificationItem[] mods = new ModificationItem[values.length];
+    	for (int i = 0; i < values.length; i++) {
+    		String value = values[i];
+            BasicAttribute ba = new BasicAttribute(name);
+            ba.add(value);
+            ModificationItem item = new ModificationItem(DirContext.ADD_ATTRIBUTE, ba); 
+            mods[i] = item;
+    	}
+    	ctxt.modifyAttributes(dn, mods);
+    }
+
+    /**
      * take a map (key = String, value = String | String[]) and populate Attributes.
      * 
      * @param map
@@ -637,6 +652,22 @@ public class LdapUtil {
         ModificationItem item = new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba); 
         ModificationItem[] mods = new ModificationItem[] { item };
         ctxt.modifyAttributes(dn, mods);
+    }
+
+    /** 
+     * remove given attributes from a multi-valued attribute
+     */
+    public static void removeAttrMulti(DirContext ctxt, String dn, String name, String[] values) throws NamingException {
+		ModificationItem[] mods = new ModificationItem[values.length];
+    	for (int i = 0; i < values.length; i++) {
+    		String value = values[i];
+    		BasicAttribute ba = new BasicAttribute(name);
+    		if (value != null)
+    			ba.add(value);
+    		ModificationItem item = new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba);
+    		mods[i] = item;
+    	}
+		ctxt.modifyAttributes(dn, mods);
     }
 
     private static String domainToDN(String parts[], int offset) {

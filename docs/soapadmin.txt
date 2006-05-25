@@ -910,7 +910,7 @@ Access: domain admin sufficient
 
 <AddDistributionListMemberRequest>
   <id>{value-of-zimbraId}</id>
-  <dlm>{member}</dlm>
+  <dlm>{member}</dlm>+
 </AddDistributionListMemeberRequest>
 
 <AddDistributionListMemberResponse>
@@ -918,17 +918,23 @@ Access: domain admin sufficient
 
 Access: domain admin sufficient
 
+Note that if any one member is already present, the entire operation
+fails, and no members are added.
+
 -----------------------------
 
 <RemoveDistributionListMemberRequest>
   <id>{value-of-zimbraId}</id>
-  <dlm>{member}</dlm>
+  <dlm>{member}</dlm>+
 </RemoveDistributionListMemberRequest>
 
 <RemoveDistributionListMemberResponse>
 </RemoveDistributionListMemberResponse>
 
 Access: domain admin sufficient
+
+Note that if any one member is not a present, the entire operation
+fails, and no members are removed.
 
 -----------------------------
 

@@ -25,6 +25,9 @@
 
 package com.zimbra.cs.service.admin;
 
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
@@ -50,7 +53,10 @@ public class RemoveDistributionListMember extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
 
         String id = request.getAttribute(AdminService.E_ID);
-        String member = request.getAttribute(AdminService.E_DLM);
+        List<String> memberList = new LinkedList<String>();
+        for (Element elem : request.listElements(AdminService.E_DLM)) {
+        	memberList.add(elem.getTextTrim());
+        }
 
         DistributionList dl = prov.getDistributionListById(id);
         if (dl == null)
@@ -59,10 +65,11 @@ public class RemoveDistributionListMember extends AdminDocumentHandler {
         if (!canAccessEmail(lc, dl.getName()))
             throw ServiceException.PERM_DENIED("can not access dl");
 
-        dl.removeMember(member);
+        String[] members = (String[]) memberList.toArray(new String[0]); 
+        dl.removeMembers(members);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                                                      new String[] {"cmd", "RemoveDistributionListMember", "name", dl.getName(), "member", member})); 
+                                                      new String[] {"cmd", "RemoveDistributionListMember", "name", dl.getName(), "member", Arrays.deepToString(members)})); 
 
         Element response = lc.createElement(AdminService.REMOVE_DISTRIBUTION_LIST_MEMBER_RESPONSE);
         return response;

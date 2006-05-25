@@ -2890,7 +2890,7 @@ public class LdapProvisioning extends Provisioning {
 
         for (DistributionList list: lists) { 
             try {
-                list.removeMember(address);                
+                list.removeMembers(addrs);                
             } catch (ServiceException se) {
                 // log warning and continue
                 ZimbraLog.account.warn("unable to remove "+address+" from DL "+list.getName(), se);

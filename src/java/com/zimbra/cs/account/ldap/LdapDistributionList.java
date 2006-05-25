@@ -25,11 +25,8 @@
 
 package com.zimbra.cs.account.ldap;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.naming.NamingException;
 import javax.naming.directory.AttributeInUseException;
@@ -58,36 +55,40 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         return mName;
     }
     
-    public void addMember(String member) throws ServiceException {
-        member = member.toLowerCase();
-        String[] parts = member.split("@");
-        if (parts.length != 2) {
-            throw ServiceException.INVALID_REQUEST("must be valid member email address: " + member, null);
+    public void addMembers(String[] members) throws ServiceException {
+        for (int i = 0; i < members.length; i++) { 
+        	members[i] = members[i].toLowerCase();
+        	String[] parts = members[i].split("@");
+        	if (parts.length != 2) {
+        		throw ServiceException.INVALID_REQUEST("invalid member email address: " + members[i], null);
+        	}
         }
         
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
-            addAttr(ctxt, Provisioning.A_zimbraMailForwardingAddress, member);
+            addAttrMulti(ctxt, Provisioning.A_zimbraMailForwardingAddress, members);
         } catch (AttributeInUseException aiue) {
-            throw AccountServiceException.MEMBER_EXISTS(getName(), member, aiue);
+            throw AccountServiceException.MEMBER_EXISTS(getName(), aiue);
         } catch (NamingException ne) {
-            throw ServiceException.FAILURE("add failed for member: " + member, ne);
+            throw ServiceException.FAILURE("error adding to distribution list: " + getName(), ne);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
     }
 
-    public void removeMember(String member) throws ServiceException {
-        member = member.toLowerCase();
+    public void removeMembers(String[] members) throws ServiceException {
+        for (int i = 0; i < members.length; i++) { 
+        	members[i] = members[i].toLowerCase();
+        }
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
-            removeAttr(ctxt, Provisioning.A_zimbraMailForwardingAddress, member);
-            } catch (NoSuchAttributeException nsae) {
-            throw AccountServiceException.NO_SUCH_MEMBER(getName(), member, nsae);
+            removeAttrMulti(ctxt, Provisioning.A_zimbraMailForwardingAddress, members);
+        } catch (NoSuchAttributeException nsae) {
+            throw AccountServiceException.NO_SUCH_MEMBER(getName(), "attempted to remove non-existent member", nsae);
         } catch (NamingException ne) {
-            throw ServiceException.FAILURE("remove failed for member: " + member, ne);
+            throw ServiceException.FAILURE("error removing from distribution list: " + getName(), ne);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
