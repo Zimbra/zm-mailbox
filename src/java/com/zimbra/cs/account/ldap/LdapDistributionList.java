@@ -55,7 +55,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         return mName;
     }
     
-    public void addMembers(String[] members) throws ServiceException {
+    private void validateMembers(String[] members) throws ServiceException {
         for (int i = 0; i < members.length; i++) { 
         	members[i] = members[i].toLowerCase();
         	String[] parts = members[i].split("@");
@@ -63,7 +63,10 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         		throw ServiceException.INVALID_REQUEST("invalid member email address: " + members[i], null);
         	}
         }
-        
+    }
+    
+    public void addMembers(String[] members) throws ServiceException {
+        validateMembers(members);
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
@@ -78,9 +81,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
     }
 
     public void removeMembers(String[] members) throws ServiceException {
-        for (int i = 0; i < members.length; i++) { 
-        	members[i] = members[i].toLowerCase();
-        }
+        validateMembers(members);
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
