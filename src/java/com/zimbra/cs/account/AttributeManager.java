@@ -87,6 +87,7 @@ public class AttributeManager {
     private static final String A_NAME = "name";
     private static final String A_IMMUTABLE = "immutable";
     private static final String A_TYPE = "type";
+    private static final String A_ORDER = "order";
     private static final String A_VALUE = "value";
     private static final String A_MAX = "max";
     private static final String A_MIN = "min";
@@ -214,6 +215,7 @@ public class AttributeManager {
 
             AttributeCallback callback = null;
             AttributeType type = null;
+            AttributeOrder order = null;
             String value = null;
             long min = Long.MIN_VALUE;
             long max = Long.MAX_VALUE;
@@ -275,6 +277,12 @@ public class AttributeManager {
                     optionalIn = parseClasses(name, file, attr.getValue());
                 } else if (aname.equals(A_FLAGS)) {
                     flags = parseFlags(name, file, attr.getValue());
+                } else if (aname.equals(A_ORDER)) {
+                	try {
+                		order = AttributeOrder.valueOf(attr.getValue());
+                	} catch (IllegalArgumentException iae) {
+                        error(name, file, aname + " is not valid: " + attr.getValue());
+                	}
                 } else {
                     error(name, file, "unknown <attr> attr: " + aname);
                 }
@@ -333,7 +341,7 @@ public class AttributeManager {
                 }
             }
 
-            AttributeInfo info = new AttributeInfo(name, id, groupId, callback, type, value, immutable, min, max, cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues, description);
+            AttributeInfo info = new AttributeInfo(name, id, groupId, callback, type, order, value, immutable, min, max, cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues, description);
             if (mAttrs.get(canonicalName) != null) {
                 error(name, file, "duplicate definiton");
             }
@@ -669,7 +677,7 @@ public class AttributeManager {
                 ATTRIBUTE_DEFINITIONS.append("attributetype ( " + ai.getName() + "\n");
                 ATTRIBUTE_DEFINITIONS.append("\tNAME ( '" + ai.getName() + "' )\n");
                 ATTRIBUTE_DEFINITIONS.append("\tDESC '" + ai.getDescription() + "'\n");
-                String syntax = null, substr = null, equality = null, ordering = null; 
+                String syntax = null, substr = null, equality = null; 
                 switch (ai.getType()) {
                 case TYPE_BOOLEAN:
                     syntax = "1.3.6.1.4.1.1466.115.121.1.7";
@@ -697,7 +705,6 @@ public class AttributeManager {
                 case TYPE_LONG:
                     syntax = "1.3.6.1.4.1.1466.115.121.1.27";
                     equality = "integerMatch";
-                    ordering = "integerOrderingMatch";
                     break;
                     
                 case TYPE_STRING:
@@ -709,6 +716,16 @@ public class AttributeManager {
                     syntax = "1.3.6.1.4.1.1466.115.121.1.15" + length;
                     equality = "caseIgnoreMatch";
                     substr = "caseIgnoreSubstringsMatch";
+                    break;
+                    
+                case TYPE_ASTRING:
+                	String alength = "";
+                	if (ai.getMax() != Long.MAX_VALUE) {
+                		length = "{" + ai.getMax() + "}";
+                	}
+                	syntax = "1.3.6.1.4.1.1466.115.121.1.26" + alength;
+                	equality = "caseIgnoreIA5Match";
+                	substr = "caseIgnoreSubstringsMatch";
                 }
 
                 ATTRIBUTE_DEFINITIONS.append("\tSYNTAX " + syntax +  "\n");
@@ -716,8 +733,8 @@ public class AttributeManager {
                 if (substr != null) {
                     ATTRIBUTE_DEFINITIONS.append("\n\tSUBSTR " + substr);
                 }
-                if (ordering != null) {
-                    ATTRIBUTE_DEFINITIONS.append("\n\tORDERING " + ordering);
+                if (ai.getOrder() != null) {
+                    ATTRIBUTE_DEFINITIONS.append("\n\tORDERING " + ai.getOrder());
                 }
                 
                 if (ai.getCardinality() == AttributeCardinality.single) {

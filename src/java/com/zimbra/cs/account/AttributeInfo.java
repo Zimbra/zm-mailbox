@@ -54,6 +54,9 @@ public class AttributeInfo {
     /** attribute type */
     private AttributeType mType;
     
+    /** sort order */
+    private AttributeOrder mOrder;
+    
     /** for enums */
     private HashSet<String> mEnumSet;
     
@@ -98,7 +101,7 @@ public class AttributeInfo {
     }
 
     AttributeInfo (String attrName, int id, int groupId, AttributeCallback callback, AttributeType type,
-                   String value, boolean immutable, long min, long max, 
+                   AttributeOrder order, String value, boolean immutable, long min, long max, 
                    AttributeCardinality cardinality, Set<AttributeClass> requiredIn, 
                    Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
                    List<String> globalConfigValues, List<String> defaultCOSValues, String description)
@@ -107,6 +110,7 @@ public class AttributeInfo {
         mImmutable = immutable;
         mCallback = callback;
         mType = type;
+        mOrder = order;
         mValue = value;
         mMin = min;
         mMax = max;
@@ -295,6 +299,10 @@ public class AttributeInfo {
        return mType;
    }
 
+   AttributeOrder getOrder() {
+	   return mOrder;
+   }
+   
    String getDescription() {
        return mDescription;
    }

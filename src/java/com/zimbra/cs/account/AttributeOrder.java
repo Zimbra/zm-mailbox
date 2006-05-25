@@ -18,40 +18,15 @@
  * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
  * All Rights Reserved.
  * 
- * Contributor(s): 
+ * Contributor(s):
  * 
  * ***** END LICENSE BLOCK *****
  */
-
+/**
+ * 
+ */
 package com.zimbra.cs.account;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public enum AttributeType {
-    TYPE_BOOLEAN("boolean"),
-    TYPE_DURATION("duration"),
-    TYPE_GENTIME("gentime"),
-    TYPE_EMAIL("email"),
-    TYPE_EMAILP("emailp"),
-    TYPE_ENUM("enum"),
-    TYPE_ID("id"),
-    TYPE_INTEGER("integer"),
-    TYPE_PORT("port"),
-    TYPE_STRING("string"),
-    TYPE_ASTRING("astring"),
-    TYPE_REGEX("regex"),
-    TYPE_LONG("long");
-
-    private static class TM {
-        static Map<String, AttributeType> sTypeMap = new HashMap<String, AttributeType>();
-    }
-    
-    AttributeType(String name) {
-        TM.sTypeMap.put(name, this);
-    }
-    
-    public static AttributeType getType(String name) {
-        return TM.sTypeMap.get(name);
-    }
+public enum AttributeOrder {
+    integerOrderingMatch
 }
