@@ -574,7 +574,9 @@
 		<delete failonerror="no">
 			<fileset dir="${tomcat.home.dir}/logs" includes="*" />
 		</delete>
-
+		<delete dir="${tomcat.home.dir}/webapps/service"/>
+		<delete file="${tomcat.home.dir}/webapps/service.war"/>
+			
 		<mkdir dir="${zimbra.home.dir}" />
 		<mkdir dir="${zimbra.home.dir}/bin" />
 		<mkdir dir="${zimbra.home.dir}/lib" />
