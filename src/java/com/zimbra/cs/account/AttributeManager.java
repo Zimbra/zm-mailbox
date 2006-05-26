@@ -25,13 +25,10 @@
 
 package com.zimbra.cs.account;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -69,6 +66,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.StringUtil;
@@ -76,8 +74,6 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
 public class AttributeManager {
-
-    private static final String ZIMBRA_ATTRS_RESOURCE = "zimbraattrs.xml";
 
     private static final String E_ATTRS = "attrs";
     private static final String A_GROUP = "group";
@@ -110,46 +106,45 @@ public class AttributeManager {
 
     public static AttributeManager getInstance() throws ServiceException {
         synchronized(AttributeManager.class) {
-            if (mInstance == null) {
-                String file = ZIMBRA_ATTRS_RESOURCE;
-                InputStream is = null;
-                try {
-                    is = AttributeManager.class.getResourceAsStream(file);
-                    if (is == null) {
-                        ZimbraLog.misc.warn("unable to find attr file resource: "+file);
-                    } else {
-                        mInstance = new AttributeManager(is, file);
-                        if (mInstance.hasErrors()) {
-                            throw ServiceException.FAILURE(mInstance.getErrors(), null);
-                        }
-                    }
-                } catch (DocumentException e) {
-                    ZimbraLog.misc.error("unable to parse attr file: " + file, e);
-                    throw ServiceException.FAILURE("unable to parse attr file: "+file+" "+e.getMessage(), e);
-                } catch (Exception e) {
-                    ZimbraLog.misc.error("unable to load attr file: " + file, e);
-                    throw ServiceException.FAILURE("unable to load attr file: " + file + " " + e.getMessage(), e);
-                } finally {
-                    if (is != null)
-                        try { is.close();}  catch (IOException e) { }
-                }
+            if (mInstance != null) {
+            	return mInstance;
             }
+            String dir = LC.zimbra_attrs_directory.value();
+            mInstance = new AttributeManager(dir);
+            if (mInstance.hasErrors()) {
+            	throw ServiceException.FAILURE(mInstance.getErrors(), null);
+            }
+            return mInstance;
         }
-        return mInstance;
     }
 
-    private AttributeManager(InputStream attrsFile, String file) throws DocumentException {
-        loadAttrs(attrsFile, file);
+    private AttributeManager(String dir) throws ServiceException {
+    	File fdir = new File(dir);
+    	if (!fdir.exists()) {
+    		throw ServiceException.FAILURE("attrs directory does not exists: " + dir, null);
+    	}
+    	if (!fdir.isDirectory()) {
+    		throw ServiceException.FAILURE("attrs directory is not a directory: " + dir, null);
+    	}
+    	
+    	File[] files = fdir.listFiles();
+    	for (File file : files) { 
+    		if (!file.getPath().endsWith(".xml")) {
+    			ZimbraLog.misc.warn("while loading attrs, ignoring not .xml file: " + file);
+    			continue;
+    		}
+    		if (!file.isFile()) {
+    			ZimbraLog.misc.warn("while loading attrs, ignored non-file: " + file);
+    		}
+    		try {
+    			loadAttrs(file);
+    		} catch (DocumentException de) {
+    			throw ServiceException.FAILURE("error loading attrs file: " + file, de);
+    		}
+    	}
+    	
     }
     
-    private AttributeManager(String[] attrFiles) throws IOException, DocumentException {
-        for (String file : attrFiles) {
-            InputStream is = new BufferedInputStream(new FileInputStream(file));
-            loadAttrs(is, file);
-            is.close();
-        }
-    }
-
     private List<String> mErrors = new LinkedList<String>();
     
     private boolean hasErrors() {
@@ -164,7 +159,7 @@ public class AttributeManager {
         return result.toString();
     }
     
-    private void error(String attrName, String file, String error) {
+    private void error(String attrName, File file, String error) {
         if (attrName != null) {
             mErrors.add("attr " + attrName + " in file " + file + ": " + error);
         } else {
@@ -172,9 +167,9 @@ public class AttributeManager {
         }
     }
     
-    private void loadAttrs(InputStream attrsFile, String file) throws DocumentException {
+    private void loadAttrs(File file) throws DocumentException {
         SAXReader reader = new SAXReader();
-        Document doc = reader.read(attrsFile);
+        Document doc = reader.read(file);
         Element root = doc.getRootElement();
         if (!root.getName().equals(E_ATTRS)) {
             error(null, file, "root tag is not " + E_ATTRS);
@@ -349,7 +344,7 @@ public class AttributeManager {
         }
     }
     
-    private Set<AttributeClass> parseClasses(String attrName, String file, String value) {
+    private Set<AttributeClass> parseClasses(String attrName, File file, String value) {
         Set<AttributeClass> result = new HashSet<AttributeClass>();
         String[] cnames = value.split(",");
         for (String cname : cnames) {
@@ -366,7 +361,7 @@ public class AttributeManager {
         return result;
     }
 
-    private Set<AttributeFlag> parseFlags(String attrName, String file, String value) {
+    private Set<AttributeFlag> parseFlags(String attrName, File file, String value) {
         Set<AttributeFlag> result = new HashSet<AttributeFlag>();
         String[] flags = value.split(",");
         for (String flag : flags) {
@@ -383,7 +378,7 @@ public class AttributeManager {
         return result;
     }
 
-    private void checkFlag(String attrName, String file, Set<AttributeFlag> flags, AttributeFlag flag, AttributeClass c1, AttributeClass c2, Set<AttributeClass> required, Set<AttributeClass> optional) {
+    private void checkFlag(String attrName, File file, Set<AttributeFlag> flags, AttributeFlag flag, AttributeClass c1, AttributeClass c2, Set<AttributeClass> required, Set<AttributeClass> optional) {
         if (flags != null && flags.contains(flag)) {
             boolean inC1 = (optional != null && optional.contains(c1)) || (required != null && required.contains(c1));
             boolean inC2 = (optional != null && optional.contains(c2)) || (required != null && required.contains(c2));
@@ -512,7 +507,7 @@ public class AttributeManager {
         AttributeManager am = null;
         if (action != Action.dump) {
             if (!cl.hasOption('i')) usage("no input attribute xml files specified");
-            am = new AttributeManager(cl.getOptionValues('i'));
+            am = new AttributeManager(cl.getOptionValue('i'));
             if (am.hasErrors()) {
                 ZimbraLog.misc.warn(am.getErrors());
                 System.exit(1);
