@@ -1,6 +1,7 @@
 reject_non_fqdn_recipient
 permit_sasl_authenticated
 permit_mynetworks
+reject_unlisted_recipient
 %%contains VAR:zimbraMtaRestriction reject_invalid_hostname%%
 %%contains VAR:zimbraMtaRestriction reject_non_fqdn_hostname%%
 %%contains VAR:zimbraMtaRestriction reject_non_fqdn_sender%%
