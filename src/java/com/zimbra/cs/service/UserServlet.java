@@ -224,7 +224,8 @@ public class UserServlet extends ZimbraServlet {
             // at this point context.authAccount is set either from the Cookie,
             // or from basic auth.  if there was no credential in either the Cookie
             // or basic auth, authAccount is set to anonymous account.
-            ZimbraLog.addAccountNameToContext(context.authAccount.getName());
+            if (context.authAccount != null)
+                ZimbraLog.addAccountNameToContext(context.authAccount.getName());
             ZimbraLog.addIpToContext(context.req.getRemoteAddr());
 
             doAuthGet(req, resp, context);
