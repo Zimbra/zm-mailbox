@@ -37,11 +37,4 @@ package com.zimbra.cs.account;
  */
 public interface Config extends Entry {
 
-    public boolean isInheritedAccountAttr(String name);
-
-    public boolean isInheritedDomainAttr(String name);
-
-    public boolean isInheritedServerAttr(String name);
-    
-    public boolean isDomainAdminModifiableAttr(String name);
 }

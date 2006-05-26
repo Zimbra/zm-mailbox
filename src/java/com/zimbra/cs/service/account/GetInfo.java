@@ -35,6 +35,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AttributeFlag;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
@@ -106,9 +108,8 @@ public class GetInfo extends DocumentHandler  {
     }
 
     private static void doAttrs(Element response, Map attrsMap) throws ServiceException {
-        String[] attrList = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraAccountClientAttr);
-        for (int attrIndex = 0; attrIndex < attrList.length; attrIndex++) {
-            String key = attrList[attrIndex];
+        Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInfo);
+        for (String key : attrList) {
             Object value = attrsMap.get(key);
             if (value instanceof String[]) {
                 String sa[] = (String[]) value;

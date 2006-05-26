@@ -36,6 +36,8 @@ import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AttributeFlag;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
@@ -131,7 +133,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         if (v != null)
             return v;
         try {
-            if (!mProv.getConfig().isInheritedAccountAttr(name))
+            if (!AttributeManager.getInstance().isAccountInherited(name))
                 return null;
             Cos cos = getCOS();
             if (cos != null)
@@ -148,7 +150,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         if (v.length > 0)
             return v;
         try {
-            if (!mProv.getConfig().isInheritedAccountAttr(name))
+            if (!AttributeManager.getInstance().isAccountInherited(name))
                 return sEmptyMulti;
 
             Cos cos = getCOS();
@@ -210,14 +212,14 @@ public class LdapAccount extends LdapNamedEntry implements Account {
                 return attrs;
             
             // then enumerate through all inheritable attrs and add them if needed
-            String[] inheritable = mProv.getConfig().getMultiAttr(Provisioning.A_zimbraCOSInheritedAttr);
-            for (int i = 0; i < inheritable.length; i++) {
-                if (!prefsOnly || inheritable[i].startsWith("zimbraPref")) {
+            Set<String> inheritable =  AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInherited);
+            for (String attr : inheritable) {
+                if (!prefsOnly || attr.startsWith("zimbraPref")) {
                     Object value = attrs.get(inheritable);
                     if (value == null)
-                        value = getMultiAttr(inheritable[i]);
+                        value = getMultiAttr(attr);
                     if (value != null)
-                        attrs.put(inheritable[i], value);
+                        attrs.put(attr, value);
                 }
             }
         } catch (NamingException e) {

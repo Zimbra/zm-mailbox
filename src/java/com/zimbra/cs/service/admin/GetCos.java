@@ -34,6 +34,7 @@ import java.util.Map.Entry;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
@@ -82,11 +83,12 @@ public class GetCos extends AdminDocumentHandler {
         cos.addAttribute(AdminService.A_NAME, c.getName());
         cos.addAttribute(AdminService.E_ID, c.getId());
         Map attrs = c.getAttrs();
+        AttributeManager attrMgr = AttributeManager.getInstance();
         for (Iterator mit=attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry entry = (Entry) mit.next();
             String name = (String) entry.getKey();
             Object value = entry.getValue();
-            boolean isCosAttr = !config.isInheritedAccountAttr(name);
+            boolean isCosAttr = !attrMgr.isAccountInherited(name);
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++) {

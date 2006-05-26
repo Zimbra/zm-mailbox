@@ -32,10 +32,13 @@ package com.zimbra.cs.account.ldap;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
+import com.zimbra.cs.account.AttributeFlag;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -67,7 +70,7 @@ public class LdapServer extends LdapNamedEntry implements Server {
             return v;
         try {
             Config c = mProv.getConfig();
-            if (!c.isInheritedServerAttr(name))
+            if (!AttributeManager.getInstance().isServerInherited(name))
                 return null;
             else
                 return c.getAttr(name);
@@ -82,7 +85,7 @@ public class LdapServer extends LdapNamedEntry implements Server {
             return v;
         try {
             Config c = mProv.getConfig();
-            if (!c.isInheritedServerAttr(name))
+            if (!AttributeManager.getInstance().isServerInherited(name))
                 return sEmptyMulti;
             else
                 return c.getMultiAttr(name);
@@ -106,13 +109,13 @@ public class LdapServer extends LdapNamedEntry implements Server {
             
             // then enumerate through all inheritable attrs and add them if needed
             Config c = mProv.getConfig();
-            String[] inheritable = mProv.getConfig().getMultiAttr(Provisioning.A_zimbraServerInheritedAttr);
-            for (int i=0; i < inheritable.length; i++) {
-                Object value = attrs.get(inheritable[i]);
+            Set<String> inheritable = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.serverInherited);
+            for (String attr : inheritable) {
+                Object value = attrs.get(attr);
                 if (value == null)
-                    value = c.getMultiAttr(inheritable[i]);
+                    value = c.getMultiAttr(attr);
                 if (value != null)
-                    attrs.put(inheritable[i], value);
+                    attrs.put(attr, value);
             }
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to get attrs", e);

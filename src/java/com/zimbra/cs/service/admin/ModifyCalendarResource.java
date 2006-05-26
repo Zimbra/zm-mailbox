@@ -29,8 +29,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.ToXML;
@@ -68,10 +68,9 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
                     "cannot access calendar resource account");
 
         if (isDomainAdminOnly(lc)) {
-            Config conf = prov.getConfig();
             for (Iterator it = attrs.keySet().iterator(); it.hasNext();) {
                 String attrName = (String) it.next();
-                if (!conf.isDomainAdminModifiableAttr(attrName))
+                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName))
                     throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
             }
         }

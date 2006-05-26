@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -44,6 +45,8 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
+import com.zimbra.cs.account.AttributeFlag;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntrySearchFilter;
@@ -378,7 +381,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
             return v;
         try {
             Config c = mProv.getConfig();
-            if (!c.isInheritedDomainAttr(name))
+            if (!AttributeManager.getInstance().isDomainInherited(name))
                 return null;
             else
                 return c.getAttr(name);
@@ -393,7 +396,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
             return v;
         try {
             Config c = mProv.getConfig();
-            if (!c.isInheritedDomainAttr(name))
+            if (!AttributeManager.getInstance().isDomainInherited(name))
                 return sEmptyMulti;
             else
                 return c.getMultiAttr(name);
@@ -416,13 +419,13 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
                 return attrs;
             // then enumerate through all inheritable attrs and add them if needed
             Config c = mProv.getConfig();
-            String[] inheritable = mProv.getConfig().getMultiAttr(Provisioning.A_zimbraDomainInheritedAttr);
-            for (int i=0; i < inheritable.length; i++) {
-                Object value = attrs.get(inheritable[i]);
+            Set<String> inheritable = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.domainInherited);
+            for (String attr : inheritable) {
+                Object value = attrs.get(attr);
                 if (value == null)
-                    value = c.getMultiAttr(inheritable[i]);
+                    value = c.getMultiAttr(attr);
                 if (value != null)
-                    attrs.put(inheritable[i], value);
+                    attrs.put(attr, value);
             }
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to get attrs", e);

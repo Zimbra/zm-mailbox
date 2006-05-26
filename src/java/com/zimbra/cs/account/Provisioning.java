@@ -345,8 +345,6 @@ public abstract class Provisioning {
     
     public static final String A_zimbraDomainDefaultCOSId = "zimbraDomainDefaultCOSId";
     
-    public static final String A_zimbraDomainAdminModifiableAttr = "zimbraDomainAdminModifiableAttr";
-
     /**
      * For a zimbraDomain object, the domain's name (i.e., widgets.com) 
      */
@@ -363,16 +361,6 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraVirtualHostname = "zimbraVirtualHostname";
 
-    /**
-     * multi-value attr. Each attr is the name of another attribute that is
-     * allowed to be inherited from the cos attr to an account attr.
-     */
-    public static final String A_zimbraCOSInheritedAttr = "zimbraCOSInheritedAttr";
-    
-    public static final String A_zimbraDomainInheritedAttr = "zimbraDomainInheritedAttr";
-    
-    public static final String A_zimbraServerInheritedAttr = "zimbraServerInheritedAttr";
-    
     public static final String A_zimbraGalLdapURL = "zimbraGalLdapURL";
     
     public static final String A_zimbraGalLdapSearchBase = "zimbraGalLdapSearchBase";
@@ -703,7 +691,7 @@ public abstract class Provisioning {
     public static final String A_zimbraAdminAuthTokenLifetime = "zimbraAdminAuthTokenLifetime";
     public static final String A_zimbraMailMinPollingInterval =  "zimbraMailMinPollingInterval";
     public static final String A_zimbraPrefMailPollingInterval = "zimbraPrefMailPollingInterval";
-    public static final String A_zimbraAccountClientAttr = "zimbraAccountClientAttr";
+
     public static final String A_zimbraSpamHeader = "zimbraSpamHeader";
     public static final String A_zimbraSpamHeaderValue = "zimbraSpamHeaderValue";
     
