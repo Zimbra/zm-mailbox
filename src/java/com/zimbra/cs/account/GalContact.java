@@ -31,7 +31,7 @@ import com.zimbra.cs.service.ServiceException;
 /**
  * @author schemers
  */
-public interface GalContact {
+public interface GalContact extends Comparable {
     
     public String getId();
 

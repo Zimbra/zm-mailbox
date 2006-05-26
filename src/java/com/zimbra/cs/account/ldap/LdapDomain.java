@@ -31,6 +31,7 @@
 package com.zimbra.cs.account.ldap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -235,6 +236,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
                 results.hadMore = results.hadMore || resourceResults.hadMore;                
             }
         }
+        Collections.sort(results.matches);
         return results;
     }
 
