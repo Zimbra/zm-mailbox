@@ -67,15 +67,22 @@ public class LdapGalContact implements GalContact {
         sb.append("}");
         return sb.toString();
     }
+
+    private String getSingleAttr(String name) {
+        Object val = mAttrs.get(name);
+        if (val instanceof String) return (String) val;
+        else if (val instanceof String[]) return ((String[])val)[0];
+        else return null;
+    }
     
     private String getSortField() {
         if (mSortField != null) return mSortField;
         
-        mSortField = (String) mAttrs.get(Contact.A_fullName);
+        mSortField = getSingleAttr(Contact.A_fullName);
         if (mSortField != null) return mSortField;
 
-        String first = (String) mAttrs.get(Contact.A_firstName);
-        String last = (String) mAttrs.get(Contact.A_lastName);
+        String first = getSingleAttr(Contact.A_firstName);
+        String last = getSingleAttr(Contact.A_lastName);
         
         if (first != null || last != null) {
             StringBuilder sb = new StringBuilder();
@@ -88,7 +95,8 @@ public class LdapGalContact implements GalContact {
             }
             mSortField = sb.toString();
         } else {
-            mSortField = "";
+            mSortField = getSingleAttr(Contact.A_email);
+            if (mSortField == null) mSortField = "";
         }
         return mSortField;
     }
