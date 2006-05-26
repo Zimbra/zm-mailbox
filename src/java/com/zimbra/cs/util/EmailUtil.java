@@ -63,7 +63,7 @@ public class EmailUtil
         return new String[] { localPart, domain };
     }
     
-    private static final String DOMAIN_PATTERN = "[-\\w.]+";
+    private static final String DOMAIN_PATTERN = "[-a-zA-Z0-9\\.]+";
     
     private static final Pattern DOMAIN_REGEX = Pattern.compile(DOMAIN_PATTERN);
     	
