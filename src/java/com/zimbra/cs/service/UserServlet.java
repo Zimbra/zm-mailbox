@@ -201,7 +201,7 @@ public class UserServlet extends ZimbraServlet {
     	if (ctxt == null) {
     		resp.sendError(HttpServletResponse.SC_FORBIDDEN, message);
     	} else if (!ctxt.cookieAuthHappened && ctxt.basicAuthAllowed() && !ctxt.basicAuthHappened) {
-    		resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());            
+    		resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
     		resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, message);
     	} else {
     		resp.sendError(HttpServletResponse.SC_FORBIDDEN, message);
@@ -353,16 +353,8 @@ public class UserServlet extends ZimbraServlet {
         
         context.opContext = new OperationContext(context.authAccount);
 
-        MailItem item = null;
-        if (context.itemId != null) {
-            item = mbox.getItemById(context.opContext, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
-        } else {
-        	item = findItem(context);
-        }
-
-        if (item == null && context.getQueryString() == null)
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "item not found");
-
+        MailItem item = resolveItem(context);
+        
         if (item instanceof Mountpoint) {
             // if the target is a mountpoint, proxy the request on to the resolved target
             proxyOnMountpoint(req, resp, context, (Mountpoint) item);
@@ -476,6 +468,37 @@ public class UserServlet extends ZimbraServlet {
 
     }
 
+    /*
+     * Parses the pathInfo, then returns MailItem corresponding to the resource in pathInfo.
+     * 
+     * If the formatter does not require authentication, e.g. IfbFormatter, 
+     * then the path resolution is skipped and returns null.  That's because
+     * IfbFormatter does not internally use the resource identified in the URL.
+     * It gets the ifb information directly from the Mailbox.
+     * 
+     * If the formatter declares that the authentication is not required, it's
+     * the formatter's responsibility to make sure the MailItems returned to
+     * the clients has gone through the access checks.
+     * 
+     */
+    private MailItem resolveItem(Context context) throws ServiceException, UserServletException {
+    	if (context.formatter != null && !context.formatter.requiresAuth())
+    		return null;
+    	
+    	Mailbox mbox = context.targetMailbox;
+        MailItem item = null;
+        if (context.itemId != null) {
+            item = mbox.getItemById(context.opContext, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
+        } else {
+        	item = findItem(context);
+        }
+
+        if (item == null && context.getQueryString() == null)
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "item not found");
+
+    	return item;
+    }
+    
     private void proxyOnMountpoint(HttpServletRequest req, HttpServletResponse resp, Context context, Mountpoint mpt)
     throws IOException, ServletException, ServiceException, UserServletException {
         String uri = SERVLET_PATH + "/~/?" + QP_ID + '=' + mpt.getOwnerId() + "%3A" + mpt.getRemoteId();
