@@ -576,6 +576,19 @@ public class Appointment extends MailItem {
         if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this appointment");
 
+        // If we're doing a modify rather than cancel, make sure the organizer
+        // in the new Invite is the same as the original organizer.
+        if (!isCancel && newInvite.hasOrganizer()) {
+            String newOrgAddr = newInvite.getOrganizer().getAddress();
+            Invite defInv = getDefaultInvite();
+            if (!defInv.hasOrganizer())
+                throw ServiceException.INVALID_REQUEST(
+                        "Changing organizer of an appointment is not allowed: old=(unspecified), new=" + newOrgAddr, null);
+            String origOrgAddr = defInv.getOrganizer().getAddress();
+            if (!newOrgAddr.equalsIgnoreCase(origOrgAddr))
+                throw ServiceException.INVALID_REQUEST(
+                        "Changing organizer of an appointment is not allowed: old=" + origOrgAddr + ", new=" + newOrgAddr, null);
+        }
         boolean modifiedAppt = false;
         Invite prev = null; // (the first) invite which has been made obsolete by the new one coming in
         
