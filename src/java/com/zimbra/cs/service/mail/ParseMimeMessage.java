@@ -190,10 +190,6 @@ public class ParseMimeMessage {
                 // there if we have one
                 if (inviteElem != null) {
                     partElem = inviteElem;
-                    String type = inviteElem.getAttribute(MailService.A_CONTENT_TYPE, null);
-                    if (type == null) {
-                        inviteElem.addAttribute(MailService.A_CONTENT_TYPE, Mime.CT_TEXT_CALENDAR);
-                    }
                 }
                 // FIXME: should also try to stick additionalParts in there too!
             }
