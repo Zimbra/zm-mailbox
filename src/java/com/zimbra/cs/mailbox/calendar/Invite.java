@@ -823,6 +823,11 @@ public class Invite {
         sb.append(", start: ").append(this.mStart);
         sb.append(", end: ").append(this.mEnd);
         sb.append(", duration: ").append(this.mDuration);
+        sb.append(", organizer: ");
+        if (hasOrganizer())
+            sb.append(getOrganizer().getAddress());
+        else
+            sb.append("(not specified)");
         sb.append(", name: ").append(this.mName);
         sb.append(", comment: ").append(this.mComment);
         sb.append(", location: ").append(this.mLocation);
