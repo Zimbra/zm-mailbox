@@ -170,6 +170,11 @@ public class FolderAction extends ItemAction {
             if (nentry != null)
                 result.addAttribute(MailService.A_DISPLAY, nentry.getName());
         } else if (operation.equals(OP_UPDATE)) {
+            // Rename if new name is specified.
+            String newName = action.getAttribute(MailService.A_NAME, null);
+            if (newName != null)
+                mbox.renameFolder(octxt, iid.getId(), newName);
+
             // duplicating code from ItemAction.java for now...
             ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, "-1"), lc);
             if (!iidFolder.belongsTo(mbox))
