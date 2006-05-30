@@ -1475,7 +1475,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             i4set = (sequenceSet == null ? null : i4folder.getSubsequence(sequenceSet, true));
         }
         long checkpoint = System.currentTimeMillis();
-        for (int i = 0, max = i4folder.getSize(); i < max; i++) {
+        for (int i = 1, max = i4folder.getSize(); i <= max; i++) {
             ImapMessage i4msg = i4folder.getBySequence(i);
             if (i4msg != null && !i4msg.expunged && (i4msg.flags & Flag.FLAG_DELETED) > 0)
                 if (i4set == null || i4set.contains(i4msg)) {
