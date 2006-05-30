@@ -125,7 +125,15 @@ public class ZimletUtil {
 		List<Zimlet> allzimlets = prov.listAllZimlets();
 		return orderZimletsByPriority(allzimlets);
 	}
-	
+
+    public static void updateZimletConfig(String zimlet, String config) throws ServiceException {
+        Zimlet zim = Provisioning.getInstance().getZimlet(zimlet);
+        if (zim == null) throw ServiceException.INVALID_REQUEST("no such zimlet:" + zimlet, null);
+        Map<String, String> map = new HashMap<String, String>();
+        map.put(Provisioning.A_zimbraZimletHandlerConfig, config);
+        zim.modifyAttrs(map);
+    }
+
 	public static ZimletConfig getZimletConfig(String zimlet) {
 		loadZimlets();
 		loadDevZimlets();
@@ -416,7 +424,7 @@ public class ZimletUtil {
 		
 		// install the config
 		if (configString != null) {
-			prov.updateZimletConfig(zimletName, configString);
+			updateZimletConfig(zimletName, configString);
 		} else if (zf.hasZimletConfig()) {
 			installConfig(zf.getZimletConfig());
 		}
@@ -563,11 +571,9 @@ public class ZimletUtil {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			Cos c = prov.getCosByName(cos);
-			Set zimlets = c.getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets);
-			if (zimlets.contains(zimlet)) {
-				return;
-			}
-			prov.addZimletToCOS(zimlet, cos);
+            Map attrs = new HashMap<String, Object>();
+            attrs.put("+"+Provisioning.A_zimbraZimletAvailableZimlets, zimlet);
+            c.modifyAttrs(attrs);            
 		} catch (Exception e) {
 			throw ZimletException.CANNOT_ACTIVATE(zimlet, e.getCause().getMessage());
 		}
@@ -586,11 +592,9 @@ public class ZimletUtil {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			Cos c = prov.getCosByName(cos);
-			Set zimlets = c.getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets);
-			if (!zimlets.contains(zimlet)) {
-				return;
-			}
-			prov.removeZimletFromCOS(zimlet, cos);
+            Map attrs = new HashMap<String, Object>();
+            attrs.put("-"+Provisioning.A_zimbraZimletAvailableZimlets, zimlet);
+            c.modifyAttrs(attrs);
 		} catch (Exception e) {
 			throw ZimletException.CANNOT_DEACTIVATE(zimlet, e.getCause().getMessage());
 		}
@@ -811,16 +815,41 @@ public class ZimletUtil {
 		String zimletName = zc.getName();
 		ZimbraLog.zimlet.info("Installing Zimlet config for " + zimletName);
 		String configString = zc.toXMLString();
-		Provisioning prov = Provisioning.getInstance();
 		try {
-			prov.updateZimletConfig(zimletName, configString);
+			updateZimletConfig(zimletName, configString);
 			String allowedDomains = zc.getConfigValue(ZIMLET_ALLOWED_DOMAINS);
 			if (allowedDomains != null) {
-				prov.addAllowedDomains(allowedDomains, "default");  // XXX to default cos for now
+				addAllowedDomains(allowedDomains, "default");  // XXX to default cos for now
 			}
 		} catch (Exception e) {
 			throw ZimletException.INVALID_ZIMLET_CONFIG("cannot update Zimlet config for "+zimletName+" : "+e.getMessage());
 		}
+	}
+    
+	public static void addAllowedDomains(String domains, String cosName) throws ServiceException {
+	    Provisioning prov = Provisioning.getInstance();          
+	    Cos cos = prov.getCosByName(cosName);
+	    Set<String> domainSet = cos.getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
+	    String[] domainArray = domains.toLowerCase().split(",");
+	    for (int i = 0; i < domainArray.length; i++) {
+	        domainSet.add(domainArray[i]);
+	    }
+	    Map<String, String[]> newlist = new HashMap<String, String[]>();
+	    newlist.put(Provisioning.A_zimbraProxyAllowedDomains, domainSet.toArray(new String[0]));
+	    cos.modifyAttrs(newlist);
+	}
+
+	public static void removeAllowedDomains(String domains, String cosName) throws ServiceException {
+	    Provisioning prov = Provisioning.getInstance();            
+	    Cos cos = prov.getCosByName(cosName);
+	    Set<String> domainSet = cos.getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
+	    String[] domainArray = domains.toLowerCase().split(",");
+	    for (int i = 0; i < domainArray.length; i++) {
+	        domainSet.remove(domainArray[i]);
+	    }
+	    Map<String, String[]> newlist = new HashMap<String, String[]>();
+	    newlist.put(Provisioning.A_zimbraProxyAllowedDomains, domainSet.toArray(new String[0]));
+	    cos.modifyAttrs(newlist);
 	}
 	
 	public static void installConfig(String config) throws IOException, ZimletException {
