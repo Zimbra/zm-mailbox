@@ -153,7 +153,13 @@ public final class SessionCache {
      * 
      * @see Session#doCleanup() */
     public static void shutdown() {
-        synchronized(sLRUMap) {
+        sShutdown = true;
+        int size;
+        synchronized (sLRUMap) {
+            size = sLRUMap.size();
+        }
+        List<Session> list = new ArrayList<Session>(size);
+        synchronized (sLRUMap) {
             sLog.info("shutdown: clearing SessionCache");
 
             // empty the lru cache
@@ -161,10 +167,12 @@ public final class SessionCache {
             while (iter.hasNext()) {
                 Session session = (Session) iter.next();
                 iter.remove();
-                session.doCleanup();
-                assert(sLRUMap.get(session.getSessionId()) == null);
+                list.add(session);
             }
-            sShutdown = true;
+        }
+        // Call deadlock-prone Session.doCleanup() after releasing lock on sLRUMap.
+        for (Session s: list) {
+            s.doCleanup();
         }
     }
     
@@ -175,11 +183,12 @@ public final class SessionCache {
     /** The frequency at which we sweep the cache to delete idle sessions. */
     private static final long SESSION_SWEEP_INTERVAL_MSEC = 1 * Constants.MILLIS_PER_MINUTE;
 
-    static Log sLog = LogFactory.getLog(SessionCache.class);
+    private static Log sLog = LogFactory.getLog(SessionCache.class);
 
     /** The cache of all active {@link Session}s.  The keys of the Map are session IDs
      *  and the values are the Sessions themselves. */
-    static LinkedHashMap<String, Session>sLRUMap = new LinkedHashMap(500);
+    private static LinkedHashMap<String, Session> sLRUMap =
+        new LinkedHashMap<String, Session>(500);
 
     /** Whether we've received a {@link #shutdown()} call to kill the cache. */
     private static boolean sShutdown = false;
@@ -199,30 +208,35 @@ public final class SessionCache {
         if (sLog.isDebugEnabled())
             sLog.debug("updating session " + sessionId);
         synchronized(sLRUMap) {
+            // Remove then re-add.  This results in access-order behavior
+            // even though sLRUMap was constructed as insertion-order linked
+            // hash map.
             sLRUMap.remove(sessionId);
             session.updateAccessTime();
             sLRUMap.put(sessionId, session);
         }
     }
-    
+
     public static void dumpState(Writer w) {
-    	synchronized(sLRUMap) {
-			try {
-				w.write("\nACTIVE SESSIONS:\n");
-			} catch(IOException e) {};
-			
-    		for (Session s: sLRUMap.values()) {
-    			s.dumpState(w);
-    			try {
-    				w.write('\n');
-    			} catch(IOException e) {};
-    		}
-    		
-			try {
-				w.write('\n');
-			} catch(IOException e) {};
-    		
-    	}
+        // Copy map values, so we can iterate them later without sLRUMap locked.
+        // This prevents deadlock.
+        int size;
+        synchronized (sLRUMap) {
+            size = sLRUMap.size();
+        }
+        List<Session> list = new ArrayList<Session>(size);
+        synchronized (sLRUMap) {
+            for (Session s: sLRUMap.values()) {
+                list.add(s);
+            }
+        }
+
+        try { w.write("\nACTIVE SESSIONS:\n"); } catch(IOException e) {};
+        for (Session s: list) {
+            s.dumpState(w);
+            try { w.write('\n'); } catch(IOException e) {};
+        }
+        try { w.write('\n'); } catch(IOException e) {};
     }
 
     private static final class SweepMapTimerTask extends TimerTask {
@@ -233,7 +247,9 @@ public final class SessionCache {
             // keep track of the count of each session type that's removed
             ValueCounter removedSessionTypes = new ValueCounter();
             int numActive = 0;
-            
+
+            List<Session> toReap = new ArrayList<Session>(100);
+
             long now = System.currentTimeMillis();
             synchronized (sLRUMap) {
                 Iterator iter = sLRUMap.values().iterator();
@@ -243,13 +259,8 @@ public final class SessionCache {
                         continue;
                     long cutoffTime = now - s.getSessionIdleLifetime();
                     if (!s.accessedAfter(cutoffTime)) {
-                        if (sLog.isDebugEnabled())
-                            sLog.debug("Removing cached session: " + s);
-                        if (sLog.isInfoEnabled())
-                            removedSessionTypes.increment(StringUtil.getSimpleClassName(s));
                         iter.remove();
-                        s.doCleanup();
-                        assert(sLRUMap.get(s.getSessionId()) == null);
+                        toReap.add(s);
                     } else {
                         // mLRUMap iterates by last access order, most recently
                         // accessed element last.  We can break here because
@@ -258,6 +269,17 @@ public final class SessionCache {
                     }
                 }
                 numActive = sLRUMap.size();
+            }
+
+            // IMPORTANT: Clean up sessions *after* releasing lock on sLRUMap.
+            // If Session.doCleanup() is called with sLRUMap locked, it can lead
+            // to deadlock. (bug 7866)
+            for (Session s: toReap) {
+                if (sLog.isDebugEnabled())
+                    sLog.debug("Removing cached session: " + s);
+                if (sLog.isInfoEnabled())
+                    removedSessionTypes.increment(StringUtil.getSimpleClassName(s));
+                s.doCleanup();
             }
 
             if (sLog.isInfoEnabled() && removedSessionTypes.size() > 0) {
