@@ -35,11 +35,19 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.localconfig.LC;
@@ -82,11 +90,51 @@ public class StatsImageServlet extends ZimbraServlet {
         if (noDefaultImg != null && !noDefaultImg.equals("") && noDefaultImg.equals("1")){
             noDefault = true;
         }
-        
+        String reqPath = req.getRequestURI(); 
         try { 
-                
-	        //check if requested server IP is mine if yes, then find the picture, else ask another server for the picture
-	        String reqPath = req.getRequestURI();
+        	
+        	
+	        //check if this is the logger host, otherwise proxy the request to the logger host 
+			String serviceHostname = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
+			String logHost  = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraLogHostname);
+			if(!serviceHostname.equalsIgnoreCase(logHost)) {
+				StringBuffer url = new StringBuffer("https");
+				url.append("://").append(logHost).append(':').append(7071);
+				url.append(reqPath);
+				String queryStr = req.getQueryString();
+				if(queryStr != null)
+					url.append('?').append(queryStr);
+				
+				// create an HTTP client with the same cookies
+		        HttpState state = new HttpState();
+		        try {
+		            state.addCookie(new org.apache.commons.httpclient.Cookie(logHost, COOKIE_ZM_ADMIN_AUTH_TOKEN, authToken.getEncoded(), "/", null, false));
+		        } catch (AuthTokenException ate) {
+		            throw ServiceException.PROXY_ERROR(ate, url.toString());
+		        }
+		        HttpClient client = new HttpClient();
+		        client.setState(state);
+		        GetMethod get = new GetMethod(url.toString());
+		        try {
+		            int statusCode = client.executeMethod(get);
+		            if (statusCode != HttpStatus.SC_OK)
+		                throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), null);
+		            
+		            resp.setContentType("image/gif");
+		            ByteUtil.copy(get.getResponseBodyAsStream(), true, resp.getOutputStream(), false);
+		            return;
+		        } catch (HttpException e) {
+		            throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
+		        } catch (IOException e) {
+		            throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
+		        }	
+			}
+        } catch (Exception ex) {
+        	resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Image not found");
+        	return;
+        }       
+        try { 
+	        
 	        if(reqPath == null && reqPath.length()==0) {
 	        	resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
 	    		return;
@@ -98,23 +146,20 @@ public class StatsImageServlet extends ZimbraServlet {
 	        String reqParts[] = reqPath.split("/");
 	
 	        String reqFilename = reqParts[3];
-	        imgName = LC.stats_img_folder.value() + File.separator + reqFilename;
-        } catch (Exception ex) {
-            imgName = LC.stats_img_folder.value() + File.separator + IMG_NOT_AVAIL;       	
-        }       
-        try { 
+	        imgName = LC.stats_img_folder.value() + File.separator + reqFilename;        	
 	        try { 
 	        	is = new FileInputStream(imgName);
 	        } catch (FileNotFoundException ex) {//unlikely case - only if the server's files are broken
 	        	if(is != null)
-                            is.close();
+	        		is.close();
 	        	if (!noDefault){
-                            imgName = LC.stats_img_folder.value() + File.separator + IMG_NOT_AVAIL;
-                            is = new FileInputStream(imgName);
-                        } else {
-                            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Image not found");
-                            return;
-                        }
+                    imgName = LC.stats_img_folder.value() + File.separator + IMG_NOT_AVAIL;
+                    is = new FileInputStream(imgName);
+                
+	        	} else {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Image not found");
+                    return;
+                }
 	        }        
         } catch (Exception ex) {
         	if(is != null)
