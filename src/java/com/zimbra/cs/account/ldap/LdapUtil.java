@@ -896,7 +896,7 @@ public class LdapUtil {
         return timeA.compareTo(timeB) > 0 ? timeA : timeB;
     }
 
-    public static void changeExchangePassword(String urls[], String email, String oldPassword, String newPassword)
+    public static void changeActiveDirectoryPassword(String urls[], String email, String oldPassword, String newPassword)
         throws NamingException, ServiceException
     {
         Hashtable<String, String> env = new Hashtable<String, String>();
@@ -960,7 +960,7 @@ public class LdapUtil {
     
 
     public static void main(String args[]) throws NamingException, ServiceException {
-        changeExchangePassword(new String[] {"ldaps://host/"}, "email", "old", "new");
+        changeActiveDirectoryPassword(new String[] {"ldaps://host/"}, "email", "old", "new");
 /*
         Date now = new Date();
         String gts = generalizedTime(now);

@@ -151,7 +151,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         if (mode == null || mode.equals(Provisioning.GM_ZIMBRA)) {
             results = searchZimbraGal(n, maxResults, token, false);
         } else if (mode.equals(Provisioning.GM_LDAP)) {
-            results = searchLdapGal(n, maxResults, token);
+            results = searchLdapGal(n, maxResults, token, false);
         } else if (mode.equals(Provisioning.GM_BOTH)) {
             String tokens[] = null;
             if (token != null) {
@@ -161,7 +161,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
             if (tokens == null) tokens = new String[] {null, null}; 
                 
             results = searchZimbraGal(n, maxResults/2, tokens[0], false);
-            SearchGalResult ldapResults = searchLdapGal(n, maxResults/2, tokens[1]);
+            SearchGalResult ldapResults = searchLdapGal(n, maxResults/2, tokens[1], false);
             if (ldapResults != null) {
                 results.matches.addAll(ldapResults.matches);
                 results.token = LdapUtil.getLaterTimestamp(results.token, ldapResults.token);
@@ -209,10 +209,10 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
         if (mode == null || mode.equals(Provisioning.GM_ZIMBRA)) {
             results = searchZimbraGal(n, maxResults, null, true);
         } else if (mode.equals(Provisioning.GM_LDAP)) {
-            results = searchLdapGal(n, maxResults, null);
+            results = searchLdapGal(n, maxResults, null, true);
         } else if (mode.equals(Provisioning.GM_BOTH)) {
             results = searchZimbraGal(n, maxResults/2, null, true);
-            SearchGalResult ldapResults = searchLdapGal(n, maxResults/2, null);
+            SearchGalResult ldapResults = searchLdapGal(n, maxResults/2, null, true);
             if (ldapResults != null) {
                 results.matches.addAll(ldapResults.matches);
                 results.token = LdapUtil.getLaterTimestamp(results.token, ldapResults.token);
@@ -359,14 +359,14 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
 
     private SearchGalResult searchLdapGal(String n,
                                           int maxResults,
-                                          String token)
+                                          String token, boolean autoComplete)
     throws ServiceException {
         String url[] = getMultiAttr(Provisioning.A_zimbraGalLdapURL);
         String bindDn = getAttr(Provisioning.A_zimbraGalLdapBindDn);
         String bindPassword = getAttr(Provisioning.A_zimbraGalLdapBindPassword);
         String searchBase = getAttr(Provisioning.A_zimbraGalLdapSearchBase, "");
-        String filter = getAttr(Provisioning.A_zimbraGalLdapFilter);
         LdapGalMapRules rules = getGalRules();
+        String filter = getAttr(autoComplete ? Provisioning.A_zimbraGalAutoCompleteLdapFilter : Provisioning.A_zimbraGalLdapFilter);
         String[] galAttrList = rules.getLdapAttrs();
         try {
             return LdapUtil.searchLdapGal(url, bindDn, bindPassword, searchBase, filter, n, maxResults, rules, token);

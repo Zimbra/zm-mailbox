@@ -371,6 +371,8 @@ public abstract class Provisioning {
 
     public static final String A_zimbraGalLdapFilter = "zimbraGalLdapFilter";
     
+    public static final String A_zimbraGalAutoCompleteLdapFilter = "zimbraGalAutoCompleteLdapFilter";
+    
     public static final String A_zimbraGalLdapAttrMap = "zimbraGalLdapAttrMap";    
 
     /**
