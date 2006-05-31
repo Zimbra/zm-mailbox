@@ -883,19 +883,6 @@ public abstract class Provisioning {
      * @throws ServiceException
      */
     public abstract Account createAccount(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException;
-    
-    /**
-     * copy an account from the remote system to the local system. The local domain must already exist.
-     * 
-     * @param emailAddress
-     * @param remoteURL remote ldap://host/ URL
-     * @param remoteBindDn remote bind dn to use (i.e., uid=zimbra,cn=admins,cn=zimbra)
-     * @param remoteBindPassword password for bind dn
-     * @return account as created on the local sysem.
-     * @throws ServiceException
-     */
-    public abstract Account copyAccount(String emailAddress, String remoteURL, 
-            String remoteBindDn, String remoteBindPassword) throws ServiceException;
 
     /**
      * deletes the specified account, removing the account and all email aliases.

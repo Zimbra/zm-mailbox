@@ -599,58 +599,6 @@ public class LdapProvisioning extends Provisioning {
         }
         return null;
     }
-
-    /**
-     * copy an account with the specified name (user@domain) from the source to the local system.
-     * @throws ServiceException
-     * 
-     */
-    public Account copyAccount(String emailAddress, String remoteURL, 
-            String remoteBindDn, String remoteBindPassword) throws ServiceException {
-        
-        emailAddress = emailAddress.toLowerCase().trim();
-        
-        DirContext ctxt = null;
-        DirContext rctxt = null;
-        
-        try {
-            ctxt = LdapUtil.getDirContext(true);
-            
-            String parts[] = emailAddress.split("@");
-            
-            if (parts.length != 2)
-                throw ServiceException.INVALID_REQUEST("must be valid email address: "+emailAddress, null);
-            
-            String uid = parts[0];
-            String domain = parts[1];
-
-            Domain d = getDomainByName(domain, ctxt);
-            if (d == null)
-                throw AccountServiceException.NO_SUCH_DOMAIN(domain);
-
-            rctxt = LdapUtil.getDirContext(new String[] {remoteURL}, remoteBindDn, remoteBindPassword);
-            
-            String dn = domainToAccountBaseDN(domain);
-            LdapAccount remoteAccount = getAccountByQuery(
-                    dn,
-                    "(&(|(uid=" + uid +
-                    ")(zimbraMailAlias=" + emailAddress + "))" +
-                    FILTER_ACCOUNT_OBJECTCLASS + ")",
-                    rctxt);
-            Attributes attrs = remoteAccount.getRawAttrs();
-            
-            String accountDn = emailToDN(uid, domain);
-            createSubcontext(ctxt, accountDn, attrs, "copyAccount");
-            LdapAccount acct = (LdapAccount) getAccountById(remoteAccount.getId(), ctxt);
-            return acct;
-        } catch (NameAlreadyBoundException nabe) {
-            throw AccountServiceException.ACCOUNT_EXISTS(emailAddress);
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to create account: "+emailAddress, e);
-        } finally {
-            LdapUtil.closeContext(ctxt);
-        }
-    }
             
     public Account createAdminAccount(String uid, String password, Map<String, Object> acctAttrs) throws ServiceException {
 

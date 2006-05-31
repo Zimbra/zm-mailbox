@@ -76,11 +76,6 @@ public class LdapEntry implements Entry {
         return mDn;
     }
 
-    synchronized Attributes getRawAttrs() {
-        Attributes attrs = (Attributes) mAttrs.clone();
-        return attrs;
-    }
-
     public synchronized String getAttr(String name) {
         try {
             return LdapUtil.getAttrString(mAttrs, name);

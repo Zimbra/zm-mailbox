@@ -52,7 +52,6 @@ public class ProvUtil {
         System.out.println("zmprov [cmd] [args ...]");
         System.out.println("");
 
-        //System.out.println("  CopyAccount(cpa) {name@domain} {ldap-url} {ldap-bind-dn} {ldap-bind-passwd}");
         //System.out.println("  CreateBulkAccounts(cabulk) {domain} {namemask} {number of accounts to create} ");
         System.out.println("  CreateAccount(ca) {name@domain} {password} [attr1 value1 [attr2 value2...]]");
         System.out.println("  DeleteAccount(da) {name@domain|id}");
@@ -150,7 +149,6 @@ public class ProvUtil {
     private static final int ADD_ACCOUNT_ALIAS = 108;
     private static final int REMOVE_ACCOUNT_ALIAS = 109;
     private static final int RENAME_ACCOUNT = 110;
-    private static final int COPY_ACCOUNT = 111;
     private static final int CREATE_BULK_ACCOUNTS = 112;
     private static final int GET_ACCOUNT_MEMBERSHIP = 114;
 
@@ -248,7 +246,6 @@ public class ProvUtil {
         addCommand("addAccountAlias", "aaa", ADD_ACCOUNT_ALIAS);
         addCommand("createAccount", "ca", CREATE_ACCOUNT);
         addCommand("createBulkAccounts", "cabulk", CREATE_BULK_ACCOUNTS);
-        addCommand("copyAccount", "cpa", COPY_ACCOUNT);        
         addCommand("getAccount", "ga", GET_ACCOUNT);        
         addCommand("getAccountMembership", "gam", GET_ACCOUNT_MEMBERSHIP);
         addCommand("getAllAccounts","gaa", GET_ALL_ACCOUNTS);
@@ -340,9 +337,6 @@ public class ProvUtil {
             break;
         case AUTO_COMPLETE_GAL:
             doAutoCompleteGal(args); 
-            break;            
-        case COPY_ACCOUNT:
-            doCopyAccount(args); 
             break;            
         case CREATE_ACCOUNT:
             doCreateAccount(args); 
@@ -660,19 +654,6 @@ public class ProvUtil {
                 Account account = mProvisioning.createAccount(name, password, attrs);
                 System.out.println(account.getId());
            }
-        }
-    }
-
-    private void doCopyAccount(String[] args) throws ServiceException {
-        if (args.length < 5) {
-            usage();
-        } else {
-            String name = args[1];
-            String url = args[2];
-            String dn = args[3];
-            String password = args[4];
-            Account account = mProvisioning.copyAccount(name, url, dn, password);
-            System.out.println(account.getId());
         }
     }
 
