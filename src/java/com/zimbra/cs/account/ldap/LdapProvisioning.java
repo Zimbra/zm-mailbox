@@ -1522,6 +1522,7 @@ public class LdapProvisioning extends Provisioning {
             
             try {
                 ctxt.unbind(d.getDN());
+                sDomainCache.remove(d);                
             } catch (ContextNotEmptyException e) {
                 // remove from cache before nuking all attrs
                 sDomainCache.remove(d);                
@@ -1535,7 +1536,7 @@ public class LdapProvisioning extends Provisioning {
                 }
                 d.modifyAttrs(attrs, false);
             }
-            
+
             String defaultDomain = getConfig().getAttr(A_zimbraDefaultDomainName, null);
             if (name.equalsIgnoreCase(defaultDomain)) {
                 try {
