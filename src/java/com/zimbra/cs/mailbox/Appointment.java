@@ -543,11 +543,14 @@ public class Appointment extends MailItem {
      * @param invite
      * @param force if true, then force update to this appointment, otherwise use RFC2446 sequencing rules
      */
-    void processNewInvite(ParsedMessage pm, Invite invite, boolean force, int folderId, short volumeId)
+    void processNewInvite(ZOrganizer originalOrganizer,
+                          ParsedMessage pm,
+                          Invite invite,
+                          boolean force, int folderId, short volumeId)
     throws ServiceException {
         String method = invite.getMethod();
         if (method.equals(ICalTok.REQUEST.toString()) || method.equals(ICalTok.CANCEL.toString()) || method.equals(ICalTok.PUBLISH.toString())) {
-            processNewInviteRequestOrCancel(pm, invite, force, folderId, volumeId);
+            processNewInviteRequestOrCancel(originalOrganizer, pm, invite, force, folderId, volumeId);
         } else if (method.equals("REPLY")) {
             processNewInviteReply(pm, invite, force);
         }
@@ -565,7 +568,12 @@ public class Appointment extends MailItem {
         saveMetadata();
     }
 
-    private void processNewInviteRequestOrCancel(ParsedMessage pm, Invite newInvite, boolean force, int folderId, short volumeId)
+    private void processNewInviteRequestOrCancel(ZOrganizer originalOrganizer,
+                                                 ParsedMessage pm,
+                                                 Invite newInvite,
+                                                 boolean force,
+                                                 int folderId,
+                                                 short volumeId)
     throws ServiceException {
         String method = newInvite.getMethod();
 
@@ -578,16 +586,21 @@ public class Appointment extends MailItem {
 
         // If we're doing a modify rather than cancel, make sure the organizer
         // in the new Invite is the same as the original organizer.
-        if (!isCancel && newInvite.hasOrganizer()) {
-            String newOrgAddr = newInvite.getOrganizer().getAddress();
-            Invite defInv = getDefaultInvite();
-            if (!defInv.hasOrganizer())
-                throw ServiceException.INVALID_REQUEST(
-                        "Changing organizer of an appointment is not allowed: old=(unspecified), new=" + newOrgAddr, null);
-            String origOrgAddr = defInv.getOrganizer().getAddress();
-            if (!newOrgAddr.equalsIgnoreCase(origOrgAddr))
-                throw ServiceException.INVALID_REQUEST(
-                        "Changing organizer of an appointment is not allowed: old=" + origOrgAddr + ", new=" + newOrgAddr, null);
+        if (!isCancel) {
+            if (newInvite.hasOrganizer()) {
+                String newOrgAddr = newInvite.getOrganizer().getAddress();
+                if (originalOrganizer == null)
+                    throw ServiceException.INVALID_REQUEST(
+                            "Changing organizer of an appointment is not allowed: old=(unspecified), new=" + newOrgAddr, null);
+                String origOrgAddr = originalOrganizer.getAddress();
+                if (!newOrgAddr.equalsIgnoreCase(origOrgAddr))
+                    throw ServiceException.INVALID_REQUEST(
+                            "Changing organizer of an appointment is not allowed: old=" + origOrgAddr + ", new=" + newOrgAddr, null);
+            } else {
+                if (originalOrganizer != null)
+                    throw ServiceException.INVALID_REQUEST(
+                            "Removing organizer of an appointment is not allowed", null);
+            }
         }
         boolean modifiedAppt = false;
         Invite prev = null; // (the first) invite which has been made obsolete by the new one coming in

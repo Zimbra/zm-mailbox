@@ -64,6 +64,7 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -2669,8 +2670,11 @@ public class Mailbox {
                     return 0; // for now, just ignore this Invitation
                 }
             } else {
+                ZOrganizer originalOrganizer = appt.getDefaultInvite().getOrganizer();
                 appt.removeAllInvites(); 
-                appt.processNewInvite(defaultInv.mPm, defaultInv.mInv,
+                appt.processNewInvite(originalOrganizer,
+                                      defaultInv.mPm,
+                                      defaultInv.mInv,
                                       defaultInv.mForce, folderId, volumeId);
             }
 
@@ -2680,8 +2684,9 @@ public class Mailbox {
 
             // handle the exceptions!
             if (exceptions != null) {
+                ZOrganizer originalOrganizer = appt.getDefaultInvite().getOrganizer();
                 for (SetAppointmentData sad : exceptions) {
-                    appt.processNewInvite(sad.mPm, sad.mInv, sad.mForce, folderId, volumeId);
+                    appt.processNewInvite(originalOrganizer, sad.mPm, sad.mInv, sad.mForce, folderId, volumeId);
                 }
             }
             
@@ -2749,7 +2754,8 @@ public class Mailbox {
                     return null; // for now, just ignore this Invitation
                 }
             } else {
-                appt.processNewInvite(pm, inv, force, folderId, volumeId);
+                ZOrganizer originalOrganizer = appt.getDefaultInvite().getOrganizer();
+                appt.processNewInvite(originalOrganizer, pm, inv, force, folderId, volumeId);
             }
             redoRecorder.setAppointmentAttrs(appt.getId(),
                                              appt.getFolderId(),
