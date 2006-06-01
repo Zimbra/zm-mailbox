@@ -48,7 +48,6 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.DateUtil;
 
 /**

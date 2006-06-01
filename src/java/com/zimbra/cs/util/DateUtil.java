@@ -34,8 +34,6 @@ import java.util.regex.Pattern;
 
 import javax.mail.internet.MailDateFormat;
 
-import com.zimbra.cs.service.ServiceException;
-
 public class DateUtil {
 
     /**
