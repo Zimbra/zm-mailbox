@@ -155,8 +155,7 @@ public abstract class AbstractAccount implements Account {
         throw new UnsupportedOperationException();
     }
 
-    public long getTimeInterval(String name, long defaultValue)
-            throws AccountServiceException {
+    public long getTimeInterval(String name, long defaultValue) {
         throw new UnsupportedOperationException();
     }
 

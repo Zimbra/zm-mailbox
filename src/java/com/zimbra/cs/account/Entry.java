@@ -129,9 +129,8 @@ public interface Entry {
      * @param name name of the attribute to retreive. 
      * @param defaultValue value to use if attr is not present or can't be parsed.
      * @return interval in milliseconds
-     * @throws AccountServiceException 
      */
-    public long getTimeInterval(String name, long defaultValue) throws AccountServiceException;
+    public long getTimeInterval(String name, long defaultValue);
 
     /**
      * 

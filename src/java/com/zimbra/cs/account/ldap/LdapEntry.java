@@ -238,39 +238,8 @@ public class LdapEntry implements Entry {
         }
     }
 
-    public long getTimeInterval(String name, long defaultValue) throws AccountServiceException {
-        String v = getAttr(name);
-        if (v == null || v.length() == 0)
-            return defaultValue;
-        else {
-            try {
-                char units = v.charAt(v.length()-1);
-                if (units >= '0' && units <= '9') {
-                    return Long.parseLong(v)*1000;
-                } else {
-                    long n = Long.parseLong(v.substring(0, v.length()-1));
-                    switch (units) {
-                    case 'd':
-                        n = n * Constants.MILLIS_PER_DAY;
-                        break;
-                    case 'h':
-                        n = n * Constants.MILLIS_PER_HOUR;
-                        break;
-                    case 'm':
-                        n = n * Constants.MILLIS_PER_MINUTE;
-                        break;
-                    case 's':
-                        n = n * Constants.MILLIS_PER_SECOND;
-                        break;
-                    default:
-                        throw AccountServiceException.INVALID_ATTR_VALUE("unable to parse duration: "+v, null);
-                    }
-                    return n;
-                }
-            } catch (NumberFormatException e) {
-                return defaultValue;
-            }
-        }
+    public long getTimeInterval(String name, long defaultValue) {
+        return DateUtil.getTimeInterval(getAttr(name), defaultValue);
     }
     
     public long getLongAttr(String name, long defaultValue) {
