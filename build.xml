@@ -45,7 +45,6 @@
 	<property name="build.dir" location="build" />
 	<property name="build.classes.dir" location="${build.dir}/classes" />
 	<property name="build.metainf.dir" location="${build.dir}/classes/META-INF/services" />
-	<property name='build.wiki.dir' location='${build.dir}/wiki' />
 
 	<property name="dist.dir" location="build/dist" />
 	<property name="dist.bin.dir" location="${dist.dir}/bin" />
@@ -65,6 +64,7 @@
 	<property name="dist.openldap.schema.dir" location="${dist.openldap.etc.dir}/schema" />
 	<property name="dist.tarfile" value="dev-service.tar" />
 	<property name="dist.zimlet.dir" location="${dist.dir}/zimlets" />
+	<property name='dist.wiki.dir' location='${dist.dir}/wiki' />
 
 	<property name="config.dir" location="conf" />
 	<condition property="web.xml.source" value="${config.dir}/web.xml">
@@ -91,7 +91,7 @@
 
 	<property name='data.dir' location='data' />
 	<property name='data.soap.dir' location='${data.dir}/soap' />
-	<property name='data.wiki.dir' location='${data.dir}/wiki-prod' />
+	<property name='data.wiki.dir' location='${data.dir}/wiki' />
 
 	<property name="deploy.war" value="${warfile}" />
 	<property name="deploy.host" value="localhost" />
@@ -114,11 +114,8 @@
 
 	<property name="zimlets" value="com_zimbra_phone,com_zimbra_tracking,com_zimbra_url,com_zimbra_email,com_zimbra_date"/>
 
-	<property name='wiki.host' value='http://localhost:7070' />
-	<property name='wiki.url' value='${wiki.host}/service/soap' />
-	<property name='wiki.user' value='user1' />
+	<!-- global wiki account -->
 	<property name='wiki.user.default' value='wiki' />
-	<!-- domain notebook user -->
 	<property name='wiki.password' value='test123' />
 
 	<condition property="is-windows">
@@ -228,6 +225,7 @@
 		<mkdir dir="${dist.openldap.schema.dir}" />
 		<mkdir dir="${generated.java.dir}" />
 		<mkdir dir="${dist.zimlet.dir}" />
+		<mkdir dir="${dist.wiki.dir}" />
 	</target>
 
 	<target name="javadoc" depends="set-buildinfo-vars">
@@ -433,6 +431,11 @@
 			<fileset dir="${jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar" />
 		</copy>
 		<copy file="${config.dir}/localconfig.xml" todir="${dist.conf.dir}" overwrite="true"/>
+		<delete dir='${dist.wiki.dir}' quiet='true' />
+		<mkdir dir='${dist.wiki.dir}'/>
+		<copy todir="${dist.wiki.dir}" overwrite="true">
+			<fileset dir="${data.wiki.dir}" includes="**" />
+		</copy>
 		<!--
   	<tar destfile="${dist.dir}/test-msgs.tar">
   	  <tarfileset dir="data/TestMailRaw"
@@ -464,7 +467,7 @@
 
 	<target name="reset-the-world-stage1" depends="clean,compile,jar,init" description="Run when tomcat is stopped." />
 
-	<target name="reset-the-world-stage2" depends="service-deploy,deploy-zimlets,inject" description="Run when tomcat is running." />
+	<target name="reset-the-world-stage2" depends="service-deploy,deploy-zimlets,init-wiki,inject" description="Run when tomcat is running." />
 
 	<target name="init" depends="stop-servers,quick-init,ldap-init,tomcat-init,start-ldap,ldap-load,start-tomcat" />
 
@@ -486,38 +489,23 @@
 			<arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r user1@${zimbra.server.hostname} -s ho@example.zimbra.com -d" />
 			<arg path="data/TestMailRaw" />
 		</java>
-		<echo>Granting domain access to Domain Notebook: ${wiki.user.default}@{zimbra.server.hostname}</echo>
-		<filter token='WIKI_URL' value='${wiki.url}' />
-		<filter token='WIKI_USER_DEFAULT' value='${wiki.user.default}' />
-		<filter token='ZIMBRA_SERVER_HOSTNAME' value='${zimbra.server.hostname}' />
-		<copy todir='${build.dir}' filtering='true'>
-			<fileset dir='${data.soap.dir}' includes='wiki-grant.xml' />
-		</copy>
-		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<!--arg line="-d" /-->
-			<!-- DEBUG -->
-			<arg line='-f ${build.dir}/wiki-grant.xml' />
+		<echo>Importing Wiki documents for user1</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="impn -u user1@${zimbra.server.hostname} -p test123 -f ${data.wiki.dir}/user1 -t /" />
 		</java>
 	</target>
 
-	<target name="import-wiki" description="Import Wiki documents into the system">
-		<delete dir='${build.wiki.dir}' quiet='true' />
-		<mkdir dir='${build.wiki.dir}'/>
-		<property name='import-wiki.binary-files' value='**/*.jpg,**/*.gif' />
-		<filter token='HOST' value='${wiki.host}' />
-		<filter token="USER" value="${wiki.user}" />
-		<copy todir='${build.wiki.dir}' filtering='true' overwrite="true">
-			<fileset dir='${data.wiki.dir}' excludes='${import-wiki.binary-files}'/>
-		</copy>
-		<copy todir='${build.wiki.dir}' filtering='false'>
-			<fileset dir='${data.wiki.dir}' includes='${import-wiki.binary-files}'/>
-		</copy>
-		<echo>Importing Wiki documents for: ${wiki.user}</echo>
-		<java classname="com.zimbra.cs.wiki.ImportWiki" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-s ${wiki.url}" />
-			<arg line="-u ${wiki.user}" />
-			<arg line="-p ${wiki.password}" />
-			<arg line="-d ${build.wiki.dir}" />
+	<target name="import-wiki" description="Import Wiki for test user">
+		<echo>Importing Wiki documents for user1</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="impn -u user1@${zimbra.server.hostname} -p test123 -f ${data.wiki.dir}/user1 -t /" />
+		</java>
+	</target>
+
+	<target name="init-wiki" description="Initialize the default Wiki account">
+		<echo>Initializing wiki@${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="in -u ${wiki.user.default}@${zimbra.server.hostname} -p ${wiki.password} -f ${data.wiki.dir}/Template -t Template" />
 		</java>
 	</target>
 
@@ -731,10 +719,6 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ca user4@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Four' displayName 'Demo User Four' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-07.00) Arizona' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 4444'"/>
 		</java>
-		<echo>Creating account: ${wiki.user.default}@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca ${wiki.user.default}@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Domain Notebook' displayName 'Domain Notebook' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-07.00) Arizona' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 4444'"/>
-		</java>
 
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="ca spam-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE zimbraMailQuota 0 zimbraHideInGal TRUE" />
@@ -748,6 +732,10 @@
 		</java>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="mcf zimbraSpamIsNotSpamAccount ham-sink@${zimbra.server.hostname}" />
+		</java>
+		<echo>Setting up default Wiki account name</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="mcf zimbraNotebookDefaultAccount ${wiki.user.default}@${zimbra.server.hostname}" />
 		</java>
 
 		<echo>Creating calendar resource: room-mississippi@${zimbra.server.hostname}</echo>
