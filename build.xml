@@ -735,7 +735,7 @@
 		</java>
 		<echo>Setting up default Wiki account name</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="mcf zimbraNotebookDefaultAccount ${wiki.user.default}@${zimbra.server.hostname}" />
+			<arg line="mcf zimbraNotebookAccount ${wiki.user.default}@${zimbra.server.hostname}" />
 		</java>
 
 		<echo>Creating calendar resource: room-mississippi@${zimbra.server.hostname}</echo>
