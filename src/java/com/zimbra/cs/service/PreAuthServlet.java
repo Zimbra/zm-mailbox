@@ -112,7 +112,7 @@ public class PreAuthServlet extends ZimbraServlet {
                 // see if we need a redirect to the correct server
                 AuthToken at = AuthToken.getAuthToken(authToken);
                 Account acct = prov.getAccountById(at.getAccountId());
-                if (acct.isCorrectHost()) {
+                if (Provisioning.onLocalServer(acct)) {
                     setCookieAndRedirect(req, resp, authToken);
                 } else {
                     redirectToCorrectServer(req, resp, acct, authToken);
@@ -141,7 +141,7 @@ public class PreAuthServlet extends ZimbraServlet {
                 AuthToken at = (expires ==  0) ? new AuthToken(acct) : new AuthToken(acct, expires);
                 try {
                     authToken = at.getEncoded();
-                    if (acct.isCorrectHost()) {
+                    if (Provisioning.onLocalServer(acct)) {
                         setCookieAndRedirect(req, resp, authToken);
                     } else {
                         redirectToCorrectServer(req, resp, acct, authToken);

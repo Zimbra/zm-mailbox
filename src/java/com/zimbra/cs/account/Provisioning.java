@@ -1014,6 +1014,12 @@ public abstract class Provisioning {
     
     public abstract Server getLocalServer() throws ServiceException;
     
+    public static boolean onLocalServer(Account account) throws ServiceException {
+        String target    = account.getAttr(Provisioning.A_zimbraMailHost);
+        String localhost = getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
+        return (target != null && target.equalsIgnoreCase(localhost));
+    }
+
     public abstract Server createServer(String name, Map<String, Object> attrs) throws ServiceException;
 
     public abstract Server getServerById(String zimbraId) throws ServiceException;

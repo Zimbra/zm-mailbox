@@ -276,7 +276,7 @@ public class UserServlet extends ZimbraServlet {
     private boolean isProxyRequest(HttpServletRequest req, HttpServletResponse resp, Context context) throws IOException, ServiceException {
         // this should handle both explicit /user/user-on-other-server/ and
         // /user/~/?id={account-id-on-other-server}:id            
-        if (!context.targetAccount.isCorrectHost()) {
+        if (!Provisioning.onLocalServer(context.targetAccount)) {
             try {
                 if (context.basicAuthHappened && context.authTokenCookie == null) 
                     context.authTokenCookie = new AuthToken(context.authAccount).getEncoded();

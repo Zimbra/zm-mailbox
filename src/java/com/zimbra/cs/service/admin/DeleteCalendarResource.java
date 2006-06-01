@@ -68,7 +68,7 @@ public class DeleteCalendarResource extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED(
                     "cannot access calendar resource account");
 
-        if (!resource.isCorrectHost()) {
+        if (!Provisioning.onLocalServer(resource)) {
             // Request must be sent to the host that the mailbox is on, so that
             // the mailbox can be deleted
             throw ServiceException.WRONG_HOST(

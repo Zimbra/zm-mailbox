@@ -185,7 +185,7 @@ public class ParseMailboxID
                 throw AccountServiceException.NO_SUCH_ACCOUNT(idStr);
             }
             
-            if (!forceRemote && acct.isCorrectHost()) {
+            if (!forceRemote &&  Provisioning.onLocalServer(acct)) {
                 mIsLocal = true;
                 mMailbox = Mailbox.getMailboxByAccountId(acct.getId());
                 mMailboxId = mMailbox.getId();
@@ -199,7 +199,7 @@ public class ParseMailboxID
             if (acct == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(idStr);
 
-            if (!forceRemote && acct.isCorrectHost()) {
+            if (!forceRemote && Provisioning.onLocalServer(acct)) {
                 mIsLocal = true;
                 mMailbox = Mailbox.getMailboxByAccountId(acct.getId());
                 mMailboxId = mMailbox.getId();

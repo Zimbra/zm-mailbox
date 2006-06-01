@@ -126,7 +126,7 @@ public class Auth extends DocumentHandler  {
         Element response = lc.createElement(AccountService.AUTH_RESPONSE);
         response.addAttribute(AccountService.E_AUTH_TOKEN, token, Element.DISP_CONTENT);
         response.addAttribute(AccountService.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.DISP_CONTENT);
-        boolean isCorrectHost = acct.isCorrectHost();
+        boolean isCorrectHost =  Provisioning.onLocalServer(acct);
         if (isCorrectHost) {
             Session session = lc.getNewSession(acct.getId(), SessionCache.SESSION_SOAP);
             if (session != null)

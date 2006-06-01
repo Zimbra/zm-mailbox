@@ -73,7 +73,7 @@ public class DeleteAccount extends AdminDocumentHandler {
         if (!canAccessAccount(lc, account))
             throw ServiceException.PERM_DENIED("can not access account");
         
-        if (!account.isCorrectHost()) {
+        if (!Provisioning.onLocalServer(account)) {
             // Request must be sent to the host that the mailbox is on, so that
             // the mailbox can be deleted
             throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);

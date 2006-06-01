@@ -100,13 +100,6 @@ public interface Account extends NamedEntry {
      * @throws ServiceException
      */
     public List<DistributionList> getDistributionLists(boolean directOnly, Map<String,String> via) throws ServiceException; 
-    
-    /**
-     * check whether this account's mailbox is supposed to be on this host
-     * 
-     * @throws ServiceException
-     */
-    public boolean isCorrectHost() throws ServiceException;
 
     /**
      * @return the Server object where this account's mailbox is homed

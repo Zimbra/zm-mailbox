@@ -537,7 +537,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false)) {
                 sendNO(tag, "account does not have IMAP access enabled");
                 return CONTINUE_PROCESSING;
-            } else if (!account.isCorrectHost()) {
+            } else if (!Provisioning.onLocalServer(account)) { 
                 String correctHost = account.getAttr(Provisioning.A_zimbraMailHost);
                 ZimbraLog.imap.info("LOGIN failed; should be on host " + correctHost);
                 if (correctHost == null || correctHost.trim().equals(""))

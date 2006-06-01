@@ -228,12 +228,6 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         return attrs;
     }
 
-    public boolean isCorrectHost() throws ServiceException{
-        String target    = getAttr(Provisioning.A_zimbraMailHost);
-        String localhost = mProv.getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
-        return (target != null && target.equalsIgnoreCase(localhost));
-    }
-
     public Server getServer() throws ServiceException {
         String serverId = getAttr(Provisioning.A_zimbraMailHost);
         return (serverId == null ? null : mProv.getServerByName(serverId));

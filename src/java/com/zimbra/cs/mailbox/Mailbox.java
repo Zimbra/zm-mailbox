@@ -1023,7 +1023,7 @@ public class Mailbox {
         Account account = getAccount(accountId);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
-        if (!account.isCorrectHost())
+        if (!Provisioning.onLocalServer(account))
             throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
         synchronized (sMailboxCache) {
             mailboxKey = (Integer) sMailboxCache.get(accountId.toLowerCase());
@@ -1109,7 +1109,7 @@ public class Mailbox {
                     // exception forces the clients to reconnect to the new
                     // server.
                     Account account = mailbox.getAccount();
-                    if (!account.isCorrectHost()) {
+                    if (!Provisioning.onLocalServer(account)) {
                         throw MailServiceException.WRONG_HOST(
                                 account.getAttr(Provisioning.A_zimbraMailHost),
                                 null);
@@ -1272,7 +1272,7 @@ public class Mailbox {
     public static Mailbox createMailbox(OperationContext octxt, Account account) throws ServiceException {
         if (account == null)
             throw new IllegalArgumentException("createMailbox: must specify an account");
-        if (!account.isCorrectHost())
+        if (!Provisioning.onLocalServer(account))
             throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
 
         Mailbox mailbox = null;
