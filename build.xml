@@ -376,7 +376,7 @@
 
 	<target name="deploy" depends="service-deploy" description="Just an alias to service-deploy"/>
 
-	<target name="service-deploy" depends="deploy-war,install-zimlets,refresh-opt-zimbra" description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
+	<target name="service-deploy" depends="deploy-war,deploy-zimlets,refresh-opt-zimbra" description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
 	<target name="deploy-war" depends="war">
 		<echo message="Wait for tomcat to start at http://${deploy.host}:${deploy.port}/" />
@@ -467,7 +467,7 @@
 
 	<target name="reset-the-world-stage1" depends="clean,compile,jar,init" description="Run when tomcat is stopped." />
 
-	<target name="reset-the-world-stage2" depends="service-deploy,deploy-zimlets,init-wiki,inject" description="Run when tomcat is running." />
+	<target name="reset-the-world-stage2" depends="service-deploy,init-wiki,inject" description="Run when tomcat is running." />
 
 	<target name="init" depends="stop-servers,quick-init,ldap-init,tomcat-init,start-ldap,ldap-load,start-tomcat" />
 
@@ -859,7 +859,7 @@
 		</exec>
 	</target>
 
-	<target name="reload-zimlets" depends="install-zimlets,restart-tomcat"/>
+	<target name="reload-zimlets" depends="deploy-zimlets,restart-tomcat"/>
 
 	<target name="package-zimlets" depends="build-init,package-zimlets-core"/>
 	<target name="package-zimlets-core">
@@ -887,12 +887,6 @@
 	<target name="deploy-zimlets" depends="package-zimlets">
 		<foreach list="${zimlets}" target="install-zimlet" param="zimlet">
 			<param name="action" value="deploy"/>
-		</foreach>
-	</target>
-
-	<target name="install-zimlets" depends="package-zimlets">
-		<foreach list="${zimlets}" target="install-zimlet" param="zimlet">
-			<param name="action" value="install"/>
 		</foreach>
 	</target>
 
