@@ -45,6 +45,11 @@ import com.zimbra.cs.util.L10nUtil;
  */
 public abstract class Provisioning {
 
+    
+    public final static String TRUE  = "TRUE";
+
+    public final static String FALSE = "FALSE";
+
     public static final String DEFAULT_COS_NAME = "default";
 
     /**

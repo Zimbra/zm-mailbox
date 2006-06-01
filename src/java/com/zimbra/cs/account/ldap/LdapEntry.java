@@ -157,7 +157,7 @@ public class LdapEntry implements Entry {
 
     public void setBooleanAttr(String name, boolean value) throws ServiceException {
         HashMap<String, String> attrs = new HashMap<String, String>(1);
-        attrs.put(name, value ? LdapUtil.LDAP_TRUE : LdapUtil.LDAP_FALSE);
+        attrs.put(name, value ? Provisioning.TRUE : Provisioning.FALSE);
         modifyAttrs(attrs);
     }
 
@@ -221,7 +221,7 @@ public class LdapEntry implements Entry {
         if (v == null)
             return defaultValue;
         else 
-            return LdapUtil.LDAP_TRUE.equals(v);
+            return Provisioning.TRUE.equals(v);
     }
 
     public int getIntAttr(String name, int defaultValue) {
