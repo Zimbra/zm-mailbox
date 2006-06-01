@@ -37,6 +37,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -54,10 +55,36 @@ public class FileUtil {
 		copy(new File(src), new File(dest));
 	}
 
-	public static void copy(File src, File dest) throws IOException {
-		FileInputStream in = in = new FileInputStream(src);
-        copy(in, true, dest);
-	}
+    public static void copy(File from, File to) throws IOException {
+    	FileInputStream fin = null;
+    	FileOutputStream fout = null;
+    	try {
+    		fin = new FileInputStream(from);
+    		fout = new FileOutputStream(to);
+    		FileChannel cin = fin.getChannel();
+    		FileChannel cout = fout.getChannel();
+    		long target = cin.size();
+    		long transferred = cin.transferTo(0, target, cout);
+    		if (target != transferred) {
+    			throw new IOException("FileUtil.copy(" + from + "," + to + "): incomplete transfer target=" + target + " transferred=" + transferred); 
+    		}
+    	} finally {
+    		if (fin != null) {
+    			try {
+    				fin.close();
+    			} catch (IOException ioe) {
+    				ZimbraLog.misc.warn("FileUtil.copy(" + from + "," + to + "): ignoring exception while closing input channel", ioe);
+    			}
+    		}
+    		if (fout != null) {
+    			try {
+    				fout.close();
+    			} catch (IOException ioe) {
+    				ZimbraLog.misc.warn("FileUtil.copy(" + from + "," + to + "): ignoring exception while closing output channel", ioe);
+    			}
+    		}
+    	}
+    }
 
     /**
      * Copy an input stream to file.
@@ -90,7 +117,7 @@ public class FileUtil {
             }
         }
     }
-    
+
     public static void ensureDirExists(File dir) throws IOException {
         if (!mkdirs(dir))
             throw new IOException("Unable to create directory " + dir.getPath());
