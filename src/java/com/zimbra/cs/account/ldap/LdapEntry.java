@@ -29,6 +29,7 @@
  */
 package com.zimbra.cs.account.ldap;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -204,36 +205,23 @@ public class LdapEntry implements Entry {
             mMultiAttrSetCache = new HashMap<String, Set<String>>();        
         Set<String> result = mMultiAttrSetCache.get(name);
         if (result == null) {
-            result = new HashSet<String>();            
-            String values[] = getMultiAttr(name);
-            if (values != null && values.length != 0) {
-                for (int i=0; i < values.length; i++) {
-                    result.add(values[i]);
-                }
-                mMultiAttrSetCache.put(name, result);
-            }
+            result =  new HashSet<String>(Arrays.asList(getMultiAttr(name)));
+            mMultiAttrSetCache.put(name, result);
         }
         return result;        
     }
 
     public boolean getBooleanAttr(String name, boolean defaultValue) {
         String v = getAttr(name);
-        if (v == null)
-            return defaultValue;
-        else 
-            return Provisioning.TRUE.equals(v);
+        return v == null ? defaultValue : Provisioning.TRUE.equals(v);
     }
 
     public int getIntAttr(String name, int defaultValue) {
         String v = getAttr(name);
-        if (v == null)
+        try {
+            return v == null ? defaultValue : Integer.parseInt(v);
+        } catch (NumberFormatException e) {
             return defaultValue;
-        else {
-            try {
-                return Integer.parseInt(v);
-            } catch (NumberFormatException e) {
-                return defaultValue;
-            }
         }
     }
 
@@ -243,23 +231,16 @@ public class LdapEntry implements Entry {
     
     public long getLongAttr(String name, long defaultValue) {
         String v = getAttr(name);
-        if (v == null)
+        try {
+            return v == null ? defaultValue : Long.parseLong(v);
+        } catch (NumberFormatException e) {
             return defaultValue;
-        else {
-            try {
-                return Long.parseLong(v);
-            } catch (NumberFormatException e) {
-                return defaultValue;
-            }
         }
     }
 
     public String getAttr(String name, String defaultValue) {
         String v = getAttr(name);
-        if (v == null)
-            return defaultValue;
-        else
-            return v;
+        return v == null ? defaultValue : v; 
     }
 
     public Date getGeneralizedTimeAttr(String name, Date defaultValue) {    
