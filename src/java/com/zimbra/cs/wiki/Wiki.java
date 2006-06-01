@@ -251,6 +251,9 @@ public class Wiki {
 	}
 	
 	private Wiki(Account acct, int fid) throws ServiceException {
+		if (!acct.getBooleanAttr("zimbraFeatureNotebookEnabled", false))
+			throw WikiServiceException.NOT_ENABLED();
+		
 		mWikiWords = new HashMap<String,WikiWord>();
 		
 		mWikiAccount = acct.getId();

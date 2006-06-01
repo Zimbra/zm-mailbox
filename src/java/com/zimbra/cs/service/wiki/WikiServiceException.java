@@ -58,4 +58,7 @@ public class WikiServiceException extends ServiceException {
     public static WikiServiceException ERROR(String w, Throwable cause) {
         return new WikiServiceException("error: "+ w, ERROR, SENDERS_FAULT, cause);
     }
+    public static WikiServiceException NOT_ENABLED() {
+        return new WikiServiceException("wiki is not enabled", ERROR, RECEIVERS_FAULT);
+    }
 }
