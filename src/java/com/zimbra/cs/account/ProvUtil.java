@@ -40,6 +40,7 @@ import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.wiki.WikiUtil;
 
 /**
  * @author schemers
@@ -119,6 +120,12 @@ public class ProvUtil {
         System.out.println("  GetCalendarResource(gcr) {name@domain|id}");
         System.out.println("  GetAllCalendarResources(gacr) [-v] [{domain}]");
         System.out.println("  SearchCalendarResources(scr) [-v] domain attr op value [attr op value...]");
+        
+        System.out.println();
+        System.out.println("  InitNotebook(in) [ -u {username} ] [ -p {password} ] [ -d {domain} ] [ -f {from dir} ] [ -t {to folder} ]");
+        System.out.println("  ImportNotebook(impn) [ -u {username} ] [ -p {password} ] [ -f {from dir} ] [ -t {to folder} ]");
+        System.out.println();
+        
         StringBuilder sb = new StringBuilder();
         EntrySearchFilter.Operator vals[] = EntrySearchFilter.Operator.values();
         for (int i = 0; i < vals.length; i++) {
@@ -207,6 +214,9 @@ public class ProvUtil {
     private static final int GET_CALENDAR_RESOURCE      = 905;
     private static final int GET_ALL_CALENDAR_RESOURCES = 906;
     private static final int SEARCH_CALENDAR_RESOURCES  = 907;
+    
+    private static final int INIT_NOTEBOOK = 1001;
+    private static final int IMPORT_NOTEBOOK = 1002;
 
     private static final int BY_ID = 1;
     private static final int BY_EMAIL = 2;
@@ -307,6 +317,9 @@ public class ProvUtil {
         addCommand("getAllCalendarResources", "gacr", GET_ALL_CALENDAR_RESOURCES);
         addCommand("searchCalendarResources", "scr",  SEARCH_CALENDAR_RESOURCES);
 
+        addCommand("initNotebook", "in",  INIT_NOTEBOOK);
+        addCommand("importNotebook", "impn",  IMPORT_NOTEBOOK);
+        
         addCommand("exit", "quit", EXIT);
         addCommand("help", "?", HELP);        
     }
@@ -508,6 +521,12 @@ public class ProvUtil {
             break;
         case SEARCH_CALENDAR_RESOURCES:
             doSearchCalendarResources(args);
+            break;
+        case INIT_NOTEBOOK:
+            importNotebook(args, true);
+            break;
+        case IMPORT_NOTEBOOK:
+            importNotebook(args, false);
             break;
         default:
             return false;
@@ -1589,6 +1608,51 @@ public class ProvUtil {
         }
     }
 
+    private void importNotebook(String[] args, boolean initialize) throws ServiceException {
+    	if (args.length < 2) {usage(); return; }
+    	
+    	String domain = null;
+    	String username = null;
+    	String password = null;
+    	String toFolder = null;
+    	String fromDir = null;
+    	boolean verbose = false;
+    	
+    	for (int i = 1; i < args.length;) {
+    		String opt = args[i++];
+    		if (opt.equals("-d")) domain = args[i++];
+    		else if (opt.equals("-u")) username = args[i++];
+    		else if (opt.equals("-p")) password = args[i++];
+    		else if (opt.equals("-t")) toFolder = args[i++];
+    		else if (opt.equals("-f")) fromDir = args[i++];
+    		else if (opt.equals("-v")) verbose = true;
+    		else { usage(); return; }
+    	}
+    	
+    	WikiUtil wu = new WikiUtil(username, password);
+    	if (verbose)
+    		wu.setVerbose();
+    	
+    	if (initialize) {
+    		// don't create mailboxes.  use soap instead.
+    		if (domain == null) {
+    			wu.initDefaultWiki(true);
+    		} else {
+    			wu.initDomainWiki(domain, true);
+    		}
+    	}
+    	
+    	if (fromDir != null) {
+    		try {
+    			wu.startImportSoap(toFolder, new java.io.File(fromDir));
+    		} catch (Exception e) {
+    			System.err.println("Cannot import templates from " + fromDir);
+    			e.printStackTrace();
+    			return;
+    		}
+    	}
+    }
+    
     private Account lookupAccount(String key) throws ServiceException {
         Account a = null;
         switch(guessType(key)) {

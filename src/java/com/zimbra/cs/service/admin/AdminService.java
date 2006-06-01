@@ -251,6 +251,9 @@ public class AdminService implements DocumentService {
     public static final QName GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST = QName.get("GetDistributionListMembershipRequest", NAMESPACE);
     public static final QName GET_DISTRIBUTION_LIST_MEMBERSHIP_RESPONSE = QName.get("GetDistributionListMembershipResponse", NAMESPACE);    
 
+    public static final QName INIT_NOTEBOOK_REQUEST  = QName.get("InitNotebookRequest",  NAMESPACE);
+    public static final QName INIT_NOTEBOOK_RESPONSE = QName.get("InitNotebookResponse", NAMESPACE);
+    
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -318,6 +321,7 @@ public class AdminService implements DocumentService {
 
     public static final String BY_ID = "id";
     public static final String BY_QUERY = "query";
+    public static final String BY_NAME = "name";
     
 	public static final String E_FIELD = "field";
 	public static final String E_MATCH = "match";
@@ -374,6 +378,9 @@ public class AdminService implements DocumentService {
     public static final String A_QUOTA_USED = "used";
     public static final String A_QUOTA_LIMIT = "limit";
 
+    public static final String E_TEMPLATE = "template";
+    public static final String A_DEST = "dest";
+    
     public static final String ADMIN_URI = "https://localhost:7071/";
 	
     public void registerHandlers(DocumentDispatcher dispatcher) {
@@ -485,6 +492,8 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(GET_MAIL_QUEUE_REQUEST, new GetMailQueue());
         dispatcher.registerHandler(MAIL_QUEUE_ACTION_REQUEST, new MailQueueAction());
         dispatcher.registerHandler(MAIL_QUEUE_FLUSH_REQUEST, new MailQueueFlush());
+        
+        dispatcher.registerHandler(INIT_NOTEBOOK_REQUEST, new InitNotebook());
     }
 
     /**

@@ -57,7 +57,7 @@ public class WikiTemplateStore {
 	}
 	
 	public static WikiTemplateStore getInstance() throws ServiceException {
-		Wiki w = Wiki.getInstance();
+		Wiki w = Wiki.getTemplateStore();
 		return WikiTemplateStore.getInstance(w.getWikiAccount(), w.getWikiFolderId());
 	}
 	
@@ -103,6 +103,8 @@ public class WikiTemplateStore {
 			if (!checkParents)
 				throw e;
 			WikiTemplateStore defaultStore = getInstance();
+			if (defaultStore.mAccountId.equals(mAccountId))
+				return new WikiTemplate("<!-- missing template "+name+" -->");
 			return defaultStore.getTemplate(octxt, name, checkParents);
 		}
 	}

@@ -41,6 +41,11 @@ public class LmcFolderActionRequest extends LmcSoapRequest {
         private String mTargetFolder;
 
         private String mName;
+        
+        private String mPerm;
+        private String mGrantee;
+        private String mD;
+        private boolean mInherit;
 
         /**
          * Set the list of Folder ID's to operate on
@@ -66,6 +71,13 @@ public class LmcFolderActionRequest extends LmcSoapRequest {
                 mTargetFolder = f;
         }
 
+        public void setGrant(String perm, String grantee, String d, boolean inherit) {
+        	mPerm = perm;
+        	mGrantee = grantee;
+        	mD = d;
+        	mInherit = inherit;
+        }
+        
         public String getFolderList() {
                 return mIDList;
         }
@@ -87,8 +99,20 @@ public class LmcFolderActionRequest extends LmcSoapRequest {
                 Element a = DomUtil.add(request, MailService.E_ACTION, "");
                 if (mIDList != null)
                     DomUtil.addAttr(a, MailService.A_ID, mIDList);
-                if (mOp != null)
+                if (mOp != null) {
                     DomUtil.addAttr(a, MailService.A_OPERATION, mOp);
+                    if (mOp.equals("grant") ||
+                    		mOp.equals("!grant")) {
+                    	Element grant = DomUtil.add(a, MailService.E_GRANT, "");
+                    	if (mPerm != null)
+                    		DomUtil.addAttr(grant, MailService.A_RIGHTS, mPerm);
+                    	if (mGrantee != null)
+                    		DomUtil.addAttr(grant, MailService.A_GRANT_TYPE, mGrantee);
+                    	if (mD != null)
+                    		DomUtil.addAttr(grant, MailService.A_DISPLAY, mD);
+                		DomUtil.addAttr(grant, MailService.A_INHERIT, mInherit);
+                    }
+                }
                 if (mName != null)
                     DomUtil.addAttr(a, MailService.A_NAME, mName);
                 if (mTargetFolder != null)

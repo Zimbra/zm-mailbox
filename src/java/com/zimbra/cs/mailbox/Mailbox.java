@@ -3411,6 +3411,9 @@ public class Mailbox {
     public synchronized void delete(OperationContext octxt, int itemId, byte type) throws ServiceException {
         delete(octxt, itemId, type, null);
     }
+    public synchronized void delete(OperationContext octxt, MailItem item, TargetConstraint tcon) throws ServiceException {
+        delete(octxt, item.getId(), item.getType(), tcon);
+    }
     public synchronized void delete(OperationContext octxt, int itemId, byte type, TargetConstraint tcon) throws ServiceException {
         DeleteItem redoRecorder = new DeleteItem(mId, itemId, type, tcon);
 

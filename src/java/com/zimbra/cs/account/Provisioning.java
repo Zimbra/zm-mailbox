@@ -841,6 +841,13 @@ public abstract class Provisioning {
     public static final String A_zimbraRemoteManagementPrivateKeyPath = "zimbraRemoteManagementPrivateKeyPath";
     public static final String A_zimbraRemoteManagementPort = "zimbraRemoteManagementPort";
 
+    
+    /*
+     * Wiki
+     */
+    public static final String A_zimbraNotebookDefaultAccount = "zimbraNotebookDefaultAccount";
+    public static final String A_zimbraNotebookDomainAccount = "zimbraNotebookDomainAccount";
+    
     private static Provisioning mProvisioning;
 
     public static Provisioning getInstance() {

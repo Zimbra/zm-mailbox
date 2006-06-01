@@ -31,11 +31,15 @@ public class WikiServiceException extends ServiceException {
 	public static final String NO_SUCH_WIKI = "wiki.NO_SUCH_WIKI";
 	public static final String NOT_WIKI_ITEM = "wiki.NOT_WIKI_ITEM";
 	public static final String CANNOT_READ = "wiki.CANNOT_READ";
+	public static final String ERROR = "wiki.ERROR";
 	
 	public static final String WIKI_ID = "w";
 	
     private WikiServiceException(String message, String code, boolean isReceiversFault, Argument... args) {
         super(message, code, isReceiversFault, args);
+    }
+    private WikiServiceException(String message, String code, boolean isReceiversFault, Throwable cause) {
+        super(message, code, isReceiversFault, cause);
     }
     public static class NoSuchWikiException extends WikiServiceException {
     	public NoSuchWikiException(String w) {
@@ -47,5 +51,11 @@ public class WikiServiceException extends ServiceException {
     }
     public static WikiServiceException CANNOT_READ(String w) {
         return new WikiServiceException("cannot read wiki message body: "+ w, CANNOT_READ, RECEIVERS_FAULT, new Argument(WIKI_ID, w));
+    }
+    public static WikiServiceException ERROR(String w) {
+        return new WikiServiceException("error: "+ w, ERROR, SENDERS_FAULT);
+    }
+    public static WikiServiceException ERROR(String w, Throwable cause) {
+        return new WikiServiceException("error: "+ w, ERROR, SENDERS_FAULT, cause);
     }
 }

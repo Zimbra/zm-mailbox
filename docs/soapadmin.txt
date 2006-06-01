@@ -1411,3 +1411,32 @@ all the queues in a given server.
 
 -----------------------------
 
+Initializes the Notebook account used for public folder and templates.
+
+{template-dir} is a directory on the server that contains the Wiki
+templates.  {template-folder} is a folder in the Mailbox that
+the templates are being imported to.  The default value of {template-folder}
+is "Template" folder.  
+
+When the element template is present in the request,
+the server will populate the template directory of the account
+with the template files in the directory.
+
+If the optional element domain is present, it will create the domain
+level wiki account used for public wiki folder for the domain.
+
+If the optional element account is present, the value will be used to
+create the account, and then sets either zimbraNotebookDefaultAccount
+or zimbraNotebookDomainAccount LDAP attribute.
+
+<InitNotebookRequest>
+  [<template dest="{template-folder}">{template-dir}</template>]
+  [<name>...</name>]
+  [<password>...</password>]
+  [<domain by="id|name">...</domain>]
+</InitNotebookRequest>
+
+<InitNotebookResponse/>
+
+-----------------------------
+

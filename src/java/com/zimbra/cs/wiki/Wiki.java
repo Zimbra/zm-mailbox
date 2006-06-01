@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.Document;
@@ -42,7 +43,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.wiki.WikiServiceException;
-import com.zimbra.cs.service.wiki.WikiServiceException.NoSuchWikiException;
 import com.zimbra.cs.session.WikiSession;
 import com.zimbra.cs.util.Pair;
 
@@ -60,7 +60,10 @@ public class Wiki {
 	
 	private static Map<Pair<String,String>,Wiki> wikiMap;
 	
-	private static final String WIKI_FOLDER =  "notebook";
+	private static final String WIKI_FOLDER     = "notebook";
+	private static final String TEMPLATE_FOLDER = "template";
+	
+	private static int sTemplateFolderId;
 	
 	static {
 		wikiMap = new HashMap<Pair<String,String>,Wiki>();
@@ -149,11 +152,33 @@ public class Wiki {
 	}
 	
 	public static Account getDefaultWikiAccount() throws ServiceException {
-		return Provisioning.getInstance().getAccountByName(LC.wiki_user.value());
+		Provisioning prov = Provisioning.getInstance();
+		Config globalConfig = prov.getConfig();
+		String defaultAcct = globalConfig.getAttr(Provisioning.A_zimbraNotebookDefaultAccount);
+		if (defaultAcct == null)
+			throw WikiServiceException.ERROR("empty config variable " + Provisioning.A_zimbraNotebookDefaultAccount);
+		Account acct = prov.getAccountByName(defaultAcct);
+		if (acct == null)
+			throw WikiServiceException.ERROR("no such account " + Provisioning.A_zimbraNotebookDefaultAccount);
+		
+		return acct;
 	}
 	
 	public static Wiki getInstance() throws ServiceException {
 		return getInstance(Wiki.getDefaultWikiAccount());
+	}
+	
+	public static Wiki getTemplateStore() throws ServiceException {
+		synchronized (Wiki.class) {
+			if (sTemplateFolderId == 0) {
+				Account acct = getDefaultWikiAccount();
+				OperationContext octxt = new OperationContext(acct);
+				WikiUrl wurl = new WikiUrl("//wiki/template");
+				Folder f = wurl.getFolder(octxt, acct.getId());
+				sTemplateFolderId = f.getId();
+			}
+		}
+		return getInstance(Wiki.getDefaultWikiAccount(), sTemplateFolderId);
 	}
 	
 	public static MailItem findWikiByPathTraverse(OperationContext octxt, String accountId, int fid, String path) throws ServiceException {
@@ -163,7 +188,7 @@ public class Wiki {
 
 		MailItem item = findWikiByNameTraverse(octxt, accountId, f.getId(), name);
 		if (item == null) {
-			Wiki w = getInstance();
+			Wiki w = getTemplateStore();
 			item = findWikiByNameTraverse(octxt, w.getWikiAccount(), w.getWikiFolderId(), name);
 		}
 		return item;
@@ -231,6 +256,8 @@ public class Wiki {
 		mWikiAccount = acct.getId();
 		mFolderId = fid;
 		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
+		if (mbox == null)
+			throw WikiServiceException.ERROR("wiki account mailbox not found");
 		OperationContext octxt = new OperationContext(acct);
 		loadWiki(octxt, mbox);
 		mbox.addListener(WikiSession.getInstance());
