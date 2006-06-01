@@ -108,8 +108,9 @@ public class ZCalendar {
             return super.toString().replace('_', '-');
         }
     }
-    
-    
+
+    private static final String LINE_BREAK = "\r\n";
+
     /**
      * @author tim
      * 
@@ -148,7 +149,8 @@ public class ZCalendar {
         }
         
         public String toString() {
-            StringBuffer toRet = new StringBuffer("BEGIN:VCALENDAR\n");
+            StringBuffer toRet = new StringBuffer("BEGIN:VCALENDAR");
+            toRet.append(LINE_BREAK);
             String INDENT = "\t";
             for (ZProperty prop : mProperties) {
                 toRet.append(prop.toString(INDENT));
@@ -162,7 +164,8 @@ public class ZCalendar {
         }
         
         public void toICalendar(Writer w) throws IOException {
-            w.write("BEGIN:VCALENDAR\n");
+            w.write("BEGIN:VCALENDAR");
+            w.write(LINE_BREAK);
             for (ZProperty prop : mProperties)
                 prop.toICalendar(w);
             
@@ -170,6 +173,29 @@ public class ZCalendar {
                 comp.toICalendar(w);
 
             w.write("END:VCALENDAR");
+        }
+
+        // Add DESCRIPTION property to components that take that property,
+        // if the property is not set.
+        public void addDescription(String desc) {
+            if (desc == null || desc.length() < 1) return;
+            ZProperty descProp = new ZProperty(ICalTok.DESCRIPTION, desc);
+            for (ZComponent comp : mComponents) {
+                ICalTok name = comp.getTok();
+                if (ICalTok.VEVENT.equals(name) ||
+                    ICalTok.VTODO.equals(name) ||
+                    ICalTok.VJOURNAL.equals(name)) {
+                    ZProperty prop = comp.getProperty(ICalTok.DESCRIPTION);
+                    if (prop == null) {
+                        comp.addProperty(descProp);
+                    } else {
+                        String val = prop.getValue();
+                        if (val == null || val.length() < 1)
+                            prop.setValue(desc);
+                    }
+                        
+                }
+            }
         }
     }
     
@@ -244,7 +270,7 @@ public class ZCalendar {
             w.write("BEGIN:");
             String name = escape(mName);
             w.write(name);
-            w.write('\n');
+            w.write(LINE_BREAK);
             
             for (ZProperty prop : mProperties) 
                 prop.toICalendar(w);
@@ -254,7 +280,7 @@ public class ZCalendar {
             
             w.write("END:");
             w.write(name);
-            w.write('\n');
+            w.write(LINE_BREAK);
         }        
     }
 
@@ -262,7 +288,7 @@ public class ZCalendar {
     // becomes \\\\ here because it is double-unescaped during the compile process!
     private static final Pattern MUST_ESCAPE = Pattern.compile("[,;\"\n\\\\]");
     private static final Pattern SIMPLE_ESCAPE = Pattern.compile("([,;\"\\\\])");
-    private static final Pattern NEWLINE_ESCAPE = Pattern.compile("[\r\n]+");
+    private static final Pattern NEWLINE_ESCAPE = Pattern.compile("[\r\n]");
     
     /**
      * ,;"\ and \n must all be escaped.  
@@ -413,7 +439,9 @@ public class ZCalendar {
             toRet.append(INDENT).append("END:").append(mName).append('\n');
             return toRet.toString();
         }
-        
+
+        private static final int CHARS_PER_FOLDED_LINE = 76;
+
         public void toICalendar(Writer w) throws IOException {
             StringWriter sw = new StringWriter();
             
@@ -427,11 +455,20 @@ public class ZCalendar {
             	sw.write(mValue);
             else
 	            sw.write(escape(mValue));
-            sw.write('\n');
-            
-            w.write(sw.toString());
-            
-//            System.out.println("PARAMOUT: "+sw.toString());
+
+            // Write with folding.
+            String rawval = sw.toString();
+            int len = rawval.length();
+            for (int i = 0; i < len; i += CHARS_PER_FOLDED_LINE) {
+                int upto = Math.min(i + CHARS_PER_FOLDED_LINE, len);
+                String segment = rawval.substring(i, upto);
+                if (i > 0) {
+                    w.write(LINE_BREAK);
+                    w.write(' ');
+                }
+                w.write(segment);
+            }
+            w.write(LINE_BREAK);
         }
         
         String getValue() { return mValue; }
@@ -491,6 +528,14 @@ public class ZCalendar {
             } else if (maValue.startsWith("\"") && maValue.endsWith("\"")) {
                 w.write('\"');
                 w.write(escape(maValue.substring(1, maValue.length()-1)));
+                w.write('\"');
+            } else if (ICalTok.TZID.equals(mTok)) {
+                // Microsoft Entourage 2004 (Outlook-like program for Mac)
+                // insists on quoting TZID parameter value (but not TZID
+                // property value).  It's an Entourage bug, but we have to
+                // keep it happy with a hacky quoting policy.
+                w.write('\"');
+                w.write(maValue);
                 w.write('\"');
             } else {
                 w.write(quote(maValue));
