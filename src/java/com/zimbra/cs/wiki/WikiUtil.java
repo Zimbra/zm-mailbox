@@ -475,7 +475,7 @@ public class WikiUtil {
 	public void initDefaultWiki(boolean useSoap) throws ServiceException {
 		Provisioning prov = Provisioning.getInstance();
 		Config globalConfig = prov.getConfig();
-		String prevAcct = globalConfig.getAttr(Provisioning.A_zimbraNotebookDefaultAccount);
+		String prevAcct = globalConfig.getAttr(Provisioning.A_zimbraNotebookAccount);
 		if (mUsername == null && prevAcct != null)
 			mUsername = prevAcct;
 		if (prevAcct != null && !prevAcct.equals(mUsername)) {
@@ -486,7 +486,7 @@ public class WikiUtil {
 		initFolders(acct, useSoap);
 		
 		HashMap<String,String> attrs = new HashMap<String,String>();
-		attrs.put(Provisioning.A_zimbraNotebookDefaultAccount, mUsername);
+		attrs.put(Provisioning.A_zimbraNotebookAccount, mUsername);
 		globalConfig.modifyAttrs(attrs);
 	}
 	
@@ -511,7 +511,7 @@ public class WikiUtil {
 	}
 	
 	public void initDomainWiki(Domain dom, boolean useSoap) throws ServiceException {
-		String prevAcct = dom.getAttr(Provisioning.A_zimbraNotebookDomainAccount);
+		String prevAcct = dom.getAttr(Provisioning.A_zimbraNotebookAccount);
 		if (prevAcct != null && !prevAcct.equals(mUsername)) {
 			ZimbraLog.wiki.info("updating default account from " + prevAcct + " to " + mUsername);
 		}
@@ -520,7 +520,7 @@ public class WikiUtil {
 		initFolders(acct, useSoap);
 		
 		HashMap<String,String> attrs = new HashMap<String,String>();
-		attrs.put(Provisioning.A_zimbraNotebookDomainAccount, mUsername);
+		attrs.put(Provisioning.A_zimbraNotebookAccount, mUsername);
 		dom.modifyAttrs(attrs);
 	}
 	

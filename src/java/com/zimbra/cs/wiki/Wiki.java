@@ -154,12 +154,12 @@ public class Wiki {
 	public static Account getDefaultWikiAccount() throws ServiceException {
 		Provisioning prov = Provisioning.getInstance();
 		Config globalConfig = prov.getConfig();
-		String defaultAcct = globalConfig.getAttr(Provisioning.A_zimbraNotebookDefaultAccount);
+		String defaultAcct = globalConfig.getAttr(Provisioning.A_zimbraNotebookAccount);
 		if (defaultAcct == null)
-			throw WikiServiceException.ERROR("empty config variable " + Provisioning.A_zimbraNotebookDefaultAccount);
+			throw WikiServiceException.ERROR("empty config variable " + Provisioning.A_zimbraNotebookAccount);
 		Account acct = prov.getAccountByName(defaultAcct);
 		if (acct == null)
-			throw WikiServiceException.ERROR("no such account " + Provisioning.A_zimbraNotebookDefaultAccount);
+			throw WikiServiceException.ERROR("no such account " + Provisioning.A_zimbraNotebookAccount);
 		
 		return acct;
 	}

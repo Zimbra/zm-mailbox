@@ -850,8 +850,7 @@ public abstract class Provisioning {
     /*
      * Wiki
      */
-    public static final String A_zimbraNotebookDefaultAccount = "zimbraNotebookDefaultAccount";
-    public static final String A_zimbraNotebookDomainAccount = "zimbraNotebookDomainAccount";
+    public static final String A_zimbraNotebookAccount = "zimbraNotebookAccount";
     
     private static Provisioning mProvisioning;
 

@@ -85,7 +85,7 @@ public class InitNotebook extends AdminDocumentHandler {
         	if (!canAccessDomain(lc, domain)) 
         		throw ServiceException.PERM_DENIED("can not access domain"); 
 
-        	String defaultUsername = domain.getAttr(Provisioning.A_zimbraNotebookDomainAccount, null);
+        	String defaultUsername = domain.getAttr(Provisioning.A_zimbraNotebookAccount, null);
 
         	if (username == null && defaultUsername == null)
         		throw ServiceException.INVALID_REQUEST("username is empty", null);
@@ -95,7 +95,7 @@ public class InitNotebook extends AdminDocumentHandler {
 
         	if (!username.equals(defaultUsername)) {
         		Map<String,String> attrMap = new HashMap<String,String>();
-        		attrMap.put(Provisioning.A_zimbraNotebookDomainAccount, username);
+        		attrMap.put(Provisioning.A_zimbraNotebookAccount, username);
         		domain.modifyAttrs(attrMap);
         	}
 
@@ -106,7 +106,7 @@ public class InitNotebook extends AdminDocumentHandler {
         } else {
         	
         	Config globalConfig = prov.getConfig();
-        	String defaultUsername = globalConfig.getAttr(Provisioning.A_zimbraNotebookDefaultAccount);
+        	String defaultUsername = globalConfig.getAttr(Provisioning.A_zimbraNotebookAccount);
 
         	if (username == null && defaultUsername == null)
         		throw ServiceException.INVALID_REQUEST("username is empty", null);
@@ -116,7 +116,7 @@ public class InitNotebook extends AdminDocumentHandler {
         	
         	if (!username.equals(defaultUsername)) {
         		Map<String,String> attrMap = new HashMap<String,String>();
-        		attrMap.put(Provisioning.A_zimbraNotebookDefaultAccount, username);
+        		attrMap.put(Provisioning.A_zimbraNotebookAccount, username);
         		globalConfig.modifyAttrs(attrMap);
         	}
         	
