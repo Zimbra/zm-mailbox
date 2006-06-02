@@ -85,6 +85,7 @@ public class LC {
     public static final KnownKey zimbra_mysql_user;
     public static final KnownKey zimbra_mysql_password;
     public static final KnownKey zimbra_ldap_userdn;
+    public static final KnownKey zimbra_ldap_user;
     public static final KnownKey zimbra_ldap_password;
     public static final KnownKey zimbra_server_hostname;
     public static final KnownKey zimbra_attrs_directory;
@@ -281,6 +282,11 @@ public class LC {
         zimbra_ldap_userdn.setDefault("uid=zimbra,cn=admins,cn=zimbra");
         zimbra_ldap_userdn.setDoc
             ("LDAP dn used to authenticate the store application with LDAP.");
+
+        zimbra_ldap_user = new KnownKey("zimbra_ldap_user");
+        zimbra_ldap_user.setDefault("zimbra");
+        zimbra_ldap_user.setDoc
+            ("zimbra username used to authenticate with admin AuthRequest.");
 
         zimbra_ldap_password = new KnownKey("zimbra_ldap_password");
         zimbra_ldap_password.setDefault("zimbra");
