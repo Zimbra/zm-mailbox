@@ -944,12 +944,97 @@ public class ICalTimeZone extends SimpleTimeZone
         return vtz;
     }
 
-    public static ICalTimeZone fromVTimeZone(ZComponent comp)
-    {
+    /**
+     * Return the time zone component (STANDARD and DAYLIGHT) with the more
+     * recent DTSTART value.  If DTSTART values are identical, tzComp2 is
+     * returned.  Null DTSTART value is considered earlier than any non-null
+     * value.
+     * @param tzComp1
+     * @param tzComp2
+     * @return
+     */
+    private static ZComponent moreRecentTzComp(ZComponent tzComp1,
+                                               ZComponent tzComp2) {
+        String dtStart1 = tzComp1.getPropVal(ICalTok.DTSTART, null);
+        String dtStart2 = tzComp2.getPropVal(ICalTok.DTSTART, null);
+        if (dtStart1 == null) return tzComp2;
+        if (dtStart2 == null) return tzComp1;
+        // String comparison works because the DTSTART strings have the format
+        // "yyyymmddThhmiss".
+        if (dtStart2.compareToIgnoreCase(dtStart1) >= 0)
+            return tzComp2;
+        else
+            return tzComp1;
+    }
+
+    public static ICalTimeZone fromVTimeZone(ZComponent comp) {
         String tzname = comp.getPropVal(ICalTok.TZID, null);
-        
-        ZComponent standard = comp.getComponent(ICalTok.STANDARD); 
-        ZComponent daylight = comp.getComponent(ICalTok.DAYLIGHT);
+
+        ZComponent standard = null;
+        ZComponent daylight = null;
+
+        // Find the most recent STANDARD and DAYLIGHT components.  "Most recent"
+        // means the component's DTSTART is later in time than that of all other
+        // components.  Thus, if multiple STANDARD components are specifieid in
+        // a VTIMEZONE, we end up using only the most recent definition.  The
+        // assumption is that all other STANDARD components are for past dates
+        // and they no longer matter.  We're forced to make this assumption
+        // because this class is a subclass of SimpleTimeZone, which doesn't
+        // allow historical information.
+        for (Iterator<ZComponent> iter = comp.getComponentIterator();
+             iter.hasNext(); ) {
+            ZComponent tzComp = iter.next();
+            if (tzComp == null) continue;
+            ICalTok tok = tzComp.getTok();
+            if (ICalTok.STANDARD.equals(tok)) {
+                if (standard == null) {
+                    standard = tzComp;
+                    continue;
+                } else
+                    standard = moreRecentTzComp(standard, tzComp);
+            } else if (ICalTok.DAYLIGHT.equals(tok)) {
+                if (daylight == null) {
+                    daylight = tzComp;
+                    continue;
+                } else
+                    daylight = moreRecentTzComp(daylight, tzComp);
+            }
+        }
+
+        // If both STANDARD and DAYLIGHT have no RRULE and their DTSTART has
+        // the same month and date, they have the same onset date.  Discard
+        // the older one.  (This happened with Asia/Singapore TZ definition
+        // created by Apple iCal; see bug 7335.)
+        if (standard != null && daylight != null) {
+            String stdRule = standard.getPropVal(ICalTok.RRULE, null);
+            String dayRule = daylight.getPropVal(ICalTok.RRULE, null);
+            // The rules should be either both non-null or both null.
+            // If only one is null then the VTIMEZONE is invalid, but we'll be
+            // lenient and treat it as if both were null.
+            if (stdRule == null || dayRule == null) {
+                String stdStart = standard.getPropVal(ICalTok.DTSTART, null);
+                String dayStart = daylight.getPropVal(ICalTok.DTSTART, null);
+                if (stdStart != null && dayStart != null) {
+                    try {
+                        // stdStart = yyyymmddThhmiss
+                        // stdStartMMDD = mmdd
+                        String stdStartMMDD = stdStart.substring(4, 8);
+                        String dayStartMMDD = dayStart.substring(4, 8);
+                        if (stdStartMMDD.equals(dayStartMMDD)) {
+                            standard = moreRecentTzComp(standard, daylight);
+                            daylight = null;
+                        }
+                    } catch (StringIndexOutOfBoundsException e) {
+                        // DTSTART values must have been malformed.  Just do
+                        // something reasonable and go on.
+                        standard = moreRecentTzComp(standard, daylight);
+                        daylight = null;
+                    }
+                }
+            }
+        }
+
+        // If only DAYLIGHT is given, make it the STANDARD.
         if (standard == null) {
         	standard = daylight;
         	daylight = null;
@@ -964,8 +1049,11 @@ public class ICalTimeZone extends SimpleTimeZone
         if (standard != null) {
             stddtStart = standard.getPropVal(ICalTok.DTSTART, null);
             String stdtzOffsetTo = standard.getPropVal(ICalTok.TZOFFSETTO, null);
-            stdoffsetTime = tzOffsetToTime(stdtzOffsetTo);  
-            stdrrule = standard.getPropVal(ICalTok.RRULE, null);
+            stdoffsetTime = tzOffsetToTime(stdtzOffsetTo);
+            if (daylight != null) {
+                // Rule is interesting only if daylight savings is in use.
+                stdrrule = standard.getPropVal(ICalTok.RRULE, null);
+            }
         }
         
         String daydtStart = null;

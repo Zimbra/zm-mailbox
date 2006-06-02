@@ -34,6 +34,7 @@ import java.io.Writer;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -132,6 +133,7 @@ public class ZCalendar {
         public void addComponent(ZComponent comp) { mComponents.add(comp); }
 
         public ZComponent getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
+        public Iterator<ZComponent> getComponentIterator() { return mComponents.iterator(); }
         public ZProperty getProperty(ICalTok tok) { return findProp(mProperties, tok); }
         public String getPropVal(ICalTok tok, String defaultValue) {
             ZProperty prop = getProperty(tok);
@@ -232,6 +234,7 @@ public class ZCalendar {
         public void addComponent(ZComponent comp) { mComponents.add(comp); }
         
         ZComponent getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
+        Iterator<ZComponent> getComponentIterator() { return mComponents.iterator(); }
         ZProperty getProperty(ICalTok tok) { return findProp(mProperties, tok); }
         public String getPropVal(ICalTok tok, String defaultValue) {
             ZProperty prop = getProperty(tok);
