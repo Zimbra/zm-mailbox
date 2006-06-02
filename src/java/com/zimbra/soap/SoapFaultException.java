@@ -25,10 +25,12 @@
 
 package com.zimbra.soap;
 
+import com.zimbra.cs.service.ServiceException;
 
+public class SoapFaultException extends ServiceException {
 
-public class SoapFaultException extends Exception {
-
+    public static final String FAULT        = "soap.FAULT";
+    
     private boolean mIsReceiversFault;
 //    private QName mCode;
 //    private QName subcode;
@@ -39,28 +41,15 @@ public class SoapFaultException extends Exception {
      * Create a new SoapFaultException.
      */
     public SoapFaultException(String message,
-                               //QName subcode,
                                Element detail,
                                boolean isReceiversFault)
 
     {
-        super(message);
+        super(message, getCode(detail), isReceiversFault);
         this.mIsReceiversFault = isReceiversFault;
         //this.subcode = subcode;
         this.mDetail = detail;
         this.mFault = null;
-    }
-
-    /**
-     * Create a new SoapFaultException. Used by subclasses
-     * when converting a mFault into a service-specific mFault
-     */
-    protected SoapFaultException(SoapFaultException sfe)
-    {
-        super(sfe.getMessage());
-        this.mIsReceiversFault = sfe.mIsReceiversFault;
-        this.mDetail = sfe.mDetail;
-        this.mFault = sfe.mFault;
     }
 
     /**
@@ -72,7 +61,7 @@ public class SoapFaultException extends Exception {
                         boolean isReceiversFault,
                         Element fault)
     {
-        super(message);
+        super(message, getCode(detail), isReceiversFault);
         this.mIsReceiversFault = isReceiversFault;
         this.mDetail = detail;
         this.mFault = fault;
@@ -81,22 +70,24 @@ public class SoapFaultException extends Exception {
     /**
      * used by transports and stub mCode
      */
-    public SoapFaultException(String message, 
-                               Throwable cause)
-    {
-        super(message, cause);
-    }
-
-    /**
-     * used by transports and stub mCode
-     */
     public SoapFaultException(String message,
                                Element fault)
     {
-        super(message);
+        super(message, FAULT, false);
         this.mFault = fault;
     }
 
+    private static String getCode(Element detail) {
+        
+        Element error = detail.getOptionalElement(ZimbraNamespace.E_ERROR);
+        if (error != null) {
+            Element code = error.getOptionalElement(ZimbraNamespace.E_CODE);
+            if (code != null)
+                return code.getText();
+        }
+        return FAULT;
+    }
+    
     /*
     public QName getSubcode()
     {

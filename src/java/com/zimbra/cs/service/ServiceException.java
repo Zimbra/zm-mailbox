@@ -53,8 +53,8 @@ public class ServiceException extends Exception {
     public static final String INTERRUPTED = "service.INTERRUPTED";
     public static final String NO_SPELL_CHECK_URL = "service.NO_SPELL_CHECK_URL"; 
     
-    private String mCode;
-    private Argument[] mArgs = null;
+    protected String mCode;
+    protected Argument[] mArgs = null;
     
     public static final String HOST            = "host";
     public static final String URL             = "url"; 

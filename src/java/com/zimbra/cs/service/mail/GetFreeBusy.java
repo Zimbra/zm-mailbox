@@ -119,11 +119,10 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
                 Element remoteResponse = proxyRequest(req, context, acct.getId());
                 for (Element thisElt : remoteResponse.listElements())
                     response.addElement(thisElt.detach());
-
-            } catch (ServiceException e) {
+            } catch (SoapFaultException e) {
                 for (int i = 0; i < idStrs.length; i++)
                     addFailureInfo(response, rangeStart, rangeEnd, idStrs[i], e);
-            } catch (SoapFaultException e) {
+            } catch (ServiceException e) {
                 for (int i = 0; i < idStrs.length; i++)
                     addFailureInfo(response, rangeStart, rangeEnd, idStrs[i], e);
             }

@@ -180,12 +180,12 @@ public class SoapEngine {
                     doc.detach();
                 	responseBody = lc.getProxyTarget().dispatch(doc);
                     responseBody.detach();
-                } catch (ServiceException e) {
-                    responseBody = responseProto.soapFault(e);
-                    mLog.info("proxy handler exception", e);
                 } catch (SoapFaultException e) {
                     responseBody = e.getFault().detach();
                     mLog.debug("proxy handler exception", e);
+                } catch (ServiceException e) {
+                    responseBody = responseProto.soapFault(e);
+                    mLog.info("proxy handler exception", e);
                 } catch (Throwable e) {
                     responseBody = responseProto.soapFault(ServiceException.FAILURE(e.toString(), e));
                     if (e instanceof OutOfMemoryError)
@@ -258,13 +258,13 @@ public class SoapEngine {
             // if no proxy, execute the request locally
             if (response == null)
                 response = handler.handle(request, context);
+        } catch (SoapFaultException e) {
+            response = e.getFault().detach();
+            mLog.debug("handler exception", e);
         } catch (ServiceException e) {
             response = soapProto.soapFault(e);
             mLog.info("handler exception", e);
             // XXX: if the session was new, do we want to delete it?
-        } catch (SoapFaultException e) {
-            response = e.getFault().detach();
-            mLog.debug("handler exception", e);
         } catch (Throwable e) {
             // TODO: better exception stack traces during develope?
             response = soapProto.soapFault(ServiceException.FAILURE(e.toString(), e));
