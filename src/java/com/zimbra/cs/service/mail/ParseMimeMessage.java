@@ -156,6 +156,25 @@ public class ParseMimeMessage {
     }
     
 
+    // Recursively find and return the content of the first text/plain part.
+    private static String getTextPlainContent(Element mpElem) {
+        if (mpElem == null) return null;
+        String type =
+            mpElem.getAttribute(MailService.A_CONTENT_TYPE, Mime.CT_DEFAULT).trim().toLowerCase();
+        if (type.equals(Mime.CT_DEFAULT)) {
+            Element contentElem = mpElem.getOptionalElement(MailService.E_CONTENT);
+            return contentElem != null ? contentElem.getText() : null;
+        } else if (type.startsWith(Mime.CT_MULTIPART_PREFIX)) {
+            for (Iterator<Element> it = mpElem.elementIterator(MailService.E_MIMEPART); it.hasNext(); ) {
+                Element elem = it.next();
+                String text = getTextPlainContent(elem);
+                if (text != null)
+                    return text;
+            }
+        }
+        return null;
+    }
+
     /**
      * Given an <m> element from SOAP, return us a parsed MimeMessage, 
      * and also fill in the MimeMessageData structure with information we parsed out of it (e.g. contained 
@@ -185,19 +204,6 @@ public class ParseMimeMessage {
             Element attachElem = msgElem.getOptionalElement(MailService.E_ATTACH); 
             Element inviteElem = msgElem.getOptionalElement(MailService.E_INVITE);
             
-            if (partElem == null) {
-                // well, there's no body part...so we'll just stick the invite 
-                // there if we have one
-                if (inviteElem != null) {
-                    partElem = inviteElem;
-                    String type = inviteElem.getAttribute(MailService.A_CONTENT_TYPE, null);
-                    if (type == null) {
-                        inviteElem.addAttribute(MailService.A_CONTENT_TYPE, Mime.CT_TEXT_CALENDAR);
-                    }
-                }
-                // FIXME: should also try to stick additionalParts in there too!
-            }
-            
             boolean hasContent  = (partElem != null || inviteElem != null || additionalParts != null);
             boolean isMultipart = (attachElem != null); // || inviteElem != null || additionalParts!=null);
             if (isMultipart) {
@@ -218,6 +224,20 @@ public class ParseMimeMessage {
                 
                 // goes into the "content" subpart
                 InviteParserResult result = inviteParser.parse(lc, mbox.getAccount(), inviteElem);
+                if (partElem != null && result.mCal != null) {
+                    // If textual content is provided and there's an invite,
+                    // set the text as DESCRIPTION of the iCalendar.  This helps
+                    // clients that ignore alternative text content and only
+                    // displays the DESCRIPTION specified in the iCalendar part.
+                    // (e.g. MS Entourage for Mac)
+                    String desc = getTextPlainContent(partElem);
+                    if (desc != null && desc.length() > 0) {
+                        result.mCal.addDescription(desc);
+                        // Don't set desc as fragment of result.mInvite.
+                        // If it's set and desc is very long, we'll run into
+                        // 64KB limit of metadata db column.
+                    }
+                }
                 MimeBodyPart mbp = CalendarMailSender.makeICalIntoMimePart(result.mUid, result.mCal);
                 alternatives[curAltPart++] = mbp;
                 
@@ -232,7 +252,7 @@ public class ParseMimeMessage {
             
             // handle the content from the client, if any
             if (hasContent) {
-                setContent(mm, mmp, partElem, alternatives);
+                setContent(mm, mmp, partElem != null ? partElem : inviteElem, alternatives);
             }
             
             if (isMultipart) {
