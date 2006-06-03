@@ -30,7 +30,9 @@ import java.util.Map;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
+import com.zimbra.soap.Element.XMLElement;
 
 public class SoapCalendarResource extends SoapAccount implements
         CalendarResource {
@@ -41,6 +43,21 @@ public class SoapCalendarResource extends SoapAccount implements
 
     public SoapCalendarResource(Element e) throws ServiceException {
         super(e);
+    }
+    
+    @Override
+    public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
+        XMLElement req = new XMLElement(AdminService.MODIFY_CALENDAR_RESOURCE_REQUEST);
+        req.addElement(AdminService.E_ID).setText(getId());
+        prov.addAttrElements(req, attrs);
+        mAttrs = (new SoapCalendarResource(prov.invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE))).mAttrs;
+        resetData();        
+    }
+
+    @Override
+    public void reload(SoapProvisioning prov) throws ServiceException {
+        mAttrs = ((SoapCalendarResource) prov.getCalendarResourceById(getId())).mAttrs;
+        resetData();        
     }
 
     public String getResourceType() {

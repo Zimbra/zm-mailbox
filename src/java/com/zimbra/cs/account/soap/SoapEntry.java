@@ -49,6 +49,16 @@ public abstract class SoapEntry implements Entry {
         mAttrs = attrs;
     }
     
+    public abstract void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException;
+     
+    public abstract void reload(SoapProvisioning prov) throws ServiceException;
+
+    protected void resetData()
+    {
+        if (mData != null)
+            mData.clear();
+    }
+        
     public String getAttr(String name) {
         Object v = mAttrs.get(name);
         if (v instanceof String) {

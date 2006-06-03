@@ -614,6 +614,18 @@ public class SoapProvisioning extends Provisioning {
         req.addElement(AdminService.E_NEW_PASSWORD).setText(newPassword);
         invoke(req);
     }
+
+    @Override
+    public void modifyAttrs(com.zimbra.cs.account.Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
+        SoapEntry se = (SoapEntry) e;
+        se.modifyAttrs(this, attrs, checkImmutable);
+    }
+
+    @Override
+    public void reload(com.zimbra.cs.account.Entry e) throws ServiceException {
+        SoapEntry se = (SoapEntry) e;
+        se.reload(this);
+    }
     
     public static void main(String args[]) throws ServiceException, IOException {
         try {
@@ -621,31 +633,22 @@ public class SoapProvisioning extends Provisioning {
             SoapProvisioning p = new SoapProvisioning();
             p.soapSetURI("https://localhost:7071/service/admin/soap");
             p.soapZimbraAdminAuthenticate();
-/*            
             HashMap<String,Object> attrs = new HashMap<String,Object>();
             attrs.put(Provisioning.A_displayName, "DISPLAY THIS");
             Account acct = p.createAccount("userkewl8@macintel.local", "test123", attrs);
             System.out.println(acct);
-            */            
+            attrs = new HashMap<String,Object>();
+            attrs.put(Provisioning.A_displayName, "DISPLAY THAT");
+            p.modifyAttrs(acct, attrs);
+            /*
             Account acct2 = p.getAccountByName("userkewl8@macintel.local");
             System.out.println(acct2);
             p.changePassword(acct2, "test123", "test1235");
-
+            */
             Account acct3 = p.getAdminAccountByName("zimbra");
             System.out.println(acct3);                        
         } catch (SoapFaultException e) {
             System.out.println(e.getCode());
         }
-    }
-
-    @Override
-    public void modifyAttrs(com.zimbra.cs.account.Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void reload(com.zimbra.cs.account.Entry e) throws ServiceException {
-        // TODO Auto-generated method stub
-        
     }
 }

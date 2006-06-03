@@ -37,10 +37,12 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
+import com.zimbra.soap.Element.XMLElement;
 
 public class SoapAccount extends SoapNamedEntry implements Account {
-
+        
     public SoapAccount(String name, String id, Map<String, Object> attrs) {
         super(name, id, attrs);
     }
@@ -117,6 +119,21 @@ public class SoapAccount extends SoapNamedEntry implements Account {
 
     public boolean saveToSent() throws ServiceException {
         return getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, false);
+    }
+
+    @Override
+    public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
+        XMLElement req = new XMLElement(AdminService.MODIFY_ACCOUNT_REQUEST);
+        req.addElement(AdminService.E_ID).setText(getId());
+        prov.addAttrElements(req, attrs);
+        mAttrs = (new SoapAccount(prov.invoke(req).getElement(AdminService.E_ACCOUNT))).mAttrs;
+        resetData();
+    }
+
+    @Override
+    public void reload(SoapProvisioning prov) throws ServiceException {
+        mAttrs = ((SoapAccount) prov.getAccountById(getId())).mAttrs;
+        resetData();        
     }
 
 }

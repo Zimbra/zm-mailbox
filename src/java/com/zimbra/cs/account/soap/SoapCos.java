@@ -29,7 +29,9 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
+import com.zimbra.soap.Element.XMLElement;
 
 public class SoapCos extends SoapNamedEntry implements Cos {
 
@@ -40,4 +42,20 @@ public class SoapCos extends SoapNamedEntry implements Cos {
     public SoapCos(Element e) throws ServiceException {
         super(e);
     }
+    
+    @Override
+    public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
+        XMLElement req = new XMLElement(AdminService.MODIFY_COS_REQUEST);
+        req.addElement(AdminService.E_ID).setText(getId());
+        prov.addAttrElements(req, attrs);
+        mAttrs = (new SoapAccount(prov.invoke(req).getElement(AdminService.E_COS))).mAttrs;
+        resetData();        
+    }
+
+    @Override
+    public void reload(SoapProvisioning prov) throws ServiceException {
+        mAttrs = ((SoapCos) prov.getCosById(getId())).mAttrs;
+        resetData();
+    }
+    
 }
