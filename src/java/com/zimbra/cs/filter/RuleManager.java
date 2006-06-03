@@ -93,7 +93,7 @@ public class RuleManager {
                 // save 
                 Map attrs = new HashMap(3);
                 attrs.put(Provisioning.A_zimbraMailSieveScript, script);
-                account.modifyAttrs(attrs);
+                Provisioning.getInstance().modifyAttrs(account, attrs);
                 mScriptCache.put(accountId, node);
             }
 

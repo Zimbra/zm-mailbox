@@ -30,6 +30,7 @@ package com.zimbra.cs.util;
 
 import java.io.File;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -149,8 +150,11 @@ public class Config {
      * @throws ServiceException
      */
     public static void enableUserServices(boolean enabled) throws ServiceException {
-        Server serverConfig = Provisioning.getInstance().getLocalServer();
-        serverConfig.setBooleanAttr(Provisioning.A_zimbraUserServicesEnabled, enabled);
+        Provisioning prov = Provisioning.getInstance();
+        Server serverConfig = prov.getLocalServer();
+        HashMap<String, String> attrs = new HashMap<String, String>();
+        attrs.put(Provisioning.A_zimbraUserServicesEnabled, enabled ? Provisioning.TRUE : Provisioning.FALSE);        
+        prov.modifyAttrs(serverConfig, attrs);
     	synchronized (sUserServicesEnabledGuard) {
     		sUserServicesEnabled = enabled;
         }

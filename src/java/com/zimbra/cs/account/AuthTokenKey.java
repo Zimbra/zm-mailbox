@@ -140,15 +140,16 @@ public class AuthTokenKey {
     }
 
     private static synchronized void refresh(boolean reload) throws ServiceException {
-        Config config = Provisioning.getInstance().getConfig();
+        Provisioning prov = Provisioning.getInstance();
+        Config config = prov.getConfig();
         // force reload
         if (reload)
-            config.reload();
+            prov.reload(config);
         
         String[] keys = config.getMultiAttr(Provisioning.A_zimbraAuthTokenKey);
 
         if (keys.length == 0) {
-            config.reload();
+            prov.reload(config);
             keys = config.getMultiAttr(Provisioning.A_zimbraAuthTokenKey);
         }
 
@@ -157,7 +158,7 @@ public class AuthTokenKey {
             AuthTokenKey key = new AuthTokenKey(0, null);
             HashMap<String, String> attrs = new HashMap<String, String>();
             attrs.put(Provisioning.A_zimbraAuthTokenKey, key.getEncoded());
-            config.modifyAttrs(attrs);
+            Provisioning.getInstance().modifyAttrs(config, attrs);
             keys = config.getMultiAttr(Provisioning.A_zimbraAuthTokenKey);
         }
 

@@ -60,7 +60,7 @@ public class ModifyDistributionList extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access dl");
 
         // pass in true to checkImmutable
-        distributionList.modifyAttrs(attrs, true);
+        prov.modifyAttrs(distributionList, attrs, true);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                   new String[] {"cmd", "ModifyDistributionList","name", distributionList.getName()}, attrs));	    

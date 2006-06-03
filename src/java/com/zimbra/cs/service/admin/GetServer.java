@@ -84,7 +84,7 @@ public class GetServer extends AdminDocumentHandler {
         if (server == null)
             throw AccountServiceException.NO_SUCH_SERVER(name);
         else
-            server.reload();
+            prov.reload(server);
         
 	    Element response = lc.createElement(AdminService.GET_SERVER_RESPONSE);
         doServer(response, server, applyConfig);

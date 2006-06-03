@@ -41,23 +41,6 @@ public class SoapServer extends SoapNamedEntry implements Server {
         super(e);
     }
 
-    @Override
-    public void modifyAttrs(Map<String, ? extends Object> attrs) throws ServiceException {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void modifyAttrs(Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void reload() throws ServiceException {
-        // TODO Auto-generated method stub
-        
-    }
-
     public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {
         // TODO Auto-generated method stub
         return null;

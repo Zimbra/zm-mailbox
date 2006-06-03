@@ -64,7 +64,8 @@ public class ModifyPrefs extends WriteOpDocumentHandler {
             }
         }
         // call modifyAttrs and pass true to checkImmutable
-        acct.modifyAttrs(prefs, true);
+        
+        Provisioning.getInstance().modifyAttrs(acct, prefs, true);
         Element response = lc.createElement(AccountService.MODIFY_PREFS_RESPONSE);
         return response;
 	}

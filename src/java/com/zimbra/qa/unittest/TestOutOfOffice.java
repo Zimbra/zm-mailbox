@@ -193,7 +193,7 @@ public class TestOutOfOffice extends TestCase
         prefs = new HashMap();
         prefs.put(keyEnabled, LdapUtil.getBooleanString(wasEnabled));
         prefs.put(keyReply, oldReplyBody);
-        account.modifyAttrs(prefs);
+        Provisioning.getInstance().modifyAttrs(account, prefs);
     }
     
     protected void tearDown() throws Exception

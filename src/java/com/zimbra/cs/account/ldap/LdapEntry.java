@@ -156,12 +156,6 @@ public class LdapEntry implements Entry {
         }
     }
 
-    public void setBooleanAttr(String name, boolean value) throws ServiceException {
-        HashMap<String, String> attrs = new HashMap<String, String>(1);
-        attrs.put(name, value ? Provisioning.TRUE : Provisioning.FALSE);
-        modifyAttrs(attrs);
-    }
-
     protected synchronized void addAttr(DirContext ctxt, String name, String value) throws NamingException, ServiceException {
         LdapUtil.addAttr(ctxt, mDn,  name, value);
         refresh(ctxt, 0);

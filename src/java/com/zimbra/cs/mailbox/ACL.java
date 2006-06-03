@@ -94,15 +94,11 @@ public class ACL {
         public String getAttr(String name, String defaultValue) { return defaultValue; }
         public Set<String> getMultiAttrSet(String name)         { return null; }
         public Map<String, Object> getAttrs()                   { return null; }
-        public void modifyAttrs(Map<String, ? extends Object> attrs) { return; }
-        public void modifyAttrs(Map<String, ? extends Object> attrs, boolean checkImmutable) { return; }
         public boolean getBooleanAttr(String name, boolean defaultValue)   { return defaultValue; }
-        public void setBooleanAttr(String name, boolean value)             { return; }
         public int getIntAttr(String name, int defaultValue)               { return 0; }
         public long getLongAttr(String name, long defaultValue)            { return 0; }
         public long getTimeInterval(String name, long defaultValue)        { return defaultValue; }
         public Date getGeneralizedTimeAttr(String name, Date defaultValue) { return defaultValue; }
-        public void reload()                      { return; }
         public void setCachedData(Object key, Object value)  { return; }
         public Object getCachedData(Object key)   { return null; }
         public Locale getLocale()                 { return null; }

@@ -223,7 +223,7 @@ public class ProvUtil {
     private static final int BY_NAME = 3;
     
     private Map<String,Integer> mCommandIndex;
-    private Provisioning mProvisioning;
+    private Provisioning mProv;
     
     private int guessType(String value) {
         if (value.indexOf("@") != -1)
@@ -334,7 +334,7 @@ public class ProvUtil {
 
     private ProvUtil() {
         initCommands();
-        mProvisioning = Provisioning.getInstance();
+        mProv = Provisioning.getInstance();
     }
     
     private boolean execute(String args[]) throws ServiceException, ArgException {
@@ -543,7 +543,7 @@ public class ProvUtil {
             String preAuthKey = PreAuthKey.generateRandomPreAuthKey();
             HashMap<String,String> attrs = new HashMap<String,String>();
             attrs.put(Provisioning.A_zimbraPreAuthKey, preAuthKey);
-            domain.modifyAttrs(attrs);
+            mProv.modifyAttrs(domain, attrs);
             System.out.printf("preAuthKey: %s\n", preAuthKey);
         }
     }
@@ -583,7 +583,7 @@ public class ProvUtil {
             String key = args[1];
             String password = args[2];
             Account account = lookupAccount(key);
-            mProvisioning.setPassword(account, password);
+            mProv.setPassword(account, password);
         }
     }
 
@@ -595,7 +595,7 @@ public class ProvUtil {
             String cosKey = args[2];
             Account account = lookupAccount(key);
             Cos cos = lookupCos(cosKey);
-            mProvisioning.setCOS(account, cos);
+            mProv.setCOS(account, cos);
         }
     }
 
@@ -606,7 +606,7 @@ public class ProvUtil {
             String key = args[1];
             String alias = args[2];
             Account account = lookupAccount(key);
-            mProvisioning.addAlias(account, alias);
+            mProv.addAlias(account, alias);
         }
     }
 
@@ -617,7 +617,7 @@ public class ProvUtil {
             String key = args[1];
             String alias = args[2];
             Account account = lookupAccount(key);
-            mProvisioning.removeAlias(account, alias);
+            mProv.removeAlias(account, alias);
         }
     }
 
@@ -628,7 +628,7 @@ public class ProvUtil {
             String key = args[1];
             String newName = args[2];
             Account account = lookupAccount(key);
-            mProvisioning.renameAccount(account.getId(), newName);
+            mProv.renameAccount(account.getId(), newName);
         }
     }
 
@@ -639,7 +639,7 @@ public class ProvUtil {
             String key = args[1];
             String newName = args[2];
             Cos cos = lookupCos(key);
-            mProvisioning.renameCos(cos.getId(), newName);
+            mProv.renameCos(cos.getId(), newName);
         }
     }
 
@@ -652,7 +652,7 @@ public class ProvUtil {
             Map<String, Object> attrs = getMap(args, 3);
             if (password != null && password.equals(""))
                 password = null;
-            Account account = mProvisioning.createAccount(name, password, attrs);
+            Account account = mProv.createAccount(name, password, attrs);
             System.out.println(account.getId());
         }
     }
@@ -670,7 +670,7 @@ public class ProvUtil {
             	Map<String, Object> attrs = new HashMap<String, Object>();
             	String displayName = nameMask + " N. " + Integer.toString(ix);
             	StringUtil.addToMultiMap(attrs, "displayName", displayName);
-                Account account = mProvisioning.createAccount(name, password, attrs);
+                Account account = mProv.createAccount(name, password, attrs);
                 System.out.println(account.getId());
            }
         }
@@ -683,7 +683,7 @@ public class ProvUtil {
             String key = args[1];
             Map<String, Object> attrs = getMap(args, 2);
             Account account = lookupAccount(key);
-            account.modifyAttrs(attrs, true);
+            mProv.modifyAttrs(account, attrs, true);
         }
     }
 
@@ -694,7 +694,7 @@ public class ProvUtil {
             String key = args[1];
             Map<String, Object> attrs = getMap(args, 2);
             Cos cos = lookupCos(key);
-            cos.modifyAttrs(attrs, true);
+            mProv.modifyAttrs(cos, attrs, true);
         }
     }
 
@@ -703,7 +703,7 @@ public class ProvUtil {
             usage();
         } else {
             Map<String, Object> attrs = getMap(args, 1);
-            mProvisioning.getConfig().modifyAttrs(attrs, true);
+            mProv.modifyAttrs(mProv.getConfig(), attrs, true);
         }
     }
 
@@ -714,7 +714,7 @@ public class ProvUtil {
             String key = args[1];
             Map<String, Object> attrs = getMap(args, 2);
             Domain domain = lookupDomain(key);
-            domain.modifyAttrs(attrs, true);
+            mProv.modifyAttrs(domain, attrs, true);
         }
     }    
 
@@ -725,7 +725,7 @@ public class ProvUtil {
             String key = args[1];
             Map<String, Object> attrs = getMap(args, 2);
             Server server = lookupServer(key);
-            server.modifyAttrs(attrs, true);
+            mProv.modifyAttrs(server, attrs, true);
         }
     }
 
@@ -735,7 +735,7 @@ public class ProvUtil {
         } else {
             String key = args[1];
             Account account = lookupAccount(key);
-            mProvisioning.deleteAccount(account.getId());
+            mProv.deleteAccount(account.getId());
         }
     }
 
@@ -745,7 +745,7 @@ public class ProvUtil {
         } else {
             String key = args[1];
             Cos cos = lookupCos(key);
-            mProvisioning.deleteCos(cos.getId());
+            mProv.deleteCos(cos.getId());
         }
     }
     
@@ -755,7 +755,7 @@ public class ProvUtil {
         } else {
             String key = args[1];
             Domain domain = lookupDomain(key);
-            mProvisioning.deleteDomain(domain.getId());
+            mProv.deleteDomain(domain.getId());
         }
     }    
 
@@ -765,7 +765,7 @@ public class ProvUtil {
         } else {
             String key = args[1];
             Server server = lookupServer(key);
-            mProvisioning.deleteServer(server.getId());
+            mProv.deleteServer(server.getId());
         }
     }
 
@@ -840,7 +840,7 @@ public class ProvUtil {
             usage();
         } else {
             String key = args[1];
-            String value[] = mProvisioning.getConfig().getMultiAttr(key);
+            String value[] = mProv.getConfig().getMultiAttr(key);
             if (value != null && value.length != 0) {
                 Map<String, Object> map = new HashMap<String, Object>();
                 map.put(key, value);
@@ -903,7 +903,7 @@ public class ProvUtil {
         }
 
         if (d == null) {
-            List domains = mProvisioning.getAllDomains();
+            List domains = mProv.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain domain = (Domain) dit.next();
                 doGetAllAccounts(domain, verbose);
@@ -980,7 +980,7 @@ public class ProvUtil {
             accounts = d.searchAccounts(query, attrsToGet, sortBy, isSortAscending, flags);
         } else {
             //accounts = mProvisioning.searchAccounts(query, attrsToGet, sortBy, isSortAscending, Provisioning.SA_ACCOUNT_FLAG);
-            accounts = mProvisioning.searchAccounts(query, attrsToGet, sortBy, isSortAscending, flags);
+            accounts = mProv.searchAccounts(query, attrsToGet, sortBy, isSortAscending, flags);
         }
 
         //ArrayList accounts = (ArrayList) mProvisioning.searchAccounts(query);
@@ -1104,7 +1104,7 @@ public class ProvUtil {
 
     private void doGetAllAdminAccounts(String[] args) throws ServiceException {
         boolean verbose = args.length > 1 && args[1].equals("-v");
-        List accounts = mProvisioning.getAllAdminAccounts();
+        List accounts = mProv.getAllAdminAccounts();
         for (Iterator it=accounts.iterator(); it.hasNext(); ) {
             Account account = (Account) it.next();
             if (verbose)
@@ -1116,7 +1116,7 @@ public class ProvUtil {
     
     private void doGetAllCos(String[] args) throws ServiceException {
         boolean verbose = args.length > 1 && args[1].equals("-v");
-        List allcos = mProvisioning.getAllCos();
+        List allcos = mProv.getAllCos();
         for (Iterator it=allcos.iterator(); it.hasNext(); ) {
             Cos cos = (Cos) it.next();
             if (verbose)
@@ -1134,13 +1134,13 @@ public class ProvUtil {
     }
 
     private void doGetAllConfig(String[] args) throws ServiceException {
-        dumpAttrs(mProvisioning.getConfig().getAttrs());
+        dumpAttrs(mProv.getConfig().getAttrs());
     }        
 
     private void doGetAllDomains(String[] args) throws ServiceException {
         boolean verbose = args.length > 1 && args[1].equals("-v");
                 
-        List domains = mProvisioning.getAllDomains();
+        List domains = mProv.getAllDomains();
         for (Iterator it=domains.iterator(); it.hasNext(); ) {
             Domain domain = (Domain) it.next();
             if (verbose)
@@ -1187,7 +1187,7 @@ public class ProvUtil {
             }
         }
         
-        List servers = mProvisioning.getAllServers(service);
+        List servers = mProv.getAllServers(service);
         for (Iterator it=servers.iterator(); it.hasNext(); ) {
             Server server = (Server) it.next();
             if (verbose)
@@ -1256,7 +1256,7 @@ public class ProvUtil {
         } else {
             String name = args[1];
             Map<String, Object> attrs = getMap(args, 2);
-            Cos cos = mProvisioning.createCos(name, attrs);
+            Cos cos = mProv.createCos(name, attrs);
             System.out.println(cos.getId());
         }
     }
@@ -1267,7 +1267,7 @@ public class ProvUtil {
         } else {
             String name = args[1];
             Map<String, Object> attrs = getMap(args, 2);
-            Domain domain = mProvisioning.createDomain(name,attrs);
+            Domain domain = mProv.createDomain(name,attrs);
             System.out.println(domain.getId());
         }
     }
@@ -1278,7 +1278,7 @@ public class ProvUtil {
         } else {
             String name = args[1];
             Map<String, Object> attrs = getMap(args, 2);
-            Server server = mProvisioning.createServer(name, attrs);
+            Server server = mProv.createServer(name, attrs);
             System.out.println(server.getId());
         }
     }    
@@ -1289,7 +1289,7 @@ public class ProvUtil {
         } else {
             String name = args[1];
             Map<String, Object> attrs = getMap(args, 2);
-            DistributionList dl = mProvisioning.createDistributionList(name, attrs);
+            DistributionList dl = mProv.createDistributionList(name, attrs);
             System.out.println(dl.getId());
         }
     }
@@ -1306,7 +1306,7 @@ public class ProvUtil {
             	Map<String, Object> attrs = new HashMap<String, Object>();
             	String displayName = nameMask + " N. " + Integer.toString(ix);
             	StringUtil.addToMultiMap(attrs, "displayName", displayName);
-            	DistributionList dl  = mProvisioning.createDistributionList(name, attrs);
+            	DistributionList dl  = mProv.createDistributionList(name, attrs);
             	System.out.println(dl.getId());
            }
         }
@@ -1334,7 +1334,7 @@ public class ProvUtil {
         }
 
         if (d == null) {
-            List domains = mProvisioning.getAllDomains();
+            List domains = mProv.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain domain = (Domain) dit.next();
                 Collection dls = domain.getAllDistributionLists();
@@ -1376,7 +1376,7 @@ public class ProvUtil {
             String key = args[1];
             Map<String, Object> attrs = getMap(args, 2);
             DistributionList dl = lookupDistributionList(key);
-            dl.modifyAttrs(attrs, true);
+            mProv.modifyAttrs(dl, attrs, true);
         }
     }
 
@@ -1386,7 +1386,7 @@ public class ProvUtil {
         } else {
             String key = args[1];
             DistributionList dl = lookupDistributionList(key);
-            mProvisioning.deleteDistributionList(dl.getId());
+            mProv.deleteDistributionList(dl.getId());
         }
     }
     
@@ -1421,7 +1421,7 @@ public class ProvUtil {
             String key = args[1];
             String alias = args[2];
             DistributionList dl = lookupDistributionList(key);
-            mProvisioning.addAlias(dl, alias);
+            mProv.addAlias(dl, alias);
         }
     }
 
@@ -1432,7 +1432,7 @@ public class ProvUtil {
             String key = args[1];
             String alias = args[2];
             DistributionList dl = lookupDistributionList(key);
-            mProvisioning.removeAlias(dl, alias);
+            mProv.removeAlias(dl, alias);
         }
     }
 
@@ -1443,7 +1443,7 @@ public class ProvUtil {
             String key = args[1];
             String newName = args[2];
             DistributionList dl = lookupDistributionList(key);
-            mProvisioning.renameDistributionList(dl.getId(), newName);
+            mProv.renameDistributionList(dl.getId(), newName);
         }
     }
 
@@ -1454,7 +1454,7 @@ public class ProvUtil {
         } else {
             String name = args[1];
             Map<String, Object> attrs = getMap(args, 2);
-            CalendarResource resource = mProvisioning.createCalendarResource(name, attrs);
+            CalendarResource resource = mProv.createCalendarResource(name, attrs);
             System.out.println(resource.getId());
         }
     }
@@ -1466,7 +1466,7 @@ public class ProvUtil {
         } else {
             String key = args[1];
             CalendarResource resource = lookupCalendarResource(key);
-            mProvisioning.deleteCalendarResource(resource.getId());
+            mProv.deleteCalendarResource(resource.getId());
         }
     }
 
@@ -1478,7 +1478,7 @@ public class ProvUtil {
             String key = args[1];
             Map<String, Object> attrs = getMap(args, 2);
             CalendarResource res = lookupCalendarResource(key);
-            res.modifyAttrs(attrs, true);
+            mProv.modifyAttrs(res, attrs, true);
         }
     }
 
@@ -1490,7 +1490,7 @@ public class ProvUtil {
             String key = args[1];
             String newName = args[2];
             CalendarResource res = lookupCalendarResource(key);
-            mProvisioning.renameCalendarResource(res.getId(), newName);
+            mProv.renameCalendarResource(res.getId(), newName);
         }
     }
 
@@ -1528,7 +1528,7 @@ public class ProvUtil {
         }
 
         if (d == null) {
-            List domains = mProvisioning.getAllDomains();
+            List domains = mProv.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain domain = (Domain) dit.next();
                 doGetAllCalendarResources(domain, verbose);
@@ -1645,13 +1645,13 @@ public class ProvUtil {
         Account a = null;
         switch(guessType(key)) {
         case BY_ID:
-            a = mProvisioning.getAccountById(key);
+            a = mProv.getAccountById(key);
             break;
         case BY_EMAIL:
-            a = mProvisioning.getAccountByName(key);
+            a = mProv.getAccountByName(key);
             break;
         case BY_NAME:
-            a = mProvisioning.getAccountByName(key);            
+            a = mProv.getAccountByName(key);            
             break;
         }
         if (a == null)
@@ -1664,13 +1664,13 @@ public class ProvUtil {
         CalendarResource res = null;
         switch(guessType(key)) {
         case BY_ID:
-            res = mProvisioning.getCalendarResourceById(key);
+            res = mProv.getCalendarResourceById(key);
             break;
         case BY_EMAIL:
-            res = mProvisioning.getCalendarResourceByName(key);
+            res = mProv.getCalendarResourceByName(key);
             break;
         case BY_NAME:
-            res = mProvisioning.getCalendarResourceByName(key);            
+            res = mProv.getCalendarResourceByName(key);            
             break;
         }
         if (res == null)
@@ -1683,11 +1683,11 @@ public class ProvUtil {
         Domain d = null;
         switch(guessType(key)) {
         case BY_ID:
-            d = mProvisioning.getDomainById(key);
+            d = mProv.getDomainById(key);
             break;
         case BY_NAME:
         default:
-            d = mProvisioning.getDomainByName(key);
+            d = mProv.getDomainByName(key);
             break;
         }
         
@@ -1701,11 +1701,11 @@ public class ProvUtil {
         Cos c = null;
         switch(guessType(key)) {
         case BY_ID:
-            c = mProvisioning.getCosById(key);
+            c = mProv.getCosById(key);
             break;
         case BY_NAME:
         default:            
-            c = mProvisioning.getCosByName(key);
+            c = mProv.getCosByName(key);
             break;
         }
         
@@ -1719,11 +1719,11 @@ public class ProvUtil {
         Server s = null;
         switch(guessType(key)) {
         case BY_ID:
-            s = mProvisioning.getServerById(key);
+            s = mProv.getServerById(key);
             break;
         case BY_NAME:
         default:            
-            s = mProvisioning.getServerByName(key);
+            s = mProv.getServerByName(key);
             break;
         }
         
@@ -1737,11 +1737,11 @@ public class ProvUtil {
         DistributionList dl = null;
         switch(guessType(key)) {
         case BY_ID:
-            dl = mProvisioning.getDistributionListById(key);
+            dl = mProv.getDistributionListById(key);
             break;
         case BY_EMAIL:
         default:            
-            dl = mProvisioning.getDistributionListByName(key);
+            dl = mProv.getDistributionListByName(key);
             break;
         }
         

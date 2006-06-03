@@ -210,6 +210,33 @@ public class LdapProvisioning extends Provisioning {
         return "cn=" + name + ",cn=mime," + CONFIG_BASE;
     }
 
+    
+    /**
+     * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
+     * keys that are <code>String</code>s, and values that are either
+     * <ul>
+     *   <li><code>null</code>, in which case the attr is removed</li>
+     *   <li>a single <code>Object</code>, in which case the attr is modified
+     *     based on the object's <code>toString()</code> value</li>
+     *   <li>an <code>Object</code> array or <code>Collection</code>,
+     *     in which case a multi-valued attr is updated</li>
+     * </ul>
+     */
+    public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException
+    {
+        LdapEntry le = (LdapEntry) e;
+        le.modifyAttrs(attrs, checkImmutable);
+    }
+
+    /**
+     * reload/refresh the entry.
+     */
+    public void reload(Entry e) throws ServiceException
+    {    
+        LdapEntry le = (LdapEntry) e;
+        le.reload();
+    }
+    
     /**
      * Status check on LDAP connection.  Search for global config entry.
      */
@@ -838,7 +865,7 @@ public class LdapProvisioning extends Provisioning {
     public void setCOS(Account acct, Cos cos) throws ServiceException {
         HashMap<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraCOSId, cos.getId());
-        acct.modifyAttrs(attrs);
+        modifyAttrs(acct, attrs);
     }
 
     /* (non-Javadoc)
@@ -847,7 +874,7 @@ public class LdapProvisioning extends Provisioning {
     public void modifyAccountStatus(Account acct, String newStatus) throws ServiceException {
         HashMap<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraAccountStatus, newStatus);
-        acct.modifyAttrs(attrs);
+        modifyAttrs(acct, attrs);
     }
 
     
@@ -1488,7 +1515,7 @@ public class LdapProvisioning extends Provisioning {
                 try {
                     Map<String, String> attrs = new HashMap<String, String>();
                     attrs.put(A_zimbraDefaultDomainName, "");
-                    getConfig().modifyAttrs(attrs);
+                    modifyAttrs(getConfig(), attrs);
                 } catch (Exception e) {
                     ZimbraLog.account.warn("unable to remove config attr:"+A_zimbraDefaultDomainName, e); 
                 }
@@ -2011,7 +2038,7 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Account#authAccount(java.lang.String)
      */
     private void authAccount(Account acct, String password, boolean checkPasswordPolicy) throws ServiceException {
-        acct.reload();
+        reload(acct);
         String accountStatus = acct.getAccountStatus();
         if (accountStatus == null)
             throw AccountServiceException.AUTH_FAILED(acct.getName());
@@ -2047,7 +2074,7 @@ public class LdapProvisioning extends Provisioning {
             Map<String, String> attrs = new HashMap<String, String>();
             attrs.put(Provisioning.A_zimbraLastLogonTimestamp, DateUtil.toGeneralizedTime(new Date()));
             try {
-                acct.modifyAttrs(attrs);
+                modifyAttrs(acct, attrs);
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("updating zimbraLastLogonTimestamp", e);
             }
@@ -2061,7 +2088,7 @@ public class LdapProvisioning extends Provisioning {
                 Map<String, String> attrs = new HashMap<String , String>();
                 attrs.put(Provisioning.A_zimbraLastLogonTimestamp, DateUtil.toGeneralizedTime(new Date()));
                 try {
-                    acct.modifyAttrs(attrs);
+                    modifyAttrs(acct, attrs);
                 } catch (ServiceException e) {
                     ZimbraLog.account.warn("updating zimbraLastLogonTimestamp", e);
                 }
@@ -2390,7 +2417,7 @@ public class LdapProvisioning extends Provisioning {
         attrs.put(Provisioning.A_userPassword, encodedPassword);
         attrs.put(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
         
-        acct.modifyAttrs(attrs);
+        modifyAttrs(acct, attrs);
     }
     
     private void createSubcontext(DirContext ctxt, String dn, Attributes attrs, String method)
@@ -2671,7 +2698,7 @@ public class LdapProvisioning extends Provisioning {
                 attrs.put("+" + Provisioning.A_zimbraMailForwardingAddress, newName);                
             }
             try {
-                list.modifyAttrs(attrs);
+                modifyAttrs(list, attrs);
                 //list.removeMember(oldName)
                 //list.addMember(newName);                
             } catch (ServiceException se) {

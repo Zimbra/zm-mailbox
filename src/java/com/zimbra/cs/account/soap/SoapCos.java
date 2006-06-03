@@ -40,21 +40,4 @@ public class SoapCos extends SoapNamedEntry implements Cos {
     public SoapCos(Element e) throws ServiceException {
         super(e);
     }
-
-    @Override
-    public void modifyAttrs(Map<String, ? extends Object> attrs) throws ServiceException {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void modifyAttrs(Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void reload() throws ServiceException {
-        // TODO Auto-generated method stub
-        
-    }
 }

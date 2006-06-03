@@ -295,6 +295,8 @@ public abstract class Provisioning {
     public static final String A_zimbraAuthLdapSearchFilter = "zimbraAuthLdapSearchFilter";
 
     public static final String A_zimbraAuthLdapExternalDn = "zimbraAuthLdapExternalDn";
+    
+    public static final String A_zimbraHideInGal = "zimbraHideInGal";
 
     /**
      *  expansions for bind dn string:
@@ -862,6 +864,42 @@ public abstract class Provisioning {
             return mProvisioning;
         }
     }
+
+    /**
+     * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
+     * keys that are <code>String</code>s, and values that are either
+     * <ul>
+     *   <li><code>null</code>, in which case the attr is removed</li>
+     *   <li>a single <code>Object</code>, in which case the attr is modified
+     *     based on the object's <code>toString()</code> value</li>
+     *   <li>an <code>Object</code> array or <code>Collection</code>,
+     *     in which case a multi-valued attr is updated</li>
+     * </ul>
+     * 
+     * Calls {@link #modifyAttrs(Map, boolean)} with <code>checkImmutable=false</code>.
+     */
+    public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs) throws ServiceException
+    {
+        modifyAttrs(e, attrs, false);
+    }
+    
+    /**
+     * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
+     * keys that are <code>String</code>s, and values that are either
+     * <ul>
+     *   <li><code>null</code>, in which case the attr is removed</li>
+     *   <li>a single <code>Object</code>, in which case the attr is modified
+     *     based on the object's <code>toString()</code> value</li>
+     *   <li>an <code>Object</code> array or <code>Collection</code>,
+     *     in which case a multi-valued attr is updated</li>
+     * </ul>
+     */
+    public abstract void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException;
+    
+    /**
+     * reload/refresh the entry.
+     */
+    public abstract void reload(Entry e) throws ServiceException;
 
     public abstract boolean healthCheck();
 

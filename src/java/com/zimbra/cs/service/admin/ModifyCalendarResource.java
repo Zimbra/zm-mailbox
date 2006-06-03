@@ -76,7 +76,7 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
         }
 
         // pass in true to checkImmutable
-        resource.modifyAttrs(attrs, true);
+        prov.modifyAttrs(resource, attrs, true);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyCalendarResource", "name",

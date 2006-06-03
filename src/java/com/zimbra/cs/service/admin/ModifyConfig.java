@@ -49,7 +49,7 @@ public class ModifyConfig extends AdminDocumentHandler {
 	    Map<String, Object> attrs = AdminService.getAttrs(request);
 	    
         // pass in true to checkImmutable
-	    prov.getConfig().modifyAttrs(attrs, true);
+	    prov.modifyAttrs(prov.getConfig(), attrs, true);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyConfig",}, attrs));

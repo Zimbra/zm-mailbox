@@ -118,13 +118,14 @@ public class TestTableMaintenance extends TestCase {
     private void setServerAttrs(int minRows, int maxRows,
                                 String operation, int growthFactor)
     throws Exception {
-        Server server = Provisioning.getInstance().getLocalServer();
+        Provisioning prov = Provisioning.getInstance();
+        Server server = prov.getLocalServer();
         Map map = new HashMap();
         map.put(Provisioning.A_zimbraTableMaintenanceMinRows, Integer.toString(minRows));
         map.put(Provisioning.A_zimbraTableMaintenanceMaxRows, Integer.toString(maxRows));
         map.put(Provisioning.A_zimbraTableMaintenanceOperation, operation);
         map.put(Provisioning.A_zimbraTableMaintenanceGrowthFactor,
             Integer.toString(growthFactor));
-        server.modifyAttrs(map);
+        prov.modifyAttrs(server, map);
     }
 }

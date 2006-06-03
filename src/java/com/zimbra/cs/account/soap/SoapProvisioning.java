@@ -108,7 +108,7 @@ public class SoapProvisioning extends Provisioning {
         soapAdminAuthenticate(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
     }
     
-    private Element invoke(Element request) throws ServiceException {
+    Element invoke(Element request) throws ServiceException {
         try {
             return mTransport.invoke(request);
         } catch (SoapFaultException e) {
@@ -126,7 +126,7 @@ public class SoapProvisioning extends Provisioning {
         return result;
     }
 
-    static void addAttrElements(Element req, Map<String, Object> attrs) throws SoapFaultException {
+    static void addAttrElements(Element req, Map<String, ? extends Object> attrs) throws SoapFaultException {
         if (attrs == null) return;
         
         for (Entry entry : attrs.entrySet()) {
@@ -518,7 +518,7 @@ public class SoapProvisioning extends Provisioning {
             throws ServiceException {
         HashMap<String, String> attrs = new HashMap<String,String>();
         attrs.put(Provisioning.A_zimbraAccountStatus, newStatus);
-        acct.modifyAttrs(attrs);
+        modifyAttrs(acct, attrs);
     }
 
     @Override
@@ -603,7 +603,7 @@ public class SoapProvisioning extends Provisioning {
     public void setCOS(Account acct, Cos cos) throws ServiceException {
         HashMap<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraCOSId, cos.getId());
-        acct.modifyAttrs(attrs);
+        modifyAttrs(acct, attrs);
     }
 
     @Override
@@ -636,5 +636,16 @@ public class SoapProvisioning extends Provisioning {
         } catch (SoapFaultException e) {
             System.out.println(e.getCode());
         }
+    }
+
+    @Override
+    public void modifyAttrs(com.zimbra.cs.account.Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void reload(com.zimbra.cs.account.Entry e) throws ServiceException {
+        // TODO Auto-generated method stub
+        
     }
 }

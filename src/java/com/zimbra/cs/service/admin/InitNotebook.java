@@ -96,7 +96,7 @@ public class InitNotebook extends AdminDocumentHandler {
         	if (!username.equals(defaultUsername)) {
         		Map<String,String> attrMap = new HashMap<String,String>();
         		attrMap.put(Provisioning.A_zimbraNotebookAccount, username);
-        		domain.modifyAttrs(attrMap);
+        		prov.modifyAttrs(domain, attrMap);
         	}
 
         	// initialize domain wiki
@@ -117,7 +117,7 @@ public class InitNotebook extends AdminDocumentHandler {
         	if (!username.equals(defaultUsername)) {
         		Map<String,String> attrMap = new HashMap<String,String>();
         		attrMap.put(Provisioning.A_zimbraNotebookAccount, username);
-        		globalConfig.modifyAttrs(attrMap);
+        		prov.modifyAttrs(globalConfig, attrMap);
         	}
         	
         	// initialize global wiki

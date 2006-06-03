@@ -58,35 +58,7 @@ public interface Entry {
     public Set<String> getMultiAttrSet(String name);
 
     public Map<String, Object> getAttrs() throws ServiceException;
-    
-    /**
-     * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
-     * keys that are <code>String</code>s, and values that are either
-     * <ul>
-     *   <li><code>null</code>, in which case the attr is removed</li>
-     *   <li>a single <code>Object</code>, in which case the attr is modified
-     *     based on the object's <code>toString()</code> value</li>
-     *   <li>an <code>Object</code> array or <code>Collection</code>,
-     *     in which case a multi-valued attr is updated</li>
-     * </ul>
-     * 
-     * Calls {@link #modifyAttrs(Map, boolean)} with <code>checkImmutable=false</code>.
-     */
-    public void modifyAttrs(Map<String, ? extends Object> attrs) throws ServiceException;
-    
-    /**
-     * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
-     * keys that are <code>String</code>s, and values that are either
-     * <ul>
-     *   <li><code>null</code>, in which case the attr is removed</li>
-     *   <li>a single <code>Object</code>, in which case the attr is modified
-     *     based on the object's <code>toString()</code> value</li>
-     *   <li>an <code>Object</code> array or <code>Collection</code>,
-     *     in which case a multi-valued attr is updated</li>
-     * </ul>
-     */
-    public void modifyAttrs(Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException;
-
+ 
     /**
      * 
      * @param name name of the attribute to retreive. 
@@ -94,14 +66,6 @@ public interface Entry {
      * @return
      */
     public boolean getBooleanAttr(String name, boolean defaultValue);
-
-    /**
-     * immediately updates the specified boolean attribute. Use modifyAttrs if you need to update more then one attr.
-     * 
-     * @param name name of the attribute to set/update
-     * @param value
-     */
-    public void setBooleanAttr(String name, boolean value) throws ServiceException;
 
     /**
      * 
@@ -139,11 +103,6 @@ public interface Entry {
      * @return
      */
     public Date getGeneralizedTimeAttr(String name, Date defaultValue);    
-    
-    /**
-     * reload/refresh the entry.
-     */
-    public void reload() throws ServiceException;
     
     /**
      * temporarily associate a key/value pair with this entry. When an entry is reloaded, any cached data is cleared.

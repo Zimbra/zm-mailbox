@@ -427,10 +427,10 @@ public class WikiUtil {
 			if (mPassword == null) {
 				mPassword = sDEFAULTPASSWORD;
 			}
-			Map<String,Object> emptyMap = Collections.emptyMap();
-			account = prov.createAccount(mUsername, mPassword, emptyMap);
+			Map<String,Object> attrs = new HashMap<String, Object>();
+            attrs.put(Provisioning.A_zimbraHideInGal, Provisioning.TRUE);
+			account = prov.createAccount(mUsername, mPassword, attrs); 
 		}
-		account.setBooleanAttr("zimbraHideInGal", true);
 		return account;
 	}
 	
@@ -487,7 +487,7 @@ public class WikiUtil {
 		
 		HashMap<String,String> attrs = new HashMap<String,String>();
 		attrs.put(Provisioning.A_zimbraNotebookAccount, mUsername);
-		globalConfig.modifyAttrs(attrs);
+		prov.modifyAttrs(globalConfig, attrs);
 	}
 	
 	public void initDomainWiki(String domain) throws ServiceException {
@@ -521,7 +521,7 @@ public class WikiUtil {
 		
 		HashMap<String,String> attrs = new HashMap<String,String>();
 		attrs.put(Provisioning.A_zimbraNotebookAccount, mUsername);
-		dom.modifyAttrs(attrs);
+		Provisioning.getInstance().modifyAttrs(dom, attrs);
 	}
 	
 	public WikiUtil(String user, String pass) throws ServiceException {

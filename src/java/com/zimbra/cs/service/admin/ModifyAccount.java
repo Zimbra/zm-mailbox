@@ -77,7 +77,7 @@ public class ModifyAccount extends AdminDocumentHandler {
         }
 
         // pass in true to checkImmutable
-        account.modifyAttrs(attrs, true);
+        prov.modifyAttrs(account, attrs, true);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyAccount","name", account.getName()}, attrs));

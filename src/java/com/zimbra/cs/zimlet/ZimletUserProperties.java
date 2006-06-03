@@ -109,7 +109,7 @@ public class ZimletUserProperties {
 		}
 		Map<String, String[]> propMap = new HashMap<String, String[]>();
 		propMap.put(Provisioning.A_zimbraZimletUserProperties, props);
-		ac.modifyAttrs(propMap);
+		Provisioning.getInstance().modifyAttrs(ac, propMap);
 	}
 	
 	private Set<ZimletProp> mPropSet;

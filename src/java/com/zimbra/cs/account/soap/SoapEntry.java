@@ -130,21 +130,6 @@ public abstract class SoapEntry implements Entry {
         return DateUtil.getTimeInterval(getAttr(name), defaultValue);        
     }
 
-    public abstract void modifyAttrs(Map<String, ? extends Object> attrs)
-            throws ServiceException;
-
-    public abstract void modifyAttrs(Map<String, ? extends Object> attrs,
-            boolean checkImmutable) throws ServiceException;
-
-    public abstract void reload() throws ServiceException;
-
-    public void setBooleanAttr(String name, boolean value)
-            throws ServiceException {
-        HashMap<String, String> attrs = new HashMap<String, String>(1);
-        attrs.put(name, value ? Provisioning.TRUE : Provisioning.FALSE);
-        modifyAttrs(attrs);
-    }
-
     public synchronized void setCachedData(Object key, Object value) {
         if (mData == null)
             mData = new HashMap<Object, Object>();

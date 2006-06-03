@@ -159,25 +159,6 @@ public abstract class AbstractAccount implements Account {
         throw new UnsupportedOperationException();
     }
 
-    public void modifyAttrs(Map<String, ? extends Object> attrs)
-            throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
-    public void modifyAttrs(Map<String, ? extends Object> attrs,
-            boolean checkImmutable) throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
-    public void reload() throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
-    public void setBooleanAttr(String name, boolean value)
-            throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
     public void setCachedData(Object key, Object value) {
         throw new UnsupportedOperationException();
     }

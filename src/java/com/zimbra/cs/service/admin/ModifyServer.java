@@ -57,7 +57,7 @@ public class ModifyServer extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_SERVER(id);
 
         // pass in true to checkImmutable
-        server.modifyAttrs(attrs, true);
+        prov.modifyAttrs(server, attrs, true);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyServer","name", server.getName()}, attrs));

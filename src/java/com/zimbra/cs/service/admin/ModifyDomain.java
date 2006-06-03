@@ -56,7 +56,7 @@ public class ModifyDomain extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_DOMAIN(id);
         
         // pass in true to checkImmutable
-        domain.modifyAttrs(attrs, true);
+        prov.modifyAttrs(domain, attrs, true);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyDomain","name", domain.getName()}, attrs));	    

@@ -56,7 +56,7 @@ public class ModifyCos extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_COS(id);
         
         // pass in true to checkImmutable
-        cos.modifyAttrs(attrs, true);
+        prov.modifyAttrs(cos, attrs, true);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyCos","name", cos.getName()}, attrs));
