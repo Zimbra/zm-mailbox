@@ -36,12 +36,9 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
