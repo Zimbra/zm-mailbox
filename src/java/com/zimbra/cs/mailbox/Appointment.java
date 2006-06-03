@@ -50,6 +50,7 @@ import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -289,8 +290,8 @@ public class Appointment extends MailItem {
 
         mUid = meta.get(Metadata.FN_UID, null);
         mInvites = new ArrayList<Invite>();
-
-        ICalTimeZone accountTZ = getMailbox().getAccount().getTimeZone();
+        
+        ICalTimeZone accountTZ = Provisioning.getInstance().getTimeZone(getMailbox().getAccount()); 
         if (mdVersion < 6) {
             mStartTime = 0;
             mEndTime = 0;

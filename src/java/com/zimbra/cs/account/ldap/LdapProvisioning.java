@@ -77,6 +77,7 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Constants;
@@ -2844,6 +2845,10 @@ public class LdapProvisioning extends Provisioning {
         for (int i=0; i < aliases.length; i++)
             addrs[i+1] = aliases[i];
         return LdapProvisioning.getDistributionLists(addrs, directOnly, via, minimal);
+    }
+    
+    public synchronized ICalTimeZone getTimeZone(Account acct) throws ServiceException {
+        return ((LdapAccount)acct).getTimeZone();
     }
 
 }

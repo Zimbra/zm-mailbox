@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
@@ -669,5 +670,11 @@ public class SoapProvisioning extends Provisioning {
     public boolean inDistributionList(Account acct, String zimbraId) throws ServiceException {
         // TODO Auto-generated method stub
         return false;
+    }
+
+    @Override
+    public ICalTimeZone getTimeZone(Account acct) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

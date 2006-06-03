@@ -362,8 +362,8 @@ public class CalendarMailSender {
                                        Verb verb, String replySubject,
                                        ParsedDateTime exceptDt)
     throws ServiceException {
-        Invite reply = new Invite(ICalTok.REPLY.toString(), new TimeZoneMap(
-                acct.getTimeZone()));
+        
+        Invite reply = new Invite(ICalTok.REPLY.toString(), new TimeZoneMap(Provisioning.getInstance().getTimeZone(acct)));
 
         reply.getTimeZoneMap().add(oldInv.getTimeZoneMap());
 

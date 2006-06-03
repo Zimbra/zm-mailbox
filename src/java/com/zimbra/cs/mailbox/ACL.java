@@ -39,7 +39,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -105,7 +104,6 @@ public class ACL {
         public String getAccountStatus()          { return null; }
         public Map<String, Object> getAttrs(boolean prefsOnly, boolean applyCos) { return null; }
         public String[] getAliases()              { return null; }
-        public ICalTimeZone getTimeZone()         { return null; }
         public CalendarUserType getCalendarUserType() { return null; }
         public boolean saveToSent()               { return false; }
         public List<DistributionList> getDistributionLists(boolean directOnly, Map<String, String> via) { return null; }

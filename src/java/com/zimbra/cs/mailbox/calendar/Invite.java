@@ -1591,7 +1591,7 @@ public class Invite {
     throws ServiceException {
         List <Invite> toRet = new ArrayList();
         
-        TimeZoneMap tzmap = new TimeZoneMap(account.getTimeZone());
+        TimeZoneMap tzmap = new TimeZoneMap(Provisioning.getInstance().getTimeZone(account));
         
         String methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
         

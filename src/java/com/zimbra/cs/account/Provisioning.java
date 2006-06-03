@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.L10nUtil;
@@ -944,6 +945,14 @@ public abstract class Provisioning {
         return cos;
     }
       
+    
+    /**
+     * Returns account's time zone
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ICalTimeZone getTimeZone(Account acct) throws ServiceException;
+
     /**
      * @param zimbraId the zimbraId of the dl we are checking for
      * @return true if this account (or one of the dl it belongs to) is a member of the specified dl.

@@ -27,7 +27,6 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -68,13 +67,6 @@ public interface Account extends NamedEntry {
     public Map<String, Object> getAttrs(boolean prefsOnly, boolean applyCos) throws ServiceException;    
 
     public String[] getAliases() throws ServiceException;
-    
-    /**
-     * Returns account's time zone
-     * @return
-     * @throws ServiceException
-     */
-    public ICalTimeZone getTimeZone() throws ServiceException;
 
     /**
      * Returns calendar user type

@@ -109,7 +109,7 @@ public class CalendarUtils {
             boolean recurrenceIdAllowed, boolean recurAllowed)
             throws ServiceException {
         if (tzMap == null) {
-            tzMap = new TimeZoneMap(account.getTimeZone());
+            tzMap = new TimeZoneMap(Provisioning.getInstance().getTimeZone(account));
         }
         Invite create = new Invite(ICalTok.PUBLISH.toString(), tzMap);
 

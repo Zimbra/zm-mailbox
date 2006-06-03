@@ -30,7 +30,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -63,10 +62,6 @@ public abstract class AbstractAccount implements Account {
     
     public String getAccountCOSId() {
         throw new UnsupportedOperationException();        
-    }
-
-    public ICalTimeZone getTimeZone() throws ServiceException {
-        throw new UnsupportedOperationException();
     }
 
     public String getUid() {

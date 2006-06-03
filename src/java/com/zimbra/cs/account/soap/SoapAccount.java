@@ -29,7 +29,6 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
@@ -69,11 +68,6 @@ public class SoapAccount extends SoapNamedEntry implements Account {
         int index = mName.indexOf('@');
         if (index != -1) return mName.substring(index+1);
         else return null;
-    }
-
-    public ICalTimeZone getTimeZone() throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     public String getUid() {

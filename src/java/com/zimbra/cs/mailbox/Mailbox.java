@@ -2414,7 +2414,7 @@ public class Mailbox {
             
         // timezones
         {
-            ICalTimeZone localTz = getAccount().getTimeZone();
+            ICalTimeZone localTz = Provisioning.getInstance().getTimeZone(getAccount()); 
             TimeZoneMap tzmap = new TimeZoneMap(localTz);
 
             for (Appointment appt : appts)
