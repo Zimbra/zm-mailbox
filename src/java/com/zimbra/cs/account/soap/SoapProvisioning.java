@@ -46,6 +46,7 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -150,28 +151,42 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void addAlias(Account acct, String alias) throws ServiceException {
-        // TODO Auto-generated method stub
+        XMLElement req = new XMLElement(AdminService.ADD_ACCOUNT_ALIAS_REQUEST);
+        req.addElement(AdminService.E_ID).setText(acct.getId());
+        req.addElement(AdminService.E_ALIAS).setText(alias);
+        invoke(req);        
     }
 
     @Override
     public void addAlias(DistributionList dl, String alias)
             throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AdminService.ADD_DISTRIBUTION_LIST_ALIAS_REQUEST);
+        req.addElement(AdminService.E_ID).setText(dl.getId());
+        req.addElement(AdminService.E_ALIAS).setText(alias);
+        invoke(req);                
     }
 
     @Override
     public void authAccount(Account acct, String password)
             throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AccountService.AUTH_REQUEST);
+        Element a = req.addElement(AccountService.E_ACCOUNT);
+        a.addAttribute(AccountService.A_BY, "name");
+        a.setText(acct.getName());
+        req.addElement(AccountService.E_PASSWORD).setText(password);        
+        invoke(req);
     }
 
     @Override
     public void changePassword(Account acct, String currentPassword,
             String newPassword) throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AccountService.CHANGE_PASSWORD_REQUEST);
+        Element a = req.addElement(AccountService.E_ACCOUNT);
+        a.addAttribute(AccountService.A_BY, "name");
+        a.setText(acct.getName());
+        req.addElement(AccountService.E_OLD_PASSWORD).setText(currentPassword);
+        req.addElement(AccountService.E_PASSWORD).setText(newPassword);        
+        invoke(req);
     }
 
     @Override
@@ -229,44 +244,50 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void deleteAccount(String zimbraId) throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AdminService.DELETE_ACCOUNT_REQUEST);
+        req.addElement(AdminService.E_ID).setText(zimbraId);
+        invoke(req);
     }
 
     @Override
     public void deleteCalendarResource(String zimbraId) throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AdminService.DELETE_CALENDAR_RESOURCE_REQUEST);
+        req.addElement(AdminService.E_ID).setText(zimbraId);
+        invoke(req);        
     }
 
     @Override
     public void deleteCos(String zimbraId) throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AdminService.DELETE_COS_REQUEST);
+        req.addElement(AdminService.E_ID).setText(zimbraId);
+        invoke(req);                
     }
 
     @Override
     public void deleteDistributionList(String zimbraId) throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AdminService.DELETE_DISTRIBUTION_LIST_REQUEST);
+        req.addElement(AdminService.E_ID).setText(zimbraId);
+        invoke(req);
     }
 
     @Override
     public void deleteDomain(String zimbraId) throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AdminService.DELETE_DOMAIN_REQUEST);
+        req.addElement(AdminService.E_ID).setText(zimbraId);
+        invoke(req);                        
     }
 
     @Override
     public void deleteServer(String zimbraId) throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AdminService.DELETE_SERVER_REQUEST);
+        req.addElement(AdminService.E_ID).setText(zimbraId);
+        invoke(req);
     }
 
     @Override
     public void deleteZimlet(String name) throws ServiceException {
         // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     private Account getAccountBy(String by, String value) throws ServiceException {
@@ -441,7 +462,7 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public Server getServerById(String zimbraId, boolean reload)
             throws ServiceException {
-        // TODO Auto-generated method stub
+        // TOÊDO Auto-generated method stub
         return null;
     }
 
@@ -486,8 +507,9 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void modifyAccountStatus(Account acct, String newStatus)
             throws ServiceException {
-        // TODO Auto-generated method stub
-
+        HashMap<String, String> attrs = new HashMap<String,String>();
+        attrs.put(Provisioning.A_zimbraAccountStatus, newStatus);
+        acct.modifyAttrs(attrs);
     }
 
     @Override
@@ -500,43 +522,56 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void removeAlias(Account acct, String alias) throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AdminService.REMOVE_ACCOUNT_ALIAS_REQUEST);
+        req.addElement(AdminService.E_ID).setText(acct.getId());
+        req.addElement(AdminService.E_ALIAS).setText(alias);
+        invoke(req);        
     }
 
     @Override
     public void removeAlias(DistributionList dl, String alias)
             throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AdminService.REMOVE_DISTRIBUTION_LIST_ALIAS_REQUEST);
+        req.addElement(AdminService.E_ID).setText(dl.getId());
+        req.addElement(AdminService.E_ALIAS).setText(alias);
+        invoke(req);        
     }
 
     @Override
     public void renameAccount(String zimbraId, String newName)
             throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AdminService.RENAME_ACCOUNT_REQUEST);
+        req.addElement(AdminService.E_ID).setText(zimbraId);
+        req.addElement(AdminService.E_NEW_NAME).setText(newName);
+        invoke(req);
     }
 
     @Override
     public void renameCalendarResource(String zimbraId, String newName)
             throws ServiceException {
         // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AdminService.RENAME_CALENDAR_RESOURCE_REQUEST);
+        req.addElement(AdminService.E_ID).setText(zimbraId);
+        req.addElement(AdminService.E_NEW_NAME).setText(newName);
+        invoke(req);
     }
 
     @Override
     public void renameCos(String zimbraId, String newName)
             throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AdminService.RENAME_COS_REQUEST);
+        req.addElement(AdminService.E_ID).setText(zimbraId);
+        req.addElement(AdminService.E_NEW_NAME).setText(newName);
+        invoke(req);        
     }
 
     @Override
     public void renameDistributionList(String zimbraId, String newName)
             throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AdminService.RENAME_DISTRIBUTION_LIST_REQUEST);
+        req.addElement(AdminService.E_ID).setText(zimbraId);
+        req.addElement(AdminService.E_NEW_NAME).setText(newName);
+        invoke(req);
     }
 
     @Override
@@ -557,15 +592,18 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void setCOS(Account acct, Cos cos) throws ServiceException {
-        // TODO Auto-generated method stub
-
+        HashMap<String, String> attrs = new HashMap<String, String>();
+        attrs.put(Provisioning.A_zimbraCOSId, cos.getId());
+        acct.modifyAttrs(attrs);
     }
 
     @Override
     public void setPassword(Account acct, String newPassword)
             throws ServiceException {
-        // TODO Auto-generated method stub
-
+        XMLElement req = new XMLElement(AdminService.SET_PASSWORD_REQUEST);
+        req.addElement(AdminService.E_ID).setText(acct.getId());
+        req.addElement(AdminService.E_NEW_PASSWORD).setText(newPassword);
+        invoke(req);
     }
     
     public static void main(String args[]) throws ServiceException, IOException {
@@ -579,9 +617,11 @@ public class SoapProvisioning extends Provisioning {
             attrs.put(Provisioning.A_displayName, "DISPLAY THIS");
             Account acct = p.createAccount("userkewl8@macintel.local", "test123", attrs);
             System.out.println(acct);
-            Account acct2 = p.getAccountById(acct.getId());
-            System.out.println(acct2);
             */            
+            Account acct2 = p.getAccountByName("userkewl8@macintel.local");
+            System.out.println(acct2);
+            p.changePassword(acct2, "test123", "test1235");
+
             Account acct3 = p.getAdminAccountByName("zimbra");
             System.out.println(acct3);                        
         } catch (SoapFaultException e) {
