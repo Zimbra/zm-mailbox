@@ -952,8 +952,6 @@ public abstract class Provisioning {
      */
     public abstract List<NamedEntry> searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
 
-    public abstract Account createAdminAccount(String name, String password, Map<String, Object> attrs) throws ServiceException;
-    
     public abstract Account getAdminAccountByName(String name) throws ServiceException;
     
     public abstract List<Account> getAllAdminAccounts()  throws ServiceException;

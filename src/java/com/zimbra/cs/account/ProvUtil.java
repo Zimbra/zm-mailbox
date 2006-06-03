@@ -1283,18 +1283,6 @@ public class ProvUtil {
         }
     }    
 
-    private void doCreateAdminAccount(String[] args) throws ServiceException, ArgException {
-        if (args.length < 3) {
-            usage();
-        } else {
-            String name = args[1];
-            String password = args[2];
-            Map<String, Object> attrs = getMap(args, 3);
-            Account account = mProvisioning.createAdminAccount(name, password, attrs);
-            System.out.println(account.getId());
-        }
-    }
-
     private void doCreateDistributionList(String[] args) throws ServiceException, ArgException {
         if (args.length < 2) {
             usage();

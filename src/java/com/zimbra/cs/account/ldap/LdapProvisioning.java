@@ -598,59 +598,6 @@ public class LdapProvisioning extends Provisioning {
         }
         return null;
     }
-            
-    public Account createAdminAccount(String uid, String password, Map<String, Object> acctAttrs) throws ServiceException {
-
-        uid = uid.toLowerCase().trim();
-        
-        if (uid.indexOf("@") != -1)
-            throw ServiceException.FAILURE("admin account names must not have an '@' in them", null);
-        
-        HashMap attrManagerContext = new HashMap();
-        AttributeManager.getInstance().preModify(acctAttrs, null, attrManagerContext, true, true);
-
-        DirContext ctxt = null;
-        try {
-            ctxt = LdapUtil.getDirContext(true);
-
-            Attributes attrs = new BasicAttributes(true);
-            LdapUtil.mapToAttrs(acctAttrs, attrs);
-            
-            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "organizationalPerson");
-            oc.add(C_zimbraAccount);
-            
-            String zimbraIdStr = LdapUtil.generateUUID();
-            attrs.put(A_zimbraId, zimbraIdStr);
-            
-            if (attrs.get(Provisioning.A_zimbraAccountStatus) == null)
-                attrs.put(A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
-            
-            attrs.put(A_uid, uid);
-            
-            // required for organizationalPerson class
-            if (attrs.get(Provisioning.A_cn) == null)
-                attrs.put(A_cn, uid);
-
-            // required for organizationalPerson class
-            if (attrs.get(Provisioning.A_sn) == null)
-                attrs.put(A_sn, uid);            
-            
-            if (password != null)
-                attrs.put(A_userPassword, LdapUtil.generateSSHA(password, null));
-
-            String dn = adminNameToDN(uid);
-            createSubcontext(ctxt, dn, attrs, "createAdminAccount");
-            Account acct = getAccountById(zimbraIdStr, ctxt); 
-            
-            AttributeManager.getInstance().postModify(acctAttrs, acct, attrManagerContext, true);
-            return acct;            
-
-        } catch (NameAlreadyBoundException nabe) {
-            throw AccountServiceException.ACCOUNT_EXISTS(uid);
-        } finally {
-            LdapUtil.closeContext(ctxt);
-        }
-    }
     
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getAllDomains()

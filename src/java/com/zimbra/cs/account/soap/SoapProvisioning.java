@@ -186,13 +186,6 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public Account createAdminAccount(String name, String password,
-            Map<String, Object> attrs) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public CalendarResource createCalendarResource(String emailAddress,
             Map<String, Object> attrs) throws ServiceException {
         // TODO Auto-generated method stub
