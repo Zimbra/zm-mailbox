@@ -132,9 +132,4 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
     public String[] getAliases() {
         return getMultiAttr(Provisioning.A_zimbraMailAlias);
     }
-
-    public List<DistributionList> getDistributionLists(boolean directOnly, Map<String, String> via) throws ServiceException {
-        String addrs[] = LdapProvisioning.getAllAddrsForDistributionList(this);
-        return LdapProvisioning.getDistributionLists(addrs, directOnly, via, false);
-    }
 }

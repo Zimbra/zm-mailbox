@@ -976,6 +976,17 @@ public abstract class Provisioning {
      */
     public abstract List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String,String> via) throws ServiceException; 
 
+    
+    /**
+     *      
+     * @param directOnly return only DLs this DL is a direct member of
+     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL name to the DL it was a member of, if 
+     *            member was indirect.
+     * @return all the DLs
+     * @throws ServiceException
+     */
+    public abstract List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String,String> via) throws ServiceException; 
+
     public abstract boolean healthCheck();
 
     public abstract Config getConfig() throws ServiceException;

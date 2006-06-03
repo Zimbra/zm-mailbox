@@ -90,7 +90,7 @@ public class GetDistributionListMembership extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access dl");
 
         HashMap<String,String> via = new HashMap<String, String>();
-        List<DistributionList> lists = distributionList.getDistributionLists(false, via);
+        List<DistributionList> lists = prov.getDistributionLists(distributionList, false, via);
         
         Element response = lc.createElement(AdminService.GET_DISTRIBUTION_LIST_MEMBERSHIP_RESPONSE);
         for (DistributionList dl: lists) {

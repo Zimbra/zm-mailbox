@@ -661,4 +661,10 @@ public class SoapProvisioning extends Provisioning {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String, String> via) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

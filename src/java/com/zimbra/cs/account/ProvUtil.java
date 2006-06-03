@@ -822,7 +822,7 @@ public class ProvUtil {
             String key = args[1];
             DistributionList dist = lookupDistributionList(key);
             HashMap<String,String> via = new HashMap<String, String>();
-            List<DistributionList> lists = dist.getDistributionLists(false, via);
+            List<DistributionList> lists = mProv.getDistributionLists(dist, false, via);
             for (DistributionList dl: lists) {
                 String viaDl = via.get(dl.getName());
                 if (viaDl != null) System.out.println(dl.getName()+" (via "+viaDl+")");

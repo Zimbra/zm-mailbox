@@ -1875,6 +1875,11 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
+    public List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String, String> via) throws ServiceException {
+        String addrs[] = getAllAddrsForDistributionList(list);
+        return getDistributionLists(addrs, directOnly, via, false);
+    }
+
     private LdapDistributionList getDistributionListByQuery(String base, String query, DirContext initCtxt) throws ServiceException {
         DirContext ctxt = initCtxt;
         try {
