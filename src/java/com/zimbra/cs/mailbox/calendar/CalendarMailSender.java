@@ -301,6 +301,11 @@ public class CalendarMailSender {
             MimeMultipart mmp = new MimeMultipart("alternative");
             mm.setContent(mmp);
 
+            // Add the text as DESCRIPTION property in the iCalendar part.
+            // MS Entourage for Mac wants this.  It ignores text/plain and
+            // text/html MIME parts.
+            cal.addDescription(text);
+
             // ///////
             // TEXT part (add me first!)
             MimeBodyPart textPart = new MimeBodyPart();

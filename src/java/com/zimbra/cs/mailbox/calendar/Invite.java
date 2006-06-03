@@ -894,12 +894,6 @@ public class Invite {
 //    private Method mMethod;
     private ICalTok mMethod;
     
-    public Invite(String method, String fragment, TimeZoneMap tzMap) {
-        mMethod = lookupMethod(method);
-        mFragment = fragment != null ? fragment : "";
-        mTzMap = tzMap;
-    }
-    
     public Invite(String method, TimeZoneMap tzMap) {
         mMethod = lookupMethod(method);
         mTzMap = tzMap;

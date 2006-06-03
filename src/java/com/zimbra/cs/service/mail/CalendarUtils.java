@@ -826,8 +826,8 @@ public class CalendarUtils {
     static Invite cancelInvite(Account acct, Invite inv, String comment,
             List<ZAttendee> forAttendees, RecurId recurId) throws ServiceException {
         // TimeZoneMap tzMap = new TimeZoneMap(acct.getTimeZone());
-        Invite cancel = new Invite(ICalTok.CANCEL.toString(), comment, inv
-                .getTimeZoneMap());
+        Invite cancel = new Invite(ICalTok.CANCEL.toString(),
+                                   inv.getTimeZoneMap());
 
         // ORGANIZER (FIXME: should check to make sure it is us!)
         cancel.setOrganizer(inv.getOrganizer());
