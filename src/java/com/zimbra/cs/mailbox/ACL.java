@@ -105,14 +105,9 @@ public class ACL {
         public Locale getLocale()                 { return null; }
         public String getName()                   { return null; }
         public String getDomainName()             { return null; }
-        public Domain getDomain()                 { return null; }
         public String getAccountStatus()          { return null; }
         public Map<String, Object> getAttrs(boolean prefsOnly, boolean applyCos) { return null; }
-        public Cos getCOS()                       { return null; }
         public String[] getAliases()              { return null; }
-        public boolean inDistributionList(String zimbraGroupId) { return false; }
-        public Set<String> getDistributionLists() { return null; }
-        public Server getServer()                 { return null; }
         public ICalTimeZone getTimeZone()         { return null; }
         public CalendarUserType getCalendarUserType() { return null; }
         public boolean saveToSent()               { return false; }

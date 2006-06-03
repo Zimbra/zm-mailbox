@@ -58,15 +58,6 @@ public abstract class AbstractAccount implements Account {
         throw new UnsupportedOperationException();
     }
 
-    public Set<String> getDistributionLists() throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
-    public List<DistributionList> getDistributionLists(boolean directOnly,
-            Map<String, String> via) throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
     public String getDomainName() {
         throw new UnsupportedOperationException();        
     }
@@ -80,14 +71,6 @@ public abstract class AbstractAccount implements Account {
     }
 
     public String getUid() {
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean inDistributionList(String zimbraId) throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean isCorrectHost() throws ServiceException {
         throw new UnsupportedOperationException();
     }
 

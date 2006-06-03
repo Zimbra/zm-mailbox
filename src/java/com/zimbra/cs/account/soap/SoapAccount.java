@@ -25,16 +25,10 @@
 
 package com.zimbra.cs.account.soap;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Cos;
-import com.zimbra.cs.account.DistributionList;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
@@ -65,42 +59,16 @@ public class SoapAccount extends SoapNamedEntry implements Account {
         return null;
     }
 
-    public Cos getCOS() throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
     public CalendarUserType getCalendarUserType() throws ServiceException {
         String cutype = getAttr(Provisioning.A_zimbraAccountCalendarUserType,
                 CalendarUserType.USER.toString());
         return CalendarUserType.valueOf(cutype);
     }
 
-    public Set<String> getDistributionLists() throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public List<DistributionList> getDistributionLists(boolean directOnly,
-            Map<String, String> via) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public Domain getDomain() throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
     public String getDomainName() {
         int index = mName.indexOf('@');
         if (index != -1) return mName.substring(index+1);
         else return null;
-    }
-
-    public Server getServer() throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     public ICalTimeZone getTimeZone() throws ServiceException {
@@ -110,11 +78,6 @@ public class SoapAccount extends SoapNamedEntry implements Account {
 
     public String getUid() {
         return super.getAttr(Provisioning.A_uid);        
-    }
-
-    public boolean inDistributionList(String zimbraId) throws ServiceException {
-        // TODO Auto-generated method stub
-        return false;
     }
 
     public boolean saveToSent() throws ServiceException {

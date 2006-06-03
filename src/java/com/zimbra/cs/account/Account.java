@@ -25,9 +25,7 @@
 
 package com.zimbra.cs.account;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
