@@ -266,16 +266,16 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("tried to remove object from non-parent", IS_NOT_CHILD, SENDERS_FAULT);
     }
 
-    public static MailServiceException MODIFY_CONFLICT() {
-        return new MailServiceException("modify conflict", MODIFY_CONFLICT, SENDERS_FAULT);
+    public static MailServiceException MODIFY_CONFLICT(Argument... args) {
+        return new MailServiceException("modify conflict", MODIFY_CONFLICT, SENDERS_FAULT, args);
     }
 
     public static MailServiceException IMMUTABLE_OBJECT(int id) {
         return new MailServiceException("cannot modify immutable object: " + id, IMMUTABLE_OBJECT, SENDERS_FAULT, new Argument(ITEM_ID, id));
     }
 
-    public static MailServiceException ALREADY_EXISTS(String name) {
-        return new MailServiceException("object with that name already exists: " + name, ALREADY_EXISTS, SENDERS_FAULT);
+    public static MailServiceException ALREADY_EXISTS(String name, Argument... args) {
+        return new MailServiceException("object with that name already exists: " + name, ALREADY_EXISTS, SENDERS_FAULT, args);
     }
 
     public static MailServiceException ALREADY_EXISTS(int id, Throwable t) {

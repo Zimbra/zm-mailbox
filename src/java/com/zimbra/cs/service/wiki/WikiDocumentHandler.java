@@ -27,6 +27,7 @@ package com.zimbra.cs.service.wiki;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.ServiceException.Argument;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiWord;
@@ -66,8 +67,11 @@ public abstract class WikiDocumentHandler extends DocumentHandler {
 			if (itemId != 0 || ver != 0) {
 				throw new IllegalArgumentException("either itemId or version is zero");
 			}
-			if (wiki.lookupWiki(wikiWord) != null) {
-				throw MailServiceException.ALREADY_EXISTS("wiki word "+wikiWord+" in folder "+wiki.getWikiFolderId());
+			WikiWord ww = wiki.lookupWiki(wikiWord);
+			if (ww != null) {
+				throw MailServiceException.ALREADY_EXISTS("wiki word "+wikiWord+" in folder "+wiki.getWikiFolderId(),
+						new Argument(MailService.A_ID, ww.getId()),
+						new Argument(MailService.A_VERSION, ww.getLastRevision()));
 			}
 		} else {
 			WikiWord ww = wiki.lookupWiki(wikiWord);
@@ -75,7 +79,9 @@ public abstract class WikiDocumentHandler extends DocumentHandler {
 				throw MailServiceException.INVALID_ID(itemId);
 			}
 			if (ww.getLastRevision() != ver) {
-				throw MailServiceException.MODIFY_CONFLICT();
+				throw MailServiceException.MODIFY_CONFLICT(
+						new Argument(MailService.A_ID, ww.getId()),
+						new Argument(MailService.A_VERSION, ww.getLastRevision()));
 			}
 		}
 	}
