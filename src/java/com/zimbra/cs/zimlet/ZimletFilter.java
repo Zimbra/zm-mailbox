@@ -126,7 +126,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
                 		return;
             		}
             	} else {
-    	        	Set zimlets = account.getCOS().getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets);
+    	        	Set zimlets = prov.getCOS(account).getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets);
     	        	if (!zimlets.contains(zimletName)) {
     	            	ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from user "+authToken.getAccountId());
     	            	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);

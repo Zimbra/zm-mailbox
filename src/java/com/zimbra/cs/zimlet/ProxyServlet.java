@@ -43,6 +43,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
@@ -77,7 +78,9 @@ public class ProxyServlet extends ZimbraServlet {
 	}
 	
 	private Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
-		return Provisioning.getInstance().getAccountById(auth.getAccountId()).getCOS().getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = prov.getAccountById(auth.getAccountId());
+        return prov.getCOS(acct).getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
 	}
 	
 	private boolean checkPermissionOnTarget(HttpServletRequest req, URL target, AuthToken auth) {
@@ -238,7 +241,9 @@ public class ProxyServlet extends ZimbraServlet {
 	}
 	
 	private Set<String> getCacheableContentTypes(AuthToken auth) throws ServiceException {
-		return Provisioning.getInstance().getAccountById(auth.getAccountId()).getCOS().getMultiAttrSet(Provisioning.A_zimbraProxyCacheableContentTypes);
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = prov.getAccountById(auth.getAccountId());        
+		return prov.getCOS(acct).getMultiAttrSet(Provisioning.A_zimbraProxyCacheableContentTypes);
 	}
 	
 	private boolean canCacheProxyContent(HttpServletRequest req, URL url, URLContents content, AuthToken authToken) 

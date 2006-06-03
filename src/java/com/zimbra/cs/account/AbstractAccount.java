@@ -54,10 +54,6 @@ public abstract class AbstractAccount implements Account {
         throw new UnsupportedOperationException();
     }
 
-    public Cos getCOS() throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
     public CalendarUserType getCalendarUserType() throws ServiceException {
         throw new UnsupportedOperationException();
     }
@@ -71,15 +67,11 @@ public abstract class AbstractAccount implements Account {
         throw new UnsupportedOperationException();
     }
 
-    public Domain getDomain() throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
     public String getDomainName() {
         throw new UnsupportedOperationException();        
     }
-
-    public Server getServer() throws ServiceException {
+    
+    public String getAccountCOSId() {
         throw new UnsupportedOperationException();        
     }
 

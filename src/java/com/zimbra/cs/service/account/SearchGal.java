@@ -66,7 +66,8 @@ public class SearchGal extends DocumentHandler {
         else
             throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
 
-        SearchGalResult result = acct.getDomain().searchGal(n, type, null);
+        Provisioning prov = Provisioning.getInstance();
+        SearchGalResult result = prov.getDomain(acct).searchGal(n, type, null);
         response.addAttribute(AccountService.A_MORE, result.hadMore);        
         for (GalContact contact : result.matches)
             addContact(response, contact);

@@ -39,7 +39,8 @@ public class DomainAccessManager extends AccessManager {
         if (!at.isDomainAdmin()) return false;
         // don't allow a domain-only admin to access a global admin's account
         if (target.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false)) return false;
-        return getDomain(at).getId().equals(target.getDomain().getId());
+        Provisioning prov = Provisioning.getInstance();
+        return getDomain(at).getId().equals(prov.getDomain(target).getId());
     }
 
     public boolean canAccessDomain(AuthToken at, String domainName) throws ServiceException {

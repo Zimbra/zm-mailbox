@@ -42,7 +42,7 @@ public abstract class AccessManager {
     }
 
     public Domain getDomain(AuthToken at) throws ServiceException {
-        return getAccount(at).getDomain();
+        return Provisioning.getInstance().getDomain(getAccount(at));
     }
 
     public abstract boolean canAccessAccount(AuthToken at, Account target) throws ServiceException;

@@ -136,4 +136,8 @@ public class SoapAccount extends SoapNamedEntry implements Account {
         resetData();        
     }
 
+    public String getAccountCOSId() {
+        return getAttr(Provisioning.A_zimbraCOSId);
+    }
+
 }

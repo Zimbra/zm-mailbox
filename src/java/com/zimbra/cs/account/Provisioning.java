@@ -901,6 +901,48 @@ public abstract class Provisioning {
      */
     public abstract void reload(Entry e) throws ServiceException;
 
+    /**
+     * @return the domain this account, or null if an admin account. 
+     * @throws ServiceException
+     */    
+    public Domain getDomain(Account acct) throws ServiceException {
+        String dname = acct.getDomainName();
+        return dname == null ? null : getDomainByName(dname);
+    }
+
+    /**
+     * @return the Server object where this account's mailbox is homed
+     * @throws ServiceException
+     */
+    public Server getServer(Account acct) throws ServiceException {
+        String serverId = acct.getAttr(Provisioning.A_zimbraMailHost);
+        return (serverId == null ? null : getServerByName(serverId));
+    }  
+    
+    private static final String DATA_COS = "COS";
+    
+    /**
+     * @return the COS object for this account, or null if account has no COS
+     * 
+     * @throws ServiceException
+     */
+    public Cos getCOS(Account acct) throws ServiceException {
+        // CACHE. If we get reloaded from LDAP, cached data is cleared
+        Cos cos = (Cos) acct.getCachedData(DATA_COS);
+        if (cos == null) {
+            String id = acct.getAccountCOSId();
+                if (id != null) cos = getCosById(id); 
+                if (cos == null) {
+                    Domain domain = getDomain(acct);
+                    String domainCosId = domain != null ? domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
+                    if (domainCosId != null) cos = getCosById(domainCosId);
+                }
+                if (cos == null) cos = getCosByName(Provisioning.DEFAULT_COS_NAME);
+                if (cos != null) acct.setCachedData(DATA_COS, cos);
+        }
+        return cos;
+    }
+      
     public abstract boolean healthCheck();
 
     public abstract Config getConfig() throws ServiceException;
@@ -1153,7 +1195,7 @@ public abstract class Provisioning {
         return lc;
     }
 
-    public static Locale getLocale(Entry entry) throws ServiceException {
+    public Locale getLocale(Entry entry) throws ServiceException {
         if (entry instanceof Account) {
             // Order of precedence for Account's locale: (including
             // CalendarResource which extends Account)
@@ -1167,11 +1209,11 @@ public abstract class Provisioning {
             Account account = (Account) entry;
             Locale lc = getEntryLocale(account);
             if (lc != null) return lc;
-            lc = getEntryLocale(account.getCOS());
+            lc = getEntryLocale(getCOS(account));
             if (lc != null) return lc;
-            lc = getEntryLocale(account.getDomain());
+            lc = getEntryLocale(getDomain(account));
             if (lc != null) return lc;
-            return getLocale(account.getServer());
+            return getLocale(getServer(account));
         } else if (entry instanceof Server) {
             // Order of precedence for Server's locale:
             //

@@ -246,7 +246,7 @@ public class ZimbraServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "no such user");
                 return;
             }
-            proxyServletRequest(req, resp, acct.getServer(), null);
+            proxyServletRequest(req, resp, prov.getServer(acct), null);
 		} catch (ServiceException e) {
 			throw new ServletException(e);
 		}

@@ -40,6 +40,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
@@ -117,6 +118,7 @@ public class ACL {
         public boolean saveToSent()               { return false; }
         public List<DistributionList> getDistributionLists(boolean directOnly, Map<String, String> via) { return null; }
         public int compareTo(Object o)            { return 0; }
+        public String getAccountCOSId()           { return null; }
     }
 
     public static class Grant {
@@ -179,13 +181,14 @@ public class ACL {
          *  If <code>acct</code> is <code>null</code>, only return
          *  <code>true</code> if the grantee is {@link ACL#GRANTEE_PUBLIC}. */
         private boolean matches(Account acct) throws ServiceException {
+            Provisioning prov = Provisioning.getInstance();
             if (acct == null)
                 return mType == ACL.GRANTEE_PUBLIC;
             switch (mType) {
                 case ACL.GRANTEE_PUBLIC:   return true;
                 case ACL.GRANTEE_AUTHUSER: return !acct.equals(ANONYMOUS_ACCT);
-                case ACL.GRANTEE_COS:      return mGrantee.equals(getId(acct.getCOS()));
-                case ACL.GRANTEE_DOMAIN:   return mGrantee.equals(getId(acct.getDomain()));
+                case ACL.GRANTEE_COS:      return mGrantee.equals(getId(prov.getCOS(acct)));
+                case ACL.GRANTEE_DOMAIN:   return mGrantee.equals(getId(prov.getDomain(acct)));
                 case ACL.GRANTEE_GROUP:    return acct.inDistributionList(mGrantee);
                 case ACL.GRANTEE_USER:     return mGrantee.equals(acct.getId());
                 default:  throw ServiceException.FAILURE("unknown ACL grantee type: " + mType, null);

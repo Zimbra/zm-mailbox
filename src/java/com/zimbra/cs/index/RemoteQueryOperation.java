@@ -116,11 +116,12 @@ class RemoteQueryOperation extends QueryOperation {
 	}
 	
 	protected void setup(Account authenticatedAccount, byte[] types, SortBy searchOrder, int offset, int limit) throws ServiceException {
-		Account acct = Provisioning.getInstance().getAccountById(mTarget.toString());
+        Provisioning prov  = Provisioning.getInstance();
+        Account acct = prov.getAccountById(mTarget.toString());
 		if (acct == null)
 			throw AccountServiceException.NO_SUCH_ACCOUNT(mTarget.toString());
 		
-		Server remoteServer = acct.getServer();
+		Server remoteServer = prov.getServer(acct);
 		
 		SearchParams params = new SearchParams();
 		params.setSortBy(searchOrder);

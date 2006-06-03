@@ -67,7 +67,9 @@ public class AutoCompleteGal extends DocumentHandler {
         else
             throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
 
-        SearchGalResult result = acct.getDomain().autoCompleteGal(n, type, max);
+        
+        Provisioning prov = Provisioning.getInstance();
+        SearchGalResult result = prov.getDomain(acct).autoCompleteGal(n, type, max);
 
         response.addAttribute(AccountService.A_MORE, result.hadMore);
         

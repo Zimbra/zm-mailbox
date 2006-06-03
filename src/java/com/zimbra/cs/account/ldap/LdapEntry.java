@@ -267,7 +267,7 @@ public class LdapEntry implements Entry {
             if (mLocale != null)
                 return mLocale;
         }
-        Locale lc = Provisioning.getLocale(this);
+        Locale lc = Provisioning.getInstance().getLocale(this);
         synchronized (this) {
             mLocale = lc;
             return mLocale;

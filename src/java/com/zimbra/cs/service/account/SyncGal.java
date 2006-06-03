@@ -51,7 +51,7 @@ public class SyncGal extends DocumentHandler {
         String tokenAttr = request.getAttribute(MailService.A_TOKEN, "");        
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
-        SearchGalResult result = acct.getDomain().searchGal("", Provisioning.GAL_SEARCH_TYPE.ALL, tokenAttr);
+        SearchGalResult result = Provisioning.getInstance().getDomain(acct).searchGal("", Provisioning.GAL_SEARCH_TYPE.ALL, tokenAttr);
         if (result.token != null)
             response.addAttribute(MailService.A_TOKEN, result.token);
         for (GalContact contact : result.matches)

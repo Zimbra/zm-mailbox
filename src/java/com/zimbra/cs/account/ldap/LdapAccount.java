@@ -42,7 +42,6 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
@@ -57,8 +56,6 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     protected LdapProvisioning mProv;
     private String mName;
     private String mDomainName;
-
-    private static final String DATA_COS = "COS";
     
     LdapAccount(String dn, Attributes attrs, LdapProvisioning prov) {
         super(dn, attrs);
@@ -105,14 +102,6 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         return mDomainName;
     }
 
-    /**
-     * @return the domain this account, or null if an admin account. 
-     * @throws ServiceException
-     */
-    public Domain getDomain() throws ServiceException {
-        return mDomainName == null ? null : mProv.getDomainByName(mDomainName);
-    }
-
     private void initNameAndDomain() {
         String uid = getUid(); 
         mDomainName = LdapUtil.dnToDomain(mDn);
@@ -135,7 +124,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         try {
             if (!AttributeManager.getInstance().isAccountInherited(name))
                 return null;
-            Cos cos = getCOS();
+            Cos cos = mProv.getCOS(this);
             if (cos != null)
                 return cos.getAttr(name);
             else
@@ -153,7 +142,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
             if (!AttributeManager.getInstance().isAccountInherited(name))
                 return sEmptyMulti;
 
-            Cos cos = getCOS();
+            Cos cos = mProv.getCOS(this);
             if (cos != null)
                 return cos.getMultiAttr(name);
             else
@@ -166,28 +155,15 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     public String[] getAliases() {
         return getMultiAttr(Provisioning.A_zimbraMailAlias);
     }
-
-    public Cos getCOS() throws ServiceException {
-        // CACHE. If we get reloaded from LDAP, cached data is cleared
-        Cos cos = (Cos) getCachedData(DATA_COS);
-        if (cos == null) {
-            String id = super.getAttr(Provisioning.A_zimbraCOSId);
-            if (id != null) cos = mProv.getCosById(id); 
-            if (cos == null) {
-                Domain domain = getDomain();
-                String domainCosId = domain != null ? domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
-                if (domainCosId != null) cos = mProv.getCosById(domainCosId);
-            }
-            if (cos == null) cos = mProv.getCosByName(Provisioning.DEFAULT_COS_NAME);
-            if (cos != null) setCachedData(DATA_COS, cos);
-        }
-        return cos;
+    
+    public String getAccountCOSId() {
+        return super.getAttr(Provisioning.A_zimbraCOSId);
     }
 
     public Map getPrefs() throws ServiceException {
         Map<String, Object> prefs = new HashMap<String, Object>();
         try {
-            LdapCos cos = (LdapCos) getCOS();
+            LdapCos cos = (LdapCos) mProv.getCOS(this);
             // get the COS prefs first
             LdapUtil.getAttrs(cos.mAttrs, prefs, "zimbraPref");
             // and override with the account ones
@@ -226,11 +202,6 @@ public class LdapAccount extends LdapNamedEntry implements Account {
             throw ServiceException.FAILURE("unable to get prefs", e);
         }
         return attrs;
-    }
-
-    public Server getServer() throws ServiceException {
-        String serverId = getAttr(Provisioning.A_zimbraMailHost);
-        return (serverId == null ? null : mProv.getServerByName(serverId));
     }
 
     private ICalTimeZone mTimeZone;

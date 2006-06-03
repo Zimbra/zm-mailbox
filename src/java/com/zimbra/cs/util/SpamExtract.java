@@ -186,7 +186,7 @@ public class SpamExtract {
         
         if (mVerbose) mLog.info("Extracting from account " + account.getName());
         
-        Server server = account.getServer();
+        Server server = Provisioning.getInstance().getServer(account);
 
         String optAdminURL;
         if (cl.hasOption('u')) {

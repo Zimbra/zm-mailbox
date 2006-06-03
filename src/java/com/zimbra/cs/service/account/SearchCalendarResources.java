@@ -64,7 +64,8 @@ public class SearchCalendarResources extends DocumentHandler {
         EntrySearchFilter filter = parseSearchFilter(request);
         filter.andWith(sFilterActiveResourcesOnly);
 
-        List resources = acct.getDomain().
+        Provisioning prov = Provisioning.getInstance();
+        List resources = prov.getDomain(acct).
             searchCalendarResources(filter, attrs, sortBy, sortAscending);
         for (Iterator iter = resources.iterator(); iter.hasNext(); ) {
             CalendarResource resource = (CalendarResource) iter.next();

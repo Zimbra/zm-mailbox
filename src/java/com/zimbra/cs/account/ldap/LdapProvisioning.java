@@ -2004,7 +2004,8 @@ public class LdapProvisioning extends Provisioning {
             throw ServiceException.INVALID_REQUEST("preAuth must not be empty", null);
 
         // see if domain is configured for preauth
-        String domainPreAuthKey = acct.getDomain().getAttr(Provisioning.A_zimbraPreAuthKey, null);
+        Provisioning prov = Provisioning.getInstance();
+        String domainPreAuthKey = prov.getDomain(acct).getAttr(Provisioning.A_zimbraPreAuthKey, null);
         if (domainPreAuthKey == null)
             throw ServiceException.INVALID_REQUEST("domain is not configured for preauth", null);
         
@@ -2158,7 +2159,8 @@ public class LdapProvisioning extends Provisioning {
         
         String authMech = Provisioning.AM_ZIMBRA;        
 
-        Domain d = acct.getDomain();
+        Provisioning prov = Provisioning.getInstance();
+        Domain d = prov.getDomain(acct);
         // see if it specifies an alternate auth
         if (d != null) {
             String am = d.getAttr(Provisioning.A_zimbraAuthMech);
@@ -2804,5 +2806,6 @@ public class LdapProvisioning extends Provisioning {
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "%D"));                
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "uid=%u,ou=people,%D"));
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "n(%n)u(%u)d(%d)D(%D)(%%)"));
-    }  
+    }
+
 }

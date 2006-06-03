@@ -135,7 +135,7 @@ public class GetInfo extends DocumentHandler  {
     	String[] attrList;
     	List<Zimlet> zimletList;
     	try {
-        	cos = acct.getCOS();
+        	cos = Provisioning.getInstance().getCOS(acct);
         	attrList = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
         	zimletList = ZimletUtil.orderZimletsByPriority(attrList);
     	} catch (ServiceException se) {

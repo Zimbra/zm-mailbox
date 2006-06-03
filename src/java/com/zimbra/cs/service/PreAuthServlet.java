@@ -178,7 +178,8 @@ public class PreAuthServlet extends ZimbraServlet {
     
     private void redirectToCorrectServer(HttpServletRequest req, HttpServletResponse resp, Account acct, String token) throws ServiceException, IOException {
         StringBuilder sb = new StringBuilder();
-        sb.append(URLUtil.getMailURL(acct.getServer(), req.getRequestURI(), true));
+        Provisioning prov = Provisioning.getInstance();        
+        sb.append(URLUtil.getMailURL(prov.getServer(acct), req.getRequestURI(), true));
         sb.append('?').append(PARAM_ISREDIRECT).append('=').append('1');
         sb.append('&').append(PARAM_AUTHTOKEN).append('=').append(token);
         addNonPreAuthParams(req, sb, false);

@@ -276,11 +276,13 @@ public class UserServlet extends ZimbraServlet {
     private boolean isProxyRequest(HttpServletRequest req, HttpServletResponse resp, Context context) throws IOException, ServiceException {
         // this should handle both explicit /user/user-on-other-server/ and
         // /user/~/?id={account-id-on-other-server}:id            
+
         if (!Provisioning.onLocalServer(context.targetAccount)) {
             try {
                 if (context.basicAuthHappened && context.authTokenCookie == null) 
                     context.authTokenCookie = new AuthToken(context.authAccount).getEncoded();
-                proxyServletRequest(req, resp, context.targetAccount.getServer(),
+                Provisioning prov = Provisioning.getInstance();                
+                proxyServletRequest(req, resp, prov.getServer(context.targetAccount),
                                     context.basicAuthHappened ? context.authTokenCookie : null);
                 return true;
             } catch (ServletException e) {
@@ -517,11 +519,12 @@ public class UserServlet extends ZimbraServlet {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "cannot generate auth token");
         }
 
-        Account targetAccount = Provisioning.getInstance().getAccountById(mpt.getOwnerId());
+        Provisioning prov = Provisioning.getInstance();
+        Account targetAccount = prov.getAccountById(mpt.getOwnerId());
         if (targetAccount == null)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "referenced account not found");
-
-        proxyServletRequest(req, resp, targetAccount.getServer(), uri,
+        
+        proxyServletRequest(req, resp, prov.getServer(targetAccount), uri,
                             context.basicAuthHappened ? context.authTokenCookie : null);
     }
 
@@ -735,7 +738,8 @@ public class UserServlet extends ZimbraServlet {
 
     public static InputStream getResourceAsStream(AuthToken auth, ItemId iid, Map<String,String> params) throws ServiceException {
         // fetch from remote store
-        Server server = Provisioning.getInstance().getAccountById(iid.getAccountId()).getServer();
+        Provisioning prov = Provisioning.getInstance();        
+        Server server = prov.getServer(prov.getAccountById(iid.getAccountId()));
         int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
         boolean useHTTP = port > 0;
         if (!useHTTP)

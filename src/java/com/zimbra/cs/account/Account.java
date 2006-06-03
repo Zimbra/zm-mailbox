@@ -43,17 +43,18 @@ public interface Account extends NamedEntry {
     }
 
     public String getUid();
+
+    /**
+     * Returns the *account's* COSId, that is, returns the zimbraCOSId directly set on the account, or null if not set.
+     * Use Provisioning.getCos(account) to get the actual COS object.
+     * @return 
+     */
+    public String getAccountCOSId();
     
     /**
      * @return the domain name for this account (foo.com), or null if an admin account. 
      */
     public String getDomainName();
-    
-    /**
-     * @return the domain this account, or null if an admin account. 
-     * @throws ServiceException
-     */    
-    public Domain getDomain() throws ServiceException;    
     
     public String getAccountStatus();
     
@@ -67,15 +68,7 @@ public interface Account extends NamedEntry {
      * @throws ServiceException
      */
     public Map<String, Object> getAttrs(boolean prefsOnly, boolean applyCos) throws ServiceException;    
-    
 
-    /**
-     * @return the COS object for this account, or null if account has no COS
-     * 
-     * @throws ServiceException
-     */
-    public Cos getCOS() throws ServiceException;
-   
     public String[] getAliases() throws ServiceException;
     
     /**
@@ -100,12 +93,6 @@ public interface Account extends NamedEntry {
      * @throws ServiceException
      */
     public List<DistributionList> getDistributionLists(boolean directOnly, Map<String,String> via) throws ServiceException; 
-
-    /**
-     * @return the Server object where this account's mailbox is homed
-     * @throws ServiceException
-     */
-    public Server getServer() throws ServiceException;
 
     /**
      * Returns account's time zone
