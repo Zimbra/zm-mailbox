@@ -381,8 +381,6 @@ public class AdminService implements DocumentService {
     public static final String E_TEMPLATE = "template";
     public static final String A_DEST = "dest";
     
-    public static final String ADMIN_URI = "https://localhost:7071/";
-	
     public void registerHandlers(DocumentDispatcher dispatcher) {
         dispatcher.registerHandler(PING_REQUEST, new Ping());
         dispatcher.registerHandler(CHECK_HEALTH_REQUEST, new CheckHealth());
