@@ -43,11 +43,6 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetAccount extends AdminDocumentHandler {
 
-    public static final String BY_NAME = "name";
-    public static final String BY_ID = "id";
-    public static final String BY_ADMIN_NAME = "adminName";
-    public static final String BY_FOREIGN_PRINCIPAL = "foreignPrincipal";
-    
     /**
      * must be careful and only return accounts a domain admin can see
      */
@@ -67,13 +62,13 @@ public class GetAccount extends AdminDocumentHandler {
 
 	    Account account = null;
 
-        if (key.equals(BY_NAME)) {
+        if (key.equals(AdminService.BY_NAME)) {
             account = prov.getAccountByName(value);
-        } else if (key.equals(BY_ID)) {
+        } else if (key.equals(AdminService.BY_ID)) {
             account = prov.getAccountById(value);
-        } else if (key.equals(BY_ADMIN_NAME)) {
+        } else if (key.equals(AdminService.BY_ADMIN_NAME)) {
             account = prov.getAdminAccountByName(value);
-        } else if (key.equals(BY_FOREIGN_PRINCIPAL)) {
+        } else if (key.equals(AdminService.BY_FOREIGN_PRINCIPAL)) {
             account = prov.getAccountByForeignPrincipal(value);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);

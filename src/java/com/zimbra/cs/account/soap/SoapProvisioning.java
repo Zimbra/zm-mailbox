@@ -269,30 +269,34 @@ public class SoapProvisioning extends Provisioning {
 
     }
 
+    private Account getAccountBy(String by, String value) throws ServiceException {
+        XMLElement req = new XMLElement(AdminService.GET_ACCOUNT_REQUEST);
+        Element a = req.addElement(AdminService.E_ACCOUNT);
+        a.setText(value);
+        a.addAttribute(AdminService.A_BY, by);
+        return new SoapAccount(invoke(req).getElement(AdminService.E_ACCOUNT));
+    }
+
     @Override
     public Account getAccountByForeignPrincipal(String principal)
             throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        return getAccountBy(AdminService.BY_FOREIGN_PRINCIPAL, principal);
     }
 
     @Override
     public Account getAccountById(String zimbraId) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        return getAccountBy(AdminService.BY_ID, zimbraId);
     }
 
     @Override
     public Account getAccountByName(String emailAddress)
             throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        return getAccountBy(AdminService.BY_NAME, emailAddress);
     }
 
     @Override
     public Account getAdminAccountByName(String name) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        return getAccountBy(AdminService.BY_ADMIN_NAME, name);
     }
 
     @Override
@@ -570,10 +574,16 @@ public class SoapProvisioning extends Provisioning {
             SoapProvisioning p = new SoapProvisioning();
             p.soapSetURI("https://localhost:7071/service/admin/soap");
             p.soapZimbraAdminAuthenticate();
+/*            
             HashMap<String,Object> attrs = new HashMap<String,Object>();
             attrs.put(Provisioning.A_displayName, "DISPLAY THIS");
-            Account acct = p.createAccount("userkewl6@macintel.local", "test123", attrs);
+            Account acct = p.createAccount("userkewl8@macintel.local", "test123", attrs);
             System.out.println(acct);
+            Account acct2 = p.getAccountById(acct.getId());
+            System.out.println(acct2);
+            */            
+            Account acct3 = p.getAdminAccountByName("zimbra");
+            System.out.println(acct3);                        
         } catch (SoapFaultException e) {
             System.out.println(e.getCode());
         }

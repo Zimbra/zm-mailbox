@@ -61,7 +61,7 @@ public class LmcAuthRequest extends LmcSoapRequest {
 	protected Element getRequestXML() {
 		Element request = DocumentHelper.createElement(AccountService.AUTH_REQUEST);
 		Element a = DomUtil.add(request, AccountService.E_ACCOUNT, mUsername);
-        DomUtil.addAttr(a, AdminService.A_BY, GetAccount.BY_NAME); // XXX should use a constant
+        DomUtil.addAttr(a, AdminService.A_BY, AdminService.BY_NAME); // XXX should use a constant
 		DomUtil.add(request, AccountService.E_PASSWORD, mPassword);
 		return request;
 	}

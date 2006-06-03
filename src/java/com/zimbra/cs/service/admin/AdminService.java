@@ -323,6 +323,9 @@ public class AdminService implements DocumentService {
     public static final String BY_QUERY = "query";
     public static final String BY_NAME = "name";
     
+    public static final String BY_ADMIN_NAME = "adminName";
+    public static final String BY_FOREIGN_PRINCIPAL = "foreignPrincipal";
+
 	public static final String E_FIELD = "field";
 	public static final String E_MATCH = "match";
     public static final String A_SCAN = "scan";
