@@ -25,10 +25,7 @@
 
 package com.zimbra.cs.account.ldap;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,8 +36,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Cos;
-import com.zimbra.cs.account.DistributionList;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -51,8 +46,6 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class LdapAccount extends LdapNamedEntry implements Account {
 
-    private static final String DATA_DL_SET = "DL_SET";
-    
     protected LdapProvisioning mProv;
     private String mName;
     private String mDomainName;
@@ -75,27 +68,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         return mName;
     }
 
-    public boolean inDistributionList(String zimbraId) throws ServiceException {
-        return getDistributionLists().contains(zimbraId);
-    }
-
-    public Set<String> getDistributionLists() throws ServiceException {      
-        Set<String> dls = (Set<String>) getCachedData(DATA_DL_SET);
-        if (dls != null) return dls;
-     
-        dls = new HashSet<String>();
-        
-        List<DistributionList> lists = getDistributionLists(false, null, true);
-        
-        for (DistributionList dl : lists) {
-            dls.add(dl.getId());
-        }
-        dls = Collections.unmodifiableSet(dls);
-        setCachedData(DATA_DL_SET, dls);
-        return dls;
-    }
-    
-    /**
+    /**`<
      * @return the domain name for this account (foo.com), or null if an admin account. 
      */
     public String getDomainName() {
@@ -238,18 +211,5 @@ public class LdapAccount extends LdapNamedEntry implements Account {
 
     public boolean saveToSent() {
         return getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, false);
-    }
-
-    public List<DistributionList> getDistributionLists(boolean directOnly, Map<String, String> via) throws ServiceException {
-        return getDistributionLists(directOnly, via, false);
-    }
-    
-    private List<DistributionList> getDistributionLists(boolean directOnly, Map<String, String> via, boolean minimal) throws ServiceException {
-        String aliases[] = this.getAliases();
-        String addrs[] = new String[aliases.length+1];
-        addrs[0] = this.getName();
-        for (int i=0; i < aliases.length; i++)
-            addrs[i+1] = aliases[i];
-        return LdapProvisioning.getDistributionLists(addrs, directOnly, via, minimal);
     }
 }

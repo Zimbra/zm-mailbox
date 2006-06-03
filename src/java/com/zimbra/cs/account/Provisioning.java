@@ -33,6 +33,7 @@ package com.zimbra.cs.account;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -943,6 +944,29 @@ public abstract class Provisioning {
         return cos;
     }
       
+    /**
+     * @param zimbraId the zimbraId of the dl we are checking for
+     * @return true if this account (or one of the dl it belongs to) is a member of the specified dl.
+     * @throws ServiceException
+     */
+    public abstract boolean inDistributionList(Account acct, String zimbraId) throws ServiceException;
+
+    /**
+     * @return set of all the zimbraId's of lists this account belongs to, including any list in other list. 
+     * @throws ServiceException
+     */
+    public abstract Set<String> getDistributionLists(Account acct) throws ServiceException; 
+
+    /**
+     *      
+     * @param directOnly return only DLs this account is a direct member of
+     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL name to the DL it was a member of, if 
+     *            member was indirect.
+     * @return all the DLs
+     * @throws ServiceException
+     */
+    public abstract List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String,String> via) throws ServiceException; 
+
     public abstract boolean healthCheck();
 
     public abstract Config getConfig() throws ServiceException;

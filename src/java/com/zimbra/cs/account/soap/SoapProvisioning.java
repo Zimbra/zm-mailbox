@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import com.zimbra.cs.account.Account;
@@ -650,5 +651,23 @@ public class SoapProvisioning extends Provisioning {
         } catch (SoapFaultException e) {
             System.out.println(e.getCode());
         }
+    }
+
+    @Override
+    public Set<String> getDistributionLists(Account acct) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean inDistributionList(Account acct, String zimbraId) throws ServiceException {
+        // TODO Auto-generated method stub
+        return false;
     }
 }

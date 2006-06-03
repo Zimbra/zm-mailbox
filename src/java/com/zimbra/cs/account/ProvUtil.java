@@ -793,13 +793,13 @@ public class ProvUtil {
             }
             Account account = lookupAccount(key);
             if (idsOnly) {
-                Set<String> lists = account.getDistributionLists();
+                Set<String> lists = mProv.getDistributionLists(account);
                 for (String id: lists) {
                     System.out.println(id);
                 }    
             } else {
                 HashMap<String,String> via = new HashMap<String, String>();
-                List<DistributionList> lists = account.getDistributionLists(false, via);
+                List<DistributionList> lists = mProv.getDistributionLists(account, false, via);
                 for (DistributionList dl: lists) {
                     String viaDl = via.get(dl.getName());
                     if (viaDl != null) System.out.println(dl.getName()+" (via "+viaDl+")");

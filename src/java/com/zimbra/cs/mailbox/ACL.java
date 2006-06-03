@@ -189,7 +189,7 @@ public class ACL {
                 case ACL.GRANTEE_AUTHUSER: return !acct.equals(ANONYMOUS_ACCT);
                 case ACL.GRANTEE_COS:      return mGrantee.equals(getId(prov.getCOS(acct)));
                 case ACL.GRANTEE_DOMAIN:   return mGrantee.equals(getId(prov.getDomain(acct)));
-                case ACL.GRANTEE_GROUP:    return acct.inDistributionList(mGrantee);
+                case ACL.GRANTEE_GROUP:    return prov.inDistributionList(acct, mGrantee);
                 case ACL.GRANTEE_USER:     return mGrantee.equals(acct.getId());
                 default:  throw ServiceException.FAILURE("unknown ACL grantee type: " + mType, null);
             }

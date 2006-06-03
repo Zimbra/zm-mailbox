@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
@@ -2806,6 +2807,43 @@ public class LdapProvisioning extends Provisioning {
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "%D"));                
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "uid=%u,ou=people,%D"));
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "n(%n)u(%u)d(%d)D(%D)(%%)"));
+    }
+
+    private static final String DATA_DL_SET = "DL_SET";
+
+    @Override
+    public Set<String> getDistributionLists(Account acct) throws ServiceException {
+        Set<String> dls = (Set<String>) acct.getCachedData(DATA_DL_SET);
+        if (dls != null) return dls;
+     
+        dls = new HashSet<String>();
+        
+        List<DistributionList> lists = getDistributionLists(acct, false, null, true);
+        
+        for (DistributionList dl : lists) {
+            dls.add(dl.getId());
+        }
+        dls = Collections.unmodifiableSet(dls);
+        acct.setCachedData(DATA_DL_SET, dls);
+        return dls;
+    }
+
+    @Override
+    public boolean inDistributionList(Account acct, String zimbraId) throws ServiceException {
+        return getDistributionLists(acct).contains(zimbraId);        
+    }
+    
+    public List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via) throws ServiceException {
+        return getDistributionLists(acct, directOnly, via, false);
+    }
+    
+    private List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via, boolean minimal) throws ServiceException {
+        String aliases[] = acct.getAliases();
+        String addrs[] = new String[aliases.length+1];
+        addrs[0] = acct.getName();
+        for (int i=0; i < aliases.length; i++)
+            addrs[i+1] = aliases[i];
+        return LdapProvisioning.getDistributionLists(addrs, directOnly, via, minimal);
     }
 
 }

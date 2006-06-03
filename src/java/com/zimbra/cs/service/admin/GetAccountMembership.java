@@ -88,7 +88,7 @@ public class GetAccountMembership extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access account");
 
         HashMap<String,String> via = new HashMap<String, String>();
-        List<DistributionList> lists = account.getDistributionLists(false, via);
+        List<DistributionList> lists = prov.getDistributionLists(account, false, via);
         
         Element response = lc.createElement(AdminService.GET_ACCOUNT_MEMBERSHIP_RESPONSE);
         for (DistributionList dl: lists) {

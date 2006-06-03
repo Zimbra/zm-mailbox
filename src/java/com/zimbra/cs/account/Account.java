@@ -72,29 +72,6 @@ public interface Account extends NamedEntry {
     public String[] getAliases() throws ServiceException;
     
     /**
-     * @param zimbraId the zimbraId of the dl we are checking for
-     * @return true if this account (or one of the dl it belongs to) is a member of the specified dl.
-     * @throws ServiceException
-     */
-    public boolean inDistributionList(String zimbraId) throws ServiceException;
-
-    /**
-     * @return set of all the zimbraId's of lists this account belongs to, including any list in other list. 
-     * @throws ServiceException
-     */
-    public Set<String> getDistributionLists() throws ServiceException; 
-
-    /**
-     *      
-     * @param directOnly return only DLs this account is a direct member of
-     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL name to the DL it was a member of, if 
-     *            member was indirect.
-     * @return all the DLs
-     * @throws ServiceException
-     */
-    public List<DistributionList> getDistributionLists(boolean directOnly, Map<String,String> via) throws ServiceException; 
-
-    /**
      * Returns account's time zone
      * @return
      * @throws ServiceException
