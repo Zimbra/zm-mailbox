@@ -164,6 +164,9 @@ public class SendInviteReply extends CalendarRequest {
                 // did they specify a custom <m> message?  If so, then we don't have to build one...
                 Element msgElem = request.getOptionalElement(MailService.E_MSG);
                 if (msgElem != null) {
+                    String text = ParseMimeMessage.getTextPlainContent(msgElem);
+                    iCal.addDescription(text);
+
                     MimeBodyPart[] mbps = new MimeBodyPart[1];
                     mbps[0] = CalendarMailSender.makeICalIntoMimePart(oldInv.getUid(), iCal);
 

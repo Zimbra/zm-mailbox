@@ -157,17 +157,21 @@ public class ParseMimeMessage {
     
 
     // Recursively find and return the content of the first text/plain part.
-    private static String getTextPlainContent(Element mpElem) {
-        if (mpElem == null) return null;
+    public static String getTextPlainContent(Element elem) {
+        if (elem == null) return null;
+        if (MailService.E_MSG.equals(elem.getName())) {
+            elem = elem.getOptionalElement(MailService.E_MIMEPART);
+            if (elem == null) return null;
+        }
         String type =
-            mpElem.getAttribute(MailService.A_CONTENT_TYPE, Mime.CT_DEFAULT).trim().toLowerCase();
+            elem.getAttribute(MailService.A_CONTENT_TYPE, Mime.CT_DEFAULT).trim().toLowerCase();
         if (type.equals(Mime.CT_DEFAULT)) {
-            Element contentElem = mpElem.getOptionalElement(MailService.E_CONTENT);
+            Element contentElem = elem.getOptionalElement(MailService.E_CONTENT);
             return contentElem != null ? contentElem.getText() : null;
         } else if (type.startsWith(Mime.CT_MULTIPART_PREFIX)) {
-            for (Iterator<Element> it = mpElem.elementIterator(MailService.E_MIMEPART); it.hasNext(); ) {
-                Element elem = it.next();
-                String text = getTextPlainContent(elem);
+            for (Iterator<Element> it = elem.elementIterator(MailService.E_MIMEPART); it.hasNext(); ) {
+                Element childElem = it.next();
+                String text = getTextPlainContent(childElem);
                 if (text != null)
                     return text;
             }

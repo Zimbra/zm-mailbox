@@ -134,6 +134,9 @@ public class CancelAppointment extends CalendarRequest {
         Element msgElem = request.getOptionalElement(MailService.E_MSG);
 
         if (msgElem != null) {
+            String desc = ParseMimeMessage.getTextPlainContent(msgElem);
+            iCal.addDescription(desc);
+
             MimeBodyPart[] mbps = new MimeBodyPart[1];
             mbps[0] = CalendarMailSender.makeICalIntoMimePart(defaultInv.getUid(), iCal);
 
@@ -186,6 +189,9 @@ public class CancelAppointment extends CalendarRequest {
         Element msgElem = request.getOptionalElement(MailService.E_MSG);
         
         if (msgElem != null) {
+            String desc = ParseMimeMessage.getTextPlainContent(msgElem);
+            iCal.addDescription(desc);
+
             MimeBodyPart[] mbps = new MimeBodyPart[1];
             mbps[0] = CalendarMailSender.makeICalIntoMimePart(inv.getUid(), iCal);
             
