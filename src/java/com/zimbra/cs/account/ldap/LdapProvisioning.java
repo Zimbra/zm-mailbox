@@ -1618,10 +1618,6 @@ public class LdapProvisioning extends Provisioning {
         return getServerById(zimbraId, null, false);
     }
 
-    public Server getServerById(String zimbraId, boolean nocache) throws ServiceException {
-        return getServerById(zimbraId, null, nocache);
-    }
-
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getCOSByName(java.lang.String)
      */

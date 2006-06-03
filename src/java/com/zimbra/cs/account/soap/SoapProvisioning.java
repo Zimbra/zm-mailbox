@@ -203,15 +203,19 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public CalendarResource createCalendarResource(String emailAddress,
             Map<String, Object> attrs) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        XMLElement req = new XMLElement(AdminService.CREATE_CALENDAR_RESOURCE_REQUEST);
+        req.addElement(AdminService.E_NAME).setText(emailAddress);
+        addAttrElements(req, attrs);
+        return new SoapCalendarResource(invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE));
     }
 
     @Override
     public Cos createCos(String name, Map<String, Object> attrs)
             throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        XMLElement req = new XMLElement(AdminService.CREATE_COS_REQUEST);
+        req.addElement(AdminService.E_NAME).setText(name);
+        addAttrElements(req, attrs);
+        return new SoapCos(invoke(req).getElement(AdminService.E_COS));
     }
 
     @Override
@@ -231,8 +235,10 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public Server createServer(String name, Map<String, Object> attrs)
             throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        XMLElement req = new XMLElement(AdminService.CREATE_SERVER_REQUEST);
+        req.addElement(AdminService.E_NAME).setText(name);
+        addAttrElements(req, attrs);
+        return new SoapServer(invoke(req).getElement(AdminService.E_SERVER));
     }
 
     @Override
@@ -356,25 +362,30 @@ public class SoapProvisioning extends Provisioning {
         return null;
     }
 
+    private CalendarResource getCalendarResourceBy(String by, String value) throws ServiceException {
+        XMLElement req = new XMLElement(AdminService.GET_CALENDAR_RESOURCE_REQUEST);
+        Element a = req.addElement(AdminService.E_CALENDAR_RESOURCE);
+        a.setText(value);
+        a.addAttribute(AdminService.A_BY, by);
+        return new SoapCalendarResource(invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE));
+    }
+
     @Override
     public CalendarResource getCalendarResourceByForeignPrincipal(
             String foreignPrincipal) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        return getCalendarResourceBy(AdminService.BY_FOREIGN_PRINCIPAL, foreignPrincipal);        
     }
 
     @Override
     public CalendarResource getCalendarResourceById(String zimbraId)
             throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        return getCalendarResourceBy(AdminService.BY_ID, zimbraId);
     }
 
     @Override
     public CalendarResource getCalendarResourceByName(String emailAddress)
             throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        return getCalendarResourceBy(AdminService.BY_NAME, emailAddress);
     }
 
     @Override
@@ -383,16 +394,22 @@ public class SoapProvisioning extends Provisioning {
         return null;
     }
 
+    private Cos getCosBy(String by, String value) throws ServiceException {
+        XMLElement req = new XMLElement(AdminService.GET_COS_REQUEST);
+        Element a = req.addElement(AdminService.E_COS);
+        a.setText(value);
+        a.addAttribute(AdminService.A_BY, by);
+        return new SoapCos(invoke(req).getElement(AdminService.E_COS));
+    }
+    
     @Override
     public Cos getCosById(String zimbraId) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        return getCosBy(AdminService.BY_ID, zimbraId);
     }
 
     @Override
     public Cos getCosByName(String name) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        return getCosBy(AdminService.BY_NAME, name);        
     }
 
     @Override
@@ -453,30 +470,22 @@ public class SoapProvisioning extends Provisioning {
         return null;
     }
 
-    @Override
-    public Server getServerById(String zimbraId) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+    private Server getServerBy(String by, String value) throws ServiceException {
+        XMLElement req = new XMLElement(AdminService.GET_SERVER_REQUEST);
+        Element a = req.addElement(AdminService.E_SERVER);
+        a.setText(value);
+        a.addAttribute(AdminService.A_BY, by);
+        return new SoapServer(invoke(req).getElement(AdminService.E_SERVER));
     }
 
     @Override
-    public Server getServerById(String zimbraId, boolean reload)
-            throws ServiceException {
-        // TOÊDO Auto-generated method stub
-        return null;
+    public Server getServerById(String zimbraId) throws ServiceException {
+        return getServerBy(AdminService.BY_ID, zimbraId);
     }
 
     @Override
     public Server getServerByName(String name) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Server getServerByName(String name, boolean reload)
-            throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        return getServerBy(AdminService.BY_NAME, name);
     }
 
     @Override

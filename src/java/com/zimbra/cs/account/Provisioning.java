@@ -1022,11 +1022,7 @@ public abstract class Provisioning {
 
     public abstract Server getServerById(String zimbraId) throws ServiceException;
 
-    public abstract Server getServerById(String zimbraId, boolean reload) throws ServiceException;
-
     public abstract Server getServerByName(String name) throws ServiceException;
-
-    public abstract Server getServerByName(String name, boolean reload) throws ServiceException;
 
     public abstract List<Server> getAllServers()  throws ServiceException;
 

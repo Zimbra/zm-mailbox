@@ -64,9 +64,9 @@ public class GetServer extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("must specify a value for a server", null);
 
         if (method.equals(BY_NAME)) {
-            server = prov.getServerByName(name, true);
+            server = prov.getServerByName(name);
         } else if (method.equals(BY_ID)) {
-            server = prov.getServerById(name, true);
+            server = prov.getServerById(name);
         } else if (method.equals(BY_SERVICE_HOSTNAME)) {
             List servers = prov.getAllServers();
             for (Iterator it = servers.iterator(); it.hasNext(); ) {
@@ -83,6 +83,8 @@ public class GetServer extends AdminDocumentHandler {
 
         if (server == null)
             throw AccountServiceException.NO_SUCH_SERVER(name);
+        else
+            server.reload();
         
 	    Element response = lc.createElement(AdminService.GET_SERVER_RESPONSE);
         doServer(response, server, applyConfig);
