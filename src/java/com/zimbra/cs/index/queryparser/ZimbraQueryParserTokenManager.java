@@ -27,6 +27,7 @@ package com.zimbra.cs.index.queryparser;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.mailbox.MailServiceException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.commons.logging.Log;

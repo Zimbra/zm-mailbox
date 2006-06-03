@@ -59,6 +59,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 
 
 /************************************************************************
@@ -269,6 +270,22 @@ class DBQueryOperation extends QueryOperation
     }
     
     /**
+     * Handles inid: query clause that resolves to a remote folder.
+     * 
+     * @param ownerId
+     * @param folderId
+     * @param truth
+     */
+    void addInIdClause(ItemId itemId, boolean truth)
+    {
+		if (mQueryTarget != QueryTarget.UNSPECIFIED && !mQueryTarget.toString().equals(itemId.getAccountId()))
+			throw new IllegalArgumentException("Cannot addInClause b/c DBQueryOperation already has an incompatible remote target");
+		
+		mQueryTarget = new QueryTarget(itemId.getAccountId());
+    	topLevelAndedConstraint().addInIdClause(itemId, truth);
+    }
+    
+    /**
      * @param folder
      * @param truth
      */
@@ -287,11 +304,7 @@ class DBQueryOperation extends QueryOperation
     		{
     			// remote!
     			isRemote = true;
-    			
-    			if (mQueryTarget != QueryTarget.UNSPECIFIED && !mQueryTarget.toString().equals(mpt.getOwnerId()))
-    				throw new IllegalArgumentException("Cannot addInClause b/c DBQueryOperation already has an incompatible remote target");
-    			
-    			mQueryTarget = new QueryTarget(mpt.getOwnerId());
+    			addInIdClause(new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), truth);
     		}
     	}
     	

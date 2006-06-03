@@ -33,6 +33,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 
 class DbLeafNode extends DbSearchConstraints implements IConstraints {
 
@@ -185,6 +186,39 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         }
     }
 
+    /**
+     * For remote folder
+     * 
+     * @param id
+     * @param truth
+     */
+    void addInIdClause(ItemId id, boolean truth)
+    {
+        if (truth) {
+            if ((remoteFolders.size() > 0 && !remoteFolders.contains(id)) 
+                        || excludeRemoteFolders.contains(id)) {
+                if (DBQueryOperation.mLog.isDebugEnabled()) {
+                    DBQueryOperation.mLog.debug("AND of conflicting remote folders, no-results-query");
+                }
+                noResults = true;
+            }
+            remoteFolders.clear();
+            remoteFolders.add(id);
+            forceHasSpamTrashSetting();
+        } else {
+            if (remoteFolders.contains(id)) {
+                remoteFolders.remove(id);
+                if (remoteFolders.size() == 0) {
+                    if (DBQueryOperation.mLog.isDebugEnabled()) {
+                        DBQueryOperation.mLog.debug("AND of conflicting remote folders, no-results-query");
+                    }
+                    noResults = true;
+                }
+            }
+            excludeRemoteFolders.add(id);
+        }
+    }
+    
     /**
      * @param folder
      * @param truth

@@ -58,6 +58,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.ZimbraLog;
 
 
@@ -690,7 +691,14 @@ public final class ZimbraQuery {
 //            }
         }
         private Folder mFolder;
+        private ItemId mInId;
 
+        public InQuery(Mailbox mailbox, Analyzer analyzer, int modifier, ItemId itemId) {
+            super(modifier, ZimbraQueryParser.IN);
+            mFolder = null;
+            mInId = itemId;
+        }
+        
         public InQuery(Mailbox mailbox, Analyzer analyzer, int modifier, Folder folder) {
             super(modifier, ZimbraQueryParser.IN);
             assert(folder != null);
@@ -714,6 +722,8 @@ public final class ZimbraQuery {
             
             if (mFolder != null) {
                 dbOp.addInClause(mFolder, calcTruth(truth));
+            } else if (mInId != null) {
+                dbOp.addInIdClause(mInId, calcTruth(truth));
             } else {
                 dbOp.addAnyFolderClause(calcTruth(truth));
             }
@@ -722,7 +732,11 @@ public final class ZimbraQuery {
         }
        
         public String toString(int expLevel) {
-            return super.toString(expLevel)+",IN:"+(mFolder!=null?mFolder.getName():"ANY_FOLDER")+")";
+            return super.toString(expLevel)+
+            ",IN:"+(mInId!=null ?
+            			mInId.toString() :
+            			(mFolder!=null?mFolder.getName():"ANY_FOLDER"))
+            +")";
         }
 	}
 

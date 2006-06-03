@@ -34,6 +34,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.ListUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -116,6 +117,9 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Set<Folder> folders = new HashSet<Folder>();        /* optional - ANY of these folders are OK */
     public Set<Folder> excludeFolders = new HashSet<Folder>(); /* optional - ALL listed folders not allowed */
 
+    public Set<ItemId> remoteFolders = new HashSet<ItemId>();         /* optional */
+    public Set<ItemId> excludeRemoteFolders = new HashSet<ItemId>();  /* optional */
+    
     public int convId = 0;                          /* optional */
     public Set<Integer> prohibitedConvIds = new HashSet<Integer>();          /* optional */
 
@@ -145,6 +149,9 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         toRet.folders = new HashSet<Folder>();        toRet.folders.addAll(folders);
         toRet.excludeFolders = new HashSet<Folder>(); toRet.excludeFolders.addAll(excludeFolders);
 
+        toRet.remoteFolders = new HashSet<ItemId>();         toRet.remoteFolders.addAll(remoteFolders);
+        toRet.excludeRemoteFolders = new HashSet<ItemId>();  toRet.excludeRemoteFolders.addAll(excludeRemoteFolders);
+        
         toRet.convId = convId;
         toRet.prohibitedConvIds = new HashSet<Integer>(); toRet.prohibitedConvIds.addAll(prohibitedConvIds);
 
@@ -192,7 +199,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                 boolean atFirst = true;
                 for (Folder f: collect) {
                     if (!atFirst) 
-                        str.append(", ");
+                        str.append(" ");
 
                     if (f instanceof Mountpoint) {
                         if (!truthiness)
@@ -203,6 +210,25 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                     } else {
                         str.append("in:").append(f.getName());
                     }
+                    atFirst = false;
+                }
+                str.append(") ");
+            }
+        }
+    }
+    
+    private static class RemoteFolderPrinter {
+        void run(StringBuilder str, boolean truthiness, Collection<ItemId> collect) {
+            if (!ListUtil.isEmpty(collect)) {
+                str.append("(");
+                boolean atFirst = true;
+                for (ItemId id: collect) {
+                    if (!atFirst) 
+                        str.append(" ");
+
+                    if (!truthiness)
+                    	str.append("-");
+                    str.append("inid:\"").append(id.toString()).append("\"");
                     atFirst = false;
                 }
                 str.append(") ");
@@ -224,6 +250,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         Printer<Range> rp = new Printer<Range>()     { void printOne(StringBuilder s, Range r)   { s.append(r.toString()); } };
 
         FolderPrinter fp = new FolderPrinter();
+        RemoteFolderPrinter rfp = new RemoteFolderPrinter();
 
 //      Printer<Folder> fp = new Printer<Folder>()   {
 //      void printOne(StringBuilder s, Folder f)  {
@@ -253,6 +280,10 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         fp.run(retVal, true, folders);
         fp.run(retVal, false, excludeFolders);
 
+        // remote folders
+        rfp.run(retVal, true, remoteFolders);
+        rfp.run(retVal, false, excludeRemoteFolders);
+        
         // convId
         if (convId != 0) {
             retVal.append("CONV:(").append(convId).append(") ");

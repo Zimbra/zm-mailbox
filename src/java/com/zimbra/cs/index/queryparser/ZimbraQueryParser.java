@@ -28,6 +28,7 @@ package com.zimbra.cs.index.queryparser;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.mailbox.MailServiceException;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -142,6 +143,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     public ZimbraQuery.BaseQuery GetQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
     {
         Integer folderId = null;
+        ItemId iid = null;
 
         switch(target) {
           case HAS:
@@ -157,13 +159,16 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           case ITEM:
             return ZimbraQuery.ItemQuery.Create(mAnalyzer, modifier, tok);
           case INID:
-              folderId = new Integer(tok);
-              // FALL THROUGH BELOW!
+                  iid = new ItemId(tok, null);
+              folderId = iid.getId();
+              // FALL THROUGH TO BELOW!
           case IN:
             if (folderId == null)
                 folderId = (Integer) sFolderStrMap.get(tok.toLowerCase());
             ZimbraQuery.InQuery inq;
-            if (folderId != null) {
+            if (iid != null && !iid.belongsTo(mMailbox)) {
+                inq = new ZimbraQuery.InQuery(mMailbox, mAnalyzer, modifier, iid);
+            } else if (folderId != null) {
                 inq = ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, folderId);
             } else {
                 inq = ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, tok);
