@@ -69,7 +69,7 @@ public class GetInfo extends DocumentHandler  {
             response.addAttribute(AccountService.E_QUOTA_USED, getRequestedMailbox(lc).getSize(), Element.DISP_CONTENT);
         } catch (ServiceException e) { }
 
-        Map attrMap = acct.getAttrs(false, true);
+        Map attrMap = acct.getAttrs();
         // take this out when client is updated
         //doPrefs(response, attrMap);
         Element prefs = response.addUniqueElement(AccountService.E_PREFS);

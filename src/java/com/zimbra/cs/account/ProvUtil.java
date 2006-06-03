@@ -1210,7 +1210,7 @@ public class ProvUtil {
 
     private void dumpAccount(Account account, boolean expandCos) throws ServiceException {
         System.out.println("# name "+account.getName());
-        Map<String, Object> attrs = account.getAttrs(false, expandCos);
+        Map<String, Object> attrs = account.getAttrs(expandCos);
         dumpAttrs(attrs);
         System.out.println();
     }
@@ -1221,7 +1221,7 @@ public class ProvUtil {
 
     private void dumpCalendarResource(CalendarResource resource, boolean expandCos) throws ServiceException {
         System.out.println("# name "+resource.getName());
-        Map<String, Object> attrs = resource.getAttrs(false, expandCos);
+        Map<String, Object> attrs = resource.getAttrs(expandCos);
         dumpAttrs(attrs);
         System.out.println();
     }

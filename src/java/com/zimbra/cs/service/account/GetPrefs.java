@@ -77,12 +77,11 @@ public class GetPrefs extends DocumentHandler  {
 		}
 	
 		Map map = null; 
-		map = acct.getAttrs(true, true);
+		map = acct.getAttrs();
 		
 	    if (map != null) {
     	    for (Iterator mi = map.entrySet().iterator(); mi.hasNext(); ) {
     	        Map.Entry entry = (Entry) mi.next();
-    	        // FIXME: this could contain a String[] instead...
     	        String key = (String) entry.getKey();
     	        if (specificPrefs != null && !specificPrefs.contains(key))
     	            continue;

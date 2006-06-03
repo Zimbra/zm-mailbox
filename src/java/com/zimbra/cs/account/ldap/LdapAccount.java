@@ -148,14 +148,14 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     }
     
     public Map<String, Object> getAttrs() throws ServiceException {
-        return getAttrs(false, true);
+        return getAttrs(true);
     }
 
-    public Map<String, Object> getAttrs(boolean prefsOnly, boolean applyCos) throws ServiceException {
+    public Map<String, Object> getAttrs(boolean applyCos) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
         try {
             // get all the account attrs
-            LdapUtil.getAttrs(mAttrs, attrs, prefsOnly ? "zimbraPref" : null);
+            LdapUtil.getAttrs(mAttrs, attrs, null);
             
             if (!applyCos)
                 return attrs;
@@ -163,13 +163,11 @@ public class LdapAccount extends LdapNamedEntry implements Account {
             // then enumerate through all inheritable attrs and add them if needed
             Set<String> inheritable =  AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInherited);
             for (String attr : inheritable) {
-                if (!prefsOnly || attr.startsWith("zimbraPref")) {
-                    Object value = attrs.get(inheritable);
-                    if (value == null)
-                        value = getMultiAttr(attr);
-                    if (value != null)
-                        attrs.put(attr, value);
-                }
+                Object value = attrs.get(inheritable);
+                if (value == null)
+                    value = getMultiAttr(attr);
+                if (value != null)
+                    attrs.put(attr, value);
             }
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to get prefs", e);

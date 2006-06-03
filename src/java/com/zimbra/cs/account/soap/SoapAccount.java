@@ -52,7 +52,7 @@ public class SoapAccount extends SoapNamedEntry implements Account {
         return getMultiAttr(Provisioning.A_zimbraMailAlias);        
     }
 
-    public Map<String, Object> getAttrs(boolean prefsOnly, boolean applyCos)
+    public Map<String, Object> getAttrs(boolean applyCos)
             throws ServiceException {
         // TODO Auto-generated method stub
         return null;

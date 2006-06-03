@@ -56,15 +56,14 @@ public interface Account extends NamedEntry {
     public String getAccountStatus();
     
     /**
-     * combines all zimbraPref* attributes from the Account and the COS and returns as a map. Account preferences
-     * override COS preferences.
+     * combines all the attributes from the Account and the COS and returns as a map. Account attrs
+     * override COS attrs
      *  
-     * @param prefsOnly return only zimbraPref* attrs.
      * @param applyCos apply COS attributes
      * @return
      * @throws ServiceException
      */
-    public Map<String, Object> getAttrs(boolean prefsOnly, boolean applyCos) throws ServiceException;    
+    public Map<String, Object> getAttrs(boolean applyCos) throws ServiceException;    
 
     public String[] getAliases() throws ServiceException;
 

@@ -47,7 +47,7 @@ public abstract class AbstractAccount implements Account {
         throw new UnsupportedOperationException();
     }
 
-    public Map<String, Object> getAttrs(boolean prefsOnly, boolean applyCos)
+    public Map<String, Object> getAttrs(boolean applyCos)
             throws ServiceException {
         throw new UnsupportedOperationException();
     }

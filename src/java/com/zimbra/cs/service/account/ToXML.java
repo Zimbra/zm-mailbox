@@ -51,7 +51,7 @@ public class ToXML {
         Element acctElem = parent.addElement(AccountService.E_ACCOUNT);
         acctElem.addAttribute(AccountService.A_NAME, account.getName());
         acctElem.addAttribute(AccountService.A_ID, account.getId());        
-        Map attrs = account.getAttrs(false, applyCos);
+        Map attrs = account.getAttrs(applyCos);
         addAccountAttrs(acctElem, attrs);
         return acctElem;
     }
@@ -71,7 +71,7 @@ public class ToXML {
         Element resElem = parent.addElement(AccountService.E_CALENDAR_RESOURCE);
         resElem.addAttribute(AccountService.A_NAME, resource.getName());
         resElem.addAttribute(AccountService.A_ID, resource.getId());        
-        Map attrs = resource.getAttrs(false, applyCos);
+        Map attrs = resource.getAttrs(applyCos);
         addAccountAttrs(resElem, attrs);
         return resElem;
     }
