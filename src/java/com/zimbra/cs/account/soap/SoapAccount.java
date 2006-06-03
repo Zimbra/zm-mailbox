@@ -37,11 +37,16 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.Element;
 
 public class SoapAccount extends SoapNamedEntry implements Account {
 
     public SoapAccount(String name, String id, Map<String, Object> attrs) {
         super(name, id, attrs);
+    }
+
+    public SoapAccount(Element e) throws ServiceException {
+        super(e);
     }
 
     @Override

@@ -28,12 +28,21 @@ package com.zimbra.cs.account.soap;
 import java.util.Map;
 
 import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.soap.Element;
 
 public abstract class SoapNamedEntry extends SoapEntry implements NamedEntry {
 
     protected String mName;
     protected String mId;
 
+    protected SoapNamedEntry(Element e) throws ServiceException {
+        super(SoapProvisioning.getAttrs(e));
+        mName = e.getAttribute(AdminService.A_NAME);
+        mId = e.getAttribute(AdminService.A_ID);
+    }
+    
     protected SoapNamedEntry(String name, String id, Map<String, Object> attrs) {
         super(attrs);
         mName = name;

@@ -117,7 +117,7 @@ public class SoapProvisioning extends Provisioning {
         }        
     }
     
-    private Map<String, Object> getAttrs(Element e) throws ServiceException {
+    static Map<String, Object> getAttrs(Element e) throws ServiceException {
         Map<String, Object> result = new HashMap<String,Object>();
         for (Element a : e.listElements(AdminService.E_A)) {
             StringUtil.addToMultiMap(result, a.getAttribute(AdminService.A_N), a.getText());
@@ -125,7 +125,7 @@ public class SoapProvisioning extends Provisioning {
         return result;
     }
 
-    private void addAttrElements(Element req, Map<String, Object> attrs) throws SoapFaultException {
+    static void addAttrElements(Element req, Map<String, Object> attrs) throws SoapFaultException {
         if (attrs == null) return;
         
         for (Entry entry : attrs.entrySet()) {
@@ -182,12 +182,7 @@ public class SoapProvisioning extends Provisioning {
         req.addElement(AdminService.E_NAME).setText(emailAddress);
         req.addElement(AdminService.E_PASSWORD).setText(password);
         addAttrElements(req, attrs);
-        Element response = invoke(req);
-        Element accountEl = response.getElement(AdminService.E_ACCOUNT);
-        String aName = accountEl.getAttribute(AdminService.A_NAME);
-        String aId = accountEl.getAttribute(AdminService.A_ID);
-        Map<String, Object> aAttrs = getAttrs(accountEl);
-        return new SoapAccount(aName, aId, aAttrs);
+        return new SoapAccount(invoke(req).getElement(AdminService.E_ACCOUNT));
     }
 
     @Override
@@ -584,7 +579,7 @@ public class SoapProvisioning extends Provisioning {
             p.soapZimbraAdminAuthenticate();
             HashMap<String,Object> attrs = new HashMap<String,Object>();
             attrs.put(Provisioning.A_displayName, "DISPLAY THIS");
-            Account acct = p.createAccount("userkewl4@macintel.local", "test123", attrs);
+            Account acct = p.createAccount("userkewl6@macintel.local", "test123", attrs);
             System.out.println(acct);
         } catch (SoapFaultException e) {
             System.out.println(e.getCode());
