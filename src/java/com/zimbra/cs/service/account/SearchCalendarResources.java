@@ -65,8 +65,8 @@ public class SearchCalendarResources extends DocumentHandler {
         filter.andWith(sFilterActiveResourcesOnly);
 
         Provisioning prov = Provisioning.getInstance();
-        List resources = prov.getDomain(acct).
-            searchCalendarResources(filter, attrs, sortBy, sortAscending);
+        List resources = 
+            prov.searchCalendarResources(prov.getDomain(acct), filter, attrs, sortBy, sortAscending);
         for (Iterator iter = resources.iterator(); iter.hasNext(); ) {
             CalendarResource resource = (CalendarResource) iter.next();
             ToXML.encodeCalendarResource(response, resource);

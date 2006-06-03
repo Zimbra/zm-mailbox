@@ -30,7 +30,6 @@
  */
 package com.zimbra.cs.account;
 
-import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
@@ -41,71 +40,6 @@ import com.zimbra.cs.service.ServiceException;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public interface Domain extends NamedEntry {
-
-    public List getAllAccounts() throws ServiceException;
-    
-    public void getAllAccounts(NamedEntry.Visitor visitor) throws ServiceException;
-
-    public List getAllCalendarResources() throws ServiceException;
-
-    public void getAllCalendarResources(NamedEntry.Visitor visitor)
-    throws ServiceException;
-
-    public List getAllDistributionLists() throws ServiceException;
-
-    /**
-     * @param query LDAP search query
-     * @param returnAttrs list of attributes to return. uid is always included.
-     * @param sortAttr attr to sort on. if not specified, sorting will be by account name.
-     * @param sortAscending sort ascending (true) or descending (false).
-     * @return a list of all the accounts that matched.
-     * @throws ServiceException
-     */
-    public abstract List searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
-
-    /**
-     * 
-     * @param query LDAP search query
-     * @param type address type to search
-     * @return List of GalContact objects
-     * @throws ServiceException
-     */
-    public SearchGalResult searchGal(String query,
-                                     Provisioning.GAL_SEARCH_TYPE type,
-                                     String token)
-    throws ServiceException;
-    
-    
-    public static class SearchGalResult {
-        public String token;
-        public List<GalContact> matches;
-        public boolean hadMore; // for auto-complete only
-    }
-
-    /**
-     * 
-     * @param query LDAP search query
-     * @param type address type to auto complete
-     * @param limit max number to return
-     * @return List of GalContact objects
-     * @throws ServiceException
-     */
-    public SearchGalResult autoCompleteGal(String query, Provisioning.GAL_SEARCH_TYPE type, int limit) throws ServiceException;
-
-    public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException;
-
-    /**
-     * @param filter search filter
-     * @param returnAttrs list of attributes to return. uid is always included
-     * @param sortAttr attr to sort on. if not specified, sorting will be by account name
-     * @param sortAscending sort ascending (true) or descending (false)
-     * @return a list of all calendar resources that matched
-     * @throws ServiceException
-     */
-    public abstract List searchCalendarResources(
-        EntrySearchFilter filter,
-        String returnAttrs[],
-        String sortAttr,
-        boolean sortAscending)
-    throws ServiceException;
+ 
+    public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException;    
 }

@@ -1282,4 +1282,69 @@ public abstract class Provisioning {
             return getLocale(getInstance().getLocalServer());
         }
     }
+
+    public abstract List getAllAccounts(Domain d) throws ServiceException;
+    
+    public abstract void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException;
+
+    public abstract List getAllCalendarResources(Domain d) throws ServiceException;
+
+    public abstract void getAllCalendarResources(Domain d, NamedEntry.Visitor visitor) throws ServiceException;
+
+    public abstract List getAllDistributionLists(Domain d) throws ServiceException;
+    
+    /**
+     * @param query LDAP search query
+     * @param returnAttrs list of attributes to return. uid is always included.
+     * @param sortAttr attr to sort on. if not specified, sorting will be by account name.
+     * @param sortAscending sort ascending (true) or descending (false).
+     * @return a list of all the accounts that matched.
+     * @throws ServiceException
+     */
+    public abstract List searchAccounts(Domain d, String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
+
+    /**
+     * 
+     * @param query LDAP search query
+     * @param type address type to search
+     * @return List of GalContact objects
+     * @throws ServiceException
+     */
+    public abstract SearchGalResult searchGal(Domain d, String query,
+                                     GAL_SEARCH_TYPE type,
+                                     String token)
+    throws ServiceException;
+    
+    
+    public static class SearchGalResult {
+        public String token;
+        public List<GalContact> matches;
+        public boolean hadMore; // for auto-complete only
+    }
+
+    /**
+     * 
+     * @param query LDAP search query
+     * @param type address type to auto complete
+     * @param limit max number to return
+     * @return List of GalContact objects
+     * @throws ServiceException
+     */
+    public abstract SearchGalResult autoCompleteGal(Domain d, String query, Provisioning.GAL_SEARCH_TYPE type, int limit) throws ServiceException;
+
+    /**
+     * @param filter search filter
+     * @param returnAttrs list of attributes to return. uid is always included
+     * @param sortAttr attr to sort on. if not specified, sorting will be by account name
+     * @param sortAscending sort ascending (true) or descending (false)
+     * @return a list of all calendar resources that matched
+     * @throws ServiceException
+     */
+    public abstract List searchCalendarResources(
+        Domain d,
+        EntrySearchFilter filter,
+        String returnAttrs[],
+        String sortAttr,
+        boolean sortAscending)
+    throws ServiceException;
 }

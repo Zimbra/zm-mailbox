@@ -33,7 +33,7 @@ import java.util.Map;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Domain.SearchGalResult;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.DocumentHandler;
@@ -69,7 +69,7 @@ public class AutoCompleteGal extends DocumentHandler {
 
         
         Provisioning prov = Provisioning.getInstance();
-        SearchGalResult result = prov.getDomain(acct).autoCompleteGal(n, type, max);
+        SearchGalResult result = prov.autoCompleteGal(prov.getDomain(acct), n, type, max);
 
         response.addAttribute(AccountService.A_MORE, result.hadMore);
         

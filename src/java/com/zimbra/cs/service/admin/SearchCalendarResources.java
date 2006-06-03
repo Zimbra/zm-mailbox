@@ -104,8 +104,7 @@ public class SearchCalendarResources extends AdminDocumentHandler {
                     d, filter, attrs, sortBy, sortAscending, offset);
         } else {
             if (d != null) {
-                resources = d.searchCalendarResources(
-                        filter, attrs, sortBy, sortAscending);
+                resources = prov.searchCalendarResources(d, filter, attrs, sortBy, sortAscending);
             } else {
                 resources = prov.searchCalendarResources(
                         filter, attrs, sortBy, sortAscending);

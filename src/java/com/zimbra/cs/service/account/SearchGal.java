@@ -31,9 +31,10 @@ package com.zimbra.cs.service.account;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Domain.SearchGalResult;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.DocumentHandler;
@@ -67,7 +68,8 @@ public class SearchGal extends DocumentHandler {
             throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
 
         Provisioning prov = Provisioning.getInstance();
-        SearchGalResult result = prov.getDomain(acct).searchGal(n, type, null);
+        Domain d = prov.getDomain(acct);
+        SearchGalResult result = prov.searchGal(d, n, type, null);
         response.addAttribute(AccountService.A_MORE, result.hadMore);        
         for (GalContact contact : result.matches)
             addContact(response, contact);

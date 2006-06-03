@@ -192,7 +192,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             List accounts;
             Domain d = mDomainId.equals("") ? null : prov.get(DomainBy.ID, mDomainId);
             if (d != null) {
-                accounts = d.searchAccounts(query, null, null, true, flags);
+                accounts = prov.searchAccounts(d, query, null, null, true, flags);
             } else {
                 accounts = prov.searchAccounts(query, null, null, true, flags);
             }

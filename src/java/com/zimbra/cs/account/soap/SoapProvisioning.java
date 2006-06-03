@@ -44,7 +44,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -664,6 +664,60 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String, String> via) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public List getAllAccounts(Domain d) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void getAllAccounts(Domain d, Visitor visitor) throws ServiceException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public List getAllCalendarResources(Domain d) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void getAllCalendarResources(Domain d, Visitor visitor) throws ServiceException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public List getAllDistributionLists(Domain d) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public SearchGalResult autoCompleteGal(Domain d, String query, GAL_SEARCH_TYPE type, int limit) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public List searchAccounts(Domain d, String query, String[] returnAttrs, String sortAttr, boolean sortAscending, int flags) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public List searchCalendarResources(Domain d, EntrySearchFilter filter, String[] returnAttrs, String sortAttr, boolean sortAscending) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String token) throws ServiceException {
         // TODO Auto-generated method stub
         return null;
     }

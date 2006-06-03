@@ -113,6 +113,6 @@ public class GetAllAccounts extends AdminDocumentHandler {
                 ToXML.encodeAccount(e, (Account) entry);
             }
         };
-        d.getAllAccounts(visitor);
+        Provisioning.getInstance().getAllAccounts(d, visitor);
     }
 }

@@ -116,7 +116,7 @@ public class SearchAccounts extends AdminDocumentHandler {
             accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset);
         } else {
             if (d != null) {
-                accounts = d.searchAccounts(query, attrs, sortBy, sortAscending, flags);
+                accounts = prov.searchAccounts(d, query, attrs, sortBy, sortAscending, flags);
             } else {
                 accounts = prov.searchAccounts(query, attrs, sortBy, sortAscending, flags);
             }

@@ -25,13 +25,10 @@
 
 package com.zimbra.cs.account.soap;
 
-import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
@@ -62,52 +59,7 @@ public class SoapDomain extends SoapNamedEntry implements Domain {
         resetData();        
     }
 
-    public SearchGalResult autoCompleteGal(String query, GAL_SEARCH_TYPE type, int limit) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public List getAllAccounts() throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public void getAllAccounts(Visitor visitor) throws ServiceException {
-        // TODO Auto-generated method stub
-        
-    }
-
-    public List getAllCalendarResources() throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public void getAllCalendarResources(Visitor visitor) throws ServiceException {
-        // TODO Auto-generated method stub
-        
-    }
-
-    public List getAllDistributionLists() throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
     public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public List searchAccounts(String query, String[] returnAttrs, String sortAttr, boolean sortAscending, int flags) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public List searchCalendarResources(EntrySearchFilter filter, String[] returnAttrs, String sortAttr, boolean sortAscending) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public SearchGalResult searchGal(String query, GAL_SEARCH_TYPE type, String token) throws ServiceException {
         // TODO Auto-generated method stub
         return null;
     }

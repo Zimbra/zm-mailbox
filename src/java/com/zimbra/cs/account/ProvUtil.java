@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import com.zimbra.cs.account.Domain.SearchGalResult;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.CosBy;
@@ -884,7 +884,7 @@ public class ProvUtil {
                     System.out.println(entry.getName());                        
             }
         };
-        domain.getAllAccounts(visitor);
+         mProv.getAllAccounts(domain, visitor);
     }
     
     private void doGetAllAccounts(String[] args) throws ServiceException {
@@ -983,7 +983,7 @@ public class ProvUtil {
         List accounts;
         if (domainStr != null) {
             Domain d = lookupDomain(domainStr);
-            accounts = d.searchAccounts(query, attrsToGet, sortBy, isSortAscending, flags);
+            accounts = Provisioning.getInstance().searchAccounts(d, query, attrsToGet, sortBy, isSortAscending, flags);
         } else {
             //accounts = mProvisioning.searchAccounts(query, attrsToGet, sortBy, isSortAscending, Provisioning.SA_ACCOUNT_FLAG);
             accounts = mProv.searchAccounts(query, attrsToGet, sortBy, isSortAscending, flags);
@@ -1035,7 +1035,7 @@ public class ProvUtil {
         
         Domain d = lookupDomain(domain);
 
-        SearchGalResult result = d.searchGal(query, Provisioning.GAL_SEARCH_TYPE.ALL, null);
+        SearchGalResult result = mProv.searchGal(d, query, Provisioning.GAL_SEARCH_TYPE.ALL, null);
         for (GalContact contact : result.matches)
             dumpContact(contact);
     }    
@@ -1068,7 +1068,7 @@ public class ProvUtil {
         
         Domain d = lookupDomain(domain);
 
-        SearchGalResult result = d.autoCompleteGal(query, Provisioning.GAL_SEARCH_TYPE.ALL, 100);
+        SearchGalResult result = mProv.autoCompleteGal(d, query, Provisioning.GAL_SEARCH_TYPE.ALL, 100);
         for (GalContact contact : result.matches)
             dumpContact(contact);
     }    
@@ -1101,7 +1101,7 @@ public class ProvUtil {
         
         Domain d = lookupDomain(domain);
 
-        SearchGalResult result = d.searchGal("", Provisioning.GAL_SEARCH_TYPE.ALL, token);
+        SearchGalResult result = mProv.searchGal(d, "", Provisioning.GAL_SEARCH_TYPE.ALL, token);
         if (result.token != null)
             System.out.println("# token = "+result.token);
         for (GalContact contact : result.matches)
@@ -1343,7 +1343,7 @@ public class ProvUtil {
             List domains = mProv.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain domain = (Domain) dit.next();
-                Collection dls = domain.getAllDistributionLists();
+                Collection dls = mProv.getAllDistributionLists(domain);
                 for (Iterator it = dls.iterator(); it.hasNext();) {
                     DistributionList dl = (DistributionList)it.next();
                     if (verbose)
@@ -1354,7 +1354,7 @@ public class ProvUtil {
             }
         } else {
             Domain domain = lookupDomain(d);
-            Collection dls = domain.getAllDistributionLists();
+            Collection dls = mProv.getAllDistributionLists(domain);
             for (Iterator it = dls.iterator(); it.hasNext();) {
                 DistributionList dl = (DistributionList) it.next();
                 if (verbose)
@@ -1558,7 +1558,7 @@ public class ProvUtil {
                 }
             }
         };
-        domain.getAllCalendarResources(visitor);
+        mProv.getAllCalendarResources(domain, visitor);
     }
 
     private void doSearchCalendarResources(String[] args) throws ServiceException {
@@ -1592,7 +1592,7 @@ public class ProvUtil {
         }
         EntrySearchFilter filter = new EntrySearchFilter(multi);
 
-        List resources = d.searchCalendarResources(filter, null, null, true);
+        List resources = mProv.searchCalendarResources(d, filter, null, null, true);
         for (Iterator iter = resources.iterator(); iter.hasNext(); ) {
             CalendarResource resource = (CalendarResource) iter.next();
             if (verbose)

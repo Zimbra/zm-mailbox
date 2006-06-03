@@ -43,7 +43,7 @@ import javax.net.ssl.SSLHandshakeException;
 
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Domain.SearchGalResult;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ExceptionToString;
 import com.zimbra.cs.util.ZimbraLog;

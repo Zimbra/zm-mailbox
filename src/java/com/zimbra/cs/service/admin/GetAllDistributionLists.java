@@ -96,7 +96,7 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
     }
     
     public static void doDomain(Element e, Domain d) throws ServiceException {
-        List dls = d.getAllDistributionLists();
+        List dls = Provisioning.getInstance().getAllDistributionLists(d);
         for (Iterator it = dls.iterator(); it.hasNext(); ) {
             GetDistributionList.doDistributionList(e, (DistributionList) it.next());
         }        
