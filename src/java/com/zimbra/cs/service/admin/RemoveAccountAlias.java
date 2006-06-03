@@ -33,6 +33,7 @@ import java.util.Map;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
@@ -58,7 +59,7 @@ public class RemoveAccountAlias extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
         String alias = request.getAttribute(AdminService.E_ALIAS);
 
-	    Account account = prov.getAccountById(id);
+	    Account account = prov.get(AccountBy.ID, id);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 

@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.util.ZimbraLog;
@@ -61,7 +62,7 @@ public class ModifyAccount extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
 	    Map<String, Object> attrs = AdminService.getAttrs(request);
 
-	    Account account = prov.getAccountById(id);
+	    Account account = prov.get(AccountBy.ID, id);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 

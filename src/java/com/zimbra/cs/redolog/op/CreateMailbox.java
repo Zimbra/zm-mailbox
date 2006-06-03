@@ -34,6 +34,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.redolog.RedoException;
@@ -103,7 +104,7 @@ public class CreateMailbox extends RedoableOp {
 				throw e;
 		}
 
-		Account account = Provisioning.getInstance().getAccountById(mAccountId);
+		Account account = Provisioning.getInstance().get(AccountBy.ID, mAccountId);
 		if (account == null)
 			throw new RedoException("Account " + mAccountId + " does not exist", this);
 

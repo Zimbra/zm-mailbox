@@ -370,12 +370,28 @@ public class LdapProvisioning extends Provisioning {
         }
         return a;
     }
+
+    @Override
+    public Account get(AccountBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case ADMIN_NAME: 
+                return getAdminAccountByName(key);
+            case ID: 
+                return getAccountById(key);
+            case FOREIGN_PRINCIPAL: 
+                return getAccountByForeignPrincipal(key);
+            case NAME: 
+                return getAccountByName(key);
+            default:
+                    return null;
+        }
+    }
     
-    public Account getAccountById(String zimbraId) throws ServiceException {
+    private Account getAccountById(String zimbraId) throws ServiceException {
         return getAccountById(zimbraId, null);
     }
 
-    public Account getAccountByForeignPrincipal(String foreignPrincipal) throws ServiceException {
+    private Account getAccountByForeignPrincipal(String foreignPrincipal) throws ServiceException {
         foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
         return getAccountByQuery(
                 "",
@@ -384,7 +400,7 @@ public class LdapProvisioning extends Provisioning {
                 null);
     }
 
-    public Account getAdminAccountByName(String name) throws ServiceException {
+    private Account getAdminAccountByName(String name) throws ServiceException {
         LdapAccount a = (LdapAccount) sAccountCache.getByName(name);
         if (a == null) {
             name = LdapUtil.escapeSearchFilterArg(name);
@@ -401,7 +417,7 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getDomainByName(java.lang.String)
      */
-    public Account getAccountByName(String emailAddress) throws ServiceException {
+    private Account getAccountByName(String emailAddress) throws ServiceException {
         
         int index = emailAddress.indexOf('@');
         String domain = null;

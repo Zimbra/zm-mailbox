@@ -31,6 +31,7 @@ package com.zimbra.cs.service.account;
 import java.util.Map;
 
 import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
@@ -83,11 +84,11 @@ public class Auth extends DocumentHandler  {
                 if (d != null)
                     value = value + "@" + d.getName();
             }
-            acct = prov.getAccountByName(value);            
+            acct = prov.get(AccountBy.NAME, value);            
         } else if (by.equals(BY_ID)) {
-            acct = prov.getAccountById(value);
+            acct = prov.get(AccountBy.ID, value);
         } else if (by.equals(BY_FOREIGN_PRINCIPAL)) {
-            acct = prov.getAccountByForeignPrincipal(value);
+            acct = prov.get(AccountBy.FOREIGN_PRINCIPAL, value);
         }
 
 		if (acct == null)

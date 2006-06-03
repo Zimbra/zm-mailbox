@@ -34,6 +34,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.DocumentHandler;
@@ -62,9 +63,9 @@ public class GetAccountInfo extends DocumentHandler  {
         Account account = null;
 
         if (key.equals(BY_NAME)) {
-            account = prov.getAccountByName(value);
+            account = prov.get(AccountBy.NAME, value);
         } else if (key.equals(BY_ID)) {
-            account = prov.getAccountById(value);
+            account = prov.get(AccountBy.ID, value);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
         }

@@ -33,6 +33,7 @@ import java.util.Map;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.util.ZimbraLog;
@@ -59,7 +60,7 @@ public class RenameAccount extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
         String newName = request.getAttribute(AdminService.E_NEW_NAME);
 
-	    Account account = prov.getAccountById(id);
+	    Account account = prov.get(AccountBy.ID, id);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
@@ -78,7 +79,7 @@ public class RenameAccount extends AdminDocumentHandler {
         
         // get again with new name...
 
-        account = prov.getAccountById(id);
+        account = prov.get(AccountBy.ID, id);
         if (account == null)
             throw ServiceException.FAILURE("unable to get account after rename: " + id, null);
 	    Element response = lc.createElement(AdminService.RENAME_ACCOUNT_RESPONSE);

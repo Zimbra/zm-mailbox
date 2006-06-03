@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.account;
 
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 
 public abstract class AccessManager {
@@ -38,7 +39,7 @@ public abstract class AccessManager {
     public abstract boolean isDomainAdminOnly(AuthToken at);
 
     public Account getAccount(AuthToken at) throws ServiceException {
-        return Provisioning.getInstance().getAccountById(at.getAccountId());
+        return Provisioning.getInstance().get(AccountBy.ID, at.getAccountId());
     }
 
     public Domain getDomain(AuthToken at) throws ServiceException {

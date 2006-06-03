@@ -39,6 +39,7 @@ import javax.net.ssl.SSLSocketFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.imap.ImapSession.EnabledHack;
 import com.zimbra.cs.imap.ImapSession.ImapFlag;
 import com.zimbra.cs.index.ZimbraHit;
@@ -572,7 +573,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         ImapSession session = null;
         try {
             Provisioning prov = Provisioning.getInstance();
-            Account account = prov.getAccountByName(username);
+            Account account = prov.get(AccountBy.NAME, username);
             if (account == null) {
                 sendNO(tag, "LOGIN failed");
                 return CONTINUE_PROCESSING;

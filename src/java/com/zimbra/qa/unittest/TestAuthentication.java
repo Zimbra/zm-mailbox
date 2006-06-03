@@ -32,6 +32,7 @@ import junit.framework.TestCase;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcSearchRequest;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -73,7 +74,7 @@ extends TestCase {
     private Account getAccount()
     throws Exception {
         String address = TestUtil.getAddress(USER_NAME);
-        return Provisioning.getInstance().getAccountByName(address);
+        return Provisioning.getInstance().get(AccountBy.NAME, address);
     }
     
     /**

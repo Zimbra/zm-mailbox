@@ -40,6 +40,7 @@ import org.apache.commons.logging.LogFactory;
 import org.dom4j.QName;
 
 import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
@@ -189,7 +190,7 @@ public class ZimbraSoapContext {
             if (key == null)
                 mRequestedAccountId = null;
 	        else if (key.equals(BY_NAME)) {
-	            account = prov.getAccountByName(value);
+	            account = prov.get(AccountBy.NAME, value);
 	            if (account == null)
                     throw AccountServiceException.NO_SUCH_ACCOUNT(value);
 	            mRequestedAccountId = account.getId();
@@ -378,7 +379,7 @@ public class ZimbraSoapContext {
      * @throws ServiceException 
      */
     public Account getAuthtokenAccount() throws ServiceException {
-        return Provisioning.getInstance().getAccountById(mAuthTokenAccountId);
+        return Provisioning.getInstance().get(AccountBy.ID, mAuthTokenAccountId);
     }
 
     /** Returns whether the authenticated user is the same as the user whose

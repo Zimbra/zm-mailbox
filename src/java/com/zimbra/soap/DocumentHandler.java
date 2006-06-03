@@ -39,6 +39,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -74,7 +75,7 @@ public abstract class DocumentHandler {
     public static Account getRequestedAccount(ZimbraSoapContext lc) throws ServiceException {
         String id = lc.getRequestedAccountId();
 
-        Account acct = Provisioning.getInstance().getAccountById(id);
+        Account acct = Provisioning.getInstance().get(AccountBy.ID, id);
         if (acct == null)
             throw ServiceException.AUTH_EXPIRED();
         return acct;
@@ -287,7 +288,7 @@ public abstract class DocumentHandler {
         if (mountpoint)
             lcTarget.recordMountpointTraversal();
 
-        Account acctTarget = Provisioning.getInstance().getAccountById(acctId);
+        Account acctTarget = Provisioning.getInstance().get(AccountBy.ID, acctId);
         if (acctTarget == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
         String hostTarget = acctTarget.getAttr(Provisioning.A_zimbraMailHost);

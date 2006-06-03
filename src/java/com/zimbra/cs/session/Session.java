@@ -41,6 +41,7 @@ import java.util.List;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMRouter;
@@ -65,7 +66,7 @@ public abstract class Session
         mSessionId = sessionId;
         mSessionType = type;
 
-        Account acct = Provisioning.getInstance().getAccountById(accountId);
+        Account acct = Provisioning.getInstance().get(AccountBy.ID, accountId);
         if (acct != null &&  Provisioning.onLocalServer(acct)) {
             // add this Session to the Mailbox or die trying
             mMailbox = Mailbox.getMailboxByAccountId(accountId);

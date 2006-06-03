@@ -30,6 +30,7 @@ package com.zimbra.cs.service.util;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
@@ -103,7 +104,7 @@ public class ItemId {
     public boolean isLocal() throws ServiceException {
         if (mAccountId == null)
             return true;
-        Account acctTarget = Provisioning.getInstance().getAccountById(mAccountId);
+        Account acctTarget = Provisioning.getInstance().get(AccountBy.ID, mAccountId);
         if (acctTarget == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(mAccountId);
         return DocumentHandler.LOCAL_HOST.equalsIgnoreCase(acctTarget.getAttr(Provisioning.A_zimbraMailHost));

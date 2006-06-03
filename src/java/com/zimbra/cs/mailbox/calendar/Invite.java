@@ -42,6 +42,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
@@ -1238,7 +1239,7 @@ public class Invite {
         if (hasOrganizer()) {
             String address = getOrganizer().getAddress();
             if (address != null) {
-                account = Provisioning.getInstance().getAccountByName(address);
+                account = Provisioning.getInstance().get(AccountBy.NAME, address);
             }
         }
         return account;

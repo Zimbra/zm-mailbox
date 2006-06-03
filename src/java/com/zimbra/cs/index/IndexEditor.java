@@ -65,6 +65,7 @@ import org.apache.lucene.search.spans.Spans;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
@@ -1349,7 +1350,7 @@ public class IndexEditor {
         if (str != null && !str.equals("")) {
             if (str.indexOf('@') >= 0) {
                 // account
-                Account acct = Provisioning.getInstance().getAccountByName(str);
+                Account acct = Provisioning.getInstance().get(AccountBy.NAME, str);
                 Mailbox mbx = Mailbox.getMailboxByAccountId(acct.getId());
                 return mbx.getId();
 

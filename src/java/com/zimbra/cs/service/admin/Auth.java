@@ -31,6 +31,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
@@ -67,9 +68,9 @@ public class Auth extends AdminDocumentHandler {
         try {
             
             if (name.indexOf("@") == -1) {
-                acct = prov.getAdminAccountByName(name);
+                acct = prov.get(AccountBy.ADMIN_NAME, name);
             } else {
-                acct = prov.getAccountByName(name);
+                acct = prov.get(AccountBy.NAME, name);
             }
 
             if (acct == null)

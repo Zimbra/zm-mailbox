@@ -32,6 +32,7 @@ import java.util.Set;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -158,7 +159,7 @@ public class ZimletUserProperties {
 	
 	public static void main(String[] args) throws Exception {
 		Provisioning prov = Provisioning.getInstance();
-		Account acct = prov.getAccountByName("user1");
+		Account acct = prov.get(AccountBy.NAME, "user1");
 		ZimletUserProperties prop = new ZimletUserProperties(acct);
 		prop.setProperty("phone","123123","aaaaaaaaaaaa");
 		prop.setProperty("phone","number","bar");

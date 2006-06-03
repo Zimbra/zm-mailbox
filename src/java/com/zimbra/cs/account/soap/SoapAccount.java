@@ -29,6 +29,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
@@ -89,7 +90,7 @@ public class SoapAccount extends SoapNamedEntry implements Account {
 
     @Override
     public void reload(SoapProvisioning prov) throws ServiceException {
-        mAttrs = ((SoapAccount) prov.getAccountById(getId())).mAttrs;
+        mAttrs = ((SoapAccount) prov.get(AccountBy.ID, getId())).mAttrs;
         resetData();        
     }
 

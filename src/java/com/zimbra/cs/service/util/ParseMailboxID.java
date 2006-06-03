@@ -34,6 +34,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 
 /**
  * @author tim
@@ -180,7 +181,7 @@ public class ParseMailboxID
         Account acct = null;  
         if (idStr.indexOf('@') >= 0) {
             // account
-            acct = Provisioning.getInstance().getAccountByName(idStr);
+            acct = Provisioning.getInstance().get(AccountBy.NAME, idStr);
             if (acct == null) {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(idStr);
             }
@@ -195,7 +196,7 @@ public class ParseMailboxID
             
         } else if (idStr.indexOf('-') >= 0) {
             // UID
-            acct = Provisioning.getInstance().getAccountById(idStr);
+            acct = Provisioning.getInstance().get(AccountBy.ID, idStr);
             if (acct == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(idStr);
 

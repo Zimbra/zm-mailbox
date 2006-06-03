@@ -41,6 +41,7 @@ import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.BlobMetaData;
 import com.zimbra.cs.util.BlobMetaDataEncodingException;
@@ -272,7 +273,7 @@ public class AuthToken {
 	}
 
     public static void main(String args[]) throws ServiceException, AuthTokenException {
-        Account a = Provisioning.getInstance().getAccountByName("user1@example.zimbra.com");
+        Account a = Provisioning.getInstance().get(AccountBy.NAME, "user1@example.zimbra.com");
         AuthToken at = new AuthToken(a);
         long start = System.currentTimeMillis();
         String encoded = at.getEncoded();

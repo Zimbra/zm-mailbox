@@ -49,6 +49,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -241,7 +242,7 @@ public class ZimbraServlet extends HttpServlet {
     throws IOException, ServletException {
 		try {
             Provisioning prov = Provisioning.getInstance();
-            Account acct = prov.getAccountById(accountId);
+            Account acct = prov.get(AccountBy.ID, accountId);
     		if (acct == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "no such user");
                 return;
@@ -345,7 +346,7 @@ public class ZimbraServlet extends HttpServlet {
         throws IOException, ServletException, ServiceException 
     {
         AuthToken at = getAuthTokenFromCookie(req, resp, doNotSendHttpError);
-        return at == null ? null : Provisioning.getInstance().getAccountById(at.getAccountId()); 
+        return at == null ? null : Provisioning.getInstance().get(AccountBy.ID, at.getAccountId()); 
     }
 
     protected Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge) throws IOException, ServletException, ServiceException {
@@ -373,7 +374,7 @@ public class ZimbraServlet extends HttpServlet {
         String pass = userPass.substring(loc + 1);
 
         Provisioning prov = Provisioning.getInstance();
-        Account acct = prov.getAccountByName(user);
+        Account acct = prov.get(AccountBy.NAME, user);
         if (acct == null) {
         	if (sendChallenge) {
         		resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());

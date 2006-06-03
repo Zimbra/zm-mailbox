@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -70,13 +71,13 @@ public class GetAccountMembership extends AdminDocumentHandler {
         Account account = null;
 
         if (key.equals(BY_NAME)) {
-            account = prov.getAccountByName(value);
+            account = prov.get(AccountBy.NAME, value);
         } else if (key.equals(BY_ID)) {
-            account = prov.getAccountById(value);
+            account = prov.get(AccountBy.ID, value);
         } else if (key.equals(BY_ADMIN_NAME)) {
-            account = prov.getAdminAccountByName(value);
+            account = prov.get(AccountBy.ADMIN_NAME, value);
         } else if (key.equals(BY_FOREIGN_PRINCIPAL)) {
-            account = prov.getAccountByForeignPrincipal(value);
+            account = prov.get(AccountBy.FOREIGN_PRINCIPAL, value);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
         }

@@ -41,6 +41,7 @@ import javax.net.ssl.SSLSocketFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.ServiceException;
@@ -195,7 +196,7 @@ public class Pop3Handler extends ProtocolHandler {
         // check account status before executing command
         if (mAccountId != null)
             try {
-                Account acct = Provisioning.getInstance().getAccountById(mAccountId);
+                Account acct = Provisioning.getInstance().get(AccountBy.ID, mAccountId);
                 if (acct == null || !acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                     return false;
             } catch (ServiceException e) {
@@ -506,7 +507,7 @@ public class Pop3Handler extends ProtocolHandler {
         
         try {
             Provisioning prov = Provisioning.getInstance();            
-            Account acct = prov.getAccountByName(mUser);
+            Account acct = prov.get(AccountBy.NAME, mUser);
             if (acct == null)
                 throw new Pop3CmdException("invalid username/password");
             if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false))

@@ -32,6 +32,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
@@ -117,7 +118,7 @@ class RemoteQueryOperation extends QueryOperation {
 	
 	protected void setup(Account authenticatedAccount, byte[] types, SortBy searchOrder, int offset, int limit) throws ServiceException {
         Provisioning prov  = Provisioning.getInstance();
-        Account acct = prov.getAccountById(mTarget.toString());
+        Account acct = prov.get(AccountBy.ID, mTarget.toString());
 		if (acct == null)
 			throw AccountServiceException.NO_SUCH_ACCOUNT(mTarget.toString());
 		

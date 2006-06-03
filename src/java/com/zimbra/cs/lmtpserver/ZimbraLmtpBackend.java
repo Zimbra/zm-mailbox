@@ -41,6 +41,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
@@ -74,7 +75,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         String addr = address.getEmailAddress();
 
         try {
-		    Account acct = Provisioning.getInstance().getAccountByName(addr);
+		    Account acct = Provisioning.getInstance().get(AccountBy.NAME, addr);
 		    if (acct == null) {
 		    	mLog.info("rejecting address " + addr + ": no account");
 		    	return LmtpStatus.REJECT;
@@ -206,7 +207,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 Mailbox mbox = null;
                 boolean attachmentsIndexingEnabled = true;
                 try {
-                    account = Provisioning.getInstance().getAccountByName(rcptEmail);
+                    account = Provisioning.getInstance().get(AccountBy.NAME, rcptEmail);
                     if (account == null) {
                         ZimbraLog.mailbox.warn("No account found delivering mail to " + rcptEmail);
                         continue;

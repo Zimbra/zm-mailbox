@@ -33,6 +33,7 @@ import java.util.Map;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -48,7 +49,7 @@ public class ChangePassword extends WriteOpDocumentHandler {
 
         String name = request.getAttribute(AccountService.E_ACCOUNT);
         Provisioning prov = Provisioning.getInstance();
-        Account acct = prov.getAccountByName(name);
+        Account acct = prov.get(AccountBy.NAME, name);
         if (acct == null)
             throw AccountServiceException.AUTH_FAILED(name);
 		String oldPassword = request.getAttribute(AccountService.E_OLD_PASSWORD);

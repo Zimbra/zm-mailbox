@@ -46,6 +46,7 @@ import org.apache.commons.codec.binary.Base64;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
@@ -79,7 +80,7 @@ public class ProxyServlet extends ZimbraServlet {
 	
 	private Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        Account acct = prov.getAccountById(auth.getAccountId());
+        Account acct = prov.get(AccountBy.ID, auth.getAccountId());
         return prov.getCOS(acct).getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
 	}
 	
@@ -242,7 +243,7 @@ public class ProxyServlet extends ZimbraServlet {
 	
 	private Set<String> getCacheableContentTypes(AuthToken auth) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        Account acct = prov.getAccountById(auth.getAccountId());        
+        Account acct = prov.get(AccountBy.ID, auth.getAccountId());        
 		return prov.getCOS(acct).getMultiAttrSet(Provisioning.A_zimbraProxyCacheableContentTypes);
 	}
 	

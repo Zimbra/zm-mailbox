@@ -347,7 +347,7 @@ public abstract class Provisioning {
     public static final String A_zimbraCalendarCompatibilityMode = "zimbraCalendarCompatibilityMode";
     
     /**
-     * Default domain name to use in getAccountByNamde if no domain specified.
+     * Default domain name to use in getAccountByName if no domain specified.
      */
     public static final String A_zimbraDefaultDomainName = "zimbraDefaultDomainName";
 
@@ -1026,11 +1026,10 @@ public abstract class Provisioning {
      */
     public abstract void renameAccount(String zimbraId, String newName) throws ServiceException;
     
-    public abstract Account getAccountById(String zimbraId) throws ServiceException;
 
-    public abstract Account getAccountByName(String emailAddress) throws ServiceException;
+    public static enum AccountBy { ADMIN_NAME, ID, FOREIGN_PRINCIPAL, NAME }
     
-    public abstract Account getAccountByForeignPrincipal(String principal) throws ServiceException;
+    public abstract Account get(AccountBy keyType, String key) throws ServiceException;
 
     /**
      * return regular accounts from searchAccounts;
@@ -1065,8 +1064,6 @@ public abstract class Provisioning {
      */
     public abstract List<NamedEntry> searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
 
-    public abstract Account getAdminAccountByName(String name) throws ServiceException;
-    
     public abstract List<Account> getAllAdminAccounts()  throws ServiceException;
 
     public abstract void setCOS(Account acct, Cos cos) throws ServiceException;

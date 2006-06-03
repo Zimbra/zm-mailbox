@@ -30,6 +30,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcDeleteAccountRequest;
 import com.zimbra.cs.db.DbMailbox;
@@ -103,7 +104,7 @@ public class TestAccount extends TestCase {
     private void cleanUp()
     throws Exception {
         Provisioning prov = Provisioning.getInstance(); 
-        Account account = prov.getAccountByName(TestUtil.getAddress(USER_NAME));
+        Account account = prov.get(AccountBy.NAME, TestUtil.getAddress(USER_NAME));
         if (account != null) {
             prov.deleteAccount(account.getId());
         }

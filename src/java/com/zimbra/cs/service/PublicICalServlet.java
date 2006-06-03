@@ -37,6 +37,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -115,7 +116,7 @@ public class PublicICalServlet extends ZimbraServlet
         }
         
         try {
-            Account acct = Provisioning.getInstance().getAccountByName(acctName);
+            Account acct = Provisioning.getInstance().get(AccountBy.NAME, acctName);
             if (acct == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Account "+acctName+" not found");
                 return;

@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import com.zimbra.cs.account.Domain.SearchGalResult;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.StringUtil;
@@ -1645,13 +1646,13 @@ public class ProvUtil {
         Account a = null;
         switch(guessType(key)) {
         case BY_ID:
-            a = mProv.getAccountById(key);
+            a = mProv.get(AccountBy.ID, key);
             break;
         case BY_EMAIL:
-            a = mProv.getAccountByName(key);
+            a = mProv.get(AccountBy.NAME, key);
             break;
         case BY_NAME:
-            a = mProv.getAccountByName(key);            
+            a = mProv.get(AccountBy.NAME, key);            
             break;
         }
         if (a == null)

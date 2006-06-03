@@ -47,6 +47,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailItem;
@@ -288,7 +289,7 @@ public class ContentServlet extends ZimbraServlet {
     private boolean isTrue(String attr, String accountId) throws ServletException {
         Provisioning prov = Provisioning.getInstance();
         try {
-            Account account = prov.getAccountById(accountId);
+            Account account = prov.get(AccountBy.ID, accountId);
             return prov.getConfig().getBooleanAttr(attr, false)
                     || account.getBooleanAttr(attr, false);
         } catch (ServiceException e) {

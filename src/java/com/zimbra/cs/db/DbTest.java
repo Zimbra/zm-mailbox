@@ -43,6 +43,7 @@ import javax.mail.MessagingException;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.index.ConversationHit;
 import com.zimbra.cs.index.ZimbraHit;
@@ -780,7 +781,7 @@ public class DbTest {
 
 
     public static void main(String[] args) throws MessagingException, IOException, ParseException, ServiceException {
-    	Account acct = Provisioning.getInstance().getAccountByName("user1");
+    	Account acct = Provisioning.getInstance().get(AccountBy.NAME, "user1");
         Mailbox mbox = Mailbox.getMailboxByAccount(acct);
         System.out.println(mbox);
         if (mbox != null) {

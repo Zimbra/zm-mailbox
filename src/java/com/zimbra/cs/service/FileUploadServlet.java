@@ -63,6 +63,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -297,7 +298,7 @@ public class FileUploadServlet extends ZimbraServlet {
             try {
                 // make sure we're on the right host; proxy if we're not...
                 Provisioning prov = Provisioning.getInstance();
-                Account acct = prov.getAccountById(authToken.getAccountId());
+                Account acct = prov.get(AccountBy.ID, authToken.getAccountId());
                 if (!Provisioning.onLocalServer(acct)) {
                     proxyServletRequest(req, resp, prov.getServer(acct), null);
                     return;

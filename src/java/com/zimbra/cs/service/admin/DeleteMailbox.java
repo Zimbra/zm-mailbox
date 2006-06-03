@@ -33,6 +33,7 @@ import java.util.Map;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
@@ -60,7 +61,7 @@ public class DeleteMailbox extends AdminDocumentHandler {
         Element mreq = request.getElement(AdminService.E_MAILBOX);
         String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);
         
-        Account account = Provisioning.getInstance().getAccountById(accountId);
+        Account account = Provisioning.getInstance().get(AccountBy.ID, accountId);
         if (account == null) {
             if (isDomainAdminOnly(zc)) {
                 throw ServiceException.PERM_DENIED("account doesn't exist, unable to determine authorization");

@@ -43,6 +43,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.service.account.Auth;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -111,7 +112,7 @@ public class PreAuthServlet extends ZimbraServlet {
             } else if (authToken != null) {
                 // see if we need a redirect to the correct server
                 AuthToken at = AuthToken.getAuthToken(authToken);
-                Account acct = prov.getAccountById(at.getAccountId());
+                Account acct = prov.get(AccountBy.ID, at.getAccountId());
                 if (Provisioning.onLocalServer(acct)) {
                     setCookieAndRedirect(req, resp, authToken);
                 } else {
@@ -126,11 +127,11 @@ public class PreAuthServlet extends ZimbraServlet {
             
                 Account acct = null;
                 if (accountBy.equals(Auth.BY_NAME)) {
-                    acct = prov.getAccountByName(account);            
+                    acct = prov.get(AccountBy.NAME, account);            
                 } else if (accountBy.equals(Auth.BY_ID)) {
-                    acct = prov.getAccountById(account);
+                    acct = prov.get(AccountBy.ID, account);
                 } else if (accountBy.equals(Auth.BY_FOREIGN_PRINCIPAL)) {
-                    acct = prov.getAccountByForeignPrincipal(account);
+                    acct = prov.get(AccountBy.FOREIGN_PRINCIPAL, account);
                 }
             
                 if (acct == null)

@@ -63,6 +63,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.localconfig.LC;
@@ -480,7 +481,7 @@ public class SpamExtract {
             return null;
         }
         
-        Account account = prov.getAccountByName(name);
+        Account account = prov.get(AccountBy.NAME, name);
         if (account == null) {
             mLog.error("can not find account " + name);
             return null;

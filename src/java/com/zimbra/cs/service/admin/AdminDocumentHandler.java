@@ -32,6 +32,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
@@ -67,7 +68,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
 
         // if there's a remote target acount and we haven't explicitly been told to execute here, proxy.
         if (getZimbraSoapContext(context).getProxyTarget() == null) {
-            Account acct = Provisioning.getInstance().getAccountById(acctId);
+            Account acct = Provisioning.getInstance().get(AccountBy.ID, acctId);
             if (acct != null && !LOCAL_HOST.equalsIgnoreCase(acct.getAttr(Provisioning.A_zimbraMailHost)))
                 return proxyRequest(request, context, acctId);
         }

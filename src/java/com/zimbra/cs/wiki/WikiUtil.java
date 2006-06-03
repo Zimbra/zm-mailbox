@@ -46,6 +46,7 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.client.*;
 import com.zimbra.cs.client.soap.*;
 import com.zimbra.cs.mailbox.ACL;
@@ -374,7 +375,7 @@ public class WikiUtil {
 				throw WikiServiceException.ERROR("import", e);
 			}
 		Provisioning prov = Provisioning.getInstance();
-		Account acct = prov.getAccountByName(mUsername);
+		Account acct = prov.get(AccountBy.NAME, mUsername);
 		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
 		OperationContext octxt = new OperationContext(acct);
 		
@@ -408,7 +409,7 @@ public class WikiUtil {
 				throw WikiServiceException.ERROR("emptyNotebooks", e);
 			}
 		Provisioning prov = Provisioning.getInstance();
-		Account acct = prov.getAccountByName(mUsername);
+		Account acct = prov.get(AccountBy.NAME, mUsername);
 		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
 		OperationContext octxt = new OperationContext(acct);
 		
@@ -422,7 +423,7 @@ public class WikiUtil {
 	
 	public Account createWikiAccount() throws ServiceException {
 		Provisioning prov = Provisioning.getInstance();
-		Account account = prov.getAccountByName(mUsername);
+		Account account = prov.get(AccountBy.NAME, mUsername);
 		if (account == null) {
 			if (mPassword == null) {
 				mPassword = sDEFAULTPASSWORD;

@@ -34,6 +34,7 @@ import java.util.Set;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcAuthRequest;
 import com.zimbra.cs.client.soap.LmcAuthResponse;
@@ -59,7 +60,7 @@ public class TestUtil {
     public static Account getAccount(String userName)
     throws ServiceException {
         String address = getAddress(userName);
-        Account account = Provisioning.getInstance().getAccountByName(address);
+        Account account = Provisioning.getInstance().get(AccountBy.NAME, address);
         if (account == null) {
             throw new IllegalArgumentException("Could not find account for '" + address + "'");
         }

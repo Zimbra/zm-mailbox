@@ -36,6 +36,7 @@ import org.apache.log4j.PropertyConfigurator;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 
@@ -258,7 +259,7 @@ public class ZimbraLog {
     public static void addAccountToContext(String id, String nameKey, String idOnlyKey) {
         Account acct = null;
         try {
-            acct = Provisioning.getInstance().getAccountById(id);
+            acct = Provisioning.getInstance().get(AccountBy.ID, id);
         } catch (ServiceException se) {
             ZimbraLog.misc.warn("unable to lookup account for log, id: "+id, se);
         }

@@ -34,6 +34,7 @@ import java.util.Set;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
@@ -119,7 +120,7 @@ public class Wiki {
 			int fid = Mailbox.ID_FOLDER_USER_ROOT;
 			String root = iter.next();
 			if (root.equals("//")) {
-				Account acct = Provisioning.getInstance().getAccountByName(iter.next());
+				Account acct = Provisioning.getInstance().get(AccountBy.NAME, iter.next());
 				accountId = acct.getId();
 			} else if (!root.equals("/")) {
 				fid = Integer.parseInt(root);
@@ -157,7 +158,7 @@ public class Wiki {
 		String defaultAcct = globalConfig.getAttr(Provisioning.A_zimbraNotebookAccount);
 		if (defaultAcct == null)
 			throw WikiServiceException.ERROR("empty config variable " + Provisioning.A_zimbraNotebookAccount);
-		Account acct = prov.getAccountByName(defaultAcct);
+		Account acct = prov.get(AccountBy.NAME, defaultAcct);
 		if (acct == null)
 			throw WikiServiceException.ERROR("no such account " + Provisioning.A_zimbraNotebookAccount);
 		
@@ -223,7 +224,7 @@ public class Wiki {
 	}
 	
 	public static Wiki getInstance(String acct, int folderId) throws ServiceException {
-		return getInstance(Provisioning.getInstance().getAccountById(acct), folderId);
+		return getInstance(Provisioning.getInstance().get(AccountBy.ID, acct), folderId);
 	}
 	
 	public static Wiki getInstance(Account acct) throws ServiceException {

@@ -307,25 +307,19 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public Account getAccountByForeignPrincipal(String principal)
-            throws ServiceException {
-        return getAccountBy(AdminService.BY_FOREIGN_PRINCIPAL, principal);
-    }
-
-    @Override
-    public Account getAccountById(String zimbraId) throws ServiceException {
-        return getAccountBy(AdminService.BY_ID, zimbraId);
-    }
-
-    @Override
-    public Account getAccountByName(String emailAddress)
-            throws ServiceException {
-        return getAccountBy(AdminService.BY_NAME, emailAddress);
-    }
-
-    @Override
-    public Account getAdminAccountByName(String name) throws ServiceException {
-        return getAccountBy(AdminService.BY_ADMIN_NAME, name);
+    public Account get(AccountBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+        case ADMIN_NAME:
+            return getAccountBy(AdminService.BY_ADMIN_NAME, key);            
+        case ID:
+            return getAccountBy(AdminService.BY_ID, key);
+        case FOREIGN_PRINCIPAL:
+            return getAccountBy(AdminService.BY_FOREIGN_PRINCIPAL, key);
+        case NAME:
+            return getAccountBy(AdminService.BY_NAME, key);            
+        default:
+                return null;
+        }
     }
 
     @Override
@@ -647,7 +641,7 @@ public class SoapProvisioning extends Provisioning {
             System.out.println(acct2);
             p.changePassword(acct2, "test123", "test1235");
             */
-            Account acct3 = p.getAdminAccountByName("zimbra");
+            Account acct3 = p.get(AccountBy.ADMIN_NAME, "zimbra");
             System.out.println(acct3);                        
         } catch (SoapFaultException e) {
             System.out.println(e.getCode());

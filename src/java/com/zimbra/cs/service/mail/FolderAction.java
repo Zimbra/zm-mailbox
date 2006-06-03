@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -236,7 +237,7 @@ public class FolderAction extends ItemAction {
         Provisioning prov = Provisioning.getInstance();
         // for addresses, default to the authenticated user's domain
         if ((type == ACL.GRANTEE_USER || type == ACL.GRANTEE_GROUP) && name.indexOf('@') == -1) {
-            Account authacct = prov.getAccountById(lc.getAuthtokenAccountId());
+            Account authacct = prov.get(AccountBy.ID, lc.getAuthtokenAccountId());
             String authname = (authacct == null ? null : authacct.getName());
             if (authacct != null)
                 name += authname.substring(authname.indexOf('@'));
@@ -247,7 +248,7 @@ public class FolderAction extends ItemAction {
             switch (type) {
                 case ACL.GRANTEE_COS:     nentry = prov.getCosByName(name);               break;
                 case ACL.GRANTEE_DOMAIN:  nentry = prov.getDomainByName(name);            break;
-                case ACL.GRANTEE_USER:    nentry = prov.getAccountByName(name);           break;
+                case ACL.GRANTEE_USER:    nentry = prov.get(AccountBy.NAME, name);           break;
                 case ACL.GRANTEE_GROUP:   nentry = prov.getDistributionListByName(name);  break;
             }
 
@@ -268,7 +269,7 @@ public class FolderAction extends ItemAction {
             switch (type) {
                 case ACL.GRANTEE_COS:     return prov.getCosById(zid);
                 case ACL.GRANTEE_DOMAIN:  return prov.getDomainById(zid);
-                case ACL.GRANTEE_USER:    return prov.getAccountById(zid);
+                case ACL.GRANTEE_USER:    return prov.get(AccountBy.ID, zid);
                 case ACL.GRANTEE_GROUP:   return prov.getDistributionListById(zid);
                 case ACL.GRANTEE_AUTHUSER:
                 case ACL.GRANTEE_PUBLIC:

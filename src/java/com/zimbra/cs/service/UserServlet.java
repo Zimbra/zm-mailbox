@@ -49,6 +49,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -520,7 +521,7 @@ public class UserServlet extends ZimbraServlet {
         }
 
         Provisioning prov = Provisioning.getInstance();
-        Account targetAccount = prov.getAccountById(mpt.getOwnerId());
+        Account targetAccount = prov.get(AccountBy.ID, mpt.getOwnerId());
         if (targetAccount == null)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "referenced account not found");
         
@@ -592,7 +593,7 @@ public class UserServlet extends ZimbraServlet {
 
             // see if we can get target account or not
             if (itemId != null && itemId.getAccountId() != null) {
-                targetAccount = prov.getAccountById(itemId.getAccountId());
+                targetAccount = prov.get(AccountBy.ID, itemId.getAccountId());
                 return;
             } else if (accountPath.equals("~")) {
                 // can't resolve this yet
@@ -600,7 +601,7 @@ public class UserServlet extends ZimbraServlet {
             } else if (accountPath.startsWith("~")) {
                 accountPath = accountPath.substring(1);
             }
-            targetAccount = prov.getAccountByName(accountPath);                
+            targetAccount = prov.get(AccountBy.NAME, accountPath);                
         }
 
         public long getStartTime() {
@@ -739,7 +740,7 @@ public class UserServlet extends ZimbraServlet {
     public static InputStream getResourceAsStream(AuthToken auth, ItemId iid, Map<String,String> params) throws ServiceException {
         // fetch from remote store
         Provisioning prov = Provisioning.getInstance();        
-        Server server = prov.getServer(prov.getAccountById(iid.getAccountId()));
+        Server server = prov.getServer(prov.get(AccountBy.ID, iid.getAccountId()));
         int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
         boolean useHTTP = port > 0;
         if (!useHTTP)

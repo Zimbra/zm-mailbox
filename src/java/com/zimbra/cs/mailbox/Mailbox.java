@@ -40,6 +40,7 @@ import org.apache.commons.collections.map.LRUMap;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -260,7 +261,7 @@ public class Mailbox {
         public OperationContext(RedoableOp redoPlayer)  { player = redoPlayer; }
         public OperationContext(Account acct)           { authuser = acct; }
         public OperationContext(String accountId) throws ServiceException {
-            authuser = Provisioning.getInstance().getAccountById(accountId);
+            authuser = Provisioning.getInstance().get(AccountBy.ID, accountId);
             if (authuser == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
         }
@@ -371,7 +372,7 @@ public class Mailbox {
      * 
      * @param accountId  The <code>zimbraId</code> to look up. */
     public static Account getAccount(String accountId) throws ServiceException {
-        return Provisioning.getInstance().getAccountById(accountId);
+        return Provisioning.getInstance().get(AccountBy.ID, accountId);
     }
 
 
