@@ -44,6 +44,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -367,21 +368,17 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public CalendarResource getCalendarResourceByForeignPrincipal(
-            String foreignPrincipal) throws ServiceException {
-        return getCalendarResourceBy(AdminService.BY_FOREIGN_PRINCIPAL, foreignPrincipal);        
-    }
-
-    @Override
-    public CalendarResource getCalendarResourceById(String zimbraId)
-            throws ServiceException {
-        return getCalendarResourceBy(AdminService.BY_ID, zimbraId);
-    }
-
-    @Override
-    public CalendarResource getCalendarResourceByName(String emailAddress)
-            throws ServiceException {
-        return getCalendarResourceBy(AdminService.BY_NAME, emailAddress);
+    public CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case ID:
+                return getCalendarResourceBy(AdminService.BY_ID, key);
+            case FOREIGN_PRINCIPAL:
+                return getCalendarResourceBy(AdminService.BY_FOREIGN_PRINCIPAL, key);
+            case NAME: 
+                return getCalendarResourceBy(AdminService.BY_NAME, key);
+            default:
+                    return null;
+        }
     }
 
     @Override
@@ -397,47 +394,38 @@ public class SoapProvisioning extends Provisioning {
         a.addAttribute(AdminService.A_BY, by);
         return new SoapCos(invoke(req).getElement(AdminService.E_COS));
     }
-    
+
     @Override
-    public Cos getCosById(String zimbraId) throws ServiceException {
-        return getCosBy(AdminService.BY_ID, zimbraId);
+    public Cos get(CosBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+        case ID:
+            return getCosBy(AdminService.BY_ID, key);
+        case NAME:
+            return getCosBy(AdminService.BY_NAME, key);
+        default:
+                return null;
+        }
     }
 
     @Override
-    public Cos getCosByName(String name) throws ServiceException {
-        return getCosBy(AdminService.BY_NAME, name);        
+    public DistributionList get(DistributionListBy keyType, String key) throws ServiceException {
+        // TODO Auto-generated method stub        
+        /*
+        switch(keyType) {
+            case ID: 
+                return getDistributionListById(key);
+            case NAME: 
+                return getDistributionListByName(key);
+            default:
+                    return null;
+        }
+        */
+        return null;        
     }
 
     @Override
-    public DistributionList getDistributionListById(String zimbraId)
-            throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public DistributionList getDistributionListByName(String name)
-            throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Domain getDomainById(String zimbraId) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Domain getDomainByName(String name) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Domain getDomainByVirtualHostname(String virtualHostname)
-            throws ServiceException {
-        // TODO Auto-generated method stub
+    public Domain get(DomainBy keyType, String key) throws ServiceException {
+        // TODO Auto-generated method stub        
         return null;
     }
 
@@ -475,13 +463,15 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public Server getServerById(String zimbraId) throws ServiceException {
-        return getServerBy(AdminService.BY_ID, zimbraId);
-    }
-
-    @Override
-    public Server getServerByName(String name) throws ServiceException {
-        return getServerBy(AdminService.BY_NAME, name);
+    public Server get(ServerBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+        case ID:
+            return getServerBy(AdminService.BY_ID, key);            
+        case NAME:
+            return getServerBy(AdminService.BY_NAME, key);
+        default:
+                return null;
+        }
     }
 
     @Override

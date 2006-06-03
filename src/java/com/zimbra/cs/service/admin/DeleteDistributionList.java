@@ -30,6 +30,7 @@ import java.util.Map;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
@@ -51,7 +52,7 @@ public class DeleteDistributionList extends AdminDocumentHandler {
 
         String id = request.getAttribute(AdminService.E_ID);
 
-        DistributionList distributionList = prov.getDistributionListById(id);
+        DistributionList distributionList = prov.get(DistributionListBy.ID, id);
         if (distributionList == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 

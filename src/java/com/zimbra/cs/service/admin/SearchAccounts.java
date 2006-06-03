@@ -39,6 +39,7 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.session.AdminSession;
@@ -104,7 +105,7 @@ public class SearchAccounts extends AdminDocumentHandler {
 
         Domain d = null;
         if (domain != null) {
-            d = prov.getDomainByName(domain);
+            d = prov.get(DomainBy.NAME, domain);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }

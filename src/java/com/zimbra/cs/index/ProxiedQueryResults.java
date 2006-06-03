@@ -30,6 +30,7 @@ package com.zimbra.cs.index;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
@@ -210,7 +211,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         if (mTransport != null) {
             return mTransport;
         }
-        Server server = Provisioning.getInstance().getServerByName(mServer);
+        Server server = Provisioning.getInstance().get(ServerBy.NAME, mServer);
         String url = URLUtil.getAdminURL(server, "/service/admin/soap");
         SoapTransport toRet = new SoapHttpTransport(url);
         toRet.setAuthToken(mAuthToken);

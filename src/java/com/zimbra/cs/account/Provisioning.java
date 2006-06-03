@@ -909,7 +909,7 @@ public abstract class Provisioning {
      */    
     public Domain getDomain(Account acct) throws ServiceException {
         String dname = acct.getDomainName();
-        return dname == null ? null : getDomainByName(dname);
+        return dname == null ? null : get(DomainBy.NAME, dname);
     }
 
     /**
@@ -918,7 +918,7 @@ public abstract class Provisioning {
      */
     public Server getServer(Account acct) throws ServiceException {
         String serverId = acct.getAttr(Provisioning.A_zimbraMailHost);
-        return (serverId == null ? null : getServerByName(serverId));
+        return (serverId == null ? null : get(ServerBy.NAME, serverId));
     }  
     
     private static final String DATA_COS = "COS";
@@ -933,13 +933,13 @@ public abstract class Provisioning {
         Cos cos = (Cos) acct.getCachedData(DATA_COS);
         if (cos == null) {
             String id = acct.getAccountCOSId();
-                if (id != null) cos = getCosById(id); 
+                if (id != null) cos = get(CosBy.ID, id); 
                 if (cos == null) {
                     Domain domain = getDomain(acct);
                     String domainCosId = domain != null ? domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
-                    if (domainCosId != null) cos = getCosById(domainCosId);
+                    if (domainCosId != null) cos = get(CosBy.ID, domainCosId);
                 }
-                if (cos == null) cos = getCosByName(Provisioning.DEFAULT_COS_NAME);
+                if (cos == null) cos = get(CosBy.NAME, Provisioning.DEFAULT_COS_NAME);
                 if (cos != null) acct.setCachedData(DATA_COS, cos);
         }
         return cos;
@@ -1025,7 +1025,6 @@ public abstract class Provisioning {
      * @throws ServiceException
      */
     public abstract void renameAccount(String zimbraId, String newName) throws ServiceException;
-    
 
     public static enum AccountBy { ADMIN_NAME, ID, FOREIGN_PRINCIPAL, NAME }
     
@@ -1098,11 +1097,9 @@ public abstract class Provisioning {
      */
     public abstract Domain createDomain(String name, Map<String, Object> attrs) throws ServiceException;
 
-    public abstract Domain getDomainById(String zimbraId) throws ServiceException;
-
-    public abstract Domain getDomainByName(String name) throws ServiceException;
-
-    public abstract Domain getDomainByVirtualHostname(String virtualHostname) throws ServiceException;
+    public static enum DomainBy { ID, NAME, VIRTUAL_HOST_NAME}
+    
+    public abstract Domain get(DomainBy keyType, String key) throws ServiceException;
     
     public abstract List<Domain> getAllDomains()  throws ServiceException;
 
@@ -1112,9 +1109,9 @@ public abstract class Provisioning {
 
     public abstract void renameCos(String zimbraId, String newName) throws ServiceException;
     
-    public abstract Cos getCosById(String zimbraId) throws ServiceException;
-
-    public abstract Cos getCosByName(String name) throws ServiceException;
+    public static enum CosBy { ID, NAME }
+    
+    public abstract Cos get(CosBy keyType, String key) throws ServiceException;
 
     public abstract List<Cos> getAllCos()  throws ServiceException;
     
@@ -1130,9 +1127,9 @@ public abstract class Provisioning {
 
     public abstract Server createServer(String name, Map<String, Object> attrs) throws ServiceException;
 
-    public abstract Server getServerById(String zimbraId) throws ServiceException;
-
-    public abstract Server getServerByName(String name) throws ServiceException;
+    public static enum ServerBy { ID, NAME }
+    
+    public abstract Server get(ServerBy keyName, String key) throws ServiceException;
 
     public abstract List<Server> getAllServers()  throws ServiceException;
 
@@ -1146,9 +1143,9 @@ public abstract class Provisioning {
 
     public abstract DistributionList createDistributionList(String listAddress, Map<String, Object> listAttrs) throws ServiceException;
 
-    public abstract DistributionList getDistributionListById(String zimbraId) throws ServiceException;
+    public static enum DistributionListBy { ID, NAME }
     
-    public abstract DistributionList getDistributionListByName(String name) throws ServiceException;
+    public abstract DistributionList get(DistributionListBy keyType, String key) throws ServiceException;
     
     public abstract void deleteDistributionList(String zimbraId) throws ServiceException;
 
@@ -1201,11 +1198,9 @@ public abstract class Provisioning {
      */
     public abstract void renameCalendarResource(String zimbraId, String newName) throws ServiceException;
 
-    public abstract CalendarResource getCalendarResourceById(String zimbraId) throws ServiceException;
-
-    public abstract CalendarResource getCalendarResourceByName(String emailAddress) throws ServiceException;
-
-    public abstract CalendarResource getCalendarResourceByForeignPrincipal(String foreignPrincipal) throws ServiceException;
+    public static enum CalendarResourceBy { ID, FOREIGN_PRINCIPAL, NAME }
+    
+    public abstract CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException;
 
     /**
      * @param filter search filter

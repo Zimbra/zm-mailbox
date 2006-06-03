@@ -30,6 +30,7 @@ import java.util.Map;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
@@ -60,7 +61,7 @@ public class DeleteCalendarResource extends AdminDocumentHandler {
 
         // Confirm that the account exists and that the mailbox is located
         // on the current host
-        CalendarResource resource = prov.getCalendarResourceById(id);
+        CalendarResource resource = prov.get(CalendarResourceBy.ID, id);
         if (resource == null)
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(id);
 

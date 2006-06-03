@@ -28,6 +28,7 @@ package com.zimbra.cs.account.soap;
 import java.util.Map;
 
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
@@ -59,7 +60,7 @@ public class SoapServer extends SoapNamedEntry implements Server {
 
     @Override
     public void reload(SoapProvisioning prov) throws ServiceException {
-        mAttrs = ((SoapServer) prov.getServerById(getId())).mAttrs;
+        mAttrs = ((SoapServer) prov.get(ServerBy.ID, getId())).mAttrs;
         resetData();        
     }
 }

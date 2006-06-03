@@ -33,6 +33,7 @@ import java.util.Map;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
@@ -51,7 +52,7 @@ public class ModifyCos extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
 	    Map<String, Object> attrs = AdminService.getAttrs(request);
 	    
-	    Cos cos = prov.getCosById(id);
+	    Cos cos = prov.get(CosBy.ID, id);
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(id);
         

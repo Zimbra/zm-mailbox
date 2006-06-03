@@ -541,7 +541,7 @@ public class LdapProvisioning extends Provisioning {
                 attrs.put(Provisioning.A_zimbraCOSId, cosId);
             } else {
                 String domainCosId = domain != null ? d.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
-                if (domainCosId != null) cos = getCosById(domainCosId);
+                if (domainCosId != null) cos = get(CosBy.ID, domainCosId);
                 if (cos == null) cos = getCosByName(Provisioning.DEFAULT_COS_NAME, ctxt);
             }
 
@@ -1136,6 +1136,20 @@ public class LdapProvisioning extends Provisioning {
         return null;
     }
 
+    @Override
+    public Domain get(DomainBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case NAME: 
+                return getDomainByName(key);
+            case ID: 
+                return getDomainById(key);
+            case VIRTUAL_HOST_NAME:
+                return getDomainByVirtualHostname(key);
+            default:
+                    return null;
+        }
+    }
+    
     private Domain getDomainById(String zimbraId, DirContext ctxt) throws ServiceException {
         if (zimbraId == null)
             return null;
@@ -1151,14 +1165,14 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getDomainById(java.lang.String)
      */
-    public Domain getDomainById(String zimbraId) throws ServiceException {
+    private Domain getDomainById(String zimbraId) throws ServiceException {
         return getDomainById(zimbraId, null);
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getDomainByName(java.lang.String)
      */
-    public Domain getDomainByName(String name) throws ServiceException {
+    private Domain getDomainByName(String name) throws ServiceException {
             return getDomainByName(name, null);
     }        
         
@@ -1172,7 +1186,7 @@ public class LdapProvisioning extends Provisioning {
         return domain;        
     }
    
-   public Domain getDomainByVirtualHostname(String virtualHostname) throws ServiceException {
+   private Domain getDomainByVirtualHostname(String virtualHostname) throws ServiceException {
         LdapDomain domain = (LdapDomain) sDomainCache.getByVirtualHostname(virtualHostname);
         if (domain == null) {
             virtualHostname = LdapUtil.escapeSearchFilterArg(virtualHostname);
@@ -1271,7 +1285,7 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#deleteAccountById(java.lang.String)
      */
     public void renameCos(String zimbraId, String newName) throws ServiceException {
-        LdapCos cos = (LdapCos) getCosById(zimbraId);
+        LdapCos cos = (LdapCos) get(CosBy.ID, zimbraId);
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(zimbraId);
 
@@ -1337,19 +1351,17 @@ public class LdapProvisioning extends Provisioning {
         }
         return cos;
     }
-    
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#getCOSById(java.lang.String)
-     */
-    public Cos getCosById(String zimbraId) throws ServiceException {
-        return getCosById(zimbraId, null);
-    }    
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#getCOSByName(java.lang.String)
-     */
-    public Cos getCosByName(String name) throws ServiceException {
-        return getCosByName(name, null);
+    @Override
+    public Cos get(CosBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case NAME:
+                return getCosByName(key, null);                
+            case ID:
+                return getCosById(key, null);                
+            default:
+                    return null;
+        }
     }
 
     /* (non-Javadoc)
@@ -1548,7 +1560,7 @@ public class LdapProvisioning extends Provisioning {
     }
     
     public void deleteCos(String zimbraId) throws ServiceException {
-        LdapCos c = (LdapCos) getCosById(zimbraId);
+        LdapCos c = (LdapCos) get(CosBy.ID, zimbraId);
         if (c == null)
             throw AccountServiceException.NO_SUCH_COS(zimbraId);
         
@@ -1659,14 +1671,23 @@ public class LdapProvisioning extends Provisioning {
         return s;
     }
 
-    public Server getServerById(String zimbraId) throws ServiceException {
+    @Override
+    public Server get(ServerBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case NAME: 
+                return getServerByName(key);
+            case ID: 
+                return getServerById(key);
+            default:
+                    return null;
+        }
+    }
+
+    private Server getServerById(String zimbraId) throws ServiceException {
         return getServerById(zimbraId, null, false);
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#getCOSByName(java.lang.String)
-     */
-    public Server getServerByName(String name) throws ServiceException {
+    private Server getServerByName(String name) throws ServiceException {
         return getServerByName(name, false);
     }
 
@@ -1945,12 +1966,24 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
+    @Override
+    public DistributionList get(DistributionListBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case ID: 
+                return getDistributionListById(key);
+            case NAME: 
+                return getDistributionListByName(key);
+            default:
+                    return null;
+        }
+    }
+
     private DistributionList getDistributionListById(String zimbraId, DirContext ctxt) throws ServiceException {
         //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
         return getDistributionListByQuery("","(&(zimbraId="+zimbraId+")(objectclass=zimbraDistributionList))", ctxt);
     }
 
-    public DistributionList getDistributionListById(String zimbraId) throws ServiceException {
+    private DistributionList getDistributionListById(String zimbraId) throws ServiceException {
         return getDistributionListById(zimbraId, null);
     }
 
@@ -1972,7 +2005,7 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    public DistributionList getDistributionListByName(String listAddress) throws ServiceException {
+    private DistributionList getDistributionListByName(String listAddress) throws ServiceException {
         String parts[] = listAddress.split("@");
         
         if (parts.length != 2)
@@ -2597,7 +2630,21 @@ public class LdapProvisioning extends Provisioning {
         renameAccount(zimbraId, newName);
     }
 
-    public CalendarResource getCalendarResourceById(String zimbraId)
+    @Override
+    public CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case ID: 
+                return getCalendarResourceById(key);
+            case FOREIGN_PRINCIPAL: 
+                return getCalendarResourceByForeignPrincipal(key);
+            case NAME: 
+                return getCalendarResourceByName(key);
+            default:
+                    return null;
+        }
+    }
+
+    private CalendarResource getCalendarResourceById(String zimbraId)
     throws ServiceException {
         if (zimbraId == null)
             return null;
@@ -2615,7 +2662,7 @@ public class LdapProvisioning extends Provisioning {
         return resource;
     }
 
-    public CalendarResource getCalendarResourceByName(String emailAddress)
+    private CalendarResource getCalendarResourceByName(String emailAddress)
     throws ServiceException {
         int index = emailAddress.indexOf('@');
         String domain = null;
@@ -2644,7 +2691,7 @@ public class LdapProvisioning extends Provisioning {
         return resource;
     }
 
-    public CalendarResource getCalendarResourceByForeignPrincipal(String foreignPrincipal)
+    private CalendarResource getCalendarResourceByForeignPrincipal(String foreignPrincipal)
     throws ServiceException {
 //        LdapCalendarResource res = null;
         foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);

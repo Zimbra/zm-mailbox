@@ -38,6 +38,7 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -61,9 +62,9 @@ public class GetCos extends AdminDocumentHandler {
 	    Cos cos = null;
 
         if (key.equals(BY_NAME)) {
-            cos = prov.getCosByName(value);
+            cos = prov.get(CosBy.NAME, value);
         } else if (key.equals(BY_ID)) {
-            cos = prov.getCosById(value);
+            cos = prov.get(CosBy.ID, value);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
         }

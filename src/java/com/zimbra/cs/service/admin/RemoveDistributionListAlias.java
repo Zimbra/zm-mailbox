@@ -30,6 +30,7 @@ import java.util.Map;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
@@ -52,7 +53,7 @@ public class RemoveDistributionListAlias extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
         String alias = request.getAttribute(AdminService.E_ALIAS);
 
-	    DistributionList dl = prov.getDistributionListById(id);
+	    DistributionList dl = prov.get(DistributionListBy.ID, id);
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 

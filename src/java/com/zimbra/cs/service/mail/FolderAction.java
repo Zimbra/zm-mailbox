@@ -38,6 +38,9 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -246,10 +249,10 @@ public class FolderAction extends ItemAction {
         NamedEntry nentry = null;
         if (name != null)
             switch (type) {
-                case ACL.GRANTEE_COS:     nentry = prov.getCosByName(name);               break;
-                case ACL.GRANTEE_DOMAIN:  nentry = prov.getDomainByName(name);            break;
+                case ACL.GRANTEE_COS:     nentry = prov.get(CosBy.NAME, name);               break;
+                case ACL.GRANTEE_DOMAIN:  nentry = prov.get(DomainBy.NAME, name);            break;
                 case ACL.GRANTEE_USER:    nentry = prov.get(AccountBy.NAME, name);           break;
-                case ACL.GRANTEE_GROUP:   nentry = prov.getDistributionListByName(name);  break;
+                case ACL.GRANTEE_GROUP:   nentry = prov.get(DistributionListBy.NAME, name);  break;
             }
 
         if (nentry != null)
@@ -267,10 +270,10 @@ public class FolderAction extends ItemAction {
         Provisioning prov = Provisioning.getInstance();
         try {
             switch (type) {
-                case ACL.GRANTEE_COS:     return prov.getCosById(zid);
-                case ACL.GRANTEE_DOMAIN:  return prov.getDomainById(zid);
+                case ACL.GRANTEE_COS:     return prov.get(CosBy.ID, zid);
+                case ACL.GRANTEE_DOMAIN:  return prov.get(DomainBy.ID, zid);
                 case ACL.GRANTEE_USER:    return prov.get(AccountBy.ID, zid);
-                case ACL.GRANTEE_GROUP:   return prov.getDistributionListById(zid);
+                case ACL.GRANTEE_GROUP:   return prov.get(DistributionListBy.ID, zid);
                 case ACL.GRANTEE_AUTHUSER:
                 case ACL.GRANTEE_PUBLIC:
                 default:                  return null;

@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -47,7 +48,7 @@ public class ProxyTarget {
     private String mURL;
 
     public ProxyTarget(String serverId, String authToken, HttpServletRequest req) throws ServiceException {
-        mServer = Provisioning.getInstance().getServerById(serverId);
+        mServer = Provisioning.getInstance().get(ServerBy.ID, serverId);
         if (mServer == null)
             throw AccountServiceException.NO_SUCH_SERVER(serverId);
 

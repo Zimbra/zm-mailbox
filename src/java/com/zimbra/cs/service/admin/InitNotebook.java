@@ -32,6 +32,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.cs.util.ZimbraLog;
@@ -72,9 +73,9 @@ public class InitNotebook extends AdminDocumentHandler {
         	Domain domain = null;
 
         	if (key.equals(AdminService.BY_NAME)) {
-        		domain = prov.getDomainByName(value);
+        		domain = prov.get(DomainBy.NAME, value);
         	} else if (key.equals(AdminService.BY_ID)) {
-        		domain = prov.getDomainById(value);
+        		domain = prov.get(DomainBy.ID, value);
         	} else {
         		throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
         	}

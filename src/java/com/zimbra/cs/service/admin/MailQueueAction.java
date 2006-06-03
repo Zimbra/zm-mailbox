@@ -30,6 +30,7 @@ import org.apache.lucene.search.Query;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.rmgmt.RemoteMailQueue;
 import com.zimbra.cs.rmgmt.RemoteMailQueue.QueueAction;
 import com.zimbra.cs.rmgmt.RemoteMailQueue.QueueAttr;
@@ -46,7 +47,7 @@ public class MailQueueAction extends AdminDocumentHandler {
         Element serverElem = request.getElement(AdminService.E_SERVER);
         String serverName = serverElem.getAttribute(AdminService.A_NAME);
         
-        Server server = prov.getServerByName(serverName);
+        Server server = prov.get(ServerBy.NAME, serverName);
         if (server == null) {
             throw ServiceException.INVALID_REQUEST("server with name " + serverName + " could not be found", null);
         }

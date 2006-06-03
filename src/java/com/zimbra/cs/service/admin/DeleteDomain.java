@@ -33,6 +33,7 @@ import java.util.Map;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
@@ -50,7 +51,7 @@ public class DeleteDomain extends AdminDocumentHandler {
 
 	    String id = request.getAttribute(AdminService.E_ID);
 
-	    Domain domain = prov.getDomainById(id);
+	    Domain domain = prov.get(DomainBy.ID, id);
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(id);
         

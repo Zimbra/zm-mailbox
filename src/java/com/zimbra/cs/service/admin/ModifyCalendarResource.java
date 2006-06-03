@@ -32,6 +32,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.util.ZimbraLog;
@@ -59,7 +60,7 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
         String id = request.getAttribute(AdminService.E_ID);
         Map<String, Object> attrs = AdminService.getAttrs(request);
 
-        CalendarResource resource = prov.getCalendarResourceById(id);
+        CalendarResource resource = prov.get(CalendarResourceBy.ID, id);
         if (resource == null)
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(id);
 

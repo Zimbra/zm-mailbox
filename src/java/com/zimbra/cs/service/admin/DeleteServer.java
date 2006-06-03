@@ -33,6 +33,7 @@ import java.util.Map;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
@@ -50,7 +51,7 @@ public class DeleteServer extends AdminDocumentHandler {
 
 	    String id = request.getAttribute(AdminService.E_ID);
 	    
-	    Server server = prov.getServerById(id);
+	    Server server = prov.get(ServerBy.ID, id);
         if (server == null)
             throw AccountServiceException.NO_SUCH_SERVER(id);
         

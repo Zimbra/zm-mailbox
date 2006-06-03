@@ -47,6 +47,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.client.*;
 import com.zimbra.cs.client.soap.*;
 import com.zimbra.cs.mailbox.ACL;
@@ -500,7 +501,7 @@ public class WikiUtil {
 			throw WikiServiceException.ERROR("invalid argument - empty domain");
 		}
 		Provisioning prov = Provisioning.getInstance();
-		Domain dom = prov.getDomainByName(domain);
+		Domain dom = prov.get(DomainBy.NAME, domain);
 		if (dom == null) {
 			throw WikiServiceException.ERROR("invalid domain: " + domain);
 		}

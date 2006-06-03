@@ -28,6 +28,7 @@ package com.zimbra.cs.account.soap;
 import java.util.Map;
 
 import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
@@ -54,7 +55,7 @@ public class SoapCos extends SoapNamedEntry implements Cos {
 
     @Override
     public void reload(SoapProvisioning prov) throws ServiceException {
-        mAttrs = ((SoapCos) prov.getCosById(getId())).mAttrs;
+        mAttrs = ((SoapCos) prov.get(CosBy.ID, getId())).mAttrs;
         resetData();
     }
     

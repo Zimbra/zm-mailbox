@@ -32,6 +32,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
@@ -80,7 +81,7 @@ public class Auth extends DocumentHandler  {
         
         if (by.equals(BY_NAME)) {
             if (virtualHost != null  && value.indexOf('@') == -1) {
-                Domain d = prov.getDomainByVirtualHostname(virtualHost);
+                Domain d = prov.get(DomainBy.VIRTUAL_HOST_NAME, virtualHost);
                 if (d != null)
                     value = value + "@" + d.getName();
             }

@@ -33,6 +33,7 @@ import java.util.List;
 
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.service.ServiceException;
 
 class AccountSearchParams {
@@ -72,7 +73,7 @@ class AccountSearchParams {
     
     void doSearch() throws ServiceException {
         if (!mDomainId.equals("")) {
-            mResult = Provisioning.getInstance().getDomainById(mDomainId).searchAccounts(mQuery, mAttrs, mSortBy, mSortAscending, mFlags);
+            mResult = Provisioning.getInstance().get(DomainBy.ID, mDomainId).searchAccounts(mQuery, mAttrs, mSortBy, mSortAscending, mFlags);
         } else {
             mResult = Provisioning.getInstance().searchAccounts(mQuery, mAttrs, mSortBy, mSortAscending, mFlags);
         }

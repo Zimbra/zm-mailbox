@@ -64,6 +64,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -170,7 +171,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
     private static Upload fetchRemoteUpload(String accountId, String uploadId, String authtoken) throws ServiceException {
         // the first half of the upload id is the server id where it lives
-        Server server = Provisioning.getInstance().getServerById(uploadId.substring(0, UPLOAD_ID_LENGTH / 2));
+        Server server = Provisioning.getInstance().get(ServerBy.ID, uploadId.substring(0, UPLOAD_ID_LENGTH / 2));
         if (server == null)
             return null;
         // determine the URI for the remote ContentServlet

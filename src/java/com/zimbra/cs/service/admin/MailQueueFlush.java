@@ -28,6 +28,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.rmgmt.RemoteCommands;
 import com.zimbra.cs.rmgmt.RemoteManager;
 import com.zimbra.cs.service.ServiceException;
@@ -43,7 +44,7 @@ public class MailQueueFlush extends AdminDocumentHandler {
         Element serverElem = request.getElement(AdminService.E_SERVER);
         String serverName = serverElem.getAttribute(AdminService.A_NAME);
         
-        Server server = prov.getServerByName(serverName);
+        Server server = prov.get(ServerBy.NAME, serverName);
         if (server == null) {
             throw ServiceException.INVALID_REQUEST("server with name " + serverName + " could not be found", null);
         }

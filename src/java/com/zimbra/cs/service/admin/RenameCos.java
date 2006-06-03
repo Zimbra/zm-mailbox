@@ -33,6 +33,7 @@ import java.util.Map;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
@@ -51,7 +52,7 @@ public class RenameCos extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
         String newName = request.getAttribute(AdminService.E_NEW_NAME);
 
-	    Cos cos = prov.getCosById(id);
+	    Cos cos = prov.get(CosBy.ID, id);
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(id);
 
@@ -64,7 +65,7 @@ public class RenameCos extends AdminDocumentHandler {
 
         // get again with new name...
 
-        cos = prov.getCosById(id);
+        cos = prov.get(CosBy.ID, id);
         if (cos == null)
             throw ServiceException.FAILURE("unabled to get renamed cos: "+id, null);
 	    Element response = lc.createElement(AdminService.RENAME_COS_RESPONSE);

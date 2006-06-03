@@ -35,6 +35,8 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.AdminSession;
@@ -87,14 +89,14 @@ public class GetQuotaUsage extends AdminDocumentHandler {
 
         Domain d = null;
         if (domain != null) {
-            d = prov.getDomainByName(domain);
+            d = prov.get(DomainBy.NAME, domain);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
 
         Cos c = null;
         if (cos != null) {
-            c = prov.getCosByName(cos);
+            c = prov.get(CosBy.NAME, cos);
             if (c == null)
                 throw AccountServiceException.NO_SUCH_COS(cos);
         }
@@ -188,7 +190,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             Provisioning prov = Provisioning.getInstance();
             int flags = Provisioning.SA_ACCOUNT_FLAG;
             List accounts;
-            Domain d = mDomainId.equals("") ? null : prov.getDomainById(mDomainId);
+            Domain d = mDomainId.equals("") ? null : prov.get(DomainBy.ID, mDomainId);
             if (d != null) {
                 accounts = d.searchAccounts(query, null, null, true, flags);
             } else {

@@ -48,6 +48,7 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailItem;
@@ -254,7 +255,7 @@ public class ContentServlet extends ZimbraServlet {
             if (!FileUploadServlet.isLocalUpload(uploadId)) {
                 // wrong server; proxy to the right one...
                 String serverId = FileUploadServlet.getUploadServerId(uploadId);
-                Server server = Provisioning.getInstance().getServerById(serverId);
+                Server server = Provisioning.getInstance().get(ServerBy.ID, serverId);
                 proxyServletRequest(req, resp, server, null);
                 return;
             }

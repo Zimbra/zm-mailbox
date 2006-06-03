@@ -32,6 +32,7 @@ import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -66,11 +67,11 @@ public class GetCalendarResource extends AdminDocumentHandler {
         CalendarResource resource = null;
 
         if (key.equals(BY_NAME)) {
-            resource = prov.getCalendarResourceByName(value);
+            resource = prov.get(CalendarResourceBy.NAME, value);
         } else if (key.equals(BY_ID)) {
-            resource = prov.getCalendarResourceById(value);
+            resource = prov.get(CalendarResourceBy.ID, value);
         } else if (key.equals(BY_FOREIGN_PRINCIPAL)) {
-            resource = prov.getCalendarResourceByForeignPrincipal(value);
+            resource = prov.get(CalendarResourceBy.FOREIGN_PRINCIPAL, value);
         } else {
             throw ServiceException.INVALID_REQUEST(
                     "unknown value for by: " + key, null);

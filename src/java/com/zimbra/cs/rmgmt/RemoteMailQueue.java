@@ -52,6 +52,7 @@ import org.dom4j.DocumentException;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.GetMailQueue;
@@ -618,7 +619,7 @@ public class RemoteMailQueue {
         	queueIds = args[4];
         }
         
-        Server server = prov.getServerByName(host);
+        Server server = prov.get(ServerBy.NAME, host);
         RemoteMailQueue queue = new RemoteMailQueue(server, queueName, task == TestTask.scan);
         queue.waitForScan(0);
 

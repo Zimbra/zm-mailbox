@@ -39,6 +39,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.Element;
@@ -75,9 +76,9 @@ public class GetAllAccounts extends AdminDocumentHandler {
             Domain domain = null;
         
             if (key.equals(BY_NAME)) {
-                domain = prov.getDomainByName(value);
+                domain = prov.get(DomainBy.NAME, value);
             } else if (key.equals(BY_ID)) {
-                domain = prov.getDomainById(value);
+                domain = prov.get(DomainBy.ID, value);
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
             }

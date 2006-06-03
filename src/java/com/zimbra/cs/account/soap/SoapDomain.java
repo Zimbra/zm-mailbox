@@ -30,6 +30,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntrySearchFilter;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
@@ -57,7 +58,7 @@ public class SoapDomain extends SoapNamedEntry implements Domain {
 
     @Override
     public void reload(SoapProvisioning prov) throws ServiceException {
-        mAttrs = ((SoapDomain) prov.getDomainById(getId())).mAttrs;
+        mAttrs = ((SoapDomain) prov.get(DomainBy.ID, getId())).mAttrs;
         resetData();        
     }
 

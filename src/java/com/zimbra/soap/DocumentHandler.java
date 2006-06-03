@@ -40,6 +40,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -292,7 +293,7 @@ public abstract class DocumentHandler {
         if (acctTarget == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
         String hostTarget = acctTarget.getAttr(Provisioning.A_zimbraMailHost);
-        Server serverTarget = Provisioning.getInstance().getServerByName(hostTarget);
+        Server serverTarget = Provisioning.getInstance().get(ServerBy.NAME, hostTarget);
         if (serverTarget == null)
             throw AccountServiceException.NO_SUCH_SERVER(hostTarget);
 

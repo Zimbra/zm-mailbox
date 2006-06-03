@@ -36,6 +36,7 @@ import ch.ethz.ssh2.StreamGobbler;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -204,7 +205,7 @@ public class RemoteManager {
 
         Zimbra.toolSetup("DEBUG");
         Provisioning prov = Provisioning.getInstance();
-        Server remote = prov.getServerByName(serverName);
+        Server remote = prov.get(ServerBy.NAME, serverName);
         
         for (int i = 0; i < iterations; i++) {
             RemoteManager rm = RemoteManager.getRemoteManager(remote);

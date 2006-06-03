@@ -34,6 +34,7 @@ import java.util.Map.Entry;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -72,9 +73,9 @@ public class GetDistributionList extends AdminDocumentHandler {
         DistributionList distributionList = null;
         
         if (key.equals(BY_NAME)) {
-            distributionList = prov.getDistributionListByName(value);
+            distributionList = prov.get(DistributionListBy.NAME, value);
         } else if (key.equals(BY_ID)) {
-            distributionList = prov.getDistributionListById(value);
+            distributionList = prov.get(DistributionListBy.ID, value);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
         }

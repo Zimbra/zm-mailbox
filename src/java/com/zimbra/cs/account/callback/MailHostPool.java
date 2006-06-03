@@ -29,6 +29,7 @@ import java.util.Map;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.service.ServiceException;
 
 public class MailHostPool implements AttributeCallback {
@@ -50,7 +51,7 @@ public class MailHostPool implements AttributeCallback {
         Provisioning prov = Provisioning.getInstance();
         for (int i=0; i < pool.length; i++) {
             if (pool[i] == null || pool[i].equals("")) continue;
-            if (prov.getServerById(pool[i]) == null)
+            if (prov.get(ServerBy.ID, pool[i]) == null)
                     throw ServiceException.INVALID_REQUEST("specified "+Provisioning.A_zimbraMailHostPool+" does not correspond to a valid server: "+pool[i], null);
         }
     }

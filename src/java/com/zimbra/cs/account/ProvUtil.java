@@ -38,6 +38,11 @@ import java.util.TreeMap;
 
 import com.zimbra.cs.account.Domain.SearchGalResult;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
+import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.StringUtil;
@@ -1665,13 +1670,13 @@ public class ProvUtil {
         CalendarResource res = null;
         switch(guessType(key)) {
         case BY_ID:
-            res = mProv.getCalendarResourceById(key);
+            res = mProv.get(CalendarResourceBy.ID, key);
             break;
         case BY_EMAIL:
-            res = mProv.getCalendarResourceByName(key);
+            res = mProv.get(CalendarResourceBy.NAME, key);
             break;
         case BY_NAME:
-            res = mProv.getCalendarResourceByName(key);            
+            res = mProv.get(CalendarResourceBy.NAME, key);            
             break;
         }
         if (res == null)
@@ -1684,11 +1689,11 @@ public class ProvUtil {
         Domain d = null;
         switch(guessType(key)) {
         case BY_ID:
-            d = mProv.getDomainById(key);
+            d = mProv.get(DomainBy.ID, key);
             break;
         case BY_NAME:
         default:
-            d = mProv.getDomainByName(key);
+            d = mProv.get(DomainBy.NAME, key);
             break;
         }
         
@@ -1702,11 +1707,11 @@ public class ProvUtil {
         Cos c = null;
         switch(guessType(key)) {
         case BY_ID:
-            c = mProv.getCosById(key);
+            c = mProv.get(CosBy.ID, key);
             break;
         case BY_NAME:
         default:            
-            c = mProv.getCosByName(key);
+            c = mProv.get(CosBy.NAME, key);
             break;
         }
         
@@ -1720,11 +1725,11 @@ public class ProvUtil {
         Server s = null;
         switch(guessType(key)) {
         case BY_ID:
-            s = mProv.getServerById(key);
+            s = mProv.get(ServerBy.ID, key);
             break;
         case BY_NAME:
         default:            
-            s = mProv.getServerByName(key);
+            s = mProv.get(ServerBy.NAME, key);
             break;
         }
         
@@ -1738,11 +1743,11 @@ public class ProvUtil {
         DistributionList dl = null;
         switch(guessType(key)) {
         case BY_ID:
-            dl = mProv.getDistributionListById(key);
+            dl = mProv.get(DistributionListBy.ID, key);
             break;
         case BY_EMAIL:
         default:            
-            dl = mProv.getDistributionListByName(key);
+            dl = mProv.get(DistributionListBy.NAME, key);
             break;
         }
         

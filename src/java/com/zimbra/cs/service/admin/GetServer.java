@@ -35,6 +35,7 @@ import java.util.Map;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -64,9 +65,9 @@ public class GetServer extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("must specify a value for a server", null);
 
         if (method.equals(BY_NAME)) {
-            server = prov.getServerByName(name);
+            server = prov.get(ServerBy.NAME, name);
         } else if (method.equals(BY_ID)) {
-            server = prov.getServerById(name);
+            server = prov.get(ServerBy.ID, name);
         } else if (method.equals(BY_SERVICE_HOSTNAME)) {
             List servers = prov.getAllServers();
             for (Iterator it = servers.iterator(); it.hasNext(); ) {

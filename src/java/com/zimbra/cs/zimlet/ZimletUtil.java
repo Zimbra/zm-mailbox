@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
@@ -571,7 +572,7 @@ public class ZimletUtil {
 		ZimbraLog.zimlet.info("Adding Zimlet " + zimlet + " to COS " + cos);
 		Provisioning prov = Provisioning.getInstance();
 		try {
-			Cos c = prov.getCosByName(cos);
+			Cos c = prov.get(CosBy.NAME, cos);
             Map attrs = new HashMap<String, Object>();
             attrs.put("+"+Provisioning.A_zimbraZimletAvailableZimlets, zimlet);
             prov.modifyAttrs(c, attrs);            
@@ -592,7 +593,7 @@ public class ZimletUtil {
 		ZimbraLog.zimlet.info("Removing Zimlet " + zimlet + " from COS " + cos);
 		Provisioning prov = Provisioning.getInstance();
 		try {
-			Cos c = prov.getCosByName(cos);
+			Cos c = prov.get(CosBy.NAME, cos);
             Map attrs = new HashMap<String, Object>();
             attrs.put("-"+Provisioning.A_zimbraZimletAvailableZimlets, zimlet);
             prov.modifyAttrs(c, attrs);
@@ -829,7 +830,7 @@ public class ZimletUtil {
     
 	public static void addAllowedDomains(String domains, String cosName) throws ServiceException {
 	    Provisioning prov = Provisioning.getInstance();          
-	    Cos cos = prov.getCosByName(cosName);
+	    Cos cos = prov.get(CosBy.NAME, cosName);
 	    Set<String> domainSet = cos.getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
 	    String[] domainArray = domains.toLowerCase().split(",");
 	    for (int i = 0; i < domainArray.length; i++) {
@@ -842,7 +843,7 @@ public class ZimletUtil {
 
 	public static void removeAllowedDomains(String domains, String cosName) throws ServiceException {
 	    Provisioning prov = Provisioning.getInstance();            
-	    Cos cos = prov.getCosByName(cosName);
+	    Cos cos = prov.get(CosBy.NAME, cosName);
 	    Set<String> domainSet = cos.getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
 	    String[] domainArray = domains.toLowerCase().split(",");
 	    for (int i = 0; i < domainArray.length; i++) {
