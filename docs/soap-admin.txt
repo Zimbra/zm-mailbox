@@ -333,7 +333,7 @@ Notes:
 -----------------------------
 
 <GetDomainRequest [applyConfig="{apply-config}"]>
-  <domain by="id|name">...</domain>
+  <domain by="id|name|virtualHostname">...</domain> 
 </GetDomainRequest>
 
 <GetDomainResponse>

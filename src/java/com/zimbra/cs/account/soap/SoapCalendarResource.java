@@ -29,7 +29,6 @@ import java.util.Map;
 
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
@@ -50,14 +49,18 @@ public class SoapCalendarResource extends SoapAccount implements
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.MODIFY_CALENDAR_RESOURCE_REQUEST);
         req.addElement(AdminService.E_ID).setText(getId());
-        prov.addAttrElements(req, attrs);
-        mAttrs = (new SoapCalendarResource(prov.invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE))).mAttrs;
+        SoapProvisioning.addAttrElements(req, attrs);
+        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE));
         resetData();        
     }
 
     @Override
     public void reload(SoapProvisioning prov) throws ServiceException {
-        mAttrs = ((SoapCalendarResource) prov.get(CalendarResourceBy.ID, getId())).mAttrs;
+        XMLElement req = new XMLElement(AdminService.GET_CALENDAR_RESOURCE_REQUEST);
+        Element a = req.addElement(AdminService.E_CALENDAR_RESOURCE);
+        a.setText(getId());
+        a.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE));
         resetData();        
     }
 

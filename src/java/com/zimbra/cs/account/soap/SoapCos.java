@@ -28,7 +28,6 @@ package com.zimbra.cs.account.soap;
 import java.util.Map;
 
 import com.zimbra.cs.account.Cos;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
@@ -48,14 +47,18 @@ public class SoapCos extends SoapNamedEntry implements Cos {
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.MODIFY_COS_REQUEST);
         req.addElement(AdminService.E_ID).setText(getId());
-        prov.addAttrElements(req, attrs);
-        mAttrs = (new SoapAccount(prov.invoke(req).getElement(AdminService.E_COS))).mAttrs;
+        SoapProvisioning.addAttrElements(req, attrs);
+        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_COS));        
         resetData();        
     }
 
     @Override
     public void reload(SoapProvisioning prov) throws ServiceException {
-        mAttrs = ((SoapCos) prov.get(CosBy.ID, getId())).mAttrs;
+        XMLElement req = new XMLElement(AdminService.GET_COS_REQUEST);
+        Element a = req.addElement(AdminService.E_COS);
+        a.setText(getId());
+        a.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_COS));        
         resetData();
     }
     

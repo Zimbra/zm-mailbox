@@ -324,6 +324,8 @@ public class AdminService implements DocumentService {
     public static final String BY_NAME = "name";
     
     public static final String BY_ADMIN_NAME = "adminName";
+    public static final String BY_VIRTUAL_HOST_NAME = "virtualHostname";
+
     public static final String BY_FOREIGN_PRINCIPAL = "foreignPrincipal";
 
 	public static final String E_FIELD = "field";

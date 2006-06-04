@@ -26,6 +26,7 @@
 package com.zimbra.cs.account.soap;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -231,8 +232,10 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public Domain createDomain(String name, Map<String, Object> attrs)
             throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        XMLElement req = new XMLElement(AdminService.CREATE_DOMAIN_REQUEST);
+        req.addElement(AdminService.E_NAME).setText(name);
+        addAttrElements(req, attrs);
+        return new SoapDomain(invoke(req).getElement(AdminService.E_DOMAIN));
     }
 
     @Override
@@ -325,32 +328,58 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public List<Account> getAllAdminAccounts() throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        ArrayList<Account> result = new ArrayList<Account>();
+        XMLElement req = new XMLElement(AdminService.GET_ALL_ADMIN_ACCOUNTS_REQUEST);
+        Element resp = invoke(req);
+        for (Element a: resp.listElements(AdminService.E_ACCOUNT)) {
+            result.add(new SoapAccount(a));
+        }
+        return result;
     }
 
     @Override
     public List<Cos> getAllCos() throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        ArrayList<Cos> result = new ArrayList<Cos>();
+        XMLElement req = new XMLElement(AdminService.GET_ALL_COS_REQUEST);
+        Element resp = invoke(req);
+        for (Element a: resp.listElements(AdminService.E_COS)) {
+            result.add(new SoapCos(a));
+        }
+        return result;        
     }
 
     @Override
     public List<Domain> getAllDomains() throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        ArrayList<Domain> result = new ArrayList<Domain>();
+        XMLElement req = new XMLElement(AdminService.GET_ALL_DOMAINS_REQUEST);
+        Element resp = invoke(req);
+        for (Element a: resp.listElements(AdminService.E_DOMAIN)) {
+            result.add(new SoapDomain(a));
+        }
+        return result;        
     }
 
     @Override
     public List<Server> getAllServers() throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        ArrayList<Server> result = new ArrayList<Server>();
+        XMLElement req = new XMLElement(AdminService.GET_ALL_SERVERS_REQUEST);
+        Element resp = invoke(req);
+        for (Element a: resp.listElements(AdminService.E_SERVER)) {
+            result.add(new SoapServer(a));
+        }
+        return result;        
     }
 
     @Override
     public List<Server> getAllServers(String service) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        ArrayList<Server> result = new ArrayList<Server>();
+        XMLElement req = new XMLElement(AdminService.GET_ALL_SERVERS_REQUEST);
+        req.addAttribute(AdminService.A_SERVICE, service);
+        Element resp = invoke(req);
+        for (Element a: resp.listElements(AdminService.E_SERVER)) {
+            result.add(new SoapServer(a));
+        }
+        return result;        
     }
 
     @Override
@@ -383,8 +412,8 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public Config getConfig() throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        XMLElement req = new XMLElement(AdminService.GET_ALL_CONFIG_REQUEST);
+        return new SoapConfig(invoke(req));
     }
 
     private Cos getCosBy(String by, String value) throws ServiceException {
@@ -423,10 +452,26 @@ public class SoapProvisioning extends Provisioning {
         return null;        
     }
 
+    private Domain getDomainBy(String by, String value) throws ServiceException {
+        XMLElement req = new XMLElement(AdminService.GET_DOMAIN_REQUEST);
+        Element a = req.addElement(AdminService.E_DOMAIN);
+        a.setText(value);
+        a.addAttribute(AdminService.A_BY, by);
+        return new SoapDomain(invoke(req).getElement(AdminService.E_DOMAIN));
+    }
+
     @Override
     public Domain get(DomainBy keyType, String key) throws ServiceException {
-        // TODO Auto-generated method stub        
-        return null;
+        switch(keyType) {
+        case ID:
+            return getDomainBy(AdminService.BY_ID, key);
+        case NAME:
+            return getDomainBy(AdminService.BY_NAME, key);
+        case VIRTUAL_HOST_NAME:
+            return getDomainBy(AdminService.BY_VIRTUAL_HOST_NAME, key);
+        default:
+                return null;
+        }
     }
 
     @Override
@@ -619,6 +664,7 @@ public class SoapProvisioning extends Provisioning {
             SoapProvisioning p = new SoapProvisioning();
             p.soapSetURI("https://localhost:7071/service/admin/soap");
             p.soapZimbraAdminAuthenticate();
+            /*
             HashMap<String,Object> attrs = new HashMap<String,Object>();
             attrs.put(Provisioning.A_displayName, "DISPLAY THIS");
             Account acct = p.createAccount("userkewl8@macintel.local", "test123", attrs);
@@ -626,13 +672,17 @@ public class SoapProvisioning extends Provisioning {
             attrs = new HashMap<String,Object>();
             attrs.put(Provisioning.A_displayName, "DISPLAY THAT");
             p.modifyAttrs(acct, attrs);
+            */
             /*
             Account acct2 = p.getAccountByName("userkewl8@macintel.local");
             System.out.println(acct2);
             p.changePassword(acct2, "test123", "test1235");
             */
             Account acct3 = p.get(AccountBy.ADMIN_NAME, "zimbra");
-            System.out.println(acct3);                        
+            System.out.println(acct3);
+            System.out.println("----");
+            for (Account at: p.getAllAdminAccounts()) System.out.println(at.getName());
+            System.out.println("----");            
         } catch (SoapFaultException e) {
             System.out.println(e.getCode());
         }

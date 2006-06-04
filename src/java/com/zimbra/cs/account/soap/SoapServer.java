@@ -28,7 +28,6 @@ package com.zimbra.cs.account.soap;
 import java.util.Map;
 
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
@@ -53,14 +52,18 @@ public class SoapServer extends SoapNamedEntry implements Server {
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.MODIFY_SERVER_REQUEST);
         req.addElement(AdminService.E_ID).setText(getId());
-        prov.addAttrElements(req, attrs);
-        mAttrs = (new SoapAccount(prov.invoke(req).getElement(AdminService.E_SERVER))).mAttrs;
+        SoapProvisioning.addAttrElements(req, attrs);
+        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_SERVER));
         resetData();        
     }
 
     @Override
     public void reload(SoapProvisioning prov) throws ServiceException {
-        mAttrs = ((SoapServer) prov.get(ServerBy.ID, getId())).mAttrs;
+        XMLElement req = new XMLElement(AdminService.GET_SERVER_REQUEST);
+        Element a = req.addElement(AdminService.E_SERVER);
+        a.setText(getId());
+        a.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_SERVER));        
         resetData();        
     }
 }

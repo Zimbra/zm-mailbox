@@ -45,9 +45,6 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetDomain extends AdminDocumentHandler {
 
-    public static final String BY_NAME = "name";
-    public static final String BY_ID = "id";
-    
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
         ZimbraSoapContext lc = getZimbraSoapContext(context);
@@ -60,10 +57,12 @@ public class GetDomain extends AdminDocumentHandler {
 	    
 	    Domain domain = null;
         
-        if (key.equals(BY_NAME)) {
+        if (key.equals(AdminService.BY_NAME)) {
             domain = prov.get(DomainBy.NAME, value);
-        } else if (key.equals(BY_ID)) {
+        } else if (key.equals(AdminService.BY_NAME)) {
             domain = prov.get(DomainBy.ID, value);
+        } else if (key.equals(AdminService.BY_VIRTUAL_HOST_NAME)) {
+            domain = prov.get(DomainBy.VIRTUAL_HOST_NAME, value);            
         } else {
             throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
         }

@@ -27,43 +27,34 @@ package com.zimbra.cs.account.soap;
 
 import java.util.Map;
 
-import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 
-public class SoapDomain extends SoapNamedEntry implements Domain {
+public class SoapConfig extends SoapEntry implements Config {
 
-    public SoapDomain(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs);
+    public SoapConfig(Map<String, Object> attrs) {
+        super(attrs);
     }
 
-    public SoapDomain(Element e) throws ServiceException {
-        super(e);
+    public SoapConfig(Element e) throws ServiceException {
+        super(SoapProvisioning.getAttrs(e));
     }
 
     @Override
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.MODIFY_DOMAIN_REQUEST);
-        req.addElement(AdminService.E_ID).setText(getId());
+        XMLElement req = new XMLElement(AdminService.MODIFY_CONFIG_REQUEST);
         SoapProvisioning.addAttrElements(req, attrs);
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_DOMAIN));        
+        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req));
         resetData();        
     }
 
     @Override
     public void reload(SoapProvisioning prov) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_DOMAIN_REQUEST);
-        Element a = req.addElement(AdminService.E_DOMAIN);
-        a.setText(getId());
-        a.addAttribute(AdminService.A_BY, AdminService.BY_ID);
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_DOMAIN));        
+        XMLElement req = new XMLElement(AdminService.GET_ALL_CONFIG_REQUEST);
+        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req));
         resetData();        
-    }
-
-    public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
     }
 }
