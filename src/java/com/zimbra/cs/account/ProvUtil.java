@@ -60,78 +60,12 @@ public class ProvUtil {
         System.out.println("zmprov [cmd] [args ...]");
         System.out.println("");
 
-        //System.out.println("  CreateBulkAccounts(cabulk) {domain} {namemask} {number of accounts to create} ");
-        System.out.println("  CreateAccount(ca) {name@domain} {password} [attr1 value1 [attr2 value2...]]");
-        System.out.println("  DeleteAccount(da) {name@domain|id}");
-        System.out.println("  GetAccount(ga) {name@domain|id}");
-        System.out.println("  GetAllAccounts(gaa) [-v] [{domain}]");
-        System.out.println("  GetAllAdminAccounts(gaaa) [-v]");
-        System.out.println("  ModifyAccount(ma) {name@domain|id} [attr1 value1 [attr2 value2...]]");
-        System.out.println("  SetPassword(sp) {name@domain|id} {password}");
-        System.out.println("  AddAccountAlias(aaa) {name@domain|id} {alias@domain}");
-        System.out.println("  RemoveAccountAlias(raa) {name@domain|id} {alias@domain}");
-        System.out.println("  SetAccountCos(sac) {name@domain|id} {cos-name|cos-id}");        
-        System.out.println("  SearchAccounts(sa) [-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [applyCos [0|1*] [domain {domain}]");
-        System.out.println("  SearchGal(sg) {domain} {name}");
-        System.out.println("  AutoCompleteGal(acg) {domain} {name}");
-        System.out.println("  RenameAccount(ra) {name@domain|id} {newName@domain}");
-        System.out.println("  GetAccountMembership(gam) {name@domain|id}");
-        System.out.println();
-
-        System.out.println("  CreateDomain(cd) {domain} [attr1 value1 [attr2 value2...]]");
-        System.out.println("  DeleteDomain(dd) {domain|id}");        
-        System.out.println("  GetDomain(gd) {domain|id}");
-        System.out.println("  GetAllDomains(gad) [-v]");
-        System.out.println("  ModifyDomain(md) {domain|id} [attr1 value1 [attr2 value2...]]");        
-        System.out.println("  GenerateDomainPreAuthKey(gdpak) {domain|id}");        
-        System.out.println("  GenerateDomainPreAuth(gdpa) {domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}");                
-        System.out.println();
-
-        System.out.println("  CreateCos(cc) {name} [attr1 value1 [attr2 value2...]]");
-        System.out.println("  DeleteCos(dc) {name|id}");        
-        System.out.println("  GetCos(gc) {name|id}");
-        System.out.println("  GetAllCos(gac) [-v]");        
-        System.out.println("  ModifyCos(mc) {name|id} [attr1 value1 [attr2 value2...]]");
-        System.out.println("  RenameCos(rc) {name|id} {newName}");
-        System.out.println();
+        for (Command c : Command.values()) {
+            if (!c.hasHelp()) continue;
+            System.out.printf("  %s(%s) %s\n", c.getName(), c.getAlias(), c.getHelp());
+        }
         
-        System.out.println("  CreateServer(cs) {name} [attr1 value1 [attr2 value2...]]");
-        System.out.println("  DeleteServer(ds) {name|id}");        
-        System.out.println("  GetServer(gs) {name|id}");
-        System.out.println("  GetAllServers(gas) [-v] [service]");
-        System.out.println("  ModifyServer(ms) {name|id} [attr1 value1 [attr2 value2...]]");        
-        System.out.println();
-        
-        System.out.println("  GetAllConfig(gacf)");
-        System.out.println("  GetConfig(gcf) {name}");
-        System.out.println("  ModifyConfig(mcf) attr1 value1 [attr2 value2...]");        
-        System.out.println();
-
-        System.out.println("  CreateDistributionList(cdl) {list@domain}");
-        System.out.println("  GetAllDistributionLists(gadl) [-v]");
-        System.out.println("  GetDistributionList(gdl) {list@domain|id}");
-        System.out.println("  ModifyDistributionList(mdl) {list@domain|id} attr1 value1 [attr2 value2...]");
-        System.out.println("  DeleteDistributionList(ddl) {list@domain|id}");
-        System.out.println("  AddDistributionListMember(adlm) {list@domain|id} {member@domain}");
-        System.out.println("  RemoveDistributionListMember(rdlm) {list@domain|id} {member@domain}");
-        System.out.println("  AddDistributionListAlias(adla) {list@domain|id} {alias@domain}");
-        System.out.println("  RemoveDistributionListAlias(rdla) {list@domain|id} {alias@domain}");
-        System.out.println("  RenameDistributionList(rdl) {list@domain|id} {newName@domain}");
-        System.out.println("  GetDistributionListMembership(gdlm) {name@domain|id}");                
-        System.out.println();
-
-        System.out.println("  CreateCalendarResource(ccr) {name@domain} [attr1 value1 [attr2 value2...]]");
-        System.out.println("  DeleteCalendarResource(dcr) {name@domain|id}");
-        System.out.println("  ModifyCalendarResource(mcr) {name@domain|id} [attr1 value1 [attr2 value2...]]");
-        System.out.println("  RenameCalendarResource(rcr) {name@domain|id} {newName@domain}");        
-        System.out.println("  GetCalendarResource(gcr) {name@domain|id}");
-        System.out.println("  GetAllCalendarResources(gacr) [-v] [{domain}]");
-        System.out.println("  SearchCalendarResources(scr) [-v] domain attr op value [attr op value...]");
-        
-        System.out.println();
-        System.out.println("  InitNotebook(in) [ -u {username} ] [ -p {password} ] [ -d {domain} ] [ -f {from dir} ] [ -t {to folder} ]");
-        System.out.println("  ImportNotebook(impn) [ -u {username} ] [ -p {password} ] [ -f {from dir} ] [ -t {to folder} ]");
-        System.out.println();
+        System.out.println("");        
         
         StringBuilder sb = new StringBuilder();
         EntrySearchFilter.Operator vals[] = EntrySearchFilter.Operator.values();
@@ -142,10 +76,6 @@ public class ProvUtil {
         }
         System.out.println("    op = " + sb.toString());
         System.out.println();
-
-        System.out.println("  exit (quit)");
-        System.out.println("  help (?)");
-        System.out.println();
         
         if (!mInteractive)
             System.exit(1);
@@ -153,86 +83,98 @@ public class ProvUtil {
 
     private static final int UNKNOWN_COMMAND = -1;
     
-    private static final int SOAP = 10;
-    private static final int LDAP = 11;    
+    public enum Command {
     
-    private static final int CREATE_ACCOUNT = 101;
-    private static final int GET_ACCOUNT =  102;
-    private static final int GET_ALL_ACCOUNTS = 103;
-    private static final int GET_ALL_ADMIN_ACCOUNTS = 104;
-    private static final int MODIFY_ACCOUNT = 105;
-    private static final int DELETE_ACCOUNT = 106;
-    private static final int SET_PASSWORD = 107;
-    private static final int ADD_ACCOUNT_ALIAS = 108;
-    private static final int REMOVE_ACCOUNT_ALIAS = 109;
-    private static final int RENAME_ACCOUNT = 110;
-    private static final int CREATE_BULK_ACCOUNTS = 112;
-    private static final int GET_ACCOUNT_MEMBERSHIP = 114;
+        ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}"),
+        ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}"),
+        ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}"),
+        AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}"),
+        CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]"),
+        CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk"),  //("  CreateBulkAccounts(cabulk) {domain} {namemask} {number of accounts to create} ");
+        CREATE_CALENDAR_RESOURCE("createCalendarResource",  "ccr", "{name@domain} [attr1 value1 [attr2 value2...]]"),
+        CREATE_COS("createCos", "cc", "{name} [attr1 value1 [attr2 value2...]]"),
+        CREATE_DISTRIBUTION_LIST("createDistributionList", "cdl", "{list@domain}"),
+        CREATE_DISTRIBUTION_LISTS_BULK("createDistributionListsBulk", "cdlbulk"),
+        CREATE_DOMAIN("createDomain", "cd", "{domain} [attr1 value1 [attr2 value2...]]"),
+        CREATE_SERVER("createServer", "cs", "{name} [attr1 value1 [attr2 value2...]]"),
+        DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}"),
+        DELETE_CALENDAR_RESOURCE("deleteCalendarResource",  "dcr", "{name@domain|id}"),
+        DELETE_COS("deleteCos", "dc", "{name|id}"),
+        DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id}"),
+        DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}"),
+        DELETE_SERVER("deleteServer", "ds", "{name|id}"),
+        EXIT("exit", "quit", ""),
+        GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}"),
+        GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "{domain|id}"),
+        GET_ACCOUNT("getAccount", "ga", "{name@domain|id}"),
+        GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}"),
+        GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [{domain}]"),
+        GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v]"),
+        GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [{domain}]"),
+        GET_ALL_CONFIG("getAllConfig", "gacf", ""),
+        GET_ALL_COS("getAllCos", "gac", "[-v]"),
+        GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[-v]"),
+        GET_ALL_DOMAINS("getAllDomains", "gad", "[-v]"),
+        GET_ALL_SERVERS("getAllServers", "gas", "[-v] [service]"),
+        GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id}"), 
+        GET_CONFIG("getConfig", "gcf", "{name}"),
+        GET_COS("getCos", "gc", "{name|id}"),
+        GET_DISTRIBUTION_LIST("getDistributionList", "gdl", "{list@domain|id}"),
+        GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}"),
+        GET_DOMAIN("getDomain", "gd", "{domain|id}"), 
+        GET_SERVER("getServer", "gs", "{name|id}"), 
+        HELP("help", "?", ""),
+        IMPORT_NOTEBOOK("importNotebook", "impn", "[ -u {username} ] [ -p {password} ] [ -f {from dir} ] [ -t {to folder} ]"),
+        INIT_NOTEBOOK("initNotebook", "in", "[ -u {username} ] [ -p {password} ] [ -d {domain} ] [ -f {from dir} ] [ -t {to folder} ]"),
+        LDAP(".ldap", ".l"), 
+        MODIFY_ACCOUNT("modifyAccount", "ma", "{name@domain|id} [attr1 value1 [attr2 value2...]]"),
+        MODIFY_CALENDAR_RESOURCE("modifyCalendarResource",  "mcr", "{name@domain|id} [attr1 value1 [attr2 value2...]]"),
+        MODIFY_CONFIG("modifyConfig", "mcf", "attr1 value1 [attr2 value2...]"),
+        MODIFY_COS("modifyCos", "mc", "{name|id} [attr1 value1 [attr2 value2...]]"),
+        MODIFY_DISTRIBUTION_LIST("modifyDistributionList", "mdl", "{list@domain|id} attr1 value1 [attr2 value2...]"),
+        MODIFY_DOMAIN("modifyDomain", "md", "{domain|id} [attr1 value1 [attr2 value2...]]"),
+        MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]"),
+        REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}"),
+        REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}"),
+        REMOVE_DISTRIBUTION_LIST_MEMBER("removeDistributionListMember", "rdlm", "{list@domain|id} {member@domain}"),
+        RENAME_ACCOUNT("renameAccount", "ra", "{name@domain|id} {newName@domain}"),
+        RENAME_CALENDAR_RESOURCE("renameCalendarResource",  "rcr", "{name@domain|id} {newName@domain}"),
+        RENAME_COS("renameCos", "rc", "{name|id} {newName}"),
+        RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}"),
+        SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [applyCos [0|1*] [domain {domain}]"),
+        SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]"),
+        SEARCH_GAL("searchGal", "sg", "{domain} {name}"),
+        SET_ACCOUNT_COS("setAccountCos", "sac", "{name@domain|id} {cos-name|cos-id}"),
+        SET_PASSWORD("setPassword", "sp", "{name@domain|id} {password}"),
+        SOAP(".soap", ".s"),
+        SYNC_GAL("syncGal", "syg");
 
-    private static final int CREATE_DOMAIN = 201;
-    private static final int GET_DOMAIN =  202;
-    private static final int GET_ALL_DOMAINS = 203;
-    private static final int MODIFY_DOMAIN = 204;
-    private static final int DELETE_DOMAIN = 205;
+        private String mName;
+        private String mAlias;
+        private String mHelp;
 
-    private static final int CREATE_COS = 301;
-    private static final int GET_COS = 302;
-    private static final int GET_ALL_COS = 303;
-    private static final int MODIFY_COS = 304;
-    private static final int DELETE_COS = 305;
-    private static final int SET_ACCOUNT_COS = 306;
-    private static final int RENAME_COS = 307;    
+        public String getName() { return mName; }
+        public String getAlias() { return mAlias; }
+        public String getHelp() { return mHelp; }
+        public boolean hasHelp() { return mHelp != null; }
 
-    private static final int CREATE_SERVER = 401;
-    private static final int GET_SERVER = 402;
-    private static final int GET_ALL_SERVERS = 403;
-    private static final int MODIFY_SERVER = 404;
-    private static final int DELETE_SERVER = 405;
+        private Command(String name, String alias) {
+            mName = name;
+            mAlias = alias;
+        }
 
-    private static final int EXIT = 501;
-    private static final int HELP = 502;
-
-    private static final int GET_ALL_CONFIG = 601;
-    private static final int GET_CONFIG = 602;
-    private static final int MODIFY_CONFIG = 603;
-
-    private static final int CREATE_DISTRIBUTION_LIST = 701;
-    private static final int GET_ALL_DISTRIBUTION_LISTS = 702;
-    private static final int GET_DISTRIBUTION_LIST = 703;
-    private static final int MODIFY_DISTRIBUTION_LIST = 704;
-    private static final int DELETE_DISTRIBUTION_LIST = 705;
-    private static final int ADD_DISTRIBUTION_LIST_MEMBER = 706;
-    private static final int REMOVE_DISTRIBUTION_LIST_MEMBER = 707;
-    private static final int ADD_DISTRIBUTION_LIST_ALIAS = 708;
-    private static final int REMOVE_DISTRIBUTION_LIST_ALIAS = 709;
-    private static final int RENAME_DISTRIBUTION_LIST = 710;
-    private static final int CREATE_DISTRIBUTION_LISTS_BULK = 711;
-    private static final int GET_DISTRIBUTION_LIST_MEMBERSHIP = 713;    
+        private Command(String name, String alias, String help) {
+            mName = name;
+            mAlias = alias;
+            mHelp = help;
+        }
+    }
     
-    private static final int SEARCH_ACCOUNTS = 801;
-    private static final int SEARCH_GAL = 802;
-    private static final int SYNC_GAL = 803;
-    private static final int AUTO_COMPLETE_GAL = 804;    
-    
-    private static final int GENERATE_DOMAIN_PRE_AUTH_KEY =  820;
-    private static final int GENERATE_DOMAIN_PRE_AUTH =  821;
-
-    private static final int CREATE_CALENDAR_RESOURCE   = 901;
-    private static final int DELETE_CALENDAR_RESOURCE   = 902;
-    private static final int MODIFY_CALENDAR_RESOURCE   = 903;
-    private static final int RENAME_CALENDAR_RESOURCE   = 904;
-    private static final int GET_CALENDAR_RESOURCE      = 905;
-    private static final int GET_ALL_CALENDAR_RESOURCES = 906;
-    private static final int SEARCH_CALENDAR_RESOURCES  = 907;
-    
-    private static final int INIT_NOTEBOOK = 1001;
-    private static final int IMPORT_NOTEBOOK = 1002;
-
     private static final int BY_ID = 1;
     private static final int BY_EMAIL = 2;
     private static final int BY_NAME = 3;
     
-    private Map<String,Integer> mCommandIndex;
+    private Map<String,Command> mCommandIndex;
     private Provisioning mProv;
     
     private int guessType(String value) {
@@ -247,102 +189,28 @@ public class ProvUtil {
         else return BY_NAME;
     }
     
-    private void addCommand(String name, String alias, int index) {
-        name = name.toLowerCase();
+    private void addCommand(Command command) {
+        String name = command.getName().toLowerCase();
         if (mCommandIndex.get(name) != null)
             throw new RuntimeException("duplicate command: "+name);
         
-        alias = alias.toLowerCase();
+        String alias = command.getAlias().toLowerCase();
         if (mCommandIndex.get(alias) != null)
             throw new RuntimeException("duplicate command: "+alias);
         
-        Integer i = new Integer(index);
-        mCommandIndex.put(name, i);
-        mCommandIndex.put(alias, i);
+        mCommandIndex.put(name, command);
+        mCommandIndex.put(alias, command);
     }
-
+    
     private void initCommands() {
-        mCommandIndex = new HashMap<String, Integer>();
-        addCommand(".soap", ".s", SOAP);
-        addCommand(".ldap", ".l", LDAP);        
-        
-        addCommand("addAccountAlias", "aaa", ADD_ACCOUNT_ALIAS);
-        addCommand("createAccount", "ca", CREATE_ACCOUNT);
-        addCommand("createBulkAccounts", "cabulk", CREATE_BULK_ACCOUNTS);
-        addCommand("getAccount", "ga", GET_ACCOUNT);        
-        addCommand("getAccountMembership", "gam", GET_ACCOUNT_MEMBERSHIP);
-        addCommand("getAllAccounts","gaa", GET_ALL_ACCOUNTS);
-        addCommand("getAllAdminAccounts", "gaaa", GET_ALL_ADMIN_ACCOUNTS);
-        addCommand("modifyAccount", "ma", MODIFY_ACCOUNT);
-        addCommand("deleteAccount", "da", DELETE_ACCOUNT);
-        addCommand("removeAccountAlias", "raa", REMOVE_ACCOUNT_ALIAS);
-        addCommand("setPassword", "sp", SET_PASSWORD);
-        addCommand("setAccountCos", "sac", SET_ACCOUNT_COS);        
-        addCommand("searchAccounts", "sa", SEARCH_ACCOUNTS);                
-        addCommand("renameAccount", "ra", RENAME_ACCOUNT);
-        addCommand("searchGal", "sg", SEARCH_GAL);                                
-        addCommand("autoCompleteGal", "acg", AUTO_COMPLETE_GAL);        
-        addCommand("syncGal", "syg", SYNC_GAL);
-    
-        addCommand("createDomain", "cd", CREATE_DOMAIN);
-        addCommand("getDomain", "gd", GET_DOMAIN);
-        addCommand("getAllDomains", "gad", GET_ALL_DOMAINS);
-        addCommand("modifyDomain", "md", MODIFY_DOMAIN);
-        addCommand("deleteDomain", "dd", DELETE_DOMAIN);
-        addCommand("generateDomainPreAuthKey", "gdpak", GENERATE_DOMAIN_PRE_AUTH_KEY);
-        addCommand("generateDomainPreAuth", "gdpa", GENERATE_DOMAIN_PRE_AUTH);        
+        mCommandIndex = new HashMap<String, Command>();
 
-        addCommand("createCos", "cc", CREATE_COS);
-        addCommand("getCos", "gc", GET_COS);
-        addCommand("getAllCos", "gac", GET_ALL_COS);
-        addCommand("modifyCos", "mc", MODIFY_COS);
-        addCommand("deleteCos", "dc", DELETE_COS);
-        addCommand("renameCos", "rc", RENAME_COS);        
-        
-        addCommand("createServer", "cs", CREATE_SERVER);
-        addCommand("getServer", "gs", GET_SERVER);
-        addCommand("getAllServers", "gas", GET_ALL_SERVERS);
-        addCommand("modifyServer", "ms", MODIFY_SERVER);
-        addCommand("deleteServer", "ds", DELETE_SERVER);
-        
-        addCommand("getAllConfig", "gacf", GET_ALL_CONFIG);
-        addCommand("getConfig", "gcf", GET_CONFIG);
-        addCommand("modifyConfig", "mcf", MODIFY_CONFIG);
-
-        addCommand("createDistributionList", "cdl", CREATE_DISTRIBUTION_LIST);
-        addCommand("getAllDistributionLists", "gadl", GET_ALL_DISTRIBUTION_LISTS);
-        addCommand("getDistributionList", "gdl", GET_DISTRIBUTION_LIST);
-        addCommand("modifyDistributionList", "mdl", MODIFY_DISTRIBUTION_LIST);
-        addCommand("deleteDistributionList", "ddl", DELETE_DISTRIBUTION_LIST);
-        addCommand("addDistributionListMember", "adlm", ADD_DISTRIBUTION_LIST_MEMBER);
-        addCommand("removeDistributionListMember", "rdlm", REMOVE_DISTRIBUTION_LIST_MEMBER);
-        addCommand("addDistributionListAlias", "adla", ADD_DISTRIBUTION_LIST_ALIAS);
-        addCommand("removeDistributionListAlias", "rdla", REMOVE_DISTRIBUTION_LIST_ALIAS);
-        addCommand("renameDistributionList", "rdl", RENAME_DISTRIBUTION_LIST);
-        addCommand("createDistributionListsBulk", "cdlbulk", CREATE_DISTRIBUTION_LISTS_BULK);
-        addCommand("getDistributionListMembership", "gdlm", GET_DISTRIBUTION_LIST_MEMBERSHIP);        
-        
-        addCommand("createCalendarResource",  "ccr",  CREATE_CALENDAR_RESOURCE);
-        addCommand("deleteCalendarResource",  "dcr",  DELETE_CALENDAR_RESOURCE);
-        addCommand("modifyCalendarResource",  "mcr",  MODIFY_CALENDAR_RESOURCE);
-        addCommand("renameCalendarResource",  "rcr",  RENAME_CALENDAR_RESOURCE);
-        addCommand("getCalendarResource",     "gcr",  GET_CALENDAR_RESOURCE);
-        addCommand("getAllCalendarResources", "gacr", GET_ALL_CALENDAR_RESOURCES);
-        addCommand("searchCalendarResources", "scr",  SEARCH_CALENDAR_RESOURCES);
-
-        addCommand("initNotebook", "in",  INIT_NOTEBOOK);
-        addCommand("importNotebook", "impn",  IMPORT_NOTEBOOK);
-        
-        addCommand("exit", "quit", EXIT);
-        addCommand("help", "?", HELP);        
+        for (Command c : Command.values())
+            addCommand(c);
     }
     
-    private int lookupCommand(String command) {
-        Integer i = mCommandIndex.get(command.toLowerCase());
-        if (i == null)
-            return UNKNOWN_COMMAND;
-        else
-            return i.intValue();
+    private Command lookupCommand(String command) {
+        return mCommandIndex.get(command.toLowerCase());
     }
 
     private ProvUtil() {
@@ -352,9 +220,9 @@ public class ProvUtil {
     
     private boolean execute(String args[]) throws ServiceException, ArgException, IOException {
 
-        int c = lookupCommand(args[0]);
+        Command c = lookupCommand(args[0]);
         
-        if (c == UNKNOWN_COMMAND)
+        if (c == null)
             return false;
         
         switch(c) {
