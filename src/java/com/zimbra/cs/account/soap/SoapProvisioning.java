@@ -158,7 +158,8 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AdminService.ADD_ACCOUNT_ALIAS_REQUEST);
         req.addElement(AdminService.E_ID).setText(acct.getId());
         req.addElement(AdminService.E_ALIAS).setText(alias);
-        invoke(req);        
+        invoke(req);
+        reload(acct);
     }
 
     @Override
@@ -167,7 +168,8 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AdminService.ADD_DISTRIBUTION_LIST_ALIAS_REQUEST);
         req.addElement(AdminService.E_ID).setText(dl.getId());
         req.addElement(AdminService.E_ALIAS).setText(alias);
-        invoke(req);                
+        invoke(req); 
+        reload(dl);
     }
 
     @Override
@@ -225,8 +227,10 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public DistributionList createDistributionList(String listAddress,
             Map<String, Object> listAttrs) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        XMLElement req = new XMLElement(AdminService.CREATE_DISTRIBUTION_LIST_REQUEST);
+        req.addElement(AdminService.E_NAME).setText(listAddress);
+        addAttrElements(req, listAttrs);
+        return new SoapDistributionList(invoke(req).getElement(AdminService.E_DL));
     }
 
     @Override
@@ -385,7 +389,7 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public List<WellKnownTimeZone> getAllTimeZones() throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     private CalendarResource getCalendarResourceBy(String by, String value) throws ServiceException {
@@ -436,20 +440,24 @@ public class SoapProvisioning extends Provisioning {
         }
     }
 
+    private DistributionList getDistributionListBy(String by, String value) throws ServiceException {
+        XMLElement req = new XMLElement(AdminService.GET_DISTRIBUTION_LIST_REQUEST);
+        Element a = req.addElement(AdminService.E_DL);
+        a.setText(value);
+        a.addAttribute(AdminService.A_BY, by);
+        return new SoapDistributionList(invoke(req).getElement(AdminService.E_DL));
+    }
+
     @Override
     public DistributionList get(DistributionListBy keyType, String key) throws ServiceException {
-        // TODO Auto-generated method stub        
-        /*
         switch(keyType) {
             case ID: 
-                return getDistributionListById(key);
+                return getDistributionListBy(AdminService.BY_ID, key);
             case NAME: 
-                return getDistributionListByName(key);
+                return getDistributionListBy(AdminService.BY_NAME, key);
             default:
                     return null;
         }
-        */
-        return null;        
     }
 
     private Domain getDomainBy(String by, String value) throws ServiceException {
@@ -565,7 +573,8 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AdminService.REMOVE_ACCOUNT_ALIAS_REQUEST);
         req.addElement(AdminService.E_ID).setText(acct.getId());
         req.addElement(AdminService.E_ALIAS).setText(alias);
-        invoke(req);        
+        invoke(req);
+        reload(acct);
     }
 
     @Override
@@ -574,7 +583,8 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AdminService.REMOVE_DISTRIBUTION_LIST_ALIAS_REQUEST);
         req.addElement(AdminService.E_ID).setText(dl.getId());
         req.addElement(AdminService.E_ALIAS).setText(alias);
-        invoke(req);        
+        invoke(req);
+        reload(dl);
     }
 
     @Override
@@ -589,7 +599,6 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void renameCalendarResource(String zimbraId, String newName)
             throws ServiceException {
-        // TODO Auto-generated method stub
         XMLElement req = new XMLElement(AdminService.RENAME_CALENDAR_RESOURCE_REQUEST);
         req.addElement(AdminService.E_ID).setText(zimbraId);
         req.addElement(AdminService.E_NEW_NAME).setText(newName);
@@ -774,13 +783,23 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void addMembers(DistributionList list, String[] members) throws ServiceException {
-        // TODO Auto-generated method stub
-        
+        XMLElement req = new XMLElement(AdminService.ADD_DISTRIBUTION_LIST_MEMBER_REQUEST);
+        req.addElement(AdminService.E_ID).setText(list.getId());
+        for (String m : members) {
+            req.addElement(AdminService.E_DLM).setText(m);
+        }
+        invoke(req);
+        reload(list);        
     }
 
     @Override
-    public void removeMembers(DistributionList list, String[] member) throws ServiceException {
-        // TODO Auto-generated method stub
-        
+    public void removeMembers(DistributionList list, String[] members) throws ServiceException {
+        XMLElement req = new XMLElement(AdminService.REMOVE_DISTRIBUTION_LIST_MEMBER_REQUEST);
+        req.addElement(AdminService.E_ID).setText(list.getId());
+        for (String m : members) {
+            req.addElement(AdminService.E_DLM).setText(m);
+        }
+        invoke(req);
+        reload(list);
     }
 }
