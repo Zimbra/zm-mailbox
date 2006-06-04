@@ -1404,7 +1404,7 @@ public class ProvUtil {
             DistributionList dl = lookupDistributionList(key);
             String [] members = new String[args.length - 2];
             System.arraycopy(args, 2, members, 0, args.length - 2);
-            dl.addMembers(members);
+            mProv.addMembers(dl, members);
         }        
     }
 
@@ -1416,7 +1416,7 @@ public class ProvUtil {
             DistributionList dl = lookupDistributionList(key);
             String [] members = new String[args.length - 2];
             System.arraycopy(args, 2, members, 0, args.length - 2);
-            dl.removeMembers(members);
+            mProv.removeMembers(dl, members);
         }
     }
 

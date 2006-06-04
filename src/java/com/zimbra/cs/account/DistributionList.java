@@ -29,10 +29,6 @@ import com.zimbra.cs.service.ServiceException;
 
 public interface DistributionList extends NamedEntry {
 
-    public void addMembers(String[] members) throws ServiceException;
-    
-    public void removeMembers(String[] member) throws ServiceException;
-
     public String[] getAllMembers() throws ServiceException;
 
     public String[] getAliases() throws ServiceException;

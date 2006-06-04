@@ -1347,4 +1347,8 @@ public abstract class Provisioning {
         String sortAttr,
         boolean sortAscending)
     throws ServiceException;
+
+    public abstract void addMembers(DistributionList list, String[] members) throws ServiceException;
+    
+    public abstract void removeMembers(DistributionList list, String[] member) throws ServiceException;
 }

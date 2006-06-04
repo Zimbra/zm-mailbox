@@ -67,7 +67,7 @@ public class RemoveDistributionListMember extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access dl");
 
         String[] members = (String[]) memberList.toArray(new String[0]); 
-        dl.removeMembers(members);
+        prov.removeMembers(dl, members);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                                                       new String[] {"cmd", "RemoveDistributionListMember", "name", dl.getName(), "member", Arrays.deepToString(members)})); 

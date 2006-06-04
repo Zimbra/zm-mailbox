@@ -1413,6 +1413,7 @@ public class LdapProvisioning extends Provisioning {
         } finally {
             LdapUtil.closeContext(ctxt);
         }
+
         Collections.sort(result);
         return result;
     }
@@ -2796,7 +2797,7 @@ public class LdapProvisioning extends Provisioning {
 
         for (DistributionList list: lists) { 
             try {
-                list.removeMembers(addrs);                
+                removeMembers(list, addrs);                
             } catch (ServiceException se) {
                 // log warning and continue
                 ZimbraLog.account.warn("unable to remove "+address+" from DL "+list.getName(), se);
@@ -3227,5 +3228,16 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
+    @Override
+    public void addMembers(DistributionList list, String[] members) throws ServiceException {
+        LdapDistributionList ldl = (LdapDistributionList) list;
+        ldl.addMembers(members);
+    }
+
+    @Override
+    public void removeMembers(DistributionList list, String[] members) throws ServiceException {
+        LdapDistributionList ldl = (LdapDistributionList) list;
+        ldl.removeMembers(members);        
+    }
 
 }

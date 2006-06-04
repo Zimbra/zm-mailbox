@@ -28,7 +28,6 @@ package com.zimbra.cs.account.ldap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,7 +55,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         return mName;
     }
     
-    public void addMembers(String[] members) throws ServiceException {
+    void addMembers(String[] members) throws ServiceException {
     	Set<String> existing = getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
     	Set<String> mods = new HashSet<String>();
     	
@@ -84,7 +83,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         modifyAttrs(modmap);
     }
 
-    public void removeMembers(String[] members) throws ServiceException {
+    void removeMembers(String[] members) throws ServiceException {
     	Set<String> existing = getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
     	Set<String> mods = new HashSet<String>();
     	HashSet<String> failed = new HashSet<String>();

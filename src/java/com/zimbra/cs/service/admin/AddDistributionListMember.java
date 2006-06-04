@@ -67,7 +67,7 @@ public class AddDistributionListMember extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access dl");
 
         String[] members = (String[]) memberList.toArray(new String[0]); 
-        dl.addMembers(members);
+        prov.addMembers(dl, members);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                                                       new String[] {"cmd", "AddDistributionListMember","name", dl.getName(), "members", Arrays.deepToString(members)})); 
         

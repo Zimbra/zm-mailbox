@@ -771,4 +771,16 @@ public class SoapProvisioning extends Provisioning {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public void addMembers(DistributionList list, String[] members) throws ServiceException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void removeMembers(DistributionList list, String[] member) throws ServiceException {
+        // TODO Auto-generated method stub
+        
+    }
 }
