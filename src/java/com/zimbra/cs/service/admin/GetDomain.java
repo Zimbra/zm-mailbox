@@ -55,18 +55,8 @@ public class GetDomain extends AdminDocumentHandler {
 	    String key = d.getAttribute(AdminService.A_BY);
         String value = d.getText();
 	    
-	    Domain domain = null;
-        
-        if (key.equals(AdminService.BY_NAME)) {
-            domain = prov.get(DomainBy.name, value);
-        } else if (key.equals(AdminService.BY_NAME)) {
-            domain = prov.get(DomainBy.id, value);
-        } else if (key.equals(AdminService.BY_VIRTUAL_HOST_NAME)) {
-            domain = prov.get(DomainBy.virtualHostname, value);            
-        } else {
-            throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
-        }
-	    
+	    Domain domain = prov.get(DomainBy.fromString(key), value);
+
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(value);
 

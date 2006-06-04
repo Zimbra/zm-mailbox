@@ -45,10 +45,6 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetServer extends AdminDocumentHandler {
 
-    public static final String BY_NAME = "name";
-    public static final String BY_SERVICE_HOSTNAME = "serviceHostname";
-    public static final String BY_ID = "id";
-    
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
         ZimbraSoapContext lc = getZimbraSoapContext(context);
@@ -59,29 +55,11 @@ public class GetServer extends AdminDocumentHandler {
 	    String method = d.getAttribute(AdminService.A_BY);
         String name = d.getText();
 
-	    Server server = null;
-
         if (name == null || name.equals(""))
             throw ServiceException.INVALID_REQUEST("must specify a value for a server", null);
-
-        if (method.equals(BY_NAME)) {
-            server = prov.get(ServerBy.name, name);
-        } else if (method.equals(BY_ID)) {
-            server = prov.get(ServerBy.id, name);
-        } else if (method.equals(BY_SERVICE_HOSTNAME)) {
-            List servers = prov.getAllServers();
-            for (Iterator it = servers.iterator(); it.hasNext(); ) {
-                Server s = (Server) it.next();
-                // when replication is enabled, should return server representing current master
-                if (name.equalsIgnoreCase(s.getAttr(Provisioning.A_zimbraServiceHostname, ""))) {
-                    server = s;
-                    break;
-                }
-            }
-        } else {
-            throw ServiceException.INVALID_REQUEST("unknown value for by: "+method, null);
-        }
-
+        
+        Server server = prov.get(ServerBy.fromString(method), name);
+        
         if (server == null)
             throw AccountServiceException.NO_SUCH_SERVER(name);
         else

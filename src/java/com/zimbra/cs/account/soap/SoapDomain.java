@@ -28,6 +28,7 @@ package com.zimbra.cs.account.soap;
 import java.util.Map;
 
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
@@ -57,7 +58,7 @@ public class SoapDomain extends SoapNamedEntry implements Domain {
         XMLElement req = new XMLElement(AdminService.GET_DOMAIN_REQUEST);
         Element a = req.addElement(AdminService.E_DOMAIN);
         a.setText(getId());
-        a.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        a.addAttribute(AdminService.A_BY, DomainBy.id.name());
         mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_DOMAIN));        
         resetData();        
     }

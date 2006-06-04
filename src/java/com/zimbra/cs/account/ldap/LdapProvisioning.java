@@ -38,6 +38,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -1680,6 +1681,16 @@ public class LdapProvisioning extends Provisioning {
                 return getServerByName(key);
             case id: 
                 return getServerById(key);
+            case serviceHostname:
+                List servers = getAllServers();
+                for (Iterator it = servers.iterator(); it.hasNext(); ) {
+                    Server s = (Server) it.next();
+                    // when replication is enabled, should return server representing current master
+                    if (key.equalsIgnoreCase(s.getAttr(Provisioning.A_zimbraServiceHostname, ""))) {
+                        return s;
+                    }
+                }
+                return null;
             default:
                     return null;
         }

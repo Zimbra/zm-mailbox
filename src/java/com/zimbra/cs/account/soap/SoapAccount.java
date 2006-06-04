@@ -29,6 +29,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
@@ -92,7 +93,7 @@ public class SoapAccount extends SoapNamedEntry implements Account {
         XMLElement req = new XMLElement(AdminService.GET_ACCOUNT_REQUEST);
         Element a = req.addElement(AdminService.E_ACCOUNT);
         a.setText(getId());
-        a.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        a.addAttribute(AdminService.A_BY, AccountBy.id.name());
         mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_ACCOUNT));
         resetData();        
     }

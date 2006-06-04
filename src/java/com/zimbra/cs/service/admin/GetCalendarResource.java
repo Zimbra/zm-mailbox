@@ -41,10 +41,6 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetCalendarResource extends AdminDocumentHandler {
 
-    public static final String BY_NAME = "name";
-    public static final String BY_ID = "id";
-    public static final String BY_FOREIGN_PRINCIPAL = "foreignPrincipal";
-
     /**
      * must be careful and only return calendar resources
      * a domain admin can see
@@ -64,18 +60,7 @@ public class GetCalendarResource extends AdminDocumentHandler {
         String key = cr.getAttribute(AdminService.A_BY);
         String value = cr.getText();
 
-        CalendarResource resource = null;
-
-        if (key.equals(BY_NAME)) {
-            resource = prov.get(CalendarResourceBy.name, value);
-        } else if (key.equals(BY_ID)) {
-            resource = prov.get(CalendarResourceBy.id, value);
-        } else if (key.equals(BY_FOREIGN_PRINCIPAL)) {
-            resource = prov.get(CalendarResourceBy.foreignPrincipal, value);
-        } else {
-            throw ServiceException.INVALID_REQUEST(
-                    "unknown value for by: " + key, null);
-        }
+        CalendarResource resource = prov.get(CalendarResourceBy.fromString(key), value);
 
         if (resource == null)
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(value);

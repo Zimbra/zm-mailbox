@@ -47,9 +47,6 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetCos extends AdminDocumentHandler {
 
-    public static final String BY_NAME = "name";
-    public static final String BY_ID = "id";
-    
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
         ZimbraSoapContext lc = getZimbraSoapContext(context);
@@ -59,15 +56,7 @@ public class GetCos extends AdminDocumentHandler {
 	    String key = d.getAttribute(AdminService.A_BY);
         String value = d.getText();
 
-	    Cos cos = null;
-
-        if (key.equals(BY_NAME)) {
-            cos = prov.get(CosBy.name, value);
-        } else if (key.equals(BY_ID)) {
-            cos = prov.get(CosBy.id, value);
-        } else {
-            throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
-        }
+	    Cos cos = prov.get(CosBy.fromString(key), value);
 	    
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(value);

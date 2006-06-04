@@ -67,18 +67,10 @@ public class InitNotebook extends AdminDocumentHandler {
         WikiUtil wiki = null;
         Element d = request.getOptionalElement(AdminService.E_DOMAIN);
         if (d != null || isDomainAdminOnly(lc)) {
-        	String key = (d == null) ? AdminService.BY_NAME : d.getAttribute(AdminService.A_BY);
+        	String key = (d == null) ? DomainBy.name.name() : d.getAttribute(AdminService.A_BY);
         	String value = (d == null) ? getAuthTokenAccountDomain(lc).getName() : d.getText();
 
-        	Domain domain = null;
-
-        	if (key.equals(AdminService.BY_NAME)) {
-        		domain = prov.get(DomainBy.name, value);
-        	} else if (key.equals(AdminService.BY_ID)) {
-        		domain = prov.get(DomainBy.id, value);
-        	} else {
-        		throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
-        	}
+        	Domain domain = prov.get(DomainBy.fromString(key), value);
 
         	if (domain == null)
         		throw AccountServiceException.NO_SUCH_DOMAIN(value);

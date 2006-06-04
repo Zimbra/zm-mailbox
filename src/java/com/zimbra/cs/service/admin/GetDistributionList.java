@@ -41,9 +41,6 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetDistributionList extends AdminDocumentHandler {
 
-    public static final String BY_NAME = "name";
-    public static final String BY_ID = "id";
-    
     /**
      * must be careful and only allow access to domain if domain admin
      */
@@ -70,15 +67,7 @@ public class GetDistributionList extends AdminDocumentHandler {
         String key = d.getAttribute(AdminService.A_BY);
         String value = d.getText();
 	    
-        DistributionList distributionList = null;
-        
-        if (key.equals(BY_NAME)) {
-            distributionList = prov.get(DistributionListBy.name, value);
-        } else if (key.equals(BY_ID)) {
-            distributionList = prov.get(DistributionListBy.id, value);
-        } else {
-            throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
-        }
+        DistributionList distributionList = prov.get(DistributionListBy.fromString(key), value);
 	    
         if (distributionList == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);

@@ -658,7 +658,7 @@ public class SoapProvisioning extends Provisioning {
         ArrayList<Account> result = new ArrayList<Account>();
         XMLElement req = new XMLElement(AdminService.GET_ALL_ACCOUNTS_REQUEST);
         Element domainEl = req.addElement(AdminService.E_DOMAIN);
-        domainEl.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        domainEl.addAttribute(AdminService.A_BY, AccountBy.id.name());
         domainEl.setText(d.getId());
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminService.E_ACCOUNT)) {
@@ -672,7 +672,7 @@ public class SoapProvisioning extends Provisioning {
         // TODO Auto-generated method stub
         XMLElement req = new XMLElement(AdminService.GET_ALL_ACCOUNTS_REQUEST);
         Element domainEl = req.addElement(AdminService.E_DOMAIN);
-        domainEl.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        domainEl.addAttribute(AdminService.A_BY, DomainBy.id.name());
         domainEl.setText(d.getId());
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminService.E_ACCOUNT)) {
@@ -685,7 +685,7 @@ public class SoapProvisioning extends Provisioning {
         ArrayList<CalendarResource> result = new ArrayList<CalendarResource>();
         XMLElement req = new XMLElement(AdminService.GET_ALL_CALENDAR_RESOURCES_REQUEST);
         Element domainEl = req.addElement(AdminService.E_DOMAIN);
-        domainEl.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        domainEl.addAttribute(AdminService.A_BY, CalendarResourceBy.id.name());
         domainEl.setText(d.getId());
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminService.E_CALENDAR_RESOURCE)) {
@@ -698,7 +698,7 @@ public class SoapProvisioning extends Provisioning {
     public void getAllCalendarResources(Domain d, Visitor visitor) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.GET_ALL_CALENDAR_RESOURCES_REQUEST);
         Element domainEl = req.addElement(AdminService.E_DOMAIN);
-        domainEl.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        domainEl.addAttribute(AdminService.A_BY, CalendarResourceBy.id.name());
         domainEl.setText(d.getId());
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminService.E_CALENDAR_RESOURCE)) {
@@ -712,7 +712,7 @@ public class SoapProvisioning extends Provisioning {
         ArrayList<DistributionList> result = new ArrayList<DistributionList>();
         XMLElement req = new XMLElement(AdminService.GET_ALL_DISTRIBUTION_LISTS_REQUEST);
         Element domainEl = req.addElement(AdminService.E_DOMAIN);
-        domainEl.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        domainEl.addAttribute(AdminService.A_BY, DomainBy.id.name());
         domainEl.setText(d.getId());
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminService.E_DL)) {

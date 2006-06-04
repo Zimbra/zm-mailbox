@@ -30,6 +30,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
@@ -70,7 +71,7 @@ public class SoapDistributionList extends SoapNamedEntry implements Distribution
         XMLElement req = new XMLElement(AdminService.GET_DISTRIBUTION_LIST_REQUEST);
         Element a = req.addElement(AdminService.E_DL);
         a.setText(getId());
-        a.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        a.addAttribute(AdminService.A_BY, DistributionListBy.id.name());
         Element dl = prov.invoke(req).getElement(AdminService.E_DL);        
         mAttrs = SoapProvisioning.getAttrs(dl);
         addDlm(dl);        

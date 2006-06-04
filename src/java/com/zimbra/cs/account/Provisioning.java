@@ -1178,7 +1178,7 @@ public abstract class Provisioning {
     public static enum ServerBy {
 
         // case must match protocol
-        id, name;
+        id, name, serviceHostname;
         
         public static ServerBy fromString(String s) throws ServiceException {
             try {
