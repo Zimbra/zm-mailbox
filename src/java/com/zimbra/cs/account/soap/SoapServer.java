@@ -44,8 +44,8 @@ public class SoapServer extends SoapNamedEntry implements Server {
     }
 
     public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO CORRECTLY HANDLE
+        return getAttrs();
     }
     
     @Override

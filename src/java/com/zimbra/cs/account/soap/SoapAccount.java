@@ -54,8 +54,8 @@ public class SoapAccount extends SoapNamedEntry implements Account {
 
     public Map<String, Object> getAttrs(boolean applyCos)
             throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO CORRECTLY HANDLE
+        return getAttrs();
     }
 
     public CalendarUserType getCalendarUserType() throws ServiceException {

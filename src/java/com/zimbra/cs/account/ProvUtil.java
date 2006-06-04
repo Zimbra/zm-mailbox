@@ -43,6 +43,7 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.StringUtil;
@@ -152,6 +153,9 @@ public class ProvUtil {
 
     private static final int UNKNOWN_COMMAND = -1;
     
+    private static final int SOAP = 10;
+    private static final int LDAP = 11;    
+    
     private static final int CREATE_ACCOUNT = 101;
     private static final int GET_ACCOUNT =  102;
     private static final int GET_ALL_ACCOUNTS = 103;
@@ -259,6 +263,9 @@ public class ProvUtil {
 
     private void initCommands() {
         mCommandIndex = new HashMap<String, Integer>();
+        addCommand(".soap", ".s", SOAP);
+        addCommand(".ldap", ".l", LDAP);        
+        
         addCommand("addAccountAlias", "aaa", ADD_ACCOUNT_ALIAS);
         addCommand("createAccount", "ca", CREATE_ACCOUNT);
         addCommand("createBulkAccounts", "cabulk", CREATE_BULK_ACCOUNTS);
@@ -343,7 +350,7 @@ public class ProvUtil {
         mProv = Provisioning.getInstance();
     }
     
-    private boolean execute(String args[]) throws ServiceException, ArgException {
+    private boolean execute(String args[]) throws ServiceException, ArgException, IOException {
 
         int c = lookupCommand(args[0]);
         
@@ -534,6 +541,17 @@ public class ProvUtil {
         case IMPORT_NOTEBOOK:
             importNotebook(args, false);
             break;
+        case SOAP:
+            // HACK FOR NOW
+            SoapProvisioning sp = new SoapProvisioning();
+            sp.soapSetURI("https://localhost:7071/service/admin/soap");
+            sp.soapZimbraAdminAuthenticate();
+            mProv = sp;
+            break;
+        case LDAP:
+            // HACK FOR NOW
+            mProv = Provisioning.getInstance();
+            break;            
         default:
             return false;
         }

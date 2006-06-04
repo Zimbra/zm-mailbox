@@ -729,32 +729,70 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public List getAllAccounts(Domain d) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        ArrayList<Account> result = new ArrayList<Account>();
+        XMLElement req = new XMLElement(AdminService.GET_ALL_ACCOUNTS_REQUEST);
+        Element domainEl = req.addElement(AdminService.E_DOMAIN);
+        domainEl.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        domainEl.setText(d.getId());
+        Element resp = invoke(req);
+        for (Element a: resp.listElements(AdminService.E_ACCOUNT)) {
+            result.add(new SoapAccount(a));
+        }
+        return result;
     }
 
     @Override
     public void getAllAccounts(Domain d, Visitor visitor) throws ServiceException {
         // TODO Auto-generated method stub
-        
+        XMLElement req = new XMLElement(AdminService.GET_ALL_ACCOUNTS_REQUEST);
+        Element domainEl = req.addElement(AdminService.E_DOMAIN);
+        domainEl.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        domainEl.setText(d.getId());
+        Element resp = invoke(req);
+        for (Element a: resp.listElements(AdminService.E_ACCOUNT)) {
+            visitor.visit(new SoapAccount(a));
+        }
     }
 
     @Override
     public List getAllCalendarResources(Domain d) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        ArrayList<CalendarResource> result = new ArrayList<CalendarResource>();
+        XMLElement req = new XMLElement(AdminService.GET_ALL_CALENDAR_RESOURCES_REQUEST);
+        Element domainEl = req.addElement(AdminService.E_DOMAIN);
+        domainEl.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        domainEl.setText(d.getId());
+        Element resp = invoke(req);
+        for (Element a: resp.listElements(AdminService.E_CALENDAR_RESOURCE)) {
+            result.add(new SoapCalendarResource(a));
+        }
+        return result;
     }
 
     @Override
     public void getAllCalendarResources(Domain d, Visitor visitor) throws ServiceException {
-        // TODO Auto-generated method stub
-        
+        XMLElement req = new XMLElement(AdminService.GET_ALL_CALENDAR_RESOURCES_REQUEST);
+        Element domainEl = req.addElement(AdminService.E_DOMAIN);
+        domainEl.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        domainEl.setText(d.getId());
+        Element resp = invoke(req);
+        for (Element a: resp.listElements(AdminService.E_CALENDAR_RESOURCE)) {
+            
+            visitor.visit(new SoapCalendarResource(a));
+        }
     }
 
     @Override
     public List getAllDistributionLists(Domain d) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        ArrayList<DistributionList> result = new ArrayList<DistributionList>();
+        XMLElement req = new XMLElement(AdminService.GET_ALL_DISTRIBUTION_LISTS_REQUEST);
+        Element domainEl = req.addElement(AdminService.E_DOMAIN);
+        domainEl.addAttribute(AdminService.A_BY, AdminService.BY_ID);
+        domainEl.setText(d.getId());
+        Element resp = invoke(req);
+        for (Element a: resp.listElements(AdminService.E_DL)) {
+            result.add(new SoapDistributionList(a));
+        }
+        return result;
     }
 
     @Override

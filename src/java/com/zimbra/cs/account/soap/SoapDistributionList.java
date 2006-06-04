@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.account.soap;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import com.zimbra.cs.account.DistributionList;
@@ -42,6 +43,15 @@ public class SoapDistributionList extends SoapNamedEntry implements Distribution
 
     public SoapDistributionList(Element e) throws ServiceException {
         super(e);
+        addDlm(e);
+    }
+
+    private void addDlm(Element e) {
+        ArrayList<String> list = new ArrayList<String>();
+        for (Element dlm : e.listElements(AdminService.E_DLM)) {
+            list.add(dlm.getText());
+        }
+        mAttrs.put(Provisioning.A_zimbraMailForwardingAddress, list.toArray(new String[list.size()]));
     }
 
     @Override
@@ -49,7 +59,9 @@ public class SoapDistributionList extends SoapNamedEntry implements Distribution
         XMLElement req = new XMLElement(AdminService.MODIFY_DISTRIBUTION_LIST_REQUEST);
         req.addElement(AdminService.E_ID).setText(getId());
         SoapProvisioning.addAttrElements(req, attrs);
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_DL));
+        Element dl = prov.invoke(req).getElement(AdminService.E_DL);
+        mAttrs = SoapProvisioning.getAttrs(dl);
+        addDlm(dl);
         resetData();        
     }
 
@@ -59,13 +71,15 @@ public class SoapDistributionList extends SoapNamedEntry implements Distribution
         Element a = req.addElement(AdminService.E_DL);
         a.setText(getId());
         a.addAttribute(AdminService.A_BY, AdminService.BY_ID);
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_DL));
+        Element dl = prov.invoke(req).getElement(AdminService.E_DL);        
+        mAttrs = SoapProvisioning.getAttrs(dl);
+        addDlm(dl);        
         resetData();        
     }
 
     public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO CORRECTLY HANDLE        
+        return getAttrs();
     }
 
     public String[] getAliases() throws ServiceException {
