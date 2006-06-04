@@ -62,9 +62,9 @@ public class GetCos extends AdminDocumentHandler {
 	    Cos cos = null;
 
         if (key.equals(BY_NAME)) {
-            cos = prov.get(CosBy.NAME, value);
+            cos = prov.get(CosBy.name, value);
         } else if (key.equals(BY_ID)) {
-            cos = prov.get(CosBy.ID, value);
+            cos = prov.get(CosBy.id, value);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
         }

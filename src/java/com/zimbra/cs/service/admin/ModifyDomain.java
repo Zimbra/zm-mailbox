@@ -52,7 +52,7 @@ public class ModifyDomain extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
 	    Map<String, Object> attrs = AdminService.getAttrs(request);
 	    
-	    Domain domain = prov.get(DomainBy.ID, id);
+	    Domain domain = prov.get(DomainBy.id, id);
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(id);
         

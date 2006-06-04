@@ -74,7 +74,7 @@ class AccountSearchParams {
     void doSearch() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         if (!mDomainId.equals("")) {
-            mResult = prov.searchAccounts(prov.get(DomainBy.ID, mDomainId), mQuery, mAttrs, mSortBy, mSortAscending, mFlags);
+            mResult = prov.searchAccounts(prov.get(DomainBy.id, mDomainId), mQuery, mAttrs, mSortBy, mSortAscending, mFlags);
         } else {
             mResult = prov.getInstance().searchAccounts(mQuery, mAttrs, mSortBy, mSortAscending, mFlags);
         }

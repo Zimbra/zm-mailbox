@@ -273,7 +273,7 @@ public class AuthToken {
 	}
 
     public static void main(String args[]) throws ServiceException, AuthTokenException {
-        Account a = Provisioning.getInstance().get(AccountBy.NAME, "user1@example.zimbra.com");
+        Account a = Provisioning.getInstance().get(AccountBy.name, "user1@example.zimbra.com");
         AuthToken at = new AuthToken(a);
         long start = System.currentTimeMillis();
         String encoded = at.getEncoded();

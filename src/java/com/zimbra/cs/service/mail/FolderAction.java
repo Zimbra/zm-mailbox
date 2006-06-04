@@ -240,7 +240,7 @@ public class FolderAction extends ItemAction {
         Provisioning prov = Provisioning.getInstance();
         // for addresses, default to the authenticated user's domain
         if ((type == ACL.GRANTEE_USER || type == ACL.GRANTEE_GROUP) && name.indexOf('@') == -1) {
-            Account authacct = prov.get(AccountBy.ID, lc.getAuthtokenAccountId());
+            Account authacct = prov.get(AccountBy.id, lc.getAuthtokenAccountId());
             String authname = (authacct == null ? null : authacct.getName());
             if (authacct != null)
                 name += authname.substring(authname.indexOf('@'));
@@ -249,10 +249,10 @@ public class FolderAction extends ItemAction {
         NamedEntry nentry = null;
         if (name != null)
             switch (type) {
-                case ACL.GRANTEE_COS:     nentry = prov.get(CosBy.NAME, name);               break;
-                case ACL.GRANTEE_DOMAIN:  nentry = prov.get(DomainBy.NAME, name);            break;
-                case ACL.GRANTEE_USER:    nentry = prov.get(AccountBy.NAME, name);           break;
-                case ACL.GRANTEE_GROUP:   nentry = prov.get(DistributionListBy.NAME, name);  break;
+                case ACL.GRANTEE_COS:     nentry = prov.get(CosBy.name, name);               break;
+                case ACL.GRANTEE_DOMAIN:  nentry = prov.get(DomainBy.name, name);            break;
+                case ACL.GRANTEE_USER:    nentry = prov.get(AccountBy.name, name);           break;
+                case ACL.GRANTEE_GROUP:   nentry = prov.get(DistributionListBy.name, name);  break;
             }
 
         if (nentry != null)
@@ -270,10 +270,10 @@ public class FolderAction extends ItemAction {
         Provisioning prov = Provisioning.getInstance();
         try {
             switch (type) {
-                case ACL.GRANTEE_COS:     return prov.get(CosBy.ID, zid);
-                case ACL.GRANTEE_DOMAIN:  return prov.get(DomainBy.ID, zid);
-                case ACL.GRANTEE_USER:    return prov.get(AccountBy.ID, zid);
-                case ACL.GRANTEE_GROUP:   return prov.get(DistributionListBy.ID, zid);
+                case ACL.GRANTEE_COS:     return prov.get(CosBy.id, zid);
+                case ACL.GRANTEE_DOMAIN:  return prov.get(DomainBy.id, zid);
+                case ACL.GRANTEE_USER:    return prov.get(AccountBy.id, zid);
+                case ACL.GRANTEE_GROUP:   return prov.get(DistributionListBy.id, zid);
                 case ACL.GRANTEE_AUTHUSER:
                 case ACL.GRANTEE_PUBLIC:
                 default:                  return null;

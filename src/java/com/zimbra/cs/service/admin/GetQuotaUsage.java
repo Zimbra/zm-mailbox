@@ -89,14 +89,14 @@ public class GetQuotaUsage extends AdminDocumentHandler {
 
         Domain d = null;
         if (domain != null) {
-            d = prov.get(DomainBy.NAME, domain);
+            d = prov.get(DomainBy.name, domain);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
 
         Cos c = null;
         if (cos != null) {
-            c = prov.get(CosBy.NAME, cos);
+            c = prov.get(CosBy.name, cos);
             if (c == null)
                 throw AccountServiceException.NO_SUCH_COS(cos);
         }
@@ -190,7 +190,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             Provisioning prov = Provisioning.getInstance();
             int flags = Provisioning.SA_ACCOUNT_FLAG;
             List accounts;
-            Domain d = mDomainId.equals("") ? null : prov.get(DomainBy.ID, mDomainId);
+            Domain d = mDomainId.equals("") ? null : prov.get(DomainBy.id, mDomainId);
             if (d != null) {
                 accounts = prov.searchAccounts(d, query, null, null, true, flags);
             } else {

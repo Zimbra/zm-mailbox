@@ -1669,13 +1669,13 @@ public class ProvUtil {
         Account a = null;
         switch(guessType(key)) {
         case BY_ID:
-            a = mProv.get(AccountBy.ID, key);
+            a = mProv.get(AccountBy.id, key);
             break;
         case BY_EMAIL:
-            a = mProv.get(AccountBy.NAME, key);
+            a = mProv.get(AccountBy.name, key);
             break;
         case BY_NAME:
-            a = mProv.get(AccountBy.NAME, key);            
+            a = mProv.get(AccountBy.name, key);            
             break;
         }
         if (a == null)
@@ -1688,13 +1688,13 @@ public class ProvUtil {
         CalendarResource res = null;
         switch(guessType(key)) {
         case BY_ID:
-            res = mProv.get(CalendarResourceBy.ID, key);
+            res = mProv.get(CalendarResourceBy.id, key);
             break;
         case BY_EMAIL:
-            res = mProv.get(CalendarResourceBy.NAME, key);
+            res = mProv.get(CalendarResourceBy.name, key);
             break;
         case BY_NAME:
-            res = mProv.get(CalendarResourceBy.NAME, key);            
+            res = mProv.get(CalendarResourceBy.name, key);            
             break;
         }
         if (res == null)
@@ -1707,11 +1707,11 @@ public class ProvUtil {
         Domain d = null;
         switch(guessType(key)) {
         case BY_ID:
-            d = mProv.get(DomainBy.ID, key);
+            d = mProv.get(DomainBy.id, key);
             break;
         case BY_NAME:
         default:
-            d = mProv.get(DomainBy.NAME, key);
+            d = mProv.get(DomainBy.name, key);
             break;
         }
         
@@ -1725,11 +1725,11 @@ public class ProvUtil {
         Cos c = null;
         switch(guessType(key)) {
         case BY_ID:
-            c = mProv.get(CosBy.ID, key);
+            c = mProv.get(CosBy.id, key);
             break;
         case BY_NAME:
         default:            
-            c = mProv.get(CosBy.NAME, key);
+            c = mProv.get(CosBy.name, key);
             break;
         }
         
@@ -1743,11 +1743,11 @@ public class ProvUtil {
         Server s = null;
         switch(guessType(key)) {
         case BY_ID:
-            s = mProv.get(ServerBy.ID, key);
+            s = mProv.get(ServerBy.id, key);
             break;
         case BY_NAME:
         default:            
-            s = mProv.get(ServerBy.NAME, key);
+            s = mProv.get(ServerBy.name, key);
             break;
         }
         
@@ -1761,11 +1761,11 @@ public class ProvUtil {
         DistributionList dl = null;
         switch(guessType(key)) {
         case BY_ID:
-            dl = mProv.get(DistributionListBy.ID, key);
+            dl = mProv.get(DistributionListBy.id, key);
             break;
         case BY_EMAIL:
         default:            
-            dl = mProv.get(DistributionListBy.NAME, key);
+            dl = mProv.get(DistributionListBy.name, key);
             break;
         }
         

@@ -67,11 +67,11 @@ public class GetCalendarResource extends AdminDocumentHandler {
         CalendarResource resource = null;
 
         if (key.equals(BY_NAME)) {
-            resource = prov.get(CalendarResourceBy.NAME, value);
+            resource = prov.get(CalendarResourceBy.name, value);
         } else if (key.equals(BY_ID)) {
-            resource = prov.get(CalendarResourceBy.ID, value);
+            resource = prov.get(CalendarResourceBy.id, value);
         } else if (key.equals(BY_FOREIGN_PRINCIPAL)) {
-            resource = prov.get(CalendarResourceBy.FOREIGN_PRINCIPAL, value);
+            resource = prov.get(CalendarResourceBy.foreignPrincipal, value);
         } else {
             throw ServiceException.INVALID_REQUEST(
                     "unknown value for by: " + key, null);

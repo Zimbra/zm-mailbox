@@ -529,7 +529,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         ImapSession session = null;
         try {
             Provisioning prov = Provisioning.getInstance();
-            Account account = prov.get(AccountBy.NAME, username);
+            Account account = prov.get(AccountBy.name, username);
             if (account == null) {
                 sendNO(tag, "LOGIN failed");
                 return CONTINUE_PROCESSING;

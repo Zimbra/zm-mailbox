@@ -306,28 +306,13 @@ public class SoapProvisioning extends Provisioning {
         throw new UnsupportedOperationException();
     }
 
-    private Account getAccountBy(String by, String value) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_ACCOUNT_REQUEST);
-        Element a = req.addElement(AdminService.E_ACCOUNT);
-        a.setText(value);
-        a.addAttribute(AdminService.A_BY, by);
-        return new SoapAccount(invoke(req).getElement(AdminService.E_ACCOUNT));
-    }
-
     @Override
     public Account get(AccountBy keyType, String key) throws ServiceException {
-        switch(keyType) {
-        case ADMIN_NAME:
-            return getAccountBy(AdminService.BY_ADMIN_NAME, key);            
-        case ID:
-            return getAccountBy(AdminService.BY_ID, key);
-        case FOREIGN_PRINCIPAL:
-            return getAccountBy(AdminService.BY_FOREIGN_PRINCIPAL, key);
-        case NAME:
-            return getAccountBy(AdminService.BY_NAME, key);            
-        default:
-                return null;
-        }
+        XMLElement req = new XMLElement(AdminService.GET_ACCOUNT_REQUEST);
+        Element a = req.addElement(AdminService.E_ACCOUNT);
+        a.setText(key);
+        a.addAttribute(AdminService.A_BY, keyType.name());
+        return new SoapAccount(invoke(req).getElement(AdminService.E_ACCOUNT));
     }
 
     @Override
@@ -392,26 +377,13 @@ public class SoapProvisioning extends Provisioning {
         throw new UnsupportedOperationException();
     }
 
-    private CalendarResource getCalendarResourceBy(String by, String value) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_CALENDAR_RESOURCE_REQUEST);
-        Element a = req.addElement(AdminService.E_CALENDAR_RESOURCE);
-        a.setText(value);
-        a.addAttribute(AdminService.A_BY, by);
-        return new SoapCalendarResource(invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE));
-    }
-
     @Override
     public CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException {
-        switch(keyType) {
-            case ID:
-                return getCalendarResourceBy(AdminService.BY_ID, key);
-            case FOREIGN_PRINCIPAL:
-                return getCalendarResourceBy(AdminService.BY_FOREIGN_PRINCIPAL, key);
-            case NAME: 
-                return getCalendarResourceBy(AdminService.BY_NAME, key);
-            default:
-                    return null;
-        }
+        XMLElement req = new XMLElement(AdminService.GET_CALENDAR_RESOURCE_REQUEST);
+        Element a = req.addElement(AdminService.E_CALENDAR_RESOURCE);
+        a.setText(key);
+        a.addAttribute(AdminService.A_BY, keyType.name());
+        return new SoapCalendarResource(invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE));
     }
 
     @Override
@@ -420,66 +392,31 @@ public class SoapProvisioning extends Provisioning {
         return new SoapConfig(invoke(req));
     }
 
-    private Cos getCosBy(String by, String value) throws ServiceException {
+    @Override
+    public Cos get(CosBy keyType, String key) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.GET_COS_REQUEST);
         Element a = req.addElement(AdminService.E_COS);
-        a.setText(value);
-        a.addAttribute(AdminService.A_BY, by);
+        a.setText(key);
+        a.addAttribute(AdminService.A_BY, keyType.name());
         return new SoapCos(invoke(req).getElement(AdminService.E_COS));
     }
 
     @Override
-    public Cos get(CosBy keyType, String key) throws ServiceException {
-        switch(keyType) {
-        case ID:
-            return getCosBy(AdminService.BY_ID, key);
-        case NAME:
-            return getCosBy(AdminService.BY_NAME, key);
-        default:
-                return null;
-        }
-    }
-
-    private DistributionList getDistributionListBy(String by, String value) throws ServiceException {
+    public DistributionList get(DistributionListBy keyType, String key) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.GET_DISTRIBUTION_LIST_REQUEST);
         Element a = req.addElement(AdminService.E_DL);
-        a.setText(value);
-        a.addAttribute(AdminService.A_BY, by);
+        a.setText(key);
+        a.addAttribute(AdminService.A_BY, keyType.name());
         return new SoapDistributionList(invoke(req).getElement(AdminService.E_DL));
     }
 
     @Override
-    public DistributionList get(DistributionListBy keyType, String key) throws ServiceException {
-        switch(keyType) {
-            case ID: 
-                return getDistributionListBy(AdminService.BY_ID, key);
-            case NAME: 
-                return getDistributionListBy(AdminService.BY_NAME, key);
-            default:
-                    return null;
-        }
-    }
-
-    private Domain getDomainBy(String by, String value) throws ServiceException {
+    public Domain get(DomainBy keyType, String key) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.GET_DOMAIN_REQUEST);
         Element a = req.addElement(AdminService.E_DOMAIN);
-        a.setText(value);
-        a.addAttribute(AdminService.A_BY, by);
+        a.setText(key);
+        a.addAttribute(AdminService.A_BY, keyType.name());
         return new SoapDomain(invoke(req).getElement(AdminService.E_DOMAIN));
-    }
-
-    @Override
-    public Domain get(DomainBy keyType, String key) throws ServiceException {
-        switch(keyType) {
-        case ID:
-            return getDomainBy(AdminService.BY_ID, key);
-        case NAME:
-            return getDomainBy(AdminService.BY_NAME, key);
-        case VIRTUAL_HOST_NAME:
-            return getDomainBy(AdminService.BY_VIRTUAL_HOST_NAME, key);
-        default:
-                return null;
-        }
     }
 
     @Override
@@ -507,24 +444,13 @@ public class SoapProvisioning extends Provisioning {
         return null;
     }
 
-    private Server getServerBy(String by, String value) throws ServiceException {
-        XMLElement req = new XMLElement(AdminService.GET_SERVER_REQUEST);
-        Element a = req.addElement(AdminService.E_SERVER);
-        a.setText(value);
-        a.addAttribute(AdminService.A_BY, by);
-        return new SoapServer(invoke(req).getElement(AdminService.E_SERVER));
-    }
-
     @Override
     public Server get(ServerBy keyType, String key) throws ServiceException {
-        switch(keyType) {
-        case ID:
-            return getServerBy(AdminService.BY_ID, key);            
-        case NAME:
-            return getServerBy(AdminService.BY_NAME, key);
-        default:
-                return null;
-        }
+        XMLElement req = new XMLElement(AdminService.GET_SERVER_REQUEST);
+        Element a = req.addElement(AdminService.E_SERVER);
+        a.setText(key);
+        a.addAttribute(AdminService.A_BY, keyType.name());
+        return new SoapServer(invoke(req).getElement(AdminService.E_SERVER));
     }
 
     @Override
@@ -687,7 +613,7 @@ public class SoapProvisioning extends Provisioning {
             System.out.println(acct2);
             p.changePassword(acct2, "test123", "test1235");
             */
-            Account acct3 = p.get(AccountBy.ADMIN_NAME, "zimbra");
+            Account acct3 = p.get(AccountBy.adminName, "zimbra");
             System.out.println(acct3);
             System.out.println("----");
             for (Account at: p.getAllAdminAccounts()) System.out.println(at.getName());

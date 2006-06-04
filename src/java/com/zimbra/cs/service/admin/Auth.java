@@ -68,9 +68,9 @@ public class Auth extends AdminDocumentHandler {
         try {
             
             if (name.indexOf("@") == -1) {
-                acct = prov.get(AccountBy.ADMIN_NAME, name);
+                acct = prov.get(AccountBy.adminName, name);
             } else {
-                acct = prov.get(AccountBy.NAME, name);
+                acct = prov.get(AccountBy.name, name);
             }
 
             if (acct == null)

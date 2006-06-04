@@ -56,7 +56,7 @@ public class GetServiceStatus extends AdminDocumentHandler {
         String monitorHost = prov.getConfig().getAttr(Provisioning.A_zimbraLogHostname);
         if (monitorHost == null || monitorHost.trim().equals(""))
             throw ServiceException.FAILURE("zimbraLogHostname is not configured", null);
-        Server monitorServer = prov.get(ServerBy.NAME, monitorHost);
+        Server monitorServer = prov.get(ServerBy.name, monitorHost);
         if (monitorServer == null)
             throw ServiceException.FAILURE("could not find zimbraLogHostname server: " + monitorServer, null);
         if (!prov.getLocalServer().getId().equalsIgnoreCase(monitorServer.getId()))

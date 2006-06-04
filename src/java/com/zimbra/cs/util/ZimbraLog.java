@@ -259,7 +259,7 @@ public class ZimbraLog {
     public static void addAccountToContext(String id, String nameKey, String idOnlyKey) {
         Account acct = null;
         try {
-            acct = Provisioning.getInstance().get(AccountBy.ID, id);
+            acct = Provisioning.getInstance().get(AccountBy.id, id);
         } catch (ServiceException se) {
             ZimbraLog.misc.warn("unable to lookup account for log, id: "+id, se);
         }

@@ -67,7 +67,7 @@ public class DeleteAccount extends AdminDocumentHandler {
         
         // Confirm that the account exists and that the mailbox is located
         // on the current host
-        Account account = prov.get(AccountBy.ID, id);
+        Account account = prov.get(AccountBy.id, id);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
         

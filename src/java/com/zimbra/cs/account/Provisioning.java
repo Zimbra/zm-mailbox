@@ -909,7 +909,7 @@ public abstract class Provisioning {
      */    
     public Domain getDomain(Account acct) throws ServiceException {
         String dname = acct.getDomainName();
-        return dname == null ? null : get(DomainBy.NAME, dname);
+        return dname == null ? null : get(DomainBy.name, dname);
     }
 
     /**
@@ -918,7 +918,7 @@ public abstract class Provisioning {
      */
     public Server getServer(Account acct) throws ServiceException {
         String serverId = acct.getAttr(Provisioning.A_zimbraMailHost);
-        return (serverId == null ? null : get(ServerBy.NAME, serverId));
+        return (serverId == null ? null : get(ServerBy.name, serverId));
     }  
     
     private static final String DATA_COS = "COS";
@@ -933,13 +933,13 @@ public abstract class Provisioning {
         Cos cos = (Cos) acct.getCachedData(DATA_COS);
         if (cos == null) {
             String id = acct.getAccountCOSId();
-                if (id != null) cos = get(CosBy.ID, id); 
+                if (id != null) cos = get(CosBy.id, id); 
                 if (cos == null) {
                     Domain domain = getDomain(acct);
                     String domainCosId = domain != null ? domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
-                    if (domainCosId != null) cos = get(CosBy.ID, domainCosId);
+                    if (domainCosId != null) cos = get(CosBy.id, domainCosId);
                 }
-                if (cos == null) cos = get(CosBy.NAME, Provisioning.DEFAULT_COS_NAME);
+                if (cos == null) cos = get(CosBy.name, Provisioning.DEFAULT_COS_NAME);
                 if (cos != null) acct.setCachedData(DATA_COS, cos);
         }
         return cos;
@@ -1037,7 +1037,19 @@ public abstract class Provisioning {
      */
     public abstract void renameAccount(String zimbraId, String newName) throws ServiceException;
 
-    public static enum AccountBy { ADMIN_NAME, ID, FOREIGN_PRINCIPAL, NAME }
+    public static enum AccountBy {
+        
+        // case must match protocol
+        adminName, id, foreignPrincipal, name;
+        
+        public static AccountBy fromString(String s) throws ServiceException {
+            try {
+                return AccountBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
     
     public abstract Account get(AccountBy keyType, String key) throws ServiceException;
 
@@ -1108,7 +1120,19 @@ public abstract class Provisioning {
      */
     public abstract Domain createDomain(String name, Map<String, Object> attrs) throws ServiceException;
 
-    public static enum DomainBy { ID, NAME, VIRTUAL_HOST_NAME}
+    public static enum DomainBy {
+        
+        // case must match protocol
+        id, name, virtualHostname;
+        
+        public static DomainBy fromString(String s) throws ServiceException {
+            try {
+                return DomainBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
     
     public abstract Domain get(DomainBy keyType, String key) throws ServiceException;
     
@@ -1120,7 +1144,20 @@ public abstract class Provisioning {
 
     public abstract void renameCos(String zimbraId, String newName) throws ServiceException;
     
-    public static enum CosBy { ID, NAME }
+    public static enum CosBy {
+        
+        // case must match protocol
+        id, name;
+        
+        public static CosBy fromString(String s) throws ServiceException {
+            try {
+                return CosBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    
+    }
     
     public abstract Cos get(CosBy keyType, String key) throws ServiceException;
 
@@ -1138,7 +1175,20 @@ public abstract class Provisioning {
 
     public abstract Server createServer(String name, Map<String, Object> attrs) throws ServiceException;
 
-    public static enum ServerBy { ID, NAME }
+    public static enum ServerBy {
+
+        // case must match protocol
+        id, name;
+        
+        public static ServerBy fromString(String s) throws ServiceException {
+            try {
+                return ServerBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    
+    }
     
     public abstract Server get(ServerBy keyName, String key) throws ServiceException;
 
@@ -1154,7 +1204,20 @@ public abstract class Provisioning {
 
     public abstract DistributionList createDistributionList(String listAddress, Map<String, Object> listAttrs) throws ServiceException;
 
-    public static enum DistributionListBy { ID, NAME }
+    public static enum DistributionListBy {
+        
+        // case must match protocol
+        id, name;
+        
+        public static DistributionListBy fromString(String s) throws ServiceException {
+            try {
+                return DistributionListBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    
+    }
     
     public abstract DistributionList get(DistributionListBy keyType, String key) throws ServiceException;
     
@@ -1209,7 +1272,20 @@ public abstract class Provisioning {
      */
     public abstract void renameCalendarResource(String zimbraId, String newName) throws ServiceException;
 
-    public static enum CalendarResourceBy { ID, FOREIGN_PRINCIPAL, NAME }
+    public static enum CalendarResourceBy { 
+
+        // case must match protocol
+        id, foreignPrincipal, name;
+        
+        public static CalendarResourceBy fromString(String s) throws ServiceException {
+            try {
+                return CalendarResourceBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    
+    }
     
     public abstract CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException;
 

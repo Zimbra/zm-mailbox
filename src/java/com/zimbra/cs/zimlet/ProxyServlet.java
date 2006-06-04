@@ -80,7 +80,7 @@ public class ProxyServlet extends ZimbraServlet {
 	
 	private Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        Account acct = prov.get(AccountBy.ID, auth.getAccountId());
+        Account acct = prov.get(AccountBy.id, auth.getAccountId());
         return prov.getCOS(acct).getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
 	}
 	
@@ -243,7 +243,7 @@ public class ProxyServlet extends ZimbraServlet {
 	
 	private Set<String> getCacheableContentTypes(AuthToken auth) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        Account acct = prov.get(AccountBy.ID, auth.getAccountId());        
+        Account acct = prov.get(AccountBy.id, auth.getAccountId());        
 		return prov.getCOS(acct).getMultiAttrSet(Provisioning.A_zimbraProxyCacheableContentTypes);
 	}
 	

@@ -57,7 +57,7 @@ public class GetMailQueue extends AdminDocumentHandler {
         Element serverElem = request.getElement(AdminService.E_SERVER);
         String serverName = serverElem.getAttribute(AdminService.A_NAME);
         
-        Server server = prov.get(ServerBy.NAME, serverName);
+        Server server = prov.get(ServerBy.name, serverName);
         if (server == null) {
             throw ServiceException.INVALID_REQUEST("server with name " + serverName + " could not be found", null);
         }

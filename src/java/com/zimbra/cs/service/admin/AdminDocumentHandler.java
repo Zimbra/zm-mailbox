@@ -68,7 +68,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
 
         // if there's a remote target acount and we haven't explicitly been told to execute here, proxy.
         if (getZimbraSoapContext(context).getProxyTarget() == null) {
-            Account acct = Provisioning.getInstance().get(AccountBy.ID, acctId);
+            Account acct = Provisioning.getInstance().get(AccountBy.id, acctId);
             if (acct != null && !LOCAL_HOST.equalsIgnoreCase(acct.getAttr(Provisioning.A_zimbraMailHost)))
                 return proxyRequest(request, context, acctId);
         }

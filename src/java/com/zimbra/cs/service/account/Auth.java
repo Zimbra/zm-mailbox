@@ -81,15 +81,15 @@ public class Auth extends DocumentHandler  {
         
         if (by.equals(BY_NAME)) {
             if (virtualHost != null  && value.indexOf('@') == -1) {
-                Domain d = prov.get(DomainBy.VIRTUAL_HOST_NAME, virtualHost);
+                Domain d = prov.get(DomainBy.virtualHostname, virtualHost);
                 if (d != null)
                     value = value + "@" + d.getName();
             }
-            acct = prov.get(AccountBy.NAME, value);            
+            acct = prov.get(AccountBy.name, value);            
         } else if (by.equals(BY_ID)) {
-            acct = prov.get(AccountBy.ID, value);
+            acct = prov.get(AccountBy.id, value);
         } else if (by.equals(BY_FOREIGN_PRINCIPAL)) {
-            acct = prov.get(AccountBy.FOREIGN_PRINCIPAL, value);
+            acct = prov.get(AccountBy.foreignPrincipal, value);
         }
 
 		if (acct == null)

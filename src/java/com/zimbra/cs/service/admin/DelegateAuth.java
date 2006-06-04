@@ -66,9 +66,9 @@ public class DelegateAuth extends AdminDocumentHandler {
         Account account = null;
 
         if (key.equals(BY_NAME)) {
-            account = prov.get(AccountBy.NAME, value);
+            account = prov.get(AccountBy.name, value);
         } else if (key.equals(BY_ID)) {
-            account = prov.get(AccountBy.ID, value);
+            account = prov.get(AccountBy.id, value);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
         }
@@ -85,7 +85,7 @@ public class DelegateAuth extends AdminDocumentHandler {
         // take the min of requested lifetime vs maxLifetime
         long expires = System.currentTimeMillis()+ Math.min(lifetime, maxLifetime);
         String token;
-        Account adminAcct = prov.get(AccountBy.ID, lc.getAuthtokenAccountId());
+        Account adminAcct = prov.get(AccountBy.id, lc.getAuthtokenAccountId());
         if (adminAcct == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(lc.getAuthtokenAccountId());
 

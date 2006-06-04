@@ -74,7 +74,7 @@ extends TestCase {
     private Account getAccount()
     throws Exception {
         String address = TestUtil.getAddress(USER_NAME);
-        return Provisioning.getInstance().get(AccountBy.NAME, address);
+        return Provisioning.getInstance().get(AccountBy.name, address);
     }
     
     /**

@@ -62,7 +62,7 @@ public class ModifyAccount extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
 	    Map<String, Object> attrs = AdminService.getAttrs(request);
 
-	    Account account = prov.get(AccountBy.ID, id);
+	    Account account = prov.get(AccountBy.id, id);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 

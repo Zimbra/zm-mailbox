@@ -51,7 +51,7 @@ public class DeleteDomain extends AdminDocumentHandler {
 
 	    String id = request.getAttribute(AdminService.E_ID);
 
-	    Domain domain = prov.get(DomainBy.ID, id);
+	    Domain domain = prov.get(DomainBy.id, id);
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(id);
         

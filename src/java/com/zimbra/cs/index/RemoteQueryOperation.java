@@ -118,7 +118,7 @@ class RemoteQueryOperation extends QueryOperation {
 	
 	protected void setup(Account authenticatedAccount, byte[] types, SortBy searchOrder, int offset, int limit) throws ServiceException {
         Provisioning prov  = Provisioning.getInstance();
-        Account acct = prov.get(AccountBy.ID, mTarget.toString());
+        Account acct = prov.get(AccountBy.id, mTarget.toString());
 		if (acct == null)
 			throw AccountServiceException.NO_SUCH_ACCOUNT(mTarget.toString());
 		

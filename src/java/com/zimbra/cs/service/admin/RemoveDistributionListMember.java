@@ -59,7 +59,7 @@ public class RemoveDistributionListMember extends AdminDocumentHandler {
         	memberList.add(elem.getTextTrim());
         }
 
-        DistributionList dl = prov.get(DistributionListBy.ID, id);
+        DistributionList dl = prov.get(DistributionListBy.id, id);
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 

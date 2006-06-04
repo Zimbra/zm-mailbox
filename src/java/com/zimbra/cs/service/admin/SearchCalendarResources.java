@@ -91,7 +91,7 @@ public class SearchCalendarResources extends AdminDocumentHandler {
 
         Domain d = null;
         if (domain != null) {
-            d = prov.get(DomainBy.NAME, domain);
+            d = prov.get(DomainBy.name, domain);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }

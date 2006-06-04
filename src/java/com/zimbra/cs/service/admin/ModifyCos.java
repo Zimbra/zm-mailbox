@@ -52,7 +52,7 @@ public class ModifyCos extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
 	    Map<String, Object> attrs = AdminService.getAttrs(request);
 	    
-	    Cos cos = prov.get(CosBy.ID, id);
+	    Cos cos = prov.get(CosBy.id, id);
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(id);
         

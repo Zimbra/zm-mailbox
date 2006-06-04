@@ -171,7 +171,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
     private static Upload fetchRemoteUpload(String accountId, String uploadId, String authtoken) throws ServiceException {
         // the first half of the upload id is the server id where it lives
-        Server server = Provisioning.getInstance().get(ServerBy.ID, uploadId.substring(0, UPLOAD_ID_LENGTH / 2));
+        Server server = Provisioning.getInstance().get(ServerBy.id, uploadId.substring(0, UPLOAD_ID_LENGTH / 2));
         if (server == null)
             return null;
         // determine the URI for the remote ContentServlet
@@ -299,7 +299,7 @@ public class FileUploadServlet extends ZimbraServlet {
             try {
                 // make sure we're on the right host; proxy if we're not...
                 Provisioning prov = Provisioning.getInstance();
-                Account acct = prov.get(AccountBy.ID, authToken.getAccountId());
+                Account acct = prov.get(AccountBy.id, authToken.getAccountId());
                 if (!Provisioning.onLocalServer(acct)) {
                     proxyServletRequest(req, resp, prov.getServer(acct), null);
                     return;

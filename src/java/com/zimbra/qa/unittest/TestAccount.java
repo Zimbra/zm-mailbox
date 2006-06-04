@@ -104,7 +104,7 @@ public class TestAccount extends TestCase {
     private void cleanUp()
     throws Exception {
         Provisioning prov = Provisioning.getInstance(); 
-        Account account = prov.get(AccountBy.NAME, TestUtil.getAddress(USER_NAME));
+        Account account = prov.get(AccountBy.name, TestUtil.getAddress(USER_NAME));
         if (account != null) {
             prov.deleteAccount(account.getId());
         }

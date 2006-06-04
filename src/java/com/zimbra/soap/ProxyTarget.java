@@ -48,7 +48,7 @@ public class ProxyTarget {
     private String mURL;
 
     public ProxyTarget(String serverId, String authToken, HttpServletRequest req) throws ServiceException {
-        mServer = Provisioning.getInstance().get(ServerBy.ID, serverId);
+        mServer = Provisioning.getInstance().get(ServerBy.id, serverId);
         if (mServer == null)
             throw AccountServiceException.NO_SUCH_SERVER(serverId);
 

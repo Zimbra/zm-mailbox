@@ -65,9 +65,9 @@ public class GetServer extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("must specify a value for a server", null);
 
         if (method.equals(BY_NAME)) {
-            server = prov.get(ServerBy.NAME, name);
+            server = prov.get(ServerBy.name, name);
         } else if (method.equals(BY_ID)) {
-            server = prov.get(ServerBy.ID, name);
+            server = prov.get(ServerBy.id, name);
         } else if (method.equals(BY_SERVICE_HOSTNAME)) {
             List servers = prov.getAllServers();
             for (Iterator it = servers.iterator(); it.hasNext(); ) {

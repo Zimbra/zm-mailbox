@@ -115,7 +115,7 @@ public class GetFreeBusy extends WriteOpDocumentHandler {
                 req.addAttribute(MailService.A_UID, paramStr);
 
                 // hack: use the ID of the first user 
-                Account acct = Provisioning.getInstance().get(AccountBy.NAME, idStrs[0]);
+                Account acct = Provisioning.getInstance().get(AccountBy.name, idStrs[0]);
 
                 Element remoteResponse = proxyRequest(req, context, acct.getId());
                 for (Element thisElt : remoteResponse.listElements())

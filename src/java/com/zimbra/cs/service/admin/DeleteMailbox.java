@@ -61,7 +61,7 @@ public class DeleteMailbox extends AdminDocumentHandler {
         Element mreq = request.getElement(AdminService.E_MAILBOX);
         String accountId = mreq.getAttribute(AdminService.A_ACCOUNTID);
         
-        Account account = Provisioning.getInstance().get(AccountBy.ID, accountId);
+        Account account = Provisioning.getInstance().get(AccountBy.id, accountId);
         if (account == null) {
             if (isDomainAdminOnly(zc)) {
                 throw ServiceException.PERM_DENIED("account doesn't exist, unable to determine authorization");

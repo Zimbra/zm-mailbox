@@ -60,7 +60,7 @@ public class TestUtil {
     public static Account getAccount(String userName)
     throws ServiceException {
         String address = getAddress(userName);
-        Account account = Provisioning.getInstance().get(AccountBy.NAME, address);
+        Account account = Provisioning.getInstance().get(AccountBy.name, address);
         if (account == null) {
             throw new IllegalArgumentException("Could not find account for '" + address + "'");
         }

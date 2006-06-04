@@ -56,7 +56,7 @@ public class RenameDistributionList extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
         String newName = request.getAttribute(AdminService.E_NEW_NAME);
 
-	    DistributionList dl = prov.get(DistributionListBy.ID, id);
+	    DistributionList dl = prov.get(DistributionListBy.id, id);
         if (dl == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
@@ -75,7 +75,7 @@ public class RenameDistributionList extends AdminDocumentHandler {
         
         // get again with new name...
 
-        dl = prov.get(DistributionListBy.ID, id);
+        dl = prov.get(DistributionListBy.id, id);
         if (dl == null)
             throw ServiceException.FAILURE("unable to get distribution list after rename: " + id, null);
 	    Element response = lc.createElement(AdminService.RENAME_DISTRIBUTION_LIST_RESPONSE);

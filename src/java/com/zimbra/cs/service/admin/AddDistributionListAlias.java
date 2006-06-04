@@ -53,7 +53,7 @@ public class AddDistributionListAlias extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
         String alias = request.getAttribute(AdminService.E_ALIAS);
 
-	    DistributionList dl = prov.get(DistributionListBy.ID, id);
+	    DistributionList dl = prov.get(DistributionListBy.id, id);
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 

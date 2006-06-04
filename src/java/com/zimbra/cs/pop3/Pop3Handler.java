@@ -196,7 +196,7 @@ public class Pop3Handler extends ProtocolHandler {
         // check account status before executing command
         if (mAccountId != null)
             try {
-                Account acct = Provisioning.getInstance().get(AccountBy.ID, mAccountId);
+                Account acct = Provisioning.getInstance().get(AccountBy.id, mAccountId);
                 if (acct == null || !acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                     return false;
             } catch (ServiceException e) {
@@ -507,7 +507,7 @@ public class Pop3Handler extends ProtocolHandler {
         
         try {
             Provisioning prov = Provisioning.getInstance();            
-            Account acct = prov.get(AccountBy.NAME, mUser);
+            Account acct = prov.get(AccountBy.name, mUser);
             if (acct == null)
                 throw new Pop3CmdException("invalid username/password");
             if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false))

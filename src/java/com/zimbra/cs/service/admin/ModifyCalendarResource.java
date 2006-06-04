@@ -60,7 +60,7 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
         String id = request.getAttribute(AdminService.E_ID);
         Map<String, Object> attrs = AdminService.getAttrs(request);
 
-        CalendarResource resource = prov.get(CalendarResourceBy.ID, id);
+        CalendarResource resource = prov.get(CalendarResourceBy.id, id);
         if (resource == null)
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(id);
 

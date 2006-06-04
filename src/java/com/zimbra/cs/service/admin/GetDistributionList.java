@@ -73,9 +73,9 @@ public class GetDistributionList extends AdminDocumentHandler {
         DistributionList distributionList = null;
         
         if (key.equals(BY_NAME)) {
-            distributionList = prov.get(DistributionListBy.NAME, value);
+            distributionList = prov.get(DistributionListBy.name, value);
         } else if (key.equals(BY_ID)) {
-            distributionList = prov.get(DistributionListBy.ID, value);
+            distributionList = prov.get(DistributionListBy.id, value);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
         }

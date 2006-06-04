@@ -52,7 +52,7 @@ public class DeleteDistributionList extends AdminDocumentHandler {
 
         String id = request.getAttribute(AdminService.E_ID);
 
-        DistributionList distributionList = prov.get(DistributionListBy.ID, id);
+        DistributionList distributionList = prov.get(DistributionListBy.id, id);
         if (distributionList == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 

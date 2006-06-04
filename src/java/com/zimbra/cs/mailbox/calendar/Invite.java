@@ -1239,7 +1239,7 @@ public class Invite {
         if (hasOrganizer()) {
             String address = getOrganizer().getAddress();
             if (address != null) {
-                account = Provisioning.getInstance().get(AccountBy.NAME, address);
+                account = Provisioning.getInstance().get(AccountBy.name, address);
             }
         }
         return account;

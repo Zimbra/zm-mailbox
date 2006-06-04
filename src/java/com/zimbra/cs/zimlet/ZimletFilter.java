@@ -116,7 +116,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
     	if (!zimletName.equals(com.zimbra.cs.zimlet.ZimletUtil.ZIMLET_DEV_DIR)) {
             try {
             	Provisioning prov = Provisioning.getInstance();
-            	Account account = prov.get(AccountBy.ID, authToken.getAccountId());
+            	Account account = prov.get(AccountBy.id, authToken.getAccountId());
             	Zimlet z = prov.getZimlet(zimletName);
             	boolean isAdmin = (authToken.isAdmin() || authToken.isDomainAdmin());
             	if (z.isExtension()) {

@@ -52,7 +52,7 @@ public class RenameCos extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
         String newName = request.getAttribute(AdminService.E_NEW_NAME);
 
-	    Cos cos = prov.get(CosBy.ID, id);
+	    Cos cos = prov.get(CosBy.id, id);
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(id);
 
@@ -65,7 +65,7 @@ public class RenameCos extends AdminDocumentHandler {
 
         // get again with new name...
 
-        cos = prov.get(CosBy.ID, id);
+        cos = prov.get(CosBy.id, id);
         if (cos == null)
             throw ServiceException.FAILURE("unabled to get renamed cos: "+id, null);
 	    Element response = lc.createElement(AdminService.RENAME_COS_RESPONSE);

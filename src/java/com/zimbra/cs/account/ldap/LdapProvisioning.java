@@ -375,13 +375,13 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public Account get(AccountBy keyType, String key) throws ServiceException {
         switch(keyType) {
-            case ADMIN_NAME: 
+            case adminName: 
                 return getAdminAccountByName(key);
-            case ID: 
+            case id: 
                 return getAccountById(key);
-            case FOREIGN_PRINCIPAL: 
+            case foreignPrincipal: 
                 return getAccountByForeignPrincipal(key);
-            case NAME: 
+            case name: 
                 return getAccountByName(key);
             default:
                     return null;
@@ -542,7 +542,7 @@ public class LdapProvisioning extends Provisioning {
                 attrs.put(Provisioning.A_zimbraCOSId, cosId);
             } else {
                 String domainCosId = domain != null ? d.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
-                if (domainCosId != null) cos = get(CosBy.ID, domainCosId);
+                if (domainCosId != null) cos = get(CosBy.id, domainCosId);
                 if (cos == null) cos = getCosByName(Provisioning.DEFAULT_COS_NAME, ctxt);
             }
 
@@ -1140,11 +1140,11 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public Domain get(DomainBy keyType, String key) throws ServiceException {
         switch(keyType) {
-            case NAME: 
+            case name: 
                 return getDomainByName(key);
-            case ID: 
+            case id: 
                 return getDomainById(key);
-            case VIRTUAL_HOST_NAME:
+            case virtualHostname:
                 return getDomainByVirtualHostname(key);
             default:
                     return null;
@@ -1286,7 +1286,7 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#deleteAccountById(java.lang.String)
      */
     public void renameCos(String zimbraId, String newName) throws ServiceException {
-        LdapCos cos = (LdapCos) get(CosBy.ID, zimbraId);
+        LdapCos cos = (LdapCos) get(CosBy.id, zimbraId);
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(zimbraId);
 
@@ -1356,9 +1356,9 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public Cos get(CosBy keyType, String key) throws ServiceException {
         switch(keyType) {
-            case NAME:
+            case name:
                 return getCosByName(key, null);                
-            case ID:
+            case id:
                 return getCosById(key, null);                
             default:
                     return null;
@@ -1562,7 +1562,7 @@ public class LdapProvisioning extends Provisioning {
     }
     
     public void deleteCos(String zimbraId) throws ServiceException {
-        LdapCos c = (LdapCos) get(CosBy.ID, zimbraId);
+        LdapCos c = (LdapCos) get(CosBy.id, zimbraId);
         if (c == null)
             throw AccountServiceException.NO_SUCH_COS(zimbraId);
         
@@ -1676,9 +1676,9 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public Server get(ServerBy keyType, String key) throws ServiceException {
         switch(keyType) {
-            case NAME: 
+            case name: 
                 return getServerByName(key);
-            case ID: 
+            case id: 
                 return getServerById(key);
             default:
                     return null;
@@ -1976,9 +1976,9 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public DistributionList get(DistributionListBy keyType, String key) throws ServiceException {
         switch(keyType) {
-            case ID: 
+            case id: 
                 return getDistributionListById(key);
-            case NAME: 
+            case name: 
                 return getDistributionListByName(key);
             default:
                     return null;
@@ -2640,11 +2640,11 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException {
         switch(keyType) {
-            case ID: 
+            case id: 
                 return getCalendarResourceById(key);
-            case FOREIGN_PRINCIPAL: 
+            case foreignPrincipal: 
                 return getCalendarResourceByForeignPrincipal(key);
-            case NAME: 
+            case name: 
                 return getCalendarResourceByName(key);
             default:
                     return null;

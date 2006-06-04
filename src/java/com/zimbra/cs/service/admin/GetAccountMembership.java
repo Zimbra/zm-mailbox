@@ -71,13 +71,13 @@ public class GetAccountMembership extends AdminDocumentHandler {
         Account account = null;
 
         if (key.equals(BY_NAME)) {
-            account = prov.get(AccountBy.NAME, value);
+            account = prov.get(AccountBy.name, value);
         } else if (key.equals(BY_ID)) {
-            account = prov.get(AccountBy.ID, value);
+            account = prov.get(AccountBy.id, value);
         } else if (key.equals(BY_ADMIN_NAME)) {
-            account = prov.get(AccountBy.ADMIN_NAME, value);
+            account = prov.get(AccountBy.adminName, value);
         } else if (key.equals(BY_FOREIGN_PRINCIPAL)) {
-            account = prov.get(AccountBy.FOREIGN_PRINCIPAL, value);
+            account = prov.get(AccountBy.foreignPrincipal, value);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
         }

@@ -255,7 +255,7 @@ public class ContentServlet extends ZimbraServlet {
             if (!FileUploadServlet.isLocalUpload(uploadId)) {
                 // wrong server; proxy to the right one...
                 String serverId = FileUploadServlet.getUploadServerId(uploadId);
-                Server server = Provisioning.getInstance().get(ServerBy.ID, serverId);
+                Server server = Provisioning.getInstance().get(ServerBy.id, serverId);
                 proxyServletRequest(req, resp, server, null);
                 return;
             }
@@ -290,7 +290,7 @@ public class ContentServlet extends ZimbraServlet {
     private boolean isTrue(String attr, String accountId) throws ServletException {
         Provisioning prov = Provisioning.getInstance();
         try {
-            Account account = prov.get(AccountBy.ID, accountId);
+            Account account = prov.get(AccountBy.id, accountId);
             return prov.getConfig().getBooleanAttr(attr, false)
                     || account.getBooleanAttr(attr, false);
         } catch (ServiceException e) {

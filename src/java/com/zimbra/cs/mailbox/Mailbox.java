@@ -261,7 +261,7 @@ public class Mailbox {
         public OperationContext(RedoableOp redoPlayer)  { player = redoPlayer; }
         public OperationContext(Account acct)           { authuser = acct; }
         public OperationContext(String accountId) throws ServiceException {
-            authuser = Provisioning.getInstance().get(AccountBy.ID, accountId);
+            authuser = Provisioning.getInstance().get(AccountBy.id, accountId);
             if (authuser == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
         }
@@ -372,7 +372,7 @@ public class Mailbox {
      * 
      * @param accountId  The <code>zimbraId</code> to look up. */
     public static Account getAccount(String accountId) throws ServiceException {
-        return Provisioning.getInstance().get(AccountBy.ID, accountId);
+        return Provisioning.getInstance().get(AccountBy.id, accountId);
     }
 
 

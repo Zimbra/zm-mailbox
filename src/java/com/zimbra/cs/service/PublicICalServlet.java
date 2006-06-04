@@ -116,7 +116,7 @@ public class PublicICalServlet extends ZimbraServlet
         }
         
         try {
-            Account acct = Provisioning.getInstance().get(AccountBy.NAME, acctName);
+            Account acct = Provisioning.getInstance().get(AccountBy.name, acctName);
             if (acct == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Account "+acctName+" not found");
                 return;

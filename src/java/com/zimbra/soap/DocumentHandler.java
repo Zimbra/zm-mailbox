@@ -76,7 +76,7 @@ public abstract class DocumentHandler {
     public static Account getRequestedAccount(ZimbraSoapContext lc) throws ServiceException {
         String id = lc.getRequestedAccountId();
 
-        Account acct = Provisioning.getInstance().get(AccountBy.ID, id);
+        Account acct = Provisioning.getInstance().get(AccountBy.id, id);
         if (acct == null)
             throw ServiceException.AUTH_EXPIRED();
         return acct;
@@ -289,11 +289,11 @@ public abstract class DocumentHandler {
         if (mountpoint)
             lcTarget.recordMountpointTraversal();
 
-        Account acctTarget = Provisioning.getInstance().get(AccountBy.ID, acctId);
+        Account acctTarget = Provisioning.getInstance().get(AccountBy.id, acctId);
         if (acctTarget == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
         String hostTarget = acctTarget.getAttr(Provisioning.A_zimbraMailHost);
-        Server serverTarget = Provisioning.getInstance().get(ServerBy.NAME, hostTarget);
+        Server serverTarget = Provisioning.getInstance().get(ServerBy.name, hostTarget);
         if (serverTarget == null)
             throw AccountServiceException.NO_SUCH_SERVER(hostTarget);
 

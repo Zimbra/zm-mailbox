@@ -619,7 +619,7 @@ public class RemoteMailQueue {
         	queueIds = args[4];
         }
         
-        Server server = prov.get(ServerBy.NAME, host);
+        Server server = prov.get(ServerBy.name, host);
         RemoteMailQueue queue = new RemoteMailQueue(server, queueName, task == TestTask.scan);
         queue.waitForScan(0);
 

@@ -66,7 +66,7 @@ public abstract class Session
         mSessionId = sessionId;
         mSessionType = type;
 
-        Account acct = Provisioning.getInstance().get(AccountBy.ID, accountId);
+        Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
         if (acct != null &&  Provisioning.onLocalServer(acct)) {
             // add this Session to the Mailbox or die trying
             mMailbox = Mailbox.getMailboxByAccountId(accountId);

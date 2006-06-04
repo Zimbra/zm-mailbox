@@ -60,7 +60,7 @@ public class RenameAccount extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
         String newName = request.getAttribute(AdminService.E_NEW_NAME);
 
-	    Account account = prov.get(AccountBy.ID, id);
+	    Account account = prov.get(AccountBy.id, id);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
@@ -79,7 +79,7 @@ public class RenameAccount extends AdminDocumentHandler {
         
         // get again with new name...
 
-        account = prov.get(AccountBy.ID, id);
+        account = prov.get(AccountBy.id, id);
         if (account == null)
             throw ServiceException.FAILURE("unable to get account after rename: " + id, null);
 	    Element response = lc.createElement(AdminService.RENAME_ACCOUNT_RESPONSE);

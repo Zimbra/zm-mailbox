@@ -1350,7 +1350,7 @@ public class IndexEditor {
         if (str != null && !str.equals("")) {
             if (str.indexOf('@') >= 0) {
                 // account
-                Account acct = Provisioning.getInstance().get(AccountBy.NAME, str);
+                Account acct = Provisioning.getInstance().get(AccountBy.name, str);
                 Mailbox mbx = Mailbox.getMailboxByAccountId(acct.getId());
                 return mbx.getId();
 

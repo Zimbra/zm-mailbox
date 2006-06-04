@@ -104,7 +104,7 @@ public class CreateMailbox extends RedoableOp {
 				throw e;
 		}
 
-		Account account = Provisioning.getInstance().get(AccountBy.ID, mAccountId);
+		Account account = Provisioning.getInstance().get(AccountBy.id, mAccountId);
 		if (account == null)
 			throw new RedoException("Account " + mAccountId + " does not exist", this);
 

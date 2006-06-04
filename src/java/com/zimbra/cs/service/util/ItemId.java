@@ -104,7 +104,7 @@ public class ItemId {
     public boolean isLocal() throws ServiceException {
         if (mAccountId == null)
             return true;
-        Account acctTarget = Provisioning.getInstance().get(AccountBy.ID, mAccountId);
+        Account acctTarget = Provisioning.getInstance().get(AccountBy.id, mAccountId);
         if (acctTarget == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(mAccountId);
         return DocumentHandler.LOCAL_HOST.equalsIgnoreCase(acctTarget.getAttr(Provisioning.A_zimbraMailHost));

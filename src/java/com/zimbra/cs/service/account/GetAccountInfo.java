@@ -63,9 +63,9 @@ public class GetAccountInfo extends DocumentHandler  {
         Account account = null;
 
         if (key.equals(BY_NAME)) {
-            account = prov.get(AccountBy.NAME, value);
+            account = prov.get(AccountBy.name, value);
         } else if (key.equals(BY_ID)) {
-            account = prov.get(AccountBy.ID, value);
+            account = prov.get(AccountBy.id, value);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
         }

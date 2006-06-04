@@ -205,7 +205,7 @@ public class RemoteManager {
 
         Zimbra.toolSetup("DEBUG");
         Provisioning prov = Provisioning.getInstance();
-        Server remote = prov.get(ServerBy.NAME, serverName);
+        Server remote = prov.get(ServerBy.name, serverName);
         
         for (int i = 0; i < iterations; i++) {
             RemoteManager rm = RemoteManager.getRemoteManager(remote);

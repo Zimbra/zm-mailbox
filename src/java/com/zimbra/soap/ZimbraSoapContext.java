@@ -190,7 +190,7 @@ public class ZimbraSoapContext {
             if (key == null)
                 mRequestedAccountId = null;
 	        else if (key.equals(BY_NAME)) {
-	            account = prov.get(AccountBy.NAME, value);
+	            account = prov.get(AccountBy.name, value);
 	            if (account == null)
                     throw AccountServiceException.NO_SUCH_ACCOUNT(value);
 	            mRequestedAccountId = account.getId();
@@ -379,7 +379,7 @@ public class ZimbraSoapContext {
      * @throws ServiceException 
      */
     public Account getAuthtokenAccount() throws ServiceException {
-        return Provisioning.getInstance().get(AccountBy.ID, mAuthTokenAccountId);
+        return Provisioning.getInstance().get(AccountBy.id, mAuthTokenAccountId);
     }
 
     /** Returns whether the authenticated user is the same as the user whose

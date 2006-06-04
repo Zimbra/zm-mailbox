@@ -112,7 +112,7 @@ public class PreAuthServlet extends ZimbraServlet {
             } else if (authToken != null) {
                 // see if we need a redirect to the correct server
                 AuthToken at = AuthToken.getAuthToken(authToken);
-                Account acct = prov.get(AccountBy.ID, at.getAccountId());
+                Account acct = prov.get(AccountBy.id, at.getAccountId());
                 if (Provisioning.onLocalServer(acct)) {
                     setCookieAndRedirect(req, resp, authToken);
                 } else {
@@ -127,11 +127,11 @@ public class PreAuthServlet extends ZimbraServlet {
             
                 Account acct = null;
                 if (accountBy.equals(Auth.BY_NAME)) {
-                    acct = prov.get(AccountBy.NAME, account);            
+                    acct = prov.get(AccountBy.name, account);            
                 } else if (accountBy.equals(Auth.BY_ID)) {
-                    acct = prov.get(AccountBy.ID, account);
+                    acct = prov.get(AccountBy.id, account);
                 } else if (accountBy.equals(Auth.BY_FOREIGN_PRINCIPAL)) {
-                    acct = prov.get(AccountBy.FOREIGN_PRINCIPAL, account);
+                    acct = prov.get(AccountBy.foreignPrincipal, account);
                 }
             
                 if (acct == null)

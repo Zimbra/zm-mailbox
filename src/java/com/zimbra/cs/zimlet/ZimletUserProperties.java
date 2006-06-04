@@ -159,7 +159,7 @@ public class ZimletUserProperties {
 	
 	public static void main(String[] args) throws Exception {
 		Provisioning prov = Provisioning.getInstance();
-		Account acct = prov.get(AccountBy.NAME, "user1");
+		Account acct = prov.get(AccountBy.name, "user1");
 		ZimletUserProperties prop = new ZimletUserProperties(acct);
 		prop.setProperty("phone","123123","aaaaaaaaaaaa");
 		prop.setProperty("phone","number","bar");

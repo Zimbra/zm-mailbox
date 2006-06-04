@@ -59,7 +59,7 @@ public class RemoveAccountAlias extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminService.E_ID);
         String alias = request.getAttribute(AdminService.E_ALIAS);
 
-	    Account account = prov.get(AccountBy.ID, id);
+	    Account account = prov.get(AccountBy.id, id);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 

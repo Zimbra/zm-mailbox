@@ -61,19 +61,7 @@ public class GetAccount extends AdminDocumentHandler {
 	    String key = a.getAttribute(AdminService.A_BY);
         String value = a.getText();
 
-	    Account account = null;
-
-        if (key.equals(AdminService.BY_NAME)) {
-            account = prov.get(AccountBy.NAME, value);
-        } else if (key.equals(AdminService.BY_ID)) {
-            account = prov.get(AccountBy.ID, value);
-        } else if (key.equals(AdminService.BY_ADMIN_NAME)) {
-            account = prov.get(AccountBy.ADMIN_NAME, value);
-        } else if (key.equals(AdminService.BY_FOREIGN_PRINCIPAL)) {
-            account = prov.get(AccountBy.FOREIGN_PRINCIPAL, value);
-        } else {
-            throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
-        }
+	    Account account = prov.get(AccountBy.fromString(key), value);
 
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);

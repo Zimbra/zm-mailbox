@@ -572,7 +572,7 @@ public class ZimletUtil {
 		ZimbraLog.zimlet.info("Adding Zimlet " + zimlet + " to COS " + cos);
 		Provisioning prov = Provisioning.getInstance();
 		try {
-			Cos c = prov.get(CosBy.NAME, cos);
+			Cos c = prov.get(CosBy.name, cos);
             Map attrs = new HashMap<String, Object>();
             attrs.put("+"+Provisioning.A_zimbraZimletAvailableZimlets, zimlet);
             prov.modifyAttrs(c, attrs);            
@@ -593,7 +593,7 @@ public class ZimletUtil {
 		ZimbraLog.zimlet.info("Removing Zimlet " + zimlet + " from COS " + cos);
 		Provisioning prov = Provisioning.getInstance();
 		try {
-			Cos c = prov.get(CosBy.NAME, cos);
+			Cos c = prov.get(CosBy.name, cos);
             Map attrs = new HashMap<String, Object>();
             attrs.put("-"+Provisioning.A_zimbraZimletAvailableZimlets, zimlet);
             prov.modifyAttrs(c, attrs);
@@ -830,7 +830,7 @@ public class ZimletUtil {
     
 	public static void addAllowedDomains(String domains, String cosName) throws ServiceException {
 	    Provisioning prov = Provisioning.getInstance();          
-	    Cos cos = prov.get(CosBy.NAME, cosName);
+	    Cos cos = prov.get(CosBy.name, cosName);
 	    Set<String> domainSet = cos.getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
 	    String[] domainArray = domains.toLowerCase().split(",");
 	    for (int i = 0; i < domainArray.length; i++) {
@@ -843,7 +843,7 @@ public class ZimletUtil {
 
 	public static void removeAllowedDomains(String domains, String cosName) throws ServiceException {
 	    Provisioning prov = Provisioning.getInstance();            
-	    Cos cos = prov.get(CosBy.NAME, cosName);
+	    Cos cos = prov.get(CosBy.name, cosName);
 	    Set<String> domainSet = cos.getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
 	    String[] domainArray = domains.toLowerCase().split(",");
 	    for (int i = 0; i < domainArray.length; i++) {

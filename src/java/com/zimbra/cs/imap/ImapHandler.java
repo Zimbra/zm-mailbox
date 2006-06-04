@@ -573,7 +573,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         ImapSession session = null;
         try {
             Provisioning prov = Provisioning.getInstance();
-            Account account = prov.get(AccountBy.NAME, username);
+            Account account = prov.get(AccountBy.name, username);
             if (account == null) {
                 sendNO(tag, "LOGIN failed");
                 return CONTINUE_PROCESSING;

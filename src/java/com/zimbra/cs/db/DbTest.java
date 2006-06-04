@@ -781,7 +781,7 @@ public class DbTest {
 
 
     public static void main(String[] args) throws MessagingException, IOException, ParseException, ServiceException {
-    	Account acct = Provisioning.getInstance().get(AccountBy.NAME, "user1");
+    	Account acct = Provisioning.getInstance().get(AccountBy.name, "user1");
         Mailbox mbox = Mailbox.getMailboxByAccount(acct);
         System.out.println(mbox);
         if (mbox != null) {

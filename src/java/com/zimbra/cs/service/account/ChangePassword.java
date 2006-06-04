@@ -49,7 +49,7 @@ public class ChangePassword extends WriteOpDocumentHandler {
 
         String name = request.getAttribute(AccountService.E_ACCOUNT);
         Provisioning prov = Provisioning.getInstance();
-        Account acct = prov.get(AccountBy.NAME, name);
+        Account acct = prov.get(AccountBy.name, name);
         if (acct == null)
             throw AccountServiceException.AUTH_FAILED(name);
 		String oldPassword = request.getAttribute(AccountService.E_OLD_PASSWORD);

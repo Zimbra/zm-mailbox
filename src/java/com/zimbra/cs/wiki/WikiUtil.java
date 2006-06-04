@@ -376,7 +376,7 @@ public class WikiUtil {
 				throw WikiServiceException.ERROR("import", e);
 			}
 		Provisioning prov = Provisioning.getInstance();
-		Account acct = prov.get(AccountBy.NAME, mUsername);
+		Account acct = prov.get(AccountBy.name, mUsername);
 		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
 		OperationContext octxt = new OperationContext(acct);
 		
@@ -410,7 +410,7 @@ public class WikiUtil {
 				throw WikiServiceException.ERROR("emptyNotebooks", e);
 			}
 		Provisioning prov = Provisioning.getInstance();
-		Account acct = prov.get(AccountBy.NAME, mUsername);
+		Account acct = prov.get(AccountBy.name, mUsername);
 		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
 		OperationContext octxt = new OperationContext(acct);
 		
@@ -424,7 +424,7 @@ public class WikiUtil {
 	
 	public Account createWikiAccount() throws ServiceException {
 		Provisioning prov = Provisioning.getInstance();
-		Account account = prov.get(AccountBy.NAME, mUsername);
+		Account account = prov.get(AccountBy.name, mUsername);
 		if (account == null) {
 			if (mPassword == null) {
 				mPassword = sDEFAULTPASSWORD;
@@ -501,7 +501,7 @@ public class WikiUtil {
 			throw WikiServiceException.ERROR("invalid argument - empty domain");
 		}
 		Provisioning prov = Provisioning.getInstance();
-		Domain dom = prov.get(DomainBy.NAME, domain);
+		Domain dom = prov.get(DomainBy.name, domain);
 		if (dom == null) {
 			throw WikiServiceException.ERROR("invalid domain: " + domain);
 		}

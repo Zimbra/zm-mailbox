@@ -39,7 +39,7 @@ public abstract class AccessManager {
     public abstract boolean isDomainAdminOnly(AuthToken at);
 
     public Account getAccount(AuthToken at) throws ServiceException {
-        return Provisioning.getInstance().get(AccountBy.ID, at.getAccountId());
+        return Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
     }
 
     public Domain getDomain(AuthToken at) throws ServiceException {

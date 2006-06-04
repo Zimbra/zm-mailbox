@@ -51,7 +51,7 @@ public class DeleteServer extends AdminDocumentHandler {
 
 	    String id = request.getAttribute(AdminService.E_ID);
 	    
-	    Server server = prov.get(ServerBy.ID, id);
+	    Server server = prov.get(ServerBy.id, id);
         if (server == null)
             throw AccountServiceException.NO_SUCH_SERVER(id);
         

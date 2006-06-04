@@ -481,7 +481,7 @@ public class SpamExtract {
             return null;
         }
         
-        Account account = prov.get(AccountBy.NAME, name);
+        Account account = prov.get(AccountBy.name, name);
         if (account == null) {
             mLog.error("can not find account " + name);
             return null;

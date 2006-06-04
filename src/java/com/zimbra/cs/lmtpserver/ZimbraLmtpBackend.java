@@ -75,7 +75,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         String addr = address.getEmailAddress();
 
         try {
-		    Account acct = Provisioning.getInstance().get(AccountBy.NAME, addr);
+		    Account acct = Provisioning.getInstance().get(AccountBy.name, addr);
 		    if (acct == null) {
 		    	mLog.info("rejecting address " + addr + ": no account");
 		    	return LmtpStatus.REJECT;
@@ -207,7 +207,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 Mailbox mbox = null;
                 boolean attachmentsIndexingEnabled = true;
                 try {
-                    account = Provisioning.getInstance().get(AccountBy.NAME, rcptEmail);
+                    account = Provisioning.getInstance().get(AccountBy.name, rcptEmail);
                     if (account == null) {
                         ZimbraLog.mailbox.warn("No account found delivering mail to " + rcptEmail);
                         continue;

@@ -61,7 +61,7 @@ public class DeleteCalendarResource extends AdminDocumentHandler {
 
         // Confirm that the account exists and that the mailbox is located
         // on the current host
-        CalendarResource resource = prov.get(CalendarResourceBy.ID, id);
+        CalendarResource resource = prov.get(CalendarResourceBy.id, id);
         if (resource == null)
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(id);
 

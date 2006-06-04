@@ -55,7 +55,7 @@ public class IMRouter implements Runnable {
     }
     
     public Object getLock(IMAddr addr) throws ServiceException {
-        Account acct = Provisioning.getInstance().get(AccountBy.NAME, addr.getAddr());
+        Account acct = Provisioning.getInstance().get(AccountBy.name, addr.getAddr());
         if (acct != null) 
             return Mailbox.getMailboxByAccount(acct);
         else
@@ -63,7 +63,7 @@ public class IMRouter implements Runnable {
     }
     
     void flush(OperationContext octxt, IMPersona persona) throws ServiceException {
-        Mailbox mbox = Mailbox.getMailboxByAccount(Provisioning.getInstance().get(AccountBy.NAME, persona.getAddr().getAddr()));
+        Mailbox mbox = Mailbox.getMailboxByAccount(Provisioning.getInstance().get(AccountBy.name, persona.getAddr().getAddr()));
         assert(persona.getAddr().getAddr().equals(mbox.getAccount().getName()));
         Metadata md = persona.encodeAsMetatata();
         mbox.setConfig(octxt, "im", md);
@@ -76,7 +76,7 @@ public class IMRouter implements Runnable {
         
         // okay, maybe it's an alias -- get the account and resolve it to the cannonical name
         if (toRet == null) {
-            Account acct = Provisioning.getInstance().get(AccountBy.NAME, addr.getAddr());            
+            Account acct = Provisioning.getInstance().get(AccountBy.name, addr.getAddr());            
             String canonName = acct.getName();
             addr = new IMAddr(canonName);
             toRet = mBuddyListMap.get(addr);
@@ -84,7 +84,7 @@ public class IMRouter implements Runnable {
         
         // okay, we might have to create the persona
         if (toRet == null) {
-            Mailbox mbox = Mailbox.getMailboxByAccount(Provisioning.getInstance().get(AccountBy.NAME, addr.getAddr()));
+            Mailbox mbox = Mailbox.getMailboxByAccount(Provisioning.getInstance().get(AccountBy.name, addr.getAddr()));
             Metadata md = mbox.getConfig(octxt, "im");
             if (md != null)
                 toRet = IMPersona.decodeFromMetadata(addr, md);

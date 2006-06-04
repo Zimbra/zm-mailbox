@@ -51,7 +51,7 @@ public class DeleteCos extends AdminDocumentHandler {
 
 	    String id = request.getAttribute(AdminService.E_ID);
 	    
-	    Cos cos = prov.get(CosBy.ID, id);
+	    Cos cos = prov.get(CosBy.id, id);
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(id);
         

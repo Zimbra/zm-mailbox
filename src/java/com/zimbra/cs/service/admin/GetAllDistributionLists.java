@@ -65,9 +65,9 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
             String value = d.getText();
         
             if (key.equals(BY_NAME)) {
-                domain = prov.get(DomainBy.NAME, value);
+                domain = prov.get(DomainBy.name, value);
             } else if (key.equals(BY_ID)) {
-                domain = prov.get(DomainBy.ID, value);
+                domain = prov.get(DomainBy.id, value);
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
             }
