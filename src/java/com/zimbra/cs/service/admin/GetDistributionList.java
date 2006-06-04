@@ -130,11 +130,6 @@ public class GetDistributionList extends AdminDocumentHandler {
            Object value = entry.getValue();
            
            // Hide the postfix lookup table attr - should we though?
-           if (name.equals(Provisioning.A_zimbraMailAlias)) {
-               continue;
-           }
-           
-           // Hide the postfix lookup table attr - should we though?
            if (name.equals(Provisioning.A_zimbraMailForwardingAddress)) {
         	   continue;
            }
