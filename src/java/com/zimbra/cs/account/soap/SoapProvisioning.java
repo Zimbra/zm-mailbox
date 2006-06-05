@@ -27,7 +27,6 @@ package com.zimbra.cs.account.soap;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +53,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.util.StringUtil;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
@@ -82,6 +80,14 @@ public class SoapProvisioning extends Provisioning {
     public String soapGetURI() {
         return mTransport.getURI();
     }
+    
+    public String getAuthToken() {
+        return mAuthToken;
+    }
+    
+    public void setAuthToken(String authToken) {
+        mAuthToken = authToken;
+    }
 
     /**
      * used to authenticate via admin AuthRequest. can only be called after setting the URI with setURI.
@@ -104,7 +110,8 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * auth as zimbra admin from localconfig
+     * auth as zimbra admin (over SOAP) using password from localconfig. Can only be called after
+     * setting the URI with setUI. 
      * 
      * @throws ServiceException
      * @throws IOException

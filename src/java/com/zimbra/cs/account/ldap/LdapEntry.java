@@ -62,14 +62,12 @@ public class LdapEntry implements Entry {
     private Map<String, String[]> mMultiAttrCache;
     private Map<String, Set<String>> mMultiAttrSetCache;
     private Map<Object, Object> mData;
-    private long mLoadtime;
     
     protected static final String[] sEmptyMulti = new String[0];
 
     LdapEntry(String dn, Attributes attrs) {
         mDn = dn;
         mAttrs = attrs;
-        mLoadtime = System.currentTimeMillis();
     }
 
     public String getDN() {
@@ -91,10 +89,6 @@ public class LdapEntry implements Entry {
             throw ServiceException.FAILURE("unable to refresh entry: "+mDn, e);
         }
     }
-
-    public boolean isStale(long ageInMillis) {
-        return mLoadtime + ageInMillis < System.currentTimeMillis(); 
-    }
     
     private synchronized void refresh(DirContext initCtxt, long curr) throws NamingException, ServiceException {
         DirContext ctxt = initCtxt;
@@ -108,7 +102,6 @@ public class LdapEntry implements Entry {
             if (mData != null)
                 mData.clear();
             mAttrs = ctxt.getAttributes(mDn);
-            mLoadtime = curr != 0 ? curr : System.currentTimeMillis();
         } finally {
             if (initCtxt == null)
                 LdapUtil.closeContext(ctxt);

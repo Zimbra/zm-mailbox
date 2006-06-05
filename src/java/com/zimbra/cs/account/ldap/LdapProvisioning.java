@@ -137,23 +137,23 @@ public class LdapProvisioning extends Provisioning {
     private static final String FILTER_CALENDAR_RESOURCE_OBJECTCLASS =
         "(objectclass=zimbraCalendarResource)";
 
-    private static ZimbraLdapEntryCache sAccountCache =
-        new ZimbraLdapEntryCache(
+    private static NamedEntryCache<LdapAccount> sAccountCache =
+        new NamedEntryCache<LdapAccount>(
                 LC.ldap_cache_account_maxsize.intValue(),
                 LC.ldap_cache_account_maxage.intValue() * Constants.MILLIS_PER_MINUTE); 
 
-    private static ZimbraLdapEntryCache sCosCache =
-        new ZimbraLdapEntryCache(
+    private static NamedEntryCache<LdapCos> sCosCache =
+        new NamedEntryCache<LdapCos>(
                 LC.ldap_cache_cos_maxsize.intValue(),
                 LC.ldap_cache_cos_maxage.intValue() * Constants.MILLIS_PER_MINUTE); 
 
-    private static ZimbraLdapDomainCache sDomainCache =
-        new ZimbraLdapDomainCache(
+    private static DomainCache sDomainCache =
+        new DomainCache(
                 LC.ldap_cache_domain_maxsize.intValue(),
-                LC.ldap_cache_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE);     
+                LC.ldap_cache_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE);         
 
-    private static ZimbraLdapEntryCache sServerCache =
-        new ZimbraLdapEntryCache(
+    private static NamedEntryCache<Server> sServerCache =
+        new NamedEntryCache<Server>(
                 LC.ldap_cache_server_maxsize.intValue(),
                 LC.ldap_cache_server_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
 
@@ -163,8 +163,8 @@ public class LdapProvisioning extends Provisioning {
     // list of time zones to preserve sort order
     private static List<WellKnownTimeZone> sTimeZoneList = new ArrayList<WellKnownTimeZone>(LC.ldap_cache_timezone_maxsize.intValue());
 
-    private static ZimbraLdapEntryCache sZimletCache = 
-        new ZimbraLdapEntryCache(
+    private static NamedEntryCache<LdapZimlet> sZimletCache = 
+        new NamedEntryCache<LdapZimlet>(
                 LC.ldap_cache_zimlet_maxsize.intValue(),
                 LC.ldap_cache_zimlet_maxage.intValue() * Constants.MILLIS_PER_MINUTE);                
 
@@ -360,7 +360,7 @@ public class LdapProvisioning extends Provisioning {
     private Account getAccountById(String zimbraId, DirContext ctxt) throws ServiceException {
         if (zimbraId == null)
             return null;
-        LdapAccount a = (LdapAccount) sAccountCache.getById(zimbraId);
+        LdapAccount a = sAccountCache.getById(zimbraId);
         if (a == null) {
             zimbraId= LdapUtil.escapeSearchFilterArg(zimbraId);
             a = getAccountByQuery(
@@ -403,7 +403,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private Account getAdminAccountByName(String name) throws ServiceException {
-        LdapAccount a = (LdapAccount) sAccountCache.getByName(name);
+        LdapAccount a = sAccountCache.getByName(name);
         if (a == null) {
             name = LdapUtil.escapeSearchFilterArg(name);
             a = getAccountByQuery(
@@ -431,7 +431,7 @@ public class LdapProvisioning extends Provisioning {
                 emailAddress = emailAddress + "@" + domain;            
          }
         
-        LdapAccount account = (LdapAccount) sAccountCache.getByName(emailAddress);
+        LdapAccount account = sAccountCache.getByName(emailAddress);
         if (account == null) {
             emailAddress = LdapUtil.escapeSearchFilterArg(emailAddress);
             account = getAccountByQuery(
@@ -1345,7 +1345,7 @@ public class LdapProvisioning extends Provisioning {
         if (zimbraId == null)
             return null;
 
-        LdapCos cos = (LdapCos) sCosCache.getById(zimbraId);
+        LdapCos cos = sCosCache.getById(zimbraId);
         if (cos == null) {
             zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
             cos = getCOSByQuery("(&(zimbraId="+zimbraId+")(objectclass=zimbraCOS))", ctxt);
@@ -1371,7 +1371,7 @@ public class LdapProvisioning extends Provisioning {
      */
     private Cos getCosByName(String name, DirContext initCtxt) throws ServiceException {
         DirContext ctxt = initCtxt;
-        LdapCos cos = (LdapCos) sCosCache.getByName(name);
+        LdapCos cos = sCosCache.getByName(name);
         if (cos != null)
             return cos;
 
@@ -1663,12 +1663,12 @@ public class LdapProvisioning extends Provisioning {
     private Server getServerById(String zimbraId, DirContext ctxt, boolean nocache) throws ServiceException {
         if (zimbraId == null)
             return null;
-        LdapServer s = null;
+        Server s = null;
         if (!nocache)
-            s = (LdapServer) sServerCache.getById(zimbraId);
+            s = sServerCache.getById(zimbraId);
         if (s == null) {
             zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
-            s = (LdapServer)getServerByQuery("(&(zimbraId="+zimbraId+")(objectclass=zimbraServer))", ctxt); 
+            s = (Server)getServerByQuery("(&(zimbraId="+zimbraId+")(objectclass=zimbraServer))", ctxt); 
             sServerCache.put(s);
         }
         return s;
@@ -1704,9 +1704,9 @@ public class LdapProvisioning extends Provisioning {
         return getServerByName(name, false);
     }
 
-    public Server getServerByName(String name, boolean nocache) throws ServiceException {
+    private Server getServerByName(String name, boolean nocache) throws ServiceException {
         if (!nocache) {
-        	LdapServer s = (LdapServer) sServerCache.getByName(name);
+        	Server s = sServerCache.getByName(name);
             if (s != null)
                 return s;
         }
@@ -2522,7 +2522,7 @@ public class LdapProvisioning extends Provisioning {
     }
     
     private Zimlet getZimlet(String name, DirContext initCtxt, boolean useCache) throws ServiceException {
-    	LdapZimlet zimlet = (LdapZimlet) sZimletCache.getByName(name);
+    	LdapZimlet zimlet = sZimletCache.getByName(name);
     	if (!useCache || zimlet == null) {
         	DirContext ctxt = initCtxt;
         	try {
