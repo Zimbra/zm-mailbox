@@ -255,7 +255,7 @@ public class SoapProvisioning extends Provisioning {
     public Zimlet createZimlet(String name, Map<String, Object> attrs)
             throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -422,26 +422,26 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public Server getLocalServer() throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public MimeTypeInfo getMimeType(String name) throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public MimeTypeInfo getMimeTypeByExtension(String ext)
             throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public List<Zimlet> getObjectTypes() throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -457,25 +457,25 @@ public class SoapProvisioning extends Provisioning {
     public WellKnownTimeZone getTimeZoneById(String tzId)
             throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Zimlet getZimlet(String name) throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean healthCheck() {
         // TODO Auto-generated method stub
-        return false;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public List<Zimlet> listAllZimlets() throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -490,8 +490,8 @@ public class SoapProvisioning extends Provisioning {
     public void preAuthAccount(Account acct, String accountName,
             String accountBy, long timestamp, long expires, String preAuth)
             throws ServiceException {
-        // TODO Auto-generated method stub
-
+        // TODO Auto-generated method stub        
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -554,7 +554,7 @@ public class SoapProvisioning extends Provisioning {
             String sortAttr, boolean sortAscending, int flags)
             throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -562,7 +562,7 @@ public class SoapProvisioning extends Provisioning {
             String[] returnAttrs, String sortAttr, boolean sortAscending)
             throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -592,65 +592,35 @@ public class SoapProvisioning extends Provisioning {
         SoapEntry se = (SoapEntry) e;
         se.reload(this);
     }
-    
-    public static void main(String args[]) throws ServiceException, IOException {
-        try {
-            Zimbra.toolSetup();
-            SoapProvisioning p = new SoapProvisioning();
-            p.soapSetURI("https://localhost:7071/service/admin/soap");
-            p.soapZimbraAdminAuthenticate();
-            /*
-            HashMap<String,Object> attrs = new HashMap<String,Object>();
-            attrs.put(Provisioning.A_displayName, "DISPLAY THIS");
-            Account acct = p.createAccount("userkewl8@macintel.local", "test123", attrs);
-            System.out.println(acct);
-            attrs = new HashMap<String,Object>();
-            attrs.put(Provisioning.A_displayName, "DISPLAY THAT");
-            p.modifyAttrs(acct, attrs);
-            */
-            /*
-            Account acct2 = p.getAccountByName("userkewl8@macintel.local");
-            System.out.println(acct2);
-            p.changePassword(acct2, "test123", "test1235");
-            */
-            Account acct3 = p.get(AccountBy.adminName, "zimbra");
-            System.out.println(acct3);
-            System.out.println("----");
-            for (Account at: p.getAllAdminAccounts()) System.out.println(at.getName());
-            System.out.println("----");            
-        } catch (SoapFaultException e) {
-            System.out.println(e.getCode());
-        }
-    }
 
     @Override
     public Set<String> getDistributionLists(Account acct) throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via) throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean inDistributionList(Account acct, String zimbraId) throws ServiceException {
         // TODO Auto-generated method stub
-        return false;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public ICalTimeZone getTimeZone(Account acct) throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String, String> via) throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -669,7 +639,6 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void getAllAccounts(Domain d, Visitor visitor) throws ServiceException {
-        // TODO Auto-generated method stub
         XMLElement req = new XMLElement(AdminService.GET_ALL_ACCOUNTS_REQUEST);
         Element domainEl = req.addElement(AdminService.E_DOMAIN);
         domainEl.addAttribute(AdminService.A_BY, DomainBy.id.name());
@@ -724,25 +693,25 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public SearchGalResult autoCompleteGal(Domain d, String query, GAL_SEARCH_TYPE type, int limit) throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public List searchAccounts(Domain d, String query, String[] returnAttrs, String sortAttr, boolean sortAscending, int flags) throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public List searchCalendarResources(Domain d, EntrySearchFilter filter, String[] returnAttrs, String sortAttr, boolean sortAscending) throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String token) throws ServiceException {
         // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
