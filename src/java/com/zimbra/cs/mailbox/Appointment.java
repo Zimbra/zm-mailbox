@@ -524,7 +524,7 @@ public class Appointment extends MailItem {
         return mInvites.get(num);
     }
     
-    public Invite getDefaultInvite() {
+    public Invite getDefaultInvite() throws ServiceException {
         Invite first = null;
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
             Invite cur = (Invite) iter.next();
@@ -533,6 +533,14 @@ public class Appointment extends MailItem {
             if (first == null)
                 first = cur;
         }
+        if (first == null)
+            throw ServiceException.FAILURE(
+                    "Invalid state: appointment " + getId() + " in mailbox " +
+                    getMailbox().getId() +
+                    " has no default invite; " +
+                    (mInvites != null ? ("invite count = " + mInvites.size())
+                                      : "null invite list"),
+                    null);
         return first;
     }
     
@@ -1508,7 +1516,8 @@ public class Appointment extends MailItem {
 
         public static final int MAX_CONFLICT_LIST_SIZE = 5;
 
-        public static String getBusyTimesString(List<Availability> list, TimeZone tz, Locale lc) {
+        public static String getBusyTimesString(List<Availability> list, TimeZone tz, Locale lc)
+        throws ServiceException {
             StringBuilder sb = new StringBuilder();
             int availCount = 0;
             boolean hasMoreConflicts = false;
