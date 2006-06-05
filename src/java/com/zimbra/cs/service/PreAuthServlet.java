@@ -121,18 +121,12 @@ public class PreAuthServlet extends ZimbraServlet {
             } else {
                 String preAuth = getRequiredParam(req, resp, PARAM_PREAUTH);            
                 String account = getRequiredParam(req, resp, PARAM_ACCOUNT);
-                String accountBy = getOptionalParam(req, PARAM_BY, Auth.BY_NAME);
+                String accountBy = getOptionalParam(req, PARAM_BY, AccountBy.name.name());
                 long timestamp = Long.parseLong(getRequiredParam(req, resp, PARAM_TIMESTAMP));
                 long expires = Long.parseLong(getRequiredParam(req, resp, PARAM_EXPIRES));
             
                 Account acct = null;
-                if (accountBy.equals(Auth.BY_NAME)) {
-                    acct = prov.get(AccountBy.name, account);            
-                } else if (accountBy.equals(Auth.BY_ID)) {
-                    acct = prov.get(AccountBy.id, account);
-                } else if (accountBy.equals(Auth.BY_FOREIGN_PRINCIPAL)) {
-                    acct = prov.get(AccountBy.foreignPrincipal, account);
-                }
+                acct = prov.get(AccountBy.fromString(accountBy), account);                            
             
                 if (acct == null)
                     throw AccountServiceException.AUTH_FAILED(account);

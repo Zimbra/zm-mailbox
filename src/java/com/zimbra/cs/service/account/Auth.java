@@ -47,10 +47,6 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class Auth extends DocumentHandler  {
 
-    public static final String BY_NAME = "name";
-    public static final String BY_ID = "id";
-    public static final String BY_FOREIGN_PRINCIPAL = "foreignPrincipal";
-    
     /** Returns (or creates) the in-memory {@link Session} object appropriate
      *  for this request.<p>
      * 
@@ -66,10 +62,9 @@ public class Auth extends DocumentHandler  {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-
         Element acctEl = request.getElement(AccountService.E_ACCOUNT);
         String value = acctEl.getText();
-        String by = acctEl.getAttribute(AccountService.A_BY, BY_NAME);
+        String byStr = acctEl.getAttribute(AccountService.A_BY, AccountBy.name.name());
         Element preAuthEl = request.getOptionalElement(AccountService.E_PREAUTH);
         String password = request.getAttribute(AccountService.E_PASSWORD, null);
         Provisioning prov = Provisioning.getInstance();
@@ -77,20 +72,17 @@ public class Auth extends DocumentHandler  {
         Element virtualHostEl = request.getOptionalElement(AccountService.E_VIRTUAL_HOST);
         String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
         
-        Account acct = null;
+        AccountBy by = AccountBy.fromString(byStr);
         
-        if (by.equals(BY_NAME)) {
+        if (by == AccountBy.name) {
             if (virtualHost != null  && value.indexOf('@') == -1) {
                 Domain d = prov.get(DomainBy.virtualHostname, virtualHost);
                 if (d != null)
                     value = value + "@" + d.getName();
             }
-            acct = prov.get(AccountBy.name, value);            
-        } else if (by.equals(BY_ID)) {
-            acct = prov.get(AccountBy.id, value);
-        } else if (by.equals(BY_FOREIGN_PRINCIPAL)) {
-            acct = prov.get(AccountBy.foreignPrincipal, value);
         }
+
+        Account acct = prov.get(AccountBy.name, value);            
 
 		if (acct == null)
 			throw AccountServiceException.AUTH_FAILED(value);
@@ -104,7 +96,7 @@ public class Auth extends DocumentHandler  {
                 long timestamp = preAuthEl.getAttributeLong(AccountService.A_TIMESTAMP);
                 expires = preAuthEl.getAttributeLong(AccountService.A_EXPIRES, 0);
                 String preAuth = preAuthEl.getTextTrim();
-                prov.preAuthAccount(acct, value, by, timestamp, expires, preAuth);
+                prov.preAuthAccount(acct, value, byStr, timestamp, expires, preAuth);
             } else {
                 throw ServiceException.INVALID_REQUEST("must specify "+AccountService.E_PASSWORD, null);
             }
