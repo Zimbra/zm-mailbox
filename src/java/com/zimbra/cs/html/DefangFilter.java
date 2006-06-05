@@ -558,7 +558,15 @@ public class DefangFilter extends DefaultFilter {
      * @param attributes
      */
     private void fixATag(XMLAttributes attributes) {
-        int index = attributes.getIndex("target");
+	// BEGIN: bug 7927
+	int index = attributes.getIndex("href");
+	if (index == -1)	// links that don't have a href don't need target="_blank"
+	    return;
+	String href = attributes.getValue(index);
+	if (href.indexOf('#') == 0) // LOCAL links don't need target="_blank"
+	    return;
+	// END: bug 7927
+	index = attributes.getIndex("target");
         if (index != -1) {
             attributes.setValue(index, "_blank");
         } else {
