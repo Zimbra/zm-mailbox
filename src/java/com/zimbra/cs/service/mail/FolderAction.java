@@ -35,6 +35,7 @@ import java.util.Set;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -173,6 +174,8 @@ public class FolderAction extends ItemAction {
             else {
             	nentry = lookupGranteeByName(grant.getAttribute(MailService.A_DISPLAY), gtype, lc);
             	zid = nentry.getId();
+            	if (gtype == ACL.GRANTEE_USER && nentry instanceof DistributionList)
+            		gtype = ACL.GRANTEE_GROUP;
             }
             
             mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, inherit, args);
@@ -243,6 +246,15 @@ public class FolderAction extends ItemAction {
         return null;
     }
 
+    static NamedEntry lookupEmailAddress(String name) throws ServiceException {
+    	NamedEntry nentry = null;
+        Provisioning prov = Provisioning.getInstance();
+        nentry = prov.get(AccountBy.name, name);
+        if (nentry == null)
+        	nentry = prov.get(DistributionListBy.name, name);
+        return nentry;
+    }
+    
     static NamedEntry lookupGranteeByName(String name, byte type, ZimbraSoapContext lc) throws ServiceException {
         if (type == ACL.GRANTEE_AUTHUSER || type == ACL.GRANTEE_PUBLIC|| type == ACL.GRANTEE_GUEST)
             return null;
@@ -261,7 +273,7 @@ public class FolderAction extends ItemAction {
             switch (type) {
                 case ACL.GRANTEE_COS:     nentry = prov.get(CosBy.name, name);               break;
                 case ACL.GRANTEE_DOMAIN:  nentry = prov.get(DomainBy.name, name);            break;
-                case ACL.GRANTEE_USER:    nentry = prov.get(AccountBy.name, name);           break;
+                case ACL.GRANTEE_USER:    nentry = lookupEmailAddress(name);                 break;
                 case ACL.GRANTEE_GROUP:   nentry = prov.get(DistributionListBy.name, name);  break;
             }
 
