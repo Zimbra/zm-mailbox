@@ -408,7 +408,7 @@ public class LC {
              " and in local config.");
 
         ldap_connect_timeout = new KnownKey("ldap_connect_timeout");
-        ldap_connect_timeout.setDefault("10000");
+        ldap_connect_timeout.setDefault("30000");
         ldap_connect_timeout.setDoc
             ("Milliseconds after which a connection attempt is aborted.");
 
@@ -423,7 +423,7 @@ public class LC {
             ("Initial number of active LDAP connections to ramp up to.");
         
         ldap_connect_pool_maxsize = new KnownKey("ldap_connect_pool_maxsize");
-        ldap_connect_pool_maxsize.setDefault("25");
+        ldap_connect_pool_maxsize.setDefault("50");
         ldap_connect_pool_maxsize.setDoc
             ("Maximum number of LDAP active and idle connections allowed.");
         
