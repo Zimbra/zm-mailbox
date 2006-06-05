@@ -80,13 +80,7 @@ public class SearchAccounts extends AdminDocumentHandler {
         String types = request.getAttribute(AdminService.A_TYPES, "accounts");
         boolean sortAscending = request.getAttributeBool(AdminService.A_SORT_ASCENDING, true);        
 
-        int flags = 0;
-        
-        if (types.indexOf("accounts") != -1) flags |= Provisioning.SA_ACCOUNT_FLAG;
-        if (types.indexOf("aliases") != -1) flags |= Provisioning.SA_ALIAS_FLAG;
-        if (types.indexOf("distributionlists") != -1) flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
-        if (types.indexOf("resources") != -1) flags |= Provisioning.SA_CALENDAR_RESOURCE_FLAG;
-        if (types.indexOf("domains") != -1) flags |= Provisioning.SA_DOMAIN_FLAG;
+        int flags = Provisioning.searchAccountStringToMask(types);
 
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 

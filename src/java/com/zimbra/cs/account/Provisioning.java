@@ -1071,6 +1071,34 @@ public abstract class Provisioning {
     /** return domains from searchAccounts. only valid with Provisioning.searchAccounts. */
     public static final int SA_DOMAIN_FLAG = 0x10;    
 
+    /**
+     * Takes a string repsrenting the objects to search for and returns a bit mask of SA_* flags for the given string.
+     * The full set of objects is "accounts,aliases,distributionLists,resources,domains".
+     * @param types
+     * @return
+     */
+    public static int searchAccountStringToMask(String types) {
+        int flags = 0;
+        
+        if (types.indexOf("accounts") != -1) flags |= Provisioning.SA_ACCOUNT_FLAG;
+        if (types.indexOf("aliases") != -1) flags |= Provisioning.SA_ALIAS_FLAG;
+        if (types.indexOf("distributionlists") != -1) flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
+        if (types.indexOf("resources") != -1) flags |= Provisioning.SA_CALENDAR_RESOURCE_FLAG;
+        if (types.indexOf("domains") != -1) flags |= Provisioning.SA_DOMAIN_FLAG;
+
+        return flags;
+    }
+    
+    public static String searchAccountMaskToString(int mask) {
+        StringBuilder sb = new StringBuilder();
+        if ( (mask & Provisioning.SA_ACCOUNT_FLAG) != 0) sb.append("accounts");
+        if ( (mask & Provisioning.SA_ALIAS_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("aliases"); }
+        if ( (mask & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("distributionlists"); }                
+        if ( (mask & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("resources"); }
+        if ( (mask & Provisioning.SA_DOMAIN_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("domains"); }        
+        return sb.toString();
+    }
+        
     public static enum GAL_SEARCH_TYPE {
         ALL, USER_ACCOUNT, CALENDAR_RESOURCE
     }

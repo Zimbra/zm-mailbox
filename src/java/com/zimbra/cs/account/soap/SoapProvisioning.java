@@ -27,6 +27,7 @@ package com.zimbra.cs.account.soap;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -490,8 +491,16 @@ public class SoapProvisioning extends Provisioning {
     public void preAuthAccount(Account acct, String accountName,
             String accountBy, long timestamp, long expires, String preAuth)
             throws ServiceException {
-        // TODO Auto-generated method stub        
-        throw new UnsupportedOperationException();
+        XMLElement req = new XMLElement(AccountService.AUTH_REQUEST);
+        Element a = req.addElement(AccountService.E_ACCOUNT);
+        a.addAttribute(AccountService.A_BY, "name");
+        a.setText(accountName);
+        Element p = req.addElement(AccountService.E_PREAUTH);
+        p.addAttribute(AccountService.A_TIMESTAMP, timestamp);
+        p.addAttribute(AccountService.A_BY, accountBy);
+        p.addAttribute(AccountService.A_EXPIRES, expires);
+        p.setText(preAuth);
+        invoke(req);
     }
 
     @Override
@@ -554,7 +563,17 @@ public class SoapProvisioning extends Provisioning {
             String sortAttr, boolean sortAscending, int flags)
             throws ServiceException {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        XMLElement req = new XMLElement(AdminService.SEARCH_ACCOUNTS_REQUEST);
+        req.addElement(AdminService.E_QUERY).setText(query);
+        if (sortAttr != null) req.addAttribute(AdminService.A_SORT_BY, sortAttr);
+        if (flags != 0) req.addAttribute(AdminService.A_TYPES, Provisioning.searchAccountMaskToString(flags));
+        req.addAttribute(AdminService.A_SORT_ASCENDING, sortAscending ? "1" : "0");
+        if (returnAttrs != null) {
+            req.addAttribute(AdminService.A_ATTRS, StringUtil.join(",", returnAttrs));
+        }
+        // TODO: handle ApplyCos, limit, offset
+        invoke(req);
+        return null;
     }
 
     @Override

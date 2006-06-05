@@ -852,18 +852,11 @@ public class ProvUtil {
         String applyCosStr  = (String) attrs.get("applyCos");
         boolean applyCos = (applyCosStr != null) ? "1".equalsIgnoreCase(applyCosStr) : true;    
 
-
         String typesStr = (String) attrs.get("types");
         int flags = Provisioning.SA_ACCOUNT_FLAG|Provisioning.SA_ALIAS_FLAG|Provisioning.SA_DISTRIBUTION_LIST_FLAG|Provisioning.SA_CALENDAR_RESOURCE_FLAG;
         
-        if (typesStr != null) {
-            flags = 0;
-            if (typesStr.indexOf("accounts") != -1) flags |= Provisioning.SA_ACCOUNT_FLAG;
-            if (typesStr.indexOf("aliases") != -1) flags |= Provisioning.SA_ALIAS_FLAG;
-            if (typesStr.indexOf("distributionlists") != -1) flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
-            if (typesStr.indexOf("resources") != -1) flags |= Provisioning.SA_CALENDAR_RESOURCE_FLAG;
-            if (typesStr.indexOf("domains") != -1) flags |= Provisioning.SA_DOMAIN_FLAG;
-        }
+        if (typesStr != null)
+            flags = Provisioning.searchAccountStringToMask(typesStr);
 
         String domainStr = (String)attrs.get("domain");
         List accounts;
