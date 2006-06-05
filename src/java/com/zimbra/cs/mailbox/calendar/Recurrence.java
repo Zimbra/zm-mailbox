@@ -651,7 +651,11 @@ public class Recurrence
                 for (Iterator iter = dateList.iterator(); iter.hasNext();) {
                     Date cur = (Date)iter.next();
                     long instStart = cur.getTime();
-                    long instEnd = mDuration.addToDate(cur).getTime();
+                    long instEnd;
+                    if (mDuration != null)
+                        instEnd = mDuration.addToDate(cur).getTime();
+                    else
+                        instEnd = instStart;
                     if (instStart < end && instEnd > start) {
                         toRet.add(num++, new Appointment.Instance(appt, mInvId, instStart, instEnd, false));
                     }

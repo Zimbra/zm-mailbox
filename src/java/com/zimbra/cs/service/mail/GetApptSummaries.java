@@ -129,7 +129,9 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                         ParsedDuration invDuration = inv.getEffectiveDuration();
                         long instStart = inst.getStart();
                         
-                        if (instStart < rangeEnd && (invDuration.addToTime(instStart))>rangeStart) {
+                        if (instStart < rangeEnd &&
+                            invDuration != null &&
+                            (invDuration.addToTime(instStart))>rangeStart) {
                             someInRange = true;
                         } else {
                             continue;
