@@ -113,7 +113,7 @@ public class ProvUtil {
         GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [{domain}]"),
         GET_ALL_CONFIG("getAllConfig", "gacf", ""),
         GET_ALL_COS("getAllCos", "gac", "[-v]"),
-        GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[-v]"),
+        GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[{domain}]"),
         GET_ALL_DOMAINS("getAllDomains", "gad", "[-v]"),
         GET_ALL_SERVERS("getAllServers", "gas", "[-v] [service]"),
         GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id}"), 
@@ -1198,21 +1198,9 @@ public class ProvUtil {
     }
     
     private void doGetAllDistributionLists(String[] args) throws ServiceException {
-        boolean verbose = false;
         String d = null;
         if (args.length == 2) {
-            if (args[1].equals("-v")) 
-                verbose = true;
-            else 
-                d = args[1];
-        } else if (args.length == 3) {
-            if (args[1].equals("-v")) 
-                verbose = true;
-            else  {
-                usage();
-                return;
-            }
-            d = args[2];            
+            d = args[1];
         } else if (args.length != 1) {
             usage();
             return;
@@ -1225,10 +1213,7 @@ public class ProvUtil {
                 Collection dls = mProv.getAllDistributionLists(domain);
                 for (Iterator it = dls.iterator(); it.hasNext();) {
                     DistributionList dl = (DistributionList)it.next();
-                    if (verbose)
-                        dumpDistributionList(dl);
-                    else
-                        System.out.println(dl.getName());
+                    System.out.println(dl.getName());
                 }
             }
         } else {
@@ -1236,10 +1221,7 @@ public class ProvUtil {
             Collection dls = mProv.getAllDistributionLists(domain);
             for (Iterator it = dls.iterator(); it.hasNext();) {
                 DistributionList dl = (DistributionList) it.next();
-                if (verbose)
-                    dumpDistributionList(dl);
-                else
-                    System.out.println(dl.getName());
+                System.out.println(dl.getName());
             }
         }
     }
