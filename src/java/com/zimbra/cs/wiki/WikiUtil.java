@@ -461,13 +461,15 @@ public class WikiUtil {
         		ACL.GUID_PUBLIC, 
         		ACL.GRANTEE_PUBLIC, 
         		ACL.stringToRights("rwid"),
-        		true);
+        		true,
+        		null);
         mbox.grantAccess(octxt, 
         		template.getId(), 
         		ACL.GUID_PUBLIC, 
         		ACL.GRANTEE_PUBLIC, 
         		ACL.stringToRights("rwid"),
-        		true);
+        		true,
+        		null);
 	}
 	
 	public void initDefaultWiki() throws ServiceException {

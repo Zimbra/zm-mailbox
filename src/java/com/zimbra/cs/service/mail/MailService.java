@@ -443,6 +443,7 @@ public class MailService implements DocumentService {
     public static final String A_LAST_EDITED_BY = "leb";
     public static final String A_COUNT = "count";
     public static final String A_TRAVERSE = "tr";
+    public static final String A_ARGS = "args";
 
     public void registerHandlers(DocumentDispatcher dispatcher) {
 

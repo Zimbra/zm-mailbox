@@ -36,7 +36,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
@@ -71,6 +70,9 @@ public class ACL {
 	public static final byte GRANTEE_COS      = 5;
     /** The grantee of these rights is all authenticated and unauthenticated users. */
 	public static final byte GRANTEE_PUBLIC   = 6;
+	/** The grantee of these rights is a named non Zimbra user identified by the email address */
+	public static final byte GRANTEE_GUEST    = 7;
+	
 
     /** The pseudo-GUID signifying "all authenticated users". */
     public static final String GUID_AUTHUSER = "00000000-0000-0000-0000-000000000000";
@@ -106,9 +108,18 @@ public class ACL {
         public String[] getAliases()              { return null; }
         public CalendarUserType getCalendarUserType() { return null; }
         public boolean saveToSent()               { return false; }
-        public List<DistributionList> getDistributionLists(boolean directOnly, Map<String, String> via) { return null; }
         public int compareTo(Object o)            { return 0; }
         public String getAccountCOSId()           { return null; }
+    }
+    
+    public static class GuestAccount extends AnonymousAccount {
+    	public GuestAccount(String emailAddress, String password) {
+    		mEmailAddress = emailAddress; mPassword = password;
+    	}
+    	public String getName()                  { return mEmailAddress; }
+    	public String getPassword()              { return mPassword; }
+    	private String mEmailAddress;
+    	private String mPassword;
     }
 
     public static class Grant {
@@ -122,6 +133,8 @@ public class ACL {
         private short mRights;
         /** Whether subfolders inherit these same rights. */
         private boolean mInherit;
+        /** Extra argument.  For example the password for guest accounts. */
+        private String mArgs;
 
         /** Creates a new Grant object granting access to a user or class
          *  of users.  <code>zimbraId</code> may be <code>null</code>
@@ -136,6 +149,10 @@ public class ACL {
             mGrantee = zimbraId;  mType    = type;
             mRights  = rights;    mInherit = inherit;
         }
+        Grant(String zimbraId, byte type, short rights, boolean inherit, String args) {
+        	this(zimbraId, type, rights, inherit);
+        	mArgs = args;
+        }
 
         /** Creates a new Grant object from a decoded {@link Metadata} hash.
          * 
@@ -147,6 +164,8 @@ public class ACL {
             mInherit = meta.getBool(FN_INHERIT, false);
             if (hasGrantee())
                 mGrantee = meta.get(FN_GRANTEE);
+            if (hasArgs())
+            	mArgs = meta.get(FN_ARGS);
         }
 
         /** Returns true if there is an explicit grantee. */
@@ -159,7 +178,9 @@ public class ACL {
         public short getGrantedRights() { return mRights; }
         /** Returns whether subfolders inherit these same rights. */
         public boolean isGrantInherited() { return mInherit; }
-
+        /** Returns if the grant requires extra arguments. */
+        public boolean hasArgs() { return mType == ACL.GRANTEE_GUEST; }
+        
         /** Returns the rights granted to the given {@link Account} by this
          *  <code>Grant</code>.  If the grant does not apply to the Account,
          *  returns <code>0</code>. */
@@ -181,10 +202,18 @@ public class ACL {
                 case ACL.GRANTEE_DOMAIN:   return mGrantee.equals(getId(prov.getDomain(acct)));
                 case ACL.GRANTEE_GROUP:    return prov.inDistributionList(acct, mGrantee);
                 case ACL.GRANTEE_USER:     return mGrantee.equals(acct.getId());
+                case ACL.GRANTEE_GUEST:    return matchesGuestAccount(acct);
                 default:  throw ServiceException.FAILURE("unknown ACL grantee type: " + mType, null);
             }
         }
 
+        private boolean matchesGuestAccount(Account acct) {
+        	if (!(acct instanceof GuestAccount))
+        		return false;
+        	GuestAccount ga = (GuestAccount) acct;
+        	return ga.getPassword().equals(mArgs);
+        }
+        
         /** Utility function: Returns the zimbraId for a null-checked LDAP
          *  entry. */
         private static final String getId(NamedEntry entry) {
@@ -215,12 +244,22 @@ public class ACL {
         void setRights(short rights, boolean inherit) {
             mRights = rights;  mInherit = inherit;
         }
+        
+        /**
+         * Update the args in the <code>Grant</code>.
+         * 
+         * @param args
+         */
+        void setArgs(String args) {
+        	if (args != null) mArgs = args;
+        }
 
 
         private static final String FN_GRANTEE = "g";
         private static final String FN_TYPE    = "t";
         private static final String FN_RIGHTS  = "r";
         private static final String FN_INHERIT = "i";
+        private static final String FN_ARGS    = "a";
 
         /** Encapsulates this <code>Grant</code> as a {@link Metadata} object
          *  for serialization. */
@@ -231,6 +270,7 @@ public class ACL {
             // FIXME: use "rwidxsca" instead of numeric value
             meta.put(FN_RIGHTS,  mRights);
             meta.put(FN_INHERIT, mInherit);
+            meta.put(FN_ARGS, mArgs);
             return meta;
         }
     }
@@ -281,7 +321,7 @@ public class ACL {
      * @param type      The type of object the grantee's ID refers to.
      * @param rights    A bitmask of the rights being granted.
      * @param inherit   Whether subfolders inherit these same rights. */
-    public void grantAccess(String zimbraId, byte type, short rights, boolean inherit) throws ServiceException {
+    public void grantAccess(String zimbraId, byte type, short rights, boolean inherit, String args) throws ServiceException {
         if (type == GRANTEE_AUTHUSER)
             zimbraId = GUID_AUTHUSER;
         else if (type == GRANTEE_PUBLIC)
@@ -292,9 +332,10 @@ public class ACL {
             for (Grant grant : mGrants)
                 if (grant.isGrantee(zimbraId)) {
                     grant.setRights(rights, inherit);
+                    grant.setArgs(args);
                     return;
                 }
-        mGrants.add(new Grant(zimbraId, type, rights, inherit));
+        mGrants.add(new Grant(zimbraId, type, rights, inherit, args));
     }
 
     /** Removes the set of rights granted to the specified id.  If no rights
@@ -333,7 +374,7 @@ public class ACL {
 
     /** Returns an <code>Iterator</code> over this <code>ACL</code>'s set of
      *  encapsulated {@link ACL.Grant} objects. */
-    public Iterator grantIterator() {
+    public Iterator<Grant> grantIterator() {
         return mGrants.iterator();
     }
 

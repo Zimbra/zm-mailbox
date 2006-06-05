@@ -224,13 +224,13 @@ public class Folder extends MailItem {
      *    <li><code>service.FAILURE</code> - if there's a database failure
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul> */
-    void grantAccess(String zimbraId, byte type, short rights, boolean inherit) throws ServiceException {
+    void grantAccess(String zimbraId, byte type, short rights, boolean inherit, String args) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
         markItemModified(Change.MODIFIED_ACL);
         if (mRights == null)
             mRights = new ACL();
-        mRights.grantAccess(zimbraId, type, rights, inherit);
+        mRights.grantAccess(zimbraId, type, rights, inherit, args);
         saveMetadata();
     }
 

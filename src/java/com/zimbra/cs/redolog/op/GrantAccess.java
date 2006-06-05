@@ -45,19 +45,21 @@ public class GrantAccess extends RedoableOp {
     private byte mGranteeType;
     private short mRights;
     private boolean mInherit;
+    private String mArgs;
 
     public GrantAccess() {
         mFolderId = UNKNOWN_ID;
         mGrantee = "";
     }
 
-    public GrantAccess(int mailboxId, int folderId, String grantee, byte granteeType, short rights, boolean inherit) {
+    public GrantAccess(int mailboxId, int folderId, String grantee, byte granteeType, short rights, boolean inherit, String args) {
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mGrantee = grantee == null ? "" : grantee;
         mGranteeType = granteeType;
         mRights = rights;
         mInherit = inherit;
+        mArgs = args == null ? "" : args;
     }
 
     public int getOpCode() {
@@ -70,6 +72,7 @@ public class GrantAccess extends RedoableOp {
         sb.append(", type=").append(mGranteeType);
         sb.append(", rights=").append(ACL.rightsToString(mRights));
         sb.append(", inherit=").append(mInherit);
+        sb.append(", args=").append(mArgs);
         return sb.toString();
     }
 
@@ -79,6 +82,8 @@ public class GrantAccess extends RedoableOp {
         out.writeByte(mGranteeType);
         out.writeShort(mRights);
         out.writeBoolean(mInherit);
+        if (getVersion().atLeast(1, 2))
+        	writeUTF8(out, mArgs);
     }
 
     protected void deserializeData(DataInput in) throws IOException {
@@ -87,10 +92,12 @@ public class GrantAccess extends RedoableOp {
         mGranteeType = in.readByte();
         mRights = in.readShort();
         mInherit = in.readBoolean();
+        if (getVersion().atLeast(1, 2))
+        	mArgs = readUTF8(in);
     }
 
     public void redo() throws ServiceException {
         Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
-        mbox.grantAccess(getOperationContext(), mFolderId, mGrantee, mGranteeType, mRights, mInherit);
+        mbox.grantAccess(getOperationContext(), mFolderId, mGrantee, mGranteeType, mRights, mInherit, mArgs);
     }
 }

@@ -632,7 +632,7 @@ Conversations:
 Folders:
 
   <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"] [url="{remote-url}"] [perm="{effective-perms}"]>
-    [<acl> <grant perm="{rights}" gt="{grantee-type}" d="{grantee-name}" [inh="0|1"]/>* </acl>]
+    [<acl> <grant perm="{rights}" gt="{grantee-type}" d="{grantee-name}" [inh="0|1"] [args="{args}"]/>* </acl>]
   </folder>
 
   {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
@@ -656,6 +656,7 @@ Folders:
     {grantee-name} = the display name (*not* the zimbra id) of the principal being granted rights;
                      optional if {grantee-type} is "all"
     {inherit}      = boolean; whether rights granted on this folder are also granted on all subfolders
+    {args}         = optional argument.  password when {grantee-type} is "guest"
 
 Mountpoints:
 
@@ -1002,7 +1003,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
   <action id="{list}" op="read|delete|rename|move|empty|color|grant|url|import|sync|fb|[!]check" name="..." [l="{target-folder}"]
                       [name="{new-name}"] [color="{new-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]
                       [excludeFreeBusy="{exclude-free-busy-boolean}">
-    [<grant perm="..." gt="..." d="..." [inh="0|1"]/>]
+    [<grant perm="..." gt="..." d="..." [inh="0|1"] [args="..."]/>]
   </action>
 </FolderActionRequest>
 

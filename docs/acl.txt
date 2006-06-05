@@ -64,7 +64,10 @@ set of possible grantees right off the bat:
         group  - compare grantee ID with Account's zimbraMemberOf values
         domain - compare grantee ID with ID of Account's derived domain
         COS    - compare grantee ID with Account's zimbraCOSId
-        all    - always succeeds
+        all    - the caller needs to present a valid Zimbra credential
+        guest  - the caller needs to present a non-Zimbra email address
+                 and password
+        pub    - always succeeds
 
 (Domain grantees may require another LDAP query, but it's likely that
 they'll already be in the LdapProvisioning cache.)

@@ -3694,8 +3694,8 @@ public class Mailbox {
         }
     }
 
-    public synchronized void grantAccess(OperationContext octxt, int folderId, String grantee, byte granteeType, short rights, boolean inherit) throws ServiceException {
-        GrantAccess redoPlayer = new GrantAccess(mId, folderId, grantee, granteeType, rights, inherit);
+    public synchronized void grantAccess(OperationContext octxt, int folderId, String grantee, byte granteeType, short rights, boolean inherit, String args) throws ServiceException {
+        GrantAccess redoPlayer = new GrantAccess(mId, folderId, grantee, granteeType, rights, inherit, args);
 
         boolean success = false;
         try {
@@ -3703,7 +3703,7 @@ public class Mailbox {
 
             Folder folder = getFolderById(folderId);
             checkItemChangeID(folder);
-            folder.grantAccess(grantee, granteeType, rights, inherit);
+            folder.grantAccess(grantee, granteeType, rights, inherit, args);
             success = true;
         } finally {
             endTransaction(success);

@@ -631,7 +631,8 @@ public class UserServlet extends ZimbraServlet {
         }
 
         public boolean noSetCookie() {
-            return getAuth().indexOf(AUTH_NO_SET_COOKIE) != -1;
+            return authAccount != null && authAccount instanceof ACL.GuestAccount
+            	|| getAuth().indexOf(AUTH_NO_SET_COOKIE) != -1;
         }
 
         public boolean basicAuthAllowed() {

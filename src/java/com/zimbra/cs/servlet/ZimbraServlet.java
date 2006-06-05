@@ -50,6 +50,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -380,7 +381,7 @@ public class ZimbraServlet extends HttpServlet {
         		resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
         		resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
         	}
-            return null;
+        	return new ACL.GuestAccount(user, pass);
         }
         try {
             prov.authAccount(acct, pass);

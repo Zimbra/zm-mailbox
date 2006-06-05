@@ -85,7 +85,7 @@ public class FolderAction extends ItemAction {
     public static final String OP_UNFLAG   = '!' + OP_FLAG;
     public static final String OP_UNTAG    = '!' + OP_TAG;
 
-    private static final Set FOLDER_OPS = new HashSet<String>(Arrays.asList(new String[] {
+    private static final Set<String> FOLDER_OPS = new HashSet<String>(Arrays.asList(new String[] {
         OP_RENAME, OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_CHECK, OP_UNCHECK, OP_GRANT, OP_REVOKE, OP_UPDATE
     }));
 
@@ -148,7 +148,7 @@ public class FolderAction extends ItemAction {
             String name = action.getAttribute(MailService.A_NAME);
             mbox.renameFolder(octxt, iid.getId(), name);
         } else if (operation.equals(OP_REVOKE)) {
-            String zid = action.getAttribute(MailService.A_ZIMBRA_ID);
+        	String zid = action.getAttribute(MailService.A_ZIMBRA_ID);
             mbox.revokeAccess(octxt, iid.getId(), zid);
         } else if (operation.equals(OP_GRANT)) {
             Element grant = action.getElement(MailService.E_GRANT);
@@ -156,11 +156,18 @@ public class FolderAction extends ItemAction {
             short rights = ACL.stringToRights(grant.getAttribute(MailService.A_RIGHTS));
             byte gtype   = stringToType(grant.getAttribute(MailService.A_GRANT_TYPE));
             String zid   = grant.getAttribute(MailService.A_ZIMBRA_ID, null);
+            String args   = grant.getAttribute(MailService.A_ARGS, null);
             NamedEntry nentry = null;
             if (gtype == ACL.GRANTEE_AUTHUSER)
                 zid = ACL.GUID_AUTHUSER;
             else if (gtype == ACL.GRANTEE_PUBLIC)
                 zid = ACL.GUID_PUBLIC;
+            else if (gtype == ACL.GRANTEE_GUEST) {
+                zid = grant.getAttribute(MailService.A_DISPLAY);
+                if (zid == null || args == null || zid.indexOf('@') < 0) {
+                	throw ServiceException.INVALID_REQUEST("invalid guest id or password", null);
+                }
+            }
             else if (zid != null)
             	nentry = lookupGranteeByZimbraId(zid, gtype);
             else {
@@ -168,7 +175,7 @@ public class FolderAction extends ItemAction {
             	zid = nentry.getId();
             }
             
-            mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, inherit);
+            mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, inherit, args);
             // kinda hacky -- return the zimbra id and name of the grantee in the response
             result.addAttribute(MailService.A_ZIMBRA_ID, zid);
             if (nentry != null)
@@ -195,7 +202,8 @@ public class FolderAction extends ItemAction {
                     byte gtype   = stringToType(grant.getAttribute(MailService.A_GRANT_TYPE));
                     short rights = ACL.stringToRights(grant.getAttribute(MailService.A_RIGHTS));
                     boolean inherit = grant.getAttributeBool(MailService.A_INHERIT, false);
-                    acl.grantAccess(zid, gtype, rights, inherit);
+                    String args   = grant.getAttribute(MailService.A_ARGS, null);
+                    acl.grantAccess(zid, gtype, rights, inherit, args);
                 }
             }
 
@@ -220,6 +228,7 @@ public class FolderAction extends ItemAction {
         if (typeStr.equalsIgnoreCase("dom"))  return ACL.GRANTEE_DOMAIN;
         if (typeStr.equalsIgnoreCase("all"))  return ACL.GRANTEE_AUTHUSER;
         if (typeStr.equalsIgnoreCase("pub"))  return ACL.GRANTEE_PUBLIC;
+        if (typeStr.equalsIgnoreCase("guest")) return ACL.GRANTEE_GUEST;
         throw ServiceException.INVALID_REQUEST("unknown grantee type: " + typeStr, null);
     }
 
@@ -230,11 +239,12 @@ public class FolderAction extends ItemAction {
         if (type == ACL.GRANTEE_AUTHUSER)  return "all";
         if (type == ACL.GRANTEE_COS)       return "cos";
         if (type == ACL.GRANTEE_DOMAIN)    return "dom";
+        if (type == ACL.GRANTEE_GUEST)     return "guest";
         return null;
     }
 
     static NamedEntry lookupGranteeByName(String name, byte type, ZimbraSoapContext lc) throws ServiceException {
-        if (type == ACL.GRANTEE_AUTHUSER || type == ACL.GRANTEE_PUBLIC)
+        if (type == ACL.GRANTEE_AUTHUSER || type == ACL.GRANTEE_PUBLIC|| type == ACL.GRANTEE_GUEST)
             return null;
 
         Provisioning prov = Provisioning.getInstance();
@@ -274,6 +284,7 @@ public class FolderAction extends ItemAction {
                 case ACL.GRANTEE_DOMAIN:  return prov.get(DomainBy.id, zid);
                 case ACL.GRANTEE_USER:    return prov.get(AccountBy.id, zid);
                 case ACL.GRANTEE_GROUP:   return prov.get(DistributionListBy.id, zid);
+                case ACL.GRANTEE_GUEST:
                 case ACL.GRANTEE_AUTHUSER:
                 case ACL.GRANTEE_PUBLIC:
                 default:                  return null;
