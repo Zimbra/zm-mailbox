@@ -31,7 +31,11 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MetadataList;
@@ -79,7 +83,7 @@ public class Document extends MailItem {
 		public String getFragment() throws ServiceException {
 	    	return mRev.get(Metadata.FN_FRAGMENT);
 		}
-	};
+	}
 	
     protected String mContentType;
     protected String mFragment;
@@ -104,6 +108,23 @@ public class Document extends MailItem {
 
 	public String getCreator() throws ServiceException {
 		return getLastRevision().getCreator();
+	}
+	
+    private static final String sRESTURLPREFIX = "/home";
+    
+	public String getRestUrl() {
+		try {
+			Folder f = getMailbox().getFolderById(getFolderId());
+			Account account = f.getMailbox().getAccount();
+			String host = account.getAttr(Provisioning.A_zimbraMailHost);
+			Server s = Provisioning.getInstance().get(Provisioning.ServerBy.serviceHostname, host);
+			String path = sRESTURLPREFIX + "/" + account.getUid() + 
+				f.getPath() + "/" + getSubject();
+			return URLUtil.getMailURL(s, path, false);
+		} catch (ServiceException se) {
+			ZimbraLog.wiki.error("cannot generate REST url", se);
+			return "";
+		}
 	}
 	
     public InputStream getRawDocument() throws IOException, ServiceException {

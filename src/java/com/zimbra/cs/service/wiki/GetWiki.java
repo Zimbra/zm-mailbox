@@ -66,6 +66,9 @@ public class GetWiki extends WikiDocumentHandler {
         										 getRequestedFolder(request), 
         										 word,
         										 traverse.equals("yes"));
+        	if (item == null) {
+        		throw new WikiServiceException.NoSuchWikiException(word);
+        	}
         	if (item.getType() != MailItem.TYPE_WIKI) {
         		throw WikiServiceException.NOT_WIKI_ITEM(word);
         	}

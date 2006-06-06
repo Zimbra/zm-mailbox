@@ -1280,6 +1280,7 @@ public class ToXML {
 
         m.addAttribute(MailService.A_ID, lc.formatItemId(doc));
         m.addAttribute(MailService.A_NAME, doc.getSubject());
+        m.addAttribute(MailService.A_URL, doc.getRestUrl());
         if (needToOutput(fields, Change.MODIFIED_SIZE))
             m.addAttribute(MailService.A_SIZE, doc.getSize());
         if (needToOutput(fields, Change.MODIFIED_DATE))
