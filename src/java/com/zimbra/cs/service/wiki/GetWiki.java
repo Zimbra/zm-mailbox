@@ -98,7 +98,7 @@ public class GetWiki extends WikiDocumentHandler {
         } else {
         	Document.DocumentRevision revision = (rev > 0) ? wikiItem.getRevision(rev) : wikiItem.getLastRevision(); 
         	try {
-        		byte[] raw = ByteUtil.getContent(revision.getBlob().getFile());
+        		byte[] raw = ByteUtil.getContent(revision.getContent(), 0);
         		wikiElem.addAttribute(MailService.A_BODY, new String(raw, "UTF-8"), Element.DISP_CONTENT);
         	} catch (IOException ioe) {
         		ZimbraLog.wiki.error("cannot read the wiki message body", ioe);

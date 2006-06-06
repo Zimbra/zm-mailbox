@@ -43,7 +43,6 @@ import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -76,9 +75,9 @@ public class Document extends MailItem {
 		public long getVersion() throws ServiceException {
 			return mRev.getLong(Metadata.FN_VERSION);
 		}
-		public Blob getBlob() throws ServiceException {
+		public InputStream getContent() throws ServiceException,IOException {
 	    	StoreManager sm = StoreManager.getInstance();
-	        return sm.getMailboxBlob(mParent.getMailbox(), mParent.getId(), getRevId(), mParent.getVolumeId()).getBlob();
+	        return sm.getContent(sm.getMailboxBlob(mParent.getMailbox(), mParent.getId(), getRevId(), mParent.getVolumeId()));
 		}
 		public String getFragment() throws ServiceException {
 	    	return mRev.get(Metadata.FN_FRAGMENT);
