@@ -105,7 +105,7 @@ public class ACL {
         public String getDomainName()             { return null; }
         public String getAccountStatus()          { return null; }
         public Map<String, Object> getAttrs(boolean applyCos) { return null; }
-        public String[] getAliases()              { return null; }
+        public String[] getAliases()              { return new String[0]; }
         public CalendarUserType getCalendarUserType() { return null; }
         public boolean saveToSent()               { return false; }
         public int compareTo(Object o)            { return 0; }
