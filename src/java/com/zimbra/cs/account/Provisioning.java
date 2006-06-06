@@ -1405,7 +1405,7 @@ public abstract class Provisioning {
      * @return a list of all the accounts that matched.
      * @throws ServiceException
      */
-    public abstract List searchAccounts(Domain d, String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
+    public abstract List<NamedEntry> searchAccounts(Domain d, String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
 
     /**
      * 

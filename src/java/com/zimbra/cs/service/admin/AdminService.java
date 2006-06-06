@@ -151,6 +151,9 @@ public class AdminService implements DocumentService {
     public static final QName CHECK_GAL_CONFIG_REQUEST = QName.get("CheckGalConfigRequest", NAMESPACE);
     public static final QName CHECK_GAL_CONFIG_RESPONSE = QName.get("CheckGalConfigResponse", NAMESPACE);        
 
+    public static final QName AUTO_COMPLETE_GAL_REQUEST = QName.get("AutoCompleteGalRequest", NAMESPACE);
+    public static final QName AUTO_COMPLETE_GAL_RESPONSE = QName.get("AutoCompleteGalResponse", NAMESPACE);
+
     public static final QName CREATE_VOLUME_REQUEST = QName.get("CreateVolumeRequest", NAMESPACE);
     public static final QName CREATE_VOLUME_RESPONSE = QName.get("CreateVolumeResponse", NAMESPACE);
     public static final QName GET_VOLUME_REQUEST = QName.get("GetVolumeRequest", NAMESPACE);
@@ -492,6 +495,8 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(MAIL_QUEUE_FLUSH_REQUEST, new MailQueueFlush());
         
         dispatcher.registerHandler(INIT_NOTEBOOK_REQUEST, new InitNotebook());
+        
+        dispatcher.registerHandler(AUTO_COMPLETE_GAL_REQUEST, new AutoCompleteGal());
     }
 
     /**

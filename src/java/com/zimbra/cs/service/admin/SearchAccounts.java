@@ -52,9 +52,6 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class SearchAccounts extends AdminDocumentHandler {
 
-    public static final String BY_NAME = "name";
-    public static final String BY_ID = "id";
-    
     /**
      * must be careful and only allow access to domain if domain admin
      */

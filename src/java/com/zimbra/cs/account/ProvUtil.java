@@ -141,7 +141,7 @@ public class ProvUtil {
         RENAME_CALENDAR_RESOURCE("renameCalendarResource",  "rcr", "{name@domain|id} {newName@domain}"),
         RENAME_COS("renameCos", "rc", "{name|id} {newName}"),
         RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}"),
-        SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [applyCos [0|1*] [domain {domain}]"),
+        SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [domain {domain}]"),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]"),
         SEARCH_GAL("searchGal", "sg", "{domain} {name}"),
         SET_ACCOUNT_COS("setAccountCos", "sac", "{name@domain|id} {cos-name|cos-id}"),
@@ -849,9 +849,6 @@ public class ProvUtil {
         String attrsStr = (String)attrs.get("attrs");
 		String[] attrsToGet = attrsStr == null ? null : attrsStr.split(",");
 
-        String applyCosStr  = (String) attrs.get("applyCos");
-        boolean applyCos = (applyCosStr != null) ? "1".equalsIgnoreCase(applyCosStr) : true;    
-
         String typesStr = (String) attrs.get("types");
         int flags = Provisioning.SA_ACCOUNT_FLAG|Provisioning.SA_ALIAS_FLAG|Provisioning.SA_DISTRIBUTION_LIST_FLAG|Provisioning.SA_CALENDAR_RESOURCE_FLAG;
         
@@ -873,7 +870,7 @@ public class ProvUtil {
             NamedEntry account = (NamedEntry) accounts.get(j);
             if (verbose) {
                 if (account instanceof Account)
-                    dumpAccount((Account)account, applyCos);
+                    dumpAccount((Account)account, true);
                 else if (account instanceof Alias)
                     dumpAlias((Alias)account);
                 else if (account instanceof DistributionList)

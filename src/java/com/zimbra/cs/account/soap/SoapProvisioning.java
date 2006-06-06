@@ -42,6 +42,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntrySearchFilter;
+import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -595,18 +596,7 @@ public class SoapProvisioning extends Provisioning {
     public List<NamedEntry> searchAccounts(String query, String[] returnAttrs,
             String sortAttr, boolean sortAscending, int flags)
             throws ServiceException {
-        // TODO Auto-generated method stub
-        XMLElement req = new XMLElement(AdminService.SEARCH_ACCOUNTS_REQUEST);
-        req.addElement(AdminService.E_QUERY).setText(query);
-        if (sortAttr != null) req.addAttribute(AdminService.A_SORT_BY, sortAttr);
-        if (flags != 0) req.addAttribute(AdminService.A_TYPES, Provisioning.searchAccountMaskToString(flags));
-        req.addAttribute(AdminService.A_SORT_ASCENDING, sortAscending ? "1" : "0");
-        if (returnAttrs != null) {
-            req.addAttribute(AdminService.A_ATTRS, StringUtil.join(",", returnAttrs));
-        }
-        // TODO: handle ApplyCos, limit, offset
-        invoke(req);
-        return null;
+        return searchAccounts((Domain) null, query, returnAttrs, sortAttr, sortAscending, flags);
     }
 
     @Override
@@ -787,14 +777,54 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public SearchGalResult autoCompleteGal(Domain d, String query, GAL_SEARCH_TYPE type, int limit) throws ServiceException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        String typeStr = null;
+
+        if (type == GAL_SEARCH_TYPE.ALL) typeStr = "all";
+        else if (type == GAL_SEARCH_TYPE.USER_ACCOUNT) typeStr = "account";
+        else if (type == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) typeStr = "resource";
+        else typeStr = "all";
+        
+        XMLElement req = new XMLElement(AdminService.AUTO_COMPLETE_GAL_REQUEST);
+        req.addElement(AdminService.E_NAME).setText(query);
+        req.addAttribute(AdminService.A_DOMAIN, d.getName());
+        req.addAttribute(AdminService.A_TYPE, typeStr);
+        req.addAttribute(AdminService.A_LIMIT, limit);
+
+        Element resp = invoke(req);
+
+        SearchGalResult result = new SearchGalResult();
+        result.matches = new ArrayList<GalContact>();
+        result.hadMore = resp.getAttributeBool(AdminService.A_MORE);
+        for (Element e: resp.listElements(AdminService.E_CN)) {
+            result.matches.add(new GalContact(AdminService.A_ID, getAttrs(e)));
+        }
+        return result;
     }
 
     @Override
-    public List searchAccounts(Domain d, String query, String[] returnAttrs, String sortAttr, boolean sortAscending, int flags) throws ServiceException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+    public List<NamedEntry> searchAccounts(Domain d, String query, String[] returnAttrs, String sortAttr, boolean sortAscending, int flags) throws ServiceException {
+        List<NamedEntry> result = new ArrayList<NamedEntry>();
+        XMLElement req = new XMLElement(AdminService.SEARCH_ACCOUNTS_REQUEST);
+        req.addElement(AdminService.E_QUERY).setText(query);
+        if (d != null) req.addAttribute(AdminService.A_DOMAIN, d.getName());
+        if (sortAttr != null) req.addAttribute(AdminService.A_SORT_BY, sortAttr);
+        if (flags != 0) req.addAttribute(AdminService.A_TYPES, Provisioning.searchAccountMaskToString(flags));
+        req.addAttribute(AdminService.A_SORT_ASCENDING, sortAscending ? "1" : "0");
+        if (returnAttrs != null) {
+            req.addAttribute(AdminService.A_ATTRS, StringUtil.join(",", returnAttrs));
+        }
+        // TODO: handle ApplyCos, limit, offset
+        Element resp = invoke(req);
+        for (Element e: resp.listElements(AdminService.E_DL))
+            result.add(new SoapDistributionList(e));
+
+        for (Element e: resp.listElements(AdminService.E_ALIAS))
+            result.add(new SoapAlias(e));
+        
+        for (Element e: resp.listElements(AdminService.E_ACCOUNT))
+            result.add(new SoapAccount(e));
+        
+        return result;
     }
 
     @Override
@@ -805,8 +835,33 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String token) throws ServiceException {
+        
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
+/*        
+        String typeStr = null;
+
+        if (type == GAL_SEARCH_TYPE.ALL) typeStr = "all";
+        else if (type == GAL_SEARCH_TYPE.USER_ACCOUNT) typeStr = "account";
+        else if (type == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) typeStr = "resource";
+        else typeStr = "all";
+        
+        XMLElement req = new XMLElement(AdminService.AUTO_COMPLETE_GAL_REQUEST);
+        req.addElement(AdminService.E_NAME).setText(query);
+        req.addAttribute(AdminService.A_DOMAIN, d.getName());
+        req.addAttribute(AdminService.A_TYPE, typeStr);
+        if (token != null) req.addAttribute(AdminService.A_TOKEN, token);
+
+        Element resp = invoke(req);
+
+        SearchGalResult result = new SearchGalResult();
+        result.matches = new ArrayList<GalContact>();
+        result.hadMore = resp.getAttributeBool(AdminService.A_MORE);
+        for (Element e: resp.listElements(AdminService.E_CN)) {
+            result.matches.add(new GalContact(AdminService.A_ID, getAttrs(e)));
+        }
+        return result;
+  */      
     }
 
     @Override

@@ -858,9 +858,10 @@ public class LdapUtil {
         SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, rules.getLdapAttrs(), false, false);
         result.token = token != null ? token : EARLIEST_SYNC_TOKEN;
         DirContext ctxt = null;
+        NamingEnumeration ne = null;
         try {
             ctxt = getDirContext(url, bindDn, bindPassword);
-            NamingEnumeration ne = ctxt.search(base, query, sc);
+            ne = ctxt.search(base, query, sc);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 String dn = sr.getNameInNamespace();
@@ -870,10 +871,12 @@ public class LdapUtil {
                 result.matches.add(lgc);
             }
             ne.close();
+            ne = null;
         } catch (SizeLimitExceededException sle) {
             result.hadMore = true;
         } finally {
             closeContext(ctxt);
+            closeEnumContext(ne);
         }
         return result;
     }
