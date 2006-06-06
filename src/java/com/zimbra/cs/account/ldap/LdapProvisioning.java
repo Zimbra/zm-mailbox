@@ -3199,7 +3199,7 @@ public class LdapProvisioning extends Provisioning {
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 String dn = sr.getNameInNamespace();
-                LdapGalContact lgc = new LdapGalContact(dn, rules.apply(sr.getAttributes())); 
+                GalContact lgc = new GalContact(dn, rules.apply(sr.getAttributes())); 
                 String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
                 result.token = LdapUtil.getLaterTimestamp(result.token, mts);
                 String cts = (String) lgc.getAttrs().get("createTimeStamp");
