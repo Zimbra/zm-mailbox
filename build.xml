@@ -495,10 +495,10 @@
 		</java>
 	</target>
 
-	<target name="import-wiki" description="Import Wiki for test user">
-		<echo>Importing Wiki documents for user1</echo>
+	<target name="import-wiki-templates" description="Import Wiki templates to the wiki account">
+		<echo>Importing Wiki templates from ${data.wiki.dir}/Template</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="impn -u user1@${zimbra.server.hostname} -p test123 -f ${data.wiki.dir}/user1 -t /" />
+			<arg line="impn -u ${wiki.user.default}@${zimbra.server.hostname} -p test123 -f ${data.wiki.dir}/Template -t Template" />
 		</java>
 	</target>
 
