@@ -792,12 +792,10 @@ public class ZCalendar {
                 StringBuilder s = new StringBuilder("Caught ParseException parsing calendar: "+e);
                 try {
                     reader.reset();
-                    
-                    Reader r = new UnfoldingReader(reader);
                     s.append('\n');
-                    while(r.ready()) {
-                        s.append((char)(r.read()));
-                    }
+                    int charRead;
+                    while ((charRead = reader.read()) != -1)
+                        s.append((char) charRead);
                 } catch(IOException ioe) {
                     ioe.printStackTrace();
                 }
