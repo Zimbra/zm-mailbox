@@ -987,7 +987,7 @@ public abstract class Provisioning {
      */
     public abstract List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String,String> via) throws ServiceException; 
 
-    public abstract boolean healthCheck();
+    public abstract boolean healthCheck() throws ServiceException;
 
     public abstract Config getConfig() throws ServiceException;
     

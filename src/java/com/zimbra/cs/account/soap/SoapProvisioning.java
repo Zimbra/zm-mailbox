@@ -261,10 +261,12 @@ public class SoapProvisioning extends Provisioning {
         return new SoapServer(invoke(req).getElement(AdminService.E_SERVER));
     }
 
+    /**
+     * unsuported
+     */
     @Override
     public Zimlet createZimlet(String name, Map<String, Object> attrs)
             throws ServiceException {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 
@@ -310,9 +312,11 @@ public class SoapProvisioning extends Provisioning {
         invoke(req);
     }
 
+    /**
+     * unsuported
+     */
     @Override
     public void deleteZimlet(String name) throws ServiceException {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 
@@ -381,9 +385,11 @@ public class SoapProvisioning extends Provisioning {
         return result;        
     }
 
+    /**
+     * unsuported
+     */
     @Override
     public List<WellKnownTimeZone> getAllTimeZones() throws ServiceException {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 
@@ -431,26 +437,37 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public Server getLocalServer() throws ServiceException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        String hostname = LC.zimbra_server_hostname.value();
+        if (hostname == null) 
+            throw ServiceException.FAILURE("zimbra_server_hostname not specified in localconfig.xml", null);
+        Server local = get(ServerBy.name, hostname);
+        if (local == null) 
+            throw ServiceException.FAILURE("Could not find an LDAP entry for server '" + hostname + "'", null);
+        return local;
     }
 
+    /**
+     * unsuported
+     */
     @Override
     public MimeTypeInfo getMimeType(String name) throws ServiceException {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * unsuported
+     */
     @Override
     public MimeTypeInfo getMimeTypeByExtension(String ext)
             throws ServiceException {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * unsuported
+     */
     @Override
     public List<Zimlet> getObjectTypes() throws ServiceException {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 
@@ -463,28 +480,35 @@ public class SoapProvisioning extends Provisioning {
         return new SoapServer(invoke(req).getElement(AdminService.E_SERVER));
     }
 
+    /**
+     * unsuported
+     */
     @Override
     public WellKnownTimeZone getTimeZoneById(String tzId)
             throws ServiceException {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * unsuported
+     */
     @Override
     public Zimlet getZimlet(String name) throws ServiceException {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean healthCheck() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+    public boolean healthCheck() throws ServiceException {
+        XMLElement req = new XMLElement(AdminService.CHECK_HEALTH_REQUEST);
+        Element response = invoke(req);
+        return response.getAttributeBool(AdminService.A_HEALTHY);
     }
 
+    /**
+     * unsuported
+     */
     @Override
     public List<Zimlet> listAllZimlets() throws ServiceException {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 
@@ -666,9 +690,11 @@ public class SoapProvisioning extends Provisioning {
         return getDistributionLists(acct).contains(zimbraId);  
     }
 
+    /**
+     * unsuported
+     */
     @Override
     public ICalTimeZone getTimeZone(Account acct) throws ServiceException {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 

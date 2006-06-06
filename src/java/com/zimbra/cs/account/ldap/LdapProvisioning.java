@@ -244,7 +244,7 @@ public class LdapProvisioning extends Provisioning {
     /**
      * Status check on LDAP connection.  Search for global config entry.
      */
-    public boolean healthCheck() {
+    public boolean healthCheck() throws ServiceException {
         boolean result = false;
         DirContext ctxt = null;
         try {
