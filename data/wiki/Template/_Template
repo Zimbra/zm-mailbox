@@ -6,13 +6,18 @@
 	<table class="_chromeTable" cellpadding="0" cellspacing="0"><tbody>
 	<tr><td class="_headerContainer" colspan=2>
 		<wiklet class='INLINE' page="_Header" inherit="true" />
-	</td></tr>
+		</td>
+	</tr>
 	<tr>
-
-		<td class="_sidebarContainer" valign="top">
+		<td class="_sideBarContainer" valign="top" rowspan="2">
 			<wiklet class='INLINE' page="_SideBar" inherit="true" />
 		</td>
 
+		<td class="_titleBarContainer" valign="top">
+			<wiklet class='INLINE' page="_TitleBar" inherit="true" />
+		</td>
+	</tr>
+	<tr>
 		<td class="_contentContainer" valign="top">
 			<wiklet class='CONTENT' />
 		</td>

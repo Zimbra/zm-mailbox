@@ -1,0 +1,27 @@
+<table cellpadding="0" cellspacing="0" width="100%"><tbody>
+	<tr>
+		<td class="_breadcrumbHeader">
+			<table cellpadding="0" cellspacing="0" width="100%">
+				<tr>
+					<td class="_breadcrumbs _smallGrayLinks" width="100%"><wiklet class='PATH' format="template" /></td>
+					<td class="_tags" width="100%"><wiklet class='TAGS' /></td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+	<tr>
+		<td class="_titleHeader">
+			<table border="0" cellpadding="0" cellspacing="0" width="100%">
+				<tr>
+					<td><div class="ImgBlank_9"></div><br></td>
+					<td class="_pageIcon"><wiklet class='ICON' /></td>
+					<td class="_pageName" width="100"><wiklet class='NAME' /></td>
+					<td class="_author _smallGrayLinks" align="right" width="100%">
+						<wiklet class='MODIFIER' /> &bull; <wiklet class='MODIFYDATE' /> 
+						<!-- &bull; <a href="#">v. <wiklet class='VERSION' /></a>	-->
+					</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+</table>

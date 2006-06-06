@@ -1,0 +1,50 @@
+
+
+._expandoSection {
+}
+
+._expandoSectionHead {
+	font-size:12px;
+	font-weight:bold;
+	background-color:#ffc795; 
+	border-bottom:1px solid #cccccc;
+	border-width:1 0 1 1;
+	height:16px;	
+	cursor:pointer;
+}
+
+._expandoSectionL1 {
+	border-left:1px solid #cccccc;
+	margin-left:3px;
+	margin-bottom:15px;
+	cursor:pointer; 
+	display:none;	
+}
+
+._expandoSectionSubHead	{	
+	background-color:#eeeeee; 
+	border-bottom:1px solid #cccccc;
+	height:16px;	
+	cursor:pointer;
+}
+
+._expandoSectionL2 {	
+	border-bottom:1px solid #cccccc;
+	padding-bottom:2px;
+	padding-left:10px; 
+	padding-bottom:10px;
+	cursor:pointer; 
+	display:none;
+}
+
+#tTOC {
+	border-bottom:1px solid #cccccc;
+}
+
+.WikiTOC ul {
+	margin-top:0px;
+	padding-left:10px;
+	list-style-type:none;
+}
+
+.WikiTOC li {}

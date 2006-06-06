@@ -1,3 +1,6 @@
+<style type="text/css">
+	<wiklet class='INLINE' page="_TemplateStyles" inherit="true" />
+</style>
 <wiklet class='TOC' format="template" bodyTemplate="_TocBodyTemplate" itemTemplate="_TocItemTemplate" />
 
 
