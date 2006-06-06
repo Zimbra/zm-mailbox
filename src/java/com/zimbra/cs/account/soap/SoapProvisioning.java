@@ -27,7 +27,9 @@ package com.zimbra.cs.account.soap;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -619,22 +621,49 @@ public class SoapProvisioning extends Provisioning {
         se.reload(this);
     }
 
+    private static final String DATA_DL_SET = "DL_SET";
+    
+    @SuppressWarnings("unchecked")
     @Override
     public Set<String> getDistributionLists(Account acct) throws ServiceException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        Set<String> dls = (Set<String>) acct.getCachedData(DATA_DL_SET);
+        if (dls != null) return dls;
+     
+        dls = new HashSet<String>();
+       
+       List<DistributionList> lists = getDistributionLists(acct, false, null);
+        
+        for (DistributionList dl : lists) {
+            dls.add(dl.getId());
+        }
+        dls = Collections.unmodifiableSet(dls);
+        acct.setCachedData(DATA_DL_SET, dls);
+        return dls;
     }
 
     @Override
     public List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via) throws ServiceException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        ArrayList<DistributionList> result = new ArrayList<DistributionList>();
+        XMLElement req = new XMLElement(AdminService.GET_ACCOUNT_MEMBERSHIP_REQUEST);
+        Element acctEl = req.addElement(AdminService.E_ACCOUNT);
+        acctEl.addAttribute(AdminService.A_BY, AccountBy.id.name());
+        acctEl.setText(acct.getId());
+        Element resp = invoke(req);
+        for (Element a: resp.listElements(AdminService.E_DL)) {
+            String viaList = a.getAttribute(AdminService.A_VIA, null);
+            if (directOnly && viaList != null) continue;
+            DistributionList dl = new SoapDistributionList(a);
+            if (via != null && viaList != null) {
+                via.put(dl.getName(), viaList);
+            }
+            result.add(dl);
+        }
+        return result;
     }
 
     @Override
     public boolean inDistributionList(Account acct, String zimbraId) throws ServiceException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        return getDistributionLists(acct).contains(zimbraId);  
     }
 
     @Override
@@ -645,8 +674,22 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String, String> via) throws ServiceException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        ArrayList<DistributionList> result = new ArrayList<DistributionList>();
+        XMLElement req = new XMLElement(AdminService.GET_DISTRIBUTION_LIST_MEMBERSHIP_REQUEST);
+        Element acctEl = req.addElement(AdminService.E_DL);
+        acctEl.addAttribute(AdminService.A_BY, DistributionListBy.id.name());
+        acctEl.setText(list.getId());
+        Element resp = invoke(req);
+        for (Element a: resp.listElements(AdminService.E_DL)) {
+            String viaList = a.getAttribute(AdminService.A_VIA, null);
+            if (directOnly && viaList != null) continue;
+            DistributionList dl = new SoapDistributionList(a);
+            if (via != null && viaList != null) {
+                via.put(dl.getName(), viaList);
+            }
+            result.add(dl);
+        }
+        return result;
     }
 
     @Override

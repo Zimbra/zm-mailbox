@@ -46,11 +46,6 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetAccountMembership extends AdminDocumentHandler {
 
-    public static final String BY_NAME = "name";
-    public static final String BY_ID = "id";
-    public static final String BY_ADMIN_NAME = "adminName";
-    public static final String BY_FOREIGN_PRINCIPAL = "foreignPrincipal";
-    
     /**
      * must be careful and only return accounts a domain admin can see
      */
@@ -63,24 +58,11 @@ public class GetAccountMembership extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-//        boolean applyCos = request.getAttributeBool(AdminService.A_APPLY_COS, true);        
         Element a = request.getElement(AdminService.E_ACCOUNT);
         String key = a.getAttribute(AdminService.A_BY);
         String value = a.getText();
 
-        Account account = null;
-
-        if (key.equals(BY_NAME)) {
-            account = prov.get(AccountBy.name, value);
-        } else if (key.equals(BY_ID)) {
-            account = prov.get(AccountBy.id, value);
-        } else if (key.equals(BY_ADMIN_NAME)) {
-            account = prov.get(AccountBy.adminName, value);
-        } else if (key.equals(BY_FOREIGN_PRINCIPAL)) {
-            account = prov.get(AccountBy.foreignPrincipal, value);
-        } else {
-            throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
-        }
+        Account account = prov.get(AccountBy.fromString(key), value);
 
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
