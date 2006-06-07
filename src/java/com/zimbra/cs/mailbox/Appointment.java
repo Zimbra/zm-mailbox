@@ -568,12 +568,7 @@ public class Appointment extends MailItem {
     void removeAllInvites() throws ServiceException
     {
         mInvites.clear();
-        try {
-            StoreManager sm = StoreManager.getInstance();
-            sm.delete(getBlob());
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("IOException", e);
-        }
+        mMailbox.markOtherItemDirty(getBlob());
         saveMetadata();
     }
 
