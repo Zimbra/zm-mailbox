@@ -375,6 +375,8 @@ public class WikiUtil {
 			} catch (Exception e) {
 				throw WikiServiceException.ERROR("import", e);
 			}
+			
+		emptyNotebooks(useSoap);
 		Provisioning prov = Provisioning.getInstance();
 		Account acct = prov.get(AccountBy.name, mUsername);
 		Mailbox mbox = Mailbox.getMailboxByAccount(acct);

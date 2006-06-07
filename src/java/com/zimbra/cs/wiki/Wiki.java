@@ -33,9 +33,9 @@ import java.util.Set;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -63,8 +63,6 @@ public class Wiki {
 	
 	private static final String WIKI_FOLDER     = "notebook";
 	private static final String TEMPLATE_FOLDER = "template";
-	
-	private static int sTemplateFolderId;
 	
 	static {
 		wikiMap = new HashMap<Pair<String,String>,Wiki>();
@@ -169,28 +167,56 @@ public class Wiki {
 		return getInstance(Wiki.getDefaultWikiAccount());
 	}
 	
-	public static Wiki getTemplateStore() throws ServiceException {
-		synchronized (Wiki.class) {
-			if (sTemplateFolderId == 0) {
-				Account acct = getDefaultWikiAccount();
-				OperationContext octxt = new OperationContext(acct);
-				WikiUrl wurl = new WikiUrl("//wiki/template");
-				Folder f = wurl.getFolder(octxt, acct.getId());
-				sTemplateFolderId = f.getId();
-			}
+	public static Wiki getTemplateStore(String accountId) throws ServiceException {
+		Provisioning prov = Provisioning.getInstance();
+		Account acct = prov.get(Provisioning.AccountBy.id, accountId);
+		Domain dom = prov.getDomain(acct);
+		Config globalConfig = prov.getConfig();
+		
+		String domainWiki = dom.getAttr(Provisioning.A_zimbraNotebookAccount, null);
+		String defaultWiki = globalConfig.getAttr(Provisioning.A_zimbraNotebookAccount, null);
+		
+		Account target = null;
+		if (domainWiki != null) {
+			target = prov.get(Provisioning.AccountBy.name, domainWiki);
+			if (target.getId() == accountId)
+				target = null;
 		}
-		return getInstance(Wiki.getDefaultWikiAccount(), sTemplateFolderId);
+		if (defaultWiki != null) {
+			Account defaultAccount = prov.get(Provisioning.AccountBy.name, defaultWiki);
+			if (defaultAccount.getId() == accountId)
+				return null;
+			if (target == null)
+				target = defaultAccount;
+		}
+		if (target == null)
+			return null;
+		int fid;
+		synchronized (Wiki.class) {
+			OperationContext octxt = new OperationContext(target);
+			WikiUrl wurl = new WikiUrl("/" + TEMPLATE_FOLDER);
+			Folder f = wurl.getFolder(octxt, target.getId());
+			fid = f.getId();
+		}
+		return getInstance(target.getId(), fid);
 	}
 	
 	public static MailItem findWikiByPathTraverse(OperationContext octxt, String accountId, int fid, String path) throws ServiceException {
 		WikiUrl url = new WikiUrl(path, fid);
 		Folder f = url.getFolder(octxt, accountId);
 		String name = url.getFilename();
+		
+		String targetAccountId = accountId;
+		int targetFolderId = f.getId();
 
-		MailItem item = findWikiByNameTraverse(octxt, accountId, f.getId(), name);
-		if (item == null) {
-			Wiki w = getTemplateStore();
-			item = findWikiByNameTraverse(octxt, w.getWikiAccount(), w.getWikiFolderId(), name);
+		MailItem item = findWikiByNameTraverse(octxt, targetAccountId, targetFolderId, name);
+		while (item == null) {
+			Wiki w = getTemplateStore(targetAccountId);
+			if (w == null)
+				return null;
+			accountId = w.getWikiAccount();
+			targetFolderId = f.getFolderId();
+			item = findWikiByNameTraverse(octxt, targetAccountId, targetFolderId, name);
 		}
 		return item;
 	}

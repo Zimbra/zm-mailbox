@@ -56,8 +56,10 @@ public class WikiTemplateStore {
 		return WikiTemplateStore.getInstance(item.getMailbox().getAccount().getId(), item.getFolderId());
 	}
 	
-	public static WikiTemplateStore getInstance() throws ServiceException {
-		Wiki w = Wiki.getTemplateStore();
+	public static WikiTemplateStore getParentInstance(String accountId) throws ServiceException {
+		Wiki w = Wiki.getTemplateStore(accountId);
+		if (w == null)
+			return null;
 		return WikiTemplateStore.getInstance(w.getWikiAccount(), w.getWikiFolderId());
 	}
 	
@@ -102,10 +104,10 @@ public class WikiTemplateStore {
 		} catch (ServiceException e) {
 			if (!checkParents)
 				throw e;
-			WikiTemplateStore defaultStore = getInstance();
-			if (defaultStore.mAccountId.equals(mAccountId))
+			WikiTemplateStore defaultStore = getParentInstance(mAccountId);
+			if (defaultStore == null)
 				return new WikiTemplate("<!-- missing template "+name+" -->");
-			return defaultStore.getTemplate(octxt, name, checkParents);
+			return defaultStore.getTemplate(octxt, name);
 		}
 	}
 	public WikiTemplate getTemplate(OperationContext octxt, String name, boolean checkParents) throws ServiceException, IOException {
