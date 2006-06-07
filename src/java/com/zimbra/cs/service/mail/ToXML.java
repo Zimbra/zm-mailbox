@@ -106,6 +106,8 @@ public class ToXML {
             return encodeConversationSummary(parent, lc, (Conversation) item, fields);
         else if (item instanceof WikiItem)
             return encodeWiki(parent, lc, (WikiItem) item, fields, -1);
+        else if (item instanceof Document)
+            return encodeDocument(parent, lc, (Document) item, fields, -1);
         else if (item instanceof Message) {
             OutputParticipants output = (fields == NOTIFY_FIELDS ? OutputParticipants.PUT_BOTH : OutputParticipants.PUT_SENDERS);
             return encodeMessageSummary(parent, lc, (Message) item, output, fields);
@@ -1271,8 +1273,11 @@ public class ToXML {
         return m;
     }
     public static Element encodeDocument(Element parent, ZimbraSoapContext lc, Document doc, int rev) {
+        return encodeDocument(parent, lc, doc, NOTIFY_FIELDS, rev);
+    }
+    public static Element encodeDocument(Element parent, ZimbraSoapContext lc, Document doc, int fields, int rev) {
         Element m = parent.addElement(MailService.E_DOC);
-        encodeDocumentCommon(m, lc, doc, NOTIFY_FIELDS, rev);
+        encodeDocumentCommon(m, lc, doc, fields, rev);
         m.addAttribute(MailService.A_CONTENT_TYPE, doc.getContentType());
         return m;
     }
