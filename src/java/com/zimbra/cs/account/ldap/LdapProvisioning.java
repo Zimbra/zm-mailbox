@@ -3180,7 +3180,7 @@ public class LdapProvisioning extends Provisioning {
 
         LdapGalMapRules rules = getGalRules(d);
 
-        SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, rules.getLdapAttrs(), true, false);
+        SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, rules.getLdapAttrs(), false, false);
 
         result.token = token != null ? token : LdapUtil.EARLIEST_SYNC_TOKEN;
         DirContext ctxt = null;
