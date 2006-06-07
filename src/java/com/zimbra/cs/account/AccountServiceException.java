@@ -52,6 +52,7 @@ public class AccountServiceException extends ServiceException {
     public static final String NO_SUCH_DOMAIN     = "account.NO_SUCH_DOMAIN";    
     public static final String NO_SUCH_COS        = "account.NO_SUCH_COS";        
     public static final String NO_SUCH_SERVER     = "account.NO_SUCH_SERVER";        
+    public static final String NO_SUCH_ZIMLET     = "account.NO_SUCH_ZIMLET";        
     public static final String NO_SUCH_DISTRIBUTION_LIST = "account.NO_SUCH_DISTRIBUTION_LIST";
     public static final String NO_SUCH_CALENDAR_RESOURCE = "account.NO_SUCH_CALENDAR_RESOURCE";
     public static final String MEMBER_EXISTS      = "account.MEMBER_EXISTS";
@@ -130,6 +131,10 @@ public class AccountServiceException extends ServiceException {
     
     public static AccountServiceException NO_SUCH_SERVER(String name) {
         return new AccountServiceException("no such server: "+name, NO_SUCH_SERVER, SENDERS_FAULT, null);
+    }    
+
+    public static AccountServiceException NO_SUCH_ZIMLET(String name) {
+        return new AccountServiceException("no such zimlet: "+name, NO_SUCH_ZIMLET, SENDERS_FAULT, null);
     }    
 
     public static AccountServiceException NO_SUCH_DISTRIBUTION_LIST(String name) {

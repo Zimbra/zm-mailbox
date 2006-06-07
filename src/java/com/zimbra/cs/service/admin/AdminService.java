@@ -199,6 +199,14 @@ public class AdminService implements DocumentService {
     public static final QName REINDEX_REQUEST = QName.get("ReIndexRequest", NAMESPACE);
     public static final QName REINDEX_RESPONSE = QName.get("ReIndexResponse", NAMESPACE);
     
+    public static final QName GET_ZIMLET_REQUEST = QName.get("GetZimletRequest", NAMESPACE);
+    public static final QName GET_ZIMLET_RESPONSE = QName.get("GetZimletResponse", NAMESPACE);
+    public static final QName LIST_ALL_ZIMLETS_REQUEST = QName.get("ListAllZimletsRequest", NAMESPACE);
+    public static final QName LIST_ALL_ZIMLETS_RESPONSE = QName.get("ListAllZimletsResponse", NAMESPACE);
+    public static final QName CREATE_ZIMLET_REQUEST = QName.get("CreateZimletRequest", NAMESPACE);
+    public static final QName CREATE_ZIMLET_RESPONSE = QName.get("CreateZimletResponse", NAMESPACE);
+    public static final QName DELETE_ZIMLET_REQUEST = QName.get("DeleteZimletRequest", NAMESPACE);
+    public static final QName DELETE_ZIMLET_RESPONSE = QName.get("DeleteZimletResponse", NAMESPACE);
     public static final QName GET_ZIMLETS_REQUEST = QName.get("GetZimletsRequest", NAMESPACE);
     public static final QName GET_ZIMLETS_RESPONSE = QName.get("GetZimletsResponse", NAMESPACE);
     public static final QName GET_ALL_ZIMLETS_REQUEST = QName.get("GetAllZimletsRequest", NAMESPACE);
@@ -468,6 +476,10 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(REINDEX_REQUEST, new ReIndex());
         
         // zimlet
+        dispatcher.registerHandler(GET_ZIMLET_REQUEST, new GetZimlet());
+        dispatcher.registerHandler(LIST_ALL_ZIMLETS_REQUEST, new ListAllZimlets());
+        dispatcher.registerHandler(CREATE_ZIMLET_REQUEST, new CreateZimlet());
+        dispatcher.registerHandler(DELETE_ZIMLET_REQUEST, new DeleteZimlet());
         dispatcher.registerHandler(GET_ZIMLETS_REQUEST, new GetZimlets());
         dispatcher.registerHandler(GET_ALL_ZIMLETS_REQUEST, new GetAllZimlets());
         dispatcher.registerHandler(DEPLOY_ZIMLET_REQUEST, new DeployZimlet());

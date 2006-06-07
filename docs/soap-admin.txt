@@ -1118,6 +1118,8 @@ Access: domain admin sufficient
 
 -----------------------------
 
+# GetZimlets returns the Zimlet packaged admin add-on js files for Network addition
+
 <GetZimletsRequest/>
 
 <GetZimletsResponse>
@@ -1148,6 +1150,49 @@ Access: domain admin sufficient
 <UndeployZimletRequest name="{zimlet-name}"/>
 
 <UndeployZimletResponse/>
+
+-----------------------------
+
+<GetZimletRequest>
+  <zimlet name="{zimlet-name}"/>
+</GetZimletRequest>
+
+<GetZimletResponse>
+  <zimlet name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </zimlet>
+</GetZimletResponse>
+
+-----------------------------
+
+<ListZimletsRequest/>
+
+<ListZimletsResponse>
+  <zimlet name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </zimlet>+
+</ListZimletsResponse>
+
+-----------------------------
+
+<CreateZimletRequest>
+  <name>...</name>
+  <a n="...">...</a>+
+</CreateZimletRequest>
+
+<CreateZimletResponse>
+  <zimlet name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </zimlet>
+</CreateZimletResponse>
+
+-----------------------------
+
+<DeleteZimletRequest>
+  <zimlet name="{zimlet-name}"/>
+</DeleteZimletRequest>
+
+<DeleteZimletResponse/>
 
 -----------------------------
 
