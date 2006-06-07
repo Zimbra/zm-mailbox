@@ -251,6 +251,25 @@ Access: domain admin sufficient (a domain admin can't specify "domains" as a typ
 Notes: admin verison of mail equiv. Used for testing via zmprov.
   
 -----------------------------
+ <SearchGalRequest [type="{type}"]>
+   <name>...</name>
+ </SearchGalRequest>
+ 
+ <SearchGalResponse more="{more}">
+   <cn>...</cn>*
+ </SearchGalResponse>
+
+  {more-flag} = 1 if the results were truncated.
+
+  {type} = type of addresses to search
+           "account" for regular user accounts, aliases and distribution lists
+           "resource" for calendar resources
+           "all" for combination of both types
+           if omitted, defaults to "all"
+           
+Notes: admin verison of mail equiv. Used for testing via zmprov.           
+
+-----------------------------
 
 <SearchDirectoryRequest [limit="..."] [offset="..."] [domain="{domain-name}"] [applyCos="{apply-cos}"]
          [attrs="a1,a2,a3"] [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"] [types="{type}"]>

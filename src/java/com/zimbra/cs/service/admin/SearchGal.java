@@ -45,7 +45,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 /**
  * @author schemers
  */
-public class AutoCompleteGal extends AdminDocumentHandler {
+public class SearchGal extends AdminDocumentHandler {
 
     /**
      * must be careful and only return accounts a domain admin can see
@@ -58,7 +58,7 @@ public class AutoCompleteGal extends AdminDocumentHandler {
         String n = request.getAttribute(AdminService.E_NAME);
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AdminService.AUTO_COMPLETE_GAL_RESPONSE);
+        Element response = lc.createElement(AdminService.SEARCH_GAL_RESPONSE);
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
         while (n.endsWith("*"))
@@ -66,8 +66,8 @@ public class AutoCompleteGal extends AdminDocumentHandler {
 
         String domain = request.getAttribute(AdminService.A_DOMAIN);
         String typeStr = request.getAttribute(AdminService.A_TYPE, "account");
+        String token = request.getAttribute(AdminService.A_TOKEN, null);
 
-        int max = (int) request.getAttributeLong(AdminService.A_LIMIT);
         Provisioning.GAL_SEARCH_TYPE type;
         if (typeStr.equals("all"))
             type = Provisioning.GAL_SEARCH_TYPE.ALL;
@@ -89,18 +89,36 @@ public class AutoCompleteGal extends AdminDocumentHandler {
         if (d == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(domain);
 
-        SearchGalResult result = prov.autoCompleteGal(d, n, type, max);
+        SearchGalResult result = prov.searchGal(d, n, type, token);
 
         response.addAttribute(AdminService.A_MORE, result.hadMore);
         
         for (GalContact contact : result.matches)
-            SearchGal.addContact(response, contact);
+            addContact(response, contact);
 
         return response;
     }
 
-    public boolean needsAuth(Map<String, Object> context) {
-        return true;
+    public static void addContact(Element response, GalContact contact) throws ServiceException {
+        Element cn = response.addElement(MailService.E_CONTACT);
+        cn.addAttribute(MailService.A_ID, contact.getId());
+        Map<String, Object> attrs = contact.getAttrs();
+        for (Map.Entry entry : attrs.entrySet()) {
+            Object value = entry.getValue();
+            // can't use DISP_ELEMENT because some GAL contact attributes
+            //   (e.g. "objectClass") are multi-valued
+            if (value instanceof String[]) {
+                String sa[] = (String[]) value;
+                for (int i = 0; i < sa.length; i++) {
+                    cn.addElement(MailService.E_ATTRIBUTE)
+                      .addAttribute(MailService.A_ATTRIBUTE_NAME, (String) entry.getKey())
+                      .setText(sa[i]);
+                }
+            } else {
+                cn.addElement(MailService.E_ATTRIBUTE)
+                  .addAttribute(MailService.A_ATTRIBUTE_NAME, (String) entry.getKey())
+                  .setText((String) entry.getValue());
+            }
+        }
     }
-
 }

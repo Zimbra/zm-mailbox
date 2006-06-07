@@ -603,8 +603,7 @@ public class SoapProvisioning extends Provisioning {
     public List<NamedEntry> searchCalendarResources(EntrySearchFilter filter,
             String[] returnAttrs, String sortAttr, boolean sortAscending)
             throws ServiceException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        return searchCalendarResources((Domain)null, filter, returnAttrs, sortAttr, sortAscending);
     }
 
     @Override
@@ -813,7 +812,7 @@ public class SoapProvisioning extends Provisioning {
         if (returnAttrs != null) {
             req.addAttribute(AdminService.A_ATTRS, StringUtil.join(",", returnAttrs));
         }
-        // TODO: handle ApplyCos, limit, offset
+        // TODO: handle ApplyCos, limit, offset?
         Element resp = invoke(req);
         for (Element e: resp.listElements(AdminService.E_DL))
             result.add(new SoapDistributionList(e));
@@ -829,16 +828,30 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public List searchCalendarResources(Domain d, EntrySearchFilter filter, String[] returnAttrs, String sortAttr, boolean sortAscending) throws ServiceException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        // TODO
+        throw new UnsupportedOperationException();        
+/*
+        List<NamedEntry> result = new ArrayList<NamedEntry>();
+        XMLElement req = new XMLElement(AdminService.SEARCH_CALENDAR_RESOURCES_REQUEST);
+        req.addElement(MailSer).setText(query);
+        if (d != null) req.addAttribute(AdminService.A_DOMAIN, d.getName());
+        if (sortAttr != null) req.addAttribute(AdminService.A_SORT_BY, sortAttr);
+        if (flags != 0) req.addAttribute(AdminService.A_TYPES, Provisioning.searchAccountMaskToString(flags));
+        req.addAttribute(AdminService.A_SORT_ASCENDING, sortAscending ? "1" : "0");
+        if (returnAttrs != null) {
+            req.addAttribute(AdminService.A_ATTRS, StringUtil.join(",", returnAttrs));
+        }
+        // TODO: handle ApplyCos, limit, offset?
+        Element resp = invoke(req);
+        for (Element e: resp.listElements(AdminService.E_CALENDAR_RESOURCE))
+            result.add(new SoapCalendarResource(e));
+        
+        return result;
+*/        
     }
 
     @Override
     public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String token) throws ServiceException {
-        
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
-/*        
         String typeStr = null;
 
         if (type == GAL_SEARCH_TYPE.ALL) typeStr = "all";
@@ -846,7 +859,7 @@ public class SoapProvisioning extends Provisioning {
         else if (type == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) typeStr = "resource";
         else typeStr = "all";
         
-        XMLElement req = new XMLElement(AdminService.AUTO_COMPLETE_GAL_REQUEST);
+        XMLElement req = new XMLElement(AdminService.SEARCH_GAL_REQUEST);
         req.addElement(AdminService.E_NAME).setText(query);
         req.addAttribute(AdminService.A_DOMAIN, d.getName());
         req.addAttribute(AdminService.A_TYPE, typeStr);
@@ -861,7 +874,6 @@ public class SoapProvisioning extends Provisioning {
             result.matches.add(new GalContact(AdminService.A_ID, getAttrs(e)));
         }
         return result;
-  */      
     }
 
     @Override

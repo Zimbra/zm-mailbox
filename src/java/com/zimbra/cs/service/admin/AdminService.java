@@ -153,6 +153,8 @@ public class AdminService implements DocumentService {
 
     public static final QName AUTO_COMPLETE_GAL_REQUEST = QName.get("AutoCompleteGalRequest", NAMESPACE);
     public static final QName AUTO_COMPLETE_GAL_RESPONSE = QName.get("AutoCompleteGalResponse", NAMESPACE);
+    public static final QName SEARCH_GAL_REQUEST = QName.get("SearchGalRequest", NAMESPACE);
+    public static final QName SEARCH_GAL_RESPONSE = QName.get("SearchGalResponse", NAMESPACE);    
 
     public static final QName CREATE_VOLUME_REQUEST = QName.get("CreateVolumeRequest", NAMESPACE);
     public static final QName CREATE_VOLUME_RESPONSE = QName.get("CreateVolumeResponse", NAMESPACE);
@@ -328,6 +330,7 @@ public class AdminService implements DocumentService {
     public static final String A_ACCOUNTID = "id";
     public static final String A_MAILBOXID = "mbxid";
     public static final String A_TOTAL = "total";
+    public static final String A_TOKEN = "token";
     public static final String A_VIA = "via";
 
     public static final String BY_ID = "id";
@@ -509,6 +512,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(INIT_NOTEBOOK_REQUEST, new InitNotebook());
         
         dispatcher.registerHandler(AUTO_COMPLETE_GAL_REQUEST, new AutoCompleteGal());
+        dispatcher.registerHandler(SEARCH_GAL_REQUEST, new SearchGal());        
     }
 
     /**
