@@ -592,7 +592,11 @@ public class WikiTemplate {
 			return false;
 		}
 		public String apply(Context ctxt) {
-			return "<div class='ImgNotebook_pageIcon'></div>";
+			if (ctxt.item instanceof Document)
+				return "<div class='ImgPage'></div>";
+			if (ctxt.item.getFolderId() == Mailbox.ID_FOLDER_USER_ROOT)
+				return "<div class='ImgNotebook'></div>";
+			return "<div class='ImgSection'></div>";
 		}
 	}
 	public static class NameWiklet extends Wiklet {
