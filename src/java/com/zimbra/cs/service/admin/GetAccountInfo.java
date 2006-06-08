@@ -26,25 +26,33 @@
 /*
  * Created on May 26, 2004
  */
-package com.zimbra.cs.service.account;
+package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.DocumentHandler;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
  */
-public class GetAccountInfo extends DocumentHandler  {
+public class GetAccountInfo extends AdminDocumentHandler  {
+
+
+    /**
+     * must be careful and only return accounts a domain admin can see
+     */
+    @Override
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
 
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
@@ -52,18 +60,18 @@ public class GetAccountInfo extends DocumentHandler  {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
    
-        Element a = request.getElement(AccountService.E_ACCOUNT);
-        String key = a.getAttribute(AccountService.A_BY);
+        Element a = request.getElement(AdminService.E_ACCOUNT);
+        String key = a.getAttribute(AdminService.A_BY);
         String value = a.getText();
 
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.fromString(key), value);
 
-        if (account == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+        if (!canAccessAccount(lc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
 
-        Element response = lc.createElement(AccountService.GET_ACCOUNT_INFO_RESPONSE);
-        response.addElement(AccountService.E_NAME).setText(account.getName());
+        Element response = lc.createElement(AdminService.GET_ACCOUNT_INFO_RESPONSE);
+        response.addElement(AdminService.E_NAME).setText(account.getName());
         addAttr(response, Provisioning.A_zimbraId, account.getId());
         addAttr(response, Provisioning.A_zimbraMailHost, account.getAttr(Provisioning.A_zimbraMailHost));
  
@@ -83,17 +91,20 @@ public class GetAccountInfo extends DocumentHandler  {
         String https = URLUtil.getSoapURL(server, true);
 
         if (http != null)
-            response.addElement(AccountService.E_SOAP_URL).setText(http);
+            response.addElement(AdminService.E_SOAP_URL).setText(http);
         
         if (https != null && !https.equalsIgnoreCase(http))
-            response.addElement(AccountService.E_SOAP_URL).setText(https);
-
+            response.addElement(AdminService.E_SOAP_URL).setText(https);
+        
+        String adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI);
+        if (adminUrl != null)
+            response.addElement(AdminService.E_ADMIN_SOAP_URL).setText(adminUrl);
     }
 
     private static void addAttr(Element response, String name, String value) {
         if (value != null && !value.equals("")) {
-            Element e = response.addElement(AccountService.E_ATTR);
-            e.addAttribute(AccountService.A_NAME, name);
+            Element e = response.addElement(AdminService.E_A);
+            e.addAttribute(AdminService.A_N, name);
             e.setText(value);
         }
     }

@@ -388,7 +388,7 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
 <GetAccountInfoResponse>
    <name>{account-name}</name>
    <attr name="{name}">{value}</a>+
-   <mailURL>{mail-url}</mailURL>+
+   <soapURL>{mail-url}</soapURL>+
 </GetInfoResponse>
  
   {account-name} = email address (user@domain)

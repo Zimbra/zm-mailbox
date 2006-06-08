@@ -67,6 +67,8 @@ public class AdminService implements DocumentService {
     public static final QName DELEGATE_AUTH_RESPONSE = QName.get("DelegateAuthResponse", NAMESPACE);    
     public static final QName GET_ACCOUNT_REQUEST = QName.get("GetAccountRequest", NAMESPACE);
     public static final QName GET_ACCOUNT_RESPONSE = QName.get("GetAccountResponse", NAMESPACE);
+    public static final QName GET_ACCOUNT_INFO_REQUEST = QName.get("GetAccountInfoRequest", NAMESPACE);
+    public static final QName GET_ACCOUNT_INFO_RESPONSE = QName.get("GetAccountInfoResponse", NAMESPACE);    
     public static final QName GET_ALL_ACCOUNTS_REQUEST = QName.get("GetAllAccountsRequest", NAMESPACE);
     public static final QName GET_ALL_ACCOUNTS_RESPONSE = QName.get("GetAllAccountsResponse", NAMESPACE);    
     public static final QName GET_ALL_ADMIN_ACCOUNTS_REQUEST = QName.get("GetAllAdminAccountsRequest", NAMESPACE);
@@ -308,7 +310,9 @@ public class AdminService implements DocumentService {
 	public static final String E_NUM_OF_PAGES = "numpages";
     public static final String E_VOLUME = "volume";
     public static final String E_PROGRESS = "progress";
-
+    public static final String E_SOAP_URL = "soapURL";
+    public static final String E_ADMIN_SOAP_URL = "adminSoapURL";    
+    
     public static final String A_APPLY_CONFIG = "applyConfig";
     public static final String A_APPLY_COS = "applyCos";
     public static final String A_ID = "id";
@@ -403,6 +407,7 @@ public class AdminService implements DocumentService {
 		dispatcher.registerHandler(CREATE_ACCOUNT_REQUEST, new CreateAccount());
         dispatcher.registerHandler(DELEGATE_AUTH_REQUEST, new DelegateAuth());        
         dispatcher.registerHandler(GET_ACCOUNT_REQUEST, new GetAccount());
+        dispatcher.registerHandler(GET_ACCOUNT_INFO_REQUEST, new GetAccountInfo());        
         dispatcher.registerHandler(GET_ALL_ACCOUNTS_REQUEST, new GetAllAccounts());        
         dispatcher.registerHandler(GET_ALL_ADMIN_ACCOUNTS_REQUEST, new GetAllAdminAccounts());
         dispatcher.registerHandler(MODIFY_ACCOUNT_REQUEST, new ModifyAccount());
