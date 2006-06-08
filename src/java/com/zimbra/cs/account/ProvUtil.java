@@ -36,6 +36,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
@@ -55,9 +61,41 @@ import com.zimbra.cs.wiki.WikiUtil;
 public class ProvUtil {
  
     private boolean mInteractive = false;
+    private boolean mVerbose = false;
+    private boolean mUseLdap = true; // we'll eventually change this to false...
+    private String mAccount = null;
+    private String mPassword = null;
+    private String mServer = "localhost";
+    private int mPort = 7071;
     
+    public void setVerbose(boolean verbose) { mVerbose = verbose; }
+    
+    public void setUseLdap(boolean useLdap) { mUseLdap = useLdap; }
+
+    public void setAccount(String account) { mAccount = account; mUseLdap = false;}
+
+    public void setPassword(String password) { mPassword = password; mUseLdap = false; }
+    
+    public void setServer(String server ) {
+        int i = server.indexOf(":");
+        if (i == -1) {
+            mServer = server;
+        } else {
+            mServer = server.substring(0, i);
+            mPort = Integer.parseInt(server.substring(i+1));
+        }
+        mUseLdap = false;
+    }
+
     private void usage() {
-        System.out.println("zmprov [cmd] [args ...]");
+        System.out.println("zmprov [args] [cmd] [cmd-args ...]");
+        System.out.println("");
+        System.out.println("  -h/--help                      display usage");
+        System.out.println("  -s/--server   {host}[:{port}]  server hostname and optional port");
+        System.out.println("  -l/--ldap                      provision via LDAP instead of SOAP");
+        System.out.println("  -a/--account  {name}           account name to auth as");
+        System.out.println("  -p/--password {pass}           password for account");
+        System.out.println("  -v/--verbose                   verbose mode");
         System.out.println("");
 
         for (Command c : Command.values()) {
@@ -215,7 +253,20 @@ public class ProvUtil {
 
     private ProvUtil() {
         initCommands();
-        mProv = Provisioning.getInstance();
+    }
+    
+    public void initProvisioning() throws ServiceException, IOException {
+        if (mUseLdap)
+            mProv = Provisioning.getInstance();
+        else {
+            SoapProvisioning sp = new SoapProvisioning();            
+            sp.soapSetURI("https://"+mServer+":"+mPort+"/service/admin/soap");
+            if (mAccount != null && mPassword != null)
+                sp.soapAdminAuthenticate(mAccount, mPassword);
+            else
+                sp.soapZimbraAdminAuthenticate();
+            mProv = sp;            
+        }
     }
     
     private boolean execute(String args[]) throws ServiceException, ArgException, IOException {
@@ -1627,7 +1678,7 @@ public class ProvUtil {
         return attrs;
     }
 
-    private void interactive(boolean verbose) throws IOException {
+    private void interactive() throws IOException {
         mInteractive = true;
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
@@ -1635,7 +1686,7 @@ public class ProvUtil {
             String line = in.readLine();
             if (line == null || line.length() == -1)
                 break;
-            if (verbose) {
+            if (mVerbose) {
                 System.out.println(line);
             }
             String args[] = StringUtil.parseLine(line);
@@ -1648,33 +1699,65 @@ public class ProvUtil {
                 Throwable cause = e.getCause();
                 System.err.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
                         (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));
-                if (verbose) e.printStackTrace(System.err);
+                if (mVerbose) e.printStackTrace(System.err);
             } catch (ArgException e) {
                     usage();
             }
         }
     }
 
-    public static void main(String args[]) throws IOException {
+    public static void main(String args[]) throws IOException, ParseException {
         Zimbra.toolSetup();
         
         ProvUtil pu = new ProvUtil();
-        if (args.length < 1) {
-            pu.interactive(false);
-        } else if (args.length == 1 && args[0].equals("-v")) {
-            pu.interactive(true);
-        } else {
-            try {
-                if (!pu.execute(args))
+        CommandLineParser parser = new GnuParser();
+        Options options = new Options();
+        options.addOption("h", "help", false, "display usage");
+        options.addOption("s", "server", true, "host[:port] of server to connect to");
+        options.addOption("l", "ldap", false, "provision via LDAP");
+        options.addOption("a", "account", true, "account name (not used with --ldap)");
+        options.addOption("p", "password", true, "password for account");
+        options.addOption("v", "verbose", false, "verbose mode");
+        
+        CommandLine cl = null;
+        boolean err = false;
+        
+        try {
+            cl = parser.parse(options, args);
+        } catch (ParseException pe) {
+            System.err.println("error: " + pe.getMessage());
+            err = true;
+        }
+            
+        if (err || cl.hasOption('h')) {
+            pu.usage();
+        }
+        
+        pu.setVerbose(cl.hasOption('v'));
+        if (cl.hasOption('l')) pu.setUseLdap(true);
+        if (cl.hasOption('s')) pu.setServer(cl.getOptionValue('s'));
+        if (cl.hasOption('a')) pu.setAccount(cl.getOptionValue('a'));
+        if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
+
+        args = cl.getArgs();
+        
+        try {
+            pu.initProvisioning();
+            if (args.length < 1) {
+                pu.interactive();
+            } else {
+                try {
+                    if (!pu.execute(args))
+                        pu.usage();
+                } catch (ArgException e) {
                     pu.usage();
-            } catch (ServiceException e) {
-            	Throwable cause = e.getCause();
-                System.err.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
-                		(cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));  
-                System.exit(2);
-            } catch (ArgException e) {
-                pu.usage();
+                }
             }
+        } catch (ServiceException e) {
+            Throwable cause = e.getCause();
+            System.err.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
+                    (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));  
+            System.exit(2);
         }
     }
     
