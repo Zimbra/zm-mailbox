@@ -67,6 +67,7 @@ public class ProvUtil {
     private String mPassword = null;
     private String mServer = "localhost";
     private int mPort = 7071;
+    private Command mCommand;
     
     public void setVerbose(boolean verbose) { mVerbose = verbose; }
     
@@ -88,6 +89,15 @@ public class ProvUtil {
     }
 
     private void usage() {
+        
+        if (mCommand != null) {
+            System.out.printf("usage:  %s(%s) %s\n", mCommand.getName(), mCommand.getAlias(), mCommand.getHelp());
+        }
+
+        if (mInteractive)
+            return;
+        
+        System.out.println("");
         System.out.println("zmprov [args] [cmd] [cmd-args ...]");
         System.out.println("");
         System.out.println("  -h/--help                      display usage");
@@ -97,26 +107,12 @@ public class ProvUtil {
         System.out.println("  -p/--password {pass}           password for account");
         System.out.println("  -v/--verbose                   verbose mode");
         System.out.println("");
-
-        for (Command c : Command.values()) {
-            if (!c.hasHelp()) continue;
-            System.out.printf("  %s(%s) %s\n", c.getName(), c.getAlias(), c.getHelp());
-        }
+        System.out.println(" zmprov is used for provisioning. Try:");
+        System.out.println("");
+        System.out.println("     zmprov help commands        to list all commands");        
+        System.out.println("");
         
-        System.out.println("");        
-        
-        StringBuilder sb = new StringBuilder();
-        EntrySearchFilter.Operator vals[] = EntrySearchFilter.Operator.values();
-        for (int i = 0; i < vals.length; i++) {
-            if (i > 0)
-                sb.append(", ");
-            sb.append(vals[i].toString());
-        }
-        System.out.println("    op = " + sb.toString());
-        System.out.println();
-        
-        if (!mInteractive)
-            System.exit(1);
+        System.exit(1);
     }
 
     private static final int UNKNOWN_COMMAND = -1;
@@ -161,7 +157,7 @@ public class ProvUtil {
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}"),
         GET_DOMAIN("getDomain", "gd", "{domain|id}"), 
         GET_SERVER("getServer", "gs", "{name|id}"), 
-        HELP("help", "?", ""),
+        HELP("help", "?", "commands"),
         IMPORT_NOTEBOOK("importNotebook", "impn", "[ -u {username} ] [ -p {password} ] [ -f {from dir} ] [ -t {to folder} ]"),
         INIT_NOTEBOOK("initNotebook", "in", "[ -u {username} ] [ -p {password} ] [ -d {domain} ] [ -f {from dir} ] [ -t {to folder} ]"),
         LDAP(".ldap", ".l"), 
@@ -271,12 +267,12 @@ public class ProvUtil {
     
     private boolean execute(String args[]) throws ServiceException, ArgException, IOException {
 
-        Command c = lookupCommand(args[0]);
+        mCommand = lookupCommand(args[0]);
         
-        if (c == null)
+        if (mCommand == null)
             return false;
         
-        switch(c) {
+        switch(mCommand) {
         case ADD_ACCOUNT_ALIAS:
             doAddAccountAlias(args); 
             break;
@@ -516,7 +512,23 @@ public class ProvUtil {
     }
 
     private void doHelp(String[] args) {
-        usage();
+        System.out.println("");
+        for (Command c : Command.values()) {
+            if (!c.hasHelp()) continue;
+            System.out.printf("  %s(%s) %s\n", c.getName(), c.getAlias(), c.getHelp());
+        }
+        
+        System.out.println("");        
+        
+        StringBuilder sb = new StringBuilder();
+        EntrySearchFilter.Operator vals[] = EntrySearchFilter.Operator.values();
+        for (int i = 0; i < vals.length; i++) {
+            if (i > 0)
+                sb.append(", ");
+            sb.append(vals[i].toString());
+        }
+        System.out.println("    op = " + sb.toString());
+        System.out.println();
     }
 
     private void doSetPassword(String[] args) throws ServiceException {
@@ -1693,8 +1705,9 @@ public class ProvUtil {
             if (args.length == 0)
                 continue;
             try {
-                if (!execute(args)) 
-                    usage();
+                if (!execute(args)) {
+                    System.out.println("Unknown command. Type: 'help commands' for a list");
+                }
             } catch (ServiceException e) {
                 Throwable cause = e.getCause();
                 System.err.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
