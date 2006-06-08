@@ -554,7 +554,7 @@ public class ProvUtil {
             System.out.println(" zmprov is used for provisioning. Try:");
             System.out.println("");
             for (Category c: Category.values()) {
-                System.out.printf("     zmprov help %-20s        %s\n", c.name().toLowerCase(), c.getDescription());
+                System.out.printf("     zmprov help %-15s %s\n", c.name().toLowerCase(), c.getDescription());
             }
             
         }
