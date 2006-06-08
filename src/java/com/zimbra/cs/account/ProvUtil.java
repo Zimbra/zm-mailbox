@@ -107,89 +107,116 @@ public class ProvUtil {
         System.out.println("  -p/--password {pass}           password for account");
         System.out.println("  -v/--verbose                   verbose mode");
         System.out.println("");
+        doHelp(null);
+        /*
         System.out.println(" zmprov is used for provisioning. Try:");
         System.out.println("");
         System.out.println("     zmprov help commands        to list all commands");        
         System.out.println("");
+        */
         
         System.exit(1);
     }
 
     private static final int UNKNOWN_COMMAND = -1;
     
-    public enum Command {
+    public static enum Category {
+        ACCOUNT("help on account-related commands"),
+        CALENDAR("help on calendar resource-related commands"),
+        COMMANDS("help on all commands"),
+        CONFIG("help on config-related commands"),
+        COS("help on COS-related commands"), 
+        DOMAIN("help on domain-related commands"), 
+        LIST("help on distribution list-related commands"), 
+        MISC("help on misc commands"), 
+        NOTEBOOK("help on notebook-related commands"), 
+        SEARCH("help on search-related commands"), 
+        SERVER("help on server-related commands");
+        
+        String mDesc;
+
+        public String getDescription() { return mDesc; }
+        
+        Category(String desc) {
+            mDesc = desc;
+        }
+    }
     
-        ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}"),
-        ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}"),
-        ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}"),
-        AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}"),
-        CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]"),
+    public enum Command {
+        
+        ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT),
+        ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", Category.LIST),
+        ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}", Category.LIST),
+        AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH),
+        CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT),
         CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk"),  //("  CreateBulkAccounts(cabulk) {domain} {namemask} {number of accounts to create} ");
-        CREATE_CALENDAR_RESOURCE("createCalendarResource",  "ccr", "{name@domain} [attr1 value1 [attr2 value2...]]"),
-        CREATE_COS("createCos", "cc", "{name} [attr1 value1 [attr2 value2...]]"),
-        CREATE_DISTRIBUTION_LIST("createDistributionList", "cdl", "{list@domain}"),
+        CREATE_CALENDAR_RESOURCE("createCalendarResource",  "ccr", "{name@domain} [attr1 value1 [attr2 value2...]]", Category.CALENDAR),
+        CREATE_COS("createCos", "cc", "{name} [attr1 value1 [attr2 value2...]]", Category.COS),
+        CREATE_DISTRIBUTION_LIST("createDistributionList", "cdl", "{list@domain}", Category.LIST),
         CREATE_DISTRIBUTION_LISTS_BULK("createDistributionListsBulk", "cdlbulk"),
-        CREATE_DOMAIN("createDomain", "cd", "{domain} [attr1 value1 [attr2 value2...]]"),
-        CREATE_SERVER("createServer", "cs", "{name} [attr1 value1 [attr2 value2...]]"),
-        DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}"),
-        DELETE_CALENDAR_RESOURCE("deleteCalendarResource",  "dcr", "{name@domain|id}"),
-        DELETE_COS("deleteCos", "dc", "{name|id}"),
-        DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id}"),
-        DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}"),
-        DELETE_SERVER("deleteServer", "ds", "{name|id}"),
-        EXIT("exit", "quit", ""),
-        GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}"),
-        GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "{domain|id}"),
-        GET_ACCOUNT("getAccount", "ga", "{name@domain|id}"),
-        GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}"),
-        GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [{domain}]"),
-        GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v]"),
-        GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [{domain}]"),
-        GET_ALL_CONFIG("getAllConfig", "gacf", ""),
-        GET_ALL_COS("getAllCos", "gac", "[-v]"),
-        GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[{domain}]"),
-        GET_ALL_DOMAINS("getAllDomains", "gad", "[-v]"),
-        GET_ALL_SERVERS("getAllServers", "gas", "[-v] [service]"),
-        GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id}"), 
-        GET_CONFIG("getConfig", "gcf", "{name}"),
-        GET_COS("getCos", "gc", "{name|id}"),
-        GET_DISTRIBUTION_LIST("getDistributionList", "gdl", "{list@domain|id}"),
-        GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}"),
-        GET_DOMAIN("getDomain", "gd", "{domain|id}"), 
-        GET_SERVER("getServer", "gs", "{name|id}"), 
-        HELP("help", "?", "commands"),
-        IMPORT_NOTEBOOK("importNotebook", "impn", "[ -u {username} ] [ -p {password} ] [ -f {from dir} ] [ -t {to folder} ]"),
-        INIT_NOTEBOOK("initNotebook", "in", "[ -u {username} ] [ -p {password} ] [ -d {domain} ] [ -f {from dir} ] [ -t {to folder} ]"),
+        CREATE_DOMAIN("createDomain", "cd", "{domain} [attr1 value1 [attr2 value2...]]", Category.DOMAIN),
+        CREATE_SERVER("createServer", "cs", "{name} [attr1 value1 [attr2 value2...]]", Category.SERVER),
+        DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}", Category.ACCOUNT),
+        DELETE_CALENDAR_RESOURCE("deleteCalendarResource",  "dcr", "{name@domain|id}", Category.CALENDAR),
+        DELETE_COS("deleteCos", "dc", "{name|id}", Category.COS),
+        DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id}", Category.LIST),
+        DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}", Category.DOMAIN),
+        DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER),
+        EXIT("exit", "quit", "", Category.MISC),
+        GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.DOMAIN),
+        GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "{domain|id}", Category.DOMAIN),
+        GET_ACCOUNT("getAccount", "ga", "{name@domain|id}", Category.ACCOUNT),
+        GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT),
+        GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [{domain}]", Category.ACCOUNT),
+        GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v]", Category.ACCOUNT),
+        GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [{domain}]", Category.CALENDAR),
+        GET_ALL_CONFIG("getAllConfig", "gacf", "", Category.CONFIG),
+        GET_ALL_COS("getAllCos", "gac", "[-v]", Category.COS),
+        GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[{domain}]", Category.LIST),
+        GET_ALL_DOMAINS("getAllDomains", "gad", "[-v]", Category.DOMAIN),
+        GET_ALL_SERVERS("getAllServers", "gas", "[-v] [service]", Category.SERVER),
+        GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id}", Category.CALENDAR), 
+        GET_CONFIG("getConfig", "gcf", "{name}", Category.CONFIG),
+        GET_COS("getCos", "gc", "{name|id}", Category.COS),
+        GET_DISTRIBUTION_LIST("getDistributionList", "gdl", "{list@domain|id}", Category.LIST),
+        GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST),
+        GET_DOMAIN("getDomain", "gd", "{domain|id}", Category.DOMAIN), 
+        GET_SERVER("getServer", "gs", "{name|id}", Category.SERVER), 
+        HELP("help", "?", "commands", Category.MISC),
+        IMPORT_NOTEBOOK("importNotebook", "impn", "[ -u {username} ] [ -p {password} ] [ -f {from dir} ] [ -t {to folder} ]", Category.NOTEBOOK),
+        INIT_NOTEBOOK("initNotebook", "in", "[ -u {username} ] [ -p {password} ] [ -d {domain} ] [ -f {from dir} ] [ -t {to folder} ]", Category.NOTEBOOK),
         LDAP(".ldap", ".l"), 
-        MODIFY_ACCOUNT("modifyAccount", "ma", "{name@domain|id} [attr1 value1 [attr2 value2...]]"),
-        MODIFY_CALENDAR_RESOURCE("modifyCalendarResource",  "mcr", "{name@domain|id} [attr1 value1 [attr2 value2...]]"),
-        MODIFY_CONFIG("modifyConfig", "mcf", "attr1 value1 [attr2 value2...]"),
-        MODIFY_COS("modifyCos", "mc", "{name|id} [attr1 value1 [attr2 value2...]]"),
-        MODIFY_DISTRIBUTION_LIST("modifyDistributionList", "mdl", "{list@domain|id} attr1 value1 [attr2 value2...]"),
-        MODIFY_DOMAIN("modifyDomain", "md", "{domain|id} [attr1 value1 [attr2 value2...]]"),
-        MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]"),
-        REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}"),
-        REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}"),
-        REMOVE_DISTRIBUTION_LIST_MEMBER("removeDistributionListMember", "rdlm", "{list@domain|id} {member@domain}"),
-        RENAME_ACCOUNT("renameAccount", "ra", "{name@domain|id} {newName@domain}"),
-        RENAME_CALENDAR_RESOURCE("renameCalendarResource",  "rcr", "{name@domain|id} {newName@domain}"),
-        RENAME_COS("renameCos", "rc", "{name|id} {newName}"),
-        RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}"),
-        SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [domain {domain}]"),
-        SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]"),
-        SEARCH_GAL("searchGal", "sg", "{domain} {name}"),
-        SET_ACCOUNT_COS("setAccountCos", "sac", "{name@domain|id} {cos-name|cos-id}"),
-        SET_PASSWORD("setPassword", "sp", "{name@domain|id} {password}"),
+        MODIFY_ACCOUNT("modifyAccount", "ma", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT),
+        MODIFY_CALENDAR_RESOURCE("modifyCalendarResource",  "mcr", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.CALENDAR),
+        MODIFY_CONFIG("modifyConfig", "mcf", "attr1 value1 [attr2 value2...]", Category.CONFIG),
+        MODIFY_COS("modifyCos", "mc", "{name|id} [attr1 value1 [attr2 value2...]]", Category.COS),
+        MODIFY_DISTRIBUTION_LIST("modifyDistributionList", "mdl", "{list@domain|id} attr1 value1 [attr2 value2...]", Category.LIST),
+        MODIFY_DOMAIN("modifyDomain", "md", "{domain|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN),
+        MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER),
+        REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT),
+        REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}", Category.LIST),
+        REMOVE_DISTRIBUTION_LIST_MEMBER("removeDistributionListMember", "rdlm", "{list@domain|id} {member@domain}", Category.LIST),
+        RENAME_ACCOUNT("renameAccount", "ra", "{name@domain|id} {newName@domain}", Category.ACCOUNT),
+        RENAME_CALENDAR_RESOURCE("renameCalendarResource",  "rcr", "{name@domain|id} {newName@domain}", Category.CALENDAR),
+        RENAME_COS("renameCos", "rc", "{name|id} {newName}", Category.COS),
+        RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST),
+        SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH),
+        SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
+        SEARCH_GAL("searchGal", "sg", "{domain} {name}", Category.SEARCH),
+        SET_ACCOUNT_COS("setAccountCos", "sac", "{name@domain|id} {cos-name|cos-id}", Category.ACCOUNT),
+        SET_PASSWORD("setPassword", "sp", "{name@domain|id} {password}", Category.ACCOUNT),
         SOAP(".soap", ".s"),
         SYNC_GAL("syncGal", "syg");
 
         private String mName;
         private String mAlias;
         private String mHelp;
+        private Category mCat;
 
         public String getName() { return mName; }
         public String getAlias() { return mAlias; }
         public String getHelp() { return mHelp; }
+        public Category getCategory() { return mCat; }
         public boolean hasHelp() { return mHelp != null; }
 
         private Command(String name, String alias) {
@@ -197,10 +224,11 @@ public class ProvUtil {
             mAlias = alias;
         }
 
-        private Command(String name, String alias, String help) {
+        private Command(String name, String alias, String help, Category cat)  {
             mName = name;
             mAlias = alias;
             mHelp = help;
+            mCat = cat;
         }
     }
     
@@ -512,22 +540,45 @@ public class ProvUtil {
     }
 
     private void doHelp(String[] args) {
-        System.out.println("");
-        for (Command c : Command.values()) {
-            if (!c.hasHelp()) continue;
-            System.out.printf("  %s(%s) %s\n", c.getName(), c.getAlias(), c.getHelp());
+        Category cat = null;
+        if (args != null && args.length >= 2) {
+            String s = args[1].toUpperCase();
+            try {
+                cat = Category.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                cat = null;
+            }
+        }
+
+        if (args == null || args.length == 1 || cat == null) {
+            System.out.println(" zmprov is used for provisioning. Try:");
+            System.out.println("");
+            for (Category c: Category.values()) {
+                System.out.printf("     zmprov help %-20s        %s\n", c.name().toLowerCase(), c.getDescription());
+            }
+            
         }
         
-        System.out.println("");        
+        if (cat != null) {
+            System.out.println("");            
+            for (Command c : Command.values()) {
+                if (!c.hasHelp()) continue;
+                if (cat == Category.COMMANDS || cat == c.getCategory())
+                    System.out.printf("  %s(%s) %s\n", c.getName(), c.getAlias(), c.getHelp());
+            }
         
-        StringBuilder sb = new StringBuilder();
-        EntrySearchFilter.Operator vals[] = EntrySearchFilter.Operator.values();
-        for (int i = 0; i < vals.length; i++) {
-            if (i > 0)
-                sb.append(", ");
-            sb.append(vals[i].toString());
+            if (cat == Category.CALENDAR) {
+                System.out.println("");                
+                StringBuilder sb = new StringBuilder();
+                EntrySearchFilter.Operator vals[] = EntrySearchFilter.Operator.values();
+                for (int i = 0; i < vals.length; i++) {
+                    if (i > 0)
+                        sb.append(", ");
+                    sb.append(vals[i].toString());
+                }
+                System.out.println("    op = " + sb.toString());
+            }
         }
-        System.out.println("    op = " + sb.toString());
         System.out.println();
     }
 
