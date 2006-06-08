@@ -2630,7 +2630,8 @@ public class Mailbox {
      */
     public synchronized int setAppointment(OperationContext octxt, int folderId, SetAppointmentData defaultInv, SetAppointmentData exceptions[])
     throws ServiceException {
-        SetAppointment redoRecorder = new SetAppointment(getId());
+        SetAppointment redoRecorder =
+            new SetAppointment(getId(), attachmentsIndexingEnabled());
         SetAppointment redoPlayer = (octxt == null ? null : (SetAppointment) octxt.player);
         
         boolean success = false;

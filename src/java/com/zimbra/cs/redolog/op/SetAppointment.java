@@ -54,6 +54,7 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
     private int mFolderId;
     private int mAppointmentId;
     private String mAppointmentPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
+    private boolean mAttachmentIndexingEnabled;
     private Mailbox.SetAppointmentData mDefaultInvite;
     private Mailbox.SetAppointmentData mExceptions[];
     private short mVolumeId = -1;
@@ -77,15 +78,18 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
         }
     }
     
-    static Mailbox.SetAppointmentData deserializeSetAppointmentData(DataInput in, Mailbox mbox) throws IOException, MessagingException {
+    private Mailbox.SetAppointmentData deserializeSetAppointmentData(
+            DataInput in, boolean attachmentIndexingEnabled)
+    throws IOException, MessagingException {
         Mailbox.SetAppointmentData toRet = new Mailbox.SetAppointmentData();
-        
+
+        int mboxId = getMailboxId();
         try {
             toRet.mForce = in.readBoolean();
         
             ICalTimeZone localTz = ICalTimeZone.decodeFromMetadata(new Metadata(in.readUTF()));
             
-            toRet.mInv = Invite.decodeMetadata(mbox.getId(), new Metadata(in.readUTF()), null, localTz);
+            toRet.mInv = Invite.decodeMetadata(mboxId, new Metadata(in.readUTF()), null, localTz);
             
             long receivedDate = in.readLong();
             
@@ -96,7 +100,7 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
             InputStream is = new ByteArrayInputStream(rawPmData);
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
             
-            toRet.mPm = new ParsedMessage(mm, receivedDate, mbox.attachmentsIndexingEnabled());
+            toRet.mPm = new ParsedMessage(mm, receivedDate, attachmentIndexingEnabled);
         } catch (ServiceException ex) {
             ex.printStackTrace();
             throw new IOException("Cannot read serialized entry for CreateInvite "+ex.toString());
@@ -114,6 +118,8 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
         out.writeInt(mAppointmentId);
         if (getVersion().atLeast(1, 1))
             writeUTF8(out, mAppointmentPartStat);
+        if (getVersion().atLeast(1, 2))
+            out.writeBoolean(mAttachmentIndexingEnabled);
         
         try {
             serializeSetAppointmentData(out, mDefaultInvite);
@@ -136,40 +142,39 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
     }
 
     protected void deserializeData(DataInput in) throws IOException {
-        assert(getMailboxId() != 0);
         mFolderId = in.readInt();
         if (getVersion().atLeast(1, 0))
             mVolumeId = in.readShort();
         mAppointmentId = in.readInt();
         if (getVersion().atLeast(1, 1))
             mAppointmentPartStat = readUTF8(in);
+        if (getVersion().atLeast(1, 2))
+            mAttachmentIndexingEnabled = in.readBoolean();
+        else
+            mAttachmentIndexingEnabled = false;
         
         try {
-            Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
-        
-            mDefaultInvite = deserializeSetAppointmentData(in, mbox);
+            mDefaultInvite = deserializeSetAppointmentData(in, mAttachmentIndexingEnabled);
             
             int numExceptions = in.readInt();
             if (numExceptions > 0) {
                 mExceptions = new Mailbox.SetAppointmentData[numExceptions];
                 for (int i = 0; i < numExceptions; i++){
-                    mExceptions[i] = deserializeSetAppointmentData(in, mbox);
+                    mExceptions[i] = deserializeSetAppointmentData(in, mAttachmentIndexingEnabled);
                 }
             }
         
         } catch (MessagingException ex) {
             ex.printStackTrace();
             throw new IOException("Cannot read serialized entry for SetAppointment"+ex.toString());
-        } catch (ServiceException ex) {
-            ex.printStackTrace();
-            throw new IOException("Cannot read serialized entry for SetAppointment"+ex.toString());
         }
     }
 
-    public SetAppointment(int mailboxId) 
+    public SetAppointment(int mailboxId, boolean attachmentIndexingEnabled) 
     {
         super(); 
         setMailboxId(mailboxId);
+        mAttachmentIndexingEnabled = attachmentIndexingEnabled;
     }
     
     public void setData(Mailbox.SetAppointmentData defaultInvite, Mailbox.SetAppointmentData exceptions[]) {

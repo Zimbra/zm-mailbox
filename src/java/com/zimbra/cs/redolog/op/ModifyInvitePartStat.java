@@ -31,13 +31,11 @@ package com.zimbra.cs.redolog.op;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.text.ParseException;
 
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author jhahm
@@ -45,7 +43,8 @@ import com.zimbra.cs.service.ServiceException;
 public class ModifyInvitePartStat extends RedoableOp 
 {
     private int mApptId = UNKNOWN_ID; // appointment which contains invite
-    private RecurId mRecurId = null;
+    private String mRecurIdDt = null;
+    private int mRecurIdRange = RecurId.RANGE_NONE;
     private String mCnStr = null;
     private String mAddressStr = null;
     private String mCUTypeStr = null;
@@ -64,7 +63,10 @@ public class ModifyInvitePartStat extends RedoableOp
     {
         setMailboxId(mailboxId);
         mApptId = apptId;
-        mRecurId = recurId;
+        if (recurId != null) {
+            mRecurIdDt = recurId.getDt().toString();
+            mRecurIdRange = recurId.getRange();
+        }
         mCnStr = cnStr != null ? cnStr : "";
         mAddressStr = addressStr != null ? addressStr : "";
         mCUTypeStr = cutypeStr != null ? cutypeStr : "";
@@ -81,13 +83,25 @@ public class ModifyInvitePartStat extends RedoableOp
 
     public void redo() throws Exception {
         Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
-        mbox.modifyPartStat(getOperationContext(), mApptId, mRecurId, mCnStr, mAddressStr, mCUTypeStr, mRoleStr, mPartStatStr, mNeedsReply, mSeqNo, mDtStamp); 
+        Appointment appt =
+            Mailbox.getMailboxById(getMailboxId()).
+            getAppointmentById(null, mApptId);
+        RecurId recurId =
+            new RecurId(ParsedDateTime.parse(mRecurIdDt,
+                                             appt.getTimeZoneMap()),
+                        mRecurIdRange);
+        mbox.modifyPartStat(
+                getOperationContext(),
+                mApptId, recurId, mCnStr, mAddressStr,
+                mCUTypeStr, mRoleStr, mPartStatStr,
+                mNeedsReply, mSeqNo, mDtStamp); 
     }
 
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("apptId=").append(mApptId);
-        if (mRecurId != null) {
-            sb.append(", recurId=").append(mRecurId.toString());
+        if (mRecurIdDt != null) {
+            sb.append(", recurIdDt=").append(mRecurIdDt);
+            sb.append(", recurIdRange=").append(mRecurIdRange);
         }
         sb.append(", cn=").append(mCnStr);
         sb.append(", address=").append(mAddressStr);
@@ -102,13 +116,13 @@ public class ModifyInvitePartStat extends RedoableOp
 
     protected void serializeData(DataOutput out) throws IOException {
         out.writeInt(mApptId);
-        
-        out.writeBoolean(mRecurId!=null);
-        if (mRecurId != null) {
-            out.writeInt(mRecurId.getRange());
-            out.writeUTF(mRecurId.getDt().toString());
+        boolean hasRecurId = mRecurIdDt != null;
+        out.writeBoolean(hasRecurId);
+        if (hasRecurId) {
+            out.writeInt(mRecurIdRange);
+            out.writeUTF(mRecurIdDt);
         }
-        
+
         out.writeUTF(mCnStr);
         out.writeUTF(mAddressStr);
         out.writeUTF(mCUTypeStr);
@@ -121,31 +135,19 @@ public class ModifyInvitePartStat extends RedoableOp
 
     protected void deserializeData(DataInput in) throws IOException {
         mApptId = in.readInt();
-        
-        try {
-            Appointment appt = Mailbox.getMailboxById(getMailboxId()).getAppointmentById(null, mApptId);
-            
-            if (in.readBoolean()) {
-                int range = in.readInt();
-                String dtStr = in.readUTF();
-                
-                try {
-                    mRecurId = new RecurId(ParsedDateTime.parse(dtStr, appt.getTimeZoneMap()), range);
-                } catch (ParseException pe) {
-                    throw new IOException("Parsing date-time: "+dtStr+" "+pe);
-                }
-            }
-            
-            mCnStr = in.readUTF();
-            mAddressStr = in.readUTF();
-            mCUTypeStr = in.readUTF();
-            mRoleStr = in.readUTF();
-            mPartStatStr = in.readUTF();
-            mNeedsReply = new Boolean(in.readBoolean());
-            mSeqNo = in.readInt();
-            mDtStamp = in.readLong();
-        } catch (ServiceException se) {
-            throw new IOException("ServiceException: "+se);
+        boolean hasRecurId = in.readBoolean();
+        if (hasRecurId) {
+            mRecurIdRange = in.readInt();
+            mRecurIdDt = in.readUTF();
         }
+
+        mCnStr = in.readUTF();
+        mAddressStr = in.readUTF();
+        mCUTypeStr = in.readUTF();
+        mRoleStr = in.readUTF();
+        mPartStatStr = in.readUTF();
+        mNeedsReply = new Boolean(in.readBoolean());
+        mSeqNo = in.readInt();
+        mDtStamp = in.readLong();
     }
 }
