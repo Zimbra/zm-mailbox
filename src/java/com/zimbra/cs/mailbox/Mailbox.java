@@ -2672,12 +2672,10 @@ public class Mailbox {
                     return 0; // for now, just ignore this Invitation
                 }
             } else {
-                ZOrganizer originalOrganizer = appt.getDefaultInvite().getOrganizer();
-                appt.removeAllInvites(); 
-                appt.processNewInvite(originalOrganizer,
-                                      defaultInv.mPm,
+                appt.processNewInvite(defaultInv.mPm,
                                       defaultInv.mInv,
-                                      defaultInv.mForce, folderId, volumeId);
+                                      defaultInv.mForce, folderId, volumeId,
+                                      true);
             }
 
             redoRecorder.setAppointmentAttrs(appt.getId(),
@@ -2686,9 +2684,8 @@ public class Mailbox {
 
             // handle the exceptions!
             if (exceptions != null) {
-                ZOrganizer originalOrganizer = appt.getDefaultInvite().getOrganizer();
                 for (SetAppointmentData sad : exceptions) {
-                    appt.processNewInvite(originalOrganizer, sad.mPm, sad.mInv, sad.mForce, folderId, volumeId);
+                    appt.processNewInvite(sad.mPm, sad.mInv, sad.mForce, folderId, volumeId);
                 }
             }
             
@@ -2756,8 +2753,7 @@ public class Mailbox {
                     return null; // for now, just ignore this Invitation
                 }
             } else {
-                ZOrganizer originalOrganizer = appt.getDefaultInvite().getOrganizer();
-                appt.processNewInvite(originalOrganizer, pm, inv, force, folderId, volumeId);
+                appt.processNewInvite(pm, inv, force, folderId, volumeId);
             }
             redoRecorder.setAppointmentAttrs(appt.getId(),
                                              appt.getFolderId(),

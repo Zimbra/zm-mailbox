@@ -534,29 +534,41 @@ public class Appointment extends MailItem {
                 first = cur;
         }
         if (first == null)
-            throw ServiceException.FAILURE(
+            ZimbraLog.calendar.error(
                     "Invalid state: appointment " + getId() + " in mailbox " +
                     getMailbox().getId() +
                     " has no default invite; " +
                     (mInvites != null ? ("invite count = " + mInvites.size())
-                                      : "null invite list"),
-                    null);
+                                      : "null invite list"));
         return first;
     }
-    
+
+    void processNewInvite(ParsedMessage pm,
+                          Invite invite,
+                          boolean force, int folderId, short volumeId)
+    throws ServiceException {
+        processNewInvite(pm, invite, force, folderId, volumeId, false);
+    }
+
     /**
      * A new Invite has come in, take a look at it and see what needs to happen.
      * Maybe we need to send updates out. Maybe we need to modify the
      * Appointment table.
      * 
      * @param invite
-     * @param force if true, then force update to this appointment, otherwise use RFC2446 sequencing rules
+     * @param force if true, then force update to this appointment,
+     *              otherwise use RFC2446 sequencing rules
      */
-    void processNewInvite(ZOrganizer originalOrganizer,
-                          ParsedMessage pm,
+    void processNewInvite(ParsedMessage pm,
                           Invite invite,
-                          boolean force, int folderId, short volumeId)
+                          boolean force, int folderId, short volumeId,
+                          boolean replaceExistingInvites)
     throws ServiceException {
+        ZOrganizer originalOrganizer = getDefaultInvite().getOrganizer();
+        if (replaceExistingInvites) {
+            mInvites.clear();
+            //saveMetadata();
+        }
         String method = invite.getMethod();
         if (method.equals(ICalTok.REQUEST.toString()) || method.equals(ICalTok.CANCEL.toString()) || method.equals(ICalTok.PUBLISH.toString())) {
             processNewInviteRequestOrCancel(originalOrganizer, pm, invite, force, folderId, volumeId);
@@ -565,13 +577,6 @@ public class Appointment extends MailItem {
         }
     }
     
-    void removeAllInvites() throws ServiceException
-    {
-        mInvites.clear();
-        mMailbox.markOtherItemDirty(getBlob());
-        saveMetadata();
-    }
-
     private void processNewInviteRequestOrCancel(ZOrganizer originalOrganizer,
                                                  ParsedMessage pm,
                                                  Invite newInvite,

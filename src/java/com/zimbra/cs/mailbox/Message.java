@@ -369,9 +369,7 @@ public class Message extends MailItem {
             	   // When updating an existing appointment, ignore the
             	   // passed-in folderId which will usually be Inbox.  Leave
             	   // the appointment in the folder it's currently in.
-                   ZOrganizer originalOrganizer = appt.getDefaultInvite().getOrganizer();
-                   appt.processNewInvite(originalOrganizer,
-                                         pm, cur, false, appt.getFolderId(), volumeId);
+                   appt.processNewInvite(pm, cur, false, appt.getFolderId(), volumeId);
                }
            }
 
