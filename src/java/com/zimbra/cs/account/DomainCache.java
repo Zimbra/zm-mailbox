@@ -115,7 +115,7 @@ public class DomainCache {
     }
     
     public synchronized Domain getByName(String key) {
-        return get(key, mNameCache);
+        return get(key.toLowerCase(), mNameCache);
     }
     
     public synchronized Domain getByVirtualHostname(String key) {
