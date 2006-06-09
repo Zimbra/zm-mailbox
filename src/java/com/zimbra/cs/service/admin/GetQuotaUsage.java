@@ -32,10 +32,8 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
@@ -65,17 +63,11 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             limit = Integer.MAX_VALUE;
         int offset = (int) request.getAttributeLong(AdminService.A_OFFSET, 0);        
         String domain = request.getAttribute(AdminService.A_DOMAIN, null);
-        String cos = request.getAttribute(AdminService.A_COS, null);
-//        String attrsStr = request.getAttribute(AdminService.A_ATTRS, null);
         String sortBy = request.getAttribute(AdminService.A_SORT_BY, SORT_TOTAL_USED);        
         final boolean sortAscending = request.getAttributeBool(AdminService.A_SORT_ASCENDING, false);        
 
         if (!(sortBy.equals(SORT_TOTAL_USED) || sortBy.equals(SORT_PERCENT_USED) || sortBy.equals(SORT_QUOTA_LIMIT)))
             throw ServiceException.INVALID_REQUEST("sortBy must be percentUsed or totalUsed", null);
-
-//        int flags = Provisioning.SA_ACCOUNT_FLAG;
-        
-//        String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
         // if we are a domain admin only, restrict to domain
         if (isDomainAdminOnly(lc)) {
@@ -94,14 +86,8 @@ public class GetQuotaUsage extends AdminDocumentHandler {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
 
-        Cos c = null;
-        if (cos != null) {
-            c = prov.get(CosBy.name, cos);
-            if (c == null)
-                throw AccountServiceException.NO_SUCH_COS(cos);
-        }
         
-        QuotaUsageParams params = new QuotaUsageParams(d, c, sortBy,sortAscending);
+        QuotaUsageParams params = new QuotaUsageParams(d, sortBy,sortAscending);
 
         ArrayList<AccountQuota> quotas = params.doSearch();
        
@@ -144,17 +130,13 @@ public class GetQuotaUsage extends AdminDocumentHandler {
 
     public class QuotaUsageParams {    
         String mDomainId;
-        String mCosId;
-        String mCosName;    
         String mSortBy;
         boolean mSortAscending;
 
         ArrayList<AccountQuota> mResult;
         
-        QuotaUsageParams(Domain d, Cos c, String sortBy, boolean sortAscending) {
+        QuotaUsageParams(Domain d, String sortBy, boolean sortAscending) {
             mDomainId = (d == null) ? "" : d.getId();
-            mCosId = (c == null) ? "" : c.getId();
-            mCosName = (c == null) ? "" : c.getName();        
             mSortBy = (sortBy == null) ? "" : sortBy;
             mSortAscending = sortAscending;
         }
@@ -166,7 +148,6 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             QuotaUsageParams other = (QuotaUsageParams) o; 
             return 
                 mDomainId.equals(other.mDomainId) &&
-                mCosId.equals(other.mCosId) &&
                 mSortBy.equals(other.mSortBy) &&
                 mSortAscending == other.mSortAscending;
         }
@@ -176,16 +157,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
 
             ArrayList<AccountQuota> result = new ArrayList<AccountQuota>();
             
-            String query = null;
-            if (!mCosId.equals("")) {
-                if (mCosName.equals(Provisioning.DEFAULT_COS_NAME)) {
-                    query = String.format("(&(zimbraMailHost=%s)((zimbraCOSId=%s)|(!(zimbraCOSId=*))))", LOCAL_HOST, mCosId);
-                } else {
-                    query = String.format("(&(zimbraMailHost=%s)(zimbraCOSId=%s))", LOCAL_HOST, mCosId);
-                }
-            } else {
-                query = String.format("(zimbraMailHost=%s)", LOCAL_HOST);
-            }
+            String query = String.format("(zimbraMailHost=%s)", LOCAL_HOST);
             
             Provisioning prov = Provisioning.getInstance();
             int flags = Provisioning.SA_ACCOUNT_FLAG;

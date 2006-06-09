@@ -341,7 +341,7 @@ Access: domain admin sufficient (though a domain admin can't specify "domains" a
      
 -----------------------------
 
-<GetQuotaUsageRequest [limit="..."] [offset="..."] [domain="{limit-to-domain}"] [cos="{limit-to-cos}"]
+<GetQuotaUsageRequest [limit="..."] [offset="..."] [domain="{limit-to-domain}"] 
          [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"]]>
 </GetQuotaUsageRequest>
 
@@ -354,7 +354,6 @@ GetQuotaUsageRequest
   limit - the number of accounts to return (0 is default and means all)
   offset - the starting offset (0, 25, etc)
   domain - the domain name to limit the search to
-  cos    - the cos name to limit the search to
   sortBy - valid values: "percentUsed", "totalUsed", "quotaLimit"
   sortAscending - whether to sort in ascending order (0/1), 0 is default, so highest quotas are returned first
   more-flag = true if more accounts left to return
