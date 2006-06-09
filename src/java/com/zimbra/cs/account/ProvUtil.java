@@ -1787,7 +1787,7 @@ public class ProvUtil {
         boolean err = false;
         
         try {
-            cl = parser.parse(options, args);
+            cl = parser.parse(options, args, true);
         } catch (ParseException pe) {
             System.err.println("error: " + pe.getMessage());
             err = true;
