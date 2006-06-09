@@ -94,6 +94,7 @@ public class LC {
     public static final KnownKey zimbra_gid;
     public static final KnownKey zimbra_log4j_properties;
     public static final KnownKey zimbra_auth_always_send_refer;
+    public static final KnownKey zimbra_admin_service_port;    
     public static final KnownKey localized_msgs_directory;
 
     public static final KnownKey zimbra_store_sweeper_max_age;
@@ -769,6 +770,10 @@ public class LC {
         zimbra_auth_always_send_refer = new KnownKey("zimbra_auth_always_send_refer");
         zimbra_auth_always_send_refer.setDefault("false");
         zimbra_auth_always_send_refer.setDoc("always send back a <refer> tag in an auth response to force a client redirect");
+        
+        zimbra_admin_service_port = 
+            new KnownKey("zimbra_admin_service_port", "7071", "Default/bootstrap admin port");
+        
     }
 
 }

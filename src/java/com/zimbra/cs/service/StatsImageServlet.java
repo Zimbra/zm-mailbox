@@ -47,7 +47,6 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.localconfig.LC;
@@ -99,7 +98,7 @@ public class StatsImageServlet extends ZimbraServlet {
 			String logHost  = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraLogHostname);
 			if(!serviceHostname.equalsIgnoreCase(logHost)) {
 				StringBuffer url = new StringBuffer("https");
-				url.append("://").append(logHost).append(':').append(7071);
+				url.append("://").append(logHost).append(':').append(LC.zimbra_admin_service_port.value());
 				url.append(reqPath);
 				String queryStr = req.getQueryString();
 				if(queryStr != null)

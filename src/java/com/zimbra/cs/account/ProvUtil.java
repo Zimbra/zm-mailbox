@@ -50,7 +50,9 @@ import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.wiki.WikiUtil;
@@ -66,7 +68,7 @@ public class ProvUtil {
     private String mAccount = null;
     private String mPassword = null;
     private String mServer = "localhost";
-    private int mPort = 7071;
+    private int mPort = LC.zimbra_admin_service_port.intValue();
     private Command mCommand;
     
     public void setVerbose(boolean verbose) { mVerbose = verbose; }
@@ -118,8 +120,6 @@ public class ProvUtil {
         System.exit(1);
     }
 
-    private static final int UNKNOWN_COMMAND = -1;
-    
     public static enum Category {
         ACCOUNT("help on account-related commands"),
         CALENDAR("help on calendar resource-related commands"),
@@ -284,7 +284,7 @@ public class ProvUtil {
             mProv = Provisioning.getInstance();
         else {
             SoapProvisioning sp = new SoapProvisioning();            
-            sp.soapSetURI("https://"+mServer+":"+mPort+"/service/admin/soap");
+            sp.soapSetURI("https://"+mServer+":"+mPort+ZimbraServlet.ADMIN_SERVICE_URI);
             if (mAccount != null && mPassword != null)
                 sp.soapAdminAuthenticate(mAccount, mPassword);
             else
@@ -487,7 +487,7 @@ public class ProvUtil {
         case SOAP:
             // HACK FOR NOW
             SoapProvisioning sp = new SoapProvisioning();
-            sp.soapSetURI("https://localhost:7071/service/admin/soap");
+            sp.soapSetURI("https://localhost:7071"+ZimbraServlet.ADMIN_SERVICE_URI);
             sp.soapZimbraAdminAuthenticate();
             mProv = sp;
             break;

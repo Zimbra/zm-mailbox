@@ -42,6 +42,7 @@ import com.zimbra.cs.client.soap.LmcSoapClientException;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -49,6 +50,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.SoapFaultException;
@@ -96,7 +98,7 @@ public class TestUtil {
             port = 80;
             scheme = "http";
         }
-        return scheme + "://localhost:" + port + "/service/soap/";
+        return scheme + "://localhost:" + port + ZimbraServlet.USER_SERVICE_URI;
     }
     
     public static String getAdminSoapUrl() {
@@ -105,9 +107,9 @@ public class TestUtil {
             port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
         } catch (ServiceException e) {
             ZimbraLog.test.error("Unable to get admin SOAP port", e);
-            port = 7071;
+            port = LC.zimbra_admin_service_port.intValue();
         }
-        return "https://localhost:" + port + "/service/admin/soap/";
+        return "https://localhost:" + port + ZimbraServlet.ADMIN_SERVICE_URI;
     }
     
     public static LmcSession getSoapSession(String userName)

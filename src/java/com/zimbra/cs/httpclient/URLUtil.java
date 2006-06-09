@@ -143,6 +143,18 @@ public class URLUtil {
         sb.append(SCHEME_HTTPS).append(hostname).append(":").append(port).append(path);
         return sb.toString();
     }
+
+
+    /**
+     * Returns absolute URL with scheme, host, and port for admin app on server.
+     * Admin app only runs over SSL.
+     * @param server
+     * @param path what follows port number; begins with slash
+     * @return
+     */
+    public static String getAdminURL(Server server) {
+        return getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI);
+    }
     
     /**
      * Utility method to translate zimbraMtaAuthHost -> zimbraMtaAuthURL.

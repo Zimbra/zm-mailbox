@@ -36,7 +36,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -96,7 +95,7 @@ public class GetAccountInfo extends AdminDocumentHandler  {
         if (https != null && !https.equalsIgnoreCase(http))
             response.addElement(AdminService.E_SOAP_URL).setText(https);
         
-        String adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI);
+        String adminUrl = URLUtil.getAdminURL(server);
         if (adminUrl != null)
             response.addElement(AdminService.E_ADMIN_SOAP_URL).setText(adminUrl);
     }

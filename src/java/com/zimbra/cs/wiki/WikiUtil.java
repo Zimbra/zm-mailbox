@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -59,6 +58,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.wiki.WikiServiceException;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
@@ -541,7 +541,7 @@ public class WikiUtil {
 			Server s = prov.getLocalServer();
 			mUrl = "http://" + s.getAttr(Provisioning.A_zimbraServiceHostname) +
 				":" + s.getAttr(Provisioning.A_zimbraMailPort) +
-				"/service/soap";
+				ZimbraServlet.USER_SERVICE_URI;
 		}
 		mUploadUrl = mUrl.substring(0, mUrl.length() - 4) + "upload";
 		mUsername = user;
