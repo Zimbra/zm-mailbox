@@ -116,6 +116,6 @@ public class NamedEntryCache<E extends NamedEntry> {
     }
     
     public synchronized E getByName(String key) {
-        return get(key, mNameCache);
+        return get(key.toLowerCase(), mNameCache);
     }
 }
