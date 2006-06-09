@@ -100,7 +100,7 @@ public class SoapProvisioning extends Provisioning {
      * @throws ServiceException
      * @throws IOException 
      */
-    public void soapAdminAuthenticate(String name, String password) throws ServiceException, IOException {
+    public void soapAdminAuthenticate(String name, String password) throws ServiceException {
        if (mTransport == null) throw SoapFaultException.CLIENT_ERROR("must call setURI before calling adminAuthenticate", null);
        XMLElement req = new XMLElement(AdminService.AUTH_REQUEST);
        req.addElement(AdminService.E_NAME).setText(name);
@@ -119,7 +119,7 @@ public class SoapProvisioning extends Provisioning {
      * @throws ServiceException
      * @throws IOException
      */
-    public void soapZimbraAdminAuthenticate() throws ServiceException, IOException {
+    public void soapZimbraAdminAuthenticate() throws ServiceException {
         soapAdminAuthenticate(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
     }
     

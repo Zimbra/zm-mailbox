@@ -32,8 +32,12 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
@@ -75,14 +79,20 @@ public class DeleteAccount extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access account");
         
         if (!Provisioning.onLocalServer(account)) {
-            // Request must be sent to the host that the mailbox is on, so that
-            // the mailbox can be deleted
-            throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
-        }
-        Mailbox mbox = Mailbox.getMailboxByAccount(account);
+            SoapProvisioning sp = new SoapProvisioning();
+            try {
+                sp.setAuthToken(AuthToken.getZimbraAdminAuthToken().getEncoded());
+            } catch (AuthTokenException e) {
+                throw ServiceException.FAILURE("unable to get admin authtoken" , e);
+            }
+            sp.soapSetURI(URLUtil.getAdminURL(prov.getServer(account)));
+            sp.deleteAccount(account.getId());
+        } else {
+            Mailbox mbox = Mailbox.getMailboxByAccount(account);
         
-        prov.deleteAccount(id);
-        mbox.deleteMailbox();
+            prov.deleteAccount(id);
+            mbox.deleteMailbox();
+        }
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
             new String[] {"cmd", "DeleteAccount","name", account.getName(), "id", account.getId()}));

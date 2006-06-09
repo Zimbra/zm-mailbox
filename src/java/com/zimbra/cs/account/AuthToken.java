@@ -42,6 +42,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.BlobMetaData;
 import com.zimbra.cs.util.BlobMetaDataEncodingException;
@@ -108,6 +109,11 @@ public class AuthToken {
                 mCache.remove(encoded);
         }
         return at;
+    }
+    
+    public static AuthToken getZimbraAdminAuthToken() throws AuthTokenException, ServiceException {
+        Account acct = Provisioning.getInstance().get(AccountBy.adminName, LC.zimbra_ldap_user.value());
+        return new AuthToken(acct);
     }
     
 	private AuthToken(String encoded) throws AuthTokenException {
