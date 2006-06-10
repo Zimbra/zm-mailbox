@@ -61,6 +61,8 @@ public class ImportContacts extends DocumentHandler  {
         OperationContext octxt = lc.getOperationContext();
         Session session = getSession(context);
 
+        int id = (int) request.getAttributeLong(MailService.A_FOLDER, Mailbox.ID_FOLDER_CONTACTS);
+        
         String ct = request.getAttribute(MailService.A_CONTENT_TYPE);
         if (!ct.equals("csv"))
             throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
@@ -85,7 +87,7 @@ public class ImportContacts extends DocumentHandler  {
                 FileUploadServlet.deleteUploads(uploads);
         }
 
-        ItemId iidFolder = new ItemId(mbox, Mailbox.ID_FOLDER_CONTACTS);
+        ItemId iidFolder = new ItemId(mbox, id);
         CreateContactOperation op = new CreateContactOperation(session, octxt, mbox, Requester.SOAP, iidFolder, contacts, null);
         op.schedule();
         List<Contact> results = op.getContacts();

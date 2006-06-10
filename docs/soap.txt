@@ -1353,7 +1353,7 @@ for op="update", caller can specify any or all of: l="{folder}", t="{tag-list}",
 
 ----------
 
-<ImportContactsRequest ct="{content-type}">
+<ImportContactsRequest ct="{content-type}" [l="{folder-id}"]>
   <content [aid="{attach-upload-id}"]>...</content>
 </ImportContactsRequest>
 
@@ -1362,6 +1362,7 @@ for op="update", caller can specify any or all of: l="{folder}", t="{tag-list}",
 </ImportContactsResponse>
 
 {content-type} = only currently supported content type is "csv"
+{folder-id} = optional folder id to import contacts into
 
 {attach-upload-id} = attachment id from upload server. If specified, then body of content is ignored.
 
