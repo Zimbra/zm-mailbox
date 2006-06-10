@@ -115,8 +115,7 @@ public class Document extends MailItem {
 		try {
 			Folder f = getMailbox().getFolderById(getFolderId());
 			Account account = f.getMailbox().getAccount();
-			String host = account.getAttr(Provisioning.A_zimbraMailHost);
-			Server s = Provisioning.getInstance().get(Provisioning.ServerBy.serviceHostname, host);
+			Server s = Provisioning.getInstance().getServer(account);
 			String path = sRESTURLPREFIX + "/" + account.getUid() + 
 				f.getPath() + "/" + getSubject();
 			return URLUtil.getMailURL(s, path, false);
