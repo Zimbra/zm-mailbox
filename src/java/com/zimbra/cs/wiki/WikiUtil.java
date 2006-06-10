@@ -49,6 +49,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.client.*;
 import com.zimbra.cs.client.soap.*;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
@@ -535,15 +536,16 @@ public class WikiUtil {
 	}
 	
 	public WikiUtil(String soapUrl, String user, String pass) throws ServiceException {
+		Server s = Provisioning.getInstance().getLocalServer();
+		
 		mUrl = soapUrl;
+
 		if (mUrl == null) {
-			Provisioning prov = Provisioning.getInstance();
-			Server s = prov.getLocalServer();
-			mUrl = "http://" + s.getAttr(Provisioning.A_zimbraServiceHostname) +
-				":" + s.getAttr(Provisioning.A_zimbraMailPort) +
-				ZimbraServlet.USER_SERVICE_URI;
+			mUrl = URLUtil.getMailURL(s, ZimbraServlet.USER_SERVICE_URI, false);
 		}
-		mUploadUrl = mUrl.substring(0, mUrl.length() - 4) + "upload";
+		
+		String path = "/service/upload";
+		mUploadUrl = URLUtil.getMailURL(s, path, false);
 		mUsername = user;
 		mPassword = pass;
 	}
