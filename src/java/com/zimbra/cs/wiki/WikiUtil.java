@@ -68,12 +68,10 @@ import com.zimbra.soap.SoapParseException;
 
 public class WikiUtil {
 	
-	private static final String sFOLDERID = "12";
 	private static final String sUSERNAME = "user1";
 	private static final String sPASSWORD = "test123";
 	
 	private static final String sDEFAULTPASSWORD = "zimbra";
-	private static final String sDEFAULTTEMPLATEDIR = "/opt/zimbra/data/wiki-templates";
 	
 	private static final String sDEFAULTFOLDER = "Notebook";
 	private static final String sDEFAULTTEMPLATEFOLDER = "Template";
@@ -195,6 +193,7 @@ public class WikiUtil {
 		req.setQuery("in:\""+folderName+"\"");
 		req.setTypes("wiki,document");
 		LmcSearchResponse resp = (LmcSearchResponse) req.invoke(mUrl);
+		@SuppressWarnings("unchecked")
 		Iterator items = resp.getResults().listIterator();
 		if (items.hasNext()) {
 			String ids = "";
@@ -536,16 +535,21 @@ public class WikiUtil {
 	}
 	
 	public WikiUtil(String soapUrl, String user, String pass) throws ServiceException {
-		Server s = Provisioning.getInstance().getLocalServer();
-		
+
 		mUrl = soapUrl;
 
 		if (mUrl == null) {
+			Server s = Provisioning.getInstance().getLocalServer();
 			mUrl = URLUtil.getMailURL(s, ZimbraServlet.USER_SERVICE_URI, false);
+			mUploadUrl = URLUtil.getMailURL(s, "/service/upload", false);
+		} else {
+			int end = mUrl.length() - 1;
+			if (mUrl.charAt(end) == '/')
+				end--;
+			int index = mUrl.lastIndexOf('/', end);
+			mUploadUrl = mUrl.substring(0, index) + "/upload";
 		}
 		
-		String path = "/service/upload";
-		mUploadUrl = URLUtil.getMailURL(s, path, false);
 		mUsername = user;
 		mPassword = pass;
 	}
@@ -580,6 +584,8 @@ public class WikiUtil {
             System.exit(1);
         }
         
+        assert(cl != null);
+        
         String url, username, password;
         String dir = cl.getOptionValue("d");
         if (cl.hasOption("v")) 
@@ -588,7 +594,7 @@ public class WikiUtil {
         username = cl.getOptionValue("u", WikiUtil.sUSERNAME);
         password = cl.getOptionValue("p", WikiUtil.sPASSWORD);
         WikiUtil prog = new WikiUtil(url, username, password);
-        prog.initDefaultWiki();
+        prog.initDefaultWiki(true);
         prog.startImport(new File(dir), true);
 	}
 }
