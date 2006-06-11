@@ -251,6 +251,44 @@ public class ZimbraLog {
     }
     
     /**
+     * push key/value to end of context.
+     * @param key
+     * @param value
+     */
+    public static void pushbackContext(String key, String value) {
+        if (key == null) return;
+        String ndc = NDC.pop();
+        String ctxt = key + "=" + value + ";";
+        if (!ndc.endsWith(ctxt)) {
+        	ndc += ctxt;
+        }
+        NDC.push(ndc);
+    }
+    
+    public static void pushbackItemId(int itemId) {
+    	pushbackContext("item", Integer.toString(itemId));
+    }
+    
+    /**
+     * pop key/value from end of context.
+     * @param key
+     * @param value
+     */
+    public static void popbackContext(String key, String value) {
+        if (key == null) return;
+        String ndc = NDC.pop();
+        String ctxt = key + "=" + value + ";";
+        if (ndc.endsWith(ctxt)) {
+        	ndc = ndc.substring(0, ndc.length() - ctxt.length());
+        }
+        NDC.push(ndc);
+    }
+    
+    public static void popbackItemId(int itemId) {
+    	popbackContext("item", Integer.toString(itemId));
+    }
+    
+    /**
      * 
      * @param id account id to lookup
      * @param nameKey name key to add to context if account lookup is ok
