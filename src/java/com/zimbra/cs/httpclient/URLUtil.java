@@ -39,6 +39,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
@@ -145,6 +146,19 @@ public class URLUtil {
     }
 
 
+    /**
+     * Returns absolute URL with scheme, host, and port for admin app on server.
+     * Admin app only runs over SSL. Uses port from localconfig.
+     * @param server hostname
+     * @return
+     */
+    public static String getAdminURL(String hostname) {
+        int port = (int) LC.zimbra_admin_service_port.longValue();
+        StringBuffer sb = new StringBuffer(128);
+        sb.append(SCHEME_HTTPS).append(hostname).append(":").append(port).append(ZimbraServlet.ADMIN_SERVICE_URI);
+        return sb.toString();
+    }
+    
     /**
      * Returns absolute URL with scheme, host, and port for admin app on server.
      * Admin app only runs over SSL.

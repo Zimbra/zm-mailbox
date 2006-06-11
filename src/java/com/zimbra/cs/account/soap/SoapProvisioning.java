@@ -49,9 +49,11 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.redolog.op.SetSubscriptionData;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.admin.AdminService;
@@ -78,6 +80,8 @@ public class SoapProvisioning extends Provisioning {
     public void soapSetURI(String uri) {
         if (mTransport != null) mTransport.shutdown();
         mTransport = new SoapHttpTransport(uri);
+        if (mAuthToken != null)
+            mTransport.setAuthToken(mAuthToken);        
     }
     
     public String soapGetURI() {
@@ -90,6 +94,8 @@ public class SoapProvisioning extends Provisioning {
     
     public void setAuthToken(String authToken) {
         mAuthToken = authToken;
+        if (mTransport != null)
+            mTransport.setAuthToken(authToken);
     }
 
     /**
@@ -122,8 +128,8 @@ public class SoapProvisioning extends Provisioning {
     public void soapZimbraAdminAuthenticate() throws ServiceException {
         soapAdminAuthenticate(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
     }
-    
-    Element invoke(Element request) throws ServiceException {
+
+    synchronized Element invoke(Element request) throws ServiceException {
         try {
             return mTransport.invoke(request);
         } catch (SoapFaultException e) {
@@ -132,7 +138,23 @@ public class SoapProvisioning extends Provisioning {
             throw SoapFaultException.IO_ERROR("invoke "+e.getMessage(), e);
         }        
     }
-    
+
+    synchronized Element invoke(Element request, String serverName) throws ServiceException {
+        String oldUri = soapGetURI();
+        String newUri = URLUtil.getAdminURL(serverName);
+        boolean diff = !oldUri.equals(newUri);        
+        try {
+            if (diff) soapSetURI(newUri);
+            return mTransport.invoke(request);
+        } catch (SoapFaultException e) {
+            throw e; // for now, later, try to map to more specific exception
+        } catch (IOException e) {
+            throw SoapFaultException.IO_ERROR("invoke "+e.getMessage(), e);
+        } finally {
+            if (diff) soapSetURI(oldUri);
+        }
+    }
+
     static Map<String, Object> getAttrs(Element e) throws ServiceException {
         Map<String, Object> result = new HashMap<String,Object>();
         for (Element a : e.listElements(AdminService.E_A)) {
@@ -370,6 +392,35 @@ public class SoapProvisioning extends Provisioning {
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminService.E_SERVER)) {
             result.add(new SoapServer(a));
+        }
+        return result;        
+    }
+
+    public static class QuotaUsage {
+        public String mName;
+        public String mId;
+        long mUsed;
+        long mLimit;
+        
+        public String getName() { return mName; }
+        public String getId() { return mId; }
+        public long getUsed() { return mUsed; } 
+        public long getLimit() { return mLimit; }
+
+        QuotaUsage(Element e) throws ServiceException {
+            mName = e.getAttribute(AdminService.A_NAME);
+            mId = e.getAttribute(AdminService.A_ID);
+            mUsed = e.getAttributeLong(AdminService.A_QUOTA_USED);
+            mLimit = e.getAttributeLong(AdminService.A_QUOTA_LIMIT);
+        }
+    }
+
+    public List<QuotaUsage> getQuotaUsage(String server) throws ServiceException {
+            ArrayList<QuotaUsage> result = new ArrayList<QuotaUsage>();
+        XMLElement req = new XMLElement(AdminService.GET_QUOTA_USAGE_REQUEST);
+        Element resp = invoke(req, server);
+        for (Element a: resp.listElements(AdminService.E_ACCOUNT)) {
+            result.add(new QuotaUsage(a));
         }
         return result;        
     }

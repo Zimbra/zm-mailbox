@@ -50,6 +50,7 @@ import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -181,6 +182,7 @@ public class ProvUtil {
         GET_DISTRIBUTION_LIST("getDistributionList", "gdl", "{list@domain|id}", Category.LIST, 1, 1),
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
         GET_DOMAIN("getDomain", "gd", "{domain|id}", Category.DOMAIN, 1, 1), 
+        GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MISC, 1, 1),
         GET_SERVER("getServer", "gs", "{name|id}", Category.SERVER, 1, 1), 
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         IMPORT_NOTEBOOK("importNotebook", "impn", "[ -u {username} ] [ -p {password} ] [ -f {from dir} ] [ -t {to folder} ]", Category.NOTEBOOK),
@@ -510,6 +512,9 @@ public class ProvUtil {
         case IMPORT_NOTEBOOK:
             importNotebook(args, false);
             break;
+        case GET_QUOTA_USAGE:
+            doGetQuotaUsage(args);
+            break;
         case SOAP:
             // HACK FOR NOW
             SoapProvisioning sp = new SoapProvisioning();
@@ -525,6 +530,16 @@ public class ProvUtil {
             return false;
         }
         return true;
+    }
+
+    private void doGetQuotaUsage(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+        SoapProvisioning sp = (SoapProvisioning) mProv;
+        List<QuotaUsage> result = sp.getQuotaUsage(args[1]);
+        for (QuotaUsage u : result) {
+            System.out.printf("%s %d %d\n", u.getName(), u.getLimit(), u.getUsed());
+        }
     }
 
     private void doCreateAccountsBulk(String[] args) throws ServiceException {
