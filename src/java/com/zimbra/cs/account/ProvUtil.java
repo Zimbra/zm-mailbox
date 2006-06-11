@@ -57,20 +57,25 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.wiki.WikiUtil;
+import com.zimbra.soap.Element;
+import com.zimbra.soap.SoapTransport.DebugListener;
 
 /**
  * @author schemers
  */
-public class ProvUtil {
+public class ProvUtil implements DebugListener {
  
     private boolean mInteractive = false;
     private boolean mVerbose = false;
+    private boolean mDebug = false;
     private boolean mUseLdap = true; // we'll eventually change this to false...
     private String mAccount = null;
     private String mPassword = null;
     private String mServer = "localhost";
     private int mPort = LC.zimbra_admin_service_port.intValue();
     private Command mCommand;
+    
+    public void setDebug(boolean debug) { mDebug = debug; }
     
     public void setVerbose(boolean verbose) { mVerbose = verbose; }
     
@@ -108,7 +113,8 @@ public class ProvUtil {
         System.out.println("  -l/--ldap                      provision via LDAP instead of SOAP");
         System.out.println("  -a/--account  {name}           account name to auth as");
         System.out.println("  -p/--password {pass}           password for account");
-        System.out.println("  -v/--verbose                   verbose mode");
+        System.out.println("  -v/--verbose                   verbose mode (dumps full exception stack trace)");
+        System.out.println("  -d/--debug                     debug mode (dumps SOAP messages)");
         System.out.println("");
         doHelp(null);
         /*
@@ -303,6 +309,7 @@ public class ProvUtil {
         else {
             SoapProvisioning sp = new SoapProvisioning();            
             sp.soapSetURI("https://"+mServer+":"+mPort+ZimbraServlet.ADMIN_SERVICE_URI);
+            if (mDebug) sp.soapSetTransportDebugListener(this);
             if (mAccount != null && mPassword != null)
                 sp.soapAdminAuthenticate(mAccount, mPassword);
             else
@@ -1290,6 +1297,7 @@ public class ProvUtil {
         options.addOption("a", "account", true, "account name (not used with --ldap)");
         options.addOption("p", "password", true, "password for account");
         options.addOption("v", "verbose", false, "verbose mode");
+        options.addOption("d", "debug", false, "debug mode");        
         
         CommandLine cl = null;
         boolean err = false;
@@ -1310,6 +1318,7 @@ public class ProvUtil {
         if (cl.hasOption('s')) pu.setServer(cl.getOptionValue('s'));
         if (cl.hasOption('a')) pu.setAccount(cl.getOptionValue('a'));
         if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
+        if (cl.hasOption('d')) pu.setDebug(true);
 
         args = cl.getArgs();
         
@@ -1411,6 +1420,23 @@ public class ProvUtil {
             }
         }
         System.out.println();
+    }
+
+    private long mSendStart;
+    
+    public void receiveSoapMessage(Element envelope) {
+        long end = System.currentTimeMillis();        
+        System.out.printf("======== SOAP RECEIVE =========\n");
+        System.out.println(envelope.prettyPrint());
+        System.out.printf("=============================== (%d msecs)\n", end-mSendStart);
+        
+    }
+
+    public void sendSoapMessage(Element envelope) {
+        mSendStart = System.currentTimeMillis();
+        System.out.println("========== SOAP SEND ==========");
+        System.out.println(envelope.prettyPrint());
+        System.out.println("===============================");
     }
 }
 

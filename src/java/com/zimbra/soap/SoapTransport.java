@@ -47,14 +47,28 @@ public abstract class SoapTransport {
     private String mAuthToken;
     private String mTargetAcctId = null;
     private String mSessionId = null;
+    private Element mContext = null;
     private String mUserAgentName;
     private String mUserAgentVersion;
+    private DebugListener mDebugListener;
+    
+    public interface DebugListener {
+        public void sendSoapMessage(Element envelope);
+        public void receiveSoapMessage(Element envelope);        
+    }
 
     protected SoapTransport() {
         mSoapProto = SoapProtocol.Soap12;
         mPrettyPrint = false;
     }
 
+    public void setDebugListener(DebugListener listener) {
+        mDebugListener = listener;
+    }
+
+    public DebugListener getDebugListener() {
+        return mDebugListener;
+    }
     /**
      * Whether or not to pretty-print XML before sending it.
      *
@@ -83,6 +97,13 @@ public abstract class SoapTransport {
     	return mAuthToken;
     }
     
+    /**
+     * @return Zimbra context (&lt;context xmlns="urn:zimbra"&gt;) from last invoke, if there was one present.
+     */
+    public Element getZimbraContext() {
+        return mContext;
+    }
+
     public void setSessionId(String sessionId) {
         mSessionId = sessionId;
     }
@@ -115,8 +136,10 @@ public abstract class SoapTransport {
     }
 
     protected String generateSoapMessage(Element document, boolean raw, boolean noSession, boolean noNotify, String requestedAccountId) {
-    	if (raw)
+    	if (raw) {
+            if (mDebugListener != null) mDebugListener.sendSoapMessage(document);
     		return SoapProtocol.toString(document, mPrettyPrint);
+        }
         
         Element context = ZimbraSoapContext.toCtxt(mSoapProto, mAuthToken, mTargetAcctId, noSession);
         ZimbraSoapContext.addSessionToCtxt(context, mSessionId, noNotify);
@@ -128,6 +151,7 @@ public abstract class SoapTransport {
             context.addElement(ZimbraSoapContext.E_ACCOUNT).addAttribute(ZimbraSoapContext.A_BY, ZimbraSoapContext.BY_ID).setText(requestedAccountId);
         }
         Element envelope = mSoapProto.soapEnvelope(document, context);
+        if (mDebugListener != null) mDebugListener.sendSoapMessage(envelope);
         String soapMessage = SoapProtocol.toString(envelope, getPrettyPrint());
     	return soapMessage;
     }
@@ -142,6 +166,8 @@ public abstract class SoapTransport {
         } catch (DocumentException de) {
             throw new SoapParseException("unable to parse response", envelopeStr);
         }
+        
+        if (mDebugListener != null) mDebugListener.receiveSoapMessage(env);
 
         return raw ? env : extractBodyElement(env);
     }
@@ -155,17 +181,17 @@ public abstract class SoapTransport {
         if (e == null)
             throw new SoapParseException("malformed soap structure in reply", env.toString());
 
-        if (proto.isFault(e))
-            throw proto.soapFault(e);
-
-        Element context = proto.getHeader(env, ZimbraSoapContext.CONTEXT);
-        if (context != null) {
-            String sid = context.getAttribute(ZimbraSoapContext.E_SESSION_ID, null);
+        mContext = proto.getHeader(env, ZimbraSoapContext.CONTEXT);
+        if (mContext != null) {
+            String sid = mContext.getAttribute(ZimbraSoapContext.E_SESSION_ID, null);
             if (sid != null)
                 mSessionId = sid;
         }
 
-        return e;
+        if (proto.isFault(e))
+            throw proto.soapFault(e);
+        else
+            return e;
     }
 
     /**

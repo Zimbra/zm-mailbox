@@ -53,7 +53,6 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.redolog.op.SetSubscriptionData;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.admin.AdminService;
@@ -62,6 +61,7 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.Element.XMLElement;
+import com.zimbra.soap.SoapTransport.DebugListener;
 
 public class SoapProvisioning extends Provisioning {
 
@@ -69,6 +69,7 @@ public class SoapProvisioning extends Provisioning {
     private String mAuthToken;
     private long mAuthTokenLifetime;
     private long mAuthTokenExpiration;
+    private DebugListener mDebugListener;
     
     public SoapProvisioning() {
         
@@ -81,9 +82,17 @@ public class SoapProvisioning extends Provisioning {
         if (mTransport != null) mTransport.shutdown();
         mTransport = new SoapHttpTransport(uri);
         if (mAuthToken != null)
-            mTransport.setAuthToken(mAuthToken);        
+            mTransport.setAuthToken(mAuthToken);
+        if (mDebugListener != null)
+            mTransport.setDebugListener(mDebugListener);
     }
     
+    public void soapSetTransportDebugListener(DebugListener listener) {
+        mDebugListener = listener;
+        if (mTransport != null)
+            mTransport.setDebugListener(mDebugListener);
+    }
+
     public String soapGetURI() {
         return mTransport.getURI();
     }
@@ -136,7 +145,7 @@ public class SoapProvisioning extends Provisioning {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
             throw SoapFaultException.IO_ERROR("invoke "+e.getMessage(), e);
-        }        
+        }
     }
 
     synchronized Element invoke(Element request, String serverName) throws ServiceException {
