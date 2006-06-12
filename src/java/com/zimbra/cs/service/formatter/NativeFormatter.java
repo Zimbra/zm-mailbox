@@ -50,7 +50,6 @@ import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.HttpUtil;
-import com.zimbra.cs.util.ZimbraLog;
 
 public class NativeFormatter extends Formatter {
 
@@ -119,9 +118,6 @@ public class NativeFormatter extends Formatter {
                 contentType = Mime.CT_APPLICATION_OCTET_STREAM;
             boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, context.authAccount) ||
                             (context.hasView() && context.getView().equals("html"));
-            ZimbraLog.mailbox.info("view = "+context.getView());
-            ZimbraLog.mailbox.info("html = "+html);
-
             if (!html) {
                 sendbackOriginalDoc(mp, contentType, context.req, context.resp);
             } else {
