@@ -55,14 +55,21 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ImportContacts extends DocumentHandler  {
 
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.A_FOLDER };
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy(Element request)  { return true; }
+
+    String DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_CONTACTS + "";
+
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
         Session session = getSession(context);
 
-        int id = (int) request.getAttributeLong(MailService.A_FOLDER, Mailbox.ID_FOLDER_CONTACTS);
-        
+        String folder = request.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER_ID);
+        ItemId iidFolder = new ItemId(folder, lc);
+
         String ct = request.getAttribute(MailService.A_CONTENT_TYPE);
         if (!ct.equals("csv"))
             throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
@@ -87,7 +94,6 @@ public class ImportContacts extends DocumentHandler  {
                 FileUploadServlet.deleteUploads(uploads);
         }
 
-        ItemId iidFolder = new ItemId(mbox, id);
         CreateContactOperation op = new CreateContactOperation(session, octxt, mbox, Requester.SOAP, iidFolder, contacts, null);
         op.schedule();
         List<Contact> results = op.getContacts();

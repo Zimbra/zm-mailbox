@@ -36,6 +36,7 @@ import com.zimbra.cs.operation.GetContactListOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.formatter.ContactCSV;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
@@ -46,17 +47,24 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ExportContacts extends DocumentHandler  {
 
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.A_FOLDER };
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
+    protected boolean checkMountpointProxy(Element request)  { return true; }
+
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
         Session session = getSession(context);
 
+        String folder = request.getAttribute(MailService.A_FOLDER, null);
+        ItemId iidFolder = folder == null ? null : new ItemId(folder, lc);
+
         String ct = request.getAttribute(MailService.A_CONTENT_TYPE);
         if (!ct.equals("csv"))
-            throw ServiceException.INVALID_REQUEST("unsupported content type: "+ct, null);
+            throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
 
-        GetContactListOperation op = new GetContactListOperation(session, octxt, mbox, Requester.SOAP, null);
+        GetContactListOperation op = new GetContactListOperation(session, octxt, mbox, Requester.SOAP, iidFolder);
         op.schedule();
         List<Contact> contacts = op.getResults();
         

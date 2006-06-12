@@ -1370,13 +1370,14 @@ TODO: should have an option on import that matches email addresses to existing c
 
 ----------
 
-<ExportContactsRequest ct="{content-type}"/>
+<ExportContactsRequest ct="{content-type}" [l="{folder-id}"]/>
 
 <ExportContactsResponse>
   <content>...</content>
 </ExportContactsResponse>
 
 {content-type} = currently, the only supported content type is "csv" (comma-separated values)
+{folder-id} = optional folder id to export contacts from
 
 ----------
 
