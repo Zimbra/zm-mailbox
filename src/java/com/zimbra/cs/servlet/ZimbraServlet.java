@@ -132,7 +132,7 @@ public class ZimbraServlet extends HttpServlet {
     protected void service(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
         if (mAllowedPorts != null && mAllowedPorts.length > 0) {
-            int incoming = request.getServerPort();
+            int incoming = request.getLocalPort();
             boolean allowed = false;
             for (int i = 0; i < mAllowedPorts.length; i++) {
                 if (mAllowedPorts[i] == incoming) {
