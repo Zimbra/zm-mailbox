@@ -424,7 +424,7 @@
 			<fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" />
 		</copy>
 		<copy todir="${dist.tomcat.conf.dir}" overwrite="true">
-			<fileset dir="${config.dir}" includes="server.xml,tomcat-users.xml" />
+			<fileset dir="${config.dir}" includes="server.xml,tomcat-users.xml,web.xml" />
 		</copy>
 		<fixcrlf srcdir="${dist.conf.dir}" eol="unix" includes="**" />
 		<copy todir="${dist.tomcat.commonlib.dir}" overwrite="true">
