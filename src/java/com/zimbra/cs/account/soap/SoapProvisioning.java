@@ -434,6 +434,31 @@ public class SoapProvisioning extends Provisioning {
         return result;        
     }
 
+    public static class MailboxInfo {
+        private long mUsed;
+        private String mMboxId;
+        
+        public long getUsed() { return mUsed; }
+        public String getMailboxId() { return mMboxId; }
+        
+        public MailboxInfo(String id, long used) {
+            mMboxId = id;
+            mUsed = used;
+        }
+    }
+
+    public MailboxInfo getMailbox(Account acct) throws ServiceException {
+        XMLElement req = new XMLElement(AdminService.GET_MAILBOX_REQUEST);
+        Element mboxReq = req.addElement(AdminService.E_MAILBOX);
+        mboxReq.addAttribute(AdminService.A_ID, acct.getId());
+        Server server = getServer(acct);
+        String serviceHost = server.getAttr(A_zimbraServiceHostname);
+        Element mbox = invoke(req, serviceHost).getElement(AdminService.E_MAILBOX);
+        return new MailboxInfo(
+                mbox.getAttribute(AdminService.A_MAILBOXID), 
+                mbox.getAttributeLong(AdminService.A_SIZE));
+    }
+
     @Override
     public List<Server> getAllServers(String service) throws ServiceException {
         ArrayList<Server> result = new ArrayList<Server>();

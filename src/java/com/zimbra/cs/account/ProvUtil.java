@@ -50,6 +50,7 @@ import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
@@ -188,7 +189,8 @@ public class ProvUtil implements DebugListener {
         GET_DISTRIBUTION_LIST("getDistributionList", "gdl", "{list@domain|id}", Category.LIST, 1, 1),
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
         GET_DOMAIN("getDomain", "gd", "{domain|id}", Category.DOMAIN, 1, 1), 
-        GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MISC, 1, 1),
+        GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MISC, 1, 1),
+        GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MISC, 1, 1),        
         GET_SERVER("getServer", "gs", "{name|id}", Category.SERVER, 1, 1), 
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         IMPORT_NOTEBOOK("importNotebook", "impn", "[ -u {username} ] [ -p {password} ] [ -f {from dir} ] [ -t {to folder} ]", Category.NOTEBOOK),
@@ -522,6 +524,9 @@ public class ProvUtil implements DebugListener {
         case GET_QUOTA_USAGE:
             doGetQuotaUsage(args);
             break;
+        case GET_MAILBOX_INFO:
+            doGetMailboxInfo(args);
+            break;
         case SOAP:
             // HACK FOR NOW
             SoapProvisioning sp = new SoapProvisioning();
@@ -549,6 +554,15 @@ public class ProvUtil implements DebugListener {
         }
     }
 
+    private void doGetMailboxInfo(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+        SoapProvisioning sp = (SoapProvisioning) mProv;
+        Account acct = lookupAccount(args[1]);
+        MailboxInfo info = sp.getMailbox(acct);
+        System.out.printf("mailboxId: %s\nquotaUsed: %d\n", info.getMailboxId(), info.getUsed());
+    }
+    
     private void doCreateAccountsBulk(String[] args) throws ServiceException {
         if (args.length < 3) {
             usage();
