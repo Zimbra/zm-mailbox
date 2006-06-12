@@ -36,6 +36,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import org.apache.commons.codec.binary.Base64;
+
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.imap.ImapSession.ImapFlag;
@@ -52,6 +54,7 @@ class ImapRequest {
     static final boolean[] FETCH_CHARS    = new boolean[128];
     static final boolean[] NUMBER_CHARS   = new boolean[128];
     static final boolean[] SEQUENCE_CHARS = new boolean[128];
+    static final boolean[] BASE64_CHARS   = new boolean[128];
     static final boolean[] SEARCH_CHARS   = new boolean[128];
     static final boolean[] REGEXP_ESCAPED = new boolean[128];
         static {
@@ -64,9 +67,14 @@ class ImapRequest {
             FETCH_CHARS['['] = false;
             SEARCH_CHARS['*'] = true;
 
+            for (int i = 'a'; i <= 'z'; i++)
+                BASE64_CHARS[i] = true;
+            for (int i = 'A'; i <= 'Z'; i++)
+                BASE64_CHARS[i] = true;
             for (int i = '0'; i <= '9'; i++)
-                NUMBER_CHARS[i] = SEQUENCE_CHARS[i] = true;
+                BASE64_CHARS[i] = NUMBER_CHARS[i] = SEQUENCE_CHARS[i] = true;
             SEQUENCE_CHARS['*'] = SEQUENCE_CHARS[':'] = SEQUENCE_CHARS[','] = true;
+            BASE64_CHARS['+'] = BASE64_CHARS['/'] = true;
 
             REGEXP_ESCAPED['('] = REGEXP_ESCAPED[')'] = REGEXP_ESCAPED['.'] = true;
             REGEXP_ESCAPED['['] = REGEXP_ESCAPED[']'] = REGEXP_ESCAPED['|'] = true;
@@ -89,6 +97,8 @@ class ImapRequest {
         mStream  = tsis;
         mSession = session;
     }
+
+    void setTag(String tag)  { mTag = tag; }
 
     ImapRequest rewind()  { mIndex = mOffset = 0;  mTag = null;  return this; }
 
@@ -217,6 +227,26 @@ class ImapRequest {
     String readTag() throws ImapParseException     { mTag = readContent(TAG_CHARS);  return mTag; }
     String readAtom() throws ImapParseException    { return readContent(ATOM_CHARS).toUpperCase(); }
     String readNumber() throws ImapParseException  { return readContent(NUMBER_CHARS); }
+
+    byte[] readBase64(boolean skipEquals) throws ImapParseException {
+        // in some cases, "=" means to just return null and be done with it
+        if (skipEquals && peekChar() == '=') {
+            skipChar('=');  return null;
+        }
+
+        String encoded = readContent(BASE64_CHARS);
+        int padding = (4 - (encoded.length() % 4)) % 4;
+        if (padding == 3)
+            throw new ImapParseException(mTag, "invalid base64-encoded content");
+        while (padding-- > 0) {
+            skipChar('=');  encoded += "=";
+        }
+        try {
+            return new Base64().decode(encoded.getBytes("us-ascii"));
+        } catch (UnsupportedEncodingException e) {
+            throw new ImapParseException(mTag, "invalid base64-encoded content");
+        }
+    }
 
     private static final int LAST_PUNCT = 0, LAST_DIGIT = 1, LAST_STAR = 2;
 
@@ -462,14 +492,14 @@ class ImapRequest {
                 parts.add(new ImapPartSpecifier(item, "", "TEXT"));
             } else if (item.equals("BINARY.SIZE")) {
                 String sectionPart = "";
-                boolean dot = false;
-
                 skipChar('[');
-                while (Character.isDigit((char) peekChar()) || dot) {
-                    sectionPart += (sectionPart.equals("") ? "" : ".") + readNumber();
-                    if ((dot = (peekChar() == '.')) == true)
-                        skipChar('.');
-                }
+                do {
+                    sectionPart += readNumber();
+                    if (peekChar() == ']')
+                        break;
+                    skipChar('.');
+                    sectionPart += ".";
+                } while (true);
                 skipChar(']');
                 parts.add(new ImapPartSpecifier(item, sectionPart, ""));
             } else if (item.equals("BODY") || item.equals("BODY.PEEK") || item.equals("BINARY") || item.equals("BINARY.PEEK")) {

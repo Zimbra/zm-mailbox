@@ -61,6 +61,7 @@ import com.zimbra.cs.ozserver.OzMatcher;
 import com.zimbra.cs.ozserver.OzTLSFilter;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Constants;
@@ -76,6 +77,41 @@ import com.zimbra.cs.util.ZimbraLog;
  */
 public class OzImapConnectionHandler implements OzConnectionHandler, ImapSessionHandler {
 
+    private abstract class Authenticator {
+        String mTag;
+        boolean mContinue = true;
+        Authenticator(String tag)  { mTag = tag; }
+        abstract boolean handle(byte[] data) throws IOException;
+    }
+    private class AuthPlain extends Authenticator {
+        AuthPlain(String tag)  { super(tag); }
+        boolean handle(byte[] response) throws IOException {
+            // RFC 2595 6: "Non-US-ASCII characters are permitted as long as they are
+            //              represented in UTF-8 [UTF-8]."
+            String message = new String(response, "utf-8");
+
+            // RFC 2595 6: "The client sends the authorization identity (identity to
+            //              login as), followed by a US-ASCII NUL character, followed by the
+            //              authentication identity (identity whose password will be used),
+            //              followed by a US-ASCII NUL character, followed by the clear-text
+            //              password.  The client may leave the authorization identity empty to
+            //              indicate that it is the same as the authentication identity."
+            int nul1 = message.indexOf('\0'), nul2 = message.indexOf('\0', nul1 + 1);
+            if (nul1 == -1 || nul2 == -1) {
+                sendNO(mTag, "malformed authentication message");
+                return CONTINUE_PROCESSING;
+            }
+            String authorizeId = message.substring(0, nul1);
+            String authenticateId = message.substring(nul1 + 1, nul2);
+            String password = message.substring(nul2 + 1);
+            if (authorizeId.equals(""))
+                authorizeId = authenticateId;
+
+            mContinue = login(authorizeId, authenticateId, password, "AUTHENTICATE", mTag);
+            return true;
+        }
+    }
+
     public static final String PROPERTY_ALLOW_CLEARTEXT_LOGINS = "imap.allows.cleartext.logins"; 
     public static final String PROPERTY_SECURE_SERVER = "imap.secure.server";
 
@@ -88,17 +124,18 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     private DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
     private DateFormat mZimbraFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
 
-    private ImapSession mSession;
-    private Mailbox     mMailbox;
-    private boolean     mStartedTLS;
-    private boolean     mGoodbyeSent;
+    private ImapSession   mSession;
+    private Mailbox       mMailbox;
+    private boolean       mStartedTLS;
+    private boolean       mGoodbyeSent;
+    private Authenticator mAuthenticator;
 
     private final OzConnection mConnection;
-    
+
     public OzImapConnectionHandler(OzConnection connection) {
         mConnection = connection;
     }
-    
+
     public void dumpState(Writer w) {
     	StringBuilder s = new StringBuilder("\n\tOzImapConnectionHandler ").append(this.toString()).append("\n");
     	if (mConnection == null) {
@@ -108,7 +145,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     		OzMatcher matcher = mConnection.getMatcher();
     		s.append(matcher.toString()).append('\n');
     	}
-    	
+
     	s.append("\t\tStartedTLS=").append(mStartedTLS ? "true" : "false").append('\n');
     	s.append("\t\tGoodbyeSent=").append(mGoodbyeSent ? "true" : "false").append('\n');
     	
@@ -164,6 +201,39 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             throw new ImapParseException(tag, "excess characters at end of command");
     }
 
+    private boolean continueAuthentication(OzImapRequest req) throws IOException {
+        String tag = mAuthenticator.mTag;
+        boolean authFinished = true;
+
+        try {
+            // use the tag from the original AUTHENTICATE command
+            req.setTag(tag);
+
+            // 6.2.2: "If the client wishes to cancel an authentication exchange, it issues a line
+            //         consisting of a single "*".  If the server receives such a response, it MUST
+            //         reject the AUTHENTICATE command by sending a tagged BAD response."
+            if (req.peekChar() == '*') {
+                req.skipChar('*');
+                if (req.eof())
+                    sendBAD(tag, "AUTHENTICATE aborted");
+                else
+                    sendBAD(tag, "AUTHENTICATE failed; invalid base64 input");
+                return CONTINUE_PROCESSING;
+            }
+
+            byte[] response = req.readBase64(false);
+            checkEOF(tag, req);
+            authFinished = mAuthenticator.handle(response);
+            return mAuthenticator.mContinue;
+        } catch (ImapParseException ipe) {
+            sendBAD(tag, ipe.getMessage());
+            return CONTINUE_PROCESSING;
+        } finally {
+            if (authFinished)
+                mAuthenticator = null;
+        }
+    }
+
     private boolean executeRequest(OzImapRequest req, ImapSession session) throws IOException, ImapParseException {
         if (session != null && session.isIdle())
             return doIDLE(null, IDLE_STOP, req.readAtom().equals("DONE") && req.eof());
@@ -178,8 +248,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 case 'A':
                     if (command.equals("AUTHENTICATE")) {
                         req.skipSpace();  String mechanism = req.readAtom();
+                        byte[] response = null;
+                        if (req.peekChar() == ' ') {
+                            req.skipSpace();  response = req.readBase64(true);
+                        }
                         checkEOF(tag, req);
-                        return doAUTHENTICATE(tag, mechanism);
+                        return doAUTHENTICATE(tag, mechanism, response);
                     } else if (command.equals("APPEND")) {
                         List<String> flags = null;  Date date = null;
                         req.skipSpace();  String folder = req.readFolder();
@@ -439,13 +513,14 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         // [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
         // [NAMESPACE]        RFC 2342: IMAP4 Namespace
         // [QUOTA]            RFC 2087: IMAP4 QUOTA extension
+        // [SASL-IR]          draft-siemborski-imap-sasl-initial-response-04: IMAP Extension for SASL Initial Client Response
         // [UIDPLUS]          RFC 2359: IMAP4 UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         boolean authenticated = mSession != null;
-        String nologin =  allowCleartextLogin() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
+        String nologin = allowCleartextLogin() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
-//        String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN "; 
-        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + "BINARY CHILDREN ID IDLE LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA UIDPLUS UNSELECT");
+        String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN "; 
+        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CHILDREN ID IDLE LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR UIDPLUS UNSELECT");
     }
 
     boolean doNOOP(String tag) throws IOException {
@@ -484,23 +559,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         return CONTINUE_PROCESSING;
     }
 
-
-    boolean doAUTHENTICATE(String tag, String mechanism) throws IOException {
-        if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
-            return CONTINUE_PROCESSING;
-
-//        if (mechanism.equals("PLAIN")) {
-//            if (!mStartedTLS) {
-//                sendNO(tag, "cleartext logins disabled");
-//                return CONTINUE_PROCESSING;
-//            }
-//        }
-
-        // no AUTHENTICATE mechanisms are supported yet
-        sendNO(tag, "mechanism not supported");
-        return CONTINUE_PROCESSING;
-    }
-
     boolean doLOGOUT(String tag) throws IOException {
         sendUntagged(ImapServer.getGoodbye());
         if (mSession != null)
@@ -508,6 +566,42 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         mGoodbyeSent = true;
         sendOK(tag, "LOGOUT completed");
         return STOP_PROCESSING;
+    }
+
+    boolean doAUTHENTICATE(String tag, String mechanism, byte[] response) throws IOException {
+        if (!checkState(tag, ImapSession.STATE_NOT_AUTHENTICATED))
+            return CONTINUE_PROCESSING;
+
+        boolean finished = false;
+
+        if (mechanism.equals("PLAIN")) {
+            // RFC 2595 6: "The PLAIN SASL mechanism MUST NOT be advertised or used
+            //              unless a strong encryption layer (such as the provided by TLS)
+            //              is active or backwards compatibility dictates otherwise."
+//            if (!mStartedTLS) {
+//                sendNO(tag, "cleartext logins disabled");
+//                return CONTINUE_PROCESSING;
+//            }
+            mAuthenticator = new AuthPlain(tag);
+        } else {
+            // no other AUTHENTICATE mechanisms are supported yet
+            sendNO(tag, "mechanism not supported");
+            return CONTINUE_PROCESSING;
+        }
+
+        // draft-siemborski-imap-sasl-initial-response:
+        //      "This extension adds an optional second argument to the AUTHENTICATE
+        //       command that is defined in Section 6.2.2 of [IMAP4].  If this second
+        //       argument is present, it represents the contents of the "initial
+        //       client response" defined in section 5.1 of [SASL]."
+        if (response != null)
+            finished = mAuthenticator.handle(response);
+
+        if (finished)
+            mAuthenticator = null;
+        else
+            sendContinuation();
+        return CONTINUE_PROCESSING;
     }
 
     boolean doLOGIN(String tag, String username, String password) throws IOException {
@@ -518,6 +612,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             return CONTINUE_PROCESSING;
         }
 
+        return login(username, username, password, "LOGIN", tag);
+    }
+
+    boolean login(String authorizeId, String username, String password, String command, String tag) throws IOException {
         // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username
         EnabledHack hack = EnabledHack.NONE;
         if (username.endsWith("/wm")) {
@@ -525,67 +623,88 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             hack = EnabledHack.WM5;
         }
 
-        Mailbox mailbox = null;
-        ImapSession session = null;
         try {
-            Provisioning prov = Provisioning.getInstance();
-            Account account = prov.get(AccountBy.name, username);
-            if (account == null) {
-                sendNO(tag, "LOGIN failed");
+            Account account = authenticate(authorizeId, username, password, command, tag);
+            ImapSession session = startSession(account, hack, command, tag);
+            if (session == null)
                 return CONTINUE_PROCESSING;
-            }
-            prov.authAccount(account, password);
-            if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false)) {
-                sendNO(tag, "account does not have IMAP access enabled");
-                return CONTINUE_PROCESSING;
-            } else if (!Provisioning.onLocalServer(account)) { 
-                String correctHost = account.getAttr(Provisioning.A_zimbraMailHost);
-                ZimbraLog.imap.info("LOGIN failed; should be on host " + correctHost);
-                if (correctHost == null || correctHost.trim().equals(""))
-                    sendNO(tag, "LOGIN failed [wrong host]");
-                else
-                    sendNO(tag, "[REFERRAL imap://" + URLEncoder.encode(account.getName(), "utf-8") + '@' + correctHost + "/] LOGIN failed");
-                return CONTINUE_PROCESSING;
-            }
-            session = (ImapSession) SessionCache.getNewSession(account.getId(), SessionCache.SESSION_IMAP);
-            if (session == null) {
-                sendNO(tag, "LOGIN failed");
-                return CONTINUE_PROCESSING;
-            }
-            session.enableHack(hack);
-            mailbox = session.getMailbox();
-            synchronized (mailbox) {
-                session.setUsername(account.getName());
-                session.cacheFlags(mailbox);
-                for (Tag ltag : mailbox.getTagList(session.getContext()))
-                    session.cacheTag(ltag);
-            }
-
-            // Session timeout will take care of closing an IMAP connection with
-            // no activity.
-            if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("disabling unauth connection alarm");
-            mConnection.cancelAlarm();
         } catch (ServiceException e) {
             if (mSession != null)
-            	mSession.clearTagCache();
-            ZimbraLog.imap.warn("LOGIN failed", e);
+                mSession.clearTagCache();
+            ZimbraLog.imap.warn(command + " failed", e);
             if (e.getCode() == AccountServiceException.CHANGE_PASSWORD)
                 sendNO(tag, "[ALERT] password must be changed before IMAP login permitted");
             else if (e.getCode() == AccountServiceException.MAINTENANCE_MODE)
                 sendNO(tag, "[ALERT] account undergoing maintenance; please try again later");
             else
-                sendNO(tag, "LOGIN failed");
+                sendNO(tag, command + " failed");
             return canContinue(e);
         }
+        
+        // Session timeout will take care of closing an IMAP connection with no activity.
+        ZimbraLog.imap.debug("disabling unauth connection alarm");
+        mConnection.cancelAlarm();
 
-        // XXX: could use mSession.getMailbox() instead of saving a copy...
-        mMailbox = mailbox;
+        sendCapability();
+        sendOK(tag, command + " completed");
+        return CONTINUE_PROCESSING;
+    }
+
+    private Account authenticate(String authorizeId, String authenticateId, String password, String command, String tag) throws ServiceException, IOException {
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.get(AccountBy.name, authenticateId);
+        Account authacct = authorizeId.equals("") ? account : prov.get(AccountBy.name, authorizeId);
+        if (account == null || authacct == null) {
+            sendNO(tag, command + " failed");
+            return null;
+        }
+        prov.authAccount(authacct, password);
+        if (!AccountUtil.isAuthorized(account, authacct)) {
+            sendNO(tag, command + " failed");
+            return null;
+        }
+        return account;
+    }
+
+    private ImapSession startSession(Account account, EnabledHack hack, String command, String tag) throws ServiceException, IOException {
+        if (account == null)
+            return null;
+
+        // make sure we can actually login via IMAP on this host
+        if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false)) {
+            sendNO(tag, "account does not have IMAP access enabled");
+            return null;
+        } else if (!Provisioning.onLocalServer(account)) { 
+            String correctHost = account.getAttr(Provisioning.A_zimbraMailHost);
+            ZimbraLog.imap.info(command + " failed; should be on host " + correctHost);
+            if (correctHost == null || correctHost.trim().equals(""))
+                sendNO(tag, command + " failed [wrong host]");
+            else
+                sendNO(tag, "[REFERRAL imap://" + URLEncoder.encode(account.getName(), "utf-8") + '@' + correctHost + "/] " + command + " failed");
+            return null;
+        }
+
+        ImapSession session = (ImapSession) SessionCache.getNewSession(account.getId(), SessionCache.SESSION_IMAP);
+        if (session == null) {
+            sendNO(tag, "AUTHENTICATE failed");
+            return null;
+        }
+        session.enableHack(hack);
+
+        Mailbox mbox = session.getMailbox();
+        synchronized (mbox) {
+            session.setUsername(account.getName());
+            session.cacheFlags(mbox);
+            for (Tag ltag : mbox.getTagList(session.getContext()))
+                session.cacheTag(ltag);
+        }
+
+        // everything's good, so store the session in the handler
+        mMailbox = mbox;
         mSession = session;
         mSession.setHandler(this);
 
-        sendCapability();
-        sendOK(tag, "LOGIN completed");
-        return CONTINUE_PROCESSING;
+        return session;
     }
 
     boolean doSELECT(String tag, String folderName) throws IOException {
@@ -1681,7 +1800,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     void sendBAD(String tag, String response) throws IOException { sendResponse(tag, response.equals("") ? "BAD" : "BAD " + response, true); }
     void sendUntagged(String response) throws IOException        { sendResponse("*", response, false); }
     void sendUntagged(String response, boolean flush) throws IOException { sendResponse("*", response, flush); }
-    void sendContinuation() throws IOException                   { sendResponse("+", null, true); }
+    void sendContinuation() throws IOException                   { sendContinuation(null); }
+    void sendContinuation(String response) throws IOException    { sendResponse("+", response, true); }
     
     private void sendResponse(String status, String msg, boolean flush) throws IOException {
         String response = status + ' ' + (msg == null ? "" : msg);
@@ -1697,15 +1817,14 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     }
 
     private static final int MAX_COMMAND_LENGTH = 2048;
-    
-    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, null);
 
+    private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, null);
     private OzCountingMatcher mLiteralMatcher = new OzCountingMatcher();
-    
+
     private enum ConnectionState { READLITERAL, READLINE, CLOSED, UNKNOWN };
 
     private ConnectionState mState = ConnectionState.UNKNOWN;
-    
+
     private void gotoReadLineState(boolean newRequest) {
         mState = ConnectionState.READLINE;
         mCommandMatcher.reset();
@@ -1716,7 +1835,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             mCurrentRequestData = new ArrayList<Object>();
             mCurrentRequestTag = null;
         }
-        if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered command read state");
+        if (ZimbraLog.imap.isDebugEnabled())
+            ZimbraLog.imap.debug("entered command read state");
     }
 
     private void gotoReadLiteralState(int target) {
@@ -1726,9 +1846,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         mConnection.setMatcher(mLiteralMatcher);
         mConnection.enableReadInterest();
         mCurrentData = new OzByteBufferGatherer(target, target);
-        if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered literal read state target=" + target);
+        if (ZimbraLog.imap.isDebugEnabled())
+            ZimbraLog.imap.debug("entered literal read state target=" + target);
     }
-    
+
     private Object mCloseLock = new Object();
     
     private void gotoClosedStateInternal(boolean sendBanner) throws IOException {
@@ -1795,23 +1916,19 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     }
 
     private OzByteBufferGatherer mCurrentData;
-    
     private ArrayList<Object> mCurrentRequestData;
-
     private String mCurrentRequestTag;
-    
+
     public void handleAlarm() {
         ZimbraLog.imap.info("closing unauthenticated idle connection");
         gotoClosedState(true);
     }
 
     public void handleInput(ByteBuffer buffer, boolean matched) throws IOException {
-        
         mCurrentData.add(buffer);
 
-        if (!matched) {
+        if (!matched)
             return;
-        }
 
         mCurrentData.trim(mConnection.getMatcher().trailingTrimLength());
 
@@ -1829,9 +1946,34 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 			 */
             gotoReadLineState(false);
             return;
-        }
-        
-        if (mState == ConnectionState.READLINE) {
+        } else if (mState == ConnectionState.READLINE && mAuthenticator != null) {
+            boolean authFinished = true;
+            try {
+                if (mCurrentData.overflowed()) {
+                    sendBAD(mAuthenticator.mTag, "AUTHENTICATE failed: request too long");
+                    gotoReadLineState(true);
+                    return;
+                } else if (mCurrentData.size() == 1 && mCurrentData.get(0) == '*') {
+                    // 6.2.2: "If the client wishes to cancel an authentication exchange, it issues a line
+                    //         consisting of a single "*".  If the server receives such a response, it MUST
+                    //         reject the AUTHENTICATE command by sending a tagged BAD response."
+                    sendBAD(mAuthenticator.mTag, "AUTHENTICATE aborted");
+                    gotoReadLineState(true);
+                    return;
+                }
+
+                mCurrentRequestData.add(mCurrentData.toAsciiString());
+                OzImapRequest req = new OzImapRequest(mAuthenticator.mTag, mCurrentRequestData, mSession);
+                if (continueAuthentication(req))
+                    gotoReadLineState(true);
+                else
+                    gotoClosedState(true);
+                return;
+            } finally {
+                if (authFinished)
+                    mAuthenticator = null;
+            }
+        } else if (mState == ConnectionState.READLINE) {
             if (mCurrentData.overflowed()) {
                 sendUntagged("BAD request too long", true);
                 gotoReadLineState(true);
@@ -1854,7 +1996,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     return;
                 }
             }
-            
+
             /* See if there is a literal at the end of this line. */
             ImapLiteral literal;
             try {
@@ -1864,12 +2006,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 gotoReadLineState(true);
                 return;
             }
-            
+
             /* Add either the literal removed line or a no-literal present at all
              * line (ie, it's line in either case) to the request in flight.
              */ 
             mCurrentRequestData.add(line);
-            
+
             if (literal.octets() > 0) {
                 if (literal.blocking()) {
                     sendContinuation();
