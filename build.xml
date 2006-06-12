@@ -585,9 +585,13 @@
 		<mkdir dir="${tomcat.home.dir}/common/lib" />
 	</target>
 
+	<target name="init-opt-zimbra" description="Push changes to /opt/zimbra">
+		<copy tofile="${zimbra.home.dir}/conf/localconfig.xml" file="${config.dir}/localconfig-dev.xml" />
+		<echo message="Updating ${zimbra.home.dir}/conf/log4j.properties; if it fails on windows, try again." />
+		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" />
+	</target>
+
 	<target name="refresh-opt-zimbra" description="Push changes to /opt/zimbra">
-		<copy tofile="${zimbra.home.dir}/conf/localconfig.xml" file="${config.dir}/localconfig-dev.xml" overwrite="true" />
-		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" overwrite="true" />
 		<copy todir="${zimbra.home.dir}/db" overwrite="true">
 			<fileset dir="${src.db.dir}" />
 		</copy>
@@ -604,9 +608,7 @@
 		<copy todir="${zimbra.home.dir}/lib/jars">
 			<fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" />
 		</copy>
-		<copy todir="${zimbra.home.dir}/lib/jars" file="${dist.jars.dir}/zimbrastore.jar" />
-		<echo message="Updating ${zimbra.home.dir}/conf/log4j.properties; if it fails on windows, try again." />
-		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" overwrite="true" />
+		<copy todir="${zimbra.home.dir}/lib/jars" file="${dist.jars.dir}/zimbrastore.jar" overwrite="true"/>
 	</target>
 
 	<target name="refresh-opt-zimbra-unix" if="is-unix">
@@ -634,7 +636,7 @@
 	</target>
 
 	<!-- for quickly wiping out database and files between tests; server start/stop is up to user -->
-	<target name="quick-init" depends="db-init,dir-init,refresh-opt-zimbra" />
+	<target name="quick-init" depends="db-init,dir-init,init-opt-zimbra,refresh-opt-zimbra" />
 
 	<target name="ldap-init">
 		<!-- We have to force overwrite or a freshly installed openldap's configs won't overwritten. -->
