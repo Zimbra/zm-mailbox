@@ -639,10 +639,10 @@ public class ToXML {
     }
 
     private static void encodeReplies(Element parent, Appointment appt, Invite inv) {
-        Element repliesElt = parent.addElement(MailService.A_APPT_REPLIES);
+        Element repliesElt = parent.addElement(MailService.E_APPT_REPLIES);
 
-        List /*Appointment.ReplyInfo */ fbas = appt.getReplyInfo(inv);
-        for (Iterator iter = fbas.iterator(); iter.hasNext(); ) {
+        List /*Appointment.ReplyInfo */ replies = appt.getReplyInfo(inv);
+        for (Iterator iter = replies.iterator(); iter.hasNext(); ) {
             Appointment.ReplyInfo repInfo = (Appointment.ReplyInfo) iter.next();
 
             Element curElt = repliesElt.addElement(MailService.E_APPT_REPLY);
@@ -653,7 +653,7 @@ public class ToXML {
                 curElt.addAttribute(MailService.A_APPT_PARTSTAT, repInfo.mAttendee.getPartStat());
             }
             curElt.addAttribute(MailService.A_DATE, repInfo.mDtStamp);
-            curElt.addAttribute("at", repInfo.mAttendee.getAddress());
+            curElt.addAttribute(MailService.A_APPT_ATTENDEE, repInfo.mAttendee.getAddress());
         }
     }
 
@@ -955,30 +955,8 @@ public class ToXML {
             e.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL,
                         appt.getEffectiveFreeBusyActual(invite, inst));
 
-            if (includeReplies) {
-                List /*Appointment.ReplyInfo */ fbas = appt.getReplyInfo(invite);
-
-                Element repliesElt = e.addElement(MailService.A_APPT_REPLIES);
-                for (Iterator iter = fbas.iterator(); iter.hasNext(); ) {
-                    Appointment.ReplyInfo repInfo = (Appointment.ReplyInfo) iter.next();
-
-                    Element curElt = repliesElt.addElement(MailService.E_APPT_REPLY);
-                    if (repInfo.mRecurId != null) {
-                        repInfo.mRecurId.toXml(curElt);
-                    }
-
-//                  PartStat ps = (PartStat)(repInfo.mAttendee.getParameters().getParameter(Parameter.PARTSTAT));
-                    if (repInfo.mAttendee.hasPartStat()) {
-                        String psStr = repInfo.mAttendee.getPartStat();
-                        curElt.addAttribute(MailService.A_APPT_PARTSTAT, psStr);
-                        String fbaStr = invite.partStatToFreeBusyActual(psStr);
-                        curElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, fbaStr);
-                    }
-
-                    curElt.addAttribute("stamp", repInfo.mDtStamp);
-                    curElt.addAttribute("at", repInfo.mAttendee.getAddress());
-                }
-            }
+            if (includeReplies)
+                encodeReplies(e, appt, invite);
 
             e.addAttribute(MailService.A_APPT_TRANSPARENCY, invite.getTransparency());
 

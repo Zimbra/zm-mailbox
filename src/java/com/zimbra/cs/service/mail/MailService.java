@@ -328,6 +328,7 @@ public class MailService implements DocumentService {
     public static final String E_APPT_DURATION = "dur";
     public static final String E_APPT_START_TIME = "s";
     public static final String E_APPT_END_TIME = "e";
+    public static final String E_APPT_REPLIES = "replies";
     public static final String E_APPT_REPLY = "reply";
 
     public static final String E_APPT_RULE = "rule";
@@ -371,7 +372,6 @@ public class MailService implements DocumentService {
     public static final String A_APPT_PARTSTAT = "ptst";
     public static final String A_APPT_FREEBUSY = "fb";
     public static final String A_APPT_FREEBUSY_ACTUAL = "fba";
-    public static final String A_APPT_REPLIES = "replies";
     public static final String A_APPT_TRANSPARENCY = "transp";
     public static final String A_APPT_ALLDAY = "allDay";
     public static final String A_APPT_LOCATION = "loc";
@@ -388,6 +388,7 @@ public class MailService implements DocumentService {
     public static final String A_APPT_THIS_AND_FUTURE = "thisAndFuture";
     public static final String A_APPT_TIMEZONE= "tz";
     public static final String A_APPT_ISORG = "isOrg";
+    public static final String A_APPT_ATTENDEE = "at";
 
     public static final String A_APPT_RULE_FREQ = "freq";
     public static final String A_APPT_RULE_COUNT_NUM = "num";

@@ -101,11 +101,17 @@
             [allDay="1|0"]
             [name="NAME"]
             [loc="LOCATION"]
+            [isOrg="0|1"]		// Am I the organizer?  (default = 0)
         >
 
-           [<myReplies>
-              [<inst recurId="YYMMDD[THHMMSS[Z]]" tz="timezonename" rangeType="1" fba="F|B|T|U">]*
-           </myReplies>] // one or more replies which we have sent out and the effective status (fba) of those particular instances 
+           [<replies>
+              [<reply d="TIMESTAMP_OF_REPLY"
+                      at="foo@bar.com"
+                      ptst="AC|DE|TE|NE"
+                      rangeType="1"
+                      recurId="YYMMDD[THHMMSS[Z]]"
+                      tz="timezonename"/>]*
+           </replies>] // one or more replies which we have sent out
            
            <s DATETIME> // Start date-time (required)
 
@@ -669,8 +675,13 @@ OR
   <appt uid="UID" id="appointment_id" f="{flags}" t="{tags}" s="{size}" d="{date}" l="{folder}">
     [<inv id="invite-original-mail-item-id" compNum="component-number">
       [<replies>
-        [<reply d="TIMESTAMP_OF_REPLY" at="foo@bar.com" ptst="AC|DE|TE|NE" rangeType="1" recurId="YYMMDD[THHMMSS[Z]]" tz="timezonename">]*
-      </replies>] // one or more replies which we have sent out and the
+        [<reply d="TIMESTAMP_OF_REPLY"
+                at="foo@bar.com"
+                ptst="AC|DE|TE|NE"
+                rangeType="1"
+                recurId="YYMMDD[THHMMSS[Z]]"
+                tz="timezonename"/>]*
+      </replies>] // one or more replies which we have sent out
       ...
         ---See <inv> part of GetMsgResponse---
       ...    
@@ -727,7 +738,7 @@ which has detailed information about the meeting (description, etc)
        3/1 "Gorilla Discussion" id=5
        3/14 "Gorilla Discussion" id=5
        3/21 "Left-Handed Gorilla Discussion" id=7
-
+	
 
 
        
