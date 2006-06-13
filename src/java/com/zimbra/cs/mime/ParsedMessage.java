@@ -236,10 +236,12 @@ public class ParsedMessage {
                 if (mExpandedMessage != mMimeMessage)
                     ((MimeVisitor) vclass.newInstance()).accept(mExpandedMessage);
             }
-        } catch (Exception e) {
-            // roll back if necessary
+        } catch (Throwable t) {
+            // If the conversion bombs for any reason, revert to the original.  Don't
+            // handle OOME, in hope that garbage created by a 3rd party converter is
+            // collected automatically.
             mExpandedMessage = mMimeMessage;
-            sLog.warn("exception while converting message; message will be analyzed unconverted", e);
+            sLog.warn("exception while converting message; message will be analyzed unconverted", t);
         }
 
         return mExpandedMessage == mMimeMessage;

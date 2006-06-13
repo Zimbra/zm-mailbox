@@ -37,8 +37,8 @@ import javax.mail.internet.MimePart;
 
 import com.zimbra.cs.util.ZimbraLog;
 
-/** A class that implements this interface can be passed to {@link Mime#accept}
- *  to walk a MIME node tree.
+/**
+ * Walks a JavaMail MIME tree and calls the abstract methods for each node. 
  *   
  * @author bburtin
  */

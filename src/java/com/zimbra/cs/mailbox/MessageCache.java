@@ -183,10 +183,12 @@ public class MessageCache {
                     // handle UUENCODE and TNEF conversion here...
                     for (Class visitor : MimeVisitor.getConverters())
                         ((MimeVisitor) visitor.newInstance()).accept(cnode.mMessage);
-                } catch (Exception e) {
-                    // if the conversion bombs for any reason, revert to the original
-                    if (ZimbraLog.mailbox.isInfoEnabled())
-                        ZimbraLog.mailbox.info("unable to convert attachments for message " + msg.getId(), e);
+                } catch (Throwable t) {
+                    // If the conversion bombs for any reason, revert to the original.  Don't
+                    // handle OOME, in hope that garbage created by a 3rd party converter is
+                    // collected automatically.
+                    ZimbraLog.mailbox.warn(
+                        "MIME converter failed for message " + msg.getId(), t);
                     is = (cnOrig == null ? fetchFromStore(msg) : new ByteArrayInputStream(cnOrig.mContent));
                     cnode = new CacheNode(size, new MimeMessage(JMSession.getSession(), is));
                     is.close();
