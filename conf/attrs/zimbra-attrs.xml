@@ -1631,4 +1631,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Skins available for this account</desc>
 </attr>
 
+<attr id="365" name="zimbraDebugInfo" type="string" max="1024" cardinality="multi" optionalIn="account">
+  <desc>For selective enabling of debug logging</desc>
+</attr>
+
 </attrs>

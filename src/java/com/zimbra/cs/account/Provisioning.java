@@ -564,6 +564,11 @@ public abstract class Provisioning {
     public static final String A_zimbraNotes = "zimbraNotes";
 
     /**
+     * For selective enabling of debug logging.
+     */
+    public static final String A_zimbraDebugInfo = "zimbraDebugInfo";
+
+    /**
      * number of old passwords to keep, or 0 for no history.
      */
     public static final String A_zimbraPasswordEnforceHistory = "zimbraPasswordEnforceHistory";
