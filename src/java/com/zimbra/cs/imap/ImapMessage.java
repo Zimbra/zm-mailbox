@@ -41,6 +41,7 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.*;
 
+import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.QCodec;
 
 import com.zimbra.cs.mailbox.Contact;
@@ -201,7 +202,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
     private void astring(PrintStream ps, String value) { astring(ps, value, false); }
     private void aSTRING(PrintStream ps, String value) { astring(ps, value, true); }
     private void astring(PrintStream ps, String value, boolean upcase) {
-        boolean literal = false;
+        boolean encoded = false;
         StringBuilder nonulls = null;
         for (int i = 0, length = value.length(), lastNull = -1; i < length; i++) {
             char c = value.charAt(i);
@@ -209,19 +210,17 @@ public class ImapMessage implements Comparable<ImapMessage> {
                 if (nonulls == null)  nonulls = new StringBuilder();
                 nonulls.append(value.substring(lastNull + 1, i));
                 lastNull = i;
-            } else if (c == '"' || c == '\\' || c > 0x7f)
-                literal = true;
+            } else if (c == '"' || c == '\\' || c >= 0x7f)
+                encoded = true;
         }
         String content = (nonulls == null ? value : nonulls.toString());
         if (upcase)  content = content.toUpperCase();
-        if (!literal) {
+        if (!encoded) {
             ps.write('"');  ps.print(content);  ps.write('"');
         } else {
             try {
-                byte[] bytes = content.getBytes(Mime.P_CHARSET_UTF8);
-                ps.write('{');  ps.print(bytes.length);  ps.write('}');  ps.write(ImapHandler.LINE_SEPARATOR_BYTES, 0, 2);
-                ps.write(bytes, 0, bytes.length);
-            } catch (UnsupportedEncodingException uee) {
+                ps.write('"');  ps.print(new QCodec().encode(content, "utf-8"));  ps.write('"');
+            } catch (EncoderException ee) {
                 ps.write(NIL, 0, 3);
             }
         }
