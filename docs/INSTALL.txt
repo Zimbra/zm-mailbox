@@ -104,6 +104,11 @@ installers to your local machine before installing.
    On Windows, install to c:\opt\zimbra\openldap. Then go to the
    openldap directory and run "slapd install" to install it as a
    Windows service.
+   
+   The location of the schema files changed in OpenLDAP 2.2.29.
+   If you're using 2.2.29 or later, you'll have to manually edit
+   slapd.win.conf and change the paths to the schema files from
+   /opt/zimbra/openldap/etc/schema to /opt/zimbra/openldap/schema.
 
 8. On Linux, probably want to chown /opt to yourself and/or give group
    write access to /opt, so you don't have to worry about running as
@@ -125,7 +130,7 @@ installers to your local machine before installing.
   	Add: ZimbraWebClient/build.xml
     	Run "deploy" and "admin-deploy"
 
-    This will compile/deploy the DHTML interface and the Admin Colsole.
+    This will compile/deploy the DHTML interface and the Admin Console.
     	
     If you install ant standalone, you can also run "ant
     reset-the-world" from within the ZimbraServer root directory.

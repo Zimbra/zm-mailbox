@@ -183,7 +183,7 @@ to allow for paging, restricting what types of items are returned, etc:
 ACCESSING DATA ACROSS Zimbra DOMAINs
 ------------------------------------------------------------
 
-1. Intra-domain (authoratative domains within a Zimbra insall)
+1. Intra-domain (authoratative domains within a Zimbra install)
 
 to access items across domains within a Zimra install, specify an @ in the mailbox
 name:
