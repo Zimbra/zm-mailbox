@@ -38,7 +38,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.cs.service.wiki.WikiServiceException.NoSuchWikiException;
 import com.zimbra.cs.util.Pair;
-import com.zimbra.cs.util.ZimbraLog;
+//import com.zimbra.cs.util.ZimbraLog;
 
 public class WikiTemplateStore {
 	
@@ -116,7 +116,7 @@ public class WikiTemplateStore {
 		}
 		WikiTemplate template = mTemplateMap.get(name);
 		if (template != null) {
-			ZimbraLog.wiki.debug("found " + name + " from template cache");
+			//ZimbraLog.wiki.debug("found " + name + " from template cache");
 			return template;
 		}
 		
@@ -159,7 +159,7 @@ public class WikiTemplateStore {
 		throw WikiServiceException.NOT_WIKI_ITEM(path);
 	}
 	public void expireTemplate(String name) {
-		ZimbraLog.wiki.debug("removing " + name + " from template cache");
+		//ZimbraLog.wiki.debug("removing " + name + " from template cache");
 		mTemplateMap.remove(name);
 		Wiki.remove(mAccountId, mFolderId);
 	}

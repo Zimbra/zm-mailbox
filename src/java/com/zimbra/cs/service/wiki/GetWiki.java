@@ -61,9 +61,12 @@ public class GetWiki extends WikiDocumentHandler {
         WikiItem wikiItem;
         
         if (word != null) {
+        	ItemId fid = getRequestedFolder(request);
+        	if (fid == null)
+        		fid = new ItemId("", Mailbox.ID_FOLDER_USER_ROOT);
         	MailItem item = Wiki.findWikiByPath(octxt, 
         										 lc.getRequestedAccountId(), 
-        										 getRequestedFolder(request), 
+        										 fid.getId(), 
         										 word,
         										 traverse.equals("yes"));
         	if (item == null) {

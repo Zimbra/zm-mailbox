@@ -24,11 +24,11 @@
  */
 package com.zimbra.cs.service.wiki;
 
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.ServiceException.Argument;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiWord;
 import com.zimbra.soap.DocumentHandler;
@@ -44,22 +44,25 @@ public abstract class WikiDocumentHandler extends DocumentHandler {
 		return lc.getAuthtokenAccount().getName();
 	}
 	
-	protected int getRequestedFolder(Element request) throws ServiceException {
+	protected ItemId getRequestedFolder(Element request) throws ServiceException {
 		for (Element elem : request.listElements()) {
-	        int fid = (int)elem.getAttributeLong(MailService.A_FOLDER, 0);
-	        if (fid != 0)
-	        	return fid;
+	        String fid = elem.getAttribute(MailService.A_FOLDER, null);
+	        if (fid != null) {
+	        	return new ItemId(fid, null);
+	        }
 		}
-		return Mailbox.ID_FOLDER_USER_ROOT;
+		return null;
 	}
 	
 	protected Wiki getRequestedWikiNotebook(Element request, ZimbraSoapContext lc) throws ServiceException {
-		for (Element elem : request.listElements()) {
-	        int fid = (int)elem.getAttributeLong(MailService.A_FOLDER, 0);
-	        if (fid != 0)
-	    		return Wiki.getInstance(lc.getAuthtokenAccount(), fid);
+		ItemId fid = getRequestedFolder(request);
+		String accountId = lc.getAuthtokenAccountId();
+		if (fid == null) {
+			return Wiki.getInstance(lc.getAuthtokenAccount());
+		} else if (!fid.belongsTo(lc.getAuthtokenAccount())) {
+			accountId = fid.getAccountId();
 		}
-		return Wiki.getInstance(lc.getAuthtokenAccount());
+		return Wiki.getInstance(accountId, fid.getId());
 	}
 	
 	protected void validateRequest(Wiki wiki, int itemId, long ver, String wikiWord) throws ServiceException {
