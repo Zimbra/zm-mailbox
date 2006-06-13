@@ -1635,4 +1635,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>For selective enabling of debug logging</desc>
 </attr>
 
+<attr id="366" name="zimbraFeatureOutOfOfficeReplyEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Whether out of office reply feature should be allowed for this account or in this cos</desc>
+</attr>
+
+<attr id="367" name="zimbraFeatureNewMailNotificationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Whether new mail notification feature should be allowed for this account or in this cos</desc>
+</attr>
+
 </attrs>
