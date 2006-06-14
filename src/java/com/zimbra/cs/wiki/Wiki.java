@@ -214,8 +214,8 @@ public class Wiki {
 			Wiki w = getTemplateStore(targetAccountId);
 			if (w == null)
 				return null;
-			accountId = w.getWikiAccount();
-			targetFolderId = f.getFolderId();
+			targetAccountId = w.getWikiAccount();
+			targetFolderId = w.getWikiFolderId();
 			item = findWikiByNameTraverse(octxt, targetAccountId, targetFolderId, name);
 		}
 		return item;
