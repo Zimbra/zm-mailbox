@@ -199,7 +199,8 @@ public class Appointment extends MailItem {
         Appointment appt = new Appointment(mbox, data);
         appt.processPartStat(firstInvite,
                              pm != null ? pm.getMimeMessage() : null,
-                             true);
+                             true,
+                             IcalXmlStrMap.PARTSTAT_NEEDS_ACTION);
         appt.createBlob(pm, firstInvite, volumeId);
         appt.finishCreation(null);
 
@@ -674,14 +675,14 @@ public class Appointment extends MailItem {
                 // carried over from the last invite to the new one.
                 newInvite.setPartStat(prev.getPartStat());
                 newInvite.setRsvp(prev.getRsvp());
-                newInvite.setNeedsReply(prev.needsReply());
                 newInvite.getAppointment().saveMetadata();
                 // No need to mark invite as modified item in mailbox as
                 // it has already been marked as a created item.
             } else {
                 processPartStat(newInvite,
                                 pm != null ? pm.getMimeMessage() : null,
-                                false);
+                                false,
+                                newInvite.getPartStat());
             }
 
             mInvites.add(newInvite);
@@ -1268,7 +1269,7 @@ public class Appointment extends MailItem {
      * @param cutypeStr
      * @param roleStr
      * @param partStatStr
-     * @param needsReply
+     * @param rsvp
      * @param seqNo
      * @param dtStamp
      * @throws ServiceException
@@ -1602,7 +1603,8 @@ public class Appointment extends MailItem {
 
     private String processPartStat(Invite invite,
                                    MimeMessage mmInv,
-                                   boolean forCreate)
+                                   boolean forCreate,
+                                   String defaultPartStat)
     throws ServiceException {
         Mailbox mbox = getMailbox();
         OperationContext octxt = mbox.getOperationContext();
@@ -1617,7 +1619,7 @@ public class Appointment extends MailItem {
         else
             lc = account.getLocale();
 
-        String partStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
+        String partStat = defaultPartStat;
         if (player != null) {
             String p = player.getAppointmentPartStat();
             if (p != null) partStat = p;
