@@ -631,7 +631,7 @@ Conversations:
                  
 Folders:
 
-  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"] [url="{remote-url}"] [perm="{effective-perms}"]>
+  <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"] [url="{remote-url}"] [perm="{effective-perms}"] [rest="{rest-url}"]>
     [<acl> <grant perm="{rights}" gt="{grantee-type}" d="{grantee-name}" [inh="0|1"] [args="{args}"]/>* </acl>]
   </folder>
 
@@ -645,6 +645,7 @@ Folders:
   {default-type} = (optional) default type for the folder; used by web client to decide which view to use;
                    possible values are the same as <SearchRequest>'s {types}: conversation|message|contact|appointment|note
   {remote-url}   = url (RSS, iCal, etc.) this folder syncs its contents to
+  {rest-url}     = url to the folder on rest interface for rest-enabled apps (such as wiki and notebook)
   {effective-perms} = for remote folders, the access rights the authenticated user has on the folder
 
   folders can have an optional ACL set on them for sharing.  if they do (and the authenticated

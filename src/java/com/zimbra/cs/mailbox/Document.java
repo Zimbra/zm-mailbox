@@ -109,22 +109,6 @@ public class Document extends MailItem {
 		return getLastRevision().getCreator();
 	}
 	
-    private static final String sRESTURLPREFIX = "/home";
-    
-	public String getRestUrl() {
-		try {
-			Folder f = getMailbox().getFolderById(getFolderId());
-			Account account = f.getMailbox().getAccount();
-			Server s = Provisioning.getInstance().getServer(account);
-			String path = sRESTURLPREFIX + "/" + account.getUid() + 
-				f.getPath() + "/" + getSubject();
-			return URLUtil.getMailURL(s, path, false);
-		} catch (ServiceException se) {
-			ZimbraLog.wiki.error("cannot generate REST url", se);
-			return "";
-		}
-	}
-	
     public InputStream getRawDocument() throws IOException, ServiceException {
     	StoreManager sm = StoreManager.getInstance();
     	int revId = getLastRevision().getRevId();

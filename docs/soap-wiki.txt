@@ -98,7 +98,7 @@
 </GetWikiRequest>
 
 <GetWikiResponse>
-  [<w name="{word}" ver="{version}" cr="{creator}" url="{rest-url}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"]>
+  [<w name="{word}" ver="{version}" cr="{creator}" rest="{rest-url}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"]>
      <fr>... fragment ...</fr>
      <body>... contents ...</body>
   </w>]+

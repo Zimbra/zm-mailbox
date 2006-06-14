@@ -445,6 +445,7 @@ public class MailService implements DocumentService {
     public static final String A_COUNT = "count";
     public static final String A_TRAVERSE = "tr";
     public static final String A_ARGS = "args";
+    public static final String A_REST_URL = "rest";
 
     public void registerHandlers(DocumentDispatcher dispatcher) {
 

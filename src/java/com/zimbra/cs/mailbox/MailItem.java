@@ -368,6 +368,18 @@ public abstract class MailItem implements Comparable {
         return mData.folderId;
     }
 
+    /** Returns the path to the MailItem.
+     */
+    public String getPath() throws ServiceException {
+    	Folder f = getMailbox().getFolderById(getFolderId());
+    	StringBuilder path = new StringBuilder();
+    	path.append(f.getPath());
+    	if (path.charAt(path.length() - 1) != '/')
+    		path.append('/');
+    	path.append(getSubject());
+    	return path.toString();
+    }
+    
     /** Returns the ID the item is referenced by in the index.  Returns -1
      *  for non-indexed items.  For indexed items, the "index ID" will be the
      *  same as the item ID unless the item is a copy of another item; in that

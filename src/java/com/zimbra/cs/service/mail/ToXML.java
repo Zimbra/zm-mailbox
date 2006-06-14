@@ -46,7 +46,10 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.html.HtmlDefang;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Appointment.Instance;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -61,11 +64,14 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.mail.EmailElementCache.CacheNode;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -208,6 +214,8 @@ public class ToXML {
                 String name = folder.getName();
                 if (name != null && name.length() > 0)
                     elem.addAttribute(MailService.A_NAME, name);
+                if (folder.getDefaultView() == MailItem.TYPE_WIKI)
+                	encodeRestUrl(elem, folder);
             }
             if (needToOutput(fields, Change.MODIFIED_FOLDER))
                 elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(folder.getFolderId()));
@@ -1262,8 +1270,10 @@ public class ToXML {
     public static Element encodeDocumentCommon(Element m, ZimbraSoapContext lc, Document doc, int fields, int rev) {
 
         m.addAttribute(MailService.A_ID, lc.formatItemId(doc));
-        m.addAttribute(MailService.A_NAME, doc.getSubject());
-        m.addAttribute(MailService.A_URL, doc.getRestUrl());
+        if (needToOutput(fields, Change.MODIFIED_NAME)) {
+        	m.addAttribute(MailService.A_NAME, doc.getSubject());
+        	encodeRestUrl(m, doc);
+        }
         if (needToOutput(fields, Change.MODIFIED_SIZE))
             m.addAttribute(MailService.A_SIZE, doc.getSize());
         if (needToOutput(fields, Change.MODIFIED_DATE))
@@ -1293,4 +1303,17 @@ public class ToXML {
 
         return m;
     }
+    
+	public static Element encodeRestUrl(Element m, MailItem item) {
+		try {
+			Account account = item.getMailbox().getAccount();
+			Server s = Provisioning.getInstance().getServer(account);
+			StringBuilder path = new StringBuilder();
+			path.append(UserServlet.SERVLET_PATH).append("/").append(account.getUid()).append(item.getPath());
+			return m.addAttribute(MailService.A_REST_URL, URLUtil.getMailURL(s, path.toString(), false));
+		} catch (ServiceException se) {
+			mLog.error("cannot generate REST url", se);
+			return m;
+		}
+	}
 }
