@@ -52,7 +52,7 @@ public class GetWiki extends WikiDocumentHandler {
         Element wElem = request.getElement(MailService.E_WIKIWORD);
         String word = wElem.getAttribute(MailService.A_NAME, null);
         String id = wElem.getAttribute(MailService.A_ID, null);
-        String traverse = wElem.getAttribute(MailService.A_TRAVERSE, "no").toLowerCase();
+        int traverse = (int)wElem.getAttributeLong(MailService.A_TRAVERSE, 0);
         int rev = (int)wElem.getAttributeLong(MailService.A_VERSION, -1);
         int count = (int)wElem.getAttributeLong(MailService.A_COUNT, -1);
 
@@ -68,7 +68,7 @@ public class GetWiki extends WikiDocumentHandler {
         										 lc.getRequestedAccountId(), 
         										 fid.getId(), 
         										 word,
-        										 traverse.equals("yes"));
+        										 traverse == 1);
         	if (item == null) {
         		throw new WikiServiceException.NoSuchWikiException(word);
         	}

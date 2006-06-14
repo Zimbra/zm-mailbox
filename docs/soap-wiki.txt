@@ -90,11 +90,11 @@
 // if count attribute is present it will return the N revision history of the metadata and fragment,
 // without body, where N <= count.
 //
-// if the attribute tr is set to yes, the server will traverse up the directory tree, then search the
+// if the attribute tr is set to 1, the server will traverse up the directory tree, then search the
 // central wiki account until the named Wiki item is found.  it's useful when requesting the template
 // items.
 <GetWikiRequest>
-  <w [name="{word}"|id="{message-id}"] [ver="{version}"] [count="{num}"] [l="{folder}"] [tr="yes|no"]/>
+  <w [name="{word}"|id="{message-id}"] [ver="{version}"] [count="{num}"] [l="{folder}"] [tr="1|0"]/>
 </GetWikiRequest>
 
 <GetWikiResponse>
