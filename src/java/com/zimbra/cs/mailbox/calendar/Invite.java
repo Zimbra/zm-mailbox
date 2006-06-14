@@ -167,7 +167,6 @@ public class Invite {
      * @param fragment Description of this appointment
      * @param dtStampOrZero RFC2445 sequencing. If 0, then will use current timestamp
      * @param sequenceNoOrZero RFC2445 sequencying.  If 0, then will use current highest sequence no, or 1
-     * @param needsReply TRUE if this mailbox is expected to reply to this invite
      * @param partStat IcalXMLStrMap.PARTSTAT_* RFC2445 Participant Status of this mailbox
      * @param rsvp RFC2445 RSVP
      * @param sentByMe TRUE if this mailbox sent this invite 
@@ -194,7 +193,6 @@ public class Invite {
             String fragment,
             int dtStampOrZero,
             int sequenceNoOrZero,
-            boolean needsReply,
             String partStat,
             boolean rsvp,
             boolean sentByMe) throws ServiceException
@@ -216,7 +214,7 @@ public class Invite {
                 name,
                 comment,
                 location,
-                Invite.APPT_FLAG_EVENT | (needsReply ? Invite.APPT_FLAG_NEEDS_REPLY : 0) | (allDayEvent ? Invite.APPT_FLAG_ALLDAY : 0),
+                Invite.APPT_FLAG_EVENT | (allDayEvent ? Invite.APPT_FLAG_ALLDAY : 0),
                 partStat,
                 rsvp,
                 recurId,
@@ -460,10 +458,6 @@ public class Invite {
                 recurrenceId, dtstamp, seqno,
                 mailboxId, mailItemId, componentNum, sentByMe, fragment);
     }
-    
-    public boolean needsReply() {
-        return ((mFlags & APPT_FLAG_NEEDS_REPLY)!=0);
-    }
 
 
     /**
@@ -535,20 +529,6 @@ public class Invite {
     }
 
     /**
-     * WARNING - does NOT save the metadata.  Make sure you know that it is being
-     * saved if you call this func.
-     * 
-     * @param needsReply
-     */
-    public void setNeedsReply(boolean needsReply) {
-        if (needsReply) {
-            mFlags |= APPT_FLAG_NEEDS_REPLY;
-        } else {
-            mFlags &= ~APPT_FLAG_NEEDS_REPLY;
-        }
-    }
-    
-    /**
      * The public version updates the metadata in the DB as well
      * @param flag -- flag to up
      * @param add TRUE means set bit (OR with value) FALSE means unset bit
@@ -575,29 +555,6 @@ public class Invite {
         }
     } 
     
-    /**
-     * This API modifies the user's attendee participation status, but only for the
-     * in-memory version of the Invite.  No changes are written to the metadata.
-     * 
-     * Update this user's attendee participation status.  The
-     * APPT_FLAG_NEEDS_REPLY flag is cleared.  Metadata is updated
-     * in DB.
-     * @param mbx
-     * @param partStat "AC" (acceptec), "TE" (tentative), "DE" (declined),
-     *                 "DG" (delegated), "CO" (completed),
-     *                 "IN" (in-process)
-     * @throws ServiceException
-     */
-    public void modifyPartStatInMemory(boolean needsReply, String partStat)
-    throws ServiceException {
-        int oldFlags = mFlags;
-        boolean oldNeedsReply = needsReply();
-        setNeedsReply(needsReply);
-        if (needsReply() != oldNeedsReply || mFlags != oldFlags || !mPartStat.equals(partStat)) {
-            mPartStat = partStat;
-        }
-    }
-    
     public void setPartStat(String partStat) { mPartStat = partStat; }
     
     /**
@@ -611,7 +568,6 @@ public class Invite {
         if (iAmOrganizer) {
             setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
             setRsvp(false);
-            setNeedsReply(false);
         } else {
             ZAttendee at = getMatchingAttendee(acct);
             if (at != null) {
@@ -624,12 +580,10 @@ public class Invite {
             	if (mMethod == ICalTok.REQUEST || mMethod == ICalTok.COUNTER) {
                     setPartStat(partStat);
                     at.setPartStat(partStat);
-                    setNeedsReply(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equals(partStat));
             	}
             } else {
                 // if this is the first time we're parsing this, and we can't find ourself on the
                 // attendee list, then allow a reply...
-                setNeedsReply(true);
                 setRsvp(true);
             }
         }
@@ -835,7 +789,6 @@ public class Invite {
         sb.append(", allDay: ").append(isAllDayEvent());
         sb.append(", otherAts: ").append(hasOtherAttendees());
         sb.append(", hasAlarm: ").append(hasAlarm());
-        sb.append(", needsReply: ").append(needsReply());
         sb.append(", isRecur: ").append(isRecurrence());
         sb.append(", recurId: ").append(getRecurId());
         sb.append(", DTStamp: ").append(mDTStamp);
@@ -855,7 +808,7 @@ public class Invite {
     
     public static final int APPT_FLAG_HASALARM        = 0x10;
     public static final int APPT_FLAG_ISRECUR         = 0x20;
-    public static final int APPT_FLAG_NEEDS_REPLY     = 0x40;
+    public static final int APPT_FLAG_NEEDS_REPLY     = 0x40;  // obsolete
     
     protected Appointment mAppt = null;
     

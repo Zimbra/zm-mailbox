@@ -38,6 +38,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SetAppointmentData;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -62,7 +63,7 @@ public class SetAppointment extends CalendarRequest {
 
         public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, Account account, Element inviteElem) throws ServiceException 
         {
-            Element content = inviteElem.getOptionalElement("content");
+            Element content = inviteElem.getOptionalElement(MailService.E_CONTENT);
             if (content != null) {
                 ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteRaw(account, inviteElem);
                 return toRet;
@@ -129,13 +130,13 @@ public class SetAppointment extends CalendarRequest {
     static private SetAppointmentData getSetAppointmentData(ZimbraSoapContext lc, Account acct, Mailbox mbox, 
                                                             Element e, ParseMimeMessage.InviteParser parser)
     throws ServiceException {
-        boolean needsReply = e.getAttributeBool(MailService.A_APPT_NEEDS_REPLY, true);
-        String partStatStr = e.getAttribute(MailService.A_APPT_PARTSTAT, "TE");
-                                
+        String partStatStr = e.getAttribute(MailService.A_APPT_PARTSTAT,
+                                            IcalXmlStrMap.PARTSTAT_NEEDS_ACTION);
+
         // <M>
         Element msgElem = e.getElement(MailService.E_MSG);
 
-        
+
         // check to see whether the entire message has been uploaded under separate cover
         String attachmentId = msgElem.getAttribute(MailService.A_ATTACHMENT_ID, null);
         
@@ -157,16 +158,15 @@ public class SetAppointment extends CalendarRequest {
         
         pm.analyze();
         ZVCalendar cal = pm.getiCalendar();
-        if (cal == null) {
-            throw ServiceException.FAILURE("SetAppointment could not find an iCalendar part for <default>", null);
-        }
-        
+        if (cal == null)
+            throw ServiceException.FAILURE("SetAppointment could not build an iCalendar object", null);
+
         boolean sentByMe = false; // not applicable in the SetAppointment case
-        
+
         Invite inv = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe).get(0);
-        
-        inv.modifyPartStatInMemory(needsReply, partStatStr);
-        
+
+        inv.setPartStat(partStatStr);
+
         SetAppointmentData sadata = new SetAppointmentData();
         sadata.mInv = inv;
         sadata.mPm = pm;

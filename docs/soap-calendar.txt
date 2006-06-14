@@ -304,7 +304,9 @@ RECURRENCE SPECIFIERS!
 //
 //
 <SetAppointmentRequest [l="folder_to_create_in"]>
-  <default needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
+  <default
+      ptst="AC|TE|DE|DG|CO|IN"  // my participation status
+  >
      <m [aid="{uploaded-MIME-body-ID}"] > ...see CreateAppointmentRequest...
 **************
 ONE OF:        
@@ -324,7 +326,9 @@ OR
 *************
      </m>
   </default>
-  [<except needsReply="0|1" ptst="AC|TE|DE|DG|CO|IN">
+  [<except
+      ptst="AC|TE|DE|DG|CO|IN"  // my participation status
+   >
      <m> Same as under <default> above  
         ...
         **1 of the 3 forms above**
