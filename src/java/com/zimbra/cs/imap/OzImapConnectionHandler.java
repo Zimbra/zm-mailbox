@@ -81,7 +81,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         String mTag;
         boolean mContinue = true;
         Authenticator(String tag)  { mTag = tag; }
-        abstract boolean handle(byte[] data) throws IOException;
+        abstract boolean handle(byte[] response) throws IOException;
     }
     private class AuthPlain extends Authenticator {
         AuthPlain(String tag)  { super(tag); }
@@ -99,7 +99,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             int nul1 = message.indexOf('\0'), nul2 = message.indexOf('\0', nul1 + 1);
             if (nul1 == -1 || nul2 == -1) {
                 sendNO(mTag, "malformed authentication message");
-                return CONTINUE_PROCESSING;
+                return true;
             }
             String authorizeId = message.substring(0, nul1);
             String authenticateId = message.substring(nul1 + 1, nul2);
@@ -578,10 +578,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             // RFC 2595 6: "The PLAIN SASL mechanism MUST NOT be advertised or used
             //              unless a strong encryption layer (such as the provided by TLS)
             //              is active or backwards compatibility dictates otherwise."
-//            if (!mStartedTLS) {
-//                sendNO(tag, "cleartext logins disabled");
-//                return CONTINUE_PROCESSING;
-//            }
+            if (!mStartedTLS) {
+                sendNO(tag, "cleartext logins disabled");
+                return CONTINUE_PROCESSING;
+            }
             mAuthenticator = new AuthPlain(tag);
         } else {
             // no other AUTHENTICATE mechanisms are supported yet
