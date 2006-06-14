@@ -1,3 +1,4 @@
+//depot/main/ZimbraServer/src/java/com/zimbra/cs/mailbox/Appointment.java#86 - edit change 26666 (ktext)
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1
@@ -1417,12 +1418,10 @@ public class Appointment extends MailItem {
             try {
                 for (Class visitor : MimeVisitor.getConverters())
                     ((MimeVisitor) visitor.newInstance()).accept(mm);
-            } catch (Throwable t) {
-                // If the conversion bombs for any reason, revert to the original.  Don't
-                // handle OOME, in hope that garbage created by a 3rd party converter is
-                // collected automatically.
+            } catch (Exception e) {
+                // If the conversion bombs for any reason, revert to the original
                 ZimbraLog.mailbox.warn(
-                    "MIME converter failed for message " + getId(), t);
+                    "MIME converter failed for message " + getId(), e);
                 is = getRawMessage();
                 mm = new MimeMessage(JMSession.getSession(), is);
                 is.close();
@@ -1452,12 +1451,10 @@ public class Appointment extends MailItem {
             try {
                 for (Class visitor : MimeVisitor.getConverters())
                     ((MimeVisitor) visitor.newInstance()).accept(mm);
-            } catch (Throwable t) {
-                // If the conversion bombs for any reason, revert to the original.  Don't
-                // handle OOME, in hope that garbage created by a 3rd party converter is
-                // collected automatically.
+            } catch (Exception e) {
+                // If the conversion bombs for any reason, revert to the original
                 ZimbraLog.mailbox.warn(
-                    "MIME converter failed for message " + getId(), t);
+                    "MIME converter failed for message " + getId(), e);
                 is = getRawMessage();
                 mm = new MimeMessage(JMSession.getSession(), is);
                 is.close();

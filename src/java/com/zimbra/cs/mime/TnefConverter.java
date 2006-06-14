@@ -170,9 +170,16 @@ public class TnefConverter extends MimeVisitor {
         if (!TNEFUtils.isTNEFMimeType(bp.getContentType()))
             return null;
 
+        MimeMessage converted = null;
+        
         // convert TNEF to a MimeMessage and remove it from the parent
-        TNEFInputStream in = new TNEFInputStream(bp.getInputStream());
-        MimeMessage converted = TNEFMime.convert(JMSession.getSession(), in);
+        try {
+            TNEFInputStream in = new TNEFInputStream(bp.getInputStream());
+            converted = TNEFMime.convert(JMSession.getSession(), in);
+        } catch (Throwable t) {
+            ZimbraLog.extensions.warn("Conversion failed.  TNEF attachment will not be expanded.", t);
+            return null;
+        }
 
         MimeMultipart convertedMulti = (MimeMultipart) converted.getContent();
         // make sure that all the attachments are marked as attachments

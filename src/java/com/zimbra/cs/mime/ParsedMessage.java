@@ -1,3 +1,4 @@
+//depot/main/ZimbraServer/src/java/com/zimbra/cs/mime/ParsedMessage.java#34 - edit change 25120 (ktext)
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1
@@ -236,12 +237,10 @@ public class ParsedMessage {
                 if (mExpandedMessage != mMimeMessage)
                     ((MimeVisitor) vclass.newInstance()).accept(mExpandedMessage);
             }
-        } catch (Throwable t) {
-            // If the conversion bombs for any reason, revert to the original.  Don't
-            // handle OOME, in hope that garbage created by a 3rd party converter is
-            // collected automatically.
+        } catch (Exception e) {
+            // roll back if necessary
             mExpandedMessage = mMimeMessage;
-            sLog.warn("exception while converting message; message will be analyzed unconverted", t);
+            sLog.warn("exception while converting message; message will be analyzed unconverted", e);
         }
 
         return mExpandedMessage == mMimeMessage;
