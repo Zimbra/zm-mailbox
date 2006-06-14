@@ -43,6 +43,7 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.InvalidAttributeIdentifierException;
 import javax.naming.directory.InvalidAttributeValueException;
 import javax.naming.directory.InvalidAttributesException;
+import javax.naming.directory.SchemaViolationException;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
@@ -141,6 +142,8 @@ public class LdapEntry implements Entry {
             throw AccountServiceException.INVALID_ATTR_VALUE("invalid attr value", e);            
         } catch (InvalidAttributesException e) {
             throw ServiceException.INVALID_REQUEST("invalid set of attributes", e);
+        } catch (SchemaViolationException e) {
+            throw ServiceException.INVALID_REQUEST("LDAP schema violation: " + e.getMessage(), e);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to modify attrs", e);
         } finally {
