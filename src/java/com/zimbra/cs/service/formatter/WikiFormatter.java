@@ -70,7 +70,7 @@ public class WikiFormatter extends Formatter {
     	return getTemplate(context, item.getMailbox().getAccountId(), item.getFolderId(), item.getWikiWord());
     }
     private WikiTemplate getTemplate(Context context, Folder folder, String name) throws IOException, ServiceException {
-    	return getTemplate(context, context.authAccount.getId(), folder.getId(), name);
+    	return getTemplate(context, folder.getMailbox().getAccountId(), folder.getId(), name);
     }
     private WikiTemplate getTemplate(Context context, String accountId, int folderId, String name) throws IOException, ServiceException {
     	WikiTemplateStore wiki = WikiTemplateStore.getInstance(accountId, folderId);

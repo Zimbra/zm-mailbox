@@ -144,23 +144,25 @@ public class WikiUtil {
 		req.invoke(mUrl);
 	}
 	
-	private void initFolders() throws LmcSoapClientException, IOException, 
+	private void initFolders(String grantee, String name) throws LmcSoapClientException, IOException, 
 	SoapFaultException, ServiceException, SoapParseException {
 		System.out.println("Initializing folders ");
 		
         LmcFolder root = getRootFolder();
         LmcFolder f = findFolder(root, sDEFAULTFOLDER);
-        setFolderAccess(f, "rwid", "pub", ACL.GUID_PUBLIC, true);
+        setFolderAccess(f, "rwid", grantee, name, true);
         
         f = findFolder(root, sDEFAULTTEMPLATEFOLDER);
         if (f == null)
         	f = createFolder(root, sDEFAULTTEMPLATEFOLDER);
         
-        setFolderAccess(f, "rwid", "pub", ACL.GUID_PUBLIC, true);
+        setFolderAccess(f, "r", "pub", ACL.GUID_PUBLIC, true);
 	}
 
 	private boolean purgeFolder(LmcFolder folder) throws LmcSoapClientException, IOException, 
 			SoapFaultException, ServiceException, SoapParseException {
+		if (folder == null)
+			return true;
 		auth();
 		if (folder.getView() == null ||
 			!folder.getView().equals(sDEFAULTVIEW) ||
@@ -299,13 +301,16 @@ public class WikiUtil {
 		if (where == null)
 			where = sDEFAULTFOLDER;
 		
-        emptyNotebooks(true);
+        emptyNotebooks(where, true);
         LmcFolder root = getRootFolder();
         LmcFolder f;
         if (where.equals("/"))
         	f = root;
-        else
+        else {
         	f = findFolder(root, where);
+        	if (f == null)
+        		f = createFolder(root, where);
+        }
         
         // start populating directories and files.
         populateFolders(f, top);
@@ -376,13 +381,18 @@ public class WikiUtil {
 				throw WikiServiceException.ERROR("import", e);
 			}
 			
-		emptyNotebooks(useSoap);
+		emptyNotebooks(where, useSoap);
 		Provisioning prov = Provisioning.getInstance();
 		Account acct = prov.get(AccountBy.name, mUsername);
 		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
 		OperationContext octxt = new OperationContext(acct);
 		
-		Folder f = mbox.getFolderByPath(octxt, where);
+		Folder f = null;
+		try {
+			f = mbox.getFolderByPath(octxt, where);
+		} catch (ServiceException se) {
+			f = mbox.createFolder(octxt, where, Mailbox.ID_FOLDER_USER_ROOT, MailItem.TYPE_WIKI, null);
+		}
 		populateFolders(octxt, mbox, f, what);
 	}
 	
@@ -399,14 +409,12 @@ public class WikiUtil {
 	    }
 	}
 	
-	private void emptyNotebooks(boolean useSoap) throws ServiceException {
+	private void emptyNotebooks(String where, boolean useSoap) throws ServiceException {
 		if (useSoap)
 			try {
 				LmcFolder root = getRootFolder();
-				LmcFolder f = findFolder(root, sDEFAULTFOLDER);
+				LmcFolder f = findFolder(root, where);
 				deleteAllItemsInFolder(f, "/");
-				f = findFolder(root, sDEFAULTTEMPLATEFOLDER);
-				if (f != null) deleteAllItemsInFolder(f, "/");
 				return;
 			} catch (Exception e) {
 				throw WikiServiceException.ERROR("emptyNotebooks", e);
@@ -416,12 +424,12 @@ public class WikiUtil {
 		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
 		OperationContext octxt = new OperationContext(acct);
 		
-		Folder f = mbox.getFolderByPath(octxt, sDEFAULTFOLDER);
-		deleteItems(octxt, mbox, f);
 		try {
-			f = mbox.getFolderByPath(octxt, sDEFAULTTEMPLATEFOLDER);
+			Folder f = mbox.getFolderByPath(octxt, where);
 			deleteItems(octxt, mbox, f);
-		} catch (Exception e) {}
+		} catch (ServiceException se) {
+			
+		}
 	}
 	
 	public Account createWikiAccount() throws ServiceException {
@@ -438,10 +446,18 @@ public class WikiUtil {
 		return account;
 	}
 	
-	private void initFolders(Account account, boolean useSoap) throws ServiceException {
+	private void initFolders(Account account, boolean useSoap, Domain dom) throws ServiceException {
+		String grantee, name;
+		if (dom == null) {
+			grantee = "pub";
+			name = ACL.GUID_PUBLIC;
+		} else {
+			grantee = "dom";
+			name = dom.getName();
+		}
 		if (useSoap)
 			try {
-				initFolders();
+				initFolders(grantee, name);
 				return;
 			} catch (Exception e) {
 				throw WikiServiceException.ERROR("initFolders", e);
@@ -460,8 +476,8 @@ public class WikiUtil {
 		}
         mbox.grantAccess(octxt, 
         		Mailbox.ID_FOLDER_NOTEBOOK, 
-        		ACL.GUID_PUBLIC, 
-        		ACL.GRANTEE_PUBLIC, 
+        		name, 
+        		grantee.equals("pub") ? ACL.GRANTEE_PUBLIC : ACL.GRANTEE_DOMAIN, 
         		ACL.stringToRights("rwid"),
         		true,
         		null);
@@ -469,7 +485,7 @@ public class WikiUtil {
         		template.getId(), 
         		ACL.GUID_PUBLIC, 
         		ACL.GRANTEE_PUBLIC, 
-        		ACL.stringToRights("rwid"),
+        		ACL.stringToRights("r"),
         		true,
         		null);
 	}
@@ -489,7 +505,7 @@ public class WikiUtil {
 		}
 		
 		Account acct = createWikiAccount();
-		initFolders(acct, useSoap);
+		initFolders(acct, useSoap, null);
 		
 		HashMap<String,String> attrs = new HashMap<String,String>();
 		attrs.put(Provisioning.A_zimbraNotebookAccount, mUsername);
@@ -523,7 +539,7 @@ public class WikiUtil {
 		}
 		
 		Account acct = createWikiAccount();
-		initFolders(acct, useSoap);
+		initFolders(acct, useSoap, dom);
 		
 		HashMap<String,String> attrs = new HashMap<String,String>();
 		attrs.put(Provisioning.A_zimbraNotebookAccount, mUsername);
