@@ -462,14 +462,14 @@
  				3. start tomcat
  				4. run the target "reset-the-world-stage2" -->
 
-	<target name="reset-the-world" depends="reset-the-world-stage1,reset-the-world-stage2" 
+	<target name="reset-the-world" depends="reset-the-world-stage1,start-tomcat, reset-the-world-stage2" 
 		description="Reset the world"/>
 
 	<target name="reset-the-world-stage1" depends="clean,compile,jar,init" description="Run when tomcat is stopped." />
 
 	<target name="reset-the-world-stage2" depends="service-deploy,init-wiki,inject" description="Run when tomcat is running." />
 
-	<target name="init" depends="stop-servers,quick-init,ldap-init,tomcat-init,start-ldap,ldap-load,start-tomcat" />
+	<target name="init" depends="stop-servers,quick-init,ldap-init,tomcat-init,start-ldap,ldap-load" />
 
 	<target name="inject" depends="compile" description="Insert messages into the system">
 		<echo>Inserting default contacts: user1@${zimbra.server.hostname}</echo>
@@ -549,9 +549,7 @@
 		<echo message="to stop (or stop your tomcat as the case may be)" />
 		<echo message="and try again later." />
 		<delete>
-			<fileset dir="${zimbra.home.dir}/db">
-				<exclude name="db/**"/>
-			</fileset>
+			<fileset dir="${zimbra.home.dir}/db" excludes="data/**"/>
 		</delete>
 		
 		<delete dir="${zimbra.home.dir}/store" />
