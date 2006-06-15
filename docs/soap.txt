@@ -836,8 +836,12 @@ message-part result:
 ----------
 
 <GetFolderRequest>
-  [<folder l="{base-folder-id}"/>]
+  [<folder [l="{base-folder-id}"] [path="{fully-qualified-path}"]/>]
 </GetFolderRequest>
+
+  either a {base-folder-id} or a {fully-qualified-path} can optionally be specified;
+  if neither is present, the descent of the folder hierarchy begins at the mailbox's
+  root folder (id 1).
 
 <GetFolderResponse>
   <folder ...>
@@ -1117,8 +1121,11 @@ u attribute is present iff count > 0
 ---------
 
 <CreateMountpointRequest>
-  <link l="{folder}" name="..." zid="{owner's-zimbra-id}" rid="{id-of-shared-item}" [view="..."] [fie="1"]/>
+  <link l="{folder}" name="{mountpoint-name}" [zid="{owner's-zimbra-id}" | d="{owner's-email-address}"]
+        [rid="{id-of-shared-item}" | path="{path-to-shared-item}"] [view="..."] [fie="1"]/>
 </CreateMountpointRequest>
+
+  - caller must specify one of (zid | d) and one of (rid | path)
 
 <CreateMountpointResponse>
   <link id="{created-link-item-id}" l="{folder}" name="..." [view="..."]/>

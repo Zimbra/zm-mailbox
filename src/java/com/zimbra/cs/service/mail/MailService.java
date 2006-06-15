@@ -216,6 +216,7 @@ public class MailService implements DocumentService {
     public static final String A_INHERIT = "inh";
     public static final String A_GRANT_TYPE = "gt";
     public static final String A_REMOTE_ID = "rid";
+    public static final String A_PATH = "path";
     public static final String A_NAME = "name";
     public static final String A_DATE = "d";
     public static final String A_SENT_DATE = "sd";

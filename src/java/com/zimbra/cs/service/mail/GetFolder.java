@@ -65,8 +65,13 @@ public class GetFolder extends DocumentHandler {
 		
 		String parentId = DEFAULT_FOLDER_ID;
 		Element eFolder = request.getOptionalElement(MailService.E_FOLDER);
-		if (eFolder != null)
-			parentId = eFolder.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER_ID);
+		if (eFolder != null) {
+            String path = eFolder.getAttribute(MailService.A_PATH, null);
+            if (path != null)
+                parentId = mbox.getFolderByPath(octxt, path).getId() + "";
+            else
+                parentId = eFolder.getAttribute(MailService.A_FOLDER, DEFAULT_FOLDER_ID);
+        }
 		ItemId iid = new ItemId(parentId, lc);
 
 		Element response = lc.createElement(MailService.GET_FOLDER_RESPONSE);
@@ -74,7 +79,7 @@ public class GetFolder extends DocumentHandler {
 		GetFolderTreeOperation op = new GetFolderTreeOperation(session, octxt, mbox, Requester.SOAP, iid);
 		op.schedule();
 		FolderNode resultFolder = op.getResult();
-		
+
 		Element folderRoot = encodeFolderNode(lc, response, resultFolder);
 		if (resultFolder.mFolder instanceof Mountpoint) {
 			handleMountpoint(request, context, iid, (Mountpoint) resultFolder.mFolder, folderRoot);			
