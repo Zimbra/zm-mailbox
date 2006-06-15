@@ -36,6 +36,7 @@ import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.ToXML.OutputParticipants;
+import com.zimbra.cs.service.util.ItemId;
 
 
 /**
@@ -102,7 +103,7 @@ public final class SearchParams
     public void setWantRecipients(boolean recips) { mRecipients = recips; }
     
     public boolean hasCursor() { return mHasCursor; }
-    public void setCursor(int prevMailItemId, String prevSort, int prevOffset) {
+    public void setCursor(ItemId prevMailItemId, String prevSort, int prevOffset) {
         mHasCursor = true;
         mPrevMailItemId = prevMailItemId;
         mPrevSortValueStr = prevSort;
@@ -113,7 +114,7 @@ public final class SearchParams
         }
         mPrevOffset = prevOffset;
     }
-    public int getPrevMailItemId() { return mPrevMailItemId; }
+    public ItemId getPrevMailItemId() { return mPrevMailItemId; }
     public String getPrevSortValueStr() { return mPrevSortValueStr; }
     public long getPrevSortValueLong() { return mPrevSortValueLong; }
     public int getPrevOffset() { return mPrevOffset; }
@@ -133,7 +134,7 @@ public final class SearchParams
     // "Cursor" Data -- the three pieces of info below are enough for us to find out place in
     // the previous result set, even if entries have been added or removed from the result
     // set:
-    private int mPrevMailItemId; // the mail item ID of the last item in the previous result set
+    private ItemId mPrevMailItemId; // the mail item ID of the last item in the previous result set
     private String mPrevSortValueStr; // the sort value of the last item in the previous result set
     private long mPrevSortValueLong; // the sort value of the last item in the previous result set
     private int mPrevOffset; // the offset of the last item in the previous result set 

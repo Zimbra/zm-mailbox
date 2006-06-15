@@ -30,6 +30,7 @@ import java.util.List;
 
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 
 /**
  * @author tim
@@ -41,7 +42,7 @@ public class ResultsPager
 {
     private ZimbraQueryResults mResults;
     private MailboxIndex.SortBy mSortOrder;
-    private int mPrevMailItemId;
+    private ItemId mPrevMailItemId;
     
     private String mPrevSortValueStr;
     private long mPrevSortValueLong;
@@ -77,7 +78,7 @@ public class ResultsPager
         return toRet;
     }
     
-    public ResultsPager(ZimbraQueryResults results, MailboxIndex.SortBy sortOrder, int prevItemId, String prevSortValueStr, long prevSortValueLong, int prevOffset, 
+    public ResultsPager(ZimbraQueryResults results, MailboxIndex.SortBy sortOrder, ItemId prevItemId, String prevSortValueStr, long prevSortValueLong, int prevOffset, 
             boolean forward, int numResultsRequested) throws ServiceException {
         mResults = results;
         mSortOrder = sortOrder;
@@ -126,7 +127,7 @@ public class ResultsPager
         strVal = mPrevSortValueStr;
         dateVal = mPrevSortValueLong;
         
-        return new DummyHit(strVal, strVal, dateVal, mPrevMailItemId);
+        return new DummyHit(strVal, strVal, dateVal, mPrevMailItemId.getId());
     }
     
     private ZimbraHit forwardFindFirst() throws ServiceException {
@@ -138,7 +139,7 @@ public class ResultsPager
         while(hit != null) {
             offset++;
             
-            if (hit.getItemId() == mPrevMailItemId) {
+            if (hit.getItemId() == mPrevMailItemId.getId()) {
                 // found it!
                 return mResults.getNext();
             } 
@@ -193,12 +194,11 @@ public class ResultsPager
         while(hit != null) {
             offset++;
             
-            if (hit.getItemId() == mPrevMailItemId) {
+            if (hit.getItemId() == mPrevMailItemId.getId()) {
                 // found old one -- DON'T include it in list
                 break;
             }
             
-      
             // if (hit COMES AFTER prevSortValue) {
             if (hit.compareBySortField(mSortOrder, prevHit) > 0) {
                 break;
