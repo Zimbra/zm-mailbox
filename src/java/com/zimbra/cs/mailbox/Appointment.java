@@ -625,11 +625,13 @@ public class Appointment extends MailItem {
         ArrayList<Invite> toUpdate = new ArrayList<Invite>();
         if (!isCancel && newInvite.isRecurrence()) {
             Invite defInv = getDefaultInvite();
-            oldDtStart = defInv.getStartTime();
-            ParsedDateTime newDtStart = newInvite.getStartTime();
-            if (!newDtStart.sameTime(oldDtStart)) {
-                needRecurrenceIdUpdate = true;
-                dtStartMovedBy = newInvite.getStartTime().difference(oldDtStart);
+            if (defInv != null) {
+                oldDtStart = defInv.getStartTime();
+                ParsedDateTime newDtStart = newInvite.getStartTime();
+                if (!newDtStart.sameTime(oldDtStart)) {
+                    needRecurrenceIdUpdate = true;
+                    dtStartMovedBy = newInvite.getStartTime().difference(oldDtStart);
+                }
             }
         }
 
