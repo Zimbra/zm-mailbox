@@ -71,14 +71,11 @@ public class WikiItem extends Document {
 	
     static WikiItem create(int id, Folder folder, short volumeId, String wikiword, String author, ParsedDocument pd, MailItem parent)
     throws ServiceException {
-    	assert(parent instanceof Document);
 
         Metadata meta = new Metadata();
 		meta.put(Metadata.FN_WIKI_WORD, wikiword);
 		
         UnderlyingData data = prepareCreate(TYPE_WIKI, id, folder, volumeId, wikiword, author, WIKI_CONTENT_TYPE, pd, (Document)parent, meta);
-        if (parent != null)
-            data.parentId = parent.getId();
 
 		Mailbox mbox = folder.getMailbox();
 		data.contentChanged(mbox);

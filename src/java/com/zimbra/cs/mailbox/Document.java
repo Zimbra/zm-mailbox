@@ -31,11 +31,7 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MetadataList;
@@ -134,11 +130,17 @@ public class Document extends MailItem {
     }
 
     public DocumentRevision getRevision(int rev) throws ServiceException {
+    	if (rev < 1 || rev > mRevisionList.size())
+    		throw new IllegalArgumentException("no such revision: "+rev);
     	return new DocumentRevision(this, mRevisionList.getMap(rev-1));
     }
     
     public DocumentRevision getLastRevision() throws ServiceException {
     	return getRevision(mRevisionList.size());
+    }
+    
+    public DocumentRevision getFirstRevision() throws ServiceException {
+    	return getRevision(1);
     }
     
     public int getVersion() {
@@ -149,7 +151,7 @@ public class Document extends MailItem {
     	return getVersion() + 1;
     }
     
-    private static Metadata getRevisionMetadata(int changeID, String author, ParsedDocument pd) throws ServiceException {
+    private static Metadata getRevisionMetadata(int changeID, String author, ParsedDocument pd) {
     	Metadata rev = new Metadata();
     	rev.put(Metadata.FN_REV_ID, changeID);
     	rev.put(Metadata.FN_CREATOR, author);
@@ -228,8 +230,6 @@ public class Document extends MailItem {
     	assert(id != Mailbox.ID_AUTO_INCREMENT);
 
         UnderlyingData data = prepareCreate(TYPE_DOCUMENT, id, folder, volumeId, filename, creator, type, pd, (Document) parent, null);
-        if (parent != null)
-            data.parentId = parent.getId();
 
         Mailbox mbox = folder.getMailbox();
         data.contentChanged(mbox);
