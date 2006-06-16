@@ -1001,14 +1001,6 @@ public class Invite {
         }
     }
 
-    // Microsoft's proprietary all-day-event implementation uses
-    // an X- property.
-    static final String MICROSOFT_ALL_DAY_EVENT = "X-MICROSOFT-CDO-ALLDAYEVENT";
-    
-    // how MS Outlook sets free-busy type of a meeting
-    public static final String MICROSOFT_BUSYSTATUS = "X-MICROSOFT-CDO-BUSYSTATUS";
-    public static final String MICROSOFT_INTENDEDSTATUS = "X-MICROSOFT-CDO-INTENDEDSTATUS";
-
 //    void parseVEvent(VEvent vevent) throws ServiceException 
 //    {
 //        assert(mTzMap != null);

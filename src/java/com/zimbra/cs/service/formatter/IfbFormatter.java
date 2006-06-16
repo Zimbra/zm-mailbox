@@ -35,6 +35,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
+import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
@@ -84,7 +85,7 @@ public class IfbFormatter extends Formatter {
         StringBuffer toRet = new StringBuffer("BEGIN:VCALENDAR").append(NL);
         toRet.append("VERSION:2.0").append(NL);
         toRet.append("METHOD:PUBLISH").append(NL);
-        toRet.append("PRODID:Zimbra-Calendar-Provider").append(NL);
+        toRet.append("PRODID:").append(ZCalendar.sZimbraProdID).append(NL);
         toRet.append("BEGIN:VFREEBUSY").append(NL);
             
         toRet.append("ORGANIZER:").append(context.targetMailbox.getAccount().getName()).append(NL);

@@ -305,8 +305,32 @@ public final class ParsedDateTime {
     public boolean equals(Object obj) {
         return (compareTo(obj) == 0);
     }
-    
-    
+
+    /**
+     * Checks if two ParsedDateTime objects have the same hour, minute, second
+     * and millisecond values.  Returns false regardless of time values if the
+     * two objects have different time zones. 
+     * @param other
+     * @return
+     */
+    public boolean sameTime(ParsedDateTime other) {
+        ICalTimeZone thisTZ = getTimeZone();
+        ICalTimeZone otherTZ = other.getTimeZone();
+        if (!thisTZ.equals(otherTZ))
+            return false;
+        GregorianCalendar otherCal = other.mCal;
+        return
+            mCal.get(java.util.Calendar.HOUR_OF_DAY)
+            == otherCal.get(java.util.Calendar.HOUR_OF_DAY) &&
+            mCal.get(java.util.Calendar.MINUTE)
+            == otherCal.get(java.util.Calendar.MINUTE) &&
+            mCal.get(java.util.Calendar.SECOND)
+            == otherCal.get(java.util.Calendar.SECOND) &&
+            mCal.get(java.util.Calendar.MILLISECOND)
+            == otherCal.get(java.util.Calendar.MILLISECOND);
+    }
+
+
     static final long MSECS_PER_SEC = 1000;
     static final long MSECS_PER_MIN = MSECS_PER_SEC * 60;
     static final long MSECS_PER_HOUR = MSECS_PER_MIN * 60;

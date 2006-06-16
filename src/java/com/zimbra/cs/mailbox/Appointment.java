@@ -1,4 +1,3 @@
-//depot/main/ZimbraServer/src/java/com/zimbra/cs/mailbox/Appointment.java#86 - edit change 26666 (ktext)
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1
@@ -45,6 +44,7 @@ import java.util.TimeZone;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.MessagingException;
+import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -61,6 +61,7 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
+import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
@@ -68,6 +69,7 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoLogProvider;
@@ -613,12 +615,30 @@ public class Appointment extends MailItem {
                             "Removing organizer of an appointment is not allowed", null);
             }
         }
+
+        // If modifying recurrence series (rather than an instance) and the
+        // start time (HH:MM:SS) is changing, we need to update the time
+        // component of RECURRENCE-ID in all exception instances.
+        boolean needRecurrenceIdUpdate = false;
+        ParsedDateTime oldDtStart = null;
+        ParsedDuration dtStartMovedBy = null;
+        ArrayList<Invite> toUpdate = new ArrayList<Invite>();
+        if (!isCancel && newInvite.isRecurrence()) {
+            Invite defInv = getDefaultInvite();
+            oldDtStart = defInv.getStartTime();
+            ParsedDateTime newDtStart = newInvite.getStartTime();
+            if (!newDtStart.sameTime(oldDtStart)) {
+                needRecurrenceIdUpdate = true;
+                dtStartMovedBy = newInvite.getStartTime().difference(oldDtStart);
+            }
+        }
+
         boolean modifiedAppt = false;
         Invite prev = null; // (the first) invite which has been made obsolete by the new one coming in
         
-        ArrayList /* Invite */ toRemove = new ArrayList(); // Invites to remove from our blob store
+        ArrayList<Invite> toRemove = new ArrayList<Invite>(); // Invites to remove from our blob store
 
-        ArrayList /* Integer */ idxsToRemove = new ArrayList(); // indexes to remove from mInvites
+        ArrayList<Integer> idxsToRemove = new ArrayList<Integer>(); // indexes to remove from mInvites
         
         for (int i = 0; i < numInvites(); i++) {
             Invite cur = getInvite(i);
@@ -661,6 +681,10 @@ public class Appointment extends MailItem {
                     addNewOne = false;
                 }
 //              break; // don't stop here!  new Invite *could* obscelete multiple existing ones! 
+            } else if (needRecurrenceIdUpdate) {
+                RecurId rid = cur.getRecurId();
+                if (rid != null && rid.getDt().sameTime(oldDtStart))
+                    toUpdate.add(cur);
             }
         }
 
@@ -692,11 +716,29 @@ public class Appointment extends MailItem {
             // this might give us problems if we had two invites with conflicting TZ
             // defs....should be very unlikely
             mTzMap.add(newInvite.getTimeZoneMap());
-            
-            modifyBlob(toRemove, pm, newInvite, volumeId);
+
+            // Adjust DTSTART of RECURRENCE-ID for exceptions if DTSTART of
+            // series is changing.  Notice we're only doing this when
+            // addNewOne is true.  We don't want to make any updates if the
+            // new invite ends up getting ignored due to older SEQUENCE.
+            if (needRecurrenceIdUpdate) {
+                for (Invite inv: toUpdate) {
+                    RecurId rid = inv.getRecurId();
+                    ParsedDateTime dt = rid.getDt().add(dtStartMovedBy);
+                    RecurId newRid = new RecurId(dt, rid.getRange());
+                    inv.setRecurId(newRid);
+
+                    // For CANCELLED instances, set DTSTART to the same time
+                    // used in RECURRENCE-ID.
+                    if (ICalTok.CANCEL.toString().equals(inv.getMethod()))
+                        inv.setDtStart(dt);
+                }
+            }
+
+            modifyBlob(toRemove, toUpdate, pm, newInvite, volumeId);
             modifiedAppt = true;
         } else {
-            modifyBlob(toRemove, null, null, volumeId);
+            modifyBlob(toRemove, toUpdate, null, null, volumeId);
         }
         
         // now remove the inviteid's from our list  
@@ -840,12 +882,16 @@ public class Appointment extends MailItem {
      * new invite had no ParsedMessage: IE because it didn't actually come in via an RFC822 msg
      * 
      * @param toRemove
+     * @param toUpdate
      * @param invPm
      * @param newInv
      * @param volumeId
      * @throws ServiceException
      */
-    private void modifyBlob(ArrayList /* Invite */ toRemove, ParsedMessage invPm, Invite newInv,
+    private void modifyBlob(List<Invite> toRemove,
+                            List<Invite> toUpdate,
+                            ParsedMessage invPm,
+                            Invite newInv,
                             short volumeId)
     throws ServiceException
     {
@@ -872,9 +918,7 @@ public class Appointment extends MailItem {
             boolean updated = false;
 
             // remove invites
-            for (Iterator iter = toRemove.iterator(); iter.hasNext();) {
-                Invite remInv = (Invite)iter.next();
-                
+            for (Invite inv: toRemove) {
                 int matchedIdx;
                 do {
                     // find the matching parts...
@@ -887,7 +931,7 @@ public class Appointment extends MailItem {
                             matchedIdx = i;
                             break;
                         }
-                        if (hdrs != null && hdrs.length > 0 && (Integer.parseInt(hdrs[0])==remInv.getMailItemId())) {
+                        if (hdrs != null && hdrs.length > 0 && (Integer.parseInt(hdrs[0])==inv.getMailItemId())) {
                             matchedIdx = i;
                             break;
                         }
@@ -899,6 +943,57 @@ public class Appointment extends MailItem {
                 } while(matchedIdx > -1);
             }
 
+            // Update some invites.
+            for (Invite inv: toUpdate) {
+                MimeBodyPart mbpInv = null;
+                int numParts = mmp.getCount();
+                for (int i = 0; i < numParts; i++) {
+                    MimeBodyPart mbp = (MimeBodyPart) mmp.getBodyPart(i);
+                    String[] hdrs = mbp.getHeader("invId");
+                    if (hdrs != null && hdrs.length > 0 &&
+                        (Integer.parseInt(hdrs[0]) == inv.getMailItemId())) {
+                        mbpInv = mbp;
+                        break;
+                    }
+                }
+                if (mbpInv == null)
+                    continue;
+
+                // Find the text/calendar part and replace it.
+                String mbpInvCt = mbpInv.getContentType();
+                Object objInv = mbpInv.getContent();
+                if (!(objInv instanceof MimeMessage)) continue;
+                MimeMessage mmInv = (MimeMessage) objInv;
+                Object objMulti = mmInv.getContent();
+                if (!(objMulti instanceof MimeMultipart)) continue;
+                MimeMultipart multi = (MimeMultipart) objMulti;
+                int numSubParts = multi.getCount();
+                int icalPartNum = -1;
+                for (int j = 0; j < numSubParts; j++) {
+                    MimeBodyPart part = (MimeBodyPart) multi.getBodyPart(j);
+                    ContentType ct = new ContentType(part.getContentType());
+                    if (ct.match(Mime.CT_TEXT_CALENDAR)) {
+                        icalPartNum = j;
+                        break;
+                    }
+                }
+                if (icalPartNum != -1) {
+                    updated = true;
+                    multi.removeBodyPart(icalPartNum);
+                    ZVCalendar cal = inv.newToICalendar();
+                    String test = cal.toString();
+                    MimeBodyPart icalPart =
+                        CalendarMailSender.makeICalIntoMimePart(inv.getUid(), cal);
+                    multi.addBodyPart(icalPart, icalPartNum);
+                    // Courtesy of JavaMail.  All three lines are necessary.
+                    // Reasons unclear from JavaMail docs.
+                    mmInv.setContent(multi);
+                    mmInv.saveChanges();
+                    mbpInv.setContent(mmInv, mbpInvCt);
+                    // End of courtesy of JavaMail
+                }
+            }
+
             if (newInv != null) {
                 MimeBodyPart mbp = new MimeBodyPart();
                 mbp.setDataHandler(new DataHandler(new PMDataSource(invPm)));
@@ -906,10 +1001,9 @@ public class Appointment extends MailItem {
                 mbp.addHeader("invId", Integer.toString(newInv.getMailItemId()));
                 updated = true;
             }
-            
-            if (!updated) {
+
+            if (!updated)
                 return;
-            }
             
             if (mmp.getCount() == 0) {
                 StoreManager sm = StoreManager.getInstance();
