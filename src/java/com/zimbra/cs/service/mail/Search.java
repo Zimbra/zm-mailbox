@@ -277,6 +277,7 @@ public class Search extends DocumentHandler  {
     protected Element addMessageHit(ZimbraSoapContext zc, Element response, MessageHit mh, EmailElementCache eecache, boolean inline, SearchParams params)
     throws ServiceException {
         Message msg = mh.getMessage();
+        
         Element m;
         if (inline) {
             m = ToXML.encodeMessageAsMP(response, zc, msg, params.getWantHtml(), null);
@@ -301,21 +302,19 @@ public class Search extends DocumentHandler  {
                 }
             }
         }
-
-        if (inline && msg.isUnread() && params.getMarkRead())
+        
+        if (inline && msg.isUnread() && params.getMarkRead()) {
+            // Mark the message as READ          
             try {
-//              Mailbox mbox = msg.getMailbox();
-//              mbox.alterTag(zc.getOperationContext(), msg.getId(), msg.getType(), Flag.ID_FLAG_UNREAD, false);
-
                 ArrayList<Integer> ids = new ArrayList<Integer>(1);
                 ids.add(msg.getId());
                 ItemActionOperation.TAG(zc, null,  zc.getOperationContext(), msg.getMailbox(), Requester.SOAP, ids, MailItem.TYPE_MESSAGE, false, null, Flag.ID_FLAG_UNREAD);
-
             } catch (ServiceException e) {
                 mLog.warn("problem marking message as read (ignored): " + msg.getId(), e);
             }
-
-            return m;
+        }
+        
+        return m;
     }
 
     protected Element addMessageHit(ZimbraSoapContext zc, Element response, Message msg, EmailElementCache eecache, SearchParams params) {

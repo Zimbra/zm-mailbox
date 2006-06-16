@@ -169,7 +169,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
                 noResults = true;
             }
 
-            if (cid == 0) {
+            if (convId == 0) {
                 convId = cid;
             } else {
                 if (DBQueryOperation.mLog.isDebugEnabled()) {
