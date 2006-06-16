@@ -173,6 +173,7 @@ public class MailService implements DocumentService {
 
     public static final String E_MAILBOX = "mbx";
     public static final String E_CONV = "c";
+    public static final String E_CURSOR = "cursor";
 	public static final String E_MSG = "m";
 	public static final String E_NOTE = "note";
 	public static final String E_TAG = "tag";
@@ -281,6 +282,7 @@ public class MailService implements DocumentService {
     public static final String A_GROUPBY = "groupBy";
     public static final String A_SEARCH_TYPES = "types";
     public static final String A_SORTBY = "sortBy";
+    public static final String A_SORTVAL = "sortVal";    
     public static final String A_FETCH = "fetch";
     public static final String A_RECIPIENTS = "recip";
     public static final String A_CONTENTMATCHED = "cm";

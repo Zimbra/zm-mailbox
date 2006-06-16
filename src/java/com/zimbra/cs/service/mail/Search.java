@@ -128,7 +128,7 @@ public class Search extends DocumentHandler  {
         }
         params.setWantRecipients(request.getAttributeBool(MailService.A_RECIPIENTS, false));
 
-        Element cursor = request.getOptionalElement("cursor");
+        Element cursor = request.getOptionalElement(MailService.E_CURSOR);
         if (cursor != null) {
 //            int prevMailItemId = (int)cursor.getAttributeLong(MailService.A_ID);
 //          int prevOffset = (int)cursor.getAttributeLong(MailService.A_QUERY_OFFSET);
@@ -139,7 +139,7 @@ public class Search extends DocumentHandler  {
                 prevMailItemId = new ItemId(cursorStr, zc);
             
             int prevOffset = 0;
-            String sortVal = cursor.getAttribute("sortVal");
+            String sortVal = cursor.getAttribute(MailService.A_SORTVAL);
             params.setCursor(prevMailItemId, sortVal, prevOffset);
         }
 
