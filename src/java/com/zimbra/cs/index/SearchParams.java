@@ -66,7 +66,14 @@ public final class SearchParams
 
     public void setQueryStr(String queryStr) { mQueryStr = queryStr; }
     public void setOffset(int offset) { mOffset = offset; }
+    
     public void setLimit(int limit) { mLimit = limit; }
+    
+    // since the results are iterator-based, the "limit" is really the same as the chunk size at this point
+    // ie, the limit is used to tell the system approximately how many results you want and it tries to get them
+    // in a single chunk --- but it isn't until you do the results iteration that the limit is enforced.
+    public void setChunkSize(int chunkSize) { setLimit(chunkSize); } 
+    
     public void setTypesStr(String groupByStr) throws ServiceException {
         mGroupByStr = groupByStr;
         types = MailboxIndex.parseGroupByString(getTypesStr());

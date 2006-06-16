@@ -42,6 +42,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.imap.ImapSession.EnabledHack;
 import com.zimbra.cs.imap.ImapSession.ImapFlag;
+import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
@@ -49,8 +50,14 @@ import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.operation.AlterTagOperation;
+import com.zimbra.cs.operation.CopyOperation;
 import com.zimbra.cs.operation.CreateFolderOperation;
+import com.zimbra.cs.operation.CreateTagOperation;
+import com.zimbra.cs.operation.DeleteOperation;
 import com.zimbra.cs.operation.GetFolderOperation;
+import com.zimbra.cs.operation.SearchOperation;
+import com.zimbra.cs.operation.SetTagsOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ThreadLocalData;
@@ -1145,7 +1152,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     if (newTags == null)
                         continue;
                     // notification will update mTags hash
-                    Tag ltag = mMailbox.createTag(getContext(), name, MailItem.DEFAULT_COLOR);
+                    CreateTagOperation op = new CreateTagOperation(mSession, getContext(), mMailbox, Requester.IMAP, name, MailItem.DEFAULT_COLOR);
+                    op.schedule();
+                    Tag ltag = op.getTag();
+                    
                     newTags.add(ltag);
                     i4flag = mSession.getFlagByName(name);
                 }
@@ -1159,7 +1169,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             for (Tag ltag : ltags)
                 try {
                     // notification will update mTags hash
-                    mMailbox.delete(getContext(), ltag.getId(), MailItem.TYPE_TAG);
+//                    mMailbox.delete(getContext(), ltag.getId(), MailItem.TYPE_TAG);
+                    DeleteOperation op = new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP, ltag.getId(), MailItem.TYPE_TAG);
+                    op.schedule();
+                    
                 } catch (ServiceException e) {
                     ZimbraLog.imap.warn("failed to delete tag: " + ltag.getName(), e);
                 }
@@ -1353,7 +1366,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     // FIXME: it'd be nice to have a bulk-delete Mailbox operation
                     try {
                         ZimbraLog.imap.debug("  ** deleting: " + i4msg.msgId);
-                        mMailbox.delete(getContext(), i4msg.msgId, i4msg.getType());
+                        
+//                        mMailbox.delete(getContext(), i4msg.msgId, i4msg.getType());
+                        DeleteOperation delOp = new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP,  i4msg.msgId, i4msg.getType());
+                        delOp.schedule();
                     } catch (MailServiceException.NoSuchItemException nsie) { }
                     // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                     long now = System.currentTimeMillis();
@@ -1405,7 +1421,16 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     search = '(' + i4folder.getQuery() + ") (" + search + ')';
                 ZimbraLog.imap.info("[ search is: " + search + " ]");
 
-                ZimbraQueryResults zqr = mMailbox.search(getContext(), search, ITEM_TYPES, MailboxIndex.SortBy.DATE_ASCENDING, 1000);
+                // ZimbraQueryResults zqr = mMailbox.search(getContext(), search, ITEM_TYPES, MailboxIndex.SortBy.DATE_ASCENDING, 1000);
+                SearchParams params = new SearchParams();
+                params.setQueryStr(search);
+                params.setTypes(ITEM_TYPES);
+                params.setSortBy(MailboxIndex.SortBy.DATE_ASCENDING);
+                params.setChunkSize(2000);
+                SearchOperation op = new SearchOperation(mSession, getContext(), mMailbox, Requester.IMAP, params);   
+                op.schedule();
+                ZimbraQueryResults zqr = op.getResults();
+                
                 try {
                     for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
                         ImapMessage i4msg = mSession.getFolder().getById(hit.getItemId());
@@ -1416,14 +1441,17 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     zqr.doneWithSearchResults();
                 }
             }
-		} catch (ParseException e) {
-            ZimbraLog.imap.warn("SEARCH failed (bad query)", e);
-            sendNO(tag, "SEARCH failed");
-            return CONTINUE_PROCESSING;
         } catch (Exception e) {
-            ZimbraLog.imap.warn("SEARCH failed", e);
-            sendNO(tag, "SEARCH failed");
-            return CONTINUE_PROCESSING;
+            Throwable t = e.getCause();
+            if (t != null && t instanceof ParseException) {
+                ZimbraLog.imap.warn("SEARCH failed (bad query)", e);
+                sendNO(tag, "SEARCH failed");
+                return CONTINUE_PROCESSING;
+            } else {
+                ZimbraLog.imap.warn("SEARCH failed", e);
+                sendNO(tag, "SEARCH failed");
+                return CONTINUE_PROCESSING;
+            }
 		}
 
         Collections.sort(hits);
@@ -1555,8 +1583,12 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     result.print(empty ? "" : " ");  pspec.write(result, baos, mm);  empty = false;
                 }
                 // FIXME: optimize by doing a single mark-read op on multiple messages
-                if (markMessage)
-                    mMailbox.alterTag(getContext(), i4msg.msgId, i4msg.getType(), Flag.ID_FLAG_UNREAD, false);
+                if (markMessage) {
+//                    mMailbox.alterTag(getContext(), i4msg.msgId, i4msg.getType(), Flag.ID_FLAG_UNREAD, false);
+                    AlterTagOperation op = new AlterTagOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType(), Flag.ID_FLAG_UNREAD, false);
+                    op.schedule();
+                }
+                    
                 // 6.4.5: "The \Seen flag is implicitly set; if this causes the flags to
                 //         change, they SHOULD be included as part of the FETCH responses."
                 if ((attributes & FETCH_FLAGS) != 0 || markMessage) {
@@ -1648,8 +1680,12 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                                 // if it was a STORE [+-]?FLAGS.SILENT, temporarily disable notifications
                                 if (silent)
                                     mSession.getFolder().disableNotifications();
+                                
                                 // actually alter the item's flags
-                                mMailbox.setTags(getContext(), i4msg.msgId, i4msg.getType(), flags, tags);
+                                // mMailbox.setTags(getContext(), i4msg.msgId, i4msg.getType(), flags, tags);
+                                SetTagsOperation op = new SetTagsOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType(), flags, tags);
+                                op.schedule();
+                                
                                 // i4msg's permanent flags/tags will be updated via notification
                                 i4msg.setSessionFlags(sflags);
                             } catch (MailServiceException.NoSuchItemException nsie) {
@@ -1737,10 +1773,15 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             for (ImapMessage i4msg : i4set) {
                 if (i4msg == null)
                     continue;
+                
                 // FIXME: should optimize to a move, as 95% of IMAP COPY ops are really moves...
-                MailItem copy = mMailbox.copy(getContext(), i4msg.msgId, i4msg.getType(), folder.getId());
-                if (copy == null)
-                    continue;
+//                MailItem copy = mMailbox.copy(getContext(), i4msg.msgId, i4msg.getType(), folder.getId());
+//                if (copy == null)
+//                    continue;
+                CopyOperation op = new CopyOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType(), folder.getId());
+                op.schedule();
+                MailItem copy = op.getResult();
+                
                 newMessages.add(copy);
                 srcUIDs.add(i4msg.imapUid);
                 copyUIDs.add(copy.getId());
@@ -1791,7 +1832,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         if (messages != null && !messages.isEmpty()) {
             for (MailItem item : messages)
                 try {
-                    mMailbox.delete(getContext(), item.getId(), item.getType());
+//                    mMailbox.delete(getContext(), item.getId(), item.getType());
+                    DeleteOperation delOp = new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP,  item.getId(), item.getType());
+                    delOp.schedule();
+                    
                 } catch (ServiceException e) {
                     ZimbraLog.imap.warn("could not roll back creation of message", e);
                 }
