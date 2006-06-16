@@ -107,7 +107,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             if (authorizeId.equals(""))
                 authorizeId = authenticateId;
 
-            mContinue = login(authorizeId, authenticateId, password, "AUTHENTICATE", mTag);
+            mContinue = login(authenticateId, authorizeId, password, "AUTHENTICATE", mTag);
             return true;
         }
     }
@@ -615,7 +615,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         return login(username, username, password, "LOGIN", tag);
     }
 
-    boolean login(String authorizeId, String username, String password, String command, String tag) throws IOException {
+    boolean login(String authenticateId, String username, String password, String command, String tag) throws IOException {
         // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username
         EnabledHack hack = EnabledHack.NONE;
         if (username.endsWith("/wm")) {
@@ -624,7 +624,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         }
 
         try {
-            Account account = authenticate(authorizeId, username, password, command, tag);
+            Account account = authenticate(authenticateId, username, password, command, tag);
             ImapSession session = startSession(account, hack, command, tag);
             if (session == null)
                 return CONTINUE_PROCESSING;
@@ -650,10 +650,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         return CONTINUE_PROCESSING;
     }
 
-    private Account authenticate(String authorizeId, String authenticateId, String password, String command, String tag) throws ServiceException, IOException {
+    private Account authenticate(String authenticateId, String username, String password, String command, String tag) throws ServiceException, IOException {
         Provisioning prov = Provisioning.getInstance();
-        Account account = prov.get(AccountBy.name, authenticateId);
-        Account authacct = authorizeId.equals("") ? account : prov.get(AccountBy.name, authorizeId);
+        Account account = prov.get(AccountBy.name, username);
+        Account authacct = username.equals("") ? account : prov.get(AccountBy.name, authenticateId);
         if (account == null || authacct == null) {
             sendNO(tag, command + " failed");
             return null;
