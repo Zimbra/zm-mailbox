@@ -589,7 +589,7 @@
 	</target>
 
 	<target name="init-opt-zimbra" description="Push changes to /opt/zimbra">
-		<copy tofile="${zimbra.home.dir}/conf/localconfig.xml" file="${config.dir}/localconfig-dev.xml" />
+		<copy tofile="${zimbra.home.dir}/conf/localconfig.xml" file="${config.dir}/localconfig-dev.xml" overwrite="true" />
 		<echo message="Updating ${zimbra.home.dir}/conf/log4j.properties; if it fails on windows, try again." />
 		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" />
 	</target>
