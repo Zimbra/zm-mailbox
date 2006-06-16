@@ -53,6 +53,13 @@ public class ZimbraNamespace {
     public static final String A_ONERROR = "onerror";
     public static final String DEF_ONERROR = "continue";
     
+    public static final String E_NOTIFY   = "notify";
+    public static final String E_REFRESH  = "refresh";
+    public static final String E_TAGS     = "tags";
+    public static final String E_CREATED  = "created";
+    public static final String E_DELETED  = "deleted";
+    public static final String E_MODIFIED = "modified";
+    
 	public static final String ZIMBRA_ACCOUNT_STR = "urn:zimbraAccount";
 	public static final Namespace ZIMBRA_ACCOUNT = Namespace.get(ZIMBRA_ACCOUNT_STR);
 

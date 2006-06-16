@@ -45,6 +45,7 @@ import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.soap.Element;
+import com.zimbra.soap.ZimbraNamespace;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import org.apache.commons.logging.Log;
@@ -242,13 +243,6 @@ public class SoapSession extends Session {
         }
     }
 
-    private static final String E_NOTIFY   = "notify";
-    private static final String E_REFRESH  = "refresh";
-    private static final String E_TAGS     = "tags";
-    private static final String E_CREATED  = "created";
-    private static final String E_DELETED  = "deleted";
-    private static final String E_MODIFIED = "modified";
-
     private static final String A_ID = "id";
 
     /** Serializes basic folder/tag structure to a SOAP response header.
@@ -270,7 +264,7 @@ public class SoapSession extends Session {
             mSentChanges.clear();
         }
 
-        Element eRefresh = ctxt.addUniqueElement(E_REFRESH);
+        Element eRefresh = ctxt.addUniqueElement(ZimbraNamespace.E_REFRESH);
 
         Mailbox mbox = Mailbox.getMailboxByAccountId(mAccountId);
         Mailbox.OperationContext octxt = zc.getOperationContext();
@@ -284,7 +278,7 @@ public class SoapSession extends Session {
             // dump all tags under a single <tags> parent
             List tags = mbox.getTagList(octxt);
             if (tags != null && tags.size() > 0) {
-                Element eTags = eRefresh.addUniqueElement(E_TAGS);
+                Element eTags = eRefresh.addUniqueElement(ZimbraNamespace.E_TAGS);
                 for (Iterator it = tags.iterator(); it.hasNext(); ) {
                     Tag tag = (Tag) it.next();
                     if (tag != null && !(tag instanceof Flag))
@@ -429,7 +423,7 @@ public class SoapSession extends Session {
         assert(pm.getSeqNo() > 0);
         
         // <notify [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
-        Element eNotify = parent.addElement(E_NOTIFY)
+        Element eNotify = parent.addElement(ZimbraNamespace.E_NOTIFY)
                               .addAttribute(ZimbraSoapContext.A_ACCOUNT_ID, explicitAcct)
                               .addAttribute(ZimbraSoapContext.A_SEQNO, pm.getSeqNo());
                               
@@ -445,12 +439,12 @@ public class SoapSession extends Session {
                 else if (obj instanceof Integer)
                     ids.append(obj);
             }
-            Element eDeleted = eNotify.addUniqueElement(E_DELETED);
+            Element eDeleted = eNotify.addUniqueElement(ZimbraNamespace.E_DELETED);
             eDeleted.addAttribute(A_ID, ids.toString());
         }
 
         if (pm.created != null && pm.created.size() > 0) {
-            Element eCreated = eNotify.addUniqueElement(E_CREATED);
+            Element eCreated = eNotify.addUniqueElement(ZimbraNamespace.E_CREATED);
             for (Iterator it = pm.created.values().iterator(); it.hasNext(); ) {
                 MailItem mi = (MailItem) it.next();
                 try {
@@ -463,7 +457,7 @@ public class SoapSession extends Session {
         }
 
         if (pm.modified != null && pm.modified.size() > 0) {
-            Element eModified = eNotify.addUniqueElement(E_MODIFIED);
+            Element eModified = eNotify.addUniqueElement(ZimbraNamespace.E_MODIFIED);
             for (Iterator it = pm.modified.values().iterator(); it.hasNext(); ) {
                 Change chg = (Change) it.next();
                 if (chg.why != 0 && chg.what instanceof MailItem) {
