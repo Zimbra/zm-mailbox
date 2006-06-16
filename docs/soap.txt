@@ -106,6 +106,7 @@ element involving the session.)  If there is a session, there will be a
        <sessionId id="{session-id}" [type="admin"]/>
        <change token="{change-id}"/>
        [<refresh>
+          <mbx s="{bytes-used}"/>       
           <tags>
             <-- all tags listed -->
           </tags>
@@ -172,6 +173,7 @@ response:
      <context xmlns="urn:zimbra">
        <sessionId id="{session-id}" [type="admin"]>
        [<refresh>
+          <mbx s="{bytes-used}"/>
           <tags>
             <-- all tags listed -->
           </tags>
