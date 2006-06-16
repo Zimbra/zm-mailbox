@@ -74,19 +74,12 @@ public abstract class Wiki {
 	
 	protected static Map<Pair<String,String>,Wiki> wikiMap;
 
-	protected static Server localServer;
-	
 	protected static final String WIKI_FOLDER     = "notebook";
 	protected static final String TEMPLATE_FOLDER = "/template";
 	protected static final int    WIKI_FOLDER_ID  = 12;
 	
 	static {
 		wikiMap = new HashMap<Pair<String,String>,Wiki>();
-		try {
-			localServer = Provisioning.getInstance().getLocalServer();
-		} catch (ServiceException se) {
-			
-		}
 	}
 	
 	public static class WikiContext {
@@ -190,7 +183,8 @@ public abstract class Wiki {
 			mFolderId = fid;
 			
 			Server acctServer = Provisioning.getInstance().getServer(acct);
-			if (acctServer.equals(localServer)) {
+			Server localServer = Provisioning.getInstance().getLocalServer();
+			if (acctServer.getId().equals(localServer.getId())) {
 				Mailbox mbox = Mailbox.getMailboxByAccount(acct);
 				if (mbox == null)
 					throw WikiServiceException.ERROR("wiki account mailbox not found");
@@ -472,7 +466,8 @@ public abstract class Wiki {
 			Provisioning prov = Provisioning.getInstance();
 			Account account = prov.get(Provisioning.AccountBy.id, acct);
 			Server acctServer = Provisioning.getInstance().getServer(account);
-			if (acctServer.equals(localServer)) {
+			Server localServer = Provisioning.getInstance().getLocalServer();
+			if (acctServer.getId().equals(localServer.getId())) {
 				Mailbox mbox = Mailbox.getMailboxByAccount(account);
 				int fid = mbox.getFolderByPath(ctxt.octxt, key).getId();
 				return getInstance(ctxt, acct, fid);
