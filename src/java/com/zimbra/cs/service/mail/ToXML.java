@@ -46,10 +46,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.html.HtmlDefang;
-import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Appointment.Instance;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -67,11 +64,9 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.mail.EmailElementCache.CacheNode;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.StringUtil;
-import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -1307,10 +1302,8 @@ public class ToXML {
 	public static Element encodeRestUrl(Element m, MailItem item) {
 		try {
 			Account account = item.getMailbox().getAccount();
-			Server s = Provisioning.getInstance().getServer(account);
-			StringBuilder path = new StringBuilder();
-			path.append(UserServlet.SERVLET_PATH).append("/").append(account.getUid()).append(item.getPath());
-			return m.addAttribute(MailService.A_REST_URL, URLUtil.getMailURL(s, path.toString(), false));
+			String url = UserServlet.getRestUrl(account, false);
+			return m.addAttribute(MailService.A_REST_URL, url + item.getPath());
 		} catch (ServiceException se) {
 			mLog.error("cannot generate REST url", se);
 			return m;

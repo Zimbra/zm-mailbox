@@ -42,7 +42,8 @@ import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.cs.wiki.WikiWord;
+import com.zimbra.cs.wiki.Wiki.WikiContext;
+import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -136,9 +137,9 @@ public class SaveDocument extends WikiDocumentHandler {
         				itemId,
         				docElem.getAttributeLong(MailService.A_VERSION, 0),
         				name);
-        
-        WikiWord ww = wiki.createDocument(octxt, ctype, name, getAuthor(lc), doc.contents);
-        Document docItem = ww.getWikiItem(octxt);
+        WikiContext ctxt = new WikiContext(octxt, lc.getRawAuthToken());
+        WikiPage ww = wiki.createDocument(ctxt, ctype, name, getAuthor(lc), doc.contents);
+        Document docItem = ww.getWikiItem(ctxt);
 
         Element response = lc.createElement(MailService.SAVE_DOCUMENT_RESPONSE);
         Element m = response.addElement(MailService.E_DOC);

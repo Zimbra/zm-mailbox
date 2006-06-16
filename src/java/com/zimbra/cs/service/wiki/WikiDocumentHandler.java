@@ -30,7 +30,8 @@ import com.zimbra.cs.service.ServiceException.Argument;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.cs.wiki.WikiWord;
+import com.zimbra.cs.wiki.WikiPage;
+import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -57,12 +58,13 @@ public abstract class WikiDocumentHandler extends DocumentHandler {
 	protected Wiki getRequestedWikiNotebook(Element request, ZimbraSoapContext lc) throws ServiceException {
 		ItemId fid = getRequestedFolder(request);
 		String accountId = lc.getAuthtokenAccountId();
+		WikiContext ctxt = new WikiContext(lc.getOperationContext(), lc.getRawAuthToken());
 		if (fid == null) {
-			return Wiki.getInstance(lc.getAuthtokenAccount());
+			return Wiki.getInstance(ctxt, accountId);
 		} else if (!fid.belongsTo(lc.getAuthtokenAccount())) {
 			accountId = fid.getAccountId();
 		}
-		return Wiki.getInstance(accountId, fid.getId());
+		return Wiki.getInstance(ctxt, accountId, fid.getId());
 	}
 	
 	protected void validateRequest(Wiki wiki, int itemId, long ver, String wikiWord) throws ServiceException {
@@ -70,14 +72,14 @@ public abstract class WikiDocumentHandler extends DocumentHandler {
 			if (itemId != 0 || ver != 0) {
 				throw new IllegalArgumentException("either itemId or version is zero");
 			}
-			WikiWord ww = wiki.lookupWiki(wikiWord);
+			WikiPage ww = wiki.lookupWiki(wikiWord);
 			if (ww != null) {
 				throw MailServiceException.ALREADY_EXISTS("wiki word "+wikiWord+" in folder "+wiki.getWikiFolderId(),
 						new Argument(MailService.A_ID, ww.getId()),
 						new Argument(MailService.A_VERSION, ww.getLastRevision()));
 			}
 		} else {
-			WikiWord ww = wiki.lookupWiki(wikiWord);
+			WikiPage ww = wiki.lookupWiki(wikiWord);
 			if (ww.getId() != itemId) {
 				throw MailServiceException.INVALID_ID(itemId);
 			}

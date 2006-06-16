@@ -156,7 +156,7 @@ public class LmcSearchRequest extends LmcSoapRequest {
     protected LmcSoapResponse parseResponseXML(Element responseXML)
 	    throws ServiceException, LmcSoapClientException 
     {
-		LmcSearchConvResponse response = new LmcSearchConvResponse();
+		LmcSearchResponse response = new LmcSearchResponse();
 		parseResponse(response, responseXML);
 		return response;
 	}

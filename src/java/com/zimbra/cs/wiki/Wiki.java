@@ -30,12 +30,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.client.LmcDocument;
+import com.zimbra.cs.client.LmcFolder;
+import com.zimbra.cs.client.LmcSession;
+import com.zimbra.cs.client.soap.LmcGetFolderRequest;
+import com.zimbra.cs.client.soap.LmcGetFolderResponse;
+import com.zimbra.cs.client.soap.LmcSearchRequest;
+import com.zimbra.cs.client.soap.LmcSearchResponse;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -43,7 +54,10 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.session.WikiSession;
 import com.zimbra.cs.util.Pair;
 
@@ -53,19 +67,35 @@ import com.zimbra.cs.util.Pair;
  * @author jylee
  *
  */
-public class Wiki {
-	private String mWikiAccount;
-	private int    mFolderId;
+public abstract class Wiki {
+	protected String mWikiAccount;
 	
-	private Map<String,WikiWord>    mWikiWords;
+	protected Map<String,WikiPage> mWikiWords;
 	
-	private static Map<Pair<String,String>,Wiki> wikiMap;
+	protected static Map<Pair<String,String>,Wiki> wikiMap;
+
+	protected static Server localServer;
 	
-	private static final String WIKI_FOLDER     = "notebook";
-	private static final String TEMPLATE_FOLDER = "template";
+	protected static final String WIKI_FOLDER     = "notebook";
+	protected static final String TEMPLATE_FOLDER = "/template";
+	protected static final int    WIKI_FOLDER_ID  = 12;
 	
 	static {
 		wikiMap = new HashMap<Pair<String,String>,Wiki>();
+		try {
+			localServer = Provisioning.getInstance().getLocalServer();
+		} catch (ServiceException se) {
+			
+		}
+	}
+	
+	public static class WikiContext {
+		OperationContext octxt;
+		String           auth;
+		
+		public WikiContext(OperationContext o, String a) {
+			octxt = o; auth = a;
+		}
 	}
 	
 	static class WikiUrl {
@@ -107,13 +137,13 @@ public class Wiki {
 			else
 				mFilename = mUrl;
 		}
-		public Folder getFolder(OperationContext octxt, String accountId) throws ServiceException {
-			return (Folder)getItemByPath(octxt, accountId, true);
+		public Folder getFolder(WikiContext ctxt, String accountId) throws ServiceException {
+			return (Folder)getItemByPath(ctxt, accountId, true);
 		}
-		public MailItem getItem(OperationContext octxt, String accountId) throws ServiceException {
-			return getItemByPath(octxt, accountId, false);
+		public MailItem getItem(WikiContext ctxt, String accountId) throws ServiceException {
+			return getItemByPath(ctxt, accountId, false);
 		}
-		public MailItem getItemByPath(OperationContext octxt, String accountId, boolean getFolder) throws ServiceException {
+		public MailItem getItemByPath(WikiContext ctxt, String accountId, boolean getFolder) throws ServiceException {
 			Iterator<String> iter = mTokens.listIterator();
 			int fid = Mailbox.ID_FOLDER_USER_ROOT;
 			String root = iter.next();
@@ -125,7 +155,7 @@ public class Wiki {
 			}
 			
 			Mailbox mbox = Mailbox.getMailboxByAccountId(accountId);
-			return mbox.getItemByPath(octxt, iter.next(), fid, getFolder);
+			return mbox.getItemByPath(ctxt.octxt, iter.next(), fid, getFolder);
 		}
 		public boolean isAbsolute() {
 			return (mTokens != null &&
@@ -143,11 +173,173 @@ public class Wiki {
 		}
 	}
 	
-	public static int getDefaultFolderId(Account acct) throws ServiceException {
-		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
-		OperationContext octxt = new OperationContext(acct);
-		Folder f = mbox.getFolderByPath(octxt, WIKI_FOLDER);
-		return f.getId();
+	/*
+	 * Mainly used for local accounts.  It's easier to
+	 * manage and navigate folders with folder ID.
+	 */
+	public static class WikiById extends Wiki {
+		protected int    mFolderId;
+		protected int    mParentFolderId;
+		
+		private WikiById(WikiContext ctxt, Account acct, int fid) throws ServiceException {
+			if (!acct.getBooleanAttr("zimbraFeatureNotebookEnabled", false))
+				throw WikiServiceException.NOT_ENABLED();
+			
+			mWikiWords = new HashMap<String,WikiPage>();
+			mWikiAccount = acct.getId();
+			mFolderId = fid;
+			
+			Server acctServer = Provisioning.getInstance().getServer(acct);
+			if (acctServer.equals(localServer)) {
+				Mailbox mbox = Mailbox.getMailboxByAccount(acct);
+				if (mbox == null)
+					throw WikiServiceException.ERROR("wiki account mailbox not found");
+				Folder f = mbox.getFolderById(ctxt.octxt, mFolderId);
+				mParentFolderId = f.getFolderId();
+				loadWiki(ctxt, mbox);
+				mbox.addListener(WikiSession.getInstance());
+			} else {
+				// for some reason if the account is not local, but we have folder id.
+				loadRemoteWiki(ctxt, acct, acctServer);
+			}
+		}
+		
+		public WikiPage lookupWiki(String wikiWord) {
+			return mWikiWords.get(wikiWord);
+		}
+		
+		public String getKey() {
+			return Integer.toString(mFolderId);
+		}
+		
+		public String getParentKey() {
+			if (mParentFolderId == Mailbox.ID_FOLDER_ROOT) {
+				return null;
+			}
+			return Integer.toString(mParentFolderId);
+		}
+
+		/*
+		 * populate the wiki list from the MailItem's in the Mailbox.
+		 */
+		private void loadWiki(WikiContext ctxt, Mailbox mbox) throws ServiceException {
+		    List<Document> wikiList = mbox.getWikiList(ctxt.octxt, mFolderId);
+		    for (Document item : wikiList) {
+		    	addDoc(item);
+		    }
+		}
+
+		/*
+		 * populate the wiki list from the remote machine.
+		 */
+		private void loadRemoteWiki(WikiContext ctxt, Account acct, Server remoteServer) throws ServiceException {
+			String auth = ctxt.auth;
+			try {
+				if (auth == null)
+					auth = AuthToken.getZimbraAdminAuthToken().getEncoded();
+
+				String url = URLUtil.getMailURL(remoteServer, ZimbraServlet.USER_SERVICE_URI, false);
+
+				LmcSession session = new LmcSession(auth, null);
+
+				LmcFolder folder = getRemoteFolder(ctxt, acct, remoteServer, mFolderId);
+				ItemId pfid = new ItemId(folder.getParentID(), null);
+		        mParentFolderId = pfid.getId();
+				
+				LmcSearchRequest sreq = new LmcSearchRequest();
+				sreq.setRequestedAccountId(acct.getId());
+				sreq.setSession(session);
+				sreq.setTypes("wiki,document");
+				sreq.setLimit("100");
+				sreq.setOffset("0");
+				sreq.setQuery("inid:" + mFolderId);
+
+				LmcSearchResponse sresp = (LmcSearchResponse)sreq.invoke(url);
+
+				List ls = sresp.getResults();
+				for (Object obj : ls) {
+					if (obj instanceof LmcDocument) {
+						WikiPage wp = WikiPage.create((LmcDocument)obj);
+						mWikiWords.put(wp.getWikiWord(), wp);
+					} else {
+						// unhandled item
+					}
+				}
+			} catch (Exception e) {
+				throw WikiServiceException.ERROR("can't load remote wiki", e);
+			}
+		}
+		
+		public synchronized WikiPage createDocument(WikiContext ctxt, String ct, String filename, String author, byte[] data, byte type) throws ServiceException {
+			WikiPage ww = lookupWiki(filename);
+			
+			if (ww == null) {
+				ww = WikiPage.create(filename);
+				mWikiWords.put(filename, ww);
+			}
+			ww.addWikiItem(ctxt, mWikiAccount, mFolderId, filename, ct, author, data, type);
+			return ww;
+		}
+		
+		public int getWikiFolderId() {
+			return mFolderId;
+		}
+		
+	}
+	
+	/*
+	 * This is for remote accounts.  Since folder ID is not readily available,
+	 * key off the path of the item.
+	 */
+	public static class WikiByPath extends Wiki {
+		private String mPath;
+		private String mRestUrl;
+		
+		private WikiByPath(WikiContext ctxt, Account acct, String path) throws ServiceException {
+			if (!acct.getBooleanAttr("zimbraFeatureNotebookEnabled", false))
+				throw WikiServiceException.NOT_ENABLED();
+			
+			mWikiWords = new HashMap<String,WikiPage>();
+			mWikiAccount = acct.getId();
+			mPath = path;
+			StringBuilder buf = new StringBuilder();
+			buf.append(UserServlet.getRestUrl(acct, false));
+			if (!path.startsWith("/"))
+				buf.append("/");
+			buf.append(path);
+			if (!path.endsWith("/"))
+				buf.append("/");
+			mRestUrl = buf.toString();
+		}
+
+		public String getKey() {
+			return mPath;
+		}
+		
+		public String getParentKey() {
+			int pos = mPath.lastIndexOf('/');
+			if (pos < 0)
+				return null;
+			return mPath.substring(0, pos);
+		}
+		
+		public WikiPage lookupWiki(String wikiWord) {
+			WikiPage page = mWikiWords.get(wikiWord);
+			if (page == null) {
+				// if we have a cache of Wiki pages whose mailbox is on another machine,
+				// the cache may not be complete.  create an instance of WikiPage and
+				// set the REST url for retrieval.
+				page = WikiPage.create(wikiWord, mRestUrl);
+			}			
+			return page;
+		}
+		
+		public synchronized WikiPage createDocument(WikiContext ctxt, String ct, String filename, String author, byte[] data, byte type) throws ServiceException {
+			throw WikiServiceException.ERROR("createDocument on a remote wiki: not implemented");
+		}
+		public int getWikiFolderId() throws ServiceException {
+			throw WikiServiceException.ERROR("createDocument on a remote wiki: not implemented");
+		}
 	}
 	
 	public static Account getDefaultWikiAccount() throws ServiceException {
@@ -163,11 +355,7 @@ public class Wiki {
 		return acct;
 	}
 	
-	public static Wiki getInstance() throws ServiceException {
-		return getInstance(Wiki.getDefaultWikiAccount());
-	}
-	
-	public static Wiki getTemplateStore(String accountId) throws ServiceException {
+	public static Wiki getTemplateStore(WikiContext ctxt, String accountId) throws ServiceException {
 		Provisioning prov = Provisioning.getInstance();
 		Account acct = prov.get(Provisioning.AccountBy.id, accountId);
 		Domain dom = prov.getDomain(acct);
@@ -191,174 +379,217 @@ public class Wiki {
 		}
 		if (target == null)
 			return null;
-		int fid;
-		synchronized (Wiki.class) {
-			OperationContext octxt = new OperationContext(target);
-			WikiUrl wurl = new WikiUrl("/" + TEMPLATE_FOLDER);
-			Folder f = wurl.getFolder(octxt, target.getId());
-			fid = f.getId();
-		}
-		return getInstance(target.getId(), fid);
+		WikiUrl wurl = new WikiUrl("//" + target.getName() + TEMPLATE_FOLDER);
+			
+		return getInstance(ctxt, wurl);
 	}
 	
-	public static MailItem findWikiByPathTraverse(OperationContext octxt, String accountId, int fid, String path) throws ServiceException {
+	public static MailItem findWikiByPathTraverse(WikiContext ctxt, String accountId, int fid, String path) throws ServiceException {
 		WikiUrl url = new WikiUrl(path, fid);
-		Folder f = url.getFolder(octxt, accountId);
+		Folder f = url.getFolder(ctxt, accountId);
 		String name = url.getFilename();
 		
 		String targetAccountId = accountId;
 		int targetFolderId = f.getId();
 
-		MailItem item = findWikiByNameTraverse(octxt, targetAccountId, targetFolderId, name);
+		MailItem item = findWikiByNameTraverse(ctxt, targetAccountId, targetFolderId, name);
 		while (item == null) {
-			Wiki w = getTemplateStore(targetAccountId);
+			Wiki w = getTemplateStore(ctxt, targetAccountId);
 			if (w == null)
 				return null;
 			targetAccountId = w.getWikiAccount();
 			targetFolderId = w.getWikiFolderId();
-			item = findWikiByNameTraverse(octxt, targetAccountId, targetFolderId, name);
+			item = findWikiByNameTraverse(ctxt, targetAccountId, targetFolderId, name);
 		}
 		return item;
 	}
 	
-	public static MailItem findWikiByNameTraverse(OperationContext octxt, String accountId, int fid, String name) throws ServiceException {
+	public static MailItem findWikiByNameTraverse(WikiContext ctxt, String accountId, int fid, String name) throws ServiceException {
 		Mailbox mbox = Mailbox.getMailboxByAccountId(accountId);
-		Wiki w = getInstance(accountId, fid);
+		Wiki w = getInstance(ctxt, accountId, fid);
 		while (w != null) {
-			WikiWord ww = w.lookupWiki(name);
+			WikiPage ww = w.lookupWiki(name);
 			if (ww != null)
-				return ww.getWikiItem(octxt);
+				return ww.getWikiItem(ctxt);
 			if (fid == Mailbox.ID_FOLDER_USER_ROOT)
 				break;
-			Folder f = mbox.getFolderById(octxt, fid);
+			Folder f = mbox.getFolderById(ctxt.octxt, fid);
 			fid = f.getFolderId();
-			w = getInstance(accountId, fid);
+			w = getInstance(ctxt, accountId, fid);
 		}
 		return null;
 	}
 	
-	public static MailItem findWikiByPath(OperationContext octxt, String accountId, int fid, String path, boolean traverse) throws ServiceException {
+	public static MailItem findWikiByPath(WikiContext ctxt, String accountId, int fid, String path, boolean traverse) throws ServiceException {
 		if (traverse)
-			return findWikiByPathTraverse(octxt, accountId, fid, path);
+			return findWikiByPathTraverse(ctxt, accountId, fid, path);
 		
-		return findWikiByPath(octxt, accountId, fid, path);
+		return findWikiByPath(ctxt, accountId, fid, path);
 	}
 	
-	public static MailItem findWikiByPath(OperationContext octxt, String accountId, int fid, String path) throws ServiceException {
+	public static MailItem findWikiByPath(WikiContext ctxt, String accountId, int fid, String path) throws ServiceException {
 		WikiUrl url = new WikiUrl(path, fid);
-		return url.getItem(octxt, accountId);
+		return url.getItem(ctxt, accountId);
 	}
 	
-	public static Wiki getInstance(String acct, int folderId) throws ServiceException {
-		return getInstance(Provisioning.getInstance().get(AccountBy.id, acct), folderId);
-	}
-	
-	public static Wiki getInstance(Account acct) throws ServiceException {
-		return getInstance(acct, getDefaultFolderId(acct));
+	public static Wiki getInstance(WikiContext ctxt, String acct) throws ServiceException {
+		return getInstance(ctxt, acct, WIKI_FOLDER_ID);
 	}
 
-	public static Wiki getInstance(Account acct, int folderId) throws ServiceException {
-		Wiki w;
+	public static Wiki getInstance(WikiContext ctxt, String acct, int folderId) throws ServiceException {
+		return getInstance(ctxt, Provisioning.getInstance().get(AccountBy.id, acct), folderId);
+	}
+	
+	public static Wiki getInstance(WikiContext ctxt, Account acct, int folderId) throws ServiceException {
 		if (acct == null || folderId < 1)
 			throw new WikiServiceException.NoSuchWikiException("no such account");
+		Pair<String,String> key = Pair.get(acct.getId(), Integer.toString(folderId));
+		Wiki wiki = wikiMap.get(key);
+		if (wiki == null) {
+			wiki = new WikiById(ctxt, acct, folderId);
+			Wiki.add(wiki, key);
+		}
+		return wiki;
+	}
+
+	public static Wiki getInstance(WikiContext ctxt, WikiUrl url) throws ServiceException {
+		if (!url.isRemote()) {
+			throw WikiServiceException.ERROR("no account name in the path");
+		}
+		Provisioning prov = Provisioning.getInstance();
+		Account account = prov.get(Provisioning.AccountBy.name, url.getToken(1));
+		if (account == null) {
+			throw WikiServiceException.ERROR("no such account: " + url.getToken(1));
+		}
+		return getInstance(ctxt, account.getId(), url.getToken(2));
+	}
+	
+	public static Wiki getInstance(WikiContext ctxt, String acct, String key) throws ServiceException {
+		try {
+			int fid = Integer.parseInt(key);
+			return getInstance(ctxt, acct, fid);
+		} catch (Exception e) {
+			Provisioning prov = Provisioning.getInstance();
+			Account account = prov.get(Provisioning.AccountBy.id, acct);
+			Server acctServer = Provisioning.getInstance().getServer(account);
+			if (acctServer.equals(localServer)) {
+				Mailbox mbox = Mailbox.getMailboxByAccount(account);
+				int fid = mbox.getFolderByPath(ctxt.octxt, key).getId();
+				return getInstance(ctxt, acct, fid);
+			}
+			Pair<String,String> k = Pair.get(account.getId(), key);
+			Wiki wiki = wikiMap.get(k);
+			if (wiki == null) {
+				wiki = new WikiByPath(ctxt, account, key);
+				Wiki.add(wiki, k);
+			}
+			return wiki;
+		}
+	}
+	
+	public static void add(Wiki wiki, Pair<String,String> key) {
 		synchronized (wikiMap) {
-			Pair<String,String> key = Pair.get(acct.getId(), Integer.toString(folderId));
-			w = wikiMap.get(key);
+			Wiki w = wikiMap.get(key);
 			if (w == null) {
-				w = new Wiki(acct, folderId);
-				wikiMap.put(key, w);
+				wikiMap.put(key, wiki);
 			}
 		}
-		return w;
 	}
 	
-	public static void remove(String acctId, int folderId) {
-		Pair<String,String> key = Pair.get(acctId, Integer.toString(folderId));
-		wikiMap.remove(key);
+	public static void remove(String acctId, String k) {
+		synchronized (wikiMap) {
+			Pair<String,String> key = Pair.get(acctId, k);
+			wikiMap.remove(key);
+		}
+	}
+
+	private static LmcFolder findFolder(LmcFolder folder, String path) throws ServiceException {
+		if (folder == null || path == null)
+			return null;
+		StringTokenizer tok = new StringTokenizer(path, "/");
+		String lastToken = null;
+		while (tok.hasMoreTokens()) {
+			lastToken = tok.nextToken();
+			LmcFolder[] sub = folder.getSubFolders();
+			if (sub == null || sub.length == 0)
+				return null;
+			for (int i = 0; i < sub.length; i++) {
+				if (sub[i].getName().equalsIgnoreCase(lastToken)) {
+					folder = sub[i];
+					break;
+				}
+			}
+			if (!folder.getName().equalsIgnoreCase(lastToken))
+				return null;
+		}
+		if (!folder.getName().equalsIgnoreCase(lastToken))
+			return null;
+		return folder;
 	}
 	
-	private Wiki(Account acct, int fid) throws ServiceException {
-		if (!acct.getBooleanAttr("zimbraFeatureNotebookEnabled", false))
-			throw WikiServiceException.NOT_ENABLED();
-		
-		mWikiWords = new HashMap<String,WikiWord>();
-		
-		mWikiAccount = acct.getId();
-		mFolderId = fid;
-		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
-		if (mbox == null)
-			throw WikiServiceException.ERROR("wiki account mailbox not found");
-		OperationContext octxt = new OperationContext(acct);
-		loadWiki(octxt, mbox);
-		mbox.addListener(WikiSession.getInstance());
-	}
-	
-	private void loadWiki(OperationContext octxt, Mailbox mbox) throws ServiceException {
-	    List<Document> wikiList = mbox.getWikiList(octxt, mFolderId);
-	    for (Document item : wikiList) {
-	    	addDoc(item);
-	    }
+	private static LmcFolder getRemoteFolder(WikiContext ctxt, Account acct, Server remoteServer, int fid) throws ServiceException {
+		String auth = ctxt.auth;
+		try {
+			if (fid <= 0)
+				fid = Mailbox.ID_FOLDER_USER_ROOT;
+			if (auth == null)
+				auth = AuthToken.getZimbraAdminAuthToken().getEncoded();
+
+			String url = URLUtil.getMailURL(remoteServer, ZimbraServlet.USER_SERVICE_URI, false);
+
+			LmcSession session = new LmcSession(auth, null);
+			LmcGetFolderRequest gfreq = new LmcGetFolderRequest();
+			gfreq.setRequestedAccountId(acct.getId());
+			gfreq.setSession(session);
+			gfreq.setFolderToGet(Integer.toString(fid));
+			LmcGetFolderResponse gfresp = (LmcGetFolderResponse) gfreq.invoke(url);
+			return gfresp.getRootFolder();
+		} catch (Exception e) {
+			throw WikiServiceException.ERROR("can't load remote wiki", e);
+		}
 	}
 	
 	public String getWikiAccount() {
 		return mWikiAccount;
 	}
 	
-	public int getWikiFolderId() {
-		return mFolderId;
-	}
+	public abstract String getKey();
+	public abstract String getParentKey() throws ServiceException;
+	public abstract int getWikiFolderId() throws ServiceException;
 	
 	public Set<String> listWiki() {
 		return mWikiWords.keySet();
 	}
-	public WikiWord lookupWiki(String wikiWord) {
-		return mWikiWords.get(wikiWord);
-	}
+	public abstract WikiPage lookupWiki(String wikiWord);
 	
 	public void addDoc(Document doc) throws ServiceException {
+		String wikiWord;
 		if (doc instanceof WikiItem) 
-			addWiki((WikiItem)doc);
+			wikiWord = ((WikiItem)doc).getWikiWord();
 		else
-			addDocImpl(doc.getFilename(), doc);
-	}
-	
-	public void addWiki(WikiItem wikiItem) throws ServiceException {
-		addDocImpl(wikiItem.getWikiWord(), wikiItem);
-	}
-	
-	public void addDocImpl(String wikiStr, Document doc) throws ServiceException {
-		WikiWord w;
-		w = mWikiWords.get(wikiStr);
+			wikiWord = doc.getFilename();
+		WikiPage w = mWikiWords.get(wikiWord);
 		if (w == null) {
-			w = new WikiWord(wikiStr);
-			mWikiWords.put(wikiStr, w);
+			w = WikiPage.create(wikiWord);
+			mWikiWords.put(wikiWord, w);
 		}
 		w.addWikiItem(doc);
 	}
 	
-	public synchronized WikiWord createWiki(OperationContext octxt, String wikiword, String author, byte[] data) throws ServiceException {
-		return createDocument(octxt, WikiItem.WIKI_CONTENT_TYPE, wikiword, author, data, MailItem.TYPE_WIKI);
+	public synchronized WikiPage createWiki(WikiContext ctxt, String wikiword, String author, byte[] data) throws ServiceException {
+		return createDocument(ctxt, WikiItem.WIKI_CONTENT_TYPE, wikiword, author, data, MailItem.TYPE_WIKI);
 	}
 	
-	public synchronized WikiWord createDocument(OperationContext octxt, String ct, String filename, String author, byte[] data) throws ServiceException {
-		return createDocument(octxt, ct, filename, author, data, MailItem.TYPE_DOCUMENT);
+	public synchronized WikiPage createDocument(WikiContext ctxt, String ct, String filename, String author, byte[] data) throws ServiceException {
+		return createDocument(ctxt, ct, filename, author, data, MailItem.TYPE_DOCUMENT);
 	}
+
+	public abstract WikiPage createDocument(WikiContext ctxt, String ct, String filename, String author, byte[] data, byte type) throws ServiceException;
 	
-	public synchronized WikiWord createDocument(OperationContext octxt, String ct, String filename, String author, byte[] data, byte type) throws ServiceException {
-		WikiWord ww = lookupWiki(filename);
-		
-		if (ww == null) {
-			ww = new WikiWord(filename);
-			mWikiWords.put(filename, ww);
-		}
-		ww.addWikiItem(octxt, mWikiAccount, mFolderId, filename, ct, author, data, type);
-		return ww;
-	}
-	
-	public void deleteWiki(OperationContext octxt, String wikiWord) throws ServiceException {
-		WikiWord w = mWikiWords.remove(wikiWord);
+	public void deleteWiki(WikiContext ctxt, String wikiWord) throws ServiceException {
+		WikiPage w = mWikiWords.remove(wikiWord);
 		if (w != null) {
-			w.deleteAllRevisions(octxt);
+			w.deleteAllRevisions(ctxt);
 		}
 	}
 }

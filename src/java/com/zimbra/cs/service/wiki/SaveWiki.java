@@ -33,7 +33,8 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.cs.wiki.WikiWord;
+import com.zimbra.cs.wiki.WikiPage;
+import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -75,8 +76,9 @@ public class SaveWiki extends WikiDocumentHandler {
         	throw ServiceException.FAILURE("cannot convert", ioe);
         }
         
-        WikiWord ww = wiki.createWiki(octxt, subject, getAuthor(lc), rawData);
-        Document wikiItem = ww.getWikiItem(octxt);
+        WikiContext ctxt = new WikiContext(octxt, lc.getRawAuthToken());
+        WikiPage ww = wiki.createWiki(ctxt, subject, getAuthor(lc), rawData);
+        Document wikiItem = ww.getWikiItem(ctxt);
         
         Element response = lc.createElement(MailService.SAVE_WIKI_RESPONSE);
         Element m = response.addElement(MailService.E_WIKIWORD);

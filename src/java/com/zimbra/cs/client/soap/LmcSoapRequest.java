@@ -72,6 +72,20 @@ public abstract class LmcSoapRequest {
 		mSession = l;
 	}
 
+	/*
+	 * If requestedAccountId is not null, the request is sent on behalf of
+	 * the account.
+	 */
+    protected String mRequestedAccountId;
+
+    public String getRequestedAccountId() {
+    	return mRequestedAccountId;
+    }
+    
+    public void setRequestedAccountId(String id) {
+    	mRequestedAccountId = id;
+    }
+    
 	/**
 	 * A particular type of request must implement this to return the XML
 	 * that should be sent in the soap:body element.  
@@ -129,7 +143,11 @@ public abstract class LmcSoapRequest {
             }
             com.zimbra.soap.Element requestElt = com.zimbra.soap.Element.convertDOM(requestXML);
 			//System.out.println("Sending over request " + DomUtil.toString(requestXML, true));
-			Element responseXML = trans.invoke(requestElt).toXML();
+			Element responseXML;
+			if (mRequestedAccountId == null)
+				responseXML = trans.invoke(requestElt).toXML();
+			else 
+				responseXML = trans.invoke(requestElt, false, false, false, mRequestedAccountId).toXML();
             if (sDumpXML) {
                 sLog.info("Response:" + DomUtil.toString(responseXML, true) + "\n");
             }
@@ -514,11 +532,12 @@ public abstract class LmcSoapRequest {
 		result.setRev(doc.attributeValue(MailService.A_VERSION));
 		result.setLastModifiedDate(doc.attributeValue(MailService.A_DATE));
 		result.setLastEditor(doc.attributeValue(MailService.A_LAST_EDITED_BY));
+		result.setRestUrl(doc.attributeValue(MailService.A_REST_URL));
 		
 		return result;
 	}
 	
-	protected LmcDocument parseWiki(Element wiki)
+	protected LmcWiki parseWiki(Element wiki)
 		throws ServiceException	{
 		LmcWiki result = new LmcWiki();
 
@@ -528,6 +547,12 @@ public abstract class LmcSoapRequest {
 		result.setRev(wiki.attributeValue(MailService.A_VERSION));
 		result.setLastModifiedDate(wiki.attributeValue(MailService.A_DATE));
 		result.setLastEditor(wiki.attributeValue(MailService.A_LAST_EDITED_BY));
+		result.setRestUrl(wiki.attributeValue(MailService.A_REST_URL));
+		
+		try {
+			Element c = DomUtil.get(wiki, MailService.A_BODY);
+			result.setContents(c.getText());
+		} catch (Exception e) {}
 		
 		return result;
 	}

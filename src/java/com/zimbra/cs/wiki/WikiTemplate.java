@@ -34,21 +34,20 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.cs.wiki.Wiki.WikiUrl;
 
 public class WikiTemplate {
-	
-	public WikiTemplate(WikiItem item) throws ServiceException {
-		this(new String(item.getMessageContent()));
-	}
 	
 	public WikiTemplate(String item) {
 		mTemplate = item;
@@ -61,12 +60,12 @@ public class WikiTemplate {
 	public static WikiTemplate findTemplate(Context ctxt, String name)
 	throws IOException,ServiceException {
     	WikiTemplateStore ts = WikiTemplateStore.getInstance(ctxt.item);
-    	return ts.getTemplate(ctxt.octxt, name);
+    	return ts.getTemplate(ctxt.wctxt, name);
 	}
 	
-	public String toString(OperationContext octxt, HttpServletRequest req, MailItem item)
+	public String toString(WikiContext ctxt, HttpServletRequest req, MailItem item)
 	throws ServiceException, IOException {
-		return toString(new Context(octxt, req, item));
+		return toString(new Context(ctxt, req, item));
 	}
 	
 	public String toString(Context ctxt) throws ServiceException, IOException {
@@ -95,15 +94,15 @@ public class WikiTemplate {
 		touch();
 	}
 	
-	public String getDocument(OperationContext octxt, HttpServletRequest req, MailItem item, String chrome)
+	public String getDocument(WikiContext ctxt, HttpServletRequest req, MailItem item, String chrome)
 	throws ServiceException, IOException {
-		return getDocument(new Context(octxt, req, item), chrome);
+		return getDocument(new Context(ctxt, req, item), chrome);
 	}
 	
 	public String getDocument(Context ctxt, String chrome)
 	throws ServiceException, IOException {
 		WikiTemplateStore ts = WikiTemplateStore.getInstance(ctxt.item);
-		WikiTemplate chromeTemplate = ts.getTemplate(ctxt.octxt, chrome);
+		WikiTemplate chromeTemplate = ts.getTemplate(ctxt.wctxt, chrome);
 		if (mDocument == null || chromeTemplate.isExpired(ctxt)) {
 			ZimbraLog.wiki.debug("generating new document " + ctxt.item.getSubject());
 			String doc = chromeTemplate.toString(ctxt);
@@ -277,13 +276,13 @@ public class WikiTemplate {
 	}
 	
 	public static class Context {
-		public Context(OperationContext oc, MailItem it) {
-			octxt = oc; item = it; content = null;
+		public Context(WikiContext wc, MailItem it) {
+			wctxt = wc; item = it; content = null;
 		}
-		public Context(OperationContext oc, HttpServletRequest request, MailItem it) {
-			octxt = oc; req = request; item = it; content = null;
+		public Context(WikiContext wc, HttpServletRequest request, MailItem it) {
+			wctxt = wc; req = request; item = it; content = null;
 		}
-		public OperationContext octxt;
+		public WikiContext wctxt;
 		public HttpServletRequest req;
 		public MailItem item;
 		public Token token;
@@ -307,9 +306,9 @@ public class WikiTemplate {
 			StringBuffer buf = new StringBuffer();
 			for (MailItem item : list) {
 				WikiTemplate t = WikiTemplate.findTemplate(ctxt, itemTemplate);
-				buf.append(t.toString(ctxt.octxt, ctxt.req, item));
+				buf.append(t.toString(ctxt.wctxt, ctxt.req, item));
 			}
-			Context newCtxt = new Context(ctxt.octxt, ctxt.item);
+			Context newCtxt = new Context(ctxt.wctxt, ctxt.item);
 			newCtxt.content = buf.toString();
 			WikiTemplate body = WikiTemplate.findTemplate(newCtxt, bodyTemplate);
 
@@ -430,14 +429,14 @@ public class WikiTemplate {
 			if (ctxt.item instanceof Folder)
 				folder = (Folder) ctxt.item;
 			else
-				folder = ctxt.item.getMailbox().getFolderById(ctxt.octxt, ctxt.item.getFolderId());
+				folder = ctxt.item.getMailbox().getFolderById(ctxt.wctxt.octxt, ctxt.item.getFolderId());
 	    	StringBuffer buf = new StringBuffer();
 	    	buf.append("<");
 	    	buf.append(sTAGS[sOUTER][style]);
 	    	buf.append(" class='");
 	    	buf.append(sTAGS[sCLASS][style]);
 	    	buf.append("'>");
-	    	List<Folder> subfolders = folder.getSubfolders(ctxt.octxt);
+	    	List<Folder> subfolders = folder.getSubfolders(ctxt.wctxt.octxt);
         	for (Folder f : subfolders) {
     	    	buf.append("<");
         		buf.append(sTAGS[sINNER][style]);
@@ -448,7 +447,7 @@ public class WikiTemplate {
         		buf.append(">");
         	}
 	    	Mailbox mbox = ctxt.item.getMailbox();
-            for (Document doc : mbox.getWikiList(ctxt.octxt, folder.getId())) {
+            for (Document doc : mbox.getWikiList(ctxt.wctxt.octxt, folder.getId())) {
             	if (shouldSkipThis(doc))
             		continue;
             	buf.append("<");
@@ -476,11 +475,11 @@ public class WikiTemplate {
 			if (ctxt.item instanceof Folder)
 				folder = (Folder) ctxt.item;
 			else
-				folder = ctxt.item.getMailbox().getFolderById(ctxt.octxt, ctxt.item.getFolderId());
-	    	list.addAll(folder.getSubfolders(ctxt.octxt));
+				folder = ctxt.item.getMailbox().getFolderById(ctxt.wctxt.octxt, ctxt.item.getFolderId());
+	    	list.addAll(folder.getSubfolders(ctxt.wctxt.octxt));
 	    	
 	    	Mailbox mbox = ctxt.item.getMailbox();
-	    	list.addAll(mbox.getWikiList(ctxt.octxt, folder.getId()));
+	    	list.addAll(mbox.getWikiList(ctxt.wctxt.octxt, folder.getId()));
 
 			String bt = params.get(sBODYTEMPLATE);
 			String it = params.get(sITEMTEMPLATE);
@@ -528,7 +527,7 @@ public class WikiTemplate {
 		}
 		private Folder getFolder(Context ctxt, MailItem item) throws ServiceException {
 			Mailbox mbox = item.getMailbox();
-			return mbox.getFolderById(ctxt.octxt, item.getFolderId());
+			return mbox.getFolderById(ctxt.wctxt.octxt, item.getFolderId());
 		}
 		private List<MailItem> getBreadcrumbs(Context ctxt) {
 			List<MailItem> list = new ArrayList<MailItem>();
@@ -834,7 +833,6 @@ public class WikiTemplate {
 		}
 	}
 	public static class WikilinkWiklet extends Wiklet {
-		private static final String URL_PREFIX = "/home/";
 		private static final String PAGENAME = "pagename";
 		private static final String TEXT = "text";
 		
@@ -883,11 +881,16 @@ public class WikiTemplate {
 			WikiUrl wurl = new WikiUrl(link, ctxt.item.getFolderId());
 			StringBuffer buf = new StringBuffer();
 			buf.append("<a href='");
-			if (wurl.isRemote())
-				buf.append(URL_PREFIX).append(wurl.getToken(1)).append('/').append(wurl.getToken(2));
-			else if (wurl.isAbsolute())
-				buf.append(URL_PREFIX).append(ctxt.item.getMailbox().getAccount().getUid()).append(wurl.getToken(1));
-			else
+			if (wurl.isRemote() || wurl.isAbsolute()) {
+				Provisioning prov = Provisioning.getInstance();
+				Account acct = ctxt.item.getMailbox().getAccount();
+				String path = wurl.getToken(1);
+				if (wurl.isRemote()) {
+					acct = prov.get(Provisioning.AccountBy.name, wurl.getToken(1));
+					path = wurl.getToken(2);
+				}
+				buf.append(UserServlet.getRestUrl(acct, false)).append(path);
+			} else
 				buf.append(link);
 			buf.append("'>").append(title).append("</a>");
 			return buf.toString();

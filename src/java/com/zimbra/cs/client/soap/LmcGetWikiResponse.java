@@ -18,25 +18,20 @@
  * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
  * All Rights Reserved.
  * 
- * Contributor(s):
+ * Contributor(s): 
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.client;
 
-public class LmcWiki extends LmcDocument {
-	private String mWikiWord;
-	private String mContents;
-	
-	public void setWikiWord(String w) { mWikiWord = w; setName(w); }
-	public void setContents(String c) { mContents = c; }
-	
-	public String getWikiWord() { return mWikiWord; }
-	public String getContents() { return mContents; }
-	
-	public String toString() {
-		return "Wiki id=" + mId + " rev=" + mRev + " wikiword=" + mWikiWord +
-		" folder=" + mFolder + " lastEditor=" + mLastEditedBy + 
-		" lastModifiedDate=" + mLastModifiedDate;
-	}
+package com.zimbra.cs.client.soap;
+
+import com.zimbra.cs.client.*;
+
+public class LmcGetWikiResponse extends LmcSoapResponse {
+
+    private LmcWiki mWiki;
+
+    public LmcWiki getWiki() { return mWiki; }
+
+    public void setWiki(LmcWiki wiki) { mWiki = wiki; }
 }

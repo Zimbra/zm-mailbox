@@ -33,6 +33,7 @@ public class LmcDocument {
 	protected String mLastEditedBy;
 	protected String mLastModifiedDate;
 	protected String mAid;
+	protected String mRestUrl;
 	
 	public void setID(String id)             { mId = id; }
 	public void setName(String filename)     { mName = filename; }
@@ -42,6 +43,7 @@ public class LmcDocument {
 	public void setLastEditor(String str)    { mLastEditedBy = str; }
 	public void setLastModifiedDate(String d)  { mLastModifiedDate = d; }
 	public void setAttachmentId(String aid)  { mAid = aid; }
+	public void setRestUrl(String url)       { mRestUrl = url; }
 	
 	public String getID()               { return mId; }
 	public String getName()             { return mName; }
@@ -51,10 +53,11 @@ public class LmcDocument {
 	public String getLastEditor()       { return mLastEditedBy; }
 	public String getLastModifiedDate() { return mLastModifiedDate; }
 	public String getAttachmentId()     { return mAid; }
+	public String getRestUrl()          { return mRestUrl; }
 	
 	public String toString() {
 		return "Document id=" + mId + " rev=" + mRev + " filename=" + mName +
 		" ct=" + mContentType + " folder=" + mFolder + " lastEditor=" + mLastEditedBy + 
-		" lastModifiedDate=" + mLastModifiedDate;
+		" lastModifiedDate=" + mLastModifiedDate + " restUrl=" + mRestUrl;
 	}
 }

@@ -40,6 +40,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.wiki.Wiki;
+import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -64,7 +65,7 @@ public class GetWiki extends WikiDocumentHandler {
         	ItemId fid = getRequestedFolder(request);
         	if (fid == null)
         		fid = new ItemId("", Mailbox.ID_FOLDER_USER_ROOT);
-        	MailItem item = Wiki.findWikiByPath(octxt, 
+        	MailItem item = Wiki.findWikiByPath(new WikiContext(octxt, lc.getRawAuthToken()), 
         										 lc.getRequestedAccountId(), 
         										 fid.getId(), 
         										 word,

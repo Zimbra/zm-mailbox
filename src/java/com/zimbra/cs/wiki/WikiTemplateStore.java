@@ -28,16 +28,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.cs.service.wiki.WikiServiceException.NoSuchWikiException;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Pair;
+import com.zimbra.cs.wiki.Wiki.WikiContext;
 //import com.zimbra.cs.util.ZimbraLog;
 
 public class WikiTemplateStore {
@@ -53,18 +52,18 @@ public class WikiTemplateStore {
 	}
 	
 	public static WikiTemplateStore getInstance(MailItem item) throws ServiceException {
-		return WikiTemplateStore.getInstance(item.getMailbox().getAccount().getId(), item.getFolderId());
+		return WikiTemplateStore.getInstance(item.getMailbox().getAccount().getId(), Integer.toString(item.getFolderId()));
 	}
 	
-	public static WikiTemplateStore getParentInstance(String accountId) throws ServiceException {
-		Wiki w = Wiki.getTemplateStore(accountId);
+	public static WikiTemplateStore getCentralAccountInstance(WikiContext ctxt, String accountId) throws ServiceException {
+		Wiki w = Wiki.getTemplateStore(ctxt, accountId);
 		if (w == null)
 			return null;
-		return WikiTemplateStore.getInstance(w.getWikiAccount(), w.getWikiFolderId());
+		return WikiTemplateStore.getInstance(w.getWikiAccount(), w.getKey());
 	}
 	
-	public static WikiTemplateStore getInstance(String account, int folderId) {
-		Pair<String,String> key = Pair.get(account, Integer.toString(folderId));
+	public static WikiTemplateStore getInstance(String account, String k) {
+		Pair<String,String> key = Pair.get(account, k);
 		WikiTemplateStore store;
 		long now = System.currentTimeMillis();
 		
@@ -82,37 +81,36 @@ public class WikiTemplateStore {
 		return store;
 	}
 
-	private static long TTL = 3600000;  // 1 hour
+	private static long TTL = 600000;  // 10 minutes
 	
 	private long   mExpiration;
 	private String mAccountId;
-	private int    mFolderId;
-	private int    mParentFolderId;
+	private String mKey;
 	private Map<String,WikiTemplate> mTemplateMap;
 	
 	private WikiTemplateStore(Pair<String,String> key) {
 		mAccountId  = key.getFirst();
-		mFolderId = Integer.parseInt(key.getSecond());
+		mKey = key.getSecond();
 		mTemplateMap = new HashMap<String,WikiTemplate>();
 		mExpiration = System.currentTimeMillis() + TTL;
 	}
 	
-	public WikiTemplate getTemplate(OperationContext octxt, String name) throws ServiceException, IOException {
+	public WikiTemplate getTemplate(WikiContext ctxt, String name) throws ServiceException, IOException {
 		boolean checkParents = name.startsWith("_");
 		try {
-			return getTemplate(octxt, name, checkParents);
+			return getTemplate(ctxt, name, checkParents);
 		} catch (ServiceException e) {
 			if (!checkParents)
 				throw e;
-			WikiTemplateStore defaultStore = getParentInstance(mAccountId);
+			WikiTemplateStore defaultStore = getCentralAccountInstance(ctxt, mAccountId);
 			if (defaultStore == null)
 				return new WikiTemplate("<!-- missing template "+name+" -->");
-			return defaultStore.getTemplate(octxt, name);
+			return defaultStore.getTemplate(ctxt, name);
 		}
 	}
-	public WikiTemplate getTemplate(OperationContext octxt, String name, boolean checkParents) throws ServiceException, IOException {
+	private WikiTemplate getTemplate(WikiContext ctxt, String name, boolean checkParents) throws ServiceException, IOException {
 		if (name.indexOf('/') != -1) {
-			return getTemplateByPath(octxt, name);
+			return getTemplateByPath(ctxt, name);
 		}
 		WikiTemplate template = mTemplateMap.get(name);
 		if (template != null) {
@@ -120,47 +118,44 @@ public class WikiTemplateStore {
 			return template;
 		}
 		
-		Wiki wiki = Wiki.getInstance(mAccountId, mFolderId);
-		WikiWord ww = wiki.lookupWiki(name);
+		Wiki wiki = Wiki.getInstance(ctxt, mAccountId, mKey);
+		WikiPage ww = wiki.lookupWiki(name);
 		
 		if (ww != null) {
-			Document item = ww.getWikiItem(octxt);
-			if (!(item instanceof WikiItem))
-				throw WikiServiceException.NOT_WIKI_ITEM(item.getFilename());
-			template = new WikiTemplate((WikiItem)item);
+			template = new WikiTemplate(ww.getContents(ctxt));
 			mTemplateMap.put(name, template);
 			return template;
 		}
 		
 		if (!checkParents)
 			return new WikiTemplate("<!-- missing template "+name+" -->");
-		
-		if (mParentFolderId == 0) {
-			Mailbox mbox = Mailbox.getMailboxByAccountId(wiki.getWikiAccount());
-			Folder f = mbox.getFolderById(octxt, mFolderId);
-			mParentFolderId = f.getFolderId();  // mountpoint should return its logical parent.
-		}
-		
-		if (mParentFolderId == mFolderId) {
+
+		String parentKey = wiki.getParentKey();
+		if (parentKey == null) {
 			throw new NoSuchWikiException(name);
 		}
-		WikiTemplateStore parentStore = WikiTemplateStore.getInstance(mAccountId, mParentFolderId);
-		return parentStore.getTemplate(octxt, name);
+		WikiTemplateStore parentStore = WikiTemplateStore.getInstance(mAccountId, parentKey);
+		return parentStore.getTemplate(ctxt, name);
 	}
-	public WikiTemplate getTemplateByPath(OperationContext octxt, String path) throws ServiceException {
-		MailItem item = Wiki.findWikiByPath(octxt, mAccountId, mFolderId, path);
+	private WikiTemplate getTemplateByPath(WikiContext ctxt, String path) throws ServiceException {
+		MailItem item = Wiki.findWikiByPath(ctxt, mAccountId, 0, path);
 		if (item instanceof Folder) {
 			return getDefaultTOC();
 		} else if (item instanceof WikiItem) {
 			WikiItem wiki = (WikiItem) item;
-			// XXX cache the template
-			return new WikiTemplate(wiki);
+			try {
+				byte[] raw = ByteUtil.getContent(wiki.getLastRevision().getContent(), 0);
+				// XXX cache the template
+				return new WikiTemplate(new String(raw, "UTF-8"));
+			} catch (Exception e) {
+				throw WikiServiceException.ERROR("can't get contents of "+path, e);
+			}
 		}
 		throw WikiServiceException.NOT_WIKI_ITEM(path);
 	}
 	public void expireTemplate(String name) {
 		//ZimbraLog.wiki.debug("removing " + name + " from template cache");
 		mTemplateMap.remove(name);
-		Wiki.remove(mAccountId, mFolderId);
+		Wiki.remove(mAccountId, mKey);
 	}
 }

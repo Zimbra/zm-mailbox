@@ -35,6 +35,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.cs.wiki.WikiTemplate;
 import com.zimbra.cs.wiki.WikiTemplateStore;
 
@@ -58,7 +59,7 @@ public class WikiFormatter extends Formatter {
     
     private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
     	WikiTemplate wt = getTemplate(context, wiki);
-    	String template = wt.getDocument(context.opContext, context.req, wiki, CHROME);
+    	String template = wt.getDocument(createWikiContext(context), context.req, wiki, CHROME);
     	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
     	context.resp.getOutputStream().print(template);
     }
@@ -73,13 +74,16 @@ public class WikiFormatter extends Formatter {
     	return getTemplate(context, folder.getMailbox().getAccountId(), folder.getId(), name);
     }
     private WikiTemplate getTemplate(Context context, String accountId, int folderId, String name) throws IOException, ServiceException {
-    	WikiTemplateStore wiki = WikiTemplateStore.getInstance(accountId, folderId);
-    	return wiki.getTemplate(context.opContext, name);
+    	WikiTemplateStore wiki = WikiTemplateStore.getInstance(accountId, Integer.toString(folderId));
+    	return wiki.getTemplate(createWikiContext(context), name);
     }
     private WikiTemplate getDefaultTOC() {
     	return WikiTemplateStore.getDefaultTOC();
     }
     
+    private WikiContext createWikiContext(Context context) {
+    	return new WikiContext(context.opContext, context.cookieAuthHappened ? context.authTokenCookie : null);
+    }
     private void handleWikiFolder(Context context, Folder folder) throws IOException, ServiceException {
     	StringBuffer ret = new StringBuffer();
     	
@@ -88,7 +92,7 @@ public class WikiFormatter extends Formatter {
     	if (template == null) {
     		template = getDefaultTOC();
     	}
-    	ret.append(template.toString(context.opContext, context.req, folder));
+    	ret.append(template.toString(createWikiContext(context), context.req, folder));
     	
     	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
     	context.resp.getOutputStream().print(ret.toString());

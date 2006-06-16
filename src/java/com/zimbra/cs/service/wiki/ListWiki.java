@@ -31,7 +31,7 @@ import java.util.Set;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.cs.wiki.WikiWord;
+import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -45,7 +45,7 @@ public class ListWiki extends WikiDocumentHandler {
         Set<String> wikiWords = wiki.listWiki();
         Element response = lc.createElement(MailService.LIST_WIKI_RESPONSE);
         for (String w : wikiWords) {
-        	WikiWord ww = wiki.lookupWiki(w);
+        	WikiPage ww = wiki.lookupWiki(w);
             Element m = response.addElement(MailService.E_WIKIWORD);
             m.addAttribute(MailService.A_NAME, w);
             m.addAttribute(MailService.A_VERSION, ww.getLastRevision());

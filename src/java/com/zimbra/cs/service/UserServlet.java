@@ -50,6 +50,7 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -135,6 +136,14 @@ public class UserServlet extends ZimbraServlet {
     /** Default maximum upload size for PUT/POST write ops: 10MB. */
     private static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
 
+    /** Returns the REST URL for the account. */
+    public static String getRestUrl(Account acct, boolean preferHttps) throws ServiceException {
+		Server s = Provisioning.getInstance().getServer(acct);
+		StringBuilder path = new StringBuilder();
+		path.append(UserServlet.SERVLET_PATH).append("/").append(acct.getUid());
+		return URLUtil.getMailURL(s, path.toString(), preferHttps);
+    }
+    
     public UserServlet() {
         mFormatters = new HashMap<String, Formatter>();
         addFormatter(new CsvFormatter());
@@ -170,6 +179,10 @@ public class UserServlet extends ZimbraServlet {
                 context.authAccount = cookieAuthRequest(context.req, context.resp, true);
                 if (context.authAccount != null) {
                 	context.cookieAuthHappened = true;
+                	try {
+                		context.authTokenCookie = getAuthTokenFromCookie(context.req, context.resp, true).getEncoded();
+                    } catch (AuthTokenException e) {
+                    }
                     return;
                 }
             }
