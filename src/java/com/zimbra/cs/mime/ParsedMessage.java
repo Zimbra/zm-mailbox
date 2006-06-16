@@ -562,9 +562,6 @@ public class ParsedMessage {
         MimeHandler handler = MimeHandler.getMimeHandler(ctype);
         assert(handler != null);
 
-        boolean isTextType = ctype.matches(Mime.CT_TEXT_WILD);
-        boolean isMessageType = ctype.equals(Mime.CT_MESSAGE_RFC822);
-
         if (handler.isIndexingEnabled()) {
             handler.init(mpi.getMimePart().getDataHandler().getDataSource());
             handler.setPartName(mpi.getPartName());
@@ -586,11 +583,13 @@ public class ParsedMessage {
                 // add ALL TEXT from EVERY PART to the toplevel body content.
                 // This is necessary for queries with multiple words -- where
                 // one word is in the body and one is in a sub-attachment.
+                //
+                // If attachment indexing is disabled, then we only add the main body and
+                // text parts...
                 allTextHandler.addContent(handler.getContent(), mpi == mpiBody);
             }
 
-            if (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsSeparately &&
-                    !isTextType && !isMessageType) {
+            if (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsSeparately) {
                 // Each non-text MIME part is also indexed as a separate
                 // Lucene document.  This is necessary so that we can tell the
                 // client what parts match if a search matched a particular
