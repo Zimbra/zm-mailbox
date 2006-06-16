@@ -366,6 +366,7 @@ public class MailService implements DocumentService {
     public static final String A_APPT_END_TIME = "e";
     public static final String A_APPT_DURATION = "d";
     public static final String A_APPT_DATETIME = "d";
+    public static final String A_APPT_TZ_OFFSET = "tzo";
     public static final String A_APPT_SUB_ID = "subId";
     public static final String A_APPT_INV_ID = "invId";
     public static final String A_APPT_ID = "apptId";

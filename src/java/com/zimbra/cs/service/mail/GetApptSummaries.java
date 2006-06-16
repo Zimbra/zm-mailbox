@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
@@ -141,6 +142,9 @@ public class GetApptSummaries extends WriteOpDocumentHandler {
                         Element instElt = apptElt.addElement(MailService.E_INSTANCE);
                         
                         instElt.addAttribute(MailService.A_APPT_START_TIME, instStart);
+                        ICalTimeZone instTz = inv.getStartTime().getTimeZone();
+                        long offset = instTz.getOffset(instStart);
+                        instElt.addAttribute(MailService.A_APPT_TZ_OFFSET, offset);
                         
                         String instFba = appointment.getEffectiveFreeBusyActual(inv, inst);
                         String instPtSt = appointment.getEffectivePartStat(inv, inst);

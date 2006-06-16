@@ -366,7 +366,19 @@ OR
    <dur DURATION/> // default duration
    <fr>FRAGMENT</fr>
       
-      ( <inst s="START_SECS_GMT" [ex="1"] [ANY CHANGED PARAMETERS]>
+      ( <inst
+          s="START_SECS_GMT"
+          tzo="ms"  // offset from GMT in milliseconds for start time in the
+                    // time zone of the instance; this is useful because the
+                    // instance time zone may not be the same as the time zone
+                    // of the requesting client; when rendering an all-day
+                    // appointment, the client must shift the appointment by
+                    // the difference between the instance time zone and its
+                    // local time zone to determine the correct date to render
+                    // the all-day block
+          [ex="1"]
+          [ANY CHANGED PARAMETERS]
+        >
           [<f>FRAGMENT IF DIFFERENT FROM DEFAULT</f>]
           [<dur DURATION>] // duration this instance if not same as default
           [<isOrg>] // isOrg flag if not same as default
