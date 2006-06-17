@@ -104,7 +104,7 @@ class ZSoapMessageHit implements ZMessageHit {
         return mSubject;
     }
 
-    public String getTags() {
+    public String getTagIds() {
         return mTags;
     }
     

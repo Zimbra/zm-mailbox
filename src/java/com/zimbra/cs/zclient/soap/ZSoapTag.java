@@ -30,7 +30,7 @@ import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.ZTag;
 import com.zimbra.soap.Element;
 
-class ZSoapTag implements ZTag {
+class ZSoapTag implements ZTag, ZSoapItem {
 
     private byte mColor;
     private String mId;

@@ -32,7 +32,7 @@ import com.zimbra.cs.zclient.ZLink;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.Element;
 
-class ZSoapLink implements ZLink {
+class ZSoapLink implements ZLink, ZSoapItem {
 
     private byte mColor;
     private String mId;
@@ -45,7 +45,7 @@ class ZSoapLink implements ZLink {
     private String mRemoteId;
     private ZFolder mParent;
     
-    ZSoapLink(Element e, ZFolder parent) throws ServiceException {
+    ZSoapLink(Element e, ZFolder parent, ZSoapMailbox mailbox) throws ServiceException {
         mParent = parent;
         mId = e.getAttribute(MailService.A_ID);
         mName = e.getAttribute(MailService.A_NAME);
@@ -56,6 +56,7 @@ class ZSoapLink implements ZLink {
         mOwnerDisplayName = e.getAttribute(MailService.A_DISPLAY);
         mRemoteId = e.getAttribute(MailService.A_REMOTE_ID);
         mOwnerId = e.getAttribute(MailService.A_ZIMBRA_ID);
+        mailbox.addItemIdMapping(this);
     }
 
     public ZFolder getParent() {

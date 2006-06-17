@@ -42,7 +42,10 @@ public interface ZMessageHit extends ZSearchHit {
     
     public String getConversationId();
     
-    public String getTags();
+    /**
+     * @return comma-separated list of tag ids
+     */
+    public String getTagIds();
 
     public String getSortFied();
     

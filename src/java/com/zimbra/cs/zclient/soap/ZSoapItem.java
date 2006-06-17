@@ -23,37 +23,10 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.zclient;
+package com.zimbra.cs.zclient.soap;
 
-import java.util.List;
+interface ZSoapItem  {
 
-
-public interface ZConversationHit extends ZSearchHit {
-
-    /**
-     * @return conversation's id
-     */
     public String getId();
-    
-    /**
-     * @return comma-separated list of tag ids
-     */
-    public String getTagIds();
-    
-    public long getDate();
-    
-    public String getFlags();
-    
-    public String getSortFied();
-    
-    public String getSubject();
-    
-    public String getFragment();
-    
-    public int getMessageCount();
-    
-    public List<String> getMatchedMessageIds();
-    
-    public List<ZEmailAddress> getRecipients();    
 
 }

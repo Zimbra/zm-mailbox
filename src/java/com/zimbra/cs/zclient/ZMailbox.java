@@ -60,9 +60,25 @@ public abstract class ZMailbox {
     public abstract ZTag getTagById(String id);
 
     /**
-     * return the root folder
+     * return the root user folder
      */
-    public abstract ZFolder getRoot();
+    public abstract ZFolder getUserRoot();
+    
+    /**
+     * find the folder with the pecified path, starting from the user root.
+     * @param path path of folder. Must start with {@link #PATH_SEPARATOR}.
+     * @return ZFolder if found, null otherwise.
+     */
+    public abstract ZFolder getFolderByPath(String path) throws ServiceException;
+    
+    /**
+     * find the folder with the specified id.
+     * @param id id of  folder
+     * @return ZFolder if found, null otherwise.
+     */
+    public abstract ZFolder getFolderById(String id);
+    
+    public abstract ZFolder createFolder(ZFolder parent, String defaultView) throws ServiceException;
     
     public abstract ZSearchResult search(ZSearchParams params) throws ServiceException;
 

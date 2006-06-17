@@ -55,17 +55,17 @@ public class ZSoapMailbox extends ZMailbox {
     private long mAuthTokenLifetime;
     private long mAuthTokenExpiration;
     private SoapHttpTransport mTransport;
-    
+
     private Map<String, ZSoapTag> mNameToTag;
-    private Map<String, ZSoapTag> mIdToTag;
-    
+    private Map<String, ZSoapItem> mIdToItem;
+
     private ZSoapFolder mUserRoot;
-    
+
     private long mSize;
 
     ZSoapMailbox() {
         mNameToTag = new HashMap<String, ZSoapTag>();
-        mIdToTag = new HashMap<String, ZSoapTag>();        
+        mIdToItem = new HashMap<String, ZSoapItem>();        
     }
     
     static class AuthResult {
@@ -117,7 +117,7 @@ public class ZSoapMailbox extends ZMailbox {
 
     private void addTag(ZSoapTag tag) {
         mNameToTag.put(tag.getName(), tag);
-        mIdToTag.put(tag.getId(), tag);
+        addItemIdMapping(tag);
     }
     
     /**
@@ -127,7 +127,7 @@ public class ZSoapMailbox extends ZMailbox {
      */
     private void refreshHandler(Element refresh) throws ServiceException {
         mNameToTag.clear();
-        mIdToTag.clear();
+        mIdToItem.clear();
         Element mbx = refresh.getElement(MailService.E_MAILBOX);
         if (mbx != null) mSize = mbx.getAttributeLong(MailService.A_SIZE);
         Element tags = refresh.getElement(ZimbraNamespace.E_TAGS);
@@ -139,8 +139,10 @@ public class ZSoapMailbox extends ZMailbox {
         refreshFolders(folder);
     }
 
+    void addItemIdMapping(ZSoapItem item) {   mIdToItem.put(item.getId(), item); }
+
     private void refreshFolders(Element folderEl) throws ServiceException {
-        mUserRoot = new ZSoapFolder(folderEl, null);
+        mUserRoot = new ZSoapFolder(folderEl, null, this);
     }
 
     public static ZMailbox getMailbox(String accountName, String password, String uri) throws ServiceException {
@@ -151,7 +153,7 @@ public class ZSoapMailbox extends ZMailbox {
     }
     
     @Override
-    public ZFolder getRoot() {
+    public ZFolder getUserRoot() {
         return mUserRoot;
     }
     
@@ -170,17 +172,21 @@ public class ZSoapMailbox extends ZMailbox {
         ZMailbox mbox = getMailbox("user1", "test123", "http://localhost:7070/service/soap");
         System.out.println(mbox.getSize());
         System.out.println(mbox.getAllTags());
-        System.out.println(mbox.getRoot());
+        System.out.println(mbox.getUserRoot());
         //ZSearchParams sp = new ZSearchParams("StringBuffer");
         ZSearchParams sp = new ZSearchParams("in:inbox");        
         sp.setLimit(20);
         sp.setTypes(ZSearchParams.TYPE_MESSAGE);
         System.out.println(mbox.search(sp));
+        System.out.println(mbox.getFolderByPath("/inBOX"));
+        System.out.println(mbox.getFolderById("2"));
     }
 
     @Override
     public ZTag getTagById(String id) {
-        return mIdToTag.get(id);
+        ZSoapItem item = mIdToItem.get(id);
+        if (item instanceof ZTag) return (ZTag) item;
+        else return null;
     }
 
     @Override
@@ -224,5 +230,25 @@ public class ZSoapMailbox extends ZMailbox {
             }
         }
         return new ZSearchResult(hits, hasMore, sortBy, offset);
+    }
+
+    @Override
+    public ZFolder createFolder(ZFolder parent, String defaultView) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ZFolder getFolderById(String id) {
+        ZSoapItem item = mIdToItem.get(id);
+        if (item instanceof ZFolder) return (ZFolder) item;
+        else return null;
+    }
+
+    @Override
+    public ZFolder getFolderByPath(String path) throws ServiceException {
+        if (!path.startsWith(ZMailbox.PATH_SEPARATOR)) 
+            throw SoapFaultException.CLIENT_ERROR("path must start with "+ZMailbox.PATH_SEPARATOR, null);
+        return getUserRoot().getSubFolderByPath(path.substring(1));
     }
 }

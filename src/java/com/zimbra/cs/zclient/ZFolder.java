@@ -29,6 +29,14 @@ import java.util.List;
 
 public interface ZFolder {
     
+    public static final String VIEW_CONVERSATION = "conversation";
+
+    public static final String VIEW_MESSAGE = "message";
+
+    public static final String VIEW_CONTACT = "contact";
+
+    public static final String VIEW_APPOINTMENT = "appointment";
+    
     public ZFolder getParent();
 
     public String getId();
@@ -67,7 +75,7 @@ public interface ZFolder {
     public int getMessageCount();
     
     /** Returns the "hint" as to which view to use to display the folder's
-     *  contents.  conversation|message|contact|appointment|note
+     *  contents.  conversation|message|contact|appointment
      */
     public String getDefaultView();
     
@@ -114,7 +122,13 @@ public interface ZFolder {
      */
     public List<ZFolder> getSubFolders();
 
-
+    /**
+     * return sub folder with specified path. Path must not start with the mailbox path separator. 
+     * @param path
+     * @return sub folder of this folder, 
+     */
+    public ZFolder getSubFolderByPath(String path);
+    
     /**
      * @return search folders, or empty list if no search folders
      */

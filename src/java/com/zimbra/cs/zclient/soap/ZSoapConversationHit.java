@@ -104,7 +104,7 @@ class ZSoapConversationHit implements ZConversationHit {
         return mSubject;
     }
 
-    public String getTags() {
+    public String getTagIds() {
         return mTags;
     }
     

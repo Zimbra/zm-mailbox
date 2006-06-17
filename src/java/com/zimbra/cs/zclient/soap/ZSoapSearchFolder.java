@@ -32,7 +32,7 @@ import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZSearchFolder;
 import com.zimbra.soap.Element;
 
-class ZSoapSearchFolder implements ZSearchFolder {
+class ZSoapSearchFolder implements ZSearchFolder, ZSoapItem {
 
     private String mId;
     private String mName;
@@ -42,7 +42,7 @@ class ZSoapSearchFolder implements ZSearchFolder {
     private String mSortBy;
     private ZFolder mParent;
     
-    ZSoapSearchFolder(Element e, ZFolder parent) throws ServiceException {
+    ZSoapSearchFolder(Element e, ZFolder parent, ZSoapMailbox mailbox) throws ServiceException {
         mParent = parent;
         mId = e.getAttribute(MailService.A_ID);
         mName = e.getAttribute(MailService.A_NAME);
@@ -50,6 +50,7 @@ class ZSoapSearchFolder implements ZSearchFolder {
         mQuery = e.getAttribute(MailService.A_QUERY);
         mTypes = e.getAttribute(MailService.A_SEARCH_TYPES, null); // TODO FIX
         mSortBy = e.getAttribute(MailService.A_SORTBY, null); // TODO FIX
+        mailbox.addItemIdMapping(this);
     }
 
     public ZFolder getParent() {
