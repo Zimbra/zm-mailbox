@@ -1,4 +1,3 @@
-
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1
@@ -512,6 +511,9 @@ public abstract class Provisioning {
     
     public static final String A_zimbraPreAuthKey = "zimbraPreAuthKey";
     
+    public static final String A_zimbraAvailableSkin = "zimbraAvailableSkin";
+    public static final String A_zimbraInstalledSkin = "zimbraInstalledSkin";
+
     public static final String A_zimbraPrefTimeZoneId = "zimbraPrefTimeZoneId";
     public static final String A_zimbraPrefUseTimeZoneListInCalendar = "zimbraPrefUseTimeZoneListInCalendar";
 

@@ -409,6 +409,19 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
 
 ----------------------------
 
+<GetAvailableSkinsRequest/>
+
+<GetAvailableSkinsResponse>
+  <skin name="{skin-name}"/>+
+</GetAvailableSkinsResponse>
+
+Returns zimbraAvailableSkin skin values set on an account (or its
+CoS).  If none is set, it returns zimbraInstalledSkin values from
+global config.
+
+----------------------------
+
+
  <SearchGalRequest [type="{type}"]>
    <name>...</name>
  </SearchGalRequest>

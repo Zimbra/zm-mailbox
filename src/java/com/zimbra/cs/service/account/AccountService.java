@@ -77,6 +77,9 @@ public class AccountService implements DocumentService {
     public static final QName GET_ALL_LOCALES_REQUEST = QName.get("GetAllLocalesRequest", NAMESPACE);
     public static final QName GET_ALL_LOCALES_RESPONSE = QName.get("GetAllLocalesResponse", NAMESPACE);
 
+    public static final QName GET_AVAILABLE_SKINS_REQUEST = QName.get("GetAvailableSkinsRequest", NAMESPACE);
+    public static final QName GET_AVAILABLE_SKINS_RESPONSE = QName.get("GetAvailableSkinsResponse", NAMESPACE);
+
     public static final String E_ACTION = "action";
     public static final String E_AUTH_TOKEN = "authToken";
     public static final String E_REFERRAL = "refer";
@@ -105,6 +108,7 @@ public class AccountService implements DocumentService {
     public static final String E_ENTRY_SEARCH_FILTER_SINGLECOND = "cond";
     public static final String E_LOCALE = "locale";
     public static final String E_VIRTUAL_HOST = "virtualHost";
+    public static final String E_SKIN = "skin";
 
     public static final String A_N = "n";
     public static final String A_NAME = "name";
@@ -151,6 +155,7 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(MODIFY_PROPERTIES_REQUEST, new ModifyProperties());
 
         dispatcher.registerHandler(GET_ALL_LOCALES_REQUEST, new GetAllLocales());
+        dispatcher.registerHandler(GET_AVAILABLE_SKINS_REQUEST, new GetAvailableSkins());
 	}
 
 }
