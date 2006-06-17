@@ -82,6 +82,7 @@ public class LC {
     public static final KnownKey zimbra_db_directory;
     public static final KnownKey zimbra_tmp_directory;
     public static final KnownKey zimbra_extensions_directory;
+    public static final KnownKey zimbra_extensions_common_directory;
     public static final KnownKey zimbra_mysql_user;
     public static final KnownKey zimbra_mysql_password;
     public static final KnownKey zimbra_ldap_userdn;
@@ -260,7 +261,12 @@ public class LC {
         zimbra_extensions_directory = new KnownKey("zimbra_extension_directory");
         zimbra_extensions_directory.setDefault("${zimbra_home}" + FS + "lib" + FS + "ext");
         zimbra_extensions_directory.setDoc
-        	("Directory whose subdirs contain extensions");
+        	("Directory whose subdirs contain extensions.");
+        
+        zimbra_extensions_common_directory = new KnownKey("zimbra_extension_common_directory");
+        zimbra_extensions_common_directory.setDefault("${zimbra_home}" + FS + "lib" + FS + "ext-common");
+        zimbra_extensions_common_directory.setDoc
+        	("Directory with jar files that are common across all extensions.");
         
         zimbra_mysql_user = new KnownKey("zimbra_mysql_user");
         zimbra_mysql_user.setDefault("zimbra");

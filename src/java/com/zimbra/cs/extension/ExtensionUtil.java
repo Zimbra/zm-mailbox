@@ -25,6 +25,9 @@
 package com.zimbra.cs.extension;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -38,89 +41,122 @@ import com.zimbra.cs.util.ZimbraLog;
 
 public class ExtensionUtil {
 
-	private static List sClassLoaders = new ArrayList();
-	
-	public static synchronized void loadAll() {
+    private static List sClassLoaders = new ArrayList();
+
+    private static URL[] dirListToURLs(File dir) {
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return null;
+        }
+        List<URL> urls = new ArrayList<URL>(files.length);
+        for (int i = 0; i < files.length; i++) {
+            try {
+                URL url = files[i].toURL();
+                urls.add(url);
+                if (ZimbraLog.extensions.isDebugEnabled()) {
+                    ZimbraLog.extensions.debug("adding url: " + url);
+                }
+            } catch (MalformedURLException mue) {
+                ZimbraLog.extensions.warn("ExtensionsUtil: exception creating url for " + files[i], mue);
+            }
+        }
+        return urls.toArray(new URL[0]);
+    }
+
+    private static ClassLoader sExtParentClassLoader;
+
+    static {
+        File extCommonDir = new File(LC.zimbra_extensions_common_directory.value());
+        URL[] extCommonURLs = dirListToURLs(extCommonDir);
+        if (extCommonURLs == null) {
+            // No ext-common libraries are present.
+            sExtParentClassLoader = ExtensionUtil.class.getClassLoader();
+        } else {
+            sExtParentClassLoader = new URLClassLoader(extCommonURLs, ExtensionUtil.class.getClassLoader());    
+        }
+    }
+
+    public static synchronized void loadAll() {
         File extDir = new File(LC.zimbra_extensions_directory.value());
-		if (extDir == null) {
-			ZimbraLog.extensions.info(LC.zimbra_extensions_directory.key() + " is null, no extensions loaded");
-			return;
-		}
+        if (extDir == null) {
+            ZimbraLog.extensions.info(LC.zimbra_extensions_directory.key() + " is null, no extensions loaded");
+            return;
+        }
         ZimbraLog.extensions.info("Loading extensions from " + extDir.getPath());
 
-		File[] extDirs = extDir.listFiles();
-		if (extDirs == null) {
-			return;
-		}
-		for (int i = 0; i < extDirs.length; i++) {
-			if (!extDirs[i].isDirectory()) {
-				ZimbraLog.extensions.warn("ignored non-directory in extensions directory: " + extDirs[i]);
-				continue;
-			}
-			
-			ZimbraExtensionClassLoader zcl = new ZimbraExtensionClassLoader(extDirs[i], ExtensionUtil.class.getClassLoader());
-			if (!zcl.hasExtensions()) {
-				ZimbraLog.extensions.warn("no " + ZimbraExtensionClassLoader.ZIMBRA_EXTENSION_CLASS + " found, ignored: " + extDirs[i]);
-				continue;
-			}
-			
-			sClassLoaders.add(zcl);
-		}
-	}
+        File[] extDirs = extDir.listFiles();
+        if (extDirs == null) {
+            return;
+        }
+        for (int i = 0; i < extDirs.length; i++) {
+            if (!extDirs[i].isDirectory()) {
+                ZimbraLog.extensions.warn("ignored non-directory in extensions directory: " + extDirs[i]);
+                continue;
+            }
 
-	private static ListOrderedMap sInitializedExtensions = new ListOrderedMap();
-	
-	public static synchronized void initAll() {
-		ZimbraLog.extensions.info("Initializing extensions");
-		for (Iterator clIter = sClassLoaders.iterator(); clIter.hasNext();) {
-			ZimbraExtensionClassLoader zcl = (ZimbraExtensionClassLoader)clIter.next();
-			List classes = zcl.getExtensionClassNames();
-			for (Iterator nameIter = classes.iterator(); nameIter.hasNext();) {
-				String name = (String)nameIter.next();
-				Class clz;
-				try {
-					clz = zcl.loadClass(name);
-					ZimbraExtension ext = (ZimbraExtension)clz.newInstance();
-					try {
-						ext.init();
-						RedoableOp.registerClassLoader(ext.getClass().getClassLoader());
+            ZimbraExtensionClassLoader zcl = new ZimbraExtensionClassLoader(dirListToURLs(extDirs[i]), sExtParentClassLoader);
+            if (!zcl.hasExtensions()) {
+                ZimbraLog.extensions.warn("no " + ZimbraExtensionClassLoader.ZIMBRA_EXTENSION_CLASS + " found, ignored: " + extDirs[i]);
+                continue;
+            }
+
+            sClassLoaders.add(zcl);
+        }
+    }
+
+    private static ListOrderedMap sInitializedExtensions = new ListOrderedMap();
+
+    public static synchronized void initAll() {
+        ZimbraLog.extensions.info("Initializing extensions");
+        for (Iterator clIter = sClassLoaders.iterator(); clIter.hasNext();) {
+            ZimbraExtensionClassLoader zcl = (ZimbraExtensionClassLoader)clIter.next();
+            List classes = zcl.getExtensionClassNames();
+            for (Iterator nameIter = classes.iterator(); nameIter.hasNext();) {
+                String name = (String)nameIter.next();
+                Class clz;
+                try {
+                    clz = zcl.loadClass(name);
+                    ZimbraExtension ext = (ZimbraExtension)clz.newInstance();
+                    try {
+                        ext.init();
+                        RedoableOp.registerClassLoader(ext.getClass().getClassLoader());
                         String extName = ext.getName();
-						ZimbraLog.extensions.info("Initialized extension " + extName + ": " + name + "@" + zcl);
-						sInitializedExtensions.put(extName, ext);
-					} catch (Throwable t) { 
-						ZimbraLog.extensions.warn("exception in " + name + ".init()", t);
-					}
-				} catch (InstantiationException e) {
-					ZimbraLog.extensions.warn("exception occurred initializing extension " + name, e);
-				} catch (IllegalAccessException e) {
-					ZimbraLog.extensions.warn("exception occurred initializing extension " + name, e);
-				} catch (ClassNotFoundException e) {
-					ZimbraLog.extensions.warn("exception occurred initializing extension " + name, e);
-				}
-				
-			}
-		}
-	}
+                        ZimbraLog.extensions.info("Initialized extension " + extName + ": " + name + "@" + zcl);
+                        sInitializedExtensions.put(extName, ext);
+                    } catch (Throwable t) { 
+                        ZimbraLog.extensions.warn("exception in " + name + ".init()", t);
+                    }
+                } catch (InstantiationException e) {
+                    ZimbraLog.extensions.warn("exception occurred initializing extension " + name, e);
+                } catch (IllegalAccessException e) {
+                    ZimbraLog.extensions.warn("exception occurred initializing extension " + name, e);
+                } catch (ClassNotFoundException e) {
+                    ZimbraLog.extensions.warn("exception occurred initializing extension " + name, e);
+                }
 
-	public static synchronized void destroyAll() {
-		ZimbraLog.extensions.info("Destroying extensions");
+            }
+        }
+    }
+
+    public static synchronized void destroyAll() {
+        ZimbraLog.extensions.info("Destroying extensions");
         List extNames = sInitializedExtensions.asList();
-		for (ListIterator iter = extNames.listIterator(extNames.size());
-			iter.hasPrevious();)
-		{
+        for (ListIterator iter = extNames.listIterator(extNames.size());
+        iter.hasPrevious();)
+        {
             String extName = (String) iter.previous();
-			ZimbraExtension ext = (ZimbraExtension) getExtension(extName);
-			try {
-				RedoableOp.deregisterClassLoader(ext.getClass().getClassLoader());
-				ext.destroy();
-				ZimbraLog.extensions.info("Destroyed extension " + extName + ": " + ext.getClass().getName() + "@" + ext.getClass().getClassLoader());
-			} catch (Throwable t) {
-				ZimbraLog.extensions.warn("exception in " + ext.getClass().getName() + ".destroy()", t);
-			}
-		}
+            ZimbraExtension ext = (ZimbraExtension) getExtension(extName);
+            try {
+                RedoableOp.deregisterClassLoader(ext.getClass().getClassLoader());
+                ext.destroy();
+                ZimbraLog.extensions.info("Destroyed extension " + extName + ": " + ext.getClass().getName() + "@" + ext.getClass().getClassLoader());
+            } catch (Throwable t) {
+                ZimbraLog.extensions.warn("exception in " + ext.getClass().getName() + ".destroy()", t);
+            }
+        }
         sInitializedExtensions.clear();
-	}
-    
+    }
+
     public static synchronized Class loadClass(String extensionName, String className) throws ClassNotFoundException {
         if (extensionName == null)
             return Class.forName(className);
@@ -130,7 +166,7 @@ public class ExtensionUtil {
         ClassLoader loader = ext.getClass().getClassLoader();
         return loader.loadClass(className);
     }
-    
+
     public static synchronized ZimbraExtension getExtension(String name) {
         return (ZimbraExtension) sInitializedExtensions.get(name);
     }

@@ -27,7 +27,6 @@ package com.zimbra.cs.extension;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -52,16 +51,8 @@ public class ZimbraExtensionClassLoader extends URLClassLoader {
 	 * Load classes from all jar files or directories in the directory
 	 * 'dir'.
 	 */
-	public ZimbraExtensionClassLoader(File dir, ClassLoader parent) {
-		this(new File[] { dir }, parent);
-	}
-
-	/**
-	 * Private for now - we can use this variant if we need to throw all
-	 * extensions (or some of them) into the same classloader instance.
-	 */
-	private ZimbraExtensionClassLoader(File[] dirs, ClassLoader parent) {
-		super(filesToURLs(dirs), parent);
+	public ZimbraExtensionClassLoader(URL[] urls, ClassLoader parent) {
+		super(urls, parent);
 		findExtensions();
 	}
 
@@ -150,26 +141,4 @@ public class ZimbraExtensionClassLoader extends URLClassLoader {
 		return classname;
 	}
 
-	private static URL[] filesToURLs(File[] dirs) {
-		List urls = new ArrayList();
-		for (int i = 0; i < dirs.length; i++) {
-			File[] files = dirs[i].listFiles();
-			if (files == null) {
-				continue;
-			}
-			for (int j = 0; j < files.length; j++) {
-				try {
-					URL url = files[i].toURL();
-					urls.add(url);
-					if (ZimbraLog.extensions.isDebugEnabled()) {
-						ZimbraLog.extensions.debug("adding url: " + url);
-					}
-				} catch (MalformedURLException mue) {
-					ZimbraLog.extensions.warn("exception creating url for " + files[i], mue);
-				}
-			}
-		}
-		return (URL[])urls.toArray(new URL[0]);
-	}
-	
 }

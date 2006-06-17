@@ -15,6 +15,7 @@ the server's own classloader (since we use tomcat, the parent is a
 WebappClassLoader object).  The classloader parenting relationship is:
 
     (Zimbra) ZimbraExtensionClassLoader ->
+    (Zimbra) URLClassLoader for loading /opt/zimbra/lib/ext-common/ ->
     (Tomcat) WebappClassLoader (and others tomcat classloaders) -> 
     (JRE) Application ClassLoader ->
     (JRE) Extension ClassLoader ->
