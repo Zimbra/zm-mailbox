@@ -368,7 +368,7 @@ public class LC {
              " the server workqueue for processing the forwards");
 
         stats_img_folder = new KnownKey("stats_img_folder");
-        stats_img_folder.setDefault("${zimbra_home}" + FS + "zimbramon" + FS + "rrdtool" + FS + "work");
+        stats_img_folder.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "work");
         stats_img_folder.setDoc
             ("Directory for storing generated statistics images.");
 
