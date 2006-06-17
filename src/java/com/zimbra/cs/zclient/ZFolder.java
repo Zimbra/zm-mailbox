@@ -120,8 +120,6 @@ public interface ZFolder {
      */
     public List<ZSearchFolder> getSearchFolders();
 
-
-
     /**
      * @return links, or empty list if no links
      */

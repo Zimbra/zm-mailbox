@@ -25,45 +25,36 @@
 
 package com.zimbra.cs.zclient;
 
-import java.util.Collection;
-
-import com.zimbra.cs.service.ServiceException;
-
-public abstract class ZMailbox {
-
-    public final static String PATH_SEPARATOR = "/";
-
-    /**
-     * @return current size of mailbox in bytes
-     */
-    public abstract long getSize();
+public interface ZEmailAddress {
     
     /**
-     * @return current list of all tags in the mailbox
+     * (f)rom, t(o), c(c). Type is only sent when an individual message message is returned. In the
+     * list of conversations, all the email addresseses returned for a conversation are a subset
+     * of the participants. In the list of messages in a converstation, the email addressses are
+     * the senders. 
      */
-    public abstract Collection<? extends ZTag> getAllTags();
-    
-    /**
-     * returns the tag the specified name, or null if no such tag exists.
-     * 
-     * @param name
-     * @return
-     */
-    public abstract ZTag getTagByName(String name);
+    public String getType();
 
     /**
-     * returns the tag with the specified id, or null if no such tag exists.
-     * 
-     * @param id
-     * @return
+     * the comment/name part of an address
      */
-    public abstract ZTag getTagById(String id);
-
-    /**
-     * return the root folder
-     */
-    public abstract ZFolder getRoot();
+    public String getPersonal();
     
-    public abstract ZSearchResult search(ZSearchParams params) throws ServiceException;
+    /**
+     * the user@domain part of an address
+     */
+    public String getAddress();
+    
+    /**
+     * if we have personal, first word in "word1 word2" format, or last word in "word1, word2" format.
+     * if no personal, take string before "@" in email-address.
+     */
+    public String getDisplay();
+    
+    /**
+     * the original email string as specified by the sender (since we can't reliably reconstruct it
+     * out of the components)
+     */
+    public String getContent();
 
 }

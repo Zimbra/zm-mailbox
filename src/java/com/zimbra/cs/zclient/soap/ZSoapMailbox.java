@@ -26,8 +26,10 @@
 package com.zimbra.cs.zclient.soap;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -37,6 +39,9 @@ import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZSearchHit;
+import com.zimbra.cs.zclient.ZSearchParams;
+import com.zimbra.cs.zclient.ZSearchResult;
 import com.zimbra.cs.zclient.ZTag;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -104,7 +109,7 @@ public class ZSoapMailbox extends ZMailbox {
             // handle refresh blocks
             Element context = mTransport.getZimbraContext();
             if (context != null) {
-                Element refresh = context.getElement(ZimbraNamespace.E_REFRESH);
+                Element refresh = context.getOptionalElement(ZimbraNamespace.E_REFRESH);
                 if (refresh != null) refreshHandler(refresh);
             }
         }
@@ -166,6 +171,9 @@ public class ZSoapMailbox extends ZMailbox {
         System.out.println(mbox.getSize());
         System.out.println(mbox.getAllTags());
         System.out.println(mbox.getRoot());
+        ZSearchParams sp = new ZSearchParams("in:inbox");
+        sp.setLimit(400);
+        System.out.println(mbox.search(sp));
     }
 
     @Override
@@ -176,5 +184,41 @@ public class ZSoapMailbox extends ZMailbox {
     @Override
     public ZTag getTagByName(String name) {
         return mNameToTag.get(name);
+    }
+
+    @Override
+    public ZSearchResult search(ZSearchParams params) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.SEARCH_REQUEST);
+
+        if (params.getLimit() != 0) req.addAttribute(MailService.A_QUERY_LIMIT, params.getLimit());
+        if (params.getOffset() != 0) req.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
+        if (params.getSortBy() != null) req.addAttribute(MailService.A_SORTBY, params.getSortBy());
+        if (params.getTypes() != null) req.addAttribute(MailService.A_SEARCH_TYPES, params.getTypes());
+        if (params.isFetchFirstMessage()) req.addAttribute(MailService.A_FETCH, params.isFetchFirstMessage());
+        if (params.isPreferHtml()) req.addAttribute(MailService.A_WANT_HTML, params.isPreferHtml());
+        if (params.isMarkAsRead()) req.addAttribute(MailService.A_MARK_READ, params.isMarkAsRead());
+        if (params.isRecipientMode()) req.addAttribute(MailService.A_RECIPIENTS, params.isRecipientMode());
+        
+        req.addElement(MailService.E_QUERY).setText(params.getQuery());
+        
+        if (params.getCursorPreviousId() != null || params.getCursorPreviousSortValue() != null) {
+            Element cursor = req.addElement(MailService.E_CURSOR);
+            if (params.getCursorPreviousId() != null) cursor.addAttribute(MailService.A_ID, params.getCursorPreviousId());
+            if (params.getCursorPreviousSortValue() != null) cursor.addAttribute(MailService.A_SORTVAL, params.getCursorPreviousSortValue());
+        }
+        
+        Element response = invoke(req);
+        
+        String sortBy = response.getAttribute(MailService.A_SORTBY);
+        boolean hasMore = response.getAttributeBool(MailService.A_QUERY_MORE);
+        int offset = (int) response.getAttributeLong(MailService.A_QUERY_OFFSET);
+        List<ZSearchHit> hits = new ArrayList<ZSearchHit>();
+        Map<String,ZSoapEmailAddress> cache = new HashMap<String, ZSoapEmailAddress>();
+        for (Element e: response.listElements()) {
+            if (e.getName().equals(MailService.E_CONV)) {
+                hits.add(new ZSoapConversationHit(e, cache));
+            }
+        }
+        return new ZSearchResult(hits, hasMore, sortBy, offset);
     }
 }

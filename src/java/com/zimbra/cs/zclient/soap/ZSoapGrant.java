@@ -67,7 +67,7 @@ public class ZSoapGrant implements ZGrant {
     }
     
     public String toString() {
-        return String.format("grant: { type: %s, name: %s, rights: %s, inherit: %s, args: %s } ", 
+        return String.format("grant: { type: %s, name: %s, rights: %s, inherit: %s, args: %s }", 
                 mGranteeType, mGranteeName, mRights, mInherit, mArgs); 
     }
 }
