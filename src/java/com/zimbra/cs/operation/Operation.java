@@ -264,7 +264,7 @@ public abstract class Operation implements IOperation
         return toRet;
     }
 
-    protected static final int OPERATION_REPEAT_THRESHOLD  = Session.OPERATION_HISTORY_LENGTH-2;
+    protected static final int OPERATION_REPEAT_THRESHOLD  = Session.OPERATION_HISTORY_LENGTH / 2;
 
     /**
      * Given a list of the recent operations on the current session, this function returns

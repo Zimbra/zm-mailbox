@@ -55,6 +55,7 @@ import com.zimbra.cs.operation.CreateFolderOperation;
 import com.zimbra.cs.operation.CreateTagOperation;
 import com.zimbra.cs.operation.DeleteOperation;
 import com.zimbra.cs.operation.GetFolderOperation;
+import com.zimbra.cs.operation.GetItemOperation;
 import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.SetTagsOperation;
 import com.zimbra.cs.operation.Operation.Requester;
@@ -1130,7 +1131,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             for (Tag ltag : ltags)
                 try {
                     // notification will update mTags hash
-    //                mMailbox.delete(getContext(), ltag.getId(), MailItem.TYPE_TAG);
                     DeleteOperation op = new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP, ltag.getId(), MailItem.TYPE_TAG);
                     op.schedule();
                         
@@ -1205,7 +1205,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
         try {
             // make sure the folder exists and is visible
-            Folder folder = mMailbox.getFolderByPath(getContext(), path);
+            GetFolderOperation op = new GetFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, path);
+            op.schedule();
+            Folder folder = op.getFolder();
+            
             if (!ImapFolder.isFolderVisible(folder, mSession)) {
                 ZimbraLog.imap.info("GETQUOTAROOT failed: folder not visible: " + path);
                 sendNO(tag, "GETQUOTAROOT failed");
@@ -1328,7 +1331,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     try {
                         ZimbraLog.imap.debug("  ** deleting: " + i4msg.msgId);
                         
-//                        mMailbox.delete(getContext(), i4msg.msgId, i4msg.getType());
                         DeleteOperation delOp = new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP,  i4msg.msgId, i4msg.getType());
                         delOp.schedule();
                         
@@ -1383,8 +1385,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     search = '(' + i4folder.getQuery() + ") (" + search + ')';
                 ZimbraLog.imap.info("[ search is: " + search + " ]");
 
-
-//              ZimbraQueryResults zqr = mMailbox.search(getContext(), search, ITEM_TYPES, MailboxIndex.SortBy.DATE_ASCENDING, 1000);
                 SearchParams params = new SearchParams();
                 params.setQueryStr(search);
                 params.setTypes(ITEM_TYPES);
@@ -1499,8 +1499,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 boolean empty = true;
                 byte[] raw = null;
                 MailItem item = null;
-                if (!fullMessage.isEmpty() || !parts.isEmpty() || (attributes & ~FETCH_FROM_CACHE) != 0)
-                    item = mMailbox.getItemById(getContext(), i4msg.msgId, i4msg.getType());
+                if (!fullMessage.isEmpty() || !parts.isEmpty() || (attributes & ~FETCH_FROM_CACHE) != 0) {
+                    GetItemOperation op = new GetItemOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType());
+                    op.schedule();
+                    item = op.getItem();
+                }
+                    
                 MimeMessage mm = null;
 
                 result.print("* " + i4msg.sequence + " FETCH (");
@@ -1546,7 +1550,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 }
                 // FIXME: optimize by doing a single mark-read op on multiple messages
                 if (markMessage) {
-//                    mMailbox.alterTag(getContext(), i4msg.msgId, i4msg.getType(), Flag.ID_FLAG_UNREAD, false);
                     AlterTagOperation op = new AlterTagOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType(), Flag.ID_FLAG_UNREAD, false);
                     op.schedule();
                 }
@@ -1645,7 +1648,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                                     mSession.getFolder().disableNotifications();
                                 
                                 // actually alter the item's flags
-                                // mMailbox.setTags(getContext(), i4msg.msgId, i4msg.getType(), flags, tags);
                                 SetTagsOperation op = new SetTagsOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType(), flags, tags);
                                 op.schedule();
                                 
@@ -1707,7 +1709,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         String copyuid = "";
         List<MailItem> newMessages = new ArrayList<MailItem>();
         try {
-            Folder folder = mMailbox.getFolderByPath(getContext(), folderName);
+            GetFolderOperation gfOp = new GetFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, folderName);
+            gfOp.schedule();
+            Folder folder = gfOp.getFolder();
+            
             if (!ImapFolder.isFolderVisible(folder, mSession)) {
                 ZimbraLog.imap.info(command + " failed: folder is hidden: " + folderName);
                 sendNO(tag, command + " failed");
@@ -1736,12 +1741,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     continue;
                 
                 // FIXME: should optimize to a move, as 95% of IMAP COPY ops are really moves...
-//                MailItem copy = mMailbox.copy(getContext(), i4msg.msgId, i4msg.getType(), folder.getId());
-//                if (copy == null)
-//                    continue;
-                CopyOperation op = new CopyOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType(), folder.getId());
-                op.schedule();
-                MailItem copy = op.getResult();
+                CopyOperation copyOp = new CopyOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType(), folder.getId());
+                copyOp.schedule();
+                MailItem copy = copyOp.getResult();
+                if (copy == null)
+                    continue;
                 
                 newMessages.add(copy);
                 srcUIDs.add(i4msg.imapUid);
@@ -1793,7 +1797,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         if (messages != null && !messages.isEmpty())
             for (MailItem item : messages)
                 try {
-//                    mMailbox.delete(getContext(), item.getId(), item.getType());
                     DeleteOperation delOp = new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP,  item.getId(), item.getType());
                     delOp.schedule();
                     

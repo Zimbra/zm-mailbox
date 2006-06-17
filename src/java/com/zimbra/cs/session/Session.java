@@ -92,8 +92,8 @@ public abstract class Session
     	   }
     }
     
-    public static final int OPERATION_HISTORY_LENGTH = 5;
-    public static final int OPERATION_HISTORY_TIME = 60 * 1000;
+    public static final int OPERATION_HISTORY_LENGTH = 6;
+    public static final int OPERATION_HISTORY_TIME = 10 * 1000;
     
     private List<RecentOperation> mRecentOperations = new LinkedList<RecentOperation>();
     
