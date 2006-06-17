@@ -46,7 +46,6 @@ JAVA_CLASSES = $(patsubst %,$(CLASSES)/%,$(JAVA_FILES:%.java=%.class))
 all: FORCE
 	$(MAKE) $(BUILD)/zimbra-native.jar
 	$(MAKE) $(BUILD)/libzimbra-native.$(SHARED_EXT)
-	$(MAKE) $(BUILD)/zmtomcatstart
 
 #
 # Build jar file that wraps native code and it's shared library.
@@ -98,26 +97,6 @@ $(BUILD)/Process.h: $(CLASSES)/com/zimbra/znative/Process.class
 	javah -o $@ -classpath $(CLASSES) com.zimbra.znative.Process
 
 #
-# Build tomcat launcher that calls setuid to drop priveleges.  Note
-# that paths you specify here must not be owned in the install by less
-# privileged user who could then hijack this launcher binary.  The
-# defaults are bad bad bad, as those symlinks might not be owned by
-# root.
-#
-ZIMBRA_LIB = /opt/zimbra/lib
-TOMCAT_HOME ?= /opt/zimbra/tomcat
-TOMCAT_PIDFILE ?= /opt/zimbra/log/tomcat.pid
-JAVA_BINARY ?= /opt/zimbra/java/bin/java
-LAUNCHER_CFLAGS = \
-	-DZIMBRA_LIB='"$(ZIMBRA_LIB)/jars"' \
-	-DTOMCAT_HOME='"$(TOMCAT_HOME)"' \
-	-DJAVA_BINARY='"$(JAVA_BINARY)"' \
-	-DTOMCAT_PIDFILE='"$(TOMCAT_PIDFILE)"'
-
-$(BUILD)/zmtomcatstart: $(SRC)/launcher/zmtomcatstart.c
-	gcc $(MACDEF) $(LAUNCHER_CFLAGS) -Wall -Wmissing-prototypes -o $@ $<
-
-#
 # Hack to copy to destination for use on incremental builds in a linux
 # dev environment.
 #
@@ -126,8 +105,6 @@ push: all
 	cp $(BUILD)/zimbra-native.jar ../ZimbraServer/jars
 	p4 edit ../ZimbraServer/lib/libzimbra-native.$(SHARED_EXT)
 	cp $(BUILD)/libzimbra-native.$(SHARED_EXT) ../ZimbraServer/lib
-	p4 edit ../ZimbraServer/libexec/zmtomcatstart.$(shell uname)
-	cp $(BUILD)/zmtomcatstart ../ZimbraServer/libexec/zmtomcatstart.$(shell uname)
 
 #
 # Clean
