@@ -27,30 +27,37 @@ package com.zimbra.cs.zclient;
 
 import java.util.List;
 
-
-public interface ZConversationHit extends ZSearchHit {
+public interface ZMessageHit extends ZSearchHit {
 
     /**
-     * @return conversation's id
+     * @return message's id
      */
     public String getId();
-    
-    public String getTags();
-    
+
+    public String getFlags();
+
+    public long getSize();
+
     public long getDate();
     
-    public String getFlags();
+    public String getConversationId();
     
+    public String getTags();
+
     public String getSortFied();
     
     public String getSubject();
     
+    public float getScore();
+    
     public String getFragment();
     
-    public int getMessageCount();
-    
-    public List<String> getMatchedMessageIds();
-    
-    public List<ZEmailAddress> getRecipients();    
+    public ZEmailAddress getSender();
 
+    public boolean getContentMatched();
+    
+    /**
+     *  @return names (1.2.3...) of mime part(s) that matched, or empty list.
+     */
+    public List<String> getMimePartHits();
 }

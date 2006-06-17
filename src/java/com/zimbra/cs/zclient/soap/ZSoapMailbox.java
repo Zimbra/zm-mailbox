@@ -171,8 +171,10 @@ public class ZSoapMailbox extends ZMailbox {
         System.out.println(mbox.getSize());
         System.out.println(mbox.getAllTags());
         System.out.println(mbox.getRoot());
-        ZSearchParams sp = new ZSearchParams("in:inbox");
-        sp.setLimit(400);
+        //ZSearchParams sp = new ZSearchParams("StringBuffer");
+        ZSearchParams sp = new ZSearchParams("in:inbox");        
+        sp.setLimit(20);
+        sp.setTypes(ZSearchParams.TYPE_MESSAGE);
         System.out.println(mbox.search(sp));
     }
 
@@ -217,6 +219,8 @@ public class ZSoapMailbox extends ZMailbox {
         for (Element e: response.listElements()) {
             if (e.getName().equals(MailService.E_CONV)) {
                 hits.add(new ZSoapConversationHit(e, cache));
+            } else if (e.getName().equals(MailService.E_MSG)) {
+                hits.add(new ZSoapMessageHit(e, cache));
             }
         }
         return new ZSearchResult(hits, hasMore, sortBy, offset);

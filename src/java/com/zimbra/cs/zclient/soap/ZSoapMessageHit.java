@@ -31,11 +31,11 @@ import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.cs.zclient.ZConversationHit;
 import com.zimbra.cs.zclient.ZEmailAddress;
+import com.zimbra.cs.zclient.ZMessageHit;
 import com.zimbra.soap.Element;
 
-class ZSoapConversationHit implements ZConversationHit {
+class ZSoapMessageHit implements ZMessageHit {
 
     private String mId;
     private String mFlags;
@@ -43,12 +43,15 @@ class ZSoapConversationHit implements ZConversationHit {
     private String mSubject;
     private String mSortField;
     private String mTags;
-    private int mMessageCount;
+    private String mConvId;
+    private float mScore;
     private long mDate;
-    private List<String> mMessageIds;
-    private List<ZEmailAddress> mRecipients;
+    private int mSize;
+    private boolean mContentMatched;
+    private List<String> mMimePartHits;
+    private ZEmailAddress mSender;
         
-    ZSoapConversationHit(Element e, Map<String,ZSoapEmailAddress> cache) throws ServiceException {
+    ZSoapMessageHit(Element e, Map<String,ZSoapEmailAddress> cache) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
         mFlags = e.getAttribute(MailService.A_FLAGS, "");
         mDate = e.getAttributeLong(MailService.A_DATE);
@@ -56,32 +59,29 @@ class ZSoapConversationHit implements ZConversationHit {
         mFragment = e.getElement(MailService.E_FRAG).getText();
         mSubject = e.getElement(MailService.E_SUBJECT).getText();        
         mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);
-        mMessageCount = (int) e.getAttributeLong(MailService.A_NUM);
-        mMessageIds = new ArrayList<String>();
-        for (Element m: e.listElements(MailService.E_MSG)) {
-            mMessageIds.add(m.getAttribute(MailService.A_ID));
+        mSize = (int) e.getAttributeLong(MailService.A_SIZE);
+        mConvId = e.getAttribute(MailService.A_CONV_ID);
+        mScore = (float) e.getAttributeDouble(MailService.A_SCORE, 0);
+        mContentMatched = e.getAttributeBool(MailService.A_CONTENTMATCHED, false);
+        mMimePartHits = new ArrayList<String>();
+        for (Element hp: e.listElements(MailService.E_HIT_MIMEPART)) {
+            mMimePartHits.add(hp.getAttribute(MailService.A_PART));
         }
-        
-        mRecipients = new ArrayList<ZEmailAddress>();
-        for (Element emailEl: e.listElements(MailService.E_EMAIL)) {
-            mRecipients.add(ZSoapEmailAddress.getAddress(emailEl, cache));
-        }        
+        Element emailEl = e.getElement(MailService.E_EMAIL);
+        mSender = ZSoapEmailAddress.getAddress(emailEl, cache);
     }
 
     public String getId() {
         return mId;
     }
 
+    public boolean getContentMatched() {
+        return mContentMatched;
+    }
+
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{ ");
-        for (ZEmailAddress addr : mRecipients) {
-            sb.append("\n").append(addr);
-        }
-        sb.append("}");        
-        
-        return String.format("convhit: { id: %s, flags: %s, fragment: %s, subject: %s, sortfield: %s, msgcount: %d, msgIds: %s, recipients: %s }",
-                mId, mFlags, mFragment, mSubject, mSortField, mMessageCount, mMessageIds, sb.toString()); 
+        return String.format("msghit: { id: %s, convid: %s, flags: %s, fragment: %s, subject: %s, sortfield: %s, size: %d, mimeparts: %s, sender: %s, score: %f }",
+                mId, mConvId, mFlags, mFragment, mSubject, mSortField, mSize, mMimePartHits, mSender, mScore);
     }
 
     public String getFlags() {
@@ -108,15 +108,23 @@ class ZSoapConversationHit implements ZConversationHit {
         return mTags;
     }
     
-    public int getMessageCount() {
-        return mMessageCount;
+    public String getConversationId() {
+        return mConvId;
     }
 
-    public List<String> getMatchedMessageIds() {
-        return mMessageIds;
+    public List<String> getMimePartHits() {
+        return mMimePartHits;
     }
 
-    public List<ZEmailAddress> getRecipients() {
-        return mRecipients;
+    public float getScore() {
+        return mScore;
+    }
+
+    public ZEmailAddress getSender() {
+        return mSender;
+    }
+
+    public long getSize() {
+        return mSize;
     }
 }
