@@ -17,7 +17,7 @@ MACDEF := -DDARWIN
 SHARED_EXT := jnilib
 LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM
 JAVA_BINARY = /usr/bin/java
-PUSHED_EXT := so.MacOSX.ppc
+PUSHED_EXT := jnilib.MacOSX.ppc
 endif
 
 ifeq ($(BUILD_PLATFORM), MACOSXx86)
@@ -27,7 +27,7 @@ MACDEF := -DDARWIN
 SHARED_EXT := jnilib
 LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM
 JAVA_BINARY = /usr/bin/java
-PUSHED_EXT := so.MacOSX.i386
+PUSHED_EXT := jnilib.MacOSX.i386
 endif
 
 CLASSES = $(BUILD)/classes
