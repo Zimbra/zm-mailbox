@@ -8,6 +8,7 @@ BUILD_PLATFORM := $(shell sh $(BUILD_ROOT)/../ZimbraBuild/rpmconf/Build/get_plat
 SHARED := -shared
 JAVAINC := -I/usr/local/java/include -I/usr/local/java/include/linux
 SHARED_EXT := so
+PUSHED_EXT := so.Linux.i386
 
 ifeq ($(BUILD_PLATFORM), MACOSX)
 JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
@@ -16,6 +17,7 @@ MACDEF := -DDARWIN
 SHARED_EXT := jnilib
 LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM
 JAVA_BINARY = /usr/bin/java
+PUSHED_EXT := so.MacOSX.ppc
 endif
 
 ifeq ($(BUILD_PLATFORM), MACOSXx86)
@@ -25,6 +27,7 @@ MACDEF := -DDARWIN
 SHARED_EXT := jnilib
 LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM
 JAVA_BINARY = /usr/bin/java
+PUSHED_EXT := so.MacOSX.i386
 endif
 
 CLASSES = $(BUILD)/classes
@@ -127,8 +130,8 @@ $(BUILD)/Util.h: $(CLASSES)/com/zimbra/znative/Util.class
 push: all
 	p4 edit ../ZimbraServer/jars/zimbra-native.jar
 	cp $(BUILD)/zimbra-native.jar ../ZimbraServer/jars
-	p4 edit ../ZimbraServer/lib/libzimbra-native.$(SHARED_EXT)
-	cp $(BUILD)/libzimbra-native.$(SHARED_EXT) ../ZimbraServer/lib
+	p4 edit ../ZimbraServer/lib/libzimbra-native.$(PUSHED_EXT)
+	cp $(BUILD)/libzimbra-native.$(SHARED_EXT) ../ZimbraServer/lib/libzimbra-native.$(PUSHED_EXT)
 
 #
 # Clean
