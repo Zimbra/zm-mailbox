@@ -594,7 +594,7 @@
 		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" />
 	</target>
 
-	<target name="refresh-opt-zimbra" description="Push changes to /opt/zimbra">
+	<target name="refresh-opt-zimbra" depends="refresh-opt-zimbra-unix" description="Push changes to /opt/zimbra">
 		<copy todir="${zimbra.home.dir}/db" overwrite="true">
 			<fileset dir="${src.db.dir}" />
 		</copy>
@@ -615,11 +615,11 @@
 	</target>
 
 	<target name="refresh-opt-zimbra-unix" if="is-unix">
-		<copy tofile="${zimbra.home.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" verbose="true" />
-		<copy todir="${zimbra.home.dir}/bin">
+		<copy tofile="${zimbra.home.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" verbose="true" overwrite="true"/>
+		<copy todir="${zimbra.home.dir}/bin" overwrite="true">
 			<fileset dir="${src.bin.dir}" includes="*" />
 		</copy>
-		<copy todir="${zimbra.home.dir}/libexec">
+		<copy todir="${zimbra.home.dir}/libexec" overwrite="true">
 			<fileset dir="${src.libexec.dir}" includes="*" />
 		</copy>
 		<chmod perm="a+rx">
