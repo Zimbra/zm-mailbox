@@ -103,6 +103,10 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
     void addChild(ZFolder folder)        { mSubFolders.add(folder); }
     void addChild(ZLink link)            { mLinks.add(link); }
     void addChild(ZSearchFolder folder)  { mSearchFolders.add(folder); }
+    
+    void removeChild(ZFolder folder)       { mSubFolders.remove(folder); }
+    void removeChild(ZLink link)           { mLinks.remove(link); }
+    void removeChild(ZSearchFolder folder) { mSearchFolders.remove(folder); }
 
     public ZFolder getParent() {
         return mParent;

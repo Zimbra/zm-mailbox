@@ -157,7 +157,26 @@ public class ZSoapMailbox extends ZMailbox {
 
     private void handleDeleted(Element deleted) {
         if (deleted == null) return;
-        // TODO
+        String ids = deleted.getAttribute(MailService.A_ID, null);
+        if (ids == null) return;
+        for (String id : ids.split(",")) {
+            ZSoapItem item = mIdToItem.get(id);
+            if (item instanceof ZSoapFolder) {
+                ZSoapFolder sf = (ZSoapFolder) item;
+                if (sf.getParent() != null) 
+                    ((ZSoapFolder)sf.getParent()).removeChild(sf);
+            } else if (item instanceof ZSoapLink) {
+                ZSoapLink sl = (ZSoapLink) item;
+                if (sl.getParent() != null) 
+                    ((ZSoapFolder)sl.getParent()).removeChild(sl);
+            } else if (item instanceof ZSoapSearchFolder) {
+                ZSoapSearchFolder sf = (ZSoapSearchFolder) item;
+                if (sf.getParent() != null) 
+                    ((ZSoapFolder)sf.getParent()).removeChild(sf);
+                
+            }
+            if (item != null) mIdToItem.remove(item.getId());
+        }
     }
 
     private void addTag(ZSoapTag tag) {
@@ -371,7 +390,12 @@ public class ZSoapMailbox extends ZMailbox {
         mbox.doAction(ZFolderAction.setChecked(true), inbox);
         mbox.doAction(ZFolderAction.setChecked(false), inbox);        
         mbox.doAction(ZFolderAction.setColor(1), inbox);
-        System.out.println(mbox.createFolder(inbox, "dork",ZFolder.VIEW_MESSAGE));
+        ZFolder dork = mbox.createFolder(inbox, "dork",ZFolder.VIEW_MESSAGE);
+        System.out.println("---------- created dork -----------");                
+        System.out.println(dork);
+        System.out.println(inbox);
+        mbox.doAction(ZFolderAction.delete(), dork);
+        System.out.println("---------- deleted dork -----------");
         System.out.println(inbox);        
     }
 
