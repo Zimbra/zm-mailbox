@@ -78,7 +78,21 @@ public abstract class ZMailbox {
      */
     public abstract ZFolder getFolderById(String id);
     
-    public abstract ZFolder createFolder(ZFolder parent, String defaultView) throws ServiceException;
+    /**
+     * create a new sub folder of the specified parent folder.
+     * 
+     * @param parent parent folder
+     * @param name name of new folder
+     * @param defaultView default view of new folder. 
+     * @see {@link ZFolder#VIEW_APPOINTMENT}
+     * @see {@link ZFolder#VIEW_CONTACT}
+     * @see {@link ZFolder#VIEW_CONVERSATION}
+     * @see {@link ZFolder#VIEW_MESSAGE}
+     *                
+     * @return newly created folder
+     * @throws ServiceException
+     */
+    public abstract ZFolder createFolder(ZFolder parent, String name, String defaultView) throws ServiceException;
  
     public abstract ZFolderAction.Result doAction(ZFolderAction action, ZFolder folder) throws ServiceException;
     

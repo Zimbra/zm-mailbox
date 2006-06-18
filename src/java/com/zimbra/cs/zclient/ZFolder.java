@@ -29,14 +29,18 @@ import java.util.List;
 
 public interface ZFolder {
     
+    /** default view for this folder is conversations */
     public static final String VIEW_CONVERSATION = "conversation";
 
+    /** default view for this folder is messages */
     public static final String VIEW_MESSAGE = "message";
 
+    /** default view for this folder is contacts */
     public static final String VIEW_CONTACT = "contact";
 
+    /** default view for this folder is appointments/calendar */
     public static final String VIEW_APPOINTMENT = "appointment";
-    
+
     public ZFolder getParent();
 
     public String getId();

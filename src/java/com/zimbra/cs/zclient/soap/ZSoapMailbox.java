@@ -219,9 +219,16 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZFolder createFolder(ZFolder parent, String defaultView) {
-        // TODO Auto-generated method stub
-        return null;
+    public ZFolder createFolder(ZFolder parent, String name, String defaultView) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.CREATE_FOLDER_REQUEST);
+        Element folderEl = req.addElement(MailService.E_FOLDER);
+        folderEl.addAttribute(MailService.A_NAME, name);
+        folderEl.addAttribute(MailService.A_FOLDER, parent.getId());
+        if (defaultView != null) folderEl.addAttribute(MailService.A_DEFAULT_VIEW, defaultView);
+        String id = invoke(req).getElement(MailService.E_FOLDER).getAttribute(MailService.A_ID);
+        // this assumes notifications will create the folder
+        ZFolder folder = getFolderById(id);
+        return folder;
     }
 
     @Override
@@ -319,9 +326,8 @@ public class ZSoapMailbox extends ZMailbox {
         mbox.doAction(ZFolderAction.setChecked(true), inbox);
         mbox.doAction(ZFolderAction.setChecked(false), inbox);        
         mbox.doAction(ZFolderAction.setColor(1), inbox);
-        mbox.doAction(ZFolderAction.setColor(2), inbox);
-        mbox.doAction(ZFolderAction.setColor(3), inbox);
-        mbox.doAction(ZFolderAction.setColor(4), inbox);
+        mbox.createFolder(inbox, "dork",ZFolder.VIEW_MESSAGE);
+                
     }
 
 }
