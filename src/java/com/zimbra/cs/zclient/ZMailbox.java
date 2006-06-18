@@ -79,7 +79,10 @@ public abstract class ZMailbox {
     public abstract ZFolder getFolderById(String id);
     
     public abstract ZFolder createFolder(ZFolder parent, String defaultView) throws ServiceException;
+ 
+    public abstract ZFolderAction.Result doAction(ZFolderAction action, ZFolder folder) throws ServiceException;
+    
+    public abstract ZFolderAction.Result doAction(ZFolderAction action, String ids) throws ServiceException;    
     
     public abstract ZSearchResult search(ZSearchParams params) throws ServiceException;
-
 }

@@ -38,6 +38,7 @@ import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZFolderAction;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZSearchHit;
 import com.zimbra.cs.zclient.ZSearchParams;
@@ -167,21 +168,6 @@ public class ZSoapMailbox extends ZMailbox {
         return mNameToTag.values();
     }
 
-    public static void main(String args[]) throws ServiceException {
-        Zimbra.toolSetup();
-        ZMailbox mbox = getMailbox("user1", "test123", "http://localhost:7070/service/soap");
-        System.out.println(mbox.getSize());
-        System.out.println(mbox.getAllTags());
-        System.out.println(mbox.getUserRoot());
-        //ZSearchParams sp = new ZSearchParams("StringBuffer");
-        ZSearchParams sp = new ZSearchParams("in:inbox");        
-        sp.setLimit(20);
-        sp.setTypes(ZSearchParams.TYPE_MESSAGE);
-        System.out.println(mbox.search(sp));
-        System.out.println(mbox.getFolderByPath("/inBOX"));
-        System.out.println(mbox.getFolderById("2"));
-    }
-
     @Override
     public ZTag getTagById(String id) {
         ZSoapItem item = mIdToItem.get(id);
@@ -251,4 +237,91 @@ public class ZSoapMailbox extends ZMailbox {
             throw SoapFaultException.CLIENT_ERROR("path must start with "+ZMailbox.PATH_SEPARATOR, null);
         return getUserRoot().getSubFolderByPath(path.substring(1));
     }
+
+    @Override
+    public ZFolderAction.Result doAction(ZFolderAction action, ZFolder folder) throws ServiceException {
+        return doAction(action, folder.getId());
+    }
+
+    @Override
+    public ZFolderAction.Result doAction(ZFolderAction action, String ids) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.FOLDER_ACTION_REQUEST);
+        Element actionEl = req.addElement(MailService.E_ACTION);
+        
+        actionEl.addAttribute(MailService.A_ID, ids);
+        String opStr = null;
+        switch (action.getOp()) {
+        case CHECK:
+            opStr = action.getChecked() ? "check" : "!check";
+            break;
+        case COLOR: 
+            opStr = "color";
+            actionEl.addAttribute(MailService.A_COLOR, action.getColor());
+            break;            
+        case DELETE:
+            opStr = "delete";
+            break;            
+        case EXCLUDE_FREE_BUSY:
+            opStr = "fb";
+            actionEl.addAttribute(MailService.A_EXCLUDE_FREEBUSY, action.getExcludeFreeBusy());
+            break;            
+        case EMPTY:
+            opStr = "empty";
+            break;            
+        case IMPORT:
+            opStr = "import";
+            actionEl.addAttribute(MailService.A_URL, action.getURL());
+            break;            
+        case MARK_AS_READ:
+            opStr = "read";
+            break;
+        case MOVE:
+            opStr = "move";
+            actionEl.addAttribute(MailService.A_FOLDER, action.getName());
+            break;
+        case RENAME:
+            opStr = "rename";
+            actionEl.addAttribute(MailService.A_NAME, action.getName());
+            break;    
+        case SYNC:
+            opStr = "sync";
+            break;
+        case URL:
+            opStr = "url";
+            actionEl.addAttribute(MailService.A_URL, action.getURL());
+            break;                        
+        default:
+            throw SoapFaultException.CLIENT_ERROR("unsupported operation: "+action.getOp(), null);
+        }
+        
+        actionEl.addAttribute(MailService.A_OPERATION, opStr);
+        
+        Element response = invoke(req);
+        ZFolderAction.Result result = new ZFolderAction.Result(response.getElement(MailService.E_ACTION).getAttribute(MailService.A_ID));
+        return result;
+    }
+
+    public static void main(String args[]) throws ServiceException {
+        Zimbra.toolSetup();
+        ZMailbox mbox = getMailbox("user1", "test123", "http://localhost:7070/service/soap");
+        System.out.println(mbox.getSize());
+        System.out.println(mbox.getAllTags());
+        System.out.println(mbox.getUserRoot());
+        //ZSearchParams sp = new ZSearchParams("StringBuffer");
+        ZSearchParams sp = new ZSearchParams("in:inbox");        
+        sp.setLimit(20);
+        sp.setTypes(ZSearchParams.TYPE_MESSAGE);
+        System.out.println(mbox.search(sp));
+        ZFolder inbox = mbox.getFolderByPath("/inBOX");
+        System.out.println(inbox);
+        System.out.println(mbox.getFolderById(inbox.getId()));
+        mbox.doAction(ZFolderAction.markAsRead(), inbox);
+        mbox.doAction(ZFolderAction.setChecked(true), inbox);
+        mbox.doAction(ZFolderAction.setChecked(false), inbox);        
+        mbox.doAction(ZFolderAction.setColor(1), inbox);
+        mbox.doAction(ZFolderAction.setColor(2), inbox);
+        mbox.doAction(ZFolderAction.setColor(3), inbox);
+        mbox.doAction(ZFolderAction.setColor(4), inbox);
+    }
+
 }

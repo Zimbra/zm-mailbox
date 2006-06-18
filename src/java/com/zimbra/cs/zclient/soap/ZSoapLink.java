@@ -34,7 +34,7 @@ import com.zimbra.soap.Element;
 
 class ZSoapLink implements ZLink, ZSoapItem {
 
-    private byte mColor;
+    private int mColor;
     private String mId;
     private String mName;
     private String mDefaultView;
@@ -51,7 +51,7 @@ class ZSoapLink implements ZLink, ZSoapItem {
         mName = e.getAttribute(MailService.A_NAME);
         mParentId = e.getAttribute(MailService.A_FOLDER);
         mFlags = e.getAttribute(MailService.A_FLAGS, "");
-        mColor = (byte) e.getAttributeLong(MailService.A_COLOR, 0);
+        mColor = (int) e.getAttributeLong(MailService.A_COLOR, 0);
         mDefaultView = e.getAttribute(MailService.A_DEFAULT_VIEW, "");
         mOwnerDisplayName = e.getAttribute(MailService.A_DISPLAY);
         mRemoteId = e.getAttribute(MailService.A_REMOTE_ID);
@@ -63,7 +63,7 @@ class ZSoapLink implements ZLink, ZSoapItem {
         return mParent;
     }
 
-    public byte getColor() {
+    public int getColor() {
         return mColor;
     }
 

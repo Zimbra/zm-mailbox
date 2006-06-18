@@ -74,6 +74,6 @@ public interface ZLink {
     
     public String getFlags();
 
-    public byte getColor();
+    public int getColor();
 
 }

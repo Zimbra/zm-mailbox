@@ -89,7 +89,7 @@ public interface ZFolder {
      * 
      * @return color
      */
-    public byte getColor();
+    public int getColor();
 
     /**
      * remote URL (RSS, iCal, etc) this folder syncs to

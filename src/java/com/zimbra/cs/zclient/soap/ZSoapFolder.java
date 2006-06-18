@@ -45,7 +45,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
     private static List<ZSearchFolder> sNoSearchFolders = Collections.unmodifiableList(new ArrayList<ZSearchFolder>());        
     private static List<ZLink> sNoLinks = Collections.unmodifiableList(new ArrayList<ZLink>());            
 
-    private byte mColor;
+    private int mColor;
     private String mId;
     private String mName;
     private int mUnreadCount;
@@ -68,7 +68,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         mName = e.getAttribute(MailService.A_NAME);
         mParentId = e.getAttribute(MailService.A_FOLDER);
         mFlags = e.getAttribute(MailService.A_FLAGS, "");
-        mColor = (byte) e.getAttributeLong(MailService.A_COLOR, 0);
+        mColor = (int) e.getAttributeLong(MailService.A_COLOR, 0);
         mUnreadCount = (int) e.getAttributeLong(MailService.A_UNREAD, 0);
         mMessageCount = (int) e.getAttributeLong(MailService.A_NUM, 0);
         mDefaultView = e.getAttribute(MailService.A_DEFAULT_VIEW, "");
@@ -116,7 +116,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         return mGrants;
     }
 
-    public byte getColor() {
+    public int getColor() {
         return mColor;
     }
 
