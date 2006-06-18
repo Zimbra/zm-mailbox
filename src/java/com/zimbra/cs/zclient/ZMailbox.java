@@ -59,6 +59,8 @@ public abstract class ZMailbox {
      */
     public abstract ZTag getTagById(String id);
 
+    public abstract ZTag createTag(String name, int color) throws ServiceException;
+    
     /**
      * return the root user folder
      */

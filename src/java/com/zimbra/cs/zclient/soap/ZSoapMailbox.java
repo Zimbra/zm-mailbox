@@ -150,9 +150,10 @@ public class ZSoapMailbox extends ZMailbox {
                 String parentId = e.getAttribute(MailService.A_FOLDER);
                 ZSoapFolder parent = (ZSoapFolder) getFolderById(parentId);
                 new ZSoapSearchFolder(e, parent, this);
+            } else if (e.getName().equals(MailService.E_TAG)) {
+                addTag(new ZSoapTag(e));
             }
         }
-        // TODO
     }
 
     private void handleDeleted(Element deleted) {
@@ -173,7 +174,8 @@ public class ZSoapMailbox extends ZMailbox {
                 ZSoapSearchFolder sf = (ZSoapSearchFolder) item;
                 if (sf.getParent() != null) 
                     ((ZSoapFolder)sf.getParent()).removeChild(sf);
-                
+            } else if (item instanceof ZSoapTag) {
+                mNameToTag.remove(((ZSoapTag) item).getName());
             }
             if (item != null) mIdToItem.remove(item.getId());
         }
@@ -291,8 +293,18 @@ public class ZSoapMailbox extends ZMailbox {
         if (defaultView != null) folderEl.addAttribute(MailService.A_DEFAULT_VIEW, defaultView);
         String id = invoke(req).getElement(MailService.E_FOLDER).getAttribute(MailService.A_ID);
         // this assumes notifications will create the folder
-        ZFolder folder = getFolderById(id);
-        return folder;
+        return getFolderById(id);
+    }
+
+    @Override
+    public ZTag createTag(String name, int color) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.CREATE_TAG_REQUEST);
+        Element tagEl = req.addElement(MailService.E_TAG);
+        tagEl.addAttribute(MailService.A_NAME, name);
+        tagEl.addAttribute(MailService.A_COLOR, color);
+        String id = invoke(req).getElement(MailService.E_TAG).getAttribute(MailService.A_ID);
+        // this assumes notifications will create the tag
+        return getTagById(id);
     }
 
     @Override
@@ -396,7 +408,9 @@ public class ZSoapMailbox extends ZMailbox {
         System.out.println(inbox);
         mbox.doAction(ZFolderAction.delete(), dork);
         System.out.println("---------- deleted dork -----------");
-        System.out.println(inbox);        
+        System.out.println(inbox);
+        System.out.println(mbox.createTag("zippy", 6));
+        System.out.println(mbox.getAllTags());
     }
 
 }

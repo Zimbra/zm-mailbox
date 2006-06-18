@@ -26,7 +26,6 @@
 package com.zimbra.cs.zclient.soap;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import com.zimbra.cs.service.ServiceException;
