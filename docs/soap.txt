@@ -118,7 +118,7 @@ element involving the session.)  If there is a session, there will be a
             <folder .../>
           </folder>
         </refresh>]
-       [<notify>
+       [<notify seq="sequence-number">
           <deleted id="665,66,452,883"/>
           <created>
             <tag id="66" name="phlox" u="8"/>
@@ -131,7 +131,7 @@ element involving the session.)  If there is a session, there will be a
               This is the new content.
             </note>
           </modified>
-        </notify>]
+        </notify>]+
      </context>
    <soap:/Header>] 
   <soap:Body>
@@ -185,7 +185,7 @@ response:
             <folder .../>
           </folder>
         </refresh>]
-       [<notify>
+       [<notify seq="sequence-number">        
           <deleted ids="665,66,452,883"/>
           <created>
             <tag id="66" name="phlox" u="8"/>
@@ -198,7 +198,7 @@ response:
               This is the new content.
             </note>
           </modified>
-        </notify>]
+        </notify>]+
      </context>
    <soap:/Header>] 
  <soap:Body>
