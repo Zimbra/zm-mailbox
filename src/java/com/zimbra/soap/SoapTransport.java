@@ -47,6 +47,7 @@ public abstract class SoapTransport {
     private String mAuthToken;
     private String mTargetAcctId = null;
     private String mSessionId = null;
+    private long mMaxNotifySeq = -1;
     private Element mContext = null;
     private String mUserAgentName;
     private String mUserAgentVersion;
@@ -109,6 +110,11 @@ public abstract class SoapTransport {
     }
     public String getSessionId() { return mSessionId; }
 
+    public void setMaxNoitfySeq(long seq) {
+        mMaxNotifySeq = seq;
+    }
+    public long getMaxNotifySeq() { return mMaxNotifySeq; }
+    
     /**
      * Sets the SOAP client name and version number.
      * @param name the SOAP client name
@@ -149,6 +155,9 @@ public abstract class SoapTransport {
 
         if (requestedAccountId != null) {
             context.addElement(ZimbraSoapContext.E_ACCOUNT).addAttribute(ZimbraSoapContext.A_BY, ZimbraSoapContext.BY_ID).setText(requestedAccountId);
+        }
+        if (mMaxNotifySeq != -1) {
+            context.addElement(ZimbraNamespace.E_NOTIFY).addAttribute(ZimbraSoapContext.A_SEQNO, mMaxNotifySeq); 
         }
         Element envelope = mSoapProto.soapEnvelope(document, context);
         if (mDebugListener != null) mDebugListener.sendSoapMessage(envelope);

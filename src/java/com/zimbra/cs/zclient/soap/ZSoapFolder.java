@@ -40,11 +40,6 @@ import com.zimbra.soap.Element;
 
 class ZSoapFolder implements ZFolder, ZSoapItem {
 
-    private static List<ZGrant> sNoGrants = Collections.unmodifiableList(new ArrayList<ZGrant>());
-    private static List<ZFolder> sNoSubFolders = Collections.unmodifiableList(new ArrayList<ZFolder>());    
-    private static List<ZSearchFolder> sNoSearchFolders = Collections.unmodifiableList(new ArrayList<ZSearchFolder>());        
-    private static List<ZLink> sNoLinks = Collections.unmodifiableList(new ArrayList<ZLink>());            
-
     private int mColor;
     private String mId;
     private String mName;
@@ -62,7 +57,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
     private List<ZLink> mLinks;        
     private ZFolder mParent;
     
-    ZSoapFolder(Element e, ZFolder parent, ZSoapMailbox mailbox) throws ServiceException {
+    ZSoapFolder(Element e, ZSoapFolder parent, ZSoapMailbox mailbox) throws ServiceException {
         mParent = parent;
         mId = e.getAttribute(MailService.A_ID);
         mName = e.getAttribute(MailService.A_NAME);
@@ -75,38 +70,39 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         mRestURL = e.getAttribute(MailService.A_REST_URL, null);
         mRemoteURL = e.getAttribute(MailService.A_URL, null);
         mEffectivePerms = e.getAttribute(MailService.A_RIGHTS, null);
-            Element aclEl = e.getOptionalElement(MailService.E_ACL);
+        
+        mSearchFolders = new ArrayList<ZSearchFolder>();        
+        mGrants = new ArrayList<ZGrant>();            
+        mSubFolders = new ArrayList<ZFolder>();
+        mLinks = new ArrayList<ZLink>();        
+
+        Element aclEl = e.getOptionalElement(MailService.E_ACL);
+
         if (aclEl != null) {
-            mGrants = new ArrayList<ZGrant>();
             for (Element grant : aclEl.listElements(MailService.E_GRANT)) {
                 mGrants.add(new ZSoapGrant(grant));
             }
-        } else {
-            mGrants = sNoGrants;
         }
-        // children        
-        for (Element child : e.listElements(MailService.E_FOLDER)) {
-            if (mSubFolders == null) 
-                mSubFolders = new ArrayList<ZFolder>();
-            mSubFolders.add(new ZSoapFolder(child, this, mailbox));
-        }
-        if (mSubFolders == null) mSubFolders = sNoSubFolders;
+
+        // sub folders
+        for (Element child : e.listElements(MailService.E_FOLDER))
+            new ZSoapFolder(child, this, mailbox);
+        
         // search
-        for (Element s : e.listElements(MailService.E_SEARCH)) {
-            if (mSearchFolders == null) 
-                mSearchFolders = new ArrayList<ZSearchFolder>();
-            mSearchFolders.add(new ZSoapSearchFolder(s, this, mailbox));
-        }
-        if (mSearchFolders == null) mSearchFolders = sNoSearchFolders;
+        for (Element s : e.listElements(MailService.E_SEARCH))
+            new ZSoapSearchFolder(s, this, mailbox);
+        
         // link
-        for (Element l : e.listElements(MailService.E_MOUNT)) {
-            if (mLinks == null) 
-                mLinks = new ArrayList<ZLink>();
-            mLinks.add(new ZSoapLink(l, this, mailbox));
-        }
-        if (mLinks == null) mLinks = sNoLinks;
+        for (Element l : e.listElements(MailService.E_MOUNT))
+            new ZSoapLink(l, this, mailbox);
+
         mailbox.addItemIdMapping(this);
+        if (parent != null) parent.addChild(this);
     }
+
+    void addChild(ZFolder folder)        { mSubFolders.add(folder); }
+    void addChild(ZLink link)            { mLinks.add(link); }
+    void addChild(ZSearchFolder folder)  { mSearchFolders.add(folder); }
 
     public ZFolder getParent() {
         return mParent;

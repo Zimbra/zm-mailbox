@@ -42,7 +42,7 @@ class ZSoapSearchFolder implements ZSearchFolder, ZSoapItem {
     private String mSortBy;
     private ZFolder mParent;
     
-    ZSoapSearchFolder(Element e, ZFolder parent, ZSoapMailbox mailbox) throws ServiceException {
+    ZSoapSearchFolder(Element e, ZSoapFolder parent, ZSoapMailbox mailbox) throws ServiceException {
         mParent = parent;
         mId = e.getAttribute(MailService.A_ID);
         mName = e.getAttribute(MailService.A_NAME);
@@ -51,6 +51,7 @@ class ZSoapSearchFolder implements ZSearchFolder, ZSoapItem {
         mTypes = e.getAttribute(MailService.A_SEARCH_TYPES, null); // TODO FIX
         mSortBy = e.getAttribute(MailService.A_SORTBY, null); // TODO FIX
         mailbox.addItemIdMapping(this);
+        if (parent != null) parent.addChild(this);
     }
 
     public ZFolder getParent() {

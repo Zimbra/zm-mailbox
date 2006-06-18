@@ -48,6 +48,7 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.ZimbraNamespace;
+import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.Element.XMLElement;
 
 public class ZSoapMailbox extends ZMailbox {
@@ -81,6 +82,7 @@ public class ZSoapMailbox extends ZMailbox {
     void setSoapURI(String uri) {
         if (mTransport != null) mTransport.shutdown();
         mTransport = new SoapHttpTransport(uri);
+        mTransport.setMaxNoitfySeq(0);
         if (mAuthToken != null)
             mTransport.setAuthToken(mAuthToken);
     }    
@@ -107,20 +109,62 @@ public class ZSoapMailbox extends ZMailbox {
         } catch (IOException e) {
             throw SoapFaultException.IO_ERROR("invoke "+e.getMessage(), e);
         } finally {
-            // handle refresh blocks
-            Element context = mTransport.getZimbraContext();
-            if (context != null) {
-                Element refresh = context.getOptionalElement(ZimbraNamespace.E_REFRESH);
-                if (refresh != null) refreshHandler(refresh);
+            handleResponseContext(mTransport.getZimbraContext());
+        }
+    }
+
+    private void handleResponseContext(Element context) throws ServiceException {
+        if (context == null) return;
+        // handle refresh blocks
+        Element refresh = context.getOptionalElement(ZimbraNamespace.E_REFRESH);
+        if (refresh != null) refreshHandler(refresh);
+        for (Element notify : context.listElements(ZimbraNamespace.E_NOTIFY)) {
+            // TODO: save max seq number!
+            mTransport.setMaxNoitfySeq(
+                    Math.max(mTransport.getMaxNotifySeq(),
+                             notify.getAttributeLong(ZimbraSoapContext.A_SEQNO, 0)));
+            // MUST DO IN THIS ORDER
+            handleDeleted(notify.getOptionalElement(ZimbraNamespace.E_DELETED));
+            handleCreated(notify.getOptionalElement(ZimbraNamespace.E_CREATED));
+            handleModified(notify.getOptionalElement(ZimbraNamespace.E_MODIFIED));
+        }
+    }
+
+    private void handleModified(Element modified) {
+        if (modified == null) return;
+        // TODO Auto-generated method stub
+    }
+
+    private void handleCreated(Element created) throws ServiceException {
+        if (created == null) return;
+        for (Element e : created.listElements()) {
+            if (e.getName().equals(MailService.E_FOLDER)) {
+                String parentId = e.getAttribute(MailService.A_FOLDER);
+                ZSoapFolder parent = (ZSoapFolder) getFolderById(parentId);
+                new ZSoapFolder(e, parent, this);
+            } else if (e.getName().equals(MailService.E_MOUNT)) {
+                String parentId = e.getAttribute(MailService.A_FOLDER);
+                ZSoapFolder parent = (ZSoapFolder) getFolderById(parentId);
+                new ZSoapLink(e, parent, this);
+            } else if (e.getName().equals(MailService.E_SEARCH)) {
+                String parentId = e.getAttribute(MailService.A_FOLDER);
+                ZSoapFolder parent = (ZSoapFolder) getFolderById(parentId);
+                new ZSoapSearchFolder(e, parent, this);
             }
         }
+        // TODO
+    }
+
+    private void handleDeleted(Element deleted) {
+        if (deleted == null) return;
+        // TODO
     }
 
     private void addTag(ZSoapTag tag) {
         mNameToTag.put(tag.getName(), tag);
         addItemIdMapping(tag);
     }
-    
+
     /**
      * handle a &lt;refresh&gt; block
      * @param refresh
@@ -129,6 +173,7 @@ public class ZSoapMailbox extends ZMailbox {
     private void refreshHandler(Element refresh) throws ServiceException {
         mNameToTag.clear();
         mIdToItem.clear();
+        mTransport.setMaxNoitfySeq(0);
         Element mbx = refresh.getElement(MailService.E_MAILBOX);
         if (mbx != null) mSize = mbx.getAttributeLong(MailService.A_SIZE);
         Element tags = refresh.getElement(ZimbraNamespace.E_TAGS);
@@ -326,8 +371,8 @@ public class ZSoapMailbox extends ZMailbox {
         mbox.doAction(ZFolderAction.setChecked(true), inbox);
         mbox.doAction(ZFolderAction.setChecked(false), inbox);        
         mbox.doAction(ZFolderAction.setColor(1), inbox);
-        mbox.createFolder(inbox, "dork",ZFolder.VIEW_MESSAGE);
-                
+        System.out.println(mbox.createFolder(inbox, "dork",ZFolder.VIEW_MESSAGE));
+        System.out.println(inbox);        
     }
 
 }
