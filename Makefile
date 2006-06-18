@@ -32,11 +32,14 @@ CLASSES = $(BUILD)/classes
 JAVA_FILES = \
 	com/zimbra/znative/IO.java \
 	com/zimbra/znative/Process.java \
+	com/zimbra/znative/ProcessorUsage.java \
+	com/zimbra/znative/ResourceUsage.java \
 	com/zimbra/znative/Util.java \
 	com/zimbra/znative/OperationFailedException.java \
 	com/zimbra/znative/tests/HardLinkTest.java \
 	com/zimbra/znative/tests/LinkCountTest.java \
-	com/zimbra/znative/tests/ProcessTest.java
+	com/zimbra/znative/tests/ProcessTest.java \
+	com/zimbra/znative/tests/UsageTest.java
 
 JAVA_SOURCES = $(patsubst %,$(SRC)/java/%,$(JAVA_FILES))
 
@@ -74,13 +77,19 @@ remove_classes_list: FORCE
 
 FORCE: ;
 
-$(BUILD)/libzimbra-native.$(SHARED_EXT): $(BUILD)/IO.o $(BUILD)/Process.o $(BUILD)/zjniutil.o
+$(BUILD)/libzimbra-native.$(SHARED_EXT): $(BUILD)/IO.o $(BUILD)/Process.o $(BUILD)/ProcessorUsage.o $(BUILD)/ResourceUsage.o $(BUILD)/Util.o $(BUILD)/zjniutil.o
 	gcc $(LIB_OPTS) $(SHARED) -o $@ $^
 
 $(BUILD)/%.o: $(SRC)/native/%.c
 	gcc $(MACDEF) $(JAVAINC) -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
 
 $(BUILD)/Process.o: $(SRC)/native/Process.c $(BUILD)/Process.h $(SRC)/native/zjniutil.h
+
+$(BUILD)/ProcessorUsage.o: $(SRC)/native/ProcessorUsage.c $(BUILD)/ProcessorUsage.h $(SRC)/native/zjniutil.h
+
+$(BUILD)/ResourceUsage.o: $(SRC)/native/ResourceUsage.c $(BUILD)/ResourceUsage.h $(SRC)/native/zjniutil.h
+
+$(BUILD)/Util.o: $(SRC)/native/Util.c $(BUILD)/Util.h $(SRC)/native/zjniutil.h
 
 $(BUILD)/zjniutil.o: $(SRC)/native/zjniutil.c $(SRC)/native/zjniutil.h
 
@@ -95,6 +104,21 @@ $(BUILD)/Process.h: $(CLASSES)/com/zimbra/znative/Process.class
 	mkdir -p $(@D)
 	$(RM) $@
 	javah -o $@ -classpath $(CLASSES) com.zimbra.znative.Process
+
+$(BUILD)/ProcessorUsage.h: $(CLASSES)/com/zimbra/znative/ProcessorUsage.class
+	mkdir -p $(@D)
+	$(RM) $@
+	javah -o $@ -classpath $(CLASSES) com.zimbra.znative.ProcessorUsage
+
+$(BUILD)/ResourceUsage.h: $(CLASSES)/com/zimbra/znative/ResourceUsage.class
+	mkdir -p $(@D)
+	$(RM) $@
+	javah -o $@ -classpath $(CLASSES) com.zimbra.znative.ResourceUsage
+
+$(BUILD)/Util.h: $(CLASSES)/com/zimbra/znative/Util.class
+	mkdir -p $(@D)
+	$(RM) $@
+	javah -o $@ -classpath $(CLASSES) com.zimbra.znative.Util
 
 #
 # Hack to copy to destination for use on incremental builds in a linux
