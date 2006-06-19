@@ -1818,10 +1818,8 @@ public final class MailboxIndex
                 long msgDate = item.getDate();
                 pm = new ParsedMessage(msg.getMimeMessage(), msgDate, mbox.attachmentsIndexingEnabled());
             }
-            
-            synchronized(mbox) {
-                item.reindex(null, pm);
-            }
+
+            item.reindex(null, pm);
             
         } catch (java.lang.RuntimeException e) {
             throw ServiceException.FAILURE("Error re-indexing message "+msgId, e);
