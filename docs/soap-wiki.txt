@@ -5,27 +5,35 @@
 // the private Notes will be determined by ACL of the folder the Notes are stored.
 // By default Notes are accesible to the account holder only, thus private.
 // 
-// XXX public Wiki API is being under review, and not supported.
-
 // Public Wiki pages are stored in a central location allocated to ZCS at the
 // installation time.  The access to the Wiki pages also follow the ACL on the
-// folder the pages are stored.  By default the Wiki pages are available to
-// everyone.  Anyone can add a new revision or delete the Wiki page created by
-// someone else.
+// folder the pages are stored.
+//
+// There are two types of public Wiki storage.  There is a public wiki store,
+// and there are optional per-domain wiki store.  The public wiki store
+// is open to all authenticated and unauthenticated users.  The per-domain wiki
+// store has rwid access granted to the domain users only.
 //
 
 
-// Create
+// Create / Update
 //
 // A Document represents a file.  A file can be created by uploading to FileUploadServlet.
 // Or it can refer to an attachment of an existing message.
 //
+// Both Wiki and Documents are versioned.  The server maintains the metadata
+// of each version, such as by who and when the version was edited, and the
+// fragment of each version.
+//
+// When updating an existing Document or Wiki, the client must supply last known
+// version of the document in 'ver' attribute.  This is used to prevent
+// blindly overwriting someone else's change made at the same time.  The update
+// will succeed only when the last known version supplied by the client matches
+// the current version in the server.
+//
 // Saving a new document, as opposed to adding a revision of existing document, should leave
 // the id and ver fields empty in the request.  Then the server checks and see if the named
-// document already exists, if so returns an error.  Saving a new version should specify
-// the existing item's id and the last known version.  If there is a version conflict, such as
-// if someone else has added a new version since it was checked last time, then the server returns
-// an error.
+// document already exists, if so returns an error.
 //
 // The request should contain either <upload> element or <msg> element, but not both.
 // When <upload> is used, the document should be first uploaded to FileUploadServlet, and
@@ -44,9 +52,50 @@
 </SaveDocumentResponse>
 
 //
+// Example
+//
+// - Saving a new document
+//
+// REQUEST:
+//
+//<SaveDocumentRequest xmlns:ns0="urn:zimbraMail">
+//  <doc>
+//    <upload id="18baa043-394f-42ae-be8a-110b279cb696:cc2f2fdf-7957-4412-aa83-6433662ce5d0"/>
+//  </doc>
+//</SaveDocumentRequest>
+//
+// RESPONSE:
+//
+//<SaveDocumentResponse xmlns:ns0="urn:zimbraMail">
+//  <doc ver="1" id="574"/>
+//</SaveDocumentResponse>
+//
+//
+// - Updating an existing document
+//
+// REQUEST:
+//
+//<SaveDocumentRequest xmlns:ns0="urn:zimbraMail">
+//  <doc ver="1" id="574">
+//    <upload id="18baa043-394f-42ae-be8a-110b279cb696:fcb572ce-2a81-4ad3-b55b-cb998c47b416"/>
+//  </doc>
+//</SaveDocumentRequest>
+//
+// RESPONSE:
+//
+//<SaveDocumentResponse xmlns:ns0="urn:zimbraMail">
+//  <doc ver="2" id="574"/>
+//</SaveDocumentResponse>
+//
+//
 // A Wiki is a versioned HTML document.
 // folder-id argument is valid when the new wiki document is being created,
 // otherwise it's ignored, and the subsequent revision is stored in the same folder.
+// 
+// When updating an existing Wiki page, the last known version of the page must be supplied
+// in 'ver' attribute.  This is used for checking collision.  If the version in the
+// server does not match the supplied last known version, the server will throw
+// an exception, indicating a collision happened while the page was being edited.
 <SaveWikiRequest>
   <w name="{wikiword}" [id="{item-id}" ver="{last-known-version}"] [l="{folder-id}"]> ... contents ... </w>
 </SaveWikiRequest>
@@ -55,6 +104,37 @@
   <w id="{item-id}" ver="{version}"/>
 </SaveWikiResponse>
 
+//
+// Examples
+//
+// - Saving a new page
+//
+// REQUEST:
+//
+//<SaveWikiRequest xmlns:ns0="urn:zimbraMail">
+//  <w l="12" name="mypage">this is a test</w>
+//</SaveWikiRequest>
+//
+// RESPONSE:
+//
+//<SaveWikiResponse xmlns:ns0="urn:zimbraMail">
+//  <w ver="1" id="575"/>
+//</SaveWikiResponse>
+//
+// - Updating an existing page
+//
+// REQUEST:
+//
+//<SaveWikiRequest xmlns:ns0="urn:zimbraMail">
+//  <w l="12" ver="1" name="mypage" id="575">this is a second revision</w>
+//</SaveWikiRequest>
+//
+
+// RESPONSE:
+//<SaveWikiResponse xmlns:ns0="urn:zimbraMail">
+//  <w ver="2" id="575"/>
+//</SaveWikiResponse>
+//
 //
 // Search
 // Documents and Wiki documents can be indexed.  
@@ -93,6 +173,12 @@
 // if the attribute tr is set to 1, the server will traverse up the directory tree, then search the
 // central wiki account until the named Wiki item is found.  it's useful when requesting the template
 // items.
+//
+// GetWiki can be invoked with either 'name' or 'id' attribute.  'name' corresponds to
+// the title of the Wiki page, and 'id' corresponds to the zimbraId of the item.
+// Wiki name is unique only within the folder.  Thus when using 'name' attribute
+// to retrieve a Wiki page, the folder must be specified in 'l' attribute.
+//
 <GetWikiRequest>
   <w [name="{word}"|id="{message-id}"] [ver="{version}"] [count="{num}"] [l="{folder}"] [tr="1|0"]/>
 </GetWikiRequest>
