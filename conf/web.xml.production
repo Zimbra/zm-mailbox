@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Copyright 2004 Zimbra Systems, Inc
+-->
+
+<!DOCTYPE web-app
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+    "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+
+  <display-name>Zimbra Service</display-name>
+  <description>
+    SOAP Service
+  </description>
+
+  <servlet>
+    <servlet-name>PrivilegedServlet</servlet-name>
+    <!-- PrivilegedServlet will bind to privileged ports and drop privileges. -->
+    <servlet-class>com.zimbra.cs.servlet.PrivilegedServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+
+  <servlet>
+    <servlet-name>ExtensionDispatcherServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.extension.ExtensionDispatcherServlet</servlet-class>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
+  
+  <servlet>
+    <servlet-name>SoapServlet</servlet-name>
+    <servlet-class>com.zimbra.soap.SoapServlet</servlet-class>
+    <load-on-startup>3</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443</param-value>
+    </init-param>
+    <!-- User command handlers only -->
+    <init-param>
+      <param-name>engine.handler.0</param-name>
+      <param-value>com.zimbra.cs.service.account.AccountService</param-value>
+    </init-param>
+    <init-param>
+      <param-name>engine.handler.1</param-name>
+      <param-value>com.zimbra.cs.service.mail.MailService</param-value>
+    </init-param>
+    <init-param>
+      <param-name>engine.handler.2</param-name>
+      <param-value>com.zimbra.cs.service.im.IMService</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>AdminServlet</servlet-name>
+    <servlet-class>com.zimbra.soap.SoapServlet</servlet-class>
+    <load-on-startup>4</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>7071</param-value>
+    </init-param>
+    <!-- Admin servlet allows both admin and user commands -->
+    <init-param>
+      <param-name>engine.handler.0</param-name>
+      <param-value>com.zimbra.cs.service.admin.AdminService</param-value>
+    </init-param>
+    <init-param>
+      <param-name>engine.handler.1</param-name>
+      <param-value>com.zimbra.cs.service.account.AccountService</param-value>
+    </init-param>
+    <init-param>
+      <param-name>engine.handler.2</param-name>
+      <param-value>com.zimbra.cs.service.mail.MailService</param-value>
+    </init-param>
+    <init-param>
+      <param-name>engine.handler.3</param-name>
+      <param-value>com.zimbra.cs.service.im.IMService</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>ContentServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.service.ContentServlet</servlet-class>
+    <load-on-startup>5</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
+    </init-param>
+    <init-param>
+      <param-name>errorpage.attachment.blocked</param-name>
+      <param-value>/error/attachment_blocked.jsp</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>UserServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.service.UserServlet</servlet-class>
+    <load-on-startup>5</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
+    </init-param>
+    <init-param>
+      <param-name>errorpage.attachment.blocked</param-name>
+      <param-value>/error/attachment_blocked.jsp</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>PreAuthServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.service.PreAuthServlet</servlet-class>
+    <load-on-startup>5</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>PublicICalServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.service.PublicICalServlet</servlet-class>
+    <load-on-startup>5</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>FileUploadServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.service.FileUploadServlet</servlet-class>
+    <load-on-startup>6</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>StatsImageServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.service.StatsImageServlet</servlet-class>
+    <load-on-startup>7</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>7071</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
+    <servlet-name>ProxyServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.zimlet.ProxyServlet</servlet-class>
+    <load-on-startup>8</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070</param-value>
+    </init-param>
+  </servlet>
+
+  <filter>
+    <filter-name>ZimletFilter</filter-name>
+    <filter-class>com.zimbra.cs.zimlet.ZimletFilter</filter-class>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
+    </init-param>
+  </filter>
+
+  <servlet-mapping>
+    <servlet-name>ExtensionDispatcherServlet</servlet-name>
+    <url-pattern>/extension/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>SoapServlet</servlet-name>
+    <url-pattern>/soap/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>AdminServlet</servlet-name>
+    <url-pattern>/admin/soap/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>ContentServlet</servlet-name>
+    <url-pattern>/content/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>PublicICalServlet</servlet-name>
+    <url-pattern>/pubcal/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>UserServlet</servlet-name>
+    <url-pattern>/user/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>UserServlet</servlet-name>
+    <url-pattern>/home/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>PreAuthServlet</servlet-name>
+    <url-pattern>/preauth/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>PreAuthServlet</servlet-name>
+    <url-pattern>/preauth</url-pattern>    
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>FileUploadServlet</servlet-name>
+    <url-pattern>/upload</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>StatsImageServlet</servlet-name>
+    <url-pattern>/statsimg/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>ProxyServlet</servlet-name>
+    <url-pattern>/proxy/*</url-pattern>
+  </servlet-mapping>
+
+  <filter-mapping>
+    <filter-name>ZimletFilter</filter-name>
+    <url-pattern>/zimlet/*</url-pattern>
+  </filter-mapping>
+</web-app>
