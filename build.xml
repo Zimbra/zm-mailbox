@@ -2,110 +2,53 @@
 
 	<property environment="env"/>
 
-	<!--
-	     This machine's hostname.  Use ZIMBRA_HOSTNAME environment variable
-	     if set.  If not, use "hostname" command output.
-	-->
+	<!-- This machine's hostname.  Use ZIMBRA_HOSTNAME environment variable
+	     if set.  If not, use "hostname" command output. -->
 	<exec executable="hostname" outputproperty="exec.hostname"/>
 	<condition property="zimbra.server.hostname" value="${env.ZIMBRA_HOSTNAME}">
 		<isset property="env.ZIMBRA_HOSTNAME"/>
 	</condition>
 	<condition property="zimbra.server.hostname" value="${exec.hostname}">
-		<not>
-			<isset property="zimbra.server.hostname"/>
-		</not>
+		<not><isset property="zimbra.server.hostname"/></not>
 	</condition>
 
-	<!--
-	     SMTP server for outgoing email.  Use ZIMBRA_SMTP_HOST environment
-	     variable if set.  Otherwise default to "localhost".
-	-->
+	<!-- SMTP server for outgoing email.  Use ZIMBRA_SMTP_HOST environment
+	     variable if set.  Otherwise default to "localhost". -->
 	<condition property="zimbra.smtp.host" value="${env.ZIMBRA_SMTP_HOST}">
 		<isset property="env.ZIMBRA_SMTP_HOST"/>
 	</condition>
 	<condition property="zimbra.smtp.host" value="localhost">
-		<not>
-			<isset property="zimbra.smtp.host"/>
-		</not>
+		<not><isset property="zimbra.smtp.host"/></not>
 	</condition>
 
-	<!--
-		 Default email view, group by conversation or by message
-	-->
-	<condition property="zimbra.prefGroupMailBy"
-			   value="${env.ZIMBRA_GROUP_MAIL_BY}">
+	<!-- Default email view, group by conversation or by message -->
+	<condition property="zimbra.prefGroupMailBy" value="${env.ZIMBRA_GROUP_MAIL_BY}">
 		<isset property="env.ZIMBRA_GROUP_MAIL_BY"/>
 	</condition>
 	<condition property="zimbra.prefGroupMailBy" value="conversation">
-		<not>
-			<isset property="zimbra.prefGroupMailBy"/>
-		</not>
+		<not><isset property="zimbra.prefGroupMailBy"/></not>
 	</condition>
 
 	<property name="build.dir" location="build" />
 	<property name="build.classes.dir" location="${build.dir}/classes" />
-	<property name="build.metainf.dir" location="${build.dir}/classes/META-INF/services" />
-
 	<property name="dist.dir" location="build/dist" />
-	<property name="dist.bin.dir" location="${dist.dir}/bin" />
-	<property name="dist.libexec.dir" location="${dist.dir}/libexec" />
-	<property name="dist.conf.dir" location="${dist.dir}/conf" />
-	<property name="dist.l10n.msgs.dir" location="${dist.dir}/conf/msgs" />
-	<property name="dist.db.dir" location="${dist.dir}/db" />
-	<property name="dist.lib.dir" location="${dist.dir}/lib" />
-	<property name="dist.jars.dir" location="${dist.dir}/lib/jars" />
-	<property name="dist.ext.dir" location="${dist.dir}/lib/ext" />
-	<property name="dist.tomcat.dir" location="${dist.dir}/tomcat" />
-	<property name="dist.tomcat.webapps.dir" location="${dist.tomcat.dir}/webapps" />
-	<property name="dist.tomcat.conf.dir" location="${dist.tomcat.dir}/conf" />
-	<property name="dist.tomcat.commonlib.dir" location="${dist.tomcat.dir}/common/lib" />
-	<property name="dist.openldap.dir" location="${dist.dir}/openldap" />
-	<property name="dist.openldap.etc.dir" location="${dist.openldap.dir}/etc/openldap" />
-	<property name="dist.openldap.schema.dir" location="${dist.openldap.etc.dir}/schema" />
-	<property name="dist.tarfile" value="dev-service.tar" />
-	<property name="dist.zimlet.dir" location="${dist.dir}/zimlets" />
-	<property name='dist.wiki.dir' location='${dist.dir}/wiki' />
-
-	<property name="config.dir" location="conf" />
-	<condition property="web.xml.source" value="${config.dir}/web.xml">
-		<not>
-			<isset property="is-production" />
-		</not>
-	</condition>
-	<condition property="web.xml.source" value="${config.dir}/production/web.xml">
-		<isset property="is-production" />
-	</condition>
-
-	<property name="warfile" location="${dist.tomcat.webapps.dir}/service.war" />
-
-	<property name="generated.dir" location="${build.dir}/generated" />
-	<property name="generated.java.dir" location="${generated.dir}/src/java" />
+	<property name="generated.java.dir" location="${build.dir}/generated/src/java" />
+	<property name="warfile" location="${build.dir}/service.war" />
+	<property name="jarfile" location="${build.dir}/zimbrastore.jar" />
+	
 	<property name="jars.dir" location="jars" />
 	<property name="lib.dir" location="lib" />
-	<property name="ext.dir" location="lib/ext" />
 	<property name="src.dir" location="src" />
 	<property name="src.java.dir" location="${src.dir}/java" />
-	<property name="src.bin.dir" location="${src.dir}/bin" />
-	<property name="src.libexec.dir" location="${src.dir}/libexec" />
-	<property name="src.db.dir" location="${src.dir}/db" />
-
-	<property name='data.dir' location='data' />
-	<property name='data.soap.dir' location='${data.dir}/soap' />
-	<property name='data.wiki.dir' location='${data.dir}/wiki' />
+	<property name="config.dir" location="conf" />
 
 	<property name="deploy.war" value="${warfile}" />
 	<property name="deploy.host" value="localhost" />
 	<property name="deploy.port" value="7070" />
-	<property name="deploy.url" value="http://${deploy.host}:${deploy.port}/manager/" />
-	<property name="deploy.user" value="zimbra" />
-	<property name="deploy.password" value="zimbra" />
-	<property name="deploy.path" value="/service" />
 
 	<property name="lmtp.host" value="localhost" />
 	<property name="lmtp.port" value="7025" />
 	<property name="lmtpinject.numthreads" value="1" />
-
-	<property name="javacc.main.class" value="org.javacc.parser.Main" />
 
 	<property name="zimbra.home.dir" location="/opt/zimbra" />
 	<property name="tomcat.home.dir" location="${zimbra.home.dir}/tomcat" />
@@ -114,69 +57,31 @@
 
 	<property name="zimlets" value="com_zimbra_phone,com_zimbra_tracking,com_zimbra_url,com_zimbra_email,com_zimbra_date"/>
 
-	<!-- global wiki account -->
-	<property name='wiki.user.default' value='wiki' />
-	<property name='wiki.password' value='test123' />
+	<property name="wiki.user.default" value="wiki" /><!-- global wiki account -->
 
-	<condition property="is-windows">
-		<os family="windows" />
-	</condition>
-	<condition property="is-unix">
-		<not>
-			<os family="windows" />
-		</not>
-	</condition>
+	<condition property="is-windows"><os family="windows"/></condition>
+	<condition property="is-unix"><not><os family="windows"/></not></condition>
 
-	<condition property="native.os" value="MacOSX">
-		<os name="Mac OS X"/>
-	</condition>
-	<condition property="native.os" value="Linux">
-		<os name="Linux"/>
-	</condition>
-	<condition property="native.so" value="jnilib">
-		<os name="Mac OS X"/>
-	</condition>
-	<condition property="native.so" value="so">
-		<not>
-			<os name="Mac OS X"/>
-		</not>
-	</condition>
+	<condition property="native.os" value="MacOSX"><os name="Mac OS X"/></condition>
+	<condition property="native.os" value="Linux"><os name="Linux"/></condition>
+	<condition property="native.so" value="jnilib"><os name="Mac OS X"/></condition>
+	<condition property="native.so" value="so"><not><os name="Mac OS X"/></not></condition>
 
-	<condition property="ldapmodify" value="${zimbra.home.dir}/openldap/ldapmodify">
-		<isset property="is-windows" />
-	</condition>
-	<condition property="ldapmodify" value="${zimbra.home.dir}/openldap/bin/ldapmodify">
-		<isset property="is-unix" />
-	</condition>
+	<condition property="production.suffix" value=".production"><isset property="is-production"/></condition>
+	<condition property="production.suffix" value=""><not><isset property="is-production"/></not></condition>
 
-	<condition property="ldapdelete" value="${zimbra.home.dir}/openldap/ldapdelete">
-		<isset property="is-windows" />
-	</condition>
-	<condition property="ldapdelete" value="${zimbra.home.dir}/openldap/bin/ldapdelete">
-		<isset property="is-unix" />
-	</condition>
+	<condition property="slapd.conf.src" value="${config.dir}/ldap/slapd.win.conf"><isset property="is-windows" /></condition>
+	<condition property="slapd.conf.src" value="${config.dir}/ldap/slapd.conf${production.suffix}"><isset property="is-unix"/></condition>
+	<condition property="slapd.conf.dir" value="openldap"><isset property="is-windows"/></condition>
+	<condition property="slapd.conf.dir" value="conf"><isset property="is-unix"/></condition>
+	<condition property="slapd.etc.dir" value="openldap/etc"><isset property="is-windows"/></condition>
+	<condition property="slapd.etc.dir" value="openldap/etc/openldap"><isset property="is-unix"/></condition>
 
-	<condition property="slapd.conf" value="conf/ldap/slapd.win.conf">
-		<isset property="is-windows" />
-	</condition>
-	<condition property="slapd.conf" value="conf/ldap/slapd.conf">
-		<isset property="is-unix" />
-	</condition>
-	<property name="slapd.conf.in" location="${slapd.conf}" />
+	<condition property="ldapmodify" value="${zimbra.home.dir}/openldap/ldapmodify"><isset property="is-windows"/></condition>
+	<condition property="ldapmodify" value="${zimbra.home.dir}/openldap/bin/ldapmodify"><isset property="is-unix"/></condition>
 
-	<condition property="slapd.conf.out" value="${zimbra.home.dir}/openldap/slapd.conf">
-		<isset property="is-windows" />
-	</condition>
-	<condition property="slapd.conf.out" value="${zimbra.home.dir}/conf/slapd.conf">
-		<isset property="is-unix" />
-	</condition>
-
-	<condition property="zimbra.schema.dir" value="${zimbra.home.dir}/openldap/etc/schema/">
-		<isset property="is-windows" />
-	</condition>
-	<condition property="zimbra.schema.dir" value="${zimbra.home.dir}/openldap/etc/openldap/schema">
-		<isset property="is-unix" />
-	</condition>
+	<condition property="ldapdelete" value="${zimbra.home.dir}/openldap/ldapdelete"><isset property="is-windows" /></condition>
+	<condition property="ldapdelete" value="${zimbra.home.dir}/openldap/bin/ldapdelete"><isset property="is-unix" /></condition>
 
 	<taskdef resource="net/sf/antcontrib/antlib.xml">
 		<classpath>
@@ -192,7 +97,7 @@
 	</path>
 
 	<taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask" classpathref="class.path" />
-
+	
 	<path id="all.java.path">
 		<pathelement location="${src.java.dir}" />
 		<pathelement location="${generated.java.dir}" />
@@ -206,32 +111,37 @@
 		<include name="**/*.java" />
 	</fileset>
 
+	<target name="make-dirs" description="Create an install directory tree under specified ${base.dir}">
+		<!-- take advantage of the fact that mkdir uses File.mkdirs() and creates inbetween dirs -->
+		<echo>Creating dirs under ${base.dir}</echo>
+		<mkdir dir="${base.dir}/${slapd.conf.dir}"/>
+		<mkdir dir="${base.dir}/${slapd.etc.dir}/schema"/>
+		<mkdir dir="${base.dir}/bin"/>
+		<mkdir dir="${base.dir}/conf/msgs"/>
+		<mkdir dir="${base.dir}/db"/>
+		<mkdir dir="${base.dir}/lib/ext"/>
+		<mkdir dir="${base.dir}/lib/jars"/>
+		<mkdir dir="${base.dir}/libexec"/>
+		<mkdir dir="${base.dir}/tomcat/common/endorsed"/>
+		<mkdir dir="${base.dir}/tomcat/common/lib"/>
+		<mkdir dir="${base.dir}/tomcat/conf"/>
+		<mkdir dir="${base.dir}/tomcat/webapps"/>
+		<mkdir dir="${base.dir}/wiki"/>
+		<mkdir dir="${base.dir}/zimlets"/>
+	</target>
 
 	<target name="build-init">
-		<mkdir dir="${build.classes.dir}" />
-		<mkdir dir="${dist.dir}" />
-		<mkdir dir="${dist.bin.dir}" />
-		<mkdir dir="${dist.libexec.dir}" />
-		<mkdir dir="${dist.conf.dir}" />
-		<mkdir dir="${dist.l10n.msgs.dir}" />
-		<mkdir dir="${dist.lib.dir}" />
-		<mkdir dir="${dist.jars.dir}" />
-		<mkdir dir="${dist.ext.dir}" />
-		<mkdir dir="${dist.tomcat.webapps.dir}" />
-		<mkdir dir="${dist.tomcat.conf.dir}" />
-		<mkdir dir="${dist.tomcat.commonlib.dir}" />
-		<mkdir dir="${dist.openldap.dir}" />
-		<mkdir dir="${dist.openldap.etc.dir}" />
-		<mkdir dir="${dist.openldap.schema.dir}" />
-		<mkdir dir="${generated.java.dir}" />
-		<mkdir dir="${dist.zimlet.dir}" />
-		<mkdir dir="${dist.wiki.dir}" />
+		<mkdir dir="${build.classes.dir}"/>
+		<mkdir dir="${generated.java.dir}"/>
+		<mkdir dir="${build.dir}/wiki"/>
+		<mkdir dir="${build.dir}/zimlets"/>
+		<antcall target="make-dirs"><param name="base.dir" value="${dist.dir}"/></antcall>
 	</target>
 
 	<target name="javadoc" depends="set-buildinfo-vars">
-		<javadoc sourcepath="src/java" destdir="docs/api" classpathref="class.path"
-                 access="private" packagenames="com.zimbra.*" additionalparam='-tag perms:m:"Permissions Required:"'
-                 breakiterator="yes" windowtitle="ZimbraServer v${zimbra.buildinfo.version}">
+		<javadoc sourcepath="src/java" destdir="docs/api" classpathref="class.path" access="private"
+			 packagenames="com.zimbra.*" additionalparam='-tag perms:m:"Permissions Required:"'
+			 breakiterator="yes" windowtitle="ZimbraServer v${zimbra.buildinfo.version}">
 			<link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
 			<link href="http://java.sun.com/products/javamail/javadocs/"/>
 			<link href="http://jakarta.apache.org/commons/logging/api/"/>
@@ -241,7 +151,7 @@
 
 	<target name="javacc-internal">
 		<mkdir dir="${output.dir}" />
-		<java classname="${javacc.main.class}" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="org.javacc.parser.Main" fork="true" classpathref="class.path" failonerror="true">
 			<sysproperty key="install.root" file="${javacc.home}" />
 			<arg value="-OUTPUT_DIRECTORY=${output.dir}" />
 			<arg value="${target}" />
@@ -305,76 +215,68 @@
 		</javac>
 	</target>
 
+	<!-- You can add more attrs.xml files from outside this project and invoke this target. -->
 	<target name="generate-ldap-config" depends="set-buildinfo-vars">
+		<mkdir dir="${build.dir}/attrs"/>
+		<copy todir="${build.dir}/attrs" overwrite="true">
+		    <fileset dir="${config.dir}/attrs" includes="*.xml"/>
+		</copy>
 		<mkdir dir="${build.dir}/ldap-config" />
 		<java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path" failonerror="true" >
 			<sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-			<arg line="-a generateLdapSchema -i ${config.dir}/attrs -t ${config.dir}/ldap/zimbra.schema-template -o ${build.dir}/ldap-config/zimbra.schema"/>
+			<arg line="-a generateLdapSchema -i ${build.dir}/attrs -t ${config.dir}/ldap/zimbra.schema-template -o ${build.dir}/ldap-config/zimbra.schema"/>
 		</java>
 		<java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path" failonerror="true">
 			<sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-			<arg line="-a generateGlobalConfigLdif -i ${config.dir}/attrs -o ${build.dir}/ldap-config/zimbra_globalconfig.ldif"/>
+			<arg line="-a generateGlobalConfigLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_globalconfig.ldif"/>
 		</java>
 		<java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path" failonerror="true">
 			<sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-			<arg line="-a generateDefaultCOSLdif -i ${config.dir}/attrs -o ${build.dir}/ldap-config/zimbra_defaultcos.ldif"/>
+			<arg line="-a generateDefaultCOSLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_defaultcos.ldif"/>
 		</java>
 		<copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra.ldif"/>
 		<copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra_mimehandlers.ldif"/>
 		<copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/amavisd.schema"/>
-		<mkdir dir="${build.dir}/conf/attrs" />
-		<copy todir="${build.dir}/conf/attrs" overwrite="true">
-		    <fileset dir="${config.dir}/attrs" includes="*.xml"/>
-		</copy>
 	</target>
 
 	<target name="compile" depends="build-init" description="Compiles the source code">
 		<javac destdir="${build.classes.dir}" debug="true" classpathref="class.path">
 			<src refid="all.java.path" />
 		</javac>
-
-		<echo>Hostname: ${zimbra.server.hostname}</echo>
-
 		<antcall target="generate-buildinfo"/>
-
-		<antcall target="generate-ldap-config"/>
-
 		<java classname="com.zimbra.cs.db.Versions" fork="true" classpathref="class.path" failonerror="true">
-			<arg value="-o" />
-			<arg value="${build.dir}" />
+			<arg line="-o ${build.dir}"/>
 		</java>
 	</target>
 
 	<target name="jar" depends="compile" description="Creates the jar file">
-		<jar destfile="${dist.jars.dir}/zimbrastore.jar" basedir="${build.classes.dir}" />
+		<echo>Hostname: ${zimbra.server.hostname}</echo>
+		<jar destfile="${jarfile}" basedir="${build.classes.dir}" />
+		<antcall target="generate-ldap-config"/>
 	</target>
 
 	<target name="clean" description="Removes any temporary files">
 		<delete dir="${build.dir}" />
 	</target>
 
-	<!-- activation.jar keeps mail.jar open.  As a result, on Windows you
-       cannot undeploy because Tomcat is unable to complete delete the
-       service directory. 
-   	
-   	   zimbra-native.jar opens a shared library so it should not be in a war
-   	   file which can be redeployed. 
-   	   
-   	   Please copy {mail,activation,zimbra-native}.jar to $TOMCAT\common\lib
-   -->
-	<property name="war.exclude" value="${ical4j.jar},servlet-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar" />
+	<!-- activation.jar keeps mail.jar open.  As a result, on
+	     Windows you cannot undeploy because Tomcat is unable to
+	     complete delete the service directory. zimbra-native.jar
+	     opens a shared library so it should not be in a war file
+	     which can be redeployed. Please copy
+	     {mail,activation,zimbra-native}.jar to
+	     $TOMCAT\common\lib -->
+	<property name="war.exclude" value="${ical4j.jar},servlet-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar"/>
 
 	<target name="war" depends="jar">
 		<echo>war.exclude=${war.exclude}</echo>
-		<war warfile="${warfile}" webxml="${web.xml.source}">
+		<war warfile="${warfile}" webxml="${config.dir}/web.xml${production.suffix}">
 			<fileset dir="WebRoot"/>
-			<lib dir="${dist.jars.dir}" includes="zimbrastore.jar" />
+			<lib file="${jarfile}" />
 			<lib dir="${jars.dir}" includes="*.jar" excludes="${war.exclude}" />
 			<classes dir="${config.dir}" includes="sieveConfig.xml" />
 		</war>
 	</target>
-
-	<target name="deploy" depends="service-deploy" description="Just an alias to service-deploy"/>
 
 	<target name="service-deploy" depends="deploy-war,deploy-zimlets,refresh-opt-zimbra" description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
@@ -383,102 +285,87 @@
 		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
 			<http url="http://${deploy.host}:${deploy.port}/" />
 		</waitfor>
-		<deploy url="${deploy.url}" username="${deploy.user}" password="${deploy.password}" path="${deploy.path}" war="${deploy.war}" update="true" />
+		<deploy url="http://${deploy.host}:${deploy.port}/manager/" username="zimbra" password="zimbra" path="/service" war="${warfile}" update="true" />
 	</target>
 
-	<target name="dev-dist" depends="jar,war,dev-dist-core,dev-dist-tar"
-		description="Build tar file of basic dev build to unpack over RPM install"/>
-
-	<target name="dev-dist-core">
-		<delete>
-			<fileset dir="${dist.dir}" includes="${dist.tarfile}" />
-		</delete>
-		<copy todir="${dist.bin.dir}" overwrite="true">
-			<fileset dir="${src.bin.dir}" includes="*" excludes="*.bat,zm*init" />
+	<target name="refresh-opt-zimbra" depends="dev-dist">
+		<copy todir="${zimbra.home.dir}">
+			<!-- for dev refresh/update the version in opt-zimbra is authoritative -->
+			<fileset dir="${dist.dir}" excludes="${dist.dir}/conf/localconfig.xml"/>
 		</copy>
-		<copy todir="${dist.libexec.dir}" overwrite="true">
-			<fileset dir="${src.bin.dir}" includes="zm*init" excludes="*.bat" />
-		</copy>
-		<fixcrlf srcdir="${dist.bin.dir}" eol="unix" includes="**" />
-		<fixcrlf srcdir="${dist.libexec.dir}" eol="unix" includes="**" />
-
-		<copy todir="${dist.conf.dir}" overwrite="true">
-			<fileset dir="${config.dir}" includes="log4j.properties*"/>
-		</copy>
-		<copy todir="${dist.l10n.msgs.dir}" overwrite="true">
-			<fileset dir="${config.dir}/msgs"/>
-		</copy>
-
-		<copy todir="${dist.openldap.etc.dir}" overwrite="true">
-			<fileset dir="${build.dir}/ldap-config" includes="*.ldif"/>
-		</copy>
-		<copy todir="${dist.openldap.schema.dir}" overwrite="true">
-			<fileset dir="${build.dir}/ldap-config" includes="*.schema"/>
-		</copy>
-		<copy todir="${dist.db.dir}" file="${src.db.dir}/db.sql" overwrite="true" />
-		<copy todir="${dist.db.dir}" file="${build.dir}/versions-init.sql" overwrite="true" />
-		<copy todir="${dist.ext.dir}" overwrite="true" >
-			<fileset dir="${ext.dir}" includes="*/*.jar" />
-		</copy>
-		<copy todir="${dist.jars.dir}" overwrite="true">
-			<fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" />
-		</copy>
-		<copy todir="${dist.tomcat.conf.dir}" overwrite="true">
-			<fileset dir="${config.dir}" includes="server.xml,tomcat-users.xml,web.xml" />
-		</copy>
-		<fixcrlf srcdir="${dist.conf.dir}" eol="unix" includes="**" />
-		<copy todir="${dist.tomcat.commonlib.dir}" overwrite="true">
-			<fileset dir="${jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar" />
-		</copy>
-		<copy file="${config.dir}/localconfig.xml" todir="${dist.conf.dir}" overwrite="true"/>
-		<delete dir='${dist.wiki.dir}' quiet='true' />
-		<mkdir dir='${dist.wiki.dir}'/>
-		<copy todir="${dist.wiki.dir}" overwrite="true">
-			<fileset dir="${data.wiki.dir}" includes="**" />
-		</copy>
-		<!--
-  	<tar destfile="${dist.dir}/test-msgs.tar">
-  	  <tarfileset dir="data/TestMailRaw"
-  	  			  prefix="TestMailRaw"
-  	  			  includes="**"
-				  excludes="CVS/*"
-  	  			  mode="640" username="zimbra" group="zimbra"/>
-  	</tar>
-  	-->
+		<!-- ant lameness: copy loses +x -->
+		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod>
 	</target>
 
-	<target name="dev-dist-tar">
-		<tar destfile="${dist.dir}/${dist.tarfile}">
-			<tarfileset dir="${dist.dir}" includes="**" excludes="bin/*,*.sh" mode="640" username="zimbra" group="zimbra" />
-			<tarfileset dir="${dist.bin.dir}" prefix="bin" includes="**" mode="750" username="zimbra" group="zimbra" />
-		</tar>
-	</target>
+	<target name="dev-dist" depends="war,package-zimlets" description="Copies files into an install tree at specified ${dist.dir}">
+		<!-- bin, libexec -->
+		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production"/></copy>
+		<copy todir="${dist.dir}/libexec" overwrite="true"><fileset dir="${src.dir}/libexec" excludes="*.production"/></copy>
+		<copy tofile="${dist.dir}/bin" file="${src.dir}/bin/tomcat${production.suffix}"/>
+		<copy tofile="${dist.dir}/bin" file="${src.dir}/bin/ldap${production.suffix}"/>
+		<fixcrlf srcdir="${dist.dir}/bin" eol="unix"/>
+		<fixcrlf srcdir="${dist.dir}/libexec" eol="unix"/>
+		<chmod perm="a+rx"><fileset dir="${dist.dir}/bin"/><fileset dir="${dist.dir}/libexec"/></chmod>
 
+		<!-- conf -->
+		<copy tofile="${dist.dir}/conf/localconfig.xml" file="${config.dir}/localconfig.xml${production.suffix}" overwrite="true" />
+		<copy todir="${dist.dir}/conf" file="${config.dir}/log4j.properties${production.suffix}" overwrite="true"/>
+		<copy todir="${dist.dir}/conf/msgs" overwrite="true"><fileset dir="${config.dir}/msgs"/></copy>
+		<copy todir="${dist.dir}/conf/attrs" overwrite="true"><fileset dir="${build.dir}/attrs"/></copy>
+		<fixcrlf srcdir="${dist.dir}/conf" eol="unix" includes="**" />
+
+		<!-- lib: ignore absence of DLL for windows -->
+		<copy todir="${dist.dir}/lib/jars" overwrite="true"><fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" /></copy>
+		<copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
+		<copy todir="${dist.dir}/lib/ext" overwrite="true" ><fileset dir="${lib.dir}/ext"/></copy> <!-- CHECK -->
+	        <copy tofile="${dist.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" verbose="true" failonerror="false" overwrite="true"/>
+		
+		<!-- tomcat -->
+		<copy todir="${dist.dir}/tomcat/webapps" file="${warfile}" overwrite="true"/>
+		<copy todir="${dist.dir}/tomcat/conf" file="${config.dir}/tomcat-5.5/server.xml${production.suffix}" overwrite="true"/>
+		<copy todir="${dist.dir}/tomcat/conf" file="${config.dir}/tomcat-5.5/tomcat-users.xml" overwrite="true"/>
+		<copy todir="${dist.dir}/tomcat/conf" file="${config.dir}/tomcat-5.5/web.xml" overwrite="true"/>
+		<copy todir="${dist.dir}/tomcat/common/lib" overwrite="true"><fileset dir="${jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar" /></copy>
+		<copy todir="${dist.dir}/tomcat/common/endorsed" file="${jars.dir}/zimbra-charset.jar" overwrite="true"/>
+
+		<!-- openldap -->
+		<copy todir="${dist.dir}/${slapd.conf.dir}" file="${slapd.conf.src}" overwrite="true"/> <!-- CHECK this is ok with dev build -->
+		<copy todir="${dist.dir}/${slapd.etc.dir}" overwrite="true"><fileset dir="${build.dir}/ldap-config" includes="*.ldif"/></copy>
+		<copy todir="${dist.dir}/${slapd.etc.dir}/schema" overwrite="true"><fileset dir="${build.dir}/ldap-config" includes="*.schema"/></copy>
+
+		<!-- db schema -->
+		<copy todir="${dist.dir}/db" overwrite="true"><fileset dir="${src.dir}/db" includes="*.sql"/></copy>
+		<copy todir="${dist.dir}/db" file="${build.dir}/versions-init.sql" overwrite="true"/>
+
+		<!-- wikis, zimlets -->
+		<copy todir="${dist.dir}/wiki" overwrite="true"><fileset dir="data/wiki" includes="**"/></copy>
+		<copy todir="${dist.dir}/zimlets" overwrite="true"><fileset dir="${build.dir}/zimlets"/></copy>
+	</target>
+	
 	<!-- There are two ways to reset the world:
   		(a) If your tomcat is a service, use "reset-the-world".
  		(b) If your tomcat is inside eclipse then do this:
- 				1. stop tomcat
- 				2. run the target "reset-the-world-stage1"
- 				3. start tomcat
- 				4. run the target "reset-the-world-stage2" -->
-
+			1. stop tomcat
+			2. run the target "reset-the-world-stage1"
+			3. start tomcat
+			4. run the target "reset-the-world-stage2" -->
 	<target name="reset-the-world" depends="reset-the-world-stage1,start-tomcat, reset-the-world-stage2" 
 		description="Reset the world"/>
 
-	<target name="reset-the-world-stage1" depends="clean,compile,jar,init" description="Run when tomcat is stopped." />
+	<target name="reset-the-world-stage1" depends="clean,jar,init" description="Run when tomcat is stopped." />
 
 	<target name="reset-the-world-stage2" depends="service-deploy,init-wiki,inject" description="Run when tomcat is running." />
 
-	<target name="init" depends="stop-servers,quick-init,ldap-init,tomcat-init,start-ldap,ldap-load" />
+	<target name="init" depends="stop-servers,init-opt-zimbra,start-ldap,ldap-load" />
 
 	<target name="inject" depends="compile" description="Insert messages into the system">
 		<echo>Inserting default contacts: user1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-f ${data.soap.dir}/samplecontacts.xml" />
+			<arg line="-f data/soap/samplecontacts.xml" />
 		</java>
 		<echo>Creating default search folders: user1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-f ${data.soap.dir}/samplesearchfolders.xml" />
+			<arg line="-f data/soap/samplesearchfolders.xml" />
 		</java>
 		<echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
 		<waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
@@ -491,21 +378,21 @@
 		</java>
 		<echo>Importing Wiki documents for user1</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="impn -u user1@${zimbra.server.hostname} -p test123 -f ${data.wiki.dir}/user1 -t /" />
+			<arg line="impn -u user1@${zimbra.server.hostname} -p test123 -f data/wiki/user1 -t /" />
 		</java>
 	</target>
 
 	<target name="import-wiki-templates" description="Import Wiki templates to the wiki account">
 		<echo>Importing Wiki templates from ${data.wiki.dir}/Template</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="impn -u ${wiki.user.default}@${zimbra.server.hostname} -p test123 -f ${data.wiki.dir}/Template -t Template" />
+			<arg line="impn -u wiki@${zimbra.server.hostname} -p test123 -f data/wiki/Template -t Template" />
 		</java>
 	</target>
 
 	<target name="init-wiki" description="Initialize the default Wiki account">
 		<echo>Initializing wiki@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="in -u ${wiki.user.default}@${zimbra.server.hostname} -p ${wiki.password} -f ${data.wiki.dir}/Template -t Template" />
+			<arg line="in -u ${wiki.user.default}@${zimbra.server.hostname} -p test123 -f data/wiki/Template -t Template" />
 		</java>
 	</target>
 
@@ -567,10 +454,9 @@
 		</delete>
 		<delete dir="${tomcat.home.dir}/webapps/service"/>
 		<delete file="${tomcat.home.dir}/webapps/service.war"/>
-			
-		<mkdir dir="${zimbra.home.dir}" />
-		<mkdir dir="${zimbra.home.dir}/bin" />
-		<mkdir dir="${zimbra.home.dir}/lib" />
+		<delete dir="${zimbra.home.dir}/openldap/var/openldap-data" />
+
+		<mkdir dir="${zimbra.home.dir}/openldap/var/openldap-data" />
 		<mkdir dir="${zimbra.home.dir}/log" />
 		<mkdir dir="${zimbra.home.dir}/store" />
 		<mkdir dir="${zimbra.home.dir}/index" />
@@ -578,54 +464,7 @@
 		<mkdir dir="${zimbra.home.dir}/redolog/archive" />
 		<mkdir dir="${zimbra.home.dir}/repl" />
 		<mkdir dir="${zimbra.home.dir}/backup" />
-		<mkdir dir="${zimbra.home.dir}/conf" />
-		<mkdir dir="${zimbra.home.dir}/db" />
-		<mkdir dir="${tomcat.home.dir}" />
-		<mkdir dir="${tomcat.home.dir}/conf" />
-		<mkdir dir="${tomcat.home.dir}/conf/msgs" />
-		<mkdir dir="${tomcat.home.dir}/conf/attrs" />
-		<mkdir dir="${tomcat.home.dir}/common" />
-		<mkdir dir="${tomcat.home.dir}/common/lib" />
-	</target>
-
-	<target name="init-opt-zimbra" description="Push changes to /opt/zimbra">
-		<copy tofile="${zimbra.home.dir}/conf/localconfig.xml" file="${config.dir}/localconfig-dev.xml" overwrite="true" />
-		<echo message="Updating ${zimbra.home.dir}/conf/log4j.properties; if it fails on windows, try again." />
-		<copy todir="${zimbra.home.dir}/conf" file="${config.dir}/log4j.properties" />
-	</target>
-
-	<target name="refresh-opt-zimbra" depends="refresh-opt-zimbra-unix" description="Push changes to /opt/zimbra">
-		<copy todir="${zimbra.home.dir}/db" overwrite="true">
-			<fileset dir="${src.db.dir}" />
-		</copy>
-		<echo message="Updating localized message files" />
-		<copy todir="${zimbra.home.dir}/conf/msgs" overwrite="true">
-			<fileset dir="${config.dir}/msgs" />
-		</copy>
-		<copy todir="${zimbra.home.dir}/conf/attrs" overwrite="true">
-			<fileset dir="${config.dir}/attrs" includes="*.xml"/>
-		</copy>
-		<copy todir="${zimbra.home.dir}/lib/ext">
-			<fileset dir="${ext.dir}" includes="*/*.jar" />
-		</copy>
-		<copy todir="${zimbra.home.dir}/lib/jars">
-			<fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" />
-		</copy>
-		<copy todir="${zimbra.home.dir}/lib/jars" file="${dist.jars.dir}/zimbrastore.jar" overwrite="true"/>
-	</target>
-
-	<target name="refresh-opt-zimbra-unix" if="is-unix">
-		<copy tofile="${zimbra.home.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" verbose="true" overwrite="true"/>
-		<copy todir="${zimbra.home.dir}/bin" overwrite="true">
-			<fileset dir="${src.bin.dir}" includes="*" />
-		</copy>
-		<copy todir="${zimbra.home.dir}/libexec" overwrite="true">
-			<fileset dir="${src.libexec.dir}" includes="*" />
-		</copy>
-		<chmod perm="a+rx">
-			<fileset dir="${zimbra.home.dir}/bin" includes="*" />
-			<fileset dir="${zimbra.home.dir}/libexec" includes="*" />
-		</chmod>
+		<antcall target="make-dirs"><param name="base.dir" value="${zimbra.home.dir}"/></antcall>
 	</target>
 
 	<target name="db-init" description="Recreate the database tables">
@@ -638,30 +477,47 @@
 			 classpathref="class.path" onerror="abort" keepformat="false" src="${build.dir}/versions-init.sql" />
 	</target>
 
-	<!-- for quickly wiping out database and files between tests; server start/stop is up to user -->
-	<target name="quick-init" depends="db-init,dir-init,init-opt-zimbra,refresh-opt-zimbra" />
-
-	<target name="ldap-init">
-		<!-- We have to force overwrite or a freshly installed openldap's configs won't overwritten. -->
-		<copy failonerror="true" overwrite="true" file="${slapd.conf.in}" tofile="${slapd.conf.out}" />
-		<copy failonerror="true" overwrite="true" file="${build.dir}/ldap-config/zimbra.schema" todir="${zimbra.schema.dir}" />
-		<copy failonerror="true" overwrite="true" file="${build.dir}/ldap-config/amavisd.schema" todir="${zimbra.schema.dir}" />
-		<delete dir="${zimbra.home.dir}/openldap/var/openldap-data" />
-		<mkdir dir="${zimbra.home.dir}/openldap/var/openldap-data" />
+	<target name="init-opt-zimbra" depends="db-init,dir-init,refresh-opt-zimbra">
+		<copy tofile="${zimbra.home.dir}/conf/localconfig.xml" file="${dist.dir}/conf/localconfig.xml" />
 	</target>
 
-	<target name="ldap-load" depends="ldap-load-step1,ldap-load-accounts,ldap-load-mime-handlers" />
+	<target name="ldap-setup-preauth">
+		<echo>Creating preauth key: ${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="gdpak ${zimbra.server.hostname}" />
+		</java>
+	</target>
 
-	<target name="ldap-load-step1" description="rub it">
-		<exec failonerror="true" executable="${ldapmodify}">
-			<arg line="-a -c -w zimbra -D uid=zimbra,cn=admins,cn=zimbra -x -f ${build.dir}/ldap-config/zimbra.ldif"/>
+	<target name="refresh-ldap" description="run this target if you have updated the schema files in /opt/zimbra, and you have generated new ldifs">
+		<antcall target="stop-tomcat"/>
+		<antcall target="stop-ldap"/>
+		<sleep seconds="2"/> <!-- sometimes start occurs too fast... -->
+		<antcall target="start-ldap"/>
+		<antcall target="start-tomcat"/>
+		<antcall target="ldap-modify"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_globalconfig.ldif"/></antcall>
+		<antcall target="ldap-modify"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/></antcall>
+		<antcall target="ldap-modify"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_mimehandlers.ldif"/></antcall>
+	</target>
+	
+	<target name="ldap-add">
+		<echo>Loading ${ldif.file}</echo>
+		<exec failonerror="true" executable="${ldapmodify}" >
+			<arg line="-a -c -w zimbra -D uid=zimbra,cn=admins,cn=zimbra -x -f ${ldif.file}"/>
 		</exec>
-		<exec failonerror="true" executable="${ldapmodify}">
-			<arg line="-c -w zimbra -D uid=zimbra,cn=admins,cn=zimbra -x -f ${build.dir}/ldap-config/zimbra_globalconfig.ldif"/>
+	</target>
+	
+	<target name="ldap-modify">
+		<echo>Loading ${ldif.file}</echo>
+		<exec failonerror="true" executable="${ldapmodify}" >
+			<arg line="-c -w zimbra -D uid=zimbra,cn=admins,cn=zimbra -x -f ${ldif.file}"/>
 		</exec>
-		<exec failonerror="true" executable="${ldapmodify}">
-			<arg line="-a -c -w zimbra -D uid=zimbra,cn=admins,cn=zimbra -x -f ${build.dir}/ldap-config/zimbra_defaultcos.ldif"/>
-		</exec>
+	</target>
+	
+	<target name="ldap-load">
+		<antcall target="ldap-add"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra.ldif"/></antcall>
+		<antcall target="ldap-modify"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_globalconfig.ldif"/></antcall>
+		<antcall target="ldap-add"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/></antcall>
+		<antcall target="ldap-add"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_mimehandlers.ldif"/></antcall>
 		<echo>Editing localconfig zimbra_server_hostname to be ${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-e zimbra_server_hostname=${zimbra.server.hostname}"/>
@@ -690,16 +546,7 @@
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="mcf zimbraDefaultDomainName ${zimbra.server.hostname}" />
 		</java>
-	</target>
 
-	<target name="ldap-setup-preauth">
-		<echo>Creating preauth key: ${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="gdpak ${zimbra.server.hostname}" />
-		</java>
-	</target>
-
-	<target name="ldap-load-accounts">
 		<echo>Creating account: admin@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="mc default zimbraFeatureIMEnabled TRUE" />
@@ -858,33 +705,28 @@
 		</java>
 	</target>
 
-	<target name="ldap-load-mime-handlers">
-		<exec failonerror="true" executable="${ldapmodify}">
-			<arg line="-a -c -w zimbra -D uid=zimbra,cn=admins,cn=zimbra -x -f ${build.dir}/ldap-config/zimbra_mimehandlers.ldif"/>
-		</exec>
-	</target>
-
 	<target name="reload-zimlets" depends="deploy-zimlets,restart-tomcat"/>
 
 	<target name="package-zimlets" depends="build-init,package-zimlets-core"/>
+
 	<target name="package-zimlets-core">
 		<foreach list="${zimlets}" target="package-zimlet" param="zimlet"/>
 		<!-- todo:  remove these classes from service.jar -->
 		<!-- todo2:  just use RegexHandler instead of creating custom classes -->
-		<zip destfile="${dist.zimlet.dir}/com_zimbra_phone.zip" update="true">
+		<zip destfile="${build.dir}/zimlets/com_zimbra_phone.zip" update="true">
 			<fileset dir="${build.classes.dir}" includes="**/NANPHandler.class"/>
 		</zip>
-		<zip destfile="${dist.zimlet.dir}/com_zimbra_tracking.zip" update="true">
+		<zip destfile="${build.dir}/zimlets/com_zimbra_tracking.zip" update="true">
 			<fileset dir="${build.classes.dir}" includes="**/TrackingHandler.class"/>
 		</zip>
-		<zip destfile="${dist.zimlet.dir}/com_zimbra_url.zip" update="true" >
+		<zip destfile="${build.dir}/zimlets/com_zimbra_url.zip" update="true" >
 			<fileset dir="${build.classes.dir}" includes="**/URLHandler.class"/>
 		</zip>
 	</target>
 
 	<target name="package-zimlet">
 		<echo>${zimlet}</echo>
-		<zip destfile="${dist.zimlet.dir}/${zimlet}.zip" update="true" >
+		<zip destfile="${build.dir}/zimlets/${zimlet}.zip" update="true" >
 			<fileset dir="${config.dir}/zimlets/${zimlet}" />
 		</zip>
 	</target>
@@ -900,18 +742,10 @@
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-q" />
 			<arg line="${action}" />
-			<arg file="${dist.zimlet.dir}/${zimlet}.zip" />
+			<arg file="${build.dir}/zimlets/${zimlet}.zip" />
 		</java>
 	</target>
-
-	<target name="tomcat-init" depends="localhost-ssl-cert">
-		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/${ical4j.jar}" />
-		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/activation.jar" />
-		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/mail.jar" />
-		<copy todir="${tomcat.home.dir}/common/lib" file="${jars.dir}/zimbra-native.jar" />
-		<copy todir="${tomcat.home.dir}/common/endorsed" file="${jars.dir}/zimbra-charset.jar" />
-	</target>
-
+	
 	<target name="stop-servers" depends="stop-tomcat,stop-ldap" />
 
 	<!-- LDAP service control -->
@@ -947,6 +781,7 @@
 
 	<!-- Tomcat service control -->
 	<target name="restart-tomcat" depends="stop-tomcat,start-tomcat"/>
+
 	<target name="stop-tomcat" depends="stop-tomcat-windows,stop-tomcat-unix"/>
 
 	<target name="stop-tomcat-windows" if="is-windows">
