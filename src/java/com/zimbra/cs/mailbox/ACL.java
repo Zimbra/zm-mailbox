@@ -211,7 +211,7 @@ public class ACL {
         	if (!(acct instanceof GuestAccount))
         		return false;
         	GuestAccount ga = (GuestAccount) acct;
-        	return ga.getPassword().equals(mArgs);
+        	return ga.getName().equals(mGrantee) && ga.getPassword().equals(mArgs);
         }
         
         /** Utility function: Returns the zimbraId for a null-checked LDAP
