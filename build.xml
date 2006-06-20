@@ -305,7 +305,7 @@
 		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod>
 	</target>
 
-	<target name="dev-dist" depends="war,package-zimlets" description="Copies files into an install tree at specified ${dist.dir}">
+	<target name="dev-dist" depends="war,package-zimlets,dev-dist-unix" description="Copies files into an install tree at specified ${dist.dir}">
 		<!-- bin, libexec -->
 		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production"/></copy>
 		<copy todir="${dist.dir}/libexec" overwrite="true"><fileset dir="${src.dir}/libexec" excludes="*.production"/></copy>
@@ -326,7 +326,6 @@
 		<copy todir="${dist.dir}/lib/jars" overwrite="true"><fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" /></copy>
 		<copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
 		<copy todir="${dist.dir}/lib/ext" overwrite="true" ><fileset dir="${lib.dir}/ext"/></copy> <!-- CHECK -->
-        <copy tofile="${dist.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" verbose="true" failonerror="false" overwrite="true"/>
 		
 		<!-- tomcat -->
 		<copy todir="${dist.dir}/tomcat/webapps" file="${warfile}" overwrite="true"/>
@@ -349,7 +348,11 @@
 		<copy todir="${dist.dir}/wiki" overwrite="true"><fileset dir="data/wiki" includes="**"/></copy>
 		<copy todir="${dist.dir}/zimlets" overwrite="true"><fileset dir="${build.dir}/zimlets"/></copy>
 	</target>
-	
+
+	<target name="dev-dist-unix" if="is-unix">
+		<copy tofile="${dist.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" verbose="true" failonerror="false" overwrite="true"/>	
+	</target>
+
 	<!-- There are two ways to reset the world:
   		(a) If your tomcat is a service, use "reset-the-world".
  		(b) If your tomcat is inside eclipse then do this:
