@@ -278,7 +278,7 @@
 		</war>
 	</target>
 
-	<target name="service-deploy" depends="deploy-war,deploy-zimlets,refresh-opt-zimbra" description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
+	<target name="service-deploy" depends="refresh-opt-zimbra,deploy-war,deploy-zimlets" description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
 	<target name="deploy-war" depends="war">
 		<echo message="Wait for tomcat to start at http://${deploy.host}:${deploy.port}/" />
@@ -288,12 +288,20 @@
 		<deploy url="http://${deploy.host}:${deploy.port}/manager/" username="zimbra" password="zimbra" path="/service" war="${warfile}" update="true" />
 	</target>
 
+	<target name="init-opt-zimbra" depends="dev-dist">
+		<copy todir="${zimbra.home.dir}">
+			<fileset dir="${dist.dir}"/>
+		</copy>
+		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod><!-- ant does not preserve perms on copy -->
+	</target>
+
 	<target name="refresh-opt-zimbra" depends="dev-dist">
 		<copy todir="${zimbra.home.dir}">
-			<!-- for dev refresh/update the version in opt-zimbra is authoritative -->
-			<fileset dir="${dist.dir}" excludes="${dist.dir}/conf/localconfig.xml"/>
+			<fileset dir="${dist.dir}">
+				<exclude name="${dist.dir}/conf/localconfig.xml"/> <!-- don't trash zimbra_server_hostname -->
+				<exclude name="${dist.dir}/tomcat/**"/> <!-- deploy-war instead of copying files behind tomcat's back -->
+			</fileset>
 		</copy>
-		<!-- ant lameness: copy loses +x -->
 		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod>
 	</target>
 
@@ -318,7 +326,7 @@
 		<copy todir="${dist.dir}/lib/jars" overwrite="true"><fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" /></copy>
 		<copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
 		<copy todir="${dist.dir}/lib/ext" overwrite="true" ><fileset dir="${lib.dir}/ext"/></copy> <!-- CHECK -->
-	        <copy tofile="${dist.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" verbose="true" failonerror="false" overwrite="true"/>
+        <copy tofile="${dist.dir}/lib/libzimbra-native.${native.so}" file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" verbose="true" failonerror="false" overwrite="true"/>
 		
 		<!-- tomcat -->
 		<copy todir="${dist.dir}/tomcat/webapps" file="${warfile}" overwrite="true"/>
@@ -356,7 +364,7 @@
 
 	<target name="reset-the-world-stage2" depends="service-deploy,init-wiki,inject" description="Run when tomcat is running." />
 
-	<target name="init" depends="stop-servers,init-opt-zimbra,start-ldap,ldap-load" />
+	<target name="init" depends="stop-servers,db-init,dir-init,init-opt-zimbra,start-ldap,ldap-load" />
 
 	<target name="inject" depends="compile" description="Insert messages into the system">
 		<echo>Inserting default contacts: user1@${zimbra.server.hostname}</echo>
@@ -475,10 +483,6 @@
 
 		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
 			 classpathref="class.path" onerror="abort" keepformat="false" src="${build.dir}/versions-init.sql" />
-	</target>
-
-	<target name="init-opt-zimbra" depends="db-init,dir-init,refresh-opt-zimbra">
-		<copy tofile="${zimbra.home.dir}/conf/localconfig.xml" file="${dist.dir}/conf/localconfig.xml" />
 	</target>
 
 	<target name="ldap-setup-preauth">
