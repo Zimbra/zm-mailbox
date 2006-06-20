@@ -309,15 +309,15 @@
 		<!-- bin, libexec -->
 		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production"/></copy>
 		<copy todir="${dist.dir}/libexec" overwrite="true"><fileset dir="${src.dir}/libexec" excludes="*.production"/></copy>
-		<copy tofile="${dist.dir}/bin" file="${src.dir}/bin/tomcat${production.suffix}"/>
-		<copy tofile="${dist.dir}/bin" file="${src.dir}/bin/ldap${production.suffix}"/>
+		<copy tofile="${dist.dir}/bin/tomcat" file="${src.dir}/bin/tomcat${production.suffix}" overwrite="true"/>
+		<copy tofile="${dist.dir}/bin/ldap" file="${src.dir}/bin/ldap${production.suffix}" overwrite="true"/>
 		<fixcrlf srcdir="${dist.dir}/bin" eol="unix"/>
 		<fixcrlf srcdir="${dist.dir}/libexec" eol="unix"/>
 		<chmod perm="a+rx"><fileset dir="${dist.dir}/bin"/><fileset dir="${dist.dir}/libexec"/></chmod>
 
 		<!-- conf -->
 		<copy tofile="${dist.dir}/conf/localconfig.xml" file="${config.dir}/localconfig.xml${production.suffix}" overwrite="true" />
-		<copy todir="${dist.dir}/conf" file="${config.dir}/log4j.properties${production.suffix}" overwrite="true"/>
+		<copy tofile="${dist.dir}/conf/log4j.properties" file="${config.dir}/log4j.properties${production.suffix}" overwrite="true"/>
 		<copy todir="${dist.dir}/conf/msgs" overwrite="true"><fileset dir="${config.dir}/msgs"/></copy>
 		<copy todir="${dist.dir}/conf/attrs" overwrite="true"><fileset dir="${build.dir}/attrs"/></copy>
 		<fixcrlf srcdir="${dist.dir}/conf" eol="unix" includes="**" />
@@ -330,14 +330,14 @@
 		
 		<!-- tomcat -->
 		<copy todir="${dist.dir}/tomcat/webapps" file="${warfile}" overwrite="true"/>
-		<copy todir="${dist.dir}/tomcat/conf" file="${config.dir}/tomcat-5.5/server.xml${production.suffix}" overwrite="true"/>
+		<copy tofile="${dist.dir}/tomcat/conf/server.xml" file="${config.dir}/tomcat-5.5/server.xml${production.suffix}" overwrite="true"/>
 		<copy todir="${dist.dir}/tomcat/conf" file="${config.dir}/tomcat-5.5/tomcat-users.xml" overwrite="true"/>
 		<copy todir="${dist.dir}/tomcat/conf" file="${config.dir}/tomcat-5.5/web.xml" overwrite="true"/>
 		<copy todir="${dist.dir}/tomcat/common/lib" overwrite="true"><fileset dir="${jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar" /></copy>
 		<copy todir="${dist.dir}/tomcat/common/endorsed" file="${jars.dir}/zimbra-charset.jar" overwrite="true"/>
 
 		<!-- openldap -->
-		<copy todir="${dist.dir}/${slapd.conf.dir}" file="${slapd.conf.src}" overwrite="true"/> <!-- CHECK this is ok with dev build -->
+		<copy tofile="${dist.dir}/${slapd.conf.dir}/slapd.conf" file="${slapd.conf.src}" overwrite="true"/> <!-- CHECK this is ok with dev build -->
 		<copy todir="${dist.dir}/${slapd.etc.dir}" overwrite="true"><fileset dir="${build.dir}/ldap-config" includes="*.ldif"/></copy>
 		<copy todir="${dist.dir}/${slapd.etc.dir}/schema" overwrite="true"><fileset dir="${build.dir}/ldap-config" includes="*.schema"/></copy>
 
