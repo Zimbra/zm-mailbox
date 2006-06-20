@@ -244,7 +244,7 @@ public class WikiUtil {
 	SoapFaultException, ServiceException, SoapParseException {
 		auth();
 		String name = what.getName();
-		if (name.toLowerCase().endsWith(".html"))
+		if (name.toLowerCase().endsWith(".html") || name.toLowerCase().endsWith(".wiki"))
 			name = name.substring(0, name.length() - 5);
 		System.out.println("Creating wiki document " + name + " in folder " + where.getName());
 		LmcWiki wiki = new LmcWiki();
@@ -260,6 +260,13 @@ public class WikiUtil {
 	
 	private void createItem(LmcFolder where, File what) throws LmcSoapClientException, IOException, 
 	SoapFaultException, ServiceException, SoapParseException {
+		// XXX use .wiki extension to distinguish wiki vs documents.
+		if (what.getName().endsWith(".wiki")) {
+			createWiki(where, what);
+		} else {
+			createDocument(where, what);
+		}
+		/*
 		String contentType = URLConnection.getFileNameMap().getContentTypeFor(what.getName());
 		// assume wiki when no extension.
 		if (what.getName().indexOf('.') == -1)
@@ -268,6 +275,7 @@ public class WikiUtil {
 			createDocument(where, what);
 		else
 			createWiki(where, what);
+			*/
 	}
 	
 	private void populateFolders(LmcFolder where, File file) throws LmcSoapClientException, IOException, 
@@ -335,6 +343,19 @@ public class WikiUtil {
         		String name = f.getName();
         		String contentType;
         		
+        		// XXX use .wiki extension to distinguish wiki vs documents.
+        		if (name.endsWith(".wiki")) {
+        			name = name.substring(0, name.length() - 5);
+        			contentType = WikiItem.WIKI_CONTENT_TYPE;
+        			type = MailItem.TYPE_WIKI;
+        		} else {
+        			contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
+        			if (contentType == null) {
+        				contentType = "application/octet-stream";
+        			}
+        			type = MailItem.TYPE_DOCUMENT;
+        		}
+        		/*
         		if (f.getName().indexOf('.') != -1) {
         			contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
         		} else {
@@ -346,6 +367,8 @@ public class WikiUtil {
         		} else {
         			type = MailItem.TYPE_WIKI;
         		}
+        		*/
+        		
         		mbox.createDocument(octxt, where.getId(), name, contentType, mbox.getAccount().getName(), contents, null, type);
         	}
 		}
