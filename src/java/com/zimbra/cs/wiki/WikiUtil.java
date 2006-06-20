@@ -261,7 +261,7 @@ public class WikiUtil {
 	private void createItem(LmcFolder where, File what) throws LmcSoapClientException, IOException, 
 	SoapFaultException, ServiceException, SoapParseException {
 		// XXX use .wiki extension to distinguish wiki vs documents.
-		if (what.getName().endsWith(".wiki")) {
+		if (what.getName().endsWith(".wiki") || what.getName().startsWith("_")) {
 			createWiki(where, what);
 		} else {
 			createDocument(where, what);
@@ -344,8 +344,9 @@ public class WikiUtil {
         		String contentType;
         		
         		// XXX use .wiki extension to distinguish wiki vs documents.
-        		if (name.endsWith(".wiki")) {
-        			name = name.substring(0, name.length() - 5);
+        		if (name.endsWith(".wiki") || name.startsWith("_")) {
+        			if (name.endsWith(".wiki")) 
+        				name = name.substring(0, name.length() - 5);
         			contentType = WikiItem.WIKI_CONTENT_TYPE;
         			type = MailItem.TYPE_WIKI;
         		} else {
