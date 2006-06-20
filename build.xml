@@ -298,8 +298,8 @@
 	<target name="refresh-opt-zimbra" depends="dev-dist">
 		<copy todir="${zimbra.home.dir}">
 			<fileset dir="${dist.dir}">
-				<exclude name="${dist.dir}/conf/localconfig.xml"/> <!-- don't trash zimbra_server_hostname -->
-				<exclude name="${dist.dir}/tomcat/**"/> <!-- deploy-war instead of copying files behind tomcat's back -->
+				<exclude name="conf/localconfig.xml"/> <!-- don't trash zimbra_server_hostname -->
+				<exclude name="tomcat/**"/> <!-- deploy-war instead of copying files behind tomcat's back -->
 			</fileset>
 		</copy>
 		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod>
