@@ -25,9 +25,11 @@
 package com.zimbra.cs.wiki;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
+import org.apache.commons.collections.map.LRUMap;
+
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
@@ -38,12 +40,33 @@ import com.zimbra.cs.util.Pair;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 //import com.zimbra.cs.util.ZimbraLog;
 
+/**
+ * Cache store for parsed WikiTemplates.  The size of the cache is set by
+ * attributes <code>zimbraNotebookFolderCacheSize</code> and
+ * <code>zimbraNotebookMaxCachedTemplatesPerFolder</code>.  Each cached
+ * templates are invalidated when an update is detected via <code>Wiki</code>
+ * and <code>WikiSession</code>.  WikiTemplate cache is organized by
+ * the folder / notebook, the same way Wiki is organized.
+ * 
+ * @author jylee
+ * 
+ */
 public class WikiTemplateStore {
 	
-	private static Map<Pair<String,String>,WikiTemplateStore> sTemplates;
+	private static final long TTL = 600000;  // 10 minutes
+	private static final int DEFAULT_CACHE_SIZE = 1024;
+	private static LRUMap sTemplateStoreCache;
 	
 	static {
-		sTemplates = new HashMap<Pair<String,String>,WikiTemplateStore>();
+		Provisioning prov = Provisioning.getInstance();
+		int cacheSize;
+		try {
+			Server localServer = prov.getLocalServer();
+			cacheSize = localServer.getIntAttr(Provisioning.A_zimbraNotebookFolderCacheSize, DEFAULT_CACHE_SIZE);
+		} catch (ServiceException se) {
+			cacheSize = DEFAULT_CACHE_SIZE;
+		}
+		sTemplateStoreCache = new LRUMap(cacheSize);
 	}
 	
 	public static WikiTemplate getDefaultTOC() {
@@ -66,32 +89,46 @@ public class WikiTemplateStore {
 		WikiTemplateStore store;
 		long now = System.currentTimeMillis();
 		
-		synchronized (WikiTemplateStore.class) {
-			store = sTemplates.get(key);
-			if (store != null && store.mExpiration < now) {
-				sTemplates.remove(key);
+		synchronized (sTemplateStoreCache) {
+			store = (WikiTemplateStore)sTemplateStoreCache.get(key);
+			if (store != null && store.isExpired(now)) {
+				sTemplateStoreCache.remove(key);
 				store = null;
 			}
 			if (store == null) {
 				store = new WikiTemplateStore(key);
-				sTemplates.put(key, store);
+				sTemplateStoreCache.put(key, store);
 			}
 		}
 		return store;
 	}
 
-	private static long TTL = 600000;  // 10 minutes
 	
 	private long   mExpiration;
 	private String mAccountId;
 	private String mKey;
-	private Map<String,WikiTemplate> mTemplateMap;
+	private LRUMap mTemplateMap;
+	private static final int TEMPLATE_CACHE_SIZE = 256;
 	
 	private WikiTemplateStore(Pair<String,String> key) {
 		mAccountId  = key.getFirst();
 		mKey = key.getSecond();
-		mTemplateMap = new HashMap<String,WikiTemplate>();
+		
+		Provisioning prov = Provisioning.getInstance();
+		int cacheSize;
+		try {
+			Server localServer = prov.getLocalServer();
+			cacheSize = localServer.getIntAttr(Provisioning.A_zimbraNotebookMaxCachedTemplatesPerFolder, TEMPLATE_CACHE_SIZE);
+		} catch (ServiceException se) {
+			cacheSize = TEMPLATE_CACHE_SIZE;
+		}
+		
+		mTemplateMap = new LRUMap(cacheSize);
 		mExpiration = System.currentTimeMillis() + TTL;
+	}
+
+	private boolean isExpired(long now) {
+		return mExpiration < now;
 	}
 	
 	public WikiTemplate getTemplate(WikiContext ctxt, String name) throws ServiceException, IOException {
@@ -111,7 +148,7 @@ public class WikiTemplateStore {
 		if (name.indexOf('/') != -1) {
 			return getTemplateByPath(ctxt, name);
 		}
-		WikiTemplate template = mTemplateMap.get(name);
+		WikiTemplate template = (WikiTemplate)mTemplateMap.get(name);
 		if (template != null) {
 			//ZimbraLog.wiki.debug("found " + name + " from template cache");
 			return template;

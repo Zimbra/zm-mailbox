@@ -30,26 +30,53 @@ import java.util.List;
 
 import org.apache.commons.collections.map.LRUMap;
 
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.wiki.WikiTemplate.Context;
 
-public class TemplateCache {
-	private static final int DEFAULT_CACHE_SIZE = 1000;
+/**
+ * Cache for the composited Wiki / Notebook pages.  Each pages are fully
+ * rendered with all the Template components.  Each pages are keyed off by
+ * the list of dependent pages.  If the requestor does not have full
+ * privilege to all the included pages to compose the fully rendered page,
+ * then a subset of the pages which the requestor has access to will be
+ * used to compose the partial page.  The partial page is then cached and
+ * used for subsequent request by the same requestor, or another requestor
+ * with the same set of privileges.
+ * 
+ * The size of the page cache is set by config variable 
+ * <code>zimbraNotebookPageCacheSize</code>, either globally or by each server.
+ * 
+ * @author jylee
+ *
+ */
+public class PageCache {
+	private static final int DEFAULT_CACHE_SIZE = 10240;
 	private LRUMap mCache;
 	private static final String SEP = ":";
 	
-	public TemplateCache() {
-		this(DEFAULT_CACHE_SIZE);
+	public PageCache() {
+		Provisioning prov = Provisioning.getInstance();
+		int cacheSize;
+		try {
+			Server localServer = prov.getLocalServer();
+			cacheSize = localServer.getIntAttr(Provisioning.A_zimbraNotebookPageCacheSize, DEFAULT_CACHE_SIZE);
+		} catch (ServiceException se) {
+			cacheSize = DEFAULT_CACHE_SIZE;
+		}
+		mCache = new LRUMap(cacheSize);
 	}
-	public TemplateCache(int cacheSize) {
+	public PageCache(int cacheSize) {
 		mCache = new LRUMap(cacheSize);
 	}
 	
-	public synchronized void addTemplate(Context ctxt, WikiTemplate template, String val) {
+	public synchronized void addPage(Context ctxt, WikiTemplate template, String page) {
 		String key = generateKey(ctxt, template);
-		mCache.put(key, val);
+		mCache.put(key, page);
 	}
 	
-	public synchronized String getTemplate(Context ctxt, WikiTemplate template) {
+	public synchronized String getPage(Context ctxt, WikiTemplate template) {
 		String key = generateKey(ctxt, template);
 		return (String)mCache.get(key);
 	}

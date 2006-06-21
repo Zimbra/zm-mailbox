@@ -59,7 +59,7 @@ public class WikiFormatter extends Formatter {
     
     private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
     	WikiTemplate wt = getTemplate(context, wiki);
-    	String template = wt.getDocument(createWikiContext(context), wiki, CHROME);
+    	String template = wt.getComposedPage(createWikiContext(context), wiki, CHROME);
     	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
     	context.resp.getOutputStream().print(template);
     }

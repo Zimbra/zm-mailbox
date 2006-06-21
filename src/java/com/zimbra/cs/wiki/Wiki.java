@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.apache.commons.collections.map.LRUMap;
+
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Config;
@@ -62,7 +64,21 @@ import com.zimbra.cs.session.WikiSession;
 import com.zimbra.cs.util.Pair;
 
 /**
- * This class represents a Wiki notebook.
+ * This class represents a Wiki notebook.  A notebook corresponds to a folder
+ * where the Wiki pages and other uploaded documents are stored.  The name
+ * (wiki word for a Wiki page, or filename for uploaded documents) is enforced
+ * to be unique within the notebook.
+ * 
+ * A Wiki can be constructed with the Id of the account holder, and the path
+ * to the folder / notebook.  When target mailbox resides on a remote machine,
+ * then the path in REST url to the folder is used as the key.  For local
+ * mailboxes, folderId is used for the path.
+ * 
+ * There is a cache of each Wik instances to help speed up a page lookup
+ * by name / subject.  The maximum cache size is set by the attribute
+ * <code>zimbraNotebookFolderCacheSize</code>.  The cache is connected to
+ * each mailbox via <code>WikiSession</code> which sends notification for
+ * changes in the Wiki pages and documents in the cache.
  * 
  * @author jylee
  *
@@ -72,14 +88,23 @@ public abstract class Wiki {
 	
 	protected Map<String,WikiPage> mWikiWords;
 	
-	protected static Map<Pair<String,String>,Wiki> wikiMap;
+	private static final int DEFAULT_CACHE_SIZE = 1024;
+	protected static LRUMap sWikiNotebookCache;
 
 	protected static final String WIKI_FOLDER     = "notebook";
 	protected static final String TEMPLATE_FOLDER = "/template";
 	protected static final int    WIKI_FOLDER_ID  = 12;
 	
 	static {
-		wikiMap = new HashMap<Pair<String,String>,Wiki>();
+		Provisioning prov = Provisioning.getInstance();
+		int cacheSize;
+		try {
+			Server localServer = prov.getLocalServer();
+			cacheSize = localServer.getIntAttr(Provisioning.A_zimbraNotebookFolderCacheSize, DEFAULT_CACHE_SIZE);
+		} catch (ServiceException se) {
+			cacheSize = DEFAULT_CACHE_SIZE;
+		}
+		sWikiNotebookCache = new LRUMap(cacheSize);
 	}
 	
 	public static class WikiContext {
@@ -445,7 +470,7 @@ public abstract class Wiki {
 		Folder f = mbox.getFolderById(ctxt.octxt, folderId);
 
 		Pair<String,String> key = Pair.get(acct.getId(), Integer.toString(folderId));
-		Wiki wiki = wikiMap.get(key);
+		Wiki wiki = (Wiki)sWikiNotebookCache.get(key);
 		if (wiki == null) {
 			wiki = new WikiById(ctxt, acct, folderId);
 			Wiki.add(wiki, key);
@@ -480,7 +505,7 @@ public abstract class Wiki {
 				return getInstance(ctxt, acct, fid);
 			}
 			Pair<String,String> k = Pair.get(account.getId(), key);
-			Wiki wiki = wikiMap.get(k);
+			Wiki wiki = (Wiki)sWikiNotebookCache.get(k);
 			if (wiki == null) {
 				wiki = new WikiByPath(ctxt, account, key);
 				Wiki.add(wiki, k);
@@ -490,18 +515,18 @@ public abstract class Wiki {
 	}
 	
 	public static void add(Wiki wiki, Pair<String,String> key) {
-		synchronized (wikiMap) {
-			Wiki w = wikiMap.get(key);
+		synchronized (sWikiNotebookCache) {
+			Wiki w = (Wiki)sWikiNotebookCache.get(key);
 			if (w == null) {
-				wikiMap.put(key, wiki);
+				sWikiNotebookCache.put(key, wiki);
 			}
 		}
 	}
 	
 	public static void remove(String acctId, String k) {
-		synchronized (wikiMap) {
+		synchronized (sWikiNotebookCache) {
 			Pair<String,String> key = Pair.get(acctId, k);
-			wikiMap.remove(key);
+			sWikiNotebookCache.remove(key);
 		}
 	}
 

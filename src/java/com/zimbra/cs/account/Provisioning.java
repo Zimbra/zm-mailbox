@@ -861,7 +861,10 @@ public abstract class Provisioning {
     /*
      * Wiki
      */
-    public static final String A_zimbraNotebookAccount = "zimbraNotebookAccount";
+    public static final String A_zimbraNotebookAccount         = "zimbraNotebookAccount";
+    public static final String A_zimbraNotebookPageCacheSize   = "zimbraNotebookPageCacheSize";
+    public static final String A_zimbraNotebookFolderCacheSize = "zimbraNotebookFolderCacheSize";
+    public static final String A_zimbraNotebookMaxCachedTemplatesPerFolder = "zimbraNotebookMaxCachedTemplatesPerFolder";
     
     private static Provisioning mProvisioning;
 

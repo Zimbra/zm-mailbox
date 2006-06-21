@@ -1654,4 +1654,19 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Skins installed and available on all servers (this is global config only)</desc>
 </attr>
 
+<attr id="369" name="zimbraNotebookPageCacheSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>10240</globalConfigValue>
+  <desc>The size of composed Wiki / Notebook page cache on the server.</desc>
+</attr>
+
+<attr id="370" name="zimbraNotebookFolderCacheSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>1024</globalConfigValue>
+  <desc>The size of Wiki / Notebook folder cache on the server.</desc>
+</attr>
+
+<attr id="371" name="zimbraNotebookMaxCachedTemplatesPerFolder" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>256</globalConfigValue>
+  <desc>The maximum number of cached templates in each Wiki / Notebook folder cache.</desc>
+</attr>
+
 </attrs>

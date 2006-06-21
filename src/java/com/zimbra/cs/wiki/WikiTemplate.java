@@ -45,6 +45,19 @@ import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.cs.wiki.Wiki.WikiUrl;
 
+/**
+ * WikiTemplate is a parsed Wiki page.  Each parsed tokens represent either
+ * a block of text, or a wiklet.  A wiklet can refer to another document
+ * stored in someone else's mailbox.  To render a wiki page, it will go through
+ * each wiklet, and get the contents denoted by each wiklet and based on
+ * the context the wiklet is run (privilege of the requestor, location of
+ * the requested page, location of the page referred by the wiklet).
+ * 
+ * Each parsed templates are cached in the class <code>WikiTemplateStore</code>.
+ * 
+ * @author jylee
+ *
+ */
 public class WikiTemplate implements Comparable<WikiTemplate> {
 	
 	public WikiTemplate(String item, String id, String key) {
@@ -61,7 +74,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		touch();
 	}
 	
-	private static TemplateCache sCache = new TemplateCache();
+	private static PageCache sCache = new PageCache();
 	
 	public static WikiTemplate findTemplate(Context ctxt, String name)
 	throws IOException,ServiceException {
@@ -95,20 +108,20 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		return mModifiedTime;
 	}
 	
-	public String getDocument(WikiContext ctxt, MailItem item, String chrome)
+	public String getComposedPage(WikiContext ctxt, MailItem item, String chrome)
 	throws ServiceException, IOException {
-		return getDocument(new Context(ctxt, item), chrome);
+		return getComposedPage(new Context(ctxt, item), chrome);
 	}
 	
-	public String getDocument(Context ctxt, String chrome)
+	public String getComposedPage(Context ctxt, String chrome)
 	throws ServiceException, IOException {
 		WikiTemplateStore ts = WikiTemplateStore.getInstance(ctxt.item);
 		WikiTemplate chromeTemplate = ts.getTemplate(ctxt.wctxt, chrome);
-		String templateVal = sCache.getTemplate(ctxt, chromeTemplate);
+		String templateVal = sCache.getPage(ctxt, chromeTemplate);
 		if (templateVal == null || chromeTemplate.isExpired(ctxt)) {
 			ZimbraLog.wiki.debug("reloading wiki template " + ctxt.item.getSubject());
 			templateVal = chromeTemplate.toString(ctxt);
-			sCache.addTemplate(ctxt, chromeTemplate, templateVal);
+			sCache.addPage(ctxt, chromeTemplate, templateVal);
 		}
 		return templateVal;
 	}
