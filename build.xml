@@ -55,7 +55,7 @@
 
 	<property name="ical4j.jar" value="ical4j-0.9.16-patched.jar" />
 
-	<property name="zimlets" value="com_zimbra_phone,com_zimbra_tracking,com_zimbra_url,com_zimbra_email,com_zimbra_date"/>
+	<property name="zimlets" value="com_zimbra_phone,com_zimbra_url,com_zimbra_email,com_zimbra_date"/>
 
 	<property name="wiki.user.default" value="wiki" /><!-- global wiki account -->
 
