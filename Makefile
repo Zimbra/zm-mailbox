@@ -9,6 +9,7 @@ SHARED := -shared
 JAVAINC := -I/usr/local/java/include -I/usr/local/java/include/linux
 SHARED_EXT := so
 PUSHED_EXT := so.Linux.i386
+CF := -fPIC
 
 ifeq ($(BUILD_PLATFORM), MACOSX)
 JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
@@ -81,10 +82,10 @@ remove_classes_list: FORCE
 FORCE: ;
 
 $(BUILD)/libzimbra-native.$(SHARED_EXT): $(BUILD)/IO.o $(BUILD)/Process.o $(BUILD)/ProcessorUsage.o $(BUILD)/ResourceUsage.o $(BUILD)/Util.o $(BUILD)/zjniutil.o
-	gcc $(LIB_OPTS) $(SHARED) -o $@ $^
+	gcc $(CF) $(LIB_OPTS) $(SHARED) -o $@ $^
 
 $(BUILD)/%.o: $(SRC)/native/%.c
-	gcc $(MACDEF) $(JAVAINC) -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
+	gcc $(CF) $(MACDEF) $(JAVAINC) -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
 
 $(BUILD)/Process.o: $(SRC)/native/Process.c $(BUILD)/Process.h $(SRC)/native/zjniutil.h
 
