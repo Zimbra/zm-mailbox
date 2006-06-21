@@ -1817,10 +1817,18 @@ public final class MailboxIndex
                 // force the pm's received-date to be the correct one
                 long msgDate = item.getDate();
                 pm = new ParsedMessage(msg.getMimeMessage(), msgDate, mbox.attachmentsIndexingEnabled());
+
+                // because of bug 8263, we sometimes have fragments that are incorrect:
+                // check them here and correct them if necessary
+                if (pm.getFragment().compareTo(msg.getFragment()) != 0) {
+                    mbox.reanalyze(msg.getId(), msg.getType(),  pm);
+                }
+                
+                item.reindex(null, pm);
+            } else {
+                item.reindex(null, null);
             }
 
-            item.reindex(null, pm);
-            
         } catch (java.lang.RuntimeException e) {
             throw ServiceException.FAILURE("Error re-indexing message "+msgId, e);
         }
