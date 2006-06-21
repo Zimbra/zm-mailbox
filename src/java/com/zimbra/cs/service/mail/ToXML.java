@@ -1303,9 +1303,13 @@ public class ToXML {
 		try {
 			Account account = item.getMailbox().getAccount();
 			String url = UserServlet.getRestUrl(account, false);
-			return m.addAttribute(MailService.A_REST_URL, url + item.getPath());
+			url = new HttpURL(url + item.getPath()).toString();
+			return m.addAttribute(MailService.A_REST_URL, url);
 		} catch (ServiceException se) {
 			mLog.error("cannot generate REST url", se);
+			return m;
+		} catch (IOException ioe) {
+			mLog.error("cannot generate REST url", ioe);
 			return m;
 		}
 	}
