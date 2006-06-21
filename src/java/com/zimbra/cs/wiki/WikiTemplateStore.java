@@ -34,7 +34,6 @@ import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.cs.service.wiki.WikiServiceException.NoSuchWikiException;
-import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Pair;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 //import com.zimbra.cs.util.ZimbraLog;
@@ -122,7 +121,7 @@ public class WikiTemplateStore {
 		WikiPage ww = wiki.lookupWiki(name);
 		
 		if (ww != null) {
-			template = new WikiTemplate(ww.getContents(ctxt));
+			template = new WikiTemplate(ww.getContents(ctxt), mAccountId, mKey);
 			mTemplateMap.put(name, template);
 			return template;
 		}
@@ -143,10 +142,9 @@ public class WikiTemplateStore {
 			return getDefaultTOC();
 		} else if (item instanceof WikiItem) {
 			WikiItem wiki = (WikiItem) item;
+			WikiTemplateStore store = WikiTemplateStore.getInstance(item);
 			try {
-				byte[] raw = ByteUtil.getContent(wiki.getLastRevision().getContent(), 0);
-				// XXX cache the template
-				return new WikiTemplate(new String(raw, "UTF-8"));
+				return store.getTemplate(ctxt, wiki.getWikiWord());
 			} catch (Exception e) {
 				throw WikiServiceException.ERROR("can't get contents of "+path, e);
 			}

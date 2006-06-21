@@ -59,7 +59,7 @@ public class WikiFormatter extends Formatter {
     
     private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
     	WikiTemplate wt = getTemplate(context, wiki);
-    	String template = wt.getDocument(createWikiContext(context), context.req, wiki, CHROME);
+    	String template = wt.getDocument(createWikiContext(context), wiki, CHROME);
     	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
     	context.resp.getOutputStream().print(template);
     }
@@ -92,7 +92,7 @@ public class WikiFormatter extends Formatter {
     	if (template == null) {
     		template = getDefaultTOC();
     	}
-    	ret.append(template.toString(createWikiContext(context), context.req, folder));
+    	ret.append(template.toString(createWikiContext(context), folder));
     	
     	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
     	context.resp.getOutputStream().print(ret.toString());

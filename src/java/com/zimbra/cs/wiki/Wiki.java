@@ -437,6 +437,13 @@ public abstract class Wiki {
 	public static Wiki getInstance(WikiContext ctxt, Account acct, int folderId) throws ServiceException {
 		if (acct == null || folderId < 1)
 			throw new WikiServiceException.NoSuchWikiException("no such account");
+		
+		// check the folder for access
+		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
+		if (mbox == null)
+			throw WikiServiceException.ERROR("wiki account mailbox not found");
+		Folder f = mbox.getFolderById(ctxt.octxt, folderId);
+
 		Pair<String,String> key = Pair.get(acct.getId(), Integer.toString(folderId));
 		Wiki wiki = wikiMap.get(key);
 		if (wiki == null) {
