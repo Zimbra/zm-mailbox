@@ -977,8 +977,14 @@ public abstract class MailItem implements Comparable {
         return blob;
     }
 
-    void reanalyze(Object obj) throws ServiceException {
-        saveData(null);
+    /** Recalculates the size, metadata, etc. for an existing MailItem and
+     *  persists that information to the database.  Maintains any existing
+     *  mutable metadata.  Updates mailbox and folder sizes appropriately.
+     * 
+     * @param data  The (optional) extra item data for indexing (e.g.
+     *              a Message's {@link com.zimbra.cs.index.ParsedMessage}. */
+    void reanalyze(Object data) throws ServiceException {
+        throw ServiceException.FAILURE("reanalysis of " + getNameForType(this) + "s not supported", null);
     }
 
     void detach() throws ServiceException  { }

@@ -423,11 +423,11 @@ public class Message extends MailItem {
         ParsedMessage pm = new ParsedMessage(getMimeMessage(), getDate(), getMailbox().attachmentsIndexingEnabled());
 		reanalyze(pm);
     }
-    void reanalyze(Object obj) throws ServiceException {
-        if (!(obj instanceof ParsedMessage))
+    void reanalyze(Object data) throws ServiceException {
+        if (!(data instanceof ParsedMessage))
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedMessage object", null);
 
-        ParsedMessage pm = (ParsedMessage) obj;
+        ParsedMessage pm = (ParsedMessage) data;
         int size;
         try {
             size = pm.getRawSize();

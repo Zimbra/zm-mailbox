@@ -419,6 +419,10 @@ public class Contact extends MailItem {
             Indexer.GetInstance().indexContact(redo, mMailbox.getMailboxIndex(), mId, this);
     }
 
+    void reanalyze(Object data) throws ServiceException {
+        saveData(getFileAsString(mFields));
+    }
+
     /** Alters an existing contact's fields.  Depending on the value of the
      *  <code>replace</code> parameter, will either modify the existing fields
      *  or completely replace the old ones with the supplied <code>Map</code>.

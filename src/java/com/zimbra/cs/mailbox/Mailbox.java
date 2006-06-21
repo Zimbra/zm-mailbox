@@ -65,7 +65,6 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
-import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -1683,6 +1682,26 @@ public class Mailbox {
                     redoRecorder.abort();
                 }
             }
+        }
+    }
+
+    /** Recalculates the size, metadata, etc. for an existing MailItem and
+     *  persists that information to the database.  Maintains any existing
+     *  mutable metadata.  Updates mailbox and folder sizes appropriately.
+     * 
+     * @param id    The item ID of the MailItem to reanalyze.
+     * @param type  The item's type (e.g. {@link MailItem#TYPE_MESSAGE}).
+     * @param data  The (optional) extra item data for indexing (e.g.
+     *              a Message's {@link ParsedMessage}. */
+    public synchronized void reanalyze(int id, byte type, Object data) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("reanalyze", null);
+            MailItem item = getItemById(null, id, type);
+            item.reanalyze(data);
+            success = true;
+        } finally {
+            endTransaction(success);
         }
     }
 

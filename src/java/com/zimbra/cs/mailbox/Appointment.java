@@ -834,10 +834,10 @@ public class Appointment extends MailItem {
         }
     }
     
-    void reanalyze(Object obj) throws ServiceException {
-        if (!(obj instanceof ParsedMessage))
+    void reanalyze(Object data) throws ServiceException {
+        if (!(data instanceof ParsedMessage))
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedMessage object", null);
-        ParsedMessage pm = (ParsedMessage) obj;
+        ParsedMessage pm = (ParsedMessage) data;
         saveData(pm.getParsedSender().getSortString());
     }
 
