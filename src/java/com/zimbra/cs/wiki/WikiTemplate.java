@@ -757,6 +757,26 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		private static final String sMEDIUMDATETIME = "mediumdateandtime";
 		private static final String sLONGDATETIME   = "longdateandtime";
 		private static final String sFULLDATETIME   = "fulldateandtime";
+		protected static Map<String,DateFormat> sFORMATS;
+		
+		static {
+			sFORMATS = new HashMap<String,DateFormat>();
+			
+			sFORMATS.put(sSHORTDATE,  DateFormat.getDateInstance(DateFormat.SHORT));
+			sFORMATS.put(sMEDIUMDATE, DateFormat.getDateInstance(DateFormat.MEDIUM));
+			sFORMATS.put(sLONGDATE,   DateFormat.getDateInstance(DateFormat.LONG));
+			sFORMATS.put(sFULLDATE,   DateFormat.getDateInstance(DateFormat.FULL));
+			
+			sFORMATS.put(sSHORTTIME,  DateFormat.getTimeInstance(DateFormat.SHORT));
+			sFORMATS.put(sMEDIUMTIME, DateFormat.getTimeInstance(DateFormat.MEDIUM));
+			sFORMATS.put(sLONGTIME,   DateFormat.getTimeInstance(DateFormat.LONG));
+			sFORMATS.put(sFULLTIME,   DateFormat.getTimeInstance(DateFormat.FULL));
+			
+			sFORMATS.put(sSHORTDATETIME,  DateFormat.getDateTimeInstance(DateFormat.SHORT,  DateFormat.SHORT));
+			sFORMATS.put(sMEDIUMDATETIME, DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM));
+			sFORMATS.put(sLONGDATETIME,   DateFormat.getDateTimeInstance(DateFormat.LONG,   DateFormat.LONG));
+			sFORMATS.put(sFULLDATETIME,   DateFormat.getDateTimeInstance(DateFormat.FULL,   DateFormat.FULL));
+		}
 		
 		public boolean isExpired(WikiTemplate template, Context ctxt) {
 			return false;
@@ -764,36 +784,15 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
-		protected DateFormat getDateFormat(Context ctxt) {
+		protected String formatDate(Context ctxt, Date date) {
 			Map<String,String> params = ctxt.token.parseParam();
 			String format = params.get(sFORMAT);
-			if (format == null)
+			if (format == null || !sFORMATS.containsKey(format))
 				format = sSHORTDATETIME;
-			if (format.equals(sSHORTDATE))
-				return DateFormat.getDateInstance(DateFormat.SHORT);
-			else if (format.equals(sMEDIUMDATE))
-				return DateFormat.getDateInstance(DateFormat.MEDIUM);
-			else if (format.equals(sLONGDATE))
-				return DateFormat.getDateInstance(DateFormat.LONG);
-			else if (format.equals(sFULLDATE))
-				return DateFormat.getDateInstance(DateFormat.FULL);
-			else if (format.equals(sSHORTTIME))
-				return DateFormat.getTimeInstance(DateFormat.SHORT);
-			else if (format.equals(sMEDIUMTIME))
-				return DateFormat.getTimeInstance(DateFormat.MEDIUM);
-			else if (format.equals(sLONGTIME))
-				return DateFormat.getTimeInstance(DateFormat.LONG);
-			else if (format.equals(sFULLTIME))
-				return DateFormat.getTimeInstance(DateFormat.FULL);
-			else if (format.equals(sSHORTDATETIME))
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
-			else if (format.equals(sMEDIUMDATETIME))
-				return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM);
-			else if (format.equals(sLONGDATETIME))
-				return DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
-			else if (format.equals(sFULLDATETIME))
-				return DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL);
-			return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
+			DateFormat formatter = sFORMATS.get(format);
+			synchronized (formatter) {
+				return formatter.format(date);
+			}
 		}
 	}
 	public static class CreateDateWiklet extends DateTimeWiklet {
@@ -810,7 +809,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				createDate = new Date(doc.getLastRevision().getRevDate());
 			} else
 				createDate = new Date(ctxt.item.getDate());
-			return getDateFormat(ctxt).format(createDate);
+			return formatDate(ctxt, createDate);
 		}
 	}
 	public static class ModifyDateWiklet extends DateTimeWiklet {
@@ -827,7 +826,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				modifyDate = new Date(doc.getLastRevision().getRevDate());
 			} else
 				modifyDate = new Date(ctxt.item.getDate());
-			return getDateFormat(ctxt).format(modifyDate);
+			return formatDate(ctxt, modifyDate);
 		}
 	}
 	public static class VersionWiklet extends Wiklet {
