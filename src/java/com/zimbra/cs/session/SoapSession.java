@@ -122,20 +122,6 @@ public class SoapSession extends Session {
     protected boolean shouldRegisterWithIM() { return true; }
     
     public synchronized RegisterNotificationResult registerNotificationConnection(OzNotificationConnectionHandler conn) throws ServiceException {
-//        if (seqNo < 2) { // testing hack
-//            if (!mIMNotifications.isEmpty()) {
-//                Element e = new Element.XMLElement("IM");
-//                for (IMNotification not : mIMNotifications) {
-//                    not.toXml(e);
-//                }
-//                conn.writeData(e.toUTF8());
-//            }
-//            if (mChanges.hasNotifications()) {
-//                
-//            }
-//        }
-//        mPushChannels.add(conn);
-        
         if (mPushChannel != null) {
             mPushChannel.close();
             mPushChannel = null;
@@ -370,7 +356,7 @@ public class SoapSession extends Session {
                     .addAttribute(ZimbraSoapContext.A_CHANGE_ID, mbox.getLastChangeID())
                     .addAttribute(ZimbraSoapContext.A_ACCOUNT_ID, explicitAcct);
                 
-                if (mSentChanges.size() > 1000) {
+                if (mSentChanges.size() > 100) {
                     // cover ourselves in case a client is doing something really stupid...
                     mLog.warn("Notification Change List abnormally long, misbehaving client.");
                     mSentChanges.clear();
