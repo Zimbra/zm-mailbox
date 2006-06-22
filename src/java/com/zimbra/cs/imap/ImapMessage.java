@@ -33,6 +33,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
@@ -41,6 +42,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.*;
 
 import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.net.BCodec;
 import org.apache.commons.codec.net.QCodec;
 
 import com.zimbra.cs.mailbox.Contact;
@@ -207,28 +209,55 @@ public class ImapMessage implements Comparable<ImapMessage> {
 
     private static final byte[] NIL = { 'N', 'I', 'L' };
 
-    private void nstring(PrintStream ps, String value) { if (value == null)  ps.write(NIL, 0, 3);  else astring(ps, value); }
-    private void astring(PrintStream ps, String value) { astring(ps, value, false); }
-    private void aSTRING(PrintStream ps, String value) { astring(ps, value, true); }
-    private void astring(PrintStream ps, String value, boolean upcase) {
-        boolean encoded = false;
+    private static void nstring(PrintStream ps, String value) { if (value == null)  ps.write(NIL, 0, 3);  else astring(ps, value, false); }
+    private static void astring(PrintStream ps, String value) { if (value == null)  ps.print("\"\"");     else astring(ps, value, false); }
+    private static void aSTRING(PrintStream ps, String value) { if (value == null)  ps.print("\"\"");     else astring(ps, value, true); }
+    private static void astring(PrintStream ps, String value, boolean upcase) {
+        boolean literal = false;
         StringBuilder nonulls = null;
-        for (int i = 0, length = value.length(), lastNull = -1; i < length; i++) {
+        int i = 0, lastNull = -1;
+        for (int length = value.length(); i < length; i++) {
             char c = value.charAt(i);
             if (c == '\0') {
                 if (nonulls == null)  nonulls = new StringBuilder();
                 nonulls.append(value.substring(lastNull + 1, i));
                 lastNull = i;
-            } else if (c == '"' || c == '\\' || c >= 0x7f)
-                encoded = true;
+            } else if (c == '"' || c == '\\' || c >= 0x7f || c < 0x20)
+                literal = true;
         }
-        String content = (nonulls == null ? value : nonulls.toString());
-        if (upcase)  content = content.toUpperCase();
-        if (!encoded) {
+        String content = (nonulls == null ? value : nonulls.append(value.substring(lastNull + 1, i)).toString());
+        if (upcase)
+            content = content.toUpperCase();
+        if (!literal) {
             ps.write('"');  ps.print(content);  ps.write('"');
         } else {
             try {
-                ps.write('"');  ps.print(new QCodec().encode(content, "utf-8"));  ps.write('"');
+                byte[] bytes = content.getBytes(Mime.P_CHARSET_UTF8);
+                ps.write('{');  ps.print(bytes.length);  ps.write('}');  ps.write(ImapHandler.LINE_SEPARATOR_BYTES, 0, 2);
+                ps.write(bytes, 0, bytes.length);
+            } catch (UnsupportedEncodingException uee) {
+                ps.write(NIL, 0, 3);
+            }
+        }
+    }
+
+    private static void nstring2047(PrintStream ps, String value) {
+        if (value == null) {
+            ps.write(NIL, 0, 3);  return;
+        }
+
+        boolean encoded = false;
+        for (int i = 0, length = value.length(); i < length; i++) {
+            char c = value.charAt(i);
+            if (c == '"' || c == '\\' || c >= 0x7f || c < 0x20)
+                encoded = true;
+        }
+        if (!encoded) {
+            ps.write('"');  ps.print(value);  ps.write('"');
+        } else {
+            try {
+                // can't use QCodec because it doesn't encode '"', which results in bad quoted-strings
+                ps.write('"');  ps.print(new BCodec().encode(value, "utf-8"));  ps.write('"');
             } catch (EncoderException ee) {
                 ps.write(NIL, 0, 3);
             }
@@ -246,14 +275,14 @@ public class ImapMessage implements Comparable<ImapMessage> {
                     //         822 syntax).  If the mailbox name field is non-NIL, this is a start of
                     //         group marker, and the mailbox name field holds the group name phrase."
                     // FIXME: handle groups...
-                } else if (addrs[i].getAddress() == null)
+                } else if (addrs[i].getAddress() == null) {
                     continue;
-                else {
+                } else {
                     // 7.4.2: "The fields of an address structure are in the following order: personal
                     //         name, [SMTP] at-domain-list (source route), mailbox name, and host name."
                     if (count++ == 0)  ps.write('(');
                     String[] parts = addrs[i].getAddress().split("@", 2);
-                    ps.write('(');  nstring(ps, addrs[i].getPersonal());
+                    ps.write('(');  nstring2047(ps, addrs[i].getPersonal());
                     ps.write(' ');  ps.write(NIL, 0, 3);
                     ps.write(' ');  nstring(ps, parts[0]);
                     ps.write(' ');  nstring(ps, parts.length > 1 ? parts[1] : null);
@@ -273,7 +302,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
         InternetAddress[] from = Mime.parseAddressHeader(mm, "From");
         InternetAddress[] sender = Mime.parseAddressHeader(mm, "Sender"), replyTo = Mime.parseAddressHeader(mm, "Reply-To");
         ps.write('(');  nstring(ps, mm.getHeader("Date", ","));
-        ps.write(' ');  nstring(ps, mm.getSubject());
+        ps.write(' ');  nstring2047(ps, mm.getSubject());
         ps.write(' ');  naddresses(ps, from);
         ps.write(' ');  naddresses(ps, sender.length == 0 ? from : sender);
         ps.write(' ');  naddresses(ps, replyTo.length == 0 ? from : replyTo);
@@ -319,7 +348,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
             }
             ps.print(first ? "NIL" : ")");
             ps.write(' ');  nstring(ps, mp.getContentID());
-            ps.write(' ');  nstring(ps, mp.getDescription());
+            ps.write(' ');  nstring2047(ps, mp.getDescription());
             ps.write(' ');  aSTRING(ps, cte);
             ps.write(' ');  ps.print(Math.max(mp.getSize(), 0));
             if (rfc822) {
@@ -359,6 +388,15 @@ public class ImapMessage implements Comparable<ImapMessage> {
             return 0;
         } catch (IOException e) {
             return 0;
+        }
+    }
+
+    public static void main(String[] args) {
+        PrintStream ps = new PrintStream(System.out);
+        ps.print(ImapHandler.LINE_SEPARATOR_BYTES);
+        String[] samples = new String[] { null, "test", "\u0442", "ha\nnd", "\"dog\"", "ca\"t", "\0fr\0og\0" };
+        for (String s : samples) {
+            nstring2047(ps, s);  ps.write(' ');  nstring(ps, s);  ps.write(' ');  astring(ps, s);  ps.write(' ');  aSTRING(ps, s);  ps.write('\n');
         }
     }
 }
