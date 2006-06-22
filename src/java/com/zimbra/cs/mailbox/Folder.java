@@ -605,6 +605,7 @@ public class Folder extends MailItem {
             if (existingFolder != null && existingFolder != this)
                 throw MailServiceException.ALREADY_EXISTS(name);
             mData.subject = name;
+            mData.date = mMailbox.getOperationTimestamp();
             saveSubject();
         }
 
@@ -940,7 +941,7 @@ public class Folder extends MailItem {
         DbMailItem.saveMetadata(this, 0, metadata);
     }
     protected void saveSubject() throws ServiceException {
-        mData.metadataChanged(mMailbox);
+        mData.contentChanged(mMailbox);
         DbMailItem.saveSubject(this, 0);
     }
 

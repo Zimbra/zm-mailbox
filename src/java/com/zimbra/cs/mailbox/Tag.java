@@ -182,6 +182,7 @@ public class Tag extends MailItem {
 
         markItemModified(Change.MODIFIED_NAME);
         mData.subject = name;
+        mData.date = mMailbox.getOperationTimestamp();
         saveSubject();
     }
 

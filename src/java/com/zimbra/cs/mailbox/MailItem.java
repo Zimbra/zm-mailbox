@@ -1646,7 +1646,7 @@ public abstract class MailItem implements Comparable {
     }
 
     protected void saveSubject() throws ServiceException {
-        mData.metadataChanged(mMailbox);
+        mData.contentChanged(mMailbox);
         DbMailItem.saveSubject(this, mData.size);
     }
 

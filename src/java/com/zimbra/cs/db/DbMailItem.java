@@ -439,14 +439,15 @@ public class DbMailItem {
             subject = ((Message) item).getNormalizedSubject();
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                    " SET date = ?, size = ?, subject = ?, mod_metadata = ?, change_date = ?" +
+                    " SET date = ?, size = ?, subject = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
                     " WHERE id = ?");
             stmt.setInt(1, (int) (item.getDate() / 1000));
             stmt.setInt(2, (int) size);
             stmt.setString(3, subject);
             stmt.setInt(4, mbox.getOperationChangeID());
             stmt.setInt(5, mbox.getOperationTimestamp());
-            stmt.setInt(6, item.getId());
+            stmt.setInt(6, mbox.getOperationChangeID());
+            stmt.setInt(7, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("writing subject for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);

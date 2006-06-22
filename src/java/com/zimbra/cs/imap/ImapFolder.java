@@ -262,7 +262,7 @@ class ImapFolder implements Iterable<ImapMessage> {
     String getQuotedPath()          { return '"' + mPath + '"'; }
     void updatePath(Folder folder)  { mPath = folder.getPath(); }
 
-    static int getUIDValidity(Folder folder) { return Math.max(folder.getModifiedSequence(), 1); }
+    static int getUIDValidity(Folder folder) { return Math.max(folder.getSavedSequence(), 1); }
 
     ImapMessage getById(int id)        { if (id <= 0) return null;   return checkRemoved(mUIDs.get(new Integer(-id))); }
     ImapMessage getByImapId(int uid)   { if (uid <= 0) return null;  return checkRemoved(mUIDs.get(new Integer(uid))); }
