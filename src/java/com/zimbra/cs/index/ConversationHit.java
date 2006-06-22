@@ -158,6 +158,8 @@ import com.zimbra.cs.service.ServiceException;
 
         // ..... etc ......
 
+        public MailItem getMailItem() throws ServiceException { return getConversation(); }
+        
         /**
          * Returns the real com.zimbra.cs.mailbox.Conversation object. Only use this if you
          * need write access to the Conversation.

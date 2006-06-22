@@ -23,6 +23,7 @@
  */
 package com.zimbra.cs.operation;
 
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -36,9 +37,10 @@ public class GetItemOperation extends Operation {
         if (c != null)
             LOAD = c.mLoad;
     }
-    
-    int[] mIds;
+
+    String mPath;
     byte mType;
+    int[] mIds;
     
     MailItem[] mItems;
     
@@ -49,6 +51,7 @@ public class GetItemOperation extends Operation {
         mIds = new int[1];
         mIds[0] = id;
         mType = type;
+        mPath = null;
     }
     
     public GetItemOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
@@ -58,12 +61,26 @@ public class GetItemOperation extends Operation {
         mIds = new int[1];
         mIds = id;
         mType = type;
+        mPath = null;
+    }
+    
+    public GetItemOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
+                String path, byte type) throws ServiceException {
+        super(session, oc, mbox, req, LOAD);
+
+        mIds = null;
+        mType = type;
+        mPath = path;
     }
     
     protected void callback() throws ServiceException {
-        if (mIds.length == 1) {
+        if (mPath != null || mIds.length == 1) {
             mItems = new MailItem[1];
-            mItems[0] = getMailbox().getItemById(getOpCtxt(), mIds[0], mType);
+            if (mPath != null) {
+                mItems[0] = getMailbox().getItemByPath(getOpCtxt(), mPath, Mailbox.ID_FOLDER_USER_ROOT, false);
+            } else {
+                mItems[0] = getMailbox().getItemById(getOpCtxt(), mIds[0], mType);
+            }
         } else {
             mItems = getMailbox().getItemById(getOpCtxt(), mIds, mType);
         }
@@ -71,20 +88,26 @@ public class GetItemOperation extends Operation {
     
     public MailItem getItem() { return mItems[0]; }
     public MailItem[] getItems() { return mItems; }
+    public Folder getFolder() { return (Folder)mItems[0]; }
     
     public String toString() {
         StringBuilder sb = new StringBuilder(super.toString());
-        sb.append(" id=(");
-        boolean first = true;
-        for (int id : mIds) {
-            if (!first) {
-                sb.append(",");
-                first = false;
+        if (mPath != null) {
+            sb.append(" path=").append(mPath);
+        } else {
+            sb.append(" id=(");
+            boolean first = true;
+            for (int id : mIds) {
+                if (!first) {
+                    sb.append(",");
+                    first = false;
+                }
+                sb.append(id);
             }
-            sb.append(id);
         }
         sb.append(") type=").append(mType);
         return sb.toString();
         
     }
+    
 }

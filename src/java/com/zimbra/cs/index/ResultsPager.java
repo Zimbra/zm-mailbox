@@ -253,6 +253,7 @@ public class ResultsPager
         boolean itemIsLoaded() { return false; }
         public String getSubject() { return mSubject; }
         public String getName() { return mName; }
+        public MailItem getMailItem() throws ServiceException { return  null; }
     }
     
 }

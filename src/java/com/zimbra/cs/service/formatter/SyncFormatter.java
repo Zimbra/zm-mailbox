@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -48,6 +49,13 @@ import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.HttpUtil;
 
 public class SyncFormatter extends Formatter {
+    
+    public static class Format {};
+    public static class Save {};
+    static int sFormatLoad = Operation.setLoad(SyncFormatter.Format.class, 10);
+    static int sSaveLoad = Operation.setLoad(SyncFormatter.Save.class, 10);
+    int getFormatLoad() { return  sFormatLoad; }
+    int getSaveLoad() { return sSaveLoad; }
 
     public String getType() {
         return "sync";
@@ -79,7 +87,7 @@ public class SyncFormatter extends Formatter {
         context.resp.getOutputStream().write(hdr.toString().getBytes());
     }
 
-    public void format(Context context, MailItem item) throws IOException, ServiceException, UserServletException {
+    public void formatCallback(Context context, MailItem item) throws IOException, ServiceException, UserServletException {
         try {
             if (context.hasPart()) {
                 handleMessagePart(context, item);
@@ -159,7 +167,7 @@ public class SyncFormatter extends Formatter {
     }
 
     // FIXME: need to support tags, flags, date, etc...
-    public void save(byte[] body, Context context, Folder folder) throws IOException, ServiceException, UserServletException {
+    public void saveCallback(byte[] body, Context context, Folder folder) throws IOException, ServiceException, UserServletException {
         try {
             Mailbox mbox = folder.getMailbox();
             ParsedMessage pm = new ParsedMessage(body, mbox.attachmentsIndexingEnabled());

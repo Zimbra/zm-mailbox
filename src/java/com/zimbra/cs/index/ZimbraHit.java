@@ -43,6 +43,14 @@ import com.zimbra.cs.service.ServiceException;
  * ZimbraQueryResults to get the hits for a given query.
  *
  */
+/**
+ * @author tim
+ *
+ */
+/**
+ * @author tim
+ *
+ */
 public abstract class ZimbraHit 
 {
 	public ZimbraHit(ZimbraQueryResultsImpl results, Mailbox mbx,  float score) {
@@ -231,7 +239,13 @@ public abstract class ZimbraHit
 	    else 
 	        return 1; 
 	}
-	
+    
+    
+    /**
+     * return the MailItem corresponding to this hit, or NULL if one is not available
+     * (e.g. for a ProxiedHit)
+     */
+    public abstract MailItem getMailItem() throws ServiceException;
 	
     /**
      * @param item which has been preloaded from the database or some other cache

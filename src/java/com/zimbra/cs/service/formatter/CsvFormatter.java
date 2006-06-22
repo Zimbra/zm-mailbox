@@ -39,6 +39,7 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -46,6 +47,13 @@ import com.zimbra.cs.util.HttpUtil;
 
 public class CsvFormatter extends Formatter {
 
+    public static class Format {};
+    public static class Save {};
+    static int sFormatLoad = Operation.setLoad(CsvFormatter.Format.class, 10);
+    static int sSaveLoad = Operation.setLoad(CsvFormatter.Save.class, 10);
+    int getFormatLoad() { return  sFormatLoad; }
+    int getSaveLoad() { return sSaveLoad; }
+    
     public String getType() {
         return "csv";
     }
@@ -58,7 +66,7 @@ public class CsvFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_CONTACTS;
     }
 
-    public void format(Context context, MailItem item) throws IOException, ServiceException {
+    public void formatCallback(Context context, MailItem item) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         StringBuffer sb = new StringBuffer();
         try {
@@ -84,7 +92,7 @@ public class CsvFormatter extends Formatter {
         return false;
     }
 
-    public void save(byte[] body, Context context, Folder folder) throws UserServletException, ServiceException {
+    public void saveCallback(byte[] body, Context context, Folder folder) throws UserServletException, ServiceException {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(body), "UTF-8"));
             for (Map<String, String> fields : ContactCSV.getContacts(reader))

@@ -183,5 +183,8 @@ public final class MessagePartHit extends ZimbraHit {
         }
         return mMessage;
     }
+    
+    public MailItem getMailItem() throws ServiceException { return  null; }
+    
 
 }

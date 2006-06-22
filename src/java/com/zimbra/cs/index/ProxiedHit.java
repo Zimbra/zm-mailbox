@@ -86,6 +86,8 @@ public class ProxiedHit extends ZimbraHit
         return mProxiedConvId;
     }
     
+    public MailItem getMailItem() throws ServiceException { return null; }
+    
     public int getItemId() throws ServiceException {
         if (mProxiedMsgId <= 0) {
             ItemId id = getParsedItemID();

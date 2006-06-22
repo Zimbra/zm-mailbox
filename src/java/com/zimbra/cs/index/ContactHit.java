@@ -61,6 +61,8 @@ public final class ContactHit extends ZimbraHit {
         }
         return mCachedDate;
     }
+
+    public MailItem getMailItem() throws ServiceException { return getContact(); }
     
     public Contact getContact() throws ServiceException {
         if (mContact == null) {

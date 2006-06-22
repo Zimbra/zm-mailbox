@@ -32,10 +32,10 @@ import com.zimbra.cs.service.ServiceException;
 
 public class DocumentHit extends ZimbraHit {
 
-	protected com.zimbra.cs.mailbox.Document mDocument;
-	protected int mMessageId;
-	protected Document mDoc;
-	
+    protected com.zimbra.cs.mailbox.Document mDocument;
+    protected int mMessageId;
+    protected Document mDoc;
+
     protected DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, float score, int mailItemId, MailItem.UnderlyingData underlyingData, Document d) throws ServiceException {
         this(results, mbx, score, mailItemId, underlyingData);
         mDoc = d;
@@ -45,57 +45,59 @@ public class DocumentHit extends ZimbraHit {
         this(results, mbx, score);
         mMessageId = mailItemId;
         if (underlyingData != null) {
-        	MailItem item = mbx.getItemFromUnderlyingData(underlyingData);
-        	assert(item instanceof com.zimbra.cs.mailbox.Document);
+            MailItem item = mbx.getItemFromUnderlyingData(underlyingData);
+            assert(item instanceof com.zimbra.cs.mailbox.Document);
             mDocument = (com.zimbra.cs.mailbox.Document) item;
         }
     }
-    
+
     protected DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, float score) {
-    	super(results, mbx, score);
+        super(results, mbx, score);
     }
-    
+
     public long getDate() throws ServiceException {
-    	return mDocument.getDate();
+        return mDocument.getDate();
     }
-    
+
     public int getSize() throws ServiceException {
-    	return (int)mDocument.getSize();
+        return (int)mDocument.getSize();
     }
-    
+
     public int getConversationId() throws ServiceException {
-    	return 0;
+        return 0;
     }
-    
+
     public int getItemId() throws ServiceException {
-    	return mMessageId;
+        return mMessageId;
     }
-    
+
     public byte getItemType() throws ServiceException {
-    	return mDocument.getType();
+        return mDocument.getType();
     }
-    
+
     void setItem(MailItem item) throws ServiceException {
-    	if (item instanceof com.zimbra.cs.mailbox.Document)
-    		mDocument = (com.zimbra.cs.mailbox.Document) item;
+        if (item instanceof com.zimbra.cs.mailbox.Document)
+            mDocument = (com.zimbra.cs.mailbox.Document) item;
     }
-    
+
     boolean itemIsLoaded() throws ServiceException {
-    	return mDocument != null;
+        return mDocument != null;
     }
-    
+
     public String getSubject() throws ServiceException {
-    	return mDocument.getSubject();
+        return mDocument.getSubject();
     }
-    
+
     public String getName() throws ServiceException {
-    	return getSubject();
+        return getSubject();
     }
-    
+
+    public MailItem getMailItem() throws ServiceException { return getDocument(); }
+
     public com.zimbra.cs.mailbox.Document getDocument() {
-    	return mDocument;
+        return mDocument;
     }
-    
+
     public int getVersion() {
         if (mDoc != null) {
             String verStr = mDoc.get(LuceneFields.L_VERSION);
@@ -105,6 +107,6 @@ public class DocumentHit extends ZimbraHit {
         }
         // if there is no lucene Document, only the db search was done.
         // then just match the latest version.
-    	return mDocument.getVersion();
+        return mDocument.getVersion();
     }
 }

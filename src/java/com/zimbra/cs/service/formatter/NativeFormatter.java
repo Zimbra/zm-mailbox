@@ -46,6 +46,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -53,6 +54,14 @@ import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.HttpUtil;
 
 public class NativeFormatter extends Formatter {
+    
+    public static class Format {};
+    public static class Save {};
+    static int sFormatLoad = Operation.setLoad(NativeFormatter.Format.class, 10);
+    static int sSaveLoad = Operation.setLoad(NativeFormatter.Save.class, 10);
+    int getFormatLoad() { return  sFormatLoad; }
+    int getSaveLoad() { return sSaveLoad; }
+    
 
     private static final String CONVERSION_PATH = "/extension/convertd";
     public static final String ATTR_MIMEPART   = "mimepart";
@@ -68,7 +77,7 @@ public class NativeFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_MESSAGES;
     }
 
-    public void format(Context context, MailItem item) throws IOException, ServiceException, UserServletException, ServletException {
+    public void formatCallback(Context context, MailItem item) throws IOException, ServiceException, UserServletException, ServletException {
         try {
             if (item instanceof Message) {
                 handleMessage(context, (Message) item);
@@ -170,7 +179,7 @@ public class NativeFormatter extends Formatter {
         return true;
     }
 
-    public void save(byte[] body, Context context, Folder folder) throws IOException, ServiceException, UserServletException {
+    public void saveCallback(byte[] body, Context context, Folder folder) throws IOException, ServiceException, UserServletException {
         try {
             Mailbox mbox = folder.getMailbox();
             ParsedMessage pm = new ParsedMessage(body, mbox.attachmentsIndexingEnabled());

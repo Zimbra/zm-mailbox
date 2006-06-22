@@ -67,7 +67,7 @@ public abstract class Operation implements IOperation
 
     public static Map<String, Config> mConfigMap = Collections.synchronizedMap(new  HashMap<String, Config>());
 
-    protected static Config loadConfig(Class c) {
+    public static Config loadConfig(Class c) {
         if (mConfigMap.containsKey(c.getCanonicalName()))
             return mConfigMap.get(c.getCanonicalName());
 
@@ -76,7 +76,15 @@ public abstract class Operation implements IOperation
 
         return null;
     }
-
+    
+    public static int setLoad(Class c, int defaultLoad) {
+        Config conf = loadConfig(c);
+        if (conf !=  null)
+            return conf.mLoad;
+        else
+            return defaultLoad;
+    }
+    
     /**
      * The Requester is used to denote what subsystem is calling a particular 
      * Operation.  Each Requester has a default Priority level, which can be used
@@ -105,12 +113,7 @@ public abstract class Operation implements IOperation
      * @param load     The load (see {@link Scheduler}) of this operation
      */
     protected Operation(Session session, OperationContext oc, Mailbox mbox, Requester req, Priority basePriority, int load) {
-        mSession = session;
-        mOpCtxt = oc;
-        mMailbox = mbox;
-        mPriority = calcPriority(basePriority);
-        mLoad = load;
-        mReq = req;
+        init(session, oc, mbox, req, basePriority, load);
     }
 
     /**
@@ -124,6 +127,22 @@ public abstract class Operation implements IOperation
      */
     protected Operation(Session session, OperationContext oc, Mailbox mbox, Requester req, int load) {
         this(session, oc, mbox, req, req.getPriority(), load);
+    }
+    
+    /**
+     * This version *must* call init()
+     */
+    protected Operation() {
+        // empty
+    }
+    
+    protected void init(Session session, OperationContext oc, Mailbox mbox, Requester req, Priority basePriority, int load) {
+        mSession = session;
+        mOpCtxt = oc;
+        mMailbox = mbox;
+        mPriority = calcPriority(basePriority);
+        mLoad = load;
+        mReq = req;
     }
 
 

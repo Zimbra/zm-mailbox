@@ -33,6 +33,9 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 
+/**
+ * 
+ */
 public class GetItemListOperation extends Operation {
 
 	private static int LOAD = 5;

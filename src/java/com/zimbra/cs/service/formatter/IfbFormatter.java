@@ -37,12 +37,21 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.Constants;
 
 public class IfbFormatter extends Formatter {
+   
+    public static class Format {};
+    public static class Save {};
+    static int sFormatLoad = Operation.setLoad(IfbFormatter.Format.class, 10);
+    static int sSaveLoad = Operation.setLoad(IfbFormatter.Save.class, 10);
+    int getFormatLoad() { return  sFormatLoad; }
+    int getSaveLoad() { return sSaveLoad; }
+    
     
     private static final long MAX_PERIOD_SIZE_IN_DAYS = 200;
     
@@ -62,7 +71,7 @@ public class IfbFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_APPOINTMENTS;
     }
 
-    public void format(Context context, MailItem item) throws IOException, ServiceException, UserServletException {
+    public void formatCallback(Context context, MailItem item) throws IOException, ServiceException, UserServletException {
         context.resp.setCharacterEncoding("UTF-8");
         context.resp.setContentType(Mime.CT_TEXT_CALENDAR);
 
@@ -149,7 +158,7 @@ public class IfbFormatter extends Formatter {
         return false;
     }
 
-    public void save(byte[] body, Context context, Folder folder) throws UserServletException {
+    public void saveCallback(byte[] body, Context context, Folder folder) throws UserServletException {
         throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
     }
 }

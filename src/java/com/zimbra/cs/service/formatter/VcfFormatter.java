@@ -35,6 +35,7 @@ import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -43,6 +44,13 @@ import com.zimbra.cs.util.HttpUtil;
 
 public class VcfFormatter extends Formatter {
 
+    public static class Format {};
+    public static class Save {};
+    static int sFormatLoad = Operation.setLoad(VcfFormatter.Format.class, 10);
+    static int sSaveLoad = Operation.setLoad(VcfFormatter.Save.class, 10);
+    int getFormatLoad() { return  sFormatLoad; }
+    int getSaveLoad() { return sSaveLoad; }
+    
     public String getType() {
         return "vcf";
     }
@@ -59,7 +67,7 @@ public class VcfFormatter extends Formatter {
         return false;
     }
 
-    public void format(Context context, MailItem target) throws IOException, ServiceException {
+    public void formatCallback(Context context, MailItem target) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         try {
             iterator = getMailItems(context, target, getDefaultStartTime(), getDefaultEndTime());
@@ -87,7 +95,7 @@ public class VcfFormatter extends Formatter {
         }
     }
 
-    public void save(byte[] body, Context context, Folder folder) throws ServiceException, IOException, UserServletException {
+    public void saveCallback(byte[] body, Context context, Folder folder) throws ServiceException, IOException, UserServletException {
         List<VCard> cards = VCard.parseVCard(new String(body, Mime.P_CHARSET_UTF8));
         if (cards == null || cards.size() == 0 || (cards.size() == 1 && cards.get(0).fields.isEmpty()))
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "no contact fields found in vcard");

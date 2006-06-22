@@ -31,6 +31,7 @@ import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -41,6 +42,13 @@ import com.zimbra.cs.wiki.WikiTemplateStore;
 
 public class WikiFormatter extends Formatter {
 
+    public static class Format {};
+    public static class Save {};
+    static int sFormatLoad = Operation.setLoad(WikiFormatter.Format.class, 10);
+    static int sSaveLoad = Operation.setLoad(WikiFormatter.Save.class, 10);
+    int getFormatLoad() { return  sFormatLoad; }
+    int getSaveLoad() { return sSaveLoad; }
+    
 	@Override
 	public String getType() {
 		return "wiki";
@@ -99,7 +107,7 @@ public class WikiFormatter extends Formatter {
     }
     
 	@Override
-	public void format(Context context, MailItem item) throws UserServletException, ServiceException, IOException {
+	public void formatCallback(Context context, MailItem item) throws UserServletException, ServiceException, IOException {
 		//long t0 = System.currentTimeMillis();
         if (item instanceof Folder && !context.itemPath.endsWith("/")) {
         	context.resp.sendRedirect(context.req.getRequestURI() + "/");
@@ -119,7 +127,7 @@ public class WikiFormatter extends Formatter {
 	}
 
 	@Override
-	public void save(byte[] body, Context context, Folder folder) throws UserServletException {
+	public void saveCallback(byte[] body, Context context, Folder folder) throws UserServletException {
         throw UserServletException.notImplemented("saving documents via POST not yet supported.");
 	}
 

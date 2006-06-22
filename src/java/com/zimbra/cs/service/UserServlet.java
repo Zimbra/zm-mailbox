@@ -58,6 +58,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.operation.GetItemOperation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.formatter.*;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -138,12 +140,12 @@ public class UserServlet extends ZimbraServlet {
 
     /** Returns the REST URL for the account. */
     public static String getRestUrl(Account acct, boolean preferHttps) throws ServiceException {
-		Server s = Provisioning.getInstance().getServer(acct);
-		StringBuilder path = new StringBuilder();
-		path.append(UserServlet.SERVLET_PATH).append("/").append(acct.getUid());
-		return URLUtil.getMailURL(s, path.toString(), preferHttps);
+        Server s = Provisioning.getInstance().getServer(acct);
+        StringBuilder path = new StringBuilder();
+        path.append(UserServlet.SERVLET_PATH).append("/").append(acct.getUid());
+        return URLUtil.getMailURL(s, path.toString(), preferHttps);
     }
-    
+
     public UserServlet() {
         mFormatters = new HashMap<String, Formatter>();
         addFormatter(new CsvFormatter());
@@ -172,15 +174,15 @@ public class UserServlet extends ZimbraServlet {
     }
 
     private void getAccount(Context context) throws IOException,
-            ServletException, UserServletException {
+    ServletException, UserServletException {
         try {
             // check cookie first
             if (context.cookieAuthAllowed()) {
                 context.authAccount = cookieAuthRequest(context.req, context.resp, true);
                 if (context.authAccount != null) {
-                	context.cookieAuthHappened = true;
-                	try {
-                		context.authTokenCookie = getAuthTokenFromCookie(context.req, context.resp, true).getEncoded();
+                    context.cookieAuthHappened = true;
+                    try {
+                        context.authTokenCookie = getAuthTokenFromCookie(context.req, context.resp, true).getEncoded();
                     } catch (AuthTokenException e) {
                     }
                     return;
@@ -204,7 +206,7 @@ public class UserServlet extends ZimbraServlet {
                 // always return
                 return;
             }
-            
+
             // there is no credential at this point.  assume anonymous public access and continue.
         } catch (ServiceException e) {
             throw new ServletException(e);
@@ -212,19 +214,19 @@ public class UserServlet extends ZimbraServlet {
     }
 
     private void sendError(Context ctxt, HttpServletRequest req, HttpServletResponse resp, String message) throws IOException {
-    	if (ctxt == null) {
-    		resp.sendError(HttpServletResponse.SC_FORBIDDEN, message);
-    	} else if (!ctxt.cookieAuthHappened && ctxt.basicAuthAllowed() && !ctxt.basicAuthHappened) {
-    		resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
-    		resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, message);
-    	} else {
-    		resp.sendError(HttpServletResponse.SC_FORBIDDEN, message);
-    	}
+        if (ctxt == null) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, message);
+        } else if (!ctxt.cookieAuthHappened && ctxt.basicAuthAllowed() && !ctxt.basicAuthHappened) {
+            resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, message);
+        } else {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, message);
+        }
     }
-    
+
     public void doGet(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException {
-    	Context context = null;
+        Context context = null;
         try {
             context = new Context(req, resp, this);
             if (!checkAuthentication(req, resp, context)) {
@@ -233,8 +235,8 @@ public class UserServlet extends ZimbraServlet {
             }
 
             if (isProxyRequest(req, resp, context))
-            	return;
-            
+                return;
+
             // at this point context.authAccount is set either from the Cookie,
             // or from basic auth.  if there was no credential in either the Cookie
             // or basic auth, authAccount is set to anonymous account.
@@ -243,7 +245,7 @@ public class UserServlet extends ZimbraServlet {
             ZimbraLog.addIpToContext(context.req.getRemoteAddr());
 
             doAuthGet(req, resp, context);
-            
+
         } catch (NoSuchItemException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
         } catch (ServiceException se) {
@@ -274,19 +276,19 @@ public class UserServlet extends ZimbraServlet {
 
         // auth is required if we haven't yet authed and they've specified a formatter that requires auth (including write ops).
         boolean authRequired = context.authAccount == null &&
-                        (context.formatter == null || context.formatter.requiresAuth() || req.getMethod().equalsIgnoreCase("POST"));
+        (context.formatter == null || context.formatter.requiresAuth() || req.getMethod().equalsIgnoreCase("POST"));
 
         // need this before proxy if we want to support sending cookie from a basic-auth
         if (authRequired) {
             getAccount(context);
             if (context.authAccount == null) {
-            	context.setAnonymousRequest();
+                context.setAnonymousRequest();
             }
         }
 
         return true;
     }
-    
+
     private boolean isProxyRequest(HttpServletRequest req, HttpServletResponse resp, Context context) throws IOException, ServiceException {
         // this should handle both explicit /user/user-on-other-server/ and
         // /user/~/?id={account-id-on-other-server}:id            
@@ -297,7 +299,7 @@ public class UserServlet extends ZimbraServlet {
                     context.authTokenCookie = new AuthToken(context.authAccount).getEncoded();
                 Provisioning prov = Provisioning.getInstance();                
                 proxyServletRequest(req, resp, prov.getServer(context.targetAccount),
-                                    context.basicAuthHappened ? context.authTokenCookie : null);
+                            context.basicAuthHappened ? context.authTokenCookie : null);
                 return true;
             } catch (ServletException e) {
                 throw ServiceException.FAILURE("proxy error", e);
@@ -309,55 +311,6 @@ public class UserServlet extends ZimbraServlet {
         return false;
     }
 
-    private MailItem findItem(Context context) throws ServiceException {
-    	try {
-    		return context.targetMailbox.getFolderByPath(context.opContext, context.itemPath);
-    	} catch (NoSuchItemException nse) {
-    		/*
-    		 * if path == /foo/bar/baz.html, then
-    		 * dir      -> /foo/bar
-    		 * name     -> baz
-    		 * fullName -> baz.html
-    		 * format   -> html
-    		 */
-    		String path = context.itemPath;
-    		String dir = "/", name = path, fullName = path, format = null;
-    		
-    		int pos = path.lastIndexOf('/');
-            if (pos != -1) {
-            	dir = path.substring(0, pos);
-            	fullName = path.substring(pos + 1);
-            } else
-            	pos = 0;
-            if (context.format == null) {
-                int dot = path.lastIndexOf('.');
-                if (dot != -1) {
-                    format = path.substring(dot + 1);
-                    name = path.substring(pos + 1, dot);
-                	path = path.substring(0, dot);
-                }
-            }
-
-    		MailItem item = context.targetMailbox.getFolderByPath(context.opContext, dir);
-    		if (item instanceof Folder) {
-    			Folder f = (Folder) item;
-    			List<? extends MailItem> itemList = context.targetMailbox.getWikiList(context.opContext, f.getId());
-    			MailItem matchedItem = null;
-    			for (MailItem mi : itemList) {
-    				if (mi.getSubject().toLowerCase().equals(fullName))
-    					return mi;
-    				if (mi.getSubject().toLowerCase().equals(name))
-    					matchedItem = mi;
-    			}
-    			if (matchedItem != null)
-    				return matchedItem;
-    		}
-
-    		context.format = format;
-    		return context.targetMailbox.getFolderByPath(context.opContext, path);
-    	}
-    }
-    
     private void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Context context)
     throws ServletException, IOException, ServiceException, UserServletException {
         Mailbox mbox = context.targetMailbox = Mailbox.getMailboxByAccount(context.targetAccount);
@@ -375,7 +328,7 @@ public class UserServlet extends ZimbraServlet {
         context.opContext = new OperationContext(context.authAccount);
 
         MailItem item = resolveItem(context);
-        
+
         if (item instanceof Mountpoint) {
             // if the target is a mountpoint, proxy the request on to the resolved target
             proxyOnMountpoint(req, resp, context, (Mountpoint) item);
@@ -404,7 +357,7 @@ public class UserServlet extends ZimbraServlet {
      *  provided in the POST request's body. */
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException {
-    	Context context = null;
+        Context context = null;
         try {
             context = new Context(req, resp, this);
             if (!checkAuthentication(req, resp, context)) {
@@ -413,8 +366,8 @@ public class UserServlet extends ZimbraServlet {
             }
 
             if (isProxyRequest(req, resp, context))
-            	return;
-            
+                return;
+
             if (context.authAccount != null)
                 ZimbraLog.addAccountNameToContext(context.authAccount.getName());
             ZimbraLog.addIpToContext(context.req.getRemoteAddr());
@@ -429,10 +382,19 @@ public class UserServlet extends ZimbraServlet {
             context.opContext = new OperationContext(context.authAccount);
 
             Folder folder = null;
+//            if (context.itemId != null)
+//                folder = mbox.getFolderById(context.opContext, context.itemId.getId());
+//            else
+//                folder = mbox.getFolderByPath(context.opContext, context.itemPath);
+            
+            GetItemOperation op;
             if (context.itemId != null)
-                folder = mbox.getFolderById(context.opContext, context.itemId.getId());
-            else
-                folder = mbox.getFolderByPath(context.opContext, context.itemPath);
+                op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemId.getId(), MailItem.TYPE_FOLDER);
+            else 
+                op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemPath, MailItem.TYPE_FOLDER);
+                
+            op.schedule();
+            folder = op.getFolder();
 
             if (folder instanceof Mountpoint) {
                 // if the target is a mountpoint, proxy the request on to the resolved target
@@ -462,7 +424,7 @@ public class UserServlet extends ZimbraServlet {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
         } catch (ServiceException se) {
             if (se.getCode() == ServiceException.PERM_DENIED)
-            	sendError(context, req, resp, se.getMessage());
+                sendError(context, req, resp, se.getMessage());
             else
                 throw new ServletException(se);
         } catch (UserServletException e) {
@@ -503,23 +465,51 @@ public class UserServlet extends ZimbraServlet {
      * 
      */
     private MailItem resolveItem(Context context) throws ServiceException, UserServletException {
-    	if (context.formatter != null && !context.formatter.requiresAuth())
-    		return null;
-    	
-    	Mailbox mbox = context.targetMailbox;
+        if (context.formatter != null && !context.formatter.requiresAuth())
+            return null;
+
         MailItem item = null;
         if (context.itemId != null) {
-            item = mbox.getItemById(context.opContext, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
+            GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
+            op.schedule();
+            item = op.getItem();
         } else {
-        	item = findItem(context);
-        }
+            try {
+                // first, try the full path
+                GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemPath, MailItem.TYPE_UNKNOWN);
+                op.schedule();
+                item = op.getItem();
+            } catch (NoSuchItemException nse) {
+                // no joy.  Perhaps they asked for something like "calendar.csv" -- where calendar was the folder name
+                // Try again, minus the extension
 
+                /*
+                 * if path == /foo/bar/baz.html, then
+                 * format   -> html
+                 * and
+                 * path ends up as /foo/bar/baz
+                 */
+                int dot = context.itemPath.lastIndexOf('.');
+                if (dot != -1) {
+                    if (context.format == null) {
+                        context.format = context.itemPath.substring(dot + 1);
+                    }
+                    context.itemPath = context.itemPath.substring(0, dot);
+                }
+
+                // try again, w/ the extension removed...
+                GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemPath, MailItem.TYPE_UNKNOWN);
+                op.schedule();
+                item = op.getItem();
+            }
+        }
+        
         if (item == null && context.getQueryString() == null)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "item not found");
-
-    	return item;
+        
+        return item;
     }
-    
+
     private void proxyOnMountpoint(HttpServletRequest req, HttpServletResponse resp, Context context, Mountpoint mpt)
     throws IOException, ServletException, ServiceException, UserServletException {
         String uri = SERVLET_PATH + "/~/?" + QP_ID + '=' + mpt.getOwnerId() + "%3A" + mpt.getRemoteId();
@@ -542,9 +532,9 @@ public class UserServlet extends ZimbraServlet {
         Account targetAccount = prov.get(AccountBy.id, mpt.getOwnerId());
         if (targetAccount == null)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "referenced account not found");
-        
+
         proxyServletRequest(req, resp, prov.getServer(targetAccount), uri,
-                            context.basicAuthHappened ? context.authTokenCookie : null);
+                    context.basicAuthHappened ? context.authTokenCookie : null);
     }
 
     public static class Context {
@@ -577,15 +567,15 @@ public class UserServlet extends ZimbraServlet {
 
             String pathInfo = request.getPathInfo().toLowerCase();
             if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("")
-                    || !pathInfo.startsWith("/")) {
+                        || !pathInfo.startsWith("/")) {
                 throw new UserServletException(
-                        HttpServletResponse.SC_BAD_REQUEST, "invalid path");
+                            HttpServletResponse.SC_BAD_REQUEST, "invalid path");
             }
-            
+
             int pos = pathInfo.indexOf('/', 1);
             if (pos == -1) {
                 throw new UserServletException(
-                        HttpServletResponse.SC_BAD_REQUEST, "invalid path");
+                            HttpServletResponse.SC_BAD_REQUEST, "invalid path");
             }
             this.accountPath = pathInfo.substring(1, pos);
 
@@ -596,8 +586,8 @@ public class UserServlet extends ZimbraServlet {
                 this.itemId = id == null ? null : new ItemId(id, null);
             } catch (ServiceException e) {
                 throw new UserServletException(
-                        HttpServletResponse.SC_BAD_REQUEST,
-                        "invalid id requested");
+                            HttpServletResponse.SC_BAD_REQUEST,
+                "invalid id requested");
             }
 
             if (this.format != null) {
@@ -605,8 +595,8 @@ public class UserServlet extends ZimbraServlet {
                 this.formatter = servlet.getFormatter(this.format);
                 if (this.formatter == null)
                     throw new UserServletException(
-                            HttpServletResponse.SC_NOT_IMPLEMENTED,
-                            "not implemented yet");
+                                HttpServletResponse.SC_NOT_IMPLEMENTED,
+                    "not implemented yet");
             }                
 
             // see if we can get target account or not
@@ -650,7 +640,7 @@ public class UserServlet extends ZimbraServlet {
 
         public boolean noSetCookie() {
             return authAccount != null && authAccount instanceof ACL.GuestAccount
-            	|| getAuth().indexOf(AUTH_NO_SET_COOKIE) != -1;
+            || getAuth().indexOf(AUTH_NO_SET_COOKIE) != -1;
         }
 
         public boolean basicAuthAllowed() {
@@ -683,15 +673,15 @@ public class UserServlet extends ZimbraServlet {
         public String getTypesString() {
             return params.get(QP_TYPES);
         }
-        
+
         public void setAnonymousRequest() {
-        	authAccount = ACL.ANONYMOUS_ACCT;
+            authAccount = ACL.ANONYMOUS_ACCT;
         }
 
         public boolean isAnonymousRequest() {
-        	return authAccount.equals(ACL.ANONYMOUS_ACCT);
+            return authAccount.equals(ACL.ANONYMOUS_ACCT);
         }
-        
+
         public String toString() {
             StringBuffer sb = new StringBuffer();
             sb.append("account(" + accountPath + ")\n");
@@ -708,7 +698,7 @@ public class UserServlet extends ZimbraServlet {
     private String defaultFormat(MailItem item, Context context) {
         if (context.hasPart())
             return "native";
-        
+
         byte type = MailItem.TYPE_UNKNOWN;
         if (item instanceof Folder)
             type = ((Folder) item).getDefaultView();
@@ -727,7 +717,7 @@ public class UserServlet extends ZimbraServlet {
                 return "native";
         }
     }
-    
+
     /**
      * @param req
      * @param resp
@@ -742,7 +732,7 @@ public class UserServlet extends ZimbraServlet {
         }
         resp.sendError(HttpServletResponse.SC_FORBIDDEN, "The attachment download has been disabled per security policy.");
     }
-    
+
     public void init() throws ServletException {
         String name = getServletName();
         ZimbraLog.mailbox.info("Servlet " + name + " starting up");

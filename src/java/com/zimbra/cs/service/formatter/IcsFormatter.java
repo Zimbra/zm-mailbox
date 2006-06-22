@@ -42,12 +42,20 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.Constants;
 
 public class IcsFormatter extends Formatter {
 
+    public static class Format {};
+    public static class Save {};
+    static int sFormatLoad = Operation.setLoad(IcsFormatter.Format.class, 10);
+    static int sSaveLoad = Operation.setLoad(IcsFormatter.Save.class, 10);
+    int getFormatLoad() { return  sFormatLoad; }
+    int getSaveLoad() { return sSaveLoad; }
+    
     public String getType() {
         return "ics";
     }
@@ -60,7 +68,7 @@ public class IcsFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_APPOINTMENTS;
     }
 
-    public void format(Context context, MailItem mailItem) throws IOException, ServiceException {
+    public void formatCallback(Context context, MailItem mailItem) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         List<Appointment> appts = new ArrayList<Appointment>();
         //ZimbraLog.mailbox.info("start = "+new Date(context.getStartTime()));
@@ -108,7 +116,7 @@ public class IcsFormatter extends Formatter {
         return false;
     }
 
-    public void save(byte[] body, Context context, Folder folder) throws ServiceException, IOException {
+    public void saveCallback(byte[] body, Context context, Folder folder) throws ServiceException, IOException {
         // TODO: Modify Formatter.save() API to pass in charset of body, then
         // use that charset in String() constructor.
         Reader reader = new StringReader(new String(body, Mime.P_CHARSET_UTF8));

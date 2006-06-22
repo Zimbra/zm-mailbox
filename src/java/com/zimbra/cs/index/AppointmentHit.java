@@ -79,6 +79,8 @@ public class AppointmentHit extends ZimbraHit {
             mAppt = (Appointment)mbx.getItemFromUnderlyingData(ud);
     }
     
+    public MailItem getMailItem() throws ServiceException { return getAppointment(); }
+    
     public Appointment getAppointment() throws ServiceException {
         if (mAppt == null) {
             mAppt = this.getMailbox().getAppointmentById(null, mId);

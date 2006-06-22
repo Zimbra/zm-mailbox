@@ -175,6 +175,8 @@ public class MessageHit extends ZimbraHit {
         return mMessage != null;
     }
     
+    public MailItem getMailItem() throws ServiceException { return  getMessage(); }
+    
     public Message getMessage() throws ServiceException {
         if (mMessage == null) {
             Mailbox mbox = Mailbox.getMailboxById(getMailbox().getId());

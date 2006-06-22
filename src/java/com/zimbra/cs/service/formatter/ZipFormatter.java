@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -48,6 +49,13 @@ import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.HttpUtil;
 
 public class ZipFormatter extends Formatter {
+    
+    public static class Format {};
+    public static class Save {};
+    static int sFormatLoad = Operation.setLoad(ZipFormatter.Format.class, 10);
+    static int sSaveLoad = Operation.setLoad(ZipFormatter.Save.class, 10);
+    int getFormatLoad() { return  sFormatLoad; }
+    int getSaveLoad() { return sSaveLoad; }
 
     private Pattern ILLEGAL_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|]");
 
@@ -67,7 +75,7 @@ public class ZipFormatter extends Formatter {
         return true;
     }
 
-    public void format(Context context, MailItem target) throws IOException, ServiceException {
+    public void formatCallback(Context context, MailItem target) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         ZipOutputStream out = null;
         try {
@@ -141,7 +149,7 @@ public class ZipFormatter extends Formatter {
     }
 
     // FIXME: should add each item to the specified folder...
-    public void save(byte[] body, Context context, Folder folder) throws UserServletException {
+    public void saveCallback(byte[] body, Context context, Folder folder) throws UserServletException {
         throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
     }
 }

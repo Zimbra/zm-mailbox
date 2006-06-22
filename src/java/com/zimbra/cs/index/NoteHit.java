@@ -64,6 +64,8 @@ public final class NoteHit extends ZimbraHit {
         return mCachedDate;
     }
     
+    public MailItem getMailItem() throws ServiceException { return  getNote(); }
+    
     public Note getNote() throws ServiceException {
         if (mNote == null) {
             mNote = getMailbox().getNoteById(null, getItemId());

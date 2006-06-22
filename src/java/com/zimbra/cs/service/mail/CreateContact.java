@@ -95,7 +95,6 @@ public class CreateContact extends WriteOpDocumentHandler  {
             }
         }
 
-//        Contact con = mbox.createContact(octxt, attrs, iidFolder.getId(), tagsStr);
         CreateContactOperation op = new CreateContactOperation(session, octxt, mbox, Requester.SOAP,
         			iidFolder, attrs, tagsStr);
         op.schedule();
