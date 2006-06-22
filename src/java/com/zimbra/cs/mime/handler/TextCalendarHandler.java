@@ -86,9 +86,11 @@ public class TextCalendarHandler extends MimeHandler {
             ZComponent vevent = miCalendar.getComponent(ZCalendar.ICalTok.VEVENT);
             if (vevent != null) {
                 mContent = vevent.getPropVal(ZCalendar.ICalTok.DESCRIPTION, null);
-                if (mContent == null || mContent.trim().equals(""))
+                if (mContent == null || mContent.trim().equals("")) {
                     mContent = vevent.getPropVal(ZCalendar.ICalTok.SUMMARY, "");
-            } else
+                } 
+            }
+            if (mContent == null)
                 mContent = "";
         } catch (Exception e) {
             mContent = "";

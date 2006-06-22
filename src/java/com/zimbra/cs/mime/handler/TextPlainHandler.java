@@ -64,6 +64,9 @@ public class TextPlainHandler extends MimeHandler {
             }
             mContent = buffer.toString();
         }
+        if (mContent == null)
+            mContent = "";
+        
         return mContent;
     }
     

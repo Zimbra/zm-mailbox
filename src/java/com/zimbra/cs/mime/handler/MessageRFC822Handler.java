@@ -74,7 +74,11 @@ public class MessageRFC822Handler extends MimeHandler {
      */
     protected String getContentImpl() throws MimeHandlerException {
         try {
-            return mMessage.getSubject();
+            String toRet = mMessage.getSubject();
+            if (toRet != null)
+                return toRet;
+            else
+                return "";
         } catch (Exception e) {
             throw new MimeHandlerException(e);
         }

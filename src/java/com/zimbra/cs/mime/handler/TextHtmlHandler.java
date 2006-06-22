@@ -166,6 +166,9 @@ public class TextHtmlHandler extends MimeHandler {
                 throw new MimeHandlerException(e);
             }
         }
+        if (mContent == null)
+            mContent = "";
+        
         return mContent;
     }
     
