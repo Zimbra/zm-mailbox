@@ -70,6 +70,7 @@ class TestIDLE {
                             Thread.sleep(100);
                         } catch (Exception e) {
                             mLog.error("exception occurred notifying", e);
+                            mConnection.close();
                         }
                     }
                 }
@@ -163,5 +164,6 @@ class TestIDLE {
         boolean debug = Boolean.parseBoolean(args[2]);
         startServer(port, secure, debug);
         startClient(port, secure);
+        System.exit(1); // if client ever returns...
     }
 }
