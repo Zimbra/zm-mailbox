@@ -119,7 +119,7 @@ public class OzTLSFilter extends OzFilter {
     private void handshakeCompleted() throws IOException {
         if (mDebug) debug("handshake: completed");
         mHandshakeComplete = true;
-        processPendingWrites();
+        flush();
         mConnection.enableReadInterest();
     }
     
@@ -134,7 +134,9 @@ public class OzTLSFilter extends OzFilter {
             return mHandshakeComplete;
         }
         
-        getNextFilter().waitForWriteCompletion();
+        if (!getNextFilter().flush()) {
+            return mHandshakeComplete;
+        }
         
         switch (mHandshakeStatus) {
         case NEED_UNWRAP:
@@ -295,9 +297,8 @@ public class OzTLSFilter extends OzFilter {
 
     ByteBuffer mWrappedBB = null;
     
-    public void processPendingWrites() throws IOException {
+    public boolean flush() throws IOException {
         synchronized (mPendingWriteBuffers) {
-
             for (Iterator<ByteBuffer> iter = mPendingWriteBuffers.iterator(); iter.hasNext();) {
                 ByteBuffer srcbb = iter.next();
                 while (srcbb.hasRemaining()) {
@@ -332,6 +333,7 @@ public class OzTLSFilter extends OzFilter {
                 }
                 iter.remove();
             }
+            return true;
         }
     }
     
@@ -345,7 +347,7 @@ public class OzTLSFilter extends OzFilter {
             }
             mPendingWriteBuffers.add(src);
             if (mTrace) trace("write: processing pending writes");
-            processPendingWrites();
+            flush();
         }
     }
 

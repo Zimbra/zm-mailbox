@@ -49,15 +49,15 @@ public class OzConnection {
 
     private OzConnectionHandler mConnectionHandler;
 
-    Log mLog;
+    private final Log mLog;
 
     private OzServer mServer;
     
-    private SocketChannel mChannel;
+    private final SocketChannel mChannel;
     
     private OzMatcher mMatcher;
 
-    private SelectionKey mSelectionKey; 
+    private final SelectionKey mSelectionKey; 
 
     private static AtomicInteger mIdCounter = new AtomicInteger(0);
     
@@ -71,7 +71,7 @@ public class OzConnection {
 
     private final Object mLock = new Object();
     
-    final boolean mDebug;
+    private final boolean mDebug;
     
     private final boolean mTrace;
 
@@ -81,15 +81,13 @@ public class OzConnection {
     
     private WriteTask mWriteTask;
 
-    private CleanupTask mCleanupTask;
-    
     private ByteBuffer mReadBuffer;
+
+    private final OzPlainFilter mPlainFilter;
     
     OzConnection(OzServer server, SocketChannel channel) throws IOException {
         mId = mIdCounter.incrementAndGet();
         mIdString = Integer.toString(mId);
-        
-        mWriteManager = new WriteManager();
         
         mRemoteAddress = channel.socket().getInetAddress().getHostAddress();
         mChannel = channel;
@@ -99,8 +97,9 @@ public class OzConnection {
         mDebug = mLog.isDebugEnabled();
         mTrace = mServer.debugLogging();
         mSelectionKey = channel.register(server.getSelector(), 0, this); 
-
-        addFilter(new OzPlainFilter(), true);
+        
+        mPlainFilter = new OzPlainFilter(); 
+        addFilter(mPlainFilter, true);
 
         mConnectTask = new ConnectTask();
         mReadTask = new ReadTask();
@@ -110,11 +109,10 @@ public class OzConnection {
     }
     
     static {
-        // Bug in JDK 1.5.0_06 - loading CloseReason class from an exception
-        // handler (I am guessing: in some cases) results in
-        // NoClassDefFoundErrro
+        // Bug in JDK 1.5.0_06 - loading TeardownReason class from an exception
+        // handler (only in some cases at that) results in NoClassDefFoundError
         if (System.currentTimeMillis() > 0) {
-            Class c = CloseReason.class;
+            Class c = TeardownReason.class;
         }
     };
     
@@ -129,7 +127,8 @@ public class OzConnection {
      * network packets and outbound application packets, while the bottom most
      * filter (the plain filter) handles all inbound application packets and
      * outbound network packets. The bottom most filter is builtin to the
-     * framework and can not be removed.
+     * framework and can not be removed - it is also very closely tied to the
+     * connection.
      */
     public void addFilter(OzFilter filter) {
         addFilter(filter, false);
@@ -168,65 +167,57 @@ public class OzConnection {
     }
     
     public void close() {
-        synchronized (mLock) {
-            try {
-                mFilters.get(0).close();
-            } catch (Throwable t) {
-                closeChannel(CloseReason.CLOSE_EXCEPTION);
-            }
+        try {
+            mFilters.get(0).close();
+        } catch (Throwable t) {
+            teardown(TeardownReason.CLOSE_EXCEPTION);
         }
     }
 
-    /**
-     * Close the channel and notify the connection handler object to cleanup
-     * also.
-     */
-    void cleanupForServer() {
-        mCleanupTask.schedule();
-    }
-    
-    private void cleanup() { 
-        try {
-            closeChannel(CloseReason.CLEANUP);
-        } catch (Throwable t) {
-            mLog.warn("exception closing channel", t);
-            mConnectionHandler.handleDisconnect();
-        }
-    }
-    
-    private enum CloseReason { WRITE_FAILED, NORMAL, ABRUPT, ALARM_EXCEPTION, CLEANUP, CLOSE_EXCEPTION; }
+    enum TeardownReason { WRITE_FAILED, NORMAL, ABRUPT, ALARM_EXCEPTION, CLOSE_EXCEPTION; }
 
     private boolean mChannelClosed;
 
     /**
-     * Close the underlying IO channel. Under normal circumstances this method
-     * is called by the plain filter. However, when things go wrong, this method
-     * can be called to shut down atleast the descriptor - but it is important
-     * to call cleanup() so the connection handler gets an opportunity to clean
-     * up too.
-     */
-    private void closeChannel(CloseReason reason) {
-        synchronized (mLock) {
-            mLog.info("channel cleanup - " + reason);
-            
-            if (mChannelClosed) {
-                /*
-                 * if we errored in write, we close the channel first, and then
-                 * re-throw the IOException, and layers above may call back and
-                 * close the connection again. We definitely want to close the
-                 * connection right away on write errors, so that the selector
-                 * won't spin if someone forgets to call close.
-                 */ 
-                if (mDebug) mLog.debug("duplicate close (occurs on write exceptions)");
-                return;
+     * A teardown is the final step of a close where we cleanup the socket and
+     * have the protocol handler cleanup also.
+     */ 
+    void teardown(TeardownReason reason, boolean closeInServerThread) {
+        synchronized (mTeardownLock) {
+            try {
+                mLog.info("teardown - " + reason);
+                if (mChannelClosed) {
+                    if (mDebug) mLog.debug("duplicate close (occurs on write exceptions)");
+                    return;
+                }
+                if (mDebug) mLog.debug("scheduling close in server thread");
+                if (closeInServerThread) {
+                    mServer.schedule(mServerCloseChannelTask);
+                } else {
+                    try { 
+                        mChannel.close();
+                    } catch (IOException ioe) {
+                        if (mDebug) mLog.debug("teardown exception in closing channel", ioe);
+                    }
+                }
+                mChannelClosed = true;
+                cancelAlarm();
+            } catch (Throwable t) {
+                mLog.warn("exception closing channel", t);
+                mConnectionHandler.handleDisconnect();
             }
-            if (mDebug) mLog.debug("scheduling close in server thread");
-            mServer.schedule(mServerCloseChannelTask);
-            mChannelClosed = true;
-            cancelAlarm();
         }
     }
 
+    private void teardown(TeardownReason reason) {
+        teardown(reason, true);
+    }
+    
+    /**
+     * Close the underlying IO channel. 
+     */
+    private Object mTeardownLock = new Object();
+    
     abstract class ServerTask {
         String mName;
         
@@ -346,13 +337,13 @@ public class OzConnection {
                         if (mDebug) mLog.debug("scheduling read register in server thread");
                         mServer.schedule(mServerRegisterReadTask);
                     }
-                    if (mWriteManager.isWritePending()) {
+                    if (mPlainFilter.isWritePending()) {
                         if (mDebug) mLog.debug("scheduling write register in server thread");
                         mServer.schedule(mServerRegisterWriteTask);
                     }
                 } catch (Throwable t) {
                     mLog.info("exception occurred during " + mName + " task", t);
-                    cleanup();
+                    teardown(TeardownReason.ABRUPT);
                 } finally {
                     if (mDebug) mLog.debug("finished " + mName);
                     clearFromNDC();
@@ -361,15 +352,6 @@ public class OzConnection {
         }
         
         protected abstract void doTask() throws IOException;
-    }
-    
-    private class CleanupTask extends Task {
-        CleanupTask() { super("cleanup"); }
-        
-        protected void doTask() throws IOException {
-            mLog.info("cleanup");
-            cleanup();
-        }
     }
     
     private class ConnectTask extends Task {
@@ -461,88 +443,10 @@ public class OzConnection {
         WriteTask() { super("write"); }
         
         protected void doTask() throws IOException {
-            mWriteManager.processPendingWrites();
+            mPlainFilter.flush();
         }
     }
 
-    private class WriteManager {
-        private List<ByteBuffer> mWriteBuffers = new LinkedList<ByteBuffer>();
-
-        public boolean isWritePending() {
-            synchronized (mLock) {
-                return mWriteBuffers.size() > 0;
-            }
-        }
-
-        void write(ByteBuffer buffer) throws IOException {
-            synchronized (mLock) {
-                mWriteBuffers.add(buffer);
-                // We always try to write so we fill up network buffers.
-                processPendingWrites();
-            }
-        }
-
-        void waitForWriteCompletion() throws IOException {
-        	synchronized (mLock) {
-        		while (!mWriteBuffers.isEmpty()) {
-        			try {
-        				mLock.wait();
-        			} catch (InterruptedException ie) {
-        				throw new IOException("interrupted waiting for write to complete");
-        			}
-        		}
-        	}
-        }
-        
-        private void processPendingWrites() throws IOException {
-        	synchronized (mLock) {
-        		int totalWritten = 0;
-        		boolean allWritten = true;
-        		for (Iterator<ByteBuffer> iter = mWriteBuffers.iterator(); iter.hasNext(); iter.remove()) {
-        			ByteBuffer data = iter.next();
-        			assert(data != null);
-        			assert(data.hasRemaining());
-        			
-                    String before = null;
-                    int req = 0;
-                    if (mDebug) before = OzUtil.toString(data); 
-                    if (mDebug) req = data.remaining();
-                    if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write buffer", data, false));
-
-                    int wrote = 0;
-                    try {
-                        wrote = mChannel.write(data);
-                    } catch (IOException ioe) {
-                        closeChannel(CloseReason.WRITE_FAILED);
-                        throw ioe;
-                    }
-        			
-                    totalWritten += wrote;
-                    if (mDebug) mLog.debug("channel wrote=" + wrote + " req=" + req + " partial=" + data.hasRemaining() + " total=" + totalWritten + " buffer: " + before + "->" + OzUtil.toString(data));
-                    
-        			if (data.hasRemaining()) {
-        				// Not all data was written. Note that write interest is
-                        // enabled *elsewhere* when write is pending.
-        				allWritten = false;
-        				break;
-        			}
-        		}
-        		
-        		if (allWritten) {
-        			if (mCloseAfterWrite) {
-        				closeChannel(CloseReason.NORMAL);
-        			}
-                    
-        			synchronized (mLock) {
-        				mLock.notifyAll();
-        			}
-        		}            
-        	}        		
-        }
-    }
-    
-    private final WriteManager mWriteManager;
-    
     private class OzPlainFilter extends OzFilter {
 
         public void read(ByteBuffer rbb) throws IOException {
@@ -579,7 +483,6 @@ public class OzConnection {
                 // filter.
                 if (mFilterChangeId.get() != filterChangeId) {
                     mLog.info("plain filter: filter stack has changed");
-                    mReadBuffer.clear();
                     return;
                 }
             }
@@ -596,22 +499,89 @@ public class OzConnection {
             rbb.clear();
         }
 
-        public void write(ByteBuffer wbb) throws IOException {
-            synchronized (mLock) {
-                mWriteManager.write(wbb);
+        private Object mWriteLock = new Object();
+
+        private boolean mCloseAfterWrite = false;
+
+        private List<ByteBuffer> mWriteBuffers = new LinkedList<ByteBuffer>();
+        
+        public void close() {
+            synchronized (mWriteLock) {
+                mCloseAfterWrite = true;
+                if (!isWritePending()) {
+                    teardown(TeardownReason.NORMAL);
+                }
             }
         }
 
-        public void waitForWriteCompletion() throws IOException {
-            mWriteManager.waitForWriteCompletion();
+        boolean isWritePending() {
+            synchronized (mWriteLock) {
+                return mWriteBuffers.size() > 0;
+            }
         }
-        
-        public void close() throws IOException {
-            synchronized (mLock) {
-                mCloseAfterWrite = true;
-                if (!mWriteManager.isWritePending()) {
-                    closeChannel(CloseReason.NORMAL);
+
+        public void write(ByteBuffer buffer) throws IOException {
+            synchronized (mWriteLock) {
+                mWriteBuffers.add(buffer);
+                // We always try to write so we fill up network buffers.
+                // Since this a non-blocking channel write will return
+                // immediately if the network buffers are full.
+                flush();
+            }
+        }
+
+        public boolean flush() throws IOException {
+            synchronized (mWriteLock) {
+                return flushLocked();
+            }
+        }
+
+        private boolean flushLocked() throws IOException {
+            int totalWritten = 0;
+            boolean allWritten = true;
+            for (Iterator<ByteBuffer> iter = mWriteBuffers.iterator(); iter.hasNext(); iter.remove()) {
+                ByteBuffer data = iter.next();
+                assert(data != null);
+                assert(data.hasRemaining());
+
+                String before = null;
+                int req = 0;
+                if (mDebug) before = OzUtil.toString(data); 
+                if (mDebug) req = data.remaining();
+                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write buffer", data, false));
+
+                int wrote = 0;
+                try {
+                    wrote = mChannel.write(data);
+                } catch (IOException ioe) {
+                    teardown(TeardownReason.WRITE_FAILED);
+                    /*
+                     * We definitely want to close the connection right away on
+                     * write errors, so that the selector won't spin if someone
+                     * forgets to call close.  We re-throw just to propogate the
+                     * error state. 
+                     */ 
+                    throw ioe;
                 }
+
+                totalWritten += wrote;
+                if (mDebug) mLog.debug("channel wrote=" + wrote + " req=" + req + " partial=" + data.hasRemaining() + " total=" + totalWritten + " buffer: " + before + "->" + OzUtil.toString(data));
+
+                if (data.hasRemaining()) {
+                    // Not all data was written. Note that write interest is
+                    // enabled *elsewhere* when write is pending.
+                    allWritten = false;
+                    break;
+                }
+            }
+
+            if (allWritten) {
+                if (mCloseAfterWrite) {
+                    teardown(TeardownReason.NORMAL);
+                }
+                return true;
+            } else {
+                return false;              
             }
         }
     }
@@ -645,7 +615,7 @@ public class OzConnection {
                         try {
                             mConnectionHandler.handleAlarm();
                         } catch (Throwable t) {
-                            closeChannel(CloseReason.ALARM_EXCEPTION);
+                            teardown(TeardownReason.ALARM_EXCEPTION);
                         }
                     }
                 } finally {
@@ -686,11 +656,6 @@ public class OzConnection {
         return mRemoteAddress;
     }
     
-    /**
-     * Always looked at with mWriteBuffers locked.
-     */
-    private boolean mCloseAfterWrite = false;
-
     public void writeAsciiWithCRLF(String data) throws IOException {
         byte[] bdata = new byte[data.length() + 2];
         int n = data.length();
@@ -707,9 +672,7 @@ public class OzConnection {
     }
 
     public void write(ByteBuffer wbb) throws IOException {
-        synchronized (mLock) {
-            mFilters.get(0).write(wbb);
-        }
+        mFilters.get(0).write(wbb);
     }
 
     private Map<String, String> mProperties = new HashMap<String, String>();

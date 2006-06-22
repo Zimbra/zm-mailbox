@@ -45,5 +45,9 @@ public abstract class OzFilter {
         return mNextFilter;
     }
 
-	public abstract void waitForWriteCompletion() throws IOException;
+    /**
+     * Try to flush any outstanding writes, and return true is there are no
+     * bytes left to send out.
+     */
+	public abstract boolean flush() throws IOException;
 }

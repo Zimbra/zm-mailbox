@@ -46,6 +46,7 @@ import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 
 import com.zimbra.cs.ozserver.OzConnection.ServerTask;
+import com.zimbra.cs.ozserver.OzConnection.TeardownReason;
 
 public class OzServer {
     
@@ -187,7 +188,7 @@ public class OzServer {
                 } catch (Throwable t) {
                     if (readyConnection != null) {
                     	mLog.warn("exception occurred handling selecting key, closing connection", t);
-                        readyConnection.cleanupForServer();
+                        readyConnection.teardown(TeardownReason.ABRUPT, false);
                     } else {
                     	mLog.warn("ignoring exception occurred while handling a selected key", t);
                     }
