@@ -150,7 +150,7 @@ public class DefangFilter extends DefaultFilter {
         acceptElement("bdo", CORE_LANG);
         acceptElement("blockquote", CORE_LANG+"cite");
         acceptElement("body", CORE_LANG+"alink,background,bgcolor,link,text,vlink");
-        acceptElement("br", CORE);
+        acceptElement("br", CORE+"clear");
         acceptElement("center", CORE_LANG);
         acceptElement("del", CORE_LANG+"cite,datetime");
         acceptElement("div", CORE_LANG+"align");
@@ -162,7 +162,7 @@ public class DefangFilter extends DefaultFilter {
         acceptElement("h5", CORE_LANG+"align");
         acceptElement("h6", CORE_LANG+"align");
         acceptElement("hr", CORE_LANG+"align,noshade,size,width");
-        acceptElement("html", LANG+"xlmns");
+        acceptElement("html", LANG+"xmlns");
         acceptElement("img", CORE_LANG+"align,alt,border,height,hspace,ismap,longdesc,src,usemap,vspace,width");
         acceptElement("ins", CORE_LANG+"cite");
         acceptElement("label", CORE_LANG+"for");
@@ -232,7 +232,7 @@ public class DefangFilter extends DefaultFilter {
             acceptElement("caption", CORE_LANG+"align");
             acceptElement("col",CORE_LANG+"alink,char,charoff,span,valign,width");
             acceptElement("colgroup", CORE_LANG+"alink,char,charoff,span,valign,width");
-            acceptElement("table", CORE_LANG+"align,bgcolor,border,cellpadding,cellspacing,frame,rules,summary,width");
+            acceptElement("table", CORE_LANG+"align,valign,bgcolor,border,cellpadding,cellspacing,frame,rules,summary,width");
             acceptElement("tbody", CORE_LANG+"align,char,charoff,valign");
             acceptElement("td", CORE_LANG+"abbr,align,axis,bgcolor,char,charoff,colspan,headers,height,nowrap,rowspan,scope,,valign,width");
             acceptElement("tfoot", CORE_LANG+"align,char,charoff,valign");
