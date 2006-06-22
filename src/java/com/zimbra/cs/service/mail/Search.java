@@ -277,6 +277,18 @@ public class Search extends DocumentHandler  {
     protected Element addMessageHit(ZimbraSoapContext zc, Element response, MessageHit mh, EmailElementCache eecache, boolean inline, SearchParams params)
     throws ServiceException {
         Message msg = mh.getMessage();
+
+        // for bug  7568, mark-as-read must happen before the response is encoded.
+        if (inline && msg.isUnread() && params.getMarkRead()) {
+            // Mark the message as READ          
+            try {
+                ArrayList<Integer> ids = new ArrayList<Integer>(1);
+                ids.add(msg.getId());
+                ItemActionOperation.TAG(zc, null,  zc.getOperationContext(), msg.getMailbox(), Requester.SOAP, ids, MailItem.TYPE_MESSAGE, false, null, Flag.ID_FLAG_UNREAD);
+            } catch (ServiceException e) {
+                mLog.warn("problem marking message as read (ignored): " + msg.getId(), e);
+            }
+        }
         
         Element m;
         if (inline) {
@@ -300,17 +312,6 @@ public class Search extends DocumentHandler  {
                     Element mp = m.addElement(MailService.E_HIT_MIMEPART);
                     mp.addAttribute(MailService.A_PART, partNameStr);
                 }
-            }
-        }
-        
-        if (inline && msg.isUnread() && params.getMarkRead()) {
-            // Mark the message as READ          
-            try {
-                ArrayList<Integer> ids = new ArrayList<Integer>(1);
-                ids.add(msg.getId());
-                ItemActionOperation.TAG(zc, null,  zc.getOperationContext(), msg.getMailbox(), Requester.SOAP, ids, MailItem.TYPE_MESSAGE, false, null, Flag.ID_FLAG_UNREAD);
-            } catch (ServiceException e) {
-                mLog.warn("problem marking message as read (ignored): " + msg.getId(), e);
             }
         }
         
