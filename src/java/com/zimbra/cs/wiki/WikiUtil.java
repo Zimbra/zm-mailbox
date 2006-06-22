@@ -527,6 +527,8 @@ public class WikiUtil {
 		if (prevAcct != null && !prevAcct.equals(mUsername)) {
 			ZimbraLog.wiki.info("updating default account from " + prevAcct + " to " + mUsername);
 		}
+		if (mUsername == null)
+			throw WikiServiceException.ERROR("empty LDAP config attribute "+Provisioning.A_zimbraNotebookAccount);
 		
 		Account acct = createWikiAccount();
 		initFolders(acct, useSoap, null);
@@ -561,6 +563,8 @@ public class WikiUtil {
 		if (prevAcct != null && !prevAcct.equals(mUsername)) {
 			ZimbraLog.wiki.info("updating default account from " + prevAcct + " to " + mUsername);
 		}
+		if (mUsername == null)
+			throw WikiServiceException.ERROR("empty LDAP domain attribute "+Provisioning.A_zimbraNotebookAccount);
 		
 		Account acct = createWikiAccount();
 		initFolders(acct, useSoap, dom);
