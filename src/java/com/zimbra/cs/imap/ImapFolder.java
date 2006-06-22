@@ -46,15 +46,15 @@ class ImapFolder implements Iterable<ImapMessage> {
     private boolean mWritable;
     private String  mQuery;
 
-    private ArrayList<ImapMessage>        mSequence = new ArrayList<ImapMessage>();
-    private HashMap<Integer, ImapMessage> mUIDs     = new HashMap<Integer, ImapMessage>();
+    private List<ImapMessage>         mSequence = new ArrayList<ImapMessage>();
+    private Map<Integer, ImapMessage> mUIDs     = new HashMap<Integer, ImapMessage>();
 
     private int mUIDValidityValue;
     private int mFirstUnread = -1;
     private int mLastSize    = 0;
 
-    private boolean              mNotificationsSuspended;
-    private HashSet<ImapMessage> mDirtyMessages = new HashSet<ImapMessage>();
+    private boolean          mNotificationsSuspended;
+    private Set<ImapMessage> mDirtyMessages = new TreeSet<ImapMessage>();
 
     /** Initializes an ImapFolder from a {@link Folder}, specified by path.
      *  Search folders are treated as folders containing all messages matching
@@ -268,7 +268,7 @@ class ImapFolder implements Iterable<ImapMessage> {
     ImapMessage getByImapId(int uid)   { if (uid <= 0) return null;  return checkRemoved(mUIDs.get(new Integer(uid))); }
     ImapMessage getBySequence(int seq) { return checkRemoved(seq > 0 && seq <= mSequence.size() ? (ImapMessage) mSequence.get(seq - 1) : null); }
     ImapMessage getLastMessage()       { return getBySequence(mSequence.size()); }
-    private ImapMessage checkRemoved(ImapMessage i4msg)  { return (i4msg == null || i4msg.expunged ? null : i4msg); }
+    private ImapMessage checkRemoved(ImapMessage i4msg)  { return (i4msg == null || i4msg.isExpunged() ? null : i4msg); }
 
     ImapMessage cache(ImapMessage i4msg) {
         // provide the information missing from the DB search
@@ -289,6 +289,14 @@ class ImapFolder implements Iterable<ImapMessage> {
         mUIDs.remove(new Integer(-i4msg.msgId));
         mDirtyMessages.remove(i4msg);
     }
+    void unghost(ImapMessage i4msg, int msgId) {
+        if (i4msg.isGhost()) {
+            mUIDs.remove(new Integer(-i4msg.msgId));
+            i4msg.msgId = msgId;
+            mUIDs.put(new Integer(-i4msg.msgId), i4msg);
+            i4msg.setGhost(false);
+        }
+    }
     
     boolean checkpointSize()  { int last = mLastSize;  return last != (mLastSize = getSize()); }
 
@@ -301,7 +309,7 @@ class ImapFolder implements Iterable<ImapMessage> {
     }
     void undirtyMessage(ImapMessage i4msg) {
         if (mDirtyMessages.remove(i4msg))
-            i4msg.added = false;
+            i4msg.setAdded(false);
     }
     Iterator<ImapMessage> dirtyIterator()  { return mDirtyMessages.iterator(); }
     void clearDirty()                      { mDirtyMessages.clear(); }
@@ -407,7 +415,7 @@ class ImapFolder implements Iterable<ImapMessage> {
         if (debug)  ZimbraLog.imap.debug("  ** iterating (collapseExpunged)");
         for (ListIterator lit = mSequence.listIterator(); lit.hasNext(); seq++) {
             ImapMessage i4msg = (ImapMessage) lit.next();
-            if (i4msg.expunged) {
+            if (i4msg.isExpunged()) {
                 if (debug)  ZimbraLog.imap.debug("  ** removing: " + i4msg.msgId);
                 // uncache() removes pointers to the message from mUIDs;
                 //   if the message appears again in mSequence, it *must* be later

@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -470,6 +471,20 @@ public class Contact extends MailItem {
         mData.contentChanged(mMailbox);
         saveData(getFileAsString());
 	}
+
+    /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
+     *         {@link ACL#RIGHT_READ} on the original item */
+    MailItem copy(Folder folder, int id, short destVolumeId) throws IOException, ServiceException {
+        mMailbox.updateContactCount(1);
+        return super.copy(folder, id, destVolumeId);
+    }
+
+    /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
+     *         {@link ACL#RIGHT_READ} on the original item */
+    MailItem icopy(Folder folder, int id, short destVolumeId, int imapId) throws IOException, ServiceException {
+        mMailbox.updateContactCount(1);
+        return super.icopy(folder, id, destVolumeId, imapId);
+    }
 
     /** @perms {@link ACL#RIGHT_DELETE} on the item */
     PendingDelete getDeletionInfo() throws ServiceException {

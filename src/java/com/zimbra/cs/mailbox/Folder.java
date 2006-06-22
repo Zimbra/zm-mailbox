@@ -357,9 +357,10 @@ public class Folder extends MailItem {
     boolean isTaggable()       { return false; }
     boolean isCopyable()       { return false; }
     boolean isMovable()        { return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0); }
-    public boolean isMutable() { return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0); }
+    boolean isMutable()        { return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0); }
     boolean isIndexed()        { return false; }
     boolean canHaveChildren()  { return true; }
+    public boolean isDeletable()  { return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0); }
     boolean trackUnread()      { return ((mAttributes & FOLDER_NO_UNREAD_COUNT) == 0); }
 
     boolean canParent(MailItem child)  { return (child instanceof Folder); }

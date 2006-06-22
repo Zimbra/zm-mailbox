@@ -51,7 +51,6 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.operation.AlterTagOperation;
-import com.zimbra.cs.operation.CopyOperation;
 import com.zimbra.cs.operation.CreateFolderOperation;
 import com.zimbra.cs.operation.CreateTagOperation;
 import com.zimbra.cs.operation.DeleteOperation;
@@ -822,9 +821,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         }
 
         try {
-        	CreateFolderOperation createFolder = new CreateFolderOperation(mSession, getContext(), mMailbox,
-        				Requester.IMAP, folderName, MailItem.TYPE_MESSAGE, false);
-        	createFolder.schedule();
+        	CreateFolderOperation op = new CreateFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, folderName, MailItem.TYPE_MESSAGE, false);
+        	op.schedule();
         } catch (ServiceException e) {
             String cause = "CREATE failed";
             if (e.getCode() == MailServiceException.CANNOT_CONTAIN)
@@ -1362,16 +1360,15 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         long checkpoint = System.currentTimeMillis();
         for (int i = 1, max = i4folder.getSize(); i <= max; i++) {
             ImapMessage i4msg = i4folder.getBySequence(i);
-            if (i4msg != null && !i4msg.expunged && (i4msg.flags & Flag.FLAG_DELETED) > 0)
+            if (i4msg != null && !i4msg.isExpunged() && (i4msg.flags & Flag.FLAG_DELETED) > 0)
                 if (i4set == null || i4set.contains(i4msg)) {
                     // message tagged for deletion -- delete now
                     // FIXME: should handle moves separately
                     // FIXME: it'd be nice to have a bulk-delete Mailbox operation
                     try {
                         ZimbraLog.imap.debug("  ** deleting: " + i4msg.msgId);
-                        
-                        DeleteOperation delOp = new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP,  i4msg.msgId, i4msg.getType());
-                        delOp.schedule();
+                        DeleteOperation op = new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType());
+                        op.schedule();
                     } catch (MailServiceException.NoSuchItemException nsie) { }
                     // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                     long now = System.currentTimeMillis();
@@ -1665,9 +1662,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
                 if (!i4flags.isEmpty() || operation == STORE_REPLACE) {
                     // FIXME: for replace, changed tag/flag mask could be precomputed outside the i4set loop
-                    byte sflags = (operation != STORE_REPLACE ? i4msg.sflags : 0);
-                    int  flags  = (operation != STORE_REPLACE ? i4msg.flags : Flag.FLAG_UNREAD | (i4msg.flags & ~ImapMessage.IMAP_FLAGS));
-                    long tags   = (operation != STORE_REPLACE ? i4msg.tags : 0);
+                    short sflags = (operation != STORE_REPLACE ? i4msg.sflags : 0);
+                    int  flags   = (operation != STORE_REPLACE ? i4msg.flags : Flag.FLAG_UNREAD | (i4msg.flags & ~ImapMessage.IMAP_FLAGS));
+                    long tags    = (operation != STORE_REPLACE ? i4msg.tags : 0);
                     for (ImapFlag i4flag : i4flags) {
                         if (Tag.validateId(i4flag.mId))
                             tags = (operation == STORE_REMOVE ^ !i4flag.mPositive ? tags & ~i4flag.mBitmask : tags | i4flag.mBitmask);
@@ -1691,7 +1688,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                                 // i4msg's permanent flags/tags will be updated via notification
                                 i4msg.setSessionFlags(sflags);
                             } catch (MailServiceException.NoSuchItemException nsie) {
-                                i4msg.expunged = true;
+                                i4msg.setExpunged(true);
                             } finally {
                                 // if it was a STORE [+-]?FLAGS.SILENT, reenable notifications
                                 mSession.getFolder().enableNotifications();
@@ -1745,7 +1742,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
         String command = (byUID ? "UID COPY" : "COPY");
         String copyuid = "";
-        List<MailItem> newMessages = new ArrayList<MailItem>();
+        List<MailItem> movedMessages = new ArrayList<MailItem>();
 
         try {
             GetFolderOperation gfOp = new GetFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, folderName);
@@ -1778,17 +1775,17 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             for (ImapMessage i4msg : i4set) {
                 if (i4msg == null)
                     continue;
-                
-                // FIXME: should optimize to a move, as 95% of IMAP COPY ops are really moves...
-                CopyOperation copyOp = new CopyOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType(), folder.getId());
-                copyOp.schedule();
-                MailItem copy = copyOp.getResult();
-                if (copy == null)
+
+                i4msg.setGhost(true);
+                ImapCopyOperation op = new ImapCopyOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType(), folder.getId());
+                op.schedule();
+                MailItem moved = op.getSource();
+                if (moved == null)
                     continue;
-                
-                newMessages.add(copy);
+
+                movedMessages.add(moved);
                 srcUIDs.add(i4msg.imapUid);
-                copyUIDs.add(copy.getId());
+                copyUIDs.add(moved.getImapUid());
                 // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                 long now = System.currentTimeMillis();
                 if (now - checkpoint > MAXIMUM_IDLE_PROCESSING_MILLIS) {
@@ -1803,7 +1800,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         } catch (IOException e) {
             // 6.4.7: "If the COPY command is unsuccessful for any reason, server implementations
             //         MUST restore the destination mailbox to its state before the COPY attempt."
-            deleteMessages(newMessages);
+//            deleteMessages(movedMessages);
 
             ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
@@ -1811,7 +1808,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         } catch (ServiceException e) {
             // 6.4.7: "If the COPY command is unsuccessful for any reason, server implementations
             //         MUST restore the destination mailbox to its state before the COPY attempt."
-            deleteMessages(newMessages);
+//            deleteMessages(movedMessages);
 
             String rcode = "";
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER) {
@@ -1836,9 +1833,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         if (messages != null && !messages.isEmpty()) {
             for (MailItem item : messages)
                 try {
-                    DeleteOperation delOp = new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP,  item.getId(), item.getType());
-                    delOp.schedule();
-                    
+                    DeleteOperation op = new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP, item.getId(), item.getType());
+                    op.schedule();
                 } catch (ServiceException e) {
                     ZimbraLog.imap.warn("could not roll back creation of message", e);
                 }
@@ -1864,8 +1860,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             // notify of any message flag changes
             for (Iterator<ImapMessage> it = i4folder.dirtyIterator(); it.hasNext(); ) {
                 ImapMessage i4msg = it.next();
-                if (i4msg.added)
-                    i4msg.added = false;
+                if (i4msg.isAdded())
+                    i4msg.setAdded(false);
                 else
                 	sendUntagged(i4msg.sequence + " FETCH (" + i4msg.getFlags(mSession) + ')');
             }
@@ -1936,6 +1932,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     void sendUntagged(String response) throws IOException        { sendResponse("*", response, false); }
     void sendUntagged(String response, boolean flush) throws IOException { sendResponse("*", response, flush); }
     void sendContinuation() throws IOException                   { sendResponse("+", null, true); }
+    void sendContinuation(String response) throws IOException    { sendResponse("+", response, true); }
     void flushOutput() throws IOException                        { mOutputStream.flush(); }
     
     private void sendResponse(String status, String msg, boolean flush) throws IOException {

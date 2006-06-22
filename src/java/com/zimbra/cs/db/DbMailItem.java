@@ -152,9 +152,10 @@ public class DbMailItem {
         }
     }
 
-    public static void copy(MailItem item, int id, int folderId, int parentId, short volumeId, String metadata) throws ServiceException {
+    public static void copy(MailItem item, int id, Folder folder, int indexId, int parentId, short volumeId, String metadata)
+    throws ServiceException {
         Mailbox mbox = item.getMailbox();
-        if (id <= 0 || folderId <= 0 || parentId == 0)
+        if (id <= 0 || folder == null || parentId == 0)
             throw ServiceException.FAILURE("invalid data for DB item copy", null);
 
         Connection conn = mbox.getOperationConnection();
@@ -164,7 +165,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("INSERT INTO " + table +
                     "(id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
                     " unread, flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
-                    "(SELECT ?, type, ?, ?, index_id, ?, date, size, ?, blob_digest, unread," +
+                    "(SELECT ?, type, ?, ?, ?, ?, date, size, ?, blob_digest, unread," +
                     " flags, tags, sender, subject, ?, ?, ?, ? FROM " + table + " WHERE id = ?)");
             int pos = 1;
             stmt.setInt(pos++, id);                            // ID
@@ -172,7 +173,8 @@ public class DbMailItem {
                 stmt.setNull(pos++, Types.INTEGER);            // PARENT_ID null for messages in virtual convs
             else
                 stmt.setInt(pos++, parentId);                  //   or, PARENT_ID specified by caller
-            stmt.setInt(pos++, folderId);                      // FOLDER_ID
+            stmt.setInt(pos++, folder.getId());                // FOLDER_ID
+            stmt.setInt(pos++, indexId);                       // INDEX_ID
             stmt.setInt(pos++, id);                            // IMAP_ID is initially the same as ID
             if (volumeId >= 0)
                 stmt.setShort(pos++, volumeId);                // VOLUME_ID specified by caller
@@ -192,6 +194,75 @@ public class DbMailItem {
                 throw MailServiceException.ALREADY_EXISTS(id, e);
             else
                 throw ServiceException.FAILURE("copying " + MailItem.getNameForType(item.getType()) + ": " + item.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void icopy(MailItem source, UnderlyingData data)
+    throws ServiceException {
+        Mailbox mbox = source.getMailbox();
+        if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0 || data.indexId == 0)
+            throw ServiceException.FAILURE("invalid data for DB item i-copy", null);
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            String table = getMailItemTableName(mbox);
+            stmt = conn.prepareStatement("INSERT INTO " + table +
+                    "(id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
+                    " unread, flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
+                    "(SELECT ?, type, NULL, ?, ?, ?, date, size, ?, blob_digest," +
+                    " unread, flags, tags, sender, subject, metadata, ?, ?, ? FROM " + table + " WHERE id = ?)");
+            int pos = 1;
+            stmt.setInt(pos++, data.id);                       // ID
+            stmt.setInt(pos++, data.folderId);                 // FOLDER_ID
+            stmt.setInt(pos++, data.indexId);                  // INDEX_ID
+            stmt.setInt(pos++, data.imapId);                   // IMAP_ID
+            if (data.volumeId >= 0)
+                stmt.setShort(pos++, data.volumeId);           // VOLUME_ID
+            else
+                stmt.setNull(pos++, Types.TINYINT);            //   or, no VOLUME_ID
+            stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
+            stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
+            stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
+            stmt.setInt(pos++, source.getId());
+            int num = stmt.executeUpdate();
+            if (num != 1)
+                throw ServiceException.FAILURE("failed to create object", null);
+        } catch (SQLException e) {
+            // catch item_id uniqueness constraint violation and return failure
+            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+                throw MailServiceException.ALREADY_EXISTS(data.id, e);
+            else
+                throw ServiceException.FAILURE("i-copying " + MailItem.getNameForType(source.getType()) + ": " + source.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void imove(MailItem item, boolean shared, Folder folder, int imapId) throws ServiceException {
+        Mailbox mbox = item.getMailbox();
+        if (folder == null || imapId == 0)
+            throw ServiceException.FAILURE("invalid data for DB item copy", null);
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            String table = getMailItemTableName(item);
+            String flags = shared ? "flags = flags | " + Flag.FLAG_COPIED + ", " : "";
+            stmt = conn.prepareStatement("UPDATE " + table +
+                    " SET folder_id = ?, " + flags + "imap_id = ?, mod_metadata = ?, change_date = ?" +
+                    " WHERE id = ?");
+            int pos = 1;
+            stmt.setInt(pos++, folder.getId());
+            stmt.setInt(pos++, imapId);
+            stmt.setInt(pos++, mbox.getOperationChangeID());
+            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setInt(pos++, item.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("i-moving " + MailItem.getNameForType(item.getType()) + ": " + item.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }

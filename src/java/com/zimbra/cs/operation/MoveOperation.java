@@ -23,6 +23,7 @@
  */
 package com.zimbra.cs.operation;
 
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -42,6 +43,8 @@ public class MoveOperation extends Operation {
     byte mType;
     int mTargetId;
     TargetConstraint mTcon;
+
+    MailItem mResult;
     
     public MoveOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
                 int itemId, byte type, int targetId)
@@ -61,9 +64,12 @@ public class MoveOperation extends Operation {
     }
     
     protected void callback() throws ServiceException {
-        getMailbox().move(this.getOpCtxt(), mItemId, mType, mTargetId, mTcon);
+        mResult = getMailbox().move(this.getOpCtxt(), mItemId, mType, mTargetId, mTcon);
     }
-    
+
+    public MailItem getResult() {
+        return mResult;
+    }
     
     public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());

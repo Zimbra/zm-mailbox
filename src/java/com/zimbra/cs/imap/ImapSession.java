@@ -161,7 +161,7 @@ public class ImapSession extends Session {
             mListed = VISIBLE;
         }
 
-        ImapFlag(String name, byte bitmask, boolean listed) {
+        ImapFlag(String name, short bitmask, boolean listed) {
             mName = name;      mImapName  = name.toUpperCase();
             mId   = 0;         mBitmask   = bitmask;
             mPositive = true;  mPermanent = false;
@@ -182,8 +182,8 @@ public class ImapSession extends Session {
 
     private ImapFlag cache(ImapFlag i4flag) {
         Map<Object, ImapFlag> map = (i4flag.mId <= 0 ? mFlags : mTags);
-        Long bitmask = new Long(i4flag.mBitmask);
         map.put(i4flag.mImapName, i4flag);
+        Long bitmask = new Long(i4flag.mBitmask);
         if (!map.containsKey(bitmask))
             map.put(bitmask, i4flag);
         return i4flag;
@@ -292,7 +292,7 @@ public class ImapSession extends Session {
                 for (ImapMessage i4msg : added.numbered) {
                     mSelectedFolder.cache(i4msg);
                     if (debug)  addlog.append(' ').append(i4msg.msgId);
-                    i4msg.added = true;
+                    i4msg.setAdded(true);
                     mSelectedFolder.dirtyMessage(i4msg);
                 }
                 if (debug)  ZimbraLog.imap.debug(addlog);
@@ -348,7 +348,7 @@ public class ImapSession extends Session {
             } else {
                 ImapMessage i4msg = mSelectedFolder.getById(id);
                 if (i4msg != null) {
-                    i4msg.expunged = true;
+                    i4msg.setExpunged(true);
                     ZimbraLog.imap.debug("  ** deleted (ntfn): " + i4msg.msgId);
                 }
             }
@@ -363,12 +363,18 @@ public class ImapSession extends Session {
                 cacheTag((Tag) item);
             else if (!selected || item == null || item.getId() <= 0)
                 continue;
-            else if (item instanceof Message && ((Message) item).getFolderId() == mSelectedFolder.getId()) {
-                int msgId = ((Message) item).getId();
+            else if (!(item instanceof Message || item instanceof Contact))
+                continue;
+            else if (item.getFolderId() == mSelectedFolder.getId()) {
+                int msgId = item.getId();
                 // make sure this message hasn't already been detected in the folder
                 if (mSelectedFolder.getById(msgId) != null)
                     continue;
-                newItems.add(item);
+                ImapMessage i4msg = mSelectedFolder.getByImapId(item.getImapUid());
+                if (i4msg != null && i4msg.isGhost())
+                    mSelectedFolder.unghost(i4msg, item.getId());
+                else
+                    newItems.add(item);
                 ZimbraLog.imap.debug("  ** created (ntfn): " + msgId);
             }
         }
@@ -420,13 +426,14 @@ public class ImapSession extends Session {
                         newItems.add(msg);
                         if (debug)  ZimbraLog.imap.debug("  ** moved (ntfn): " + msg.getId());
                     }
-                } else if (!inFolder && !virtual)
-                    i4msg.expunged = true;
-                else if ((chg.why & (Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) != 0)
+                } else if (!inFolder && !virtual) {
+                    if (!i4msg.isGhost())
+                        i4msg.setExpunged(true);
+                } else if ((chg.why & (Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) != 0)
                     i4msg.setPermanentFlags(msg.getFlagBitmask(), msg.getTagBitmask());
                 else if ((chg.why & Change.MODIFIED_IMAP_UID) != 0) {
                     // if the IMAP uid changed, need to bump it to the back of the sequence!
-                    i4msg.expunged = true;
+                    i4msg.setExpunged(true);
                     if (!virtual)
                         newItems.add(msg);
                     if (debug)  ZimbraLog.imap.debug("  ** imap uid changed (ntfn): " + msg.getId());

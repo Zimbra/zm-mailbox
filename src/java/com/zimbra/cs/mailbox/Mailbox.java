@@ -3369,8 +3369,8 @@ public class Mailbox {
         }
     }
 
-    public synchronized MailItem copy(OperationContext octxt, int itemId, byte type, int targetId) throws IOException, ServiceException {
-        CopyItem redoRecorder = new CopyItem(mId, itemId, type, targetId);
+    public synchronized MailItem copy(OperationContext octxt, int itemId, byte type, int folderId) throws IOException, ServiceException {
+        CopyItem redoRecorder = new CopyItem(mId, itemId, type, folderId);
 
         boolean success = false;
         try {
@@ -3383,18 +3383,22 @@ public class Mailbox {
             int newId;
             short destVolumeId;
             if (redoPlayer == null) {
-            	newId = getNextItemId(ID_AUTO_INCREMENT);
+                newId = getNextItemId(ID_AUTO_INCREMENT);
                 if (item.getVolumeId() != -1)
                     destVolumeId = Volume.getCurrentMessageVolume().getId();
                 else
                     destVolumeId = -1;
             } else {
-            	newId = getNextItemId(redoPlayer.getDestId());
+                newId = getNextItemId(redoPlayer.getDestId());
                 destVolumeId = redoPlayer.getDestVolumeId();
             }
-            MailItem copy = item.copy(getFolderById(targetId), newId, destVolumeId);
+            MailItem copy = item.copy(getFolderById(folderId), newId, destVolumeId);
             redoRecorder.setDestId(copy.getId());
             redoRecorder.setDestVolumeId(copy.getVolumeId());
+
+            // if we're not sharing the index entry, we need to index the new item
+            if (copy.getIndexId() == copy.getId())
+                mCurrentChange.setIndexedItem(copy, null);
 
             success = true;
             return copy;
@@ -3403,10 +3407,55 @@ public class Mailbox {
         }
     }
 
-    public synchronized void move(OperationContext octxt, int itemId, byte type, int targetId) throws ServiceException {
-        move(octxt, itemId, type, targetId, null);
+    public synchronized MailItem imapCopy(OperationContext octxt, int itemId, byte type, int folderId) throws IOException, ServiceException {
+        // this is an IMAP command, so we'd better be tracking IMAP changes by now...
+        beginTrackingImap(octxt);
+
+        ImapCopyItem redoRecorder = new ImapCopyItem(mId, itemId, type, folderId);
+
+        boolean success = false;
+        try {
+            beginTransaction("icopy", octxt, redoRecorder);
+            ImapCopyItem redoPlayer = (ImapCopyItem) mCurrentChange.getRedoPlayer();
+
+            MailItem item = getItemById(itemId, type);
+            checkItemChangeID(item);
+
+            int newId, newImapId;
+            short destVolumeId;
+            if (redoPlayer == null) {
+                newId = getNextItemId(ID_AUTO_INCREMENT);
+                newImapId = getNextItemId(ID_AUTO_INCREMENT);
+                if (item.getVolumeId() != -1)
+                    destVolumeId = Volume.getCurrentMessageVolume().getId();
+                else
+                    destVolumeId = -1;
+            } else {
+                newId = getNextItemId(redoPlayer.getDestId());
+                newImapId = redoPlayer.getSrcImapId();
+                destVolumeId = redoPlayer.getDestVolumeId();
+            }
+            MailItem copy = item.icopy(getFolderById(folderId), newId, destVolumeId, newImapId);
+            redoRecorder.setDestId(copy.getId());
+            redoRecorder.setSrcImapId(item.getImapUid());
+            redoRecorder.setDestVolumeId(copy.getVolumeId());
+
+            // if we're not sharing the index entry, we need to index the new item
+            if (copy.getIndexId() == copy.getId())
+                mCurrentChange.setIndexedItem(copy, null);
+
+            success = true;
+            // NOTE! we're returning the *moved* item, not the copy that replaced it
+            return item;
+        } finally {
+            endTransaction(success);
+        }
     }
-    public synchronized void move(OperationContext octxt, int itemId, byte type, int targetId, TargetConstraint tcon)
+
+    public synchronized MailItem move(OperationContext octxt, int itemId, byte type, int targetId) throws ServiceException {
+        return move(octxt, itemId, type, targetId, null);
+    }
+    public synchronized MailItem move(OperationContext octxt, int itemId, byte type, int targetId, TargetConstraint tcon)
     throws ServiceException {
         MoveItem redoRecorder = new MoveItem(mId, itemId, type, targetId, tcon);
 
@@ -3420,6 +3469,7 @@ public class Mailbox {
 
             item.move(getFolderById(targetId));
             success = true;
+            return item;
         } finally {
             endTransaction(success);
         }

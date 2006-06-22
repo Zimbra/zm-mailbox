@@ -272,7 +272,7 @@ public class Message extends MailItem {
     boolean isTaggable()      { return true; }
     boolean isCopyable()      { return true; }
     boolean isMovable()       { return true; }
-    boolean isMutable()       { return true; }
+    boolean isMutable()       { return isTagged(mMailbox.mDraftFlag); }
     boolean isIndexed()       { return true; }
     boolean canHaveChildren() { return false; }
 
@@ -387,8 +387,9 @@ public class Message extends MailItem {
            saveMetadata();
    }
 
-    MailItem copy(Folder folder, int id, short destVolumeId)
-    throws IOException, ServiceException {
+   /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
+    *         {@link ACL#RIGHT_READ} on the original item */
+    MailItem copy(Folder folder, int id, short destVolumeId) throws IOException, ServiceException {
         Message copy = (Message) super.copy(folder, id, destVolumeId);
 
         Conversation parent = (Conversation) getParent();
@@ -400,19 +401,33 @@ public class Message extends MailItem {
         return copy;
     }
 
+    /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
+     *         {@link ACL#RIGHT_READ} on the original item */
+    MailItem icopy(Folder folder, int id, short destVolumeId, int imapId) throws IOException, ServiceException {
+        Folder oldFolder = getFolder();
+        MailItem item = super.icopy(folder, id, destVolumeId, imapId);
+
+        // update folder counts *after* the op, as folders are more costly to re-cache
+        oldFolder.updateMessageCount(-1);
+        folder.updateMessageCount(1);
+        return item;
+    }
+
+    /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
+     *         {@link ACL#RIGHT_DELETE} on the source folder */
     void move(Folder folder) throws ServiceException {
         Folder oldFolder = getFolder();
         super.move(folder);
 
+        // update folder counts *after* the op, as folders are more costly to re-cache
         oldFolder.updateMessageCount(-1);
         folder.updateMessageCount(1);
     }
 
     public void reindex(IndexItem redo, Object indexData) throws ServiceException {
-        assert(indexData instanceof ParsedMessage);
         ParsedMessage pm = (ParsedMessage) indexData;
         if (pm == null)
-            throw ServiceException.FAILURE("Message is missing data to index", null);
+            pm = new ParsedMessage(getMimeMessage(), getDate(), getMailbox().attachmentsIndexingEnabled());
 
         // FIXME: need to note this as dirty so we can reindex if things fail
         if (!DebugConfig.disableIndexing)

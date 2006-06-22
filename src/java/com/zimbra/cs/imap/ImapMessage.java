@@ -33,7 +33,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
@@ -55,25 +54,27 @@ import com.zimbra.cs.service.formatter.VCard;
 
 
 public class ImapMessage implements Comparable<ImapMessage> {
-    static final byte FLAG_RECENT       = 0x01;
-    static final byte FLAG_SPAM         = 0x02;
-    static final byte FLAG_NONSPAM      = 0x04;
-    static final byte FLAG_JUNKRECORDED = 0x08;
-    static final byte FLAG_IS_CONTACT   = 0x10;
+    static final short FLAG_RECENT       = 0x0001;
+    static final short FLAG_SPAM         = 0x0002;
+    static final short FLAG_NONSPAM      = 0x0004;
+    static final short FLAG_JUNKRECORDED = 0x0008;
+    static final short FLAG_IS_CONTACT   = 0x0010;
+    static final short FLAG_ADDED        = 0x0100;
+    static final short FLAG_EXPUNGED     = 0x0200;
+    static final short FLAG_GHOST        = 0x0400;
 
     static final int IMAP_FLAGS = Flag.FLAG_UNREAD | Flag.FLAG_FLAGGED | Flag.FLAG_DELETED |
                                   Flag.FLAG_DRAFT  | Flag.FLAG_REPLIED | Flag.FLAG_FORWARDED |
                                   Flag.FLAG_NOTIFIED;
-    static final byte SESSION_FLAGS = FLAG_RECENT | FLAG_SPAM | FLAG_NONSPAM | FLAG_JUNKRECORDED | FLAG_IS_CONTACT;
+    static final short PERMANENT_SESSION_FLAGS = FLAG_IS_CONTACT | FLAG_ADDED | FLAG_EXPUNGED | FLAG_GHOST;
+    static final short SESSION_FLAGS = FLAG_RECENT | FLAG_SPAM | FLAG_NONSPAM | FLAG_JUNKRECORDED | PERMANENT_SESSION_FLAGS;
 
-    int     sequence;
-    int     msgId;
-    int     imapUid;
-    int     flags;
-    long    tags;
-    byte    sflags;
-    boolean added    = false;
-    boolean expunged = false;
+    int   sequence;
+    int   msgId;
+    int   imapUid;
+    int   flags;
+    long  tags;
+    short sflags;
     ImapFolder parent;
 
     public ImapMessage(int id, byte type, int imapId, int flag, long tag) {
@@ -103,6 +104,14 @@ public class ImapMessage implements Comparable<ImapMessage> {
         // FIXME: need to generate the representation of the item to do this correctly...
         return getContent(item).length;
     }
+
+    boolean isExpunged()  { return (sflags & FLAG_EXPUNGED) != 0; }
+    boolean isAdded()     { return (sflags & FLAG_ADDED) != 0; }
+    boolean isGhost()     { return (sflags & FLAG_GHOST) != 0; }
+
+    void setExpunged(boolean expunged)  { sflags = (short) (expunged ? sflags | FLAG_EXPUNGED : sflags & ~FLAG_EXPUNGED); }
+    void setAdded(boolean added)        { sflags = (short) (added ? sflags | FLAG_ADDED : sflags & ~FLAG_ADDED); }
+    void setGhost(boolean ghost)        { sflags = (short) (ghost ? sflags | FLAG_GHOST : sflags & ~FLAG_GHOST); }
 
     private static final byte[] EMPTY_CONTENT = new byte[0];
 
@@ -189,10 +198,10 @@ public class ImapMessage implements Comparable<ImapMessage> {
         tags  = t;
         parent.dirtyMessage(this);
     }
-    void setSessionFlags(byte s) {
-        if (s == sflags)
+    void setSessionFlags(short s) {
+        if ((s & PERMANENT_SESSION_FLAGS) == (sflags & PERMANENT_SESSION_FLAGS))
             return;
-        sflags = s;
+        sflags = (short) ((s & IMAP_FLAGS) | (sflags & ~IMAP_FLAGS));
         parent.dirtyMessage(this);
     }
 

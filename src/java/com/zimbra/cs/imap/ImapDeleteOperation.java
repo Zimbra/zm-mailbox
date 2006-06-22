@@ -53,7 +53,7 @@ class ImapDeleteOperation extends Operation {
             Folder folder = mMailbox.getFolderByPath(getOpCtxt(), mFolderName);
             if (!ImapFolder.isFolderVisible(folder, (ImapSession) mSession)) {
                 throw ImapServiceException.FOLDER_NOT_VISIBLE(folder.getPath());
-            } else if (!folder.isMutable()) {
+            } else if (!folder.isDeletable()) {
                 throw ImapServiceException.CANNOT_DELETE_SYSTEM_FOLDER(folder.getPath());
             }
 

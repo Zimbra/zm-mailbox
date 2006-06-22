@@ -544,7 +544,7 @@ public class Conversation extends MailItem {
             target.updateSize(msg.getSize());
 
             moved.add(msg.getId());
-            msg.folderChanged(target);
+            msg.folderChanged(target, 0);
         }
         // mark unread messages moved from Mailbox to Trash/Spam as read in the DB
         if (!markedRead.isEmpty())

@@ -146,7 +146,7 @@ public abstract class RedoableOp {
     public static final int OP_ADD_DOCUMENT_REVISION    = 54;
     
     public static final int OP_TRACK_IMAP               = 55;
-    public static final int OP_PUBLISH_FOLDER           = 56;
+    public static final int OP_IMAP_COPY_ITEM           = 56;
 
     public static final int OP_LAST				        = 57;
 
@@ -209,7 +209,7 @@ public abstract class RedoableOp {
         "SaveDocument",
         "AddDocumentRevision",
         "TrackImap",
-        "PublishFolder",
+        "ImapCopyItem",
 	};
 
 	public static String getOpClassName(int opcode) {

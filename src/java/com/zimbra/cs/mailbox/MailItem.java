@@ -384,7 +384,7 @@ public abstract class MailItem implements Comparable {
      *  for non-indexed items.  For indexed items, the "index ID" will be the
      *  same as the item ID unless the item is a copy of another item; in that
      *  case, the "index ID" is the same as the original item's "index ID". */
-    int getIndexId() {
+    public int getIndexId() {
         return mData.indexId;
     }
 
@@ -748,6 +748,7 @@ public abstract class MailItem implements Comparable {
     abstract boolean isMutable();
     abstract boolean isIndexed();
 	abstract boolean canHaveChildren();
+    boolean isDeletable()             { return true; }
 	boolean trackTags()               { return isTaggable(); }
 	boolean trackUnread()             { return true; }
 	boolean canParent(MailItem child) { return canHaveChildren(); }
@@ -1190,17 +1191,17 @@ public abstract class MailItem implements Comparable {
         }
 	}
 
-    /** Copies an item to a {@link Folder}.  Persists the new item to
-     *  the database and the in-memory cache.  Copies to the same folder
-     *  as the original item will succeed.<p>
+    /** Copies an item to a {@link Folder}.  Persists the new item to the
+     *  database and the in-memory cache.  Copies to the same folder as the
+     *  original item will succeed.<p>
      * 
-     *  Copied items (both the original and the target) share the same
-     *  entry in the index and get the {@link Flag#FLAG_COPIED} flag to
-     *  facilitate garbage collection of index entries.  They do not share
-     *  the same blob on disk (if any), although the system will use a
-     *  hard link if possible.  Copying a {@link Message} will put it in
-     *  the same {@link Conversation} as the original (exceptions: draft
-     *  messages, messages in the Junk folder).
+     *  Immutable copied items (both the original and the target) share the
+     *  same entry in the index and get the {@link Flag#FLAG_COPIED} flag to
+     *  facilitate garbage collection of index entries.  (Mutable copied items
+     *  are indexed separately.)  They do not share the same blob on disk,
+     *  although the system will use a hard link where possible.  Copying a
+     *  {@link Message} will put it in the same {@link Conversation} as the
+     *  original (exceptions: draft messages, messages in the Junk folder).
      * 
      * @param folder        The folder to copy the item to.
      * @param id            The item id for the newly-created copy.
@@ -1226,25 +1227,24 @@ public abstract class MailItem implements Comparable {
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
 
-        // mark as copied for indexing purposes
-        if (!isTagged(mMailbox.mCopiedFlag))
+        // we'll share the index entry if this item can't change out from under us
+        if (isIndexed() && !isMutable())
             alterTag(mMailbox.mCopiedFlag, true);
 
-        mMailbox.updateContactCount(this instanceof Contact ? 1 : 0);
-
         // if the copy or original is in Spam, put the copy in its own conversation
-        MailItem parent = getParent();
-        boolean detach = parent == null || parent.getId() <= 0 || isTagged(mMailbox.mDraftFlag) || inSpam() != folder.inSpam();
+        boolean detach = getParentId() <= 0 || isTagged(mMailbox.mDraftFlag) || inSpam() != folder.inSpam();
 
         UnderlyingData data = mData.duplicate(id, folder.getId(), destVolumeId);
         if (detach)
             data.parentId = -1;
+        if (isIndexed() && isMutable())
+            data.indexId = id;
         data.metadata = encodeMetadata();
         data.contentChanged(mMailbox);
-        DbMailItem.copy(this, id, folder.getId(), data.parentId, data.volumeId, data.metadata);
+        DbMailItem.copy(this, id, folder, data.indexId, data.parentId, data.volumeId, data.metadata);
 
-        MailItem item = constructItem(mMailbox, data);
-        item.finishCreation(detach ? null : parent);
+        MailItem copy = constructItem(mMailbox, data);
+        copy.finishCreation(detach ? null : getParent());
 
         MailboxBlob srcBlob = getBlob();
         if (srcBlob != null) {
@@ -1252,7 +1252,91 @@ public abstract class MailItem implements Comparable {
             MailboxBlob blob = sm.link(srcBlob.getBlob(), mMailbox, data.id, data.modContent, data.volumeId);
             mMailbox.markOtherItemDirty(blob);
         }
-        return item;
+        return copy;
+    }
+
+    /** Moves the item to the target folder and creates a copy of the item in
+     *  the original item's folder.  Persists the new item to the database and
+     *  the in-memory cache.  Copies to the same folder as the original item
+     *  will succeed, but it is strongly suggested that {@link copy()} be used
+     *  in that case.<p>
+     * 
+     *  Immutable copied items (both the original and the target) share the
+     *  same entry in the index and get the {@link Flag#FLAG_COPIED} flag to
+     *  facilitate garbage collection of index entries.  (Mutable copied items
+     *  are indexed separately.)  They do not share the same blob on disk,
+     *  although the system will use a hard link where possible.  Copied
+     *  {@link Message}s are placed in their own {@link VirtualConversation}
+     *  rather than being grouped with the original (moved) Message.<p>
+     * 
+     *  The copy is assigned the same IMAP UID as the original item.  The
+     *  moved item is then explicitly assigned a new IMAP UID.  
+     * 
+     * @param folder        The folder to copy the item to.
+     * @param id            The item id for the newly-created copy.
+     * @param destVolumeId  The id of the Volume to put the copied blob in.
+     * @param imapId        The IMAP UID to assign to the <u>moved</u> item.
+     * @perms {@link ACL#RIGHT_INSERT} on the target folder,
+     *        {@link ACL#RIGHT_READ} on the original item
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>mail.CANNOT_COPY</code> - if the item is not copyable
+     *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
+     *        can't hold the copy of the item
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul>
+     * @see com.zimbra.cs.store.Volume#getCurrentMessageVolume() */
+    MailItem icopy(Folder folder, int id, short destVolumeId, int imapId) throws IOException, ServiceException {
+        if (!isCopyable())
+            throw MailServiceException.CANNOT_COPY(mId);
+        if (!isMovable())
+            throw MailServiceException.IMMUTABLE_OBJECT(mId);
+        if (!folder.canContain(this))
+            throw MailServiceException.CANNOT_CONTAIN();
+
+        // permissions required are the same as for copy()
+        if (!canAccess(ACL.RIGHT_READ))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
+        if (!folder.canAccess(ACL.RIGHT_INSERT))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
+
+        Folder oldFolder = getFolder();
+        int oldImapId = getImapUid();
+
+        // we'll share the index entry if this item can't change out from under us
+        boolean shared = isIndexed() && !isMutable();
+        if (shared)
+            mData.flags |= Flag.FLAG_COPIED;
+
+        // first, move the item to the target folder
+        oldFolder.updateSize(-getSize());
+        folder.updateSize(getSize());
+        oldFolder.updateUnread(-mData.unreadCount);
+        folder.updateUnread(mData.unreadCount);
+        folderChanged(folder, imapId);
+        DbMailItem.imove(this, shared, folder, imapId);
+
+        // then copy it back to the original folder, leaving the copy out of the conversation
+        //   also, make sure that the new item's imap ID is the same as the old item's old imap ID
+        UnderlyingData data = mData.duplicate(id, oldFolder.getId(), destVolumeId);
+        data.parentId = -1;
+        data.imapId   = oldImapId;
+        data.metadata = encodeMetadata();
+        if (isIndexed() && !shared)
+            data.indexId = id;
+        data.contentChanged(mMailbox);
+        DbMailItem.icopy(this, data);
+
+        MailItem copy = constructItem(mMailbox, data);
+        copy.finishCreation(null);
+
+        MailboxBlob srcBlob = getBlob();
+        if (srcBlob != null) {
+            StoreManager sm = StoreManager.getInstance();
+            MailboxBlob blob = sm.link(srcBlob.getBlob(), mMailbox, data.id, data.modContent, data.volumeId);
+            mMailbox.markOtherItemDirty(blob);
+        }
+        return copy;
     }
 
     /** Moves an item to a different {@link Folder}.  Persists the change
@@ -1306,7 +1390,7 @@ public abstract class MailItem implements Comparable {
             detach();
 
 		DbMailItem.setFolder(this, folder);
-		folderChanged(folder);
+		folderChanged(folder, 0);
 	}
 
 	/** Records all relevant changes to the in-memory object for when an item
@@ -1314,14 +1398,15 @@ public abstract class MailItem implements Comparable {
      *  changes to the database.
      * 
 	 * @param newFolder  The folder the item is being moved to.
+	 * @param imapId     The new IMAP ID for the item after the operation.
 	 * @throws ServiceException if we're not in a transaction */
-	void folderChanged(Folder newFolder) throws ServiceException {
+	void folderChanged(Folder newFolder, int imapId) throws ServiceException {
         if (mData.folderId == newFolder.getId())
             return;
 		markItemModified(Change.MODIFIED_FOLDER);
         mData.metadataChanged(mMailbox);
 		mData.folderId = newFolder.getId();
-        mData.imapId   = mMailbox.isTrackingImap() ? 0 : mData.imapId;
+        mData.imapId   = mMailbox.isTrackingImap() ? imapId : mData.imapId;
 	}
 
 	void addChild(MailItem child) throws ServiceException {
@@ -1413,7 +1498,7 @@ public abstract class MailItem implements Comparable {
         delete(DELETE_ITEM);
     }
     void delete(boolean childrenOnly) throws ServiceException {
-        if (!childrenOnly && !isMutable())
+        if (!childrenOnly && !isDeletable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
 
         // get the full list of things that are being removed
