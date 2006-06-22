@@ -142,10 +142,21 @@ public class ResultsPager
             if (hit.getItemId() == mPrevMailItemId.getId()) {
                 // found it!
                 return mResults.getNext();
-            } 
+            }
+            
+            int comp = hit.compareBySortField(mSortOrder, prevHit); 
+
+            // if (hit at the SAME TIME as prevSortValue) AND the ID is > prevHitId
+            //   --> this depends on a secondary sort-order of HitID.  This doesn't
+            //  currently hold up with ProxiedHits: we need to convert Hit sorting to
+            //  use ItemIds (instead of int's) TODO FIXME
+            if ((comp == 0) && 
+                        (hit.getItemId() > mPrevMailItemId.getId())) {
+                return hit;
+            }
             
             // if (hit COMES AFTER prevSortValue) {
-            if (hit.compareBySortField(mSortOrder, prevHit) > 0) {
+            if (comp > 0) {
                 return hit;
             }
 
