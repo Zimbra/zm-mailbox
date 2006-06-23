@@ -50,7 +50,7 @@ public class ImapUnsubscribeOperation extends Operation {
     protected void callback() throws ServiceException {
         synchronized (mMailbox) {
             Folder folder = mMailbox.getFolderByPath(mOpCtxt, mFolderName);
-            if (!folder.isTagged(mMailbox.mSubscribeFlag))
+            if (folder.isTagged(mMailbox.mSubscribeFlag))
                 mMailbox.alterTag(mOpCtxt, folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, false);
         }
     }
