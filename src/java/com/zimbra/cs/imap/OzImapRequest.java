@@ -416,15 +416,17 @@ class OzImapRequest {
             } else if (item.equals("BINARY.SIZE")) {
                 String sectionPart = "";
                 skipChar('[');
-                do {
+                while (peekChar() != ']') {
+                    if (!sectionPart.equals("")) {
+                        sectionPart += ".";  skipChar('.');
+                    }
                     sectionPart += readNumber();
-                    if (peekChar() == ']')
-                        break;
-                    skipChar('.');
-                    sectionPart += ".";
-                } while (true);
+                }
                 skipChar(']');
-                parts.add(new ImapPartSpecifier(item, sectionPart, ""));
+                if (sectionPart.equals(""))
+                    attributes |= OzImapConnectionHandler.FETCH_BINARY_SIZE;
+                else
+                    parts.add(new ImapPartSpecifier(item, sectionPart, ""));
             } else if (item.equals("BODY") || item.equals("BODY.PEEK") || item.equals("BINARY") || item.equals("BINARY.PEEK")) {
                 boolean binary = item.startsWith("BINARY");
                 if (!item.endsWith(".PEEK"))

@@ -85,7 +85,7 @@ class ImapPartSpecifier {
 
     public String toString() {
         StringBuffer response = new StringBuffer(mCommand);
-        if (mCommand.equals("BODY") || mCommand.equals("BINARY")) {
+        if (mCommand.equals("BODY") || mCommand.equals("BINARY") || mCommand.equals("BINARY.SIZE")) {
             response.append('[').append(mPart).append(mPart.equals("") || mModifier.equals("") ? "" : ".").append(mModifier);
             if (mHeaders != null) {
                 boolean first = true;  response.append(" (");

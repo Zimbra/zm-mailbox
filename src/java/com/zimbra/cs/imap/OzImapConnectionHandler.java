@@ -1444,10 +1444,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     static final int FETCH_FLAGS         = 0x0008;
     static final int FETCH_INTERNALDATE  = 0x0010;
     static final int FETCH_RFC822_SIZE   = 0x0020;
-    static final int FETCH_UID           = 0x0040;
+    static final int FETCH_BINARY_SIZE   = 0x0040;
+    static final int FETCH_UID           = 0x0080;
     static final int FETCH_MARK_READ     = 0x1000;
     private static final int FETCH_FROM_CACHE = FETCH_FLAGS | FETCH_UID;
-    private static final int FETCH_FROM_MIME  = FETCH_FLAGS | FETCH_INTERNALDATE | FETCH_RFC822_SIZE | FETCH_UID;
+    private static final int FETCH_FROM_MIME  = FETCH_FLAGS | FETCH_INTERNALDATE | FETCH_RFC822_SIZE | FETCH_BINARY_SIZE | FETCH_UID;
 
     static final int FETCH_FAST = FETCH_FLAGS | FETCH_INTERNALDATE | FETCH_RFC822_SIZE;
     static final int FETCH_ALL  = FETCH_FAST  | FETCH_ENVELOPE;
@@ -1508,6 +1509,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 }
                 if ((attributes & FETCH_RFC822_SIZE) != 0) {
                     result.print((empty ? "" : " ") + "RFC822.SIZE " + i4msg.getSize(item));  empty = false;
+                }
+                if ((attributes & FETCH_BINARY_SIZE) != 0) {
+                    result.print((empty ? "" : " ") + "BINARY.SIZE[] " + i4msg.getSize(item));  empty = false;
                 }
                 if (!fullMessage.isEmpty()) {
                     raw = i4msg.getContent(item);
