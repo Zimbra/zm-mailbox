@@ -45,6 +45,9 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class RenameAccount extends AdminDocumentHandler {
 
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_ID };
+    protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
+
     /**
      * must be careful and only allow renames from/to domains a domain admin can see
      */

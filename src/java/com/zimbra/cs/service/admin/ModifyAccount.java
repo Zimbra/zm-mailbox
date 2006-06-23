@@ -47,6 +47,9 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ModifyAccount extends AdminDocumentHandler {
 
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_ID };
+    protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
+
     /**
      * must be careful and only allow modifies to accounts/attrs domain admin has access to
      */

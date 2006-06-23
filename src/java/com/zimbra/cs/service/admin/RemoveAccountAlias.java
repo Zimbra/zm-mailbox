@@ -44,6 +44,9 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class RemoveAccountAlias extends AdminDocumentHandler {
 
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_ID };
+    protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
+
     /**
      * must be careful and only allow access to domain if domain admin
      */
