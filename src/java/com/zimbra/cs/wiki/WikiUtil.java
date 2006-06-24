@@ -471,13 +471,15 @@ public class WikiUtil {
 	}
 	
 	private void initFolders(Account account, boolean useSoap, Domain dom) throws ServiceException {
-		String grantee, name;
+		String grantee, name, id;
 		if (dom == null) {
 			grantee = "pub";
 			name = ACL.GUID_PUBLIC;
+			id = ACL.GUID_PUBLIC;
 		} else {
 			grantee = "dom";
 			name = dom.getName();
+			id = dom.getId();
 		}
 		if (useSoap)
 			try {
@@ -500,7 +502,7 @@ public class WikiUtil {
 		}
         mbox.grantAccess(octxt, 
         		Mailbox.ID_FOLDER_NOTEBOOK, 
-        		name, 
+        		id, 
         		grantee.equals("pub") ? ACL.GRANTEE_PUBLIC : ACL.GRANTEE_DOMAIN, 
         		ACL.stringToRights("rwid"),
         		true,
