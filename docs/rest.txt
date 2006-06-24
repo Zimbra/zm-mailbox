@@ -35,7 +35,7 @@ GOALS/CONCEPTS
 3) Should be able to request different "flavors" for content. i.e., XML, JSON,
    ICS, RSS/ATOM, RDF, HTML, CSV, microformats, etc. The flavor will be based 
    on the "fmt" query param. "flavor" is a term used in articles on REST, 
-   and basically means MIME content-type. If an explicitp flavor is not requested,
+   and basically means MIME content-type. If an explicit flavor is not requested,
    then the default for a given type will be used.
 
    folders in our system have a "hint" for which view to use to display the folder's
@@ -59,13 +59,12 @@ URL
           types={types} // when searching
           start={date-specifier}
           end={date-specifier}
-          sync="1"
           auth={auth-types}
- 
+
           {types}   = comma-separated list.  Legal values are:
                       conversation|message|contact|appointment|note
                       (default is "conversation")
- 
+
           {date-specifier} = mm/dd/yyyy | yyyy/dd/mm | \d+ (milliseconds) | [mp+-]?([0-9]+)([mhdwy][a-z]*)
 
               absolute dates:
@@ -100,13 +99,13 @@ URL
               +6mon     6 months from now 
               1year     1 year from now
 
-          sync="1" -- requests that the server return additional metadata in response as X-Zimbra-* HTTP headers
-
           {auth-types} = comma-separated list. Legal values are:
               co     cookie
               ba     basic auth
               nsc    do not set a cookie when using basic auth
               (default is "co,ba", i.e. check both)
+
+          fmt="sync" -- requests that the server return additional metadata in response as X-Zimbra-* HTTP headers
 
 ------------------------------------------------------------
 EXAMPLES
@@ -284,7 +283,7 @@ ISSUES/NOTES
   over the "inbox" folder. So you'll have to explicitly use the fmt query parameter to 
   disambiguate between the two:
 
-  /home/roland/inbox?fmt=rss
+   /home/roland/inbox?fmt=rss
    /home/roland/inbox.rss?fmt=zip
    
 ------------------------------------------------------------
