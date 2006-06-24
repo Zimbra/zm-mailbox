@@ -146,7 +146,7 @@ When we support documents in a folder, we'd use the document's name as you'd exp
 We should of course be able to convert attachments to HTML (via Verity) with this
 syntax:
 
-/home/roland/?id=564&part=4&fmt=html   // part 4 (which could be a word doc) in html
+/home/roland/?id=564&part=4&view=html   // part 4 (which could be a word doc) in html
 
 ------------------------------------------------------------
 SEARCHING
