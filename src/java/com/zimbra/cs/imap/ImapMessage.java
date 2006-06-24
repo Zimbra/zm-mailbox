@@ -68,8 +68,9 @@ public class ImapMessage implements Comparable<ImapMessage> {
     static final int IMAP_FLAGS = Flag.FLAG_UNREAD | Flag.FLAG_FLAGGED | Flag.FLAG_DELETED |
                                   Flag.FLAG_DRAFT  | Flag.FLAG_REPLIED | Flag.FLAG_FORWARDED |
                                   Flag.FLAG_NOTIFIED;
-    static final short PERMANENT_SESSION_FLAGS = FLAG_IS_CONTACT | FLAG_ADDED | FLAG_EXPUNGED | FLAG_GHOST;
-    static final short SESSION_FLAGS = FLAG_RECENT | FLAG_SPAM | FLAG_NONSPAM | FLAG_JUNKRECORDED | PERMANENT_SESSION_FLAGS;
+    static final short MUTABLE_SESSION_FLAGS = FLAG_SPAM | FLAG_NONSPAM | FLAG_JUNKRECORDED;
+    static final short SESSION_FLAGS = FLAG_ADDED | FLAG_EXPUNGED | FLAG_IS_CONTACT |
+                                       FLAG_GHOST | FLAG_RECENT   | MUTABLE_SESSION_FLAGS;
 
     int   sequence;
     int   msgId;
@@ -201,9 +202,9 @@ public class ImapMessage implements Comparable<ImapMessage> {
         parent.dirtyMessage(this);
     }
     void setSessionFlags(short s) {
-        if ((s & PERMANENT_SESSION_FLAGS) == (sflags & PERMANENT_SESSION_FLAGS))
+        if ((s & MUTABLE_SESSION_FLAGS) == (sflags & MUTABLE_SESSION_FLAGS))
             return;
-        sflags = (short) ((s & IMAP_FLAGS) | (sflags & ~IMAP_FLAGS));
+        sflags = (short) ((s & MUTABLE_SESSION_FLAGS) | (sflags & ~MUTABLE_SESSION_FLAGS));
         parent.dirtyMessage(this);
     }
 
