@@ -188,8 +188,7 @@ class ImapFolder implements Iterable<ImapMessage> {
 
     static boolean isFolderWritable(Folder folder, ImapSession session) {
         return isFolderSelectable(folder, session) && !(folder instanceof SearchFolder) &&
-               folder.getId() != Mailbox.ID_FOLDER_CONTACTS &&
-               folder.getId() != Mailbox.ID_FOLDER_AUTO_CONTACTS;
+               folder.getDefaultView() != MailItem.TYPE_CONTACT;
     }
     static boolean isFolderSelectable(Folder folder, ImapSession session) {
         return isFolderVisible(folder, session) && !folder.isTagged(folder.getMailbox().mDeletedFlag);
@@ -201,15 +200,18 @@ class ImapFolder implements Iterable<ImapMessage> {
                 return false;
         }
         return folder != null &&
-               folder.getId() != Mailbox.ID_FOLDER_CALENDAR &&
+               folder.getDefaultView() != MailItem.TYPE_APPOINTMENT &&
+               folder.getDefaultView() != MailItem.TYPE_WIKI &&
+               folder.getDefaultView() != MailItem.TYPE_DOCUMENT &&
                folder.getId() != Mailbox.ID_FOLDER_USER_ROOT &&
                (!(folder instanceof SearchFolder) || ((SearchFolder) folder).isImapVisible());
     }
 
     static boolean isPathCreatable(String path) {
         return path != null &&
-               !path.toLowerCase().matches("/\\s*contacts\\s*(/.*)?") &&
-               !path.toLowerCase().matches("/\\s*calendar\\s*(/.*)?");
+               !path.toLowerCase().matches("\\s*notebook\\s*(/.*)?") &&
+               !path.toLowerCase().matches("\\s*contacts\\s*(/.*)?") &&
+               !path.toLowerCase().matches("\\s*calendar\\s*(/.*)?");
     }
 
     /** Formats a folder path as an IMAP-UTF-7 quoted-string.  Applies all
