@@ -523,8 +523,8 @@ public class OzConnection {
         public void write(ByteBuffer buffer) throws IOException {
             synchronized (mWriteLock) {
                 mWriteBuffers.add(buffer);
-                // We always try to write so we fill up network buffers.
-                // Since this a non-blocking channel write will return
+                // We always try to flush so we fill up network buffers.
+                // Since this a non-blocking channel write() will return
                 // immediately if the network buffers are full.
                 flush();
             }
@@ -535,7 +535,7 @@ public class OzConnection {
                 return flushLocked();
             }
         }
-
+        
         private boolean flushLocked() throws IOException {
             int totalWritten = 0;
             boolean allWritten = true;

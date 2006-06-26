@@ -80,6 +80,9 @@ class TestIDLE {
 
         public void handleInput(ByteBuffer content, boolean matched) throws IOException {
             //mLog.info(OzUtil.byteBufferDebugDump("got input", content, false));
+            if (!matched) {
+                return;
+            }
             synchronized (mAppLock) {
                 mConnection.writeAsciiWithCRLF("response");
             }
@@ -138,11 +141,17 @@ class TestIDLE {
             do {
                 out.write(request);
                 out.flush();
-                String response = in.readLine();
-                if (response.equals("notification")) {
-                    notifications++;
-                    mLog.info("notification");
-                } else if (response.equals("response")) {
+                String response;
+                do {
+                    response = in.readLine();
+                    if (response.equals("notification")) {
+                        notifications++;
+                        mLog.info("notification");
+                    } else {
+                        break;
+                    }
+                } while (true);
+                if (response.equals("response")) {
                     responses++;
                     mLog.info("response (" + responses + "/" + notifications + ")");
                     break;
