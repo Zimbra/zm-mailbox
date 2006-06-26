@@ -25,39 +25,12 @@
 
 package com.zimbra.cs.zclient;
 
-public interface ZSearchFolder {
-    
-    public ZFolder getParent();
-
-    public String getId();
-
-    /** Returns the folder's name.  Note that this is the folder's
-     *  name (e.g. <code>"foo"</code>), not its absolute pathname
-     *  (e.g. <code>"/baz/bar/foo"</code>).
-     * 
-     * @see #getPath() 
-     * 
-     */
-    public String getName();
-
-    /** Returns the folder's absolute path.  Paths are UNIX-style with 
-     *  <code>'/'</code> as the path delimiter.  Paths are relative to
-     *  the user root folder,
-     *  which has the path <code>"/"</code>.  So the Inbox's path is
-     *  <code>"/Inbox"</code>, etc.
-     */
-    public String getPath();
-
-    /**
-     * 
-     * @return parent id of folder, or null if root folder.
-     */
-    public String getParentId();
+public interface ZSearchFolder extends ZFolder {
 
     public String getQuery();
 
     public String getTypes();
 
     public String getSortBy();
-
+    
 }

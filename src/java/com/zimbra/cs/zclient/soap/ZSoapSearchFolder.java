@@ -27,62 +27,25 @@ package com.zimbra.cs.zclient.soap;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZSearchFolder;
 import com.zimbra.soap.Element;
 
-class ZSoapSearchFolder implements ZSearchFolder, ZSoapItem {
+class ZSoapSearchFolder extends ZSoapFolder implements ZSearchFolder, ZSoapItem {
 
-    private String mId;
-    private String mName;
-    private String mParentId;
     private String mQuery;
     private String mTypes;
     private String mSortBy;
-    private ZFolder mParent;
     
     ZSoapSearchFolder(Element e, ZSoapFolder parent, ZSoapMailbox mailbox) throws ServiceException {
-        mParent = parent;
-        mId = e.getAttribute(MailService.A_ID);
-        mName = e.getAttribute(MailService.A_NAME);
-        mParentId = e.getAttribute(MailService.A_FOLDER);
+        super(e, parent, mailbox);
         mQuery = e.getAttribute(MailService.A_QUERY);
         mTypes = e.getAttribute(MailService.A_SEARCH_TYPES, null); // TODO FIX
         mSortBy = e.getAttribute(MailService.A_SORTBY, null); // TODO FIX
-        mailbox.addItemIdMapping(this);
-        if (parent != null) parent.addChild(this);
-    }
-
-    public ZFolder getParent() {
-        return mParent;
-    }
-
-    public String getId() {
-        return mId;
-    }
-
-    public String getName() {
-        return mName;
     }
 
     public String toString() {
-        return String.format("search: { id: %s, name: %s, parentId: %s, query: %s, types: %s, sortBy: %s, path: %s }", 
-                mId, mName, mParentId, mQuery, mTypes, mSortBy, getPath());
-    }
-
-    public String getParentId() {
-        return mParentId;
-    }
-
-    public String getPath() {
-        // TODO: CACHE? compute upfront?
-        if (mParent == null)
-            return ZMailbox.PATH_SEPARATOR;
-        else {
-            String pp = mParent.getPath();
-            return pp.length() == 1 ? (pp + mName) : (pp + ZMailbox.PATH_SEPARATOR + mName);
-        }
+        return toString(String.format(",query: %s, types: %s, sortBy: %s", 
+                mQuery, mTypes, mSortBy));
     }
 
     public String getQuery() {

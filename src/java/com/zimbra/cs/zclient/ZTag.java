@@ -42,6 +42,6 @@ public interface ZTag {
      */
     public int getUnreadCount();
 
-    public byte getColor();
+    public int getColor();
 
 }

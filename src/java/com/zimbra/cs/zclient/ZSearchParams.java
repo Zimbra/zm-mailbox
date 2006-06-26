@@ -130,6 +130,16 @@ public class ZSearchParams {
         mQuery = query;
     }
 
+    /**
+     * init search params (query, types, sortBy) from a search folder.
+     * @param folder
+     */
+    public ZSearchParams(ZSearchFolder folder) {
+        mQuery = folder.getQuery();
+        mTypes = folder.getTypes();
+        mSortBy = folder.getSortBy();
+    }
+
     public String getCursorPreviousId() {
         return mCursorPreviousId;
     }

@@ -27,6 +27,7 @@ package com.zimbra.cs.zclient;
 
 import java.util.Collection;
 
+import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.service.ServiceException;
 
 public abstract class ZMailbox {
@@ -59,7 +60,20 @@ public abstract class ZMailbox {
      */
     public abstract ZTag getTagById(String id);
 
+    /** create a new tag with the specified color. */
     public abstract ZTag createTag(String name, int color) throws ServiceException;
+
+    /** modifies the tag's color */
+    public abstract ZActionResult setTagColor(String id, int color) throws ServiceException;
+
+    /** mark all items with tag as read */
+    public abstract ZActionResult markTagAsRead(String id) throws ServiceException;
+
+    /** delete tag */
+    public abstract ZActionResult deleteTag(String id) throws ServiceException;    
+
+    /** rename tag */
+    public abstract ZActionResult renameTag(String id, String name) throws ServiceException;        
     
     /**
      * return the root user folder
@@ -81,6 +95,13 @@ public abstract class ZMailbox {
     public abstract ZFolder getFolderById(String id);
     
     /**
+     * find the search folder with the specified id.
+     * @param id id of  folder
+     * @return ZSearchFolder if found, null otherwise.
+     */
+    public abstract ZSearchFolder getSearchFolderById(String id);
+    
+    /**
      * create a new sub folder of the specified parent folder.
      * 
      * @param parent parent folder
@@ -95,11 +116,25 @@ public abstract class ZMailbox {
      * @throws ServiceException
      */
     public abstract ZFolder createFolder(ZFolder parent, String name, String defaultView) throws ServiceException;
+    
+    /**
+     * create a new sub folder of the specified parent folder.
+     * 
+     * @param parent parent folder
+     * @param name name of new folder
+     * @param types comma-sep list of types to search for. See {@link SearchParams} for more info. Use null for default value.
+     * @parm sortBy how to sort the result. See {@link SearchParams} for more info. Use null for default value.
+     * @see {@link ZSearchParams#SORT_BY_DATE_ASC}
+     * @see {@link ZSearchParams#TYPE_MESSAGE}
+     * @return newly created search folder
+     * @throws ServiceException
+     */
+    public abstract ZSearchFolder createSearchFolder(ZFolder parent, String name, String query, String types, String sortBy) throws ServiceException;
  
-    public static class ZFolderActionResult {
+    public static class ZActionResult {
         private String mIds;
         
-        public ZFolderActionResult(String ids) {
+        public ZActionResult(String ids) {
             mIds = ids;
         }
         
@@ -117,42 +152,42 @@ public abstract class ZMailbox {
     }
 
     /** sets or unsets the folder's checked state in the UI */
-    public abstract ZFolderActionResult setFolderChecked(String ids, boolean checkedState) throws ServiceException;
+    public abstract ZActionResult setFolderChecked(String ids, boolean checkedState) throws ServiceException;
 
     /** modifies the folder's color */
-    public abstract ZFolderActionResult setFolderColor(String ids, int color) throws ServiceException;
+    public abstract ZActionResult setFolderColor(String ids, int color) throws ServiceException;
     
     /** hard delete the folder, all items in folder and all sub folders */
-    public abstract ZFolderActionResult deleteFolder(String ids) throws ServiceException;
+    public abstract ZActionResult deleteFolder(String ids) throws ServiceException;
 
     /** hard delete all items in folder and sub folders (doesn't delete the folder itself) */
-    public abstract ZFolderActionResult emptyFolder(String ids) throws ServiceException;    
+    public abstract ZActionResult emptyFolder(String ids) throws ServiceException;    
 
     /** mark all items in folder as read */
-    public abstract ZFolderActionResult markFolderAsRead(String ids) throws ServiceException;
+    public abstract ZActionResult markFolderAsRead(String ids) throws ServiceException;
 
     /** add the contents of the remote feed at target-url to the folder (one time action) */ 
-    public abstract ZFolderActionResult importURLIntoFolder(String id, String url) throws ServiceException;
+    public abstract ZActionResult importURLIntoFolder(String id, String url) throws ServiceException;
 
     /** move the folder to be a child of {target-folder} */
-    public abstract ZFolderActionResult moveFolder(String folderId, String targetFolderId) throws ServiceException;
+    public abstract ZActionResult moveFolder(String folderId, String targetFolderId) throws ServiceException;
     
     /** change the folder's name; if new name  begins with '/', the folder is moved to the new path and any missing path elements are created */
-    public abstract ZFolderActionResult renameFolder(String folderId, String name) throws ServiceException;
+    public abstract ZActionResult renameFolder(String folderId, String name) throws ServiceException;
     
     /** sets or unsets the folder's exclude from free busy state */
-    public abstract ZFolderActionResult setFolderExcludeFreeBusy(String folderId, boolean state) throws ServiceException;
+    public abstract ZActionResult setFolderExcludeFreeBusy(String folderId, boolean state) throws ServiceException;
     
     /** 
      * set the synchronization url on the folder to {target-url}, empty the folder, and 
      * synchronize the folder's contents to the remote feed, also sets {exclude-free-busy-boolean} 
      */
-    public abstract ZFolderActionResult setFolderURL(String folderId, String url) throws ServiceException;    
+    public abstract ZActionResult setFolderURL(String folderId, String url) throws ServiceException;    
 
     /**
      * sync the folder's contents to the remote feed specified by the folders URL
      */
-    public abstract ZFolderActionResult syncFolder(String folderId) throws ServiceException;    
+    public abstract ZActionResult syncFolder(String folderId) throws ServiceException;    
 
     /**
      * 

@@ -34,7 +34,6 @@ import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZLink;
 import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZSearchFolder;
 import com.zimbra.soap.Element;
 
 class ZSoapFolder implements ZFolder, ZSoapItem {
@@ -52,7 +51,6 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
     private String mEffectivePerms;
     private List<ZGrant> mGrants;
     private List<ZFolder> mSubFolders;
-    private List<ZSearchFolder> mSearchFolders;    
     private List<ZLink> mLinks;        
     private ZFolder mParent;
     
@@ -70,7 +68,6 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         mRemoteURL = e.getAttribute(MailService.A_URL, null);
         mEffectivePerms = e.getAttribute(MailService.A_RIGHTS, null);
         
-        mSearchFolders = new ArrayList<ZSearchFolder>();        
         mGrants = new ArrayList<ZGrant>();            
         mSubFolders = new ArrayList<ZFolder>();
         mLinks = new ArrayList<ZLink>();        
@@ -101,11 +98,9 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
 
     void addChild(ZFolder folder)        { mSubFolders.add(folder); }
     void addChild(ZLink link)            { mLinks.add(link); }
-    void addChild(ZSearchFolder folder)  { mSearchFolders.add(folder); }
     
     void removeChild(ZFolder folder)       { mSubFolders.remove(folder); }
     void removeChild(ZLink link)           { mLinks.remove(link); }
-    void removeChild(ZSearchFolder folder) { mSearchFolders.remove(folder); }
 
     public ZFolder getParent() {
         return mParent;
@@ -131,29 +126,26 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         return mUnreadCount;
     }
     
-    String toString(String prefix) {
+    public String toString() {
+        return toString(null);
+    }
+    
+    protected String toString(String extra) {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
         for (ZFolder child : mSubFolders) {
-            sb.append("\n").append(prefix).append( ((ZSoapFolder)child).toString(prefix+"  ")).append("\n");
+            sb.append("\n").append( ((ZSoapFolder)child).toString()).append("\n");
         }
-        for (ZSearchFolder search : mSearchFolders) {
-            sb.append("\n").append(prefix).append(search).append("\n");
-        }        
         for (ZLink link : mLinks) {
-            sb.append("\n").append(prefix).append(link).append("\n");
+            sb.append("\n").append(link).append("\n");
         }                
-        sb.append(prefix).append("}");
+        sb.append("}");
         
-        return String.format("%sfolder: { id: %s, name: %s, parentId: %s, flags: %s, color: %d, unreadCount: %d, " +
-                "messageCount: %d, view: %s, restURL: %s, url: %s, perms: %s, grants: %s, children: %s, path: %s } ", 
-                prefix,
+        return String.format("folder: { id: %s, name: %s, parentId: %s, flags: %s, color: %d, unreadCount: %d, " +
+                "messageCount: %d, view: %s, restURL: %s, url: %s, perms: %s, grants: %s, children: %s, path: %s%s} ", 
                 mId, mName, mParentId, mFlags, mColor, mUnreadCount, mMessageCount, mDefaultView, 
-                mRestURL, mRemoteURL, mEffectivePerms, mGrants.toString(), sb.toString(), getPath()); 
-    }
-
-    public String toString() {
-        return toString("");
+                mRestURL, mRemoteURL, mEffectivePerms, mGrants.toString(), sb.toString(), getPath(), 
+                extra != null ? extra : ""); 
     }
 
     public String getDefaultView() {
@@ -197,10 +189,6 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
     public List<ZFolder> getSubFolders() {
         return mSubFolders;
     }
-    
-    public List<ZSearchFolder> getSearchFolders() {
-        return mSearchFolders;
-    }    
     
     public List<ZLink> getLinks() {
         return mLinks;

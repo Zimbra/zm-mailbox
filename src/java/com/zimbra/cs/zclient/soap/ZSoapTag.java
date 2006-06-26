@@ -32,7 +32,7 @@ import com.zimbra.soap.Element;
 
 class ZSoapTag implements ZTag, ZSoapItem {
 
-    private byte mColor;
+    private int mColor;
     private String mId;
     private String mName;
     private int mUnreadCount;
@@ -44,7 +44,13 @@ class ZSoapTag implements ZTag, ZSoapItem {
         mUnreadCount = (int) e.getAttributeLong(MailService.A_UNREAD, 0);
     }
 
-    public byte getColor() {
+    void modifyNotification(Element e) throws ServiceException {
+        mColor = (int) e.getAttributeLong(MailService.A_COLOR, mColor);
+        mName = e.getAttribute(MailService.A_NAME, mName);
+        mUnreadCount = (int) e.getAttributeLong(MailService.A_UNREAD, mUnreadCount);
+    }
+
+    public int getColor() {
         return mColor;
     }
 

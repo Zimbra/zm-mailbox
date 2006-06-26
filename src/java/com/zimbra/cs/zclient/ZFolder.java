@@ -134,11 +134,6 @@ public interface ZFolder {
     public ZFolder getSubFolderByPath(String path);
     
     /**
-     * @return search folders, or empty list if no search folders
-     */
-    public List<ZSearchFolder> getSearchFolders();
-
-    /**
      * @return links, or empty list if no links
      */
     public List<ZLink> getLinks();
