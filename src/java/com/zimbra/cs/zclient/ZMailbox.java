@@ -96,9 +96,69 @@ public abstract class ZMailbox {
      */
     public abstract ZFolder createFolder(ZFolder parent, String name, String defaultView) throws ServiceException;
  
-    public abstract ZFolderAction.Result doAction(ZFolderAction action, ZFolder folder) throws ServiceException;
+    public static class ZFolderActionResult {
+        private String mIds;
+        
+        public ZFolderActionResult(String ids) {
+            mIds = ids;
+        }
+        
+        public String getIds() {
+            return mIds;
+        }
+        
+        public String[] getIdsAsArray() {
+            return mIds.split(",");
+        }
+        
+        public String toString() {
+            return String.format("actionResult: { ids: %s }", mIds);
+        }
+    }
+
+    /** sets or unsets the folder's checked state in the UI */
+    public abstract ZFolderActionResult setFolderChecked(String ids, boolean checkedState) throws ServiceException;
+
+    /** modifies the folder's color */
+    public abstract ZFolderActionResult setFolderColor(String ids, int color) throws ServiceException;
     
-    public abstract ZFolderAction.Result doAction(ZFolderAction action, String ids) throws ServiceException;    
+    /** hard delete the folder, all items in folder and all sub folders */
+    public abstract ZFolderActionResult deleteFolder(String ids) throws ServiceException;
+
+    /** hard delete all items in folder and sub folders (doesn't delete the folder itself) */
+    public abstract ZFolderActionResult emptyFolder(String ids) throws ServiceException;    
+
+    /** mark all items in folder as read */
+    public abstract ZFolderActionResult markFolderAsRead(String ids) throws ServiceException;
+
+    /** add the contents of the remote feed at target-url to the folder (one time action) */ 
+    public abstract ZFolderActionResult importURLIntoFolder(String id, String url) throws ServiceException;
+
+    /** move the folder to be a child of {target-folder} */
+    public abstract ZFolderActionResult moveFolder(String folderId, String targetFolderId) throws ServiceException;
     
+    /** change the folder's name; if new name  begins with '/', the folder is moved to the new path and any missing path elements are created */
+    public abstract ZFolderActionResult renameFolder(String folderId, String name) throws ServiceException;
+    
+    /** sets or unsets the folder's exclude from free busy state */
+    public abstract ZFolderActionResult setFolderExcludeFreeBusy(String folderId, boolean state) throws ServiceException;
+    
+    /** 
+     * set the synchronization url on the folder to {target-url}, empty the folder, and 
+     * synchronize the folder's contents to the remote feed, also sets {exclude-free-busy-boolean} 
+     */
+    public abstract ZFolderActionResult setFolderURL(String folderId, String url) throws ServiceException;    
+
+    /**
+     * sync the folder's contents to the remote feed specified by the folders URL
+     */
+    public abstract ZFolderActionResult syncFolder(String folderId) throws ServiceException;    
+
+    /**
+     * 
+     * @param params
+     * @return
+     * @throws ServiceException
+     */
     public abstract ZSearchResult search(ZSearchParams params) throws ServiceException;
 }

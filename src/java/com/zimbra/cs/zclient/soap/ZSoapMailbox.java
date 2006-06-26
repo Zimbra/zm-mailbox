@@ -38,7 +38,6 @@ import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZFolderAction;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZSearchHit;
 import com.zimbra.cs.zclient.ZSearchParams;
@@ -321,69 +320,6 @@ public class ZSoapMailbox extends ZMailbox {
         return getUserRoot().getSubFolderByPath(path.substring(1));
     }
 
-    @Override
-    public ZFolderAction.Result doAction(ZFolderAction action, ZFolder folder) throws ServiceException {
-        return doAction(action, folder.getId());
-    }
-
-    @Override
-    public ZFolderAction.Result doAction(ZFolderAction action, String ids) throws ServiceException {
-        XMLElement req = new XMLElement(MailService.FOLDER_ACTION_REQUEST);
-        Element actionEl = req.addElement(MailService.E_ACTION);
-        
-        actionEl.addAttribute(MailService.A_ID, ids);
-        String opStr = null;
-        switch (action.getOp()) {
-        case CHECK:
-            opStr = action.getChecked() ? "check" : "!check";
-            break;
-        case COLOR: 
-            opStr = "color";
-            actionEl.addAttribute(MailService.A_COLOR, action.getColor());
-            break;            
-        case DELETE:
-            opStr = "delete";
-            break;            
-        case EXCLUDE_FREE_BUSY:
-            opStr = "fb";
-            actionEl.addAttribute(MailService.A_EXCLUDE_FREEBUSY, action.getExcludeFreeBusy());
-            break;            
-        case EMPTY:
-            opStr = "empty";
-            break;            
-        case IMPORT:
-            opStr = "import";
-            actionEl.addAttribute(MailService.A_URL, action.getURL());
-            break;            
-        case MARK_AS_READ:
-            opStr = "read";
-            break;
-        case MOVE:
-            opStr = "move";
-            actionEl.addAttribute(MailService.A_FOLDER, action.getName());
-            break;
-        case RENAME:
-            opStr = "rename";
-            actionEl.addAttribute(MailService.A_NAME, action.getName());
-            break;    
-        case SYNC:
-            opStr = "sync";
-            break;
-        case URL:
-            opStr = "url";
-            actionEl.addAttribute(MailService.A_URL, action.getURL());
-            break;                        
-        default:
-            throw SoapFaultException.CLIENT_ERROR("unsupported operation: "+action.getOp(), null);
-        }
-        
-        actionEl.addAttribute(MailService.A_OPERATION, opStr);
-        
-        Element response = invoke(req);
-        ZFolderAction.Result result = new ZFolderAction.Result(response.getElement(MailService.E_ACTION).getAttribute(MailService.A_ID));
-        return result;
-    }
-
     public static void main(String args[]) throws ServiceException {
         Zimbra.toolSetup();
         ZMailbox mbox = getMailbox("user1", "test123", "http://localhost:7070/service/soap");
@@ -398,19 +334,87 @@ public class ZSoapMailbox extends ZMailbox {
         ZFolder inbox = mbox.getFolderByPath("/inBOX");
         System.out.println(inbox);
         System.out.println(mbox.getFolderById(inbox.getId()));
-        mbox.doAction(ZFolderAction.markAsRead(), inbox);
-        mbox.doAction(ZFolderAction.setChecked(true), inbox);
-        mbox.doAction(ZFolderAction.setChecked(false), inbox);        
-        mbox.doAction(ZFolderAction.setColor(1), inbox);
+        mbox.markFolderAsRead(inbox.getId());
+        mbox.setFolderChecked(inbox.getId(), true);
+        mbox.setFolderChecked(inbox.getId(), false);        
+        mbox.setFolderColor(inbox.getId(), 1);
         ZFolder dork = mbox.createFolder(inbox, "dork",ZFolder.VIEW_MESSAGE);
         System.out.println("---------- created dork -----------");                
         System.out.println(dork);
         System.out.println(inbox);
-        mbox.doAction(ZFolderAction.delete(), dork);
+        mbox.deleteFolder(dork.getId());
         System.out.println("---------- deleted dork -----------");
         System.out.println(inbox);
         System.out.println(mbox.createTag("zippy", 6));
         System.out.println(mbox.getAllTags());
+    }
+
+    Element initFolderAction(String op, String ids) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.FOLDER_ACTION_REQUEST);
+        Element actionEl = req.addElement(MailService.E_ACTION);
+        actionEl.addAttribute(MailService.A_ID, ids);
+        actionEl.addAttribute(MailService.A_OPERATION, op);
+        return actionEl;
+    }
+
+    ZFolderActionResult doFolderAction(Element actionEl) throws ServiceException {
+        Element response = invoke(actionEl.getParent());
+        return new ZFolderActionResult(response.getElement(MailService.E_ACTION).getAttribute(MailService.A_ID));
+    }
+
+    @Override
+    public ZFolderActionResult deleteFolder(String ids) throws ServiceException {
+        return doFolderAction(initFolderAction("delete", ids));
+    }
+
+    @Override
+    public ZFolderActionResult emptyFolder(String ids) throws ServiceException {
+        return doFolderAction(initFolderAction("empty", ids));        
+    }
+
+    @Override
+    public ZFolderActionResult importURLIntoFolder(String id, String url) throws ServiceException {
+        return doFolderAction(initFolderAction("import", id).addAttribute(MailService.A_URL, url));
+    }
+
+    @Override
+    public ZFolderActionResult markFolderAsRead(String ids) throws ServiceException {
+        return doFolderAction(initFolderAction("read", ids));                
+    }
+
+    @Override
+    public ZFolderActionResult moveFolder(String id, String targetFolderId) throws ServiceException {
+        return doFolderAction(initFolderAction("move", id).addAttribute(MailService.A_FOLDER, targetFolderId));
+    }
+
+    @Override
+    public ZFolderActionResult renameFolder(String id, String name) throws ServiceException {
+        return doFolderAction(initFolderAction("rename", id).addAttribute(MailService.A_NAME, name));
+    }
+
+    @Override
+    public ZFolderActionResult setFolderChecked(String ids, boolean checked) throws ServiceException {
+        return doFolderAction(initFolderAction(checked ? "check" : "!check", ids));
+    }
+
+    @Override
+    public ZFolderActionResult setFolderColor(String ids, int color) throws ServiceException {
+        return doFolderAction(initFolderAction("color", ids).addAttribute(MailService.A_COLOR, color));
+    }
+
+    @Override
+    public ZFolderActionResult setFolderExcludeFreeBusy(String ids, boolean state) throws ServiceException {
+        return doFolderAction(initFolderAction("fb", ids).addAttribute(MailService.A_EXCLUDE_FREEBUSY, state));
+    }
+
+    @Override
+    public ZFolderActionResult setFolderURL(String id, String url) throws ServiceException {
+        return doFolderAction(initFolderAction("url", id).addAttribute(MailService.A_URL, url));
+    }
+
+    @Override
+    public ZFolderActionResult syncFolder(String ids) throws ServiceException {
+        return doFolderAction(initFolderAction("sync", ids));
     }
 
 }
