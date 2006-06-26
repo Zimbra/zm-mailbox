@@ -1625,10 +1625,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="364" name="zimbraAvailableSkin" type="string" max="80" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited">
-  <defaultCOSValue>bare</defaultCOSValue>
-  <defaultCOSValue>sand</defaultCOSValue>
-  <defaultCOSValue>sky</defaultCOSValue>
-  <defaultCOSValue>steel</defaultCOSValue>
   <desc>Skins available for this account</desc>
 </attr>
 
@@ -1648,6 +1644,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="368" name="zimbraInstalledSkin" type="string" max="80" cardinality="multi" optionalIn="globalConfig">
   <globalConfigValue>bare</globalConfigValue>
+  <globalConfigValue>froggy</globalConfigValue>
+  <globalConfigValue>harvest</globalConfigValue>
+  <globalConfigValue>rose</globalConfigValue>
   <globalConfigValue>sand</globalConfigValue>
   <globalConfigValue>sky</globalConfigValue>
   <globalConfigValue>steel</globalConfigValue>
