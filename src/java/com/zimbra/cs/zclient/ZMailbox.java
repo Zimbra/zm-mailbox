@@ -122,6 +122,7 @@ public abstract class ZMailbox {
      * 
      * @param parent parent folder
      * @param name name of new folder
+     * @param query search query (required)
      * @param types comma-sep list of types to search for. See {@link SearchParams} for more info. Use null for default value.
      * @parm sortBy how to sort the result. See {@link SearchParams} for more info. Use null for default value.
      * @see {@link ZSearchParams#SORT_BY_DATE_ASC}
@@ -130,6 +131,18 @@ public abstract class ZMailbox {
      * @throws ServiceException
      */
     public abstract ZSearchFolder createSearchFolder(ZFolder parent, String name, String query, String types, String sortBy) throws ServiceException;
+
+    /**
+     * modify a search folder.
+     * 
+     * @param id id of search folder
+     * @param query search query or null to leave unchanged.
+     * @param types new types or null to leave unchanged.
+     * @parm sortBy new sortBy or null to leave unchanged
+     * @return modified search folder
+     * @throws ServiceException
+     */
+    public abstract ZSearchFolder modifySearchFolder(String id, String query, String types, String sortBy) throws ServiceException;
  
     public static class ZActionResult {
         private String mIds;
@@ -196,4 +209,12 @@ public abstract class ZMailbox {
      * @throws ServiceException
      */
     public abstract ZSearchResult search(ZSearchParams params) throws ServiceException;
+    
+    /**
+     * A request that does nothing and always returns nothing. Used to keep a session alive, and return
+     * any pending notifications.
+     *
+     * @throws ServiceException
+     */
+    public abstract void noOp() throws ServiceException;    
 }

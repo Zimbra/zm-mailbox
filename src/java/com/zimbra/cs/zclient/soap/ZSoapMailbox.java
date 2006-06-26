@@ -143,8 +143,11 @@ public class ZSoapMailbox extends ZMailbox {
                         mNameToTag.put(tag.getName(), tag);
                     }
                 }
+            } else if (e.getName().equals(MailService.E_SEARCH) || e.getName().equals(MailService.E_FOLDER)) {
+                ZSoapFolder f = (ZSoapFolder) getFolderById(e.getAttribute(MailService.A_ID));
+                if (f != null)
+                    f.modifyNotification(e);
             }
-                
         }
     }
 
@@ -294,6 +297,11 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
+    public void noOp() throws ServiceException {
+        invoke(new XMLElement(MailService.NO_OP_REQUEST));
+    }
+
+    @Override
     public ZFolder createFolder(ZFolder parent, String name, String defaultView) throws ServiceException {
         XMLElement req = new XMLElement(MailService.CREATE_FOLDER_REQUEST);
         Element folderEl = req.addElement(MailService.E_FOLDER);
@@ -319,6 +327,19 @@ public class ZSoapMailbox extends ZMailbox {
         return getSearchFolderById(id);
     }
 
+    @Override
+    public ZSearchFolder modifySearchFolder(String id, String query, String types, String sortBy) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.MODIFY_SEARCH_FOLDER_REQUEST);
+        Element folderEl = req.addElement(MailService.E_SEARCH);
+        folderEl.addAttribute(MailService.A_ID, id);
+        if (query != null) folderEl.addAttribute(MailService.A_QUERY, query);
+        if (types != null) folderEl.addAttribute(MailService.A_SEARCH_TYPES, types);
+        if (sortBy != null) folderEl.addAttribute(MailService.A_SORTBY, sortBy);
+        invoke(req);
+        // this assumes notifications will modify the search folder
+        return getSearchFolderById(id);
+    }
+    
     @Override
     public ZTag createTag(String name, int color) throws ServiceException {
         XMLElement req = new XMLElement(MailService.CREATE_TAG_REQUEST);
@@ -357,7 +378,6 @@ public class ZSoapMailbox extends ZMailbox {
         System.out.println(mbox.getSize());
         System.out.println(mbox.getAllTags());
         System.out.println(mbox.getUserRoot());
-        System.exit(0);
         //ZSearchParams sp = new ZSearchParams("StringBuffer");
         ZSearchParams sp = new ZSearchParams("in:inbox");        
         sp.setLimit(20);
@@ -387,7 +407,12 @@ public class ZSoapMailbox extends ZMailbox {
         System.out.println(mbox.getAllTags());        
         ZSearchFolder flagged = mbox.createSearchFolder(mbox.getUserRoot(), "is-it-flagged", "is:flagged", null, null);
         System.out.println(flagged);
+        System.out.println(mbox.renameFolder(flagged.getId(), "flagged-and-unread"));        
+        System.out.println(mbox.setFolderColor(flagged.getId(), 6));
+        System.out.println(mbox.modifySearchFolder(flagged.getId(), "is:flagged is:unread", null, ZSearchParams.SORT_BY_DATE_DESC));
+        
         mbox.deleteFolder(flagged.getId());
+        mbox.noOp();
     }
 
     Element initFolderAction(String op, String ids) throws ServiceException {
@@ -518,9 +543,9 @@ public class ZSoapMailbox extends ZMailbox {
  *<CreateTagRequest>
  *<TagActionRequest>
 
- <GetSearchFolderRequest>
+ *<GetSearchFolderRequest> (NOT NEEDED?)
  *<CreateSearchFolderRequest>
- <ModifySearchFolderRequest>
+ *<ModifySearchFolderRequest>
 
  <CreateMountpointRequest>
 

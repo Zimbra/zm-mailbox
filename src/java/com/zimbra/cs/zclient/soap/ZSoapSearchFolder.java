@@ -39,12 +39,19 @@ class ZSoapSearchFolder extends ZSoapFolder implements ZSearchFolder, ZSoapItem 
     ZSoapSearchFolder(Element e, ZSoapFolder parent, ZSoapMailbox mailbox) throws ServiceException {
         super(e, parent, mailbox);
         mQuery = e.getAttribute(MailService.A_QUERY);
-        mTypes = e.getAttribute(MailService.A_SEARCH_TYPES, null); // TODO FIX
-        mSortBy = e.getAttribute(MailService.A_SORTBY, null); // TODO FIX
+        mTypes = e.getAttribute(MailService.A_SEARCH_TYPES, null); // TODO FIX?
+        mSortBy = e.getAttribute(MailService.A_SORTBY, null); // TODO FIX?
+    }
+
+    void modifyNotification(Element e) throws ServiceException {
+        mQuery = e.getAttribute(MailService.A_QUERY, mQuery);
+        mTypes = e.getAttribute(MailService.A_SEARCH_TYPES, mTypes);
+        mSortBy = e.getAttribute(MailService.A_SORTBY, mSortBy);
+        super.modifyNotification(e);
     }
 
     public String toString() {
-        return toString(String.format(",query: %s, types: %s, sortBy: %s", 
+        return toString("search", String.format(",query: %s, types: %s, sortBy: %s", 
                 mQuery, mTypes, mSortBy));
     }
 

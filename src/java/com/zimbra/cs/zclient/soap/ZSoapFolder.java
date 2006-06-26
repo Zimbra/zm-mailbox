@@ -96,6 +96,20 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         if (parent != null) parent.addChild(this);
     }
 
+    void modifyNotification(Element e) throws ServiceException {
+        mName = e.getAttribute(MailService.A_NAME, mName);
+        mParentId = e.getAttribute(MailService.A_FOLDER, mParentId); // TODO: re-compute mParent!
+        mFlags = e.getAttribute(MailService.A_FLAGS, mFlags);
+        mColor = (int) e.getAttributeLong(MailService.A_COLOR, mColor);
+        mUnreadCount = (int) e.getAttributeLong(MailService.A_UNREAD, mUnreadCount);
+        mMessageCount = (int) e.getAttributeLong(MailService.A_NUM, mMessageCount);
+        mDefaultView = e.getAttribute(MailService.A_DEFAULT_VIEW, mDefaultView);
+        mRestURL = e.getAttribute(MailService.A_REST_URL, mRestURL);
+        mRemoteURL = e.getAttribute(MailService.A_URL, mRemoteURL);
+        mEffectivePerms = e.getAttribute(MailService.A_RIGHTS, mEffectivePerms);
+        // TODO: ACLs, sub/search/link?
+    }
+
     void addChild(ZFolder folder)        { mSubFolders.add(folder); }
     void addChild(ZLink link)            { mLinks.add(link); }
     
@@ -127,10 +141,10 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
     }
     
     public String toString() {
-        return toString(null);
+        return toString("folder", null);
     }
     
-    protected String toString(String extra) {
+    protected String toString(String type, String extra) {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
         for (ZFolder child : mSubFolders) {
@@ -141,8 +155,9 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         }                
         sb.append("}");
         
-        return String.format("folder: { id: %s, name: %s, parentId: %s, flags: %s, color: %d, unreadCount: %d, " +
-                "messageCount: %d, view: %s, restURL: %s, url: %s, perms: %s, grants: %s, children: %s, path: %s%s} ", 
+        return String.format("%s: { id: %s, name: %s, parentId: %s, flags: %s, color: %d, unreadCount: %d, " +
+                "messageCount: %d, view: %s, restURL: %s, url: %s, perms: %s, grants: %s, children: %s, path: %s%s} ",
+                type,
                 mId, mName, mParentId, mFlags, mColor, mUnreadCount, mMessageCount, mDefaultView, 
                 mRestURL, mRemoteURL, mEffectivePerms, mGrants.toString(), sb.toString(), getPath(), 
                 extra != null ? extra : ""); 
