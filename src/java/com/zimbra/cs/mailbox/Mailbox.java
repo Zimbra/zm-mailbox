@@ -4596,7 +4596,7 @@ public class Mailbox {
                 	if (getFolder)
                 		return lastFolder;
                 	for (Document doc : getWikiList(octxt, lastFolder.getId()))
-                		if (doc.getFilename().equals(lastToken))
+                		if (doc.getFilename().equalsIgnoreCase(lastToken))
                 			return doc;
                 }
             }
