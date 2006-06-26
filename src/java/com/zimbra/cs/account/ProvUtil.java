@@ -1124,22 +1124,22 @@ public class ProvUtil implements DebugListener {
     		else { usage(); return; }
     	}
     	
-    	WikiUtil wu = new WikiUtil(username, password);
+    	WikiUtil wu = WikiUtil.getInstance(null, username, password);
     	if (verbose)
     		wu.setVerbose();
     	
     	if (initialize) {
     		// don't create mailboxes.  use soap instead.
     		if (domain == null) {
-    			wu.initDefaultWiki(true);
+    			wu.initDefaultWiki();
     		} else {
-    			wu.initDomainWiki(domain, true);
+    			wu.initDomainWiki(domain);
     		}
     	}
     	
     	if (fromDir != null) {
     		try {
-    			wu.startImportSoap(toFolder, new java.io.File(fromDir));
+    			wu.startImport(toFolder, new java.io.File(fromDir));
     		} catch (Exception e) {
     			System.err.println("Cannot import templates from " + fromDir);
     			e.printStackTrace();

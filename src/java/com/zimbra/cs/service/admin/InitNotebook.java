@@ -93,7 +93,7 @@ public class InitNotebook extends AdminDocumentHandler {
         	}
 
         	// initialize domain wiki
-        	wiki = new WikiUtil(username, password);
+        	wiki = WikiUtil.getInstance(username, password);
         	wiki.initDomainWiki(domain);
         	
         } else {
@@ -114,7 +114,7 @@ public class InitNotebook extends AdminDocumentHandler {
         	}
         	
         	// initialize global wiki
-        	wiki = new WikiUtil(username, password);
+        	wiki = WikiUtil.getInstance(username, password);
         	wiki.initDefaultWiki();
         	
         }
