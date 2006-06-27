@@ -119,11 +119,10 @@ public class ZSoapMailbox extends ZMailbox {
         Element refresh = context.getOptionalElement(ZimbraNamespace.E_REFRESH);
         if (refresh != null) refreshHandler(refresh);
         for (Element notify : context.listElements(ZimbraNamespace.E_NOTIFY)) {
-            // TODO: save max seq number!
             mTransport.setMaxNoitfySeq(
                     Math.max(mTransport.getMaxNotifySeq(),
                              notify.getAttributeLong(ZimbraSoapContext.A_SEQNO, 0)));
-            // MUST DO IN THIS ORDER
+            // MUST DO IN THIS ORDER?
             handleDeleted(notify.getOptionalElement(ZimbraNamespace.E_DELETED));
             handleCreated(notify.getOptionalElement(ZimbraNamespace.E_CREATED));
             handleModified(notify.getOptionalElement(ZimbraNamespace.E_MODIFIED));
@@ -615,6 +614,49 @@ public class ZSoapMailbox extends ZMailbox {
         return doAction(actionEl);        
     }
 
+    private Element itemAction(String op, String id, String constraints) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.ITEM_ACTION_REQUEST);
+        Element actionEl = req.addElement(MailService.E_ACTION);
+        actionEl.addAttribute(MailService.A_ID, id);
+        actionEl.addAttribute(MailService.A_OPERATION, op);
+        if (constraints != null) actionEl.addAttribute(MailService.A_TARGET_CONSTRAINT, constraints);
+        return actionEl;
+    }
+
+    @Override
+    public ZActionResult deleteItem(String ids, String targetConstraints) throws ServiceException {
+        return doAction(itemAction("delete", ids, targetConstraints));        
+    }
+
+    @Override
+    public ZActionResult flagItem(String ids, boolean flag, String targetConstraints) throws ServiceException {
+        return doAction(itemAction(flag ? "flag" : "!flag", ids, targetConstraints));
+    }
+
+    @Override
+    public ZActionResult markItemRead(String ids, boolean read, String targetConstraints) throws ServiceException {
+        return doAction(itemAction(read ? "read" : "!read", ids, targetConstraints));
+    }
+
+    @Override
+    public ZActionResult moveItem(String ids, String destFolderId, String targetConstraints) throws ServiceException {
+        return doAction(itemAction("move", ids, targetConstraints).addAttribute(MailService.A_FOLDER, destFolderId));
+    }
+
+    @Override
+    public ZActionResult tagItem(String ids, String tagId, boolean tag, String targetConstraints) throws ServiceException {
+        return doAction(itemAction(tag ? "tag" : "!tag", ids, targetConstraints).addAttribute(MailService.A_TAG, tagId));
+    }
+
+    @Override
+    public ZActionResult updateItem(String ids, String destFolderId, String tagList, String flags, String targetConstraints) throws ServiceException {
+        Element actionEl = itemAction("update", ids, targetConstraints);
+        if (destFolderId != null) actionEl.addAttribute(MailService.A_FOLDER, destFolderId);
+        if (tagList != null) actionEl.addAttribute(MailService.A_TAGS, tagList);
+        if (flags != null) actionEl.addAttribute(MailService.A_FLAGS, flags);
+        return doAction(actionEl);
+    }
+
     /*
  
  <AuthRequest xmlns="urn:zimbraAccount">
@@ -637,7 +679,7 @@ public class ZSoapMailbox extends ZMailbox {
 
  *<CreateFolderRequest>
 
- <ItemActionRequest>
+ *<ItemActionRequest>
  *<MsgActionRequest>
  *<ConvActionRequest>
 

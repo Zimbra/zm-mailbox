@@ -141,7 +141,7 @@ public abstract class ZMailbox {
 
 
     /**
-     * tag/untag conversations
+     * move conversations
      * 
      * @param ids list of conversation ids to act on
      * @param destFolderId id of destination folder
@@ -167,6 +167,85 @@ public abstract class ZMailbox {
      */
     public abstract ZActionResult markConversationSpam(String id, boolean spam, String destFolderId, String targetConstraints) throws ServiceException;
 
+    /**
+     * hard delete item(s).
+     * 
+     * @param ids list of item ids to act on
+     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     *         affected items. A leading '-' means to negate the constraint(s). Use null for
+     *         no constraints.  
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult deleteItem(String ids, String targetConstraints) throws ServiceException;
+
+    /**
+     * mark item as read/unread
+     * 
+     * @param ids list of ids to act on
+     * @param read mark read (TRUE) or unread (FALSE)
+     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     *         affected items. A leading '-' means to negate the constraint(s). Use null for
+     *         no constraints.  
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult markItemRead(String ids, boolean read, String targetConstraints) throws ServiceException;
+
+    /**
+     * flag/unflag items
+     * 
+     * @param ids list of ids to act on
+     * @param flag flag (TRUE) or unflag (FALSE)
+     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     *         affected items. A leading '-' means to negate the constraint(s). Use null for
+     *         no constraints.  
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult flagItem(String ids, boolean flag, String targetConstraints) throws ServiceException;
+
+    /**
+     * tag/untag items
+     * 
+     * @param ids list of ids to act on
+     * @param tagId id of tag to tag/untag with
+     * @param tag tag (TRUE) or untag (FALSE)
+     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     *         affected items. A leading '-' means to negate the constraint(s). Use null for
+     *         no constraints.  
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult tagItem(String ids, String tagId, boolean tag, String targetConstraints) throws ServiceException;
+
+    /**
+     * move conversations
+     * 
+     * @param ids list of item ids to act on
+     * @param destFolderId id of destination folder
+     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     *         affected items A leading '-' means to negate the constraint(s). Use null for
+     *         no constraints.  
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult moveItem(String ids, String destFolderId, String targetConstraints) throws ServiceException;
+
+    /**
+     * update message(s)
+     * @param ids
+     * @param destFolderId optional destination folder
+     * @param tagList optional new list of tag ids
+     * @param flags optional new value for flags
+     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     *         affected items A leading '-' means to negate the constraint(s). Use null for
+     *         no constraints.  
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult updateItem(String ids, String destFolderId, String tagList, String flags, String targetConstraints) throws ServiceException;        
+    
     /** hard delete message(s) */
     public abstract ZActionResult deleteMessage(String ids) throws ServiceException;
 
