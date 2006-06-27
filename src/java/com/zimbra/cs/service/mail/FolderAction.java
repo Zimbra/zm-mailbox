@@ -196,8 +196,8 @@ public class FolderAction extends ItemAction {
             String flags = action.getAttribute(MailService.A_FLAGS, null);
             String tags  = action.getAttribute(MailService.A_TAGS, null);
             byte color = (byte) action.getAttributeLong(MailService.A_COLOR, -1);
-            Element eAcl = action.getElement(MailService.E_ACL);
             ACL acl = null;
+            Element eAcl = action.getOptionalElement(MailService.E_ACL);
             if (eAcl != null) {
                 acl = new ACL();
                 for (Element grant : eAcl.listElements(MailService.E_GRANT)) {
