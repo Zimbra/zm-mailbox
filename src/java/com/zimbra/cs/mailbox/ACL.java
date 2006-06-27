@@ -101,7 +101,7 @@ public class ACL {
         public void setCachedData(Object key, Object value)  { return; }
         public Object getCachedData(Object key)   { return null; }
         public Locale getLocale()                 { return null; }
-        public String getName()                   { return null; }
+        public String getName()                   { return "public"; }
         public String getDomainName()             { return null; }
         public String getAccountStatus()          { return null; }
         public Map<String, Object> getAttrs(boolean applyCos) { return null; }
