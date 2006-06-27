@@ -4570,10 +4570,11 @@ public class Mailbox {
      */
     public MailItem getItemByPath(OperationContext octxt, String path, int fid, boolean getFolder) throws ServiceException {
         boolean success = true;
+        MailItem ret = null;
+        if (path == null)
+            throw MailServiceException.INVALID_NAME(path);
         try {
             beginTransaction("getItemByPath", octxt);
-            if (path == null)
-                throw MailServiceException.NO_SUCH_FOLDER(path);
             if (path.startsWith("/")) {
                 path = path.substring(1);
                 fid = ID_FOLDER_USER_ROOT;
@@ -4583,29 +4584,38 @@ public class Mailbox {
                 StringTokenizer tok = new StringTokenizer(path, "/");
                 String lastToken = null;
                 Folder lastFolder = null;
+                
+                // tokenize the path, traverse the folders until
+                // we can't find the subfolder, or run out of tokens.
                 while (folder != null && tok.hasMoreTokens()) {
                 	lastToken = tok.nextToken();
                 	lastFolder = folder;
                 	folder = lastFolder.findSubfolder(lastToken);
                 }
-                if (folder == null && 
-                		lastFolder != null && 
-                		lastFolder.canAccess(ACL.RIGHT_READ) && 
-                		lastToken != null && 
-                		!tok.hasMoreTokens()) {
+                
+                if (folder != null) {
+                	ret = folder;
+                } else if (lastFolder != null && 
+                			lastToken != null && 
+                			!tok.hasMoreTokens()) {
+                	// we used up all the tokens.  must have matched all but
+                	// one folders in the path.  search the last folder
+                	// for a document or wikiitem matching the last token.
                 	if (getFolder)
-                		return lastFolder;
-                	for (Document doc : getWikiList(octxt, lastFolder.getId()))
-                		if (doc.getFilename().equalsIgnoreCase(lastToken))
-                			return doc;
+                		ret = lastFolder;
+                	else {
+                		for (Document doc : getWikiList(octxt, lastFolder.getId()))
+                			if (doc.getFilename().equalsIgnoreCase(lastToken)) {
+                				ret = doc;
+                				break;
+                			}
+                	}
                 }
             }
-            if (folder == null)
-                throw MailServiceException.NO_SUCH_FOLDER("/" + path);
-            if (!folder.canAccess(ACL.RIGHT_READ))
-                throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder /" + path);
-            success = true;
-            return folder;
+            if (ret == null)
+            	throw MailServiceException.NO_SUCH_ITEM(path);
+            success = (checkAccess(ret) != null);
+            return ret;
         } finally {
             endTransaction(success);
         }

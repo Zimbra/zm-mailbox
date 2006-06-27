@@ -138,6 +138,10 @@ public class MailServiceException extends ServiceException {
         return new NoSuchItemException("no such item: "+ id, NO_SUCH_ITEM, SENDERS_FAULT, new Argument(ITEM_ID, id));
     }
 
+    public static MailServiceException NO_SUCH_ITEM(String name) {
+        return new NoSuchItemException("no such item: "+ name, NO_SUCH_ITEM, SENDERS_FAULT, new Argument(NAME, name));
+    }
+
     public static MailServiceException NO_SUCH_CONV(int id) {
         return new NoSuchItemException("no such conversation: "+ id, NO_SUCH_CONV, SENDERS_FAULT, new Argument(ITEM_ID, id));
     }
