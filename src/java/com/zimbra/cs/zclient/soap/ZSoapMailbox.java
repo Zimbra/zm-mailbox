@@ -260,8 +260,19 @@ public class ZSoapMailbox extends ZMailbox {
 
     @Override
     public ZSearchResult search(ZSearchParams params) throws ServiceException {
-        XMLElement req = new XMLElement(MailService.SEARCH_REQUEST);
+        return internalSearch(null, params);
+    }
 
+    @Override
+    public ZSearchResult searchConversation(String convId, ZSearchParams params) throws ServiceException {
+        if (convId == null) throw SoapFaultException.CLIENT_ERROR("conversation id must not be null", null);
+        return internalSearch(convId, params);
+    }
+    
+    private ZSearchResult internalSearch(String convId, ZSearchParams params) throws ServiceException {
+        XMLElement req = new XMLElement(convId == null ? MailService.SEARCH_REQUEST : MailService.SEARCH_CONV_REQUEST);
+
+        req.addAttribute(MailService.A_CONV_ID, convId);
         if (params.getLimit() != 0) req.addAttribute(MailService.A_QUERY_LIMIT, params.getLimit());
         if (params.getOffset() != 0) req.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
         if (params.getSortBy() != null) req.addAttribute(MailService.A_SORTBY, params.getSortBy());
@@ -381,8 +392,10 @@ public class ZSoapMailbox extends ZMailbox {
         //ZSearchParams sp = new ZSearchParams("StringBuffer");
         ZSearchParams sp = new ZSearchParams("in:inbox");        
         sp.setLimit(20);
-        sp.setTypes(ZSearchParams.TYPE_MESSAGE);
+        sp.setTypes(ZSearchParams.TYPE_CONVERSATION);
         System.out.println(mbox.search(sp));
+        System.out.println(mbox.searchConversation("346", sp));
+        
         ZFolder inbox = mbox.getFolderByPath("/inBOX");
         System.out.println(inbox);
         System.out.println(mbox.getFolderById(inbox.getId()));
@@ -412,10 +425,11 @@ public class ZSoapMailbox extends ZMailbox {
         System.out.println(mbox.modifySearchFolder(flagged.getId(), "is:flagged is:unread", null, ZSearchParams.SORT_BY_DATE_DESC));
         
         mbox.deleteFolder(flagged.getId());
-        mbox.noOp();
+        mbox.noOp();        
+        System.out.println(mbox.flagConversation("346", false, null));
     }
 
-    Element initFolderAction(String op, String ids) throws ServiceException {
+    private Element folderAction(String op, String ids) throws ServiceException {
         XMLElement req = new XMLElement(MailService.FOLDER_ACTION_REQUEST);
         Element actionEl = req.addElement(MailService.E_ACTION);
         actionEl.addAttribute(MailService.A_ID, ids);
@@ -423,67 +437,67 @@ public class ZSoapMailbox extends ZMailbox {
         return actionEl;
     }
     
-    ZActionResult doAction(Element actionEl) throws ServiceException {
+    private ZActionResult doAction(Element actionEl) throws ServiceException {
         Element response = invoke(actionEl.getParent());
         return new ZActionResult(response.getElement(MailService.E_ACTION).getAttribute(MailService.A_ID));
     }
 
     @Override
     public ZActionResult deleteFolder(String ids) throws ServiceException {
-        return doAction(initFolderAction("delete", ids));
+        return doAction(folderAction("delete", ids));
     }
 
     @Override
     public ZActionResult emptyFolder(String ids) throws ServiceException {
-        return doAction(initFolderAction("empty", ids));        
+        return doAction(folderAction("empty", ids));        
     }
 
     @Override
     public ZActionResult importURLIntoFolder(String id, String url) throws ServiceException {
-        return doAction(initFolderAction("import", id).addAttribute(MailService.A_URL, url));
+        return doAction(folderAction("import", id).addAttribute(MailService.A_URL, url));
     }
 
     @Override
     public ZActionResult markFolderAsRead(String ids) throws ServiceException {
-        return doAction(initFolderAction("read", ids));                
+        return doAction(folderAction("read", ids));                
     }
 
     @Override
     public ZActionResult moveFolder(String id, String targetFolderId) throws ServiceException {
-        return doAction(initFolderAction("move", id).addAttribute(MailService.A_FOLDER, targetFolderId));
+        return doAction(folderAction("move", id).addAttribute(MailService.A_FOLDER, targetFolderId));
     }
 
     @Override
     public ZActionResult renameFolder(String id, String name) throws ServiceException {
-        return doAction(initFolderAction("rename", id).addAttribute(MailService.A_NAME, name));
+        return doAction(folderAction("rename", id).addAttribute(MailService.A_NAME, name));
     }
 
     @Override
     public ZActionResult setFolderChecked(String ids, boolean checked) throws ServiceException {
-        return doAction(initFolderAction(checked ? "check" : "!check", ids));
+        return doAction(folderAction(checked ? "check" : "!check", ids));
     }
 
     @Override
     public ZActionResult setFolderColor(String ids, int color) throws ServiceException {
-        return doAction(initFolderAction("color", ids).addAttribute(MailService.A_COLOR, color));
+        return doAction(folderAction("color", ids).addAttribute(MailService.A_COLOR, color));
     }
 
     @Override
     public ZActionResult setFolderExcludeFreeBusy(String ids, boolean state) throws ServiceException {
-        return doAction(initFolderAction("fb", ids).addAttribute(MailService.A_EXCLUDE_FREEBUSY, state));
+        return doAction(folderAction("fb", ids).addAttribute(MailService.A_EXCLUDE_FREEBUSY, state));
     }
 
     @Override
     public ZActionResult setFolderURL(String id, String url) throws ServiceException {
-        return doAction(initFolderAction("url", id).addAttribute(MailService.A_URL, url));
+        return doAction(folderAction("url", id).addAttribute(MailService.A_URL, url));
     }
 
     @Override
     public ZActionResult syncFolder(String ids) throws ServiceException {
-        return doAction(initFolderAction("sync", ids));
+        return doAction(folderAction("sync", ids));
     }
 
-    Element initTagAction(String op, String id) throws ServiceException {
+    private Element tagAction(String op, String id) throws ServiceException {
         XMLElement req = new XMLElement(MailService.TAG_ACTION_REQUEST);
         Element actionEl = req.addElement(MailService.E_ACTION);
         actionEl.addAttribute(MailService.A_ID, id);
@@ -493,22 +507,112 @@ public class ZSoapMailbox extends ZMailbox {
 
     @Override
     public ZActionResult deleteTag(String id) throws ServiceException {
-        return doAction(initTagAction("delete", id));
+        return doAction(tagAction("delete", id));
     }
 
     @Override
     public ZActionResult markTagAsRead(String id) throws ServiceException {
-        return doAction(initTagAction("read", id));
+        return doAction(tagAction("read", id));
     }
 
     @Override
     public ZActionResult renameTag(String id, String name) throws ServiceException {
-        return doAction(initTagAction("rename", id).addAttribute(MailService.A_NAME, name));
+        return doAction(tagAction("rename", id).addAttribute(MailService.A_NAME, name));
     }
 
     @Override
     public ZActionResult setTagColor(String id, int color) throws ServiceException {
-        return doAction(initTagAction("color", id).addAttribute(MailService.A_COLOR, color));        
+        return doAction(tagAction("color", id).addAttribute(MailService.A_COLOR, color));        
+    }
+
+    private Element convAction(String op, String id, String constraints) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.CONV_ACTION_REQUEST);
+        Element actionEl = req.addElement(MailService.E_ACTION);
+        actionEl.addAttribute(MailService.A_ID, id);
+        actionEl.addAttribute(MailService.A_OPERATION, op);
+        if (constraints != null) actionEl.addAttribute(MailService.A_TARGET_CONSTRAINT, constraints);
+        return actionEl;
+    }
+
+    @Override
+    public ZActionResult deleteConversation(String ids, String targetConstraints) throws ServiceException {
+        return doAction(convAction("delete", ids, targetConstraints));
+    }
+
+    @Override
+    public ZActionResult flagConversation(String ids, boolean flag, String targetConstraints) throws ServiceException {
+        return doAction(convAction(flag ? "flag" : "!flag", ids, targetConstraints));
+    }
+
+    @Override
+    public ZActionResult markConversationRead(String ids, boolean read, String targetConstraints) throws ServiceException {
+        return doAction(convAction(read ? "read" : "!read", ids, targetConstraints));
+    }
+
+    @Override
+    public ZActionResult markConversationSpam(String id, boolean spam, String destFolderId, String targetConstraints) throws ServiceException {
+        Element actionEl = convAction(spam ? "spam" : "!spam", id, targetConstraints);
+        if (destFolderId != null) actionEl.addAttribute(MailService.A_FOLDER, destFolderId);
+        return doAction(actionEl);
+    }
+
+    @Override
+    public ZActionResult moveConversation(String ids, String destFolderId, String targetConstraints) throws ServiceException {
+        return doAction(convAction("move", ids, targetConstraints).addAttribute(MailService.A_FOLDER, destFolderId));
+    }
+
+    @Override
+    public ZActionResult tagConversation(String ids, String tagId, boolean tag, String targetConstraints) throws ServiceException {
+        return doAction(convAction(tag ? "tag" : "!tag", ids, targetConstraints).addAttribute(MailService.A_TAG, tagId));        
+    }
+
+    private Element messageAction(String op, String id) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.MSG_ACTION_REQUEST);
+        Element actionEl = req.addElement(MailService.E_ACTION);
+        actionEl.addAttribute(MailService.A_ID, id);
+        actionEl.addAttribute(MailService.A_OPERATION, op);
+        return actionEl;
+    }
+
+    @Override
+    public ZActionResult deleteMessage(String ids) throws ServiceException {
+        return doAction(messageAction("delete", ids));
+    }
+
+    @Override
+    public ZActionResult flagMessage(String ids, boolean flag) throws ServiceException {
+        return doAction(messageAction(flag ? "flag" : "!flag", ids));
+    }
+
+    @Override
+    public ZActionResult markMessageRead(String ids, boolean read) throws ServiceException {
+        return doAction(messageAction(read ? "read" : "!read", ids));
+    }
+
+    @Override
+    public ZActionResult markMessageSpam(String id, boolean spam, String destFolderId) throws ServiceException {
+        Element actionEl = messageAction(spam ? "spam" : "!spam", id);
+        if (destFolderId != null) actionEl.addAttribute(MailService.A_FOLDER, destFolderId);
+        return doAction(actionEl);
+    }
+
+    @Override
+    public ZActionResult moveMessage(String ids, String destFolderId) throws ServiceException {
+        return doAction(messageAction("move", ids).addAttribute(MailService.A_FOLDER, destFolderId));
+    }
+
+    @Override
+    public ZActionResult tagMessage(String ids, String tagId, boolean tag) throws ServiceException {
+        return doAction(messageAction(tag ? "tag" : "!tag", ids).addAttribute(MailService.A_TAG, tagId));
+    }
+
+    @Override
+    public ZActionResult updateMessage(String ids, String destFolderId, String tagList, String flags) throws ServiceException {
+        Element actionEl = messageAction("update", ids);
+        if (destFolderId != null) actionEl.addAttribute(MailService.A_FOLDER, destFolderId);
+        if (tagList != null) actionEl.addAttribute(MailService.A_TAGS, tagList);
+        if (flags != null) actionEl.addAttribute(MailService.A_FLAGS, flags);
+        return doAction(actionEl);        
     }
 
     /*
@@ -524,8 +628,8 @@ public class ZSoapMailbox extends ZMailbox {
  <SyncGalRequest token="[{previous-token}]"/>
  <SearchCalendarResourcesRequest
  <ModifyPrefsRequest>
- <SearchRequest>  - TODO: partially done
- <SearchConvRequest>
+ *<SearchRequest>  - TODO: partially done
+ *<SearchConvRequest>
  <BrowseRequest browseBy="{browse-by}"/>
  <GetFolderRequest>
  <GetConvRequest>
@@ -534,12 +638,12 @@ public class ZSoapMailbox extends ZMailbox {
  *<CreateFolderRequest>
 
  <ItemActionRequest>
- <MsgActionRequest>
- <ConvActionRequest>
+ *<MsgActionRequest>
+ *<ConvActionRequest>
 
  *<FolderActionRequest>   - TODO: grant
 
- <GetTagRequest/>
+ *<GetTagRequest/> (NOT NEEDED?)
  *<CreateTagRequest>
  *<TagActionRequest>
 

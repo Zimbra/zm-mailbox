@@ -962,7 +962,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 
 <ItemActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|update" [tag="..."] [l="{folder}"] [tcon="[-]{constraint}"]/>
+  <action id="{list}" op="delete|read|flag|tag|move|update" [tag="..."] [l="{folder}"] [tcon="[-]{constraint}" [f="{flags}"] [t="{tag-list}"]/>
 </ItemActionRequest>
 
 <ItemActionResponse>
@@ -984,7 +984,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 
 <MsgActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|update|spam" [tag="..."] [l="{folder}"]/>
+  <action id="{list}" op="delete|read|flag|tag|move|update|spam" [tag="..."] [l="{folder}"] [f="{flags}"] [t="{tag-list}"]/>
 </MsgActionRequest>
 
 <MsgActionResponse>

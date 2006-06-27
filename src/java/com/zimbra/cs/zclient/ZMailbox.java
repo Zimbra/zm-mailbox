@@ -75,11 +75,136 @@ public abstract class ZMailbox {
     /** rename tag */
     public abstract ZActionResult renameTag(String id, String name) throws ServiceException;        
     
+    /** include items in the Trash folder */
+    public static final String TC_INCLUDE_TRASH = "t";
+    
+    /** include items in the Spam/Junk folder */
+    public static final String TC_INCLUDE_JUNK = "j";
+    
+    /** include items in the Sent folder */
+    public static final String TC_INCLUDE_SENT = "s";
+    
+    /** include items in any other folder */
+    public static final String TC_INCLUDE_OTHER = "o";
+
+    /**
+     * hard delete conversation(s).
+     * 
+     * @param ids list of conversation ids to act on
+     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
+     *         no constraints.  
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult deleteConversation(String ids, String targetConstraints) throws ServiceException;
+
+    /**
+     * mark conversation as read/unread
+     * 
+     * @param ids list of conversation ids to act on
+     * @param read mark read (TRUE) or unread (FALSE)
+     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
+     *         no constraints.  
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult markConversationRead(String ids, boolean read, String targetConstraints) throws ServiceException;
+
+    /**
+     * flag/unflag conversations
+     * 
+     * @param ids list of conversation ids to act on
+     * @param flag flag (TRUE) or unflag (FALSE)
+     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
+     *         no constraints.  
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult flagConversation(String ids, boolean flag, String targetConstraints) throws ServiceException;
+
+    /**
+     * tag/untag conversations
+     * 
+     * @param ids list of conversation ids to act on
+     * @param tagId id of tag to tag/untag with
+     * @param tag tag (TRUE) or untag (FALSE)
+     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
+     *         no constraints.  
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult tagConversation(String ids, String tagId, boolean tag, String targetConstraints) throws ServiceException;
+
+
+    /**
+     * tag/untag conversations
+     * 
+     * @param ids list of conversation ids to act on
+     * @param destFolderId id of destination folder
+     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
+     *         no constraints.  
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult moveConversation(String ids, String destFolderId, String targetConstraints) throws ServiceException;
+
+    /**
+     * spam/unspam a single conversation
+     * 
+     * @param id conversation id to act on
+     * @param spam spam (TRUE) or not spam (FALSE)
+     * @param destFolderId optional id of destination folder, only used with "not spam".
+     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
+     *         no constraints.  
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult markConversationSpam(String id, boolean spam, String destFolderId, String targetConstraints) throws ServiceException;
+
+    /** hard delete message(s) */
+    public abstract ZActionResult deleteMessage(String ids) throws ServiceException;
+
+    /** mark message(s) as read/unread */
+    public abstract ZActionResult markMessageRead(String ids, boolean read) throws ServiceException;
+    
+    /**
+     *  mark message as spam/not spam 
+     * @param spam spam (TRUE) or not spam (FALSE)
+     * @param destFolderId optional id of destination folder, only used with "not spam".
+     */
+    public abstract ZActionResult markMessageSpam(String id, boolean spam, String destFolderId) throws ServiceException;
+    
+    /** flag/unflag message(s) */
+    public abstract ZActionResult flagMessage(String ids, boolean flag) throws ServiceException;
+    
+    /** tag/untag message(s) */
+    public abstract ZActionResult tagMessage(String ids, String tagId, boolean tag) throws ServiceException;    
+    
+    /** move message(s) */
+    public abstract ZActionResult moveMessage(String ids, String destFolderId) throws ServiceException;        
+
+    /**
+     * update message(s)
+     * @param ids
+     * @param destFolderId optional destination folder
+     * @param tagList optional new list of tag ids
+     * @param flags optional new value for flags
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult updateMessage(String ids, String destFolderId, String tagList, String flags) throws ServiceException;        
+
     /**
      * return the root user folder
      */
     public abstract ZFolder getUserRoot();
-    
+
     /**
      * find the folder with the pecified path, starting from the user root.
      * @param path path of folder. Must start with {@link #PATH_SEPARATOR}.
@@ -209,6 +334,14 @@ public abstract class ZMailbox {
      * @throws ServiceException
      */
     public abstract ZSearchResult search(ZSearchParams params) throws ServiceException;
+    
+    /**
+     * 
+     * @param params
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZSearchResult searchConversation(String convId, ZSearchParams params) throws ServiceException;
     
     /**
      * A request that does nothing and always returns nothing. Used to keep a session alive, and return
