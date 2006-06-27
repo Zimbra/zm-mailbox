@@ -93,17 +93,15 @@ public class WikiFormatter extends Formatter {
     	return new WikiContext(context.opContext, context.cookieAuthHappened ? context.authTokenCookie : null);
     }
     private void handleWikiFolder(Context context, Folder folder) throws IOException, ServiceException {
-    	StringBuffer ret = new StringBuffer();
-    	
     	WikiTemplate template = getTemplate(context, folder, TOC);
     	
     	if (template == null) {
     		template = getDefaultTOC();
     	}
-    	ret.append(template.toString(createWikiContext(context), folder));
+    	String ret = template.getComposedPage(createWikiContext(context), folder, CHROME);
     	
     	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
-    	context.resp.getOutputStream().print(ret.toString());
+    	context.resp.getOutputStream().print(ret);
     }
     
 	@Override

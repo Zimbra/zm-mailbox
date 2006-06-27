@@ -120,7 +120,13 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		String templateVal = sCache.getPage(ctxt, chromeTemplate);
 		if (templateVal == null || chromeTemplate.isExpired(ctxt)) {
 			ZimbraLog.wiki.debug("reloading wiki template " + ctxt.item.getSubject());
-			templateVal = chromeTemplate.toString(ctxt);
+			if (ctxt.item instanceof WikiItem)
+				templateVal = chromeTemplate.toString(ctxt);
+			else {
+				String inner = toString(ctxt);
+				ctxt.content = inner;
+				templateVal = chromeTemplate.toString(ctxt);
+			}
 			sCache.addPage(ctxt, chromeTemplate, templateVal);
 		}
 		return templateVal;
@@ -588,10 +594,9 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 		private List<MailItem> getBreadcrumbs(Context ctxt) {
 			List<MailItem> list = new ArrayList<MailItem>();
-			list.add(ctxt.item);
 			try {
 				Folder f = getFolder(ctxt, ctxt.item);
-				while (f.getId() != 1) {
+				while (f.getId() != Mailbox.ID_FOLDER_USER_ROOT) {
 					list.add(0, f);
 					f = getFolder(ctxt, f);
 				}
@@ -862,6 +867,8 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 		public boolean isExpired(WikiTemplate template, Context ctxt) throws ServiceException, IOException {
 			if (ctxt.content == null) {
+				if (!(ctxt.item instanceof WikiItem))
+					return true;
 				WikiItem wiki = (WikiItem) ctxt.item;
 				WikiTemplate t = WikiTemplate.findTemplate(ctxt, wiki.getWikiWord());
 				if (t.getModifiedTime() > template.getModifiedTime())
@@ -873,6 +880,8 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public String apply(Context ctxt) throws ServiceException, IOException {
 			if (ctxt.content != null)
 				return ctxt.content;
+			if (!(ctxt.item instanceof WikiItem))
+				return "<!-- cotent wiklet on non-wiki item -->";
 			WikiItem wiki = (WikiItem) ctxt.item;
 			WikiTemplate template = WikiTemplate.findTemplate(ctxt, wiki.getWikiWord());
 			return template.toString(ctxt);
