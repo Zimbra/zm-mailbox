@@ -1,6 +1,8 @@
+/*
 * {
 	font-family:Verdana;
 }
+*/
 BODY {
 	margin:0px;
 }
