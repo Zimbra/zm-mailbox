@@ -438,7 +438,7 @@ public class Conversation extends MailItem {
      * @perms {@link ACL#RIGHT_WRITE} on all the messages */
     void alterTag(Tag tag, boolean add) throws ServiceException {
         if (tag == null)
-            throw MailServiceException.CANNOT_TAG();
+            throw ServiceException.FAILURE("missing tag argument", null);
         if ((add ? mData.size : 0) == mInheritedTagSet.count(tag))
             return;
         if (tag.getId() == Flag.ID_FLAG_UNREAD)

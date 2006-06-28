@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
@@ -70,7 +69,7 @@ public class TagAction extends ItemAction  {
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
 
         if (operation.equals(OP_TAG) || operation.equals(OP_FLAG) || operation.equals(OP_UNTAG) || operation.equals(OP_UNFLAG))
-            throw MailServiceException.CANNOT_TAG();
+            throw ServiceException.INVALID_REQUEST("cannot tag/flag a tag", null);
         if (operation.endsWith(OP_MOVE) || operation.endsWith(OP_UPDATE) || operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on tag: " + operation, null);
         String successes;

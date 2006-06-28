@@ -45,7 +45,6 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
@@ -100,7 +99,7 @@ public class FolderAction extends ItemAction {
         Element result = response.addUniqueElement(MailService.E_ACTION);
 
         if (operation.equals(OP_TAG) || operation.equals(OP_FLAG) || operation.equals(OP_UNTAG) || operation.equals(OP_UNFLAG))
-            throw MailServiceException.CANNOT_TAG();
+            throw ServiceException.INVALID_REQUEST("cannot tag/flag a folder", null);
         if (operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on folder: " + operation, null);
         String successes;
@@ -184,17 +183,12 @@ public class FolderAction extends ItemAction {
             if (nentry != null)
                 result.addAttribute(MailService.A_DISPLAY, nentry.getName());
         } else if (operation.equals(OP_UPDATE)) {
-            // Rename if new name is specified.
-            String newName = action.getAttribute(MailService.A_NAME, null);
-            if (newName != null)
-                mbox.renameFolder(octxt, iid.getId(), newName);
-
             // duplicating code from ItemAction.java for now...
+            String newName = action.getAttribute(MailService.A_NAME, null);
             ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, "-1"), lc);
             if (!iidFolder.belongsTo(mbox))
                 throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
             String flags = action.getAttribute(MailService.A_FLAGS, null);
-            String tags  = action.getAttribute(MailService.A_TAGS, null);
             byte color = (byte) action.getAttributeLong(MailService.A_COLOR, -1);
             ACL acl = null;
             Element eAcl = action.getOptionalElement(MailService.E_ACL);
@@ -210,16 +204,19 @@ public class FolderAction extends ItemAction {
                 }
             }
 
+            if (newName != null)
+                mbox.renameFolder(octxt, iid.getId(), newName);
             if (iidFolder.getId() > 0)
                 mbox.move(octxt, iid.getId(), MailItem.TYPE_FOLDER, iidFolder.getId(), null);
-            if (tags != null || flags != null)
-                mbox.setTags(octxt, iid.getId(), MailItem.TYPE_FOLDER, flags, tags, null);
+            if (flags != null)
+                mbox.setTags(octxt, iid.getId(), MailItem.TYPE_FOLDER, flags, null, null);
             if (color >= 0)
                 mbox.setColor(octxt, iid.getId(), MailItem.TYPE_FOLDER, color);
             if (acl != null)
                 mbox.setPermissions(octxt, iid.getId(), acl);
-        } else
+        } else {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
+        }
 
         return lc.formatItemId(iid);
     }

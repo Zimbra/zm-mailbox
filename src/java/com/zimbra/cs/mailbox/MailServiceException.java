@@ -246,8 +246,8 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("cannot combine objects from different mailboxes", WRONG_MAILBOX, SENDERS_FAULT);
     }
 
-    public static MailServiceException CANNOT_TAG() {
-        return new MailServiceException("cannot apply tag to object", CANNOT_TAG, SENDERS_FAULT);
+    public static MailServiceException CANNOT_TAG(Tag tag, MailItem item) {
+        return new MailServiceException("cannot apply tag \"" + tag.getName() + "\" to item " + item.getId(), CANNOT_TAG, SENDERS_FAULT);
     }
 
     public static MailServiceException CANNOT_SUBSCRIBE(int id) {

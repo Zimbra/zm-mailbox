@@ -1008,7 +1008,7 @@ public abstract class MailItem implements Comparable {
 	    if (unread == isUnread())
 	        return;
 	    if (!mMailbox.mUnreadFlag.canTag(this))
-	        throw MailServiceException.CANNOT_TAG();
+	        throw MailServiceException.CANNOT_TAG(mMailbox.mUnreadFlag, this);
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
 
@@ -1040,7 +1040,7 @@ public abstract class MailItem implements Comparable {
 	    if (tag == null)
 	        throw ServiceException.FAILURE("no tag supplied when trying to tag item " + mId, null);
 	    if (!isTaggable() || (add && !tag.canTag(this)))
-	        throw MailServiceException.CANNOT_TAG();
+	        throw MailServiceException.CANNOT_TAG(tag, this);
 	    if (tag.getId() == Flag.ID_FLAG_UNREAD)
 	        throw ServiceException.FAILURE("unread state must be set with alterUnread", null);
         if (!canAccess(ACL.RIGHT_WRITE))

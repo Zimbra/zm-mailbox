@@ -1022,7 +1022,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 ---------
 
 <FolderActionRequest>
-  <action id="{list}" op="read|delete|rename|move|empty|color|grant|url|import|sync|fb|[!]check" name="..." [l="{target-folder}"]
+  <action id="{list}" op="read|delete|rename|move|empty|color|grant|url|import|sync|fb|[!]check|update" name="..." [l="{target-folder}"]
                       [name="{new-name}"] [color="{new-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]
                       [excludeFreeBusy="{exclude-free-busy-boolean}">
     [<grant perm="..." gt="..." d="..." [inh="0|1"] [args="..."]/>]
@@ -1030,7 +1030,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 </FolderActionRequest>
 
 <FolderActionResponse>
-  <action id="{list}" op="read|delete|empty|rename|move|color|grant" [zid="{grantee-zimbra-id}"]/>
+  <action id="{list}" op="read|delete|empty|rename|move|color|grant|url|import|sync|fb|[!]check|update" [zid="{grantee-zimbra-id}"]/>
 </FolderActionResponse>
 
   Actions:
@@ -1049,6 +1049,12 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
     op="import" - add the contents to the remote feed at {target-url} to the folder [1-time action]
     op="fb" - set the excludeFreeBusy boolean for this folder (must specify {exclude-free-busy-boolean})
     op="check" (or "!check") - set or unset the "checked" state of the folder in the UI
+    op="update" - do several operations at once:
+          name="{new-name}"        to change the folder's name
+          l="{target-folder}"      to change the folder's location
+          color="{new-color}"      to set the folder's color
+          f="{new-flags}"          to change the folder's exclude free/(b)usy, checked (#), and IMAP subscribed (*) state
+          <acl><grant ...>*</acl>  to replace the folder's existing ACL with a new ACL
 
   {list} = on input, list of folders to act on, on output, list of
            folders that were acted on;

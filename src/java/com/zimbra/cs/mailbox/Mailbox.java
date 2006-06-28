@@ -1110,16 +1110,13 @@ public class Mailbox {
                     // server.
                     Account account = mailbox.getAccount();
                     if (!Provisioning.onLocalServer(account)) {
-                        throw MailServiceException.WRONG_HOST(
-                                account.getAttr(Provisioning.A_zimbraMailHost),
-                                null);
+                        throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
                     }
                 }
                 if (obj instanceof MailboxLock)
                     ((MailboxLock) obj).mailbox = mailbox;
                 else
                     sMailboxCache.put(mailboxId, mailbox);
-                // DbMailItem.writeCheckpoint(mailbox);
                 return mailbox;
             } finally {
                 if (conn != null)
@@ -3318,7 +3315,7 @@ public class Mailbox {
                 Tag tag = (tagId < 0 ? getFlagById(tagId) : getTagById(tagId));
                 // don't let the user tag things as "has attachments" or "draft"
                 if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
-                    throw MailServiceException.CANNOT_TAG();
+                    throw MailServiceException.CANNOT_TAG(tag, item);
                 item.alterTag(tag, addTag);
             }
             success = true;
@@ -3361,7 +3358,8 @@ public class Mailbox {
             boolean unread = (flags & Flag.FLAG_UNREAD) > 0;
             flags &= ~Flag.FLAG_UNREAD;
             item.setTags(flags, tags);
-            item.alterUnread(unread);
+            if (mUnreadFlag.canTag(item))
+                item.alterUnread(unread);
 
             success = true;
         } finally {
