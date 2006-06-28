@@ -881,9 +881,9 @@ GetConvRequest gets information about the 1 conversation named by id's value.
 It will return exactly 1 conversation element.
 
 <GetConvResponse>
-  <c id="{conv-id}" t="{tags}" n="{num-msgs}" d="{date}" f="{flags}" l="{folder}">
+  <c id="{conv-id}" [t="{tags}"] n="{num-msgs}" [f="{flags}"]>
     <su>{subject}</su>
-    <m id="{message-id}" f="{flags}" s="{size}" d="{date}">
+    <m id="{message-id}" [f="{flags}"] s="{size}" d="{date}" [t="{tags}"]>
       <e .../>
       <fr>{fragment}</fr>
      </m>+

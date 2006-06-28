@@ -75,6 +75,8 @@ public abstract class ZMailbox {
     /** rename tag */
     public abstract ZActionResult renameTag(String id, String name) throws ServiceException;        
     
+    public abstract ZConversation getConversation(String id) throws ServiceException;
+    
     /** include items in the Trash folder */
     public static final String TC_INCLUDE_TRASH = "t";
     
@@ -86,7 +88,7 @@ public abstract class ZMailbox {
     
     /** include items in any other folder */
     public static final String TC_INCLUDE_OTHER = "o";
-
+    
     /**
      * hard delete conversation(s).
      * 
@@ -245,6 +247,15 @@ public abstract class ZMailbox {
      * @throws ServiceException
      */
     public abstract ZActionResult updateItem(String ids, String destFolderId, String tagList, String flags, String targetConstraints) throws ServiceException;        
+    
+    public abstract ZMessage getMessage(
+            String id, 
+            boolean markRead,
+            boolean defangedHtml, 
+            boolean rawContent,
+            String part,
+            String subId
+            ) throws ServiceException;
     
     /** hard delete message(s) */
     public abstract ZActionResult deleteMessage(String ids) throws ServiceException;

@@ -26,6 +26,7 @@
 package com.zimbra.cs.zclient.soap;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -80,8 +81,8 @@ class ZSoapMessageHit implements ZMessageHit {
     }
 
     public String toString() {
-        return String.format("msghit: { id: %s, convid: %s, flags: %s, fragment: %s, subject: %s, sortfield: %s, size: %d, mimeparts: %s, sender: %s, score: %f }",
-                mId, mConvId, mFlags, mFragment, mSubject, mSortField, mSize, mMimePartHits, mSender, mScore);
+        return String.format("msghit: { id: %s, convid: %s, flags: %s, fragment: %s, subject: %s, date: %s, sortfield: %s, size: %d, mimeparts: %s, sender: %s, score: %f }",
+                mId, mConvId, mFlags, mFragment, mSubject, new Date(mDate), mSortField, mSize, mMimePartHits, mSender, mScore);
     }
 
     public String getFlags() {
