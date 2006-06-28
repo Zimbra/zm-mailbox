@@ -29,6 +29,7 @@
 package com.zimbra.cs.service.mail;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -84,15 +85,21 @@ public class ParseMimeMessage {
 //            return CalendarUtils.parseInviteForCreate(account, inviteElem, null, mUid, false);
 //        }
 //    };
-    
+
+    private static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
+
     public static MimeMessage importMsgSoap(Element msgElem) throws ServiceException {
         /* msgElem == "<m>" E_MSG */
         assert(msgElem.getName().equals(MailService.E_MSG));
 
         Element contentElement = msgElem.getElement(MailService.E_CONTENT);
 
-        String content = contentElement.getText();
-        ByteArrayInputStream messageStream = new ByteArrayInputStream(content.getBytes());
+        byte[] content = contentElement.getText().getBytes();
+        long maxSize = Provisioning.getInstance().getLocalServer().getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
+        if (content.length > maxSize)
+            throw ServiceException.INVALID_REQUEST("inline message too large", null);
+
+        ByteArrayInputStream messageStream = new ByteArrayInputStream(content);
         try {
             return new Mime.FixedMimeMessage(JMSession.getSession(), messageStream);
         } catch (MessagingException me) {
