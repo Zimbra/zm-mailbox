@@ -187,7 +187,7 @@ public class FolderAction extends ItemAction {
             String newName = action.getAttribute(MailService.A_NAME, null);
             ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, "-1"), lc);
             if (!iidFolder.belongsTo(mbox))
-                throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
+                throw ServiceException.INVALID_REQUEST("cannot move folder between mailboxes", null);
             String flags = action.getAttribute(MailService.A_FLAGS, null);
             byte color = (byte) action.getAttributeLong(MailService.A_COLOR, -1);
             ACL acl = null;
@@ -204,16 +204,16 @@ public class FolderAction extends ItemAction {
                 }
             }
 
-            if (newName != null)
-                mbox.renameFolder(octxt, iid.getId(), newName);
-            if (iidFolder.getId() > 0)
-                mbox.move(octxt, iid.getId(), MailItem.TYPE_FOLDER, iidFolder.getId(), null);
             if (flags != null)
                 mbox.setTags(octxt, iid.getId(), MailItem.TYPE_FOLDER, flags, null, null);
             if (color >= 0)
                 mbox.setColor(octxt, iid.getId(), MailItem.TYPE_FOLDER, color);
             if (acl != null)
                 mbox.setPermissions(octxt, iid.getId(), acl);
+            if (iidFolder.getId() > 0)
+                mbox.move(octxt, iid.getId(), MailItem.TYPE_FOLDER, iidFolder.getId(), null);
+            if (newName != null)
+                mbox.renameFolder(octxt, iid.getId(), newName);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
         }
