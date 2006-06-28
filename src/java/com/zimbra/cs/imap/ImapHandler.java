@@ -771,16 +771,15 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         // 6.3.1: "The SELECT command automatically deselects any currently selected mailbox 
         //         before attempting the new selection.  Consequently, if a mailbox is selected
         //         and a SELECT command that fails is attempted, no mailbox is selected."
+        ImapFolder i4folder = null;
         if (mSession.isSelected())
-            mSession.deselectFolder();
+            i4folder = mSession.deselectFolder();
 
         boolean writable = command.equals("SELECT");
-        ImapFolder i4folder = null;
         try {
-        	ImapGetFolderOperation op = new ImapGetFolderOperation(mSession, getContext(), mMailbox, folderName, writable);
+        	ImapGetFolderOperation op = new ImapGetFolderOperation(mSession, getContext(), mMailbox, folderName, writable, i4folder);
         	op.schedule();
         	i4folder = op.getResult();
-        	writable = op.getWritable();
         } catch (ServiceException e) {
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER)
                 ZimbraLog.imap.info(command + " failed: no such folder: " + folderName);
@@ -790,6 +789,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             return canContinue(e);
         }
 
+        writable = i4folder.isWritable();
         mSession.selectFolder(i4folder);
 
         // note: not sending back a "* OK [UIDNEXT ....]" response

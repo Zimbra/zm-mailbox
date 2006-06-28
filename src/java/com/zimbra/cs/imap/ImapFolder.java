@@ -160,6 +160,42 @@ class ImapFolder implements Iterable<ImapMessage> {
         return i4list;
     }
 
+    /** Reinitializes an ImapFolder for the purposes of EXAMINE/SELECTing the
+     *  folder that's already EXAMINE/SELECTed.  Does not reload the contents
+     *  of the folder from the Mailbox, but instead cleans up the existing data
+     *  structures.  Cannot be called on virtual folders, which must be re-read
+     *  manually.
+     * @param select   Whether the user wants to open the folder for writing.
+     * @param mbox     The mailbox in which the target folder is found.
+     * @param session  The authenticated user's current IMAP session.
+     * @see #ImapFolder(String, boolean, Mailbox, ImapSession) */
+    void reopen(boolean select, Mailbox mbox, ImapSession session) throws ServiceException {
+        if (isVirtual())
+            throw ServiceException.INVALID_REQUEST("cannot reopen virtual folders", null);
+        OperationContext octxt = session.getContext();
+        Folder folder = mbox.getFolderByPath(octxt, mPath);
+        if (!isFolderSelectable(folder, session))
+            throw ServiceException.PERM_DENIED("cannot select folder: /" + mPath);
+        if (folder.getId() != mFolderId)
+            throw ServiceException.INVALID_REQUEST("folder IDs do not match (was " + mFolderId + ", is " + folder.getId() + ')', null);
+        mWritable = select && isFolderWritable(folder, session);
+        mUIDValidityValue = getUIDValidity(folder);
+
+        mNotificationsSuspended = false;
+        mDirtyMessages.clear();
+        collapseExpunged();
+
+        mFirstUnread = -1;
+        for (ImapMessage i4msg : mSequence) {
+            if (mFirstUnread == -1 && (i4msg.flags & Flag.FLAG_UNREAD) != 0)
+                mFirstUnread = i4msg.sequence;
+            i4msg.setAdded(false);
+            i4msg.setGhost(false);
+        }
+
+        mLastSize = mSequence.size();
+    }
+
     /** Returns the selected folder's zimbra ID. */
     int getId()           { return mFolderId; }
     /** Returns the number of messages in the folder.  Messages that have been

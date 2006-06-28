@@ -130,11 +130,14 @@ public class ImapSession extends Session {
             mState = STATE_SELECTED;
         }
     }
-    void deselectFolder() {
+    ImapFolder deselectFolder() {
+        ImapFolder i4folder = null;
         if (mState != STATE_LOGOUT) {
             mState = STATE_AUTHENTICATED;
+            i4folder = mSelectedFolder;
             mSelectedFolder = null;
         }
+        return i4folder;
     }
     void loggedOut()        { mState = STATE_LOGOUT; }
     ImapFolder getFolder()  { return mSelectedFolder; }
