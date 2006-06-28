@@ -193,6 +193,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 sendUntagged("BAD " + ipe.getMessage(), true);
             else if (ipe.mCode != null)
                 sendNO(ipe.mTag, '[' + ipe.mCode + "] " + ipe.getMessage());
+            else if (ipe.mNO)
+                sendNO(ipe.mTag, ipe.getMessage());
             else
                 sendBAD(ipe.mTag, ipe.getMessage());
         } finally {

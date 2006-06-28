@@ -653,7 +653,7 @@ class ImapRequest {
             else if (key.equals("CC"))          { skipSpace(); search.append("cc:"); readAndQuoteString(search, charset); }
             else if (key.equals("FROM"))        { skipSpace(); search.append("from:"); readAndQuoteString(search, charset); }
             else if (key.equals("HEADER"))      { skipSpace(); String hdr = readAstring().toUpperCase(), prefix = INDEXED_HEADER.get(hdr);
-                                                  if (prefix == null)  throw new ImapParseException(mTag, "unindexed header: " + hdr);
+                                                  if (prefix == null)  throw new ImapParseException(mTag, "unindexed header: " + hdr, true);
                                                   skipSpace(); search.append(prefix); readAndQuoteString(search, charset); }
             else if (key.equals("KEYWORD"))     { skipSpace(); ImapFlag i4flag = getFlag(readAtom());
                                                   if (i4flag != null && !i4flag.mPositive)   search.append('-');

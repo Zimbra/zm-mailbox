@@ -27,10 +27,17 @@ package com.zimbra.cs.imap;
 
 final class ImapParseException extends ImapException {
     String mTag, mCode;
+    boolean mNO;
 
     ImapParseException(String tag, String message) { 
         super("parse error: " + message);
         mTag = tag;
+    }
+
+    ImapParseException(String tag, String message, boolean no) { 
+        super((no ? "" : "parse error: ") + message);
+        mTag = tag;
+        mNO = no;
     }
 
     ImapParseException(String tag, String code, String message) {

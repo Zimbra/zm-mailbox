@@ -234,6 +234,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 sendUntagged("BAD " + ipe.getMessage(), true);
             else if (ipe.mCode != null)
                 sendNO(ipe.mTag, '[' + ipe.mCode + "] " + ipe.getMessage());
+            else if (ipe.mNO)
+                sendNO(ipe.mTag, ipe.getMessage());
             else
                 sendBAD(ipe.mTag, ipe.getMessage());
         } catch (ImapTerminatedException ite) {
