@@ -304,6 +304,13 @@ public abstract class ZMailbox {
      * @return ZSearchFolder if found, null otherwise.
      */
     public abstract ZSearchFolder getSearchFolderById(String id);
+
+    /**
+     * find the link with the specified id.
+     * @param id id of link
+     * @return ZLink if found, null otherwise.
+     */
+    public abstract ZLink getLinkById(String id);
     
     /**
      * create a new sub folder of the specified parent folder.
@@ -429,4 +436,36 @@ public abstract class ZMailbox {
      * @throws ServiceException
      */
     public abstract void noOp() throws ServiceException;    
+
+    public enum OwnerBy { BY_ID, BY_NAME }
+    
+    public enum SharedItemBy { BY_ID, BY_PATH }
+    
+    /**
+     * create a new mointpoint in the specified parent folder.
+     * 
+     * @param parent parent folder
+     * @param name name of new folder
+     * @param defaultView default view of new folder.
+     * @param ownerBy used to specify whether owner is an id or account name (email address) 
+     * @param owner either the id or name of the owner
+     * @param itemBy used to specify whether sharedItem is an id or path to the shared item
+     * @param sharedItem either the id or path of the item
+     * @see {@link ZFolder#VIEW_APPOINTMENT}
+     * @see {@link ZFolder#VIEW_CONTACT}
+     * @see {@link ZFolder#VIEW_CONVERSATION}
+     * @see {@link ZFolder#VIEW_MESSAGE}
+     *                
+     * @return newly created folder
+     * @throws ServiceException
+     */
+    public abstract ZLink createMountpoint(
+            ZFolder parent, String name, 
+            String defaultView,
+            OwnerBy ownerBy,
+            String owner,
+            SharedItemBy itemBy,
+            String sharedItem
+            ) throws ServiceException;
 }
+

@@ -38,6 +38,7 @@ import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZLink;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZSearchFolder;
 import com.zimbra.cs.zclient.ZSearchHit;
@@ -369,6 +370,13 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
+    public ZLink getLinkById(String id) {
+        ZSoapItem item = mIdToItem.get(id);
+        if (item instanceof ZLink) return (ZLink) item;
+        else return null;
+    }
+
+    @Override
     public ZSearchFolder getSearchFolderById(String id) {
         ZSoapItem item = mIdToItem.get(id);
         if (item instanceof ZSearchFolder) return (ZSearchFolder) item;
@@ -426,6 +434,11 @@ public class ZSoapMailbox extends ZMailbox {
         mbox.deleteFolder(flagged.getId());
         mbox.noOp();        
         System.out.println(mbox.flagConversation("346", false, null));
+        
+        //ZLink user2 = mbox.createMountpoint(mbox.getUserRoot(), "user2", ZFolder.VIEW_APPOINTMENT, OwnerBy.BY_NAME, "user2", SharedItemBy.BY_PATH, "/Calendar");
+        //System.out.println(user2);        
+        //mbox.deleteItem(user2.getId(), null);
+
     }
 
     private Element folderAction(String op, String ids) throws ServiceException {
@@ -657,6 +670,19 @@ public class ZSoapMailbox extends ZMailbox {
         return doAction(actionEl);
     }
 
+    @Override
+    public ZLink createMountpoint(ZFolder parent, String name, String defaultView, OwnerBy ownerBy, String owner, SharedItemBy itemBy, String sharedItem) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.CREATE_MOUNTPOINT_REQUEST);
+        Element linkEl = req.addElement(MailService.E_MOUNT);
+        linkEl.addAttribute(MailService.A_NAME, name);
+        linkEl.addAttribute(MailService.A_FOLDER, parent.getId());
+        if (defaultView != null) linkEl.addAttribute(MailService.A_DEFAULT_VIEW, defaultView);
+        linkEl.addAttribute(ownerBy == OwnerBy.BY_ID ? MailService.A_ZIMBRA_ID : MailService.A_DISPLAY, owner);
+        linkEl.addAttribute(itemBy == SharedItemBy.BY_ID ? MailService.A_REMOTE_ID: MailService.A_PATH, sharedItem);
+        String id = invoke(req).getElement(MailService.E_MOUNT).getAttribute(MailService.A_ID);
+        return getLinkById(id);
+    }
+
     /*
  
  <AuthRequest xmlns="urn:zimbraAccount">
@@ -692,8 +718,7 @@ public class ZSoapMailbox extends ZMailbox {
  *<GetSearchFolderRequest> (NOT NEEDED?)
  *<CreateSearchFolderRequest>
  *<ModifySearchFolderRequest>
-
- <CreateMountpointRequest>
+ *<CreateMountpointRequest>
 
  <SendMsgRequest>
  <SaveDraftRequest>
