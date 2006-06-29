@@ -356,7 +356,10 @@ public class Mailbox {
     }
 
     /** Returns the {@link Account} object for this mailbox's owner.  At
-     *  present, each account can have at most one <code>Mailbox</code>. */
+     *  present, each account can have at most one <code>Mailbox</code>.
+     *  
+     *  @throws AccountServiceException if no account exists
+     *  */
     public synchronized Account getAccount() throws ServiceException {
         Account acct = getAccount(getAccountId());
         if (acct != null)
@@ -367,7 +370,7 @@ public class Mailbox {
     }
 
     /** Returns the {@link Account} object for the specified account ID.  This
-     *  is just shorthand for {@link Provisioning#getAccountById(String)}.
+     *  is just shorthand for {@link Provisioning#get(AccountBy, String)}.
      * 
      * @param accountId  The <code>zimbraId</code> to look up. */
     public static Account getAccount(String accountId) throws ServiceException {

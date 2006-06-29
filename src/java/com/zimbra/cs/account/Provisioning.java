@@ -1061,6 +1061,13 @@ public abstract class Provisioning {
         }
     }
     
+    /**
+     * Looks up an account by the specified key.
+     * 
+     * @return the <code>Account</code>, or <code>null</code> if no <code>Account</code>
+     * with the given key exists.
+     * @throws ServiceException if the key is malformed
+     */
     public abstract Account get(AccountBy keyType, String key) throws ServiceException;
 
     /**
