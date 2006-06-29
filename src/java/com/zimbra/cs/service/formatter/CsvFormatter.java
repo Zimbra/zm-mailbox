@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.mail.Part;
@@ -39,10 +40,13 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.operation.CreateContactOperation;
 import com.zimbra.cs.operation.Operation;
+import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.HttpUtil;
 
 public class CsvFormatter extends Formatter {
@@ -95,8 +99,12 @@ public class CsvFormatter extends Formatter {
     public void saveCallback(byte[] body, Context context, Folder folder) throws UserServletException, ServiceException {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(body), "UTF-8"));
-            for (Map<String, String> fields : ContactCSV.getContacts(reader))
-                folder.getMailbox().createContact(context.opContext, fields, folder.getId(), null);
+            List<Map<String, String>> contacts = ContactCSV.getContacts(reader);
+            
+            ItemId iidFolder = new ItemId(folder);
+            
+            CreateContactOperation.ImportCsvContacts(null, context.opContext, context.targetMailbox, Requester.REST, iidFolder, contacts, null);
+            
         } catch (ContactCSV.ParseException e) {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "could not parse csv file");
         } catch (UnsupportedEncodingException uee) {

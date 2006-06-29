@@ -25,6 +25,8 @@
 package com.zimbra.cs.operation;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +52,36 @@ public class CreateContactOperation extends Operation {
 	private List<Map<String, String>> mList;
 	
 	private List<Contact> mContacts;
+    
+    private final static int CHUNK_SIZE = 100;
+    
+    public static List<ItemId> ImportCsvContacts(Session session, OperationContext oc, Mailbox mbox, Requester req,
+                ItemId iidFolder, List<Map<String, String>> csvContacts, String tagsStr) throws ServiceException {
+        
+        List<ItemId> toRet = new LinkedList<ItemId>();
+        
+        Iterator<Map<String, String>> iter = csvContacts.iterator();
+        
+        List<Map<String, String>> curChunk = new LinkedList<Map<String,String>>();
+        
+        while(iter.hasNext()) {
+            curChunk.clear();
+            for (int i = 0; i < CHUNK_SIZE && iter.hasNext(); i++) {
+                curChunk.add(iter.next());
+            }
+            CreateContactOperation op = new CreateContactOperation(session, oc, mbox, req, iidFolder, curChunk, tagsStr);
+            op.schedule();
+            for (Contact c : op.getContacts())
+                toRet.add(new ItemId(c));
+            
+            System.gc();
+            System.gc();
+            System.gc();
+            System.gc();
+        }
+        
+        return toRet;
+    }
 
 	public CreateContactOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
 				ItemId iidFolder, Map<String,String> attrs, String tagsStr)

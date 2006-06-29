@@ -84,7 +84,11 @@ public class ImportContacts extends DocumentHandler  {
                 reader = new BufferedReader(new StringReader(content.getText()));
             else
                 reader = parseUploadedContent(lc, attachment, uploads = new ArrayList<Upload>());
+            
             contacts = ContactCSV.getContacts(reader);
+            reader.close();
+        } catch (IOException e) {
+            throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS(e.getMessage(), e);
         } catch (ParseException e) {
             throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS(e.getMessage(), e);
         } finally {
@@ -94,16 +98,24 @@ public class ImportContacts extends DocumentHandler  {
                 FileUploadServlet.deleteUploads(uploads);
         }
 
-        CreateContactOperation op = new CreateContactOperation(session, octxt, mbox, Requester.SOAP, iidFolder, contacts, null);
-        op.schedule();
-        List<Contact> results = op.getContacts();
+//        CreateContactOperation op = new CreateContactOperation(session, octxt, mbox, Requester.SOAP, iidFolder, contacts, null);
+//        op.schedule();
+//        List<Contact> results = op.getContacts();
+        
+        List<ItemId> idsList = CreateContactOperation.ImportCsvContacts(session, octxt, mbox, Requester.SOAP, iidFolder, contacts, null);
 
-        StringBuffer ids = new StringBuffer();
-        for (Contact c : results) {
-        	if (ids.length() > 0)
-        		ids.append(",");
-        	ids.append(c.getId());
+        StringBuilder ids = new StringBuilder();
+        
+        for (ItemId iid : idsList) {
+            if (ids.length() > 0)
+                ids.append(",");
+            ids.append(iid.toString(lc));
         }
+
+        System.gc();
+        System.gc();
+        System.gc();
+        System.gc();
 
         Element response = lc.createElement(MailService.IMPORT_CONTACTS_RESPONSE);
         Element cn = response.addElement(MailService.E_CONTACT);
