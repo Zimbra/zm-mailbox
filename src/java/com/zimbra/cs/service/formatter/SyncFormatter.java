@@ -70,7 +70,7 @@ public class SyncFormatter extends Formatter {
      * add to http headers as well as content for now... 
      */
     private static void addHeader(Context context, StringBuffer sb, String name, String value) {
-        sb.append(name).append(": ").append(value).append("\n");
+        sb.append(name).append(": ").append(value).append("\r\n");
         context.resp.addHeader(name, value);
     }
     
@@ -80,11 +80,16 @@ public class SyncFormatter extends Formatter {
         addHeader(context, hdr, "X-Zimbra-Flags", item.getFlagString());
         addHeader(context, hdr, "X-Zimbra-Received", item.getDate() + "");
         addHeader(context, hdr, "X-Zimbra-Modified", item.getChangeDate() + "");
-        if (item instanceof Message) {
-            addHeader(context, hdr, "X-Zimbra-Conv", ((Message)item).getConversationId()+"");
-        }
-        // dump headers to content
-        context.resp.getOutputStream().write(hdr.toString().getBytes());
+        if (item instanceof Message)
+            addHeader(context, hdr, "X-Zimbra-Conv", ((Message) item).getConversationId() + "");
+        byte[] inline = hdr.toString().getBytes();
+
+        // explicitly set the Content-Length header, as it's only done implicitly for short payloads
+        if (item instanceof Message || (item instanceof Appointment && !context.itemId.hasSubpart()))
+            context.resp.setContentLength(inline.length + (int) item.getSize());
+
+        // inline X-Zimbra headers with response body
+        context.resp.getOutputStream().write(inline);
     }
 
     public void formatCallback(Context context, MailItem item) throws IOException, ServiceException, UserServletException {
@@ -102,8 +107,8 @@ public class SyncFormatter extends Formatter {
     }
 
     private void handleAppointment(Context context, Appointment appt) throws IOException, ServiceException, MessagingException {
-        addXZimbraHeaders(context, appt);
         context.resp.setContentType(Mime.CT_TEXT_PLAIN);
+        addXZimbraHeaders(context, appt);
         if (context.itemId.hasSubpart()) {
             MimeMessage mm = appt.getMimeMessage(context.itemId.getSubpartId());
             mm.writeTo(context.resp.getOutputStream());
@@ -112,10 +117,10 @@ public class SyncFormatter extends Formatter {
             ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
         }        
     }
-    
+
     private void handleMessage(Context context, Message msg) throws IOException, ServiceException {
-        addXZimbraHeaders(context, msg);
         context.resp.setContentType(Mime.CT_TEXT_PLAIN);
+        addXZimbraHeaders(context, msg);
         InputStream is = msg.getRawMessage();
         ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
     }
