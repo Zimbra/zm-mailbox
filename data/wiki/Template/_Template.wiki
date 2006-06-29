@@ -1,8 +1,4 @@
-<style type="text/css">
-	<wiklet class='INLINE' page="_TemplateStyles" inherit="true" />
-</style>
-
-<div class="_page">
+<div id='ZimbraWikiPage'>
 	<table class="_chromeTable" cellpadding="0" cellspacing="0"><tbody>
 	<tr><td class="_headerContainer" colspan=2>
 		<wiklet class='INLINE' page="_Header" inherit="true" />

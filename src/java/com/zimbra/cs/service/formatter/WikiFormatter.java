@@ -68,9 +68,8 @@ public class WikiFormatter extends Formatter {
     private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
     	WikiTemplate wt = getTemplate(context, wiki);
     	String template = wt.getComposedPage(createWikiContext(context), wiki, CHROME);
-    	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
-    	context.resp.getOutputStream().print(template);
-    }
+		printWikiPage(context, template);
+	}
 
     private static final String TOC = "_Index";
     private static final String CHROME = "_Template";
@@ -99,10 +98,38 @@ public class WikiFormatter extends Formatter {
     		template = getDefaultTOC();
     	}
     	String ret = template.getComposedPage(createWikiContext(context), folder, CHROME);
-    	
-    	context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
-    	context.resp.getOutputStream().print(ret);
+		printWikiPage(context, ret);
     }
+
+	/**
+	 * <b>Note:</b>
+	 * This will be revisited when the client relies on the REST
+	 * output for display/browsing functionality.
+	 */
+	private static void printWikiPage(Context context, String s)
+	throws IOException {
+		context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
+		javax.servlet.ServletOutputStream out = context.resp.getOutputStream();
+		out.println("<HTML>");
+		out.println("<HEAD>");
+		/***
+		// NOTE: This doesn't work because this servlet is at a different
+		//       context path than the wiki.css file.
+		String contextPath = context.req.getContextPath();
+		out.print("<LINK rel='stylesheet' type='text/css' href='");
+		out.print(contextPath);
+		out.println("/css/wiki.css'>");
+		/***/
+		// REVISIT: Can we assume that the context path for the wiki.css
+		//          file will be "/zimbra"?
+		out.print("<LINK rel='stylesheet' type='text/css' href='/zimbra/css/wiki.css'>");
+		/***/
+		out.println("</HEAD>");
+		out.println("<BODY style='margin:0px'>");
+		out.println(s);
+		out.println("</BODY>");
+		out.println("</HTML>");
+	}
     
 	@Override
 	public void formatCallback(Context context, MailItem item) throws UserServletException, ServiceException, IOException {
