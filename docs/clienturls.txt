@@ -12,6 +12,22 @@ AjxDebug.DBG1 = 1; // minimal debugging
 AjxDebug.DBG2 = 2; // moderate debugging
 AjxDebug.DBG3 = 3; // anything goes
 
+ http://server/zimbra/?debug=1
+
+----------------------------------------
+
+ skin={skin-name}
+
+  load specified skin:
+  
+    bare
+    sand
+    sky
+    steel
+	...
+
+ http://server/zimbra/?skin=sand
+ 
 ----------------------------------------
 
  app={app-name}
@@ -32,21 +48,17 @@ AjxDebug.DBG3 = 3; // anything goes
  
   start with (n)o (s)plash (s)creen
 
- For example:
- 
   http://server/zimbra/?nss=1
  
 ----------------------------------------
     
  view={view-name}
 
- start in a particular subview:
+ start in a particular subview with given args:
  
  compose
   
      &to={...}&subject={...}&body={...}
-
-For example:
 
   http://server/zimbra/?view=compose&to=a@b.com&subject=hello%20world&body=test
     
@@ -54,7 +66,7 @@ For example:
 
  redirect=0|1
  
-   The client normal redirects the user's browser to their mailhost at login, unless you are connecting to
+   The client normally redirects the user's browser to their mailhost at login, unless you are connecting to
    either localhost or an IP address. You can use redirect=0 to disable that redirect, or redirect=1 to force
    a redirect in the localhost/IP case.
    
@@ -62,13 +74,13 @@ For example, assumming zimbraMailHost is server1.company.com, connecting to:
   
   http://localhost/zimbra/?redirect=1
   
-will cause the client to redirect to server1.company.com.  connecting to:
+will cause the client to redirect to server1.company.com, and connecting to:
   
   http://mail.company.com/zimbra/?redirect=0
   
   will tell it not to redirect (this assumes mail.company.com is a CNAME/VIP for server1.company.com).
   
-Disabling redirect only useful where you have split-dns issues, and you are trying to connect from the external-side, or when
+Disabling redirect is only useful where you have split-dns issues, and you are trying to connect from the external-side, or when
 you are doing SSH port forwarding and you don't want to redirect to the real hostname.
 
 ----------------------------------------
