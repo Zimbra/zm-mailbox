@@ -34,6 +34,9 @@ public class LmcDocument {
 	protected String mLastModifiedDate;
 	protected String mAid;
 	protected String mRestUrl;
+	protected String mFragment;
+	protected String mCreator;
+	protected String mCreateDate;
 	
 	public void setID(String id)             { mId = id; }
 	public void setName(String filename)     { mName = filename; }
@@ -44,6 +47,9 @@ public class LmcDocument {
 	public void setLastModifiedDate(String d)  { mLastModifiedDate = d; }
 	public void setAttachmentId(String aid)  { mAid = aid; }
 	public void setRestUrl(String url)       { mRestUrl = url; }
+	public void setFragment(String f)        { mFragment = f; }
+	public void setCreator(String cr)        { mCreator = cr; }
+	public void setCreateDate(String cd)     { mCreateDate = cd; }
 	
 	public String getID()               { return mId; }
 	public String getName()             { return mName; }
@@ -54,6 +60,9 @@ public class LmcDocument {
 	public String getLastModifiedDate() { return mLastModifiedDate; }
 	public String getAttachmentId()     { return mAid; }
 	public String getRestUrl()          { return mRestUrl; }
+	public String getFragment()         { return mFragment; }
+	public String getCreator()          { return mCreator; }
+	public String getCreateDate()       { return mCreateDate; }
 	
 	public String toString() {
 		return "Document id=" + mId + " rev=" + mRev + " filename=" + mName +

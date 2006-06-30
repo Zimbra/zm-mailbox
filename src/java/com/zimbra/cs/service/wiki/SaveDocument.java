@@ -133,7 +133,8 @@ public class SaveDocument extends WikiDocumentHandler {
         	itemId = iid.getId();
         }
 
-        validateRequest(wiki,
+        validateRequest(lc,
+        				wiki,
         				itemId,
         				docElem.getAttributeLong(MailService.A_VERSION, 0),
         				name);

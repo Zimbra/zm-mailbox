@@ -30,12 +30,8 @@ import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.wiki.WikiServiceException;
-import com.zimbra.cs.service.wiki.WikiServiceException.NoSuchWikiException;
 import com.zimbra.cs.util.Pair;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 //import com.zimbra.cs.util.ZimbraLog;
@@ -53,7 +49,7 @@ import com.zimbra.cs.wiki.Wiki.WikiContext;
  */
 public class WikiTemplateStore {
 	
-	private static final long TTL = 600000;  // 10 minutes
+	private static final long TTL = 60000;  // 10 minutes
 	private static final int DEFAULT_CACHE_SIZE = 1024;
 	private static LRUMap sTemplateStoreCache;
 	
@@ -75,13 +71,6 @@ public class WikiTemplateStore {
 	
 	public static WikiTemplateStore getInstance(MailItem item) throws ServiceException {
 		return WikiTemplateStore.getInstance(item.getMailbox().getAccount().getId(), Integer.toString(item.getFolderId()));
-	}
-	
-	public static WikiTemplateStore getCentralAccountInstance(WikiContext ctxt, String accountId) throws ServiceException {
-		Wiki w = Wiki.getTemplateStore(ctxt, accountId);
-		if (w == null)
-			return null;
-		return WikiTemplateStore.getInstance(w.getWikiAccount(), w.getKey());
 	}
 	
 	public static WikiTemplateStore getInstance(String account, String k) {
@@ -132,22 +121,6 @@ public class WikiTemplateStore {
 	}
 	
 	public WikiTemplate getTemplate(WikiContext ctxt, String name) throws ServiceException, IOException {
-		boolean checkParents = name.startsWith("_");
-		try {
-			return getTemplate(ctxt, name, checkParents);
-		} catch (ServiceException e) {
-			if (!checkParents)
-				throw e;
-			WikiTemplateStore defaultStore = getCentralAccountInstance(ctxt, mAccountId);
-			if (defaultStore == null)
-				return new WikiTemplate("<!-- missing template "+name+" -->");
-			return defaultStore.getTemplate(ctxt, name);
-		}
-	}
-	private WikiTemplate getTemplate(WikiContext ctxt, String name, boolean checkParents) throws ServiceException, IOException {
-		if (name.indexOf('/') != -1) {
-			return getTemplateByPath(ctxt, name);
-		}
 		WikiTemplate template = (WikiTemplate)mTemplateMap.get(name);
 		if (template != null) {
 			//ZimbraLog.wiki.debug("found " + name + " from template cache");
@@ -163,31 +136,21 @@ public class WikiTemplateStore {
 			return template;
 		}
 		
-		if (!checkParents)
-			return new WikiTemplate("<!-- missing template "+name+" -->");
-
-		String parentKey = wiki.getParentKey();
-		if (parentKey == null) {
-			throw new NoSuchWikiException(name);
-		}
-		WikiTemplateStore parentStore = WikiTemplateStore.getInstance(mAccountId, parentKey);
-		return parentStore.getTemplate(ctxt, name);
-	}
-	private WikiTemplate getTemplateByPath(WikiContext ctxt, String path) throws ServiceException {
-		MailItem item = Wiki.findWikiByPath(ctxt, mAccountId, 0, path);
-		if (item instanceof Folder) {
-			return getDefaultTOC();
-		} else if (item instanceof WikiItem) {
-			WikiItem wiki = (WikiItem) item;
-			WikiTemplateStore store = WikiTemplateStore.getInstance(item);
+		boolean checkParents = name.startsWith("_");
+		try {
+			int fid = 0;
 			try {
-				return store.getTemplate(ctxt, wiki.getWikiWord());
+				fid = Integer.parseInt(wiki.getKey());
 			} catch (Exception e) {
-				throw WikiServiceException.ERROR("can't get contents of "+path, e);
 			}
+			wiki = Wiki.findWikiByPath(ctxt, mAccountId, fid, name, checkParents);
+			WikiTemplateStore store = getInstance(wiki.getWikiAccount(), wiki.getKey());
+			return store.getTemplate(ctxt, name);
+		} catch (ServiceException se) {
+			return new WikiTemplate("<!-- missing template "+name+" -->");
 		}
-		throw WikiServiceException.NOT_WIKI_ITEM(path);
 	}
+	
 	public void expireTemplate(String name) {
 		//ZimbraLog.wiki.debug("removing " + name + " from template cache");
 		mTemplateMap.remove(name);

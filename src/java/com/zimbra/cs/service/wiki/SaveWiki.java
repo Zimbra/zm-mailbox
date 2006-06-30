@@ -64,7 +64,8 @@ public class SaveWiki extends WikiDocumentHandler {
         	itemId = iid.getId();
         }
 
-        validateRequest(wiki,
+        validateRequest(lc,
+        				wiki,
         				itemId,
         				msgElem.getAttributeLong(MailService.A_VERSION, 0),
         				subject);

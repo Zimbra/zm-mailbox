@@ -67,7 +67,7 @@ public abstract class WikiDocumentHandler extends DocumentHandler {
 		return Wiki.getInstance(ctxt, accountId, fid.getId());
 	}
 	
-	protected void validateRequest(Wiki wiki, int itemId, long ver, String wikiWord) throws ServiceException {
+	protected void validateRequest(ZimbraSoapContext lc, Wiki wiki, int itemId, long ver, String wikiWord) throws ServiceException {
 		if (itemId == 0 || ver == 0) {
 			if (itemId != 0 || ver != 0) {
 				throw new IllegalArgumentException("either itemId or version is zero");
@@ -80,7 +80,8 @@ public abstract class WikiDocumentHandler extends DocumentHandler {
 			}
 		} else {
 			WikiPage ww = wiki.lookupWiki(wikiWord);
-			if (ww.getId() != itemId) {
+			ItemId iid = new ItemId(ww.getId(), lc);
+			if (iid.getId() != itemId) {
 				throw MailServiceException.INVALID_ID(itemId);
 			}
 			if (ww.getLastRevision() != ver) {

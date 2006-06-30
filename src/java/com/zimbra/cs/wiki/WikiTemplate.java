@@ -32,15 +32,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.cs.wiki.Wiki.WikiUrl;
@@ -294,34 +291,48 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public Map<String,String> parseParam() {
 			return parseParam(mVal);
 		}
-		
+		private enum ParseState { K, V, VQ }
 		public Map<String,String> parseParam(String text) {
 			if (mParams != null)
 				return mParams;
 			Map<String,String> map = new HashMap<String,String>();
-			int start = 0;
-			int end = text.indexOf(' ');
-			while (true) {
-				int equal = text.indexOf('=', start);
-				if (end == -1)
-					end = text.length();
-				if (equal == -1 || equal > end) {
-					String s = text.substring(start,end);
-					map.put(s, s);
-				} else {
-					String val;
-					if (text.charAt(equal+1) == '"' && text.charAt(end-1) == '"')
-						val = text.substring(equal+2,end-1);
-					else if (text.charAt(equal+1) == '\'' && text.charAt(end-1) == '\'')
-						val = text.substring(equal+2,end-1);
-					else
-						val = text.substring(equal+1,end);
-					map.put(text.substring(start,equal), val);
+			ParseState state = ParseState.K;
+			String key = null;
+			boolean done = false;
+			char c = 0, cprev;
+			for (int start = 0, end = 0; !done ; end++) {
+				cprev = c;
+				if (end == text.length()) {
+					c = ' ';
+					done = true;
 				}
-				if (end == text.length())
-					break;
-				start = end + 1;
-				end = text.indexOf(' ', start);
+				else
+					c = text.charAt(end);
+				if (state == ParseState.K) {
+					if (c == ' ' || c == '=') {
+						key = text.substring(start,end);
+						start = end + 1;
+						if (c == ' ')
+							map.put(key, key);
+						else if (c == '=')
+							state = ParseState.V;
+					}
+				} else if (state == ParseState.V) {
+					if (c == '"' || c == '\'') {
+						start++;
+						state = ParseState.VQ;
+					} else if (c == ' ') {
+						map.put(key, text.substring(start,end));
+						start = end + 1;
+						state = ParseState.K;
+					}
+				} else if (state == ParseState.VQ) {
+					if ((c == '"' || c == '\'') && cprev != '\\') {
+						map.put(key, text.substring(start,end));
+						start = end + 1;
+						state = ParseState.K;
+					}
+				}
 			}
 			mParams = map;
 			return map;
@@ -976,21 +987,15 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 					title = link;
 			}
 			WikiUrl wurl = new WikiUrl(link, ctxt.item.getFolderId());
-			StringBuffer buf = new StringBuffer();
-			buf.append("<a href='");
-			if (wurl.isRemote() || wurl.isAbsolute()) {
-				Provisioning prov = Provisioning.getInstance();
-				Account acct = ctxt.item.getMailbox().getAccount();
-				String path = wurl.getToken(1);
-				if (wurl.isRemote()) {
-					acct = prov.get(Provisioning.AccountBy.name, wurl.getToken(1));
-					path = wurl.getToken(2);
-				}
-				buf.append(UserServlet.getRestUrl(acct, false)).append(path);
-			} else
-				buf.append(link);
-			buf.append("'>").append(title).append("</a>");
-			return buf.toString();
+			try {
+				StringBuffer buf = new StringBuffer();
+				buf.append("<a href='");
+				buf.append(wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId()));
+				buf.append("'>").append(title).append("</a>");
+				return buf.toString();
+			} catch (Exception e) {
+				return "<!-- invalid wiki url "+link+" -->" + title;
+			}
 		}
 	}
 }

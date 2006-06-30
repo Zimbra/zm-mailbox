@@ -147,7 +147,7 @@ public abstract class LmcSoapRequest {
 			if (mRequestedAccountId == null)
 				responseXML = trans.invoke(requestElt).toXML();
 			else 
-				responseXML = trans.invoke(requestElt, false, false, false, mRequestedAccountId).toXML();
+				responseXML = trans.invoke(requestElt, false, true, true, mRequestedAccountId).toXML();
             if (sDumpXML) {
                 sLog.info("Response:" + DomUtil.toString(responseXML, true) + "\n");
             }
@@ -521,33 +521,16 @@ public abstract class LmcSoapRequest {
 		return newTag;
 	}
 
-	protected LmcDocument parseDocument(Element doc)
-		throws ServiceException	{
-		LmcDocument result = new LmcDocument();
-
-		result.setID(doc.attributeValue(MailService.A_ID));
-		result.setName(doc.attributeValue(MailService.A_NAME));
-		result.setContentType(doc.attributeValue(MailService.A_CONTENT_TYPE));
-		result.setFolder(doc.attributeValue(MailService.A_FOLDER));
-		result.setRev(doc.attributeValue(MailService.A_VERSION));
-		result.setLastModifiedDate(doc.attributeValue(MailService.A_DATE));
-		result.setLastEditor(doc.attributeValue(MailService.A_LAST_EDITED_BY));
-		result.setRestUrl(doc.attributeValue(MailService.A_REST_URL));
-		
+	protected LmcDocument parseDocument(Element doc) {
+		LmcDocument result = parseDocumentCommon(doc, new LmcDocument());
 		return result;
 	}
 	
-	protected LmcWiki parseWiki(Element wiki)
-		throws ServiceException	{
+	protected LmcWiki parseWiki(Element wiki) {
 		LmcWiki result = new LmcWiki();
-
-		result.setID(wiki.attributeValue(MailService.A_ID));
+		parseDocumentCommon(wiki, result);
+		
 		result.setWikiWord(wiki.attributeValue(MailService.A_NAME));
-		result.setFolder(wiki.attributeValue(MailService.A_FOLDER));
-		result.setRev(wiki.attributeValue(MailService.A_VERSION));
-		result.setLastModifiedDate(wiki.attributeValue(MailService.A_DATE));
-		result.setLastEditor(wiki.attributeValue(MailService.A_LAST_EDITED_BY));
-		result.setRestUrl(wiki.attributeValue(MailService.A_REST_URL));
 		
 		try {
 			Element c = DomUtil.get(wiki, MailService.A_BODY);
@@ -557,6 +540,29 @@ public abstract class LmcSoapRequest {
 		return result;
 	}
 
+	private LmcDocument parseDocumentCommon(Element doc, LmcDocument result) {
+		result.setID(doc.attributeValue(MailService.A_ID));
+		result.setName(doc.attributeValue(MailService.A_NAME));
+		result.setContentType(doc.attributeValue(MailService.A_CONTENT_TYPE));
+		result.setFolder(doc.attributeValue(MailService.A_FOLDER));
+		result.setRev(doc.attributeValue(MailService.A_VERSION));
+		result.setLastModifiedDate(doc.attributeValue(MailService.A_DATE));
+		result.setLastEditor(doc.attributeValue(MailService.A_LAST_EDITED_BY));
+		result.setRestUrl(doc.attributeValue(MailService.A_REST_URL));
+		result.setCreator(doc.attributeValue(MailService.A_CREATOR));
+		result.setCreateDate(doc.attributeValue(MailService.A_CREATED_DATE));
+		
+		for (Iterator it = doc.elementIterator(); it.hasNext();) {
+			Element e = (Element) it.next();
+
+			String elementType = e.getQName().getName();
+			if (elementType.equals(MailService.E_FRAG)) {
+				// fragment
+				result.setFragment(e.getText());
+			}
+		}
+		return result;
+	}
 	/**
 	 * Add the XML representation of the message to the element.
 	 * @param e - the element at the root

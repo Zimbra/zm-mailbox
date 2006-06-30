@@ -67,6 +67,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -1298,7 +1299,23 @@ public class ToXML {
 
         return m;
     }
-    
+    public static Element encodeWikiPage(Element parent, WikiPage page) {
+        Element m = parent.addElement(MailService.E_WIKIWORD);
+        m.addAttribute(MailService.A_ID, page.getId());
+        m.addAttribute(MailService.A_REST_URL, page.getRestUrl());
+        //m.addAttribute(MailService.A_SIZE, page.getSize());
+        m.addAttribute(MailService.A_DATE, page.getModifiedDate());
+        m.addAttribute(MailService.A_FOLDER, page.getFolderId());
+        m.addAttribute(MailService.A_VERSION, page.getLastRevision());
+        m.addAttribute(MailService.A_CREATOR, page.getCreator());
+        m.addAttribute(MailService.A_CREATED_DATE, page.getCreatedDate());
+        m.addAttribute(MailService.A_LAST_EDITED_BY, page.getLastEditor());
+        m.addAttribute(MailService.A_MODIFIED_DATE, page.getModifiedDate());
+        String frag = page.getFragment();
+        if (frag != null && !frag.equals(""))
+            m.addAttribute(MailService.E_FRAG, frag, Element.DISP_CONTENT);
+        return m;
+    }
 	public static Element encodeRestUrl(Element m, MailItem item) {
 		try {
 			Account account = item.getMailbox().getAccount();

@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.client.LmcDocument;
 import com.zimbra.cs.client.LmcWiki;
 import com.zimbra.cs.mailbox.Document;
@@ -46,14 +47,15 @@ public abstract class WikiPage {
 		return new LocalWikiPage(wikiWord);
 	}
 
-	public static WikiPage create(String wikiWord, String restUrl) {
-		return new RemoteWikiPage(wikiWord, restUrl);
+	public static WikiPage create(String accountId, String wikiWord, String restUrl) {
+		return new RemoteWikiPage(accountId, wikiWord, restUrl);
 	}
 	
-	public static WikiPage create(LmcDocument wiki) throws ServiceException {
-		return new RemoteWikiPage(wiki);
+	public static WikiPage create(String accountId, LmcDocument wiki) throws ServiceException {
+		return new RemoteWikiPage(accountId, wiki);
 	}
 	
+	protected String mAccountId;
 	protected String mWikiWord;
 	protected int mId;
 	protected int mFolderId;
@@ -62,6 +64,7 @@ public abstract class WikiPage {
 	protected long mModifiedDate;
 	protected String mCreator;
 	protected String mModifiedBy;
+	protected String mFragment;
 
 	public abstract void addWikiItem(WikiContext ctxt,
 										String acctid,
@@ -75,7 +78,11 @@ public abstract class WikiPage {
 	public abstract void deleteAllRevisions(WikiContext ctxt) throws ServiceException;
 	public abstract Document getWikiItem(WikiContext ctxt) throws ServiceException;
 	public abstract String getContents(WikiContext ctxt) throws ServiceException;
+	public abstract String getRestUrl();
 	
+	public String getAccountId() {
+		return mAccountId;
+	}
 	public String getWikiWord() {
 		return mWikiWord;
 	}
@@ -100,12 +107,18 @@ public abstract class WikiPage {
 		return mModifiedBy;
 	}
 
-	public int getFolderId() {
-		return mFolderId;
+	public String getFolderId() {
+		ItemId iid = new ItemId(mAccountId, mFolderId);
+		return iid.toString((String)null);
 	}
 
-	public int getId() {
-		return mId;
+	public String getId() {
+		ItemId iid = new ItemId(mAccountId, mId);
+		return iid.toString((String)null);
+	}
+	
+	public String getFragment() {
+		return mFragment;
 	}
 	
 	public static class LocalWikiPage extends WikiPage {
@@ -130,6 +143,7 @@ public abstract class WikiPage {
 			} else {
 				addWikiItem(mbox.addDocumentRevision(ctxt.octxt, getWikiItem(ctxt), data, author));
 			}
+			mAccountId = acctid;
 		}
 
 		public void addWikiItem(Document newItem) throws ServiceException {
@@ -142,6 +156,7 @@ public abstract class WikiPage {
 			mCreatedDate = newItem.getFirstRevision().getRevDate();
 			mCreator = newItem.getFirstRevision().getCreator();
 			mFolderId = newItem.getFolderId();
+			mFragment = newItem.getFragment();
 			mEmpty = false;
 		}
 
@@ -161,20 +176,25 @@ public abstract class WikiPage {
 				throw WikiServiceException.ERROR("can't get contents", ioe);
 			}
 		}
+		public String getRestUrl() {
+			return "";
+		}
 	}
 	
 	public static class RemoteWikiPage extends WikiPage {
 		private String mRestUrl;
 		private String mContents;
 		
-		private RemoteWikiPage(String name, String restUrl) {
+		private RemoteWikiPage(String accountId, String name, String restUrl) {
+			mAccountId = accountId;
 			mWikiWord = name;
 			mRestUrl = restUrl + name;
 		}
 		
-		private RemoteWikiPage(LmcDocument wiki) throws ServiceException {
+		private RemoteWikiPage(String accountId, LmcDocument wiki) throws ServiceException {
 			ItemId iid = new ItemId(wiki.getID(), null);
 			ItemId fid = new ItemId(wiki.getFolder(), null);
+			mAccountId = accountId;
 			mWikiWord = wiki.getName();
 			mId = iid.getId();
 			mRevision = Integer.parseInt(wiki.getRev());
@@ -182,16 +202,28 @@ public abstract class WikiPage {
 			mModifiedBy = wiki.getLastEditor();
 			mFolderId = fid.getId();
 			mRestUrl = wiki.getRestUrl();
+			mCreatedDate = Long.parseLong(wiki.getCreateDate());
+			mCreator = wiki.getCreator();
+			mFragment = wiki.getFragment();
 			if (wiki instanceof LmcWiki)
 				mContents = ((LmcWiki)wiki).getContents();
 		}
 		
 		public String getContents(WikiContext ctxt) throws ServiceException {
+			String auth;
+			if (ctxt != null && ctxt.auth != null)
+				auth = ctxt.auth;
+			else
+				try {
+					auth = AuthToken.getZimbraAdminAuthToken().getEncoded();
+				} catch (Exception ate) {
+					auth = null;
+				}
 			if (mContents == null) {
 				try {
 					URL url = new URL(mRestUrl + "?fmt=native");
 					URLConnection uconn = url.openConnection();
-					uconn.addRequestProperty("cookie", "ZM_AUTH_TOKEN=" + ctxt.auth);
+					uconn.addRequestProperty("cookie", "ZM_AUTH_TOKEN=" + auth);
 					Object obj = uconn.getContent();
 					if (obj instanceof InputStream) {
 						mContents = new String(ByteUtil.getContent((InputStream)obj, 0), "UTF-8");
@@ -224,6 +256,9 @@ public abstract class WikiPage {
 
 		public Document getWikiItem(WikiContext ctxt) throws ServiceException {
 			throw WikiServiceException.ERROR("not implemented");
+		}
+		public String getRestUrl() {
+			return mRestUrl;
 		}
 	}
 }

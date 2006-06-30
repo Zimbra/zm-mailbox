@@ -40,6 +40,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.wiki.Wiki;
+import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -65,18 +66,28 @@ public class GetWiki extends WikiDocumentHandler {
         	ItemId fid = getRequestedFolder(request);
         	if (fid == null)
         		fid = new ItemId("", Mailbox.ID_FOLDER_USER_ROOT);
-        	MailItem item = Wiki.findWikiByPath(new WikiContext(octxt, lc.getRawAuthToken()), 
-        										 lc.getRequestedAccountId(), 
-        										 fid.getId(), 
-        										 word,
-        										 traverse == 1);
-        	if (item == null) {
-        		throw new WikiServiceException.NoSuchWikiException(word);
+        	WikiContext wctxt = new WikiContext(octxt, lc.getRawAuthToken());
+        	WikiPage wikiPage = Wiki.findWikiPageByPath(wctxt, lc.getRequestedAccountId(), fid.getId(), word, traverse == 1);
+        	try {
+        		Document doc = wikiPage.getWikiItem(wctxt);
+            	if (doc.getType() != MailItem.TYPE_WIKI) {
+            		throw WikiServiceException.NOT_WIKI_ITEM(word);
+            	}
+            	wikiItem = (WikiItem) doc;
+        	} catch (Exception e) {
+        		if (wikiPage == null) {
+        			throw new WikiServiceException.NoSuchWikiException(word);
+        		}
+        		Element wikiElem = ToXML.encodeWikiPage(response, wikiPage);
+        		try {
+        			String contents = wikiPage.getContents(wctxt);
+        			if (contents != null && contents != "") {
+                		wikiElem.addAttribute(MailService.A_BODY, contents, Element.DISP_CONTENT);
+        			}
+        		} catch (Exception ex) {
+        		}
+        		return response;
         	}
-        	if (item.getType() != MailItem.TYPE_WIKI) {
-        		throw WikiServiceException.NOT_WIKI_ITEM(word);
-        	}
-            wikiItem = (WikiItem)item;
         } else if (id != null) {
         	ItemId iid = new ItemId(id, lc);
         	Mailbox mbox = getRequestedMailbox(lc);

@@ -31,6 +31,7 @@ public class WikiServiceException extends ServiceException {
 	public static final String NO_SUCH_WIKI = "wiki.NO_SUCH_WIKI";
 	public static final String NOT_WIKI_ITEM = "wiki.NOT_WIKI_ITEM";
 	public static final String CANNOT_READ = "wiki.CANNOT_READ";
+	public static final String INVALID_PATH = "wiki.INVALID_PATH";
 	public static final String ERROR = "wiki.ERROR";
 	
 	public static final String WIKI_ID = "w";
@@ -57,6 +58,9 @@ public class WikiServiceException extends ServiceException {
     }
     public static WikiServiceException ERROR(String w, Throwable cause) {
         return new WikiServiceException("error: "+ w, ERROR, SENDERS_FAULT, cause);
+    }
+    public static WikiServiceException INVALID_PATH(String path) {
+        return new WikiServiceException("invalid path: "+ path, ERROR, SENDERS_FAULT);
     }
     public static WikiServiceException NOT_ENABLED() {
         return new WikiServiceException("wiki is not enabled", ERROR, RECEIVERS_FAULT);
