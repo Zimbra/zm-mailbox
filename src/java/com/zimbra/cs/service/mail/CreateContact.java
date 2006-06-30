@@ -137,13 +137,7 @@ public class CreateContact extends WriteOpDocumentHandler  {
                     ContentType ctype = new ContentType(mp.getContentType());
                     if (!ctype.match(Mime.CT_TEXT_PLAIN) && !ctype.match(Mime.CT_TEXT_VCARD))
                         throw MailServiceException.INVALID_CONTENT_TYPE(ctype.getBaseType());
-                    Object content = mp.getContent();
-                    if (content instanceof InputStream)
-                        text = new String(ByteUtil.getContent((InputStream) content, mp.getSize()));
-                    else if (content instanceof String)
-                        text = (String) content;
-                    else
-                        throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS("could not extract part content", null);
+                    text = Mime.getStringContent(mp);
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("error reading vCard", e);
                 } catch (MessagingException e) {

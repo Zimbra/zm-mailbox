@@ -55,14 +55,12 @@ public class TextPlainHandler extends MimeHandler {
 
     protected String getContentImpl() throws MimeHandlerException {
         if (mContent == null) {
-            StringBuffer buffer = new StringBuffer();
             DataSource source = getDataSource();
             try {
-                Mime.decodeText(source.getInputStream(), source.getContentType(), buffer);
+                mContent = Mime.decodeText(source.getInputStream(), source.getContentType());
             } catch (IOException e) {
                 throw new MimeHandlerException(e);
             }
-            mContent = buffer.toString();
         }
         if (mContent == null)
             mContent = "";

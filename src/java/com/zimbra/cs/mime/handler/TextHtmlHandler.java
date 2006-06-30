@@ -131,7 +131,7 @@ public class TextHtmlHandler extends MimeHandler {
         super.init(source);
         try {
             mContent = null;
-            mReader = Mime.decodeText(source.getInputStream(), source.getContentType());
+            mReader = Mime.getTextReader(source.getInputStream(), source.getContentType());
             mParser = new org.cyberneko.html.parsers.SAXParser();
             mHandler = new ContentExtractor();
             mParser.setContentHandler(mHandler);

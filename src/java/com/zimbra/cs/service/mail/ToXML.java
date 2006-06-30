@@ -1186,28 +1186,18 @@ public class ToXML {
     }
 
     /**
-     * @param mp
+     * @param elt
      * @param pi
      * @throws MessagingException
      * @throws IOException
      */
-    private static void getContent(Element mp, MPartInfo pi) throws IOException, MessagingException {
+    private static void getContent(Element elt, MPartInfo pi) throws IOException, MessagingException {
         // TODO: support other parts
         String ct = pi.getContentType();
         if (ct.matches(Mime.CT_TEXT_WILD) || ct.matches(Mime.CT_XML_WILD)) {
-            MimePart part = pi.getMimePart();
+            MimePart mp = pi.getMimePart();
 
-            Object o = part.getContent();
-            String cstr = null;
-            if (o instanceof String) {
-                cstr = (String) o;
-            } else if (o instanceof InputStream) {
-                InputStream is = (InputStream) o;
-                cstr = new String(ByteUtil.getContent(is, 4096));
-            } else {
-                return;
-            }
-
+            String cstr = Mime.getStringContent(mp);
             //mLog.info("before strip: "+cstr);
             String data = StringUtil.stripControlCharacters(cstr);
             //mLog.info("after strip: "+data);
@@ -1217,14 +1207,12 @@ public class ToXML {
                 //mLog.info("after defang: "+data);
             }
 
-            mp.addAttribute(MailService.E_CONTENT, data, Element.DISP_CONTENT);
-            //content.addAttribute(MailService.A_CONTENT_TYPE, )
-            //content.addText((String) part.getContent());
+            elt.addAttribute(MailService.E_CONTENT, data, Element.DISP_CONTENT);
             // TODO: CDATA worth the effort?
 //          if (isHtml && data.indexOf("]]>") == -1)
-//          content.addCDATA(data);
+//              content.addCDATA(data);
 //          else
-//          content.addText(data);
+//              content.addText(data);
         }
     }
 

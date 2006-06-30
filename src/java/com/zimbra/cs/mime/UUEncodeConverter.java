@@ -57,14 +57,9 @@ public class UUEncodeConverter extends MimeVisitor {
             // only check "text/plain" parts for uudecodeable attachments
             if (!msg.isMimeType(Mime.CT_TEXT_PLAIN))
                 return false;
-            
-            Object content = msg.getContent();
-            // FIXME: check for char or byte arrays, SharedByteInputStream or whatever
-            if (!(content instanceof String))
-                return false;
-            String text = (String) content;
-    
+
             // go through top-level text/plain part and extract uuencoded files
+            String text = Mime.getStringContent(msg);
             boolean initial = text.startsWith("begin ");
             for (int location = 0; initial || (location = text.indexOf("\nbegin ", location)) != -1; initial = false, location++) {
                 // find the end of the uuencoded block

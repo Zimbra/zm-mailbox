@@ -30,8 +30,6 @@
 package com.zimbra.cs.filter.jsieve;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
 import java.util.ListIterator;
 
 import javax.mail.MessagingException;
@@ -46,6 +44,7 @@ import org.apache.jsieve.tests.AbstractTest;
 
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mime.MPartInfo;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 
@@ -107,12 +106,11 @@ public class BodyTest extends AbstractTest {
 
     }
     
-    protected void validateArguments(Arguments arguments) throws SieveException
-    {
+    protected void validateArguments(Arguments arguments) {
         // override validation -- it's already done in executeBasic above
     }
 
-    private boolean test(MailAdapter mail, String comparator, String key) throws SieveException {
+    private boolean test(MailAdapter mail, String comparator, String key) {
         ZimbraMailAdapter zimbraMail = (ZimbraMailAdapter) mail;
         ParsedMessage pm = zimbraMail.getParsedMessage();
         try {
@@ -120,13 +118,10 @@ public class BodyTest extends AbstractTest {
              * We check the first level MIME parts that are text. If the key word appears there,
              * we consider it a match.
              */
-            for (MPartInfo part : pm.getMessageParts()) {
-                Object content = part.getMimePart().getContent();
-                if (content instanceof String) {
-                    String contentStr = (String) content;
-                    if (contentStr.toLowerCase().indexOf(key.toLowerCase()) >= 0) {
-                        return true;
-                    }
+            for (MPartInfo mpi : pm.getMessageParts()) {
+                String content = Mime.getStringContent(mpi.getMimePart());
+                if (content.toLowerCase().indexOf(key.toLowerCase()) >= 0) {
+                    return true;
                 }
             }
         } catch (IOException e) {

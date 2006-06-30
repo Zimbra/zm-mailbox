@@ -207,9 +207,9 @@ public class Mime {
             handlePart((MimePart) bp, prefix + (i + 1), partList, parent, i+1);
         }
     }
-    
-    /** Returns the MimeMultipart object encapsulating the body of a MIME
-     *  part with content-type "message/rfc822".  Use this method instead of
+
+    /** Returns the MimeMessage object encapsulating a MIME part with
+     *  content-type "message/rfc822".  Use this method instead of
      *  {@link Part#getContent()} to work around JavaMail's fascism about
      *  proper MIME format and failure to support RFC 2184. */
     public static Object getMessageContent(MimePart message822Part) throws IOException, MessagingException {
@@ -219,9 +219,9 @@ public class Mime {
                 // handle unparsed content due to miscapitalization of content-type value
                 content = new FixedMimeMessage(JMSession.getSession(), (InputStream) content);
             } catch (Exception e) {}
-            return content;
+        return content;
     }
-    
+
     /** Returns the MimeMultipart object encapsulating the body of a MIME
      *  part with content-type "multipart/*".  Use this method instead of
      *  {@link Part#getContent()} to work around JavaMail's fascism about
@@ -234,6 +234,17 @@ public class Mime {
                 content = new MimeMultipart(new InputStreamDataSource((InputStream) content, contentType));
             } catch (Exception e) {}
         return content;
+    }
+
+    /** Returns a String containing the text content of the MimePart.  If the
+     *  part's specified charset is unknown, defaults to the system's default
+     *  charset.  Use this method instead of {@link Part#getContent()} to work
+     *  around JavaMail's fascism about proper MIME format and failure to
+     *  support RFC 2184. 
+     * @throws MessagingException 
+     * @throws IOException */
+    public static String getStringContent(MimePart textPart) throws IOException, MessagingException {
+        return decodeText(textPart.getInputStream(), textPart.getContentType());
     }
 
     private static final class InputStreamDataSource implements DataSource {
@@ -459,15 +470,15 @@ public class Mime {
 	 * @param buffer
 	 * @throws IOException
 	 */
-	public static void decodeText(InputStream input, String contentType, StringBuffer buffer)
-		throws IOException 
-	{
-    	Reader reader = decodeText(input, contentType);
+	public static String decodeText(InputStream input, String contentType) throws IOException {
+        StringBuilder buffer = new StringBuilder();
+    	Reader reader = getTextReader(input, contentType);
         char [] cbuff = new char[MAX_DECODE_BUFFER];
         int num;
         while ( (num = reader.read(cbuff, 0, cbuff.length)) != -1) {
             buffer.append(cbuff, 0, num);
         }
+        return buffer.toString();
 	}
 	 
     /**
@@ -479,7 +490,7 @@ public class Mime {
       * @param contentType The Content-Type of the stream, which must be "text/*"
       * @throws IOException
       */
-    public static Reader decodeText(InputStream input, String contentType) {
+    public static Reader getTextReader(InputStream input, String contentType) {
     	String charset = getCharset(contentType);
         Reader reader = null;
         if (charset != null) { 

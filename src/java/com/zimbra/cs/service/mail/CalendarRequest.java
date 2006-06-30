@@ -107,7 +107,7 @@ public abstract class CalendarRequest extends WriteOpDocumentHandler {
                 MPartInfo mpi = (MPartInfo) it.next();
                 
                 if (mpi.getContentType().equals(Mime.CT_TEXT_HTML))
-                    return (String)(mpi.getMimePart().getContent());
+                    return Mime.getStringContent(mpi.getMimePart());
             }
             return null;
         } catch (IOException e) {
