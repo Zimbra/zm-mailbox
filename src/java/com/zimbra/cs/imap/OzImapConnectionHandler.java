@@ -1626,7 +1626,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
                 if (!i4flags.isEmpty() || operation == STORE_REPLACE) {
                     // FIXME: for replace, changed tag/flag mask could be precomputed outside the i4set loop
-                    short sflags = (operation != STORE_REPLACE ? i4msg.sflags : 0);
+                    short sflags = (operation != STORE_REPLACE ? i4msg.sflags : (short) (i4msg.sflags & ~ImapMessage.MUTABLE_SESSION_FLAGS));
                     int  flags   = (operation != STORE_REPLACE ? i4msg.flags : Flag.FLAG_UNREAD | (i4msg.flags & ~ImapMessage.IMAP_FLAGS));
                     long tags    = (operation != STORE_REPLACE ? i4msg.tags : 0);
                     for (ImapFlag i4flag : i4flags) {
@@ -1637,18 +1637,21 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                         else
                             flags = (int) (operation == STORE_REMOVE ^ !i4flag.mPositive ? flags & ~i4flag.mBitmask : flags | i4flag.mBitmask);
                     }
+                    boolean persist = tags != i4msg.tags || flags != i4msg.flags;
 
                     synchronized (mMailbox) {
-                        if (tags != i4msg.tags || flags != i4msg.flags)
+                        if (persist || sflags != i4msg.sflags)
                             try {
                                 // if it was a STORE [+-]?FLAGS.SILENT, temporarily disable notifications
                                 if (silent)
                                     mSession.getFolder().disableNotifications();
-                                
+
                                 // actually alter the item's flags
-                                SetTagsOperation op = new SetTagsOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType(), flags, tags);
-                                op.schedule();
-                                
+                                if (persist) {
+                                    SetTagsOperation op = new SetTagsOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType(), flags, tags);
+                                    op.schedule();
+                                }
+
                                 // i4msg's permanent flags/tags will be updated via notification
                                 i4msg.setSessionFlags(sflags);
                             } catch (MailServiceException.NoSuchItemException nsie) {
