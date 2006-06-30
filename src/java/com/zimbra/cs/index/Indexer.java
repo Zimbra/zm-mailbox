@@ -56,33 +56,21 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 
 
-/**
- * @author schemers
- *
- * Index blobs that need to be indexed.
- * Also save metadata cached info too if needed
- * 
- * TODO this is a singleton and therefore should probably be made static
- */
 public class Indexer 
 {
     private static Log mLog = LogFactory.getLog(Indexer.class);
 
     private static Indexer sInstance = new Indexer();
-    
+
     public static Indexer GetInstance() {
-    	return sInstance;
+        return sInstance;
     }
 
     private Indexer() 
     {
         sInstance = this;
-	}
-    
-    /////////////////////////////////////////////////////////////
-    // External API (called by IndexTask, IndexerDaemon
-    /////////////////////////////////////////////////////////////
-    
+    }
+
     public MailboxIndex.AdminInterface getAdminInterface(int mailboxId) throws ServiceException
     {
         return new MailboxIndex.AdminInterface(Mailbox.getMailboxById(mailboxId).getMailboxIndex());
@@ -94,7 +82,7 @@ public class Indexer
         MailboxIndex idx = mbox.getMailboxIndex();
         MailItem item;
         try {
-        	item = mbox.getItemById(null, itemId, itemType);
+            item = mbox.getItemById(null, itemId, itemType);
         } catch (MailServiceException.NoSuchItemException e) {
             // Because index commits are batched, during mailbox restore
             // it's possible to see the commit record of indexing operation
@@ -111,32 +99,32 @@ public class Indexer
         redo.log();
         redo.allowCommit();
         switch (itemType) {
-        case MailItem.TYPE_APPOINTMENT:
-            break;
-        case MailItem.TYPE_DOCUMENT:
-        case MailItem.TYPE_WIKI:
-        	indexDocument(redo, idx, itemId, (com.zimbra.cs.mailbox.Document) item, timestamp);
-        	break;
-        case MailItem.TYPE_MESSAGE:
+            case MailItem.TYPE_APPOINTMENT:
+                break;
+            case MailItem.TYPE_DOCUMENT:
+            case MailItem.TYPE_WIKI:
+                indexDocument(redo, idx, itemId, (com.zimbra.cs.mailbox.Document) item, timestamp);
+                break;
+            case MailItem.TYPE_MESSAGE:
                 InputStream is = mbox.getMessageById(null, itemId).getRawMessage();
                 MimeMessage mm;
-    			try {
-    				mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
+                try {
+                    mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
                     ParsedMessage pm = new ParsedMessage(mm, timestamp, mbox.attachmentsIndexingEnabled());
                     indexMessage(redo, idx, itemId, pm);
-    			} catch (Throwable e) {
+                } catch (Throwable e) {
                     mLog.warn("Skipping indexing; Unable to parse message " + itemId + ": " + e.toString(), e);
                     // Eat up all errors during message analysis.  Throwing
                     // anything here will force server halt during crash
                     // recovery.  Because we can't possibly predict all
                     // data-dependent message parse problems, we opt to live
                     // with unindexed messages rather than P1 support calls.
-    
+
                     // Write abort record for this item, to prevent repeat calls
                     // to index this unindexable item.
                     redo.abort();
                 } finally {
-        			is.close();
+                    is.close();
                 }
                 break;
             case MailItem.TYPE_CONTACT:
@@ -147,7 +135,7 @@ public class Indexer
                 break;
             default:
                 redo.abort();
-                throw ServiceException.FAILURE("Invalid item type for indexing: type=" + itemType, null);
+            throw ServiceException.FAILURE("Invalid item type for indexing: type=" + itemType, null);
         }
     }
 
@@ -161,21 +149,19 @@ public class Indexer
     public void indexMessage(IndexItem redo, MailboxIndex idx, int messageId, ParsedMessage pm)
     throws ServiceException {
         try {
-	        int numDocsAdded = 0;
-        	for (Iterator it = pm.getLuceneDocuments().iterator(); it.hasNext(); ) {
-        		Document doc = (Document) it.next();
-        		if (doc != null) {
-        			addDocument(redo, doc, idx, messageId, pm.getReceivedDate());
-        			numDocsAdded++;
-        		}
-        	}
-        	incrementNumIndexedBy(numDocsAdded);
-//        	redoRecorder.commit(); // TODO call this after write has completed! (or abort!)
+            int numDocsAdded = 0;
+            for (Iterator it = pm.getLuceneDocuments().iterator(); it.hasNext(); ) {
+                Document doc = (Document) it.next();
+                if (doc != null) {
+                    addDocument(redo, doc, idx, messageId, pm.getReceivedDate());
+                    numDocsAdded++;
+                }
+            }
         } catch (IOException e) {
             throw ServiceException.FAILURE("indexMessage caught IOException", e);
         }
     }
-    
+
     /**
      * Index a Contact in the specified mailbox.
      * @param mailboxId
@@ -185,31 +171,31 @@ public class Indexer
      */
     public void indexContact(IndexItem redo, MailboxIndex idx, int mailItemId, Contact contact)
     throws ServiceException {
-		mLog.info("indexContact("+contact+")");
+        mLog.info("indexContact("+contact+")");
         try {
             StringBuffer contentText = new StringBuffer();
             Map m = contact.getFields();
             for (Iterator it = m.values().iterator(); it.hasNext(); )
             {
                 String cur = (String)it.next();
-                
+
                 contentText.append(cur);
                 contentText.append(' ');
             }
-            
-            
+
+
             // FIXME: this is very slow, and unnecessary in many instances (e.g. a contact is new).  Create some kind of a flag
             // so we don't try to do this when a contact is known to be new -- such as when re-indexing.
-        	try {
-        	    idx.deleteDocuments(new int[] { mailItemId });
-        	} catch(IOException e) {
-        	    mLog.debug("indexContact ignored IOException deleting documents (index does not exist yet)");
-        	}
-            
+            try {
+                idx.deleteDocuments(new int[] { mailItemId });
+            } catch(IOException e) {
+                mLog.debug("indexContact ignored IOException deleting documents (index does not exist yet)");
+            }
+
             Document doc = new Document();
             String subj = contact.getFileAsString().toLowerCase();
             String name = subj;
-            
+
             StringBuffer emailStrBuf = new StringBuffer();
             List emailList = contact.getEmailAddresses();
             for (Iterator iter = emailList.iterator(); iter.hasNext();) {
@@ -219,27 +205,26 @@ public class Indexer
             }
 
             String emailStr = emailStrBuf.toString();
-            
+
             contentText.append(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr));
-            
+
             /* put the email addresses in the "To" field so they can be more easily searched */
             doc.add(Field.UnStored(LuceneFields.L_H_TO, emailStr));
-            
+
             doc.add(Field.UnStored(LuceneFields.L_CONTENT, contentText.toString()));
             doc.add(Field.UnStored(LuceneFields.L_H_SUBJECT, subj));
             doc.add(Field.Keyword(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(mailItemId)));
             doc.add(Field.Text(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT));
             doc.add(new Field(LuceneFields.L_SORT_SUBJECT, subj.toUpperCase(), true/*store*/, true/*index*/, false /*token*/));
             doc.add(new Field(LuceneFields.L_SORT_NAME, name.toUpperCase(), false/*store*/, true/*index*/, false /*token*/));
-            
+
             addDocument(redo, doc, idx, mailItemId, contact.getDate());
-            
-        	incrementNumIndexedBy(1);
+
         } catch (IOException e) {
-        	throw ServiceException.FAILURE("indexContact caught IOException", e);
+            throw ServiceException.FAILURE("indexContact caught IOException", e);
         }
     }
-    
+
     /**
      * Index a Note in the specified mailbox.
      * @param mailboxId
@@ -249,47 +234,45 @@ public class Indexer
      */
     public void indexNote(IndexItem redo, MailboxIndex idx, int mailItemId, Note note)
     throws ServiceException {
-		mLog.info("indexNote("+note+")");
+        mLog.info("indexNote("+note+")");
         try {
             String toIndex = note.getContent();
-            
+
             if (mLog.isDebugEnabled()) {
                 mLog.debug("Note value=\""+toIndex+"\"");
             }
-            
-        	try {
-        	    idx.deleteDocuments(new int[] { mailItemId });
-        	} catch(IOException e) {
-        	    mLog.debug("indexNote ignored IOException deleting documents (index does not exist yet)");
-        	}
-            
+
+            try {
+                idx.deleteDocuments(new int[] { mailItemId });
+            } catch(IOException e) {
+                mLog.debug("indexNote ignored IOException deleting documents (index does not exist yet)");
+            }
+
             Document doc = new Document();
             doc.add(Field.UnStored(LuceneFields.L_CONTENT, toIndex));
-            
+
             String subj = toIndex.toLowerCase();
             String name = subj;
-            
+
             doc.add(Field.UnStored(LuceneFields.L_H_SUBJECT, subj));
             doc.add(Field.Keyword(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(mailItemId)));
             doc.add(Field.Text(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE));
 
             doc.add(new Field(LuceneFields.L_SORT_SUBJECT, subj.toUpperCase(), true/*store*/, true/*index*/, false /*token*/));
             doc.add(new Field(LuceneFields.L_SORT_NAME, name.toUpperCase(), false/*store*/, true/*index*/, false /*token*/));
-            
-            
-//            String dateString = DateField.timeToString(note.getDate());
-//            mLog.debug("Note date is: "+dateString);
-//            doc.add(Field.Text(LuceneFields.L_DATE, dateString));
-            
+
+//          String dateString = DateField.timeToString(note.getDate());
+//          mLog.debug("Note date is: "+dateString);
+//          doc.add(Field.Text(LuceneFields.L_DATE, dateString));
+
             addDocument(redo, doc, idx, mailItemId, note.getDate());
             
-        	incrementNumIndexedBy(1);
         } catch (IOException e) {
-        	throw ServiceException.FAILURE("indexNote caught IOException", e);
+            throw ServiceException.FAILURE("indexNote caught IOException", e);
         }
     }
-    
-    
+
+
     /**
      * Index a Document/WikiItem in the specified mailbox.
      * @param mailboxId
@@ -300,33 +283,32 @@ public class Indexer
     public void indexDocument(IndexItem redo, MailboxIndex idx, int mailItemId, com.zimbra.cs.mailbox.Document document, long timestamp)
     throws ServiceException {
         try {
-        	ParsedDocument pd = new ParsedDocument(document.getBlob().getBlob().getFile(),
-        							document.getFilename(), 
-        							document.getContentType(),
-        							timestamp);
-        	indexDocument(redo, idx, mailItemId, pd);
+            ParsedDocument pd = new ParsedDocument(document.getBlob().getBlob().getFile(),
+                        document.getFilename(), 
+                        document.getContentType(),
+                        timestamp);
+            indexDocument(redo, idx, mailItemId, pd);
         } catch (IOException e) {
-        	throw ServiceException.FAILURE("indexDocument caught Exception", e);
+            throw ServiceException.FAILURE("indexDocument caught Exception", e);
         }
     }
     public void indexDocument(IndexItem redo, MailboxIndex idx, int mailItemId, ParsedDocument pd)
     throws ServiceException {
         try {
-        	try {
-        	    idx.deleteDocuments(new int[] { mailItemId });
-        	} catch(IOException e) {
-        	    mLog.debug("indexDocument ignored IOException deleting documents (index does not exist yet)");
-        	}
+            try {
+                idx.deleteDocuments(new int[] { mailItemId });
+            } catch(IOException e) {
+                mLog.debug("indexDocument ignored IOException deleting documents (index does not exist yet)");
+            }
             addDocument(redo, pd.getDocument(), idx, mailItemId, pd.getCreatedDate());
-        	incrementNumIndexedBy(1);
         } catch (IOException e) {
-        	throw ServiceException.FAILURE("indexDocument caught Exception", e);
+            throw ServiceException.FAILURE("indexDocument caught Exception", e);
         }
     }
-    
-    
+
+
     boolean checkForExistence(MailboxIndex idx, int mailItemId) {
-    	return idx.checkMailItemExists(mailItemId);
+        return idx.checkMailItemExists(mailItemId);
     }
 
     /**
@@ -337,10 +319,10 @@ public class Indexer
      * @throws ServiceException
      */
     public void addDocument(IndexItem redoOp, Document doc, MailboxIndex idx, 
-            int mailboxBlobId, long receivedDate) throws IOException
-	{
-    	addDocument(redoOp, doc, idx, mailboxBlobId, receivedDate, false);
-	}
+                int mailboxBlobId, long receivedDate) throws IOException
+                {
+        addDocument(redoOp, doc, idx, mailboxBlobId, receivedDate, false);
+                }
 
     /**
      * add the document to the mailbox specified by mailboxId
@@ -352,35 +334,34 @@ public class Indexer
      * @throws ServiceException
      */
     public void addDocument(IndexItem redoOp, Document doc, MailboxIndex idx, int mailboxBlobId, 
-            long receivedDate, boolean checkExisting) throws IOException
-	{
-    	long start = System.currentTimeMillis();
-    	String mailboxBlobIdStr = Integer.toString(mailboxBlobId);
+                long receivedDate, boolean checkExisting) throws IOException {
+        long start = System.currentTimeMillis();
+        String mailboxBlobIdStr = Integer.toString(mailboxBlobId);
 
-    	boolean doit = true;
-    	if (checkExisting) {
-    		boolean exists = checkForExistence(idx, mailboxBlobId);
+        boolean doit = true;
+        if (checkExisting) {
+            boolean exists = checkForExistence(idx, mailboxBlobId);
 
-    		if (exists) {
-    			doit = false;
+            if (exists) {
+                doit = false;
                 if (mLog.isDebugEnabled()) {
                     mLog.debug("Already indexed: mailbox=" + idx + ", mailboxBlob=" + mailboxBlobId);
                 }
-    		}
-    	}
+            }
+        }
 
-    	if (doit) {
-	    	idx.addDocument(redoOp, doc, mailboxBlobIdStr, receivedDate);
-    	}
+        if (doit) {
+            idx.addDocument(redoOp, doc, mailboxBlobIdStr, receivedDate);
+        }
 
         if (mLog.isDebugEnabled()) {
             long end = System.currentTimeMillis();
             long elapsed = end-start; 
-        
+
             mLog.debug("Indexer.addDocument took " + elapsed + "ms" );
         }
-	}
-    
+    }
+
     /**
      * Server startup-time initialization
      */
@@ -415,53 +396,10 @@ public class Indexer
     }
 
     public void shutdown() {
-    	MailboxIndex.shutdown();
+        MailboxIndex.shutdown();
     }
 
     public void flush() {
-    	MailboxIndex.flushAllWriters();
-    }
-
-    /////////////////////////////////////////////////////////////
-    // Statistics
-    /////////////////////////////////////////////////////////////
-    
-	// What do each of these mean?  Aside from "i didn't comment this code" that is...
-	private int mNumIndexed;
-	private int mNumIgnored;
-	private int mNumRequeued;
-	private int mNumRetryLimit;
-
-	public synchronized void incrementNumIndexedBy(int howmany) {
-		mNumIndexed += howmany;
-	}
-
-	public synchronized void incrementNumIgnoredBy(int howmany) {
-		mNumIgnored += howmany;
-	}
-
-	public synchronized void incrementNumRequeuedBy(int howmany) {
-		mNumRequeued += howmany;
-	}
-
-	public synchronized void incrementNumRetryLimitBy(int howmany) {
-		mNumRetryLimit += howmany;
-	}
-	
-    
-    public synchronized void resetStats() {
-		mNumRetryLimit = mNumIndexed = mNumIgnored = mNumRequeued = 0;
-    }
-    
-
-	// synchronized with the incrementXYZ() methods
-    public synchronized void logStats() {
-    	if (mNumIndexed > 0 || mNumIgnored > 0 ||
-    		mNumRequeued > 0 || mNumRetryLimit > 0) {
-	    	mLog.info("Finished indexed: " + mNumIndexed +
-	  			  	  ", ignored: " + mNumIgnored +
-					  ", requeued: " + mNumRequeued +
-					  ", retrylimit: " + mNumRetryLimit);
-    	}
+        MailboxIndex.flushAllWriters();
     }
 }

@@ -74,10 +74,7 @@ public class CreateContactOperation extends Operation {
             for (Contact c : op.getContacts())
                 toRet.add(new ItemId(c));
             
-            System.gc();
-            System.gc();
-            System.gc();
-            System.gc();
+            op = null;
         }
         
         return toRet;

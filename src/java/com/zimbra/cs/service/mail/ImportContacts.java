@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -111,11 +110,6 @@ public class ImportContacts extends DocumentHandler  {
                 ids.append(",");
             ids.append(iid.toString(lc));
         }
-
-        System.gc();
-        System.gc();
-        System.gc();
-        System.gc();
 
         Element response = lc.createElement(MailService.IMPORT_CONTACTS_RESPONSE);
         Element cn = response.addElement(MailService.E_CONTACT);
