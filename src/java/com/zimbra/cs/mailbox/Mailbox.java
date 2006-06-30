@@ -2091,7 +2091,7 @@ public class Mailbox {
     }
 
 
-    public void beginTrackingImap(OperationContext octxt) throws ServiceException {
+    public synchronized void beginTrackingImap(OperationContext octxt) throws ServiceException {
         if (isTrackingImap())
             return;
 
@@ -2110,7 +2110,7 @@ public class Mailbox {
         }
     }
 
-    public void beginTrackingSync(OperationContext octxt) throws ServiceException {
+    public synchronized void beginTrackingSync(OperationContext octxt) throws ServiceException {
         if (isTrackingSync())
             return;
 
