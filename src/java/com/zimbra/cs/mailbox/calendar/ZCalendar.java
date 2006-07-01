@@ -31,8 +31,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -754,24 +752,23 @@ public class ZCalendar {
             }
         }
 
-        public void propertyValue(String value) throws URISyntaxException, ParseException, IOException { 
+        public void propertyValue(String value) { 
             mCurProperty.mValue = value;
         }
 
         public void endProperty(String name) { mCurProperty = null; }
 
-        public void parameter(String name, String value) throws URISyntaxException { 
+        public void parameter(String name, String value) { 
             ZParameter param = new ZParameter(name, value);
             if (mCurProperty != null) {
                 mCurProperty.mParameters.add(param);
             } else {
-                ZimbraLog.calendar.debug("ERROR: got parameter "+name+","+value+" outside of Property");
+                ZimbraLog.calendar.debug("ERROR: got parameter " + name + "," + value + " outside of Property");
             }
         }
     }
-    
-    public static class ZCalendarBuilder
-    {
+
+    public static class ZCalendarBuilder {
         public static ZVCalendar build(Reader reader) throws ServiceException {
             BufferedReader br = new BufferedReader(reader);
             reader = br;
@@ -780,29 +777,27 @@ public class ZCalendar {
             } catch(IOException e) {
                 e.printStackTrace();
             }
+
             CalendarParser parser = new CalendarParserImpl();
-            
             ZContentHandler handler = new ZContentHandler();
-            
             try {
                 parser.parse(new UnfoldingReader(reader), handler);
-            } catch(IOException e) {
-                throw ServiceException.FAILURE("Caught IOException parsing calendar: "+e, e);
-            } catch(ParserException e) {
-                StringBuilder s = new StringBuilder("Caught ParseException parsing calendar: "+e);
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("Caught IOException parsing calendar: " + e, e);
+            } catch (ParserException e) {
+                StringBuilder s = new StringBuilder("Caught ParseException parsing calendar: " + e);
                 try {
                     reader.reset();
                     s.append('\n');
                     int charRead;
                     while ((charRead = reader.read()) != -1)
                         s.append((char) charRead);
-                } catch(IOException ioe) {
+                } catch (IOException ioe) {
                     ioe.printStackTrace();
                 }
-                
-                throw ServiceException.FAILURE(s.toString(), e);
+                throw ServiceException.PARSE_ERROR(s.toString(), e);
             }
-            
+
             return handler.mCal;
         }
     }
@@ -848,17 +843,16 @@ public class ZCalendar {
             
 
             if (false) {
-            
-            File inFile = new File("c:\\test.ics");
-            FileReader in = new FileReader(inFile);
-            
-            CalendarParser parser = new CalendarParserImpl();
-            
-            ZContentHandler handler = new ZContentHandler();
-            parser.parse(new UnfoldingReader(in), handler);
-            System.out.println(handler.mCal.toString());
-//            createFromCalendar(handler.mCal);
-            Invite.createFromCalendar(null, null, handler.mCal, false);
+                File inFile = new File("c:\\test.ics");
+                FileReader in = new FileReader(inFile);
+
+                CalendarParser parser = new CalendarParserImpl();
+
+                ZContentHandler handler = new ZContentHandler();
+                parser.parse(new UnfoldingReader(in), handler);
+                System.out.println(handler.mCal.toString());
+//              createFromCalendar(handler.mCal);
+                Invite.createFromCalendar(null, null, handler.mCal, false);
             }
             
         } catch(Exception e) {
