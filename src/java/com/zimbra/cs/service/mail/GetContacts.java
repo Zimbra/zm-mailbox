@@ -170,34 +170,26 @@ public class GetContacts extends DocumentHandler  {
 			}
 		}
 	}
-	
-	private List<Element> proxyRemote(Element request, ArrayList<String> attrs, boolean sync, String sortStr, int folderId, Map<String, StringBuffer>  remote, Map<String,Object> context)
+
+	private List<Element> proxyRemote(Element request, ArrayList<String> attrs, boolean sync, String sortStr, int folderId, Map<String, StringBuffer> remote, Map<String,Object> context)
 	throws ServiceException {
-		Element cn = request.addElement(MailService.E_CONTACT);
-		
 		List<Element> responses = new ArrayList<Element>();
-		
-		for (Iterator it = remote.entrySet().iterator(); it.hasNext(); ) {
-			Map.Entry entry = (Map.Entry) it.next();
-			
+
+        Element cn = request.addElement(MailService.E_CONTACT);
+        for (Map.Entry<String, StringBuffer> entry : remote.entrySet()) {
 			cn.addAttribute(MailService.A_ID, entry.getValue().toString());
-			
-			try {
-				Element response = proxyRequest(request, context, entry.getKey().toString());
-				extractResponses(response, responses);
-			} catch (SoapFaultException e) {
-				throw ServiceException.FAILURE("SoapFaultException: "+e.toString(), e);
-			}
+
+			Element response = proxyRequest(request, context, entry.getKey());
+			extractResponses(response, responses);
 		}
-	
+
 		return responses;
 	}
-	
+
 	protected void extractResponses(Element responseElt, List<Element> responses) {
 		for (Element e : responseElt.listElements(MailService.E_CONTACT)) {
 			e.detach();
 			responses.add(e);
 		}
 	}
-
 }
