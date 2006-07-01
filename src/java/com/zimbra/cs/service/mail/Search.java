@@ -292,7 +292,7 @@ public class Search extends DocumentHandler  {
         
         Element m;
         if (inline) {
-            m = ToXML.encodeMessageAsMP(response, zc, msg, params.getWantHtml(), null);
+            m = ToXML.encodeMessageAsMP(response, zc, msg, null, params.getWantHtml(), true);
             if (!msg.getFragment().equals(""))
                 m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
         } else

@@ -893,28 +893,33 @@ It will return exactly 1 conversation element.
 ------------
 
 <GetMsgRequest>
-  <m id="{msg-id}" [read="1"] [raw="1"] [html="1"] [part="{part}"] [subId="subId"/>
+  <m id="{msg-id}" [read="1"] [raw="1"] [html="1"] [neuter="0"] [part="{part}"]/>
 </GetMsgRequest>
+
+    The {msg-id} can contain a subpart identifier (e.g. "775-778") to return
+    a message stored as a subpart of some other mail-item, specifically for
+    Messages stored as part of Appointments
 
 read="1" to mark the message as read, "0" to leave the read status unchanged.  
 	(default is 0.)
-html="1" to return defanged HTML content by default.
-    (default is 0.)
 raw="1" to return the raw message content rather than a parsed mime structure;
     (default is "0".  if message too big or not ASCII, a content servlet URL is returned)
+html="1" to return defanged HTML content by default.
+    (default is 0.)
+neuter="1" to "neuter" <IMG> tags returned in HTML content; this involves switching
+    the "src" attribute to "dfsrc" so that images don't display by default
+    (default is 1.)
 supply a "part" and the retrieved data will be on the specified message/rfc822 subpart.
     if the part does not exist or is not a message/rfc822 part, mail.NO_SUCH_PART
-subId="nn" to return a message which is stored as a subpart of some other mail-item,
-    specifically this is used for Messages which are stored as part of Appointments
 
 <GetMsgResponse>
   <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" l="{folder}" (cid="{conv}")>
-   <e .../>*
-   <su>{subject}</su>
-   <fr>{fragment}</fr>
-   <mid>{Message-ID header}</mid>
-   [<mp>...</mp>]
-   [<content (url="...")>...</content>]
+    <e .../>*
+    <su>{subject}</su>
+    <fr>{fragment}</fr>
+    <mid>{Message-ID header}</mid>
+    [<mp>...</mp>]
+    [<content (url="...")>...</content>]
   </m>
 </GetMsgResponse>
 

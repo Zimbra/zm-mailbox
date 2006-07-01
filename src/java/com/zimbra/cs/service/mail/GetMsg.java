@@ -61,6 +61,7 @@ public class GetMsg extends WriteOpDocumentHandler {
         ItemId iid = new ItemId(eMsg.getAttribute(MailService.A_ID), lc);
         boolean raw = eMsg.getAttributeBool(MailService.A_RAW, false);
         boolean read = eMsg.getAttributeBool(MailService.A_MARK_READ, false);
+        boolean neuter = eMsg.getAttributeBool(MailService.A_NEUTER, true);
         String part = eMsg.getAttribute(MailService.A_PART, null);
         
         GetMsgOperation op = new GetMsgOperation(session, octxt, mbox, Requester.SOAP, iid, raw, read, part);
@@ -71,9 +72,9 @@ public class GetMsg extends WriteOpDocumentHandler {
         } else {
             boolean wantHTML = eMsg.getAttributeBool(MailService.A_WANT_HTML, false);
             if (op.getMsg() != null)
-                ToXML.encodeMessageAsMP(response, lc, op.getMsg(), wantHTML, part);
+                ToXML.encodeMessageAsMP(response, lc, op.getMsg(), part, wantHTML, neuter);
             else if (op.getAppt() != null)
-                ToXML.encodeApptInviteAsMP(response, lc, op.getAppt(), iid, wantHTML, part);
+                ToXML.encodeApptInviteAsMP(response, lc, op.getAppt(), iid, part, wantHTML, neuter);
         }
         return response;
     }

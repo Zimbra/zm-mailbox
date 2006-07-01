@@ -104,7 +104,7 @@ public class SaveDraft extends WriteOpDocumentHandler {
 
         Element response = lc.createElement(MailService.SAVE_DRAFT_RESPONSE);
         // FIXME: inefficient -- this recalculates the MimeMessage (but SaveDraft is called rarely)
-        ToXML.encodeMessageAsMP(response, lc, msg, false, null);
+        ToXML.encodeMessageAsMP(response, lc, msg, null, false, true);
         return response;
     }
 }

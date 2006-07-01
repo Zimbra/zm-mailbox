@@ -244,6 +244,7 @@ public class MailService implements DocumentService {
     public static final String A_WANT_HTML = "html";
     public static final String A_RAW = "raw";
     public static final String A_MARK_READ = "read";
+    public static final String A_NEUTER = "neuter";
     public static final String A_URL = "url";
     public static final String A_NUM = "n";
     public static final String A_PART = "part";

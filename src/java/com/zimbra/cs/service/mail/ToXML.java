@@ -29,7 +29,6 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.HashSet;
@@ -496,16 +495,20 @@ public class ToXML {
         return c;
     }
 
-    /**
-     * Encodes a Message object into <m> element with <mp> elements
-     * for message body.
-     * @param lc TODO
-     * @param msg
-     * @param metaDataOnly
-     * @return
-     * @throws ServiceException
-     */
-    public static Element encodeMessageAsMP(Element parent, ZimbraSoapContext lc, Message msg, boolean wantHTML, String part)
+    /** Encodes a Message object into <m> element with <mp> elements for
+     *  message body.
+     * @param parent  The Element to add the new <code>&lt;m></code> to.
+     * @param lc      The SOAP request's context.
+     * @param msg     The Message to serialize.
+     * @param part    If non-null, we'll serialuize this message/rfc822 subpart
+     *                of the specified Message instead of the Message itself.
+     * @param wantHTML  <code>true</code> to prefer HTML parts as the "body",
+     *                  <code>false</code> to prefer text/plain parts.
+     * @param neuter  Whether to rename "src" attributes on HTML <img> tags.
+     * @return The newly-created <code>&lt;m></code> Element, which has already
+     *         been added as a child to the passed-in <code>parent</code>.
+     * @throws ServiceException */
+    public static Element encodeMessageAsMP(Element parent, ZimbraSoapContext lc, Message msg, String part, boolean wantHTML, boolean neuter)
     throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().equals(""));
 
@@ -569,7 +572,7 @@ public class ToXML {
             List parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
                 MPartInfo body = Mime.getBody(parts, wantHTML);
-                addParts(m, (MPartInfo) parts.get(0), body, part);
+                addParts(m, (MPartInfo) parts.get(0), body, part, neuter);
             }
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
@@ -662,16 +665,22 @@ public class ToXML {
     }
 
 
-    /**
-     * Encodes an Invite stored within an Appointment object into <m> element with <mp> elements
-     * for message body.
-     * @param lc TODO
-     * @param msg
-     * @param metaDataOnly
-     * @return
-     * @throws ServiceException
-     */
-    public static Element encodeApptInviteAsMP(Element parent, ZimbraSoapContext lc, Appointment appt, ItemId iid, boolean wantHTML, String part)
+    /** Encodes an Invite stored within an Appointment object into <m> element
+     *  with <mp> elements.
+     * @param parent  The Element to add the new <code>&lt;m></code> to.
+     * @param lc      The SOAP request's context.
+     * @param appt    The Appointment to serialize.
+     * @param iid     The requested item; the contained subpart will be used to
+     *                pick the Invite out of the Appointment's blob & metadata.
+     * @param part    If non-null, we'll serialuize this message/rfc822 subpart
+     *                of the specified Message instead of the Message itself.
+     * @param wantHTML  <code>true</code> to prefer HTML parts as the "body",
+     *                  <code>false</code> to prefer text/plain parts.
+     * @param neuter  Whether to rename "src" attributes on HTML <img> tags.
+     * @return The newly-created <code>&lt;m></code> Element, which has already
+     *         been added as a child to the passed-in <code>parent</code>.
+     * @throws ServiceException */
+    public static Element encodeApptInviteAsMP(Element parent, ZimbraSoapContext lc, Appointment appt, ItemId iid, String part, boolean wantHTML, boolean neuter)
     throws ServiceException {
         int invId = iid.getSubpartId();
         boolean wholeMessage = (part == null || part.trim().equals(""));
@@ -718,13 +727,13 @@ public class ToXML {
                 m.addAttribute(MailService.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.DISP_CONTENT);
 
 //          if (wholeMessage && msg.isDraft()) {
-//          if (msg.getDraftOrigId() > 0)
-//          m.addAttribute(MailService.A_ORIG_ID, msg.getDraftOrigId());
-//          if (!msg.getDraftReplyType().equals(""))
-//          m.addAttribute(MailService.A_REPLY_TYPE, msg.getDraftReplyType());
-//          String inReplyTo = mm.getHeader("In-Reply-To", null);
-//          if (inReplyTo != null && !inReplyTo.equals(""))
-//          m.addAttribute(MailService.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo), Element.DISP_CONTENT);
+//              if (msg.getDraftOrigId() > 0)
+//                  m.addAttribute(MailService.A_ORIG_ID, msg.getDraftOrigId());
+//              if (!msg.getDraftReplyType().equals(""))
+//                  m.addAttribute(MailService.A_REPLY_TYPE, msg.getDraftReplyType());
+//              String inReplyTo = mm.getHeader("In-Reply-To", null);
+//              if (inReplyTo != null && !inReplyTo.equals(""))
+//                  m.addAttribute(MailService.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo), Element.DISP_CONTENT);
 //          }
 
             if (!wholeMessage)
@@ -742,7 +751,7 @@ public class ToXML {
             List parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
                 MPartInfo body = Mime.getBody(parts, wantHTML);
-                addParts(m, (MPartInfo) parts.get(0), body, part);
+                addParts(m, (MPartInfo) parts.get(0), body, part, neuter);
             }
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
@@ -1090,7 +1099,7 @@ public class ToXML {
     }
 
 
-    private static void addParts(Element parent, MPartInfo mpi, MPartInfo body, String prefix) {
+    private static void addParts(Element parent, MPartInfo mpi, MPartInfo body, String prefix, boolean neuter) {
         Element elem = parent.addElement(MailService.E_MIMEPART);
         MimePart mp = mpi.getMimePart();
 
@@ -1102,7 +1111,7 @@ public class ToXML {
         if (Mime.CT_XML_ZIMBRA_SHARE.equals(contentTypeString)) {
             Element shr = parent.getParent().addElement("shr");
             try {
-                getContent(shr, mpi);
+                addContent(shr, mpi);
             } catch (IOException e) {
                 if (mLog.isWarnEnabled())
                     mLog.warn("error writing body part: ", e);
@@ -1168,7 +1177,7 @@ public class ToXML {
         if (mpi == body) {
             elem.addAttribute(MailService.A_BODY, true);
             try {
-                getContent(elem, mpi);
+                addContent(elem, mpi, neuter);
             } catch (IOException ioe) {
                 if (mLog.isWarnEnabled())
                     mLog.warn("error writing body part: ", ioe);
@@ -1180,39 +1189,47 @@ public class ToXML {
         if (mpi.hasChildren()) {
             for (Iterator it = mpi.getChildren().iterator(); it.hasNext();) {
                 MPartInfo cp = (MPartInfo) it.next();
-                addParts(elem, cp, body, prefix);
+                addParts(elem, cp, body, prefix, neuter);
             }
         }
     }
 
-    /**
-     * @param elt
-     * @param pi
-     * @throws MessagingException
-     * @throws IOException
-     */
-    private static void getContent(Element elt, MPartInfo pi) throws IOException, MessagingException {
+    /** Adds the decoded text content of a message part to the {@link Element}.
+     *  The content is added as the value of a new <code>&lt;content></code>
+     *  sub-element.  <i>Note: This method will only extract the content of a
+     *  <b>text/*</b> or <b>xml/*</b> message part.</i> 
+     * @param elt  The element to add the <code>&lt;content></code> to.
+     * @param mpi  The message part to extract the content from.
+     * @throws MessagingException when message parsing or CTE-decoding fails
+     * @throws IOException on error during parsing or defanging */
+    private static void addContent(Element elt, MPartInfo mpi) throws IOException, MessagingException {
+        addContent(elt, mpi, true);
+    }
+
+    /** Adds the decoded text content of a message part to the {@link Element}.
+     *  The content is added as the value of a new <code>&lt;content></code>
+     *  sub-element.  <i>Note: This method will only extract the content of a
+     *  <b>text/*</b> or <b>xml/*</b> message part.</i> 
+     * @param elt     The element to add the <code>&lt;content></code> to.
+     * @param mpi     The message part to extract the content from.
+     * @param neuter  Whether to "neuter" image <code>src</code> attributes.
+     * @throws MessagingException when message parsing or CTE-decoding fails
+     * @throws IOException on error during parsing or defanging
+     * @see HtmlDefang#defang(String, boolean) */
+    private static void addContent(Element elt, MPartInfo mpi, boolean neuter) throws IOException, MessagingException {
         // TODO: support other parts
-        String ct = pi.getContentType();
+        String ct = mpi.getContentType();
         if (ct.matches(Mime.CT_TEXT_WILD) || ct.matches(Mime.CT_XML_WILD)) {
-            MimePart mp = pi.getMimePart();
+            MimePart mp = mpi.getMimePart();
 
             String cstr = Mime.getStringContent(mp);
-            //mLog.info("before strip: "+cstr);
             String data = StringUtil.stripControlCharacters(cstr);
-            //mLog.info("after strip: "+data);
-            boolean isHtml = pi.getContentType().equals(Mime.CT_TEXT_HTML);
-            if (isHtml) {
-                data = HtmlDefang.defang(data, true);
-                //mLog.info("after defang: "+data);
-            }
+
+            if (mpi.getContentType().equals(Mime.CT_TEXT_HTML))
+                data = HtmlDefang.defang(data, neuter);
 
             elt.addAttribute(MailService.E_CONTENT, data, Element.DISP_CONTENT);
             // TODO: CDATA worth the effort?
-//          if (isHtml && data.indexOf("]]>") == -1)
-//              content.addCDATA(data);
-//          else
-//              content.addText(data);
         }
     }
 
