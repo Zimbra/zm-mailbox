@@ -57,55 +57,53 @@ public class SoapFaultException extends ServiceException {
 //    private QName subcode;
     private Element mDetail;
     private Element mFault;
+    private boolean mIsLocal;
 
     
     public SoapFaultException(String message, String code, boolean isReceiversFault, Throwable cause) {
         super(message, code, isReceiversFault);
     }
-   
-    
+
+
     /**
      * Create a new SoapFaultException.
      */
-    public SoapFaultException(String message,
-                               Element detail,
-                               boolean isReceiversFault)
-
-    {
+    public SoapFaultException(String message, Element detail, boolean isReceiversFault) {
         super(message, getCode(detail), isReceiversFault);
-        this.mIsReceiversFault = isReceiversFault;
-        //this.subcode = subcode;
-        this.mDetail = detail;
-        this.mFault = null;
+        mIsReceiversFault = isReceiversFault;
+        //subcode = subcode;
+        mDetail = detail;
+        mFault = null;
     }
 
     /**
      * Create a new SoapFaultException. Used by SoapProtocol only.
      *
      */
-    SoapFaultException(String message,
-                        Element detail,
-                        boolean isReceiversFault,
-                        Element fault)
-    {
+    SoapFaultException(String message, Element detail, boolean isReceiversFault, Element fault) {
         super(message, getCode(detail), isReceiversFault);
-        this.mIsReceiversFault = isReceiversFault;
-        this.mDetail = detail;
-        this.mFault = fault;
+        mIsReceiversFault = isReceiversFault;
+        mDetail = detail;
+        mFault = fault;
     }
 
     /**
      * used by transports and stub mCode
      */
-    public SoapFaultException(String message,
-                               Element fault)
-    {
+    public SoapFaultException(String message, Element fault) {
         super(message, UNKNOWN, false);
-        this.mFault = fault;
+        mFault = fault;
+    }
+
+    /**
+     * used by transports and stub mCode
+     */
+    public SoapFaultException(String message, boolean isLocal, Element fault) {
+        this(message, fault);
+        mIsLocal = isLocal;
     }
 
     private static String getCode(Element detail) {
-        
         Element error = detail.getOptionalElement(ZimbraNamespace.E_ERROR);
         if (error != null) {
             Element code = error.getOptionalElement(ZimbraNamespace.E_CODE);
@@ -116,69 +114,58 @@ public class SoapFaultException extends ServiceException {
     }
     
     /*
-    public QName getSubcode()
-    {
+    public QName getSubcode() {
         return subcode;
     }
     */
 
-    public Element getDetail()
-    {
+    public Element getDetail() {
         return mDetail;
     }
 
     /**
      * can only be called if mDetail is null.
      */
-    protected void initDetail(Element detail)
-        throws IllegalStateException
-    {
-        if (this.mDetail != null) {
+    protected void initDetail(Element detail) throws IllegalStateException {
+        if (mDetail != null)
             throw new IllegalStateException("mDetail is not null");
-        }
 
-        this.mDetail = detail;
+        mDetail = detail;
     }
 
-    public boolean isReceiversFault()
-    {
+    public boolean isReceiversFault() {
         return mIsReceiversFault;
     }
 
     /**
      * Returns the raw soap mFault, if available.
      */
-    public Element getFault()
-    {
+    public Element getFault() {
         return mFault;
+    }
+
+    /**
+     * Returns whether the SOAP fault was generated locally.
+     * <code>false</code> means that it came from a remote source.
+     */
+    public boolean isSourceLocal() {
+        return mIsLocal;
     }
 
     /**
      * dump out detailed debugging information about this mFault
      */
-    public String dump()
-    {
+    public String dump() {
         StringBuffer sb = new StringBuffer();
-        sb.append("class=");
-        sb.append(getClass().getName());
-        sb.append("\n");
-        sb.append("message=");
-        sb.append(getMessage());
-        sb.append("\n");
-//        sb.append("mCode=");
-//        sb.append(mCode);
-//        sb.append("\n");
-//        sb.append("subcode=");
-//        sb.append(subcode);
-//        sb.append("\n");
-        sb.append("mIsReceiversFault=");
-        sb.append(mIsReceiversFault);
-        sb.append("\n");
+        sb.append("class=").append(getClass().getName()).append("\n");
+        sb.append("message=").append(getMessage()).append("\n");
+//        sb.append("mCode=").append(mCode).append("\n");
+//        sb.append("subcode=").append(subcode).append("\n");
+        sb.append("mIsReceiversFault=").append(mIsReceiversFault).append("\n");
+        sb.append("mIsLocal=").append(mIsLocal).append("\n");
 
-        sb.append("mDetail=").append(mDetail);
-        sb.append("\n");
-        sb.append("mFault=").append(mFault);
-        sb.append("\n");
+        sb.append("mDetail=").append(mDetail).append("\n");
+        sb.append("mFault=").append(mFault).append("\n");
         return sb.toString();
     }
 }

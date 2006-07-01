@@ -260,7 +260,8 @@ public class SoapEngine {
                 response = handler.handle(request, context);
         } catch (SoapFaultException e) {
             response = e.getFault().detach();
-            mLog.debug("handler exception", e);
+            if (!e.isSourceLocal())
+                mLog.debug("handler exception", e);
         } catch (ServiceException e) {
             response = soapProto.soapFault(e);
             mLog.info("handler exception", e);
