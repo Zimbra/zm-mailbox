@@ -1317,6 +1317,14 @@ public class Mailbox {
                 redoRecorder.setMailboxId(mailbox.getId());
 
                 success = true;
+            } catch (ServiceException e) {
+                // Log exception here, just in case.  If badness happens during rollback
+                // the original exception will be lost.
+                ZimbraLog.mailbox.error("Error during mailbox creation", e);
+                throw e;
+            } catch (Throwable t) {
+                ZimbraLog.mailbox.error("Error during mailbox creation", t);
+                throw ServiceException.FAILURE("createMailbox", t);
             } finally {
                 try {
                     if (mailbox != null) {
