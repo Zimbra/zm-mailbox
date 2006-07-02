@@ -102,7 +102,7 @@ public class FeedManager {
 
         BufferedInputStream content = null;
         try {
-            String charset = Mime.P_CHARSET_DEFAULT;
+            String expectedCharset = Mime.P_CHARSET_DEFAULT;
             int redirects = 0;
             do {
                 if (url == null || url.equals(""))
@@ -136,7 +136,7 @@ public class FeedManager {
                 if (locationHeader == null) {
                     content = new BufferedInputStream(get.getResponseBodyAsStream());
                     String cs = get.getResponseCharSet();
-                    if (cs != null) charset = cs;
+                    if (cs != null) expectedCharset = cs;
                     break;
                 }
                 url = locationHeader.getValue();
@@ -145,13 +145,14 @@ public class FeedManager {
             if (redirects > MAX_REDIRECTS)
                 throw ServiceException.TOO_MANY_HOPS();
 
-            switch (getLeadingChar(content)) {
+            StringBuilder charset = new StringBuilder(expectedCharset);
+            switch (getLeadingChar(content, charset)) {
                 case -1:
                     throw ServiceException.PARSE_ERROR("empty body in response when fetching remote subscription", null);
                 case '<':
                     return parseRssFeed(Element.parseXML(content), fsd);
                 case 'B':  case 'b':
-                    Reader reader = new InputStreamReader(content, charset);
+                    Reader reader = new InputStreamReader(content, charset.toString());
                     ZVCalendar ical = ZCalendarBuilder.build(reader);
                     List<Invite> invites = Invite.createFromCalendar(acct, null, ical, false);
                     // handle missing UIDs on remote calendars by generating them as needed
@@ -171,21 +172,25 @@ public class FeedManager {
         }
     }
 
-    private static int getLeadingChar(BufferedInputStream is) throws IOException {
+    private static int getLeadingChar(BufferedInputStream is, StringBuilder charset) throws IOException {
         is.mark(10);
         int ch = is.read();
         switch (ch) {
             case 0xEF:
-                if (is.read() == 0xBB && is.read() == 0xBF)
-                    ch = is.read();
+                if (is.read() == 0xBB && is.read() == 0xBF) {
+                    is.mark(1);
+                    ch = is.read();  charset.setLength(0);  charset.append("utf-8");
+                }
                 break;
             case 0xFE:
-                if (is.read() == 0xFF && is.read() == 0x00)
-                    ch = is.read();
+                if (is.read() == 0xFF && is.read() == 0x00) {
+                    ch = is.read();  charset.setLength(0);  charset.append("utf-16le");
+                }
                 break;
             case 0xFF:
-                if (is.read() == 0xFE)
-                    ch = is.read();
+                if (is.read() == 0xFE) {
+                    ch = is.read();  charset.setLength(0);  charset.append("utf-16be");
+                }
                 break;
         }
         is.reset();
