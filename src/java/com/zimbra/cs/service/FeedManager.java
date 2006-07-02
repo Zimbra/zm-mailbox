@@ -184,12 +184,12 @@ public class FeedManager {
                 break;
             case 0xFE:
                 if (is.read() == 0xFF && is.read() == 0x00) {
-                    ch = is.read();  charset.setLength(0);  charset.append("utf-16le");
+                    ch = is.read();  charset.setLength(0);  charset.append("utf-16");
                 }
                 break;
             case 0xFF:
                 if (is.read() == 0xFE) {
-                    ch = is.read();  charset.setLength(0);  charset.append("utf-16be");
+                    ch = is.read();  charset.setLength(0);  charset.append("utf-16");
                 }
                 break;
         }
