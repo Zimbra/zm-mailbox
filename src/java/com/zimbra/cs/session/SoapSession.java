@@ -44,13 +44,10 @@ import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.Constants;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraNamespace;
 import com.zimbra.soap.ZimbraSoapContext;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 
 
 /**
@@ -59,8 +56,6 @@ import org.apache.commons.logging.LogFactory;
  * Add your own get/set methods here for session data.
  */
 public class SoapSession extends Session {
-
-    static Log mLog = LogFactory.getLog(SoapSession.class);
 
     // Read/write access to all these members requires synchronizing on "this".
     private String  mQueryStr = "";
@@ -225,7 +220,7 @@ public class SoapSession extends Session {
             
         	clearCachedQueryResults();
         } catch (ServiceException e) {
-            mLog.warn("ServiceException in notifyPendingChanges ", e);
+            ZimbraLog.session.warn("ServiceException in notifyPendingChanges ", e);
         }
     }
 
@@ -341,7 +336,7 @@ public class SoapSession extends Session {
         try {
             mbox = Mailbox.getMailboxByAccountId(getAccountId());
         } catch (ServiceException e) {
-            mLog.warn("error fetching mailbox for account " + getAccountId(), e);
+            ZimbraLog.session.warn("error fetching mailbox for account " + getAccountId(), e);
             return ctxt;
         }
         String explicitAcct = getAccountId().equals(zc.getAuthtokenAccountId()) ? null : getAccountId();
@@ -358,7 +353,7 @@ public class SoapSession extends Session {
                 
                 if (mSentChanges.size() > 100) {
                     // cover ourselves in case a client is doing something really stupid...
-                    mLog.warn("Notification Change List abnormally long, misbehaving client.");
+                    ZimbraLog.session.warn("Notification Change List abnormally long, misbehaving client.");
                     mSentChanges.clear();
                 }
                 
@@ -436,7 +431,7 @@ public class SoapSession extends Session {
                 try {
                     ToXML.encodeItem(eCreated, zc, mi, ToXML.NOTIFY_FIELDS);
                 } catch (ServiceException e) {
-                    mLog.warn("error encoding item " + mi.getId(), e);
+                    ZimbraLog.session.warn("error encoding item " + mi.getId(), e);
                     return;
                 }
             }
@@ -451,7 +446,7 @@ public class SoapSession extends Session {
                     try {
                         ToXML.encodeItem(eModified, zc, mi, chg.why);
                     } catch (ServiceException e) {
-                        mLog.warn("error encoding item " + mi.getId(), e);
+                        ZimbraLog.session.warn("error encoding item " + mi.getId(), e);
                         return;
                     }
                 } else if (chg.why != 0 && chg.what instanceof Mailbox)
@@ -510,7 +505,7 @@ public class SoapSession extends Session {
         try {
             clearCachedQueryResults();
         } catch (ServiceException e) {
-        	mLog.warn("ServiceException while cleaning up Session", e);
+        	ZimbraLog.session.warn("ServiceException while cleaning up Session", e);
         }
     }
 }

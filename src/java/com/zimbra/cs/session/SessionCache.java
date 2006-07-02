@@ -41,6 +41,7 @@ import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.ValueCounter;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.ZimbraLog;
 
 
 
@@ -85,11 +86,12 @@ public final class SessionCache {
                 case SESSION_SOAP:   session = new SoapSession(accountId, sessionId);   break;
             }
         } catch (ServiceException e) {
+            ZimbraLog.session.warn("failed to create session", e);
             return null;
         }
 
-        if (sLog.isDebugEnabled())
-            sLog.debug("Created " + session);
+        if (ZimbraLog.session.isDebugEnabled())
+            ZimbraLog.session.debug("Created " + session);
         updateInCache(sessionId, session);
         return session;
     }
@@ -107,16 +109,17 @@ public final class SessionCache {
             return null;
 
         synchronized(sLRUMap) {
-            Session session = (Session) sLRUMap.get(sessionId);
+            Session session = sLRUMap.get(sessionId);
             if (session != null) {
                 if (session.validateAccountId(accountId)) {
                     updateInCache(sessionId, session);
                     return session;
                 } else
-                    sLog.warn("account ID mismatch in session cache.  Requested " + accountId + ":" + sessionId +
+                    ZimbraLog.session.warn("account ID mismatch in session cache.  Requested " + accountId + ":" + sessionId +
                               ", found " + session.getAccountId());
-            } else if (sLog.isDebugEnabled())
-                sLog.debug("no session with id " + sessionId + " found (accountId: " + accountId + ")");
+            } else if (ZimbraLog.session.isDebugEnabled()) {
+                ZimbraLog.session.debug("no session with id " + sessionId + " found (accountId: " + accountId + ")");
+            }
             return null;
         }
     }
@@ -139,11 +142,11 @@ public final class SessionCache {
         if (sShutdown)
             return;
 
-        if (sLog.isDebugEnabled())
-            sLog.debug("Clearing session " + sessionId);
+        if (ZimbraLog.session.isDebugEnabled())
+            ZimbraLog.session.debug("Clearing session " + sessionId);
         Session session = null;
         synchronized (sLRUMap) {
-            session = (Session) sLRUMap.remove(sessionId);
+            session = sLRUMap.remove(sessionId);
         }
         if (session != null)
             session.doCleanup();
@@ -160,7 +163,7 @@ public final class SessionCache {
         }
         List<Session> list = new ArrayList<Session>(size);
         synchronized (sLRUMap) {
-            sLog.info("shutdown: clearing SessionCache");
+            ZimbraLog.session.info("shutdown: clearing SessionCache");
 
             // empty the lru cache
             Iterator iter = sLRUMap.values().iterator();
@@ -183,12 +186,11 @@ public final class SessionCache {
     /** The frequency at which we sweep the cache to delete idle sessions. */
     private static final long SESSION_SWEEP_INTERVAL_MSEC = 1 * Constants.MILLIS_PER_MINUTE;
 
-    private static Log sLog = LogFactory.getLog(SessionCache.class);
+    static Log sLog = LogFactory.getLog(SessionCache.class);
 
     /** The cache of all active {@link Session}s.  The keys of the Map are session IDs
      *  and the values are the Sessions themselves. */
-    private static LinkedHashMap<String, Session> sLRUMap =
-        new LinkedHashMap<String, Session>(500);
+    static LinkedHashMap<String, Session> sLRUMap = new LinkedHashMap<String, Session>(500);
 
     /** Whether we've received a {@link #shutdown()} call to kill the cache. */
     private static boolean sShutdown = false;
@@ -205,8 +207,8 @@ public final class SessionCache {
     }
 
     private static void updateInCache(String sessionId, Session session) {
-        if (sLog.isDebugEnabled())
-            sLog.debug("updating session " + sessionId);
+        if (ZimbraLog.session.isDebugEnabled())
+            ZimbraLog.session.debug("updating session " + sessionId);
         synchronized(sLRUMap) {
             // Remove then re-add.  This results in access-order behavior
             // even though sLRUMap was constructed as insertion-order linked
@@ -275,8 +277,8 @@ public final class SessionCache {
             // If Session.doCleanup() is called with sLRUMap locked, it can lead
             // to deadlock. (bug 7866)
             for (Session s: toReap) {
-                if (sLog.isDebugEnabled())
-                    sLog.debug("Removing cached session: " + s);
+                if (ZimbraLog.session.isDebugEnabled())
+                    ZimbraLog.session.debug("Removing cached session: " + s);
                 if (sLog.isInfoEnabled())
                     removedSessionTypes.increment(StringUtil.getSimpleClassName(s));
                 s.doCleanup();
@@ -325,8 +327,7 @@ public final class SessionCache {
 //            sLog.debug("Detected " + accountCounter.getTotal() + " active sessions.  " +
 //                       sessionTypeCounter + ".  Accounts: " + accountList);
             if (manySessionsList.length() > 0) {
-                sLog.info("Found accounts that have a large number of sessions: " +
-                          manySessionsList);
+                ZimbraLog.session.info("Found accounts that have a large number of sessions: " + manySessionsList);
             }
         }
     }

@@ -34,7 +34,6 @@ package com.zimbra.cs.session;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,8 +49,7 @@ import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.StringUtil;
 
-public abstract class Session 
-{
+public abstract class Session {
     protected String  mAccountId;
     private   String  mSessionId;
     private   int     mSessionType;
@@ -71,7 +69,7 @@ public abstract class Session
             // add this Session to the Mailbox or die trying
             mMailbox = Mailbox.getMailboxByAccountId(accountId);
             mMailbox.addListener(this);
-         
+
             // add this Session to the IM Persona, or die trying
             if (this.shouldRegisterWithIM()) {
                 synchronized(mMailbox) {
@@ -82,14 +80,14 @@ public abstract class Session
         }
         updateAccessTime();
     }
-    
+
     public static class RecentOperation {
-    	   public long mTimestamp;
-    	   public Class mOperationClass;
-    	   public RecentOperation(long ts, Class oc) {
-    		   mTimestamp = ts;
-    		   mOperationClass = oc;
-    	   }
+        public long mTimestamp;
+        public Class mOperationClass;
+        public RecentOperation(long ts, Class oc) {
+            mTimestamp = ts;
+            mOperationClass = oc;
+        }
     }
     
     public static final int OPERATION_HISTORY_LENGTH = 6;
@@ -98,24 +96,24 @@ public abstract class Session
     private List<RecentOperation> mRecentOperations = new LinkedList<RecentOperation>();
     
     synchronized public void logOperation(Operation op) {
-    	  long now = System.currentTimeMillis();
-    	  long cutoff = now - OPERATION_HISTORY_TIME;
-    	  
-    	  if (mRecentOperations.size() >= OPERATION_HISTORY_LENGTH) 
-    		  mRecentOperations.remove(0);
-    	  
-    	  while (mRecentOperations.size() > 0 && mRecentOperations.get(0).mTimestamp < cutoff)
-    		  mRecentOperations.remove(0);
-    	  
-    	  mRecentOperations.add(new RecentOperation(now, op.getClass()));
+        long now = System.currentTimeMillis();
+        long cutoff = now - OPERATION_HISTORY_TIME;
+
+        if (mRecentOperations.size() >= OPERATION_HISTORY_LENGTH) 
+            mRecentOperations.remove(0);
+
+        while (mRecentOperations.size() > 0 && mRecentOperations.get(0).mTimestamp < cutoff)
+            mRecentOperations.remove(0);
+
+        mRecentOperations.add(new RecentOperation(now, op.getClass()));
     }
-    
+
     synchronized public List<RecentOperation> getRecentOperations() { return mRecentOperations; }
     
     public void dumpState(Writer w) {
-    	try {
-    		w.write(this.toString());
-    	} catch(IOException e) { e.printStackTrace(); };
+        try {
+            w.write(this.toString());
+        } catch(IOException e) { e.printStackTrace(); };
     }
 
     /** Returns the Session's identifier. */
@@ -170,8 +168,8 @@ public abstract class Session
      *          has been used (data was sent         
      * @param conn
      */
-    public RegisterNotificationResult registerNotificationConnection(OzNotificationConnectionHandler conn) throws ServiceException 
-    { 
+    public RegisterNotificationResult registerNotificationConnection(OzNotificationConnectionHandler conn)
+    throws ServiceException { 
         return RegisterNotificationResult.NO_NOTIFY; 
     }
 

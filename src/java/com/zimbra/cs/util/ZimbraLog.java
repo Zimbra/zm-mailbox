@@ -176,6 +176,11 @@ public class ZimbraLog {
     public static final org.apache.commons.logging.Log filter = LogFactory.getLog("zimbra.filter");
     
     /**
+     * the "zimbra.session" logger. For session- and notification-related logs.
+     */
+    public static final org.apache.commons.logging.Log session = LogFactory.getLog("zimbra.session");
+    
+    /**
      * the "zimbra.backup" logger. For backup/restore-related logs.
      */
     public static final org.apache.commons.logging.Log backup = LogFactory.getLog("zimbra.backup");
