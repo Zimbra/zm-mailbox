@@ -183,23 +183,24 @@ public class ZimbraServlet extends HttpServlet {
         }
     }
 
-    public static AuthToken getAuthTokenFromCookie(HttpServletRequest req,
-                                                      HttpServletResponse resp)
+    public static AuthToken getAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp)
     throws IOException {
         return getAuthTokenFromCookieImpl(req, resp, COOKIE_ZM_AUTH_TOKEN, false);
     }
 
-    protected static AuthToken getAuthTokenFromCookie(HttpServletRequest req,
-                                                      HttpServletResponse resp,
-                                                      boolean doNotSendHttpError)
+    protected static AuthToken getAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError)
     throws IOException {
         return getAuthTokenFromCookieImpl(req, resp, COOKIE_ZM_AUTH_TOKEN, doNotSendHttpError);
     }
 
-    protected static AuthToken getAdminAuthTokenFromCookie(HttpServletRequest req,
-                                                           HttpServletResponse resp)
+    protected static AuthToken getAdminAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp)
     throws IOException {
         return getAuthTokenFromCookieImpl(req, resp, COOKIE_ZM_ADMIN_AUTH_TOKEN, false);
+    }
+
+    protected static AuthToken getAdminAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError)
+    throws IOException {
+        return getAuthTokenFromCookieImpl(req, resp, COOKIE_ZM_ADMIN_AUTH_TOKEN, doNotSendHttpError);
     }
 
     private static AuthToken getAuthTokenFromCookieImpl(HttpServletRequest req,

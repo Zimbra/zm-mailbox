@@ -81,6 +81,10 @@ public class FileUploadServlet extends ZimbraServlet {
     /** The length of a fully-qualified upload ID (2 UUIDs and a ':') */
     private static final int UPLOAD_ID_LENGTH = 73;
 
+    /** Query parameter used for specifying that the servlet should look at
+     *  the admin cookie for the auth token for an upload. */
+    public static final String QP_ADMIN = "admin";
+
     public static final class Upload {
         final String   accountId;
         final String   uuid;
@@ -117,7 +121,7 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
 
-    static HashMap mPending = new HashMap(100);
+    static HashMap<String, Upload> mPending = new HashMap<String, Upload>(100);
     static Log mLog = LogFactory.getLog(FileUploadServlet.class);
 
     static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
@@ -155,7 +159,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
         // the upload is local, so get it from the cache
         synchronized (mPending) {
-            Upload up = (Upload) mPending.get(uploadId);
+            Upload up = mPending.get(uploadId);
             if (up == null) {
                 mLog.warn("upload not found: " + context);
                 throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
@@ -214,8 +218,7 @@ public class FileUploadServlet extends ZimbraServlet {
             // store the fetched file as a normal upload
             DiskFileUpload upload = getUploader();
             FileItem fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
-            ByteUtil.copy(is = method.getResponseBodyAsStream(), false,
-                          fi.getOutputStream(), false);
+            ByteUtil.copy(is = method.getResponseBodyAsStream(), false, fi.getOutputStream(), false);
             return new Upload(accountId, fi);
         } catch (HttpException e) {
             throw ServiceException.PROXY_ERROR(e, url);
@@ -230,10 +233,10 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
 
-    public static void deleteUploads(List uploads) {
+    public static void deleteUploads(List<Upload> uploads) {
         if (uploads != null && !uploads.isEmpty())
-            for (Iterator it = uploads.iterator(); it.hasNext(); )
-                deleteUpload((Upload) it.next());
+            for (Upload up : uploads)
+                deleteUpload(up);
     }
 
     public static void deleteUpload(Upload upload) {
@@ -241,7 +244,7 @@ public class FileUploadServlet extends ZimbraServlet {
             return;
         Upload up = null;
         synchronized (mPending) {
-            up = (Upload) mPending.remove(upload.uuid);
+            up = mPending.remove(upload.uuid);
         }
         if (up == upload)
             up.purge();
@@ -285,12 +288,13 @@ public class FileUploadServlet extends ZimbraServlet {
 
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
 		int status = HttpServletResponse.SC_OK;
-        List items = null;
+        List<FileItem> items = null;
         String attachmentId = null;
         String reqId = null;
         do {
             // file upload requires authentication
-    		AuthToken authToken = getAuthTokenFromCookie(req, resp, true);
+            boolean useAdminToken = "1".equals(req.getParameter(QP_ADMIN));
+    		AuthToken authToken = useAdminToken ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
             if (authToken == null) {
                 status = HttpServletResponse.SC_UNAUTHORIZED;
                 break;
@@ -336,8 +340,8 @@ public class FileUploadServlet extends ZimbraServlet {
 
             // strip form fields out of the list of uploads...
             if (items != null)
-                for (Iterator it = items.iterator(); it.hasNext(); ) {
-                    FileItem fi = (FileItem) it.next();
+                for (Iterator<FileItem> it = items.iterator(); it.hasNext(); ) {
+                    FileItem fi = it.next();
                     if (fi != null && fi.getFieldName().equals("requestId"))
                         reqId = fi.getString();
                     if (fi == null || fi.isFormField() || fi.getName() == null || fi.getName().trim().equals(""))
@@ -352,8 +356,8 @@ public class FileUploadServlet extends ZimbraServlet {
 
             // cache the uploaded files in the hash and construct the list of upload IDs
             try {
-                for (Iterator it = items.iterator(); it.hasNext(); ) {
-                    Upload up = new Upload(authToken.getAccountId(), (FileItem) it.next());
+                for (FileItem fi : items) {
+                    Upload up = new Upload(authToken.getAccountId(), fi);
                     synchronized (mPending) {
                         mLog.debug("doPost(): added " + up);
                     	mPending.put(up.uuid, up);
@@ -385,8 +389,8 @@ public class FileUploadServlet extends ZimbraServlet {
 
         // handle failure by cleaning up the failed upload
         if (status != HttpServletResponse.SC_OK && items != null && items.size() > 0)
-            for (Iterator it = items.iterator(); it.hasNext(); )
-                ((FileItem) it.next()).delete();
+            for (FileItem fi : items)
+                fi.delete();
 	}
 
     private static DiskFileUpload getUploader() {
@@ -437,14 +441,14 @@ public class FileUploadServlet extends ZimbraServlet {
 
     private final class MapReaperTask extends TimerTask {
         public void run() {
-            ArrayList reaped = new ArrayList();
+            ArrayList<Upload> reaped = new ArrayList<Upload>();
             int sizeBefore;
             int sizeAfter;
             synchronized(mPending) {
                 sizeBefore = mPending.size();
                 long cutoffTime = System.currentTimeMillis() - UPLOAD_TIMEOUT_MSEC;
-                for (Iterator it = mPending.values().iterator(); it.hasNext(); ) {
-                    Upload up = (Upload) it.next();
+                for (Iterator<Upload> it = mPending.values().iterator(); it.hasNext(); ) {
+                    Upload up = it.next();
                     if (!up.accessedAfter(cutoffTime)) {
                         mLog.debug("Purging cached upload: " + up);
                         it.remove();
@@ -462,8 +466,8 @@ public class FileUploadServlet extends ZimbraServlet {
                 else if (sizeAfter > 0)
                     mLog.info(sizeAfter + " pending file uploads");
             }
-            for (Iterator it = reaped.iterator(); it.hasNext(); )
-                ((Upload) it.next()).purge();
+            for (Upload up : reaped)
+                up.purge();
         }
     }
 }
