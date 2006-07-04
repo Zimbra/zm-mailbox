@@ -47,7 +47,7 @@ import com.zimbra.cs.util.ZimbraLog;
 public class ZimbraSuite extends TestSuite
 {
     static final DecimalFormat TEST_TIME_FORMAT = new DecimalFormat("0.00");
-    private static List<TestSuite> sAdditionalSuites = new ArrayList<TestSuite>();
+    private static List<Test> sAdditionalTests = new ArrayList<Test>();
 
     public static TestSuite suite() {
         TestSuite suite = new TestSuite();
@@ -68,21 +68,23 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestMailItem.class));
         suite.addTest(new TestSuite(TestConcurrency.class));
         
-        synchronized (sAdditionalSuites) {
-            for (TestSuite additional : sAdditionalSuites) {
+        synchronized (sAdditionalTests) {
+            for (Test additional : sAdditionalTests) {
                 suite.addTest(additional);
             }
         }
         
         return suite;
     }
-    
-    public static void addSuite(TestSuite suite) {
-        synchronized (sAdditionalSuites) {
-            sAdditionalSuites.add(suite);
+
+    /**
+     * Used by extensions to add additional tests to the main test suite.
+     */
+    public static void addAdditionalTest(Test test) {
+        synchronized (sAdditionalTests) {
+            sAdditionalTests.add(test);
         }
     }
-    
     
     /**
      * Runs the entire test suite and writes the output to the specified
