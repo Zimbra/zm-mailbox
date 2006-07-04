@@ -486,6 +486,9 @@ public class LdapProvisioning extends Provisioning {
         emailAddress = emailAddress.toLowerCase().trim();
 
         HashMap attrManagerContext = new HashMap();
+        if (acctAttrs == null) {
+            acctAttrs = new HashMap<String, Object>();
+        }
         AttributeManager.getInstance().preModify(acctAttrs, null, attrManagerContext, true, true);
 
         DirContext ctxt = null;

@@ -1025,7 +1025,7 @@ public abstract class Provisioning {
      * @param emailAddress email address (domain must already exist) of account being created.
      * @param password password of account being created, or null. Account's without passwords can't be logged into.
      * @param accountStatus the initial account status
-     * @param attrs other initial attributes
+     * @param attrs other initial attributes or <code>null</code>
      * @return
      * @throws ServiceException
      */
