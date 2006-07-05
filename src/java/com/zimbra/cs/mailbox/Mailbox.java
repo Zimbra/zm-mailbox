@@ -1051,7 +1051,9 @@ public class Mailbox {
      *        mode and the calling thread doesn't hold the lock
      *    <li><code>service.FAILURE</code> - if there's a database failure
      *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
-     *        lives on a different host</ul> */
+     *        lives on a different host
+     *    <li><code>account.NO_SUCH_ACCOUNT</code> - if the mailbox's Account
+     *        has been deleted</ul> */
     public static Mailbox getMailboxById(int mailboxId) throws ServiceException {
         return getMailboxById(mailboxId, false);
     }
@@ -1077,7 +1079,9 @@ public class Mailbox {
      *        mode and the calling thread doesn't hold the lock
      *    <li><code>service.FAILURE</code> - if there's a database failure
      *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
-     *        lives on a different host</ul> */
+     *        lives on a different host
+     *    <li><code>account.NO_SUCH_ACCOUNT</code> - if the mailbox's Account
+     *        has been deleted and <code>skipMailHostCheck=false</code></ul> */
     public static Mailbox getMailboxById(int mailboxId,
                                          boolean skipMailHostCheck)
     throws ServiceException {
