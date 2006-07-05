@@ -1366,10 +1366,10 @@ public class DbMailItem {
                     (visible == null ? "" : " AND folder_id IN" + DbUtil.suitableNumberOfVariables(visible)) + 
                     " AND mi.mod_metadata > ? ORDER BY mi.mod_metadata");
             int attr = 1;
-            stmt.setLong(attr++, lastSync);
             if (visible != null)
                 for (Folder folder : visible)
                     stmt.setInt(attr++, folder.getId());
+            stmt.setLong(attr++, lastSync);
             rs = stmt.executeQuery();
 
             while (rs.next())
