@@ -300,16 +300,18 @@ public class FileUploadServlet extends ZimbraServlet {
                 break;
             }
 
-            try {
-                // make sure we're on the right host; proxy if we're not...
-                Provisioning prov = Provisioning.getInstance();
-                Account acct = prov.get(AccountBy.id, authToken.getAccountId());
-                if (!Provisioning.onLocalServer(acct)) {
-                    proxyServletRequest(req, resp, prov.getServer(acct), null);
-                    return;
+            if (!useAdminToken) {
+                try {
+                    // make sure we're on the right host; proxy if we're not...
+                    Provisioning prov = Provisioning.getInstance();
+                    Account acct = prov.get(AccountBy.id, authToken.getAccountId());
+                    if (!Provisioning.onLocalServer(acct)) {
+                        proxyServletRequest(req, resp, prov.getServer(acct), null);
+                        return;
+                    }
+                } catch (ServiceException e) {
+                    throw new ServletException(e);
                 }
-            } catch (ServiceException e) {
-                throw new ServletException(e);
             }
 
             // file upload requires multipart enctype
