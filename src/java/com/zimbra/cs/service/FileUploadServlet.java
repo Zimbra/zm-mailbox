@@ -71,6 +71,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.ZimbraLog;
 
 public class FileUploadServlet extends ZimbraServlet {
 
@@ -81,9 +82,18 @@ public class FileUploadServlet extends ZimbraServlet {
     /** The length of a fully-qualified upload ID (2 UUIDs and a ':') */
     private static final int UPLOAD_ID_LENGTH = 73;
 
-    /** Query parameter used for specifying that the servlet should look at
-     *  the admin cookie for the auth token for an upload. */
-    public static final String QP_ADMIN = "admin";
+    /** Port number for the admin service. */
+    private static int ADMIN_PORT;
+        static {
+            try {
+                ADMIN_PORT = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
+                if (ADMIN_PORT == -1)
+                    ZimbraLog.system.info("no admin port configured for local server; admin upload disabled");
+            } catch (ServiceException e) {
+                ADMIN_PORT = -1;
+                ZimbraLog.system.warn("error getting admin port for local server; admin upload disabled", e);
+            }
+        }
 
     public static final class Upload {
         final String   accountId;
@@ -293,14 +303,14 @@ public class FileUploadServlet extends ZimbraServlet {
         String reqId = null;
         do {
             // file upload requires authentication
-            boolean useAdminToken = "1".equals(req.getParameter(QP_ADMIN));
-    		AuthToken authToken = useAdminToken ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
+            boolean isAdminRequest = (req.getLocalPort() == ADMIN_PORT);
+    		AuthToken authToken = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
             if (authToken == null) {
                 status = HttpServletResponse.SC_UNAUTHORIZED;
                 break;
             }
 
-            if (!useAdminToken) {
+            if (!isAdminRequest) {
                 try {
                     // make sure we're on the right host; proxy if we're not...
                     Provisioning prov = Provisioning.getInstance();
