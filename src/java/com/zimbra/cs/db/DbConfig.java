@@ -151,10 +151,10 @@ public class DbConfig {
      * @return Map containing config items.
      * @throws SQLException
      */
-    public static Map /*<Config>*/ getAll(Connection conn, Timestamp ts) throws ServiceException {
+    public static Map<String, DbConfig> getAll(Connection conn, Timestamp ts) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        HashMap result = new HashMap();
+        HashMap<String, DbConfig> result = new HashMap<String, DbConfig>();
         try {
             if (ts == null) {
                 stmt = conn.prepareStatement("SELECT * FROM config");
