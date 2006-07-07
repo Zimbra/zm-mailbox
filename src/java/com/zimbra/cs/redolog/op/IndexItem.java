@@ -66,7 +66,11 @@ public class IndexItem extends RedoableOp {
 		return OP_INDEX_ITEM;
 	}
 
-	protected String getPrintableData() {
+    public boolean deferCrashRecovery() {
+        return true;
+    }
+
+    protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
         sb.append(mId).append(", type=").append(mType);
         return sb.toString();

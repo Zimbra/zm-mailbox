@@ -43,6 +43,7 @@ import org.apache.commons.logging.LogFactory;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.Sync;
 
+import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.logger.FileLogWriter;
 import com.zimbra.cs.redolog.logger.LogWriter;
@@ -310,6 +311,10 @@ public class RedoLogManager {
                     logOnly(abort, true);
                 }
             }
+
+            // Flush out all uncommitted Lucene index writes.
+            Indexer.GetInstance().flush();
+
             mLog.info("Finished post-startup crash recovery");
 
             // Being paranoid...
