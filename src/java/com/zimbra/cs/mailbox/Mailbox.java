@@ -2322,7 +2322,7 @@ public class Mailbox {
     }
     public synchronized List<Folder> getFolderList(OperationContext octxt, byte sort) throws ServiceException {
         List<Folder> folders = new ArrayList<Folder>();
-        for (MailItem item : getItemList(octxt, MailItem.TYPE_CONTACT, -1, sort))
+        for (MailItem item : getItemList(octxt, MailItem.TYPE_FOLDER, -1, sort))
             folders.add((Folder) item);
         return folders;
     }
