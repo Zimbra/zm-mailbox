@@ -57,16 +57,15 @@ public class DbMailbox {
 
     private static String DATABASE_PREFIX = "mailbox";
 
-    public static int createMailbox(Connection conn, int mailboxId, String accountId, String comment) throws ServiceException {
+    public synchronized static int createMailbox(Connection conn, int mailboxId, String accountId, String comment) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             boolean explicitId = (mailboxId != Mailbox.ID_AUTO_INCREMENT);
             String idSource = (explicitId ? "?" : "next_mailbox_id");
-            stmt = conn.prepareStatement(
-                    "INSERT INTO mailbox(account_id, id, index_volume_id, item_id_checkpoint, comment)" +
-                    " SELECT ?, " + idSource + ", index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
-                    " FROM current_volumes ORDER BY index_volume_id LIMIT 1");
+            stmt = conn.prepareStatement("INSERT INTO mailbox(account_id, id, index_volume_id, item_id_checkpoint, comment)" +
+                                         " SELECT ?, " + idSource + ", index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
+                                         " FROM current_volumes ORDER BY index_volume_id LIMIT 1");
             int attr = 1;
             stmt.setString(attr++, accountId);
             if (explicitId)
@@ -75,24 +74,23 @@ public class DbMailbox {
             stmt.executeUpdate();
             stmt.close();
 
-            stmt = conn.prepareStatement(
-                    "UPDATE current_volumes SET next_mailbox_id = LAST_INSERT_ID(IF(? > next_mailbox_id, ?, next_mailbox_id)) + 1");
+            stmt = conn.prepareStatement("UPDATE current_volumes SET next_mailbox_id = IF(? > next_mailbox_id, ?, next_mailbox_id) + 1");
             stmt.setInt(1, mailboxId);
             stmt.setInt(2, mailboxId);
             stmt.executeUpdate();
             stmt.close();
-//            return (num == 1);
 
             if (explicitId)
                 return mailboxId;
 
-            stmt = conn.prepareStatement("SELECT LAST_INSERT_ID()");
+            stmt = conn.prepareStatement("SELECT id FROM mailbox WHERE account_id = ?");
+            stmt.setString(1, accountId);
             rs = stmt.executeQuery();
             if (rs.next())
                 return rs.getInt(1);
             throw ServiceException.FAILURE("determining new account id for mailbox: " + accountId, null);
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("writing new mailbox for account " + accountId, e);
+            throw ServiceException.FAILURE("writing new mailbox row for account " + accountId, e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
@@ -381,8 +379,7 @@ public class DbMailbox {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement(
-                    "SELECT index_volume_id FROM mailbox WHERE id = ?");
+            stmt = conn.prepareStatement("SELECT index_volume_id FROM mailbox WHERE id = ?");
             stmt.setInt(1, data.id);
             rs = stmt.executeQuery();
             if (!rs.next())
