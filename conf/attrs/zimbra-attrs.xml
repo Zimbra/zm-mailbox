@@ -1673,4 +1673,17 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether end-user wants auto-complete from GAL. Feature must also be enabled.</desc>
 </attr>
 
+<attr id="373" name="zimbraHsmAge" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>30d</globalConfigValue>
+  <desc>Minimum age of mail items whose filesystem data will be moved to secondary storage (nnnnn[hmsd]).</desc>
+</attr>
+
+<attr id="374" name="zimbraNetworkLicense" type="string" cardinality="single" optionalIn="globalConfig" immutable="1">
+  <desc>Contents of a signed Zimbra license key - an XML string.</desc>
+</attr>
+
+<attr id="375" name="zimbraNetworkActivation" type="string" cardinality="single" optionalIn="globalConfig" immutable="1">
+  <desc>A signed activation key that authorizes this installation.</desc>
+</attr>
+
 </attrs>
