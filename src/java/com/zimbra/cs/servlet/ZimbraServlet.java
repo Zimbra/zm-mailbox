@@ -50,10 +50,12 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapProtocol;
 
@@ -376,6 +378,17 @@ public class ZimbraServlet extends HttpServlet {
         String pass = userPass.substring(loc + 1);
 
         Provisioning prov = Provisioning.getInstance();
+        
+        if (user.indexOf('@') == -1) {
+            String hostHeader = req.getHeader("Host");
+            if (hostHeader != null && hostHeader.length() > 1) {
+                int i = hostHeader.indexOf(':');
+                if (i != -1) hostHeader = hostHeader.substring(0, i);
+            }
+            Domain d = prov.get(DomainBy.virtualHostname, hostHeader.toLowerCase());
+            if (d != null) user += "@" + d.getName();
+        }
+
         Account acct = prov.get(AccountBy.name, user);
         if (acct == null) {
         	if (sendChallenge) {
