@@ -80,6 +80,11 @@ public abstract class WikiDocumentHandler extends DocumentHandler {
 			}
 		} else {
 			WikiPage ww = wiki.lookupWiki(wikiWord);
+			if (ww == null) {
+				throw MailServiceException.MODIFY_CONFLICT(
+						new Argument(MailService.A_ID, itemId),
+						new Argument(MailService.A_VERSION, ver));
+			}
 			ItemId iid = new ItemId(ww.getId(), lc);
 			if (iid.getId() != itemId) {
 				throw MailServiceException.INVALID_ID(itemId);
