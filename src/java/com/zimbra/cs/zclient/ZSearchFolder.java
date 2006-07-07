@@ -25,12 +25,14 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.cs.zclient.ZMailbox.SortBy;
+
 public interface ZSearchFolder extends ZFolder {
 
     public String getQuery();
 
     public String getTypes();
 
-    public String getSortBy();
+    public SortBy getSortBy();
     
 }

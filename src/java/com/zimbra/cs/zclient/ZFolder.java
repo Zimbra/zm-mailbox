@@ -27,19 +27,27 @@ package com.zimbra.cs.zclient;
 
 import java.util.List;
 
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.SoapFaultException;
+
 public interface ZFolder {
     
-    /** default view for this folder is conversations */
-    public static final String VIEW_CONVERSATION = "conversation";
+    public enum View {
+        
+        appointment,
+        contact,
+        conversation,
+        message,
+        wiki;
 
-    /** default view for this folder is messages */
-    public static final String VIEW_MESSAGE = "message";
-
-    /** default view for this folder is contacts */
-    public static final String VIEW_CONTACT = "contact";
-
-    /** default view for this folder is appointments/calendar */
-    public static final String VIEW_APPOINTMENT = "appointment";
+        public static View fromString(String s) throws ServiceException {
+            try {
+                return View.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw SoapFaultException.CLIENT_ERROR("invalid view: "+s, e);
+            }
+        }
+    }
 
     public ZFolder getParent();
 
@@ -79,9 +87,9 @@ public interface ZFolder {
     public int getMessageCount();
     
     /** Returns the "hint" as to which view to use to display the folder's
-     *  contents.  conversation|message|contact|appointment
+     *  contents.
      */
-    public String getDefaultView();
+    public View getDefaultView();
     
     /**
      *  checked in UI (#), exclude free/(b)usy info, IMAP subscribed (*)

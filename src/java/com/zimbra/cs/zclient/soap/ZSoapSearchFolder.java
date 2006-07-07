@@ -28,25 +28,34 @@ package com.zimbra.cs.zclient.soap;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.ZSearchFolder;
+import com.zimbra.cs.zclient.ZMailbox.SortBy;
 import com.zimbra.soap.Element;
 
 class ZSoapSearchFolder extends ZSoapFolder implements ZSearchFolder, ZSoapItem {
 
     private String mQuery;
     private String mTypes;
-    private String mSortBy;
+    private SortBy mSortBy;
     
     ZSoapSearchFolder(Element e, ZSoapFolder parent, ZSoapMailbox mailbox) throws ServiceException {
         super(e, parent, mailbox);
         mQuery = e.getAttribute(MailService.A_QUERY);
-        mTypes = e.getAttribute(MailService.A_SEARCH_TYPES, null); // TODO FIX?
-        mSortBy = e.getAttribute(MailService.A_SORTBY, null); // TODO FIX?
+        mTypes = e.getAttribute(MailService.A_SEARCH_TYPES, null);
+        try {
+            mSortBy = SortBy.fromString(e.getAttribute(MailService.A_SORTBY, SortBy.dateDesc.name()));
+        } catch (ServiceException se) {
+            mSortBy = SortBy.dateDesc;
+        }
     }
 
     void modifyNotification(Element e) throws ServiceException {
         mQuery = e.getAttribute(MailService.A_QUERY, mQuery);
         mTypes = e.getAttribute(MailService.A_SEARCH_TYPES, mTypes);
-        mSortBy = e.getAttribute(MailService.A_SORTBY, mSortBy);
+        try {
+            mSortBy = SortBy.fromString(e.getAttribute(MailService.A_SORTBY, mSortBy.name()));
+        } catch (ServiceException se) {
+            mSortBy = SortBy.dateDesc;   
+        }
         super.modifyNotification(e);
     }
 
@@ -59,7 +68,7 @@ class ZSoapSearchFolder extends ZSoapFolder implements ZSearchFolder, ZSoapItem 
         return mQuery;
     }
 
-    public String getSortBy() {
+    public SortBy getSortBy() {
         return mSortBy;
     }
 

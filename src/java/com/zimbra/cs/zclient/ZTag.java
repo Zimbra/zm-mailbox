@@ -29,7 +29,7 @@ import com.zimbra.soap.SoapFaultException;
 
 public interface ZTag extends Comparable {
 
-    public enum TagColor {
+    public enum Color {
         
         orange(0),
         blue(1),
@@ -43,21 +43,21 @@ public interface ZTag extends Comparable {
 
         public int getValue() { return mValue; }
 
-        public static TagColor fromString(String s) throws ServiceException {
+        public static Color fromString(String s) throws ServiceException {
             try {
-                return TagColor.values()[Integer.parseInt(s)];
+                return Color.values()[Integer.parseInt(s)];
             } catch (NumberFormatException e) {
             } catch (IndexOutOfBoundsException e) {
             }
             
             try {
-                return TagColor.valueOf(s);
+                return Color.valueOf(s);
             } catch (IllegalArgumentException e) {
                 throw SoapFaultException.CLIENT_ERROR("invalid color: "+s, e);
             }
         }
 
-        TagColor(int value) { mValue = value; } 
+        Color(int value) { mValue = value; } 
     }
 
     public String getId();
@@ -76,6 +76,6 @@ public interface ZTag extends Comparable {
      */
     public int getUnreadCount();
 
-    public TagColor getColor();
+    public Color getColor();
 
 }

@@ -44,7 +44,8 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.zclient.ZTag.TagColor;
+import com.zimbra.cs.zclient.ZMailbox.SortBy;
+import com.zimbra.cs.zclient.ZTag.Color;
 import com.zimbra.cs.zclient.soap.ZSoapMailbox;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -127,28 +128,38 @@ public class ZMailboxUtil implements DebugListener {
     
     public enum Command {
         
+        CREATE_FOLDER("createFolder", "cf", "{folder-name} [{default-view}]", Category.FOLDER, 1, 2),
+        CREATE_SEARCH_FOLDER("createSearchFolder", "csf", "{folder-name} {query} [{types}] [{sort-by}]", Category.FOLDER, 2, 4),        
         CREATE_TAG("createTag", "ct", "{tag-name} {tag-color}", Category.TAG, 2, 2),
         DELETE_CONVERSATION("deleteConversation", "dc", "{conv-ids} [{tcon}]", Category.CONVERSATION, 1, 2),
         DELETE_ITEM("deleteItem", "di", "{item-ids} [{tcon}]", Category.ITEM, 1, 2),        
+        DELETE_FOLDER("deleteFolder", "df", "{folder-path}", Category.FOLDER, 1, 1),
+        DELETE_MESSAGE("deleteMessage", "dm", "{msg-ids}", Category.MESSAGE, 1, 1),
         DELETE_TAG("deleteTag", "dt", "{tag-name}", Category.TAG, 1, 1),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
         FLAG_CONVERSATION("flagConversation", "fc", "{conv-ids} [0|1*] [{tcon}]", Category.CONVERSATION, 1, 3),
         FLAG_ITEM("flagItem", "fi", "{item-ids} [0|1*] [{tcon}]", Category.ITEM, 1, 3),
+        FLAG_MESSAGE("flagMessage", "fm", "{msg-ids} [0|1*]", Category.MESSAGE, 1, 2),
         GET_ALL_TAGS("getAllTags", "gat", "[-v]", Category.TAG, 0, 1),        
         GET_ALL_FOLDERS("getAllFolders", "gaf", "[-v]", Category.FOLDER, 0, 1),                
         GET_CONVERSATION("getConversation", "gc", "{conv-id}", Category.CONVERSATION, 1, 1),
+        GET_MESSAGE("getMessage", "gm", "{msg-id}", Category.MESSAGE, 1, 1),        
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         MARK_CONVERSATION_READ("markConversationRead", "mcr", "{conv-ids} [0|1*] [{tcon}]", Category.CONVERSATION, 1, 3),
+        MARK_CONVERSATION_SPAM("markConversationSpam", "mcs", "{conv-ids} [0|1*] [{dest-folder-path}] [{tcon}]", Category.CONVERSATION, 1, 4),
         MARK_ITEM_READ("markItemRead", "mir", "{item-ids} [0|1*] [{tcon}]", Category.ITEM, 1, 3),
-        MARK_CONVERSATION_SPAM("markConversationSpam", "mcs", "{conv-ids} [0|1*] [{tcon}]", Category.CONVERSATION, 1, 3),        
+        MARK_MESSAGE_READ("markMessageRead", "mmr", "{msg-ids} [0|1*]", Category.MESSAGE, 1, 2),
+        MARK_MESSAGE_SPAM("markMessageSpam", "mms", "{msg-ids} [0|1*] [{dest-folder-path}]", Category.MESSAGE, 1, 3),                        
         MARK_TAG_READ("markTagRead", "mtr", "{tag-name}", Category.TAG, 1, 1),
-        MOVE_CONVERSATION("moveConversation", "mc", "{conv-ids} {dest-folder-path} [{tcon}]", Category.CONVERSATION, 1, 2),
+        MOVE_CONVERSATION("moveConversation", "mc", "{conv-ids} {dest-folder-path} [{tcon}]", Category.CONVERSATION, 2, 3),
         MOVE_ITEM("moveItem", "mi", "{item-ids} {dest-folder-path} [{tcon}]", Category.ITEM, 1, 2),        
+        MOVE_MESSAGE("moveMessage", "mm", "{msg-ids} {dest-folder-path}", Category.MESSAGE, 2, 2),
         NOOP("noOp", "no", "", Category.MISC, 0, 0),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", Category.TAG, 2, 2),
         SET_TAG_COLOR("setTagColor", "stc", "{tag-name} {tag-color}", Category.TAG, 2, 2),
         TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*] [{tcon}]", Category.CONVERSATION, 2, 4),
-        TAG_ITEM("tagItem", "ti", "{item-ids} {tag-name} [0|1*] [{tcon}]", Category.ITEM, 2, 4);
+        TAG_ITEM("tagItem", "ti", "{item-ids} {tag-name} [0|1*] [{tcon}]", Category.ITEM, 2, 4),
+        TAG_MESSAGE("tagMessage", "tm", "{msg-ids} {tag-name} [0|1*]", Category.MESSAGE, 2, 3);
 
         private String mName;
         private String mAlias;
@@ -270,6 +281,11 @@ public class ZMailboxUtil implements DebugListener {
     }
     
     private String lookupFolderId(String pathOrId) throws ServiceException {
+        return lookupFolderId(pathOrId, false);
+    }
+    
+    private String lookupFolderId(String pathOrId, boolean parent) throws ServiceException {
+        if (parent) pathOrId = ZMailbox.getParentPath(pathOrId);
         if (pathOrId == null || pathOrId.length() == 0) return null;
         ZFolder folder = mMbox.getFolderById(pathOrId);
         if (folder == null) folder = mMbox.getFolderByPath(pathOrId);
@@ -288,9 +304,8 @@ public class ZMailboxUtil implements DebugListener {
     private String arg(String[] args, int index) {
         return arg(args, index, null);
     }
-
+    
     private boolean execute(String args[]) throws ServiceException, ArgException, IOException {
-        String [] members;
         
         mCommand = lookupCommand(args[0]);
         
@@ -303,18 +318,38 @@ public class ZMailboxUtil implements DebugListener {
         }
         
         switch(mCommand) {
-        case CREATE_TAG:
-            mMbox.createTag(args[1], TagColor.fromString(args[2]));
+        case CREATE_FOLDER:
+            mMbox.createFolder(
+                    lookupFolderId(args[1], true), 
+                    ZMailbox.getBasePath(args[1]), 
+                    args.length == 3 ? ZFolder.View.fromString(args[2]) : null);
             break;
-        case DELETE_TAG:
-            mMbox.deleteTag(lookupTag(args[1]).getId());
+        case CREATE_SEARCH_FOLDER:
+            mMbox.createSearchFolder(
+                    lookupFolderId(args[1], true), 
+                    ZMailbox.getBasePath(args[1]),
+                    args[2],
+                    arg(args, 3),
+                    args.length == 5 ? SortBy.fromString(arg(args, 4)) : null);
+            break;
+        case CREATE_TAG:
+            mMbox.createTag(args[1], Color.fromString(args[2]));
             break;
         case DELETE_CONVERSATION:
             mMbox.deleteConversation(args[1], arg(args, 2));
             break;
+        case DELETE_FOLDER:
+            mMbox.deleteFolder(lookupFolderId(args[1]));
+            break;            
         case DELETE_ITEM:
             mMbox.deleteItem(args[1], arg(args, 2));
             break;            
+        case DELETE_MESSAGE:
+            mMbox.deleteMessage(args[1]);
+            break;
+        case DELETE_TAG:
+            mMbox.deleteTag(lookupTag(args[1]).getId());
+            break;
         case EXIT:
             System.exit(0);
             break;
@@ -324,6 +359,9 @@ public class ZMailboxUtil implements DebugListener {
         case FLAG_ITEM:
             mMbox.flagItem(args[1], argb(args, 2, true), arg(args, 3));
             break;                        
+        case FLAG_MESSAGE:
+            mMbox.flagMessage(args[1], argb(args, 2, true));
+            break;            
         case GET_ALL_FOLDERS:
             doGetAllFolders(args); 
             break;
@@ -333,6 +371,9 @@ public class ZMailboxUtil implements DebugListener {
         case GET_CONVERSATION:
             doGetConversation(args);
             break;
+        case GET_MESSAGE:
+            doGetMessage(args);
+            break;            
         case HELP:
             doHelp(args); 
             break;
@@ -342,8 +383,14 @@ public class ZMailboxUtil implements DebugListener {
         case MARK_ITEM_READ:
             mMbox.markItemRead(args[1], argb(args, 2, true), arg(args, 3));
             break;            
+        case MARK_MESSAGE_READ:
+            mMbox.markMessageRead(args[1], argb(args, 2, true));
+            break;
         case MARK_CONVERSATION_SPAM:            
             mMbox.markConversationSpam(args[1], argb(args, 2, true), lookupFolderId(arg(args, 3)), arg(args, 4));
+            break;            
+        case MARK_MESSAGE_SPAM:            
+            mMbox.markMessageSpam(args[1], argb(args, 2, true), lookupFolderId(arg(args, 3)));
             break;            
         case MARK_TAG_READ:
             mMbox.markTagRead(lookupTag(args[1]).getId());
@@ -354,6 +401,9 @@ public class ZMailboxUtil implements DebugListener {
         case MOVE_ITEM:
             mMbox.moveItem(args[1], lookupFolderId(arg(args, 2)), arg(args, 3));
             break;                                    
+        case MOVE_MESSAGE:
+            mMbox.moveMessage(args[1], lookupFolderId(arg(args, 2)));
+            break;                        
         case NOOP:
             mMbox.noOp();
             break;
@@ -361,13 +411,16 @@ public class ZMailboxUtil implements DebugListener {
             mMbox.renameTag(lookupTag(args[1]).getId(), args[2]);
             break;
         case SET_TAG_COLOR:
-            mMbox.setTagColor(lookupTag(args[1]).getId(), TagColor.fromString(args[2]));            
+            mMbox.setTagColor(lookupTag(args[1]).getId(), Color.fromString(args[2]));            
             break;
         case TAG_CONVERSATION:
             mMbox.tagConversation(args[1], lookupTag(args[2]).getId(), argb(args, 3, true), arg(args, 4));
             break;
         case TAG_ITEM:
             mMbox.tagItem(args[1], lookupTag(args[2]).getId(), argb(args, 3, true), arg(args, 4));
+            break;
+        case TAG_MESSAGE:
+            mMbox.tagMessage(args[1], lookupTag(args[2]).getId(), argb(args, 3, true));
             break;
         default:
             return false;
@@ -392,7 +445,11 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doDumpFolder(ZFolder folder, boolean verbose, boolean recurse) {
-        System.out.println(folder.getPath());
+        if (verbose) {
+            System.out.println(folder);
+        } else {
+            System.out.println(folder.getPath());
+        }
         for (ZFolder child : folder.getSubFolders()) {
             doDumpFolder(child, verbose, recurse);
         }
@@ -400,12 +457,17 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doGetAllFolders(String[] args) throws ServiceException {
         boolean verbose = (args.length == 2) && args[1].equals("-v");
-        doDumpFolder(mMbox.getUserRoot(), true, verbose);
+        doDumpFolder(mMbox.getUserRoot(), verbose, true);
     }        
 
     private void doGetConversation(String[] args) throws ServiceException {
         ZConversation conv = mMbox.getConversation(args[1]);
         System.out.println(conv);
+    }        
+
+    private void doGetMessage(String[] args) throws ServiceException {
+        ZMessage msg = mMbox.getMessage(args[1], true, false, false, null, null); // TODO: optionally pass in these args
+        System.out.println(msg);
     }        
     
     private void dumpContact(GalContact contact) throws ServiceException {

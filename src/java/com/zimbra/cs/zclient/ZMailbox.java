@@ -29,12 +29,61 @@ import java.util.List;
 
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.zclient.ZTag.TagColor;
+import com.zimbra.cs.zclient.ZTag.Color;
+import com.zimbra.soap.SoapFaultException;
 
 public abstract class ZMailbox {
 
     public final static String PATH_SEPARATOR = "/";
+    
+    public final static char PATH_SEPARATOR_CHAR = '/';    
 
+   public enum SortBy {
+        
+       dateDesc, dateAsc, subjDesc, subjAsc, nameDesc, nameAsc;
+
+        public static SortBy fromString(String s) throws ServiceException {
+            try {
+                return SortBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw SoapFaultException.CLIENT_ERROR("invalid sortBy: "+s, e);
+            }
+        }
+   }
+   
+    /**
+     * returns the parent folder path. First removes a trailing {@link #PATH_SEPARATOR} if one is present, then
+     * returns the value of the path preceeding the last {@link #PATH_SEPARATOR} in the path.
+     * @param path path must be absolute
+     * @throws ServiceException 
+     */
+    public static String getParentPath(String path) throws ServiceException {
+        if (path.equals(PATH_SEPARATOR)) return PATH_SEPARATOR;
+        if (path.charAt(0) != PATH_SEPARATOR_CHAR) 
+            throw ServiceException.INVALID_REQUEST("path must be absoliute: "+path, null);
+        if (path.charAt(path.length()-1) == PATH_SEPARATOR_CHAR)
+            path = path.substring(0, path.length()-1);
+        int index = path.lastIndexOf(PATH_SEPARATOR_CHAR);
+        path = path.substring(0, index);
+        if (path.length() == 0) return PATH_SEPARATOR;
+        else return path;
+    }
+    
+    /**
+     * returns the base folder path. First removes a trailing {@link #PATH_SEPARATOR} if one is present, then
+     * returns the value of the path trailing the last {@link #PATH_SEPARATOR} in the path.
+     * @throws ServiceException 
+     */
+    public static String getBasePath(String path) throws ServiceException {
+        if (path.equals(PATH_SEPARATOR)) return PATH_SEPARATOR;
+        if (path.charAt(0) != PATH_SEPARATOR_CHAR) 
+            throw ServiceException.INVALID_REQUEST("path must be absoliute: "+path, null);
+        if (path.charAt(path.length()-1) == PATH_SEPARATOR_CHAR)
+            path = path.substring(0, path.length()-1);
+        int index = path.lastIndexOf(PATH_SEPARATOR_CHAR);
+        return path.substring(index+1);
+    }
+    
     /**
      * @return current size of mailbox in bytes
      */
@@ -72,10 +121,10 @@ public abstract class ZMailbox {
     public abstract ZTag getTagById(String id);
 
     /** create a new tag with the specified color. */
-    public abstract ZTag createTag(String name, TagColor color) throws ServiceException;
+    public abstract ZTag createTag(String name, Color color) throws ServiceException;
 
     /** modifies the tag's color */
-    public abstract ZActionResult setTagColor(String id, TagColor color) throws ServiceException;
+    public abstract ZActionResult setTagColor(String id, Color color) throws ServiceException;
 
     /** mark all items with tag as read */
     public abstract ZActionResult markTagRead(String id) throws ServiceException;
@@ -337,33 +386,28 @@ public abstract class ZMailbox {
     /**
      * create a new sub folder of the specified parent folder.
      * 
-     * @param parent parent folder
+     * @param parentId parent folder id
      * @param name name of new folder
      * @param defaultView default view of new folder. 
-     * @see {@link ZFolder#VIEW_APPOINTMENT}
-     * @see {@link ZFolder#VIEW_CONTACT}
-     * @see {@link ZFolder#VIEW_CONVERSATION}
-     * @see {@link ZFolder#VIEW_MESSAGE}
      *                
      * @return newly created folder
      * @throws ServiceException
      */
-    public abstract ZFolder createFolder(ZFolder parent, String name, String defaultView) throws ServiceException;
+    public abstract ZFolder createFolder(String parentId, String name, ZFolder.View defaultView) throws ServiceException;
     
     /**
      * create a new sub folder of the specified parent folder.
      * 
-     * @param parent parent folder
+     * @param parentId parent folder id
      * @param name name of new folder
      * @param query search query (required)
      * @param types comma-sep list of types to search for. See {@link SearchParams} for more info. Use null for default value.
-     * @parm sortBy how to sort the result. See {@link SearchParams} for more info. Use null for default value.
-     * @see {@link ZSearchParams#SORT_BY_DATE_ASC}
+     * @parm sortBy how to sort the result. Use null for default value.
      * @see {@link ZSearchParams#TYPE_MESSAGE}
      * @return newly created search folder
      * @throws ServiceException
      */
-    public abstract ZSearchFolder createSearchFolder(ZFolder parent, String name, String query, String types, String sortBy) throws ServiceException;
+    public abstract ZSearchFolder createSearchFolder(String parentId, String name, String query, String types, SortBy sortBy) throws ServiceException;
 
     /**
      * modify a search folder.
@@ -375,7 +419,7 @@ public abstract class ZMailbox {
      * @return modified search folder
      * @throws ServiceException
      */
-    public abstract ZSearchFolder modifySearchFolder(String id, String query, String types, String sortBy) throws ServiceException;
+    public abstract ZSearchFolder modifySearchFolder(String id, String query, String types, SortBy sortBy) throws ServiceException;
  
     public static class ZActionResult {
         private String mIds;
@@ -466,24 +510,20 @@ public abstract class ZMailbox {
     /**
      * create a new mointpoint in the specified parent folder.
      * 
-     * @param parent parent folder
+     * @param parentId parent folder id
      * @param name name of new folder
      * @param defaultView default view of new folder.
      * @param ownerBy used to specify whether owner is an id or account name (email address) 
      * @param owner either the id or name of the owner
      * @param itemBy used to specify whether sharedItem is an id or path to the shared item
      * @param sharedItem either the id or path of the item
-     * @see {@link ZFolder#VIEW_APPOINTMENT}
-     * @see {@link ZFolder#VIEW_CONTACT}
-     * @see {@link ZFolder#VIEW_CONVERSATION}
-     * @see {@link ZFolder#VIEW_MESSAGE}
      *                
      * @return newly created folder
      * @throws ServiceException
      */
     public abstract ZLink createMountpoint(
-            ZFolder parent, String name, 
-            String defaultView,
+            String parentId, String name, 
+            ZFolder.View defaultView,
             OwnerBy ownerBy,
             String owner,
             SharedItemBy itemBy,

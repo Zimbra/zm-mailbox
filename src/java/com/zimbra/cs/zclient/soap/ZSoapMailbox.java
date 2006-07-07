@@ -47,7 +47,7 @@ import com.zimbra.cs.zclient.ZSearchHit;
 import com.zimbra.cs.zclient.ZSearchParams;
 import com.zimbra.cs.zclient.ZSearchResult;
 import com.zimbra.cs.zclient.ZTag;
-import com.zimbra.cs.zclient.ZTag.TagColor;
+import com.zimbra.cs.zclient.ZTag.Color;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
@@ -295,7 +295,7 @@ public class ZSoapMailbox extends ZMailbox {
         req.addAttribute(MailService.A_CONV_ID, convId);
         if (params.getLimit() != 0) req.addAttribute(MailService.A_QUERY_LIMIT, params.getLimit());
         if (params.getOffset() != 0) req.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
-        if (params.getSortBy() != null) req.addAttribute(MailService.A_SORTBY, params.getSortBy());
+        if (params.getSortBy() != null) req.addAttribute(MailService.A_SORTBY, params.getSortBy().name());
         if (params.getTypes() != null) req.addAttribute(MailService.A_SEARCH_TYPES, params.getTypes());
         if (params.isFetchFirstMessage()) req.addAttribute(MailService.A_FETCH, params.isFetchFirstMessage());
         if (params.isPreferHtml()) req.addAttribute(MailService.A_WANT_HTML, params.isPreferHtml());
@@ -333,46 +333,46 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZFolder createFolder(ZFolder parent, String name, String defaultView) throws ServiceException {
+    public ZFolder createFolder(String parentId, String name, ZFolder.View defaultView) throws ServiceException {
         XMLElement req = new XMLElement(MailService.CREATE_FOLDER_REQUEST);
         Element folderEl = req.addElement(MailService.E_FOLDER);
         folderEl.addAttribute(MailService.A_NAME, name);
-        folderEl.addAttribute(MailService.A_FOLDER, parent.getId());
-        if (defaultView != null) folderEl.addAttribute(MailService.A_DEFAULT_VIEW, defaultView);
+        folderEl.addAttribute(MailService.A_FOLDER, parentId);
+        if (defaultView != null) folderEl.addAttribute(MailService.A_DEFAULT_VIEW, defaultView.name());
         String id = invoke(req).getElement(MailService.E_FOLDER).getAttribute(MailService.A_ID);
         // this assumes notifications will create the folder
         return getFolderById(id);
     }
 
     @Override
-    public ZSearchFolder createSearchFolder(ZFolder parent, String name, String query, String types, String sortBy) throws ServiceException {
+    public ZSearchFolder createSearchFolder(String parentId, String name, String query, String types, SortBy sortBy) throws ServiceException {
         XMLElement req = new XMLElement(MailService.CREATE_SEARCH_FOLDER_REQUEST);
         Element folderEl = req.addElement(MailService.E_SEARCH);
         folderEl.addAttribute(MailService.A_NAME, name);
-        folderEl.addAttribute(MailService.A_FOLDER, parent.getId());
+        folderEl.addAttribute(MailService.A_FOLDER, parentId);
         folderEl.addAttribute(MailService.A_QUERY, query);
         if (types != null) folderEl.addAttribute(MailService.A_SEARCH_TYPES, types);
-        if (sortBy != null) folderEl.addAttribute(MailService.A_SORTBY, sortBy);
+        if (sortBy != null) folderEl.addAttribute(MailService.A_SORTBY, sortBy.name());
         String id = invoke(req).getElement(MailService.E_SEARCH).getAttribute(MailService.A_ID);
         // this assumes notifications will create the folder
         return getSearchFolderById(id);
     }
 
     @Override
-    public ZSearchFolder modifySearchFolder(String id, String query, String types, String sortBy) throws ServiceException {
+    public ZSearchFolder modifySearchFolder(String id, String query, String types, SortBy sortBy) throws ServiceException {
         XMLElement req = new XMLElement(MailService.MODIFY_SEARCH_FOLDER_REQUEST);
         Element folderEl = req.addElement(MailService.E_SEARCH);
         folderEl.addAttribute(MailService.A_ID, id);
         if (query != null) folderEl.addAttribute(MailService.A_QUERY, query);
         if (types != null) folderEl.addAttribute(MailService.A_SEARCH_TYPES, types);
-        if (sortBy != null) folderEl.addAttribute(MailService.A_SORTBY, sortBy);
+        if (sortBy != null) folderEl.addAttribute(MailService.A_SORTBY, sortBy.name());
         invoke(req);
         // this assumes notifications will modify the search folder
         return getSearchFolderById(id);
     }
     
     @Override
-    public ZTag createTag(String name, TagColor color) throws ServiceException {
+    public ZTag createTag(String name, Color color) throws ServiceException {
         XMLElement req = new XMLElement(MailService.CREATE_TAG_REQUEST);
         Element tagEl = req.addElement(MailService.E_TAG);
         tagEl.addAttribute(MailService.A_NAME, name);
@@ -502,7 +502,7 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZActionResult setTagColor(String id, TagColor color) throws ServiceException {
+    public ZActionResult setTagColor(String id, Color color) throws ServiceException {
         return doAction(tagAction("color", id).addAttribute(MailService.A_COLOR, color.getValue()));        
     }
 
@@ -640,12 +640,12 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZLink createMountpoint(ZFolder parent, String name, String defaultView, OwnerBy ownerBy, String owner, SharedItemBy itemBy, String sharedItem) throws ServiceException {
+    public ZLink createMountpoint(String parentId, String name, ZFolder.View defaultView, OwnerBy ownerBy, String owner, SharedItemBy itemBy, String sharedItem) throws ServiceException {
         XMLElement req = new XMLElement(MailService.CREATE_MOUNTPOINT_REQUEST);
         Element linkEl = req.addElement(MailService.E_MOUNT);
         linkEl.addAttribute(MailService.A_NAME, name);
-        linkEl.addAttribute(MailService.A_FOLDER, parent.getId());
-        if (defaultView != null) linkEl.addAttribute(MailService.A_DEFAULT_VIEW, defaultView);
+        linkEl.addAttribute(MailService.A_FOLDER, parentId);
+        if (defaultView != null) linkEl.addAttribute(MailService.A_DEFAULT_VIEW, defaultView.name());
         linkEl.addAttribute(ownerBy == OwnerBy.BY_ID ? MailService.A_ZIMBRA_ID : MailService.A_DISPLAY, owner);
         linkEl.addAttribute(itemBy == SharedItemBy.BY_ID ? MailService.A_REMOTE_ID: MailService.A_PATH, sharedItem);
         String id = invoke(req).getElement(MailService.E_MOUNT).getAttribute(MailService.A_ID);
@@ -681,26 +681,26 @@ public class ZSoapMailbox extends ZMailbox {
         mbox.setFolderChecked(inbox.getId(), true);
         mbox.setFolderChecked(inbox.getId(), false);        
         mbox.setFolderColor(inbox.getId(), 1);
-        ZFolder dork = mbox.createFolder(inbox, "dork",ZFolder.VIEW_MESSAGE);
+        ZFolder dork = mbox.createFolder(inbox.getId(), "dork", ZFolder.View.message);
         System.out.println("---------- created dork -----------");                
         System.out.println(dork);
         System.out.println(inbox);
         mbox.deleteFolder(dork.getId());
         System.out.println("---------- deleted dork -----------");
         System.out.println(inbox);
-        ZTag zippy = mbox.createTag("zippy", TagColor.purple);
+        ZTag zippy = mbox.createTag("zippy", Color.purple);
         System.out.println(zippy);
-        System.out.println(mbox.setTagColor(zippy.getId(), TagColor.orange));
+        System.out.println(mbox.setTagColor(zippy.getId(), Color.orange));
         System.out.println(mbox.markTagRead(zippy.getId()));
         System.out.println(mbox.renameTag(zippy.getId(), "zippy2"));
         System.out.println(mbox.getAllTags());
         System.out.println(mbox.deleteTag(zippy.getId()));
         System.out.println(mbox.getAllTags());        
-        ZSearchFolder flagged = mbox.createSearchFolder(mbox.getUserRoot(), "is-it-flagged", "is:flagged", null, null);
+        ZSearchFolder flagged = mbox.createSearchFolder(mbox.getUserRoot().getId(), "is-it-flagged", "is:flagged", null, null);
         System.out.println(flagged);
         System.out.println(mbox.renameFolder(flagged.getId(), "flagged-and-unread"));        
         System.out.println(mbox.setFolderColor(flagged.getId(), 6));
-        System.out.println(mbox.modifySearchFolder(flagged.getId(), "is:flagged is:unread", null, ZSearchParams.SORT_BY_DATE_DESC));
+        System.out.println(mbox.modifySearchFolder(flagged.getId(), "is:flagged is:unread", null, SortBy.dateAsc));
         
         mbox.deleteFolder(flagged.getId());
         mbox.noOp();        

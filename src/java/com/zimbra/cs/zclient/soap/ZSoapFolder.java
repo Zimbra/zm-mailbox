@@ -42,7 +42,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
     private String mId;
     private String mName;
     private int mUnreadCount;
-    private String mDefaultView;
+    private View mDefaultView;
     private String mFlags;
     private int mMessageCount;
     private String mParentId;
@@ -63,7 +63,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         mColor = (int) e.getAttributeLong(MailService.A_COLOR, 0);
         mUnreadCount = (int) e.getAttributeLong(MailService.A_UNREAD, 0);
         mMessageCount = (int) e.getAttributeLong(MailService.A_NUM, 0);
-        mDefaultView = e.getAttribute(MailService.A_DEFAULT_VIEW, "");
+        mDefaultView = View.fromString(e.getAttribute(MailService.A_DEFAULT_VIEW, View.conversation.name()));
         mRestURL = e.getAttribute(MailService.A_REST_URL, null);
         mRemoteURL = e.getAttribute(MailService.A_URL, null);
         mEffectivePerms = e.getAttribute(MailService.A_RIGHTS, null);
@@ -103,7 +103,8 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         mColor = (int) e.getAttributeLong(MailService.A_COLOR, mColor);
         mUnreadCount = (int) e.getAttributeLong(MailService.A_UNREAD, mUnreadCount);
         mMessageCount = (int) e.getAttributeLong(MailService.A_NUM, mMessageCount);
-        mDefaultView = e.getAttribute(MailService.A_DEFAULT_VIEW, mDefaultView);
+        String newView = e.getAttribute(MailService.A_DEFAULT_VIEW, null);
+        if (newView != null) mDefaultView = View.fromString(newView);
         mRestURL = e.getAttribute(MailService.A_REST_URL, mRestURL);
         mRemoteURL = e.getAttribute(MailService.A_URL, mRemoteURL);
         mEffectivePerms = e.getAttribute(MailService.A_RIGHTS, mEffectivePerms);
@@ -163,7 +164,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
                 extra != null ? extra : ""); 
     }
 
-    public String getDefaultView() {
+    public View getDefaultView() {
         return mDefaultView;
     }
 

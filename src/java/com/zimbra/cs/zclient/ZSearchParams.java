@@ -25,26 +25,9 @@
 
 package com.zimbra.cs.zclient;
 
-public class ZSearchParams {
+import com.zimbra.cs.zclient.ZMailbox.SortBy;
 
-    /** sort by date descending */
-    public static final String SORT_BY_DATE_DESC = "dateDesc"; 
-    
-    /** sort by date ascending */
-    public static final String SORT_BY_DATE_ASC = "dateAsc";
-    
-    /** sort by subject descending */
-    public static final String SORT_BY_SUBJECT_DESC = "subjectDesc";
-    
-    /** sort by subject ascending */
-    public static final String SORT_BY_SUBJECT_ASC = "subjectAsc";
-    
-    /** sort by name descending */
-    public static final String SORT_BY_NAME_DESC = "nameDesc";
-    
-    /** sort by name ascending */
-    public static final String SORT_BY_NAME_ASC = "nameAsc";
-    
+public class ZSearchParams {
 
     public static final String TYPE_CONVERSATION = "conversation";
     
@@ -69,7 +52,7 @@ public class ZSearchParams {
     /**
      * dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc(default is "dateDesc")
      */
-    private String mSortBy = SORT_BY_DATE_DESC;
+    private SortBy mSortBy = SortBy.dateDesc;
     
     /**
      * comma-separated list.  Legal values are:
@@ -212,11 +195,11 @@ public class ZSearchParams {
         mRecipientMode = recipientMode;
     }
 
-    public String getSortBy() {
+    public SortBy getSortBy() {
         return mSortBy;
     }
 
-    public void setSortBy(String sortBy) {
+    public void setSortBy(SortBy sortBy) {
         mSortBy = sortBy;
     }
 
