@@ -177,7 +177,7 @@ public class Message extends MailItem {
      *  Note that this can only be set when the Message is created; it cannot
      *  be altered thereafter.*/
     public boolean isFromMe() {
-        return (mData.flags & Flag.FLAG_FROM_ME) != 0;
+        return (mData.flags & Flag.BITMASK_FROM_ME) != 0;
     }
 
     /** Returns the ID of the {@link Conversation} the Message belongs to.
@@ -451,9 +451,9 @@ public class Message extends MailItem {
         }
 
         // make sure the "attachments" FLAG is correct
-        mData.flags &= ~Flag.FLAG_ATTACHED;
+        mData.flags &= ~Flag.BITMASK_ATTACHED;
         if (pm.hasAttachments())
-            mData.flags |= Flag.FLAG_ATTACHED;
+            mData.flags |= Flag.BITMASK_ATTACHED;
 
         // make sure the SUBJECT is correct
         boolean subjectChanged = !getSubject().equals(pm.getSubject());
@@ -546,7 +546,7 @@ public class Message extends MailItem {
     }
     private static String encodeMetadata(byte color, ParsedMessage pm, int flags, DraftInfo dinfo, List<ApptInfo> apptInfos) {
         // cache the "To" header only for messages sent by the user
-        String recipients = ((flags & Flag.FLAG_FROM_ME) == 0 ? null : pm.getRecipients());
+        String recipients = ((flags & Flag.BITMASK_FROM_ME) == 0 ? null : pm.getRecipients());
         return encodeMetadata(new Metadata(), color, pm.getSender(), recipients, pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), dinfo, apptInfos).toString();
     }
     static Metadata encodeMetadata(Metadata meta, byte color, String sender, String recipients, String fragment, String subject, String rawSubject, DraftInfo dinfo, List<ApptInfo> apptInfos) {

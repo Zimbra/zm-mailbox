@@ -250,7 +250,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             String table = getMailItemTableName(item);
-            String flags = shared ? "flags = flags | " + Flag.FLAG_COPIED + ", " : "";
+            String flags = shared ? "flags = flags | " + Flag.BITMASK_COPIED + ", " : "";
             stmt = conn.prepareStatement("UPDATE " + table +
                     " SET folder_id = ?, " + flags + "imap_id = ?, mod_metadata = ?, change_date = ?" +
                     " WHERE id = ?");
@@ -1474,7 +1474,7 @@ public class DbMailItem {
     private static final String LEAF_NODE_FIELDS = "id, size, type, unread, folder_id," +
                                                    " parent_id IS NULL, blob_digest IS NOT NULL," +
                                                    " mod_content, mod_metadata," +
-                                                   " flags & " + Flag.FLAG_COPIED + ", index_id, volume_id";
+                                                   " flags & " + Flag.BITMASK_COPIED + ", index_id, volume_id";
 
     private static final int LEAF_CI_ID           = 1;
     private static final int LEAF_CI_SIZE         = 2;
@@ -1673,7 +1673,7 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                int flags = rs.getBoolean(4) ? Flag.FLAG_UNREAD | rs.getInt(5) : rs.getInt(5);
+                int flags = rs.getBoolean(4) ? Flag.BITMASK_UNREAD | rs.getInt(5) : rs.getInt(5);
                 result.add(new ImapMessage(rs.getInt(1), rs.getByte(2), rs.getInt(3), flags, rs.getLong(6)));
             }
             return result;
@@ -1740,7 +1740,7 @@ public class DbMailItem {
             if (extra == ExtraData.MAIL_ITEM) {
                 result.data = constructItem(rs, 4);
             } else if (extra == ExtraData.IMAP_MSG) {
-                int flags = rs.getBoolean(6) ? Flag.FLAG_UNREAD | rs.getInt(7) : rs.getInt(7);
+                int flags = rs.getBoolean(6) ? Flag.BITMASK_UNREAD | rs.getInt(7) : rs.getInt(7);
                 result.i4msg = new ImapMessage(result.id, result.type, rs.getInt(5), flags, rs.getLong(8));
             }
             return result;

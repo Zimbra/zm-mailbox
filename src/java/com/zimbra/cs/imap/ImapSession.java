@@ -403,7 +403,7 @@ public class ImapSession extends Session {
                 continue;
             } else if (chg.what instanceof Folder && ((Folder) chg.what).getId() == mSelectedFolder.getId()) {
                 Folder folder = (Folder) chg.what;
-                if ((chg.why & Change.MODIFIED_FLAGS) != 0 && (folder.getFlagBitmask() & Flag.FLAG_DELETED) != 0) {
+                if ((chg.why & Change.MODIFIED_FLAGS) != 0 && (folder.getFlagBitmask() & Flag.BITMASK_DELETED) != 0) {
                     // notify client that mailbox is deselected due to \Noselect?
                     // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
                     //                mailbox, but disconnect all other clients who have the

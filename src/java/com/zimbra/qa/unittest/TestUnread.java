@@ -467,7 +467,7 @@ public class TestUnread extends TestCase
         DbResults results = DbUtil.executeQuery(
             "SELECT COUNT(*) " +
             "FROM " + DbMailItem.getMailItemTableName(mMbox) +
-            " WHERE flags & " + Flag.FLAG_UNREAD + " > 0");
+            " WHERE flags & " + Flag.BITMASK_UNREAD + " > 0");
         int numRows = results.getInt(1);
         assertEquals("Found " + numRows + " items with old unread flag set", 0, numRows);
     }
@@ -476,10 +476,10 @@ public class TestUnread extends TestCase
     throws Exception {
         String flagString = item.getFlagString();
         if (item.isUnread()) {
-            assertTrue("unread bit test: " + item.getFlagBitmask(), (item.getFlagBitmask() & Flag.FLAG_UNREAD) > 0);
+            assertTrue("unread bit test: " + item.getFlagBitmask(), (item.getFlagBitmask() & Flag.BITMASK_UNREAD) > 0);
             assertTrue("unread flag string: " + flagString, flagString.indexOf(Flag.getAbbreviation(Flag.ID_FLAG_UNREAD)) >= 0); 
         } else {
-            assertTrue("read bit test: " + item.getFlagBitmask(), (item.getFlagBitmask() & Flag.FLAG_UNREAD) == 0);
+            assertTrue("read bit test: " + item.getFlagBitmask(), (item.getFlagBitmask() & Flag.BITMASK_UNREAD) == 0);
             assertTrue("read flag string: " + flagString, flagString.indexOf(Flag.getAbbreviation(Flag.ID_FLAG_UNREAD)) == -1); 
         }
 

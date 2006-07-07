@@ -2320,6 +2320,12 @@ public class Mailbox {
             endTransaction(success);
         }
     }
+    public synchronized List<Folder> getFolderList(OperationContext octxt, byte sort) throws ServiceException {
+        List<Folder> folders = new ArrayList<Folder>();
+        for (MailItem item : getItemList(octxt, MailItem.TYPE_CONTACT, -1, sort))
+            folders.add((Folder) item);
+        return folders;
+    }
 
 
     public synchronized SearchFolder getSearchFolderById(OperationContext octxt, int searchId) throws ServiceException {
@@ -2939,7 +2945,7 @@ public class Mailbox {
 
         // quick check to make sure we don't deliver 5 copies of the same message
         String msgidHeader = pm.getMessageID();
-        boolean isSent = ((flags & Flag.FLAG_FROM_ME) != 0);
+        boolean isSent = ((flags & Flag.BITMASK_FROM_ME) != 0);
         boolean checkDuplicates = (redoPlayer == null && msgidHeader != null);
         if (checkDuplicates && !isSent && mSentMessageIDs.containsKey(msgidHeader)) {
             Integer sentMsgID = (Integer) mSentMessageIDs.get(msgidHeader);
@@ -2959,11 +2965,11 @@ public class Mailbox {
 
         // Strip out unread flag for internal storage.
         // This should not be done earlier than redoRecorder initialization.
-        boolean unread = (flags & Flag.FLAG_UNREAD) > 0;
-        flags = flags & ~Flag.FLAG_UNREAD;
+        boolean unread = (flags & Flag.BITMASK_UNREAD) > 0;
+        flags = flags & ~Flag.BITMASK_UNREAD;
 
         boolean isSpam = folderId == ID_FOLDER_SPAM;
-        boolean isDraft = ((flags & Flag.FLAG_DRAFT) != 0);
+        boolean isDraft = ((flags & Flag.BITMASK_DRAFT) != 0);
 
         Message msg = null;
         Blob blob = null;
@@ -2981,9 +2987,9 @@ public class Mailbox {
 
             // "having attachments" is currently tracked via flags
             if (pm.hasAttachments())
-                flags |= Flag.FLAG_ATTACHED;
+                flags |= Flag.BITMASK_ATTACHED;
             else
-                flags &= ~Flag.FLAG_ATTACHED;
+                flags &= ~Flag.BITMASK_ATTACHED;
 
             Folder folder  = getFolderById(folderId);
             String subject = pm.getNormalizedSubject();
@@ -3202,7 +3208,7 @@ public class Mailbox {
             Message.DraftInfo dinfo = null;
             if (replyType != null && origId > 0)
                 dinfo = new Message.DraftInfo(replyType, origId);
-            return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.FLAG_DRAFT | Flag.FLAG_FROM_ME, null,
+            return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME, null,
                         ID_AUTO_INCREMENT, ":API:", dinfo, new SharedDeliveryContext());
         } else
             return saveDraftInternal(octxt, pm, id);
@@ -3395,8 +3401,8 @@ public class Mailbox {
 
             // Special-case the unread flag.  It's passed in as a flag from the outside,
             // but treated as a separate argument inside the mailbox.
-            boolean unread = (flags & Flag.FLAG_UNREAD) > 0;
-            flags &= ~Flag.FLAG_UNREAD;
+            boolean unread = (flags & Flag.BITMASK_UNREAD) > 0;
+            flags &= ~Flag.BITMASK_UNREAD;
             item.setTags(flags, tags);
             if (mUnreadFlag.canTag(item))
                 item.alterUnread(unread);
@@ -3888,7 +3894,7 @@ public class Mailbox {
                 if (obj instanceof Invite)
                     addInvite(octxt, (Invite) obj, folderId, true, null);
                 else if (obj instanceof ParsedMessage)
-                    addMessage(octxt, (ParsedMessage) obj, folderId, true, Flag.FLAG_UNREAD, null);
+                    addMessage(octxt, (ParsedMessage) obj, folderId, true, Flag.BITMASK_UNREAD, null);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IOException", e);
             }

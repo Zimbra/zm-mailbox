@@ -35,9 +35,11 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.internet.*;
 
@@ -50,9 +52,11 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.formatter.VCard;
+import com.zimbra.cs.util.ZimbraLog;
 
 
 public class ImapMessage implements Comparable<ImapMessage> {
@@ -65,9 +69,9 @@ public class ImapMessage implements Comparable<ImapMessage> {
     static final short FLAG_EXPUNGED     = 0x0200;
     static final short FLAG_GHOST        = 0x0400;
 
-    static final int IMAP_FLAGS = Flag.FLAG_UNREAD | Flag.FLAG_FLAGGED | Flag.FLAG_DELETED |
-                                  Flag.FLAG_DRAFT  | Flag.FLAG_REPLIED | Flag.FLAG_FORWARDED |
-                                  Flag.FLAG_NOTIFIED;
+    static final int IMAP_FLAGS = Flag.BITMASK_UNREAD | Flag.BITMASK_FLAGGED | Flag.BITMASK_DELETED |
+                                  Flag.BITMASK_DRAFT  | Flag.BITMASK_REPLIED | Flag.BITMASK_FORWARDED |
+                                  Flag.BITMASK_NOTIFIED;
     static final short MUTABLE_SESSION_FLAGS = FLAG_SPAM | FLAG_NONSPAM | FLAG_JUNKRECORDED;
     static final short SESSION_FLAGS = FLAG_ADDED | FLAG_EXPUNGED | FLAG_IS_CONTACT |
                                        FLAG_GHOST | FLAG_RECENT   | MUTABLE_SESSION_FLAGS;
@@ -152,25 +156,25 @@ public class ImapMessage implements Comparable<ImapMessage> {
     private static final String NO_FLAGS = "FLAGS ()";
 
     String getFlags(ImapSession session) {
-        if ((flags & IMAP_FLAGS) == Flag.FLAG_UNREAD && tags == 0 && sflags == 0)
+        if ((flags & IMAP_FLAGS) == Flag.BITMASK_UNREAD && tags == 0 && sflags == 0)
             return NO_FLAGS;
         StringBuilder result = new StringBuilder("FLAGS (");
         int empty = result.length();
 
-        if ((flags & Flag.FLAG_DELETED) != 0)
+        if ((flags & Flag.BITMASK_DELETED) != 0)
             result.append(result.length() == empty ? "" : " ").append("\\Deleted");
-        if ((flags & Flag.FLAG_DRAFT) != 0)
+        if ((flags & Flag.BITMASK_DRAFT) != 0)
             result.append(result.length() == empty ? "" : " ").append("\\Draft");
-        if ((flags & Flag.FLAG_FLAGGED) != 0)
+        if ((flags & Flag.BITMASK_FLAGGED) != 0)
             result.append(result.length() == empty ? "" : " ").append("\\Flagged");
-        if ((flags & Flag.FLAG_REPLIED) != 0)
+        if ((flags & Flag.BITMASK_REPLIED) != 0)
             result.append(result.length() == empty ? "" : " ").append("\\Answered");
-        if ((flags & Flag.FLAG_NOTIFIED) != 0)
+        if ((flags & Flag.BITMASK_NOTIFIED) != 0)
             result.append(result.length() == empty ? "" : " ").append("$MDNSent");
-        if ((flags & Flag.FLAG_FORWARDED) != 0)
+        if ((flags & Flag.BITMASK_FORWARDED) != 0)
             result.append(result.length() == empty ? "" : " ").append("$Forwarded Forwarded");
         // note: \Seen is the IMAP flag, but we store "unread", so the test here is == not !=
-        if ((flags & Flag.FLAG_UNREAD) == 0)
+        if ((flags & Flag.BITMASK_UNREAD) == 0)
             result.append(result.length() == empty ? "" : " ").append("\\Seen");
 
         if ((sflags & FLAG_RECENT) != 0)
@@ -398,6 +402,116 @@ public class ImapMessage implements Comparable<ImapMessage> {
         String[] samples = new String[] { null, "test", "\u0442", "ha\nnd", "\"dog\"", "ca\"t", "\0fr\0og\0" };
         for (String s : samples) {
             nstring2047(ps, s);  ps.write(' ');  nstring(ps, s);  ps.write(' ');  astring(ps, s);  ps.write(' ');  aSTRING(ps, s);  ps.write('\n');
+        }
+    }
+
+
+    private static class WindowsMobile5Converter extends MimeVisitor {
+        protected boolean visitBodyPart(MimeBodyPart bp)  { return false; }
+
+        protected boolean visitMessage(MimeMessage mm, VisitPhase visitKind) throws MessagingException {
+            if (visitKind != VisitPhase.VISIT_BEGIN)
+                return false;
+            // only want to affect multipart/alternative messages
+            String ctype = Mime.getContentType(mm);
+            if (!ctype.equals(Mime.CT_MULTIPART_ALTERNATIVE))
+                return false;
+
+            BodyPart bp = null;
+            try {
+                Object content = Mime.getMultipartContent(mm, ctype);
+                if (content instanceof MimeMultipart)
+                    bp = getPrimaryPart((MimeMultipart) content);
+            } catch (IOException e) {
+                ZimbraLog.extensions.warn("exception while traversing message; skipping", e);
+            } catch (MessagingException e) {
+                ZimbraLog.extensions.warn("exception while traversing message; skipping", e);
+            }
+            if (bp == null)
+                return false;
+            // check to make sure that the caller's OK with altering the message
+            if (mCallback != null && !mCallback.onModification())
+                return false;
+            // and put the selected part where the multipart/alternative used to be
+            mm.setDataHandler(bp.getDataHandler());
+            return true;
+        }
+        
+        protected boolean visitMultipart(MimeMultipart multi, VisitPhase visitKind) throws MessagingException {
+            if (visitKind != VisitPhase.VISIT_BEGIN)
+                return false;
+            // we should never hit a multipart/alternative part -- ever
+            if (Mime.getContentType(multi).equals(Mime.CT_MULTIPART_ALTERNATIVE)) {
+                ZimbraLog.extensions.warn("unexpected multipart/alternative found; skipping");
+                return false;
+            }
+
+            Map<Integer, BodyPart> replacements = null;
+            try {
+                for (int i = 0; i < multi.getCount(); i++) {
+                    BodyPart bp = multi.getBodyPart(i);
+                    String ctype = Mime.getContentType(bp);
+                    if (ctype.equals(Mime.CT_MULTIPART_ALTERNATIVE) && bp instanceof MimeBodyPart) {
+                        Object content = Mime.getMultipartContent((MimeBodyPart) bp, ctype);
+                        if (content instanceof MimeMultipart) {
+                            BodyPart subpart = getPrimaryPart((MimeMultipart) content);
+                            if (subpart != null) {
+                                if (replacements == null)
+                                    replacements = new HashMap<Integer, BodyPart>();
+                                replacements.put(i, subpart);
+                            }
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                ZimbraLog.extensions.warn("exception while traversing multipart; skipping", e);
+            } catch (MessagingException e) {
+                ZimbraLog.extensions.warn("exception while traversing multipart; skipping", e);
+            }
+            if (replacements == null || replacements.isEmpty())
+                return false;
+            // check to make sure that the caller's OK with altering the message
+            if (mCallback != null && !mCallback.onModification())
+                return false;
+            // and put the selected parts where the multipart/alternatives used to be
+            for (Map.Entry<Integer, BodyPart> entry : replacements.entrySet()) {
+                multi.removeBodyPart(entry.getKey());
+                multi.addBodyPart(entry.getValue(), entry.getKey());
+            }
+            return true;
+        }
+
+        private static Map<String, Integer> typeRankings = new HashMap<String, Integer>();
+            static {
+                typeRankings.put(Mime.CT_TEXT_HTML, 1);
+                typeRankings.put(Mime.CT_TEXT_PLAIN, 2);
+                typeRankings.put(Mime.CT_TEXT_CALENDAR, 3);
+            }
+
+        private BodyPart getPrimaryPart(MimeMultipart multi) throws MessagingException, IOException {
+            BodyPart primary = null;
+            int primaryRank = 0;
+            for (int i = 0; i < multi.getCount(); i++) {
+                BodyPart subpart = multi.getBodyPart(i);
+                String ctype = Mime.getContentType(subpart);
+                if (ctype.equals(Mime.CT_MULTIPART_ALTERNATIVE) && subpart instanceof MimeBodyPart) {
+                    Object content = Mime.getMultipartContent((MimeBodyPart) subpart, ctype);
+                    if (content instanceof MimeMultipart) {
+                        subpart = getPrimaryPart((MimeMultipart) content);
+                        if (subpart == null)
+                            continue;
+                        ctype = Mime.getContentType(subpart);
+                    }
+                }
+                Integer rank = typeRankings.get(ctype);
+                if (rank == null)
+                    rank = 0;
+                if (primary == null || rank > primaryRank) {
+                    primary = subpart;
+                    primaryRank = rank;
+                }
+            }
+            return primary;
         }
     }
 }

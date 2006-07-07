@@ -176,7 +176,7 @@ public class MailSender {
             // if requested, save a copy of the message to the Sent Mail folder
             Message msg = null;
             if (saveToFolder != 0) {
-                int flags = Flag.FLAG_FROM_ME;
+                int flags = Flag.BITMASK_FROM_ME;
                 ParsedMessage pm = new ParsedMessage(mm, mm.getSentDate().getTime(),
                                                      mbox.attachmentsIndexingEnabled());
                 // save it to the requested folder

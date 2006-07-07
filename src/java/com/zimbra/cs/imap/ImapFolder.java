@@ -112,7 +112,7 @@ class ImapFolder implements Iterable<ImapMessage> {
         StringBuilder added = debug ? new StringBuilder("  ** added: ") : null;
         for (ImapMessage i4msg : i4list) {
             cache(i4msg);
-            if (mFirstUnread == -1 && (i4msg.flags & Flag.FLAG_UNREAD) != 0)
+            if (mFirstUnread == -1 && (i4msg.flags & Flag.BITMASK_UNREAD) != 0)
                 mFirstUnread = i4msg.sequence;
             if (debug)  added.append(' ').append(i4msg.msgId);
         }
@@ -187,7 +187,7 @@ class ImapFolder implements Iterable<ImapMessage> {
 
         mFirstUnread = -1;
         for (ImapMessage i4msg : mSequence) {
-            if (mFirstUnread == -1 && (i4msg.flags & Flag.FLAG_UNREAD) != 0)
+            if (mFirstUnread == -1 && (i4msg.flags & Flag.BITMASK_UNREAD) != 0)
                 mFirstUnread = i4msg.sequence;
             i4msg.setAdded(false);
             i4msg.setGhost(false);

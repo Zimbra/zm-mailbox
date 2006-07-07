@@ -45,39 +45,39 @@ public class Flag extends Tag {
         }
 
     public static final int ID_FLAG_FROM_ME = -1;
-    public static final int FLAG_FROM_ME    = 1 << getIndex(ID_FLAG_FROM_ME);
+    public static final int BITMASK_FROM_ME = 1 << getIndex(ID_FLAG_FROM_ME);
         static { FLAG_REP[getIndex(ID_FLAG_FROM_ME)] = 's'; }
 
     public static final int ID_FLAG_ATTACHED = -2;
-    public static final int FLAG_ATTACHED    = 1 << getIndex(ID_FLAG_ATTACHED);
+    public static final int BITMASK_ATTACHED = 1 << getIndex(ID_FLAG_ATTACHED);
         static { FLAG_REP[getIndex(ID_FLAG_ATTACHED)] = 'a'; }
 
     public static final int ID_FLAG_REPLIED = -3;
-    public static final int FLAG_REPLIED    = 1 << getIndex(ID_FLAG_REPLIED);
+    public static final int BITMASK_REPLIED = 1 << getIndex(ID_FLAG_REPLIED);
         static { FLAG_REP[getIndex(ID_FLAG_REPLIED)] = 'r'; }
 
     public static final int ID_FLAG_FORWARDED = -4;
-    public static final int FLAG_FORWARDED    = 1 << getIndex(ID_FLAG_FORWARDED);
+    public static final int BITMASK_FORWARDED = 1 << getIndex(ID_FLAG_FORWARDED);
         static { FLAG_REP[getIndex(ID_FLAG_FORWARDED)] = 'w'; }
 
     public static final int ID_FLAG_COPIED = -5;
-    public static final int FLAG_COPIED    = 1 << getIndex(ID_FLAG_COPIED);
+    public static final int BITMASK_COPIED = 1 << getIndex(ID_FLAG_COPIED);
         static { FLAG_REP[getIndex(ID_FLAG_COPIED)] = '2'; }
 
     public static final int ID_FLAG_FLAGGED = -6;
-    public static final int FLAG_FLAGGED    = 1 << getIndex(ID_FLAG_FLAGGED);
+    public static final int BITMASK_FLAGGED = 1 << getIndex(ID_FLAG_FLAGGED);
         static { FLAG_REP[getIndex(ID_FLAG_FLAGGED)] = 'f'; }
 
     public static final int ID_FLAG_DRAFT = -7;
-    public static final int FLAG_DRAFT    = 1 << getIndex(ID_FLAG_DRAFT);
+    public static final int BITMASK_DRAFT = 1 << getIndex(ID_FLAG_DRAFT);
         static { FLAG_REP[getIndex(ID_FLAG_DRAFT)] = 'd'; }
 
     public static final int ID_FLAG_DELETED = -8;
-    public static final int FLAG_DELETED    = 1 << getIndex(ID_FLAG_DELETED);
+    public static final int BITMASK_DELETED = 1 << getIndex(ID_FLAG_DELETED);
         static { FLAG_REP[getIndex(ID_FLAG_DELETED)] = 'x'; }
 
     public static final int ID_FLAG_NOTIFIED = -9;
-    public static final int FLAG_NOTIFIED    = 1 << getIndex(ID_FLAG_NOTIFIED);
+    public static final int BITMASK_NOTIFIED = 1 << getIndex(ID_FLAG_NOTIFIED);
         static { FLAG_REP[getIndex(ID_FLAG_NOTIFIED)] = 'n'; }
 
     /**
@@ -88,29 +88,29 @@ public class Flag extends Tag {
      * lookups of unread <code>MailItem</code>s.
      */
     public static final int ID_FLAG_UNREAD = -10;
-    public static final int FLAG_UNREAD    = 1 << getIndex(ID_FLAG_UNREAD);
+    public static final int BITMASK_UNREAD = 1 << getIndex(ID_FLAG_UNREAD);
         static { FLAG_REP[getIndex(ID_FLAG_UNREAD)] = 'u'; }
 
     public static final int ID_FLAG_SUBSCRIBED = -20;
-    public static final int FLAG_SUBSCRIBED    = 1 << getIndex(ID_FLAG_SUBSCRIBED);
+    public static final int BITMASK_SUBSCRIBED = 1 << getIndex(ID_FLAG_SUBSCRIBED);
         static { FLAG_REP[getIndex(ID_FLAG_SUBSCRIBED)] = '*'; }
 
     public static final int ID_FLAG_EXCLUDE_FREEBUSY = -21;
-    public static final int FLAG_EXCLUDE_FREEBUSY    = 1 << getIndex(ID_FLAG_EXCLUDE_FREEBUSY);
+    public static final int BITMASK_EXCLUDE_FREEBUSY = 1 << getIndex(ID_FLAG_EXCLUDE_FREEBUSY);
          static { FLAG_REP[getIndex(ID_FLAG_EXCLUDE_FREEBUSY)] = 'b'; }
 
      public static final int ID_FLAG_CHECKED = -22;
-     public static final int FLAG_CHECKED    = 1 << getIndex(ID_FLAG_CHECKED);
+     public static final int BITMASK_CHECKED = 1 << getIndex(ID_FLAG_CHECKED);
          static { FLAG_REP[getIndex(ID_FLAG_CHECKED)] = '#'; }
 
 
     static final String UNREAD_FLAG_ONLY = getAbbreviation(ID_FLAG_UNREAD) + "";
 
-    public static final int FLAG_SYSTEM = FLAG_FROM_ME | FLAG_ATTACHED | FLAG_COPIED | FLAG_DRAFT;
-    public static final int FLAGS_ALL = FLAG_FROM_ME   | FLAG_ATTACHED | FLAG_REPLIED  |
-                                        FLAG_FORWARDED | FLAG_COPIED   | FLAG_FLAGGED  |
-                                        FLAG_DRAFT     | FLAG_DELETED  | FLAG_NOTIFIED |
-                                        FLAG_CHECKED   | FLAG_SUBSCRIBED | FLAG_EXCLUDE_FREEBUSY;
+    public static final int FLAG_SYSTEM = BITMASK_FROM_ME | BITMASK_ATTACHED | BITMASK_COPIED | BITMASK_DRAFT;
+    public static final int FLAGS_ALL = BITMASK_FROM_ME   | BITMASK_ATTACHED | BITMASK_REPLIED  |
+                                        BITMASK_FORWARDED | BITMASK_COPIED   | BITMASK_FLAGGED  |
+                                        BITMASK_DRAFT     | BITMASK_DELETED  | BITMASK_NOTIFIED |
+                                        BITMASK_CHECKED   | BITMASK_SUBSCRIBED | BITMASK_EXCLUDE_FREEBUSY;
 
     public static final byte FLAG_GENERIC         = 0x00;
     public static final byte FLAG_IS_MESSAGE_ONLY = 0x01;
@@ -159,7 +159,7 @@ public class Flag extends Tag {
             throw ServiceException.FAILURE("invalid value for flags: " + flags, null);
     }
 
-    /** @return the "external" flag bitmask for the given flag string, which includes {@link Flag#FLAG_UNREAD}. */
+    /** @return the "external" flag bitmask for the given flag string, which includes {@link Flag#BITMASK_UNREAD}. */
     public static int flagsToBitmask(String flags) {
         int bitmask = 0;
         if (flags != null)

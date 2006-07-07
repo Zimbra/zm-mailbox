@@ -84,7 +84,7 @@ public class ImapAppendOperation extends Operation  {
             }
 
             byte sflags = 0;
-            int flagMask = Flag.FLAG_UNREAD;
+            int flagMask = Flag.BITMASK_UNREAD;
             StringBuffer tagStr = new StringBuffer();
             if (mFlagNames != null) {
                 for (ImapFlag i4flag : mIFindOrCreateTags.doFindOrCreateTags(mFlagNames, mNewTags)) {
@@ -107,7 +107,7 @@ public class ImapAppendOperation extends Operation  {
                     if (!pm.getSender().equals("")) {
                         InternetAddress ia = new InternetAddress(pm.getSender());
                         if (AccountUtil.addressMatchesAccount(mMailbox.getAccount(), ia.getAddress()))
-                            flagMask |= Flag.FLAG_FROM_ME;
+                            flagMask |= Flag.BITMASK_FROM_ME;
                     }
                 } catch (Exception e) { }
 

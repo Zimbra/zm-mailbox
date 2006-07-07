@@ -1319,7 +1319,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         long checkpoint = System.currentTimeMillis();
         for (int i = 1, max = i4folder.getSize(); i <= max; i++) {
             ImapMessage i4msg = i4folder.getBySequence(i);
-            if (i4msg != null && !i4msg.isExpunged() && (i4msg.flags & Flag.FLAG_DELETED) > 0)
+            if (i4msg != null && !i4msg.isExpunged() && (i4msg.flags & Flag.BITMASK_DELETED) > 0)
                 if (i4set == null || i4set.contains(i4msg)) {
                     // message tagged for deletion -- delete now
                     // FIXME: should handle moves separately
@@ -1490,7 +1490,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	        PrintStream result = new PrintStream(baos, false, "utf-8");
         	try {
-                boolean markMessage = markRead && (i4msg.flags & Flag.FLAG_UNREAD) != 0;
+                boolean markMessage = markRead && (i4msg.flags & Flag.BITMASK_UNREAD) != 0;
                 boolean empty = true;
                 byte[] raw = null;
                 MailItem item = null;
@@ -1627,7 +1627,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 if (!i4flags.isEmpty() || operation == STORE_REPLACE) {
                     // FIXME: for replace, changed tag/flag mask could be precomputed outside the i4set loop
                     short sflags = (operation != STORE_REPLACE ? i4msg.sflags : (short) (i4msg.sflags & ~ImapMessage.MUTABLE_SESSION_FLAGS));
-                    int  flags   = (operation != STORE_REPLACE ? i4msg.flags : Flag.FLAG_UNREAD | (i4msg.flags & ~ImapMessage.IMAP_FLAGS));
+                    int  flags   = (operation != STORE_REPLACE ? i4msg.flags : Flag.BITMASK_UNREAD | (i4msg.flags & ~ImapMessage.IMAP_FLAGS));
                     long tags    = (operation != STORE_REPLACE ? i4msg.tags : 0);
                     for (ImapFlag i4flag : i4flags) {
                         if (Tag.validateId(i4flag.mId))

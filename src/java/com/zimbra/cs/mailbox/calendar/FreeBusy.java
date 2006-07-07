@@ -32,10 +32,10 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Appointment.Instance;
@@ -54,8 +54,8 @@ import com.zimbra.cs.service.*;
  * combine intervals that are right next to each other (ie 9-10busy, 10-11busy becomes
  * 9-11busy)
  */
-public class FreeBusy {
-    
+public class FreeBusy implements Iterable<FreeBusy.Interval> {
+
     private static Log sLog = LogFactory.getLog(FreeBusy.class);
     
     private FreeBusy(IntervalList list) {
@@ -63,15 +63,14 @@ public class FreeBusy {
     }
     IntervalList mList; 
     
-    private static class IntervalIterator implements Iterator
-    {
+    private static class IntervalIterator implements Iterator<Interval> {
         private Interval mCur;
         private IntervalIterator(IntervalList list) {
             mCur = list.getHead();
         }
         public boolean hasNext() { return (mCur != null); }
-        public Object next() { 
-            Object toRet = mCur;
+        public Interval next() { 
+            Interval toRet = mCur;
             mCur = mCur.getNext();
             return toRet;
         }
@@ -80,7 +79,7 @@ public class FreeBusy {
         }
     }
     
-    public Iterator /* Interval */ iterator() {
+    public Iterator<Interval> iterator() {
         return new IntervalIterator(mList);
     }
     
@@ -92,8 +91,7 @@ public class FreeBusy {
             mHead = new Interval(start, end, IcalXmlStrMap.FBTYPE_FREE);
         }
 
-        void addInterval(Interval toAdd) 
-        {
+        void addInterval(Interval toAdd) {
             assert(toAdd.mStart <= toAdd.mEnd);
             // we only care about intervals within our window!  
             if (toAdd.mStart < mStart) {
@@ -228,14 +226,11 @@ public class FreeBusy {
             
         }
 
-        public String toString()
-        {
+        public String toString() {
             StringBuffer toRet = new StringBuffer("\n");
-            for (Interval cur = mHead; cur != null; cur = cur.getNext())
-            {
+            for (Interval cur = mHead; cur != null; cur = cur.getNext()) {
                 toRet.append("\t").append(cur.toString()).append("\n");
             }
-            
             return toRet.toString();
         }
         
@@ -267,14 +262,12 @@ public class FreeBusy {
                 mInstances.add(instance);
         }
 
-        public Interval(long start, long end, String status,
-                        LinkedHashSet<Instance> instances) {
+        public Interval(long start, long end, String status, LinkedHashSet<Instance> instances) {
             this(start, end, status);
             addInstances(instances);
         }
 
-        public String toString() 
-        {
+        public String toString() {
             StringBuilder toRet = new StringBuilder();
             toRet.append("start=").append(mStart);
             toRet.append(", end=").append(mEnd);
@@ -381,9 +374,7 @@ public class FreeBusy {
      * @return
      * @throws ServiceException
      */
-    public static FreeBusy getFreeBusyList(Mailbox mbox,
-                                           long start, long end,
-                                           Appointment exAppt)
+    public static FreeBusy getFreeBusyList(Mailbox mbox, long start, long end, Appointment exAppt)
     throws ServiceException {
         // Check if this account is an always-free calendar resource.
         Account acct = mbox.getAccount();
@@ -397,11 +388,10 @@ public class FreeBusy {
 
         int exApptId = exAppt == null ? -1 : exAppt.getId();
 
-        List /* Folder */ folders = mbox.getItemList(null, MailItem.TYPE_FOLDER);
-        ArrayList /* Folder */ excludeFolders = new ArrayList();
-        for (Iterator iter = folders.iterator(); iter.hasNext();) {
-            Folder f = (Folder)iter.next();
-            if ((f.getFlagBitmask() & Flag.ID_FLAG_EXCLUDE_FREEBUSY)!= 0)
+        List<Folder> folders = mbox.getFolderList(null, DbMailItem.SORT_NONE);
+        List<Folder> excludeFolders = new ArrayList<Folder>();
+        for (Folder f : folders) {
+            if ((f.getFlagBitmask() & Flag.BITMASK_EXCLUDE_FREEBUSY)!= 0)
                 excludeFolders.add(f);
         }
         
@@ -409,18 +399,15 @@ public class FreeBusy {
         if (excludeFolders.size() > 0) {
             exFolders = new int[excludeFolders.size()];
             int i = 0;
-            for (Iterator iter = excludeFolders.iterator(); iter.hasNext(); i++) {
-                Folder f = (Folder)iter.next();
-                exFolders[i] = f.getId();
-            }
+            for (Folder f : excludeFolders)
+                exFolders[i++] = f.getId();
         }
         
-        Collection appts = mbox.getAppointmentsForRange(null, start, end, Mailbox.ID_AUTO_INCREMENT, exFolders);
+        Collection<Appointment> appts = mbox.getAppointmentsForRange(null, start, end, Mailbox.ID_AUTO_INCREMENT, exFolders);
 
         IntervalList intervals = new IntervalList(start, end);
-        
-        for (Iterator iter = appts.iterator(); iter.hasNext(); ) {
-            Appointment cur = (Appointment)iter.next();
+
+        for (Appointment cur : appts) {
             if (cur.getId() == exApptId)
                 continue;
 

@@ -464,29 +464,29 @@ public abstract class MailItem implements Comparable {
     }
 
     /** Returns the "external" flag bitmask, which includes
-     *  {@link Flag#FLAG_UNREAD} when the item is unread. */
+     *  {@link Flag#BITMASK_UNREAD} when the item is unread. */
     public int getFlagBitmask() {
         int flags = mData.flags;
         if (isUnread())
-            flags = flags | Flag.FLAG_UNREAD;
+            flags = flags | Flag.BITMASK_UNREAD;
         return flags;
     }
 
     /** Returns the "internal" flag bitmask, which does not include
-     *  {@link Flag#FLAG_UNREAD}.  This is the same bitmask as is stored
+     *  {@link Flag#BITMASK_UNREAD}.  This is the same bitmask as is stored
      *  in the database's <code>MAIL_ITEM.FLAGS</code> column. */
     public int getInternalFlagBitmask() {
         return mData.flags;
     }
 
     /** Returns the external string representation of this item's flags.
-     *  This string includes the state of {@link Flag#FLAG_UNREAD} and is
+     *  This string includes the state of {@link Flag#BITMASK_UNREAD} and is
      *  formed by concatenating the appropriate {@link Flag#FLAG_REP}
      *  characters for all flags set on the item. */
     public String getFlagString() {
         if (mData.flags == 0)
             return isUnread() ? Flag.UNREAD_FLAG_ONLY : "";
-        int flags = mData.flags | (isUnread() ? Flag.FLAG_UNREAD : 0);
+        int flags = mData.flags | (isUnread() ? Flag.BITMASK_UNREAD : 0);
         return Flag.bitmaskToFlags(flags);
     }
 
@@ -1145,7 +1145,7 @@ public abstract class MailItem implements Comparable {
     /** Updates the user-settable set of {@link Flag}s and {@link Tag}s on
      *  the item.  This overwrites the old set of flags and tags, but will
      *  not change system flags that are normally immutable after item
-     *  creation, like {@link Flag#FLAG_ATTACHED} and {@link Flag#FLAG_DRAFT}.
+     *  creation, like {@link Flag#BITMASK_ATTACHED} and {@link Flag#BITMASK_DRAFT}.
      *  If a specified flag or tag does not exist, it is ignored.
 	 * 
      * @param flags  The bitmask of user-settable flags to apply.
@@ -1196,7 +1196,7 @@ public abstract class MailItem implements Comparable {
      *  original item will succeed.<p>
      * 
      *  Immutable copied items (both the original and the target) share the
-     *  same entry in the index and get the {@link Flag#FLAG_COPIED} flag to
+     *  same entry in the index and get the {@link Flag#BITMASK_COPIED} flag to
      *  facilitate garbage collection of index entries.  (Mutable copied items
      *  are indexed separately.)  They do not share the same blob on disk,
      *  although the system will use a hard link where possible.  Copying a
@@ -1262,7 +1262,7 @@ public abstract class MailItem implements Comparable {
      *  in that case.<p>
      * 
      *  Immutable copied items (both the original and the target) share the
-     *  same entry in the index and get the {@link Flag#FLAG_COPIED} flag to
+     *  same entry in the index and get the {@link Flag#BITMASK_COPIED} flag to
      *  facilitate garbage collection of index entries.  (Mutable copied items
      *  are indexed separately.)  They do not share the same blob on disk,
      *  although the system will use a hard link where possible.  Copied
@@ -1306,7 +1306,7 @@ public abstract class MailItem implements Comparable {
         // we'll share the index entry if this item can't change out from under us
         boolean shared = isIndexed() && !isMutable();
         if (shared)
-            mData.flags |= Flag.FLAG_COPIED;
+            mData.flags |= Flag.BITMASK_COPIED;
 
         // first, move the item to the target folder
         oldFolder.updateSize(-getSize());
@@ -1462,7 +1462,7 @@ public abstract class MailItem implements Comparable {
         public List<Integer> cascadeIds;
         /** The document ids that need to be removed from the index. */
         public List<Integer> indexIds  = new ArrayList<Integer>();
-        /** The ids of all items with the {@link Flag#FLAG_COPIED} flag being
+        /** The ids of all items with the {@link Flag#BITMASK_COPIED} flag being
          *  deleted.  Items in <code>sharedIndex</code> whose last copies are
          *  being removed are added to {@link #indexIds} via a call to
          *  {@link DbMailItem#resolveSharedIndex}. */

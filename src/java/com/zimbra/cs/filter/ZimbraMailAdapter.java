@@ -344,7 +344,7 @@ public class ZimbraMailAdapter implements MailAdapter
     
     private TagAndFlag getTagAndFlag(List nontermActions) throws ServiceException {
         StringBuilder tagsBuf = null;
-        int flagBits = Flag.FLAG_UNREAD;
+        int flagBits = Flag.BITMASK_UNREAD;
         for (Iterator it = nontermActions.listIterator(); it.hasNext(); ) {
             Action action = (Action) it.next();
             
