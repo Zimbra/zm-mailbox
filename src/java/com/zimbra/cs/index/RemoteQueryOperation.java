@@ -35,130 +35,133 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.soap.SoapProtocol;
+import com.zimbra.soap.ZimbraSoapContext;
 
 class RemoteQueryOperation extends QueryOperation {
-	
-	UnionQueryOperation mOp = null;
-	ProxiedQueryResults mResults = null;
-	String mTargetAccount = "";
-	QueryTarget mTarget = null;
 
-	int getOpType() {
-		return OP_TYPE_REMOTE;
-	}
-	
-	boolean tryAddOredOperation(QueryOperation op) {
-		QueryTargetSet targets = op.getQueryTargets();
-		assert(targets.countExplicitTargets() == 1);
-		assert(targets.hasExternalTargets());
-		
-		for (QueryTarget t : targets) {
-			assert(t != QueryTarget.LOCAL);
-			if (t != QueryTarget.UNSPECIFIED) {
-				if (mTarget == null) 
-					mTarget = t; 
-				else 
-					if (!mTarget.equals(t))
-						return false;
-			}
-		}
-		
-		assert(mTarget != null);
+    UnionQueryOperation mOp = null;
+    ProxiedQueryResults mResults = null;
+    String mTargetAccount = "";
+    QueryTarget mTarget = null;
 
-		if (mOp == null)
-			mOp = new UnionQueryOperation();
-		
-		mOp.add(op);
-		return true;
-	}
-	
-    String toQueryString() {
-    	return mOp.toQueryString();
+    int getOpType() {
+        return OP_TYPE_REMOTE;
     }
-	
-	public String toString() {
-		return "REMOTE["+mTarget.toString()+"]:"+mOp.toString();
-	}
 
-	QueryTargetSet getQueryTargets() {
-		return mOp.getQueryTargets();
-	}
+    boolean tryAddOredOperation(QueryOperation op) {
+        QueryTargetSet targets = op.getQueryTargets();
+        assert(targets.countExplicitTargets() == 1);
+        assert(targets.hasExternalTargets());
 
-	QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash,
-			boolean includeSpam) throws ServiceException {
-		
-		return mOp.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
-	}
+        for (QueryTarget t : targets) {
+            assert(t != QueryTarget.LOCAL);
+            if (t != QueryTarget.UNSPECIFIED) {
+                if (mTarget == null) 
+                    mTarget = t; 
+                else 
+                    if (!mTarget.equals(t))
+                        return false;
+            }
+        }
 
-	boolean hasSpamTrashSetting() {
-		return mOp.hasSpamTrashSetting();
-	}
+        assert(mTarget != null);
 
-	void forceHasSpamTrashSetting() {
-		mOp.forceHasSpamTrashSetting();
-	}
+        if (mOp == null)
+            mOp = new UnionQueryOperation();
 
-	boolean hasNoResults() {
-		return mOp.hasNoResults();
-	}
+        mOp.add(op);
+        return true;
+    }
 
-	boolean hasAllResults() {
-		return mOp.hasAllResults();
-	}
+    String toQueryString() {
+        return mOp.toQueryString();
+    }
 
-	QueryOperation optimize(Mailbox mbox) throws ServiceException {
-		return mOp.optimize(mbox);
-	}
-	
-	protected QueryOperation combineOps(QueryOperation other, boolean union) {
-		return null;
-	}
-	
-	protected void setup(Account authenticatedAccount, byte[] types, SortBy searchOrder, int offset, int limit) throws ServiceException {
+    public String toString() {
+        return "REMOTE["+mTarget.toString()+"]:"+mOp.toString();
+    }
+
+    QueryTargetSet getQueryTargets() {
+        return mOp.getQueryTargets();
+    }
+
+    QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash,
+                boolean includeSpam) throws ServiceException {
+
+        return mOp.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
+    }
+
+    boolean hasSpamTrashSetting() {
+        return mOp.hasSpamTrashSetting();
+    }
+
+    void forceHasSpamTrashSetting() {
+        mOp.forceHasSpamTrashSetting();
+    }
+
+    boolean hasNoResults() {
+        return mOp.hasNoResults();
+    }
+
+    boolean hasAllResults() {
+        return mOp.hasAllResults();
+    }
+
+    QueryOperation optimize(Mailbox mbox) throws ServiceException {
+        return mOp.optimize(mbox);
+    }
+
+    protected QueryOperation combineOps(QueryOperation other, boolean union) {
+        return null;
+    }
+
+    protected void setup(SoapProtocol proto, Account authenticatedAccount, byte[] types, SortBy searchOrder, int offset, int limit) throws ServiceException {
         Provisioning prov  = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.id, mTarget.toString());
-		if (acct == null)
-			throw AccountServiceException.NO_SUCH_ACCOUNT(mTarget.toString());
-		
-		Server remoteServer = prov.getServer(acct);
-		
-		SearchParams params = new SearchParams();
-		params.setSortBy(searchOrder);
-		params.setTypes(types);
-		params.setOffset(offset);
-		params.setLimit(limit);
-		
-		if (ZimbraLog.index.isInfoEnabled()) 
-			ZimbraLog.index.info("RemoteQuery of \""+mOp.toQueryString()+"\" sent to "+mTarget.toString()+" on server "+remoteServer.getName());
-		
-		params.setQueryStr(mOp.toQueryString());
-		try {
-			mResults = new ProxiedQueryResults(new AuthToken(authenticatedAccount).getEncoded(), mTarget.toString(), remoteServer.getName(), params);
-		} catch (AuthTokenException e) {
-			throw ServiceException.FAILURE("AuthTokenException getting auth token: "+e.toString(), e);
-		}
-	}
-	
-	protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res,
-			MailboxIndex mbidx, int chunkSize) throws IOException, ServiceException {
-	}
+        if (acct == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(mTarget.toString());
 
-	public void resetIterator() throws ServiceException {
-		mResults.resetIterator();
-	}
+        Server remoteServer = prov.getServer(acct);
 
-	public ZimbraHit getNext() throws ServiceException {
-		return mResults.getNext();
-	}
+        SearchParams params = new SearchParams();
+        params.setSortBy(searchOrder);
+        params.setTypes(types);
+        params.setOffset(offset);
+        params.setLimit(limit);
 
-	public ZimbraHit peekNext() throws ServiceException {
-		return mResults.peekNext();
-	}
+        if (ZimbraLog.index.isInfoEnabled()) 
+            ZimbraLog.index.info("RemoteQuery of \""+mOp.toQueryString()+"\" sent to "+mTarget.toString()+" on server "+remoteServer.getName());
 
-	public void doneWithSearchResults() throws ServiceException {
-		mResults.doneWithSearchResults();
-	}
+        params.setQueryStr(mOp.toQueryString());
+        try {
+            mResults = new ProxiedQueryResults(proto, new AuthToken(authenticatedAccount).getEncoded(), mTarget.toString(), remoteServer.getName(), params);
+        } catch (AuthTokenException e) {
+            throw ServiceException.FAILURE("AuthTokenException getting auth token: "+e.toString(), e);
+        }
+    }
+
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res,
+                MailboxIndex mbidx, int chunkSize) throws IOException, ServiceException {
+    }
+
+    public void resetIterator() throws ServiceException {
+        mResults.resetIterator();
+    }
+
+    public ZimbraHit getNext() throws ServiceException {
+        return mResults.getNext();
+    }
+
+    public ZimbraHit peekNext() throws ServiceException {
+        return mResults.peekNext();
+    }
+
+    public void doneWithSearchResults() throws ServiceException {
+        mResults.doneWithSearchResults();
+    }
 
 }

@@ -37,8 +37,10 @@ import java.util.Iterator;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.SetUtil;
+import com.zimbra.soap.SoapProtocol;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -56,22 +58,22 @@ import org.apache.commons.logging.LogFactory;
 class UnionQueryOperation extends QueryOperation
 {
     private static Log mLog = LogFactory.getLog(UnionQueryOperation.class);
-    
+
     private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
-    
+
     int getOpType() {
         return OP_TYPE_UNION;
     }
-    
+
     QueryTargetSet getQueryTargets() {
-    	QueryTargetSet toRet = new QueryTargetSet();
-    	
-    	for (QueryOperation op : mQueryOperations) {
-    		toRet = (QueryTargetSet)SetUtil.union(toRet, op.getQueryTargets());
-    	}
-    	return toRet;
+        QueryTargetSet toRet = new QueryTargetSet();
+
+        for (QueryOperation op : mQueryOperations) {
+            toRet = (QueryTargetSet)SetUtil.union(toRet, op.getQueryTargets());
+        }
+        return toRet;
     }
-    
+
     /******************
      * 
      * Hits iteration
@@ -88,9 +90,9 @@ class UnionQueryOperation extends QueryOperation
             internalGetNext();
         }
     }
-    
+
     private ZimbraHit mCachedNextHit = null;
-    
+
     public ZimbraHit getNext() throws ServiceException {
         atStart = false;
         ZimbraHit toRet = mCachedNextHit;
@@ -98,20 +100,20 @@ class UnionQueryOperation extends QueryOperation
             mCachedNextHit = null;
             internalGetNext();
         }
-        
+
         return toRet;
     }
-    
+
     public ZimbraHit peekNext() throws ServiceException
     {
         return mCachedNextHit;
     }
-    
+
     private void internalGetNext() throws ServiceException
     {
         if (mCachedNextHit == null) {
             int i = 0;
-            
+
             // loop through QueryOperations and find the "best" hit
             int currentBestHitOffset = -1;
             ZimbraHit currentBestHit = null;
@@ -138,8 +140,8 @@ class UnionQueryOperation extends QueryOperation
             }
         }
     }
-    
-    
+
+
     public void doneWithSearchResults() throws ServiceException {
         for (Iterator iter = mQueryOperations.iterator(); iter.hasNext(); )
         {
@@ -147,9 +149,9 @@ class UnionQueryOperation extends QueryOperation
             q.doneWithSearchResults();
         }
     }
-    
+
     ArrayList<QueryOperation>mQueryOperations = new ArrayList<QueryOperation>();
-    
+
     public boolean hasSpamTrashSetting() {
         boolean hasAll = true;
         for (Iterator iter = mQueryOperations.iterator(); hasAll && iter.hasNext(); )
@@ -159,7 +161,7 @@ class UnionQueryOperation extends QueryOperation
         }
         return hasAll;
     }
-    
+
     void forceHasSpamTrashSetting() {
         assert(false); // not called, but if it were it would go:
         for (Iterator iter = mQueryOperations.iterator(); iter.hasNext(); )
@@ -168,12 +170,12 @@ class UnionQueryOperation extends QueryOperation
             op.forceHasSpamTrashSetting();
         }
     }
-    
+
     QueryTarget getQueryTarget(QueryTarget targetOfParent) {
-    	return targetOfParent;
+        return targetOfParent;
     }
-    
-    
+
+
     boolean hasNoResults() {
         return false;
     }
@@ -183,7 +185,7 @@ class UnionQueryOperation extends QueryOperation
     QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException
     {
         ArrayList<QueryOperation> newList = new ArrayList<QueryOperation>();
-        
+
         for (Iterator iter = mQueryOperations.iterator(); iter.hasNext(); )
         {
             QueryOperation op = (QueryOperation)iter.next();
@@ -197,87 +199,87 @@ class UnionQueryOperation extends QueryOperation
         mQueryOperations = newList;
         return this;
     }
-    
-    
+
+
     public void add(QueryOperation op) {
         mQueryOperations.add(op);
     }
-    
+
     void pruneIncompatibleTargets(QueryTargetSet targets) {
-    	// go from end--front so we don't get confused when entries are removed
-    	for (int i = mQueryOperations.size()-1; i >= 0; i--) {
-    		QueryOperation op = mQueryOperations.get(i);
-    		if (op instanceof UnionQueryOperation) {
-    			assert(false); // shouldn't be here, should have optimized already
-    			((UnionQueryOperation)op).pruneIncompatibleTargets(targets);
-    		} else if (op instanceof IntersectionQueryOperation) {
-    			((IntersectionQueryOperation)op).pruneIncompatibleTargets(targets);
-    		} else {
-    			QueryTargetSet opTargets = op.getQueryTargets();
-    			assert(opTargets.size() == 1);
-    			if (!opTargets.isSubset(targets)) {
-    				mQueryOperations.remove(i);
-    			}
-    		}
-    	}
+        // go from end--front so we don't get confused when entries are removed
+        for (int i = mQueryOperations.size()-1; i >= 0; i--) {
+            QueryOperation op = mQueryOperations.get(i);
+            if (op instanceof UnionQueryOperation) {
+                assert(false); // shouldn't be here, should have optimized already
+                ((UnionQueryOperation)op).pruneIncompatibleTargets(targets);
+            } else if (op instanceof IntersectionQueryOperation) {
+                ((IntersectionQueryOperation)op).pruneIncompatibleTargets(targets);
+            } else {
+                QueryTargetSet opTargets = op.getQueryTargets();
+                assert(opTargets.size() == 1);
+                if (!opTargets.isSubset(targets)) {
+                    mQueryOperations.remove(i);
+                }
+            }
+        }
     }
-    
-    QueryOperation runRemoteSearches(Mailbox mbox, MailboxIndex mbidx, byte[] types, SortBy searchOrder, int offset, int limit) 
+
+    QueryOperation runRemoteSearches(SoapProtocol proto, OperationContext octxt, MailboxIndex mbidx, byte[] types, SortBy searchOrder, int offset, int limit) 
     throws ServiceException, IOException {
-    	
-    	boolean hasRemoteOps = false;
-    	
-    	for (int i = mQueryOperations.size()-1; i >= 0; i--) {
-    		QueryOperation op = mQueryOperations.get(i);
-    		
-    		QueryTargetSet targets = op.getQueryTargets();
-    		assert(targets.countExplicitTargets() <= 1);
-    		
-    		if (targets.hasExternalTargets()) {
-    			mQueryOperations.remove(i);
 
-    			hasRemoteOps = true;
-    			boolean foundOne = false;
-    			
-    			// find a remoteOp to add this one to
-    			for (QueryOperation tryIt : mQueryOperations) {
-    				if (tryIt instanceof RemoteQueryOperation) {
-    					if (((RemoteQueryOperation)tryIt).tryAddOredOperation(op)) {
-    						foundOne = true;
-    						break;
-    					}
-    				}
-    			}
-    			
-    			if (!foundOne) {
-    				RemoteQueryOperation remoteOp = new RemoteQueryOperation();
-    				remoteOp.tryAddOredOperation(op);
-        			mQueryOperations.add(i, remoteOp);
-    			}
-    		}
-    	}
+        boolean hasRemoteOps = false;
 
-    	if (hasRemoteOps) {
-        	// okay, if we actually have remote operations, then we need to call setup() once per --
-        	// this actually runs the remote operation
-    		for (QueryOperation toSetup : mQueryOperations) {
-    			if (toSetup instanceof RemoteQueryOperation) {
-    				((RemoteQueryOperation)toSetup).setup(mbox.getAccount(), types, searchOrder, offset, limit);
-    			}
-    		}
-    	}
-    	
-    	assert(mQueryOperations.size() > 0);
-    
-    	if (mQueryOperations.size() == 1) {
-    		// this can happen if we replaced ALL of our operations with a single remote op...
-    		return mQueryOperations.get(0);
-    	}
-    	
-    	return this;
+        for (int i = mQueryOperations.size()-1; i >= 0; i--) {
+            QueryOperation op = mQueryOperations.get(i);
+
+            QueryTargetSet targets = op.getQueryTargets();
+            assert(targets.countExplicitTargets() <= 1);
+
+            if (targets.hasExternalTargets()) {
+                mQueryOperations.remove(i);
+
+                hasRemoteOps = true;
+                boolean foundOne = false;
+
+                // find a remoteOp to add this one to
+                for (QueryOperation tryIt : mQueryOperations) {
+                    if (tryIt instanceof RemoteQueryOperation) {
+                        if (((RemoteQueryOperation)tryIt).tryAddOredOperation(op)) {
+                            foundOne = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!foundOne) {
+                    RemoteQueryOperation remoteOp = new RemoteQueryOperation();
+                    remoteOp.tryAddOredOperation(op);
+                    mQueryOperations.add(i, remoteOp);
+                }
+            }
+        }
+        
+        if (hasRemoteOps) {
+            // okay, if we actually have remote operations, then we need to call setup() once per --
+            // this actually runs the remote operation
+            for (QueryOperation toSetup : mQueryOperations) {
+                if (toSetup instanceof RemoteQueryOperation) {
+                    ((RemoteQueryOperation)toSetup).setup(proto, octxt.getAuthenticatedUser(), types, searchOrder, offset, limit);
+                }
+            }
+        }
+
+        assert(mQueryOperations.size() > 0);
+
+        if (mQueryOperations.size() == 1) {
+            // this can happen if we replaced ALL of our operations with a single remote op...
+            return mQueryOperations.get(0);
+        }
+
+        return this;
     }
-    
-    
+
+
     public QueryOperation optimize(Mailbox mbox) throws ServiceException {
         restartSubOpt:
             do {
@@ -295,16 +297,16 @@ class UnionQueryOperation extends QueryOperation
                 }
                 break;
             } while(true);
-    
-        if (mQueryOperations.size() == 0) {
-            return new NoTermQueryOperation();
-        }
-        
-        outer:
+
+    if (mQueryOperations.size() == 0) {
+        return new NoTermQueryOperation();
+    }
+
+    outer:
         do {
             for (int i = 0; i < mQueryOperations.size(); i++) {
                 QueryOperation lhs = (QueryOperation)mQueryOperations.get(i);
-                
+
                 // if one of our direct children is an OR, then promote all of its
                 // elements to our level -- this can happen if a subquery has
                 // ORed terms at the top level
@@ -313,7 +315,7 @@ class UnionQueryOperation extends QueryOperation
                     mQueryOperations.remove(i);
                     continue outer;
                 }
-                
+
                 for (int j = i+1; j < mQueryOperations.size(); j++) {
                     QueryOperation rhs = (QueryOperation)mQueryOperations.get(j);
                     QueryOperation joined = lhs.combineOps(rhs,true);
@@ -327,37 +329,37 @@ class UnionQueryOperation extends QueryOperation
             }
             break;
         } while(true);
-    
-    
+
+
     // now - check to see if we have only one child -- if so, then WE can be
     // eliminated, so push the child up
     if (mQueryOperations.size() == 1) {
         return (QueryOperation)mQueryOperations.get(0);
     }
-    
+
     return this;
     }
-    
-    String toQueryString() {
-    	StringBuilder ret = new StringBuilder("(");
-    	
-    	boolean atFirst = true;
-    	
-    	for (QueryOperation op : mQueryOperations) {
-    		if (!atFirst)
-    			ret.append(" OR ");
-    		
-    		ret.append(op.toQueryString());
-    		atFirst = false;
-    	}
 
-    	ret.append(')');
-    	return ret.toString();
+    String toQueryString() {
+        StringBuilder ret = new StringBuilder("(");
+
+        boolean atFirst = true;
+
+        for (QueryOperation op : mQueryOperations) {
+            if (!atFirst)
+                ret.append(" OR ");
+
+            ret.append(op.toQueryString());
+            atFirst = false;
+        }
+
+        ret.append(')');
+        return ret.toString();
     }
-    
+
     public String toString() {
         StringBuilder retval = new StringBuilder("(");
-        
+
         for (int i = 0; i < mQueryOperations.size(); i++) {
             retval.append(" OR ");
             retval.append(mQueryOperations.get(i).toString());
@@ -365,20 +367,20 @@ class UnionQueryOperation extends QueryOperation
         retval.append(")");
         return retval.toString();
     }
-    
+
     public Object clone() {
-		UnionQueryOperation toRet = null;
-		toRet = (UnionQueryOperation)super.clone();
-    	
-    	assert(mCachedNextHit == null);
-    	
-    	toRet.mQueryOperations = new ArrayList<QueryOperation>(mQueryOperations.size());
-    	for (QueryOperation q : mQueryOperations)
-    		toRet.mQueryOperations.add(q);
-    	
-    	return toRet;
+        UnionQueryOperation toRet = null;
+        toRet = (UnionQueryOperation)super.clone();
+
+        assert(mCachedNextHit == null);
+
+        toRet.mQueryOperations = new ArrayList<QueryOperation>(mQueryOperations.size());
+        for (QueryOperation q : mQueryOperations)
+            toRet.mQueryOperations.add(q);
+
+        return toRet;
     }
-    
+
     protected QueryOperation combineOps(QueryOperation other, boolean union) {
         if (mLog.isDebugEnabled()) {
             mLog.debug("combineOps("+toString()+","+other.toString()+")");
@@ -394,7 +396,7 @@ class UnionQueryOperation extends QueryOperation
     protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException
     {
         this.setupResults(mbx, res);
-        
+
         for (int i = 0; i < mQueryOperations.size(); i++) {
             QueryOperation qop = (QueryOperation)mQueryOperations.get(i);
             if (mLog.isDebugEnabled()) {
@@ -402,8 +404,8 @@ class UnionQueryOperation extends QueryOperation
             }
             qop.prepare(mbx, res, mbidx, chunkSize+1); // add 1 to chunksize b/c we buffer
         }
-        
+
         internalGetNext();
     }
-    
+
 }

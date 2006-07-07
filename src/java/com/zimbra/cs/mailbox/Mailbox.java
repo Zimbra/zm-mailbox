@@ -87,6 +87,7 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.soap.SoapProtocol;
 
 
 /**
@@ -133,21 +134,21 @@ public class Mailbox {
      *  When new mailboxes are created, they are added to both mappings.
      *  When mailboxes are deleted, they are removed from both mappings. */
     private static Map sMailboxCache;
-        static {
-            try {
-                loadMailboxMap();
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.fatal("when loading mailbox/account id relationship");
-                throw new RuntimeException(e);
-            }
+    static {
+        try {
+            loadMailboxMap();
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.fatal("when loading mailbox/account id relationship");
+            throw new RuntimeException(e);
         }
+    }
 
     public static final class MailboxLock {
         final String accountId;
         final int    mailboxId;
         Thread  owner;
         Mailbox mailbox;
-        
+
         MailboxLock(String acct, int mbox)  { accountId = acct.toLowerCase();  mailboxId = mbox;  owner = Thread.currentThread(); }
     }
 
@@ -259,6 +260,7 @@ public class Mailbox {
 
         public OperationContext(RedoableOp redoPlayer)  { player = redoPlayer; }
         public OperationContext(Account acct)           { authuser = acct; }
+        public OperationContext(Mailbox mbox)  throws ServiceException { authuser = mbox.getAccount(); }
         public OperationContext(String accountId) throws ServiceException {
             authuser = Provisioning.getInstance().get(AccountBy.id, accountId);
             if (authuser == null)
@@ -274,6 +276,8 @@ public class Mailbox {
         }
 
         public RedoableOp getPlayer() { return player; }
+
+        public Account getAuthenticatedUser() { return authuser; }
 
         long getTimestamp() {
             return (player == null ? System.currentTimeMillis() : player.getTimestamp());
@@ -301,7 +305,7 @@ public class Mailbox {
 
     private MailboxLock  mMaintenance = null;
     private MailboxIndex mMailboxIndex = null;
-    
+
     /** flag: messages sent by me */
     public Flag mSentFlag;
     /** flag: messages/contacts with attachments */
@@ -328,7 +332,7 @@ public class Mailbox {
     public Flag mExcludeFBFlag;
     /** flag: folders "checked" for display in the web UI */
     public Flag mCheckedFlag;
-    
+
     /** the full set of message flags, in order */
     final Flag[] mFlags = new Flag[31];
 
@@ -365,7 +369,7 @@ public class Mailbox {
         if (acct != null)
             return acct;
         ZimbraLog.mailbox.warn("no account found in directory for mailbox " + mId +
-                               " (was expecting " + getAccountId() + ')');
+                    " (was expecting " + getAccountId() + ')');
         throw AccountServiceException.NO_SUCH_ACCOUNT(mData.accountId);
     }
 
@@ -389,7 +393,7 @@ public class Mailbox {
         if (mMaintenance != null)
             throw MailServiceException.MAINTENANCE(mId);
         mListeners.add(session);
-        
+
         if (ZimbraLog.mailbox.isDebugEnabled())
             ZimbraLog.mailbox.debug("adding listener: " + session);
     }
@@ -400,7 +404,7 @@ public class Mailbox {
      * @param session  The listener to deregister for notifications. */
     public synchronized void removeListener(Session session) {
         mListeners.remove(session);
-            
+
         if (ZimbraLog.mailbox.isDebugEnabled())
             ZimbraLog.mailbox.debug("clearing listener: " + session);
     }
@@ -457,7 +461,7 @@ public class Mailbox {
     public long getLastChangeDate() {
         return mData.lastChangeDate;
     }
-    
+
 
     /** Returns the change sequence number for the most recent
      *  transaction.  This will be either the change number for the
@@ -529,7 +533,7 @@ public class Mailbox {
     public int getLastItemId() {
         return (mCurrentChange.itemId == MailboxChange.NO_CHANGE ? mData.lastItemId : mCurrentChange.itemId);
     }
-    
+
     /**
      * MUST NOT be called while a transaction is in progress 
      * 
@@ -537,10 +541,10 @@ public class Mailbox {
      */
     public int incrementChangeId() throws ServiceException {
         assert(!mCurrentChange.isActive());
-        
+
         return getNextItemId(ID_AUTO_INCREMENT);
     }
-    
+
 
     // Don't make this method package-visible.  Keep it private.
     //   idFromRedo: specific ID value to use during redo execution, or ID_AUTO_INCREMENT
@@ -931,7 +935,7 @@ public class Mailbox {
         if (item != null)
             item.uncacheChildren();
     }
-    
+
     /** Removes all items of a specified type from the <code>Mailbox</code>'s
      *  caches.  There may be some collateral damage: purging non-tag,
      *  non-folder types will drop the entire item cache.
@@ -949,7 +953,7 @@ public class Mailbox {
         if (ZimbraLog.cache.isDebugEnabled())
             ZimbraLog.cache.debug("purged " + MailItem.getNameForType(type) + " cache in mailbox " + getId());
     }
-    
+
 
     private static void loadMailboxMap() throws ServiceException {
         if (sMailboxCache != null)
@@ -1083,7 +1087,7 @@ public class Mailbox {
      *    <li><code>account.NO_SUCH_ACCOUNT</code> - if the mailbox's Account
      *        has been deleted and <code>skipMailHostCheck=false</code></ul> */
     public static Mailbox getMailboxById(int mailboxId,
-                                         boolean skipMailHostCheck)
+                boolean skipMailHostCheck)
     throws ServiceException {
         if (mailboxId <= 0)
             throw MailServiceException.NO_SUCH_MBOX(mailboxId);
@@ -1131,7 +1135,7 @@ public class Mailbox {
             }
         }
     }
- 
+
     public static MailboxLock beginMaintenance(String accountId, int mailboxId) throws ServiceException {
         synchronized (sMailboxCache) {
             Integer mailboxKey = (Integer) sMailboxCache.get(accountId.toLowerCase());
@@ -1496,7 +1500,7 @@ public class Mailbox {
                 Connection conn = getOperationConnection();
                 DbMailbox.deleteMailbox(conn, this);
                 DbMailbox.dropMailboxDatabase(getId());
-    
+
                 success = true;
             } finally {
                 // commit the DB transaction before touching the store!  (also ends the operation)
@@ -1510,7 +1514,7 @@ public class Mailbox {
                     sMailboxCache.remove(mData.accountId);
                     sMailboxCache.remove(new Integer(mId));
                 }
-                
+
                 // attempt to nuke the store and index
                 // FIXME: we're assuming a lot about the store and index here; should use their functions
                 try {
@@ -1521,7 +1525,7 @@ public class Mailbox {
                     for (Volume vol : Volume.getAll())
                         sm.deleteStore(this, vol.getId());
                 } catch (IOException iox) { }
-    
+
                 // twiddle the mailbox lock [must be the last command of this function!]
                 //   (so even *we* can't access this Mailbox going forward)
                 lock.owner   = null;
@@ -1538,27 +1542,27 @@ public class Mailbox {
     public short getIndexVolume() {
         return mData.indexVolumeId;
     }
-    
+
     public void reIndex() throws ServiceException {
         reIndex(null);
     }
-    
+
     public static class ReIndexStatus {
         public int mNumProcessed = 0;
         public int mNumToProcess = 0;
         public int mNumFailed = 0;
         public boolean mCancel = false;
-        
+
         public String toString() {
             String toRet = "Completed "+mNumProcessed+" out of " +mNumToProcess
             + " ("+mNumFailed +" failures";
-            
+
             if (mCancel) 
                 return "--CANCELLING--  "+toRet;
             else 
                 return toRet;
         }
-        
+
         public Object clone() {
             ReIndexStatus toRet = new ReIndexStatus();
             toRet.mNumProcessed = mNumProcessed;
@@ -1567,18 +1571,18 @@ public class Mailbox {
             return toRet;
         }
     }
-    
-    
+
+
     /**
      * Status of current reindexing operation for this mailbox, or NULL 
      * if a re-index is not in progress
      */
     private ReIndexStatus mReIndexStatus = null;
-    
+
     public synchronized boolean isReIndexInProgress() {
         return mReIndexStatus != null;
     }
-    
+
     public synchronized ReIndexStatus getReIndexStatus() {
         return mReIndexStatus;
     }
@@ -1589,7 +1593,7 @@ public class Mailbox {
         Collection msgs = null;
         boolean redoInitted = false;
         boolean indexDeleted = false;
-        
+
         try {
             //
             // First step, with the mailbox locked: 
@@ -1611,13 +1615,13 @@ public class Mailbox {
                     DbSearchConstraints c = new DbSearchConstraints();
                     c.mailboxId = this.getId();
                     c.sort = DbMailItem.SORT_BY_DATE;
-                    
+
                     msgs = DbMailItem.search(getOperationConnection(), c);
-                    
+
                     MailboxIndex idx = getMailboxIndex();
                     idx.deleteIndex();
                     indexDeleted = true;
-                    
+
                     success = true;
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("Error deleting index before re-indexing", e);
@@ -1629,7 +1633,7 @@ public class Mailbox {
             }
 
             long start = System.currentTimeMillis();
-            
+
             //
             // Second step:
             //      For each message in the list from above
@@ -1647,9 +1651,9 @@ public class Mailbox {
                     }
                     mReIndexStatus.mNumProcessed++;
                 }
-                
+
                 SearchResult sr = (SearchResult) iter.next();
-                
+
                 try {
                     MailboxIndex idx = getMailboxIndex();
                     idx.reIndexItem(sr.id, sr.type);
@@ -1660,7 +1664,7 @@ public class Mailbox {
                     ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on msg "+sr.id+".  Message will not be indexed.", e);
                 }
             }
-            
+
             //
             // Final step: print some statistics
             //
@@ -1672,12 +1676,12 @@ public class Mailbox {
                 mps = avg > 0 ? 1000 / avg : 0;
             }
             ZimbraLog.mailbox.info("Re-Indexing: Mailbox " + getId() + " COMPLETED.  Re-indexed "+mReIndexStatus.mNumProcessed
-                    +" msgs in " + (end-start) + "ms.  (avg "+avg+"ms/msg = "+mps+" msgs/sec)"
-                    +" ("+mReIndexStatus.mNumFailed+" failed) ");
-            
+                        +" msgs in " + (end-start) + "ms.  (avg "+avg+"ms/msg = "+mps+" msgs/sec)"
+                        +" ("+mReIndexStatus.mNumFailed+" failed) ");
+
         } finally {
             mReIndexStatus = null;
-            
+
             getMailboxIndex().flush();
             if (redoInitted) {
                 if (indexDeleted) {
@@ -1771,8 +1775,8 @@ public class Mailbox {
      * @see #mFolderCache */
     public static boolean isCachedType(byte type) {
         return type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER ||
-               type == MailItem.TYPE_TAG    || type == MailItem.TYPE_FLAG ||
-               type == MailItem.TYPE_MOUNTPOINT;
+        type == MailItem.TYPE_TAG    || type == MailItem.TYPE_FLAG ||
+        type == MailItem.TYPE_MOUNTPOINT;
     }
 
     private MailItem checkAccess(MailItem item) throws ServiceException {
@@ -1930,7 +1934,7 @@ public class Mailbox {
             item = mFolderCache.get(key);
         if (item == null)
             item = getItemCache().get(key);
-        
+
         byte type = MailItem.TYPE_UNKNOWN;
         if (item != null) {
             type = item.getType();
@@ -1962,7 +1966,7 @@ public class Mailbox {
         logCacheActivity(key, type, retVal);
         return retVal;
     }
-    
+
     public synchronized MailItem getItemFromUnderlyingData(MailItem.UnderlyingData data) throws ServiceException {
         boolean success = false;
         try {
@@ -2009,10 +2013,10 @@ public class Mailbox {
                 if (!hasFullAccess())
                     throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             } else {
-            	if (!folder.canAccess(ACL.RIGHT_READ, getAuthenticatedAccount()))
+                if (!folder.canAccess(ACL.RIGHT_READ, getAuthenticatedAccount()))
                     throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             }
-            
+
             if (type == MailItem.TYPE_TAG) {
                 if (folderId != -1 && folderId != ID_FOLDER_TAGS)
                     return Collections.emptyList();
@@ -2325,7 +2329,7 @@ public class Mailbox {
         return (SearchFolder) getItemById(searchId, MailItem.TYPE_SEARCHFOLDER);
     }
 
-    
+
     public synchronized Note getNoteById(OperationContext octxt, int noteId) throws ServiceException {
         return (Note) getItemById(octxt, noteId, MailItem.TYPE_NOTE);
     }
@@ -2443,7 +2447,7 @@ public class Mailbox {
 
         // REPLY
         cal.addProperty(new ZProperty(ICalTok.METHOD, ICalTok.PUBLISH.toString()));
-            
+
         // timezones
         {
             ICalTimeZone localTz = Provisioning.getInstance().getTimeZone(getAccount()); 
@@ -2451,7 +2455,7 @@ public class Mailbox {
 
             for (Appointment appt : appts)
                 tzmap.add(appt.getTimeZoneMap());
-                
+
             // iterate the tzmap and add all the VTimeZone's 
             // (TODO: should this code live in TimeZoneMap???) 
             for (Iterator iter = tzmap.tzIterator(); iter.hasNext(); ) {
@@ -2459,13 +2463,13 @@ public class Mailbox {
                 cal.addComponent(cur.newToVTimeZone());
             }
         }
-            
+
         // build all the event components and add them to the Calendar
         for (Appointment appt : appts)
             appt.appendRawCalendarData(cal);
         return cal;
     }
-    
+
     public synchronized ZVCalendar getZCalendarForRange(OperationContext octxt, long start, long end, int folderId)
     throws ServiceException {
         boolean success = false;
@@ -2477,7 +2481,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
 
     /** Returns a <code>Collection</code> of all {@link Appointment}s which
      *  overlap the specified time period.  There is no guarantee that the
@@ -2501,8 +2505,8 @@ public class Mailbox {
      * @perms {@link ACL#RIGHT_READ} on all returned appointments.
      * @throws ServiceException */
     public synchronized Collection<Appointment> getAppointmentsForRange(OperationContext octxt, long start, long end, 
-            int folderId, int[] excludeFolders)
-    throws ServiceException {
+                int folderId, int[] excludeFolders)
+                throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getAppointmentsForRange", octxt);
@@ -2543,37 +2547,58 @@ public class Mailbox {
      */
     public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize) 
     throws IOException, ParseException, ServiceException {
-        Account acct = getAccount();
-        boolean includeTrash = 
-        	acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
-        boolean includeSpam = 
-        	acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
+        return search(SoapProtocol.Soap12, octxt, queryString, types, sortBy, chunkSize);
+    }
+
+    /**
+     * You **MUST** call doneWithSearchResults() when you are done with the search results, otherwise
+     * resources will be leaked.
+     * 
+     * @param octxt
+     * @param queryString
+     * @param types
+     * @param sortBy
+     * @param chunkSize A hint to the search engine telling it the size of the result set you are expecting
+     * @return
+     * @throws IOException
+     * @throws ParseException
+     * @throws ServiceException
+     */
+    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize) 
+    throws IOException, ParseException, ServiceException {
+
+        if (octxt == null)
+            throw ServiceException.INVALID_REQUEST("The OperationContext must not be null", null);
         
-    	ZimbraQuery zq = new ZimbraQuery(queryString, this, types, sortBy, includeTrash, includeSpam, chunkSize);
-    	try {
-    		zq.executeRemoteOps();
-    	
-    		boolean success = false;
-    		try {
-    			synchronized(this) {
-    				beginTransaction("search", octxt);
-    				ZimbraQueryResults results = zq.execute(); 
-    				success = true;
-    				return results;
-    			}
-    		} finally {
-    			endTransaction(success);
-    		}
-    	} catch (IOException e) {
-    		zq.doneWithQuery();
-    		throw e;
-    	} catch (ServiceException e) {
-    		zq.doneWithQuery();
-    		throw e;
-    	} catch (Throwable t) {
-    		zq.doneWithQuery();
-    		throw ServiceException.FAILURE("Caught "+t.getMessage(), t);
-    	}
+        Account acct = getAccount();
+        boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
+        boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
+        
+        ZimbraQuery zq = new ZimbraQuery(queryString, this, types, sortBy, includeTrash, includeSpam, chunkSize);
+        try {
+            zq.executeRemoteOps(proto, octxt);
+            
+            boolean success = false;
+            try {
+                synchronized(this) {
+                    beginTransaction("search", octxt);
+                    ZimbraQueryResults results = zq.execute(); 
+                    success = true;
+                    return results;
+                }
+            } finally {
+                endTransaction(success);
+            }
+        } catch (IOException e) {
+            zq.doneWithQuery();
+            throw e;
+        } catch (ServiceException e) {
+            zq.doneWithQuery();
+            throw e;
+        } catch (Throwable t) {
+            zq.doneWithQuery();
+            throw ServiceException.FAILURE("Caught "+t.getMessage(), t);
+        }
     }
 
     public synchronized FreeBusy getFreeBusy(long start, long end) throws ServiceException {
@@ -2597,24 +2622,24 @@ public class Mailbox {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this mailbox");
             if (browseBy != null)
                 browseBy = browseBy.intern();
-    
+
             BrowseResult browseResult = new BrowseResult();
-    
+
             MailboxIndex idx = getMailboxIndex();
-            
+
             if (browseBy == BROWSE_BY_ATTACHMENTS) {
                 idx.getAttachments(browseResult.getResult());
             } else if (browseBy == BROWSE_BY_DOMAINS) {
                 HashMap<String, DomainItem> domainItems = new HashMap<String, DomainItem>();
                 HashSet<String> set = new HashSet<String>();
-                
+
                 idx.getDomainsForField(LuceneFields.L_H_CC, set);
                 addDomains(domainItems, set, DomainItem.F_CC);
-                
+
                 set.clear();
                 idx.getDomainsForField(LuceneFields.L_H_FROM, set);
                 addDomains(domainItems, set, DomainItem.F_FROM);
-                
+
                 set.clear();             
                 idx.getDomainsForField(LuceneFields.L_H_TO, set);
                 addDomains(domainItems, set, DomainItem.F_TO);
@@ -2638,12 +2663,12 @@ public class Mailbox {
             mMailboxIndex = new MailboxIndex(this, null);
         return mMailboxIndex;
     }
-    
+
     public static class SetAppointmentData {
         public Invite mInv;
         public boolean mForce;
         public ParsedMessage mPm;
-        
+
         public String toString() {
             StringBuilder toRet = new StringBuilder();
             toRet.append("inv:").append(mInv.toString()).append("\n");
@@ -2652,7 +2677,7 @@ public class Mailbox {
             return toRet.toString();
         }
     }
-    
+
     /**
      * @param octxt
      * @param exceptions can be NULL
@@ -2664,7 +2689,7 @@ public class Mailbox {
         SetAppointment redoRecorder =
             new SetAppointment(getId(), attachmentsIndexingEnabled());
         SetAppointment redoPlayer = (octxt == null ? null : (SetAppointment) octxt.player);
-        
+
         boolean success = false;
         try {
             beginTransaction("setAppointment", octxt, redoRecorder);
@@ -2685,50 +2710,50 @@ public class Mailbox {
             } else {
                 // id already set before we stored the invite in the redoRecorder!!!
             }
-            
+
             redoRecorder.setData(defaultInv, exceptions);
 
             // handle the DEFAULT appointment
             short volumeId =
                 redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
-                                   : redoPlayer.getVolumeId();
-            Appointment appt = getAppointmentByUid(defaultInv.mInv.getUid());
-            if (appt == null) { 
-                // ONLY create an appointment if this is a REQUEST method...otherwise don't.
-                if (defaultInv.mInv.getMethod().equals("REQUEST") || defaultInv.mInv.getMethod().equals("PUBLISH")) {
-                    appt = createAppointment(folderId, volumeId, "",
-                            defaultInv.mInv.getUid(), defaultInv.mPm, defaultInv.mInv);
+                            : redoPlayer.getVolumeId();
+                Appointment appt = getAppointmentByUid(defaultInv.mInv.getUid());
+                if (appt == null) { 
+                    // ONLY create an appointment if this is a REQUEST method...otherwise don't.
+                    if (defaultInv.mInv.getMethod().equals("REQUEST") || defaultInv.mInv.getMethod().equals("PUBLISH")) {
+                        appt = createAppointment(folderId, volumeId, "",
+                                    defaultInv.mInv.getUid(), defaultInv.mPm, defaultInv.mInv);
+                    } else {
+//                      mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
+                        return 0; // for now, just ignore this Invitation
+                    }
                 } else {
-//                  mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
-                    return 0; // for now, just ignore this Invitation
+                    appt.processNewInvite(defaultInv.mPm,
+                                defaultInv.mInv,
+                                defaultInv.mForce, folderId, volumeId,
+                                true);
                 }
-            } else {
-                appt.processNewInvite(defaultInv.mPm,
-                                      defaultInv.mInv,
-                                      defaultInv.mForce, folderId, volumeId,
-                                      true);
-            }
 
-            redoRecorder.setAppointmentAttrs(appt.getId(),
-                                             appt.getFolderId(),
-                                             volumeId);
+                redoRecorder.setAppointmentAttrs(appt.getId(),
+                            appt.getFolderId(),
+                            volumeId);
 
-            // handle the exceptions!
-            if (exceptions != null) {
-                for (SetAppointmentData sad : exceptions) {
-                    appt.processNewInvite(sad.mPm, sad.mInv, sad.mForce, folderId, volumeId);
+                // handle the exceptions!
+                if (exceptions != null) {
+                    for (SetAppointmentData sad : exceptions) {
+                        appt.processNewInvite(sad.mPm, sad.mInv, sad.mForce, folderId, volumeId);
+                    }
                 }
-            }
-            
-            success = true;
-            
-            return appt.getId();
-            
+
+                success = true;
+
+                return appt.getId();
+
         } finally {
             endTransaction(success);
         }
     }
-    
+
     /**
      * Directly add an Invite into the system...this process also gets triggered when we add a Message
      * that has a text/calendar Mime part: but this API is useful when you don't want to add a corresponding
@@ -2743,61 +2768,61 @@ public class Mailbox {
      */
     public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean force, ParsedMessage pm)
     throws ServiceException {
-    	
+
         byte[] data = null;
-        
+
         if (pm != null) {
-        	try {
-        		data = pm.getRawData();
-        	} catch (MessagingException me) {
+            try {
+                data = pm.getRawData();
+            } catch (MessagingException me) {
                 throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-        	} catch (IOException ie) {
-        		throw ServiceException.FAILURE("Caught IOException", ie);
-        	}
+            } catch (IOException ie) {
+                throw ServiceException.FAILURE("Caught IOException", ie);
+            }
         }
-    	
+
         CreateInvite redoRecorder = new CreateInvite(mId, inv, folderId, data, force);
         CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.player);
         short volumeId =
             redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
-                               : redoPlayer.getVolumeId();
-        
-        boolean success = false;
-        try {
-            beginTransaction("addInvite", octxt, redoRecorder);
-            
-            if (redoPlayer == null || redoPlayer.getAppointmentId() == 0) {
-                assert(inv.getMailItemId() == 0); 
-                int mailItemId = getNextItemId(Mailbox.ID_AUTO_INCREMENT);
-                inv.setInviteId(mailItemId);
-            } else {
-                // id already set before we stored the invite in the redoRecorder!!!
-            }
-            
-            Appointment appt = getAppointmentByUid(inv.getUid());
-            if (appt == null) { 
-                // ONLY create an appointment if this is a REQUEST method...otherwise don't.
-                if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
-                    appt = createAppointment(folderId, volumeId, "", inv.getUid(), pm, inv);
-                } else {
-//                  mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
-                    return null; // for now, just ignore this Invitation
-                }
-            } else {
-                appt.processNewInvite(pm, inv, force, folderId, volumeId);
-            }
-            redoRecorder.setAppointmentAttrs(appt.getId(),
-                                             appt.getFolderId(),
-                                             volumeId);
+                        : redoPlayer.getVolumeId();
 
-            success = true;
-            return new int[] { appt.getId(), inv.getMailItemId() };
-        } finally {
-            endTransaction(success);
-        }
-        
+            boolean success = false;
+            try {
+                beginTransaction("addInvite", octxt, redoRecorder);
+
+                if (redoPlayer == null || redoPlayer.getAppointmentId() == 0) {
+                    assert(inv.getMailItemId() == 0); 
+                    int mailItemId = getNextItemId(Mailbox.ID_AUTO_INCREMENT);
+                    inv.setInviteId(mailItemId);
+                } else {
+                    // id already set before we stored the invite in the redoRecorder!!!
+                }
+
+                Appointment appt = getAppointmentByUid(inv.getUid());
+                if (appt == null) { 
+                    // ONLY create an appointment if this is a REQUEST method...otherwise don't.
+                    if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
+                        appt = createAppointment(folderId, volumeId, "", inv.getUid(), pm, inv);
+                    } else {
+//                      mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
+                        return null; // for now, just ignore this Invitation
+                    }
+                } else {
+                    appt.processNewInvite(pm, inv, force, folderId, volumeId);
+                }
+                redoRecorder.setAppointmentAttrs(appt.getId(),
+                            appt.getFolderId(),
+                            volumeId);
+
+                success = true;
+                return new int[] { appt.getId(), inv.getMailItemId() };
+            } finally {
+                endTransaction(success);
+            }
+
     }
-    
+
     synchronized Appointment getAppointmentByUid(String uid) throws ServiceException {
         return getAppointmentByUid(null, uid);
     }
@@ -2831,11 +2856,11 @@ public class Mailbox {
             } catch (Exception e) {
                 return false;
             }
-        else if (pref.equalsIgnoreCase(DEDUPE_INBOX))   // move the existing mail from sent to inbox
-            // XXX: not implemented
-            return false;
-        else
-            return false;
+            else if (pref.equalsIgnoreCase(DEDUPE_INBOX))   // move the existing mail from sent to inbox
+                // XXX: not implemented
+                return false;
+            else
+                return false;
     }
 
     public int getConversationIdFromReferent(MimeMessage newMsg, int parentID) {
@@ -2864,14 +2889,14 @@ public class Mailbox {
     }
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags,
-                                           String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
+                String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
         return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, sharedDeliveryCtxt);
     }
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId,
-                              boolean noICal, int flags, String tagStr, int conversationId,
-                              String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
+                boolean noICal, int flags, String tagStr, int conversationId,
+                String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
         // make sure the message has been analyzed before taking the Mailbox lock
         pm.analyze();
@@ -2883,15 +2908,15 @@ public class Mailbox {
         // and then actually add the message
         long start = ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.start();
         Message msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId,
-                                         rcptEmail, null, sharedDeliveryCtxt);
+                    rcptEmail, null, sharedDeliveryCtxt);
         ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         return msg;
     }
 
     private synchronized Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId,
-                                                    boolean noICal, int flags, String tagStr, int conversationId, 
-                                                    String rcptEmail, Message.DraftInfo dinfo,
-                                                    SharedDeliveryContext sharedDeliveryCtxt)
+                boolean noICal, int flags, String tagStr, int conversationId, 
+                String rcptEmail, Message.DraftInfo dinfo,
+                SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding message to mailbox " + mId, null);
@@ -2925,7 +2950,7 @@ public class Mailbox {
             if (conversationId == ID_AUTO_INCREMENT) {
                 conversationId = getConversationIdFromReferent(pm.getMimeMessage(), sentMsgID.intValue());
                 if (debug)  ZimbraLog.mailbox.debug("  duplicate detected but not deduped (" + msgidHeader + "); " +
-                                                    "will try to slot into conversation " + conversationId);
+                            "will try to slot into conversation " + conversationId);
             }
         }
 
@@ -2999,10 +3024,10 @@ public class Mailbox {
                 ZimbraLog.mailbox.debug("  placing message in existing conversation " + convTarget.getId());
 
             short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
-                                                : redoPlayer.getVolumeId();
+                        : redoPlayer.getVolumeId();
             ZVCalendar iCal = pm.getiCalendar();
             msg = Message.create(messageId, folder, convTarget, pm, msgSize, digest,
-                                 volumeId, unread, flags, tags, dinfo, noICal, iCal);
+                        volumeId, unread, flags, tags, dinfo, noICal, iCal);
 
             redoRecorder.setMessageId(msg.getId());
 
@@ -3035,11 +3060,11 @@ public class Mailbox {
                 // of multiple recipients.  Save message to incoming directory.
                 if (redoPlayer == null)
                     blob = sm.storeIncoming(data, digest,
-                                            null, msg.getVolumeId());
+                                null, msg.getVolumeId());
                 else
                     blob = sm.storeIncoming(data, digest,
-                                            redoPlayer.getPath(),
-                                            redoPlayer.getVolumeId());
+                                redoPlayer.getPath(),
+                                redoPlayer.getVolumeId());
                 String blobPath = blob.getPath();
                 short blobVolumeId = blob.getVolumeId();
 
@@ -3049,9 +3074,9 @@ public class Mailbox {
                     // Log entry in redolog for blob save.  Blob bytes are
                     // logged in StoreToIncoming entry.
                     storeRedoRecorder =
-                    	new StoreIncomingBlob(
-                    			digest, msgSize,
-                    			sharedDeliveryCtxt.getMailboxIdList());
+                        new StoreIncomingBlob(
+                                    digest, msgSize,
+                                    sharedDeliveryCtxt.getMailboxIdList());
                     storeRedoRecorder.start(timestamp);
                     storeRedoRecorder.setBlobBodyInfo(data, blobPath, blobVolumeId);
                     storeRedoRecorder.log();
@@ -3125,7 +3150,7 @@ public class Mailbox {
 
         if (msg != null && ZimbraLog.mailbox.isInfoEnabled())
             ZimbraLog.mailbox.info("Added message id=" + msg.getId() + " digest=" + digest +
-                                   " mailbox=" + getId() + " rcpt=" + rcptEmail);
+                        " mailbox=" + getId() + " rcpt=" + rcptEmail);
         return msg;
     }
 
@@ -3178,7 +3203,7 @@ public class Mailbox {
             if (replyType != null && origId > 0)
                 dinfo = new Message.DraftInfo(replyType, origId);
             return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.FLAG_DRAFT | Flag.FLAG_FROM_ME, null,
-                                      ID_AUTO_INCREMENT, ":API:", dinfo, new SharedDeliveryContext());
+                        ID_AUTO_INCREMENT, ":API:", dinfo, new SharedDeliveryContext());
         } else
             return saveDraftInternal(octxt, pm, id);
     }
@@ -3211,7 +3236,7 @@ public class Mailbox {
             redoRecorder.setImapId(imapID);
 
             short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
-                                                : redoPlayer.getVolumeId();
+                        : redoPlayer.getVolumeId();
 
             // update the content and increment the revision number
             Blob blob = msg.setContent(data, digest, volumeId, pm);
@@ -3225,7 +3250,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
     /**
      * Modify the Participant-Status of your LOCAL data part of an appointment -- this is used when you Reply to
      * an Invite so that you can track the fact that you've replied to it.
@@ -3244,22 +3269,22 @@ public class Mailbox {
      * @throws ServiceException
      */
     public synchronized void modifyPartStat(OperationContext octxt, int apptId, RecurId recurId,
-            String cnStr, String addressStr, String cutypeStr, String roleStr, String partStatStr, Boolean rsvp, int seqNo, long dtStamp) 
+                String cnStr, String addressStr, String cutypeStr, String roleStr, String partStatStr, Boolean rsvp, int seqNo, long dtStamp) 
     throws ServiceException {
-        
+
         ModifyInvitePartStat redoRecorder = new ModifyInvitePartStat(mId, apptId, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, rsvp, seqNo, dtStamp);
-        
+
         boolean success = false;
         try {
             beginTransaction("updateInvitePartStat", octxt, redoRecorder);
 
             Appointment appt = getAppointmentById(apptId);
-            
+
             Account acct = getAccount();
-        
+
             appt.modifyPartStat(acct, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, rsvp, seqNo, dtStamp);
             markItemModified(appt, Change.MODIFIED_INVITE);
-            
+
             success = true;
         } finally {
             endTransaction(success);
@@ -3662,9 +3687,9 @@ public class Mailbox {
         Appointment appt = Appointment.create(createId, getFolderById(folderId), volumeId, tags, uid, pm, invite);
 
         if (redoRecorder != null)
-        	redoRecorder.setAppointmentAttrs(appt.getId(),
-                                             appt.getFolderId(),
-                                             appt.getVolumeId());
+            redoRecorder.setAppointmentAttrs(appt.getId(),
+                        appt.getFolderId(),
+                        appt.getVolumeId());
         return appt;
     }
 
@@ -3680,10 +3705,10 @@ public class Mailbox {
             int contactId;
             short volumeId;
             if (redoPlayer == null) {
-            	contactId = getNextItemId(ID_AUTO_INCREMENT);
+                contactId = getNextItemId(ID_AUTO_INCREMENT);
                 volumeId = Volume.getCurrentMessageVolume().getId();
             } else {
-            	contactId = getNextItemId(redoPlayer.getContactId());
+                contactId = getNextItemId(redoPlayer.getContactId());
                 volumeId = redoPlayer.getVolumeId();
             }
             Contact con = Contact.create(contactId, getFolderById(folderId), volumeId, attrs, tags);
@@ -3868,13 +3893,13 @@ public class Mailbox {
                 throw ServiceException.FAILURE("IOException", e);
             }
 
-        // update the subscription to avoid downloading items twice
-        if (subscription && sdata.lastDate > 0)
-            try {
-                setSubscriptionData(octxt, folderId, sdata.lastDate, sdata.lastGuid);
-            } catch (Exception e) {
-                ZimbraLog.mailbox.warn("could not update feed metadata", e);
-            }
+            // update the subscription to avoid downloading items twice
+            if (subscription && sdata.lastDate > 0)
+                try {
+                    setSubscriptionData(octxt, folderId, sdata.lastDate, sdata.lastGuid);
+                } catch (Exception e) {
+                    ZimbraLog.mailbox.warn("could not update feed metadata", e);
+                }
     }
 
     public synchronized void setSubscriptionData(OperationContext octxt, int folderId, long date, String guid) throws ServiceException {
@@ -3920,7 +3945,7 @@ public class Mailbox {
                     else if (subfolderId != ID_AUTO_INCREMENT && subfolderId != subfolder.getId())
                         throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
                     else if (!subfolder.getName().equals(parts[i]) && subfolder.isMutable())
-                    	subfolder.rename(parts[i], parent);
+                        subfolder.rename(parts[i], parent);
                     recorderParentIds[i] = subfolder.getId();
                     parent = subfolder;
                 }
@@ -3954,7 +3979,7 @@ public class Mailbox {
     public synchronized SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query, String types, String sort)
     throws ServiceException {
         CreateSavedSearch redoRecorder = new CreateSavedSearch(mId, folderId, name, query, types, sort);
-        
+
         boolean success = false;
         try {
             beginTransaction("createSearchFolder", octxt, redoRecorder);
@@ -4092,8 +4117,8 @@ public class Mailbox {
         try {
             if (indexingNeeded) {
                 indexRedo = new IndexItem(mId,
-                                          itemToIndex.getId(),
-                                          itemToIndex.getType());
+                            itemToIndex.getId(),
+                            itemToIndex.getType());
                 indexRedo.start(getOperationTimestampMillis());
                 indexRedo.setParentOp(redoRecorder);
 
@@ -4128,19 +4153,19 @@ public class Mailbox {
                     ZimbraLog.mailbox.fatal("Unable to commit database transaction.  Forcing server to abort.", t);
                     Runtime.getRuntime().exit(1);
                 }
-            allGood = true;
+                allGood = true;
         } finally {
             if (!allGood) {
                 // We will get here if indexing commit failed.
                 // (Database commit hasn't happened.)
-    
+
                 // Write abort redo records to prevent the transactions from
                 // being redone during crash recovery.
-    
+
                 // Write abort redo entries before doing database rollback.
                 // If we do rollback first and server crashes, crash
                 // recovery will try to redo the operation.
-    
+
                 // Write abort redo record for indexing transaction before writing
                 // abort record for main.  This prevents indexing from
                 // being redone during crash recovery when main transaction
@@ -4170,7 +4195,7 @@ public class Mailbox {
             //    value.
             if (redoRecorder != null)
                 redoRecorder.commit();
-            
+
             // 6. The commit redo record for indexing sub-transaction is
             //    written in batch by another thread.  To avoid the batch
             //    commit thread's writing commit-index before this thread's
@@ -4186,7 +4211,7 @@ public class Mailbox {
             commitCache(mCurrentChange);
         }
     }
-    
+
     public synchronized void postIMNotification(IMNotification imn) {
         for (Session session : mListeners)
             session.notifyIM(imn);
@@ -4243,15 +4268,15 @@ public class Mailbox {
                     ZimbraLog.mailbox.warn("ignoring error while getting index to delete entries for items: " + deleted.itemIds, e);
                 }
 
-            // delete any blobs associated with items deleted from db/index
-            StoreManager sm = StoreManager.getInstance();
-            if (deleted != null && deleted.blobs != null)
-                for (MailboxBlob blob : deleted.blobs)
-                    try {
-                        sm.delete(blob);
-                    } catch (IOException e) {
-                        ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during commit");
-                    }
+                // delete any blobs associated with items deleted from db/index
+                StoreManager sm = StoreManager.getInstance();
+                if (deleted != null && deleted.blobs != null)
+                    for (MailboxBlob blob : deleted.blobs)
+                        try {
+                            sm.delete(blob);
+                        } catch (IOException e) {
+                            ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during commit");
+                        }
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);
         } finally {
@@ -4344,7 +4369,7 @@ public class Mailbox {
             for (Iterator it = cache.values().iterator(); i < excess && it.hasNext(); ) {
                 Object obj = it.next();
                 if (obj instanceof MailItem)
-                	overflow[i++] = obj;
+                    overflow[i++] = obj;
                 else
                     it.remove();
             }
@@ -4374,7 +4399,7 @@ public class Mailbox {
         if (!isCachedType(type)) {
             ZimbraPerf.COUNTER_MBOX_ITEM_CACHE.increment(item == null ? 0 : 1);
         }
-        
+
         // The per-access log only gets updated when cache or perf debug logging
         // is on
         if (!ZimbraLog.cache.isDebugEnabled() && !ZimbraLog.perf.isDebugEnabled())
@@ -4453,7 +4478,7 @@ public class Mailbox {
                 mSharedDelivCoord.mNumDelivs++;
                 if (ZimbraLog.mailbox.isDebugEnabled()) {
                     ZimbraLog.mailbox.debug("# of shared deliv incr to " + mSharedDelivCoord.mNumDelivs +
-                        " for mailbox " + getId());
+                                " for mailbox " + getId());
                 }
                 return true;
             } else {
@@ -4472,7 +4497,7 @@ public class Mailbox {
             mSharedDelivCoord.mNumDelivs--;
             if (ZimbraLog.mailbox.isDebugEnabled()) {
                 ZimbraLog.mailbox.debug("# of shared deliv decr to " + mSharedDelivCoord.mNumDelivs +
-                    " for mailbox " + getId());
+                            " for mailbox " + getId());
             }
             assert(mSharedDelivCoord.mNumDelivs >= 0);
             if (mSharedDelivCoord.mNumDelivs == 0) {
@@ -4514,7 +4539,7 @@ public class Mailbox {
                 try {
                     mSharedDelivCoord.wait(3000);
                     ZimbraLog.misc.info("wake up from wait for completion of shared delivery; mailbox=" + getId() + 
-                            " # of shared deliv=" + mSharedDelivCoord.mNumDelivs);
+                                " # of shared deliv=" + mSharedDelivCoord.mNumDelivs);
                 } catch (InterruptedException e) {}
             }
         }
@@ -4531,41 +4556,41 @@ public class Mailbox {
     }
 
     public Document addDocumentRevision(OperationContext octxt, Document doc, byte[] rawData, String author) throws ServiceException {
-    	StoreManager sm = StoreManager.getInstance();
-    	Blob blob = null;
-    	boolean success = false;
-    	try {
-    		AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, null, 0, 0);
-    		
-    		beginTransaction("addDocumentRevision", octxt, redoRecorder);
-        	redoRecorder.setAuthor(author);
-        	redoRecorder.setDocument(doc);
-    		short volumeId = Volume.getCurrentMessageVolume().getId();
-        	blob = sm.storeIncoming(rawData, null, null, volumeId);
-        	redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
-        	markOtherItemDirty(blob);
-        	
-        	ParsedDocument pd = new ParsedDocument(blob.getFile(), doc.getFilename(), doc.getContentType(), getOperationTimestampMillis());
-        	doc.addRevision(author, pd);
-        	mCurrentChange.setIndexedItem(doc, pd);
+        StoreManager sm = StoreManager.getInstance();
+        Blob blob = null;
+        boolean success = false;
+        try {
+            AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, null, 0, 0);
 
-        	sm.link(blob, this, doc.getId(), doc.getLastRevision().getRevId(), volumeId);
-        	doc.purgeOldRevisions(1);  // purge all but 1 revisions.
-        	success = true;
-       	} catch (IOException ioe) {
-        	throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
-    	} finally {
-        	endTransaction(success);
-        	if (blob != null)
-            	try {
-                	sm.delete(blob);
-               	} catch (IOException ioe) {
-//                	 no harm done
-               	}
-    	}
-    	return doc;
+            beginTransaction("addDocumentRevision", octxt, redoRecorder);
+            redoRecorder.setAuthor(author);
+            redoRecorder.setDocument(doc);
+            short volumeId = Volume.getCurrentMessageVolume().getId();
+            blob = sm.storeIncoming(rawData, null, null, volumeId);
+            redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
+            markOtherItemDirty(blob);
+
+            ParsedDocument pd = new ParsedDocument(blob.getFile(), doc.getFilename(), doc.getContentType(), getOperationTimestampMillis());
+            doc.addRevision(author, pd);
+            mCurrentChange.setIndexedItem(doc, pd);
+
+            sm.link(blob, this, doc.getId(), doc.getLastRevision().getRevId(), volumeId);
+            doc.purgeOldRevisions(1);  // purge all but 1 revisions.
+            success = true;
+        } catch (IOException ioe) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+        } finally {
+            endTransaction(success);
+            if (blob != null)
+                try {
+                    sm.delete(blob);
+                } catch (IOException ioe) {
+//                  no harm done
+                }
+        }
+        return doc;
     }
-    
+
     /**
      * if path == /foo/bar, returns Mailitem bar in folder foo.
      * if path == foo/bar, locates the folder identified by fid, looks for subfolder foo, then
@@ -4597,36 +4622,36 @@ public class Mailbox {
                 StringTokenizer tok = new StringTokenizer(path, "/");
                 String lastToken = null;
                 Folder lastFolder = null;
-                
+
                 // tokenize the path, traverse the folders until
                 // we can't find the subfolder, or run out of tokens.
                 while (folder != null && tok.hasMoreTokens()) {
-                	lastToken = tok.nextToken();
-                	lastFolder = folder;
-                	folder = lastFolder.findSubfolder(lastToken);
+                    lastToken = tok.nextToken();
+                    lastFolder = folder;
+                    folder = lastFolder.findSubfolder(lastToken);
                 }
-                
+
                 if (folder != null) {
-                	ret = folder;
+                    ret = folder;
                 } else if (lastFolder != null && 
-                			lastToken != null && 
-                			!tok.hasMoreTokens()) {
-                	// we used up all the tokens.  must have matched all but
-                	// one folders in the path.  search the last folder
-                	// for a document or wikiitem matching the last token.
-                	if (getFolder)
-                		ret = lastFolder;
-                	else {
-                		for (Document doc : getWikiList(octxt, lastFolder.getId()))
-                			if (doc.getFilename().equalsIgnoreCase(lastToken)) {
-                				ret = doc;
-                				break;
-                			}
-                	}
+                            lastToken != null && 
+                            !tok.hasMoreTokens()) {
+                    // we used up all the tokens.  must have matched all but
+                    // one folders in the path.  search the last folder
+                    // for a document or wikiitem matching the last token.
+                    if (getFolder)
+                        ret = lastFolder;
+                    else {
+                        for (Document doc : getWikiList(octxt, lastFolder.getId()))
+                            if (doc.getFilename().equalsIgnoreCase(lastToken)) {
+                                ret = doc;
+                                break;
+                            }
+                    }
                 }
             }
             if (ret == null)
-            	throw MailServiceException.NO_SUCH_ITEM(path);
+                throw MailServiceException.NO_SUCH_ITEM(path);
             success = (checkAccess(ret) != null);
             return ret;
         } finally {
@@ -4635,9 +4660,9 @@ public class Mailbox {
     }
 
     public WikiItem getWikiById(OperationContext octxt, int id) throws ServiceException {
-    	return (WikiItem) getItemById(octxt, id, MailItem.TYPE_WIKI);
+        return (WikiItem) getItemById(octxt, id, MailItem.TYPE_WIKI);
     }
-    
+
     public synchronized List<Document> getWikiList(OperationContext octxt, int folderId) throws ServiceException {
         return getWikiList(octxt, folderId, DbMailItem.SORT_NONE);
     }
@@ -4649,62 +4674,62 @@ public class Mailbox {
             docs.add((Document) item);
         return docs;
     }
-    
+
     public synchronized WikiItem createWiki(OperationContext octxt, 
-											int folderId, 
-											String wikiword, 
-											String author, 
-											byte[] rawData,
-											MailItem parent) throws ServiceException {
-    	return (WikiItem)createDocument(octxt, folderId, wikiword, WikiItem.WIKI_CONTENT_TYPE, 
-    									author, rawData, parent, MailItem.TYPE_WIKI);
+                int folderId, 
+                String wikiword, 
+                String author, 
+                byte[] rawData,
+                MailItem parent) throws ServiceException {
+        return (WikiItem)createDocument(octxt, folderId, wikiword, WikiItem.WIKI_CONTENT_TYPE, 
+                    author, rawData, parent, MailItem.TYPE_WIKI);
     }
 
     public synchronized Document createDocument(OperationContext octxt, 
-    											int folderId, 
-    											String filename, 
-    											String mimeType, 
-    											String author,
-    											byte[] rawData,
-    											MailItem parent) throws ServiceException {
-    	return createDocument(octxt, folderId, filename, mimeType, author, rawData, parent, MailItem.TYPE_DOCUMENT);
+                int folderId, 
+                String filename, 
+                String mimeType, 
+                String author,
+                byte[] rawData,
+                MailItem parent) throws ServiceException {
+        return createDocument(octxt, folderId, filename, mimeType, author, rawData, parent, MailItem.TYPE_DOCUMENT);
     }
-    
+
     public synchronized Document createDocument(OperationContext octxt, 
-    											int folderId, 
-    											String filename, 
-    											String mimeType, 
-    											String author,
-    											byte[] rawData,
-    											MailItem parent,
-    											byte type) throws ServiceException {
-       	Document doc;
+                int folderId, 
+                String filename, 
+                String mimeType, 
+                String author,
+                byte[] rawData,
+                MailItem parent,
+                byte type) throws ServiceException {
+        Document doc;
         boolean success = false;
-       	StoreManager sm = StoreManager.getInstance();
-       	Blob blob = null;
+        StoreManager sm = StoreManager.getInstance();
+        Blob blob = null;
         try {
             SaveDocument redoRecorder = new SaveDocument(mId, null, 0, folderId);
 
             beginTransaction("createDoc", octxt, redoRecorder);
             redoRecorder.setFilename(filename);
             redoRecorder.setMimeType(mimeType);
-        	redoRecorder.setAuthor(author);
-        	int itemId = getNextItemId(ID_AUTO_INCREMENT);
-           	short volumeId = Volume.getCurrentMessageVolume().getId();
+            redoRecorder.setAuthor(author);
+            int itemId = getNextItemId(ID_AUTO_INCREMENT);
+            short volumeId = Volume.getCurrentMessageVolume().getId();
 
-           	blob = sm.storeIncoming(rawData, null, null, volumeId);
+            blob = sm.storeIncoming(rawData, null, null, volumeId);
             redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
             markOtherItemDirty(blob);
 
-        	ParsedDocument pd = new ParsedDocument(blob.getFile(), filename, mimeType, getOperationTimestampMillis());
-        	
-        	if (type == MailItem.TYPE_DOCUMENT)
-        		doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, author, mimeType, pd, parent);
-        	else if (type == MailItem.TYPE_WIKI)
-        		doc = WikiItem.create(itemId, getFolderById(folderId), volumeId, filename, author, pd, parent);
-        	else
-        		throw MailServiceException.INVALID_TYPE(type);
-        	
+            ParsedDocument pd = new ParsedDocument(blob.getFile(), filename, mimeType, getOperationTimestampMillis());
+
+            if (type == MailItem.TYPE_DOCUMENT)
+                doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, author, mimeType, pd, parent);
+            else if (type == MailItem.TYPE_WIKI)
+                doc = WikiItem.create(itemId, getFolderById(folderId), volumeId, filename, author, pd, parent);
+            else
+                throw MailServiceException.INVALID_TYPE(type);
+
             mCurrentChange.setIndexedItem(doc, pd);
             sm.link(blob, this, itemId, doc.getLastRevision().getRevId(), volumeId);
             success = true;
@@ -4712,17 +4737,17 @@ public class Mailbox {
         } catch (IOException ioe) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
         } finally {
-        	endTransaction(success);
+            endTransaction(success);
             if (blob != null)
-            	try {
-            		sm.delete(blob);
-            	} catch (IOException ioe) {
-            		// no harm done
-            	}
+                try {
+                    sm.delete(blob);
+                } catch (IOException ioe) {
+                    // no harm done
+                }
         }
-    	return doc;
+        return doc;
     }
-    
+
     public static void dumpMailboxCache() {
         StringBuilder sb = new StringBuilder();
         sb.append("MAILBOX CACHE DUMP\n");

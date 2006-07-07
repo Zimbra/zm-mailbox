@@ -35,10 +35,13 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
+import com.zimbra.soap.SoapProtocol;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class SearchOperation extends Operation {
 	SearchParams mParams;
 	ZimbraQueryResults mResults;
+	SoapProtocol mProto = SoapProtocol.Soap12;
 	
 	private static int LOAD = 5;
 	static {
@@ -51,6 +54,13 @@ public class SearchOperation extends Operation {
 		super(session, oc, mbox, req, req.getPriority(), LOAD);
 		mParams = params;
 	}
+    
+	public SearchOperation(Session session, ZimbraSoapContext zc, OperationContext oc, Mailbox mbox, Requester req, SearchParams params) throws ServiceException {
+        super(session, oc, mbox, req, req.getPriority(), LOAD);
+        mParams = params;
+        mProto = zc.getResponseProtocol();
+    }
+    
 	
 	public String toString() {
 		return super.toString()+" offset="+mParams.getOffset()+" limit="+mParams.getLimit();
@@ -60,7 +70,7 @@ public class SearchOperation extends Operation {
 		try {
 			byte[] types = MailboxIndex.parseGroupByString(mParams.getTypesStr());
 			
-			mResults = getMailbox().search(getOpCtxt(), mParams.getQueryStr(), types, mParams.getSortBy(), mParams.getLimit() + mParams.getOffset());
+			mResults = getMailbox().search(mProto, getOpCtxt(), mParams.getQueryStr(), types, mParams.getSortBy(), mParams.getLimit() + mParams.getOffset());
 			
 		} catch (IOException e) {
 			throw ServiceException.FAILURE("IO error", e);

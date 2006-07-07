@@ -36,10 +36,9 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ParseMailboxID;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
+import com.zimbra.soap.SoapProtocol;
 import com.zimbra.soap.SoapTransport;
 
 import java.io.IOException;
@@ -76,6 +75,8 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     protected String mAuthToken;
     protected String mTargetAcctId = null;
     protected SoapTransport mTransport = null;
+    protected SoapProtocol mResponseProto = null;
+    
     SearchParams mSearchParams;
     
     // mailbox specifier
@@ -91,13 +92,14 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      * @param server hostname of server
      * @param params
      */
-    public ProxiedQueryResults(String encodedAuthToken, String targetAccountId, String server, SearchParams params) {
+    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String targetAccountId, String server, SearchParams params) {
         super(params.getTypes(), params.getSortBy());
         
         this.mSearchParams = params;
         this.mAuthToken = encodedAuthToken;
         this.mServer = server;
         this.mTargetAcctId = targetAccountId;
+        this.mResponseProto = respProto;
     }
     
     /**
@@ -107,12 +109,13 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      * @param server hostname of server
      * @param params
      */
-    public ProxiedQueryResults(String encodedAuthToken, String server, SearchParams params) {
+    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params) {
         super(params.getTypes(), params.getSortBy());
         
         this.mSearchParams = params;
         this.mAuthToken = encodedAuthToken;
         this.mServer = server;
+        this.mResponseProto = respProto;
     }
     
     /**
@@ -123,7 +126,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      * @param params
      * @param searchAllMailboxes -- must be set to SEARCH_ALL_MAILBOXES
      */
-    public ProxiedQueryResults(String encodedAuthToken, String server, SearchParams params, int searchAllMailboxes) {
+    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params, int searchAllMailboxes) {
         super(params.getTypes(), params.getSortBy());
     
         assert(searchAllMailboxes == SEARCH_ALL_MAILBOXES);
@@ -133,6 +136,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         this.mServer = server;
         this.isMultipleMailboxes = true;
         this.isAllMailboxes = true; 
+        this.mResponseProto = respProto;
     }
     
     /**
@@ -142,7 +146,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      * @param server
      * @param params
      */
-    public ProxiedQueryResults(String encodedAuthToken, String server, SearchParams params, List /*ParseMailboxID*/ mailboxes)
+    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params, List /*ParseMailboxID*/ mailboxes)
     {
         super(params.getTypes(), params.getSortBy());
     
@@ -150,6 +154,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         this.mAuthToken = encodedAuthToken;
         this.mServer = server;
         this.isMultipleMailboxes = true;
+        this.mResponseProto = respProto;
         
         this.mMailboxes = mailboxes; 
     }
@@ -248,9 +253,10 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             
             Element searchElt;
             if (isMultipleMailboxes) {
-                searchElt = new Element.XMLElement(AdminService.SEARCH_MULTIPLE_MAILBOXES_REQUEST);
+                searchElt = Element.create(mResponseProto, AdminService.SEARCH_MULTIPLE_MAILBOXES_REQUEST);
             } else {
-                searchElt = new Element.XMLElement(MailService.SEARCH_REQUEST);
+//                searchElt = new Element.XMLElement(MailService.SEARCH_REQUEST);
+                searchElt = Element.create(mResponseProto, MailService.SEARCH_REQUEST);
             }
             
             searchElt.addAttribute(MailService.A_SEARCH_TYPES, mSearchParams.getTypesStr());
@@ -278,6 +284,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             }
             
             // call the remote server now!
+            transp.setSoapProtocol(searchElt instanceof Element.JavaScriptElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12);
             Element searchResp = transp.invokeWithoutSession(searchElt);
             
             
@@ -315,9 +322,11 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             return (mBufferEndOffset > mIterOffset);
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException ", e);
-        } catch (SoapFaultException e) {
-        	throw ServiceException.FAILURE("SoapFaultException ", e);
-        } 
+        }
+//        catch (ServiceException e) {
+//            //throw ServiceException.FAILURE("ServiceException ", e);
+//            throw e;
+//        }
     }
     
     

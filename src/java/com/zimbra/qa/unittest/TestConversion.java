@@ -69,7 +69,7 @@ public class TestConversion extends TestCase {
         Account account = TestUtil.getAccount("user1");
         Mailbox mbox = Mailbox.getMailboxByAccount(account);
         String query = "subject:Rich text (TNEF) test";
-        ZimbraQueryResults results = mbox.search(null, query,
+        ZimbraQueryResults results = mbox.search(new Mailbox.OperationContext(mbox), query,
             new byte[] { MailItem.TYPE_MESSAGE}, MailboxIndex.SortBy.SUBJ_ASCENDING, 100);
         assertTrue("No results found for '" + query + "'", results.hasNext());
         

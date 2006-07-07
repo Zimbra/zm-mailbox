@@ -162,7 +162,7 @@ public class AddressBookTest extends AbstractTest {
                                 iaddrStr = iaddr.getAddress();
                             } catch (AddressException e1) {
                             }
-                            results = mbox.search(null, "To:" + iaddrStr, 
+                            results = mbox.search(new Mailbox.OperationContext(mbox), "To:" + iaddrStr, 
                                     SEARCH_TYPE, MailboxIndex.SortBy.DATE_ASCENDING, 100);
                             mLog.debug("searching for " + iaddrStr);
                             if (results.hasNext()) {

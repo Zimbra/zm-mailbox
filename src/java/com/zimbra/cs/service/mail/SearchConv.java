@@ -57,20 +57,20 @@ public class SearchConv extends Search {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         if (sLog.isDebugEnabled())
             sLog.debug("**Start SearchConv");
-        
+
         ZimbraSoapContext zc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zc);
         Mailbox.OperationContext octxt = zc.getOperationContext();
         Session session = getSession(context);
-        
+
         SearchParams params = parseCommonParameters(request, zc);
-        
+
         String cidStr = request.getAttribute(MailService.A_CONV_ID);
         int cid = 0;
         try {
             cid = Integer.parseInt(cidStr);
         } catch(NumberFormatException e) {}
-        
+
         //
         // append (conv:(convid)) onto the beginning of the queryStr
         StringBuffer queryBuffer = new StringBuffer("conv:\"");
@@ -79,33 +79,33 @@ public class SearchConv extends Search {
         queryBuffer.append(params.getQueryStr());
         queryBuffer.append(")");
         params.setQueryStr(queryBuffer.toString());
-        
+
         // 
         // force to group-by-message
         params.setTypesStr(MailboxIndex.GROUP_BY_MESSAGE);
-        
+
         //ZimbraQueryResults results = this.getResults(mbox, params, lc, session);
-        SearchOperation op = new SearchOperation(session, zc.getOperationContext(), mbox, Requester.SOAP,  params);
+        SearchOperation op = new SearchOperation(session, zc, zc.getOperationContext(), mbox, Requester.SOAP,  params);
         op.schedule();
         ZimbraQueryResults results = op.getResults();        
-        
+
         try {
-        	Element response = zc.createElement(MailService.SEARCH_CONV_RESPONSE);
-        	response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
-        	
-        	SortBy sb = results.getSortBy();
-        	response.addAttribute(MailService.A_SORTBY, sb.toString());
-        	
-        	Message[] msgs = mbox.getMessagesByConversation(octxt, cid, sb.getDbMailItemSortByte());
-        	
-        	Element retVal = putHits(zc, response, msgs, results, params);
-        	
-        	return retVal;
+            Element response = zc.createElement(MailService.SEARCH_CONV_RESPONSE);
+            response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
+
+            SortBy sb = results.getSortBy();
+            response.addAttribute(MailService.A_SORTBY, sb.toString());
+
+            Message[] msgs = mbox.getMessagesByConversation(octxt, cid, sb.getDbMailItemSortByte());
+
+            Element retVal = putHits(zc, response, msgs, results, params);
+
+            return retVal;
         } finally {
-        	results.doneWithSearchResults();
+            results.doneWithSearchResults();
         }
     }
-    
+
     /**
      * NOTE - this version will only work for messages.  That's OK since we force GROUP_BY_MESSAGE here
      * 
@@ -128,15 +128,15 @@ public class SearchConv extends Search {
         }
 
         int iterLen = limit;
-//        boolean hasMoreHits = false;
+//      boolean hasMoreHits = false;
 
         if (msgs.length > iterLen+offset) {
-//            hasMoreHits = true;
+//          hasMoreHits = true;
         } else {
             // iterLen+offset <= msgs.length
             iterLen = msgs.length - offset;
         }
-         
+
         if (iterLen > 0) {
 
             //
@@ -149,7 +149,7 @@ public class SearchConv extends Search {
             for (int i = 0; i < matched.length; i++) {
                 matched[i] = null;
             }
-            
+
             //
             // Foreach hit, see if the hit message is in msgs[] (list of msgs in this conv), and if so 
             //
@@ -164,7 +164,7 @@ public class SearchConv extends Search {
                         }
                     }
                 }
-            
+
             //
             // Okay, we've built the matched[] array.  Now iterate through all the messages, and put the message
             // or the MATCHED entry into the result
@@ -184,5 +184,5 @@ public class SearchConv extends Search {
 
         return response;
     }
-    
+
 }

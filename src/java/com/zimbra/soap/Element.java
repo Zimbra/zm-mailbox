@@ -49,6 +49,41 @@ public abstract class Element {
     public static final byte DISP_ATTRIBUTE = 0;
     public static final byte DISP_CONTENT   = 1;
     public static final byte DISP_ELEMENT   = 2;
+    
+    /**
+     * Call element.addElement if you have an existing element, only use this for new
+     * trees.
+     * 
+     * @param proto SoapJS or Soap11 or Soap12
+     * @param name
+     * @return
+     * @throws ServiceException
+     */
+    public static Element create(SoapProtocol proto, String name) throws ServiceException {
+        if (proto == SoapProtocol.SoapJS)
+            return new JavaScriptElement(name);
+        else if (proto == SoapProtocol.Soap11 || proto == SoapProtocol.Soap12)
+            return new XMLElement(name);
+        throw ServiceException.INVALID_REQUEST("Unknown SoapProtocol: "+proto, null);
+    }
+    
+    /**
+     * Call element.addElement if you have an existing element, only use this for new
+     * trees.
+     * 
+     * @param proto SoapJS or Soap11 or Soap12
+     * @param name
+     * @return
+     * @throws ServiceException
+     */
+    public static Element create(SoapProtocol proto, QName qname) throws ServiceException {
+        if (proto == SoapProtocol.SoapJS)
+            return new JavaScriptElement(qname);
+        else if (proto == SoapProtocol.Soap11 || proto == SoapProtocol.Soap12)
+            return new XMLElement(qname);
+        throw ServiceException.INVALID_REQUEST("Unknown SoapProtocol: "+proto, null);
+    }
+    
 
     public abstract ElementFactory getFactory();
 

@@ -80,7 +80,7 @@ public class Search extends DocumentHandler  {
         Mailbox mbox = getRequestedMailbox(zc);
         SearchParams params = parseCommonParameters(request, zc);
 
-        SearchOperation op = new SearchOperation(session, zc.getOperationContext(), mbox, Requester.SOAP,  params);
+        SearchOperation op = new SearchOperation(session, zc, zc.getOperationContext(), mbox, Requester.SOAP,  params);
         op.schedule();
         ZimbraQueryResults results = op.getResults();
 
@@ -202,9 +202,7 @@ public class Search extends DocumentHandler  {
                 e = ToXML.encodeNote(response,zc, nh.getNote());
             } else if (hit instanceof ProxiedHit) {
                 ProxiedHit ph = (ProxiedHit) hit;
-                // XXX element may be in XML.  refer to bug 7046.
-                e = Element.convertDOM(ph.getElement().detach().toXML(), response.getFactory());
-                response.addElement(e);
+                response.addElement(ph.getElement().detach());
                 addSortField = false;
             } else if (hit instanceof AppointmentHit) {
                 AppointmentHit ah = (AppointmentHit)hit;
