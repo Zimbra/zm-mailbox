@@ -25,10 +25,11 @@
 
 package com.zimbra.cs.zclient;
 
-import java.util.Collection;
+import java.util.List;
 
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.zclient.ZTag.TagColor;
 
 public abstract class ZMailbox {
 
@@ -40,9 +41,19 @@ public abstract class ZMailbox {
     public abstract long getSize();
     
     /**
-     * @return current list of all tags in the mailbox
+     * @return current List of all tags in the mailbox
      */
-    public abstract Collection<? extends ZTag> getAllTags();
+    public abstract List<ZTag> getAllTags();
+    
+    /**
+     * @return current list of all tags names in the mailbox, sorted
+     */
+    public abstract List<String> getAllTagNames();
+    
+    /**
+     * @return current list of all tags ids in the mailbox
+     */
+    public abstract List<String> getAllTagIds();
     
     /**
      * returns the tag the specified name, or null if no such tag exists.
@@ -61,13 +72,13 @@ public abstract class ZMailbox {
     public abstract ZTag getTagById(String id);
 
     /** create a new tag with the specified color. */
-    public abstract ZTag createTag(String name, int color) throws ServiceException;
+    public abstract ZTag createTag(String name, TagColor color) throws ServiceException;
 
     /** modifies the tag's color */
-    public abstract ZActionResult setTagColor(String id, int color) throws ServiceException;
+    public abstract ZActionResult setTagColor(String id, TagColor color) throws ServiceException;
 
     /** mark all items with tag as read */
-    public abstract ZActionResult markTagAsRead(String id) throws ServiceException;
+    public abstract ZActionResult markTagRead(String id) throws ServiceException;
 
     /** delete tag */
     public abstract ZActionResult deleteTag(String id) throws ServiceException;    
@@ -235,7 +246,7 @@ public abstract class ZMailbox {
     public abstract ZActionResult moveItem(String ids, String destFolderId, String targetConstraints) throws ServiceException;
 
     /**
-     * update message(s)
+     * update items(s)
      * @param ids
      * @param destFolderId optional destination folder
      * @param tagList optional new list of tag ids
@@ -399,7 +410,7 @@ public abstract class ZMailbox {
     public abstract ZActionResult emptyFolder(String ids) throws ServiceException;    
 
     /** mark all items in folder as read */
-    public abstract ZActionResult markFolderAsRead(String ids) throws ServiceException;
+    public abstract ZActionResult markFolderRead(String ids) throws ServiceException;
 
     /** add the contents of the remote feed at target-url to the folder (one time action) */ 
     public abstract ZActionResult importURLIntoFolder(String id, String url) throws ServiceException;

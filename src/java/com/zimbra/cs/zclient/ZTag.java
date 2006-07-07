@@ -24,7 +24,41 @@
  */
 package com.zimbra.cs.zclient;
 
-public interface ZTag {
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.SoapFaultException;
+
+public interface ZTag extends Comparable {
+
+    public enum TagColor {
+        
+        orange(0),
+        blue(1),
+        cyan(2), 
+        green(3),
+        purple(4),
+        red(5),
+        yellow(6);
+        
+        private int mValue;
+
+        public int getValue() { return mValue; }
+
+        public static TagColor fromString(String s) throws ServiceException {
+            try {
+                return TagColor.values()[Integer.parseInt(s)];
+            } catch (NumberFormatException e) {
+            } catch (IndexOutOfBoundsException e) {
+            }
+            
+            try {
+                return TagColor.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw SoapFaultException.CLIENT_ERROR("invalid color: "+s, e);
+            }
+        }
+
+        TagColor(int value) { mValue = value; } 
+    }
 
     public String getId();
 
@@ -42,6 +76,6 @@ public interface ZTag {
      */
     public int getUnreadCount();
 
-    public int getColor();
+    public TagColor getColor();
 
 }

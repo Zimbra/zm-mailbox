@@ -70,8 +70,8 @@ class ZSoapConversation implements ZConversation {
         }
         sb.append("}");        
         
-        return String.format("conversation: { id: %s, flags: %s, subject: %s, msgcount: %d, messages: %s }",
-                mId, mFlags, mSubject, mMessageCount, sb.toString()); 
+        return String.format("conversation: { id: %s, tags: %s, flags: %s, subject: %s, msgcount: %d, messages: %s }",
+                mId, mTags, mFlags, mSubject, mMessageCount, sb.toString()); 
     }
 
     public String getFlags() {

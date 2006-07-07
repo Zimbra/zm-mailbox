@@ -27,7 +27,7 @@ package com.zimbra.cs.zclient.soap;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,9 +47,11 @@ import com.zimbra.cs.zclient.ZSearchHit;
 import com.zimbra.cs.zclient.ZSearchParams;
 import com.zimbra.cs.zclient.ZSearchResult;
 import com.zimbra.cs.zclient.ZTag;
+import com.zimbra.cs.zclient.ZTag.TagColor;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
+import com.zimbra.soap.SoapTransport;
 import com.zimbra.soap.ZimbraNamespace;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.Element.XMLElement;
@@ -71,12 +73,6 @@ public class ZSoapMailbox extends ZMailbox {
     ZSoapMailbox() {
         mNameToTag = new HashMap<String, ZSoapTag>();
         mIdToItem = new HashMap<String, ZSoapItem>();        
-    }
-    
-    static class AuthResult {
-        String mToken;
-        String mSessionId;
-        String mRefer;
     }
 
     /**
@@ -102,6 +98,7 @@ public class ZSoapMailbox extends ZMailbox {
         mAuthTokenLifetime = response.getAttributeLong(AccountService.E_LIFETIME);
         mAuthTokenExpiration = System.currentTimeMillis() + mAuthTokenLifetime;
         mTransport.setAuthToken(mAuthToken);
+        // TODO: handle <refer>
     }
 
     synchronized Element invoke(Element request) throws ServiceException {
@@ -227,8 +224,13 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     public static ZMailbox getMailbox(String accountName, String password, String uri) throws ServiceException {
+        return getMailbox(accountName, password, uri, null);
+    }
+
+    public static ZMailbox getMailbox(String accountName, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
         ZSoapMailbox zmbx = new ZSoapMailbox();
         zmbx.setSoapURI(uri);
+        if (listener != null) zmbx.mTransport.setDebugListener(listener);
         zmbx.authRequest(accountName, AccountBy.name, password);
         return zmbx;
     }
@@ -244,8 +246,24 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public Collection<ZSoapTag> getAllTags() {
-        return mNameToTag.values();
+    public List<ZTag> getAllTags() {
+        return new ArrayList<ZTag>(mNameToTag.values());
+    }
+
+    @Override
+    public List<String> getAllTagIds() {
+        ArrayList<String> ids = new ArrayList<String>(mNameToTag.size());
+        for (ZTag tag: mNameToTag.values()) {
+            ids.add(tag.getId());
+        }
+        return ids;
+    }
+
+    @Override
+    public List<String> getAllTagNames() {
+        ArrayList<String> names = new ArrayList<String>(mNameToTag.keySet());
+        Collections.sort(names);
+        return names;
     }
 
     @Override
@@ -354,11 +372,11 @@ public class ZSoapMailbox extends ZMailbox {
     }
     
     @Override
-    public ZTag createTag(String name, int color) throws ServiceException {
+    public ZTag createTag(String name, TagColor color) throws ServiceException {
         XMLElement req = new XMLElement(MailService.CREATE_TAG_REQUEST);
         Element tagEl = req.addElement(MailService.E_TAG);
         tagEl.addAttribute(MailService.A_NAME, name);
-        tagEl.addAttribute(MailService.A_COLOR, color);
+        tagEl.addAttribute(MailService.A_COLOR, color.getValue());
         String id = invoke(req).getElement(MailService.E_TAG).getAttribute(MailService.A_ID);
         // this assumes notifications will create the tag
         return getTagById(id);
@@ -421,7 +439,7 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZActionResult markFolderAsRead(String ids) throws ServiceException {
+    public ZActionResult markFolderRead(String ids) throws ServiceException {
         return doAction(folderAction("read", ids));                
     }
 
@@ -474,7 +492,7 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZActionResult markTagAsRead(String id) throws ServiceException {
+    public ZActionResult markTagRead(String id) throws ServiceException {
         return doAction(tagAction("read", id));
     }
 
@@ -484,8 +502,8 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZActionResult setTagColor(String id, int color) throws ServiceException {
-        return doAction(tagAction("color", id).addAttribute(MailService.A_COLOR, color));        
+    public ZActionResult setTagColor(String id, TagColor color) throws ServiceException {
+        return doAction(tagAction("color", id).addAttribute(MailService.A_COLOR, color.getValue()));        
     }
 
     private Element convAction(String op, String id, String constraints) throws ServiceException {
@@ -515,7 +533,7 @@ public class ZSoapMailbox extends ZMailbox {
     @Override
     public ZActionResult markConversationSpam(String id, boolean spam, String destFolderId, String targetConstraints) throws ServiceException {
         Element actionEl = convAction(spam ? "spam" : "!spam", id, targetConstraints);
-        if (destFolderId != null) actionEl.addAttribute(MailService.A_FOLDER, destFolderId);
+        if (destFolderId != null && destFolderId.length() > 0) actionEl.addAttribute(MailService.A_FOLDER, destFolderId);
         return doAction(actionEl);
     }
 
@@ -555,7 +573,7 @@ public class ZSoapMailbox extends ZMailbox {
     @Override
     public ZActionResult markMessageSpam(String id, boolean spam, String destFolderId) throws ServiceException {
         Element actionEl = messageAction(spam ? "spam" : "!spam", id);
-        if (destFolderId != null) actionEl.addAttribute(MailService.A_FOLDER, destFolderId);
+        if (destFolderId != null && destFolderId.length() > 0) actionEl.addAttribute(MailService.A_FOLDER, destFolderId);
         return doAction(actionEl);
     }
 
@@ -572,7 +590,7 @@ public class ZSoapMailbox extends ZMailbox {
     @Override
     public ZActionResult updateMessage(String ids, String destFolderId, String tagList, String flags) throws ServiceException {
         Element actionEl = messageAction("update", ids);
-        if (destFolderId != null) actionEl.addAttribute(MailService.A_FOLDER, destFolderId);
+        if (destFolderId != null && destFolderId.length() > 0) actionEl.addAttribute(MailService.A_FOLDER, destFolderId);
         if (tagList != null) actionEl.addAttribute(MailService.A_TAGS, tagList);
         if (flags != null) actionEl.addAttribute(MailService.A_FLAGS, flags);
         return doAction(actionEl);        
@@ -615,7 +633,7 @@ public class ZSoapMailbox extends ZMailbox {
     @Override
     public ZActionResult updateItem(String ids, String destFolderId, String tagList, String flags, String targetConstraints) throws ServiceException {
         Element actionEl = itemAction("update", ids, targetConstraints);
-        if (destFolderId != null) actionEl.addAttribute(MailService.A_FOLDER, destFolderId);
+        if (destFolderId != null && destFolderId.length() > 0) actionEl.addAttribute(MailService.A_FOLDER, destFolderId);
         if (tagList != null) actionEl.addAttribute(MailService.A_TAGS, tagList);
         if (flags != null) actionEl.addAttribute(MailService.A_FLAGS, flags);
         return doAction(actionEl);
@@ -659,7 +677,7 @@ public class ZSoapMailbox extends ZMailbox {
         ZFolder inbox = mbox.getFolderByPath("/inBOX");
         System.out.println(inbox);
         System.out.println(mbox.getFolderById(inbox.getId()));
-        mbox.markFolderAsRead(inbox.getId());
+        mbox.markFolderRead(inbox.getId());
         mbox.setFolderChecked(inbox.getId(), true);
         mbox.setFolderChecked(inbox.getId(), false);        
         mbox.setFolderColor(inbox.getId(), 1);
@@ -670,10 +688,10 @@ public class ZSoapMailbox extends ZMailbox {
         mbox.deleteFolder(dork.getId());
         System.out.println("---------- deleted dork -----------");
         System.out.println(inbox);
-        ZTag zippy = mbox.createTag("zippy", 6);
+        ZTag zippy = mbox.createTag("zippy", TagColor.purple);
         System.out.println(zippy);
-        System.out.println(mbox.setTagColor(zippy.getId(), 3));
-        System.out.println(mbox.markTagAsRead(zippy.getId()));
+        System.out.println(mbox.setTagColor(zippy.getId(), TagColor.orange));
+        System.out.println(mbox.markTagRead(zippy.getId()));
         System.out.println(mbox.renameTag(zippy.getId(), "zippy2"));
         System.out.println(mbox.getAllTags());
         System.out.println(mbox.deleteTag(zippy.getId()));
@@ -723,8 +741,8 @@ public class ZSoapMailbox extends ZMailbox {
  
  <BrowseRequest browseBy="{browse-by}"/>
  <GetFolderRequest>
- <GetConvRequest>
- <GetMsgRequest>
+ *<GetConvRequest>
+ *<GetMsgRequest>
 
  *<CreateFolderRequest>
 
@@ -754,7 +772,7 @@ public class ZSoapMailbox extends ZMailbox {
  <ImportContactsRequest ct="{content-type}" [l="{folder-id}"]>
  <ExportContactsRequest ct="{content-type}" [l="{folder-id}"]/>
 
- <NoOpRequest/>
+ *<NoOpRequest/>
 
  <GetRulesRequest>
  <GetRulesResponse>
