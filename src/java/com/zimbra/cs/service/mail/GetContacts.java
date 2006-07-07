@@ -30,7 +30,6 @@ package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -48,7 +47,6 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetContacts extends DocumentHandler  {
@@ -74,7 +72,7 @@ public class GetContacts extends DocumentHandler  {
 			if (iidFolder.belongsTo(mbox))
 				folderId = iidFolder.getId();
 			else 
-				throw ServiceException.FAILURE("Got remote folderId: "+folderIdStr+" but did not proxy", null);
+				throw ServiceException.FAILURE("Got remote folderId: " + folderIdStr + " but did not proxy", null);
 		}
 
 		byte sort = DbMailItem.SORT_NONE;
@@ -86,7 +84,7 @@ public class GetContacts extends DocumentHandler  {
 
 		ArrayList<String> attrs = null;
 		ArrayList<ItemId> ids = null;
-		
+
 		for (Element e : request.listElements())
 			if (e.getName().equals(MailService.E_ATTRIBUTE)) {
 				String name = e.getAttribute(MailService.A_ATTRIBUTE_NAME);
@@ -122,10 +120,10 @@ public class GetContacts extends DocumentHandler  {
 			partitionItems(zsc, ids, local, remote);
 			
 			if (remote.size() > 0) {
-				if (folderId >0)
+				if (folderId > 0)
 					throw ServiceException.INVALID_REQUEST("Cannot specify a folder with mixed-mailbox items", null);
 
-				List<Element> responses = proxyRemote(request, attrs, sync, sortStr, folderId, remote, context);
+				List<Element> responses = proxyRemote(request, remote, context);
 				for (Element e : responses) {
 					response.addElement(e);
 				}
@@ -171,7 +169,7 @@ public class GetContacts extends DocumentHandler  {
 		}
 	}
 
-	private List<Element> proxyRemote(Element request, ArrayList<String> attrs, boolean sync, String sortStr, int folderId, Map<String, StringBuffer> remote, Map<String,Object> context)
+	private List<Element> proxyRemote(Element request, Map<String, StringBuffer> remote, Map<String,Object> context)
 	throws ServiceException {
 		List<Element> responses = new ArrayList<Element>();
 
