@@ -38,7 +38,7 @@ import com.zimbra.soap.Element;
 
 class ZSoapFolder implements ZFolder, ZSoapItem {
 
-    private int mColor;
+    private ZFolder.Color mColor;
     private String mId;
     private String mName;
     private int mUnreadCount;
@@ -60,7 +60,11 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         mName = e.getAttribute(MailService.A_NAME);
         mParentId = e.getAttribute(MailService.A_FOLDER);
         mFlags = e.getAttribute(MailService.A_FLAGS, "");
-        mColor = (int) e.getAttributeLong(MailService.A_COLOR, 0);
+        try {
+            mColor = ZFolder.Color.fromString(e.getAttribute(MailService.A_COLOR, "0"));
+        } catch (ServiceException se) {
+            mColor = ZFolder.Color.orange;
+        }
         mUnreadCount = (int) e.getAttributeLong(MailService.A_UNREAD, 0);
         mMessageCount = (int) e.getAttributeLong(MailService.A_NUM, 0);
         mDefaultView = View.fromString(e.getAttribute(MailService.A_DEFAULT_VIEW, View.conversation.name()));
@@ -100,7 +104,13 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         mName = e.getAttribute(MailService.A_NAME, mName);
         mParentId = e.getAttribute(MailService.A_FOLDER, mParentId); // TODO: re-compute mParent!
         mFlags = e.getAttribute(MailService.A_FLAGS, mFlags);
-        mColor = (int) e.getAttributeLong(MailService.A_COLOR, mColor);
+        String newColor = e.getAttribute(MailService.A_COLOR, null);
+        if (newColor != null) {
+            try {
+                mColor = ZFolder.Color.fromString(newColor);
+            } catch (ServiceException se) {
+            }
+        }
         mUnreadCount = (int) e.getAttributeLong(MailService.A_UNREAD, mUnreadCount);
         mMessageCount = (int) e.getAttributeLong(MailService.A_NUM, mMessageCount);
         String newView = e.getAttribute(MailService.A_DEFAULT_VIEW, null);
@@ -125,7 +135,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         return mGrants;
     }
 
-    public int getColor() {
+    public ZFolder.Color getColor() {
         return mColor;
     }
 
@@ -156,10 +166,10 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         }                
         sb.append("}");
         
-        return String.format("%s: { id: %s, name: %s, parentId: %s, flags: %s, color: %d, unreadCount: %d, " +
+        return String.format("%s: { id: %s, name: %s, parentId: %s, flags: %s, color: %s, unreadCount: %d, " +
                 "messageCount: %d, view: %s, restURL: %s, url: %s, perms: %s, grants: %s, children: %s, path: %s%s} ",
                 type,
-                mId, mName, mParentId, mFlags, mColor, mUnreadCount, mMessageCount, mDefaultView, 
+                mId, mName, mParentId, mFlags, mColor.name(), mUnreadCount, mMessageCount, mDefaultView, 
                 mRestURL, mRemoteURL, mEffectivePerms, mGrants.toString(), sb.toString(), getPath(), 
                 extra != null ? extra : ""); 
     }

@@ -32,6 +32,39 @@ import com.zimbra.soap.SoapFaultException;
 
 public interface ZFolder {
     
+    public enum Color {
+        
+        orange(0),
+        blue(1),
+        cyan(2), 
+        green(3),
+        purple(4),
+        red(5),
+        yellow(6),
+        pink(7),
+        gray(8);
+        
+        private int mValue;
+
+        public int getValue() { return mValue; }
+
+        public static Color fromString(String s) throws ServiceException {
+            try {
+                return Color.values()[Integer.parseInt(s)];
+            } catch (NumberFormatException e) {
+            } catch (IndexOutOfBoundsException e) {
+            }
+            
+            try {
+                return Color.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw SoapFaultException.CLIENT_ERROR("invalid color: "+s, e);
+            }
+        }
+
+        Color(int value) { mValue = value; } 
+    }
+
     public enum View {
         
         appointment,
@@ -101,7 +134,7 @@ public interface ZFolder {
      * 
      * @return color
      */
-    public int getColor();
+    public Color getColor();
 
     /**
      * remote URL (RSS, iCal, etc) this folder syncs to

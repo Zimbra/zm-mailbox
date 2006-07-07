@@ -454,22 +454,22 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZActionResult setFolderChecked(String ids, boolean checked) throws ServiceException {
+    public ZActionResult modifyFolderChecked(String ids, boolean checked) throws ServiceException {
         return doAction(folderAction(checked ? "check" : "!check", ids));
     }
 
     @Override
-    public ZActionResult setFolderColor(String ids, int color) throws ServiceException {
-        return doAction(folderAction("color", ids).addAttribute(MailService.A_COLOR, color));
+    public ZActionResult modifyFolderColor(String ids, ZFolder.Color color) throws ServiceException {
+        return doAction(folderAction("color", ids).addAttribute(MailService.A_COLOR, color.getValue()));
     }
 
     @Override
-    public ZActionResult setFolderExcludeFreeBusy(String ids, boolean state) throws ServiceException {
+    public ZActionResult modifyFolderExcludeFreeBusy(String ids, boolean state) throws ServiceException {
         return doAction(folderAction("fb", ids).addAttribute(MailService.A_EXCLUDE_FREEBUSY, state));
     }
 
     @Override
-    public ZActionResult setFolderURL(String id, String url) throws ServiceException {
+    public ZActionResult modifyFolderURL(String id, String url) throws ServiceException {
         return doAction(folderAction("url", id).addAttribute(MailService.A_URL, url));
     }
 
@@ -502,7 +502,7 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZActionResult setTagColor(String id, Color color) throws ServiceException {
+    public ZActionResult modifyTagColor(String id, Color color) throws ServiceException {
         return doAction(tagAction("color", id).addAttribute(MailService.A_COLOR, color.getValue()));        
     }
 
@@ -678,9 +678,9 @@ public class ZSoapMailbox extends ZMailbox {
         System.out.println(inbox);
         System.out.println(mbox.getFolderById(inbox.getId()));
         mbox.markFolderRead(inbox.getId());
-        mbox.setFolderChecked(inbox.getId(), true);
-        mbox.setFolderChecked(inbox.getId(), false);        
-        mbox.setFolderColor(inbox.getId(), 1);
+        mbox.modifyFolderChecked(inbox.getId(), true);
+        mbox.modifyFolderChecked(inbox.getId(), false);        
+        mbox.modifyFolderColor(inbox.getId(), ZFolder.Color.blue);
         ZFolder dork = mbox.createFolder(inbox.getId(), "dork", ZFolder.View.message);
         System.out.println("---------- created dork -----------");                
         System.out.println(dork);
@@ -690,7 +690,7 @@ public class ZSoapMailbox extends ZMailbox {
         System.out.println(inbox);
         ZTag zippy = mbox.createTag("zippy", Color.purple);
         System.out.println(zippy);
-        System.out.println(mbox.setTagColor(zippy.getId(), Color.orange));
+        System.out.println(mbox.modifyTagColor(zippy.getId(), Color.orange));
         System.out.println(mbox.markTagRead(zippy.getId()));
         System.out.println(mbox.renameTag(zippy.getId(), "zippy2"));
         System.out.println(mbox.getAllTags());
@@ -699,7 +699,7 @@ public class ZSoapMailbox extends ZMailbox {
         ZSearchFolder flagged = mbox.createSearchFolder(mbox.getUserRoot().getId(), "is-it-flagged", "is:flagged", null, null);
         System.out.println(flagged);
         System.out.println(mbox.renameFolder(flagged.getId(), "flagged-and-unread"));        
-        System.out.println(mbox.setFolderColor(flagged.getId(), 6));
+        System.out.println(mbox.modifyFolderColor(flagged.getId(), ZFolder.Color.red));
         System.out.println(mbox.modifySearchFolder(flagged.getId(), "is:flagged is:unread", null, SortBy.dateAsc));
         
         mbox.deleteFolder(flagged.getId());

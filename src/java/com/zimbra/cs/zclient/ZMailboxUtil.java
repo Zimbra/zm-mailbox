@@ -136,6 +136,7 @@ public class ZMailboxUtil implements DebugListener {
         DELETE_FOLDER("deleteFolder", "df", "{folder-path}", Category.FOLDER, 1, 1),
         DELETE_MESSAGE("deleteMessage", "dm", "{msg-ids}", Category.MESSAGE, 1, 1),
         DELETE_TAG("deleteTag", "dt", "{tag-name}", Category.TAG, 1, 1),
+        EMPTY_FOLDER("emptyFolder", "ef", "{folder-path}", Category.FOLDER, 1, 1),        
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
         FLAG_CONVERSATION("flagConversation", "fc", "{conv-ids} [0|1*] [{tcon}]", Category.CONVERSATION, 1, 3),
         FLAG_ITEM("flagItem", "fi", "{item-ids} [0|1*] [{tcon}]", Category.ITEM, 1, 3),
@@ -148,15 +149,18 @@ public class ZMailboxUtil implements DebugListener {
         MARK_CONVERSATION_READ("markConversationRead", "mcr", "{conv-ids} [0|1*] [{tcon}]", Category.CONVERSATION, 1, 3),
         MARK_CONVERSATION_SPAM("markConversationSpam", "mcs", "{conv-ids} [0|1*] [{dest-folder-path}] [{tcon}]", Category.CONVERSATION, 1, 4),
         MARK_ITEM_READ("markItemRead", "mir", "{item-ids} [0|1*] [{tcon}]", Category.ITEM, 1, 3),
+        MARK_FOLDER_READ("markFolderRead", "mfr", "{folder-path}", Category.FOLDER, 1, 1),        
         MARK_MESSAGE_READ("markMessageRead", "mmr", "{msg-ids} [0|1*]", Category.MESSAGE, 1, 2),
-        MARK_MESSAGE_SPAM("markMessageSpam", "mms", "{msg-ids} [0|1*] [{dest-folder-path}]", Category.MESSAGE, 1, 3),                        
+        MARK_MESSAGE_SPAM("markMessageSpam", "mms", "{msg-ids} [0|1*] [{dest-folder-path}]", Category.MESSAGE, 1, 3),
         MARK_TAG_READ("markTagRead", "mtr", "{tag-name}", Category.TAG, 1, 1),
+        MODIFY_FOLDER_CHECKED("modifyFolderChecked", "mfch", "{folder-path} [0|1*]", Category.FOLDER, 1, 2),
+        MODIFY_FOLDER_COLOR("modifyFolderColor", "mfc", "{folder-path} {new-color}", Category.FOLDER, 2, 2),        
+        MODIFY_TAG_COLOR("modifyTagColor", "mtc", "{tag-name} {tag-color}", Category.TAG, 2, 2),
         MOVE_CONVERSATION("moveConversation", "mc", "{conv-ids} {dest-folder-path} [{tcon}]", Category.CONVERSATION, 2, 3),
         MOVE_ITEM("moveItem", "mi", "{item-ids} {dest-folder-path} [{tcon}]", Category.ITEM, 1, 2),        
         MOVE_MESSAGE("moveMessage", "mm", "{msg-ids} {dest-folder-path}", Category.MESSAGE, 2, 2),
         NOOP("noOp", "no", "", Category.MISC, 0, 0),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", Category.TAG, 2, 2),
-        SET_TAG_COLOR("setTagColor", "stc", "{tag-name} {tag-color}", Category.TAG, 2, 2),
         TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*] [{tcon}]", Category.CONVERSATION, 2, 4),
         TAG_ITEM("tagItem", "ti", "{item-ids} {tag-name} [0|1*] [{tcon}]", Category.ITEM, 2, 4),
         TAG_MESSAGE("tagMessage", "tm", "{msg-ids} {tag-name} [0|1*]", Category.MESSAGE, 2, 3);
@@ -350,6 +354,9 @@ public class ZMailboxUtil implements DebugListener {
         case DELETE_TAG:
             mMbox.deleteTag(lookupTag(args[1]).getId());
             break;
+        case EMPTY_FOLDER:
+            mMbox.emptyFolder(lookupFolderId(args[1]));
+            break;                        
         case EXIT:
             System.exit(0);
             break;
@@ -382,7 +389,10 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case MARK_ITEM_READ:
             mMbox.markItemRead(args[1], argb(args, 2, true), arg(args, 3));
-            break;            
+            break;
+        case MARK_FOLDER_READ:
+            mMbox.markFolderRead(lookupFolderId(args[1]));
+            break;                                    
         case MARK_MESSAGE_READ:
             mMbox.markMessageRead(args[1], argb(args, 2, true));
             break;
@@ -394,6 +404,15 @@ public class ZMailboxUtil implements DebugListener {
             break;            
         case MARK_TAG_READ:
             mMbox.markTagRead(lookupTag(args[1]).getId());
+            break;
+        case MODIFY_FOLDER_CHECKED:
+            mMbox.modifyFolderChecked(lookupFolderId(args[1]), argb(args, 2, true));
+            break;                        
+        case MODIFY_FOLDER_COLOR:
+            mMbox.modifyFolderColor(lookupFolderId(args[1]), ZFolder.Color.fromString(args[2]));
+            break;                                    
+        case MODIFY_TAG_COLOR:
+            mMbox.modifyTagColor(lookupTag(args[1]).getId(), Color.fromString(args[2]));            
             break;
         case MOVE_CONVERSATION:
             mMbox.moveConversation(args[1], lookupFolderId(arg(args, 2)), arg(args, 3));
@@ -409,9 +428,6 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case RENAME_TAG:
             mMbox.renameTag(lookupTag(args[1]).getId(), args[2]);
-            break;
-        case SET_TAG_COLOR:
-            mMbox.setTagColor(lookupTag(args[1]).getId(), Color.fromString(args[2]));            
             break;
         case TAG_CONVERSATION:
             mMbox.tagConversation(args[1], lookupTag(args[2]).getId(), argb(args, 3, true), arg(args, 4));

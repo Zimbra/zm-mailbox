@@ -29,7 +29,6 @@ import java.util.List;
 
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.zclient.ZTag.Color;
 import com.zimbra.soap.SoapFaultException;
 
 public abstract class ZMailbox {
@@ -121,10 +120,10 @@ public abstract class ZMailbox {
     public abstract ZTag getTagById(String id);
 
     /** create a new tag with the specified color. */
-    public abstract ZTag createTag(String name, Color color) throws ServiceException;
+    public abstract ZTag createTag(String name, ZTag.Color color) throws ServiceException;
 
     /** modifies the tag's color */
-    public abstract ZActionResult setTagColor(String id, Color color) throws ServiceException;
+    public abstract ZActionResult modifyTagColor(String id, ZTag.Color color) throws ServiceException;
 
     /** mark all items with tag as read */
     public abstract ZActionResult markTagRead(String id) throws ServiceException;
@@ -442,10 +441,10 @@ public abstract class ZMailbox {
     }
 
     /** sets or unsets the folder's checked state in the UI */
-    public abstract ZActionResult setFolderChecked(String ids, boolean checkedState) throws ServiceException;
+    public abstract ZActionResult modifyFolderChecked(String ids, boolean checkedState) throws ServiceException;
 
     /** modifies the folder's color */
-    public abstract ZActionResult setFolderColor(String ids, int color) throws ServiceException;
+    public abstract ZActionResult modifyFolderColor(String ids, ZFolder.Color color) throws ServiceException;
     
     /** hard delete the folder, all items in folder and all sub folders */
     public abstract ZActionResult deleteFolder(String ids) throws ServiceException;
@@ -466,13 +465,13 @@ public abstract class ZMailbox {
     public abstract ZActionResult renameFolder(String folderId, String name) throws ServiceException;
     
     /** sets or unsets the folder's exclude from free busy state */
-    public abstract ZActionResult setFolderExcludeFreeBusy(String folderId, boolean state) throws ServiceException;
+    public abstract ZActionResult modifyFolderExcludeFreeBusy(String folderId, boolean state) throws ServiceException;
     
     /** 
      * set the synchronization url on the folder to {target-url}, empty the folder, and 
      * synchronize the folder's contents to the remote feed, also sets {exclude-free-busy-boolean} 
      */
-    public abstract ZActionResult setFolderURL(String folderId, String url) throws ServiceException;    
+    public abstract ZActionResult modifyFolderURL(String folderId, String url) throws ServiceException;    
 
     /**
      * sync the folder's contents to the remote feed specified by the folders URL
