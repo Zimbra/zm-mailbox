@@ -89,6 +89,7 @@ public class AttributeManager {
     private static final String A_MIN = "min";
     private static final String A_CALLBACK = "callback";
     private static final String A_ID = "id";
+    private static final String A_ID_PARENT = "idParent";
     private static final String A_CARDINALITY = "cardinality";
     private static final String A_REQUIRED_IN = "requiredIn";
     private static final String A_OPTIONAL_IN = "optionalIn";
@@ -218,6 +219,7 @@ public class AttributeManager {
             boolean immutable = false;
 //            boolean ignore = false;
             int id = -1;
+            String idParent = null;
             AttributeCardinality cardinality = null;
             Set<AttributeClass> requiredIn = null;
             Set<AttributeClass> optionalIn = null;
@@ -252,6 +254,10 @@ public class AttributeManager {
                     }
                 } else if (aname.equals(A_VALUE)) { 
                     value = attr.getValue();
+                } else if (aname.equals(A_ID_PARENT)) {
+                    idParent = attr.getValue();
+                    if (!idParent.matches("^\\d+(\\.\\d+)+")) 
+                        error(name, file, "invalid idParent " + idParent + ": must be an OID");
                 } else if (aname.equals(A_ID)) {
                     try {
                         id = Integer.parseInt(attr.getValue());
@@ -337,7 +343,7 @@ public class AttributeManager {
                 }
             }
 
-            AttributeInfo info = new AttributeInfo(name, id, groupId, callback, type, order, value, immutable, min, max, cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues, description);
+            AttributeInfo info = new AttributeInfo(name, id, idParent, groupId, callback, type, order, value, immutable, min, max, cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues, description);
             if (mAttrs.get(canonicalName) != null) {
                 error(name, file, "duplicate definiton");
             }
@@ -663,7 +669,11 @@ public class AttributeManager {
                 }
             });
             for (AttributeInfo ai : list) {
-                ATTRIBUTE_OIDS.append("objectIdentifier " + ai.getName() + " " + mGroupMap.get(i) + ':' + ai.getId() + "\n");
+                String idParent = ai.getIdParent();
+                if (idParent == null)
+                    ATTRIBUTE_OIDS.append("objectIdentifier " + ai.getName() + " " + mGroupMap.get(i) + ':' + ai.getId() + "\n");
+                else 
+                    ATTRIBUTE_OIDS.append("objectIdentifier " + ai.getName() + " " + idParent + "." + ai.getId() + "\n");                    
             }
 
             // ATTRIBUTE_DEFINITIONS: DESC EQUALITY NAME ORDERING SINGLE-VALUE SUBSTR SYNTAX
