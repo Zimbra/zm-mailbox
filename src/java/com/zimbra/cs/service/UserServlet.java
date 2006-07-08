@@ -27,6 +27,8 @@ package com.zimbra.cs.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
@@ -576,6 +578,20 @@ public class UserServlet extends ZimbraServlet {
             if (pos == -1) {
                 throw new UserServletException(
                             HttpServletResponse.SC_BAD_REQUEST, "invalid path");
+            }
+            String checkInternalDispatch = (String)request.getAttribute("zimbra-internal-dispatch");
+            if (checkInternalDispatch != null &&
+            		checkInternalDispatch.equals("yes")) {
+            	// XXX extra decoding is necessary if the HttpRequest was
+            	// re-dispatched internally from SetHeaderFilter class in
+            	// zimbra app.  it appears org.apache.catalina.core.ApplicationHttpRequest
+            	// does not perform URL decoding on pathInfo.  refer to
+            	// bug 8159.
+            	try {
+            		pathInfo = URLDecoder.decode(pathInfo, "UTF-8");
+            	} catch (UnsupportedEncodingException uee) {
+            		ZimbraLog.misc.info("cannot decode pathInfo " + pathInfo);
+            	}
             }
             this.accountPath = pathInfo.substring(1, pos);
 
