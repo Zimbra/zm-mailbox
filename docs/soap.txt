@@ -678,11 +678,12 @@ Folders:
 
 Mountpoints:
 
-  <link id="{folder-id}" name="{folder-name}" l="{parent-id}" d="{owner's-display-name}" zid="{owner's-zimbra-id}" rid="{id-of-shared-item}" [color="{color}"] [view="{default-type}"]/>
+  <link id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] d="{owner's-display-name}" zid="{owner's-zimbra-id}" rid="{id-of-shared-item}" [color="{color}"] [view="{default-type}"]/>
 
   {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
                    cannot contain ':', '"', '/', or any character below 0x20
   {parent-id}    = id of parent folder (absent for root folder)
+  {flags}        = checked in UI (#), exclude free/(b)usy info, IMAP subscribed (*)
   {owner's-display-name} = primary email address of the owner of the linked-to resource
   {owner's-zimbra-id} = Zimbra id (guid) of the owner of the linked-to resource
   {id-of-shared-item} = item id of the linked-to resource in the remote mailbox
@@ -938,7 +939,7 @@ supply a "part" and the retrieved data will be on the specified message/rfc822 s
 ---------
 
 <CreateFolderRequest>
-  <folder name="..." l="{parent-folder}" [fie="1"] [view="{default-type}"]/>
+  <folder name="..." l="{parent-folder}" [fie="1"] [view="{default-type}"] [color="{color}"]/>
 </CreateFolderRequest>
 
 <CreateFolderResponse>
@@ -1127,7 +1128,7 @@ u attribute is present iff count > 0
 ---------
 
 <CreateSearchFolderRequest>
-  <search name="..." query="..." [types="..."] [sortBy="..."] l="{folder}"/>
+  <search name="..." query="..." [types="..."] [sortBy="..."] l="{folder}" [color="{color}"]/>
 </CreateSearchFolderRequest>
 
 <CreateSearchFolderResponse>
@@ -1148,7 +1149,7 @@ u attribute is present iff count > 0
 
 <CreateMountpointRequest>
   <link l="{folder}" name="{mountpoint-name}" [zid="{owner's-zimbra-id}" | d="{owner's-email-address}"]
-        [rid="{id-of-shared-item}" | path="{path-to-shared-item}"] [view="..."] [fie="1"]/>
+        [rid="{id-of-shared-item}" | path="{path-to-shared-item}"] [view="..."] [color="{color}"] [fie="1"]/>
 </CreateMountpointRequest>
 
   - caller must specify one of (zid | d) and one of (rid | path)

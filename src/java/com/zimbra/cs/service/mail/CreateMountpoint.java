@@ -33,6 +33,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -65,6 +66,8 @@ public class CreateMountpoint extends WriteOpDocumentHandler {
         Element t = request.getElement(MailService.E_MOUNT);
         String name = t.getAttribute(MailService.A_NAME);
         String view = t.getAttribute(MailService.A_DEFAULT_VIEW, null);
+        String flags = t.getAttribute(MailService.A_FLAGS, null);
+        byte color = (byte) t.getAttributeLong(MailService.A_COLOR, MailItem.DEFAULT_COLOR);
         ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER), lc);
         boolean fetchIfExists = t.getAttributeBool(MailService.A_FETCH_IF_EXISTS, false);
 
@@ -87,7 +90,7 @@ public class CreateMountpoint extends WriteOpDocumentHandler {
         }
 
         CreateMountpointOperation op = new CreateMountpointOperation(session, octxt, mbox, Requester.SOAP,
-        			iidParent, name, ownerId, remoteId, view, fetchIfExists);
+        			iidParent, name, ownerId, remoteId, view, flags, color, fetchIfExists);
         op.schedule();
         Mountpoint mpt = op.getMountpoint();
 

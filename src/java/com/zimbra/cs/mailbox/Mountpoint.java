@@ -92,6 +92,8 @@ public class Mountpoint extends Folder {
      * @param ownerId   The remote mailbox's owner's <code>zimbraId</code>.
      * @param remoteId  The remote item's numeric id.
      * @param view      The (optional) default object type for the folder.
+     * @param flags     Folder flags (e.g. {@link Flag#BITMASK_CHECKED}).
+     * @param name      The new mountpoint's color.
      * @perms {@link ACL#RIGHT_INSERT} on the parent folder
      * @throws ServiceException   The following error codes are possible:<ul>
      *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
@@ -107,7 +109,7 @@ public class Mountpoint extends Folder {
      *        sufficient permissions</ul>
      * @see #validateFolderName(String)
      * @see #canContain(byte) */
-    static Mountpoint create(int id, Folder parent, String name, String ownerId, int remoteId, byte view)
+    static Mountpoint create(int id, Folder parent, String name, String ownerId, int remoteId, byte view, int flags, byte color)
     throws ServiceException {
         if (parent == null || ownerId == null || ownerId.length() != 36 || remoteId <= 0)
             throw ServiceException.INVALID_REQUEST("invalid parameters when creating mountpoint", null);
@@ -128,8 +130,9 @@ public class Mountpoint extends Folder {
         data.folderId    = parent.getId();
         data.parentId    = data.folderId;
         data.date        = mbox.getOperationTimestamp();
+        data.flags       = flags & Flag.FLAGS_FOLDER;
         data.subject     = name;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, view, ownerId, remoteId);
+        data.metadata    = encodeMetadata(color, view, ownerId, remoteId);
         data.modMetadata = mbox.getOperationChangeID();
         data.modContent  = mbox.getOperationChangeID();
         DbMailItem.create(mbox, data);

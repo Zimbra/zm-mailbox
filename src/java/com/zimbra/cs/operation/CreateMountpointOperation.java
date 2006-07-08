@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.operation;
 
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -36,66 +37,72 @@ import com.zimbra.cs.session.Session;
 
 
 public class CreateMountpointOperation extends Operation {
-	
-	private static int LOAD = 5;
-	static {
-		Operation.Config c = loadConfig(CreateMountpointOperation.class);
-		if (c != null)
-			LOAD = c.mLoad;
-	}
-	
-	private ItemId mIidParent;
-	private String mName;
-	private String mOwnerId;
-	private int mRemoteId;
-	private String mView;
-	private boolean mFetchIfExists;
-	
-	private Mountpoint mMpt;
 
-	public CreateMountpointOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-				ItemId iidParent, String name, String ownerId, int remoteId, String view, boolean fetchIfExists) {
-		super(session, oc, mbox, req, LOAD);
-		
-		mIidParent = iidParent;
-		mName = name;
-		mOwnerId = ownerId;
-		mRemoteId = remoteId;
-		mView = view;
-		mFetchIfExists = fetchIfExists;
-	}
-	
-	public String toString() {
-		StringBuilder toRet = new StringBuilder("CreateMountpoint(");
+    private static int LOAD = 5;
+        static {
+            Operation.Config c = loadConfig(CreateMountpointOperation.class);
+            if (c != null)
+                LOAD = c.mLoad;
+        }
 
-		toRet.append("name=").append(mName);
-		toRet.append(" parent=").append(mIidParent);
-		if (mView != null) 
-			toRet.append(" view=").append(mView);
-		
-		toRet.append(" ownerId=").append(mOwnerId);
-		toRet.append(" remoteId=").append(mRemoteId);
-		
-		toRet.append(")");
- 		
-		return toRet.toString();
-	}
-	
-	protected void callback() throws ServiceException {
-		try {
-			mMpt = getMailbox().createMountpoint(getOpCtxt(), mIidParent.getId(), mName, mOwnerId, mRemoteId, MailItem.getTypeForName(mView));
-		} catch (ServiceException se) {
-			if (se.getCode() == MailServiceException.ALREADY_EXISTS && mFetchIfExists) {
-				Folder folder = getMailbox().getFolderByName(this.getOpCtxt(), mIidParent.getId(), mName);
-				if (folder instanceof Mountpoint)
-					mMpt = (Mountpoint) folder;
-				else
-					throw se;
-			} else
-				throw se;
-		}
-	}
-	
-	public Mountpoint getMountpoint() { return mMpt; }
+    private ItemId mIidParent;
+    private String mName;
+    private String mOwnerId;
+    private int mRemoteId;
+    private byte mView;
+    private int mFlags;
+    private byte mColor;
+    private boolean mFetchIfExists;
+    
+    private Mountpoint mMpt;
+
+    public CreateMountpointOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
+                ItemId iidParent, String name, String ownerId, int remoteId, String view, String flags, byte color, boolean fetchIfExists) {
+        super(session, oc, mbox, req, LOAD);
+        
+        mIidParent = iidParent;
+        mName = name;
+        mOwnerId = ownerId;
+        mRemoteId = remoteId;
+        mView = MailItem.getTypeForName(view);
+        mFlags = Flag.flagsToBitmask(flags);;
+        mColor = color;
+        mFetchIfExists = fetchIfExists;
+    }
+    
+    public String toString() {
+        StringBuilder toRet = new StringBuilder("CreateMountpoint(");
+
+        toRet.append("name=").append(mName);
+        toRet.append(" parent=").append(mIidParent);
+        if (mView != MailItem.TYPE_UNKNOWN) 
+            toRet.append(" view=").append(mView);
+        toRet.append(" flags=").append(mFlags);
+        toRet.append(" color=").append(mColor);
+
+        toRet.append(" ownerId=").append(mOwnerId);
+        toRet.append(" remoteId=").append(mRemoteId);
+
+        toRet.append(")");
+
+        return toRet.toString();
+    }
+    
+    protected void callback() throws ServiceException {
+        try {
+            mMpt = getMailbox().createMountpoint(getOpCtxt(), mIidParent.getId(), mName, mOwnerId, mRemoteId, mView, mFlags, mColor);
+        } catch (ServiceException se) {
+            if (se.getCode() == MailServiceException.ALREADY_EXISTS && mFetchIfExists) {
+                Folder folder = getMailbox().getFolderByName(getOpCtxt(), mIidParent.getId(), mName);
+                if (folder instanceof Mountpoint)
+                    mMpt = (Mountpoint) folder;
+                else
+                    throw se;
+            } else
+                throw se;
+        }
+    }
+    
+    public Mountpoint getMountpoint() { return mMpt; }
 
 }

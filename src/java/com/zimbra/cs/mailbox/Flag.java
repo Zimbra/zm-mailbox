@@ -107,10 +107,11 @@ public class Flag extends Tag {
     static final String UNREAD_FLAG_ONLY = getAbbreviation(ID_FLAG_UNREAD) + "";
 
     public static final int FLAG_SYSTEM = BITMASK_FROM_ME | BITMASK_ATTACHED | BITMASK_COPIED | BITMASK_DRAFT;
+    public static final int FLAGS_FOLDER = BITMASK_CHECKED | BITMASK_SUBSCRIBED | BITMASK_EXCLUDE_FREEBUSY;
     public static final int FLAGS_ALL = BITMASK_FROM_ME   | BITMASK_ATTACHED | BITMASK_REPLIED  |
                                         BITMASK_FORWARDED | BITMASK_COPIED   | BITMASK_FLAGGED  |
                                         BITMASK_DRAFT     | BITMASK_DELETED  | BITMASK_NOTIFIED |
-                                        BITMASK_CHECKED   | BITMASK_SUBSCRIBED | BITMASK_EXCLUDE_FREEBUSY;
+                                        FLAGS_FOLDER;
 
     public static final byte FLAG_GENERIC         = 0x00;
     public static final byte FLAG_IS_MESSAGE_ONLY = 0x01;

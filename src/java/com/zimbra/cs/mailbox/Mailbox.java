@@ -1370,31 +1370,28 @@ public class Mailbox {
      *  This function does <u>not</u> have hooks for inserting arbitrary
      *  folders, tags, or messages into a new mailbox.
      * 
-     * @see Folder#create(int, Mailbox, Folder, String, byte, byte, String) */
+     * @see Folder#create(int, Mailbox, Folder, String, byte, byte, int, byte, String) */
     private void initialize() throws ServiceException {
         // the new mailbox's caches are created and the default set of tags are
         // loaded by the earlier call to loadFoldersAndTags in beginTransaction
 
         byte hidden = Folder.FOLDER_IS_IMMUTABLE | Folder.FOLDER_NO_UNREAD_COUNT;
-        Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT", hidden, MailItem.TYPE_UNKNOWN, null);
-        Folder.create(ID_FOLDER_TAGS,          this, root, "Tags",          hidden, MailItem.TYPE_TAG, null);
-        Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.TYPE_CONVERSATION, null);
+        Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT", hidden, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_TAGS,          this, root, "Tags",          hidden, MailItem.TYPE_TAG, 0, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.TYPE_CONVERSATION, 0, MailItem.DEFAULT_COLOR, null);
 
         byte system = Folder.FOLDER_IS_IMMUTABLE;
-        Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system, MailItem.TYPE_UNKNOWN, null);
-        Folder.create(ID_FOLDER_INBOX,    this, userRoot, "Inbox",    system, MailItem.TYPE_MESSAGE, null);
-        Folder.create(ID_FOLDER_TRASH,    this, userRoot, "Trash",    system, MailItem.TYPE_UNKNOWN, null);
-        Folder.create(ID_FOLDER_SPAM,     this, userRoot, "Junk",     system, MailItem.TYPE_MESSAGE, null);
-        Folder.create(ID_FOLDER_SENT,     this, userRoot, "Sent",     system, MailItem.TYPE_MESSAGE, null);
-        Folder.create(ID_FOLDER_DRAFTS,   this, userRoot, "Drafts",   system, MailItem.TYPE_MESSAGE, null);
-        Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.TYPE_CONTACT, null);
-        Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, null);
-        Folder.create(ID_FOLDER_NOTEBOOK, this, userRoot, "Notebook", system, MailItem.TYPE_WIKI, null);
-        Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.TYPE_CONTACT, null);
+        Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_INBOX,    this, userRoot, "Inbox",    system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_TRASH,    this, userRoot, "Trash",    system, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_SPAM,     this, userRoot, "Junk",     system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_SENT,     this, userRoot, "Sent",     system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_DRAFTS,   this, userRoot, "Drafts",   system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_NOTEBOOK, this, userRoot, "Notebook", system, MailItem.TYPE_WIKI,    0, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR, null);
         mCurrentChange.itemId = FIRST_USER_ID;
-
-        // and write a checkpoint to the tombstones table to help establish a change/date relationship
-        DbMailItem.writeCheckpoint(this);
     }
 
     private void initFlags() throws ServiceException {
@@ -3749,16 +3746,16 @@ public class Mailbox {
         }
     }
 
-    public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte defaultView, String url)
+    public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte defaultView, int flags, byte color, String url)
     throws ServiceException {
         Folder.validateFolderName(name);
         String path = getFolderById(parentId).getPath() + (parentId == ID_FOLDER_USER_ROOT ? "" : "/") + name;
-        return createFolder(octxt, path, (byte) 0, defaultView, url);
+        return createFolder(octxt, path, (byte) 0, defaultView, flags, color, url);
     }
     public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView) throws ServiceException {
-        return createFolder(octxt, path, attrs, defaultView, null);
+        return createFolder(octxt, path, attrs, defaultView, 0, MailItem.DEFAULT_COLOR, null);
     }
-    public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView, String url)
+    public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView, int flags, byte color, String url)
     throws ServiceException {
         if (path != null) {
             path = path.trim();
@@ -3767,7 +3764,7 @@ public class Mailbox {
             if (path.endsWith("/") && path.length() > 1)
                 path = path.substring(0, path.length() - 1);
         }
-        CreateFolder redoRecorder = new CreateFolder(mId, path, attrs, defaultView, url);
+        CreateFolder redoRecorder = new CreateFolder(mId, path, attrs, defaultView, flags, color, url);
 
         boolean success = false;
         try {
@@ -3788,7 +3785,8 @@ public class Mailbox {
                 int folderId = playerFolderIds == null ? ID_AUTO_INCREMENT : playerFolderIds[i];
                 Folder subfolder = folder.findSubfolder(parts[i]);
                 if (subfolder == null)
-                    subfolder = Folder.create(getNextItemId(folderId), this, folder, parts[i], (byte) 0, last ? defaultView : MailItem.TYPE_UNKNOWN, last ? url : null);
+                    subfolder = Folder.create(getNextItemId(folderId), this, folder, parts[i], (byte) 0,
+                                              last ? defaultView : MailItem.TYPE_UNKNOWN, flags, color, last ? url : null);
                 else if (folderId != ID_AUTO_INCREMENT && folderId != subfolder.getId())
                     throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
                 else if (last)
@@ -3982,9 +3980,9 @@ public class Mailbox {
         }
     }
 
-    public synchronized SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query, String types, String sort)
+    public synchronized SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query, String types, String sort, byte color)
     throws ServiceException {
-        CreateSavedSearch redoRecorder = new CreateSavedSearch(mId, folderId, name, query, types, sort);
+        CreateSavedSearch redoRecorder = new CreateSavedSearch(mId, folderId, name, query, types, sort, color);
 
         boolean success = false;
         try {
@@ -3992,7 +3990,7 @@ public class Mailbox {
             CreateSavedSearch redoPlayer = (CreateSavedSearch) mCurrentChange.getRedoPlayer();
 
             int searchId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getSearchId());
-            SearchFolder search = SearchFolder.create(searchId, getFolderById(folderId), name, query, types, sort);
+            SearchFolder search = SearchFolder.create(searchId, getFolderById(folderId), name, query, types, sort, color);
             redoRecorder.setSearchId(search.getId());
             success = true;
             return search;
@@ -4019,9 +4017,9 @@ public class Mailbox {
         }
     }
 
-    public synchronized Mountpoint createMountpoint(OperationContext octxt, int folderId, String name, String ownerId, int remoteId, byte view)
+    public synchronized Mountpoint createMountpoint(OperationContext octxt, int folderId, String name, String ownerId, int remoteId, byte view, int flags, byte color)
     throws ServiceException {
-        CreateMountpoint redoRecorder = new CreateMountpoint(mId, folderId, name, ownerId, remoteId, view);
+        CreateMountpoint redoRecorder = new CreateMountpoint(mId, folderId, name, ownerId, remoteId, view, flags, color);
 
         boolean success = false;
         try {
@@ -4029,7 +4027,7 @@ public class Mailbox {
             CreateMountpoint redoPlayer = (CreateMountpoint) mCurrentChange.getRedoPlayer();
 
             int mptId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
-            Mountpoint mpt = Mountpoint.create(mptId, getFolderById(folderId), name, ownerId, remoteId, view);
+            Mountpoint mpt = Mountpoint.create(mptId, getFolderById(folderId), name, ownerId, remoteId, view, flags, color);
             redoRecorder.setId(mpt.getId());
             success = true;
             return mpt;

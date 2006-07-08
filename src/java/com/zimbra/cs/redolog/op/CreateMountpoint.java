@@ -44,20 +44,24 @@ public class CreateMountpoint extends RedoableOp {
     private String mName;
     private String mOwnerId;
     private int mRemoteId;
-    private byte mHint;
+    private byte mDefaultView;
+    private int mFlags;
+    private byte mColor;
 
     public CreateMountpoint() {
         mId = UNKNOWN_ID;
     }
 
-    public CreateMountpoint(int mailboxId, int folderId, String name, String ownerId, int remoteId, byte hint) {
+    public CreateMountpoint(int mailboxId, int folderId, String name, String ownerId, int remoteId, byte view, int flags, byte color) {
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
         mFolderId = folderId;
         mName = name != null ? name : "";
         mOwnerId = ownerId;
         mRemoteId = remoteId;
-        mHint = hint;
+        mDefaultView = view;
+        mFlags = flags;
+        mColor = color;
     }
 
     public int getId() {
@@ -73,10 +77,10 @@ public class CreateMountpoint extends RedoableOp {
     }
 
     protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("id=").append(mId);
+        StringBuilder sb = new StringBuilder("id=").append(mId);
         sb.append(", name=").append(mName).append(", folder=").append(mFolderId);
         sb.append(", owner=").append(mOwnerId).append(", remote=").append(mRemoteId);
-        sb.append(", hint=").append(mHint);
+        sb.append(", view=").append(mDefaultView).append(", flags=").append(mFlags).append(", color=").append(mColor);
         return sb.toString();
     }
 
@@ -86,7 +90,9 @@ public class CreateMountpoint extends RedoableOp {
         writeUTF8(out, mOwnerId);
         out.writeInt(mRemoteId);
         out.writeInt(mFolderId);
-        out.writeByte(mHint);
+        out.writeByte(mDefaultView);
+        out.writeInt(mFlags);
+        out.writeByte(mColor);
     }
 
     protected void deserializeData(DataInput in) throws IOException {
@@ -95,14 +101,16 @@ public class CreateMountpoint extends RedoableOp {
         mOwnerId = readUTF8(in);
         mRemoteId = in.readInt();
         mFolderId = in.readInt();
-        mHint = in.readByte();
+        mDefaultView = in.readByte();
+        mFlags = in.readInt();
+        mColor = in.readByte();
     }
 
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mailbox = Mailbox.getMailboxById(mboxId);
         try {
-            mailbox.createMountpoint(getOperationContext(), mFolderId, mName, mOwnerId, mRemoteId, mHint);
+            mailbox.createMountpoint(getOperationContext(), mFolderId, mName, mOwnerId, mRemoteId, mDefaultView, mFlags, mColor);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 if (mLog.isInfoEnabled())

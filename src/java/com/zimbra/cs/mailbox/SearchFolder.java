@@ -98,6 +98,7 @@ public class SearchFolder extends Folder {
      * @param query   The query associated with the search folder.
      * @param types   The (optional) set of item types the search returns.
      * @param sort    The (optional) order the results are returned in.
+     * @param color   The new folder's color.
      * @perms {@link ACL#RIGHT_INSERT} on the parent folder
      * @throws ServiceException   The following error codes are possible:<ul>
      *    <li><code>mail.CANNOT_CONTAIN</code> - if the target folder
@@ -114,7 +115,7 @@ public class SearchFolder extends Folder {
      * @see #validateFolderName(String)
      * @see #validateQuery(String)
      * @see #canContain(byte) */
-    static SearchFolder create(int id, Folder parent, String name, String query, String types, String sort)
+    static SearchFolder create(int id, Folder parent, String name, String query, String types, String sort, byte color)
     throws ServiceException {
         if (parent == null || !parent.canContain(TYPE_SEARCHFOLDER))
             throw MailServiceException.CANNOT_CONTAIN();

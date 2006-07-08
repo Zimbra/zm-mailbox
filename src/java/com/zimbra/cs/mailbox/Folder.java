@@ -421,7 +421,7 @@ public class Folder extends MailItem {
      * @see #validateFolderName(String)
      * @see #canContain(byte) */
     static Folder create(int id, Mailbox mbox, Folder parent, String name) throws ServiceException {
-        return create(id, mbox, parent, name, (byte) 0, TYPE_UNKNOWN, null);
+        return create(id, mbox, parent, name, (byte) 0, TYPE_UNKNOWN, 0, DEFAULT_COLOR, null);
     }
 
     /** Creates a new Folder with optional attributes and persists it
@@ -434,6 +434,8 @@ public class Folder extends MailItem {
      * @param name        The new folder's name.
      * @param attributes  Any extra constraints on the folder.
      * @param view        The (optional) default object type for the folder.
+     * @param flags       Folder flags (e.g. {@link Flag#BITMASK_CHECKED}).
+     * @param color       The new folder's color.
      * @param url         The (optional) url to sync folder contents to.
      * @perms {@link ACL#RIGHT_INSERT} on the parent folder
      * @throws ServiceException   The following error codes are possible:<ul>
@@ -450,7 +452,7 @@ public class Folder extends MailItem {
      * @see #canContain(byte)
      * @see #FOLDER_IS_IMMUTABLE
      * @see #FOLDER_NO_UNREAD_COUNT */
-    static Folder create(int id, Mailbox mbox, Folder parent, String name, byte attributes, byte view, String url)
+    static Folder create(int id, Mailbox mbox, Folder parent, String name, byte attributes, byte view, int flags, byte color, String url)
     throws ServiceException {
         if (id != Mailbox.ID_FOLDER_ROOT) {
             if (parent == null || !parent.canContain(TYPE_FOLDER))
@@ -470,8 +472,9 @@ public class Folder extends MailItem {
         data.folderId    = (id == Mailbox.ID_FOLDER_ROOT ? id : parent.getId());
         data.parentId    = data.folderId;
         data.date        = mbox.getOperationTimestamp();
+        data.flags       = flags & Flag.FLAGS_FOLDER;
         data.subject     = name;
-		data.metadata    = encodeMetadata(DEFAULT_COLOR, attributes, view, null, new SyncData(url));
+		data.metadata    = encodeMetadata(color, attributes, view, null, new SyncData(url));
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 

@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.operation;
 
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -45,27 +46,31 @@ public class CreateFolderOperation extends Operation {
 	
 	private String mName;
 	private ItemId mIidParent;
-	private byte mView;
+    private byte mView;
+    private int mFlags;
+    private byte mColor;
 	private String mUrl;
 	private boolean mFetchIfExists;
 	
 	private Folder mFolder;
 
 	public CreateFolderOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-				String name, ItemId iidParent, String view, String url, boolean fetchIfExists) {
+				String name, ItemId iidParent, String view, String flags, byte color, String url, boolean fetchIfExists) {
 		super(session, oc, mbox, req, LOAD);
 		
 		mName = name;
 		mIidParent = iidParent;
 		mView = MailItem.getTypeForName(view);
+        mFlags = Flag.flagsToBitmask(flags);
+        mColor = color;
 		mUrl = url;
 		mFetchIfExists = fetchIfExists;
 	}
-	
+
 	public CreateFolderOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
 				String name, byte view, boolean fetchIfExists) {
 		super(session, oc, mbox, req, LOAD);
-		
+
 		mName = name;
 		mIidParent = null;
 		mView = view;
@@ -78,7 +83,8 @@ public class CreateFolderOperation extends Operation {
 		
 		toRet.append("name=").append(mName);
 		toRet.append(" parent=").append(mIidParent);
-		toRet.append(" view=").append(mView);
+        toRet.append(" view=").append(mView);
+        toRet.append(" color=").append(mColor);
 		
 		if (mUrl != null) 
 			toRet.append(" url=").append(mUrl);
@@ -91,9 +97,9 @@ public class CreateFolderOperation extends Operation {
 	protected void callback() throws ServiceException {
         try {
         	if (mIidParent != null)
-        		mFolder = getMailbox().createFolder(getOpCtxt(), mName, mIidParent.getId(), mView, mUrl);
+        		mFolder = getMailbox().createFolder(getOpCtxt(), mName, mIidParent.getId(), mView, mFlags, mColor, mUrl);
         	else 
-        		mFolder = getMailbox().createFolder(getOpCtxt(), mName, (byte)0, mView);
+        		mFolder = getMailbox().createFolder(getOpCtxt(), mName, (byte) 0, mView);
         		
         	if (!mFolder.getUrl().equals(""))
         		try {

@@ -77,7 +77,7 @@ public class TestFolders extends TestCase
         Folder top = null;
         
         for (int i = 1; i <= NUM_LEVELS; i++) {
-            Folder folder = mMbox.createFolder(null, NAME_PREFIX + i, parentId, MailItem.TYPE_UNKNOWN, null);
+            Folder folder = mMbox.createFolder(null, NAME_PREFIX + i, parentId, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
             if (i == 1) {
                 top = folder;
             }
@@ -103,7 +103,7 @@ public class TestFolders extends TestCase
         Message m3 = TestUtil.insertMessage(mMbox, 3, "RE: " + name);
         ZimbraLog.test.debug("Created message 3, id=" + m3.getId());
         
-        Folder f = mMbox.createFolder(null, name, Mailbox.ID_FOLDER_INBOX, MailItem.TYPE_UNKNOWN, null);
+        Folder f = mMbox.createFolder(null, name, Mailbox.ID_FOLDER_INBOX, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
         mMbox.move(null, m1.getId(), m1.getType(), f.getId());
         mMbox.move(null, m2.getId(), m2.getType(), f.getId());
         

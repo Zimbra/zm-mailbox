@@ -30,6 +30,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.operation.CreateSearchFolderOperation;
@@ -62,10 +63,10 @@ public class CreateSearchFolder extends WriteOpDocumentHandler  {
         String query     = t.getAttribute(MailService.A_QUERY);
         String types     = t.getAttribute(MailService.A_SEARCH_TYPES, null);
         String sort      = t.getAttribute(MailService.A_SORTBY, null);
+        byte color       = (byte) t.getAttributeLong(MailService.A_COLOR, MailItem.DEFAULT_COLOR);
         ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER), lc);
 
-        CreateSearchFolderOperation op = new CreateSearchFolderOperation(session, octxt, mbox, Requester.SOAP,
-        			iidParent, name, query, types, sort);
+        CreateSearchFolderOperation op = new CreateSearchFolderOperation(session, octxt, mbox, Requester.SOAP, iidParent, name, query, types, sort, color);
         op.schedule();
         SearchFolder search = op.getSearchFolder();
 
