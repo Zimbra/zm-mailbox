@@ -88,7 +88,7 @@ public class AttributeInfo {
 
     private int mId;
     
-    private String mIdParent;
+    private String mParentOid;
     
     private int mGroupId;
     
@@ -102,7 +102,7 @@ public class AttributeInfo {
         }
     }
 
-    AttributeInfo (String attrName, int id, String idParent, int groupId, AttributeCallback callback, AttributeType type,
+    AttributeInfo (String attrName, int id, String parentId, int groupId, AttributeCallback callback, AttributeType type,
                    AttributeOrder order, String value, boolean immutable, long min, long max, 
                    AttributeCardinality cardinality, Set<AttributeClass> requiredIn, 
                    Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
@@ -117,7 +117,7 @@ public class AttributeInfo {
         mMin = min;
         mMax = max;
         mId = id;
-        mIdParent = idParent;
+        mParentOid = parentId;
         mGroupId = groupId;
         mCardinality = cardinality;
         mRequiredInClasses = requiredIn;
@@ -298,8 +298,8 @@ public class AttributeInfo {
        return mId;
    }
    
-   String getIdParent() {
-       return mIdParent;
+   String getParentOid() {
+       return mParentOid;
    }
    
    int getGroupId() {

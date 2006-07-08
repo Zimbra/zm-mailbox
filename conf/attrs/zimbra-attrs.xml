@@ -170,9 +170,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr name="userPassword" type="string" immutable="1" optionalIn="account"/>
 
 
-<!-- zimbraHsmAge is special. We set idParent to keep the same OID it had before -->
+<!-- zimbraHsmAge is special. We set parentOid to keep the same OID it had before -->
 
-<attr id="20" idParent="1.3.6.1.4.1.19348.2.4" name="zimbraHsmAge" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="20" parentOid="1.3.6.1.4.1.19348.2.4" name="zimbraHsmAge" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <globalConfigValue>30d</globalConfigValue>
   <desc>Minimum age of mail items whose filesystem data will be moved to secondary storage (nnnnn[hmsd]).</desc>
 </attr>
