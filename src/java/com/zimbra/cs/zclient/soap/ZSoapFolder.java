@@ -32,7 +32,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
-import com.zimbra.cs.zclient.ZLink;
+import com.zimbra.cs.zclient.ZMountpoint;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.Element;
 
@@ -51,7 +51,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
     private String mEffectivePerms;
     private List<ZGrant> mGrants;
     private List<ZFolder> mSubFolders;
-    private List<ZLink> mLinks;        
+    private List<ZMountpoint> mLinks;        
     private ZFolder mParent;
     
     ZSoapFolder(Element e, ZSoapFolder parent, ZSoapMailbox mailbox) throws ServiceException {
@@ -74,7 +74,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         
         mGrants = new ArrayList<ZGrant>();            
         mSubFolders = new ArrayList<ZFolder>();
-        mLinks = new ArrayList<ZLink>();        
+        mLinks = new ArrayList<ZMountpoint>();        
 
         Element aclEl = e.getOptionalElement(MailService.E_ACL);
 
@@ -94,7 +94,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         
         // link
         for (Element l : e.listElements(MailService.E_MOUNT))
-            new ZSoapLink(l, this, mailbox);
+            new ZSoapMountpoint(l, this, mailbox);
 
         mailbox.addItemIdMapping(this);
         if (parent != null) parent.addChild(this);
@@ -122,10 +122,10 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
     }
 
     void addChild(ZFolder folder)        { mSubFolders.add(folder); }
-    void addChild(ZLink link)            { mLinks.add(link); }
+    void addChild(ZMountpoint link)            { mLinks.add(link); }
     
     void removeChild(ZFolder folder)       { mSubFolders.remove(folder); }
-    void removeChild(ZLink link)           { mLinks.remove(link); }
+    void removeChild(ZMountpoint link)           { mLinks.remove(link); }
 
     public ZFolder getParent() {
         return mParent;
@@ -151,27 +151,43 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         return mUnreadCount;
     }
     
-    public String toString() {
-        return toString("folder", null);
+    protected void toStringCommon(ZSoapSB sb) {
+        sb.add("id", mId);
+        sb.add("name", mName);
+        sb.add("path", getPath());
+        sb.add("parentId", mParentId);
+        sb.add("flags", mFlags);
+        sb.add("color", mColor.name());
+        sb.add("unreadCount", mUnreadCount);
+        sb.add("messageCount", mMessageCount);
+        sb.add("view", mDefaultView.name());
+        sb.add("restURL", mRestURL);
+        sb.add("url", mRemoteURL);
+        sb.add("effectivePermissions", mEffectivePerms);
+        sb.beginArray("grants");
+        for (ZGrant grant: mGrants) {
+            sb.addArrayElement(grant.toString(), false);
+        }
+        sb.endArray();        
+        sb.beginArray("mountpoints");
+        for (ZMountpoint mp: mLinks) {
+            sb.addArrayElement(mp.toString(), false);
+        }
+        sb.endArray();        
+
+        sb.beginArray("children");
+        for (ZFolder child : mSubFolders) {
+            sb.addArrayElement(child.toString(), false);
+        }
+        sb.endArray();
     }
     
-    protected String toString(String type, String extra) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{");
-        for (ZFolder child : mSubFolders) {
-            sb.append("\n").append( ((ZSoapFolder)child).toString()).append("\n");
-        }
-        for (ZLink link : mLinks) {
-            sb.append("\n").append(link).append("\n");
-        }                
-        sb.append("}");
-        
-        return String.format("%s: { id: %s, name: %s, parentId: %s, flags: %s, color: %s, unreadCount: %d, " +
-                "messageCount: %d, view: %s, restURL: %s, url: %s, perms: %s, grants: %s, children: %s, path: %s%s} ",
-                type,
-                mId, mName, mParentId, mFlags, mColor.name(), mUnreadCount, mMessageCount, mDefaultView, 
-                mRestURL, mRemoteURL, mEffectivePerms, mGrants.toString(), sb.toString(), getPath(), 
-                extra != null ? extra : ""); 
+    public String toString() {
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct("ZFolder");
+        toStringCommon(sb);
+        sb.endStruct();
+        return sb.toString();
     }
 
     public View getDefaultView() {
@@ -216,7 +232,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         return mSubFolders;
     }
     
-    public List<ZLink> getLinks() {
+    public List<ZMountpoint> getLinks() {
         return mLinks;
     }
 

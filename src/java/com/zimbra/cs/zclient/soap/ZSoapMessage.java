@@ -26,7 +26,6 @@
 package com.zimbra.cs.zclient.soap;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -90,33 +89,35 @@ class ZSoapMessage implements ZMessage {
         return mId;
     }
 
-    public String toString() {
-        StringBuilder addrSb = new StringBuilder();
-        addrSb.append("{ ");
+    ZSoapSB toString(ZSoapSB sb) {
+        sb.beginStruct("ZMessage");
+        sb.add("id", mId);
+        sb.add("flags", mFlags);
+        sb.add("tags", mTags);
+        sb.add("subject", mSubject);
+        sb.add("fragment", mFragment);
+        sb.add("messageIdHeader", mMessageIdHeader);
+        sb.addDate("receivedDate", mReceivedDate);
+        sb.addDate("sentDate", mSentDate);
+        sb.add("folderId", mFolderId);
+        sb.add("conversationId", mConversationId);
+        sb.add("size", mSize);
+        sb.add("content", mContent);
+        sb.add("contentURL", mContentURL);
+        sb.beginArray("addresses");
         for (ZEmailAddress email : mAddresses) {
-            addrSb.append("\n").append(email);
+            sb.addArrayElement(email.toString(), false);
         }
-        addrSb.append("}");        
-
-        return String.format("message: { id: %s, flags: %s, tags: %s, subject: %s, fragment: %s, messageIdHeader: %s, "+
-                "recvDate: %s, sentDate: %s, folder: %s, convId: %s, size: %d, content: %s, contentURL: %s, addresses: %s, parts: %s}",
-                mId, 
-                mFlags,
-                mTags,
-                mSubject, 
-                mFragment,
-                mMessageIdHeader,
-                mReceivedDate == 0 ? "" : new Date(mReceivedDate),
-                mSentDate == 0 ? "" : new Date(mSentDate),
-                mFolderId,
-                mConversationId,
-                mSize,
-                mContent,
-                mContentURL,
-                addrSb.toString(),
-                mMimeStructure);
+        sb.endArray();
+        sb.addStruct("mimeStructure", mMimeStructure.toString()); //TODO
+        sb.endStruct();        
+        return sb;
     }
 
+    public String toString() {
+        return toString(new ZSoapSB()).toString();
+    }
+    
     public String getFlags() {
         return mFlags;
     }
@@ -195,7 +196,7 @@ class ZSoapMessage implements ZMessage {
             mContentDescription = e.getAttribute(MailService.A_CONTENT_DESCRIPTION, null);
             mContentLocation = e.getAttribute(MailService.A_CONTENT_LOCATION, null);
             mIsBody = e.getAttributeBool(MailService.A_BODY, false);
-            mSize = e.getAttributeLong(MailService.A_SIZE);
+            mSize = e.getAttributeLong(MailService.A_SIZE, 0);
             Element content = e.getOptionalElement(MailService.E_CONTENT);
             if (content != null) {
                 mContent = content.getText();
@@ -207,18 +208,30 @@ class ZSoapMessage implements ZMessage {
             }
         }
 
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-            sb.append("{ ");
+        ZSoapSB toString(ZSoapSB sb) {
+            sb.beginStruct("ZMimePart");
+            sb.add("partName", mPartName);
+            sb.add("content", mContent);
+            sb.add("contentType", mContentType);
+            sb.add("contentDisposition", mContentDisposition);
+            sb.add("contentId", mContentId);
+            sb.add("contentLocation", mContentLocation);
+            sb.add("contentDescription", mContentDescription);
+            sb.add("isBody", mIsBody);
+            sb.add("size", mSize);
+            sb.add("name", mName);
+            sb.add("fileName", mFileName);
+            sb.beginArray("children");
             for (ZMimePart part : mChildren) {
-                sb.append("\n").append(part);
+                sb.addArrayElement(part.toString(), false);
             }
-            sb.append("}");        
+            sb.endArray();
+            sb.endStruct();
+            return sb;
+        }
 
-            return String.format("mimepart: { partName: %s, contentType: %s, name: %s, contentDisposition: %s, fileName: %s, contentId: %s, contentLocation: %s, "+
-                    "contentDescription: %s, isBody: %s, size: %d, children: %s }",
-                    mPartName, mContentType, mName, mContentDisposition, mFileName, mContentId, mContentLocation, mContentDescription,
-                    mIsBody, mSize, sb.toString());
+        public String toString() {
+            return toString(new ZSoapSB()).toString();
         }
 
         public List<ZMimePart> getChildren() {

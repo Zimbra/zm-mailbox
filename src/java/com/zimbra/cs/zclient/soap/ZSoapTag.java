@@ -70,7 +70,14 @@ class ZSoapTag implements ZTag, ZSoapItem {
     }
     
     public String toString() {
-        return String.format("tag: { id: %s, name: %s, color: %d, unreadCount: %d} ", mId, mName, mColor, mUnreadCount); 
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct("ZTag");
+        sb.add("id", mId);
+        sb.add("name", mName);
+        sb.add("color", mColor.name());
+        sb.add("unreadCount", mUnreadCount);
+        sb.endStruct();
+        return sb.toString();
     }
 
     public int compareTo(Object o) {

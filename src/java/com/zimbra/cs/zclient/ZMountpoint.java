@@ -25,7 +25,7 @@
 
 package com.zimbra.cs.zclient;
 
-public interface ZLink {
+public interface ZMountpoint {
 
     public String getId();
 
@@ -53,17 +53,17 @@ public interface ZLink {
     public String getParentId();
 
     /**
-     * @return primary email address of the owner of the link-to resource
+     * @return primary email address of the owner of the mounted resource
      */
     public String getOwnerDisplayName();
 
     /**
-     * @return zimbra id of the owner of the linked-to resource
+     * @return zimbra id of the owner of the mounted resource
      */
     public String getOwnerId();
 
     /**
-     * @return folder id of the remote/linked-to folder
+     * @return remote folder id of the mounted folder
      */
     public String getRemoteId();
     

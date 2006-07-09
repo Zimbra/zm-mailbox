@@ -26,7 +26,6 @@
 package com.zimbra.cs.zclient.soap;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -74,15 +73,26 @@ class ZSoapConversationHit implements ZConversationHit {
     }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{ ");
-        for (ZEmailAddress addr : mRecipients) {
-            sb.append("\n").append(addr);
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct("ZConversationHit");
+        sb.add("id", mId);
+        sb.add("fragment", mFragment);
+        sb.add("subject", mSubject);
+        sb.addDate("date", mDate);
+        sb.add("sortField", mSortField);
+        sb.add("messageCount", mMessageCount);
+        sb.beginArray("messageIds");
+        for (String id: mMessageIds) {
+            sb.addArrayElement(id, true);
         }
-        sb.append("}");        
-        
-        return String.format("convhit: { id: %s, flags: %s, fragment: %s, subject: %s, date: %s, sortfield: %s, msgcount: %d, msgIds: %s, recipients: %s }",
-                mId, mFlags, mFragment, mSubject, new Date(mDate), mSortField, mMessageCount, mMessageIds, sb.toString()); 
+        sb.endArray();
+        sb.beginArray("recipients");
+        for (ZEmailAddress addr : mRecipients) {
+            sb.addArrayElement(addr.toString(), false);
+        }
+        sb.endArray();
+        sb.endStruct();
+        return sb.toString();
     }
 
     public String getFlags() {

@@ -177,6 +177,6 @@ public interface ZFolder {
     /**
      * @return links, or empty list if no links
      */
-    public List<ZLink> getLinks();
+    public List<ZMountpoint> getLinks();
 
 }

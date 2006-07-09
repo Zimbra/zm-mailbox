@@ -81,8 +81,18 @@ public class ZSoapEmailAddress implements ZEmailAddress {
         return mType;
     }
     
+    ZSoapSB toString(ZSoapSB sb) {
+        sb.beginStruct("ZEmailAddress");
+        sb.add("address", mAddress);
+        sb.add("content", mContent);
+        sb.add("display", mDisplay);
+        sb.add("personal", mPersonal);
+        sb.add("type", mType);
+        sb.endStruct();
+        return sb;
+    }
+    
     public String toString() {
-        return String.format("email: { address: %s, content: %s, display: %s, personal: %s, type: %s }", 
-                mAddress, mContent, mDisplay, mPersonal, mType);
+        return toString(new ZSoapSB()).toString();
     }
 }

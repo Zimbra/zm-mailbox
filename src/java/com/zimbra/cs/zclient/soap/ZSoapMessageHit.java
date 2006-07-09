@@ -26,7 +26,6 @@
 package com.zimbra.cs.zclient.soap;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -81,8 +80,25 @@ class ZSoapMessageHit implements ZMessageHit {
     }
 
     public String toString() {
-        return String.format("msghit: { id: %s, convid: %s, flags: %s, fragment: %s, subject: %s, date: %s, sortfield: %s, size: %d, mimeparts: %s, sender: %s, score: %f }",
-                mId, mConvId, mFlags, mFragment, mSubject, new Date(mDate), mSortField, mSize, mMimePartHits, mSender, mScore);
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct("ZMessageHit");
+        sb.add("id", mId);
+        sb.add("conversationId", mConvId);
+        sb.add("flags", mFlags);
+        sb.add("fragment", mFragment);
+        sb.add("subject", mSubject);
+        sb.addDate("date", mDate);
+        sb.add("size", mSize);
+        sb.addStruct("sender", mSender.toString());
+        sb.add("sortField", mSortField);
+        sb.add("score", mScore);
+        sb.beginArray("mimePartHits");
+        for (String mp : mMimePartHits){
+            sb.addArrayElement(mp, true);
+        }
+        sb.endArray();
+        sb.endStruct();
+        return sb.toString();
     }
 
     public String getFlags() {

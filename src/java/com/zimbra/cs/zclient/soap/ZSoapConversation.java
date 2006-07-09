@@ -26,7 +26,6 @@
 package com.zimbra.cs.zclient.soap;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -63,15 +62,20 @@ class ZSoapConversation implements ZConversation {
     }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{ ");
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct("ZConversation");
+        sb.add("id", mId);
+        sb.add("tags", mTags);
+        sb.add("flags", mFlags);
+        sb.add("subject", mSubject);
+        sb.add("messageCount", mMessageCount);
+        sb.beginArray("messages");
         for (ZMessageSummary msg : mMessageSummaries) {
-            sb.append("\n").append(msg);
+            sb.addArrayElement(msg.toString(), false);
         }
-        sb.append("}");        
-        
-        return String.format("conversation: { id: %s, tags: %s, flags: %s, subject: %s, msgcount: %d, messages: %s }",
-                mId, mTags, mFlags, mSubject, mMessageCount, sb.toString()); 
+        sb.endArray();        
+        sb.endStruct();
+        return sb.toString();
     }
 
     public String getFlags() {
@@ -118,8 +122,17 @@ class ZSoapConversation implements ZConversation {
         
 
         public String toString() {
-            return String.format("message: { id: %s, flags: %s, fragment: %s, tags: %s, size: %d, sender: %s, date: %s }",
-                    mId, mFlags, mFragment, mTags, mSize, mSender, new Date(mDate));
+            ZSoapSB sb = new ZSoapSB();
+            sb.beginStruct("ZMessageSummary");
+            sb.add("id", mId);
+            sb.add("flags", mFlags);
+            sb.add("fragment", mFragment);
+            sb.add("tags", mTags);
+            sb.add("size", mSize);
+            sb.addStruct("sender", mSender.toString());
+            sb.addDate("date", mDate);
+            sb.endStruct();
+            return sb.toString();
         }
 
         public long getDate() {

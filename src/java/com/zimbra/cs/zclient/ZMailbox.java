@@ -376,11 +376,11 @@ public abstract class ZMailbox {
     public abstract ZSearchFolder getSearchFolderById(String id);
 
     /**
-     * find the link with the specified id.
-     * @param id id of link
-     * @return ZLink if found, null otherwise.
+     * find the mountpoint with the specified id.
+     * @param id id of mountpoint
+     * @return ZMountpoint if found, null otherwise.
      */
-    public abstract ZLink getLinkById(String id);
+    public abstract ZMountpoint getMountpointById(String id);
     
     /**
      * create a new sub folder of the specified parent folder.
@@ -520,7 +520,7 @@ public abstract class ZMailbox {
      * @return newly created folder
      * @throws ServiceException
      */
-    public abstract ZLink createMountpoint(
+    public abstract ZMountpoint createMountpoint(
             String parentId, String name, 
             ZFolder.View defaultView,
             OwnerBy ownerBy,

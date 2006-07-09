@@ -28,11 +28,11 @@ package com.zimbra.cs.zclient.soap;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZLink;
+import com.zimbra.cs.zclient.ZMountpoint;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.Element;
 
-class ZSoapLink implements ZLink, ZSoapItem {
+class ZSoapMountpoint implements ZMountpoint, ZSoapItem {
 
     private int mColor;
     private String mId;
@@ -45,7 +45,7 @@ class ZSoapLink implements ZLink, ZSoapItem {
     private String mRemoteId;
     private ZFolder mParent;
     
-    ZSoapLink(Element e, ZSoapFolder parent, ZSoapMailbox mailbox) throws ServiceException {
+    ZSoapMountpoint(Element e, ZSoapFolder parent, ZSoapMailbox mailbox) throws ServiceException {
         mParent = parent;
         mId = e.getAttribute(MailService.A_ID);
         mName = e.getAttribute(MailService.A_NAME);
@@ -77,8 +77,20 @@ class ZSoapLink implements ZLink, ZSoapItem {
     }
 
     public String toString() {
-        return String.format("link: { id: %s, name: %s, parentId: %s, flags: %s, color: %d, view: %s, owner: %s, ownerId: %s, remoteId: %s, path: %s }",
-                mId, mName, mParentId, mFlags, mColor, mDefaultView, mOwnerDisplayName, mOwnerId, mRemoteId, getPath());
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct("ZMountpoint");
+        sb.add("id", mId);
+        sb.add("name", mName);
+        sb.add("path", getPath());
+        sb.add("view", mDefaultView);
+        sb.add("flags", mFlags);
+        sb.add("parent", mParentId);
+        sb.add("color", mColor);
+        sb.add("ownerId", mOwnerId);
+        sb.add("ownerDisplayName", mOwnerDisplayName);
+        sb.add("remoteId", mRemoteId);
+        sb.endStruct();
+        return sb.toString();
     }
 
     public String getDefaultView() {
@@ -94,7 +106,6 @@ class ZSoapLink implements ZLink, ZSoapItem {
     }
 
     public String getPath() {
-        // TODO: CACHE? compute upfront?
         if (mParent == null)
             return ZMailbox.PATH_SEPARATOR;
         else {

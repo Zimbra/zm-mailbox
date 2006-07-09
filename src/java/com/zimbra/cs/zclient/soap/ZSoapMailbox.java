@@ -39,7 +39,7 @@ import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZConversation;
 import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZLink;
+import com.zimbra.cs.zclient.ZMountpoint;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZSearchFolder;
@@ -160,7 +160,7 @@ public class ZSoapMailbox extends ZMailbox {
             } else if (e.getName().equals(MailService.E_MOUNT)) {
                 String parentId = e.getAttribute(MailService.A_FOLDER);
                 ZSoapFolder parent = (ZSoapFolder) getFolderById(parentId);
-                new ZSoapLink(e, parent, this);
+                new ZSoapMountpoint(e, parent, this);
             } else if (e.getName().equals(MailService.E_SEARCH)) {
                 String parentId = e.getAttribute(MailService.A_FOLDER);
                 ZSoapFolder parent = (ZSoapFolder) getFolderById(parentId);
@@ -181,8 +181,8 @@ public class ZSoapMailbox extends ZMailbox {
                 ZSoapFolder sf = (ZSoapFolder) item;
                 if (sf.getParent() != null) 
                     ((ZSoapFolder)sf.getParent()).removeChild(sf);
-            } else if (item instanceof ZSoapLink) {
-                ZSoapLink sl = (ZSoapLink) item;
+            } else if (item instanceof ZSoapMountpoint) {
+                ZSoapMountpoint sl = (ZSoapMountpoint) item;
                 if (sl.getParent() != null) 
                     ((ZSoapFolder)sl.getParent()).removeChild(sl);
             } else if (item instanceof ZSoapTag) {
@@ -390,9 +390,9 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZLink getLinkById(String id) {
+    public ZMountpoint getMountpointById(String id) {
         ZSoapItem item = mIdToItem.get(id);
-        if (item instanceof ZLink) return (ZLink) item;
+        if (item instanceof ZMountpoint) return (ZMountpoint) item;
         else return null;
     }
 
@@ -640,7 +640,7 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZLink createMountpoint(String parentId, String name, ZFolder.View defaultView, OwnerBy ownerBy, String owner, SharedItemBy itemBy, String sharedItem) throws ServiceException {
+    public ZMountpoint createMountpoint(String parentId, String name, ZFolder.View defaultView, OwnerBy ownerBy, String owner, SharedItemBy itemBy, String sharedItem) throws ServiceException {
         XMLElement req = new XMLElement(MailService.CREATE_MOUNTPOINT_REQUEST);
         Element linkEl = req.addElement(MailService.E_MOUNT);
         linkEl.addAttribute(MailService.A_NAME, name);
@@ -649,7 +649,7 @@ public class ZSoapMailbox extends ZMailbox {
         linkEl.addAttribute(ownerBy == OwnerBy.BY_ID ? MailService.A_ZIMBRA_ID : MailService.A_DISPLAY, owner);
         linkEl.addAttribute(itemBy == SharedItemBy.BY_ID ? MailService.A_REMOTE_ID: MailService.A_PATH, sharedItem);
         String id = invoke(req).getElement(MailService.E_MOUNT).getAttribute(MailService.A_ID);
-        return getLinkById(id);
+        return getMountpointById(id);
     }
 
     @Override
