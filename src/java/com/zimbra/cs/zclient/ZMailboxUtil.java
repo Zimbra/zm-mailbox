@@ -496,7 +496,7 @@ public class ZMailboxUtil implements DebugListener {
     private void doSearch(String[] args) throws ServiceException {
         ZSearchParams sp = new ZSearchParams(args[1]);
         ZSearchResult result = mMbox.search(sp);
-        //System.out.println(result);
+        System.out.println(result);
         Calendar c = Calendar.getInstance();        
         for (ZSearchHit hit: result.getHits()) {
             if (hit instanceof ZConversationHit) {

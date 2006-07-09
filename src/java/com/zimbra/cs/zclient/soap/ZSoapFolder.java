@@ -164,22 +164,9 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         sb.add("restURL", mRestURL);
         sb.add("url", mRemoteURL);
         sb.add("effectivePermissions", mEffectivePerms);
-        sb.beginArray("grants");
-        for (ZGrant grant: mGrants) {
-            sb.addArrayElement(grant.toString(), false);
-        }
-        sb.endArray();        
-        sb.beginArray("mountpoints");
-        for (ZMountpoint mp: mLinks) {
-            sb.addArrayElement(mp.toString(), false);
-        }
-        sb.endArray();        
-
-        sb.beginArray("children");
-        for (ZFolder child : mSubFolders) {
-            sb.addArrayElement(child.toString(), false);
-        }
-        sb.endArray();
+        sb.add("grants", mGrants, false);
+        sb.add("mountpoints", mLinks, false);
+        sb.add("children", mSubFolders, false);
     }
     
     public String toString() {

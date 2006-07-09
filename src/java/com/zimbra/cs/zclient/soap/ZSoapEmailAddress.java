@@ -32,7 +32,7 @@ import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.soap.Element;
 
-public class ZSoapEmailAddress implements ZEmailAddress {
+class ZSoapEmailAddress implements ZEmailAddress {
 
     private String mAddress;
     private String mDisplay;

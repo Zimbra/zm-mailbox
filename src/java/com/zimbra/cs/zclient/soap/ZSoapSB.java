@@ -26,8 +26,10 @@
 package com.zimbra.cs.zclient.soap;
 
 import java.util.Date;
+import java.util.List;
 
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.zclient.ZSearchHit;
 
 class ZSoapSB {
     private StringBuilder mSb;
@@ -51,7 +53,7 @@ class ZSoapSB {
         return this;
     }
     
-    ZSoapSB beginArray(String name) {
+    private ZSoapSB beginArray(String name) {
         checkFirst();        
         mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": [\n");
         mFirst = true;
@@ -59,7 +61,7 @@ class ZSoapSB {
         return this;
     }
 
-    ZSoapSB endArray() {
+    private ZSoapSB endArray() {
         mSb.append("\n]");
         mFirst = false;
         mInArray = false;
@@ -79,13 +81,22 @@ class ZSoapSB {
         return '"' + StringUtil.jsEncode(value) + '"';
     }
     
+    ZSoapSB add(String name, List<? extends Object> list, boolean encode) {
+        beginArray(name);
+        for (Object o : list) {
+            addArrayElement(o.toString(), encode);
+        }
+        endArray();
+        return this;
+    }
+
     ZSoapSB add(String name, String value) {
         checkFirst();
         mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": ").append(quote(value));
         return this;
     }
     
-    ZSoapSB addArrayElement(String value, boolean encode) {
+    private ZSoapSB addArrayElement(String value, boolean encode) {
         checkFirst();
         mSb.append(encode ? StringUtil.jsEncode(value) : value);
         return this;

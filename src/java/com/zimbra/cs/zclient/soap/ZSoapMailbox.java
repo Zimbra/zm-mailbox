@@ -310,21 +310,7 @@ public class ZSoapMailbox extends ZMailbox {
             if (params.getCursorPreviousSortValue() != null) cursor.addAttribute(MailService.A_SORTVAL, params.getCursorPreviousSortValue());
         }
         
-        Element response = invoke(req);
-        
-        String sortBy = response.getAttribute(MailService.A_SORTBY);
-        boolean hasMore = response.getAttributeBool(MailService.A_QUERY_MORE);
-        int offset = (int) response.getAttributeLong(MailService.A_QUERY_OFFSET);
-        List<ZSearchHit> hits = new ArrayList<ZSearchHit>();
-        Map<String,ZSoapEmailAddress> cache = new HashMap<String, ZSoapEmailAddress>();
-        for (Element e: response.listElements()) {
-            if (e.getName().equals(MailService.E_CONV)) {
-                hits.add(new ZSoapConversationHit(e, cache));
-            } else if (e.getName().equals(MailService.E_MSG)) {
-                hits.add(new ZSoapMessageHit(e, cache));
-            }
-        }
-        return new ZSearchResult(hits, hasMore, sortBy, offset);
+        return new ZSoapSearchResult(invoke(req));
     }
 
     @Override

@@ -104,12 +104,8 @@ class ZSoapMessage implements ZMessage {
         sb.add("size", mSize);
         sb.add("content", mContent);
         sb.add("contentURL", mContentURL);
-        sb.beginArray("addresses");
-        for (ZEmailAddress email : mAddresses) {
-            sb.addArrayElement(email.toString(), false);
-        }
-        sb.endArray();
-        sb.addStruct("mimeStructure", mMimeStructure.toString()); //TODO
+        sb.add("addresses", mAddresses, false);
+        sb.addStruct("mimeStructure", mMimeStructure.toString());
         sb.endStruct();        
         return sb;
     }
@@ -221,11 +217,7 @@ class ZSoapMessage implements ZMessage {
             sb.add("size", mSize);
             sb.add("name", mName);
             sb.add("fileName", mFileName);
-            sb.beginArray("children");
-            for (ZMimePart part : mChildren) {
-                sb.addArrayElement(part.toString(), false);
-            }
-            sb.endArray();
+            sb.add("children", mChildren, false);
             sb.endStruct();
             return sb;
         }

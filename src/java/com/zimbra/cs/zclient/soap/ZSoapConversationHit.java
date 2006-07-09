@@ -81,16 +81,8 @@ class ZSoapConversationHit implements ZConversationHit {
         sb.addDate("date", mDate);
         sb.add("sortField", mSortField);
         sb.add("messageCount", mMessageCount);
-        sb.beginArray("messageIds");
-        for (String id: mMessageIds) {
-            sb.addArrayElement(id, true);
-        }
-        sb.endArray();
-        sb.beginArray("recipients");
-        for (ZEmailAddress addr : mRecipients) {
-            sb.addArrayElement(addr.toString(), false);
-        }
-        sb.endArray();
+        sb.add("messageIds", mMessageIds, true);
+        sb.add("recipients", mRecipients, false);
         sb.endStruct();
         return sb.toString();
     }

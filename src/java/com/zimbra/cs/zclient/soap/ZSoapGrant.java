@@ -30,7 +30,7 @@ import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.soap.Element;
 
-public class ZSoapGrant implements ZGrant {
+class ZSoapGrant implements ZGrant {
 
     private String mArgs;
     private String mGranteeName;

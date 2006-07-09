@@ -27,57 +27,26 @@ package com.zimbra.cs.zclient;
 
 import java.util.List;
 
-public class ZSearchResult {
- 
-    private List<ZSearchHit> mHits;
-    private boolean mHasMore;
-    private String mSortBy;
-    private int mOffset;
-
-    public ZSearchResult(List<ZSearchHit> hits, boolean hasMore, String sortBy, int offset) {
-        mHits = hits;
-        mHasMore = hasMore;
-        mSortBy = sortBy;
-        mOffset = offset;
-    }
+public interface ZSearchResult {
 
     /**
      * @return ZSearchHit objects from search
      */
-    public List<ZSearchHit> getHits() {
-        return mHits;
-    }
-    
+    public List<ZSearchHit> getHits();
+
     /**
      * @return true if there are more search results on the server
      */
-    public boolean hasMore() {
-        return mHasMore;
-    }
+    public boolean hasMore();
     
     /**
      * @return the sort by value
      */
-    public String getSortBy() {
-        return mSortBy;
-    }
-    
+    public String getSortBy();
+
     /**
      * @return offset of the search
      */
-    public int getOffset() {
-        return mOffset;
-    }
+    public int getOffset();
 
-    public String toString() {
-        StringBuilder hits = new StringBuilder();
-        hits.append("{");
-        for (ZSearchHit hit : mHits) {
-            hits.append(hit).append("\n");
-        }
-        hits.append("}");        
-        return String.format("searchresult: { more: %s, sortBy: %s, offset: %d, hits: %s }",
-                mHasMore, mSortBy, mOffset, hits.toString());
-    }
-    
 }
