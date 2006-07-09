@@ -35,6 +35,7 @@ import java.util.*;
 import org.dom4j.QName;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.StringUtil;
 
 /**
  * @author dkarp
@@ -618,73 +619,6 @@ public abstract class Element {
             return elt;
         }
 
-        private static final HashSet<String> RESERVED_KEYWORDS = new HashSet<String>(Arrays.asList(new String[] {
-                A_NAMESPACE, "abstract", "boolean", "break", "byte", "case", "catch", "char", "class", "continue",
-                "const", "debugger", "default", "delete", "do", "double", "else", "extends", "enum", "export", 
-                "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in",
-                "instanceOf", "int", "interface", "label", "long", "native", "new", "null", "package", "private",
-                "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this",
-                "throw", "throws", "transient", "true", "try", "typeof", "var", "void", "volatile", "while", "with"
-        }));
-
-        private static final String[] JS_CHAR_ENCODINGS = {
-            "\\u0000", "\\u0001", "\\u0002", "\\u0003", "\\u0004", "\\u0005", "\\u0006", "\\u0007",
-            "\\b",     "\\t",     "\\n",     "\\u000B", "\\f",     "\\r",     "\\u000E", "\\u000F",
-            "\\u0010", "\\u0011", "\\u0012", "\\u0013", "\\u0014", "\\u0015", "\\u0016", "\\u0017",
-            "\\u0018", "\\u0019", "\\u001A", "\\u001B", "\\u001C", "\\u001D", "\\u001E", "\\u001F"
-        };
-
-        private static String jsEncode(Object obj) {
-            if (obj == null)
-                return "";
-            String replacement, str = obj.toString();
-            StringBuffer sb = null;
-            int i, last, length = str.length();
-            for (i = 0, last = -1; i < length; i++) {
-                char c = str.charAt(i);
-                switch (c) {
-                    case '\\':  replacement = "\\\\";                break;
-                    case '"':   replacement = "\\\"";                break;
-                    default:    if (c >= ' ')                        continue;
-                                replacement = JS_CHAR_ENCODINGS[c];  break;
-                }
-                if (sb == null)
-                    sb = new StringBuffer(str.substring(0, i));
-                else
-                    sb.append(str.substring(last, i));
-                sb.append(replacement);
-                last = i + 1;
-            }
-            return (sb == null ? str : sb.append(str.substring(last, i)).toString());
-        }
-
-        private static String jsEncodeKey(String pname) {
-            if (RESERVED_KEYWORDS.contains(pname))
-                return '"' + pname + '"';
-            for (int i = 0; i < pname.length(); i++) {
-                char c = pname.charAt(i);
-                if (c == '$' || c == '_' || (c >= 'a' && c <= 'z') || c >= 'A' && c <= 'Z')
-                    continue;
-                switch (Character.getType(c)) {
-                    // note: not allowing unquoted escape sequences for now...
-                    case Character.UPPERCASE_LETTER:
-                    case Character.LOWERCASE_LETTER:
-                    case Character.TITLECASE_LETTER:
-                    case Character.MODIFIER_LETTER:
-                    case Character.OTHER_LETTER:
-                    case Character.LETTER_NUMBER:
-                        continue;
-                    case Character.NON_SPACING_MARK:
-                    case Character.COMBINING_SPACING_MARK:
-                    case Character.DECIMAL_DIGIT_NUMBER:
-                    case Character.CONNECTOR_PUNCTUATION:
-                        if (i > 0)  continue;
-                }
-                return '"' + pname + '"';
-            }
-            return pname;
-        }
-
         public String toString() {
             StringBuffer sb = new StringBuffer();  toString(sb, -1);  return sb.toString();
         }
@@ -703,12 +637,12 @@ public abstract class Element {
                 for (Iterator it = mAttributes.entrySet().iterator(); it.hasNext(); index++) {
                     indent(sb, indent, true);
                     Map.Entry attr = (Map.Entry) it.next();
-                    sb.append(jsEncodeKey((String) attr.getKey())).append(indent >= 0 ? ": " : ":");
+                    sb.append(StringUtil.jsEncodeKey((String) attr.getKey())).append(indent >= 0 ? ": " : ":");
 
                     Object value = attr.getValue();
-                    if (value instanceof String)                  sb.append('"').append(jsEncode(value)).append('"');
+                    if (value instanceof String)                  sb.append('"').append(StringUtil.jsEncode(value)).append('"');
                     else if (value instanceof JavaScriptElement)  ((JavaScriptElement) value).toString(sb, indent);
-                    else if (value instanceof Element)            sb.append('"').append(jsEncode(value)).append('"');
+                    else if (value instanceof Element)            sb.append('"').append(StringUtil.jsEncode(value)).append('"');
                     else if (!(value instanceof List))            sb.append(value);
                     else {
                         sb.append('[');
@@ -721,7 +655,7 @@ public abstract class Element {
                                 if (child instanceof JavaScriptElement)
                                     ((JavaScriptElement) child).toString(sb, lindent);
                                 else
-                                    sb.append('"').append(jsEncode(child)).append('"');
+                                    sb.append('"').append(StringUtil.jsEncode(child)).append('"');
                                 if (lit.nextIndex() != lsize)  sb.append(",");
                             }
                         sb.append(']');
@@ -730,7 +664,7 @@ public abstract class Element {
                 }
                 if (needNamespace) {
                     indent(sb, indent, true);
-                    sb.append(A_NAMESPACE).append(indent >= 0 ? ": \"" : ":\"").append(jsEncode(mNamespaces.get(""))).append('"');
+                    sb.append(A_NAMESPACE).append(indent >= 0 ? ": \"" : ":\"").append(StringUtil.jsEncode(mNamespaces.get(""))).append('"');
                 }
                 indent(sb, indent - 2, true);
             }
