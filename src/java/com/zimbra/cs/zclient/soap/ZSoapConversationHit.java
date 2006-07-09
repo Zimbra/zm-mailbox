@@ -43,6 +43,7 @@ class ZSoapConversationHit implements ZConversationHit {
     private String mSubject;
     private String mSortField;
     private String mTags;
+    private float mScore;
     private int mMessageCount;
     private long mDate;
     private List<String> mMessageIds;
@@ -57,6 +58,7 @@ class ZSoapConversationHit implements ZConversationHit {
         mSubject = e.getElement(MailService.E_SUBJECT).getText();        
         mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);
         mMessageCount = (int) e.getAttributeLong(MailService.A_NUM);
+        mScore = (float) e.getAttributeDouble(MailService.A_SCORE, 0);
         mMessageIds = new ArrayList<String>();
         for (Element m: e.listElements(MailService.E_MSG)) {
             mMessageIds.add(m.getAttribute(MailService.A_ID));
@@ -70,6 +72,10 @@ class ZSoapConversationHit implements ZConversationHit {
 
     public String getId() {
         return mId;
+    }
+    
+    public float getScore() {
+        return mScore;
     }
 
     public String toString() {

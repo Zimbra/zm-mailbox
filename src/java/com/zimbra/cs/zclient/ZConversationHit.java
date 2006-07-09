@@ -44,8 +44,6 @@ public interface ZConversationHit extends ZSearchHit {
     
     public String getFlags();
     
-    public String getSortFied();
-    
     public String getSubject();
     
     public String getFragment();

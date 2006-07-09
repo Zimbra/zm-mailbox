@@ -91,23 +91,7 @@ public class ZSearchParams {
      */
     private String mQuery;
     
-    /**
-     * cursorPreviousId and cursorPreviousSortValue 
-     * correspond to the last hit on the previous page (assuming you're
-     * going forward -- if you're backing up then th
-     * ey should be the first
-     * hit on the previous page)....the server uses those parameters to find
-     * the spot in the new results that corresponds to your old position:
-     * even if some entries have been removed or added to the search results
-     * (e.g. if you are searching is:unread and you read some)
-     */
-    
-    private String mCursorPreviousId;
-    
-    /**
-     * @see #cursorPreviousId
-     */
-    private String mCursorPreviousSortValue;
+    private Cursor mCursor;
 
     public ZSearchParams(String query) {
         mQuery = query;
@@ -123,22 +107,14 @@ public class ZSearchParams {
         mSortBy = folder.getSortBy();
     }
 
-    public String getCursorPreviousId() {
-        return mCursorPreviousId;
+    public Cursor getCursor() {
+        return mCursor;
     }
 
-    public void setCursorPreviousId(String cursorPreviousId) {
-        mCursorPreviousId = cursorPreviousId;
+    public void setCursor(Cursor cursor) {
+        mCursor = cursor;
     }
-
-    public String getCursorPreviousSortValue() {
-        return mCursorPreviousSortValue;
-    }
-
-    public void setCursorPreviousSortValue(String cursorPreviousSortValue) {
-        mCursorPreviousSortValue = cursorPreviousSortValue;
-    }
-
+    
     public boolean isFetchFirstMessage() {
         return mFetchFirstMessage;
     }
@@ -209,5 +185,39 @@ public class ZSearchParams {
 
     public void setTypes(String types) {
         mTypes = types;
+    }
+    
+    public static class Cursor {
+        
+        private String mPreviousId;
+        
+        /**
+         * @see #cursorPreviousId
+         */
+        private String mPreviousSortValue;
+
+        /**
+         * cursorPreviousId and cursorPreviousSortValue 
+         * correspond to the last hit on the previous page (assuming you're
+         * going forward -- if you're backing up then th
+         * ey should be the first
+         * hit on the previous page)....the server uses those parameters to find
+         * the spot in the new results that corresponds to your old position:
+         * even if some entries have been removed or added to the search results
+         * (e.g. if you are searching is:unread and you read some)
+         */
+
+        public Cursor(String prevoiusId, String previousSortValue) {
+            mPreviousId = prevoiusId;
+            mPreviousSortValue = previousSortValue;
+        }
+        
+        public String getPreviousId() {
+            return mPreviousId;
+        }
+
+        public String getPreviousSortValue() {
+            return mPreviousSortValue;
+        }
     }
 }

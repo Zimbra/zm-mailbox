@@ -47,11 +47,7 @@ public interface ZMessageHit extends ZSearchHit {
      */
     public String getTagIds();
 
-    public String getSortFied();
-    
     public String getSubject();
-    
-    public float getScore();
     
     public String getFragment();
     

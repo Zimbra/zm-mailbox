@@ -34,6 +34,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.TreeMap;
 
 import org.apache.commons.cli.CommandLine;
@@ -50,6 +51,7 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
 import com.zimbra.cs.zclient.ZMailbox.SortBy;
+import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 import com.zimbra.cs.zclient.ZTag.Color;
 import com.zimbra.cs.zclient.soap.ZSoapMailbox;
 import com.zimbra.soap.Element;
@@ -178,6 +180,8 @@ public class ZMailboxUtil implements DebugListener {
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", Category.FOLDER, 2, 2),        
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", Category.TAG, 2, 2),
         SEARCH("search", "s", "{query}", Category.SEARCH, 1, 1),
+        SEARCH_NEXT("searchNext", "sn", "", Category.SEARCH, 0, 0),
+        SEARCH_PREVIOUS("searchPrevious", "sp", "", Category.SEARCH, 0, 0),        
         SYNC_FOLDER("syncFolder", "sf", "{folder-path}", Category.FOLDER, 1, 1),                        
         TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*] [{tcon}]", Category.CONVERSATION, 2, 4),
         TAG_ITEM("tagItem", "ti", "{item-ids} {tag-name} [0|1*] [{tcon}]", Category.ITEM, 2, 4),
@@ -225,6 +229,9 @@ public class ZMailboxUtil implements DebugListener {
     
     private Map<String,Command> mCommandIndex;
     private ZMailbox mMbox;
+    private String mPrompt = "mbox> ";
+    ZSearchParams mSearchParams;
+    ZSearchResult mSearchResult;
     
     private boolean isId(String value) {
         return (value.length() == 36 &&
@@ -263,7 +270,8 @@ public class ZMailboxUtil implements DebugListener {
     }
     
     public void initMailbox() throws ServiceException, IOException {
-        mMbox = ZSoapMailbox.getMailbox(mAccount, mPassword, mUrl, mDebug ? this : null);        
+        mMbox = ZSoapMailbox.getMailbox(mAccount, mPassword, mUrl, mDebug ? this : null);
+        mPrompt = String.format("mbox %s> ", mAccount);
     }
     
     private ZTag lookupTag(String idOrName) throws SoapFaultException {
@@ -466,6 +474,12 @@ public class ZMailboxUtil implements DebugListener {
         case SEARCH:
             doSearch(args);
             break;
+        case SEARCH_NEXT:
+            doSearchNext(args);
+            break;
+        case SEARCH_PREVIOUS:
+            doSearchPrevious(args);
+            break;
         case SYNC_FOLDER:
             mMbox.syncFolder(lookupFolderId(args[1]));
             break;
@@ -494,11 +508,44 @@ public class ZMailboxUtil implements DebugListener {
     }
     
     private void doSearch(String[] args) throws ServiceException {
-        ZSearchParams sp = new ZSearchParams(args[1]);
-        ZSearchResult result = mMbox.search(sp);
-        System.out.println(result);
+        mSearchParams = new ZSearchParams(args[1]);
+        mCursors.clear();
+        //System.out.println(result);
+        doSearch(mSearchParams);
+    }
+    
+    private Stack<Cursor> mCursors = new Stack<Cursor>();
+
+    private void doSearchNext(String[] args) throws ServiceException {
+        ZSearchParams sp = mSearchParams;
+        ZSearchResult sr = mSearchResult;
+        if (sp == null || sr == null || !sr.hasMore())
+            return;
+
+        List<ZSearchHit> hits = sr.getHits();
+        if (hits.size() == 0) return;
+        ZSearchHit lastHit = hits.get(hits.size()-1);
+        Cursor cursor = new Cursor(lastHit.getId(), lastHit.getSortFied());
+        mCursors.push(cursor);
+        sp.setCursor(cursor);
+        doSearch(sp);
+    }
+    
+    private void doSearchPrevious(String[] args) throws ServiceException {
+        ZSearchParams sp = mSearchParams;
+        ZSearchResult sr = mSearchResult;
+        if (sp == null || sr == null || mCursors.size() == 0)
+            return;
+        mCursors.pop();
+        sp.setCursor(mCursors.size() > 0 ? mCursors.peek() : null);
+        doSearch(sp);
+    }
+    
+    private void doSearch(ZSearchParams sp) throws ServiceException {
+        mSearchResult =  mMbox.search(sp);
+        //System.out.println(result);
         Calendar c = Calendar.getInstance();        
-        for (ZSearchHit hit: result.getHits()) {
+        for (ZSearchHit hit: mSearchResult.getHits()) {
             if (hit instanceof ZConversationHit) {
                 ZConversationHit ch = (ZConversationHit) hit;
                 c.setTimeInMillis(ch.getDate());
@@ -637,7 +684,7 @@ public class ZMailboxUtil implements DebugListener {
         mInteractive = true;
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
-            System.out.print("mbox> ");
+            System.out.print(mPrompt);
             String line = in.readLine();
             if (line == null || line.length() == -1)
                 break;

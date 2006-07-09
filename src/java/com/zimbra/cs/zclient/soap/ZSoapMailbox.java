@@ -47,6 +47,7 @@ import com.zimbra.cs.zclient.ZSearchHit;
 import com.zimbra.cs.zclient.ZSearchParams;
 import com.zimbra.cs.zclient.ZSearchResult;
 import com.zimbra.cs.zclient.ZTag;
+import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 import com.zimbra.cs.zclient.ZTag.Color;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -304,10 +305,11 @@ public class ZSoapMailbox extends ZMailbox {
         
         req.addElement(MailService.E_QUERY).setText(params.getQuery());
         
-        if (params.getCursorPreviousId() != null || params.getCursorPreviousSortValue() != null) {
-            Element cursor = req.addElement(MailService.E_CURSOR);
-            if (params.getCursorPreviousId() != null) cursor.addAttribute(MailService.A_ID, params.getCursorPreviousId());
-            if (params.getCursorPreviousSortValue() != null) cursor.addAttribute(MailService.A_SORTVAL, params.getCursorPreviousSortValue());
+        if (params.getCursor() != null) {
+            Cursor cursor = params.getCursor();
+            Element cursorEl = req.addElement(MailService.E_CURSOR);
+            if (cursor.getPreviousId() != null) cursorEl.addAttribute(MailService.A_ID, cursor.getPreviousId());
+            if (cursor.getPreviousSortValue() != null) cursorEl.addAttribute(MailService.A_SORTVAL, cursor.getPreviousSortValue());
         }
         
         return new ZSoapSearchResult(invoke(req));
