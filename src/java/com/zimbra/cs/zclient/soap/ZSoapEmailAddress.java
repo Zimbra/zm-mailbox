@@ -35,7 +35,6 @@ import com.zimbra.soap.Element;
 public class ZSoapEmailAddress implements ZEmailAddress {
 
     private String mAddress;
-    private String mContent;
     private String mDisplay;
     private String mPersonal;
     private String mType;
@@ -50,7 +49,6 @@ public class ZSoapEmailAddress implements ZEmailAddress {
         }
         addr = new ZSoapEmailAddress();
         addr.mAddress = e.getAttribute(MailService.A_ADDRESS, null);
-        addr.mContent = e.getText();
         addr.mDisplay = e.getAttribute(MailService.A_DISPLAY, null);
         addr.mPersonal = e.getAttribute(MailService.A_PERSONAL, null);
         addr.mType = e.getAttribute(MailService.A_TYPE, "");
@@ -63,10 +61,6 @@ public class ZSoapEmailAddress implements ZEmailAddress {
     
     public String getAddress() {
         return mAddress;
-    }
-
-    public String getContent() {
-        return mContent;
     }
 
     public String getDisplay() {
@@ -84,7 +78,6 @@ public class ZSoapEmailAddress implements ZEmailAddress {
     ZSoapSB toString(ZSoapSB sb) {
         sb.beginStruct("ZEmailAddress");
         sb.add("address", mAddress);
-        sb.add("content", mContent);
         sb.add("display", mDisplay);
         sb.add("personal", mPersonal);
         sb.add("type", mType);

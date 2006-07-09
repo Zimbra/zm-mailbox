@@ -51,10 +51,4 @@ public interface ZEmailAddress {
      */
     public String getDisplay();
     
-    /**
-     * the original email string as specified by the sender (since we can't reliably reconstruct it
-     * out of the components)
-     */
-    public String getContent();
-
 }
