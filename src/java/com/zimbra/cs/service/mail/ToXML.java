@@ -39,6 +39,7 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.*;
 
+import org.apache.commons.httpclient.HttpsURL;
 import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -1324,8 +1325,11 @@ public class ToXML {
 	public static Element encodeRestUrl(Element m, MailItem item) {
 		try {
 			Account account = item.getMailbox().getAccount();
-			String url = UserServlet.getRestUrl(account, false);
-			url = new HttpURL(url + item.getPath()).toString();
+			String url = UserServlet.getRestUrl(account, true);
+			if (url.startsWith("https"))
+				url = new HttpsURL(url + item.getPath()).toString();
+			else
+				url = new HttpURL(url + item.getPath()).toString();
 			return m.addAttribute(MailService.A_REST_URL, url);
 		} catch (ServiceException se) {
 			mLog.error("cannot generate REST url", se);

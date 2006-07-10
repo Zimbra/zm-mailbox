@@ -55,6 +55,10 @@ public class URLUtil {
 
     private static final String SCHEME_HTTP  = "http://";
     private static final String SCHEME_HTTPS = "https://";
+    
+    private static int DEFAULT_HTTP_PORT = 80;
+    private static int DEFAULT_HTTPS_PORT = 443;
+    
 
     /**
      * Return the URL where SOAP service is available for given store server.
@@ -92,6 +96,7 @@ public class URLUtil {
         }
         
         boolean ssl;
+        boolean printPort = true;
         
         switch (mode) {
         case both:
@@ -117,16 +122,23 @@ public class URLUtil {
             if (port < 1) {
                 throw ServiceException.INVALID_REQUEST("server " + server.getName() + " has invalid " + Provisioning.A_zimbraMailSSLPort + ": " + port, null);
             }
+            if (port == DEFAULT_HTTPS_PORT)
+            	printPort = false;
         } else {
             scheme = SCHEME_HTTP;
             port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
             if (port < 1) {
                 throw ServiceException.INVALID_REQUEST("server " + server.getName() + " has invalid " + Provisioning.A_zimbraMailPort + ": " + port, null);
             }
+            if (port == DEFAULT_HTTP_PORT)
+            	printPort = false;
         }
 
         StringBuffer sb = new StringBuffer(128);
-        sb.append(scheme).append(hostname).append(":").append(port).append(path);
+        sb.append(scheme).append(hostname);
+        if (printPort)
+        	sb.append(":").append(port);
+        sb.append(path);
         return sb.toString();
     }
 
