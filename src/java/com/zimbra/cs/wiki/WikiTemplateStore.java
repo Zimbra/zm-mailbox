@@ -49,7 +49,7 @@ import com.zimbra.cs.wiki.Wiki.WikiContext;
  */
 public class WikiTemplateStore {
 	
-	private static final long TTL = 60000;  // 10 minutes
+	private static final long TTL = 10  * 60 * 1000;  // 10 minutes
 	private static final int DEFAULT_CACHE_SIZE = 1024;
 	private static LRUMap sTemplateStoreCache;
 	

@@ -555,8 +555,9 @@ public abstract class Wiki {
 	}
 
 	public static Wiki getInstance(WikiContext ctxt, String acct, String key) throws ServiceException {
+		int fid;
 		try {
-			int fid = Integer.parseInt(key);
+			fid = Integer.parseInt(key);
 			return getInstance(ctxt, acct, fid);
 		} catch (NumberFormatException e) {
 			Provisioning prov = Provisioning.getInstance();
@@ -565,11 +566,16 @@ public abstract class Wiki {
 			Server localServer = prov.getLocalServer();
 			if (acctServer.getId().equals(localServer.getId())) {
 				Mailbox mbox = Mailbox.getMailboxByAccount(account);
-				MailItem item = mbox.getItemByPath(ctxt.octxt, key, 0, true);
-				if (!(item instanceof Folder)) {
-					item = mbox.getItemById(ctxt.octxt, item.getFolderId(), MailItem.TYPE_UNKNOWN);
+				if (key.equals("/"))
+					fid = Mailbox.ID_FOLDER_USER_ROOT;
+				else {
+					MailItem item = mbox.getItemByPath(ctxt.octxt, key, 0, true);
+					if (item instanceof Folder)
+						fid = item.getId();
+					else
+						fid = item.getFolderId();
 				}
-				return getInstance(ctxt, acct, ((Folder)item).getId());
+				return getInstance(ctxt, acct, fid);
 			}
 			Pair<String,String> k = Pair.get(account.getId(), key);
 			Wiki wiki = (Wiki)sWikiNotebookCache.get(k);
