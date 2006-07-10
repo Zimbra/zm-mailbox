@@ -288,7 +288,7 @@
 		<deploy url="http://${deploy.host}:${deploy.port}/manager/" username="zimbra" password="zimbra" path="/service" war="${warfile}" update="true" />
 	</target>
 
-	<target name="init-opt-zimbra" depends="dev-dist">
+	<target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert">
 		<copy todir="${zimbra.home.dir}">
 			<fileset dir="${dist.dir}"/>
 		</copy>
