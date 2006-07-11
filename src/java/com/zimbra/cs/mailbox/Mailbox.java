@@ -4560,11 +4560,13 @@ public class Mailbox {
     }
 
     public Document addDocumentRevision(OperationContext octxt, Document doc, byte[] rawData, String author) throws ServiceException {
+        String digest = ByteUtil.getDigest(rawData);
         StoreManager sm = StoreManager.getInstance();
         Blob blob = null;
         boolean success = false;
         try {
-            AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, null, 0, 0);
+            AddDocumentRevision redoRecorder =
+                new AddDocumentRevision(mId, digest, rawData.length, 0);
 
             beginTransaction("addDocumentRevision", octxt, redoRecorder);
             redoRecorder.setAuthor(author);
@@ -4574,7 +4576,7 @@ public class Mailbox {
             redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
             markOtherItemDirty(blob);
 
-            ParsedDocument pd = new ParsedDocument(blob.getFile(), doc.getFilename(), doc.getContentType(), getOperationTimestampMillis());
+            ParsedDocument pd = new ParsedDocument(rawData, digest, doc.getFilename(), doc.getContentType(), getOperationTimestampMillis());
             doc.addRevision(author, pd);
             mCurrentChange.setIndexedItem(doc, pd);
 
@@ -4707,12 +4709,14 @@ public class Mailbox {
                 byte[] rawData,
                 MailItem parent,
                 byte type) throws ServiceException {
+        String digest = ByteUtil.getDigest(rawData);
         Document doc;
         boolean success = false;
         StoreManager sm = StoreManager.getInstance();
         Blob blob = null;
         try {
-            SaveDocument redoRecorder = new SaveDocument(mId, null, 0, folderId);
+            SaveDocument redoRecorder =
+                new SaveDocument(mId, digest, rawData.length, folderId);
 
             beginTransaction("createDoc", octxt, redoRecorder);
             redoRecorder.setFilename(filename);
@@ -4721,16 +4725,22 @@ public class Mailbox {
             int itemId = getNextItemId(ID_AUTO_INCREMENT);
             short volumeId = Volume.getCurrentMessageVolume().getId();
 
-            blob = sm.storeIncoming(rawData, null, null, volumeId);
+            blob = sm.storeIncoming(rawData, digest, null, volumeId);
             redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
             markOtherItemDirty(blob);
 
-            ParsedDocument pd = new ParsedDocument(blob.getFile(), filename, mimeType, getOperationTimestampMillis());
+            ParsedDocument pd = new ParsedDocument(rawData, digest, filename, mimeType, getOperationTimestampMillis());
 
             if (type == MailItem.TYPE_DOCUMENT)
-                doc = Document.create(itemId, getFolderById(folderId), volumeId, filename, author, mimeType, pd, parent);
+                doc = Document.create(
+                        itemId, getFolderById(folderId),
+                        volumeId, filename,
+                        author, mimeType, pd, parent);
             else if (type == MailItem.TYPE_WIKI)
-                doc = WikiItem.create(itemId, getFolderById(folderId), volumeId, filename, author, pd, parent);
+                doc = WikiItem.create(
+                        itemId, getFolderById(folderId),
+                        volumeId, filename,
+                        author, pd, parent);
             else
                 throw MailServiceException.INVALID_TYPE(type);
 

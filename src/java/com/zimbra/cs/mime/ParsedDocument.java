@@ -28,12 +28,15 @@
  */
 package com.zimbra.cs.mime;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import javax.activation.DataSource;
 import javax.activation.FileDataSource;
 
 import org.apache.commons.codec.binary.Base64;
@@ -91,37 +94,71 @@ public class ParsedDocument {
         int getTotalSize() throws IOException  { consumeRemainder();  return mSize; }
     }
 
-    private class DocumentDataSource extends FileDataSource {
+    private static interface DocumentDataSource extends DataSource {
+        public String getDigest() throws IOException;
+        public int getSize() throws IOException;
+    }
+
+    private class FileDocumentDataSource extends FileDataSource implements DocumentDataSource {
         private DigestingInputStream mStream;
 
-        private DocumentDataSource()    { super(mFile); }
-        public String getContentType()  { return mContentType; }
-        public String getName()         { return mFilename; }
+        private FileDocumentDataSource(File file) { super(file); }
+        public String getContentType() { return mContentType; }
+        public String getName()        { return mFilename; }
         public InputStream getInputStream() throws IOException {
             return mStream = new DigestingInputStream(super.getInputStream());
         }
-        String getDigest() throws IOException  { checkStream();  return encodeDigest(mStream.getDigest()); }
-        int getSize() throws IOException       { checkStream();  return mStream.getTotalSize(); }
+        public OutputStream getOutputStream() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public String getDigest() throws IOException  { checkStream();  return encodeDigest(mStream.getDigest()); }
+        public int getSize() throws IOException       { checkStream();  return mStream.getTotalSize(); }
         private void checkStream() throws IOException  { if (mStream == null) getInputStream(); }
+    }
+
+    private class ByteArrayDataSource implements DocumentDataSource {
+        private byte[] mRawData;
+        private String mMyDigest;
+
+        private ByteArrayDataSource(byte[] rawData, String digest) {
+            mRawData = rawData;
+            mMyDigest = digest;
+        }
+
+        public String getContentType() { return mContentType; }
+        public String getName() { return mFilename; }
+        public InputStream getInputStream() throws IOException {
+            return new ByteArrayInputStream(mRawData);
+        }
+        public OutputStream getOutputStream() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+        public String getDigest() throws IOException { return mMyDigest; }
+        public int getSize() throws IOException { return mRawData.length; }
     }
 
     String mContentType;
     String mFilename;
-    File mFile;
     private int mSize;
     private String mDigest;
     private Document mDocument;
     private String mFragment;
     private long mCreatedDate;
 
-    public ParsedDocument(File file, String filename, String ctype)
-    throws ServiceException, IOException {
-    	this(file, filename, ctype, file.lastModified());
-    }
-    
     public ParsedDocument(File file, String filename, String ctype, long createdDate)
     throws ServiceException, IOException {
-        mFile = file;
+        DocumentDataSource ds = new FileDocumentDataSource(file);
+        init(ds, filename, ctype, createdDate);
+    }
+
+    public ParsedDocument(byte[] rawData, String digest, String filename, String ctype, long createdDate)
+    throws ServiceException, IOException {
+        DocumentDataSource ds = new ByteArrayDataSource(rawData, digest);
+        init(ds, filename, ctype, createdDate);
+    }
+
+    private void init(DocumentDataSource ds, String filename, String ctype, long createdDate)
+    throws ServiceException, IOException {
         mFilename = filename;
         mContentType = ctype;
         mCreatedDate = createdDate;
@@ -130,7 +167,6 @@ public class ParsedDocument {
             MimeHandler handler = MimeHandler.getMimeHandler(ctype);
             assert(handler != null);
 
-            DocumentDataSource ds = new DocumentDataSource();
             if (handler.isIndexingEnabled())
                 handler.init(ds);
             handler.setFilename(filename);
@@ -174,17 +210,17 @@ public class ParsedDocument {
         long timer, time;
         for (int i = 0; i < 5; i++) {
             timer = System.currentTimeMillis();
-            pd = new ParsedDocument(new File("C:\\tmp\\todo.txt"), "todo.txt", "text/plain");
+            pd = new ParsedDocument(new File("C:\\tmp\\todo.txt"), "todo.txt", "text/plain", timer);
             time = (System.currentTimeMillis() - timer);
             System.out.println(pd.getFilename() + " (" + pd.getSize() + "b) {" + time + "us} [" + pd.getDigest() + "]: " + pd.getFragment());
 
             timer = System.currentTimeMillis();
-            pd = new ParsedDocument(new File("C:\\tmp\\SOLTYREI.html"), "SOLTYREI.html", "text/html");
+            pd = new ParsedDocument(new File("C:\\tmp\\SOLTYREI.html"), "SOLTYREI.html", "text/html", timer);
             time = (System.currentTimeMillis() - timer);
             System.out.println(pd.getFilename() + " (" + pd.getSize() + "b) {" + time + "us} [" + pd.getDigest() + "]: " + pd.getFragment());
 
             timer = System.currentTimeMillis();
-            pd = new ParsedDocument(new File("C:\\tmp\\postgresql-8.0-US.pdf"), "postgresql-8.0-US.pdf", "application/pdf");
+            pd = new ParsedDocument(new File("C:\\tmp\\postgresql-8.0-US.pdf"), "postgresql-8.0-US.pdf", "application/pdf", timer);
             time = (System.currentTimeMillis() - timer);
             System.out.println(pd.getFilename() + " (" + pd.getSize() + "b) {" + time + "us} [" + pd.getDigest() + "]: " + pd.getFragment());
         }
