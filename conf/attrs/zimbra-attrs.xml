@@ -1405,7 +1405,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>URL at which this MTA (via zimbra saslauthd) should authenticate.  Set by setting zimbraMtaAuthHost.</desc>
 </attr>
 
-<attr id="311" name="zimbraMtaMyNetworks" type="astring" max="1024" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="311" name="zimbraMtaMyNetworks" type="astring" max="10240" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
   <desc>value of postfix mynetworks</desc>
 </attr>
 
