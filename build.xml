@@ -330,6 +330,7 @@
 		<!-- tomcat -->
 		<copy todir="${dist.dir}/tomcat/webapps" file="${warfile}" overwrite="true"/>
 		<copy tofile="${dist.dir}/tomcat/conf/server.xml" file="${config.dir}/tomcat-5.5/server.xml${production.suffix}" overwrite="true"/>
+		<copy tofile="${dist.dir}/tomcat/conf/context.xml" file="${config.dir}/tomcat-5.5/context.xml" overwrite="true"/>
 		<copy todir="${dist.dir}/tomcat/conf" file="${config.dir}/tomcat-5.5/tomcat-users.xml" overwrite="true"/>
 		<copy todir="${dist.dir}/tomcat/conf" file="${config.dir}/tomcat-5.5/web.xml" overwrite="true"/>
 		<copy todir="${dist.dir}/tomcat/common/lib" overwrite="true"><fileset dir="${jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar" /></copy>
