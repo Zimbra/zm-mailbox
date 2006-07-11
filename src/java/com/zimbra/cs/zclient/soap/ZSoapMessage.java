@@ -43,7 +43,6 @@ class ZSoapMessage implements ZMessage {
     private String mTags;
     private String mFolderId;
     private String mConversationId;
-    private String mFragment;
     private long mReceivedDate;
     private long mSentDate;
     private String mMessageIdHeader;
@@ -58,8 +57,6 @@ class ZSoapMessage implements ZMessage {
         mFlags = e.getAttribute(MailService.A_FLAGS, "");
         mTags = e.getAttribute(MailService.A_TAGS, "");
         mSubject = e.getElement(MailService.E_SUBJECT).getText();
-        Element fragEl = e.getOptionalElement(MailService.E_FRAG);
-        mFragment = fragEl == null ? null : fragEl.getText();
         mMessageIdHeader = e.getElement(MailService.E_MSG_ID_HDR).getText();
         mReceivedDate = e.getAttributeLong(MailService.A_DATE, 0);
         mSentDate = e.getAttributeLong(MailService.A_SENT_DATE, 0);
@@ -95,7 +92,6 @@ class ZSoapMessage implements ZMessage {
         sb.add("flags", mFlags);
         sb.add("tags", mTags);
         sb.add("subject", mSubject);
-        sb.add("fragment", mFragment);
         sb.add("messageIdHeader", mMessageIdHeader);
         sb.addDate("receivedDate", mReceivedDate);
         sb.addDate("sentDate", mSentDate);
@@ -144,10 +140,6 @@ class ZSoapMessage implements ZMessage {
 
     public String getFolderId() {
         return mFolderId;
-    }
-
-    public String getFragment() {
-        return mFragment;
     }
 
     public String getMessageIdHeader() {

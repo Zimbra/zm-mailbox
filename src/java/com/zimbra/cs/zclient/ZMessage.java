@@ -46,8 +46,6 @@ public interface ZMessage  {
     public String getFolderId();
     
     public String getConversationId();
-    
-    public String getFragment();
 
     public long getReceivedDate();
     

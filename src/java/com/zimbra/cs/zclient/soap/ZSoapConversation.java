@@ -91,8 +91,7 @@ class ZSoapConversation implements ZConversation {
     }
 
     public List<ZMessageSummary> getMessageSummaries() {
-        // TODO Auto-generated method stub
-        return null;
+        return mMessageSummaries;
     }
     
     private static class ZSoapMessageSummary implements ZMessageSummary {

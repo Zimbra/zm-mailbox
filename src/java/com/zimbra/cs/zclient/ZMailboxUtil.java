@@ -48,6 +48,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
 import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
 import com.zimbra.cs.zclient.ZMailbox.SortBy;
@@ -157,7 +158,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_ALL_TAGS("getAllTags", "gat", "[-v]", Category.TAG, 0, 1),        
         GET_ALL_FOLDERS("getAllFolders", "gaf", "[-v]", Category.FOLDER, 0, 1),
         GET_ALL_MOUNTPOINTS("getAllMountpoints", "gam", "[-v]", Category.FOLDER, 0, 1),
-        GET_CONVERSATION("getConversation", "gc", "{conv-id}", Category.CONVERSATION, 1, 1),
+        GET_CONVERSATION("getConversation", "gc", "{conv-id}", Category.CONVERSATION, 1, 2),
         GET_MESSAGE("getMessage", "gm", "{msg-id}", Category.MESSAGE, 1, 1),        
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         IMPORT_URL_INTO_FOLDER("importURLIntoFolder", "iuif", "{folder-path} {url}", Category.FOLDER, 2, 2),
@@ -180,6 +181,7 @@ public class ZMailboxUtil implements DebugListener {
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", Category.FOLDER, 2, 2),        
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", Category.TAG, 2, 2),
         SEARCH("search", "s", "{query}", Category.SEARCH, 1, 1),
+        SEARCH_CURRENT("searchCurrent", "sc", "", Category.SEARCH, 0, 0),        
         SEARCH_NEXT("searchNext", "sn", "", Category.SEARCH, 0, 0),
         SEARCH_PREVIOUS("searchPrevious", "sp", "", Category.SEARCH, 0, 0),        
         SYNC_FOLDER("syncFolder", "sf", "{folder-path}", Category.FOLDER, 1, 1),                        
@@ -301,7 +303,41 @@ public class ZMailboxUtil implements DebugListener {
     private String lookupFolderId(String pathOrId) throws ServiceException {
         return lookupFolderId(pathOrId, false);
     }
-    
+
+    private String translateId(String indexOrId) throws ServiceException {
+        StringBuilder ids = new StringBuilder();
+        for (String t : indexOrId.split(",")) {
+            
+            // TODO: REGEX? ^\d+s$
+            if (t.length() > 1 && t.charAt(t.length()-1) == 's') {
+                t = t.substring(0, t.length()-1);
+                //System.out.println(t);                
+                int i = t.indexOf('-');
+                if (i != -1) {
+                    int start = Integer.parseInt(t.substring(0, i));
+                    String es = t.substring(i+1, t.length());
+//                    System.out.println(es);
+                    int end = Integer.parseInt(t.substring(i+1, t.length()));
+                    for (int j = start; j <= end; j++) {
+                        String id = mSearchIndexToId.get(j);
+                        if (id == null) throw SoapFaultException.CLIENT_ERROR("unknown search result index: "+t, null);
+                        if (ids.length() > 0) ids.append(",");                        
+                        ids.append(id);
+                    }
+                } else {
+                    String id = mSearchIndexToId.get(Integer.parseInt(t));
+                    if (id == null) throw SoapFaultException.CLIENT_ERROR("unknown search result index: "+t, null);
+                    if (ids.length() > 0) ids.append(",");                    
+                    ids.append(id);
+                }
+            } else {
+                if (ids.length() > 0) ids.append(",");                
+                ids.append(t);
+            }
+        }
+        return ids.toString();
+    }
+
     private String lookupFolderId(String pathOrId, boolean parent) throws ServiceException {
         if (parent) pathOrId = ZMailbox.getParentPath(pathOrId);
         if (pathOrId == null || pathOrId.length() == 0) return null;
@@ -367,7 +403,7 @@ public class ZMailboxUtil implements DebugListener {
             mMbox.createTag(args[1], Color.fromString(args[2]));
             break;
         case DELETE_CONVERSATION:
-            mMbox.deleteConversation(args[1], param(args, 2));
+            mMbox.deleteConversation(translateId(args[1]), param(args, 2));
             break;
         case DELETE_FOLDER:
             mMbox.deleteFolder(lookupFolderId(args[1]));
@@ -388,7 +424,7 @@ public class ZMailboxUtil implements DebugListener {
             System.exit(0);
             break;
         case FLAG_CONVERSATION:
-            mMbox.flagConversation(args[1], paramb(args, 2, true), param(args, 3));
+            mMbox.flagConversation(translateId(args[1]), paramb(args, 2, true), param(args, 3));
             break;            
         case FLAG_ITEM:
             mMbox.flagItem(args[1], paramb(args, 2, true), param(args, 3));
@@ -418,7 +454,7 @@ public class ZMailboxUtil implements DebugListener {
             mMbox.importURLIntoFolder(lookupFolderId(args[1]), args[2]);
             break;
         case MARK_CONVERSATION_READ:
-            mMbox.markConversationRead(args[1], paramb(args, 2, true), param(args, 3));
+            mMbox.markConversationRead(translateId(args[1]), paramb(args, 2, true), param(args, 3));
             break;
         case MARK_ITEM_READ:
             mMbox.markItemRead(args[1], paramb(args, 2, true), param(args, 3));
@@ -430,7 +466,7 @@ public class ZMailboxUtil implements DebugListener {
             mMbox.markMessageRead(args[1], paramb(args, 2, true));
             break;
         case MARK_CONVERSATION_SPAM:            
-            mMbox.markConversationSpam(args[1], paramb(args, 2, true), lookupFolderId(param(args, 3)), param(args, 4));
+            mMbox.markConversationSpam(translateId(args[1]), paramb(args, 2, true), lookupFolderId(param(args, 3)), param(args, 4));
             break;            
         case MARK_MESSAGE_SPAM:            
             mMbox.markMessageSpam(args[1], paramb(args, 2, true), lookupFolderId(param(args, 3)));
@@ -454,7 +490,7 @@ public class ZMailboxUtil implements DebugListener {
             mMbox.modifyTagColor(lookupTag(args[1]).getId(), Color.fromString(args[2]));            
             break;
         case MOVE_CONVERSATION:
-            mMbox.moveConversation(args[1], lookupFolderId(param(args, 2)), param(args, 3));
+            mMbox.moveConversation(translateId(args[1]), lookupFolderId(param(args, 2)), param(args, 3));
             break;                        
         case MOVE_ITEM:
             mMbox.moveItem(args[1], lookupFolderId(param(args, 2)), param(args, 3));
@@ -477,6 +513,9 @@ public class ZMailboxUtil implements DebugListener {
         case SEARCH_NEXT:
             doSearchNext(args);
             break;
+        case SEARCH_CURRENT:
+            doSearchCurrent(args);
+            break;            
         case SEARCH_PREVIOUS:
             doSearchPrevious(args);
             break;
@@ -484,7 +523,7 @@ public class ZMailboxUtil implements DebugListener {
             mMbox.syncFolder(lookupFolderId(args[1]));
             break;
         case TAG_CONVERSATION:
-            mMbox.tagConversation(args[1], lookupTag(args[2]).getId(), paramb(args, 3, true), param(args, 4));
+            mMbox.tagConversation(translateId(args[1]), lookupTag(args[2]).getId(), paramb(args, 3, true), param(args, 4));
             break;
         case TAG_ITEM:
             mMbox.tagItem(args[1], lookupTag(args[2]).getId(), paramb(args, 3, true), param(args, 4));
@@ -507,14 +546,27 @@ public class ZMailboxUtil implements DebugListener {
         return sb.toString();
     }
     
+    
+    private Stack<Cursor> mSearchCursors = new Stack<Cursor>();
+    private Stack<Integer> mSearchOffsets = new Stack<Integer>();
+    private Map<Integer, String> mSearchIndexToId = new HashMap<Integer, String>();
+
     private void doSearch(String[] args) throws ServiceException {
         mSearchParams = new ZSearchParams(args[1]);
-        mCursors.clear();
+        mSearchCursors.clear();
+        mSearchOffsets.clear();
+        mSearchOffsets.push(0);
+        mSearchIndexToId.clear();
         //System.out.println(result);
-        doSearch(mSearchParams);
+        dumpSearch(mMbox.search(mSearchParams));                
     }
     
-    private Stack<Cursor> mCursors = new Stack<Cursor>();
+    private void doSearchCurrent(String[] args) throws ServiceException {
+        ZSearchResult sr = mSearchResult;
+        if (sr == null || !sr.hasMore())
+            return;
+        dumpSearch(mSearchResult);
+    }
 
     private void doSearchNext(String[] args) throws ServiceException {
         ZSearchParams sp = mSearchParams;
@@ -526,37 +578,72 @@ public class ZMailboxUtil implements DebugListener {
         if (hits.size() == 0) return;
         ZSearchHit lastHit = hits.get(hits.size()-1);
         Cursor cursor = new Cursor(lastHit.getId(), lastHit.getSortFied());
-        mCursors.push(cursor);
+        mSearchCursors.push(cursor);
+        mSearchOffsets.push(mSearchOffsets.peek() + hits.size());
         sp.setCursor(cursor);
-        doSearch(sp);
+        dumpSearch(mMbox.search(sp));        
     }
-    
+
     private void doSearchPrevious(String[] args) throws ServiceException {
         ZSearchParams sp = mSearchParams;
         ZSearchResult sr = mSearchResult;
-        if (sp == null || sr == null || mCursors.size() == 0)
+        if (sp == null || sr == null || mSearchCursors.size() == 0)
             return;
-        mCursors.pop();
-        sp.setCursor(mCursors.size() > 0 ? mCursors.peek() : null);
-        doSearch(sp);
+        mSearchCursors.pop();
+        mSearchOffsets.pop();
+        sp.setCursor(mSearchCursors.size() > 0 ? mSearchCursors.peek() : null);
+        dumpSearch(mMbox.search(sp));
     }
-    
-    private void doSearch(ZSearchParams sp) throws ServiceException {
-        mSearchResult =  mMbox.search(sp);
+
+    private int colWidth(int num) {
+        int i = 1;
+        while (num > 10) {
+            i++;
+            num /= 10;
+        }
+        return i;
+    }
+
+    private void dumpSearch(ZSearchResult sr) throws ServiceException {
+        mSearchResult =  sr;
         //System.out.println(result);
-        Calendar c = Calendar.getInstance();        
-        for (ZSearchHit hit: mSearchResult.getHits()) {
+        int offset = mSearchOffsets.peek();
+        int first = offset+1;
+        int last = offset+sr.getHits().size();
+
+        System.out.printf("num: %d, more: %s, hits: %d - %d%n%n", sr.getHits().size(), sr.hasMore(), first, last);
+        int width = colWidth(last);
+        
+        final int FROM_LEN = 20;
+        
+        Calendar c = Calendar.getInstance();
+        String headerFormat = String.format("%%%d.%ds   %%10.10s  %%-20.20s  %%-50.50s  %%s%%n", width, width);
+        //String headerFormat = String.format("%10.10s  %-20.20s  %-50.50s  %-6.6s  %s%n");
+        
+        String itemFormat = String.format("%%%d.%ds.  %%10.10s  %%-20.20s  %%-50.50s  %%tD %%<tR%%n", width, width);
+        //String itemFormat = "%10.10s  %-20.20s  %-50.50s  %-6.6s  %tD %5$tR%n";
+
+        System.out.format(headerFormat, "", "Id", "From", "Subject", "Date");
+        System.out.format(headerFormat, "", "----------", "--------------------", "--------------------------------------------------", "--------------");
+        int i = first;
+        for (ZSearchHit hit: sr.getHits()) {
             if (hit instanceof ZConversationHit) {
                 ZConversationHit ch = (ZConversationHit) hit;
                 c.setTimeInMillis(ch.getDate());
                 String sub = ch.getSubject();
-                String numMsg = "("+ch.getMessageCount()+")";
-                if (ch.getFragment() != null || ch.getFragment().length() > 0)
-                    sub += " (" + ch.getFragment()+")";
-                System.out.format("%10.10s  %-20.20s  %-50.50s  %-6.6s  %tD %5$tR%n", 
-                        ch.getId(), emailAddrs(ch.getRecipients()), sub, numMsg, c);
+                String from = emailAddrs(ch.getRecipients());
+                if (ch.getMessageCount() > 1) {
+                    String numMsg = " ("+ch.getMessageCount()+")";
+                    int space = FROM_LEN - numMsg.length();
+                    from = ( (from.length() < space) ? from : from.substring(0, space)) + numMsg;
+                }
+                //if (ch.getFragment() != null || ch.getFragment().length() > 0)
+                //    sub += " (" + ch.getFragment()+")";
+                mSearchIndexToId.put(i, ch.getId());
+                System.out.format(itemFormat, i++, ch.getId(), from, sub, c);
             }
         }
+        System.out.println();
     }
 
     private void doGetAllTags(String[] args) throws ServiceException {
@@ -615,8 +702,27 @@ public class ZMailboxUtil implements DebugListener {
     }        
 
     private void doGetConversation(String[] args) throws ServiceException {
-        ZConversation conv = mMbox.getConversation(args[1]);
-        System.out.println(conv);
+        int i = 1;
+        boolean verbose = (args.length == 3) && args[1].equals("-v");
+        if (verbose) i = 2;
+        ZConversation conv = mMbox.getConversation(translateId(args[i]));
+        if (verbose) {
+            System.out.println(conv);
+        } else {
+
+            System.out.format("%nSubject: %s%nTags: %s%nFlags: %s%nNumber-of-Messages: %d%n%n",
+                    conv.getSubject(), conv.getTagIds(), conv.getFlags(), conv.getMessageCount());
+            
+            System.out.format("%10.10s  %-12.12s  %-50.50s  %s%n", 
+                    "Id", "Sender", "Fragment", "Date");
+            System.out.format("%10.10s  %-12.12s  %-50.50s  %s%n", 
+                    "----------", "------------", "--------------------------------------------------", "---------------");
+            for (ZMessageSummary ms : conv.getMessageSummaries()) {
+                System.out.format("%10.10s  %-12.12s  %-50.50s  %tD %4$tR%n", 
+                        ms.getId(), ms.getSender().getDisplay(), ms.getFragment(), ms.getDate());
+            }
+            System.out.println();
+        }
     }        
 
     private void doGetMessage(String[] args) throws ServiceException {
@@ -777,7 +883,12 @@ public class ZMailboxUtil implements DebugListener {
             try {
                 cat = Category.valueOf(s);
             } catch (IllegalArgumentException e) {
-                cat = null;
+                for (Category c : Category.values()) {
+                    if (c.name().startsWith(s)) {
+                        cat = c;
+                        break;
+                    }
+                }
             }
         }
 
