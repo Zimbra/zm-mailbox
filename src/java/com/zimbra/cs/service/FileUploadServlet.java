@@ -40,10 +40,12 @@ import java.util.TimerTask;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.ContentDisposition;
+import javax.mail.internet.MimeUtility;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.codec.net.QCodec;
 import org.apache.commons.fileupload.DefaultFileItem;
 import org.apache.commons.fileupload.DiskFileUpload;
 import org.apache.commons.fileupload.FileItem;
@@ -70,6 +72,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Constants;
+import com.zimbra.cs.util.FileUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -98,24 +101,24 @@ public class FileUploadServlet extends ZimbraServlet {
     public static final class Upload {
         final String   accountId;
         final String   uuid;
+        final String   name;
         final FileItem file;
         long time;
 
-        /**
-         * 
-         * @param auth
-         * @param attachment a <code>List</code> of {@link FileItem} objects
-         * @throws ServiceException
-         */
         Upload(String acctId, FileItem attachment) throws ServiceException {
+            this(acctId, attachment, attachment.getName());
+        }
+
+        Upload(String acctId, FileItem attachment, String filename) throws ServiceException {
             String localServer = Provisioning.getInstance().getLocalServer().getId();
             accountId = acctId;
             time      = System.currentTimeMillis();
             uuid      = localServer + UPLOAD_PART_DELIMITER + LdapUtil.generateUUID();
+            name      = FileUtil.trimFilename(filename);
             file      = attachment;
         }
 
-        public String getName()         { return file.getName(); }
+        public String getName()         { return name; }
         public String getContentType()  { return file.getContentType(); }
         public InputStream getInputStream() throws IOException {
             return file.getInputStream();
@@ -127,7 +130,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
         public String toString() {
             return "Upload: {accountId: " + accountId + ", time: " + time +
-                   ", uploadId: " + uuid + ", " + (file == null ? "no file" : file.getName()) + "}";
+                   ", uploadId: " + uuid + ", " + (file == null ? "no file" : name) + "}";
         }
     }
 
@@ -224,6 +227,10 @@ public class FileUploadServlet extends ZimbraServlet {
             String contentType = ctHeader == null ? "text/plain" : ctHeader.getValue();
             Header cdispHeader = method.getResponseHeader("Content-Disposition");
             String filename = cdispHeader == null ? "unknown" : new ContentDisposition(cdispHeader.getValue()).getParameter("filename");
+            if (filename != null && filename.indexOf("=?") != -1 && filename.indexOf("?=") != -1)
+                try {
+                    filename = MimeUtility.decodeText(filename);
+                } catch (UnsupportedEncodingException uee) { }
 
             // store the fetched file as a normal upload
             DiskFileUpload upload = getUploader();
@@ -350,14 +357,33 @@ public class FileUploadServlet extends ZimbraServlet {
                 break;
             }
 
-            // strip form fields out of the list of uploads...
+            String lastName = null, charset = "utf-8";
+            HashMap<FileItem, String> filenames = new HashMap<FileItem, String>();
             if (items != null)
                 for (Iterator<FileItem> it = items.iterator(); it.hasNext(); ) {
                     FileItem fi = it.next();
-                    if (fi != null && fi.getFieldName().equals("requestId"))
-                        reqId = fi.getString();
-                    if (fi == null || fi.isFormField() || fi.getName() == null || fi.getName().trim().equals(""))
+                    if (fi == null)
+                        continue;
+                    if (fi.isFormField()) {
+                        // correlate this file upload session's request and response
+                        if (fi.getFieldName().equals("requestId"))
+                            reqId = fi.getString();
+                        // get the form value charset, if specified
+                        if (fi.getFieldName().equals("_charset_"))
+                            charset = fi.getString();
+                        // allow a client to explicitly provide filenames for the uploads
+                        if (fi.getFieldName().startsWith("filename"))
+                            lastName = fi.getString(charset);
+                        // strip form fields out of the list of uploads
                         it.remove();
+                    } else {
+                        if (fi.getName() == null || fi.getName().trim().equals("")) {
+                            it.remove();
+                        } else {
+                            filenames.put(fi, lastName);
+                            lastName = null;
+                        }
+                    }
                 }
 
             // empty upload is not a "success"
@@ -369,9 +395,13 @@ public class FileUploadServlet extends ZimbraServlet {
             // cache the uploaded files in the hash and construct the list of upload IDs
             try {
                 for (FileItem fi : items) {
-                    Upload up = new Upload(authToken.getAccountId(), fi);
+                    String name = filenames.get(fi);
+                    if (name == null || name.trim().equals(""))
+                        name = fi.getName();
+                    Upload up = new Upload(authToken.getAccountId(), fi, name);
+
+                    mLog.debug("doPost(): added " + up);
                     synchronized (mPending) {
-                        mLog.debug("doPost(): added " + up);
                     	mPending.put(up.uuid, up);
                     }
                     attachmentId = (attachmentId == null ? up.uuid : attachmentId + UPLOAD_DELIMITER + up.uuid);

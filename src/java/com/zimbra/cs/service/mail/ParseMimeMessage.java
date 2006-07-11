@@ -50,6 +50,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.FileUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ExceptionToString;
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -64,6 +65,8 @@ import javax.activation.DataHandler;
 import javax.mail.*;
 import javax.mail.internet.*;
 
+import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.net.QCodec;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -506,9 +509,15 @@ public class ParseMimeMessage {
 
             ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
             if (up.getName() != null) {
-                String filename = FileUtil.trimFilename(up.getName());
-                if (filename != null)
+                String filename = up.getName();
+                if (filename != null) {
+                    try {
+                        // JavaMail doesn't use RFC 2231 encoding, and we're not going to, either...
+                        if (!StringUtil.isAsciiString(filename))
+                            filename = new QCodec().encode(filename, "utf-8");
+                    } catch (EncoderException ee) { }
                 	cd.setParameter("filename", filename);
+                }
             }
             mbp.setHeader("Content-Disposition", cd.toString());
 

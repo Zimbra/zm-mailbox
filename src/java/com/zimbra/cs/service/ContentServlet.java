@@ -39,6 +39,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 
+import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.net.QCodec;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -268,6 +270,10 @@ public class ContentServlet extends ZimbraServlet {
 
             ContentDisposition cd = new ContentDisposition(Part.INLINE);
             String filename = up.getName();
+            if (filename != null)
+                try {
+                    filename = new QCodec().encode(filename, "utf-8");
+                } catch (EncoderException ee) { }
             cd.setParameter("filename", filename == null ? "unknown" : filename);
             resp.addHeader("Content-Disposition", cd.toString());
             sendbackOriginalDoc(up.getInputStream(), up.getContentType(), resp);
