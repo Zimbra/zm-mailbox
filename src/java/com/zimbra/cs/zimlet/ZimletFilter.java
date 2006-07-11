@@ -83,7 +83,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 			throws IOException, ServiceException {
 		Config config = Provisioning.getInstance().getConfig();
 		int adminPort = config.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
-		if (adminPort == req.getServerPort()) {
+		if (adminPort == req.getLocalPort()) {
 			return getAdminAuthTokenFromCookie(req, resp);
 		}	
 		return getAuthTokenFromCookie(req, resp, true);

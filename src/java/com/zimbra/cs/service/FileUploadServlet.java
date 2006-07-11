@@ -45,7 +45,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.codec.net.QCodec;
 import org.apache.commons.fileupload.DefaultFileItem;
 import org.apache.commons.fileupload.DiskFileUpload;
 import org.apache.commons.fileupload.FileItem;
@@ -310,7 +309,7 @@ public class FileUploadServlet extends ZimbraServlet {
         String reqId = null;
         do {
             // file upload requires authentication
-            boolean isAdminRequest = (req.getServerPort() == ADMIN_PORT);
+            boolean isAdminRequest = (req.getLocalPort() == ADMIN_PORT);
     		AuthToken authToken = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
             if (authToken == null) {
                 status = HttpServletResponse.SC_UNAUTHORIZED;
@@ -369,7 +368,7 @@ public class FileUploadServlet extends ZimbraServlet {
                         if (fi.getFieldName().equals("requestId"))
                             reqId = fi.getString();
                         // get the form value charset, if specified
-                        if (fi.getFieldName().equals("_charset_"))
+                        if (fi.getFieldName().equals("_charset_") && !fi.getString().equals(""))
                             charset = fi.getString();
                         // allow a client to explicitly provide filenames for the uploads
                         if (fi.getFieldName().startsWith("filename"))

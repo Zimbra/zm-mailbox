@@ -57,9 +57,8 @@ public class ProxyTarget {
         String scheme;
         int port;
 
-        int localAdminPort = Provisioning.getInstance().getLocalServer().
-            getIntAttr(Provisioning.A_zimbraAdminPort, 0);
-        if (req.getServerPort() == localAdminPort) {
+        int localAdminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+        if (req.getLocalPort() == localAdminPort) {
             scheme = "https";
             port = mServer.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
             if (port <= 0)
