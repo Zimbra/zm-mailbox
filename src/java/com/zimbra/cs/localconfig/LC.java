@@ -96,6 +96,7 @@ public class LC {
     public static final KnownKey zimbra_log4j_properties;
     public static final KnownKey zimbra_auth_always_send_refer;
     public static final KnownKey zimbra_admin_service_port;    
+    public static final KnownKey zimbra_zmprov_default_to_ldap;
     public static final KnownKey localized_msgs_directory;
 
     public static final KnownKey zimbra_store_sweeper_max_age;
@@ -779,6 +780,10 @@ public class LC {
         
         zimbra_admin_service_port = 
             new KnownKey("zimbra_admin_service_port", "7071", "Default/bootstrap admin port");
+        
+        zimbra_zmprov_default_to_ldap =
+            new KnownKey("zimbra_zmprov_default_to_ldap", "false", "whether zmprov defaults to LDAP or SOAP");            
+            
         
     }
 

@@ -71,7 +71,7 @@ public class ProvUtil implements DebugListener {
     private boolean mInteractive = false;
     private boolean mVerbose = false;
     private boolean mDebug = false;
-    private boolean mUseLdap = true; // we'll eventually change this to false...
+    private boolean mUseLdap = LC.zimbra_zmprov_default_to_ldap.booleanValue(); 
     private String mAccount = null;
     private String mPassword = null;
     private String mServer = "localhost";
@@ -121,13 +121,6 @@ public class ProvUtil implements DebugListener {
         System.out.println("  -d/--debug                     debug mode (dumps SOAP messages)");
         System.out.println("");
         doHelp(null);
-        /*
-        System.out.println(" zmprov is used for provisioning. Try:");
-        System.out.println("");
-        System.out.println("     zmprov help commands        to list all commands");        
-        System.out.println("");
-        */
-        
         System.exit(1);
     }
 
@@ -1404,7 +1397,12 @@ public class ProvUtil implements DebugListener {
             try {
                 cat = Category.valueOf(s);
             } catch (IllegalArgumentException e) {
-                cat = null;
+                for (Category c : Category.values()) {
+                    if (c.name().startsWith(s)) {
+                        cat = c;
+                        break;
+                    }
+                }             
             }
         }
 
