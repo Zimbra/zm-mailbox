@@ -31,6 +31,7 @@
 
 	<property name="build.dir" location="build" />
 	<property name="build.classes.dir" location="${build.dir}/classes" />
+	<property name="build.zmprov" location="${build.dir}/data/zmprov.txt" />	
 	<property name="dist.dir" location="build/dist" />
 	<property name="generated.java.dir" location="${build.dir}/generated/src/java" />
 	<property name="warfile" location="${build.dir}/service.war" />
@@ -135,6 +136,7 @@
 		<mkdir dir="${generated.java.dir}"/>
 		<mkdir dir="${build.dir}/wiki"/>
 		<mkdir dir="${build.dir}/zimlets"/>
+		<mkdir dir="${build.dir}/data"/>
 		<antcall target="make-dirs"><param name="base.dir" value="${dist.dir}"/></antcall>
 	</target>
 
@@ -390,21 +392,21 @@
 		</java>
 		<echo>Importing Wiki documents for user1</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="impn -u user1@${zimbra.server.hostname} -p test123 -f data/wiki/user1 -t /" />
+			<arg line="-l impn -u user1@${zimbra.server.hostname} -p test123 -f data/wiki/user1 -t /" />
 		</java>
 	</target>
 
 	<target name="import-wiki-templates" description="Import Wiki templates to the wiki account">
 		<echo>Importing Wiki templates from ${data.wiki.dir}/Template</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="impn -u wiki@${zimbra.server.hostname} -p test123 -f data/wiki/Template -t Template" />
+			<arg line="-l impn -u wiki@${zimbra.server.hostname} -p test123 -f data/wiki/Template -t Template" />
 		</java>
 	</target>
 
 	<target name="init-wiki" description="Initialize the default Wiki account">
 		<echo>Initializing wiki@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="in -u ${wiki.user.default}@${zimbra.server.hostname} -p test123 -f data/wiki/Template -t Template" />
+			<arg line="-l in -u ${wiki.user.default}@${zimbra.server.hostname} -p test123 -f data/wiki/Template -t Template" />
 		</java>
 	</target>
 
@@ -521,7 +523,7 @@
 		</exec>
 	</target>
 	
-	<target name="ldap-load">
+	<target name="ldap-load" depends="zmprov-commands">
 		<antcall target="ldap-add"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra.ldif"/></antcall>
 		<antcall target="ldap-modify"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_globalconfig.ldif"/></antcall>
 		<antcall target="ldap-add"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/></antcall>
@@ -530,187 +532,182 @@
 		<java classname="com.zimbra.cs.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-e zimbra_server_hostname=${zimbra.server.hostname}"/>
 		</java>
-		<echo>Setting zimbraLogHostname to ${zimbra.server.hostname}</echo>
+		<echo>Running zmprov commands</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ModifyConfig zimbraLogHostname ${zimbra.server.hostname}" />
+			<arg line="-l -f ${build.zmprov} -v" />
 		</java>
-		<echo>Provisioning server entry for ${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="CreateServer ${zimbra.server.hostname} zimbraSmtpHostname ${zimbra.smtp.host} zimbraMailPort 7070 zimbraMailMode http zimbraImapCleartextLoginEnabled TRUE" />
-		</java>
-		<echo>Setting installed-service attributes on server ${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ModifyServer ${zimbra.server.hostname} zimbraServiceInstalled ldap zimbraServiceInstalled mta zimbraServiceInstalled mailbox" />
-		</java>
-		<echo>Setting enabled-service attributes on server ${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ModifyServer ${zimbra.server.hostname} zimbraServiceEnabled ldap zimbraServiceEnabled mta zimbraServiceEnabled mailbox" />
-		</java>
-		<echo>Creating domain: ${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="cd ${zimbra.server.hostname}" />
-		</java>
-		<echo>Setting default domain: ${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="mcf zimbraDefaultDomainName ${zimbra.server.hostname}" />
-		</java>
+	</target>
 
-		<echo>Creating account: admin@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="mc default zimbraFeatureIMEnabled TRUE" />
-		</java>
-		<!-- This account is used during QA tests. -->
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca admin@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Administrator' displayName 'Administrator' zimbraIsAdminAccount TRUE zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 0000'"/>
-		</java>
-		<echo>Creating account: user1@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca user1@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User One' displayName 'Demo User One' zimbraMailQuota 62914560 zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 1111'"/>
-		</java>
-		<echo>Creating account: user2@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca user2@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Two' displayName 'Demo User Two' zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 2222'"/>
-		</java>
-		<echo>Creating account: user3@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca user3@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Three' displayName 'Demo User Three' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-05.00) Eastern Time (US &amp; Canada)' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 3333'"/>
-		</java>
-		<echo>Creating account: user4@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca user4@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} cn 'Demo User Four' displayName 'Demo User Four' zimbraAttachmentsIndexingEnabled FALSE zimbraPrefTimeZoneId '(GMT-07.00) Arizona' zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} telephoneNumber '+1 650 555 4444'"/>
-		</java>
-
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca spam-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE zimbraMailQuota 0 zimbraHideInGal TRUE" />
-		</java>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="mcf zimbraSpamIsSpamAccount spam-sink@${zimbra.server.hostname}" />
-		</java>
-		<echo>Setting up not junk account</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ca ham-sink@${zimbra.server.hostname} test123 zimbraMailHost ${zimbra.server.hostname} zimbraAttachmentsIndexingEnabled FALSE zimbraMailQuota 0 zimbraHideInGal TRUE" />
-		</java>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="mcf zimbraSpamIsNotSpamAccount ham-sink@${zimbra.server.hostname}" />
-		</java>
-		<echo>Setting up default Wiki account name</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="mcf zimbraNotebookAccount ${wiki.user.default}@${zimbra.server.hostname}" />
-		</java>
-
-		<echo>Creating calendar resource: room-mississippi@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ccr room-mississippi@${zimbra.server.hostname}
-				       displayName 'Mississippi Conference Room'
-					   description 'Projector, DVD'
-					   zimbraNotes 'The door squeaks.'
-				       zimbraCalResType Location
-					   zimbraCalResAutoAcceptDecline TRUE
-					   zimbraCalResAutoDeclineIfBusy TRUE
-					   zimbraCalResAutoDeclineRecurring FALSE
-					   zimbraCalResLocationDisplayName 'Site: HQ, Building: A, Floor: 11, Room 1101'
-					   zimbraCalResSite HQ
-					   zimbraCalResBuilding A
-					   zimbraCalResFloor 11
-					   zimbraCalResRoom 1101
-					   zimbraCalResCapacity 10
-					   zimbraCalResContactName 'Administrator'
-					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
-					   zimbraCalResContactPhone '(650)555-1212'
-					   street '1500 Fashion Island Blvd., Suite 100'
-					   l 'San Mateo'
-					   st 'California'
-					   postalCode 94404
-					   co USA
-				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
-				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
-		</java>
-		<echo>Creating calendar resource: room-amazon@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ccr room-amazon@${zimbra.server.hostname}
-				       displayName 'Amazon Conference Room'
-					   description 'TV, VCR; room is always available'
-				       zimbraNotes 'A/C not working well'
-				       zimbraCalResType Location
-					   zimbraCalResAutoAcceptDecline TRUE
-					   zimbraCalResAutoDeclineIfBusy FALSE
-					   zimbraCalResAutoDeclineRecurring FALSE
-					   zimbraCalResLocationDisplayName 'Room 1201, 2nd Floor of Building A at HQ'
-					   zimbraCalResSite HQ
-					   zimbraCalResBuilding A
-					   zimbraCalResFloor 12
-					   zimbraCalResRoom 1202
-					   zimbraCalResCapacity 20
-					   zimbraCalResContactName 'Administrator'
-					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
-					   zimbraCalResContactPhone '(650)555-1212'
-				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
-				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
-		</java>
-		<echo>Creating calendar resource: room-nile@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ccr room-nile@${zimbra.server.hostname}
-				       displayName 'Nile Conference Room'
-					   description 'Projector; for single meetings only'
-					   zimbraNotes 'need to get some more chairs in here'
-				       zimbraCalResType Location
-					   zimbraCalResAutoAcceptDecline TRUE
-					   zimbraCalResAutoDeclineIfBusy TRUE
-					   zimbraCalResAutoDeclineRecurring TRUE
-					   zimbraCalResLocationDisplayName 'Room B201, 2nd basement floor, HQ Building B'
-					   zimbraCalResSite HQ
-					   zimbraCalResBuilding B
-					   zimbraCalResFloor B2
-					   zimbraCalResRoom B201
-					   zimbraCalResCapacity 100
-					   zimbraCalResContactName 'Administrator'
-					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
-					   zimbraCalResContactPhone '(650)555-1212'
-				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
-				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
-		</java>
-		<echo>Creating calendar resource: projector1@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ccr projector1@${zimbra.server.hostname}
-				       displayName 'Projector'
-					   description '800x600 max resolution'
-					   zimbraNotes 'usually works okay'
-				       zimbraCalResType Equipment
-					   zimbraCalResAutoAcceptDecline FALSE
-					   zimbraCalResAutoDeclineIfBusy FALSE
-					   zimbraCalResAutoDeclineRecurring FALSE
-					   zimbraCalResLocationDisplayName 'HQ Building B, B2 floor'
-					   zimbraCalResSite HQ
-					   zimbraCalResBuilding B
-					   zimbraCalResFloor B2
-					   zimbraCalResRoom B201
-					   zimbraCalResContactName 'Administrator'
-					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
-					   zimbraCalResContactPhone '(650)555-1212'
-				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
-				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
-		</java>
-		<echo>Creating calendar resource: pencil1@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="ccr pencil1@${zimbra.server.hostname}
-				       displayName '#2 pencil'
-					   description 'a writing tool'
-				       zimbraNotes 'must occasionally be sharpened'
-				       zimbraCalResType Equipment
-					   zimbraCalResAutoAcceptDecline TRUE
-					   zimbraCalResAutoDeclineIfBusy TRUE
-					   zimbraCalResAutoDeclineRecurring TRUE
-					   street '1500 Fashion Island Blvd, Suite 100'
-					   l 'San Mateo'
-				       st CA
-				       postalCode 94404
-				       co USA
-					   zimbraCalResContactName 'Administrator'
-					   zimbraCalResContactEmail admin@${zimbra.server.hostname}
-					   zimbraCalResContactPhone '(650)555-1212'
-				       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana'
-				       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}"/>
-		</java>
+	<target name="zmprov-commands" depends="build-init">
+		
+		<echo file="${build.zmprov}">		
+		ModifyConfig zimbraLogHostname ${zimbra.server.hostname}
+		CreateServer ${zimbra.server.hostname} \
+			zimbraSmtpHostname ${zimbra.smtp.host} \
+			zimbraMailPort 7070 \
+			zimbraMailMode http \
+			zimbraImapCleartextLoginEnabled TRUE
+		ModifyServer ${zimbra.server.hostname} \
+			zimbraServiceInstalled ldap \
+			zimbraServiceInstalled mta \
+			zimbraServiceInstalled mailbox
+		ModifyServer ${zimbra.server.hostname} \
+			zimbraServiceEnabled ldap \
+			zimbraServiceEnabled mta \
+			zimbraServiceEnabled mailbox
+		cd ${zimbra.server.hostname}
+		mcf zimbraDefaultDomainName ${zimbra.server.hostname}
+		mc default zimbraFeatureIMEnabled TRUE
+		ca admin@${zimbra.server.hostname} test123 \
+			zimbraMailHost ${zimbra.server.hostname} \
+			cn 'Administrator' displayName 'Administrator' \
+			zimbraIsAdminAccount TRUE \
+			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+			telephoneNumber '+1 650 555 0000'
+		ca user1@${zimbra.server.hostname} test123 \
+			zimbraMailHost ${zimbra.server.hostname} \
+			cn 'Demo User One' \
+			displayName 'Demo User One' \
+			zimbraMailQuota 62914560 \
+			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+			telephoneNumber '+1 650 555 1111'
+		ca user2@${zimbra.server.hostname} test123 \
+			zimbraMailHost ${zimbra.server.hostname} \
+			cn 'Demo User Two' \
+			displayName 'Demo User Two' \
+			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+			telephoneNumber '+1 650 555 2222'
+		ca user3@${zimbra.server.hostname} test123 \
+			zimbraMailHost ${zimbra.server.hostname} \
+			cn 'Demo User Three' \
+			displayName 'Demo User Three' \
+			zimbraAttachmentsIndexingEnabled FALSE \
+			zimbraPrefTimeZoneId '(GMT-05.00) Eastern Time (US &amp; Canada)' \
+			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+			telephoneNumber '+1 650 555 3333'
+		ca user4@${zimbra.server.hostname} test123 \
+			zimbraMailHost ${zimbra.server.hostname} \
+			cn 'Demo User Four' \
+			displayName 'Demo User Four' \
+			zimbraAttachmentsIndexingEnabled FALSE \
+			zimbraPrefTimeZoneId '(GMT-07.00) Arizona' \
+			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
+			telephoneNumber '+1 650 555 4444'
+		ca spam-sink@${zimbra.server.hostname} test123 \
+			zimbraMailHost ${zimbra.server.hostname} \
+			zimbraAttachmentsIndexingEnabled FALSE \
+			zimbraMailQuota 0 \
+			zimbraHideInGal TRUE
+		mcf zimbraSpamIsSpamAccount spam-sink@${zimbra.server.hostname}
+		ca ham-sink@${zimbra.server.hostname} test123 \
+			zimbraMailHost ${zimbra.server.hostname} \
+			zimbraAttachmentsIndexingEnabled FALSE \
+			zimbraMailQuota 0 \
+			zimbraHideInGal TRUE
+		mcf zimbraSpamIsNotSpamAccount ham-sink@${zimbra.server.hostname}
+		mcf zimbraNotebookAccount ${wiki.user.default}@${zimbra.server.hostname}
+		ccr room-mississippi@${zimbra.server.hostname} \
+					       displayName 'Mississippi Conference Room' \
+						   description 'Projector, DVD' \
+						   zimbraNotes 'The door squeaks.' \
+					       zimbraCalResType Location \
+						   zimbraCalResAutoAcceptDecline TRUE \
+						   zimbraCalResAutoDeclineIfBusy TRUE \
+						   zimbraCalResAutoDeclineRecurring FALSE \
+						   zimbraCalResLocationDisplayName 'Site: HQ, Building: A, Floor: 11, Room 1101' \
+						   zimbraCalResSite HQ \
+						   zimbraCalResBuilding A \
+						   zimbraCalResFloor 11 \
+						   zimbraCalResRoom 1101 \
+						   zimbraCalResCapacity 10 \
+						   zimbraCalResContactName 'Administrator' \
+						   zimbraCalResContactEmail admin@${zimbra.server.hostname} \
+						   zimbraCalResContactPhone '(650)555-1212' \
+						   street '1500 Fashion Island Blvd., Suite 100' \
+						   l 'San Mateo' \
+						   st 'California' \
+						   postalCode 94404 \
+						   co USA \
+					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+		ccr room-amazon@${zimbra.server.hostname} \
+					       displayName 'Amazon Conference Room' \
+						   description 'TV, VCR; room is always available' \
+					       zimbraNotes 'A/C not working well' \
+					       zimbraCalResType Location \
+						   zimbraCalResAutoAcceptDecline TRUE \
+						   zimbraCalResAutoDeclineIfBusy FALSE \
+						   zimbraCalResAutoDeclineRecurring FALSE \
+						   zimbraCalResLocationDisplayName 'Room 1201, 2nd Floor of Building A at HQ' \
+						   zimbraCalResSite HQ \
+						   zimbraCalResBuilding A \
+						   zimbraCalResFloor 12 \
+						   zimbraCalResRoom 1202 \
+						   zimbraCalResCapacity 20 \
+						   zimbraCalResContactName 'Administrator' \
+						   zimbraCalResContactEmail admin@${zimbra.server.hostname} \
+						   zimbraCalResContactPhone '(650)555-1212' \
+					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+		ccr room-nile@${zimbra.server.hostname} \
+					       displayName 'Nile Conference Room' \
+						   description 'Projector; for single meetings only' \
+						   zimbraNotes 'need to get some more chairs in here' \
+					       zimbraCalResType Location \
+						   zimbraCalResAutoAcceptDecline TRUE \
+						   zimbraCalResAutoDeclineIfBusy TRUE \
+						   zimbraCalResAutoDeclineRecurring TRUE \
+						   zimbraCalResLocationDisplayName 'Room B201, 2nd basement floor, HQ Building B' \
+						   zimbraCalResSite HQ \
+						   zimbraCalResBuilding B \
+						   zimbraCalResFloor B2 \
+						   zimbraCalResRoom B201 \
+						   zimbraCalResCapacity 100 \
+						   zimbraCalResContactName 'Administrator' \
+						   zimbraCalResContactEmail admin@${zimbra.server.hostname} \
+						   zimbraCalResContactPhone '(650)555-1212' \
+					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+		ccr projector1@${zimbra.server.hostname} \
+					       displayName 'Projector' \
+						   description '800x600 max resolution' \
+						   zimbraNotes 'usually works okay' \
+					       zimbraCalResType Equipment \
+						   zimbraCalResAutoAcceptDecline FALSE \
+						   zimbraCalResAutoDeclineIfBusy FALSE \
+						   zimbraCalResAutoDeclineRecurring FALSE \
+						   zimbraCalResLocationDisplayName 'HQ Building B, B2 floor' \
+						   zimbraCalResSite HQ \
+						   zimbraCalResBuilding B \
+						   zimbraCalResFloor B2 \
+						   zimbraCalResRoom B201 \
+						   zimbraCalResContactName 'Administrator' \
+						   zimbraCalResContactEmail admin@${zimbra.server.hostname} \
+						   zimbraCalResContactPhone '(650)555-1212' \
+					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+		ccr pencil1@${zimbra.server.hostname} \
+					       displayName '#2 pencil' \
+						   description 'a writing tool' \
+					       zimbraNotes 'must occasionally be sharpened' \
+					       zimbraCalResType Equipment \
+						   zimbraCalResAutoAcceptDecline TRUE \
+						   zimbraCalResAutoDeclineIfBusy TRUE \
+						   zimbraCalResAutoDeclineRecurring TRUE \
+						   street '1500 Fashion Island Blvd, Suite 100' \
+						   l 'San Mateo' \
+					       st CA \
+					       postalCode 94404 \
+					       co USA \
+						   zimbraCalResContactName 'Administrator' \
+						   zimbraCalResContactEmail admin@${zimbra.server.hostname} \
+						   zimbraCalResContactPhone '(650)555-1212' \
+					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+		</echo>
 	</target>
 
 	<target name="reload-zimlets" depends="deploy-zimlets,restart-tomcat"/>

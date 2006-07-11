@@ -28,6 +28,8 @@
  */
 package com.zimbra.cs.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -103,6 +105,45 @@ public class StringUtil {
     private static final int TERM_WHITESPACE = 1;
     private static final int TERM_SINGLEQUOTE = 2;
     private static final int TERM_DBLQUOTE = 3;    
+    
+    /**
+     * read a line from "in", using readLine(). A trailing '\\' on the line will
+     * be treated as continuation and the next line will be read and appended to the line,
+     * without the \\.
+     * @param in
+     * @return complete line or null on end of file.
+     * @throws IOException
+     */
+    public static String readLine(BufferedReader in) throws IOException {
+        String line;
+        StringBuilder sb = null;
+        
+        while ((line = in.readLine()) != null) {
+            if (line.length() == 0) {
+                break;
+            } else if (line.charAt(line.length()-1) == '\\') {
+                if (sb == null) sb = new StringBuilder();
+                sb.append(line.substring(0, line.length()-1));
+            } else {
+                break;
+            }
+        }
+        
+        if (line == null) {
+            if (sb == null) {
+                return null;
+            } else {
+                return sb.toString();
+            }
+        } else {
+            if (sb == null) {
+                return line;
+            } else {
+                sb.append(line);
+                return sb.toString();
+            }
+        }
+    }
     
     /**
      * split a line into array of Strings, using a shell-style syntax for tokenizing words.

@@ -26,7 +26,9 @@
 package com.zimbra.cs.account;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -110,6 +112,7 @@ public class ProvUtil implements DebugListener {
         System.out.println("zmprov [args] [cmd] [cmd-args ...]");
         System.out.println("");
         System.out.println("  -h/--help                      display usage");
+        System.out.println("  -f/--file                      use file as input stream");        
         System.out.println("  -s/--server   {host}[:{port}]  server hostname and optional port");
         System.out.println("  -l/--ldap                      provision via LDAP instead of SOAP");
         System.out.println("  -a/--account  {name}           account name to auth as");
@@ -1270,13 +1273,13 @@ public class ProvUtil implements DebugListener {
         return attrs;
     }
 
-    private void interactive() throws IOException {
+    private void interactive(InputStream is) throws IOException {
         mInteractive = true;
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        BufferedReader in = new BufferedReader(new InputStreamReader(is));
         while (true) {
             System.out.print("prov> ");
-            String line = in.readLine();
-            if (line == null || line.length() == -1)
+            String line = StringUtil.readLine(in);
+            if (line == null)
                 break;
             if (mVerbose) {
                 System.out.println(line);
@@ -1306,6 +1309,7 @@ public class ProvUtil implements DebugListener {
         CommandLineParser parser = new GnuParser();
         Options options = new Options();
         options.addOption("h", "help", false, "display usage");
+        options.addOption("f", "file", true, "use file as input stream");        
         options.addOption("s", "server", true, "host[:port] of server to connect to");
         options.addOption("l", "ldap", false, "provision via LDAP");
         options.addOption("a", "account", true, "account name (not used with --ldap)");
@@ -1333,13 +1337,13 @@ public class ProvUtil implements DebugListener {
         if (cl.hasOption('a')) pu.setAccount(cl.getOptionValue('a'));
         if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
         if (cl.hasOption('d')) pu.setDebug(true);
-
+        
         args = cl.getArgs();
         
         try {
             pu.initProvisioning();
             if (args.length < 1) {
-                pu.interactive();
+                pu.interactive(cl.hasOption('f') ? new FileInputStream(cl.getOptionValue('f')) : System.in);
             } else {
                 try {
                     if (!pu.execute(args))
