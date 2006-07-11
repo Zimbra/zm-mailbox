@@ -939,7 +939,7 @@ supply a "part" and the retrieved data will be on the specified message/rfc822 s
 ---------
 
 <CreateFolderRequest>
-  <folder name="..." l="{parent-folder}" [fie="1"] [view="{default-type}"] [color="{color}"]/>
+  <folder name="..." l="{parent-folder}" [fie="1"] [view="{default-type}"] [color="{color}"] [f="{flags}"]/>
 </CreateFolderRequest>
 
 <CreateFolderResponse>
@@ -1148,8 +1148,8 @@ u attribute is present iff count > 0
 ---------
 
 <CreateMountpointRequest>
-  <link l="{folder}" name="{mountpoint-name}" [zid="{owner's-zimbra-id}" | d="{owner's-email-address}"]
-        [rid="{id-of-shared-item}" | path="{path-to-shared-item}"] [view="..."] [color="{color}"] [fie="1"]/>
+  <link l="{folder}" name="{mountpoint-name}" [view="..."] [color="{color}"] [f="{flags}"] [fie="1"]
+         [zid="{owner's-zimbra-id}" | d="{owner's-email-address}"] [rid="{id-of-shared-item}" | path="{path-to-shared-item}"]/>
 </CreateMountpointRequest>
 
   - caller must specify one of (zid | d) and one of (rid | path)
