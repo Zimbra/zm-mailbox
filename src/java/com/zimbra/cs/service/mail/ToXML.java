@@ -1325,7 +1325,7 @@ public class ToXML {
 	public static Element encodeRestUrl(Element m, MailItem item) {
 		try {
 			Account account = item.getMailbox().getAccount();
-			String url = UserServlet.getRestUrl(account, true);
+			String url = UserServlet.getRestUrl(account);
 			if (url.startsWith("https"))
 				url = new HttpsURL(url + item.getPath()).toString();
 			else

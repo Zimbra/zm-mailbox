@@ -131,7 +131,7 @@ public class WikiTemplateStore {
 		WikiPage ww = wiki.lookupWiki(name);
 		
 		if (ww != null) {
-			template = new WikiTemplate(ww.getContents(ctxt), mAccountId, mKey);
+			template = new WikiTemplate(ww.getContents(ctxt), mAccountId, mKey, name);
 			mTemplateMap.put(name, template);
 			return template;
 		}

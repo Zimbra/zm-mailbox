@@ -141,11 +141,11 @@ public class UserServlet extends ZimbraServlet {
     private static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
 
     /** Returns the REST URL for the account. */
-    public static String getRestUrl(Account acct, boolean preferHttps) throws ServiceException {
+    public static String getRestUrl(Account acct) throws ServiceException {
         Server s = Provisioning.getInstance().getServer(acct);
         StringBuilder path = new StringBuilder();
         path.append(UserServlet.SERVLET_PATH).append("/").append(acct.getUid());
-        return URLUtil.getMailURL(s, path.toString(), preferHttps);
+        return URLUtil.getMailURL(s, path.toString(), true);
     }
 
     public UserServlet() {

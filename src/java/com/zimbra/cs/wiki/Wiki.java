@@ -157,7 +157,7 @@ public abstract class Wiki {
 		}
 		public String getFullUrl(WikiContext ctxt, String referenceAccount) throws ServiceException {
 			Account ownerAccount = getOwnerAccount(referenceAccount);
-			return UserServlet.getRestUrl(ownerAccount, false)
+			return UserServlet.getRestUrl(ownerAccount)
 							+ getPath(ctxt, ownerAccount);
 		}
 		public Account getOwnerAccount(String referenceAccount) throws ServiceException {
@@ -352,7 +352,7 @@ public abstract class Wiki {
 			mWikiAccount = acct.getId();
 			mPath = path;
 			StringBuilder buf = new StringBuilder();
-			buf.append(UserServlet.getRestUrl(acct, false));
+			buf.append(UserServlet.getRestUrl(acct));
 			if (!path.startsWith("/"))
 				buf.append("/");
 			buf.append(path);

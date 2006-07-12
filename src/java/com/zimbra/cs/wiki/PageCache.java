@@ -86,9 +86,9 @@ public class PageCache {
 		template.getInclusions(ctxt, inclusions);
 		Collections.sort(inclusions);
 		StringBuilder name = new StringBuilder();
-		name.append(template.getId()).append(SEP).append(template.getKey()).append(SEP);
+		name.append(template.getId()).append(SEP);
 		for (WikiTemplate t : inclusions) {
-			name.append(t.getId()).append(SEP).append(t.getKey()).append(SEP);
+			name.append(t.getId()).append(SEP);
 		}
 		return name.toString();
 	}

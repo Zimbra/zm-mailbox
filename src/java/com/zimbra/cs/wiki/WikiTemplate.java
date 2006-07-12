@@ -57,17 +57,21 @@ import com.zimbra.cs.wiki.Wiki.WikiUrl;
  */
 public class WikiTemplate implements Comparable<WikiTemplate> {
 	
-	public WikiTemplate(String item, String id, String key) {
+	public WikiTemplate(String item, String id, String key, String name) {
 		this(item);
-		mId = id;
-		mKey = key;
+		StringBuilder buf = new StringBuilder();
+		if (id != null) buf.append(id);
+		buf.append(":");
+		if (key != null) buf.append(key);
+		buf.append(":");
+		if (name != null) buf.append(name);
+		mId = buf.toString();
 	}
 	public WikiTemplate(String item) {
 		mTemplate = item;
 		mTokens = new ArrayList<Token>();
 		mModifiedTime = 0;
 		mId = "";
-		mKey = "";
 		touch();
 	}
 	
@@ -153,14 +157,8 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		return mId;
 	}
 	
-	public String getKey() {
-		return mKey;
-	}
-	
 	public int compareTo(WikiTemplate t) {
-		if (!mId.equals(t.mId))
-			return mId.compareTo(t.mId);
-		return mKey.compareTo(t.mKey);
+		return mId.compareTo(t.mId);
 	}
 
 	public void getInclusions(Context ctxt, List<WikiTemplate> inclusions) {
@@ -199,7 +197,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	}
 	
 	private String mId;
-	private String mKey;
 	
 	private long    mModifiedTime;
 	private boolean mParsed;
