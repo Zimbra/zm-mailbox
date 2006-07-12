@@ -171,7 +171,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
     
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct("ZFolder");
+        sb.beginStruct();
         toStringCommon(sb);
         sb.endStruct();
         return sb.toString();

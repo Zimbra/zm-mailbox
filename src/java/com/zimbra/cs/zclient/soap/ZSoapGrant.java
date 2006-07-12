@@ -68,7 +68,7 @@ class ZSoapGrant implements ZGrant {
     
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct("ZGrant");
+        sb.beginStruct();
         sb.add("type", mGranteeType);
         sb.add("name", mGranteeName);
         sb.add("rights", mRights);

@@ -80,7 +80,7 @@ class ZSoapConversationHit implements ZConversationHit {
 
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct("ZConversationHit");
+        sb.beginStruct();
         sb.add("id", mId);
         sb.add("fragment", mFragment);
         sb.add("subject", mSubject);

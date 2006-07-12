@@ -134,6 +134,11 @@ public abstract class ZMailbox {
     /** rename tag */
     public abstract ZActionResult renameTag(String id, String name) throws ServiceException;        
     
+    /**
+     * @return List of all contacts
+     */
+    public abstract List<ZContact> getAllContacts(String optFolderId) throws ServiceException;
+    
     public abstract ZConversation getConversation(String id) throws ServiceException;
     
     /** include items in the Trash folder */

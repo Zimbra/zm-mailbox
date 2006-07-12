@@ -37,13 +37,13 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZConversation;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMountpoint;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZSearchFolder;
-import com.zimbra.cs.zclient.ZSearchHit;
 import com.zimbra.cs.zclient.ZSearchParams;
 import com.zimbra.cs.zclient.ZSearchResult;
 import com.zimbra.cs.zclient.ZTag;
@@ -708,6 +708,19 @@ public class ZSoapMailbox extends ZMailbox {
         msgEl.addAttribute(MailService.A_ID, id);
         Map<String,ZSoapEmailAddress> cache = new HashMap<String, ZSoapEmailAddress>();
         return new ZSoapMessage(invoke(req).getElement(MailService.E_MSG), cache);
+    }
+
+    @Override
+    public List<ZContact> getAllContacts(String optFolderId) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.GET_CONTACTS_REQUEST);
+        if (optFolderId != null) 
+            req.addAttribute(MailService.A_FOLDER, optFolderId);
+        Element response = invoke(req);
+        List<ZContact> result = new ArrayList<ZContact>();
+        for (Element cn : response.listElements(MailService.E_CONTACT)) {
+            result.add(new ZSoapContact(cn));
+        }
+        return result;
     }
 
     /*

@@ -87,7 +87,7 @@ class ZSoapMessage implements ZMessage {
     }
 
     ZSoapSB toString(ZSoapSB sb) {
-        sb.beginStruct("ZMessage");
+        sb.beginStruct();
         sb.add("id", mId);
         sb.add("flags", mFlags);
         sb.add("tags", mTags);
@@ -197,7 +197,7 @@ class ZSoapMessage implements ZMessage {
         }
 
         ZSoapSB toString(ZSoapSB sb) {
-            sb.beginStruct("ZMimePart");
+            sb.beginStruct();
             sb.add("partName", mPartName);
             sb.add("content", mContent);
             sb.add("contentType", mContentType);

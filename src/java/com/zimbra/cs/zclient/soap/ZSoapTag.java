@@ -71,7 +71,7 @@ class ZSoapTag implements ZTag, ZSoapItem {
     
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct("ZTag");
+        sb.beginStruct();
         sb.add("id", mId);
         sb.add("name", mName);
         sb.add("color", mColor.name());

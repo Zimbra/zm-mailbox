@@ -29,7 +29,6 @@ import java.util.Date;
 import java.util.List;
 
 import com.zimbra.cs.util.StringUtil;
-import com.zimbra.cs.zclient.ZSearchHit;
 
 class ZSoapSB {
     private StringBuilder mSb;
@@ -40,13 +39,19 @@ class ZSoapSB {
         mSb = new StringBuilder();
     }
     
-    ZSoapSB beginStruct(String name) {
-        //mSb.append(name).append(": {\n");
+    ZSoapSB beginStruct() {
         mSb.append("{\n");        
         mFirst = true;
         return this;
     }
     
+    ZSoapSB beginStruct(String name) {
+        checkFirst();
+        mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": {\n");        
+        mFirst = true;
+        return this;
+    }
+
     ZSoapSB endStruct() {
         mSb.append("\n}");
         mFirst = false;

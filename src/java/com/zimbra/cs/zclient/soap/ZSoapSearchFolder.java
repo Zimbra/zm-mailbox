@@ -61,7 +61,7 @@ class ZSoapSearchFolder extends ZSoapFolder implements ZSearchFolder, ZSoapItem 
 
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct("ZSearchFolder");
+        sb.beginStruct();
         sb.add("query", mQuery);
         sb.add("types", mTypes);
         sb.add("sortBy", mSortBy.name());

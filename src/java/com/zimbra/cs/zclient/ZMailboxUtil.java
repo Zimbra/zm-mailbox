@@ -108,6 +108,7 @@ public class ZMailboxUtil implements DebugListener {
         System.out.println("zmmailbox [args] [cmd] [cmd-args ...]");
         System.out.println("");
         System.out.println("  -h/--help                                display usage");
+        System.out.println("  -f/--file                                use file as input stream");
         System.out.println("  -u/--url      http[s]://{host}[:{port}]  server hostname and optional port");
         System.out.println("  -a/--account  {name}                     account name to auth as");
         System.out.println("  -p/--password {pass}                     password for account");
@@ -155,9 +156,10 @@ public class ZMailboxUtil implements DebugListener {
         FLAG_CONVERSATION("flagConversation", "fc", "{conv-ids} [0|1*] [{tcon}]", Category.CONVERSATION, 1, 3),
         FLAG_ITEM("flagItem", "fi", "{item-ids} [0|1*] [{tcon}]", Category.ITEM, 1, 3),
         FLAG_MESSAGE("flagMessage", "fm", "{msg-ids} [0|1*]", Category.MESSAGE, 1, 2),
-        GET_ALL_TAGS("getAllTags", "gat", "[-v]", Category.TAG, 0, 1),        
+        GET_ALL_CONTACTS("getAllContacts", "gact", "[-v]", Category.CONTACT, 0, 2),
         GET_ALL_FOLDERS("getAllFolders", "gaf", "[-v]", Category.FOLDER, 0, 1),
-        GET_ALL_MOUNTPOINTS("getAllMountpoints", "gam", "[-v]", Category.FOLDER, 0, 1),
+        GET_ALL_MOUNTPOINTS("getAllMountpoints", "gam", "[-v]", Category.FOLDER, 0, 1),        
+        GET_ALL_TAGS("getAllTags", "gat", "[-v]", Category.TAG, 0, 1),        
         GET_CONVERSATION("getConversation", "gc", "{conv-id}", Category.CONVERSATION, 1, 2),
         GET_MESSAGE("getMessage", "gm", "{msg-id}", Category.MESSAGE, 1, 1),        
         HELP("help", "?", "commands", Category.MISC, 0, 1),
@@ -180,10 +182,10 @@ public class ZMailboxUtil implements DebugListener {
         NOOP("noOp", "no", "", Category.MISC, 0, 0),
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", Category.FOLDER, 2, 2),        
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", Category.TAG, 2, 2),
-        SEARCH("search", "s", "{query}", Category.SEARCH, 1, 1),
-        SEARCH_CURRENT("searchCurrent", "sc", "", Category.SEARCH, 0, 0),        
-        SEARCH_NEXT("searchNext", "sn", "", Category.SEARCH, 0, 0),
-        SEARCH_PREVIOUS("searchPrevious", "sp", "", Category.SEARCH, 0, 0),        
+        SEARCH("search", "s", "{query}", Category.SEARCH, 1, 2),
+        SEARCH_CURRENT("searchCurrent", "sc", "", Category.SEARCH, 0, 1),        
+        SEARCH_NEXT("searchNext", "sn", "", Category.SEARCH, 0, 1),
+        SEARCH_PREVIOUS("searchPrevious", "sp", "", Category.SEARCH, 0, 1),
         SYNC_FOLDER("syncFolder", "sf", "{folder-path}", Category.FOLDER, 1, 1),                        
         TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*] [{tcon}]", Category.CONVERSATION, 2, 4),
         TAG_ITEM("tagItem", "ti", "{item-ids} {tag-name} [0|1*] [{tcon}]", Category.ITEM, 2, 4),
@@ -432,9 +434,12 @@ public class ZMailboxUtil implements DebugListener {
         case FLAG_MESSAGE:
             mMbox.flagMessage(args[1], paramb(args, 2, true));
             break;            
+        case GET_ALL_CONTACTS:
+            doGetAllContacts(args); 
+            break;
         case GET_ALL_FOLDERS:
             doGetAllFolders(args); 
-            break;
+            break;            
         case GET_ALL_MOUNTPOINTS:
             doGetAllMountpoints(args); 
             break;
@@ -552,23 +557,27 @@ public class ZMailboxUtil implements DebugListener {
     private Map<Integer, String> mSearchIndexToId = new HashMap<Integer, String>();
 
     private void doSearch(String[] args) throws ServiceException {
-        mSearchParams = new ZSearchParams(args[1]);
+        int i = 1;
+        boolean verbose = (args.length == 3) && args[1].equals("-v");
+        if (verbose) i = 2;
+        mSearchParams = new ZSearchParams(args[i]);
         mSearchCursors.clear();
         mSearchOffsets.clear();
         mSearchOffsets.push(0);
         mSearchIndexToId.clear();
         //System.out.println(result);
-        dumpSearch(mMbox.search(mSearchParams));                
+        dumpSearch(mMbox.search(mSearchParams), verbose);                
     }
     
     private void doSearchCurrent(String[] args) throws ServiceException {
+        boolean verbose = (args.length == 2) && args[1].equals("-v");
         ZSearchResult sr = mSearchResult;
-        if (sr == null || !sr.hasMore())
-            return;
-        dumpSearch(mSearchResult);
+        if (sr == null) return;
+        dumpSearch(mSearchResult, verbose);
     }
 
     private void doSearchNext(String[] args) throws ServiceException {
+        boolean verbose = (args.length == 2) && args[1].equals("-v");        
         ZSearchParams sp = mSearchParams;
         ZSearchResult sr = mSearchResult;
         if (sp == null || sr == null || !sr.hasMore())
@@ -581,10 +590,11 @@ public class ZMailboxUtil implements DebugListener {
         mSearchCursors.push(cursor);
         mSearchOffsets.push(mSearchOffsets.peek() + hits.size());
         sp.setCursor(cursor);
-        dumpSearch(mMbox.search(sp));        
+        dumpSearch(mMbox.search(sp), verbose);
     }
 
     private void doSearchPrevious(String[] args) throws ServiceException {
+        boolean verbose = (args.length == 2) && args[1].equals("-v");
         ZSearchParams sp = mSearchParams;
         ZSearchResult sr = mSearchResult;
         if (sp == null || sr == null || mSearchCursors.size() == 0)
@@ -592,7 +602,7 @@ public class ZMailboxUtil implements DebugListener {
         mSearchCursors.pop();
         mSearchOffsets.pop();
         sp.setCursor(mSearchCursors.size() > 0 ? mSearchCursors.peek() : null);
-        dumpSearch(mMbox.search(sp));
+        dumpSearch(mMbox.search(sp), verbose);
     }
 
     private int colWidth(int num) {
@@ -604,9 +614,12 @@ public class ZMailboxUtil implements DebugListener {
         return i;
     }
 
-    private void dumpSearch(ZSearchResult sr) throws ServiceException {
+    private void dumpSearch(ZSearchResult sr, boolean verbose) throws ServiceException {
         mSearchResult =  sr;
-        //System.out.println(result);
+        if (verbose) {
+            System.out.println(sr);
+            return;
+        }
         int offset = mSearchOffsets.peek();
         int first = offset+1;
         int last = offset+sr.getHits().size();
@@ -617,10 +630,10 @@ public class ZMailboxUtil implements DebugListener {
         final int FROM_LEN = 20;
         
         Calendar c = Calendar.getInstance();
-        String headerFormat = String.format("%%%d.%ds   %%10.10s  %%-20.20s  %%-50.50s  %%s%%n", width, width);
+        String headerFormat = String.format("%%%d.%ds  %%10.10s    %%-20.20s  %%-50.50s  %%s%%n", width, width);
         //String headerFormat = String.format("%10.10s  %-20.20s  %-50.50s  %-6.6s  %s%n");
         
-        String itemFormat = String.format("%%%d.%ds.  %%10.10s  %%-20.20s  %%-50.50s  %%tD %%<tR%%n", width, width);
+        String itemFormat = String.format("%%%d.%ds. %%10.10s    %%-20.20s  %%-50.50s  %%tD %%<tR%%n", width, width);
         //String itemFormat = "%10.10s  %-20.20s  %-50.50s  %-6.6s  %tD %5$tR%n";
 
         System.out.format(headerFormat, "", "Id", "From", "Subject", "Date");
@@ -648,19 +661,27 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doGetAllTags(String[] args) throws ServiceException {
         boolean verbose = (args.length == 2) && args[1].equals("-v");
-        for (String tag: mMbox.getAllTagNames()) {
-            dumpTag(tag, verbose);
+
+        if (verbose) {
+            StringBuilder sb = new StringBuilder();            
+            for (String tagName: mMbox.getAllTagNames()) {
+                ZTag tag = mMbox.getTagByName(tagName);
+                if (sb.length() > 0) sb.append(",\n");
+                sb.append(tag);
+            }
+            System.out.format("[%n%s%n]%n", sb.toString());
+        } else {
+            if (mMbox.getAllTagNames().size() == 0) return;            
+            String hdrFormat = "%10.10s  %10.10s  %10.10s  %s%n";
+            System.out.format(hdrFormat, "Id", "Unread", "Color", "Name");
+            System.out.format(hdrFormat, "----------", "----------", "----------", "----------");
+            for (String tagName: mMbox.getAllTagNames()) {
+                ZTag tag = mMbox.getTagByName(tagName); 
+                System.out.format("%10.10s  %10d  %10.10s  %s%n",
+                        tag.getId(), tag.getUnreadCount(), tag.getColor().name(), tag.getName());
+            }
         }
     }        
-
-    private void dumpTag(String tagName, boolean verbose) throws ServiceException {
-        if (verbose) {
-            ZTag tag = mMbox.getTagByName(tagName);
-            if (tag != null) System.out.println(tag);
-        } else {
-            System.out.println(tagName);
-        }
-    }
 
     private void doDumpFolder(ZFolder folder, boolean verbose, boolean recurse) {
         if (verbose) {
@@ -678,6 +699,11 @@ public class ZMailboxUtil implements DebugListener {
     private void doGetAllFolders(String[] args) throws ServiceException {
         boolean verbose = (args.length == 2) && args[1].equals("-v");
         doDumpFolder(mMbox.getUserRoot(), verbose, true);
+    }        
+
+    private void doGetAllContacts(String[] args) throws ServiceException {
+        //boolean verbose = (args.length == 2) && args[1].equals("-v");
+        System.out.println(mMbox.getAllContacts(null));
     }        
 
     private void doDumpMountpoints(ZFolder folder, boolean verbose, boolean recurse) {
@@ -716,7 +742,7 @@ public class ZMailboxUtil implements DebugListener {
             System.out.format("%10.10s  %-12.12s  %-50.50s  %s%n", 
                     "Id", "Sender", "Fragment", "Date");
             System.out.format("%10.10s  %-12.12s  %-50.50s  %s%n", 
-                    "----------", "------------", "--------------------------------------------------", "---------------");
+                    "----------", "------------", "--------------------------------------------------", "--------------");
             for (ZMessageSummary ms : conv.getMessageSummaries()) {
                 System.out.format("%10.10s  %-12.12s  %-50.50s  %tD %4$tR%n", 
                         ms.getId(), ms.getSender().getDisplay(), ms.getFragment(), ms.getDate());
@@ -791,7 +817,7 @@ public class ZMailboxUtil implements DebugListener {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
             System.out.print(mPrompt);
-            String line = in.readLine();
+            String line = StringUtil.readLine(in);
             if (line == null || line.length() == -1)
                 break;
             if (mVerbose) {
@@ -822,6 +848,7 @@ public class ZMailboxUtil implements DebugListener {
         CommandLineParser parser = new GnuParser();
         Options options = new Options();
         options.addOption("h", "help", false, "display usage");
+        options.addOption("f", "file", true, "use file as input stream"); 
         options.addOption("u", "url", true, "http[s]://host[:port] of server to connect to");
         options.addOption("a", "account", true, "account name (not used with --ldap)");
         options.addOption("p", "password", true, "password for account");

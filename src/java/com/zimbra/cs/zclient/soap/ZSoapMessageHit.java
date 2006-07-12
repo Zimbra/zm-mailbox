@@ -81,7 +81,7 @@ class ZSoapMessageHit implements ZMessageHit {
 
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct("ZMessageHit");
+        sb.beginStruct();
         sb.add("id", mId);
         sb.add("conversationId", mConvId);
         sb.add("flags", mFlags);

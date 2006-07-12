@@ -29,9 +29,6 @@ import java.util.List;
 
 public interface ZMessage  {
 
-    /**
-     * @return conversation's id
-     */
     public String getId();
     
     /**

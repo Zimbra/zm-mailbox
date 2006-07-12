@@ -88,7 +88,7 @@ class ZSoapSearchResult implements ZSearchResult {
 
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct("ZSearchResult");
+        sb.beginStruct();
         sb.add("more", mHasMore);
         sb.add("sortBy", mSortBy);
         sb.add("offset", mOffset);

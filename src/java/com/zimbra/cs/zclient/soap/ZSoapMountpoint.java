@@ -78,7 +78,7 @@ class ZSoapMountpoint implements ZMountpoint, ZSoapItem {
 
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct("ZMountpoint");
+        sb.beginStruct();
         sb.add("id", mId);
         sb.add("name", mName);
         sb.add("path", getPath());

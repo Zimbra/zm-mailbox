@@ -63,7 +63,7 @@ class ZSoapConversation implements ZConversation {
 
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct("ZConversation");
+        sb.beginStruct();
         sb.add("id", mId);
         sb.add("tags", mTags);
         sb.add("flags", mFlags);
@@ -118,7 +118,7 @@ class ZSoapConversation implements ZConversation {
 
         public String toString() {
             ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct("ZMessageSummary");
+            sb.beginStruct();
             sb.add("id", mId);
             sb.add("flags", mFlags);
             sb.add("fragment", mFragment);
