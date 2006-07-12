@@ -142,6 +142,7 @@ public class ZMailboxUtil implements DebugListener {
     
     enum Command {
         
+        CREATE_CONTACT("createContact", "cct", "{folder-name} [attr1 value1 [attr2 value2...]]", Category.CONTACT, 3, Integer.MAX_VALUE),        
         CREATE_FOLDER("createFolder", "cf", "{folder-name} [{default-view}]", Category.FOLDER, 1, 2),
         CREATE_MOUNTPOINT("createMountpoint", "cm", "{folder-name} {owner-id-or-name} {remote-item-id-or-path} {default-view}", Category.FOLDER, 4, 4),
         CREATE_SEARCH_FOLDER("createSearchFolder", "csf", "{folder-name} {query} [{types}] [{sort-by}]", Category.FOLDER, 2, 4),        
@@ -374,6 +375,10 @@ public class ZMailboxUtil implements DebugListener {
         }
         
         switch(mCommand) {
+        case CREATE_CONTACT:
+            ZContact cc = mMbox.createContact(lookupFolderId(args[1]), null, getMap(args, 2));
+            System.out.println(cc.getId());
+            break;
         case CREATE_FOLDER:
             mMbox.createFolder(
                     lookupFolderId(args[1], true), 
@@ -800,14 +805,14 @@ public class ZMailboxUtil implements DebugListener {
             return a;
     }
 */
-    private Map<String, Object> getMap(String[] args, int offset) throws ArgException {
-        Map<String, Object> attrs = new HashMap<String, Object>();
+    private Map<String, String> getMap(String[] args, int offset) throws ArgException {
+        Map<String, String> attrs = new HashMap<String, String>();
         for (int i = offset; i < args.length; i+=2) {
             String n = args[i];
             if (i+1 >= args.length)
                 throw new ArgException("not enough arguments");
             String v = args[i+1];
-            StringUtil.addToMultiMap(attrs, n, v);
+            attrs.put(n, v);
         }
         return attrs;
     }

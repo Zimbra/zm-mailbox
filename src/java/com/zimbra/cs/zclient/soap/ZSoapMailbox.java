@@ -723,6 +723,22 @@ public class ZSoapMailbox extends ZMailbox {
         return result;
     }
 
+    @Override
+    public ZContact createContact(String folderId, String tags, Map<String, String> attrs) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.CREATE_CONTACT_REQUEST);
+        Element cn = req.addElement(MailService.E_CONTACT);
+        if (folderId != null) 
+            cn.addAttribute(MailService.A_FOLDER, folderId);
+        if (tags != null) 
+            cn.addAttribute(MailService.A_TAGS, tags);
+        for (Map.Entry<String, String> entry : attrs.entrySet()) {
+            Element a = cn.addElement(MailService.E_ATTRIBUTE);
+            a.addAttribute(MailService.A_ATTRIBUTE_NAME, entry.getKey());
+            a.setText(entry.getValue());
+        }
+        return new ZSoapContact(invoke(req).getElement(MailService.E_CONTACT));
+    }
+
     /*
  
  <AuthRequest xmlns="urn:zimbraAccount">

@@ -26,6 +26,7 @@
 package com.zimbra.cs.zclient;
 
 import java.util.List;
+import java.util.Map;
 
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.service.ServiceException;
@@ -138,6 +139,10 @@ public abstract class ZMailbox {
      * @return List of all contacts
      */
     public abstract List<ZContact> getAllContacts(String optFolderId) throws ServiceException;
+    
+    public abstract ZContact createContact(String folderId, String tags, Map<String, String> attrs) throws ServiceException;
+    
+    //------------------------
     
     public abstract ZConversation getConversation(String id) throws ServiceException;
     
