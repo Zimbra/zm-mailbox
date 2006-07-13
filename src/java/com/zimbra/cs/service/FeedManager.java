@@ -48,6 +48,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
@@ -133,13 +134,18 @@ public class FeedManager {
                 client.executeMethod(get);
 
                 Header locationHeader = get.getResponseHeader("location");
-                if (locationHeader == null) {
+                if (locationHeader != null) {
+                    // update our target URL and loop again to do another HTTP GET
+                    url = locationHeader.getValue();
+                } else if (get.getStatusCode() != HttpServletResponse.SC_OK) {
+                    throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusLine().toString(), null);
+                } else {
                     content = new BufferedInputStream(get.getResponseBodyAsStream());
                     String cs = get.getResponseCharSet();
-                    if (cs != null) expectedCharset = cs;
+                    if (cs != null)
+                        expectedCharset = cs;
                     break;
                 }
-                url = locationHeader.getValue();
             } while (++redirects <= MAX_REDIRECTS);
 
             if (redirects > MAX_REDIRECTS)
