@@ -79,6 +79,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.license.ZimbraLicenseManager;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -215,6 +216,80 @@ public class LdapProvisioning extends Provisioning {
         return "cn=" + name + ",cn=mime," + CONFIG_BASE;
     }
 
+    private static String[] sExcludedAccounts = {
+    	Provisioning.A_zimbraSpamIsNotSpamAccount,
+    	Provisioning.A_zimbraSpamIsSpamAccount,
+    };
+    
+    private int countAccounts() throws ServiceException {
+    	StringBuilder buf = new StringBuilder();
+    	buf.append("(&");
+    	buf.append("(!(zimbraIsSystemResource=TRUE))");
+    	buf.append("(objectclass=zimbraAccount)(!(objectclass=zimbraCalendarResource))");
+    	
+    	// exclude spam / ham accounts.  newly created spam / ham accounts
+    	// will have zimbraIsSystemResource bit set, and will be excluded by
+    	// the filter and then this step won't be necessary.  
+    	Config config = getConfig();
+    	String excludeAccount;
+    	for (int i = 0; i < sExcludedAccounts.length; i++) {
+    		try {
+    			excludeAccount = config.getAttr(sExcludedAccounts[i]);
+    			if (excludeAccount != null) {
+    				Account acct = get(AccountBy.name, excludeAccount);
+    				if (acct != null) {
+    					buf.append("(!(zimbraId=").append(acct.getId()).append("))");
+    				}
+    			}
+    		} catch (ServiceException se) {
+                mLog.warn("error looking up account " + sExcludedAccounts[i], se);
+    		}
+    	}
+
+    	buf.append(")");
+
+    	String query = buf.toString();
+    	int numAccounts = 0;
+    	
+        DirContext ctxt = null;
+        try {
+            ctxt = LdapUtil.getDirContext();
+            
+            SearchControls searchControls = 
+                new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, new String[] {"zimbraId", "objectclass"}, false, false);
+
+            NamingEnumeration<SearchResult> ne = null;
+
+            try {
+                    
+            	ne = ctxt.search("", query, searchControls);
+            	while (ne != null && ne.hasMore()) {
+            		SearchResult sr = ne.nextElement();
+            		String dn = sr.getNameInNamespace();
+            		// skip admin accounts
+            		if (dn.endsWith("cn=zimbra")) continue;
+            		Attributes attrs = sr.getAttributes();
+            		Attribute objectclass = attrs.get("objectclass");
+            		if (objectclass.contains(C_zimbraAccount)) 
+            			numAccounts++;
+            	}
+            } finally {
+                if (ne != null) ne.close();
+            }
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to count all the users", e);
+        } finally {
+            LdapUtil.closeContext(ctxt);
+        }
+    	return numAccounts;
+    }
+    
+    private void checkCreateAccount() throws ServiceException {
+    	ZimbraLicenseManager licenseMgr = ZimbraLicenseManager.getInstance();
+    	if (licenseMgr == null)
+    		return;
+    	licenseMgr.checkAccountsLimit(countAccounts());
+    }
     
     public void modifyAttrs(Entry e,
                             Map<String, ? extends Object> attrs,
@@ -222,6 +297,7 @@ public class LdapProvisioning extends Provisioning {
     throws ServiceException {
         modifyAttrs(e, attrs, checkImmutable, true);
     }
+
 
     /**
      * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
@@ -493,7 +569,7 @@ public class LdapProvisioning extends Provisioning {
                                   Map<String, Object> acctAttrs,
                                   String[] additionalObjectClasses)
     throws ServiceException {
-
+    	checkCreateAccount();
         emailAddress = emailAddress.toLowerCase().trim();
 
         HashMap attrManagerContext = new HashMap();

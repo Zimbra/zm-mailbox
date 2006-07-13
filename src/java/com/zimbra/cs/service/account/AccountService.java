@@ -109,6 +109,7 @@ public class AccountService implements DocumentService {
     public static final String E_LOCALE = "locale";
     public static final String E_VIRTUAL_HOST = "virtualHost";
     public static final String E_SKIN = "skin";
+    public static final String E_LICENSE = "license";
 
     public static final String A_N = "n";
     public static final String A_NAME = "name";
@@ -122,6 +123,7 @@ public class AccountService implements DocumentService {
     public static final String A_ZIMLET_PRIORITY = "priority";
     public static final String A_TIMESTAMP = "timestamp";
     public static final String A_EXPIRES = "expires";
+    public static final String A_STATUS = "status";
 
     public static final String A_ATTRS = "attrs";  
     public static final String A_SORT_BY = "sortBy";

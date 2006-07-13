@@ -366,6 +366,7 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
      ...
    </zimlets>
    <mailURL>{mail-url}</mailURL>+
+   [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
  
   {account-name} = email address (user@domain)
@@ -381,6 +382,9 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
        Multiple URLs can be returned if both http and https (SSL) are enabled. If only one of the two is enabled,
        the only one URL will be returned.       
 
+  license attribute is pertinent to the Network edition only.  this attribute is 
+  present only when the installed license is NOT ok.
+  
 ----------------------------
 
 <GetAccountInfoRequest>

@@ -40,6 +40,8 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.license.ZimbraLicenseManager;
+import com.zimbra.cs.license.ZimbraLicenseManager.LicenseStatus;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.zimlet.ZimletUtil;
@@ -81,6 +83,7 @@ public class GetInfo extends DocumentHandler  {
         Element props = response.addUniqueElement(AccountService.E_PROPERTIES);
         doProperties(props, acct);
         GetAccountInfo.addUrls(response, acct);
+        doLicenseCheck(response);
         
         return response;
     }
@@ -165,5 +168,18 @@ public class GetInfo extends DocumentHandler  {
     		elem.addAttribute(AccountService.A_NAME, prop.getKey());
     		elem.setText(prop.getValue());
     	}
+    }
+    
+    private static void doLicenseCheck(Element response) throws ServiceException {
+        ZimbraLicenseManager licenseMgr = ZimbraLicenseManager.getInstance();
+        if (licenseMgr != null) {
+        	LicenseStatus st = licenseMgr.checkLicense();
+        	Element license = response.addUniqueElement(AccountService.E_LICENSE);
+        	if (st != LicenseStatus.LICENSE_OK) {
+        		String statusString = (st == LicenseStatus.LICENSE_IN_GRACE_PERIOD) ? "inGracePeriod" : "bad";
+        		license.addAttribute(AccountService.A_STATUS, statusString);
+        	}
+        }
+
     }
 }

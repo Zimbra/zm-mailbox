@@ -1691,4 +1691,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>A signed activation key that authorizes this installation.</desc>
 </attr>
 
+<attr id="376" name="zimbraIsSystemResource" type="boolean" cardinality="single" optionalIn="account">
+  <desc>Indicates the account is a resource used by the system such as spam accounts or Notebook accounts.</desc>
+</attr>
+
 </attrs>
