@@ -52,8 +52,10 @@ class ZSoapSearchResult implements ZSearchResult {
         for (Element h: e.listElements()) {
             if (h.getName().equals(MailService.E_CONV)) {
                 mHits.add(new ZSoapConversationHit(h, cache));
-            } else if (e.getName().equals(MailService.E_MSG)) {
+            } else if (h.getName().equals(MailService.E_MSG)) {
                 mHits.add(new ZSoapMessageHit(h, cache));
+            } else if (h.getName().equals(MailService.E_CONTACT)) {
+                mHits.add(new ZSoapContactHit(h));
             }
         }
     }

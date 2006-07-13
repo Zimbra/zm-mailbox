@@ -333,7 +333,7 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZSearchFolder createSearchFolder(String parentId, String name, String query, String types, SortBy sortBy) throws ServiceException {
+    public ZSearchFolder createSearchFolder(String parentId, String name, String query, String types, SearchSortBy sortBy) throws ServiceException {
         XMLElement req = new XMLElement(MailService.CREATE_SEARCH_FOLDER_REQUEST);
         Element folderEl = req.addElement(MailService.E_SEARCH);
         folderEl.addAttribute(MailService.A_NAME, name);
@@ -347,7 +347,7 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZSearchFolder modifySearchFolder(String id, String query, String types, SortBy sortBy) throws ServiceException {
+    public ZSearchFolder modifySearchFolder(String id, String query, String types, SearchSortBy sortBy) throws ServiceException {
         XMLElement req = new XMLElement(MailService.MODIFY_SEARCH_FOLDER_REQUEST);
         Element folderEl = req.addElement(MailService.E_SEARCH);
         folderEl.addAttribute(MailService.A_ID, id);
@@ -595,7 +595,7 @@ public class ZSoapMailbox extends ZMailbox {
 
     @Override
     public ZActionResult deleteItem(String ids, String targetConstraints) throws ServiceException {
-        return doAction(itemAction("delete", ids, targetConstraints));        
+        return doAction(itemAction("delete", ids, targetConstraints));
     }
 
     @Override
@@ -688,7 +688,7 @@ public class ZSoapMailbox extends ZMailbox {
         System.out.println(flagged);
         System.out.println(mbox.renameFolder(flagged.getId(), "flagged-and-unread"));        
         System.out.println(mbox.modifyFolderColor(flagged.getId(), ZFolder.Color.red));
-        System.out.println(mbox.modifySearchFolder(flagged.getId(), "is:flagged is:unread", null, SortBy.dateAsc));
+        System.out.println(mbox.modifySearchFolder(flagged.getId(), "is:flagged is:unread", null, SearchSortBy.dateAsc));
         
         mbox.deleteFolder(flagged.getId());
         mbox.noOp();        
@@ -711,10 +711,20 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public List<ZContact> getAllContacts(String optFolderId) throws ServiceException {
+    public List<ZContact> getAllContacts(String optFolderId, ContactSortBy sortBy, boolean sync, List<String> attrs) throws ServiceException {
         XMLElement req = new XMLElement(MailService.GET_CONTACTS_REQUEST);
         if (optFolderId != null) 
             req.addAttribute(MailService.A_FOLDER, optFolderId);
+        if (sortBy != null) 
+            req.addAttribute(MailService.A_SORTBY, sortBy.name());
+        if (sync)
+            req.addAttribute(MailService.A_SYNC, sync);
+
+        if (attrs != null) {
+            for (String name : attrs)
+                req.addElement(MailService.E_ATTRIBUTE).addAttribute(MailService.A_ATTRIBUTE_NAME, name);
+        }
+        
         Element response = invoke(req);
         List<ZContact> result = new ArrayList<ZContact>();
         for (Element cn : response.listElements(MailService.E_CONTACT)) {
@@ -737,6 +747,63 @@ public class ZSoapMailbox extends ZMailbox {
             a.setText(entry.getValue());
         }
         return new ZSoapContact(invoke(req).getElement(MailService.E_CONTACT));
+    }
+
+    private Element contactAction(String op, String id) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.CONTACT_ACTION_REQUEST);
+        Element actionEl = req.addElement(MailService.E_ACTION);
+        actionEl.addAttribute(MailService.A_ID, id);
+        actionEl.addAttribute(MailService.A_OPERATION, op);
+        return actionEl;
+    }
+
+    @Override
+    public ZActionResult deleteContact(String ids) throws ServiceException {
+        return doAction(contactAction("delete", ids));                
+    }
+
+    @Override
+    public ZActionResult flagContact(String ids, boolean flag) throws ServiceException {
+        return doAction(contactAction(flag ? "flag" : "!flag", ids));        
+    }
+
+    @Override
+    public List<ZContact> getContacts(String ids, ContactSortBy sortBy, boolean sync, List<String> attrs) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.GET_CONTACTS_REQUEST);
+
+        if (sortBy != null) 
+            req.addAttribute(MailService.A_SORTBY, sortBy.name());
+        if (sync)
+            req.addAttribute(MailService.A_SYNC, sync);        
+        req.addElement(MailService.E_CONTACT).addAttribute(MailService.A_ID, ids);
+        if (attrs != null) {
+            for (String name : attrs)
+                req.addElement(MailService.E_ATTRIBUTE).addAttribute(MailService.A_ATTRIBUTE_NAME, name);
+        }
+        List<ZContact> result = new ArrayList<ZContact>();
+        for (Element cn : invoke(req).listElements(MailService.E_CONTACT)) {
+            result.add(new ZSoapContact(cn));
+        }
+        return result;
+    }
+
+    @Override
+    public ZActionResult moveContact(String ids, String destFolderId) throws ServiceException {
+        return doAction(contactAction("move", ids).addAttribute(MailService.A_FOLDER, destFolderId));        
+    }
+
+    @Override
+    public ZActionResult tagContact(String ids, String tagId, boolean tag) throws ServiceException {
+        return doAction(contactAction(tag ? "tag" : "!tag", ids).addAttribute(MailService.A_TAG, tagId));        
+    }
+
+    @Override
+    public ZActionResult updateContact(String ids, String destFolderId, String tagList, String flags) throws ServiceException {
+        Element actionEl = contactAction("update", ids);
+        if (destFolderId != null && destFolderId.length() > 0) actionEl.addAttribute(MailService.A_FOLDER, destFolderId);
+        if (tagList != null) actionEl.addAttribute(MailService.A_TAGS, tagList);
+        if (flags != null) actionEl.addAttribute(MailService.A_FLAGS, flags);
+        return doAction(actionEl);        
     }
 
     /*
@@ -782,10 +849,10 @@ public class ZSoapMailbox extends ZMailbox {
  <SaveDraftRequest>
  <AddMsgRequest>
 
- <CreateContactRequest>
- <ModifyContactRequest replace="{replace-mode}">
- <GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"]>
- <ContactActionRequest>
+ *<CreateContactRequest>
+ *<ModifyContactRequest replace="{replace-mode}">
+ *<GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"]>
+ *<ContactActionRequest>
  <ImportContactsRequest ct="{content-type}" [l="{folder-id}"]>
  <ExportContactsRequest ct="{content-type}" [l="{folder-id}"]/>
 

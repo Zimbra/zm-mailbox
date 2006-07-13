@@ -38,13 +38,13 @@ public abstract class ZMailbox {
     
     public final static char PATH_SEPARATOR_CHAR = '/';    
 
-   public enum SortBy {
+   public enum SearchSortBy {
         
        dateDesc, dateAsc, subjDesc, subjAsc, nameDesc, nameAsc;
 
-        public static SortBy fromString(String s) throws ServiceException {
+        public static SearchSortBy fromString(String s) throws ServiceException {
             try {
-                return SortBy.valueOf(s);
+                return SearchSortBy.valueOf(s);
             } catch (IllegalArgumentException e) {
                 throw SoapFaultException.CLIENT_ERROR("invalid sortBy: "+s, e);
             }
@@ -88,6 +88,8 @@ public abstract class ZMailbox {
      * @return current size of mailbox in bytes
      */
     public abstract long getSize();
+    
+    //  ------------------------
     
     /**
      * @return current List of all tags in the mailbox
@@ -135,14 +137,64 @@ public abstract class ZMailbox {
     /** rename tag */
     public abstract ZActionResult renameTag(String id, String name) throws ServiceException;        
     
+    // ------------------------
+
+    public enum ContactSortBy {
+         
+        nameDesc, nameAsc;
+
+         public static ContactSortBy fromString(String s) throws ServiceException {
+             try {
+                 return ContactSortBy.valueOf(s);
+             } catch (IllegalArgumentException e) {
+                 throw SoapFaultException.CLIENT_ERROR("invalid sortBy: "+s, e);
+             }
+         }
+    }
+
     /**
-     * @return List of all contacts
+     * 
+     * @param optFolderId return contacts only in specified folder (null for all folders)
+     * @param sortBy sort results (null for no sorting)
+     * @param sync if true, return modified date on contacts
+     * @return
+     * @throws ServiceException
      */
-    public abstract List<ZContact> getAllContacts(String optFolderId) throws ServiceException;
+    public abstract List<ZContact> getAllContacts(String optFolderId, ContactSortBy sortBy, boolean sync, List<String> attrs) throws ServiceException;
     
     public abstract ZContact createContact(String folderId, String tags, Map<String, String> attrs) throws ServiceException;
     
-    //------------------------
+    /**
+     * 
+     * @param ids comma-separated list of contact ids
+     * @param attrs limit attrs returns to given list
+     * @param sortBy sort results (null for no sorting)
+     * @param sync if true, return modified date on contacts
+     * @return
+     * @throws ServiceException
+     */
+    public abstract List<ZContact> getContacts(String ids, ContactSortBy sortBy, boolean sync, List<String> attrs) throws ServiceException;
+    
+    public abstract ZActionResult moveContact(String ids, String destFolderId) throws ServiceException;
+    
+    public abstract ZActionResult deleteContact(String ids) throws ServiceException;    
+    
+    public abstract ZActionResult flagContact(String ids, boolean flag) throws ServiceException;
+    
+    public abstract ZActionResult tagContact(String ids, String tagId, boolean tag) throws ServiceException;
+
+    /**
+     * update items(s)
+     * @param ids
+     * @param destFolderId optional destination folder
+     * @param tagList optional new list of tag ids
+     * @param flags optional new value for flags
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult updateContact(String ids, String destFolderId, String tagList, String flags) throws ServiceException;        
+    
+    //  ------------------------
     
     public abstract ZConversation getConversation(String id) throws ServiceException;
     
@@ -238,6 +290,8 @@ public abstract class ZMailbox {
      */
     public abstract ZActionResult markConversationSpam(String id, boolean spam, String destFolderId, String targetConstraints) throws ServiceException;
 
+    // ------------------------
+    
     /**
      * hard delete item(s).
      * 
@@ -316,7 +370,9 @@ public abstract class ZMailbox {
      * @throws ServiceException
      */
     public abstract ZActionResult updateItem(String ids, String destFolderId, String tagList, String flags, String targetConstraints) throws ServiceException;        
-    
+
+    // ------------------------
+
     public abstract ZMessage getMessage(
             String id, 
             boolean markRead,
@@ -359,6 +415,8 @@ public abstract class ZMailbox {
      */
     public abstract ZActionResult updateMessage(String ids, String destFolderId, String tagList, String flags) throws ServiceException;        
 
+    // ------------------------
+    
     /**
      * return the root user folder
      */
@@ -416,7 +474,7 @@ public abstract class ZMailbox {
      * @return newly created search folder
      * @throws ServiceException
      */
-    public abstract ZSearchFolder createSearchFolder(String parentId, String name, String query, String types, SortBy sortBy) throws ServiceException;
+    public abstract ZSearchFolder createSearchFolder(String parentId, String name, String query, String types, SearchSortBy sortBy) throws ServiceException;
 
     /**
      * modify a search folder.
@@ -428,7 +486,7 @@ public abstract class ZMailbox {
      * @return modified search folder
      * @throws ServiceException
      */
-    public abstract ZSearchFolder modifySearchFolder(String id, String query, String types, SortBy sortBy) throws ServiceException;
+    public abstract ZSearchFolder modifySearchFolder(String id, String query, String types, SearchSortBy sortBy) throws ServiceException;
  
     public static class ZActionResult {
         private String mIds;
@@ -488,6 +546,8 @@ public abstract class ZMailbox {
      */
     public abstract ZActionResult syncFolder(String folderId) throws ServiceException;    
 
+    // ------------------------
+    
     /**
      * 
      * @param params

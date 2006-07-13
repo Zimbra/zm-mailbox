@@ -71,7 +71,7 @@ class ZSoapContact implements ZContact, ZSoapItem {
         sb.add("folder", mFolderId);
         sb.add("flags", mFlags);
         sb.add("tags", mTagIds);
-        sb.add("metaDataChangedDate", mMetaDataChangedDate);
+        sb.addDate("metaDataChangedDate", mMetaDataChangedDate);
         sb.add("revision", mRevision);
         sb.beginStruct("attrs");
         for (Map.Entry<String, String> entry : mAttrs.entrySet()) {

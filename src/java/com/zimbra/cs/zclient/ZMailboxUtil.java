@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -51,7 +52,7 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
 import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
-import com.zimbra.cs.zclient.ZMailbox.SortBy;
+import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 import com.zimbra.cs.zclient.ZTag.Color;
 import com.zimbra.cs.zclient.soap.ZSoapMailbox;
@@ -147,6 +148,7 @@ public class ZMailboxUtil implements DebugListener {
         CREATE_MOUNTPOINT("createMountpoint", "cm", "{folder-name} {owner-id-or-name} {remote-item-id-or-path} {default-view}", Category.FOLDER, 4, 4),
         CREATE_SEARCH_FOLDER("createSearchFolder", "csf", "{folder-name} {query} [{types}] [{sort-by}]", Category.FOLDER, 2, 4),        
         CREATE_TAG("createTag", "ct", "{tag-name} {tag-color}", Category.TAG, 2, 2),
+        DELETE_CONTACT("deleteContact", "dct", "{contact-ids}", Category.CONTACT, 1, 1),        
         DELETE_CONVERSATION("deleteConversation", "dc", "{conv-ids} [{tcon}]", Category.CONVERSATION, 1, 2),
         DELETE_ITEM("deleteItem", "di", "{item-ids} [{tcon}]", Category.ITEM, 1, 2),        
         DELETE_FOLDER("deleteFolder", "df", "{folder-path}", Category.FOLDER, 1, 1),
@@ -154,13 +156,15 @@ public class ZMailboxUtil implements DebugListener {
         DELETE_TAG("deleteTag", "dt", "{tag-name}", Category.TAG, 1, 1),
         EMPTY_FOLDER("emptyFolder", "ef", "{folder-path}", Category.FOLDER, 1, 1),        
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
+        FLAG_CONTACT("flagContact", "fct", "{contact-ids} [0|1*]", Category.CONTACT, 1, 2),        
         FLAG_CONVERSATION("flagConversation", "fc", "{conv-ids} [0|1*] [{tcon}]", Category.CONVERSATION, 1, 3),
         FLAG_ITEM("flagItem", "fi", "{item-ids} [0|1*] [{tcon}]", Category.ITEM, 1, 3),
         FLAG_MESSAGE("flagMessage", "fm", "{msg-ids} [0|1*]", Category.MESSAGE, 1, 2),
-        GET_ALL_CONTACTS("getAllContacts", "gact", "[-v]", Category.CONTACT, 0, 2),
+        GET_ALL_CONTACTS("getAllContacts", "gact", "[-v] [attr1 [attr2...]]", Category.CONTACT, 0, Integer.MAX_VALUE),
         GET_ALL_FOLDERS("getAllFolders", "gaf", "[-v]", Category.FOLDER, 0, 1),
         GET_ALL_MOUNTPOINTS("getAllMountpoints", "gam", "[-v]", Category.FOLDER, 0, 1),        
-        GET_ALL_TAGS("getAllTags", "gat", "[-v]", Category.TAG, 0, 1),        
+        GET_ALL_TAGS("getAllTags", "gat", "[-v]", Category.TAG, 0, 1),
+        GET_CONTACTS("getContacts", "gct", "[-v] {contact-ids} [attr1 [attr2...]]", Category.CONTACT, 1, Integer.MAX_VALUE),                
         GET_CONVERSATION("getConversation", "gc", "{conv-id}", Category.CONVERSATION, 1, 2),
         GET_MESSAGE("getMessage", "gm", "{msg-id}", Category.MESSAGE, 1, 1),        
         HELP("help", "?", "commands", Category.MISC, 0, 1),
@@ -177,17 +181,19 @@ public class ZMailboxUtil implements DebugListener {
         MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", Category.FOLDER, 1, 2),        
         MODIFY_FOLDER_URL("modifyFolderURL", "mfu", "{folder-path} {url}", Category.FOLDER, 2, 2),                
         MODIFY_TAG_COLOR("modifyTagColor", "mtc", "{tag-name} {tag-color}", Category.TAG, 2, 2),
+        MOVE_CONTACT("moveContact", "mct", "{contact-ids} {dest-folder-path}", Category.CONTACT, 2, 2),        
         MOVE_CONVERSATION("moveConversation", "mc", "{conv-ids} {dest-folder-path} [{tcon}]", Category.CONVERSATION, 2, 3),
         MOVE_ITEM("moveItem", "mi", "{item-ids} {dest-folder-path} [{tcon}]", Category.ITEM, 1, 2),        
         MOVE_MESSAGE("moveMessage", "mm", "{msg-ids} {dest-folder-path}", Category.MESSAGE, 2, 2),
         NOOP("noOp", "no", "", Category.MISC, 0, 0),
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", Category.FOLDER, 2, 2),        
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", Category.TAG, 2, 2),
-        SEARCH("search", "s", "{query}", Category.SEARCH, 1, 2),
+        SEARCH("search", "s", "{query} [limit {limit}] [sortby {sortBy}] [types {types}]", Category.SEARCH, 1, 7),
         SEARCH_CURRENT("searchCurrent", "sc", "", Category.SEARCH, 0, 1),        
         SEARCH_NEXT("searchNext", "sn", "", Category.SEARCH, 0, 1),
         SEARCH_PREVIOUS("searchPrevious", "sp", "", Category.SEARCH, 0, 1),
-        SYNC_FOLDER("syncFolder", "sf", "{folder-path}", Category.FOLDER, 1, 1),                        
+        SYNC_FOLDER("syncFolder", "sf", "{folder-path}", Category.FOLDER, 1, 1),
+        TAG_CONTACT("tagContact", "tct", "{contact-ids} {tag-name} [0|1*]", Category.CONVERSATION, 2, 3),        
         TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*] [{tcon}]", Category.CONVERSATION, 2, 4),
         TAG_ITEM("tagItem", "ti", "{item-ids} {tag-name} [0|1*] [{tcon}]", Category.ITEM, 2, 4),
         TAG_MESSAGE("tagMessage", "tm", "{msg-ids} {tag-name} [0|1*]", Category.MESSAGE, 2, 3);
@@ -380,16 +386,17 @@ public class ZMailboxUtil implements DebugListener {
             System.out.println(cc.getId());
             break;
         case CREATE_FOLDER:
-            mMbox.createFolder(
+            ZFolder cf = mMbox.createFolder(
                     lookupFolderId(args[1], true), 
                     ZMailbox.getBasePath(args[1]), 
                     args.length == 3 ? ZFolder.View.fromString(args[2]) : null);
+            System.out.println(cf.getId());
             break;
         case CREATE_MOUNTPOINT:
             String cmPath = args[1];
             String cmOwner = args[2];
             String cmItem = args[3];
-            mMbox.createMountpoint(
+            ZMountpoint cm = mMbox.createMountpoint(
                         lookupFolderId(cmPath, true), 
                         ZMailbox.getBasePath(cmPath),
                         ZFolder.View.fromString(args[4]),
@@ -397,18 +404,24 @@ public class ZMailboxUtil implements DebugListener {
                         cmOwner,
                         (isId(cmItem) ? SharedItemBy.BY_ID : SharedItemBy.BY_PATH),
                         cmItem);
+            System.out.println(cm.getId());
             break;
         case CREATE_SEARCH_FOLDER:
-            mMbox.createSearchFolder(
+            ZSearchFolder csf = mMbox.createSearchFolder(
                     lookupFolderId(args[1], true), 
                     ZMailbox.getBasePath(args[1]),
                     args[2],
                     param(args, 3),
-                    args.length == 5 ? SortBy.fromString(param(args, 4)) : null);
+                    args.length == 5 ? SearchSortBy.fromString(param(args, 4)) : null);
+            System.out.println(csf.getId());
             break;
         case CREATE_TAG:
-            mMbox.createTag(args[1], Color.fromString(args[2]));
+            ZTag ct = mMbox.createTag(args[1], Color.fromString(args[2]));
+            System.out.println(ct.getId());
             break;
+        case DELETE_CONTACT:
+            mMbox.deleteContact(args[1]);
+            break;            
         case DELETE_CONVERSATION:
             mMbox.deleteConversation(translateId(args[1]), param(args, 2));
             break;
@@ -430,6 +443,9 @@ public class ZMailboxUtil implements DebugListener {
         case EXIT:
             System.exit(0);
             break;
+        case FLAG_CONTACT:
+            mMbox.flagContact(args[1], paramb(args, 2, true));
+            break;            
         case FLAG_CONVERSATION:
             mMbox.flagConversation(translateId(args[1]), paramb(args, 2, true), param(args, 3));
             break;            
@@ -442,6 +458,9 @@ public class ZMailboxUtil implements DebugListener {
         case GET_ALL_CONTACTS:
             doGetAllContacts(args); 
             break;
+        case GET_CONTACTS:
+            doGetContacts(args); 
+            break;            
         case GET_ALL_FOLDERS:
             doGetAllFolders(args); 
             break;            
@@ -507,7 +526,10 @@ public class ZMailboxUtil implements DebugListener {
             break;                                    
         case MOVE_MESSAGE:
             mMbox.moveMessage(args[1], lookupFolderId(param(args, 2)));
-            break;                        
+            break;
+        case MOVE_CONTACT:
+            mMbox.moveContact(args[1], lookupFolderId(param(args, 2)));
+            break;
         case NOOP:
             mMbox.noOp();
             break;
@@ -531,6 +553,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case SYNC_FOLDER:
             mMbox.syncFolder(lookupFolderId(args[1]));
+            break;
+        case TAG_CONTACT:
+            mMbox.tagContact(args[1], lookupTag(args[2]).getId(), paramb(args, 3, true));
             break;
         case TAG_CONVERSATION:
             mMbox.tagConversation(translateId(args[1]), lookupTag(args[2]).getId(), paramb(args, 3, true), param(args, 4));
@@ -561,11 +586,25 @@ public class ZMailboxUtil implements DebugListener {
     private Stack<Integer> mSearchOffsets = new Stack<Integer>();
     private Map<Integer, String> mSearchIndexToId = new HashMap<Integer, String>();
 
-    private void doSearch(String[] args) throws ServiceException {
+    private void doSearch(String[] args) throws ServiceException, ArgException {
         int i = 1;
         boolean verbose = (args.length == 3) && args[1].equals("-v");
         if (verbose) i = 2;
-        mSearchParams = new ZSearchParams(args[i]);
+        mSearchParams = new ZSearchParams(args[i++]);
+
+        Map<String, String> attrs = getMap(args, i);
+        
+//        [limit {limit}] [sortby {sortBy}] [types {types}]        
+        
+        String limitStr = attrs.get("limit");
+        mSearchParams.setLimit(limitStr != null ? Integer.parseInt(limitStr) : 25);
+        
+        String sortBy = attrs.get("sortBy");
+        mSearchParams.setSortBy(sortBy != null ?  SearchSortBy.fromString(sortBy) : SearchSortBy.dateDesc);
+            
+        String types = attrs.get("types");
+        mSearchParams.setTypes(types != null ? types : ZSearchParams.TYPE_CONVERSATION);        
+        
         mSearchCursors.clear();
         mSearchOffsets.clear();
         mSearchOffsets.push(0);
@@ -659,6 +698,14 @@ public class ZMailboxUtil implements DebugListener {
                 //    sub += " (" + ch.getFragment()+")";
                 mSearchIndexToId.put(i, ch.getId());
                 System.out.format(itemFormat, i++, ch.getId(), from, sub, c);
+            } else if (hit instanceof ZContactHit) {
+                ZContactHit ch = (ZContactHit) hit;
+                //c.setTimeInMillis(ch.getDate());
+                String sub = ch.getEmail();
+                String from = ch.getFileAsStr();
+                mSearchIndexToId.put(i, ch.getId());
+                System.out.format(itemFormat, i++, ch.getId(), from, sub, c);
+                
             }
         }
         System.out.println();
@@ -707,8 +754,17 @@ public class ZMailboxUtil implements DebugListener {
     }        
 
     private void doGetAllContacts(String[] args) throws ServiceException {
-        //boolean verbose = (args.length == 2) && args[1].equals("-v");
-        System.out.println(mMbox.getAllContacts(null));
+        int i = 1;
+        boolean verbose = args.length > 1 ? args[i].equals("-v") : false;
+        if (verbose) i++;        
+        System.out.println(mMbox.getAllContacts(null, null, true, getList(args, i)));
+    }        
+
+    private void doGetContacts(String[] args) throws ServiceException, ArgException {
+        int i = 1;
+        boolean verbose = args[i].equals("-v");
+        if (verbose) i++;
+        System.out.println(mMbox.getContacts(args[i++], null, true, getList(args, i)));
     }        
 
     private void doDumpMountpoints(ZFolder folder, boolean verbose, boolean recurse) {
@@ -813,6 +869,14 @@ public class ZMailboxUtil implements DebugListener {
                 throw new ArgException("not enough arguments");
             String v = args[i+1];
             attrs.put(n, v);
+        }
+        return attrs;
+    }
+
+    private List<String> getList(String[] args, int offset) {
+        List<String> attrs = new ArrayList<String>();
+        for (int i = offset; i < args.length; i++) {
+            attrs.add(args[i]);
         }
         return attrs;
     }

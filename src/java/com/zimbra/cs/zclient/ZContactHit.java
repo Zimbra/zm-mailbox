@@ -25,14 +25,22 @@
 
 package com.zimbra.cs.zclient;
 
-import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
+public interface ZContactHit extends ZSearchHit {
 
-public interface ZSearchFolder extends ZFolder {
+    /**
+     * @return message's id
+     */
+    public String getId();
 
-    public String getQuery();
+    public String getFolderId();
 
-    public String getTypes();
-
-    public SearchSortBy getSortBy();
+    public String getRevision();
     
+    public String getFileAsStr();
+
+    public String getEmail();
+
+    public String getEmail2();
+
+    public String getEmail3();
 }

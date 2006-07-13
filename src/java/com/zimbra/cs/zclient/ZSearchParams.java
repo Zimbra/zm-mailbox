@@ -25,7 +25,7 @@
 
 package com.zimbra.cs.zclient;
 
-import com.zimbra.cs.zclient.ZMailbox.SortBy;
+import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 
 public class ZSearchParams {
 
@@ -37,9 +37,8 @@ public class ZSearchParams {
     
     public static final String TYPE_APPOINTMENT = "appointment";
     
-    
     /**
-     *  max number of results to return (0 to return all)
+     *  max number of results to return
      */
     private int mLimit;
     
@@ -52,7 +51,7 @@ public class ZSearchParams {
     /**
      * dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc(default is "dateDesc")
      */
-    private SortBy mSortBy = SortBy.dateDesc;
+    private SearchSortBy mSortBy = SearchSortBy.dateDesc;
     
     /**
      * comma-separated list.  Legal values are:
@@ -171,11 +170,11 @@ public class ZSearchParams {
         mRecipientMode = recipientMode;
     }
 
-    public SortBy getSortBy() {
+    public SearchSortBy getSortBy() {
         return mSortBy;
     }
 
-    public void setSortBy(SortBy sortBy) {
+    public void setSortBy(SearchSortBy sortBy) {
         mSortBy = sortBy;
     }
 
