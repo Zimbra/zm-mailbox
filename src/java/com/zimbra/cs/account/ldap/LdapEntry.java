@@ -111,14 +111,23 @@ public class LdapEntry implements Entry {
 
 
     public void modifyAttrs(Map<String, ? extends Object> attrs) throws ServiceException {
-        modifyAttrs(attrs, false);
+        modifyAttrs(attrs, false, true);
     }
 
-    public void modifyAttrs(Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
+    public void modifyAttrs(Map<String, ? extends Object> attrs,
+                            boolean checkImmutable)
+    throws ServiceException {
+        modifyAttrs(attrs, checkImmutable, true);
+    }
+
+    public void modifyAttrs(Map<String, ? extends Object> attrs,
+                            boolean checkImmutable,
+                            boolean allowCallback)
+    throws ServiceException {
         HashMap context = new HashMap();
-        AttributeManager.getInstance().preModify(attrs, this, context, false, checkImmutable);
+        AttributeManager.getInstance().preModify(attrs, this, context, false, checkImmutable, allowCallback);
         modifyAttrsInternal(null, attrs);
-        AttributeManager.getInstance().postModify(attrs, this, context, false);
+        AttributeManager.getInstance().postModify(attrs, this, context, false, allowCallback);
     }
 
   

@@ -708,9 +708,22 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public void modifyAttrs(com.zimbra.cs.account.Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
+    public void modifyAttrs(com.zimbra.cs.account.Entry e,
+                            Map<String, ? extends Object> attrs,
+                            boolean checkImmutable)
+    throws ServiceException {
         SoapEntry se = (SoapEntry) e;
         se.modifyAttrs(this, attrs, checkImmutable);
+    }
+
+    @Override
+    public void modifyAttrs(com.zimbra.cs.account.Entry e,
+                            Map<String, ? extends Object> attrs,
+                            boolean checkImmutable,
+                            boolean allowCallback)
+    throws ServiceException {
+        // allowCallback is ignored over SOAP interface
+        modifyAttrs(e, attrs, checkImmutable, true);
     }
 
     @Override

@@ -450,7 +450,22 @@ public class AttributeManager {
         return cb;
     }
 
-    public void preModify(Map<String, ? extends Object> attrs, Entry entry, Map context, boolean isCreate, boolean checkImmutable) throws ServiceException {
+    public void preModify(Map<String, ? extends Object> attrs,
+                          Entry entry,
+                          Map context,
+                          boolean isCreate,
+                          boolean checkImmutable)    
+    throws ServiceException {
+        preModify(attrs, entry, context, isCreate, checkImmutable, true);
+    }
+
+    public void preModify(Map<String, ? extends Object> attrs,
+                          Entry entry,
+                          Map context,
+                          boolean isCreate,
+                          boolean checkImmutable,
+                          boolean allowCallback)    
+    throws ServiceException {
     	String[] keys = attrs.keySet().toArray(new String[0]);
 		for (int i = 0; i < keys.length; i++) {
 		    String name = keys[i];
@@ -462,7 +477,7 @@ public class AttributeManager {
             AttributeInfo info = mAttrs.get(name.toLowerCase());
             if (info != null) {
                 info.checkValue(value, checkImmutable);
-                if (info.getCallback() != null)
+                if (allowCallback && info.getCallback() != null)
                     info.getCallback().preModify(context, name, value, attrs, entry, isCreate);
             } else {
                 ZimbraLog.misc.warn("checkValue: no attribute info for: "+name);
@@ -470,7 +485,18 @@ public class AttributeManager {
 		}
     }
 
-    public void postModify(Map<String, ? extends Object> attrs, Entry entry, Map context, boolean isCreate) {
+    public void postModify(Map<String, ? extends Object> attrs,
+            Entry entry,
+            Map context,
+            boolean isCreate) {
+        postModify(attrs, entry, context, isCreate, true);
+    }
+
+    public void postModify(Map<String, ? extends Object> attrs,
+                           Entry entry,
+                           Map context,
+                           boolean isCreate,
+                           boolean allowCallback) {
     	String[] keys = attrs.keySet().toArray(new String[0]);
 		for (int i = 0; i < keys.length; i++) {
 			String name = keys[i];
@@ -478,7 +504,7 @@ public class AttributeManager {
             if (name.charAt(0) == '-' || name.charAt(0) == '+') name = name.substring(1);
             AttributeInfo info = mAttrs.get(name.toLowerCase());
             if (info != null) {
-                if (info.getCallback() != null) {
+                if (allowCallback && info.getCallback() != null) {
                     try {
                         info.getCallback().postModify(context, name, entry, isCreate);
                     } catch (Exception e) {

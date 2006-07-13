@@ -215,6 +215,13 @@ public class LdapProvisioning extends Provisioning {
     }
 
     
+    public void modifyAttrs(Entry e,
+                            Map<String, ? extends Object> attrs,
+                            boolean checkImmutable)
+    throws ServiceException {
+        modifyAttrs(e, attrs, checkImmutable, true);
+    }
+
     /**
      * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
      * keys that are <code>String</code>s, and values that are either
@@ -226,10 +233,13 @@ public class LdapProvisioning extends Provisioning {
      *     in which case a multi-valued attr is updated</li>
      * </ul>
      */
-    public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException
-    {
+    public void modifyAttrs(Entry e,
+                            Map<String, ? extends Object> attrs,
+                            boolean checkImmutable,
+                            boolean allowCallback)
+    throws ServiceException {
         LdapEntry le = (LdapEntry) e;
-        le.modifyAttrs(attrs, checkImmutable);
+        le.modifyAttrs(attrs, checkImmutable, allowCallback);
     }
 
     /**

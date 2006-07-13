@@ -906,8 +906,17 @@ public abstract class Provisioning {
      *     in which case a multi-valued attr is updated</li>
      * </ul>
      */
-    public abstract void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException;
-    
+    public abstract void modifyAttrs(Entry e,
+                                     Map<String, ? extends Object> attrs,
+                                     boolean checkImmutable)
+    throws ServiceException;
+
+    public abstract void modifyAttrs(Entry e,
+                                     Map<String, ? extends Object> attrs,
+                                     boolean checkImmutable,
+                                     boolean allowCallback)
+    throws ServiceException;
+
     /**
      * reload/refresh the entry.
      */
