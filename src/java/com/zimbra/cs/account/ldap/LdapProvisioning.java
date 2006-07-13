@@ -66,6 +66,7 @@ import javax.naming.directory.InvalidAttributeIdentifierException;
 import javax.naming.directory.InvalidAttributeValueException;
 import javax.naming.directory.InvalidAttributesException;
 import javax.naming.directory.InvalidSearchFilterException;
+import javax.naming.directory.SchemaViolationException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.Control;
@@ -359,7 +360,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (InvalidNameException e) {
             return null;            
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to lookup account via query: "+query, e);
+            throw ServiceException.FAILURE("unable to lookup account via query: "+query+" message: "+e.getMessage(), e);
         } finally {
             if (initCtxt == null)
                 LdapUtil.closeContext(ctxt);
@@ -973,9 +974,9 @@ public class LdapProvisioning extends Provisioning {
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(alias);
         } catch (InvalidNameException e) {
-            throw ServiceException.INVALID_REQUEST("invalid alias name", e);
+            throw ServiceException.INVALID_REQUEST("invalid alias name: "+e.getMessage(), e);
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to create alias", e);
+            throw ServiceException.FAILURE("unable to create alias: "+e.getMessage(), e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }                
@@ -1143,7 +1144,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (InvalidNameException e) {
             return null;                        
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to lookup domain via query: "+query, e);
+            throw ServiceException.FAILURE("unable to lookup domain via query: "+query+" message:"+e.getMessage(), e);
         } finally {
             if (initCtxt == null)
                 LdapUtil.closeContext(ctxt);
@@ -1343,7 +1344,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (InvalidNameException e) {
             return null;                        
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to lookup cos via query: "+query, e);
+            throw ServiceException.FAILURE("unable to lookup cos via query: "+query+ " message: "+e.getMessage(), e);
         } finally {
             if (initCtxt == null)
                 LdapUtil.closeContext(ctxt);
@@ -1401,7 +1402,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (InvalidNameException e) {
             return null;
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to lookup COS by name: "+name, e);
+            throw ServiceException.FAILURE("unable to lookup COS by name: "+name+" message: "+e.getMessage(), e);
         } finally {
             if (initCtxt == null)
                 LdapUtil.closeContext(ctxt);
@@ -1643,7 +1644,7 @@ public class LdapProvisioning extends Provisioning {
             throw AccountServiceException.SERVER_EXISTS(name);
         } catch (NamingException e) {
             //if (e instanceof )
-            throw ServiceException.FAILURE("unable to create server: "+name, e);
+            throw ServiceException.FAILURE("unable to create server: "+name+" message: "+e.getMessage(), e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
@@ -1665,7 +1666,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (InvalidNameException e) {
             return null;                        
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to lookup server via query: "+query, e);
+            throw ServiceException.FAILURE("unable to lookup server via query: "+query+" message: "+e.getMessage(), e);
         } finally {
             if (initCtxt == null)
                 LdapUtil.closeContext(ctxt);
@@ -1736,7 +1737,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (InvalidNameException e) {
             return null;            
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to lookup server by name: "+name, e);
+            throw ServiceException.FAILURE("unable to lookup server by name: "+name+" message: "+e.getMessage(), e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
@@ -1922,7 +1923,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (InvalidNameException e) {
             return null;                        
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to lookup distribution list via query: "+query, e);
+            throw ServiceException.FAILURE("unable to lookup distribution list via query: "+query+ " message: "+e.getMessage(), e);
         } finally {
             if (initCtxt == null)
                 LdapUtil.closeContext(ctxt);
@@ -2512,13 +2513,15 @@ public class LdapProvisioning extends Provisioning {
         } catch (NameAlreadyBoundException e) {            
             throw e;
         } catch (InvalidAttributeIdentifierException e) {
-            throw AccountServiceException.INVALID_ATTR_NAME(method+" invalid attr name", e);
+            throw AccountServiceException.INVALID_ATTR_NAME(method+" invalid attr name: "+e.getMessage(), e);
         } catch (InvalidAttributeValueException e) {
-            throw AccountServiceException.INVALID_ATTR_VALUE(method+" invalid attr value", e);            
+            throw AccountServiceException.INVALID_ATTR_VALUE(method+" invalid attr value: "+e.getMessage(), e);
         } catch (InvalidAttributesException e) {
-            throw ServiceException.INVALID_REQUEST(method+" invalid set of attributes", e);
+            throw ServiceException.INVALID_REQUEST(method+" invalid set of attributes: "+e.getMessage(), e);
         } catch (InvalidNameException e) {
-            throw ServiceException.INVALID_REQUEST(method+" invalid name", e);
+            throw ServiceException.INVALID_REQUEST(method+" invalid name: "+e.getMessage(), e);
+        } catch (SchemaViolationException e) {
+            throw ServiceException.INVALID_REQUEST(method+" invalid schema change: "+e.getMessage(), e);            
         } catch (NamingException e) {
             throw ServiceException.FAILURE(method, e);
         } finally {
