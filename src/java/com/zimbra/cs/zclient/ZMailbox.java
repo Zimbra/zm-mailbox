@@ -166,6 +166,16 @@ public abstract class ZMailbox {
     
     /**
      * 
+     * @param id
+     * @param replace if true, replace all attrs with specified attrs, otherwise merge with existing
+     * @param attrs
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZContact modifyContact(String id, boolean replace, Map<String, String> attrs) throws ServiceException;
+    
+    /**
+     * 
      * @param ids comma-separated list of contact ids
      * @param attrs limit attrs returns to given list
      * @param sortBy sort results (null for no sorting)

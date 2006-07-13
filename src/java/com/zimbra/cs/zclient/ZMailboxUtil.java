@@ -176,6 +176,7 @@ public class ZMailboxUtil implements DebugListener {
         MARK_MESSAGE_READ("markMessageRead", "mmr", "{msg-ids} [0|1*]", Category.MESSAGE, 1, 2),
         MARK_MESSAGE_SPAM("markMessageSpam", "mms", "{msg-ids} [0|1*] [{dest-folder-path}]", Category.MESSAGE, 1, 3),
         MARK_TAG_READ("markTagRead", "mtr", "{tag-name}", Category.TAG, 1, 1),
+        MODIFY_CONTACT("modifyContactAttrs", "mcta", "[-r] {contact-id} [attr1 value1 [attr2 value2...]]", Category.CONTACT, 3, Integer.MAX_VALUE),
         MODIFY_FOLDER_CHECKED("modifyFolderChecked", "mfch", "{folder-path} [0|1*]", Category.FOLDER, 1, 2),
         MODIFY_FOLDER_COLOR("modifyFolderColor", "mfc", "{folder-path} {new-color}", Category.FOLDER, 2, 2),
         MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", Category.FOLDER, 1, 2),        
@@ -503,6 +504,9 @@ public class ZMailboxUtil implements DebugListener {
         case MARK_TAG_READ:
             mMbox.markTagRead(lookupTag(args[1]).getId());
             break;
+        case MODIFY_CONTACT:
+            doModifyContact(args);
+            break;
         case MODIFY_FOLDER_CHECKED:
             mMbox.modifyFolderChecked(lookupFolderId(args[1]), paramb(args, 2, true));
             break;                        
@@ -706,6 +710,13 @@ public class ZMailboxUtil implements DebugListener {
                 mSearchIndexToId.put(i, ch.getId());
                 System.out.format(itemFormat, i++, ch.getId(), from, sub, c);
                 
+            } else if (hit instanceof ZMessageHit) {
+                ZMessageHit mh = (ZMessageHit) hit;
+                c.setTimeInMillis(mh.getDate());
+                String sub = mh.getSubject();
+                String from = mh.getSender().getDisplay();
+                mSearchIndexToId.put(i, mh.getId());
+                System.out.format(itemFormat, i++, mh.getId(), from, sub, c);
             }
         }
         System.out.println();
@@ -817,6 +828,14 @@ public class ZMailboxUtil implements DebugListener {
         System.out.println(msg);
     }        
     
+    private void doModifyContact(String[] args) throws ServiceException, ArgException {
+        int i = 1;
+        boolean replace = args[1].equals("-r");
+        if (replace) i = 2;
+        ZContact mc = mMbox.modifyContact(translateId(args[i]), false, getMap(args, i+1));
+        System.out.println(mc.getId());
+    }
+
     private void dumpContact(GalContact contact) throws ServiceException {
         System.out.println("# name "+contact.getId());
         Map<String, Object> attrs = contact.getAttrs();

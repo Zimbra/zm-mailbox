@@ -394,7 +394,7 @@ public class ZSoapMailbox extends ZMailbox {
     @Override
     public ZFolder getFolderByPath(String path) throws ServiceException {
         if (!path.startsWith(ZMailbox.PATH_SEPARATOR)) 
-            throw SoapFaultException.CLIENT_ERROR("path must start with "+ZMailbox.PATH_SEPARATOR, null);
+            path = ZMailbox.PATH_SEPARATOR + path;
         return getUserRoot().getSubFolderByPath(path.substring(1));
     }
 
@@ -804,6 +804,21 @@ public class ZSoapMailbox extends ZMailbox {
         if (tagList != null) actionEl.addAttribute(MailService.A_TAGS, tagList);
         if (flags != null) actionEl.addAttribute(MailService.A_FLAGS, flags);
         return doAction(actionEl);        
+    }
+
+    @Override
+    public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.MODIFY_CONTACT_REQUEST);
+        if (replace) 
+            req.addAttribute(MailService.A_REPLACE, replace);
+        Element cn = req.addElement(MailService.E_CONTACT);
+        cn.addAttribute(MailService.A_ID, id);
+        for (Map.Entry<String, String> entry : attrs.entrySet()) {
+            Element a = cn.addElement(MailService.E_ATTRIBUTE);
+            a.addAttribute(MailService.A_ATTRIBUTE_NAME, entry.getKey());
+            a.setText(entry.getValue());
+        }
+        return new ZSoapContact(invoke(req).getElement(MailService.E_CONTACT));
     }
 
     /*
