@@ -40,6 +40,7 @@ class ZSoapContactHit implements ZContactHit {
     private String mRevision;
     private String mFolderId;
     private float mScore;
+    private long mMetaDataDate;
         
     ZSoapContactHit(Element e) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
@@ -51,6 +52,7 @@ class ZSoapContactHit implements ZContactHit {
         mEmail = e.getAttribute(Contact.A_email, null);
         mEmail2 = e.getAttribute(Contact.A_email2, null);
         mEmail3 = e.getAttribute(Contact.A_email3, null);
+        mMetaDataDate = e.getAttributeLong(MailService.A_MODIFIED_DATE, 0) * 1000;
     }
 
     public String toString() {
@@ -103,5 +105,9 @@ class ZSoapContactHit implements ZContactHit {
 
     public String getSortFied() {
         return mSortField;
+    }
+
+    public long getMetaDataChangedDate() {
+        return mMetaDataDate;
     }
 }

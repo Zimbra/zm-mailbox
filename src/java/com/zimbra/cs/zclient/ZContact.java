@@ -39,6 +39,9 @@ public interface ZContact  {
 
     public String getRevision();
 
+    /**
+     * @return time in msecs
+     */
     public long getMetaDataChangedDate();
     
     public Map<String, String> getAttrs();

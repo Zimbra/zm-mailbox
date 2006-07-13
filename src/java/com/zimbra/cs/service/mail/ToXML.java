@@ -293,12 +293,14 @@ public class ToXML {
     }
     public static Element encodeContact(Element parent, ZimbraSoapContext lc, Contact contact,
                 ContactAttrCache cacache, boolean summary, List<String> attrFilter, int fields) {
+        boolean didMd = false;
         Element elem = parent.addElement(MailService.E_CONTACT);
         elem.addAttribute(MailService.A_ID, lc.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
             elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(contact.getFolderId()));
         recordItemTags(elem, contact, fields);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
+            didMd = true;
             elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
             elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
         }
@@ -321,6 +323,11 @@ public class ToXML {
                 if (email != null)
                     elem.addAttribute(Contact.A_email3, email);
 
+                // send back date with summary via search results
+                if (!didMd) {
+                    elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
+                    didMd = true;
+                }
             } catch (ServiceException e) { }
             return elem;
         }

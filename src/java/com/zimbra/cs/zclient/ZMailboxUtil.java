@@ -700,7 +700,7 @@ public class ZMailboxUtil implements DebugListener {
                 System.out.format(itemFormat, i++, ch.getId(), from, sub, c);
             } else if (hit instanceof ZContactHit) {
                 ZContactHit ch = (ZContactHit) hit;
-                //c.setTimeInMillis(ch.getDate());
+                c.setTimeInMillis(ch.getMetaDataChangedDate());
                 String sub = ch.getEmail();
                 String from = ch.getFileAsStr();
                 mSearchIndexToId.put(i, ch.getId());

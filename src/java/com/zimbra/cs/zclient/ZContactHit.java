@@ -43,4 +43,9 @@ public interface ZContactHit extends ZSearchHit {
     public String getEmail2();
 
     public String getEmail3();
+    
+    /**
+     * @return time in msecs
+     */
+    public long getMetaDataChangedDate();
 }
