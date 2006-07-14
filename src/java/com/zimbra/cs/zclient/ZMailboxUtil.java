@@ -176,7 +176,7 @@ public class ZMailboxUtil implements DebugListener {
         CREATE_CONTACT("createContact", "cct", "{folder-name} [attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 3, Integer.MAX_VALUE),        
         CREATE_FOLDER("createFolder", "cf", "{folder-name}", "create folder", Category.FOLDER, 1, 1, O_VIEW, O_COLOR, O_FLAGS),
         CREATE_MOUNTPOINT("createMountpoint", "cm", "{folder-name} {owner-id-or-name} {remote-item-id-or-path}", "create mountpoint", Category.FOLDER, 3, 3, O_VIEW, O_COLOR, O_FLAGS),
-        CREATE_SEARCH_FOLDER("createSearchFolder", "csf", "{folder-name} {query}", "create search folder", Category.FOLDER, 2, 2, O_SORT, O_VIEW, O_COLOR),        
+        CREATE_SEARCH_FOLDER("createSearchFolder", "csf", "{folder-name} {query}", "create search folder", Category.FOLDER, 2, 2, O_SORT, O_TYPES, O_COLOR),        
         CREATE_TAG("createTag", "ct", "{tag-name}", "create tag", Category.TAG, 1, 1, O_COLOR),
         DELETE_CONTACT("deleteContact", "dct", "{contact-ids}", "hard delete contact(s)", Category.CONTACT, 1, 1),        
         DELETE_CONVERSATION("deleteConversation", "dc", "{conv-ids}", "hard delete conversastion(s)", Category.CONVERSATION, 1, 1),
@@ -275,7 +275,7 @@ public class ZMailboxUtil implements DebugListener {
                 String optStr = String.format("  -%s/--%s%s", opt.getOpt(), opt.getLongOpt(), arg);
                 sb.append(String.format("  %-30s %s%n", optStr, opt.getDescription()));
             }
-            //sb.append("\n");
+            //sb.append(String.format("%n    %s%n%n", getHelp()));
             return sb.toString();
         }
 
