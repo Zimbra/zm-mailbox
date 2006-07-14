@@ -58,6 +58,9 @@ public class AddDistributionListMember extends AdminDocumentHandler {
         for (Element elem : request.listElements(AdminService.E_DLM)) {
         	memberList.add(elem.getTextTrim());
         }
+        if (memberList.isEmpty()) {
+            throw ServiceException.INVALID_REQUEST("members to add not specified", null);
+        }
         
         DistributionList dl = prov.get(DistributionListBy.id, id);
         if (dl == null)
