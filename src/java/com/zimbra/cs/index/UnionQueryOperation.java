@@ -34,8 +34,10 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Set;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
@@ -223,20 +225,32 @@ class UnionQueryOperation extends QueryOperation
             }
         }
     }
-
-    QueryOperation runRemoteSearches(SoapProtocol proto, OperationContext octxt, MailboxIndex mbidx, byte[] types, SortBy searchOrder, int offset, int limit) 
+    
+    QueryOperation runRemoteSearches(SoapProtocol proto, Mailbox mbox, OperationContext octxt, MailboxIndex mbidx, byte[] types, SortBy searchOrder, int offset, int limit) 
     throws ServiceException, IOException {
 
         boolean hasRemoteOps = false;
+        
+        Set<Folder> visibleFolders = mbox.getVisibleFolders(octxt);
+        
 
-        for (int i = mQueryOperations.size()-1; i >= 0; i--) {
+        // Since optimize() has already been run, we know that each of our ops
+        // only has one target (or none).  Find those operations which have
+        // an external target and wrap them in RemoteQueryOperations
+        for (int i = mQueryOperations.size()-1; i >= 0; i--) { // iterate backwards so we can remove/add w/o screwing iteration
             QueryOperation op = mQueryOperations.get(i);
 
             QueryTargetSet targets = op.getQueryTargets();
+            
+            // this assertion OK because we have already distributed multi-target query ops
+            // during the optimize() step
             assert(targets.countExplicitTargets() <= 1);
+            
+            // the assertion above is critical: the code below all assumes
+            // that we only have ONE target (ie we've already distributed if necessary)
 
             if (targets.hasExternalTargets()) {
-                mQueryOperations.remove(i);
+                mQueryOperations.remove(i);   
 
                 hasRemoteOps = true;
                 boolean foundOne = false;
@@ -256,6 +270,34 @@ class UnionQueryOperation extends QueryOperation
                     remoteOp.tryAddOredOperation(op);
                     mQueryOperations.add(i, remoteOp);
                 }
+            } else {
+                // local target
+                if (visibleFolders != null) {
+                    if (visibleFolders.size() == 0) {
+                        mQueryOperations.remove(i);
+                        mQueryOperations.add(i, new NullQueryOperation());
+                    } else {
+                        mQueryOperations.remove(i);
+                        
+                        // build a "and (in:visible1 or in:visible2 or in:visible3...)" query tree here!
+                        IntersectionQueryOperation intersect = new IntersectionQueryOperation();
+                        intersect.addQueryOp(op);
+                        
+                        UnionQueryOperation union = new UnionQueryOperation();
+                        intersect.addQueryOp(union);
+                        
+                        for (Folder f : visibleFolders) {
+                            DBQueryOperation newOp = DBQueryOperation.Create();
+                            union.add(newOp);
+                            newOp.addInClause(f, true);
+                        }
+                        
+                        mQueryOperations.add(i, intersect);
+                    }
+                }
+                
+                
+                
             }
         }
         
@@ -268,14 +310,14 @@ class UnionQueryOperation extends QueryOperation
                 }
             }
         }
-
+        
         assert(mQueryOperations.size() > 0);
-
+        
         if (mQueryOperations.size() == 1) {
             // this can happen if we replaced ALL of our operations with a single remote op...
             return mQueryOperations.get(0);
         }
-
+        
         return this;
     }
 
@@ -380,7 +422,7 @@ class UnionQueryOperation extends QueryOperation
 
         return toRet;
     }
-
+    
     protected QueryOperation combineOps(QueryOperation other, boolean union) {
         if (mLog.isDebugEnabled()) {
             mLog.debug("combineOps("+toString()+","+other.toString()+")");

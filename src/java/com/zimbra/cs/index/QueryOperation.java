@@ -55,8 +55,8 @@ import com.zimbra.cs.service.ServiceException;
 
 abstract class QueryOperation implements Cloneable, ZimbraQueryResults
 {
-	// order does matter somewhat -- order is used to sort execution order when
-	// there are multiple operations to choose from (e.g. an OR of two operations, etc)
+    // order does matter somewhat -- order is used to sort execution order when
+    // there are multiple operations to choose from (e.g. an OR of two operations, etc)
     public static final int OP_TYPE_REMOTE      = 1;
     public static final int OP_TYPE_NULL        = 2; // no results at all
     public static final int OP_TYPE_LUCENE      = 3;
@@ -65,12 +65,12 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
     public static final int OP_TYPE_INTERSECT   = 6; // AND
     public static final int OP_TYPE_UNION       = 7; // OR
     public static final int OP_TYPE_NO_TERM     = 8; // pseudo-op, always optimized away
-    
+
     private static final int MIN_CHUNK_SIZE = 26;
     private static final int MAX_CHUNK_SIZE = 5000;
 
     abstract int getOpType(); 
-    
+
     /**
      * @author tim
      *
@@ -79,7 +79,7 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
         public int compare(Object o1, Object o2) {
             QueryOperation lhs = (QueryOperation)o1;
             QueryOperation rhs = (QueryOperation)o2;
-            
+
             return lhs.getOpType() - rhs.getOpType();
         }
         public boolean equals(Object obj) {
@@ -87,34 +87,34 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
             return false;
         }
     }
-    
+
     /**
      * @return A representation of this operation as a parsable query string
      */
     abstract String toQueryString(); 
-    
+
     final static QueryOpSortComparator sQueryOpSortComparator = new QueryOpSortComparator();
 
     private final static boolean USE_PRELOADING_GROUPER = true; // mostly useful for debugging
-    
+
     private SortBy mSortOrder = null;
     public SortBy getSortBy() { return mSortOrder; }
-    
+
     ////////////////////
     // Top-Level Execution  
     final ZimbraQueryResults run(Mailbox mbox, MailboxIndex mbidx, byte[] types, SortBy searchOrder, int chunkSize) throws IOException, ServiceException
     {
         mIsToplevelQueryOp = true;
         mSortOrder = searchOrder;
-        
+
         chunkSize++; // one extra for checking the "more" flag at the end of the results
-        
+
         if (chunkSize < MIN_CHUNK_SIZE) {
             chunkSize = MIN_CHUNK_SIZE;
         } else if (chunkSize > MAX_CHUNK_SIZE) {
             chunkSize = MAX_CHUNK_SIZE;
         }
-        
+
         int retType = MailboxIndex.SEARCH_RETURN_DOCUMENTS;
         for (int i = 0; i < types.length; i++) {
             if (types[i] == MailItem.TYPE_CONVERSATION) {
@@ -126,54 +126,54 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
                 break;
             }
         }
-        
+
         // set me to TRUE if you're returning Conversations or something which could benefit from preloading        
         boolean preloadOuterResults = false;
-        
+
         int outerChunkSize = chunkSize;
-        
+
         switch (retType) {
-        case MailboxIndex.SEARCH_RETURN_CONVERSATIONS:
-            if (USE_PRELOADING_GROUPER) {
-                chunkSize+= 2; // one for the ConvQueryResults, one for the Grouper 
-                setupResults(mbox, new ConvQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
-                chunkSize*=2; // guess 2 msgs per conv
-            } else {
-                chunkSize++; // one for the ConvQueryResults
-                setupResults(mbox, new ConvQueryResults(this, types, searchOrder));
-                chunkSize*=2;
-            }
-            preloadOuterResults = true;
-            break;
-        case MailboxIndex.SEARCH_RETURN_MESSAGES:
-            if (USE_PRELOADING_GROUPER) {
-                chunkSize+= 2; // one for the MsgQueryResults, one for the Grouper 
-                setupResults(mbox, new MsgQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
-            } else {
-                chunkSize++; // one for the MsgQueryResults
-                setupResults(mbox, new MsgQueryResults(this, types, searchOrder));
-            }
-            break;
-        case MailboxIndex.SEARCH_RETURN_DOCUMENTS:
-            if (USE_PRELOADING_GROUPER) {
-                chunkSize++; // one for the grouper
-                setupResults(mbox, new UngroupedQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
-            } else {
-                setupResults(mbox, new UngroupedQueryResults(this, types, searchOrder));
-            }
-            break;
+            case MailboxIndex.SEARCH_RETURN_CONVERSATIONS:
+                if (USE_PRELOADING_GROUPER) {
+                    chunkSize+= 2; // one for the ConvQueryResults, one for the Grouper 
+                    setupResults(mbox, new ConvQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
+                    chunkSize*=2; // guess 2 msgs per conv
+                } else {
+                    chunkSize++; // one for the ConvQueryResults
+                    setupResults(mbox, new ConvQueryResults(this, types, searchOrder));
+                    chunkSize*=2;
+                }
+                preloadOuterResults = true;
+                break;
+            case MailboxIndex.SEARCH_RETURN_MESSAGES:
+                if (USE_PRELOADING_GROUPER) {
+                    chunkSize+= 2; // one for the MsgQueryResults, one for the Grouper 
+                    setupResults(mbox, new MsgQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
+                } else {
+                    chunkSize++; // one for the MsgQueryResults
+                    setupResults(mbox, new MsgQueryResults(this, types, searchOrder));
+                }
+                break;
+            case MailboxIndex.SEARCH_RETURN_DOCUMENTS:
+                if (USE_PRELOADING_GROUPER) {
+                    chunkSize++; // one for the grouper
+                    setupResults(mbox, new UngroupedQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
+                } else {
+                    setupResults(mbox, new UngroupedQueryResults(this, types, searchOrder));
+                }
+                break;
         }
-        
+
         prepare(mMailbox, mResults, mbidx, chunkSize);
-        
+
         if (USE_PRELOADING_GROUPER && preloadOuterResults) {
             return new ItemPreloadingGrouper(mResults, outerChunkSize, mbox);
         } else {
             return mResults;
         }
     }
-    
-    
+
+
     /******************
      * 
      * Hits iteration
@@ -183,7 +183,7 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
     {
         return peekNext() != null;
     }
-    
+
     /**
      * 
      * prepare() is the API which begins query execution.  It is allowed to grab and hold resources, which are then
@@ -203,11 +203,11 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
      */
     protected abstract void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) throws IOException, ServiceException;
 
-	public ZimbraHit getFirstHit() throws ServiceException {
-		resetIterator();
-		return getNext();
-	}
-	
+    public ZimbraHit getFirstHit() throws ServiceException {
+        resetIterator();
+        return getNext();
+    }
+
     public ZimbraHit skipToHit(int hitNo) throws ServiceException {
         resetIterator();
         for (int i = 0; i < hitNo; i++) {
@@ -218,7 +218,7 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
         }
         return getNext();
     }
-    
+
     /******************
      * 
      * Internals
@@ -227,29 +227,29 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
 
 
     abstract QueryTargetSet getQueryTargets();
-    
+
     public Object clone() {
-    	try {
-    		return super.clone();
-    	} catch (CloneNotSupportedException e) {
-    		assert(false); // better not happen
-    	}
-    	return null;
+        try {
+            return super.clone();
+        } catch (CloneNotSupportedException e) {
+            assert(false); // better not happen
+        }
+        return null;
     }
-    
+
     private boolean mIsToplevelQueryOp = false;
     protected boolean isTopLevelQueryOp() { return mIsToplevelQueryOp; }
     private ZimbraQueryResultsImpl mResults;
     private Mailbox mMailbox;
-    
-    
+
+
     final protected Mailbox getMailbox() { return mMailbox; }
     final protected ZimbraQueryResultsImpl getResultsSet() { return mResults; }
     final protected void setupResults(Mailbox mbx, ZimbraQueryResultsImpl res) {
         mMailbox = mbx;
         mResults = res;
     }
-    
+
     /**
      * We use this code to recursively descend the operation tree and set the "-in:junk -in:trash"
      * setting as necessary.  Descend down the tree, when you hit an AND, then only one of the 
@@ -260,23 +260,21 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
      *
      */ 
     abstract QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException;
-    
+
     /** 
      * @return TRUE if this subtree has a trash/spam paramater, FALSE if one is needed.
      */
     abstract boolean hasSpamTrashSetting();
-    
+
     /**
      * A bit of a hack -- when we combine a "all items including trash/spam" term with another query, this
      * API lets us force the "include trash/spam" part in the other query and thereby drop the 1st one. 
      */
     abstract void forceHasSpamTrashSetting();
-    
-    
-    
+
     abstract boolean hasNoResults();
     abstract boolean hasAllResults();
-    
+
     /**
      * @param mbox
      * @return An Optimzed version of this query, or NULL if this query "should have no effect".  
@@ -298,5 +296,5 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
      * not be combined.
      */
     protected abstract QueryOperation combineOps(QueryOperation other, boolean union);
-    
+
 }

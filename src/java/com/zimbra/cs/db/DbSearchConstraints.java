@@ -404,7 +404,19 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         // these we have to intersect:
         //
         //   Folder{A or B or C} AND Folder{B or C or D} --> Folder{IN-BOTH}
-        folders = fu.intersectIfNonempty(folders, other.folders);
+        {
+            // if both sets are empty going in, then an empty set means 
+            // "no constraint"....on the other hand if either set is nonempty
+            // going in, then an empty set coming out means "no results".
+            // ugly.  Should modify this so folders=null means "no constraint" and
+            // folders=[] means "no results".  TODO...
+            if (folders.size() >  0 ||  other.folders.size() > 0) {
+                folders = fu.intersectIfNonempty(folders, other.folders);
+                if (folders.size() == 0)
+                    noResults = true;
+            }
+        }
+        
         
         excludeFolders = fu.union(excludeFolders, other.excludeFolders);
 
@@ -427,7 +439,15 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         // these we have to intersect:
         //
         //   Item{A or B or C} AND Item{B or C or D} --> Item{IN-BOTH}
-        itemIds = iu.intersectIfNonempty(itemIds, other.itemIds);
+        {
+            boolean prevNonempty = false;
+            if (itemIds.size() > 0 || other.itemIds.size() > 0)
+                prevNonempty = true;
+            itemIds = iu.intersectIfNonempty(itemIds, other.itemIds);
+            if (itemIds.size() == 0 && prevNonempty)
+                noResults = true;
+        }
+        
 
         // these we can just union, since:
         //
@@ -438,12 +458,25 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
 
         // indexId
         //   IndexId{A or B or C} AND IndexId{B or C or D} --> IndexId{IN-BOTH}
-        indexIds = iu.intersectIfNonempty(indexIds, other.indexIds);
+        {
+            // see comment above at folders 
+            if (indexIds.size() > 0 || other.indexIds.size() > 0) {
+                indexIds = iu.intersectIfNonempty(indexIds, other.indexIds);
+                if (indexIds.size() == 0)
+                    noResults = true;
+            }
+        }
 
         // types
         // see comments above
-        types = bu.intersectIfNonempty(types, other.types);
-        
+        {
+            if (types.size() > 0 || other.types.size() > 0) {
+                types = bu.intersectIfNonempty(types, other.types);
+                if (types.size() ==  0)
+                    noResults = true;
+            }
+        }
+            
         // see comments above
         excludeTypes = bu.union(excludeTypes, other.excludeTypes);
 

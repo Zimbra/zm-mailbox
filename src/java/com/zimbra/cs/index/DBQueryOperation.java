@@ -827,6 +827,7 @@ class DBQueryOperation extends QueryOperation
     int getOpType() {
         return OP_TYPE_DB;
     }
+    
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#optimize(com.zimbra.cs.mailbox.Mailbox)

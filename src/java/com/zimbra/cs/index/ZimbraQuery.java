@@ -1657,6 +1657,34 @@ public final class ZimbraQuery {
         if (mOp != null) 
             mOp.doneWithSearchResults();
     }
+    
+//    
+//    void checkPermissions(Mailbox mbox, Mailbox.OperationContext octxt) throws ServiceException {
+//        Set<Folder> folders = mbox.getVisibleFolders(octxt);
+//        if (folders == null) {
+//            return;
+//        } else {
+//            // Since optimize() has already been run, we know that each of our ops
+//            // only has one target (or none).  
+//            
+//            if (folders.size() == 0)
+//                return new NullQueryOperation();
+//            
+//            IntersectionQueryOperation toRet = new IntersectionQueryOperation();
+//            toRet.addQueryOp(this);
+//            
+//            UnionQueryOperation union = new UnionQueryOperation();
+//            toRet.addQueryOp(union);
+//            
+//            for (Folder f : folders) {
+//                DBQueryOperation newOp = DBQueryOperation.Create();
+//                union.add(newOp);
+//                newOp.addInClause(f, false);
+//            }
+//            
+//            return toRet.optimize(mbox);
+//        }
+//    }
 
     public void executeRemoteOps(SoapProtocol proto, OperationContext octxt) throws ServiceException, IOException
     {
@@ -1667,13 +1695,21 @@ public final class ZimbraQuery {
 
             if (targets.size() > 1) {
                 UnionQueryOperation union = (UnionQueryOperation)mOp;
-                mOp = union.runRemoteSearches(proto, octxt, mbidx, mTypes, mSearchOrder, 0, mChunkSize);
+                mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mTypes, mSearchOrder, 0, mChunkSize);
             } else {
                 if (targets.hasExternalTargets()) {
                     RemoteQueryOperation remote = new RemoteQueryOperation();
                     remote.tryAddOredOperation(mOp);
                     remote.setup(proto, octxt.getAuthenticatedUser(), mTypes, mSearchOrder, 0, mChunkSize);
                     mOp = remote;
+                } else {
+                    // 1 local target...HACK: for now we'll temporarily wrap it in a UnionQueryOperation,
+                    // then call union.runRemoteSearches() --- that way we don't have to duplicate the
+                    // important code there (permissions checks).  FIXME!
+                    UnionQueryOperation union = new UnionQueryOperation();
+                    union.add(mOp);
+                    mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mTypes, mSearchOrder, 0, mChunkSize);
+                    mOp = mOp.optimize(mMbox);
                 }
             }
         }
