@@ -74,7 +74,7 @@ public class ProvUtil implements DebugListener {
     private boolean mUseLdap = LC.zimbra_zmprov_default_to_ldap.booleanValue(); 
     private String mAccount = null;
     private String mPassword = null;
-    private String mServer = "localhost";
+    private String mServer = LC.zimbra_zmprov_default_soap_server.value();
     private int mPort = LC.zimbra_admin_service_port.intValue();
     private Command mCommand;
     
