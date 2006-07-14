@@ -32,6 +32,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,7 +112,7 @@ public class ZMailboxUtil implements DebugListener {
     private void usage() {
         
         if (mCommand != null) {
-            System.out.printf("usage:  %s(%s) %s\n", mCommand.getName(), mCommand.getAlias(), mCommand.getHelp());
+            System.out.printf("usage:  %s(%s) %s\n", mCommand.getName(), mCommand.getAlias(), mCommand.getSyntax());
         }
 
         if (mInteractive)
@@ -160,71 +161,72 @@ public class ZMailboxUtil implements DebugListener {
     private static Option O_COLOR = new Option("c", "color", true, "color");
     private static Option O_LIMIT = new Option("l", "limit", true, "max number of results to return");    
     private static Option O_SORT = new Option("s", "sort", true, "sort order TODO");
-    private static Option O_REPLACE = new Option("r", "replace", true, "replace contact (default is to merge)");    
+    private static Option O_REPLACE = new Option("r", "replace", false, "replace contact (default is to merge)");    
     private static Option O_TAGS = new Option("t", "tags", true, "list of tag ids/names");
     private static Option O_TYPES = new Option("T", "types", true, "list of types to search for (message,conversation,contact)");
     private static Option O_VERBOSE = new Option("v", "verbose", false, "verbose output");
     
     enum Command {
         
-        CREATE_CONTACT("createContact", "cct", "{folder-name} [attr1 value1 [attr2 value2...]]", Category.CONTACT, 3, Integer.MAX_VALUE),        
-        CREATE_FOLDER("createFolder", "cf", "{folder-name} [{default-view}]", Category.FOLDER, 1, 2),
-        CREATE_MOUNTPOINT("createMountpoint", "cm", "{folder-name} {owner-id-or-name} {remote-item-id-or-path} {default-view}", Category.FOLDER, 4, 4),
-        CREATE_SEARCH_FOLDER("createSearchFolder", "csf", "{folder-name} {query} [{types}] [{sort-by}]", Category.FOLDER, 2, 4),        
-        CREATE_TAG("createTag", "ct", "{tag-name} {tag-color}", Category.TAG, 2, 2),
-        DELETE_CONTACT("deleteContact", "dct", "{contact-ids}", Category.CONTACT, 1, 1),        
-        DELETE_CONVERSATION("deleteConversation", "dc", "{conv-ids} [{tcon}]", Category.CONVERSATION, 1, 2),
-        DELETE_ITEM("deleteItem", "di", "{item-ids} [{tcon}]", Category.ITEM, 1, 2),        
-        DELETE_FOLDER("deleteFolder", "df", "{folder-path}", Category.FOLDER, 1, 1),
-        DELETE_MESSAGE("deleteMessage", "dm", "{msg-ids}", Category.MESSAGE, 1, 1),
-        DELETE_TAG("deleteTag", "dt", "{tag-name}", Category.TAG, 1, 1),
-        EMPTY_FOLDER("emptyFolder", "ef", "{folder-path}", Category.FOLDER, 1, 1),        
-        EXIT("exit", "quit", "", Category.MISC, 0, 0),
-        FLAG_CONTACT("flagContact", "fct", "{contact-ids} [0|1*]", Category.CONTACT, 1, 2),        
-        FLAG_CONVERSATION("flagConversation", "fc", "{conv-ids} [0|1*] [{tcon}]", Category.CONVERSATION, 1, 3),
-        FLAG_ITEM("flagItem", "fi", "{item-ids} [0|1*] [{tcon}]", Category.ITEM, 1, 3),
-        FLAG_MESSAGE("flagMessage", "fm", "{msg-ids} [0|1*]", Category.MESSAGE, 1, 2),
-        GET_ALL_CONTACTS("getAllContacts", "gact", "[-v] [attr1 [attr2...]]", Category.CONTACT, 0, Integer.MAX_VALUE, O_VERBOSE),
-        GET_ALL_FOLDERS("getAllFolders", "gaf", "[-v]", Category.FOLDER, 0, 0, O_VERBOSE),
-        GET_ALL_MOUNTPOINTS("getAllMountpoints", "gam", "[-v]", Category.FOLDER, 0, 0, O_VERBOSE),        
-        GET_ALL_TAGS("getAllTags", "gat", "[-v]", Category.TAG, 0, 0, O_VERBOSE),
-        GET_CONTACTS("getContacts", "gct", "[-v] {contact-ids} [attr1 [attr2...]]", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),                
-        GET_CONVERSATION("getConversation", "gc", "[-v] {conv-id}", Category.CONVERSATION, 1, 1, O_VERBOSE),
-        GET_MESSAGE("getMessage", "gm", "[-v] {msg-id}", Category.MESSAGE, 1, 1, O_VERBOSE),
-        HELP("help", "?", "commands", Category.MISC, 0, 1),
-        IMPORT_URL_INTO_FOLDER("importURLIntoFolder", "iuif", "{folder-path} {url}", Category.FOLDER, 2, 2),
-        MARK_CONVERSATION_READ("markConversationRead", "mcr", "{conv-ids} [0|1*] [{tcon}]", Category.CONVERSATION, 1, 3),
-        MARK_CONVERSATION_SPAM("markConversationSpam", "mcs", "{conv-ids} [0|1*] [{dest-folder-path}] [{tcon}]", Category.CONVERSATION, 1, 4),
-        MARK_ITEM_READ("markItemRead", "mir", "{item-ids} [0|1*] [{tcon}]", Category.ITEM, 1, 3),
-        MARK_FOLDER_READ("markFolderRead", "mfr", "{folder-path}", Category.FOLDER, 1, 1),        
-        MARK_MESSAGE_READ("markMessageRead", "mmr", "{msg-ids} [0|1*]", Category.MESSAGE, 1, 2),
-        MARK_MESSAGE_SPAM("markMessageSpam", "mms", "{msg-ids} [0|1*] [{dest-folder-path}]", Category.MESSAGE, 1, 3),
-        MARK_TAG_READ("markTagRead", "mtr", "{tag-name}", Category.TAG, 1, 1),
-        MODIFY_CONTACT("modifyContactAttrs", "mcta", "[-r] {contact-id} [attr1 value1 [attr2 value2...]]", Category.CONTACT, 3, Integer.MAX_VALUE, O_REPLACE),
-        MODIFY_FOLDER_CHECKED("modifyFolderChecked", "mfch", "{folder-path} [0|1*]", Category.FOLDER, 1, 2),
-        MODIFY_FOLDER_COLOR("modifyFolderColor", "mfc", "{folder-path} {new-color}", Category.FOLDER, 2, 2),
-        MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", Category.FOLDER, 1, 2),        
-        MODIFY_FOLDER_URL("modifyFolderURL", "mfu", "{folder-path} {url}", Category.FOLDER, 2, 2),
-        MODIFY_TAG_COLOR("modifyTagColor", "mtc", "{tag-name} {tag-color}", Category.TAG, 2, 2),
-        MOVE_CONTACT("moveContact", "mct", "{contact-ids} {dest-folder-path}", Category.CONTACT, 2, 2),
-        MOVE_CONVERSATION("moveConversation", "mc", "{conv-ids} {dest-folder-path} [{tcon}]", Category.CONVERSATION, 2, 3),
-        MOVE_ITEM("moveItem", "mi", "{item-ids} {dest-folder-path} [{tcon}]", Category.ITEM, 1, 2),
-        MOVE_MESSAGE("moveMessage", "mm", "{msg-ids} {dest-folder-path}", Category.MESSAGE, 2, 2),
-        NOOP("noOp", "no", "", Category.MISC, 0, 0),
-        RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", Category.FOLDER, 2, 2),
-        RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", Category.TAG, 2, 2),
-        SEARCH("search", "s", "{query} [limit {limit}] [sortby {sortBy}] [types {types}]", Category.SEARCH, 1, 7),
-        SEARCH_CURRENT("searchCurrent", "sc", "", Category.SEARCH, 0, 1),
-        SEARCH_NEXT("searchNext", "sn", "", Category.SEARCH, 0, 1),
-        SEARCH_PREVIOUS("searchPrevious", "sp", "", Category.SEARCH, 0, 1),
-        SYNC_FOLDER("syncFolder", "sf", "{folder-path}", Category.FOLDER, 1, 1),
-        TAG_CONTACT("tagContact", "tct", "{contact-ids} {tag-name} [0|1*]", Category.CONTACT, 2, 3),
-        TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*] [{tcon}]", Category.CONVERSATION, 2, 4),
-        TAG_ITEM("tagItem", "ti", "{item-ids} {tag-name} [0|1*] [{tcon}]", Category.ITEM, 2, 4),
-        TAG_MESSAGE("tagMessage", "tm", "{msg-ids} {tag-name} [0|1*]", Category.MESSAGE, 2, 3);
+        CREATE_CONTACT("createContact", "cct", "{folder-name} [attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 3, Integer.MAX_VALUE),        
+        CREATE_FOLDER("createFolder", "cf", "{folder-name} [{default-view}]", "create folder", Category.FOLDER, 1, 2),
+        CREATE_MOUNTPOINT("createMountpoint", "cm", "{folder-name} {owner-id-or-name} {remote-item-id-or-path} {default-view}", "create mountpoint", Category.FOLDER, 4, 4),
+        CREATE_SEARCH_FOLDER("createSearchFolder", "csf", "{folder-name} {query} [{types}] [{sort-by}]", "create search folder", Category.FOLDER, 2, 4),        
+        CREATE_TAG("createTag", "ct", "{tag-name} {tag-color}", "create tag", Category.TAG, 2, 2),
+        DELETE_CONTACT("deleteContact", "dct", "{contact-ids}", "hard delete contact(s)", Category.CONTACT, 1, 1),        
+        DELETE_CONVERSATION("deleteConversation", "dc", "{conv-ids} [{tcon}]", "hard delete conversastion(s)", Category.CONVERSATION, 1, 2),
+        DELETE_ITEM("deleteItem", "di", "{item-ids} [{tcon}]", "hard delete item(s)", Category.ITEM, 1, 2),        
+        DELETE_FOLDER("deleteFolder", "df", "{folder-path}", "hard delete a folder (and subfolders)", Category.FOLDER, 1, 1),
+        DELETE_MESSAGE("deleteMessage", "dm", "{msg-ids}", "hard delete message(s)", Category.MESSAGE, 1, 1),
+        DELETE_TAG("deleteTag", "dt", "{tag-name}", "delete a tag", Category.TAG, 1, 1),
+        EMPTY_FOLDER("emptyFolder", "ef", "{folder-path}", "empty all the items in a folder (including subfolders)", Category.FOLDER, 1, 1),        
+        EXIT("exit", "quit", "", "exit program", Category.MISC, 0, 0),
+        FLAG_CONTACT("flagContact", "fct", "{contact-ids} [0|1*]", "flag/unflag contact(s)", Category.CONTACT, 1, 2),
+        FLAG_CONVERSATION("flagConversation", "fc", "{conv-ids} [0|1*] [{tcon}]", "flag/unflag conversation(s)", Category.CONVERSATION, 1, 3),
+        FLAG_ITEM("flagItem", "fi", "{item-ids} [0|1*] [{tcon}]", "flag/unflag item(s)", Category.ITEM, 1, 3),
+        FLAG_MESSAGE("flagMessage", "fm", "{msg-ids} [0|1*]", "flag/unflag message(s)", Category.MESSAGE, 1, 2),
+        GET_ALL_CONTACTS("getAllContacts", "gact", "[attr1 [attr2...]]", "get all contacts in the mailbox", Category.CONTACT, 0, Integer.MAX_VALUE, O_VERBOSE),
+        GET_ALL_FOLDERS("getAllFolders", "gaf", "", "get all folders in the mailbox", Category.FOLDER, 0, 0, O_VERBOSE),
+        GET_ALL_MOUNTPOINTS("getAllMountpoints", "gam", "", "get all mountpoints in the mailbox", Category.FOLDER, 0, 0, O_VERBOSE),        
+        GET_ALL_TAGS("getAllTags", "gat", "", "get all tags", Category.TAG, 0, 0, O_VERBOSE),
+        GET_CONTACTS("getContacts", "gct", "{contact-ids} [attr1 [attr2...]]", "get contact(s)", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),                
+        GET_CONVERSATION("getConversation", "gc", "{conv-id}", "get a converation", Category.CONVERSATION, 1, 1, O_VERBOSE),
+        GET_MESSAGE("getMessage", "gm", "{msg-id}", "get a message", Category.MESSAGE, 1, 1, O_VERBOSE),
+        HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
+        IMPORT_URL_INTO_FOLDER("importURLIntoFolder", "iuif", "{folder-path} {url}", "add the contents to the remote feed at {target-url} to the folder", Category.FOLDER, 2, 2),
+        MARK_CONVERSATION_READ("markConversationRead", "mcr", "{conv-ids} [0|1*] [{tcon}]", "mark conversation(s) as read/unread", Category.CONVERSATION, 1, 3),
+        MARK_CONVERSATION_SPAM("markConversationSpam", "mcs", "{conv} [0|1*] [{dest-folder-path}] [{tcon}]", "mark conversation as spam/not-spam, and optionally move", Category.CONVERSATION, 1, 4),
+        MARK_ITEM_READ("markItemRead", "mir", "{item-ids} [0|1*] [{tcon}]", "mark item(s) as read/unread", Category.ITEM, 1, 3),
+        MARK_FOLDER_READ("markFolderRead", "mfr", "{folder-path}", "mark all items in a folder as read", Category.FOLDER, 1, 1),
+        MARK_MESSAGE_READ("markMessageRead", "mmr", "{msg-ids} [0|1*]", "mark message(s) as read/unread", Category.MESSAGE, 1, 2),
+        MARK_MESSAGE_SPAM("markMessageSpam", "mms", "{msg} [0|1*] [{dest-folder-path}]", "mark a message as spam/not-spam, and optionally move", Category.MESSAGE, 1, 3),
+        MARK_TAG_READ("markTagRead", "mtr", "{tag-name}", "mark all items with this tag as read", Category.TAG, 1, 1),
+        MODIFY_CONTACT("modifyContactAttrs", "mcta", "{contact-id} [attr1 value1 [attr2 value2...]]", "modify a contact", Category.CONTACT, 3, Integer.MAX_VALUE, O_REPLACE),
+        MODIFY_FOLDER_CHECKED("modifyFolderChecked", "mfch", "{folder-path} [0|1*]", "modify whether a folder is checked in the UI", Category.FOLDER, 1, 2),
+        MODIFY_FOLDER_COLOR("modifyFolderColor", "mfc", "{folder-path} {new-color}", "modify a folder's color", Category.FOLDER, 2, 2),
+        MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", "change whether folder is excluded from free-busy", Category.FOLDER, 1, 2),        
+        MODIFY_FOLDER_URL("modifyFolderURL", "mfu", "{folder-path} {url}", "modify a folder's URL", Category.FOLDER, 2, 2),
+        MODIFY_TAG_COLOR("modifyTagColor", "mtc", "{tag-name} {tag-color}", "modify a tag's color", Category.TAG, 2, 2),
+        MOVE_CONTACT("moveContact", "mct", "{contact-ids} {dest-folder-path}", "move contact(s) to a new folder", Category.CONTACT, 2, 2),
+        MOVE_CONVERSATION("moveConversation", "mc", "{conv-ids} {dest-folder-path} [{tcon}]", "move conversation(s) to a new folder", Category.CONVERSATION, 2, 3),
+        MOVE_ITEM("moveItem", "mi", "{item-ids} {dest-folder-path} [{tcon}]", "move item(s) to a new folder", Category.ITEM, 1, 2),
+        MOVE_MESSAGE("moveMessage", "mm", "{msg-ids} {dest-folder-path}", "move message(s) to a new folder", Category.MESSAGE, 2, 2),
+        NOOP("noOp", "no", "", "do a NoOp SOAP call to the server", Category.MISC, 0, 0),
+        RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
+        RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
+        SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 1, 1, O_LIMIT, O_SORT, O_TYPES),
+        SEARCH_CURRENT("searchCurrent", "sc", "", "redisplay last search", Category.SEARCH, 0, 1),
+        SEARCH_NEXT("searchNext", "sn", "", "fetch next page of search results", Category.SEARCH, 0, 1),
+        SEARCH_PREVIOUS("searchPrevious", "sp", "", "fetch previous page of search results", Category.SEARCH, 0, 1),
+        SYNC_FOLDER("syncFolder", "sf", "{folder-path}", "synchronize folder's contents to the remote feed specified by folder's {url}", Category.FOLDER, 1, 1),
+        TAG_CONTACT("tagContact", "tct", "{contact-ids} {tag-name} [0|1*]", "tag/untag contact(s)", Category.CONTACT, 2, 3),
+        TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*] [{tcon}]", "tag/untag conversation(s)", Category.CONVERSATION, 2, 4),
+        TAG_ITEM("tagItem", "ti", "{item-ids} {tag-name} [0|1*] [{tcon}]", "tag/untag item(s)", Category.ITEM, 2, 4),
+        TAG_MESSAGE("tagMessage", "tm", "{msg-ids} {tag-name} [0|1*]", "tag/untag message(s)", Category.MESSAGE, 2, 3);
 
         private String mName;
         private String mAlias;
+        private String mSyntax;
         private String mHelp;
         private Options mOpts;
         private Category mCat;
@@ -233,9 +235,10 @@ public class ZMailboxUtil implements DebugListener {
 
         public String getName() { return mName; }
         public String getAlias() { return mAlias; }
+        public String getSyntax() { return mSyntax; }
         public String getHelp() { return mHelp; }
         public Category getCategory() { return mCat; }
-        public boolean hasHelp() { return mHelp != null; }
+        public boolean hasHelp() { return mSyntax != null; }
         public boolean checkArgsLength(String args[]) {
             int len = args == null ? 0 : args.length;
             return len >= mMinArgLength && len <= mMaxArgLength;
@@ -244,9 +247,37 @@ public class ZMailboxUtil implements DebugListener {
             return mOpts;
         }
 
-        private Command(String name, String alias, String help, Category cat, int minArgLength, int maxArgLength, Option ... opts)  {
+        public String getCommandHelp() {
+            String commandName = String.format("%s(%s)", getName(), getAlias());
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("  %-38s %s%n", commandName, getHelp()));
+            return sb.toString();
+        }
+        
+        public String getFullUsage() {
+            String commandName = String.format("%s(%s)", getName(), getAlias());
+            Collection opts = getOptions().getOptions();
+
+            StringBuilder sb = new StringBuilder();
+            
+            sb.append(String.format("  %-28s %s%n", commandName, (opts.size() < -1 ? "[opts] ":"") + getSyntax()));
+            //if (opts.size() > 0)
+            //    System.out.println();
+            
+            for (Object o: opts) {
+                Option opt = (Option) o;
+                String arg = opt.hasArg() ? " <arg>" : "";
+                String optStr = String.format("  -%s/--%s%s", opt.getOpt(), opt.getLongOpt(), arg);
+                sb.append(String.format("  %-28s %s%n", optStr, opt.getDescription()));
+            }
+            sb.append("\n");
+            return sb.toString();
+        }
+
+        private Command(String name, String alias, String syntax, String help, Category cat, int minArgLength, int maxArgLength, Option ... opts)  {
             mName = name;
             mAlias = alias;
+            mSyntax = syntax;
             mHelp = help;
             mCat = cat;
             mMinArgLength = minArgLength;
@@ -626,17 +657,16 @@ public class ZMailboxUtil implements DebugListener {
     private void doSearch(String[] args) throws ServiceException, ArgException {
         mSearchParams = new ZSearchParams(args[0]);
 
-        Map<String, String> attrs = getMap(args, 1);
-        
+
 //        [limit {limit}] [sortby {sortBy}] [types {types}]        
         
-        String limitStr = attrs.get("limit");
+        String limitStr = mCommandLine.getOptionValue(O_LIMIT.getOpt());
         mSearchParams.setLimit(limitStr != null ? Integer.parseInt(limitStr) : 25);
         
-        String sortBy = attrs.get("sortBy");
+        String sortBy = mCommandLine.getOptionValue(O_SORT.getOpt());
         mSearchParams.setSortBy(sortBy != null ?  SearchSortBy.fromString(sortBy) : SearchSortBy.dateDesc);
             
-        String types = attrs.get("types");
+        String types = mCommandLine.getOptionValue(O_TYPES.getOpt());
         mSearchParams.setTypes(types != null ? types : ZSearchParams.TYPE_CONVERSATION);        
         
         mSearchCursors.clear();
@@ -682,7 +712,7 @@ public class ZMailboxUtil implements DebugListener {
 
     private int colWidth(int num) {
         int i = 1;
-        while (num > 10) {
+        while (num >= 10) {
             i++;
             num /= 10;
         }
@@ -1008,11 +1038,15 @@ public class ZMailboxUtil implements DebugListener {
         }
         
         if (cat != null) {
-            System.out.println("");            
+            System.out.println("");
             for (Command c : Command.values()) {
                 if (!c.hasHelp()) continue;
-                if (cat == Category.COMMANDS || cat == c.getCategory())
-                    System.out.printf("  %s(%s) %s\n", c.getName(), c.getAlias(), c.getHelp());
+                if (cat == Category.COMMANDS || cat == c.getCategory()) {
+                    if (mOptVerbose)
+                        System.out.print(c.getFullUsage());
+                    else
+                        System.out.print(c.getCommandHelp());
+                }
             }
         
         }
