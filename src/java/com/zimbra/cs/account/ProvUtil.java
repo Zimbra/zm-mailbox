@@ -189,8 +189,9 @@ public class ProvUtil implements DebugListener {
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MISC, 1, 1),        
         GET_SERVER("getServer", "gs", "{name|id}", Category.SERVER, 1, 1), 
         HELP("help", "?", "commands", Category.MISC, 0, 1),
-        IMPORT_NOTEBOOK("importNotebook", "impn", "[ -u {username} ] [ -p {password} ] [ -f {from dir} ] [ -t {to folder} ]", Category.NOTEBOOK),
-        INIT_NOTEBOOK("initNotebook", "in", "[ -u {username} ] [ -p {password} ] [ -d {domain} ] [ -f {from dir} ] [ -t {to folder} ]", Category.NOTEBOOK),
+        IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {password} {directory} {folder}", Category.NOTEBOOK),
+        INIT_NOTEBOOK("initNotebook", "in", "{name@domain} {password} [ {directory} {folder} ]", Category.NOTEBOOK),
+        INIT_DOMAIN_NOTEBOOK("initDomainNotebook", "idn", "{name@domain} {password} {domain} [ {directory} {folder} ]", Category.NOTEBOOK),
         LDAP(".ldap", ".l"), 
         MODIFY_ACCOUNT("modifyAccount", "ma", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
         MODIFY_CALENDAR_RESOURCE("modifyCalendarResource",  "mcr", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 3, Integer.MAX_VALUE),
@@ -512,10 +513,13 @@ public class ProvUtil implements DebugListener {
             doSearchCalendarResources(args);
             break;
         case INIT_NOTEBOOK:
-            importNotebook(args, true);
+            initNotebook(args);
+            break;
+        case INIT_DOMAIN_NOTEBOOK:
+            initDomainNotebook(args);
             break;
         case IMPORT_NOTEBOOK:
-            importNotebook(args, false);
+            importNotebook(args);
             break;
         case GET_QUOTA_USAGE:
             doGetQuotaUsage(args);
@@ -1099,48 +1103,79 @@ public class ProvUtil implements DebugListener {
         }
     }
 
-    private void importNotebook(String[] args, boolean initialize) throws ServiceException {
-    	if (args.length < 2) {usage(); return; }
+    private void initNotebook(String[] args) throws ServiceException {
+    	if (args.length != 3 && args.length != 5) {usage(); return; }
+    	
+    	String username = null;
+    	String password = null;
+    	String fromDir = null;
+    	String toFolder = null;
+    	
+    	username = args[1];
+    	password = args[2];
+    	if (args.length > 3) {
+    		fromDir = args[3];
+    		toFolder = args[4];
+    	}
+    	
+    	WikiUtil wu = WikiUtil.getInstance(null, username, password);
+    	wu.initDefaultWiki();
+    	
+    	if (fromDir != null && toFolder != null) {
+        	doImport(fromDir, toFolder, wu);
+    	}
+    }
+    private void initDomainNotebook(String[] args) throws ServiceException {
+    	int foo = args.length;
+    	if (args.length != 4 && args.length != 6) {usage(); return; }
     	
     	String domain = null;
     	String username = null;
     	String password = null;
-    	String toFolder = null;
     	String fromDir = null;
-    	boolean verbose = false;
+    	String toFolder = null;
     	
-    	for (int i = 1; i < args.length;) {
-    		String opt = args[i++];
-    		if (opt.equals("-d")) domain = args[i++];
-    		else if (opt.equals("-u")) username = args[i++];
-    		else if (opt.equals("-p")) password = args[i++];
-    		else if (opt.equals("-t")) toFolder = args[i++];
-    		else if (opt.equals("-f")) fromDir = args[i++];
-    		else if (opt.equals("-v")) verbose = true;
-    		else { usage(); return; }
+    	username = args[1];
+    	password = args[2];
+    	domain = args[3];
+    	if (args.length > 4) {
+    		fromDir = args[4];
+    		toFolder = args[5];
     	}
     	
     	WikiUtil wu = WikiUtil.getInstance(null, username, password);
-    	if (verbose)
-    		wu.setVerbose();
+    	wu.initDomainWiki(domain);
     	
-    	if (initialize) {
-    		// don't create mailboxes.  use soap instead.
-    		if (domain == null) {
-    			wu.initDefaultWiki();
-    		} else {
-    			wu.initDomainWiki(domain);
-    		}
+    	if (fromDir != null && toFolder != null) {
+        	doImport(fromDir, toFolder, wu);
+    	}
+    }
+    private void importNotebook(String[] args) throws ServiceException {
+    	if (args.length != 5) {usage(); return; }
+    	
+    	String username = null;
+    	String password = null;
+    	String fromDir = null;
+    	String toFolder = null;
+    	
+    	username = args[1];
+    	password = args[2];
+    	if (args.length > 3) {
+    		fromDir = args[3];
+    		toFolder = args[4];
     	}
     	
-    	if (fromDir != null) {
-    		try {
-    			wu.startImport(toFolder, new java.io.File(fromDir));
-    		} catch (Exception e) {
-    			System.err.println("Cannot import templates from " + fromDir);
-    			e.printStackTrace();
-    			return;
-    		}
+    	WikiUtil wu = WikiUtil.getInstance(null, username, password);
+    	doImport(fromDir, toFolder, wu);
+    }
+    
+    private void doImport(String fromDir, String toFolder, WikiUtil wu) throws ServiceException {
+    	try {
+    		wu.startImport(toFolder, new java.io.File(fromDir));
+    	} catch (Exception e) {
+    		System.err.println("Cannot import Wiki documents from " + fromDir);
+    		e.printStackTrace();
+    		return;
     	}
     }
     
