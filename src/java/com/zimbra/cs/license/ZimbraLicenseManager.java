@@ -43,5 +43,5 @@ public abstract class ZimbraLicenseManager {
     }
     
     public abstract LicenseStatus checkLicense() throws ServiceException;
-    public abstract void checkAccountsLimit(int numAccounts) throws ServiceException;
+    public abstract void checkAccountsLimit() throws ServiceException;
 }
