@@ -115,7 +115,7 @@ public class Mailbox {
     public static final int ID_FOLDER_NOTEBOOK  = 12;
     public static final int ID_FOLDER_AUTO_CONTACTS = 13;
 
-    public static final int HIGHEST_SYSTEM_ID = 12;
+    public static final int HIGHEST_SYSTEM_ID = 13;
     public static final int FIRST_USER_ID     = 256;
 
     static final int  ONE_MONTH_SECS   = 60 * 60 * 24 * 31;
