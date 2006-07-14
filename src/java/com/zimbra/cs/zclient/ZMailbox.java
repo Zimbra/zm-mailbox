@@ -465,12 +465,14 @@ public abstract class ZMailbox {
      * 
      * @param parentId parent folder id
      * @param name name of new folder
-     * @param defaultView default view of new folder. 
+     * @param defaultView default view of new folder or null.
+     * @param color color of folder, or null to use default
+     * @param flags flags for folder, or null
      *                
      * @return newly created folder
      * @throws ServiceException
      */
-    public abstract ZFolder createFolder(String parentId, String name, ZFolder.View defaultView) throws ServiceException;
+    public abstract ZFolder createFolder(String parentId, String name, ZFolder.View defaultView, ZFolder.Color color, String flags) throws ServiceException;
     
     /**
      * create a new sub folder of the specified parent folder.
@@ -484,7 +486,7 @@ public abstract class ZMailbox {
      * @return newly created search folder
      * @throws ServiceException
      */
-    public abstract ZSearchFolder createSearchFolder(String parentId, String name, String query, String types, SearchSortBy sortBy) throws ServiceException;
+    public abstract ZSearchFolder createSearchFolder(String parentId, String name, String query, String types, SearchSortBy sortBy, ZFolder.Color color) throws ServiceException;
 
     /**
      * modify a search folder.
@@ -603,6 +605,8 @@ public abstract class ZMailbox {
     public abstract ZMountpoint createMountpoint(
             String parentId, String name, 
             ZFolder.View defaultView,
+            ZFolder.Color color, 
+            String flags,            
             OwnerBy ownerBy,
             String owner,
             SharedItemBy itemBy,
