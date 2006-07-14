@@ -26,6 +26,8 @@
 package com.zimbra.cs.account.soap;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -138,13 +140,21 @@ public class SoapProvisioning extends Provisioning {
         soapAdminAuthenticate(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
     }
 
+    private String serverName() {
+        try {
+            return new URI(mTransport.getURI()).getHost();
+        } catch (URISyntaxException e) {
+            return mTransport.getURI();
+        }
+    }
+    
     synchronized Element invoke(Element request) throws ServiceException {
         try {
             return mTransport.invoke(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
-            throw SoapFaultException.IO_ERROR("invoke "+e.getMessage(), e);
+            throw SoapFaultException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName(), e);
         }
     }
 
@@ -158,7 +168,7 @@ public class SoapProvisioning extends Provisioning {
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
-            throw SoapFaultException.IO_ERROR("invoke "+e.getMessage(), e);
+            throw SoapFaultException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName, e);
         } finally {
             if (diff) soapSetURI(oldUri);
         }
@@ -684,6 +694,7 @@ public class SoapProvisioning extends Provisioning {
         return searchAccounts((Domain) null, query, returnAttrs, sortAttr, sortAscending, flags);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public List<NamedEntry> searchCalendarResources(EntrySearchFilter filter,
             String[] returnAttrs, String sortAttr, boolean sortAscending)
