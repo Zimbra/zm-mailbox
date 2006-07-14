@@ -87,8 +87,7 @@ class ZSoapContact implements ZContact, ZSoapItem {
     }
 
     public Map<String, String> getAttrs() {
-        // TODO Auto-generated method stub
-        return null;
+        return mAttrs;
     }
 
     public long getMetaDataChangedDate() {

@@ -49,6 +49,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.StringUtil;
@@ -75,9 +76,6 @@ public class ZMailboxUtil implements DebugListener {
     private String mAccount = null;
     private String mPassword = null;
     private String mUrl = "http://localhost";
-    
-    // intenral command opts
-    private boolean mOptVerbose;
     
     /** current command */
     private Command mCommand;
@@ -173,7 +171,7 @@ public class ZMailboxUtil implements DebugListener {
     
     enum Command {
         
-        CREATE_CONTACT("createContact", "cct", "{folder-name} [attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 3, Integer.MAX_VALUE),        
+        CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER),        
         CREATE_FOLDER("createFolder", "cf", "{folder-name}", "create folder", Category.FOLDER, 1, 1, O_VIEW, O_COLOR, O_FLAGS),
         CREATE_MOUNTPOINT("createMountpoint", "cm", "{folder-name} {owner-id-or-name} {remote-item-id-or-path}", "create mountpoint", Category.FOLDER, 3, 3, O_VIEW, O_COLOR, O_FLAGS),
         CREATE_SEARCH_FOLDER("createSearchFolder", "csf", "{folder-name} {query}", "create search folder", Category.FOLDER, 2, 2, O_SORT, O_TYPES, O_COLOR),        
@@ -453,12 +451,24 @@ public class ZMailboxUtil implements DebugListener {
         return view == null ? null : ZFolder.View.fromString(view);
     }
 
-    private String flagsOpt() throws ServiceException {
+    private String flagsOpt() {
         return mCommandLine.getOptionValue(O_FLAGS.getOpt());        
     }
 
-    private String typesOpt() throws ServiceException {
+    private String typesOpt() {
         return mCommandLine.getOptionValue(O_TYPES.getOpt());        
+    }
+
+    private String folderOpt() {
+        return mCommandLine.getOptionValue(O_FOLDER.getOpt());
+    }
+
+    private boolean replaceOpt() {
+        return mCommandLine.hasOption(O_REPLACE.getOpt());
+    }
+    
+    private boolean verboseOpt() {
+        return mCommandLine.hasOption(O_VERBOSE.getOpt());
     }
     
     private SearchSortBy searchSortByOpt() throws ServiceException {
@@ -481,7 +491,6 @@ public class ZMailboxUtil implements DebugListener {
         try {
             mCommandLine = mParser.parse(mCommand.getOptions(), args, true);
             args = mCommandLine.getArgs();
-            mOptVerbose = mCommandLine.hasOption('v'); 
         } catch (ParseException e) {
             usage();
             return true;
@@ -494,7 +503,7 @@ public class ZMailboxUtil implements DebugListener {
         
         switch(mCommand) {
         case CREATE_CONTACT:
-            ZContact cc = mMbox.createContact(lookupFolderId(args[0]), null, getMap(args, 1));
+            ZContact cc = mMbox.createContact(lookupFolderId(folderOpt()), null, getMap(args, 0));
             System.out.println(cc.getId());
             break;
         case CREATE_FOLDER:
@@ -729,10 +738,10 @@ public class ZMailboxUtil implements DebugListener {
         String limitStr = mCommandLine.getOptionValue(O_LIMIT.getOpt());
         mSearchParams.setLimit(limitStr != null ? Integer.parseInt(limitStr) : 25);
         
-        String sortBy = mCommandLine.getOptionValue(O_SORT.getOpt());
-        mSearchParams.setSortBy(sortBy != null ?  SearchSortBy.fromString(sortBy) : SearchSortBy.dateDesc);
+        SearchSortBy sortBy = searchSortByOpt();
+        mSearchParams.setSortBy(sortBy != null ?  sortBy : SearchSortBy.dateDesc);
             
-        String types = mCommandLine.getOptionValue(O_TYPES.getOpt());
+        String types = typesOpt();
         mSearchParams.setTypes(types != null ? types : ZSearchParams.TYPE_CONVERSATION);        
         
         mSearchCursors.clear();
@@ -740,13 +749,13 @@ public class ZMailboxUtil implements DebugListener {
         mSearchOffsets.push(0);
         mIndexToId.clear();
         //System.out.println(result);
-        dumpSearch(mMbox.search(mSearchParams), mOptVerbose);                
+        dumpSearch(mMbox.search(mSearchParams), verboseOpt());                
     }
     
     private void doSearchCurrent(String[] args) throws ServiceException {
         ZSearchResult sr = mSearchResult;
         if (sr == null) return;
-        dumpSearch(mSearchResult, mOptVerbose);
+        dumpSearch(mSearchResult, verboseOpt());
     }
 
     private void doSearchNext(String[] args) throws ServiceException {
@@ -762,7 +771,7 @@ public class ZMailboxUtil implements DebugListener {
         mSearchCursors.push(cursor);
         mSearchOffsets.push(mSearchOffsets.peek() + hits.size());
         sp.setCursor(cursor);
-        dumpSearch(mMbox.search(sp), mOptVerbose);
+        dumpSearch(mMbox.search(sp), verboseOpt());
     }
 
     private void doSearchPrevious(String[] args) throws ServiceException {
@@ -773,7 +782,7 @@ public class ZMailboxUtil implements DebugListener {
         mSearchCursors.pop();
         mSearchOffsets.pop();
         sp.setCursor(mSearchCursors.size() > 0 ? mSearchCursors.peek() : null);
-        dumpSearch(mMbox.search(sp), mOptVerbose);
+        dumpSearch(mMbox.search(sp), verboseOpt());
     }
 
     private int colWidth(int num) {
@@ -846,7 +855,7 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doGetAllTags(String[] args) throws ServiceException {
-        if (mOptVerbose) {
+        if (verboseOpt()) {
             StringBuilder sb = new StringBuilder();            
             for (String tagName: mMbox.getAllTagNames()) {
                 ZTag tag = mMbox.getTagByName(tagName);
@@ -881,12 +890,27 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doGetAllFolders(String[] args) throws ServiceException {
-        doDumpFolder(mMbox.getUserRoot(), mOptVerbose, true);
+        doDumpFolder(mMbox.getUserRoot(), verboseOpt(), true);
     }        
 
+    
+    private void dumpContacts(List<ZContact> contacts) throws ServiceException {
+        if (verboseOpt()) {
+            System.out.println(contacts);
+        } else {
+            if (contacts.size() == 0) return;            
+            String hdrFormat = "%10.10s  %s%n";
+            System.out.format(hdrFormat, "Id", "FileAsStr");
+            System.out.format(hdrFormat, "----------", "----------");
+            for (ZContact cn: contacts) {
+                System.out.format("%10.10s  %s%n", 
+                        cn.getId(), Contact.getFileAsString(cn.getAttrs()));
+            }
+        }
+    }
+
     private void doGetAllContacts(String[] args) throws ServiceException {
-        String folderId = lookupFolderId(mCommandLine.getOptionValue(O_FOLDER.getOpt()));
-        System.out.println(mMbox.getAllContacts(folderId , null, true, getList(args, 0)));
+        dumpContacts(mMbox.getAllContacts(lookupFolderId(folderOpt()), null, true, getList(args, 0))); 
     }        
 
     private void doGetContacts(String[] args) throws ServiceException, ArgException {
@@ -910,12 +934,12 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doGetAllMountpoints(String[] args) throws ServiceException {
-        doDumpMountpoints(mMbox.getUserRoot(), mOptVerbose, true);
+        doDumpMountpoints(mMbox.getUserRoot(), verboseOpt(), true);
     }        
 
     private void doGetConversation(String[] args) throws ServiceException {
         ZConversation conv = mMbox.getConversation(translateId(args[0]));
-        if (mOptVerbose) {
+        if (verboseOpt()) {
             System.out.println(conv);
         } else {
 
@@ -1109,7 +1133,7 @@ public class ZMailboxUtil implements DebugListener {
             for (Command c : Command.values()) {
                 if (!c.hasHelp()) continue;
                 if (cat == Category.COMMANDS || cat == c.getCategory()) {
-                    if (mOptVerbose)
+                    if (verboseOpt())
                         System.out.print(c.getFullUsage());
                     else
                         System.out.print(c.getCommandHelp());
