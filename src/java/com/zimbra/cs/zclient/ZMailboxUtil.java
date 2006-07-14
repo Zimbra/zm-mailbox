@@ -84,7 +84,7 @@ public class ZMailboxUtil implements DebugListener {
     private CommandLine mCommandLine;
     
     /** parser for internal commands */
-    private CommandLineParser mParser = new GnuParser();;
+    private CommandLineParser mParser = new GnuParser();
     
     public void setDebug(boolean debug) { mDebug = debug; }
     
@@ -231,7 +231,7 @@ public class ZMailboxUtil implements DebugListener {
         private String mAlias;
         private String mSyntax;
         private String mHelp;
-        private Options mOpts;
+        private Option[] mOpt;        
         private Category mCat;
         private int mMinArgLength = 0;
         private int mMaxArgLength = Integer.MAX_VALUE;
@@ -246,8 +246,16 @@ public class ZMailboxUtil implements DebugListener {
             int len = args == null ? 0 : args.length;
             return len >= mMinArgLength && len <= mMaxArgLength;
         }
+        
+        // it appears we have to create a new Option object everytime we call parse!
+        // otherwise strange things were happening (i.e., looks like there is state
+        // being stored in an Option, when one would assume they are immutable.
         public Options getOptions() {
-            return mOpts;
+            Options opts = new Options();
+            for (Option o : mOpt) {
+                opts.addOption(o.getOpt(), o.getLongOpt(), o.hasArg(), o.getDescription());
+            }
+            return opts;
         }
 
         public String getCommandHelp() {
@@ -285,10 +293,7 @@ public class ZMailboxUtil implements DebugListener {
             mCat = cat;
             mMinArgLength = minArgLength;
             mMaxArgLength = maxArgLength;
-            mOpts = new Options();
-            for (Option o: opts) {
-                mOpts.addOption(o);
-            }
+            mOpt = opts;
         }
         
     }
@@ -491,6 +496,7 @@ public class ZMailboxUtil implements DebugListener {
         try {
             mCommandLine = mParser.parse(mCommand.getOptions(), args, true);
             args = mCommandLine.getArgs();
+            System.out.println(mCommandLine.getArgList().size());
         } catch (ParseException e) {
             usage();
             return true;
@@ -815,14 +821,14 @@ public class ZMailboxUtil implements DebugListener {
         final int FROM_LEN = 20;
         
         Calendar c = Calendar.getInstance();
-        String headerFormat = String.format("%%%d.%ds  %%10.10s    %%-20.20s  %%-50.50s  %%s%%n", width, width);
+        String headerFormat = String.format("%%%d.%ds  %%10.10s  %%4s   %%-20.20s  %%-50.50s  %%s%%n", width, width);
         //String headerFormat = String.format("%10.10s  %-20.20s  %-50.50s  %-6.6s  %s%n");
         
-        String itemFormat = String.format("%%%d.%ds. %%10.10s    %%-20.20s  %%-50.50s  %%tD %%<tR%%n", width, width);
+        String itemFormat = String.format("%%%d.%ds. %%10.10s  %%4s    %%-20.20s  %%-50.50s  %%tD %%<tR%%n", width, width);
         //String itemFormat = "%10.10s  %-20.20s  %-50.50s  %-6.6s  %tD %5$tR%n";
 
-        System.out.format(headerFormat, "", "Id", "From", "Subject", "Date");
-        System.out.format(headerFormat, "", "----------", "--------------------", "--------------------------------------------------", "--------------");
+        System.out.format(headerFormat, "", "Id", "Type", "From", "Subject", "Date");
+        System.out.format(headerFormat, "", "----------", "----", "--------------------", "--------------------------------------------------", "--------------");
         int i = first;
         for (ZSearchHit hit: sr.getHits()) {
             if (hit instanceof ZConversationHit) {
@@ -838,14 +844,14 @@ public class ZMailboxUtil implements DebugListener {
                 //if (ch.getFragment() != null || ch.getFragment().length() > 0)
                 //    sub += " (" + ch.getFragment()+")";
                 mIndexToId.put(i, ch.getId());
-                System.out.format(itemFormat, i++, ch.getId(), from, sub, c);
+                System.out.format(itemFormat, i++, ch.getId(), "conv", from, sub, c);
             } else if (hit instanceof ZContactHit) {
                 ZContactHit ch = (ZContactHit) hit;
                 c.setTimeInMillis(ch.getMetaDataChangedDate());
                 String sub = ch.getEmail();
                 String from = ch.getFileAsStr();
                 mIndexToId.put(i, ch.getId());
-                System.out.format(itemFormat, i++, ch.getId(), from, sub, c);
+                System.out.format(itemFormat, i++, ch.getId(), "cont", from, sub, c);
                 
             } else if (hit instanceof ZMessageHit) {
                 ZMessageHit mh = (ZMessageHit) hit;
@@ -853,7 +859,7 @@ public class ZMailboxUtil implements DebugListener {
                 String sub = mh.getSubject();
                 String from = mh.getSender().getDisplay();
                 mIndexToId.put(i, mh.getId());
-                System.out.format(itemFormat, i++, mh.getId(), from, sub, c);
+                System.out.format(itemFormat, i++, mh.getId(), "mess", from, sub, c);
             }
         }
         System.out.println();
