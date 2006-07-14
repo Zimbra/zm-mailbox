@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -174,16 +176,16 @@ public class ZMailboxUtil implements DebugListener {
         CREATE_SEARCH_FOLDER("createSearchFolder", "csf", "{folder-name} {query} [{types}] [{sort-by}]", "create search folder", Category.FOLDER, 2, 4),        
         CREATE_TAG("createTag", "ct", "{tag-name} {tag-color}", "create tag", Category.TAG, 2, 2),
         DELETE_CONTACT("deleteContact", "dct", "{contact-ids}", "hard delete contact(s)", Category.CONTACT, 1, 1),        
-        DELETE_CONVERSATION("deleteConversation", "dc", "{conv-ids} [{tcon}]", "hard delete conversastion(s)", Category.CONVERSATION, 1, 2),
-        DELETE_ITEM("deleteItem", "di", "{item-ids} [{tcon}]", "hard delete item(s)", Category.ITEM, 1, 2),        
+        DELETE_CONVERSATION("deleteConversation", "dc", "{conv-ids}", "hard delete conversastion(s)", Category.CONVERSATION, 1, 1),
+        DELETE_ITEM("deleteItem", "di", "{item-ids}", "hard delete item(s)", Category.ITEM, 1, 1),        
         DELETE_FOLDER("deleteFolder", "df", "{folder-path}", "hard delete a folder (and subfolders)", Category.FOLDER, 1, 1),
         DELETE_MESSAGE("deleteMessage", "dm", "{msg-ids}", "hard delete message(s)", Category.MESSAGE, 1, 1),
         DELETE_TAG("deleteTag", "dt", "{tag-name}", "delete a tag", Category.TAG, 1, 1),
         EMPTY_FOLDER("emptyFolder", "ef", "{folder-path}", "empty all the items in a folder (including subfolders)", Category.FOLDER, 1, 1),        
         EXIT("exit", "quit", "", "exit program", Category.MISC, 0, 0),
         FLAG_CONTACT("flagContact", "fct", "{contact-ids} [0|1*]", "flag/unflag contact(s)", Category.CONTACT, 1, 2),
-        FLAG_CONVERSATION("flagConversation", "fc", "{conv-ids} [0|1*] [{tcon}]", "flag/unflag conversation(s)", Category.CONVERSATION, 1, 3),
-        FLAG_ITEM("flagItem", "fi", "{item-ids} [0|1*] [{tcon}]", "flag/unflag item(s)", Category.ITEM, 1, 3),
+        FLAG_CONVERSATION("flagConversation", "fc", "{conv-ids} [0|1*]", "flag/unflag conversation(s)", Category.CONVERSATION, 1, 2),
+        FLAG_ITEM("flagItem", "fi", "{item-ids} [0|1*]", "flag/unflag item(s)", Category.ITEM, 1, 2),
         FLAG_MESSAGE("flagMessage", "fm", "{msg-ids} [0|1*]", "flag/unflag message(s)", Category.MESSAGE, 1, 2),
         GET_ALL_CONTACTS("getAllContacts", "gact", "[attr1 [attr2...]]", "get all contacts in the mailbox", Category.CONTACT, 0, Integer.MAX_VALUE, O_VERBOSE),
         GET_ALL_FOLDERS("getAllFolders", "gaf", "", "get all folders in the mailbox", Category.FOLDER, 0, 0, O_VERBOSE),
@@ -194,9 +196,9 @@ public class ZMailboxUtil implements DebugListener {
         GET_MESSAGE("getMessage", "gm", "{msg-id}", "get a message", Category.MESSAGE, 1, 1, O_VERBOSE),
         HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
         IMPORT_URL_INTO_FOLDER("importURLIntoFolder", "iuif", "{folder-path} {url}", "add the contents to the remote feed at {target-url} to the folder", Category.FOLDER, 2, 2),
-        MARK_CONVERSATION_READ("markConversationRead", "mcr", "{conv-ids} [0|1*] [{tcon}]", "mark conversation(s) as read/unread", Category.CONVERSATION, 1, 3),
-        MARK_CONVERSATION_SPAM("markConversationSpam", "mcs", "{conv} [0|1*] [{dest-folder-path}] [{tcon}]", "mark conversation as spam/not-spam, and optionally move", Category.CONVERSATION, 1, 4),
-        MARK_ITEM_READ("markItemRead", "mir", "{item-ids} [0|1*] [{tcon}]", "mark item(s) as read/unread", Category.ITEM, 1, 3),
+        MARK_CONVERSATION_READ("markConversationRead", "mcr", "{conv-ids} [0|1*]", "mark conversation(s) as read/unread", Category.CONVERSATION, 1, 2),
+        MARK_CONVERSATION_SPAM("markConversationSpam", "mcs", "{conv} [0|1*] [{dest-folder-path}]", "mark conversation as spam/not-spam, and optionally move", Category.CONVERSATION, 1, 3),
+        MARK_ITEM_READ("markItemRead", "mir", "{item-ids} [0|1*]", "mark item(s) as read/unread", Category.ITEM, 1, 2),
         MARK_FOLDER_READ("markFolderRead", "mfr", "{folder-path}", "mark all items in a folder as read", Category.FOLDER, 1, 1),
         MARK_MESSAGE_READ("markMessageRead", "mmr", "{msg-ids} [0|1*]", "mark message(s) as read/unread", Category.MESSAGE, 1, 2),
         MARK_MESSAGE_SPAM("markMessageSpam", "mms", "{msg} [0|1*] [{dest-folder-path}]", "mark a message as spam/not-spam, and optionally move", Category.MESSAGE, 1, 3),
@@ -208,8 +210,8 @@ public class ZMailboxUtil implements DebugListener {
         MODIFY_FOLDER_URL("modifyFolderURL", "mfu", "{folder-path} {url}", "modify a folder's URL", Category.FOLDER, 2, 2),
         MODIFY_TAG_COLOR("modifyTagColor", "mtc", "{tag-name} {tag-color}", "modify a tag's color", Category.TAG, 2, 2),
         MOVE_CONTACT("moveContact", "mct", "{contact-ids} {dest-folder-path}", "move contact(s) to a new folder", Category.CONTACT, 2, 2),
-        MOVE_CONVERSATION("moveConversation", "mc", "{conv-ids} {dest-folder-path} [{tcon}]", "move conversation(s) to a new folder", Category.CONVERSATION, 2, 3),
-        MOVE_ITEM("moveItem", "mi", "{item-ids} {dest-folder-path} [{tcon}]", "move item(s) to a new folder", Category.ITEM, 1, 2),
+        MOVE_CONVERSATION("moveConversation", "mc", "{conv-ids} {dest-folder-path}", "move conversation(s) to a new folder", Category.CONVERSATION, 2, 2),
+        MOVE_ITEM("moveItem", "mi", "{item-ids} {dest-folder-path}", "move item(s) to a new folder", Category.ITEM, 2, 2),
         MOVE_MESSAGE("moveMessage", "mm", "{msg-ids} {dest-folder-path}", "move message(s) to a new folder", Category.MESSAGE, 2, 2),
         NOOP("noOp", "no", "", "do a NoOp SOAP call to the server", Category.MISC, 0, 0),
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
@@ -220,8 +222,8 @@ public class ZMailboxUtil implements DebugListener {
         SEARCH_PREVIOUS("searchPrevious", "sp", "", "fetch previous page of search results", Category.SEARCH, 0, 1),
         SYNC_FOLDER("syncFolder", "sf", "{folder-path}", "synchronize folder's contents to the remote feed specified by folder's {url}", Category.FOLDER, 1, 1),
         TAG_CONTACT("tagContact", "tct", "{contact-ids} {tag-name} [0|1*]", "tag/untag contact(s)", Category.CONTACT, 2, 3),
-        TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*] [{tcon}]", "tag/untag conversation(s)", Category.CONVERSATION, 2, 4),
-        TAG_ITEM("tagItem", "ti", "{item-ids} {tag-name} [0|1*] [{tcon}]", "tag/untag item(s)", Category.ITEM, 2, 4),
+        TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*]", "tag/untag conversation(s)", Category.CONVERSATION, 2, 3),
+        TAG_ITEM("tagItem", "ti", "{item-ids} {tag-name} [0|1*]", "tag/untag item(s)", Category.ITEM, 2, 3),
         TAG_MESSAGE("tagMessage", "tm", "{msg-ids} {tag-name} [0|1*]", "tag/untag message(s)", Category.MESSAGE, 2, 3);
 
         private String mName;
@@ -270,7 +272,7 @@ public class ZMailboxUtil implements DebugListener {
                 String optStr = String.format("  -%s/--%s%s", opt.getOpt(), opt.getLongOpt(), arg);
                 sb.append(String.format("  %-28s %s%n", optStr, opt.getDescription()));
             }
-            sb.append("\n");
+            //sb.append("\n");
             return sb.toString();
         }
 
@@ -365,7 +367,17 @@ public class ZMailboxUtil implements DebugListener {
         return lookupFolderId(pathOrId, false);
     }
 
+    Pattern sTargetConstraint = Pattern.compile("\\{(.*)\\}$");
+
+    private String getTargetContstraint(String indexOrId) {
+        Matcher m = sTargetConstraint.matcher(indexOrId);
+        return m.find() ? m.group(1) : null;
+    }
+    
     private String translateId(String indexOrId) throws ServiceException {
+        Matcher m = sTargetConstraint.matcher(indexOrId);
+        if (m.find()) indexOrId = m.replaceAll("");
+
         StringBuilder ids = new StringBuilder();
         for (String t : indexOrId.split(",")) {
             
