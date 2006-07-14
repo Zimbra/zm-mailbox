@@ -25,6 +25,8 @@
 
 package com.zimbra.cs.servlet;
 
+import java.util.Date;
+
 import javax.naming.directory.DirContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -45,14 +47,24 @@ import com.zimbra.znative.Util;
  */
 public class PrivilegedServlet extends HttpServlet {
 
+    private static final int CHECK_LDAP_SLEEP_MILLIS = 10000;
+    
     private static void checkLDAP() {
-        DirContext ctxt = null;
-        try {
-            ctxt = LdapUtil.getDirContext();
-        } catch (ServiceException e) {
-            Util.halt("Error communicating with LDAP", e);
-        } finally {
-            LdapUtil.closeContext(ctxt);
+        while (true) {
+            DirContext ctxt = null;
+            try {
+                ctxt = LdapUtil.getDirContext();
+                return;
+            } catch (ServiceException e) {
+                System.err.println(new Date() + ": error communicating with LDAP (will retry)");
+                e.printStackTrace();
+                try {
+                    Thread.sleep(CHECK_LDAP_SLEEP_MILLIS);
+                } catch (InterruptedException ie) {
+                }
+            } finally {
+                LdapUtil.closeContext(ctxt);
+            }
         }
     }
 
