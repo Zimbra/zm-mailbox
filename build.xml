@@ -392,21 +392,21 @@
 		</java>
 		<echo>Importing Wiki documents for user1</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-l impn -u user1@${zimbra.server.hostname} -p test123 -f data/wiki/user1 -t /" />
+			<arg line="-l impn user1@${zimbra.server.hostname} test123 data/wiki/user1 /" />
 		</java>
 	</target>
 
 	<target name="import-wiki-templates" description="Import Wiki templates to the wiki account">
 		<echo>Importing Wiki templates from ${data.wiki.dir}/Template</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-l impn -u wiki@${zimbra.server.hostname} -p test123 -f data/wiki/Template -t Template" />
+			<arg line="-l impn wiki@${zimbra.server.hostname} test123 data/wiki/Template Template" />
 		</java>
 	</target>
 
 	<target name="init-wiki" description="Initialize the default Wiki account">
 		<echo>Initializing wiki@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-l in -u ${wiki.user.default}@${zimbra.server.hostname} -p test123 -f data/wiki/Template -t Template" />
+			<arg line="-l in ${wiki.user.default}@${zimbra.server.hostname} test123 data/wiki/Template Template" />
 		</java>
 	</target>
 
