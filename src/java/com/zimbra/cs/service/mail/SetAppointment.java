@@ -58,8 +58,12 @@ public class SetAppointment extends CalendarRequest {
     protected static class SetAppointmentInviteParser extends ParseMimeMessage.InviteParser {
         
         private boolean mExceptOk = false;
+        private boolean mForCancel = false;
         
-        SetAppointmentInviteParser(boolean exceptOk) { mExceptOk = exceptOk; };
+        SetAppointmentInviteParser(boolean exceptOk, boolean forCancel) {
+            mExceptOk = exceptOk;
+            mForCancel = forCancel;
+        }
 
         public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, Account account, Element inviteElem) throws ServiceException 
         {
@@ -68,7 +72,14 @@ public class SetAppointment extends CalendarRequest {
                 ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteRaw(account, inviteElem);
                 return toRet;
             } else {
-                return CalendarUtils.parseInviteForCreate(account, inviteElem, null, null, mExceptOk, CalendarUtils.RECUR_ALLOWED);
+                if (mForCancel)
+                    return CalendarUtils.parseInviteForCancel(
+                            account, inviteElem, null,
+                            mExceptOk, CalendarUtils.RECUR_ALLOWED);
+                else
+                    return CalendarUtils.parseInviteForCreate(
+                            account, inviteElem, null, null,
+                            mExceptOk, CalendarUtils.RECUR_ALLOWED);
             }
         }
     };
@@ -91,17 +102,29 @@ public class SetAppointment extends CalendarRequest {
             // First, the <default>
             {
                 Element e = request.getElement(MailService.A_DEFAULT);
-                defaultData = getSetAppointmentData(lc, acct, mbox, e, new SetAppointmentInviteParser(false));
+                defaultData = getSetAppointmentData(lc, acct, mbox, e, new SetAppointmentInviteParser(false, false));
             }
             
-            // for each <exception>
-            for (Iterator iter = request.elementIterator(MailService.A_EXCEPT); iter.hasNext(); ) {
+            // for each <except>
+            for (Iterator iter = request.elementIterator(MailService.E_APPT_EXCEPT);
+                 iter.hasNext(); ) {
                 Element e = (Element) iter.next();
-                SetAppointmentData exDat = getSetAppointmentData(lc, acct, mbox, e, new SetAppointmentInviteParser(true));
+                SetAppointmentData exDat = getSetAppointmentData(
+                        lc, acct, mbox, e,
+                        new SetAppointmentInviteParser(true, false));
                 exceptions.add(exDat);
             }
-            
-            
+
+            // for each <cancel>
+            for (Iterator iter = request.elementIterator(MailService.E_APPT_CANCEL);
+                 iter.hasNext(); ) {
+                Element e = (Element) iter.next();
+                SetAppointmentData exDat = getSetAppointmentData(
+                        lc, acct, mbox, e,
+                        new SetAppointmentInviteParser(true, true));
+                exceptions.add(exDat);
+            }
+
             SetAppointmentData[] exceptArray = null;
             if (exceptions.size() > 0) {
                 exceptArray = new SetAppointmentData[exceptions.size()];
@@ -117,7 +140,7 @@ public class SetAppointment extends CalendarRequest {
             
             for (Iterator iter = exceptions.iterator(); iter.hasNext();) {
                 SetAppointmentData cur = (SetAppointmentData) iter.next();
-                Element e = response.addElement(MailService.A_EXCEPT);
+                Element e = response.addElement(MailService.E_APPT_EXCEPT);
                 e.addAttribute(MailService.A_APPT_RECURRENCE_ID, cur.mInv.getRecurId().toString());
                 e.addAttribute(MailService.A_ID, lc.formatItemId(cur.mInv.getMailItemId()));
             }
@@ -127,8 +150,9 @@ public class SetAppointment extends CalendarRequest {
         } // synchronized(mbox)
     }
     
-    static private SetAppointmentData getSetAppointmentData(ZimbraSoapContext lc, Account acct, Mailbox mbox, 
-                                                            Element e, ParseMimeMessage.InviteParser parser)
+    static private SetAppointmentData getSetAppointmentData(
+            ZimbraSoapContext lc, Account acct, Mailbox mbox,
+            Element e, ParseMimeMessage.InviteParser parser)
     throws ServiceException {
         String partStatStr = e.getAttribute(MailService.A_APPT_PARTSTAT,
                                             IcalXmlStrMap.PARTSTAT_NEEDS_ACTION);

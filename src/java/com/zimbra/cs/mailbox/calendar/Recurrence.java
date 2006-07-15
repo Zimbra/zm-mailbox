@@ -1113,7 +1113,7 @@ public class Recurrence
         }
         
         public Element toXml(Element parent) {
-            Element elt = parent.addElement(MailService.E_APPT_CANCELLATION);
+            Element elt = parent.addElement(MailService.E_APPT_CANCEL);
             mRecurRange.toXml(elt);
             
             return elt;
@@ -1175,7 +1175,7 @@ public class Recurrence
         
 
         public Element toXml(Element parent) {
-            Element elt = parent.addElement(MailService.E_APPT_EXCEPTION_RULE);
+            Element elt = parent.addElement(MailService.E_APPT_EXCEPT);
             mRecurRange.toXml(elt);
             
             // now put the 

@@ -640,6 +640,7 @@ public class ToXML {
             Element ie = apptElt.addElement(MailService.E_INVITE);
             encodeTimeZoneMap(ie, appt.getTimeZoneMap());
 
+            ie.addAttribute(MailService.A_APPT_SEQUENCE, inv.getSeqNo());
             encodeReplies(ie, appt, inv);
 
             ie.addAttribute(MailService.A_ID, lc.formatItemId(inv.getMailItemId()));
@@ -950,6 +951,7 @@ public class ToXML {
         if (allFields) {
             try {
                 e.addAttribute("x_uid", invite.getUid());
+                e.addAttribute(MailService.A_APPT_SEQUENCE, invite.getSeqNo());
 
                 e.addAttribute(MailService.A_APPT_ID, lc.formatItemId(appt));
 

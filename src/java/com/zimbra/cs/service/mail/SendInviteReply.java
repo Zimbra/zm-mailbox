@@ -131,7 +131,7 @@ public class SendInviteReply extends CalendarRequest {
             
             
             // see if there is a specific Exception being referenced by this reply...
-            Element exc = request.getOptionalElement(MailService.A_APPT_EXCEPTION_ID);
+            Element exc = request.getOptionalElement(MailService.E_APPT_EXCEPTION_ID);
             ParsedDateTime exceptDt = null;
             if (exc != null) {
                 exceptDt = CalendarUtils.parseDateTime(exc,

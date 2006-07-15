@@ -326,6 +326,8 @@ public class ParseMimeMessage {
 	            	mLog.debug("Ignoring message fragment data");
                 } else if (eName.equals(MailService.E_INVITE)) { /* <inv> */
                     // Already processed above.  Ignore it.
+                } else if (eName.equals(MailService.E_APPT_TZ)) { /* <tz> */
+                    // Ignore as a special case.
 	            } else {
 	                unsupportedChildElement(elem, msgElem);
 	            }
@@ -343,7 +345,8 @@ public class ParseMimeMessage {
             // JavaMail tip: don't forget to call this, it is REALLY confusing.  
             mm.saveChanges();
 
-            dumpMessage(mm);
+            if (mLog.isDebugEnabled())
+                dumpMessage(mm);
             
 			return mm;
 	    } catch (UnsupportedEncodingException encEx) {

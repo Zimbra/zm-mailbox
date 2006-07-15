@@ -327,8 +327,9 @@ public class MailService implements DocumentService {
     public static final String E_APPT_DATE = "date";
     public static final String E_APPT_ADD = "add";
     public static final String E_APPT_EXCLUDE = "exclude";
-    public static final String E_APPT_EXCEPTION_RULE = "except";
-    public static final String E_APPT_CANCELLATION = "cancel";
+    public static final String E_APPT_EXCEPT = "except";
+    public static final String E_APPT_CANCEL = "cancel";
+    public static final String E_APPT_EXCEPTION_ID = "exceptId";
     public static final String E_APPT_DURATION = "dur";
     public static final String E_APPT_START_TIME = "s";
     public static final String E_APPT_END_TIME = "e";
@@ -358,11 +359,10 @@ public class MailService implements DocumentService {
 
     public static final String A_UID = "uid";
     public static final String A_DEFAULT = "default";
-    public static final String A_EXCEPT = "except";
     public static final String A_VERB = "verb";
     public static final String A_APPT_COMPONENT_NUM = "compNum";
+    public static final String A_APPT_SEQUENCE = "seq";
     public static final String A_APPT_IS_EXCEPTION = "ex";
-    public static final String A_APPT_EXCEPTION_ID = "exceptId";
     public static final String A_APPT_RECURRENCE_ID = "recurId";
     public static final String A_APPT_RECURRENCE_RANGE_TYPE = "rangeType";
     public static final String A_APPT_START_TIME = "s";
