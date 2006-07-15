@@ -49,7 +49,7 @@
 
 	<property name="lmtp.host" value="localhost" />
 	<property name="lmtp.port" value="7025" />
-	<property name="lmtpinject.numthreads" value="1" />
+	<property name="lmtpinject.numthreads" value="2" />
 
 	<property name="zimbra.home.dir" location="/opt/zimbra" />
 	<property name="tomcat.home.dir" location="${zimbra.home.dir}/tomcat" />
