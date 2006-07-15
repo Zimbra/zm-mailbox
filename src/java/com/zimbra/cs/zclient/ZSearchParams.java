@@ -26,6 +26,7 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
+import com.zimbra.soap.SoapFaultException;
 
 public class ZSearchParams {
 
@@ -36,6 +37,26 @@ public class ZSearchParams {
     public static final String TYPE_CONTACT = "contact";
     
     public static final String TYPE_APPOINTMENT = "appointment";
+    
+    public static final String getCanonicalTypes(String list) throws SoapFaultException {
+        if (list == null || list.length() == 0) return "";
+
+        StringBuilder sb = new StringBuilder();
+        for (String s : list.split(",")) {
+            if (sb.length() > 0) sb.append(",");
+            if (s.startsWith("conv"))
+                sb.append(TYPE_CONVERSATION);
+            else if (s.startsWith("m"))
+                sb.append(TYPE_MESSAGE);
+            else if (s.startsWith("cont"))
+                sb.append(TYPE_CONTACT);
+            else if (s.startsWith("a"))
+                sb.append(TYPE_APPOINTMENT);
+            else
+                throw SoapFaultException.CLIENT_ERROR("invlaid search type: "+s, null);
+        }
+        return sb.toString();
+    }
     
     /**
      *  max number of results to return

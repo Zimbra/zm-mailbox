@@ -163,15 +163,15 @@ public class ZMailboxUtil implements DebugListener {
     
     private static Option O_COLOR = new Option("c", "color", true, "color");
     private static Option O_CURRENT = new Option("c", "current", false, "current page of search results");    
-    private static Option O_FLAGS = new Option("f", "flags", true, "flags");
-    private static Option O_FOLDER = new Option("F", "folder", true, "folder-path-or-id");
+    private static Option O_FLAGS = new Option("F", "flags", true, "flags");
+    private static Option O_FOLDER = new Option("f", "folder", true, "folder-path-or-id");
     private static Option O_LIMIT = new Option("l", "limit", true, "max number of results to return");
     private static Option O_NEXT = new Option("n", "next", false, "next page of search results");    
     private static Option O_PREVIOUS = new Option("p", "previous", false,  "previous page of search results");
     private static Option O_SORT = new Option("s", "sort", true, "sort order TODO");
     private static Option O_REPLACE = new Option("r", "replace", false, "replace contact (default is to merge)");    
-    private static Option O_TAGS = new Option("t", "tags", true, "list of tag ids/names");
-    private static Option O_TYPES = new Option("T", "types", true, "list of types to search for (message,conversation,contact,wiki)");
+    private static Option O_TAGS = new Option("T", "tags", true, "list of tag ids/names");
+    private static Option O_TYPES = new Option("t", "types", true, "list of types to search for (message,conversation,contact,wiki)");
     private static Option O_VERBOSE = new Option("v", "verbose", false, "verbose output");
     private static Option O_VIEW = new Option("V", "view", true, "default type for folder (conversation,message,contact,appointment,wiki)");    
     
@@ -481,7 +481,10 @@ public class ZMailboxUtil implements DebugListener {
 
     private String flagsOpt()    { return mCommandLine.getOptionValue(O_FLAGS.getOpt()); }
 
-    private String typesOpt()    { return mCommandLine.getOptionValue(O_TYPES.getOpt()); }
+    private String typesOpt() throws SoapFaultException {
+        String t = mCommandLine.getOptionValue(O_TYPES.getOpt());         
+        return t == null ? null : ZSearchParams.getCanonicalTypes(t);
+    }
 
     private String folderOpt()   { return mCommandLine.getOptionValue(O_FOLDER.getOpt()); }
 
