@@ -32,6 +32,7 @@ public interface ZConversation  {
     public enum Flag {
         unread('u'),
         flagged('f'),
+        sentByMe('s'),
         attachment('a');
 
         private char mFlagChar;
