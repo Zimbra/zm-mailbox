@@ -28,6 +28,37 @@ package com.zimbra.cs.zclient;
 import java.util.Map;
 
 public interface ZContact  {
+    
+    public enum Flag {
+        flagged('f'),
+        attachment('a');
+
+        private char mFlagChar;
+        
+        public char getFlagChar() { return mFlagChar; }
+
+        public static String toNameList(String flags) {
+            if (flags == null || flags.length() == 0) return "";            
+            StringBuilder sb = new StringBuilder();
+            for (int i=0; i < flags.length(); i++) {
+                String v = null;
+                for (Flag f : Flag.values()) {
+                    if (f.getFlagChar() == flags.charAt(i)) {
+                        v = f.name();
+                        break;
+                    }
+                }
+                if (sb.length() > 0) sb.append(", ");
+                sb.append(v == null ? flags.substring(i, i+1) : v);
+            }
+            return sb.toString();
+        }
+        
+        Flag(char flagChar) {
+            mFlagChar = flagChar;
+            
+        }
+    }
 
     public String getId();
     

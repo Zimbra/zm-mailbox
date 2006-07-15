@@ -54,8 +54,8 @@ class ZSoapMessage implements ZMessage {
         
     ZSoapMessage(Element e, Map<String,ZSoapEmailAddress> cache) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
-        mFlags = e.getAttribute(MailService.A_FLAGS, "");
-        mTags = e.getAttribute(MailService.A_TAGS, "");
+        mFlags = e.getAttribute(MailService.A_FLAGS, null);
+        mTags = e.getAttribute(MailService.A_TAGS, null);
         mSubject = e.getElement(MailService.E_SUBJECT).getText();
         mMessageIdHeader = e.getElement(MailService.E_MSG_ID_HDR).getText();
         mReceivedDate = e.getAttributeLong(MailService.A_DATE, 0);

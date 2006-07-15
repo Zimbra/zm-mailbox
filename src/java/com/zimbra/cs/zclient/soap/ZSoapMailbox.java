@@ -82,6 +82,7 @@ public class ZSoapMailbox extends ZMailbox {
     void setSoapURI(String uri) {
         if (mTransport != null) mTransport.shutdown();
         mTransport = new SoapHttpTransport(uri);
+        mTransport.setUserAgent("zclient", "1.0");
         mTransport.setMaxNoitfySeq(0);
         if (mAuthToken != null)
             mTransport.setAuthToken(mAuthToken);

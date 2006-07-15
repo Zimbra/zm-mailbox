@@ -375,6 +375,23 @@ public class ZMailboxUtil implements DebugListener {
         return ids.toString();
     }
     
+    /**
+     * takes a list of ids, and trys to resolve them all to tag names
+     * 
+     * @param idsOrNames
+     * @return
+     * @throws SoapFaultException
+     */
+    private String lookupTagNames(String ids) throws SoapFaultException {
+        StringBuilder names = new StringBuilder();
+        for (String tid : ids.split(",")) {
+            ZTag tag = lookupTag(tid);
+            if (names.length() > 0) names.append(", ");
+            names.append(tag == null ? tid : tag.getName());
+        }
+        return names.toString();
+    }
+    
     private String lookupFolderId(String pathOrId) throws ServiceException {
         return lookupFolderId(pathOrId, false);
     }
@@ -1057,8 +1074,12 @@ public class ZMailboxUtil implements DebugListener {
 
             mIndexToId.clear();
             
-            System.out.format("%nSubject: %s%nTags: %s%nFlags: %s%nNumber-of-Messages: %d%n%n",
-                    conv.getSubject(), conv.getTagIds(), conv.getFlags(), conv.getMessageCount());
+            System.out.format("%nSubject: %s%n", conv.getSubject());
+            System.out.format("Id: %s%n", conv.getId());
+            
+            if (conv.getTagIds() != null) System.out.format("Tags: %s%n", lookupTagNames(conv.getTagIds()));
+            if (conv.getFlags() != null) System.out.format("Flags: %s%n", ZConversation.Flag.toNameList(conv.getFlags())); 
+            System.out.format("Num-Messages: %d%n%n", conv.getMessageCount());
             
             if (conv.getMessageCount() == 0) return;
 
@@ -1129,8 +1150,9 @@ public class ZMailboxUtil implements DebugListener {
             doHeader(msg.getEmailAddresses(), "To", ZEmailAddress.EMAIL_TYPE_TO);
             doHeader(msg.getEmailAddresses(), "Cc", ZEmailAddress.EMAIL_TYPE_CC);
             System.out.format("Date: %s\n", DateUtil.toRFC822Date(new Date(msg.getReceivedDate())));
-            System.out.format("Tags: %s%nFlags: %s%nSize: %d%n",
-                    msg.getTagIds(), msg.getFlags(), msg.getSize());
+            if (msg.getTagIds() != null) System.out.format("Tags: %s%n", lookupTagNames(msg.getTagIds()));
+            if (msg.getFlags() != null) System.out.format("Flags: %s%n", ZMessage.Flag.toNameList(msg.getFlags())); 
+            System.out.format("Size: %d%n", msg.getSize());
             System.out.println();
             if (dumpBody(msg.getMimeStructure()))
                 System.out.println();

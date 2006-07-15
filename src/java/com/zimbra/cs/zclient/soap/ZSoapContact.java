@@ -46,8 +46,8 @@ class ZSoapContact implements ZContact, ZSoapItem {
     ZSoapContact(Element e) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
         mFolderId = e.getAttribute(MailService.A_FOLDER);
-        mFlags = e.getAttribute(MailService.A_FLAGS, "");
-        mTagIds = e.getAttribute(MailService.A_TAGS, "");
+        mFlags = e.getAttribute(MailService.A_FLAGS, null);
+        mTagIds = e.getAttribute(MailService.A_TAGS, null);
         mRevision = e.getAttribute(MailService.A_REVISION, null);
         mMetaDataChangedDate = e.getAttributeLong(MailService.A_MODIFIED_DATE, 0) * 1000;
         mAttrs = new HashMap<String, String>();

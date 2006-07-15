@@ -46,7 +46,7 @@ class ZSoapContactHit implements ZContactHit {
         mId = e.getAttribute(MailService.A_ID);
         mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);
         mScore = (float) e.getAttributeDouble(MailService.A_SCORE, 0);
-        mFileAsStr = e.getAttribute(MailService.A_FILE_AS_STR, "");
+        mFileAsStr = e.getAttribute(MailService.A_FILE_AS_STR, null);
         mRevision = e.getAttribute(MailService.A_REVISION, null);
         mFolderId = e.getAttribute(MailService.A_FOLDER);
         mEmail = e.getAttribute(Contact.A_email, null);

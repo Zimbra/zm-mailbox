@@ -53,9 +53,9 @@ class ZSoapMessageHit implements ZMessageHit {
         
     ZSoapMessageHit(Element e, Map<String,ZSoapEmailAddress> cache) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
-        mFlags = e.getAttribute(MailService.A_FLAGS, "");
+        mFlags = e.getAttribute(MailService.A_FLAGS, null);
         mDate = e.getAttributeLong(MailService.A_DATE);
-        mTags = e.getAttribute(MailService.A_TAGS, "");
+        mTags = e.getAttribute(MailService.A_TAGS, null);
         mFragment = e.getElement(MailService.E_FRAG).getText();
         mSubject = e.getElement(MailService.E_SUBJECT).getText();        
         mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);

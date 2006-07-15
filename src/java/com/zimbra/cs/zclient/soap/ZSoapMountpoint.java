@@ -50,9 +50,9 @@ class ZSoapMountpoint implements ZMountpoint, ZSoapItem {
         mId = e.getAttribute(MailService.A_ID);
         mName = e.getAttribute(MailService.A_NAME);
         mParentId = e.getAttribute(MailService.A_FOLDER);
-        mFlags = e.getAttribute(MailService.A_FLAGS, "");
+        mFlags = e.getAttribute(MailService.A_FLAGS, null);
         mColor = (int) e.getAttributeLong(MailService.A_COLOR, 0);
-        mDefaultView = e.getAttribute(MailService.A_DEFAULT_VIEW, "");
+        mDefaultView = e.getAttribute(MailService.A_DEFAULT_VIEW, null);
         mOwnerDisplayName = e.getAttribute(MailService.A_DISPLAY);
         mRemoteId = e.getAttribute(MailService.A_REMOTE_ID);
         mOwnerId = e.getAttribute(MailService.A_ZIMBRA_ID);

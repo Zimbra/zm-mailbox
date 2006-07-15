@@ -46,8 +46,8 @@ class ZSoapConversation implements ZConversation {
         
     ZSoapConversation(Element e, Map<String,ZSoapEmailAddress> cache) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
-        mFlags = e.getAttribute(MailService.A_FLAGS, "");
-        mTags = e.getAttribute(MailService.A_TAGS, "");
+        mFlags = e.getAttribute(MailService.A_FLAGS, null);
+        mTags = e.getAttribute(MailService.A_TAGS, null);
         mSubject = e.getElement(MailService.E_SUBJECT).getText();        
         mMessageCount = (int) e.getAttributeLong(MailService.A_NUM);
         
@@ -106,9 +106,9 @@ class ZSoapConversation implements ZConversation {
         
         ZSoapMessageSummary(Element e, Map<String,ZSoapEmailAddress> cache) throws ServiceException {
             mId = e.getAttribute(MailService.A_ID);
-            mFlags = e.getAttribute(MailService.A_FLAGS, "");
+            mFlags = e.getAttribute(MailService.A_FLAGS, null);
             mDate = e.getAttributeLong(MailService.A_DATE);
-            mTags = e.getAttribute(MailService.A_TAGS, "");
+            mTags = e.getAttribute(MailService.A_TAGS, null);
             mFragment = e.getElement(MailService.E_FRAG).getText();        
             mSize = e.getAttributeLong(MailService.A_SIZE);
             Element emailEl = e.getOptionalElement(MailService.E_EMAIL);

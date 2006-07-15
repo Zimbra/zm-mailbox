@@ -59,7 +59,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         mId = e.getAttribute(MailService.A_ID);
         mName = e.getAttribute(MailService.A_NAME);
         mParentId = e.getAttribute(MailService.A_FOLDER);
-        mFlags = e.getAttribute(MailService.A_FLAGS, "");
+        mFlags = e.getAttribute(MailService.A_FLAGS, null);
         try {
             mColor = ZFolder.Color.fromString(e.getAttribute(MailService.A_COLOR, "0"));
         } catch (ServiceException se) {

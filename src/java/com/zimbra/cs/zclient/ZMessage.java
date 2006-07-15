@@ -29,6 +29,44 @@ import java.util.List;
 
 public interface ZMessage  {
 
+    public enum Flag {
+        unread('u'),
+        flagged('f'),
+        attachment('a'),
+        replied('r'),
+        sentByMe('s'),
+        forwarded('w'),
+        draft('d'),
+        deleted('x'),
+        notificationSent('n');
+
+        private char mFlagChar;
+        
+        public char getFlagChar() { return mFlagChar; }
+
+        public static String toNameList(String flags) {
+            if (flags == null || flags.length() == 0) return "";            
+            StringBuilder sb = new StringBuilder();
+            for (int i=0; i < flags.length(); i++) {
+                String v = null;
+                for (Flag f : Flag.values()) {
+                    if (f.getFlagChar() == flags.charAt(i)) {
+                        v = f.name();
+                        break;
+                    }
+                }
+                if (sb.length() > 0) sb.append(", ");
+                sb.append(v == null ? flags.substring(i, i+1) : v);
+            }
+            return sb.toString();
+        }
+        
+        Flag(char flagChar) {
+            mFlagChar = flagChar;
+            
+        }
+    }
+    
     public String getId();
     
     /**
