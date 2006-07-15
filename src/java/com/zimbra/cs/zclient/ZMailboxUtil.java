@@ -928,7 +928,7 @@ public class ZMailboxUtil implements DebugListener {
                 ZMessageHit mh = (ZMessageHit) hit;
                 c.setTimeInMillis(mh.getDate());
                 String sub = mh.getSubject();
-                String from = mh.getSender().getDisplay();
+                String from = mh.getSender() == null ? "<none>" : mh.getSender().getDisplay();
                 mIndexToId.put(i, mh.getId());
                 System.out.format(itemFormat, i++, mh.getId(), "mess", from, sub, c);
             }

@@ -67,8 +67,8 @@ class ZSoapMessageHit implements ZMessageHit {
         for (Element hp: e.listElements(MailService.E_HIT_MIMEPART)) {
             mMimePartHits.add(hp.getAttribute(MailService.A_PART));
         }
-        Element emailEl = e.getElement(MailService.E_EMAIL);
-        mSender = ZSoapEmailAddress.getAddress(emailEl, cache);
+        Element emailEl = e.getOptionalElement(MailService.E_EMAIL);
+        if (emailEl != null) mSender = ZSoapEmailAddress.getAddress(emailEl, cache);
     }
 
     public String getId() {

@@ -771,7 +771,7 @@ message result:
 ---------------
 <SearchResponse sortBy="sort-by" offset="..." more="{more-flag}">
    <m id="{message-id}" t="{tags}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" l="{location}" score="..." [mbx="UID"] sf="SORT-FIELD-VALUE" [cm="1"]>
-     <e .../>  <!- sender only -->
+     <e .../>*  <!- sender only -->
      <su>{subject}</su>
      <fr>{fragment}</fr>
      [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only) 
