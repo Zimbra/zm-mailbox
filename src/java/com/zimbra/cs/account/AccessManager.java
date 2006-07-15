@@ -48,6 +48,15 @@ public abstract class AccessManager {
 
     public abstract boolean canAccessAccount(AuthToken at, Account target) throws ServiceException;
 
+    /** Returns whether the specified account's credentials are sufficient
+     *  to perform operations on the target account.  <i>Note: This method
+     *  checks only for admin access, and passing the same account for
+     *  <code>credentials</code> and <code>target</code> will not succeed
+     *  for non-admin accounts.</i>
+     * @param credentials  The authenticated account performing the action. 
+     * @param target       The target account for the proposed action. */
+    public abstract boolean canAccessAccount(Account credentials, Account target);
+
     public abstract boolean canAccessDomain(AuthToken at, String domainName) throws ServiceException;
 
     public abstract boolean canAccessDomain(AuthToken at, Domain domain) throws ServiceException;

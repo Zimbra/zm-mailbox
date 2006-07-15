@@ -338,14 +338,19 @@ public abstract class MailItem implements Comparable {
         return mData.type;
     }
 
+    /** Returns the numeric ID of the {@link Mailbox} this item belongs to. */
+    public int getMailboxId() {
+        return mMailbox.getId();
+    }
+
     /** Returns the {@link Mailbox} this item belongs to. */
     public Mailbox getMailbox() {
         return mMailbox;
     }
 
-    /** Returns the numeric ID of the {@link Mailbox} this item belongs to. */
-    public int getMailboxId() {
-        return mMailbox.getId();
+    /** Returns the {@link Account} this item's Mailbox belongs to. */
+    public Account getAccount() throws ServiceException {
+        return mMailbox.getAccount();
     }
 
     /** Returns the item's color.  If not specified, defaults to

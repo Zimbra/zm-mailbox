@@ -37,6 +37,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.collections.map.LRUMap;
 
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -599,9 +600,12 @@ public class Mailbox {
      *    <li>all admin accounts</ul>
      * 
      * @see #getAuthenticatedAccount() */
-    boolean hasFullAccess() {
+    boolean hasFullAccess() throws ServiceException {
         Account authuser = getAuthenticatedAccount();
-        return authuser == null || authuser.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+        // XXX: in Mailbox, authuser is set to null if authuser == owner.
+        if (authuser == null || getAccountId().equals(authuser.getId()))
+            return true;
+        return AccessManager.getInstance().canAccessAccount(authuser, getAccount());
     }
 
 

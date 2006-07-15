@@ -35,8 +35,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -197,12 +197,12 @@ public class Folder extends MailItem {
     private short checkRights(short rightsNeeded, Account authuser, boolean inheritedOnly) throws ServiceException {
         if (rightsNeeded == 0)
             return rightsNeeded;
-        // XXX in Mailbox, authuser is set to null if authuser == owner.
+        // XXX: in Mailbox, authuser is set to null if authuser == owner.
         // the mailbox owner can do anything they want
         if (authuser == null || authuser.getId().equals(mMailbox.getAccountId()))
             return rightsNeeded;
-        // admin users can also do anything they want
-        if (authuser.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false))
+        // admin users (and the appropriate domain admins) can also do anything they want
+        if (AccessManager.getInstance().canAccessAccount(authuser, getAccount()))
             return rightsNeeded;
         // check the ACLs to see if access has been explicitly granted
         Short granted = mRights != null ? mRights.getGrantedRights(authuser, inheritedOnly) : null;

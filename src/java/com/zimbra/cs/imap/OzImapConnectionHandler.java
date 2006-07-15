@@ -34,6 +34,7 @@ import java.util.*;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -67,7 +68,6 @@ import com.zimbra.cs.ozserver.OzMatcher;
 import com.zimbra.cs.ozserver.OzTLSFilter;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
-import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Constants;
@@ -666,10 +666,15 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             sendNO(tag, command + " failed");
             return null;
         }
+        // authenticate the authentication principal
         prov.authAccount(authacct, password);
-        if (!AccountUtil.isAuthorized(account, authacct)) {
-            sendNO(tag, command + " failed");
-            return null;
+        // authorize as the target user
+        if (!account.getId().equals(authacct.getId())) {
+            // check domain/global admin if auth credentials != target account
+            if (!AccessManager.getInstance().canAccessAccount(authacct, account)) {
+                sendNO(tag, command + " failed");
+                return null;
+            }
         }
         return account;
     }

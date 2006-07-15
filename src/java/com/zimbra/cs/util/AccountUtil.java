@@ -80,26 +80,6 @@ public class AccountUtil {
         return false;
     }
 
-    /** Returns whether the specified account's credentials are sufficient to
-     *  perform operations on the target account.  This occurs when the two
-     *  accounts are the same, when the credentials belong to an admin, or
-     *  when the credentials are for an appropriate domain admin.
-     * @param target       The target account for the proposed action.
-     * @param credentials  The authenticated account performing the action. */
-    public static boolean isAuthorized(Account target, Account credentials) {
-        // same account always succeeds, of course
-        if (target.getId().equals(credentials.getId()))
-            return true;
-        // admin auth account will also always succeed
-        if (credentials.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false))
-            return true;
-        // domain admins succeed if the target is in the same domain
-        if (target.getDomainName() != null && target.getDomainName().equals(credentials.getDomainName()))
-            return credentials.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
-        // everyone else is out of luck
-        return false;
-    }
-
     /* We do a more lightweight canonicalization that postfix, because
      * we except to set the LDAP attributes only in certain ways.  For
      * instance we do not canonicalize the local part by itself.
