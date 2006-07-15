@@ -162,9 +162,12 @@ public class ZMailboxUtil implements DebugListener {
     }
     
     private static Option O_COLOR = new Option("c", "color", true, "color");
+    private static Option O_CURRENT = new Option("c", "current", false, "current page of search results");    
     private static Option O_FLAGS = new Option("f", "flags", true, "flags");
     private static Option O_FOLDER = new Option("F", "folder", true, "folder-path-or-id");
-    private static Option O_LIMIT = new Option("l", "limit", true, "max number of results to return");    
+    private static Option O_LIMIT = new Option("l", "limit", true, "max number of results to return");
+    private static Option O_NEXT = new Option("n", "next", false, "next page of search results");    
+    private static Option O_PREVIOUS = new Option("p", "previous", false,  "previous page of search results");
     private static Option O_SORT = new Option("s", "sort", true, "sort order TODO");
     private static Option O_REPLACE = new Option("r", "replace", false, "replace contact (default is to merge)");    
     private static Option O_TAGS = new Option("t", "tags", true, "list of tag ids/names");
@@ -220,10 +223,8 @@ public class ZMailboxUtil implements DebugListener {
         NOOP("noOp", "no", "", "do a NoOp SOAP call to the server", Category.MISC, 0, 0),
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
-        SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 1, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE),
-        SEARCH_CURRENT("searchCurrent", "sc", "", "redisplay last search", Category.SEARCH, 0, 0, O_VERBOSE),
-        SEARCH_NEXT("searchNext", "sn", "", "fetch next page of search results", Category.SEARCH, 0, 0, O_VERBOSE),
-        SEARCH_PREVIOUS("searchPrevious", "sp", "", "fetch previous page of search results", Category.SEARCH, 0, 0, O_VERBOSE),
+        SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
+        SEARCH_CONVERSATION("searchConv", "sc", "{conv-id} {query}", "perform search on conversation", Category.SEARCH, 0, 2, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),        
         SYNC_FOLDER("syncFolder", "sf", "{folder-path}", "synchronize folder's contents to the remote feed specified by folder's {url}", Category.FOLDER, 1, 1),
         TAG_CONTACT("tagContact", "tct", "{contact-ids} {tag-name} [0|1*]", "tag/untag contact(s)", Category.CONTACT, 2, 3),
         TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*]", "tag/untag conversation(s)", Category.CONVERSATION, 2, 3),
@@ -306,6 +307,8 @@ public class ZMailboxUtil implements DebugListener {
     private String mPrompt = "mbox> ";
     ZSearchParams mSearchParams;
     ZSearchResult mSearchResult;
+    ZSearchParams mConvSearchParams;    
+    ZSearchResult mConvSearchResult;    
     
     private boolean isId(String value) {
         return (value.length() == 36 &&
@@ -459,25 +462,21 @@ public class ZMailboxUtil implements DebugListener {
         return view == null ? null : ZFolder.View.fromString(view);
     }
 
-    private String flagsOpt() {
-        return mCommandLine.getOptionValue(O_FLAGS.getOpt());        
-    }
+    private String flagsOpt()    { return mCommandLine.getOptionValue(O_FLAGS.getOpt()); }
 
-    private String typesOpt() {
-        return mCommandLine.getOptionValue(O_TYPES.getOpt());        
-    }
+    private String typesOpt()    { return mCommandLine.getOptionValue(O_TYPES.getOpt()); }
 
-    private String folderOpt() {
-        return mCommandLine.getOptionValue(O_FOLDER.getOpt());
-    }
+    private String folderOpt()   { return mCommandLine.getOptionValue(O_FOLDER.getOpt()); }
 
-    private boolean replaceOpt() {
-        return mCommandLine.hasOption(O_REPLACE.getOpt());
-    }
+    private boolean replaceOpt() { return mCommandLine.hasOption(O_REPLACE.getOpt()); }
     
-    private boolean verboseOpt() {
-        return mCommandLine.hasOption(O_VERBOSE.getOpt());
-    }
+    private boolean verboseOpt() { return mCommandLine.hasOption(O_VERBOSE.getOpt()); }
+    
+    private boolean currrentOpt() { return mCommandLine.hasOption(O_CURRENT.getOpt()); }
+
+    private boolean nextOpt()     { return mCommandLine.hasOption(O_NEXT.getOpt()); }
+
+    private boolean previousOpt() { return mCommandLine.hasOption(O_PREVIOUS.getOpt()); }
     
     private SearchSortBy searchSortByOpt() throws ServiceException {
         String sort = mCommandLine.getOptionValue(O_SORT.getOpt());                
@@ -653,15 +652,9 @@ public class ZMailboxUtil implements DebugListener {
         case SEARCH:
             doSearch(args);
             break;
-        case SEARCH_NEXT:
-            doSearchNext(args);
-            break;
-        case SEARCH_CURRENT:
-            doSearchCurrent(args);
+        case SEARCH_CONVERSATION:
+            doSearchConv(args);
             break;            
-        case SEARCH_PREVIOUS:
-            doSearchPrevious(args);
-            break;
         case SYNC_FOLDER:
             mMbox.syncFolder(lookupFolderId(args[0]));
             break;
@@ -731,15 +724,19 @@ public class ZMailboxUtil implements DebugListener {
                     cmItem);
         System.out.println(cm.getId());
     }
-
     
     private Stack<Cursor> mSearchCursors = new Stack<Cursor>();
     private Stack<Integer> mSearchOffsets = new Stack<Integer>();
     private Map<Integer, String> mIndexToId = new HashMap<Integer, String>();
 
     private void doSearch(String[] args) throws ServiceException, ArgException {
+        
+        if (currrentOpt()) { doSearchRedisplay(args); return; }
+        else if (previousOpt()) { doSearchPrevious(args); return; }
+        else if (nextOpt()) { doSearchNext(args); return; }
+        else if (args.length == 0) { usage(); return; }
+        
         mSearchParams = new ZSearchParams(args[0]);
-
 
 //        [limit {limit}] [sortby {sortBy}] [types {types}]        
         
@@ -760,7 +757,7 @@ public class ZMailboxUtil implements DebugListener {
         dumpSearch(mMbox.search(mSearchParams), verboseOpt());                
     }
     
-    private void doSearchCurrent(String[] args) throws ServiceException {
+    private void doSearchRedisplay(String[] args) throws ServiceException {
         ZSearchResult sr = mSearchResult;
         if (sr == null) return;
         dumpSearch(mSearchResult, verboseOpt());
@@ -791,6 +788,61 @@ public class ZMailboxUtil implements DebugListener {
         mSearchOffsets.pop();
         sp.setCursor(mSearchCursors.size() > 0 ? mSearchCursors.peek() : null);
         dumpSearch(mMbox.search(sp), verboseOpt());
+    }
+
+    String mConvSearchConvId;
+    
+    private void doSearchConv(String[] args) throws ServiceException, ArgException {
+        
+        if (currrentOpt()) { doSearchConvRedisplay(args); return; }
+        else if (previousOpt()) { doSearchConvPrevious(args); return; }
+        else if (nextOpt()) { doSearchConvNext(args); return; }
+        else if (args.length != 2) { usage(); return; }
+
+        mConvSearchConvId = id(args[0]);
+        mConvSearchParams = new ZSearchParams(args[1]);
+
+//        [limit {limit}] [sortby {sortBy}] [types {types}]        
+        
+        String limitStr = mCommandLine.getOptionValue(O_LIMIT.getOpt());
+        mConvSearchParams.setLimit(limitStr != null ? Integer.parseInt(limitStr) : 25);
+        
+        SearchSortBy sortBy = searchSortByOpt();
+        mConvSearchParams.setSortBy(sortBy != null ?  sortBy : SearchSortBy.dateDesc);
+            
+        String types = typesOpt();
+        mConvSearchParams.setTypes(types != null ? types : ZSearchParams.TYPE_CONVERSATION);        
+
+        mIndexToId.clear();
+        //System.out.println(result);
+        dumpConvSearch(mMbox.searchConversation(mConvSearchConvId, mConvSearchParams), verboseOpt());                
+    }
+    
+    private void doSearchConvRedisplay(String[] args) throws ServiceException {
+        ZSearchResult sr = mConvSearchResult;
+        if (sr == null) return;
+        dumpConvSearch(mConvSearchResult, verboseOpt());
+    }
+
+    private void doSearchConvNext(String[] args) throws ServiceException {
+        ZSearchParams sp = mConvSearchParams;
+        ZSearchResult sr = mConvSearchResult;
+        if (sp == null || sr == null || !sr.hasMore())
+            return;
+
+        List<ZSearchHit> hits = sr.getHits();
+        if (hits.size() == 0) return;
+        sp.setOffset(sp.getOffset() + hits.size());
+        dumpConvSearch(mMbox.searchConversation(mConvSearchConvId, sp), verboseOpt());
+    }
+
+    private void doSearchConvPrevious(String[] args) throws ServiceException {
+        ZSearchParams sp = mConvSearchParams;
+        ZSearchResult sr = mConvSearchResult;
+        if (sp == null || sr == null || sp.getOffset() == 0)
+            return;
+        sp.setOffset(sp.getOffset() - sr.getHits().size());        
+        dumpConvSearch(mMbox.searchConversation(mConvSearchConvId, sp), verboseOpt());
     }
 
     private int colWidth(int num) {
@@ -862,6 +914,49 @@ public class ZMailboxUtil implements DebugListener {
                 String from = mh.getSender().getDisplay();
                 mIndexToId.put(i, mh.getId());
                 System.out.format(itemFormat, i++, mh.getId(), "mess", from, sub, c);
+            }
+        }
+        System.out.println();
+    }
+
+    private void dumpConvSearch(ZSearchResult sr, boolean verbose) throws ServiceException {
+        mConvSearchResult =  sr;
+        if (verbose) {
+            System.out.println(sr);
+            return;
+        }
+        
+        int offset = sr.getOffset();
+        int first = offset+1;
+        int last = offset+sr.getHits().size();
+
+        System.out.printf("num: %d, more: %s%n%n", sr.getHits().size(), sr.hasMore());
+        int width = colWidth(last);
+
+        if (sr.getHits().size() == 0) {
+            return;
+        }
+        
+        final int FROM_LEN = 20;
+        
+        Calendar c = Calendar.getInstance();
+        String headerFormat = String.format("%%%d.%ds  %%10.10s  %%-20.20s  %%-50.50s  %%s%%n", width, width);
+        //String headerFormat = String.format("%10.10s  %-20.20s  %-50.50s  %-6.6s  %s%n");
+        
+        String itemFormat = String.format(  "%%%d.%ds. %%10.10s  %%-20.20s  %%-50.50s  %%tD %%<tR%%n", width, width);
+        //String itemFormat = "%10.10s  %-20.20s  %-50.50s  %-6.6s  %tD %5$tR%n";
+
+        System.out.format(headerFormat, "", "Id", "From", "Subject", "Date");
+        System.out.format(headerFormat, "", "----------", "--------------------", "--------------------------------------------------", "--------------");
+        int i = first;
+        for (ZSearchHit hit: sr.getHits()) {
+            if (hit instanceof ZMessageHit) {
+                ZMessageHit mh = (ZMessageHit) hit;
+                c.setTimeInMillis(mh.getDate());
+                String sub = mh.getSubject();
+                String from = mh.getSender().getDisplay();
+                mIndexToId.put(i, mh.getId());
+                System.out.format(itemFormat, i++, mh.getId(), from, sub, c);
             }
         }
         System.out.println();
