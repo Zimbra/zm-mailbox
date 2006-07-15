@@ -69,7 +69,7 @@ public abstract class ZMailbox {
         if (path.length() == 0) return PATH_SEPARATOR;
         else return path;
     }
-    
+
     /**
      * returns the base folder path. First removes a trailing {@link #PATH_SEPARATOR} if one is present, then
      * returns the value of the path trailing the last {@link #PATH_SEPARATOR} in the path.

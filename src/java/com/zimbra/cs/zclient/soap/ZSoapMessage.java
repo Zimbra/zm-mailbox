@@ -147,8 +147,7 @@ class ZSoapMessage implements ZMessage {
     }
 
     public ZMimePart getMimeStructure() {
-        // TODO Auto-generated method stub
-        return null;
+        return mMimeStructure;
     }
 
     public long getReceivedDate() {

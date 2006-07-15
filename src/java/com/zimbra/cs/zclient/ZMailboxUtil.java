@@ -33,6 +33,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,12 +53,14 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.DateUtil;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
 import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
+import com.zimbra.cs.zclient.ZMessage.ZMimePart;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 import com.zimbra.cs.zclient.ZTag.Color;
 import com.zimbra.cs.zclient.soap.ZSoapMailbox;
@@ -496,7 +499,6 @@ public class ZMailboxUtil implements DebugListener {
         try {
             mCommandLine = mParser.parse(mCommand.getOptions(), args, true);
             args = mCommandLine.getArgs();
-            System.out.println(mCommandLine.getArgList().size());
         } catch (ParseException e) {
             usage();
             return true;
@@ -824,7 +826,7 @@ public class ZMailboxUtil implements DebugListener {
         String headerFormat = String.format("%%%d.%ds  %%10.10s  %%4s   %%-20.20s  %%-50.50s  %%s%%n", width, width);
         //String headerFormat = String.format("%10.10s  %-20.20s  %-50.50s  %-6.6s  %s%n");
         
-        String itemFormat = String.format("%%%d.%ds. %%10.10s  %%4s    %%-20.20s  %%-50.50s  %%tD %%<tR%%n", width, width);
+        String itemFormat = String.format(  "%%%d.%ds. %%10.10s  %%4s   %%-20.20s  %%-50.50s  %%tD %%<tR%%n", width, width);
         //String itemFormat = "%10.10s  %-20.20s  %-50.50s  %-6.6s  %tD %5$tR%n";
 
         System.out.format(headerFormat, "", "Id", "Type", "From", "Subject", "Date");
@@ -953,27 +955,107 @@ public class ZMailboxUtil implements DebugListener {
         if (verboseOpt()) {
             System.out.println(conv);
         } else {
+            
+            int first = 1;
+            int last = first + conv.getMessageCount();
+            int width = colWidth(last);
 
+            mIndexToId.clear();
+            
             System.out.format("%nSubject: %s%nTags: %s%nFlags: %s%nNumber-of-Messages: %d%n%n",
                     conv.getSubject(), conv.getTagIds(), conv.getFlags(), conv.getMessageCount());
             
-            System.out.format("%10.10s  %-12.12s  %-50.50s  %s%n", 
-                    "Id", "Sender", "Fragment", "Date");
-            System.out.format("%10.10s  %-12.12s  %-50.50s  %s%n", 
-                    "----------", "------------", "--------------------------------------------------", "--------------");
+            if (conv.getMessageCount() == 0) return;
+
+            String headerFormat = String.format("%%%d.%ds  %%10.10s  %%-15.15s  %%-50.50s  %%s%%n", width, width); 
+            String itemFormat   = String.format("%%%d.%ds. %%10.10s  %%-15.15s  %%-50.50s  %%tD %%<tR%%n", width, width); 
+            System.out.format(headerFormat, "","Id", "Sender", "Fragment", "Date");
+            System.out.format(headerFormat, "", "----------", "---------------", "--------------------------------------------------", "--------------");
+            int i = first;
             for (ZMessageSummary ms : conv.getMessageSummaries()) {
-                System.out.format("%10.10s  %-12.12s  %-50.50s  %tD %4$tR%n", 
-                        ms.getId(), ms.getSender().getDisplay(), ms.getFragment(), ms.getDate());
+                System.out.format(itemFormat,
+                        i, ms.getId(), ms.getSender().getDisplay(), ms.getFragment(), ms.getDate());
+                mIndexToId.put(i++, ms.getId());
             }
             System.out.println();
         }
     }        
 
+    private static int addEmail(StringBuilder sb, String email, int line) {
+        if (sb.length() > 0) { sb.append(','); line++; }
+        if (line > 76) { sb.append("\n"); line = 1; }
+        if (sb.length() > 0) { sb.append(' '); line++; }
+        if (line > 20 && (line + email.length() > 76)) {
+            sb.append("\n ");
+            line = 1;
+        }
+        sb.append(email);
+        line += email.length();
+        return line;
+    }
+    
+    public static String formatEmail(ZEmailAddress e) {
+        String p = e.getPersonal();
+        String a = e.getAddress();
+        if (a == null) a = "";
+        if (p == null)
+            return String.format("<%s>", a);
+        else 
+            return String.format("%s <%s>", p, a);
+    }
+    
+    public static String formatEmail(List<ZEmailAddress> list, String type, int used) {
+        if (list == null || list.size() == 0) return "";
+        
+        StringBuilder sb = new StringBuilder();
+        
+        for (ZEmailAddress e: list) {
+            if (e.getType().equalsIgnoreCase(type)) {
+                String fe = formatEmail(e);
+                used = addEmail(sb, fe, used);
+            }
+        }
+        return sb.toString();
+    }
+    
+    private void doHeader(List<ZEmailAddress> list, String hdrName, String addrType) {
+        String val = formatEmail(list, addrType, hdrName.length()+2);
+        if (val == null || val.length() == 0) return;
+        System.out.format("%s: %s%n", hdrName, val);
+    }
+    
     private void doGetMessage(String[] args) throws ServiceException {
         ZMessage msg = mMbox.getMessage(id(args[0]), true, false, false, null, null); // TODO: optionally pass in these args
-        System.out.println(msg);
+        if (verboseOpt()) {
+            System.out.println(msg);
+        } else {
+            System.out.format("Subject: %s%n", msg.getSubject());
+            doHeader(msg.getEmailAddresses(), "From", ZEmailAddress.EMAIL_TYPE_FROM);
+            doHeader(msg.getEmailAddresses(), "To", ZEmailAddress.EMAIL_TYPE_TO);
+            doHeader(msg.getEmailAddresses(), "Cc", ZEmailAddress.EMAIL_TYPE_CC);
+            System.out.format("Date: %s\n", DateUtil.toRFC822Date(new Date(msg.getReceivedDate())));
+            System.out.format("Tags: %s%nFlags: %s%nSize: %d%n",
+                    msg.getTagIds(), msg.getFlags(), msg.getSize());
+            System.out.println();
+            if (dumpBody(msg.getMimeStructure()))
+                System.out.println();
+        }
     }        
     
+    private boolean dumpBody(ZMimePart mp) {
+        if (mp == null) return false;
+        
+        if (mp.isBody()) {
+            System.out.println(mp.getContent());
+            return true;
+        } else {
+            for (ZMimePart child : mp.getChildren()) {
+                if (dumpBody(child)) return true;
+            }
+        }
+        return false;
+    }
+
     private void doModifyContact(String[] args) throws ServiceException, ArgException {
         ZContact mc = mMbox.modifyContact(id(args[0]),  mCommandLine.hasOption('r'), getMap(args, 1));
         System.out.println(mc.getId());

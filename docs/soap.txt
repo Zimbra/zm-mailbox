@@ -554,7 +554,9 @@ Email addresses:
  <e [t="{type}"] [id="{email-id}"|ref="{email-id}"] p="{personal-name}" 
     a="{email-address}" d="{display-name}">{content}</e>
    
-   {type} = (f)rom, t(o), c(c). Type is only sent when an individual message message is returned. In the
+   {type} = (f)rom, t(o), c(c), (s)ender, (r)eply-to, b(cc)
+   
+   			Type is only sent when an individual message message is returned. In the
             list of conversations, all the email addresseses returned for a conversation are a subset
             of the participants. In the list of messages in a converstation, the email addressses are
             the senders. 

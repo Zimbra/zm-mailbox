@@ -94,6 +94,10 @@ public class DateUtil {
       return result;
     }
 
+    public static String toRFC822Date(Date date) {
+        return new MailDateFormat().format(date);
+    }
+    
     public static Date parseRFC2822Date(String encoded, Date fallback) {
         if (encoded == null)
             return fallback;

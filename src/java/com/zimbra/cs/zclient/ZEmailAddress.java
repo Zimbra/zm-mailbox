@@ -27,8 +27,15 @@ package com.zimbra.cs.zclient;
 
 public interface ZEmailAddress {
     
+    public static final String EMAIL_TYPE_BCC = "b";
+    public static final String EMAIL_TYPE_CC = "c";
+    public static final String EMAIL_TYPE_FROM = "f";
+    public static final String EMAIL_TYPE_SENDER = "s";
+    public static final String EMAIL_TYPE_TO = "t";
+    public static final String EMAIL_TYPE_REPLY_TO = "r";
+    
     /**
-     * (f)rom, t(o), c(c). Type is only sent when an individual message message is returned. In the
+     * (f)rom, t(o), c(c), (s)ender, (r)eply-to, b(cc). Type is only sent when an individual message message is returned. In the
      * list of conversations, all the email addresseses returned for a conversation are a subset
      * of the participants. In the list of messages in a converstation, the email addressses are
      * the senders. 
