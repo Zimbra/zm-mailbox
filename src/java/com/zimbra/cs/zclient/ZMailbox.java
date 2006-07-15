@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.zclient;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +47,7 @@ public abstract class ZMailbox {
             try {
                 return SearchSortBy.valueOf(s);
             } catch (IllegalArgumentException e) {
-                throw SoapFaultException.CLIENT_ERROR("invalid sortBy: "+s, e);
+                throw SoapFaultException.CLIENT_ERROR("invalid sortBy: "+s+", valid values: "+Arrays.asList(SearchSortBy.values()), e); 
             }
         }
    }
@@ -147,7 +148,7 @@ public abstract class ZMailbox {
              try {
                  return ContactSortBy.valueOf(s);
              } catch (IllegalArgumentException e) {
-                 throw SoapFaultException.CLIENT_ERROR("invalid sortBy: "+s, e);
+                 throw SoapFaultException.CLIENT_ERROR("invalid sortBy: "+s+", valid values: "+Arrays.asList(ContactSortBy.values()), e);                  
              }
          }
     }

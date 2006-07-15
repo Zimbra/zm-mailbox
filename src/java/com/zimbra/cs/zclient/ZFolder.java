@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.zclient;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.zimbra.cs.service.ServiceException;
@@ -58,7 +59,7 @@ public interface ZFolder {
             try {
                 return Color.valueOf(s);
             } catch (IllegalArgumentException e) {
-                throw SoapFaultException.CLIENT_ERROR("invalid color: "+s, e);
+                throw SoapFaultException.CLIENT_ERROR("invalid color: "+s+", valid values: "+Arrays.asList(Color.values()), e);
             }
         }
 
@@ -77,7 +78,7 @@ public interface ZFolder {
             try {
                 return View.valueOf(s);
             } catch (IllegalArgumentException e) {
-                throw SoapFaultException.CLIENT_ERROR("invalid view: "+s, e);
+                throw SoapFaultException.CLIENT_ERROR("invalid view: "+s+", valid values: "+Arrays.asList(View.values()), e);                
             }
         }
     }

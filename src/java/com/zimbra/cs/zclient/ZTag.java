@@ -24,6 +24,8 @@
  */
 package com.zimbra.cs.zclient;
 
+import java.util.Arrays;
+
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.SoapFaultException;
 
@@ -53,7 +55,7 @@ public interface ZTag extends Comparable {
             try {
                 return Color.valueOf(s);
             } catch (IllegalArgumentException e) {
-                throw SoapFaultException.CLIENT_ERROR("invalid color: "+s, e);
+                throw SoapFaultException.CLIENT_ERROR("invalid color: "+s+", valid values: "+Arrays.asList(Color.values()), e);
             }
         }
 
