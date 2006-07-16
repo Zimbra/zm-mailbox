@@ -46,6 +46,7 @@ public abstract class SoapTransport {
     private boolean mPrettyPrint;
     private String mAuthToken;
     private String mTargetAcctId = null;
+    private String mTargetAcctName = null;    
     private String mSessionId = null;
     private long mMaxNotifySeq = -1;
     private Element mContext = null;
@@ -91,7 +92,11 @@ public abstract class SoapTransport {
     }
     
     public void setTargetAcctId(String acctId) {
-    	mTargetAcctId = acctId;
+        mTargetAcctId = acctId;
+    }
+    
+    public void setTargetAcctName(String acctName) {
+        mTargetAcctName = acctName;
     }
     
     public String getAuthToken() {
@@ -147,7 +152,7 @@ public abstract class SoapTransport {
     		return SoapProtocol.toString(document, mPrettyPrint);
         }
         
-        Element context = ZimbraSoapContext.toCtxt(mSoapProto, mAuthToken, mTargetAcctId, noSession);
+        Element context = ZimbraSoapContext.toCtxt(mSoapProto, mAuthToken, mTargetAcctId, mTargetAcctName, noSession);
         ZimbraSoapContext.addSessionToCtxt(context, mSessionId, noNotify);
         if (mUserAgentName != null) {
             ZimbraSoapContext.addUserAgentToCtxt(context, mUserAgentName, mUserAgentVersion);

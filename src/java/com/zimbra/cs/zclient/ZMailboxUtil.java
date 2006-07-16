@@ -49,6 +49,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -62,7 +63,6 @@ import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 import com.zimbra.cs.zclient.ZTag.Color;
-import com.zimbra.cs.zclient.soap.ZSoapMailbox;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapTransport.DebugListener;
@@ -75,9 +75,18 @@ public class ZMailboxUtil implements DebugListener {
     private boolean mInteractive = false;
     private boolean mGlobalVerbose = false;
     private boolean mDebug = false;
-    private String mAccount = null;
+    private String mAccountName = null;
     private String mPassword = null;
+    private ZAccount mAccount = null;
     private String mUrl = "http://localhost";
+    
+    private Map<String,Command> mCommandIndex;
+    private ZMailbox mMbox;
+    private String mPrompt = "mbox> ";
+    ZSearchParams mSearchParams;
+    ZSearchResult mSearchResult;
+    ZSearchParams mConvSearchParams;    
+    ZSearchResult mConvSearchResult;    
     
     /** current command */
     private Command mCommand;
@@ -92,7 +101,7 @@ public class ZMailboxUtil implements DebugListener {
     
     public void setVerbose(boolean verbose) { mGlobalVerbose = verbose; }
     
-    public void setAccount(String account) { mAccount = account; }
+    public void setAccount(String account) { mAccountName = account; }
 
     public void setPassword(String password) { mPassword = password; }
     
@@ -302,14 +311,6 @@ public class ZMailboxUtil implements DebugListener {
         
     }
     
-    private Map<String,Command> mCommandIndex;
-    private ZMailbox mMbox;
-    private String mPrompt = "mbox> ";
-    ZSearchParams mSearchParams;
-    ZSearchResult mSearchResult;
-    ZSearchParams mConvSearchParams;    
-    ZSearchResult mConvSearchResult;    
-    
     private boolean isId(String value) {
         return (value.length() == 36 &&
                 value.charAt(8) == '-' &&
@@ -347,8 +348,9 @@ public class ZMailboxUtil implements DebugListener {
     }
     
     public void initMailbox() throws ServiceException, IOException {
-        mMbox = ZSoapMailbox.getMailbox(mAccount, mPassword, mUrl, mDebug ? this : null);
-        mPrompt = String.format("mbox %s> ", mAccount);
+        mAccount = ZAccount.getAccount(mAccountName, AccountBy.name, mPassword, mUrl, mDebug ? this : null); 
+        mMbox = mAccount.getMailbox();
+        mPrompt = String.format("mbox %s> ", mAccountName);
     }
     
     private ZTag lookupTag(String idOrName) throws SoapFaultException {
@@ -1050,7 +1052,7 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doGetAllContacts(String[] args) throws ServiceException {
-        dumpAllContacts(mMbox.getAllContacts(lookupFolderId(folderOpt()), null, true, getList(args, 0))); 
+        dumpContacts(mMbox.getAllContacts(lookupFolderId(folderOpt()), null, true, getList(args, 0))); 
     }        
 
     private void doGetContacts(String[] args) throws ServiceException, ArgException {

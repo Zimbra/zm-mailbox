@@ -541,13 +541,13 @@ public class ZimbraSoapContext {
      * @param authToken  The serialized authorization token for the user.
      * @param noSession  Whether to suppress the default new session creation.
      * @return A new <code>context</code> Element in the appropriate markup. */
-	static Element toCtxt(SoapProtocol protocol, String authToken, String targetAccountId, boolean noSession) {
+	static Element toCtxt(SoapProtocol protocol, String authToken, String targetAccountId, String targetAccountName, boolean noSession) {
 		Element ctxt = toCtxt(protocol, authToken, noSession);
 
-		if (targetAccountId != null) {
+		if (targetAccountId != null || targetAccountName != null) {
 			Element acctElt = ctxt.addUniqueElement(E_ACCOUNT);
-			acctElt.addAttribute(A_BY, "id");
-			acctElt.setText(targetAccountId);
+			acctElt.addAttribute(A_BY, targetAccountId != null ? "id" : "name");
+			acctElt.setText(targetAccountId != null ? targetAccountId : targetAccountName);
 		}
 		
 		return ctxt;

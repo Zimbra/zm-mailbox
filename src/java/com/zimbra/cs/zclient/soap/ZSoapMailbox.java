@@ -32,17 +32,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZConversation;
 import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMountpoint;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.cs.zclient.ZMountpoint;
 import com.zimbra.cs.zclient.ZSearchFolder;
 import com.zimbra.cs.zclient.ZSearchParams;
 import com.zimbra.cs.zclient.ZSearchResult;
@@ -60,8 +57,6 @@ import com.zimbra.soap.Element.XMLElement;
 public class ZSoapMailbox extends ZMailbox {
 
     private String mAuthToken;
-    private long mAuthTokenLifetime;
-    private long mAuthTokenExpiration;
     private SoapHttpTransport mTransport;
 
     private Map<String, ZSoapTag> mNameToTag;
@@ -87,21 +82,6 @@ public class ZSoapMailbox extends ZMailbox {
         if (mAuthToken != null)
             mTransport.setAuthToken(mAuthToken);
     }    
-
-    void authRequest(String key, AccountBy by, String password) throws ServiceException {
-        if (mTransport == null) throw SoapFaultException.CLIENT_ERROR("must call setURI before calling adminAuthenticate", null);
-        XMLElement req = new XMLElement(AccountService.AUTH_REQUEST);
-        Element account = req.addElement(AccountService.E_ACCOUNT);
-        account.addAttribute(AccountService.A_BY, by.name());
-        account.setText(key);
-        req.addElement(AccountService.E_PASSWORD).setText(password);
-        Element response = invoke(req);
-        mAuthToken = response.getElement(AccountService.E_AUTH_TOKEN).getText();
-        mAuthTokenLifetime = response.getAttributeLong(AccountService.E_LIFETIME);
-        mAuthTokenExpiration = System.currentTimeMillis() + mAuthTokenLifetime;
-        mTransport.setAuthToken(mAuthToken);
-        // TODO: handle <refer>
-    }
 
     synchronized Element invoke(Element request) throws ServiceException {
         try {
@@ -225,15 +205,12 @@ public class ZSoapMailbox extends ZMailbox {
         mUserRoot = new ZSoapFolder(folderEl, null, this);
     }
 
-    public static ZMailbox getMailbox(String accountName, String password, String uri) throws ServiceException {
-        return getMailbox(accountName, password, uri, null);
-    }
-
-    public static ZMailbox getMailbox(String accountName, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
+    static ZMailbox getMailbox(String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
         ZSoapMailbox zmbx = new ZSoapMailbox();
         zmbx.setSoapURI(uri);
         if (listener != null) zmbx.mTransport.setDebugListener(listener);
-        zmbx.authRequest(accountName, AccountBy.name, password);
+        zmbx.mTransport.setAuthToken(authToken);
+        zmbx.noOp();
         return zmbx;
     }
     
@@ -658,58 +635,6 @@ public class ZSoapMailbox extends ZMailbox {
         return new ZSoapConversation(invoke(req).getElement(MailService.E_CONV), cache);
     }
 
-    public static void main(String args[]) throws ServiceException {
-        Zimbra.toolSetup();
-        ZMailbox mbox = getMailbox("user1", "test123", "http://localhost:7070/service/soap");
-        System.out.println(mbox.getSize());
-        System.out.println(mbox.getAllTags());
-        System.out.println(mbox.getUserRoot());
-        ZSearchParams sp = new ZSearchParams("my pictures");
-        //ZSearchParams sp = new ZSearchParams("in:inbox");        
-        sp.setLimit(20);
-        sp.setTypes(ZSearchParams.TYPE_CONVERSATION);
-        System.out.println(mbox.search(sp));
-        System.out.println(mbox.searchConversation("346", sp));
-        
-        ZFolder inbox = mbox.getFolderByPath("/inBOX");
-        System.out.println(inbox);
-        System.out.println(mbox.getFolderById(inbox.getId()));
-        mbox.markFolderRead(inbox.getId());
-        mbox.modifyFolderChecked(inbox.getId(), true);
-        mbox.modifyFolderChecked(inbox.getId(), false);        
-        mbox.modifyFolderColor(inbox.getId(), ZFolder.Color.blue);
-        ZFolder dork = mbox.createFolder(inbox.getId(), "dork", ZFolder.View.message, null, null);
-        System.out.println("---------- created dork -----------");                
-        System.out.println(dork);
-        System.out.println(inbox);
-        mbox.deleteFolder(dork.getId());
-        System.out.println("---------- deleted dork -----------");
-        System.out.println(inbox);
-        ZTag zippy = mbox.createTag("zippy", Color.purple);
-        System.out.println(zippy);
-        System.out.println(mbox.modifyTagColor(zippy.getId(), Color.orange));
-        System.out.println(mbox.markTagRead(zippy.getId()));
-        System.out.println(mbox.renameTag(zippy.getId(), "zippy2"));
-        System.out.println(mbox.getAllTags());
-        System.out.println(mbox.deleteTag(zippy.getId()));
-        System.out.println(mbox.getAllTags());        
-        ZSearchFolder flagged = mbox.createSearchFolder(mbox.getUserRoot().getId(), "is-it-flagged", "is:flagged", null, null, null);
-        System.out.println(flagged);
-        System.out.println(mbox.renameFolder(flagged.getId(), "flagged-and-unread"));        
-        System.out.println(mbox.modifyFolderColor(flagged.getId(), ZFolder.Color.red));
-        System.out.println(mbox.modifySearchFolder(flagged.getId(), "is:flagged is:unread", null, SearchSortBy.dateAsc));
-        
-        mbox.deleteFolder(flagged.getId());
-        mbox.noOp();        
-        System.out.println(mbox.flagConversation("346", false, null));
-        System.out.println(mbox.getConversation("346"));
-        System.out.println(mbox.getMessage("375", false, false, false, null, null));
-        //ZLink user2 = mbox.createMountpoint(mbox.getUserRoot(), "user2", ZFolder.VIEW_APPOINTMENT, OwnerBy.BY_NAME, "user2", SharedItemBy.BY_PATH, "/Calendar");
-        //System.out.println(user2);        
-        //mbox.deleteItem(user2.getId(), null);
-
-    }
-
     @Override
     public ZMessage getMessage(String id, boolean markRead, boolean defangedHtml, boolean rawContent, String part, String subId) throws ServiceException {
         XMLElement req = new XMLElement(MailService.GET_MSG_REQUEST);
@@ -844,7 +769,7 @@ public class ZSoapMailbox extends ZMailbox {
  <SearchCalendarResourcesRequest
  <ModifyPrefsRequest>
  
- *<SearchRequest>  - TODO: partially done
+ *<SearchRequest>
  *<SearchConvRequest>
  
  <BrowseRequest browseBy="{browse-by}"/>
