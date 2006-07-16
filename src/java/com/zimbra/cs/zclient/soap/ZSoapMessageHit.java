@@ -56,8 +56,10 @@ class ZSoapMessageHit implements ZMessageHit {
         mFlags = e.getAttribute(MailService.A_FLAGS, null);
         mDate = e.getAttributeLong(MailService.A_DATE);
         mTags = e.getAttribute(MailService.A_TAGS, null);
-        mFragment = e.getElement(MailService.E_FRAG).getText();
-        mSubject = e.getElement(MailService.E_SUBJECT).getText();        
+        Element fr = e.getOptionalElement(MailService.E_FRAG);
+        if (fr != null) mFragment = fr.getText();
+        Element sub = e.getOptionalElement(MailService.E_SUBJECT);
+        mSubject =sub.getText();        
         mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);
         mSize = (int) e.getAttributeLong(MailService.A_SIZE);
         mConvId = e.getAttribute(MailService.A_CONV_ID);
