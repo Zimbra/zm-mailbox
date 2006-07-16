@@ -140,4 +140,12 @@ class ZSoapMessageHit implements ZMessageHit {
     public long getSize() {
         return mSize;
     }
+
+    public boolean hasFlags() {
+        return mFlags != null && mFlags.length() > 0;
+    }
+
+    public boolean hasTags() {
+        return mTags != null && mTags.length() > 0;
+    }
 }

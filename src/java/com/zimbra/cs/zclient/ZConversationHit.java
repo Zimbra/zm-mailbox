@@ -44,6 +44,10 @@ public interface ZConversationHit extends ZSearchHit {
     
     public String getFlags();
     
+    public boolean hasFlags();
+    
+    public boolean hasTags();
+    
     public String getSubject();
     
     public String getFragment();

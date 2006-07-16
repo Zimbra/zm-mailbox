@@ -74,6 +74,10 @@ public interface ZConversation  {
     
     public String getFlags();
     
+    public boolean hasFlags();
+    
+    public boolean hasTags();
+
     public String getSubject();
     
     public int getMessageCount();

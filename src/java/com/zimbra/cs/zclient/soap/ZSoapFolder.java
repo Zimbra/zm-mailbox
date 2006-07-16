@@ -234,6 +234,10 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
             }
         }
         return null;
+    }
+
+    public boolean hasFlags() {
+        return mFlags != null && mFlags.length() > 0;
     }    
 
 }

@@ -73,6 +73,8 @@ public interface ZMountpoint {
     public String getDefaultView();
     
     public String getFlags();
+    
+    public boolean hasFlags();
 
     public int getColor();
 

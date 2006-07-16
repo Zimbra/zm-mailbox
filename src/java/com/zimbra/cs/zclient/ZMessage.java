@@ -76,6 +76,10 @@ public interface ZMessage  {
     
     public String getFlags();
     
+    public boolean hasFlags();
+    
+    public boolean hasTags();
+    
     public String getSubject();
     
     public String getFolderId();

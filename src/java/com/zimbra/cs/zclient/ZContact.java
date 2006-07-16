@@ -25,10 +25,78 @@
 
 package com.zimbra.cs.zclient;
 
+import java.util.Arrays;
 import java.util.Map;
+
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.SoapFaultException;
 
 public interface ZContact  {
     
+    public enum Attr {
+
+        assitantPhone,
+        birthday,
+        callbackPhone,
+        carPhone,
+        company,
+        companyPhone,
+        description,
+        department,
+        email,
+        email2,
+        email3,
+        fileAs,
+        firstName,
+        fullName,
+        homeCity,
+        homeCountry,
+        homeFax,
+        homePhone,
+        homePhone2,
+        homePostalCode,
+        homeState,
+        homeStreet,
+        homeURL,
+        initials,
+        jobTitle,
+        lastName,
+        middleName,
+        mobilePhone,
+        namePrefix,
+        nameSuffix,
+        nickname,
+        notes,
+        office,
+        otherCity,
+        otherCountry,
+        otherFax,
+        otherPhone,
+        otherPostalCode,
+        otherState,
+        otherStreet,
+        otherURL,
+        pager,
+        workCity,
+        workCountry,
+        workFax,
+        workPhone,
+        workPhone2,
+        workPostalCode,
+        workState,
+        workStreet,
+        workURL;
+
+        public static Attr fromString(String s) throws ServiceException {
+            try {
+                return Attr.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw SoapFaultException.CLIENT_ERROR("invalid attr: "+s+", valid values: "+Arrays.asList(Attr.values()), e);
+            }
+        }
+
+    }
+
     public enum Flag {
         flagged('f'),
         attachment('a');
@@ -65,6 +133,10 @@ public interface ZContact  {
     public String getTagIds();
     
     public String getFlags();
+    
+    public boolean hasFlags();
+    
+    public boolean hasTags();
     
     public String getFolderId();
 

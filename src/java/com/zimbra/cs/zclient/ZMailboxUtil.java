@@ -49,7 +49,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -165,6 +164,7 @@ public class ZMailboxUtil implements DebugListener {
     private static Option O_CURRENT = new Option("c", "current", false, "current page of search results");    
     private static Option O_FLAGS = new Option("F", "flags", true, "flags");
     private static Option O_FOLDER = new Option("f", "folder", true, "folder-path-or-id");
+    private static Option O_IGNORE = new Option("i", "ignore", false, "ignore unknown contact attrs");            
     private static Option O_LIMIT = new Option("l", "limit", true, "max number of results to return");
     private static Option O_NEXT = new Option("n", "next", false, "next page of search results");    
     private static Option O_PREVIOUS = new Option("p", "previous", false,  "previous page of search results");
@@ -177,7 +177,7 @@ public class ZMailboxUtil implements DebugListener {
     
     enum Command {
         
-        CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER),        
+        CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER, O_IGNORE),        
         CREATE_FOLDER("createFolder", "cf", "{folder-name}", "create folder", Category.FOLDER, 1, 1, O_VIEW, O_COLOR, O_FLAGS),
         CREATE_MOUNTPOINT("createMountpoint", "cm", "{folder-name} {owner-id-or-name} {remote-item-id-or-path}", "create mountpoint", Category.FOLDER, 3, 3, O_VIEW, O_COLOR, O_FLAGS),
         CREATE_SEARCH_FOLDER("createSearchFolder", "csf", "{folder-name} {query}", "create search folder", Category.FOLDER, 2, 2, O_SORT, O_TYPES, O_COLOR),        
@@ -210,7 +210,7 @@ public class ZMailboxUtil implements DebugListener {
         MARK_MESSAGE_READ("markMessageRead", "mmr", "{msg-ids} [0|1*]", "mark message(s) as read/unread", Category.MESSAGE, 1, 2),
         MARK_MESSAGE_SPAM("markMessageSpam", "mms", "{msg} [0|1*] [{dest-folder-path}]", "mark a message as spam/not-spam, and optionally move", Category.MESSAGE, 1, 3),
         MARK_TAG_READ("markTagRead", "mtr", "{tag-name}", "mark all items with this tag as read", Category.TAG, 1, 1),
-        MODIFY_CONTACT("modifyContactAttrs", "mcta", "{contact-id} [attr1 value1 [attr2 value2...]]", "modify a contact", Category.CONTACT, 3, Integer.MAX_VALUE, O_REPLACE),
+        MODIFY_CONTACT("modifyContactAttrs", "mcta", "{contact-id} [attr1 value1 [attr2 value2...]]", "modify a contact", Category.CONTACT, 3, Integer.MAX_VALUE, O_REPLACE, O_IGNORE),
         MODIFY_FOLDER_CHECKED("modifyFolderChecked", "mfch", "{folder-path} [0|1*]", "modify whether a folder is checked in the UI", Category.FOLDER, 1, 2),
         MODIFY_FOLDER_COLOR("modifyFolderColor", "mfc", "{folder-path} {new-color}", "modify a folder's color", Category.FOLDER, 2, 2),
         MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", "change whether folder is excluded from free-busy", Category.FOLDER, 1, 2),        
@@ -490,6 +490,8 @@ public class ZMailboxUtil implements DebugListener {
 
     private boolean replaceOpt() { return mCommandLine.hasOption(O_REPLACE.getOpt()); }
     
+    private boolean ignoreOpt() { return mCommandLine.hasOption(O_IGNORE.getOpt()); }    
+    
     private boolean verboseOpt() { return mCommandLine.hasOption(O_VERBOSE.getOpt()); }
     
     private boolean currrentOpt() { return mCommandLine.hasOption(O_CURRENT.getOpt()); }
@@ -530,7 +532,7 @@ public class ZMailboxUtil implements DebugListener {
         
         switch(mCommand) {
         case CREATE_CONTACT:
-            ZContact cc = mMbox.createContact(lookupFolderId(folderOpt()), null, getMap(args, 0));
+            ZContact cc = mMbox.createContact(lookupFolderId(folderOpt()), null, getContactMap(args, 0, !ignoreOpt()));
             System.out.println(cc.getId());
             break;
         case CREATE_FOLDER:
@@ -1020,9 +1022,8 @@ public class ZMailboxUtil implements DebugListener {
     private void doGetAllFolders(String[] args) throws ServiceException {
         doDumpFolder(mMbox.getUserRoot(), verboseOpt(), true);
     }        
-
     
-    private void dumpContacts(List<ZContact> contacts) throws ServiceException {
+    private void dumpAllContacts(List<ZContact> contacts) throws ServiceException {
         if (verboseOpt()) {
             System.out.println(contacts);
         } else {
@@ -1036,13 +1037,24 @@ public class ZMailboxUtil implements DebugListener {
             }
         }
     }
+    
+    private void dumpContacts(List<ZContact> contacts) throws ServiceException {
+        if (verboseOpt()) {
+            System.out.println(contacts);
+        } else {
+            if (contacts.size() == 0) return;            
+            for (ZContact cn: contacts) {
+                dumpContact(cn);
+            }
+        }
+    }
 
     private void doGetAllContacts(String[] args) throws ServiceException {
-        dumpContacts(mMbox.getAllContacts(lookupFolderId(folderOpt()), null, true, getList(args, 0))); 
+        dumpAllContacts(mMbox.getAllContacts(lookupFolderId(folderOpt()), null, true, getList(args, 0))); 
     }        
 
     private void doGetContacts(String[] args) throws ServiceException, ArgException {
-        System.out.println(mMbox.getContacts(id(args[0]), null, true, getList(args, 1)));
+        dumpContacts(mMbox.getContacts(id(args[0]), null, true, getList(args, 1)));
     }
 
     private void doDumpMountpoints(ZFolder folder, boolean verbose, boolean recurse) {
@@ -1065,38 +1077,41 @@ public class ZMailboxUtil implements DebugListener {
         doDumpMountpoints(mMbox.getUserRoot(), verboseOpt(), true);
     }        
 
+    private void dumpConversation(ZConversation conv) throws SoapFaultException {
+        int first = 1;
+        int last = first + conv.getMessageCount();
+        int width = colWidth(last);
+
+        mIndexToId.clear();
+        
+        System.out.format("%nSubject: %s%n", conv.getSubject());
+        System.out.format("Id: %s%n", conv.getId());
+        
+        if (conv.hasTags()) System.out.format("Tags: %s%n", lookupTagNames(conv.getTagIds()));
+        if (conv.hasFlags()) System.out.format("Flags: %s%n", ZConversation.Flag.toNameList(conv.getFlags())); 
+        System.out.format("Num-Messages: %d%n%n", conv.getMessageCount());
+        
+        if (conv.getMessageCount() == 0) return;
+
+        String headerFormat = String.format("%%%d.%ds  %%10.10s  %%-15.15s  %%-50.50s  %%s%%n", width, width); 
+        String itemFormat   = String.format("%%%d.%ds. %%10.10s  %%-15.15s  %%-50.50s  %%tD %%<tR%%n", width, width); 
+        System.out.format(headerFormat, "","Id", "Sender", "Fragment", "Date");
+        System.out.format(headerFormat, "", "----------", "---------------", "--------------------------------------------------", "--------------");
+        int i = first;
+        for (ZMessageSummary ms : conv.getMessageSummaries()) {
+            System.out.format(itemFormat,
+                    i, ms.getId(), ms.getSender().getDisplay(), ms.getFragment(), ms.getDate());
+            mIndexToId.put(i++, ms.getId());
+        }
+        System.out.println();
+    }
+
     private void doGetConversation(String[] args) throws ServiceException {
         ZConversation conv = mMbox.getConversation(id(args[0]));
         if (verboseOpt()) {
             System.out.println(conv);
         } else {
-            
-            int first = 1;
-            int last = first + conv.getMessageCount();
-            int width = colWidth(last);
-
-            mIndexToId.clear();
-            
-            System.out.format("%nSubject: %s%n", conv.getSubject());
-            System.out.format("Id: %s%n", conv.getId());
-            
-            if (conv.getTagIds() != null) System.out.format("Tags: %s%n", lookupTagNames(conv.getTagIds()));
-            if (conv.getFlags() != null) System.out.format("Flags: %s%n", ZConversation.Flag.toNameList(conv.getFlags())); 
-            System.out.format("Num-Messages: %d%n%n", conv.getMessageCount());
-            
-            if (conv.getMessageCount() == 0) return;
-
-            String headerFormat = String.format("%%%d.%ds  %%10.10s  %%-15.15s  %%-50.50s  %%s%%n", width, width); 
-            String itemFormat   = String.format("%%%d.%ds. %%10.10s  %%-15.15s  %%-50.50s  %%tD %%<tR%%n", width, width); 
-            System.out.format(headerFormat, "","Id", "Sender", "Fragment", "Date");
-            System.out.format(headerFormat, "", "----------", "---------------", "--------------------------------------------------", "--------------");
-            int i = first;
-            for (ZMessageSummary ms : conv.getMessageSummaries()) {
-                System.out.format(itemFormat,
-                        i, ms.getId(), ms.getSender().getDisplay(), ms.getFragment(), ms.getDate());
-                mIndexToId.put(i++, ms.getId());
-            }
-            System.out.println();
+            dumpConversation(conv);
         }
     }        
 
@@ -1142,23 +1157,31 @@ public class ZMailboxUtil implements DebugListener {
         if (val == null || val.length() == 0) return;
         System.out.format("%s: %s%n", hdrName, val);
     }
-    
+
+    private void dumpMessage(ZMessage msg) throws SoapFaultException {
+        System.out.format("Id: %s%n", msg.getId());
+        System.out.format("Conversation-Id: %s%n", msg.getConversationId());
+        ZFolder f =  mMbox.getFolderById(msg.getFolderId());
+        System.out.format("Folder: %s%n", f == null ? msg.getFolderId() : f.getPath());
+        System.out.format("Subject: %s%n", msg.getSubject());
+        doHeader(msg.getEmailAddresses(), "From", ZEmailAddress.EMAIL_TYPE_FROM);
+        doHeader(msg.getEmailAddresses(), "To", ZEmailAddress.EMAIL_TYPE_TO);
+        doHeader(msg.getEmailAddresses(), "Cc", ZEmailAddress.EMAIL_TYPE_CC);
+        System.out.format("Date: %s\n", DateUtil.toRFC822Date(new Date(msg.getReceivedDate())));
+        if (msg.hasTags()) System.out.format("Tags: %s%n", lookupTagNames(msg.getTagIds()));
+        if (msg.hasFlags()) System.out.format("Flags: %s%n", ZMessage.Flag.toNameList(msg.getFlags())); 
+        System.out.format("Size: %d%n", msg.getSize());
+        System.out.println();
+        if (dumpBody(msg.getMimeStructure()))
+            System.out.println();
+    }
+
     private void doGetMessage(String[] args) throws ServiceException {
         ZMessage msg = mMbox.getMessage(id(args[0]), true, false, false, null, null); // TODO: optionally pass in these args
         if (verboseOpt()) {
             System.out.println(msg);
         } else {
-            System.out.format("Subject: %s%n", msg.getSubject());
-            doHeader(msg.getEmailAddresses(), "From", ZEmailAddress.EMAIL_TYPE_FROM);
-            doHeader(msg.getEmailAddresses(), "To", ZEmailAddress.EMAIL_TYPE_TO);
-            doHeader(msg.getEmailAddresses(), "Cc", ZEmailAddress.EMAIL_TYPE_CC);
-            System.out.format("Date: %s\n", DateUtil.toRFC822Date(new Date(msg.getReceivedDate())));
-            if (msg.getTagIds() != null) System.out.format("Tags: %s%n", lookupTagNames(msg.getTagIds()));
-            if (msg.getFlags() != null) System.out.format("Flags: %s%n", ZMessage.Flag.toNameList(msg.getFlags())); 
-            System.out.format("Size: %d%n", msg.getSize());
-            System.out.println();
-            if (dumpBody(msg.getMimeStructure()))
-                System.out.println();
+            dumpMessage(msg);
         }
     }        
     
@@ -1177,14 +1200,23 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doModifyContact(String[] args) throws ServiceException, ArgException {
-        ZContact mc = mMbox.modifyContact(id(args[0]),  mCommandLine.hasOption('r'), getMap(args, 1));
+        ZContact mc = mMbox.modifyContact(id(args[0]),  mCommandLine.hasOption('r'), getContactMap(args, 1, !ignoreOpt()));
         System.out.println(mc.getId());
     }
 
-    private void dumpContact(GalContact contact) throws ServiceException {
-        System.out.println("# name "+contact.getId());
-        Map<String, Object> attrs = contact.getAttrs();
-        dumpAttrs(attrs);
+    private void dumpContact(ZContact contact) throws ServiceException {
+        System.out.format("Id: %s%n", contact.getId());
+        ZFolder f =  mMbox.getFolderById(contact.getFolderId());
+        System.out.format("Folder: %s%n", f == null ? contact.getFolderId() : f.getPath());
+        System.out.format("Date: %tD %<tR%n", contact.getMetaDataChangedDate());
+        if (contact.hasTags()) System.out.format("Tags: %s%n", lookupTagNames(contact.getTagIds()));
+        if (contact.hasFlags()) System.out.format("Flags: %s%n", ZContact.Flag.toNameList(contact.getFlags())); 
+        System.out.format("Revision: %s%n", contact.getRevision());
+        System.out.format("Attrs:%n");
+        Map<String, String> attrs = contact.getAttrs();
+        for (Map.Entry<String, String> entry : attrs.entrySet()) {
+            System.out.format("  %s: %s%n", entry.getKey(), entry.getValue());
+        }
         System.out.println();
     }
     
@@ -1205,6 +1237,16 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
+    private Map<String, String> getContactMap(String[] args, int offset, boolean validate) throws ArgException, ServiceException {
+        Map<String, String> result = getMap(args, offset);
+        if (validate) {
+            for (String name : result.keySet()) {
+                ZContact.Attr.fromString(name);
+            }
+        }
+        return result;
+    }
+    
     private Map<String, String> getMap(String[] args, int offset) throws ArgException {
         Map<String, String> attrs = new HashMap<String, String>();
         for (int i = offset; i < args.length; i+=2) {

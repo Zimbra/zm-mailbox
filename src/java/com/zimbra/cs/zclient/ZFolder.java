@@ -162,6 +162,8 @@ public interface ZFolder {
      */
     public String getFlags();
 
+    public boolean hasFlags();
+    
     /**
      * range 0-127; defaults to 0 if not present; client can display only 0-7
      * 

@@ -57,7 +57,8 @@ class ZSoapMessage implements ZMessage {
         mFlags = e.getAttribute(MailService.A_FLAGS, null);
         mTags = e.getAttribute(MailService.A_TAGS, null);
         mSubject = e.getElement(MailService.E_SUBJECT).getText();
-        mMessageIdHeader = e.getElement(MailService.E_MSG_ID_HDR).getText();
+        Element mid = e.getOptionalElement(MailService.E_MSG_ID_HDR);
+        if (mid != null) mMessageIdHeader = mid.getText();
         mReceivedDate = e.getAttributeLong(MailService.A_DATE, 0);
         mSentDate = e.getAttributeLong(MailService.A_SENT_DATE, 0);
         mFolderId = e.getAttribute(MailService.A_FOLDER);
@@ -84,6 +85,14 @@ class ZSoapMessage implements ZMessage {
 
     public String getId() {
         return mId;
+    }
+
+    public boolean hasFlags() {
+        return mFlags != null && mFlags.length() > 0;        
+    }
+
+    public boolean hasTags() {
+        return mTags != null && mTags.length() > 0;
     }
 
     ZSoapSB toString(ZSoapSB sb) {

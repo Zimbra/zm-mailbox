@@ -124,6 +124,10 @@ class ZSoapMountpoint implements ZMountpoint, ZSoapItem {
 
     public String getOwnerId() {
         return mOwnerId;
+    }
+
+    public boolean hasFlags() {
+        return mFlags != null && mFlags.length() > 0;
     }    
 
 }

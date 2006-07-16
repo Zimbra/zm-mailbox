@@ -159,4 +159,12 @@ class ZSoapConversation implements ZConversation {
         }
     }
 
+    public boolean hasFlags() {
+        return mFlags != null && mFlags.length() > 0;
+    }
+
+    public boolean hasTags() {
+        return mTags != null && mTags.length() > 0;        
+    }
+
 }

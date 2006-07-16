@@ -128,4 +128,12 @@ class ZSoapConversationHit implements ZConversationHit {
     public List<ZEmailAddress> getRecipients() {
         return mRecipients;
     }
+
+    public boolean hasFlags() {
+        return mFlags != null && mFlags.length() > 0;
+    }
+
+    public boolean hasTags() {
+        return mTags != null && mTags.length() > 0;        
+    }
 }

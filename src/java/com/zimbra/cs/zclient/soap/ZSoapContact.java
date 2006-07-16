@@ -91,7 +91,7 @@ class ZSoapContact implements ZContact, ZSoapItem {
     }
 
     public long getMetaDataChangedDate() {
-        return 0;
+        return mMetaDataChangedDate;
     }
 
     public String getRevision() {
@@ -100,6 +100,14 @@ class ZSoapContact implements ZContact, ZSoapItem {
 
     public String getTagIds() {
         return mTagIds;
+    }
+
+    public boolean hasFlags() {
+        return mFlags != null && mFlags.length() > 0;        
+    }
+
+    public boolean hasTags() {
+        return mTagIds != null && mTagIds.length() > 0;
     }
 
 }

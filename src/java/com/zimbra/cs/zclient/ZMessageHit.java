@@ -49,6 +49,10 @@ public interface ZMessageHit extends ZSearchHit {
 
     public String getSubject();
     
+    public boolean hasFlags();
+    
+    public boolean hasTags();
+    
     public String getFragment();
     
     public ZEmailAddress getSender();
