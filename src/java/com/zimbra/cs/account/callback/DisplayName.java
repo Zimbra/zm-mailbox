@@ -31,8 +31,9 @@ import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapAccount;
+import com.zimbra.cs.account.ldap.LdapDistributionList;
 import com.zimbra.cs.service.ServiceException;
-
+ 
 public class DisplayName implements AttributeCallback {
 
     /**
@@ -42,7 +43,7 @@ public class DisplayName implements AttributeCallback {
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
 
-        if (!(entry instanceof LdapAccount)) return;
+        if (!((entry instanceof LdapAccount)||(entry instanceof LdapDistributionList))) return;
         
         if (!(value instanceof String))
             throw ServiceException.INVALID_REQUEST(Provisioning.A_displayName+" is a single-valued attribute", null);

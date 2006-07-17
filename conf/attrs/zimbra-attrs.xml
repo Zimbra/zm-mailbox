@@ -125,7 +125,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr name="company" type="string" optionalIn="account" flags="domainAdminModifiable"/>
 
-<attr name="cn" type="string" optionalIn="account,alias" requiredIn="cos,server,mimeEntry,objectEntry,timeZone,zimletEntry" flags="domainAdminModifiable"/>
+<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,mimeEntry,objectEntry,timeZone,zimletEntry" flags="domainAdminModifiable"/>
 
 <attr name="displayName" type="string" optionalIn="account,distributionList" requiredIn="calendarResource" flags="accountInfo,domainAdminModifiable" callback="DisplayName"/>
 

@@ -1902,7 +1902,12 @@ public class LdapProvisioning extends Provisioning {
             if (attrs.get(Provisioning.A_zimbraMailStatus) == null) {
                 attrs.put(A_zimbraMailStatus, MAIL_STATUS_ENABLED);
             }
-
+            
+            Attribute a = attrs.get(Provisioning.A_displayName);             
+            if (a != null) {
+                attrs.put(A_cn, a.get());
+            }
+            
             String dn = emailToDN(list, domain);
             createSubcontext(ctxt, dn, attrs, "createDistributionList");
 
@@ -1912,6 +1917,8 @@ public class LdapProvisioning extends Provisioning {
 
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.DISTRIBUTION_LIST_EXISTS(listAddress);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to create distribution listt: "+listAddress, e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
