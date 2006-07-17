@@ -60,6 +60,7 @@ import javax.naming.NamingException;
 import javax.naming.SizeLimitExceededException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
+import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InvalidAttributeIdentifierException;
@@ -602,8 +603,14 @@ public class LdapProvisioning extends Provisioning {
             }
             
             // required for organizationalPerson class
-            if (attrs.get(Provisioning.A_cn) == null)
-                attrs.put(A_cn, uid);
+            if (attrs.get(Provisioning.A_cn) == null) {
+                Attribute a = attrs.get(Provisioning.A_displayName); 
+                if (a != null) {
+                    attrs.put(A_cn, a.get());
+                } else {
+                    attrs.put(A_cn, uid);
+                }
+            }
 
             // required for organizationalPerson class
             if (attrs.get(Provisioning.A_sn) == null)
