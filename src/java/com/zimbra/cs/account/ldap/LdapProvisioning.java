@@ -80,7 +80,6 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.license.ZimbraLicenseManager;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -217,11 +216,20 @@ public class LdapProvisioning extends Provisioning {
         return "cn=" + name + ",cn=mime," + CONFIG_BASE;
     }
 
-    private void checkCreateAccount() throws ServiceException {
-    	ZimbraLicenseManager licenseMgr = ZimbraLicenseManager.getInstance();
-    	if (licenseMgr == null)
-    		return;
-    	licenseMgr.checkAccountsLimit();
+    public static interface ProvisioningValidator {
+    	public void validate(String action) throws ServiceException;
+    }
+    
+    private static List<ProvisioningValidator> sValidators = new ArrayList<ProvisioningValidator>();
+    
+    public static void register(ProvisioningValidator validator) {
+    	sValidators.add(validator);
+    }
+    
+    private void validate(String action) throws ServiceException {
+    	for (ProvisioningValidator v : sValidators) {
+    		v.validate(action);
+    	}
     }
     
     public void modifyAttrs(Entry e,
@@ -502,7 +510,7 @@ public class LdapProvisioning extends Provisioning {
                                   Map<String, Object> acctAttrs,
                                   String[] additionalObjectClasses)
     throws ServiceException {
-    	checkCreateAccount();
+    	validate("createAccount");
         emailAddress = emailAddress.toLowerCase().trim();
 
         HashMap attrManagerContext = new HashMap();
