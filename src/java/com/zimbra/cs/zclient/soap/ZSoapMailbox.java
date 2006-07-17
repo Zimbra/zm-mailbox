@@ -128,6 +128,8 @@ public class ZSoapMailbox extends ZMailbox {
                 ZSoapFolder f = (ZSoapFolder) getFolderById(e.getAttribute(MailService.A_ID));
                 if (f != null)
                     f.modifyNotification(e);
+            } else if (e.getName().equals(MailService.E_MAILBOX)) {
+                mSize = e.getAttributeLong(MailService.A_SIZE);                
             }
         }
     }

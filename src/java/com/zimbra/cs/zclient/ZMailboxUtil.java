@@ -210,6 +210,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_CONTACTS("getContacts", "gct", "{contact-ids} [attr1 [attr2...]]", "get contact(s)", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),                
         GET_CONVERSATION("getConversation", "gc", "{conv-id}", "get a converation", Category.CONVERSATION, 1, 1, O_VERBOSE),
         GET_MESSAGE("getMessage", "gm", "{msg-id}", "get a message", Category.MESSAGE, 1, 1, O_VERBOSE),
+        GET_MAILBOX_SIZE("getMailboxSize", "gms", "", "get mailbox size", Category.MISC, 0, 0, O_VERBOSE),
         HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
         IMPORT_URL_INTO_FOLDER("importURLIntoFolder", "iuif", "{folder-path} {url}", "add the contents to the remote feed at {target-url} to the folder", Category.FOLDER, 2, 2),
         MARK_CONVERSATION_READ("markConversationRead", "mcr", "{conv-ids} [0|1*]", "mark conversation(s) as read/unread", Category.CONVERSATION, 1, 2),
@@ -309,6 +310,17 @@ public class ZMailboxUtil implements DebugListener {
             mOpt = opts;
         }
         
+    }
+
+    private static final long KBYTES = 1024;
+    private static final long MBYTES = 1024*1024;
+    private static final long GBYTES = 1024*1024*1024;
+    
+    private String formatSize(long size) {
+        if (size > GBYTES) return String.format("%.2f GB", (((double)size)/GBYTES));
+        else if (size > MBYTES) return String.format("%.2f MB", (((double)size)/MBYTES));
+        else if (size > KBYTES) return String.format("%.2f KB", (((double)size)/KBYTES));
+        else return String.format("%d B", size);
     }
     
     private boolean isId(String value) {
@@ -604,6 +616,10 @@ public class ZMailboxUtil implements DebugListener {
         case GET_CONVERSATION:
             doGetConversation(args);
             break;
+        case GET_MAILBOX_SIZE:
+            if (verboseOpt()) System.out.format("%d%n", mMbox.getSize()); 
+            else System.out.format("%s%n", formatSize(mMbox.getSize())); 
+            break;                        
         case GET_MESSAGE:
             doGetMessage(args);
             break;            
@@ -926,8 +942,8 @@ public class ZMailboxUtil implements DebugListener {
             } else if (hit instanceof ZContactHit) {
                 ZContactHit ch = (ZContactHit) hit;
                 c.setTimeInMillis(ch.getMetaDataChangedDate());
-                String sub = ch.getEmail();
-                String from = ch.getFileAsStr();
+                String from = getFirstEmail(ch);
+                String sub = ch.getFileAsStr();
                 mIndexToId.put(i, ch.getId());
                 System.out.format(itemFormat, i++, ch.getId(), "cont", from, sub, c);
                 
@@ -941,6 +957,13 @@ public class ZMailboxUtil implements DebugListener {
             }
         }
         System.out.println();
+    }
+
+    private String getFirstEmail(ZContactHit ch) {
+        if (ch.getEmail() != null) return ch.getEmail();
+        else if (ch.getEmail2() != null) return ch.getEmail2();
+        else if (ch.getEmail3() != null) return ch.getEmail3();
+        else return "<none>";
     }
 
     private void dumpConvSearch(ZSearchResult sr, boolean verbose) throws ServiceException {
@@ -1172,7 +1195,7 @@ public class ZMailboxUtil implements DebugListener {
         System.out.format("Date: %s\n", DateUtil.toRFC822Date(new Date(msg.getReceivedDate())));
         if (msg.hasTags()) System.out.format("Tags: %s%n", lookupTagNames(msg.getTagIds()));
         if (msg.hasFlags()) System.out.format("Flags: %s%n", ZMessage.Flag.toNameList(msg.getFlags())); 
-        System.out.format("Size: %d%n", msg.getSize());
+        System.out.format("Size: %s%n", formatSize(msg.getSize()));
         System.out.println();
         if (dumpBody(msg.getMimeStructure()))
             System.out.println();

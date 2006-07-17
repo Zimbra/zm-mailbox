@@ -44,13 +44,13 @@ public class ZSearchParams {
         StringBuilder sb = new StringBuilder();
         for (String s : list.split(",")) {
             if (sb.length() > 0) sb.append(",");
-            if (s.startsWith("conv"))
+            if (s.startsWith("conv") && TYPE_CONVERSATION.startsWith(s))
                 sb.append(TYPE_CONVERSATION);
-            else if (s.startsWith("m"))
+            else if (s.startsWith("m") && TYPE_MESSAGE.startsWith(s))
                 sb.append(TYPE_MESSAGE);
-            else if (s.startsWith("cont"))
+            else if (s.startsWith("cont") && TYPE_CONTACT.startsWith(s)) 
                 sb.append(TYPE_CONTACT);
-            else if (s.startsWith("a"))
+            else if (s.startsWith("a") && TYPE_APPOINTMENT.startsWith(s))
                 sb.append(TYPE_APPOINTMENT);
             else
                 throw SoapFaultException.CLIENT_ERROR("invlaid search type: "+s, null);
