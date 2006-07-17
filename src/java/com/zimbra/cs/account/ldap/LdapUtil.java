@@ -257,27 +257,27 @@ public class LdapUtil {
 
         DirContext ctxt = null;
         String resultDn = null;;
-        boolean tooMany = false;        
+        String tooMany = null;
+        NamingEnumeration ne = null;
         try {
             ctxt = getDirContext(url, searchDn, searchPassword);
-            NamingEnumeration ne = ctxt.search(searchBase, searchFilter, sSubtreeSC);
-
+            ne = ctxt.search(searchBase, searchFilter, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 if (resultDn == null) {
                     resultDn = sr.getNameInNamespace();
                 } else {
-                    tooMany = true;
+                    tooMany = sr.getNameInNamespace();
                     break;
                 }
             }
-            ne.close();
         } finally {
             closeContext(ctxt);
+            closeEnumContext(ne);
         }
         
-        if (tooMany) {
-            ZimbraLog.account.warn("ldapAuthenticate searchFilter returned more then one result: "+searchFilter);
+        if (tooMany != null) {
+            ZimbraLog.account.warn(String.format("ldapAuthenticate searchFilter returned more then one result: (dn1=%s, dn2=%s, filter=%s)", resultDn, tooMany, searchFilter));
             throw new AuthenticationException("too many results from search filter!");
         } else if (resultDn == null) {
             throw new AuthenticationException("empty search");
