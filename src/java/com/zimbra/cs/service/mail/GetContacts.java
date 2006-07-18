@@ -45,11 +45,10 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class GetContacts extends DocumentHandler  {
+public class GetContacts extends MailDocumentHandler  {
 
 	private static final int ALL_FOLDERS = -1;
 

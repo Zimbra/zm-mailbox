@@ -39,7 +39,6 @@ import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -47,7 +46,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 /**
  * @author dkarp
  */
-public class GetFolder extends DocumentHandler {
+public class GetFolder extends MailDocumentHandler {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_FOLDER, MailService.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { MailService.E_FOLDER };

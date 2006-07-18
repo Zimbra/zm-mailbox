@@ -39,14 +39,13 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.StringUtil;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author bburtin
  */
-public class CheckSpelling extends DocumentHandler  {
+public class CheckSpelling extends MailDocumentHandler {
     
     private static Log sLog = LogFactory.getLog(CheckSpelling.class);
     

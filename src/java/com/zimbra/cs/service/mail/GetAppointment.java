@@ -36,7 +36,6 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -47,7 +46,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  * without notice.
  *
  */
-public class GetAppointment extends DocumentHandler {
+public class GetAppointment extends MailDocumentHandler {
     private static Log sLog = LogFactory.getLog(GetAppointment.class);
 
     private static final String[] TARGET_ITEM_PATH = new String[] { MailService.A_ID };

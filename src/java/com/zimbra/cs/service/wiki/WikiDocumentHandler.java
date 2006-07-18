@@ -27,16 +27,16 @@ package com.zimbra.cs.service.wiki;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.ServiceException.Argument;
+import com.zimbra.cs.service.mail.MailDocumentHandler;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public abstract class WikiDocumentHandler extends DocumentHandler {
+public abstract class WikiDocumentHandler extends MailDocumentHandler {
     private static final String[] TARGET_WIKI_PATH = new String[] { MailService.E_WIKIWORD, MailService.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_WIKI_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }

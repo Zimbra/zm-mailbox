@@ -39,14 +39,13 @@ import com.zimbra.cs.operation.GetItemListOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
  */
-public class GetSearchFolder extends DocumentHandler  {
+public class GetSearchFolder extends MailDocumentHandler  {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
@@ -58,12 +57,13 @@ public class GetSearchFolder extends DocumentHandler  {
         
 		GetItemListOperation op = new GetItemListOperation(session, octxt, mbox, Requester.SOAP, MailItem.TYPE_SEARCHFOLDER);
 		op.schedule();
-		List<? extends MailItem>  results = op.getResults();
+		List<? extends MailItem> results = op.getResults();
 		
-		if (results != null)
+		if (results != null) {
 			for (MailItem mi : results) 
-				ToXML.encodeSearchFolder(response, lc, (SearchFolder)mi);
-		
+				ToXML.encodeSearchFolder(response, lc, (SearchFolder) mi);
+        }
+
         return response;
 	}
 }

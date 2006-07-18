@@ -48,12 +48,11 @@ import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
  * @author dkarp
  */
-public class ItemAction extends WriteOpDocumentHandler {
+public class ItemAction extends MailDocumentHandler {
 
 	protected static final String[] OPERATION_PATH = new String[] { MailService.E_ACTION, MailService.A_OPERATION };
 	protected static final String[] TARGET_ITEM_PATH = new String[] { MailService.E_ACTION, MailService.A_ID };

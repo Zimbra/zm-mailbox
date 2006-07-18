@@ -39,11 +39,10 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
-public class GetICal extends WriteOpDocumentHandler {
+public class GetICal extends MailDocumentHandler {
 
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)

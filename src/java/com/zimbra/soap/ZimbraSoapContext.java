@@ -253,8 +253,9 @@ public class ZimbraSoapContext {
             if (req != null) {
             	mProxyTarget = new ProxyTarget(targetServerId, mRawAuthToken, req);
                 mIsProxyRequest = !mProxyTarget.isTargetLocal();
-            } else
+            } else {
                 sLog.warn("Missing SERVLET_REQUEST key in request context");
+            }
         }
 
         // record session-related info and validate any specified sessions
@@ -330,7 +331,7 @@ public class ZimbraSoapContext {
      * @throws ServiceException   The following error codes are possible:<ul>
      *    <li><code>service.PERM_DENIED</code> - if you try to traverse two
      *        mountpoints in the course of a single proxy</ul> */
-    void recordMountpointTraversal() throws ServiceException {
+    public void recordMountpointTraversal() throws ServiceException {
         if (mMountpointTraversed)
             throw ServiceException.PERM_DENIED("cannot mount a mountpoint");
         mMountpointTraversed = true;

@@ -47,12 +47,11 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
  * @author dkarp
  */
-public class SaveDraft extends WriteOpDocumentHandler {
+public class SaveDraft extends MailDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);

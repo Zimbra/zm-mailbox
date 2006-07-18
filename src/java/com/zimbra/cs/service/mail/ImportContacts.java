@@ -45,14 +45,13 @@ import com.zimbra.cs.service.formatter.ContactCSV.ParseException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
  */
-public class ImportContacts extends DocumentHandler  {
+public class ImportContacts extends MailDocumentHandler  {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.A_FOLDER };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }

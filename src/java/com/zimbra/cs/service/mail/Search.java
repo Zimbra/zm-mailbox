@@ -37,19 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.AppointmentHit;
-import com.zimbra.cs.index.ContactHit;
-import com.zimbra.cs.index.ConversationHit;
-import com.zimbra.cs.index.DocumentHit;
-import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.index.MessageHit;
-import com.zimbra.cs.index.MessagePartHit;
-import com.zimbra.cs.index.NoteHit;
-import com.zimbra.cs.index.ProxiedHit;
-import com.zimbra.cs.index.ResultsPager;
-import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.index.ZimbraHit;
-import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.*;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Conversation;
@@ -66,12 +54,11 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
-public class Search extends DocumentHandler  {
+public class Search extends MailDocumentHandler  {
     protected static Log mLog = LogFactory.getLog(Search.class);
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -173,7 +160,7 @@ public class Search extends DocumentHandler  {
 
         int totalNumHits = 0;
 
-        for (ZimbraHit hit : (java.util.List<ZimbraHit>)pager.getHits()) {
+        for (ZimbraHit hit : (java.util.List<ZimbraHit>) pager.getHits()) {
 
 //          for (ZimbraHit hit = results.skipToHit(offset); hit != null; hit = results.getNext()) {
             if (++totalNumHits > limit) {

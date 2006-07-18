@@ -40,11 +40,10 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
  */
-public class CreateSearchFolder extends WriteOpDocumentHandler  {
+public class CreateSearchFolder extends MailDocumentHandler  {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_SEARCH, MailService.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };

@@ -46,14 +46,13 @@ import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
 /**
  * @author tim
  */
-public class GetApptSummaries extends WriteOpDocumentHandler {
+public class GetApptSummaries extends MailDocumentHandler {
 
     private static Log mLog = LogFactory.getLog(GetApptSummaries.class);
 

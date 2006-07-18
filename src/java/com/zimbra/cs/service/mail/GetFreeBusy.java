@@ -44,10 +44,9 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ParseMailboxID;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class GetFreeBusy extends WriteOpDocumentHandler {
+public class GetFreeBusy extends MailDocumentHandler {
 
     
 //    <GetFreeBusyRequest s="date" e="date" [uid="id,..."]/>

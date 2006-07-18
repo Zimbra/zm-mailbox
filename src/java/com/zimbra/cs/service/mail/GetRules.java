@@ -33,25 +33,19 @@ import java.util.Map;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author kchen
  */
-public class GetRules extends DocumentHandler {
+public class GetRules extends MailDocumentHandler {
 
-    /* (non-Javadoc)
-     * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
-     */
-    public Element handle(Element document, Map<String, Object> context)
-            throws ServiceException {
-
+    public Element handle(Element document, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
 		// FIXME: need to check that account exists
-        Account account = super.getRequestedAccount(lc);
-        
+        Account account = getRequestedAccount(lc);
+
         Element response = lc.createElement(MailService.GET_RULES_RESPONSE);
         RuleManager mgr = RuleManager.getInstance();
         Element rules = mgr.getRulesAsXML(response, account);

@@ -94,7 +94,7 @@ public class ProxyTarget {
         return mServer.equals(localServer);
     }
 
-    public Element dispatch(Element request) throws ServiceException, SoapFaultException {
+    public Element dispatch(Element request) throws ServiceException {
         SoapHttpTransport transport = new SoapHttpTransport(mURL);
         try {
             transport.setAuthToken(mAuthToken);
@@ -107,7 +107,7 @@ public class ProxyTarget {
         }
     }
 
-    public Element dispatch(Element request, ZimbraSoapContext lc) throws ServiceException, SoapFaultException {
+    public Element dispatch(Element request, ZimbraSoapContext lc) throws ServiceException {
         if (lc == null)
             return dispatch(request);
 

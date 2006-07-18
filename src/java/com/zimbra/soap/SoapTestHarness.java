@@ -445,26 +445,17 @@ public class SoapTestHarness {
 	}
 
 	private void doRequest(Element request) throws SoapFaultException, IOException {
-//        mCurrent.mDocRequest = (request.elementIterator().next()).createCopy();
         mCurrent.mDocRequest = request.elementIterator().next();
         mCurrent.mDocRequest.detach();
-		if (mAuthToken == null)
+		if (mAuthToken == null) {
 			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest);
-		else {
+        } else {
             Element ctxt = ZimbraSoapContext.toCtxt(mSoapProto, mAuthToken, mSessionId);
             if (mTargetUser != null)
                 ctxt.addUniqueElement(ZimbraSoapContext.E_ACCOUNT).addAttribute(ZimbraSoapContext.A_BY, ZimbraSoapContext.BY_NAME).setText(mTargetUser);
-			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ctxt);
-            if (mResponseProto == SoapProtocol.SoapJS) {
-                Element context = mCurrent.mSoapRequest.getOptionalElement(mSoapProto.getHeaderQName()).getOptionalElement(ZimbraSoapContext.CONTEXT);
-                if (context != null)
-                    context.addElement(ZimbraSoapContext.E_FORMAT).addAttribute(ZimbraSoapContext.A_TYPE, ZimbraSoapContext.TYPE_JAVASCRIPT);
-            }
-//            try {
-//                ctxt.addElement(ZimbraContext.E_CHANGE)
-//                    .addAttribute(ZimbraContext.A_TYPE, ZimbraContext.CHANGE_CREATED)
-//                    .addAttribute(ZimbraContext.A_CHANGE_ID, 190);
-//            } catch (ServiceException e) { }
+            if (mResponseProto == SoapProtocol.SoapJS)
+                ctxt.addElement(ZimbraSoapContext.E_FORMAT).addAttribute(ZimbraSoapContext.A_TYPE, ZimbraSoapContext.TYPE_JAVASCRIPT);
+            mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ctxt);
         }
 
 		long start = System.currentTimeMillis();

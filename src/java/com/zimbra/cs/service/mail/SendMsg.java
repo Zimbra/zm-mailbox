@@ -53,7 +53,6 @@ import com.zimbra.cs.service.mail.ParseMimeMessage.MimeMessageData;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
@@ -62,7 +61,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  *
  * Process the <SendMsg> request from the client and send an email message.
  */
-public class SendMsg extends WriteOpDocumentHandler {
+public class SendMsg extends MailDocumentHandler {
 
     private static Log mLog = LogFactory.getLog(SendMsg.class);
 

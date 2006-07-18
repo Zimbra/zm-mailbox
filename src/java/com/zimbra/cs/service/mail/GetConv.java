@@ -37,14 +37,13 @@ import com.zimbra.cs.operation.GetConversationByIdOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
  */
-public class GetConv extends DocumentHandler  {
+public class GetConv extends MailDocumentHandler  {
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);

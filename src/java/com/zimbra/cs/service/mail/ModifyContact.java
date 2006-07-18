@@ -42,12 +42,11 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
  * @author schemers
  */
-public class ModifyContact extends WriteOpDocumentHandler  {
+public class ModifyContact extends MailDocumentHandler  {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_CONTACT, MailService.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }

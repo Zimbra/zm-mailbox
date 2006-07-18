@@ -39,12 +39,11 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
  * @author schemers
  */
-public class CreateTag extends WriteOpDocumentHandler  {
+public class CreateTag extends MailDocumentHandler  {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);

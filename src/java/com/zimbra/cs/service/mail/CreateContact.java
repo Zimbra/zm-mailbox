@@ -54,12 +54,11 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
  * @author schemers
  */
-public class CreateContact extends WriteOpDocumentHandler  {
+public class CreateContact extends MailDocumentHandler  {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_CONTACT, MailService.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };

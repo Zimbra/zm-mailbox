@@ -46,11 +46,10 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
-public abstract class CalendarRequest extends WriteOpDocumentHandler {
+public abstract class CalendarRequest extends MailDocumentHandler {
 
     protected static class CalSendData extends ParseMimeMessage.MimeMessageData {
         int mOrigId; // orig id if this is a reply

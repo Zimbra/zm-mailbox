@@ -30,14 +30,13 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
  */
-public class NoOp extends DocumentHandler  {
+public class NoOp extends MailDocumentHandler  {
 
 	public Element handle(Element request, Map<String, Object> context) {
         ZimbraSoapContext lc = getZimbraSoapContext(context);

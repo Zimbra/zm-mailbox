@@ -46,14 +46,13 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
 /**
  *
  */
-public class AddMsg extends WriteOpDocumentHandler {
+public class AddMsg extends MailDocumentHandler {
     private static Log mLog = LogFactory.getLog(AddMsg.class);
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_MSG, MailService.A_FOLDER };

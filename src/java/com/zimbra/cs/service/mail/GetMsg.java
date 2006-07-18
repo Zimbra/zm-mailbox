@@ -39,13 +39,12 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
  */
-public class GetMsg extends WriteOpDocumentHandler {
+public class GetMsg extends MailDocumentHandler {
 
     private static final String[] TARGET_MSG_PATH = new String[] { MailService.E_MSG, MailService.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_MSG_PATH; }

@@ -29,7 +29,6 @@
 package com.zimbra.soap;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
@@ -41,12 +40,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.EmailUtil;
@@ -183,6 +178,29 @@ public abstract class DocumentHandler {
         return (lc == null ? null : lc.getSession(sessionType));
     }
 
+
+    /** Returns the {@link Server} object where an Account (specified by ID)
+     *  is homed.  This is similar to {@link Provisioning#getServer(Account),
+     *  except that the account is specified by ID and exceptions are thrown
+     *  on failure rather than returning null.
+     * @param acctId  The Zimbra ID of the account.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>account.NO_SUCH_ACCOUNT</code> - if there is no Account
+     *        with the specified ID
+     *    <li><code>account.NO_SUCH_SERVER</code> - if the Server associated
+     *        with the Account does not exist</ul> */
+    protected static Server getServer(String acctId) throws ServiceException {
+        Account acct = Provisioning.getInstance().get(AccountBy.id, acctId);
+        if (acct == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
+        String hostname = acct.getAttr(Provisioning.A_zimbraMailHost);
+
+        Server server = Provisioning.getInstance().get(ServerBy.name, hostname);
+        if (server == null)
+            throw AccountServiceException.NO_SUCH_SERVER(hostname);
+        return server;
+    }
+
     protected static String getXPath(Element request, String[] xpath) {
         int depth = 0;
         while (depth < xpath.length - 1 && request != null)
@@ -201,106 +219,28 @@ public abstract class DocumentHandler {
         request.addAttribute(xpath[depth], value);
     }
 
-    private void insertMountpointReferences(Element response, String[] xpath, ItemId iidMountpoint, ItemId iidLocal, ZimbraSoapContext lc) {
-        int depth = 0;
-        while (depth < xpath.length && response != null)
-            response = response.getOptionalElement(xpath[depth++]);
-        if (response == null)
-            return;
-        String local = iidLocal.toString(lc);
-        for (Iterator it = response.elementIterator(); it.hasNext(); ) {
-            Element elt = (Element) it.next();
-            String folder = elt.getAttribute(MailService.A_FOLDER, null);
-            if (local.equalsIgnoreCase(folder))
-                elt.addAttribute(MailService.A_FOLDER, iidMountpoint.toString(lc));
-        }
-    }
-
-    protected static ItemId getProxyTarget(ZimbraSoapContext lc, ItemId iid, boolean checkMountpoint) throws ServiceException {
-        if (lc == null || iid == null)
-            return null;
-        if (!iid.belongsTo(getRequestedAccount(lc)))
-            return iid;
-
-        if (!checkMountpoint)
-            return null;
-        Mailbox mbox = getRequestedMailbox(lc);
-        MailItem item = mbox.getItemById(lc.getOperationContext(), iid.getId(), MailItem.TYPE_FOLDER);
-        if (!(item instanceof Mountpoint))
-            return null;
-        Mountpoint mpt = (Mountpoint) item;
-        return new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
-    }
-
-    protected String[] getProxiedIdPath(Element request)     { return null; }
-    protected boolean checkMountpointProxy(Element request)  { return false; }
-    protected String[] getResponseItemPath()  { return null; }
-
-    protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
-        // find the id of the item we're proxying on...
-        String[] xpath = getProxiedIdPath(request);
-        if (xpath == null)
-            xpath = getProxiedIdPath(request);
-        String id = (xpath != null ? getXPath(request, xpath) : null);
-        if (id == null)
-            return null;
-
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        ItemId iid = new ItemId(id, lc);
-
-        // if the "target item" is remote, proxy.
-        ItemId iidTarget = getProxyTarget(lc, iid, checkMountpointProxy(request));
-        if (iidTarget != null)
-            return proxyRequest(request, context, iid, iidTarget);
-
+    protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
         // if the "target account" is remote and the command is non-admin, proxy.
+        ZimbraSoapContext lc = getZimbraSoapContext(context);
         String acctId = lc.getRequestedAccountId();
-        if (acctId != null && lc.getProxyTarget() != null && !isAdminCommand())
+        if (acctId != null && lc.getProxyTarget() != null && !isAdminCommand()) {
             if (!LOCAL_HOST.equalsIgnoreCase(getRequestedAccount(lc).getAttr(Provisioning.A_zimbraMailHost)))
                 return proxyRequest(request, context, acctId);
+        }
 
         return null;
     }
 
-    protected Element proxyRequest(Element request, Map<String, Object> context, ItemId iidRequested, ItemId iidResolved) throws ServiceException, SoapFaultException {
-        // prepare the request for re-processing
-        boolean mountpoint = iidRequested != iidResolved;
-        if (mountpoint)
-            setXPath(request, getProxiedIdPath(request), iidResolved.toString());
-
-        Element response = proxyRequest(request, context, iidResolved.getAccountId(), mountpoint);
-
-        // translate remote folder IDs back into local mountpoint IDs
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        String[] xpathResponse = getResponseItemPath();
-        if (mountpoint && xpathResponse != null) 
-            insertMountpointReferences(response, xpathResponse, iidRequested, iidResolved, lc);
-        return response;
-    }
-
-    protected static Element proxyRequest(Element request, Map<String, Object> context, String acctId) throws SoapFaultException, ServiceException {
-        return proxyRequest(request, context, acctId, false);
-    }
-
-    private static Element proxyRequest(Element request, Map<String, Object> context, String acctId, boolean mountpoint) throws SoapFaultException, ServiceException {
+    protected static Element proxyRequest(Element request, Map<String, Object> context, String acctId) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         // new context for proxied request has a different "requested account"
         ZimbraSoapContext lcTarget = new ZimbraSoapContext(lc, acctId);
-        if (mountpoint)
-            lcTarget.recordMountpointTraversal();
 
-        Account acctTarget = Provisioning.getInstance().get(AccountBy.id, acctId);
-        if (acctTarget == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
-        String hostTarget = acctTarget.getAttr(Provisioning.A_zimbraMailHost);
-        Server serverTarget = Provisioning.getInstance().get(ServerBy.name, hostTarget);
-        if (serverTarget == null)
-            throw AccountServiceException.NO_SUCH_SERVER(hostTarget);
-
-        return proxyRequest(request, context, serverTarget, lcTarget);
+        return proxyRequest(request, context, getServer(acctId), lcTarget);
     }
 
-    protected static Element proxyRequest(Element request, Map<String, Object> context, Server server, ZimbraSoapContext lc) throws SoapFaultException, ServiceException {
+    protected static Element proxyRequest(Element request, Map<String, Object> context, Server server, ZimbraSoapContext lc)
+    throws ServiceException {
         // figure out whether we can just re-dispatch or if we need to proxy via HTTP
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
         boolean isLocal = LOCAL_HOST.equalsIgnoreCase(server.getName()) && engine != null;
@@ -310,6 +250,7 @@ public abstract class DocumentHandler {
         if (isLocal) {
             // executing on same server; just hand back to the SoapEngine
             Map<String, Object> contextTarget = new HashMap<String, Object>(context);
+            contextTarget.put(SoapEngine.ZIMBRA_ENGINE, engine);
             contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, lc);
             response = engine.dispatchRequest(request, contextTarget, lc);
             if (lc.getResponseProtocol().isFault(response)) {

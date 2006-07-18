@@ -43,13 +43,12 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.WriteOpDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author dkarp
  */
-public class CreateMountpoint extends WriteOpDocumentHandler {
+public class CreateMountpoint extends MailDocumentHandler {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_MOUNT, MailService.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };

@@ -50,11 +50,11 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class SyncOperation extends Operation {
 
     private static int LOAD = 2;
-    static {
-        Operation.Config c = loadConfig(SyncOperation.class);
-        if (c != null)
-            LOAD = c.mLoad;
-    }
+        static {
+            Operation.Config c = loadConfig(SyncOperation.class);
+            if (c != null)
+                LOAD = c.mLoad;
+        }
 
     private static final int DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_ROOT;
     private static enum SyncPhase { INITIAL, DELTA };
@@ -94,8 +94,9 @@ public class SyncOperation extends Operation {
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     mResponse.addElement(MailService.E_FOLDER);
-            } else
+            } else {
                 deltaSync(mZsc, mResponse, mbox, mBegin);
+            }
         }
     }
 
@@ -120,9 +121,9 @@ public class SyncOperation extends Operation {
             boolean isSearch = folder instanceof SearchFolder;
             Mailbox.OperationContext octxt = zsc.getOperationContext();
             if (!isSearch) {
-                if (folder.getId() == Mailbox.ID_FOLDER_TAGS)
+                if (folder.getId() == Mailbox.ID_FOLDER_TAGS) {
                     initialTagSync(zsc, f, mbox);
-                else {
+                } else {
                     initialItemSync(f, MailService.E_MSG, mbox.listItemIds(octxt, MailItem.TYPE_MESSAGE, folder.getId()));
                     initialItemSync(f, MailService.E_CONTACT, mbox.listItemIds(octxt, MailItem.TYPE_CONTACT, folder.getId()));
                     initialItemSync(f, MailService.E_NOTE, mbox.listItemIds(octxt, MailItem.TYPE_NOTE, folder.getId()));
@@ -137,9 +138,10 @@ public class SyncOperation extends Operation {
             return true;
 
         // write the subfolders' data to the response
-        for (Folder subfolder : subfolders)
+        for (Folder subfolder : subfolders) {
             if (subfolder != null)
                 isVisible |= folderSync(zsc, f, mbox, subfolder, visible, phase);
+        }
 
         // if this folder and all its subfolders are not visible (oops!), remove them from the response
         if (!isVisible)
@@ -149,9 +151,10 @@ public class SyncOperation extends Operation {
     }
 
     private void initialTagSync(ZimbraSoapContext zsc, Element response, Mailbox mbox) throws ServiceException {
-        for (Tag tag : mbox.getTagList(zsc.getOperationContext()))
+        for (Tag tag : mbox.getTagList(zsc.getOperationContext())) {
             if (tag != null && !(tag instanceof Flag))
                 ToXML.encodeTag(response, zsc, tag);
+        }
     }
 
     private void initialItemSync(Element f, String ename, int[] items) {
@@ -174,9 +177,9 @@ public class SyncOperation extends Operation {
     };
 
     private static final int MUTABLE_FIELDS = Change.MODIFIED_FLAGS  | Change.MODIFIED_TAGS |
-    Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT |
-    Change.MODIFIED_NAME   | Change.MODIFIED_CONFLICT |
-    Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION;
+                                              Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT |
+                                              Change.MODIFIED_NAME   | Change.MODIFIED_CONFLICT |
+                                              Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION;
 
     private void deltaSync(ZimbraSoapContext zsc, Element response, Mailbox mbox, long begin) throws ServiceException {
         if (begin >= mbox.getLastChangeID())

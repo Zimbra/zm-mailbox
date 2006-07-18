@@ -60,17 +60,15 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
 
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         String[] xpath = getProxiedAccountPath();
-        if (xpath == null)
-            return super.proxyIfNecessary(request, context);
-        String acctId = getXPath(request, xpath);
-        if (acctId == null)
-            return super.proxyIfNecessary(request, context);
+        String acctId = (xpath != null ? getXPath(request, xpath) : null);
 
-        // if there's a remote target acount and we haven't explicitly been told to execute here, proxy.
-        if (getZimbraSoapContext(context).getProxyTarget() == null) {
-            Account acct = Provisioning.getInstance().get(AccountBy.id, acctId);
-            if (acct != null && !LOCAL_HOST.equalsIgnoreCase(acct.getAttr(Provisioning.A_zimbraMailHost)))
-                return proxyRequest(request, context, acctId);
+        if (acctId != null) {
+            // if there's a remote target acount and we haven't explicitly been told to execute here, proxy.
+            if (getZimbraSoapContext(context).getProxyTarget() == null) {
+                Account acct = Provisioning.getInstance().get(AccountBy.id, acctId);
+                if (acct != null && !LOCAL_HOST.equalsIgnoreCase(acct.getAttr(Provisioning.A_zimbraMailHost)))
+                    return proxyRequest(request, context, acctId);
+            }
         }
 
         return super.proxyIfNecessary(request, context);

@@ -35,12 +35,11 @@ import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.WriteOpDocumentHandler;
 
 /**
  * @author kchen
  */
-public class SaveRules extends WriteOpDocumentHandler {
+public class SaveRules extends MailDocumentHandler {
 
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
