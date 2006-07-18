@@ -60,6 +60,7 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -2276,12 +2277,27 @@ public class Mailbox {
     }
 
 
+    /**
+     * Returns the folder with the specified id.
+     * @throws NoSuchItemException if the folder does not exist
+     */
     public synchronized Folder getFolderById(OperationContext octxt, int id) throws ServiceException {
         return (Folder) getItemById(octxt, id, MailItem.TYPE_FOLDER);
     }
+    
+    
+    /**
+     * Returns the folder with the specified id.
+     * @throws NoSuchItemException if the folder does not exist
+     */
     Folder getFolderById(int id) throws ServiceException {
         return (Folder) getItemById(id, MailItem.TYPE_FOLDER);
     }
+    
+    /**
+     * Returns the folder with the specified parent and name.
+     * @throws NoSuchItemException if the folder does not exist
+     */
     public synchronized Folder getFolderByName(OperationContext octxt, int parentId, String name) throws ServiceException {
         boolean success = true;
         try {
@@ -2297,6 +2313,11 @@ public class Mailbox {
             endTransaction(success);
         }
     }
+
+    /**
+     * Returns the folder with the specified path, delimited by slashes (<code>/</code>).
+     * @throws NoSuchItemException if the folder does not exist
+     */
     public synchronized Folder getFolderByPath(OperationContext octxt, String name) throws ServiceException {
         boolean success = true;
         try {
