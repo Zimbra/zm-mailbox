@@ -97,9 +97,14 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         if (parent != null) parent.addChild(this);
     }
 
-    void modifyNotification(Element e) throws ServiceException {
+    void modifyNotification(Element e, ZMailbox mbox) throws ServiceException {
         mName = e.getAttribute(MailService.A_NAME, mName);
-        mParentId = e.getAttribute(MailService.A_FOLDER, mParentId); // TODO: re-compute mParent!
+        String oldParentId = mParentId;
+        mParentId = e.getAttribute(MailService.A_FOLDER, mParentId);
+        if (mParentId != oldParentId) {
+            //re-compute mParent!
+            mParent = mbox.getFolderById(mParentId);
+        }
         mFlags = e.getAttribute(MailService.A_FLAGS, mFlags);
         String newColor = e.getAttribute(MailService.A_COLOR, null);
         if (newColor != null) {
