@@ -30,6 +30,7 @@
 package com.zimbra.soap;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.dom4j.Namespace;
 import org.dom4j.QName;
@@ -278,6 +279,38 @@ public abstract class SoapProtocol {
     public boolean hasFault(Element soapEnvelope) {
         Element body = getBodyElement(soapEnvelope);
         return body != null && isFault(body);
+    }
+    
+    
+    private static final String[] ZIMBRA_ERROR_ELEMENT = new String[] { "Detail", "Error", "a" };
+    
+    /**
+     * Walk the passed-in Fault element, find Arguments (see ServiceException.Argument ) of type ItemID
+     * and update them so that they contain the target account ID 
+     * 
+     * @param element
+     * @param remoteAccountId
+     */
+    void updateArgumentsForRemoteFault(Element element, String remoteAccountId)
+    {
+        if (!isFault(element)) {
+            return;
+        }
+        
+        // We are going to proxy a REMOTE fault through, therefore we must
+        // patch any arguments of type ITEMID so that they have the appropriate account info
+        List<Element> argList = element.getPathElementList(ZIMBRA_ERROR_ELEMENT);
+        if (argList != null) {
+            for (Element arg : argList) {
+                String type = arg.getAttribute("t", "UNKNOWN");
+                if (type.equals(ServiceException.Argument.Type.IID.toString())) {
+                    String value = arg.getTextTrim();
+                    if (value.indexOf(":") < 0) {
+                        arg.setText(remoteAccountId + ":" + value);
+                    }
+                }
+            }
+        }
     }
 
     /** 

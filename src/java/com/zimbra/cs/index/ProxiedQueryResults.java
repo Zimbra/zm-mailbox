@@ -323,9 +323,12 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException ", e);
         }
-//      catch (ServiceException e) {
-//      //throw ServiceException.FAILURE("ServiceException ", e);
-//      throw e;
+//        catch (ServiceException e) {
+//            if (!isMultipleMailboxes) {
+//                //throw ServiceException.FAILURE("ServiceException ", e);
+//                e.setArgument(ServiceException.PROXIED_FROM_ACCT, mTargetAcctId);
+//            }
+//            throw e;
 //      }
     }
 

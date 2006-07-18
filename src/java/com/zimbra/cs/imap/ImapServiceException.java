@@ -44,7 +44,7 @@ public class ImapServiceException extends ServiceException {
 	}
 
 	public static ImapServiceException CANNOT_DELETE_SYSTEM_FOLDER(String folderName) {
-		return new ImapServiceException("cannot delete system folder: ", CANT_RENAME_INBOX, SENDERS_FAULT, new Argument(FOLDER_NAME, folderName));
+		return new ImapServiceException("cannot delete system folder: ", CANT_RENAME_INBOX, SENDERS_FAULT, new Argument(FOLDER_NAME, folderName, Argument.Type.STR));
 	}
 
 	public static ImapServiceException CANT_RENAME_INBOX() {
@@ -52,10 +52,10 @@ public class ImapServiceException extends ServiceException {
 	}
 
 	public static ImapServiceException FOLDER_NOT_VISIBLE(String folderName) {
-		return new ImapServiceException("folder not visible: ", FOLDER_NOT_VISIBLE, SENDERS_FAULT, new Argument(FOLDER_NAME, folderName)); 
+		return new ImapServiceException("folder not visible: ", FOLDER_NOT_VISIBLE, SENDERS_FAULT, new Argument(FOLDER_NAME, folderName, Argument.Type.STR)); 
 	}
 
 	public static ImapServiceException FOLDER_NOT_WRITABLE(String folderName) {
-		return new ImapServiceException("folder is READ-ONLY: ", FOLDER_NOT_WRITABLE, SENDERS_FAULT, new Argument(FOLDER_NAME, folderName)); 
+		return new ImapServiceException("folder is READ-ONLY: ", FOLDER_NOT_WRITABLE, SENDERS_FAULT, new Argument(FOLDER_NAME, folderName, Argument.Type.STR)); 
 	}
 }

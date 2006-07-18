@@ -312,8 +312,10 @@ public abstract class DocumentHandler {
             Map<String, Object> contextTarget = new HashMap<String, Object>(context);
             contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, lc);
             response = engine.dispatchRequest(request, contextTarget, lc);
-            if (lc.getResponseProtocol().isFault(response))
+            if (lc.getResponseProtocol().isFault(response)) {
+                lc.getResponseProtocol().updateArgumentsForRemoteFault(response, lc.getRequestedAccountId());
                 throw new SoapFaultException("error in proxied request", true, response);
+            }
         } else {
             // executing remotely; find out target and proxy there
             HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);

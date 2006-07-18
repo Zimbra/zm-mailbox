@@ -49,6 +49,11 @@ class Soap11Protocol extends SoapProtocol {
     private static final QName DETAIL = new QName("detail", NS);
     private static final QName SENDER_CODE = new QName("Client", NS);
     private static final QName RECEIVER_CODE = new QName("Server", NS);
+    
+    private static final String ARGUMENT = "a";
+    private static final String ARG_NAME = "n";
+    private static final String ARG_TYPE = "t";
+    
 
     /** empty package-private constructor */
     Soap11Protocol() { 
@@ -113,8 +118,9 @@ class Soap11Protocol extends SoapProtocol {
         
         if (e.getArgs() != null) {
             for (ServiceException.Argument arg : e.getArgs()) {
-                Element val = error.addElement("a");
-                val.addAttribute("n", arg.mName);
+                Element val = error.addElement(ARGUMENT);
+                val.addAttribute(ARG_NAME, arg.mName);
+                val.addAttribute(ARG_TYPE, arg.mType.toString());
                 val.setText(arg.mValue);
             }
         }

@@ -240,6 +240,77 @@ public abstract class Element {
         d4elt.setText(getText());
         return d4elt;
     }
+    
+    /**
+     * Return the attribute value that is at the specified path, or null if
+     * one could not be found
+     * 
+     * @param xpath
+     * @return
+     */
+    public String getPathAttribute(String[] xpath) {
+        int depth = 0;
+        Element cur = this;
+        while (depth < xpath.length - 1 && cur != null)
+            cur = cur.getOptionalElement(xpath[depth++]);
+        return (cur == null ? null : cur.getAttribute(xpath[depth], null));
+    }
+    
+    /**
+     * Return the first Element matching the specified path, or null if none was found
+     * 
+     * @param xpath
+     * @return
+     */
+    public Element getPathElement(String[] xpath) {
+        int depth = 0;
+        Element cur = this;
+        while (depth < xpath.length && cur != null)
+            cur = cur.getOptionalElement(xpath[depth++]);
+        
+        return cur;
+    }
+    
+    /**
+     * Return the list of Elements matching the specified path, or null
+     * if none were found.
+     * 
+     * @param xpath
+     * @return
+     */
+    public List<Element> getPathElementList(String[] xpath) {
+        int depth = 0;
+        Element cur = this;
+        while (depth < xpath.length-1 && cur != null)
+            cur = cur.getOptionalElement(xpath[depth++]);
+        
+        if (cur == null)
+            return null;
+        
+        return cur.listElements(xpath[xpath.length-1]);
+    }
+    
+
+    /**
+     * Set the attribute at the specified path, thowing an exception if the
+     * parent Element does not exist.
+     * 
+     * @param xpath
+     * @param value
+     * @throws ServiceException
+     */
+    public void setPathAttribute(String[] xpath, String value) throws ServiceException {
+        if (xpath == null || xpath.length == 0)
+            return;
+        int depth = 0;
+        Element cur = this;
+        while (depth < xpath.length - 1 && cur != null)
+            cur = cur.getOptionalElement(xpath[depth++]);
+        if (cur == null)
+            throw ServiceException.INVALID_REQUEST("could not find path", null);
+        cur.addAttribute(xpath[depth], value);
+    }
+    
 
     public static Element parseJSON(InputStream is) throws SoapParseException { return parseJSON(is, JavaScriptElement.mFactory); }
     public static Element parseJSON(InputStream is, ElementFactory factory) throws SoapParseException {

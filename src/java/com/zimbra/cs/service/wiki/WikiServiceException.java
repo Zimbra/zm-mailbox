@@ -44,14 +44,14 @@ public class WikiServiceException extends ServiceException {
     }
     public static class NoSuchWikiException extends WikiServiceException {
     	public NoSuchWikiException(String w) {
-    		super("no such wiki: "+ w, NO_SUCH_WIKI, SENDERS_FAULT, new Argument(WIKI_ID, w));
+    		super("no such wiki: "+ w, NO_SUCH_WIKI, SENDERS_FAULT, new Argument(WIKI_ID, w, Argument.Type.STR));
     	}
     }
     public static WikiServiceException NOT_WIKI_ITEM(String w) {
-        return new WikiServiceException("not WikiItem: "+ w, NO_SUCH_WIKI, SENDERS_FAULT, new Argument(WIKI_ID, w));
+        return new WikiServiceException("not WikiItem: "+ w, NO_SUCH_WIKI, SENDERS_FAULT, new Argument(WIKI_ID, w, Argument.Type.STR));
     }
     public static WikiServiceException CANNOT_READ(String w) {
-        return new WikiServiceException("cannot read wiki message body: "+ w, CANNOT_READ, RECEIVERS_FAULT, new Argument(WIKI_ID, w));
+        return new WikiServiceException("cannot read wiki message body: "+ w, CANNOT_READ, RECEIVERS_FAULT, new Argument(WIKI_ID, w, Argument.Type.STR));
     }
     public static WikiServiceException ERROR(String w) {
         return new WikiServiceException("error: "+ w, ERROR, SENDERS_FAULT);

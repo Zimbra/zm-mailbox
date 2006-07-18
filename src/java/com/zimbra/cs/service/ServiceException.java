@@ -61,20 +61,62 @@ public class ServiceException extends Exception {
     public static final String MAILBOX_ID      = "mboxId";
     public static final String ACCOUNT_ID      = "acctId"; 
     
+    public static final String PROXIED_FROM_ACCT  = "proxiedFromAcct"; // exception proxied from remote account
     
     public static class Argument {
-        public Argument(String name, String value) {
-            mName = name;
-            mValue = value;
+        public static enum Type {
+            IID,        // mail-item ID or mailbox-id 
+            ACCTID,   // account ID
+            STR,       // opaque string
+            NUM        // opaque number
         }
         
-        public Argument(String name, long value) {
+        public Argument(String name, String value, Type typ) {
+            mName = name;
+            mValue = value;
+            mType = typ;
+        }
+        
+        public Argument(String name, long value, Type type) {
             mName = name;
             mValue = Long.toString(value);
+            mType = type;
         }
         
         public String mName;
         public String mValue;
+        public Type mType;
+    }
+    
+    /**
+     * Sets the specified argument if it is not already set, updates 
+     * it if it is.
+     * 
+     * @param name
+     * @param value
+     */
+    public void setArgument(String name, String value, Argument.Type type) {
+        if (mArgs == null) {
+            mArgs = new Argument[1];
+            mArgs[0] = new Argument(name, value, type);
+        } else {
+            for (Argument arg : mArgs) {
+                if ((arg.mName.equals(name)) && (arg.mType == type)) {
+                    arg.mValue = value;
+                    return;
+                }
+            }
+    
+            // not found -- enlarge array
+            Argument[] newArgs = new Argument[mArgs.length + 1];
+            for (int i = mArgs.length-1; i>=0; i--) {
+                newArgs[i] = mArgs[i];
+            }
+            
+            // add new argument
+            newArgs[mArgs.length] = new Argument(name, value, type);
+            mArgs = newArgs;
+        }
     }
     
     /**
@@ -171,7 +213,7 @@ public class ServiceException extends Exception {
     }
 
     public static ServiceException WRONG_HOST(String target, Throwable cause) {
-        return new ServiceException("operation sent to wrong host (you want '" + target + "')", WRONG_HOST, SENDERS_FAULT, cause, new Argument(HOST, target));
+        return new ServiceException("operation sent to wrong host (you want '" + target + "')", WRONG_HOST, SENDERS_FAULT, cause, new Argument(HOST, target, Argument.Type.STR));
     }
 
     public static ServiceException NON_READONLY_OPERATION_DENIED() {
@@ -180,7 +222,7 @@ public class ServiceException extends Exception {
 
     public static ServiceException PROXY_ERROR(Throwable cause, String url) {
         return new ServiceException("error while proxying request to target server (url=" + url + "): " + (cause != null ? cause.getMessage() : "unknown reason"), 
-                PROXY_ERROR, RECEIVERS_FAULT, cause, new Argument(URL, url));
+                PROXY_ERROR, RECEIVERS_FAULT, cause, new Argument(URL, url, Argument.Type.STR));
     }
 
     public static ServiceException TOO_MANY_HOPS() {
@@ -192,11 +234,11 @@ public class ServiceException extends Exception {
     }
     
     public static ServiceException ALREADY_IN_PROGRESS(String mboxId, String action) {
-        return new ServiceException("mbox "+mboxId+" is already running action "+action, ALREADY_IN_PROGRESS, SENDERS_FAULT, new Argument(MAILBOX_ID, mboxId), new Argument("action", action));
+        return new ServiceException("mbox "+mboxId+" is already running action "+action, ALREADY_IN_PROGRESS, SENDERS_FAULT, new Argument(MAILBOX_ID, mboxId, Argument.Type.IID), new Argument("action", action, Argument.Type.STR));
     }
     
     public static ServiceException NOT_IN_PROGRESS(String mboxId, String action) {
-        return new ServiceException("mbox "+mboxId+" is not currently running action "+action, NOT_IN_PROGRESS, SENDERS_FAULT, new Argument(MAILBOX_ID, mboxId), new Argument("action", action));
+        return new ServiceException("mbox "+mboxId+" is not currently running action "+action, NOT_IN_PROGRESS, SENDERS_FAULT, new Argument(MAILBOX_ID, mboxId, Argument.Type.IID), new Argument("action", action, Argument.Type.STR));
     }
 
     public static ServiceException INTERRUPTED(String str) {

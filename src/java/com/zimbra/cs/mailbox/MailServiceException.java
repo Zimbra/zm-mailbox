@@ -123,99 +123,99 @@ public class MailServiceException extends ServiceException {
     }
     
     public static MailServiceException MAINTENANCE(int id) {
-        return new MailServiceException("mailbox in maintenance mode: "+ id, MAINTENANCE, RECEIVERS_FAULT, new Argument(MAILBOX_ID, id));
+        return new MailServiceException("mailbox in maintenance mode: "+ id, MAINTENANCE, RECEIVERS_FAULT, new Argument(MAILBOX_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException NO_SUCH_MBOX(int id) {
-        return new MailServiceException("no such mailbox: "+ id, NO_SUCH_MBOX, SENDERS_FAULT, new Argument(MAILBOX_ID, id));
+        return new MailServiceException("no such mailbox: "+ id, NO_SUCH_MBOX, SENDERS_FAULT, new Argument(MAILBOX_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException NO_SUCH_MBOX(String accountId) {
-        return new MailServiceException("no mailbox for account: "+ accountId, NO_SUCH_MBOX, SENDERS_FAULT, new Argument(ACCOUNT_ID, accountId));
+        return new MailServiceException("no mailbox for account: "+ accountId, NO_SUCH_MBOX, SENDERS_FAULT, new Argument(ACCOUNT_ID, accountId, Argument.Type.ACCTID));
     }
 
     public static MailServiceException NO_SUCH_ITEM(int id) {
-        return new NoSuchItemException("no such item: "+ id, NO_SUCH_ITEM, SENDERS_FAULT, new Argument(ITEM_ID, id));
+        return new NoSuchItemException("no such item: "+ id, NO_SUCH_ITEM, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException NO_SUCH_ITEM(String name) {
-        return new NoSuchItemException("no such item: "+ name, NO_SUCH_ITEM, SENDERS_FAULT, new Argument(NAME, name));
+        return new NoSuchItemException("no such item: "+ name, NO_SUCH_ITEM, SENDERS_FAULT, new Argument(NAME, name, Argument.Type.STR));
     }
 
     public static MailServiceException NO_SUCH_CONV(int id) {
-        return new NoSuchItemException("no such conversation: "+ id, NO_SUCH_CONV, SENDERS_FAULT, new Argument(ITEM_ID, id));
+        return new NoSuchItemException("no such conversation: "+ id, NO_SUCH_CONV, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException NO_SUCH_MSG(int id) {
-        return new NoSuchItemException("no such message: "+ id, NO_SUCH_MSG, SENDERS_FAULT, new Argument(ITEM_ID, id));
+        return new NoSuchItemException("no such message: "+ id, NO_SUCH_MSG, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException NO_SUCH_PART(String name) {
-        return new MailServiceException("no such message part: " + name, NO_SUCH_PART, SENDERS_FAULT, new Argument(NAME, name));
+        return new MailServiceException("no such message part: " + name, NO_SUCH_PART, SENDERS_FAULT, new Argument(NAME, name, Argument.Type.STR));
     }
 
     public static MailServiceException NO_SUCH_CONTACT(int id) {
-        return new NoSuchItemException("no such contact: " + id, NO_SUCH_CONTACT, SENDERS_FAULT, new Argument(ITEM_ID, id));
+        return new NoSuchItemException("no such contact: " + id, NO_SUCH_CONTACT, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException NO_SUCH_FOLDER(int id) {
-        return new NoSuchItemException("no such folder id: " + id, NO_SUCH_FOLDER, SENDERS_FAULT, new Argument(ITEM_ID, id));
+        return new NoSuchItemException("no such folder id: " + id, NO_SUCH_FOLDER, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
     
     public static MailServiceException NO_SUCH_FOLDER(String path) {
-        return new NoSuchItemException("no such folder path: " + path, NO_SUCH_FOLDER, SENDERS_FAULT, new Argument(PATH, path));
+        return new NoSuchItemException("no such folder path: " + path, NO_SUCH_FOLDER, SENDERS_FAULT, new Argument(PATH, path, Argument.Type.STR));
     }
     
     public static MailServiceException NO_SUCH_NOTE(int id) {
-        return new NoSuchItemException("no such note: " + id, NO_SUCH_NOTE, SENDERS_FAULT, new Argument(ITEM_ID, id));
+        return new NoSuchItemException("no such note: " + id, NO_SUCH_NOTE, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException NO_SUCH_APPT(int id) {
-        return new NoSuchItemException("no such appointment: " + id, NO_SUCH_APPT, SENDERS_FAULT, new Argument(ITEM_ID, id));
+        return new NoSuchItemException("no such appointment: " + id, NO_SUCH_APPT, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException NO_SUCH_APPT(String uid) {
-        return new NoSuchItemException("no such appointment: " + uid, NO_SUCH_APPT, SENDERS_FAULT, new Argument(UID, uid));
+        return new NoSuchItemException("no such appointment: " + uid, NO_SUCH_APPT, SENDERS_FAULT, new Argument(UID, uid, Argument.Type.STR));
     }
 
     public static MailServiceException NO_SUCH_APPT(String uid, String msg) {
-        return new MailServiceException("no such appointment: "+uid+" "+msg, NO_SUCH_APPT, SENDERS_FAULT, new Argument(UID, uid));
+        return new MailServiceException("no such appointment: "+uid+" "+msg, NO_SUCH_APPT, SENDERS_FAULT, new Argument(UID, uid, Argument.Type.STR));
     }
     
     public static MailServiceException NO_SUCH_DOC(int id) {
-        return new NoSuchItemException("no such document: " + id, NO_SUCH_DOC, SENDERS_FAULT, new Argument(ITEM_ID, id));
+        return new NoSuchItemException("no such document: " + id, NO_SUCH_DOC, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException NO_SUCH_TAG(int id) {
-        return new NoSuchItemException("no such tag: " + id, NO_SUCH_TAG, SENDERS_FAULT, new Argument(ITEM_ID, id));
+        return new NoSuchItemException("no such tag: " + id, NO_SUCH_TAG, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException NO_SUCH_TAG(String name) {
-        return new NoSuchItemException("no such tag: " + name, NO_SUCH_TAG, SENDERS_FAULT, new Argument(NAME, name));
+        return new NoSuchItemException("no such tag: " + name, NO_SUCH_TAG, SENDERS_FAULT, new Argument(NAME, name, Argument.Type.STR));
     }
 
     public static MailServiceException NO_SUCH_UPLOAD(String uploadId) {
-        return new MailServiceException("upload not found: " + uploadId, NO_SUCH_UPLOAD, SENDERS_FAULT, new Argument(UPLOAD_ID, uploadId));
+        return new MailServiceException("upload not found: " + uploadId, NO_SUCH_UPLOAD, SENDERS_FAULT, new Argument(UPLOAD_ID, uploadId, Argument.Type.STR));
     }
 
     public static MailServiceException SCAN_ERROR(String file) {
-        return new MailServiceException("upload could not be scanned: file '" + file + "'", SCAN_ERROR, RECEIVERS_FAULT, new Argument(NAME, file));
+        return new MailServiceException("upload could not be scanned: file '" + file + "'", SCAN_ERROR, RECEIVERS_FAULT, new Argument(NAME, file, Argument.Type.STR));
     }
 
     public static MailServiceException UPLOAD_REJECTED(String file, String reason) {
-        return new MailServiceException("upload rejected: file '" + file + "': " + reason, UPLOAD_REJECTED, SENDERS_FAULT, new Argument(NAME, file), new Argument("reason", reason));
+        return new MailServiceException("upload rejected: file '" + file + "': " + reason, UPLOAD_REJECTED, SENDERS_FAULT, new Argument(NAME, file, Argument.Type.STR), new Argument("reason", reason, Argument.Type.STR));
     }
 
     public static MailServiceException TOO_MANY_TAGS() {
-        return new MailServiceException("exceeded limit of " + MailItem.MAX_TAG_COUNT + " tags", TOO_MANY_TAGS, SENDERS_FAULT, new Argument(LIMIT, MailItem.MAX_TAG_COUNT));
+        return new MailServiceException("exceeded limit of " + MailItem.MAX_TAG_COUNT + " tags", TOO_MANY_TAGS, SENDERS_FAULT, new Argument(LIMIT, MailItem.MAX_TAG_COUNT, Argument.Type.NUM));
     }
 
     public static MailServiceException TOO_MANY_UPLOADS(String uploadId) {
-        return new MailServiceException("more than 1 file uploaded: " + uploadId, TOO_MANY_UPLOADS, SENDERS_FAULT, new Argument(UPLOAD_ID, uploadId));
+        return new MailServiceException("more than 1 file uploaded: " + uploadId, TOO_MANY_UPLOADS, SENDERS_FAULT, new Argument(UPLOAD_ID, uploadId, Argument.Type.STR));
     }
 
     public static MailServiceException TOO_MANY_CONTACTS(int limit) {
-        return new MailServiceException("exceeded limit of " + limit + " contacts", TOO_MANY_CONTACTS, SENDERS_FAULT, new Argument(LIMIT, limit));
+        return new MailServiceException("exceeded limit of " + limit + " contacts", TOO_MANY_CONTACTS, SENDERS_FAULT, new Argument(LIMIT, limit, Argument.Type.NUM));
     }
 
     public static MailServiceException UNABLE_TO_IMPORT_CONTACTS(String msg, Throwable t) {
@@ -223,23 +223,23 @@ public class MailServiceException extends ServiceException {
     }
 
     public static MailServiceException QUOTA_EXCEEDED(long limit) {
-        return new MailServiceException("mailbox exceeded quota of " + limit + " bytes", QUOTA_EXCEEDED, SENDERS_FAULT, new Argument(LIMIT, limit));
+        return new MailServiceException("mailbox exceeded quota of " + limit + " bytes", QUOTA_EXCEEDED, SENDERS_FAULT, new Argument(LIMIT, limit, Argument.Type.NUM));
     }
 
     public static MailServiceException INVALID_ID(int id) {
-        return new MailServiceException("item id out of range: " + id, INVALID_ID, SENDERS_FAULT, new Argument(ITEM_ID, id));
+        return new MailServiceException("item id out of range: " + id, INVALID_ID, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException INVALID_NAME(String name) {
-        return new MailServiceException("invalid tag/folder name: " + name, INVALID_NAME, SENDERS_FAULT, new Argument(NAME, name));
+        return new MailServiceException("invalid tag/folder name: " + name, INVALID_NAME, SENDERS_FAULT, new Argument(NAME, name, Argument.Type.STR));
     }
 
     public static MailServiceException INVALID_TYPE(byte type) {
-        return new MailServiceException("invalid item type: " + type, INVALID_TYPE, SENDERS_FAULT, new Argument(TYPE, type));
+        return new MailServiceException("invalid item type: " + type, INVALID_TYPE, SENDERS_FAULT, new Argument(TYPE, type, Argument.Type.NUM));
     }
 
     public static MailServiceException INVALID_CONTENT_TYPE(String type) {
-        return new MailServiceException("invalid content type: " + type, INVALID_CONTENT_TYPE, SENDERS_FAULT, new Argument(TYPE, type));
+        return new MailServiceException("invalid content type: " + type, INVALID_CONTENT_TYPE, SENDERS_FAULT, new Argument(TYPE, type, Argument.Type.STR));
     }
 
     public static MailServiceException WRONG_MAILBOX() {
@@ -251,7 +251,7 @@ public class MailServiceException extends ServiceException {
     }
 
     public static MailServiceException CANNOT_SUBSCRIBE(int id) {
-        return new MailServiceException("cannot add subscription to existing folder " + id, CANNOT_SUBSCRIBE, SENDERS_FAULT, new Argument(ITEM_ID, id));
+        return new MailServiceException("cannot add subscription to existing folder " + id, CANNOT_SUBSCRIBE, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException CANNOT_CONTAIN() {
@@ -259,7 +259,7 @@ public class MailServiceException extends ServiceException {
     }
 
     public static MailServiceException CANNOT_COPY(int id) {
-        return new MailServiceException("cannot copy object: " + id, CANNOT_COPY, SENDERS_FAULT, new Argument(ITEM_ID, id));
+        return new MailServiceException("cannot copy object: " + id, CANNOT_COPY, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException CANNOT_PARENT() {
@@ -275,7 +275,7 @@ public class MailServiceException extends ServiceException {
     }
 
     public static MailServiceException IMMUTABLE_OBJECT(int id) {
-        return new MailServiceException("cannot modify immutable object: " + id, IMMUTABLE_OBJECT, SENDERS_FAULT, new Argument(ITEM_ID, id));
+        return new MailServiceException("cannot modify immutable object: " + id, IMMUTABLE_OBJECT, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException ALREADY_EXISTS(String name, Argument... args) {
@@ -283,11 +283,11 @@ public class MailServiceException extends ServiceException {
     }
 
     public static MailServiceException ALREADY_EXISTS(int id, Throwable t) {
-        return new MailServiceException("object with that id already exists: " + id, ALREADY_EXISTS, SENDERS_FAULT, t, new Argument(ITEM_ID, id));
+        return new MailServiceException("object with that id already exists: " + id, ALREADY_EXISTS, SENDERS_FAULT, t, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException QUERY_PARSE_ERROR(String query, Throwable t, String curToken, int lineNo, int offset) {
-        return new MailServiceException("Couldn't parse query: " + query, QUERY_PARSE_ERROR, SENDERS_FAULT, t, new Argument(CURRENT_TOKEN, curToken), new Argument(LINE_NO, lineNo), new Argument(COL_NO, offset));
+        return new MailServiceException("Couldn't parse query: " + query, QUERY_PARSE_ERROR, SENDERS_FAULT, t, new Argument(CURRENT_TOKEN, curToken, Argument.Type.STR), new Argument(LINE_NO, lineNo, Argument.Type.NUM), new Argument(COL_NO, offset, Argument.Type.NUM));
     }
 
     public static MailServiceException MESSAGE_PARSE_ERROR(Throwable t) {
@@ -331,11 +331,11 @@ public class MailServiceException extends ServiceException {
     	int offset = 0;
         if (invalid != null) {
             for (Address addr : invalid)
-                args[offset++] = new Argument("invalid", addr.toString());
+                args[offset++] = new Argument("invalid", addr.toString(), Argument.Type.STR);
         }
         if (unsent != null) {
         	for (Address addr : unsent)
-        		args[offset++] = new Argument("unsent", addr.toString());
+        		args[offset++] = new Argument("unsent", addr.toString(), Argument.Type.STR);
         }
     	
     	return new MailServiceException(msg, failureType, SENDERS_FAULT, e, args);
@@ -354,7 +354,7 @@ public class MailServiceException extends ServiceException {
     }
     
     public static MailServiceException TOO_MANY_QUERY_TERMS_EXPANDED(String msg, String token, int max) {
-        return new MailServiceException(msg, TOO_MANY_QUERY_TERMS_EXPANDED, SENDERS_FAULT, new Argument("TOKEN", token), new Argument("MAX", max));
+        return new MailServiceException(msg, TOO_MANY_QUERY_TERMS_EXPANDED, SENDERS_FAULT, new Argument("TOKEN", token, Argument.Type.STR), new Argument("MAX", max, Argument.Type.NUM));
     }
     
     

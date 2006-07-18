@@ -29,10 +29,12 @@
 
 package com.zimbra.soap;
 
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.SoapProtocol;
 import com.zimbra.soap.SoapFaultException;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.dom4j.DocumentException;
 
@@ -185,6 +187,7 @@ public abstract class SoapTransport {
 
         return raw ? env : extractBodyElement(env);
     }
+
     
     Element extractBodyElement(Element env) throws SoapParseException, SoapFaultException {
         SoapProtocol proto = SoapProtocol.determineProtocol(env);
@@ -202,9 +205,12 @@ public abstract class SoapTransport {
                 mSessionId = sid;
         }
 
-        if (proto.isFault(e))
+        if (proto.isFault(e)) {
+            if (mTargetAcctId != null) {
+                proto.updateArgumentsForRemoteFault(e, mTargetAcctId);
+            }
             throw proto.soapFault(e);
-        else
+        } else
             return e;
     }
 
