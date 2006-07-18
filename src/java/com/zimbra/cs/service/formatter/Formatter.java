@@ -33,10 +33,7 @@ import javax.servlet.ServletException;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.AppointmentHit;
-import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -84,33 +81,33 @@ public abstract class Formatter {
         return MailboxIndex.SEARCH_FOR_MESSAGES;
     }
 
-    public final void format(UserServlet.Context context, MailItem item) throws UserServletException, ServiceException, IOException, ServletException {
+    public final void format(UserServlet.Context context, MailItem item) throws UserServletException, IOException, ServletException {
         try {
             FormatOperation op = new FormatOperation(context, item, this);
             op.schedule();
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
             if (cause instanceof UserServletException)
-                throw (UserServletException)cause;
+                throw (UserServletException) cause;
             if (cause instanceof ServletException)
-                throw (ServletException)cause;
+                throw (ServletException) cause;
             if (cause instanceof IOException)
-                throw (IOException)cause;
+                throw (IOException) cause;
         }
     }
 
-    public final void save(byte[] body, UserServlet.Context context, Folder folder) throws UserServletException, ServiceException, IOException, ServletException {
+    public final void save(byte[] body, UserServlet.Context context, Folder folder) throws UserServletException, IOException, ServletException {
         try {
             SaveOperation op = new SaveOperation(body, context, folder, this);
             op.schedule();
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
             if (cause instanceof UserServletException)
-                throw (UserServletException)cause;
+                throw (UserServletException) cause;
             if (cause instanceof ServletException)
-                throw (ServletException)cause;
+                throw (ServletException) cause;
             if (cause instanceof IOException)
-                throw (IOException)cause;
+                throw (IOException) cause;
         }
     }
     
