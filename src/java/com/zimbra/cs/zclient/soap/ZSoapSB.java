@@ -86,7 +86,10 @@ class ZSoapSB {
         return '"' + StringUtil.jsEncode(value) + '"';
     }
     
-    ZSoapSB add(String name, List<? extends Object> list, boolean encode) {
+    ZSoapSB add(String name, List<? extends Object> list, boolean encode, boolean showEmpty) {
+        if (!showEmpty && (list == null || list.size() == 0)) 
+            return this;
+        
         beginArray(name);
         for (Object o : list) {
             addArrayElement(o.toString(), encode);

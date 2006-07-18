@@ -210,8 +210,8 @@ public interface ZFolder {
     public ZFolder getSubFolderByPath(String path);
     
     /**
-     * @return links, or empty list if no links
+     * @return mountpounts, or empty list if no mountpoints
      */
-    public List<ZMountpoint> getLinks();
+    public List<ZMountpoint> getMountpoints();
 
 }

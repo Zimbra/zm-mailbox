@@ -68,9 +68,9 @@ public interface ZMountpoint {
     public String getRemoteId();
     
     /** Returns the "hint" as to which view to use to display the folder's
-     *  contents.  conversation|message|contact|appointment|note
+     *  contents.  conversation|message|contact|appointment
      */
-    public String getDefaultView();
+    public ZFolder.View getDefaultView();
     
     public String getFlags();
     

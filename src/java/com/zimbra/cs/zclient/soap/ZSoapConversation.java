@@ -69,7 +69,7 @@ class ZSoapConversation implements ZConversation {
         sb.add("flags", mFlags);
         sb.add("subject", mSubject);
         sb.add("messageCount", mMessageCount);
-        sb.add("messages", mMessageSummaries, false);
+        sb.add("messages", mMessageSummaries, false, true);
         sb.endStruct();
         return sb.toString();
     }

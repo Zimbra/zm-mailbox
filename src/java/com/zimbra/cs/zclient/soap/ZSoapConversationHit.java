@@ -54,8 +54,10 @@ class ZSoapConversationHit implements ZConversationHit {
         mFlags = e.getAttribute(MailService.A_FLAGS, null);
         mDate = e.getAttributeLong(MailService.A_DATE);
         mTags = e.getAttribute(MailService.A_TAGS, null);
-        mFragment = e.getElement(MailService.E_FRAG).getText();
-        mSubject = e.getElement(MailService.E_SUBJECT).getText();        
+        Element fr = e.getOptionalElement(MailService.E_FRAG);
+        if (fr != null) mFragment = fr.getText();
+        Element su = e.getOptionalElement(MailService.E_SUBJECT);
+        if (su != null) mSubject = su.getText();
         mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);
         mMessageCount = (int) e.getAttributeLong(MailService.A_NUM);
         mScore = (float) e.getAttributeDouble(MailService.A_SCORE, 0);
@@ -87,8 +89,8 @@ class ZSoapConversationHit implements ZConversationHit {
         sb.addDate("date", mDate);
         sb.add("sortField", mSortField);
         sb.add("messageCount", mMessageCount);
-        sb.add("messageIds", mMessageIds, true);
-        sb.add("recipients", mRecipients, false);
+        sb.add("messageIds", mMessageIds, true, true);
+        sb.add("recipients", mRecipients, false, true);
         sb.endStruct();
         return sb.toString();
     }

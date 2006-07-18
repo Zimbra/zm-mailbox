@@ -164,9 +164,9 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         sb.add("restURL", mRestURL);
         sb.add("url", mRemoteURL);
         sb.add("effectivePermissions", mEffectivePerms);
-        sb.add("grants", mGrants, false);
-        sb.add("mountpoints", mLinks, false);
-        sb.add("children", mSubFolders, false);
+        sb.add("grants", mGrants, false, false);
+        sb.add("mountpoints", mLinks, false, false);
+        sb.add("children", mSubFolders, false, false);
     }
     
     public String toString() {
@@ -219,7 +219,7 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         return mSubFolders;
     }
     
-    public List<ZMountpoint> getLinks() {
+    public List<ZMountpoint> getMountpoints() {
         return mLinks;
     }
 

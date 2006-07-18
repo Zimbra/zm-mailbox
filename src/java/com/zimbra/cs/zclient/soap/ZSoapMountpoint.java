@@ -37,7 +37,7 @@ class ZSoapMountpoint implements ZMountpoint, ZSoapItem {
     private int mColor;
     private String mId;
     private String mName;
-    private String mDefaultView;
+    private ZFolder.View mDefaultView;
     private String mFlags;
     private String mParentId;
     private String mOwnerId;
@@ -52,7 +52,7 @@ class ZSoapMountpoint implements ZMountpoint, ZSoapItem {
         mParentId = e.getAttribute(MailService.A_FOLDER);
         mFlags = e.getAttribute(MailService.A_FLAGS, null);
         mColor = (int) e.getAttributeLong(MailService.A_COLOR, 0);
-        mDefaultView = e.getAttribute(MailService.A_DEFAULT_VIEW, null);
+        mDefaultView = ZFolder.View.fromString(e.getAttribute(MailService.A_DEFAULT_VIEW, ZFolder.View.conversation.name()));
         mOwnerDisplayName = e.getAttribute(MailService.A_DISPLAY);
         mRemoteId = e.getAttribute(MailService.A_REMOTE_ID);
         mOwnerId = e.getAttribute(MailService.A_ZIMBRA_ID);
@@ -82,7 +82,7 @@ class ZSoapMountpoint implements ZMountpoint, ZSoapItem {
         sb.add("id", mId);
         sb.add("name", mName);
         sb.add("path", getPath());
-        sb.add("view", mDefaultView);
+        sb.add("view", mDefaultView.name());
         sb.add("flags", mFlags);
         sb.add("parent", mParentId);
         sb.add("color", mColor);
@@ -93,7 +93,7 @@ class ZSoapMountpoint implements ZMountpoint, ZSoapItem {
         return sb.toString();
     }
 
-    public String getDefaultView() {
+    public ZFolder.View getDefaultView() {
         return mDefaultView;
     }
 

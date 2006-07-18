@@ -94,7 +94,7 @@ class ZSoapMessageHit implements ZMessageHit {
         sb.addStruct("sender", mSender.toString());
         sb.add("sortField", mSortField);
         sb.add("score", mScore);
-        sb.add("mimePartHits", mMimePartHits, true);
+        sb.add("mimePartHits", mMimePartHits, true, false);
         sb.endStruct();
         return sb.toString();
     }

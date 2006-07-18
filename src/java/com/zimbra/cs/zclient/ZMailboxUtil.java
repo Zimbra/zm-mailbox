@@ -1031,21 +1031,39 @@ public class ZMailboxUtil implements DebugListener {
         }
     }        
 
-    private void doDumpFolder(ZFolder folder, boolean verbose, boolean recurse) {
-        if (verbose) {
-            System.out.println(folder);
+    private void doDumpFolder(ZFolder folder, boolean recurse) {
+        String path;
+        if (folder instanceof ZSearchFolder) {
+            path = String.format("%s (%s)", folder.getPath(), ((ZSearchFolder)folder).getQuery());
+        } else if (folder.getRemoteURL() != null) {
+            path = String.format("%s (%s)", folder.getPath(), folder.getRemoteURL());
         } else {
-            System.out.println(folder.getPath());
+            path = folder.getPath();
         }
+        
+        System.out.format("%10.10s  %4.4s  %10d  %10d  %s%n",
+                folder.getId(), folder.getDefaultView().name(), folder.getUnreadCount(), folder.getMessageCount(), path);
         if (recurse) {
             for (ZFolder child : folder.getSubFolders()) {
-                doDumpFolder(child, verbose, recurse);
+                doDumpFolder(child, recurse);
+            }
+            for (ZMountpoint mp : folder.getMountpoints()) {
+                path = String.format("%s (%s:%s)", mp.getPath(), mp.getOwnerDisplayName(), mp.getRemoteId());
+                System.out.format("%10.10s  %4.4s  %10s  %10s  %s%n",                
+                mp.getId(), mp.getDefaultView(), "NA", "NA", path);
             }
         }
     }
 
     private void doGetAllFolders(String[] args) throws ServiceException {
-        doDumpFolder(mMbox.getUserRoot(), verboseOpt(), true);
+        if (verboseOpt()) {
+            System.out.println(mMbox.getUserRoot());
+        } else {
+            String hdrFormat = "%10.10s  %4.4s  %10.10s  %10.10s  %s%n";
+            System.out.format(hdrFormat, "Id", "View", "Unread", "Msg Count", "Path");
+            System.out.format(hdrFormat, "----------", "----", "----------", "----------",  "----------");            
+            doDumpFolder(mMbox.getUserRoot(), true);
+        }
     }        
     
     private void dumpAllContacts(List<ZContact> contacts) throws ServiceException {
@@ -1083,7 +1101,7 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doDumpMountpoints(ZFolder folder, boolean verbose, boolean recurse) {
-        for (ZMountpoint link: folder.getLinks()) {
+        for (ZMountpoint link: folder.getMountpoints()) {
             if (verbose) {
                 System.out.println(link);
             } else {

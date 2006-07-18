@@ -94,7 +94,7 @@ class ZSoapSearchResult implements ZSearchResult {
         sb.add("more", mHasMore);
         sb.add("sortBy", mSortBy);
         sb.add("offset", mOffset);
-        sb.add("hits", mHits, false);
+        sb.add("hits", mHits, false, true);
         sb.endStruct();
         return sb.toString();
     }
