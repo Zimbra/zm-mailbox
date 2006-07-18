@@ -138,6 +138,10 @@ public interface ZContact  {
     
     public boolean hasTags();
     
+    public boolean isFlagged();
+    
+    public boolean hasAttachment();
+    
     public String getFolderId();
 
     public String getRevision();

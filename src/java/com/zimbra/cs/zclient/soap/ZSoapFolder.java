@@ -238,6 +238,18 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
 
     public boolean hasFlags() {
         return mFlags != null && mFlags.length() > 0;
+    }
+
+    public boolean isCheckedInUI() {
+        return hasFlags() && mFlags.indexOf(Flag.checkedInUI.getFlagChar()) != -1;
+    }
+
+    public boolean isExcludedFromFreeBusy() {
+        return hasFlags() && mFlags.indexOf(Flag.excludeFreeBusyInfo.getFlagChar()) != -1;
+    }
+
+    public boolean isIMAPSubscribed() {
+        return hasFlags() && mFlags.indexOf(Flag.imapSubscribed.getFlagChar()) != -1;
     }    
 
 }

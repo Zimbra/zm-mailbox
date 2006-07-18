@@ -56,7 +56,8 @@ class ZSoapMessage implements ZMessage {
         mId = e.getAttribute(MailService.A_ID);
         mFlags = e.getAttribute(MailService.A_FLAGS, null);
         mTags = e.getAttribute(MailService.A_TAGS, null);
-        mSubject = e.getElement(MailService.E_SUBJECT).getText();
+        Element sub = e.getOptionalElement(MailService.E_SUBJECT);
+        if (sub != null) mSubject = sub.getText();
         Element mid = e.getOptionalElement(MailService.E_MSG_ID_HDR);
         if (mid != null) mMessageIdHeader = mid.getText();
         mReceivedDate = e.getAttributeLong(MailService.A_DATE, 0);
@@ -273,6 +274,42 @@ class ZSoapMessage implements ZMessage {
         public long getSize() {
             return mSize;
         }
+    }
+
+    public boolean hasAttachment() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.attachment.getFlagChar()) != -1;
+    }
+
+    public boolean isDeleted() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.deleted.getFlagChar()) != -1;
+    }
+
+    public boolean isDraft() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.draft.getFlagChar()) != -1;
+    }
+
+    public boolean isFlagged() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.flagged.getFlagChar()) != -1;
+    }
+
+    public boolean isForwarded() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.forwarded.getFlagChar()) != -1;
+    }
+
+    public boolean isNotificationSent() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.notificationSent.getFlagChar()) != -1;
+    }
+
+    public boolean isRepliedTo() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.replied.getFlagChar()) != -1;
+    }
+
+    public boolean isSentByMe() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.sentByMe.getFlagChar()) != -1;
+    }
+
+    public boolean isUnread() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.unread.getFlagChar()) != -1;
     }
 
 }

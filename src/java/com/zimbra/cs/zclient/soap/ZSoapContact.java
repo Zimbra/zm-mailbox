@@ -110,4 +110,12 @@ class ZSoapContact implements ZContact, ZSoapItem {
         return mTagIds != null && mTagIds.length() > 0;
     }
 
+    public boolean hasAttachment() {
+        return hasFlags() && mFlags.indexOf(Flag.attachment.getFlagChar()) != -1;
+    }
+
+    public boolean isFlagged() {
+        return hasFlags() && mFlags.indexOf(Flag.flagged.getFlagChar()) != -1;
+    }
+
 }

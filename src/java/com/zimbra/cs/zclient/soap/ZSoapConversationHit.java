@@ -31,6 +31,7 @@ import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.ZConversation;
 import com.zimbra.cs.zclient.ZConversationHit;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.soap.Element;
@@ -137,5 +138,21 @@ class ZSoapConversationHit implements ZConversationHit {
 
     public boolean hasTags() {
         return mTags != null && mTags.length() > 0;        
+    }
+
+    public boolean hasAttachment() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.attachment.getFlagChar()) != -1;
+    }
+
+    public boolean isFlagged() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.flagged.getFlagChar()) != -1;
+    }
+
+    public boolean isSentByMe() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.sentByMe.getFlagChar()) != -1;
+    }
+
+    public boolean isUnread() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.unread.getFlagChar()) != -1;
     }
 }

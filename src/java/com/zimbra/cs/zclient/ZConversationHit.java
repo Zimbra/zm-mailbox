@@ -48,6 +48,14 @@ public interface ZConversationHit extends ZSearchHit {
     
     public boolean hasTags();
     
+    public boolean isUnread();
+
+    public boolean isFlagged();
+
+    public boolean isSentByMe();
+
+    public boolean hasAttachment();
+
     public String getSubject();
     
     public String getFragment();

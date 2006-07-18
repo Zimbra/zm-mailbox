@@ -80,6 +80,24 @@ public interface ZMessage  {
     
     public boolean hasTags();
     
+    public boolean isUnread();
+
+    public boolean isFlagged();
+
+    public boolean hasAttachment();
+
+    public boolean isRepliedTo();
+
+    public boolean isSentByMe();
+
+    public boolean isForwarded();
+
+    public boolean isDraft();
+
+    public boolean isDeleted();
+
+    public boolean isNotificationSent();
+    
     public String getSubject();
     
     public String getFolderId();

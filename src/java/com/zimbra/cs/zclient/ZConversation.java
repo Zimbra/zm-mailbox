@@ -76,6 +76,14 @@ public interface ZConversation  {
     
     public boolean hasFlags();
     
+    public boolean isUnread();
+
+    public boolean isFlagged();
+
+    public boolean isSentByMe();
+
+    public boolean hasAttachment();
+
     public boolean hasTags();
 
     public String getSubject();

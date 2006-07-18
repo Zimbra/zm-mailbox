@@ -190,14 +190,14 @@ public class ZSoapMailbox extends ZMailbox {
         mNameToTag.clear();
         mIdToItem.clear();
         mTransport.setMaxNoitfySeq(0);
-        Element mbx = refresh.getElement(MailService.E_MAILBOX);
+        Element mbx = refresh.getOptionalElement(MailService.E_MAILBOX);
         if (mbx != null) mSize = mbx.getAttributeLong(MailService.A_SIZE);
-        Element tags = refresh.getElement(ZimbraNamespace.E_TAGS);
+        Element tags = refresh.getOptionalElement(ZimbraNamespace.E_TAGS);
         if (tags != null) {
             for (Element t : tags.listElements(MailService.E_TAG))
                 addTag(new ZSoapTag(t));
         }
-        Element folder = refresh.getElement(MailService.E_FOLDER);
+        Element folder = refresh.getOptionalElement(MailService.E_FOLDER);
         refreshFolders(folder);
     }
 

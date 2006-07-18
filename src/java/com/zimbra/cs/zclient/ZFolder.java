@@ -33,6 +33,20 @@ import com.zimbra.soap.SoapFaultException;
 
 public interface ZFolder {
     
+    public static final String ID_USER_ROOT = "1";
+    public static final String ID_INBOX = "2";
+    public static final String ID_TRASH = "3";
+    public static final String ID_SPAM = "4";
+    public static final String ID_SENT = "5";
+    public static final String ID_DRAFTS = "6";
+    public static final String ID_CONTACTS = "7";
+    public static final String ID_TAGS = "8";
+    public static final String ID_CONVERSATIONS = "9";
+    public static final String ID_CALENDAR = "10";
+    public static final String ID_ROOT = "11";
+    public static final String ID_NOTEBOOK = "12";
+    public static final String ID_AUTO_CONTACTS = "13";
+    
     public enum Flag {
         checkedInUI('#'),
         excludeFreeBusyInfo('b'),
@@ -164,6 +178,12 @@ public interface ZFolder {
 
     public boolean hasFlags();
     
+    public boolean isCheckedInUI();
+
+    public boolean isExcludedFromFreeBusy();
+
+    public boolean isIMAPSubscribed();
+
     /**
      * range 0-127; defaults to 0 if not present; client can display only 0-7
      * 

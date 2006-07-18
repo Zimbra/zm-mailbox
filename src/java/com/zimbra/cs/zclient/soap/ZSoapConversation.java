@@ -48,7 +48,8 @@ class ZSoapConversation implements ZConversation {
         mId = e.getAttribute(MailService.A_ID);
         mFlags = e.getAttribute(MailService.A_FLAGS, null);
         mTags = e.getAttribute(MailService.A_TAGS, null);
-        mSubject = e.getElement(MailService.E_SUBJECT).getText();        
+        Element sub = e.getOptionalElement(MailService.E_SUBJECT);
+        if (sub != null) mSubject = sub.getText();        
         mMessageCount = (int) e.getAttributeLong(MailService.A_NUM);
         
         mMessageSummaries = new ArrayList<ZMessageSummary>();
@@ -109,7 +110,8 @@ class ZSoapConversation implements ZConversation {
             mFlags = e.getAttribute(MailService.A_FLAGS, null);
             mDate = e.getAttributeLong(MailService.A_DATE);
             mTags = e.getAttribute(MailService.A_TAGS, null);
-            mFragment = e.getElement(MailService.E_FRAG).getText();        
+            Element fr = e.getOptionalElement(MailService.E_FRAG);
+            if (fr != null) mFragment = fr.getText();        
             mSize = e.getAttributeLong(MailService.A_SIZE);
             Element emailEl = e.getOptionalElement(MailService.E_EMAIL);
             if (emailEl != null) mSender = ZSoapEmailAddress.getAddress(emailEl, cache); 
@@ -167,4 +169,19 @@ class ZSoapConversation implements ZConversation {
         return mTags != null && mTags.length() > 0;        
     }
 
+    public boolean hasAttachment() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.attachment.getFlagChar()) != -1;
+    }
+
+    public boolean isFlagged() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.flagged.getFlagChar()) != -1;
+    }
+
+    public boolean isSentByMe() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.sentByMe.getFlagChar()) != -1;
+    }
+
+    public boolean isUnread() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.unread.getFlagChar()) != -1;
+    }
 }
