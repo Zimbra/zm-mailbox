@@ -27,91 +27,31 @@ package com.zimbra.cs.zclient.soap;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMountpoint;
-import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.Element;
 
-class ZSoapMountpoint implements ZMountpoint, ZSoapItem {
+class ZSoapMountpoint extends ZSoapFolder implements ZMountpoint, ZSoapItem {
 
-    private int mColor;
-    private String mId;
-    private String mName;
-    private ZFolder.View mDefaultView;
-    private String mFlags;
-    private String mParentId;
     private String mOwnerId;
     private String mOwnerDisplayName;
     private String mRemoteId;
-    private ZFolder mParent;
     
     ZSoapMountpoint(Element e, ZSoapFolder parent, ZSoapMailbox mailbox) throws ServiceException {
-        mParent = parent;
-        mId = e.getAttribute(MailService.A_ID);
-        mName = e.getAttribute(MailService.A_NAME);
-        mParentId = e.getAttribute(MailService.A_FOLDER);
-        mFlags = e.getAttribute(MailService.A_FLAGS, null);
-        mColor = (int) e.getAttributeLong(MailService.A_COLOR, 0);
-        mDefaultView = ZFolder.View.fromString(e.getAttribute(MailService.A_DEFAULT_VIEW, ZFolder.View.conversation.name()));
+        super(e, parent, mailbox);
         mOwnerDisplayName = e.getAttribute(MailService.A_DISPLAY);
         mRemoteId = e.getAttribute(MailService.A_REMOTE_ID);
         mOwnerId = e.getAttribute(MailService.A_ZIMBRA_ID);
-        mailbox.addItemIdMapping(this);
-        if (parent != null) parent.addChild(this);
-    }
-
-    public ZFolder getParent() {
-        return mParent;
-    }
-
-    public int getColor() {
-        return mColor;
-    }
-
-    public String getId() {
-        return mId;
-    }
-
-    public String getName() {
-        return mName;
     }
 
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
         sb.beginStruct();
-        sb.add("id", mId);
-        sb.add("name", mName);
-        sb.add("path", getPath());
-        sb.add("view", mDefaultView.name());
-        sb.add("flags", mFlags);
-        sb.add("parent", mParentId);
-        sb.add("color", mColor);
         sb.add("ownerId", mOwnerId);
         sb.add("ownerDisplayName", mOwnerDisplayName);
         sb.add("remoteId", mRemoteId);
+        toStringCommon(sb);
         sb.endStruct();
         return sb.toString();
-    }
-
-    public ZFolder.View getDefaultView() {
-        return mDefaultView;
-    }
-
-    public String getFlags() {
-        return mFlags;
-    }
-
-    public String getParentId() {
-        return mParentId;
-    }
-
-    public String getPath() {
-        if (mParent == null)
-            return ZMailbox.PATH_SEPARATOR;
-        else {
-            String pp = mParent.getPath();
-            return pp.length() == 1 ? (pp + mName) : (pp + ZMailbox.PATH_SEPARATOR + mName);
-        }
     }
 
     public String getOwnerDisplayName() {
@@ -125,9 +65,4 @@ class ZSoapMountpoint implements ZMountpoint, ZSoapItem {
     public String getOwnerId() {
         return mOwnerId;
     }
-
-    public boolean hasFlags() {
-        return mFlags != null && mFlags.length() > 0;
-    }    
-
 }

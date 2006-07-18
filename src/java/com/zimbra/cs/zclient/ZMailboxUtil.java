@@ -205,7 +205,6 @@ public class ZMailboxUtil implements DebugListener {
         FLAG_MESSAGE("flagMessage", "fm", "{msg-ids} [0|1*]", "flag/unflag message(s)", Category.MESSAGE, 1, 2),
         GET_ALL_CONTACTS("getAllContacts", "gact", "[attr1 [attr2...]]", "get all contacts", Category.CONTACT, 0, Integer.MAX_VALUE, O_VERBOSE, O_FOLDER),
         GET_ALL_FOLDERS("getAllFolders", "gaf", "", "get all folders", Category.FOLDER, 0, 0, O_VERBOSE),
-        GET_ALL_MOUNTPOINTS("getAllMountpoints", "gam", "", "get all mountpoints", Category.FOLDER, 0, 0, O_VERBOSE),        
         GET_ALL_TAGS("getAllTags", "gat", "", "get all tags", Category.TAG, 0, 0, O_VERBOSE),
         GET_CONTACTS("getContacts", "gct", "{contact-ids} [attr1 [attr2...]]", "get contact(s)", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),                
         GET_CONVERSATION("getConversation", "gc", "{conv-id}", "get a converation", Category.CONVERSATION, 1, 1, O_VERBOSE),
@@ -457,10 +456,6 @@ public class ZMailboxUtil implements DebugListener {
         if (parent && pathOrId != null) pathOrId = ZMailbox.getParentPath(pathOrId);
         if (pathOrId == null || pathOrId.length() == 0) return null;
         ZFolder folder = mMbox.getFolderById(pathOrId);
-        if (folder == null) {
-            ZMountpoint mp = mMbox.getMountpointById(pathOrId);
-            if (mp != null) return mp.getId();
-        }
         if (folder == null) folder = mMbox.getFolderByPath(pathOrId);
         if (folder == null) throw SoapFaultException.CLIENT_ERROR("unknown folder: "+pathOrId, null);
         return folder.getId();
@@ -607,9 +602,6 @@ public class ZMailboxUtil implements DebugListener {
         case GET_ALL_FOLDERS:
             doGetAllFolders(args); 
             break;            
-        case GET_ALL_MOUNTPOINTS:
-            doGetAllMountpoints(args); 
-            break;
         case GET_ALL_TAGS:
             doGetAllTags(args); 
             break;            
@@ -1035,6 +1027,9 @@ public class ZMailboxUtil implements DebugListener {
         String path;
         if (folder instanceof ZSearchFolder) {
             path = String.format("%s (%s)", folder.getPath(), ((ZSearchFolder)folder).getQuery());
+        } else if (folder instanceof ZMountpoint) {
+            ZMountpoint mp = (ZMountpoint) folder;
+            path = String.format("%s (%s:%s)", folder.getPath(), mp.getOwnerDisplayName(), mp.getRemoteId());
         } else if (folder.getRemoteURL() != null) {
             path = String.format("%s (%s)", folder.getPath(), folder.getRemoteURL());
         } else {
@@ -1046,11 +1041,6 @@ public class ZMailboxUtil implements DebugListener {
         if (recurse) {
             for (ZFolder child : folder.getSubFolders()) {
                 doDumpFolder(child, recurse);
-            }
-            for (ZMountpoint mp : folder.getMountpoints()) {
-                path = String.format("%s (%s:%s)", mp.getPath(), mp.getOwnerDisplayName(), mp.getRemoteId());
-                System.out.format("%10.10s  %4.4s  %10s  %10s  %s%n",                
-                mp.getId(), mp.getDefaultView(), "NA", "NA", path);
             }
         }
     }
@@ -1099,26 +1089,6 @@ public class ZMailboxUtil implements DebugListener {
     private void doGetContacts(String[] args) throws ServiceException, ArgException {
         dumpContacts(mMbox.getContacts(id(args[0]), null, true, getList(args, 1)));
     }
-
-    private void doDumpMountpoints(ZFolder folder, boolean verbose, boolean recurse) {
-        for (ZMountpoint link: folder.getMountpoints()) {
-            if (verbose) {
-                System.out.println(link);
-            } else {
-                System.out.println(link.getPath());
-            }
-        }
-
-        if (recurse) {
-            for (ZFolder child : folder.getSubFolders()) {
-                doDumpMountpoints(child, verbose, recurse);
-            }
-        }
-    }
-
-    private void doGetAllMountpoints(String[] args) throws ServiceException {
-        doDumpMountpoints(mMbox.getUserRoot(), verboseOpt(), true);
-    }        
 
     private void dumpConversation(ZConversation conv) throws SoapFaultException {
         int first = 1;

@@ -25,33 +25,8 @@
 
 package com.zimbra.cs.zclient;
 
-public interface ZMountpoint {
-
-    public String getId();
-
-    /** Returns the folder's name.  Note that this is the folder's
-     *  name (e.g. <code>"foo"</code>), not its absolute pathname
-     *  (e.g. <code>"/baz/bar/foo"</code>).
-     * 
-     * @see #getPath() 
-     * 
-     */
-    public String getName();
-
-    /** Returns the folder's absolute path.  Paths are UNIX-style with 
-     *  <code>'/'</code> as the path delimiter.  Paths are relative to
-     *  the user root folder,
-     *  which has the path <code>"/"</code>.  So the Inbox's path is
-     *  <code>"/Inbox"</code>, etc.
-     */
-    public String getPath();
-
-    /**
-     * 
-     * @return parent id of folder, or null if root folder.
-     */
-    public String getParentId();
-
+public interface ZMountpoint extends ZFolder {
+    
     /**
      * @return primary email address of the owner of the mounted resource
      */
@@ -66,16 +41,5 @@ public interface ZMountpoint {
      * @return remote folder id of the mounted folder
      */
     public String getRemoteId();
-    
-    /** Returns the "hint" as to which view to use to display the folder's
-     *  contents.  conversation|message|contact|appointment
-     */
-    public ZFolder.View getDefaultView();
-    
-    public String getFlags();
-    
-    public boolean hasFlags();
-
-    public int getColor();
 
 }

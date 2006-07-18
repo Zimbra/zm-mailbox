@@ -32,7 +32,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
-import com.zimbra.cs.zclient.ZMountpoint;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.Element;
 
@@ -51,7 +50,6 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
     private String mEffectivePerms;
     private List<ZGrant> mGrants;
     private List<ZFolder> mSubFolders;
-    private List<ZMountpoint> mLinks;        
     private ZFolder mParent;
     
     ZSoapFolder(Element e, ZSoapFolder parent, ZSoapMailbox mailbox) throws ServiceException {
@@ -74,7 +72,6 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         
         mGrants = new ArrayList<ZGrant>();            
         mSubFolders = new ArrayList<ZFolder>();
-        mLinks = new ArrayList<ZMountpoint>();        
 
         Element aclEl = e.getOptionalElement(MailService.E_ACL);
 
@@ -122,10 +119,8 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
     }
 
     void addChild(ZFolder folder)        { mSubFolders.add(folder); }
-    void addChild(ZMountpoint link)            { mLinks.add(link); }
     
     void removeChild(ZFolder folder)       { mSubFolders.remove(folder); }
-    void removeChild(ZMountpoint link)           { mLinks.remove(link); }
 
     public ZFolder getParent() {
         return mParent;
@@ -165,7 +160,6 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         sb.add("url", mRemoteURL);
         sb.add("effectivePermissions", mEffectivePerms);
         sb.add("grants", mGrants, false, false);
-        sb.add("mountpoints", mLinks, false, false);
         sb.add("children", mSubFolders, false, false);
     }
     
@@ -217,10 +211,6 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
 
     public List<ZFolder> getSubFolders() {
         return mSubFolders;
-    }
-    
-    public List<ZMountpoint> getMountpoints() {
-        return mLinks;
     }
 
     public ZFolder getSubFolderByPath(String path) {
