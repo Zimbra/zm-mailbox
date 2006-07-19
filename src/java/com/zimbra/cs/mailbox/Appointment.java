@@ -690,6 +690,7 @@ public class Appointment extends MailItem {
             }
         }
 
+        boolean callProcessPartStat = false;
         if (addNewOne) {
             newInvite.setAppointment(this);
             Account account = getMailbox().getAccount();
@@ -706,10 +707,7 @@ public class Appointment extends MailItem {
                 // No need to mark invite as modified item in mailbox as
                 // it has already been marked as a created item.
             } else {
-                processPartStat(newInvite,
-                                pm != null ? pm.getMimeMessage() : null,
-                                false,
-                                newInvite.getPartStat());
+                callProcessPartStat = true;
             }
 
             mInvites.add(newInvite);
@@ -775,6 +773,14 @@ public class Appointment extends MailItem {
                     // no default invite!  This appointment no longer valid
                     this.delete();
                 } else {
+                    if (callProcessPartStat) {
+                        // processPartStat() must be called after
+                        // updateRecurrence() has been called.  (bug 8072)
+                        processPartStat(newInvite,
+                                        pm != null ? pm.getMimeMessage() : null,
+                                        false,
+                                        newInvite.getPartStat());
+                    }
                     this.saveMetadata();
                 }
             }
