@@ -26,6 +26,7 @@
 package com.zimbra.soap;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.redolog.RedoLogProvider;
@@ -238,8 +239,12 @@ public class SoapEngine {
             // since the last request
             try {
                 Account account = DocumentHandler.getRequestedAccount(zsc);
-                if (!account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
-                    return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
+                if (!account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
+                    if (zsc.isDelegatedRequest())
+                        return soapProto.soapFault(AccountServiceException.ACCOUNT_INACTIVE(account.getName()));
+                    else
+                        return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
+                }
             } catch (ServiceException ex) {
                 return soapProto.soapFault(ex);
             }

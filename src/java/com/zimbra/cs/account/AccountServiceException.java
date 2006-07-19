@@ -64,7 +64,8 @@ public class AccountServiceException extends ServiceException {
     public static final String SERVER_EXISTS      = "account.SERVER_EXISTS";
     public static final String DISTRIBUTION_LIST_EXISTS = "account.DISTRIBUTION_LIST_EXISTS";
     public static final String MAINTENANCE_MODE   = "account.MAINTENANCE_MODE";
-    
+    public static final String ACCOUNT_INACTIVE   = "account.ACCOUNT_INACTIVE";
+
     private AccountServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
     }
@@ -150,29 +151,33 @@ public class AccountServiceException extends ServiceException {
     public static AccountServiceException NO_SUCH_MEMBER(String dlName, String members) {
         return new AccountServiceException("non-existent members: " + members + " in distribution list: " + dlName, NO_SUCH_MEMBER, SENDERS_FAULT, null);   
     }
-    
+
     public static AccountServiceException ACCOUNT_EXISTS(String name) {
         return new AccountServiceException("account already exists: "+name, ACCOUNT_EXISTS, SENDERS_FAULT, null);
     }
-    
+
     public static AccountServiceException DOMAIN_EXISTS(String name) {
-        return new AccountServiceException("domain already exists: "+name, DOMAIN_EXISTS, SENDERS_FAULT, null);
+        return new AccountServiceException("domain already exists: " + name, DOMAIN_EXISTS, SENDERS_FAULT, null);
     }
 
     public static AccountServiceException COS_EXISTS(String name) {
-        return new AccountServiceException("cos already exists: "+name, COS_EXISTS, SENDERS_FAULT, null);
+        return new AccountServiceException("cos already exists: " + name, COS_EXISTS, SENDERS_FAULT, null);
     }
-    
+
     public static AccountServiceException SERVER_EXISTS(String name) {
-        return new AccountServiceException("server already exists: "+name, SERVER_EXISTS, SENDERS_FAULT, null);
-    }    
-    
+        return new AccountServiceException("server already exists: " + name, SERVER_EXISTS, SENDERS_FAULT, null);
+    }
+
     public static AccountServiceException DISTRIBUTION_LIST_EXISTS(String name) {
-        return new AccountServiceException("distribution list already exists: "+name, DISTRIBUTION_LIST_EXISTS, SENDERS_FAULT, null);
-    }    
-    
+        return new AccountServiceException("distribution list already exists: " + name, DISTRIBUTION_LIST_EXISTS, SENDERS_FAULT, null);
+    }
+
     public static AccountServiceException MAINTENANCE_MODE() {
         return new AccountServiceException("account is in maintenance mode", MAINTENANCE_MODE, RECEIVERS_FAULT, null);
+    }
+
+    public static AccountServiceException ACCOUNT_INACTIVE(String name) {
+        return new AccountServiceException("account is not active:" + name, ACCOUNT_INACTIVE, RECEIVERS_FAULT, null);
     }
 
     public static AccountServiceException PASSWORD_RECENTLY_USED() {
