@@ -70,34 +70,42 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         if (zsc.getProxyTarget() != null)
             return null;
 
-        // check whether we need to proxy to the home server of a target account
-        String[] xpath = getProxiedAccountPath();
-        String acctId = (xpath != null ? getXPath(request, xpath) : null);
-        if (acctId != null) {
-            Account acct = Provisioning.getInstance().get(AccountBy.id, acctId);
-            if (acct != null && !LOCAL_HOST.equalsIgnoreCase(acct.getAttr(Provisioning.A_zimbraMailHost)))
-                return proxyRequest(request, context, acctId);
-        }
+        try {
+            // check whether we need to proxy to the home server of a target account
+            String[] xpath = getProxiedAccountPath();
+            String acctId = (xpath != null ? getXPath(request, xpath) : null);
+            if (acctId != null) {
+                Account acct = Provisioning.getInstance().get(AccountBy.id, acctId);
+                if (acct != null && !LOCAL_HOST.equalsIgnoreCase(acct.getAttr(Provisioning.A_zimbraMailHost)))
+                    return proxyRequest(request, context, acctId);
+            }
 
-        // check whether we need to proxy to the home server of a target calendar resource
-        xpath = getProxiedResourcePath();
-        String rsrcId = (xpath != null ? getXPath(request, xpath) : null);
-        if (rsrcId != null) {
-            CalendarResource rsrc = Provisioning.getInstance().get(CalendarResourceBy.id, rsrcId);
-            if (rsrc != null) {
-                Server server = Provisioning.getInstance().get(ServerBy.name, rsrc.getAttr(Provisioning.A_zimbraMailHost));
+            // check whether we need to proxy to the home server of a target calendar resource
+            xpath = getProxiedResourcePath();
+            String rsrcId = (xpath != null ? getXPath(request, xpath) : null);
+            if (rsrcId != null) {
+                CalendarResource rsrc = Provisioning.getInstance().get(CalendarResourceBy.id, rsrcId);
+                if (rsrc != null) {
+                    Server server = Provisioning.getInstance().get(ServerBy.name, rsrc.getAttr(Provisioning.A_zimbraMailHost));
+                    if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
+                        return proxyRequest(request, context, server, zsc);
+                }
+            }
+
+            // check whether we need to proxy to a target server
+            xpath = getProxiedServerPath();
+            String serverId = (xpath != null ? getXPath(request, xpath) : null);
+            if (serverId != null) {
+                Server server = Provisioning.getInstance().get(ServerBy.id, serverId);
                 if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
                     return proxyRequest(request, context, server, zsc);
             }
-        }
-
-        // check whether we need to proxy to a target server
-        xpath = getProxiedServerPath();
-        String serverId = (xpath != null ? getXPath(request, xpath) : null);
-        if (serverId != null) {
-            Server server = Provisioning.getInstance().get(ServerBy.id, serverId);
-            if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
-                return proxyRequest(request, context, server, zsc);
+        } catch (ServiceException e) {
+            // if something went wrong proxying the request, just execute it locally
+            if (ServiceException.PROXY_ERROR.equals(e.getCode()))
+                return null;
+            // but if it's a real error, it's a real error
+            throw e;
         }
 
         return super.proxyIfNecessary(request, context);
