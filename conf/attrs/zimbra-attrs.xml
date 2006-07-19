@@ -1592,7 +1592,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>An alias for this domain, used to determine default login domain based on URL client is visiting</desc>
 </attr>
 
-<attr id="353" name="zimbraHideInGal" type="boolean" cardinality="single" optionalIn="mailRecipient">
+<attr id="353" name="zimbraHideInGal" type="boolean" cardinality="single" optionalIn="mailRecipient" flags="domainAdminModifiable">
   <desc>hide entry in Global Address List</desc>
 </attr>
 
