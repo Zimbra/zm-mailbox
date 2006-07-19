@@ -1674,7 +1674,16 @@ public class Appointment extends MailItem {
     // each F/B call is expensive as well.  Need a more efficient way.
     private List<Availability> checkAvailability()
     throws ServiceException {
-        Collection instances = expandInstances(getStartTime(), getEndTime());
+
+        // Only look between now and appointment end time.  Resource is
+        // available if end time is in the past.
+        long now = System.currentTimeMillis();
+        long st = Math.max(getStartTime(), now);
+        long et = getEndTime();
+        if (et < now)
+            return null;
+
+        Collection instances = expandInstances(st, et);
         List<Availability> list = new ArrayList<Availability>(instances.size());
         int numConflicts = 0;
         for (Iterator iter = instances.iterator(); iter.hasNext(); ) {
@@ -1744,7 +1753,7 @@ public class Appointment extends MailItem {
                     }
                 } else if (resource.autoDeclineIfBusy()) {
                     List<Availability> avail = checkAvailability();
-                    if (!Availability.isAvailable(avail)) {
+                    if (avail != null && !Availability.isAvailable(avail)) {
                         partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
                         if (invite.hasOrganizer()) {
                             String msg =
