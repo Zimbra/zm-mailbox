@@ -42,6 +42,9 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class RenameCalendarResource extends AdminDocumentHandler {
 
+    private static final String[] TARGET_RESOURCE_PATH = new String[] { AdminService.E_ID };
+    protected String[] getProxiedResourcePath()  { return TARGET_RESOURCE_PATH; }
+
     /**
      * must be careful and only allow renames from/to
      * domains a domain admin can see
@@ -50,9 +53,8 @@ public class RenameCalendarResource extends AdminDocumentHandler {
         return true;
     }
 
-    public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         String id = request.getAttribute(AdminService.E_ID);
@@ -62,15 +64,13 @@ public class RenameCalendarResource extends AdminDocumentHandler {
         if (resource == null)
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(id);
 
-        if (!canAccessAccount(lc, resource))
-            throw ServiceException.PERM_DENIED(
-                    "cannot access calendar resource account");
+        if (!canAccessAccount(zsc, resource))
+            throw ServiceException.PERM_DENIED("cannot access calendar resource account");
 
         String oldName = resource.getName();
 
-        if (!canAccessEmail(lc, newName))
-            throw ServiceException.PERM_DENIED(
-                    "cannot access calendar resource account: " + newName);
+        if (!canAccessEmail(zsc, newName))
+            throw ServiceException.PERM_DENIED("cannot access calendar resource account: " + newName);
 
         prov.renameCalendarResource(id, newName);
 
@@ -82,11 +82,8 @@ public class RenameCalendarResource extends AdminDocumentHandler {
 
         resource = prov.get(CalendarResourceBy.id, id);
         if (resource == null)
-            throw ServiceException.FAILURE(
-                    "unable to get calendar resource after rename: " + id,
-                    null);
-        Element response =
-            lc.createElement(AdminService.RENAME_CALENDAR_RESOURCE_RESPONSE);
+            throw ServiceException.FAILURE("unable to get calendar resource after rename: " + id, null);
+        Element response = zsc.createElement(AdminService.RENAME_CALENDAR_RESOURCE_RESPONSE);
         ToXML.encodeCalendarResource(response, resource, true);
         return response;
     }

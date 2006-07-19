@@ -44,6 +44,9 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ModifyCalendarResource extends AdminDocumentHandler {
 
+    private static final String[] TARGET_RESOURCE_PATH = new String[] { AdminService.E_ID };
+    protected String[] getProxiedResourcePath()  { return TARGET_RESOURCE_PATH; }
+
     /**
      * must be careful and only allow modifies to
      * calendar resources/attrs domain admin has access to
@@ -52,9 +55,8 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
         return true;
     }
 
-    public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         String id = request.getAttribute(AdminService.E_ID);
@@ -64,15 +66,13 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
         if (resource == null)
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(id);
 
-        if (!canAccessAccount(lc, resource))
-            throw ServiceException.PERM_DENIED(
-                    "cannot access calendar resource account");
+        if (!canAccessAccount(zsc, resource))
+            throw ServiceException.PERM_DENIED("cannot access calendar resource account");
 
-        if (isDomainAdminOnly(lc)) {
-            for (Iterator it = attrs.keySet().iterator(); it.hasNext();) {
-                String attrName = (String) it.next();
+        if (isDomainAdminOnly(zsc)) {
+            for (String attrName : attrs.keySet()) {
                 if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName))
-                    throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
+                    throw ServiceException.PERM_DENIED("can not modify attr: " + attrName);
             }
         }
 
@@ -83,8 +83,7 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
                 new String[] {"cmd", "ModifyCalendarResource", "name",
                               resource.getName()}, attrs));
 
-        Element response =
-            lc.createElement(AdminService.MODIFY_CALENDAR_RESOURCE_RESPONSE);
+        Element response = zsc.createElement(AdminService.MODIFY_CALENDAR_RESOURCE_RESPONSE);
         ToXML.encodeCalendarResource(response, resource, true);
         return response;
     }

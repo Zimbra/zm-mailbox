@@ -45,9 +45,11 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ModifyServer extends AdminDocumentHandler {
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    private static final String[] TARGET_SERVER_PATH = new String[] { AdminService.E_ID };
+    protected String[] getProxiedServerPath()  { return TARGET_SERVER_PATH; }
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getAttribute(AdminService.E_ID);
@@ -67,13 +69,11 @@ public class ModifyServer extends AdminDocumentHandler {
         // tell Config class about it.
         if (attrs.containsKey(Provisioning.A_zimbraUserServicesEnabled)) {
             Server localServer = Provisioning.getInstance().getLocalServer();
-            if (server.equals(localServer)) {
-                boolean b = server.getBooleanAttr(Provisioning.A_zimbraUserServicesEnabled, true);
-                Config.enableUserServices(b);
-            }
+            if (server.equals(localServer))
+                Config.enableUserServices(server.getBooleanAttr(Provisioning.A_zimbraUserServicesEnabled, true));
         }
 
-	    Element response = lc.createElement(AdminService.MODIFY_SERVER_RESPONSE);
+	    Element response = zsc.createElement(AdminService.MODIFY_SERVER_RESPONSE);
 	    GetServer.doServer(response, server);
 	    return response;
 	}

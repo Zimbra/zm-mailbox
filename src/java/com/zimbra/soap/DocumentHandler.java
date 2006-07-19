@@ -53,14 +53,16 @@ import com.zimbra.cs.util.ZimbraLog;
  */
 public abstract class DocumentHandler {
 
-    public static String LOCAL_HOST;
-    static {
-        try {
-            LOCAL_HOST = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
-        } catch (Exception e) {
-            Zimbra.halt("could not fetch local server name from LDAP for request proxying");
+    public static String LOCAL_HOST, LOCAL_HOST_ID;
+        static {
+            try {
+                Server localServer = Provisioning.getInstance().getLocalServer();
+                LOCAL_HOST = localServer.getAttr(Provisioning.A_zimbraServiceHostname);
+                LOCAL_HOST_ID = localServer.getId();
+            } catch (Exception e) {
+                Zimbra.halt("could not fetch local server name from LDAP for request proxying");
+            }
         }
-    }
 
     public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException;
 
@@ -68,8 +70,8 @@ public abstract class DocumentHandler {
         return (ZimbraSoapContext) context.get(SoapEngine.ZIMBRA_CONTEXT);
     }
 
-    public static Account getRequestedAccount(ZimbraSoapContext lc) throws ServiceException {
-        String id = lc.getRequestedAccountId();
+    public static Account getRequestedAccount(ZimbraSoapContext zsc) throws ServiceException {
+        String id = zsc.getRequestedAccountId();
 
         Account acct = Provisioning.getInstance().get(AccountBy.id, id);
         if (acct == null)
@@ -77,8 +79,8 @@ public abstract class DocumentHandler {
         return acct;
     }
 
-    public static Mailbox getRequestedMailbox(ZimbraSoapContext lc) throws ServiceException {
-        String id = lc.getRequestedAccountId();
+    public static Mailbox getRequestedMailbox(ZimbraSoapContext zsc) throws ServiceException {
+        String id = zsc.getRequestedAccountId();
         Mailbox mbox = Mailbox.getMailboxByAccountId(id);
         if (mbox != null)
             ZimbraLog.addToContext(mbox);
@@ -96,31 +98,31 @@ public abstract class DocumentHandler {
         return false;
     }
 
-    public boolean isDomainAdminOnly(ZimbraSoapContext lc) {
-        return AccessManager.getInstance().isDomainAdminOnly(lc.getAuthToken());
+    public boolean isDomainAdminOnly(ZimbraSoapContext zsc) {
+        return AccessManager.getInstance().isDomainAdminOnly(zsc.getAuthToken());
     }
 
-    public boolean canAccessAccount(ZimbraSoapContext lc, Account target) throws ServiceException {
-        return AccessManager.getInstance().canAccessAccount(lc.getAuthToken(), target);
+    public boolean canAccessAccount(ZimbraSoapContext zsc, Account target) throws ServiceException {
+        return AccessManager.getInstance().canAccessAccount(zsc.getAuthToken(), target);
     }
 
-    public Domain getAuthTokenAccountDomain(ZimbraSoapContext lc) throws ServiceException {
-        return AccessManager.getInstance().getDomain(lc.getAuthToken());
+    public Domain getAuthTokenAccountDomain(ZimbraSoapContext zsc) throws ServiceException {
+        return AccessManager.getInstance().getDomain(zsc.getAuthToken());
     }
 
-    public boolean canAccessDomain(ZimbraSoapContext lc, String domainName) throws ServiceException {
-        return AccessManager.getInstance().canAccessDomain(lc.getAuthToken(), domainName);
+    public boolean canAccessDomain(ZimbraSoapContext zsc, String domainName) throws ServiceException {
+        return AccessManager.getInstance().canAccessDomain(zsc.getAuthToken(), domainName);
     }
 
-    public boolean canAccessDomain(ZimbraSoapContext lc, Domain domain) throws ServiceException {
-        return canAccessDomain(lc, domain.getName());
+    public boolean canAccessDomain(ZimbraSoapContext zsc, Domain domain) throws ServiceException {
+        return canAccessDomain(zsc, domain.getName());
     }
 
-    public boolean canAccessEmail(ZimbraSoapContext lc, String email) throws ServiceException {
+    public boolean canAccessEmail(ZimbraSoapContext zsc, String email) throws ServiceException {
         String parts[] = EmailUtil.getLocalPartAndDomain(email);
         if (parts == null)
             throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
-        return canAccessDomain(lc, parts[1]);
+        return canAccessDomain(zsc, parts[1]);
     }
 
     /**
@@ -174,8 +176,8 @@ public abstract class DocumentHandler {
      * @see SessionCache#SESSION_SOAP
      * @see SessionCache#SESSION_ADMIN */
     protected Session getSession(Map<String, Object> context, int sessionType) {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        return (lc == null ? null : lc.getSession(sessionType));
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        return (zsc == null ? null : zsc.getSession(sessionType));
     }
 
 
@@ -221,10 +223,10 @@ public abstract class DocumentHandler {
 
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
         // if the "target account" is remote and the command is non-admin, proxy.
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        String acctId = lc.getRequestedAccountId();
-        if (acctId != null && lc.getProxyTarget() != null && !isAdminCommand()) {
-            if (!LOCAL_HOST.equalsIgnoreCase(getRequestedAccount(lc).getAttr(Provisioning.A_zimbraMailHost)))
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        String acctId = zsc.getRequestedAccountId();
+        if (acctId != null && zsc.getProxyTarget() != null && !isAdminCommand()) {
+            if (!LOCAL_HOST.equalsIgnoreCase(getRequestedAccount(zsc).getAttr(Provisioning.A_zimbraMailHost)))
                 return proxyRequest(request, context, acctId);
         }
 
@@ -232,14 +234,14 @@ public abstract class DocumentHandler {
     }
 
     protected static Element proxyRequest(Element request, Map<String, Object> context, String acctId) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         // new context for proxied request has a different "requested account"
-        ZimbraSoapContext lcTarget = new ZimbraSoapContext(lc, acctId);
+        ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, acctId);
 
-        return proxyRequest(request, context, getServer(acctId), lcTarget);
+        return proxyRequest(request, context, getServer(acctId), zscTarget);
     }
 
-    protected static Element proxyRequest(Element request, Map<String, Object> context, Server server, ZimbraSoapContext lc)
+    protected static Element proxyRequest(Element request, Map<String, Object> context, Server server, ZimbraSoapContext zsc)
     throws ServiceException {
         // figure out whether we can just re-dispatch or if we need to proxy via HTTP
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
@@ -251,17 +253,17 @@ public abstract class DocumentHandler {
             // executing on same server; just hand back to the SoapEngine
             Map<String, Object> contextTarget = new HashMap<String, Object>(context);
             contextTarget.put(SoapEngine.ZIMBRA_ENGINE, engine);
-            contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, lc);
-            response = engine.dispatchRequest(request, contextTarget, lc);
-            if (lc.getResponseProtocol().isFault(response)) {
-                lc.getResponseProtocol().updateArgumentsForRemoteFault(response, lc.getRequestedAccountId());
+            contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, zsc);
+            response = engine.dispatchRequest(request, contextTarget, zsc);
+            if (zsc.getResponseProtocol().isFault(response)) {
+                zsc.getResponseProtocol().updateArgumentsForRemoteFault(response, zsc.getRequestedAccountId());
                 throw new SoapFaultException("error in proxied request", true, response);
             }
         } else {
             // executing remotely; find out target and proxy there
             HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-            ProxyTarget proxy = new ProxyTarget(server.getId(), lc.getRawAuthToken(), httpreq);
-            response = proxy.dispatch(request, lc);
+            ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getRawAuthToken(), httpreq);
+            response = proxy.dispatch(request, zsc);
             response.detach();
         }
         return response;

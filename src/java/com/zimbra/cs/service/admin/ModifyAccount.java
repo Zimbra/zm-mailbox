@@ -28,7 +28,6 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
@@ -58,8 +57,7 @@ public class ModifyAccount extends AdminDocumentHandler {
     }
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getAttribute(AdminService.E_ID);
@@ -69,12 +67,11 @@ public class ModifyAccount extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
-        if (!canAccessAccount(lc, account))
+        if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
-        if (isDomainAdminOnly(lc)) {
-            for (Iterator it = attrs.keySet().iterator(); it.hasNext();) {
-                String attrName = (String) it.next();
+        if (isDomainAdminOnly(zsc)) {
+            for (String attrName : attrs.keySet()) {
                 if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName))
                     throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
             }
@@ -86,7 +83,7 @@ public class ModifyAccount extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyAccount","name", account.getName()}, attrs));
 
-        Element response = lc.createElement(AdminService.MODIFY_ACCOUNT_RESPONSE);
+        Element response = zsc.createElement(AdminService.MODIFY_ACCOUNT_RESPONSE);
         ToXML.encodeAccount(response, account);
 	    return response;
 	}

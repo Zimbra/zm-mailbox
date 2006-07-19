@@ -42,6 +42,9 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class DeleteCalendarResource extends AdminDocumentHandler {
 
+    private static final String[] TARGET_RESOURCE_PATH = new String[] { AdminService.E_ID };
+    protected String[] getProxiedResourcePath()  { return TARGET_RESOURCE_PATH; }
+
     /**
      * must be careful and only allow deletes domain admin has access to
      */
@@ -52,9 +55,8 @@ public class DeleteCalendarResource extends AdminDocumentHandler {
     /**
      * Deletes a calendar resource account and its mailbox.
      */
-    public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         String id = request.getAttribute(AdminService.E_ID);
@@ -65,27 +67,22 @@ public class DeleteCalendarResource extends AdminDocumentHandler {
         if (resource == null)
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(id);
 
-        if (!canAccessAccount(lc, resource))
-            throw ServiceException.PERM_DENIED(
-                    "cannot access calendar resource account");
+        if (!canAccessAccount(zsc, resource))
+            throw ServiceException.PERM_DENIED("cannot access calendar resource account");
 
         if (!Provisioning.onLocalServer(resource)) {
             // Request must be sent to the host that the mailbox is on, so that
             // the mailbox can be deleted
-            throw ServiceException.WRONG_HOST(
-                    resource.getAttr(Provisioning.A_zimbraMailHost), null);
+            throw ServiceException.WRONG_HOST(resource.getAttr(Provisioning.A_zimbraMailHost), null);
         }
         Mailbox mbox = Mailbox.getMailboxByAccount(resource);
 
         prov.deleteCalendarResource(id);
         mbox.deleteMailbox();
 
-        ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-            new String[] {"cmd", "DeleteCalendarResource", "name",
-                          resource.getName(), "id", resource.getId()}));
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(new String[] {"cmd", "DeleteCalendarResource", "name", resource.getName(), "id", resource.getId()}));
 
-        Element response =
-            lc.createElement(AdminService.DELETE_CALENDAR_RESOURCE_RESPONSE);
+        Element response = zsc.createElement(AdminService.DELETE_CALENDAR_RESOURCE_RESPONSE);
         return response;
     }
 }
