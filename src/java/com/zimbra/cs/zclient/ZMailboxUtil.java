@@ -26,6 +26,7 @@
 package com.zimbra.cs.zclient;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -53,6 +54,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.DateUtil;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -170,7 +172,8 @@ public class ZMailboxUtil implements DebugListener {
     }
     
     private static Option O_COLOR = new Option("c", "color", true, "color");
-    private static Option O_CURRENT = new Option("c", "current", false, "current page of search results");    
+    private static Option O_CURRENT = new Option("c", "current", false, "current page of search results");
+    private static Option O_DATE = new Option("d", "date", true,  "received date (msecs since epoch)");        
     private static Option O_FLAGS = new Option("F", "flags", true, "flags");
     private static Option O_FOLDER = new Option("f", "folder", true, "folder-path-or-id");
     private static Option O_IGNORE = new Option("i", "ignore", false, "ignore unknown contact attrs");            
@@ -186,7 +189,8 @@ public class ZMailboxUtil implements DebugListener {
     
     enum Command {
         
-        CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER, O_IGNORE),        
+        ADD_MESSAGE("addMessage", "am", "{dest-folder-path} {filename-or-dir} [{filename-or-dir} ...]", "add a message to a folder", Category.MESSAGE, 2, Integer.MAX_VALUE, O_TAGS, O_DATE),
+        CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER, O_IGNORE, O_TAGS),        
         CREATE_FOLDER("createFolder", "cf", "{folder-name}", "create folder", Category.FOLDER, 1, 1, O_VIEW, O_COLOR, O_FLAGS),
         CREATE_MOUNTPOINT("createMountpoint", "cm", "{folder-name} {owner-id-or-name} {remote-item-id-or-path}", "create mountpoint", Category.FOLDER, 3, 3, O_VIEW, O_COLOR, O_FLAGS),
         CREATE_SEARCH_FOLDER("createSearchFolder", "csf", "{folder-name} {query}", "create search folder", Category.FOLDER, 2, 2, O_SORT, O_TYPES, O_COLOR),        
@@ -478,6 +482,11 @@ public class ZMailboxUtil implements DebugListener {
         return color == null ? null : ZTag.Color.fromString(color);
     }
     
+    private String tagsOpt() throws SoapFaultException {
+        String tags = mCommandLine.getOptionValue(O_TAGS.getOpt());
+        return (tags == null) ? null : lookupTagIds(tags);
+    }
+    
     private ZFolder.Color folderColorOpt() throws ServiceException {
         String color = mCommandLine.getOptionValue(O_COLOR.getOpt());
         return color == null ? null : ZFolder.Color.fromString(color);
@@ -495,6 +504,11 @@ public class ZMailboxUtil implements DebugListener {
         return t == null ? null : ZSearchParams.getCanonicalTypes(t);
     }
 
+    private long dateOpt() {
+        String ds = mCommandLine.getOptionValue(O_DATE.getOpt());
+        return ds == null ? 0 : Long.parseLong(ds);
+    }
+    
     private String folderOpt()   { return mCommandLine.getOptionValue(O_FOLDER.getOpt()); }
 
     private boolean replaceOpt() { return mCommandLine.hasOption(O_REPLACE.getOpt()); }
@@ -540,8 +554,11 @@ public class ZMailboxUtil implements DebugListener {
         }
         
         switch(mCommand) {
+        case ADD_MESSAGE:
+            doAddMessage(args);
+            break;
         case CREATE_CONTACT:
-            ZContact cc = mMbox.createContact(lookupFolderId(folderOpt()), null, getContactMap(args, 0, !ignoreOpt()));
+            ZContact cc = mMbox.createContact(lookupFolderId(folderOpt()),tagsOpt(), getContactMap(args, 0, !ignoreOpt()));
             System.out.println(cc.getId());
             break;
         case CREATE_FOLDER:
@@ -706,6 +723,31 @@ public class ZMailboxUtil implements DebugListener {
             return false;
         }
         return true;
+    }
+
+    private void addMessage(String folderId, String tags, long date, File file) throws ServiceException, IOException {
+        //String aid = mMbox.uploadAttachments(new File[] {file}, 5000);
+        String id = mMbox.addMessage(folderId, tags, date, new String(ByteUtil.getContent(file)), false);
+        System.out.format("%s (%s)%n", id, file.getPath());
+    }
+
+    private void doAddMessage(String[] args) throws ServiceException, IOException {
+        String folderId = lookupFolderId(args[0], false);
+        String tags = tagsOpt();
+        long date = dateOpt();
+
+        for (int i=1; i < args.length; i++) {
+            File file = new File(args[i]);
+            if (file.isDirectory()) {
+                // TODO: should we recurse?
+                for (File child : file.listFiles()) {
+                    if (child.isFile())
+                        addMessage(folderId, tags, date, child);
+                }
+            } else {
+                addMessage(folderId, tags, date, file);
+            }
+        }
     }
 
     private String emailAddrs(List<ZEmailAddress> addrs) {

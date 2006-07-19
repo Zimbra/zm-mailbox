@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.zclient;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -382,8 +383,20 @@ public abstract class ZMailbox {
      */
     public abstract ZActionResult updateItem(String ids, String destFolderId, String tagList, String flags, String targetConstraints) throws ServiceException;        
 
-    // ------------------------
+    /* ------------------------------------------------- */
 
+    public abstract String uploadAttachments(File[] files, int msTimeout) throws ServiceException;
+    
+    /**
+     * @param folderId (required) folderId of folder to add message to
+     * @param tags coma-spearated list of tags, or null for no tags
+     * @param receivedDate (optional) time the message was originally received, in MILLISECONDS since the epoch 
+     * @param content message content
+     * @param noICal if TRUE, then don't process iCal attachments.
+     * @return ID of newly created message
+     */
+    public abstract String addMessage(String folderId, String tags, long receivedDate, String content, boolean noICal) throws ServiceException;
+    
     public abstract ZMessage getMessage(
             String id, 
             boolean markRead,

@@ -33,6 +33,8 @@ public interface ZConversation  {
         unread('u'),
         flagged('f'),
         sentByMe('s'),
+        replied('r'),
+        forwarded('w'),   
         attachment('a');
 
         private char mFlagChar;
@@ -80,7 +82,11 @@ public interface ZConversation  {
 
     public boolean isFlagged();
 
+    public boolean isRepliedTo();
+
     public boolean isSentByMe();
+
+    public boolean isForwarded();
 
     public boolean hasAttachment();
 

@@ -184,4 +184,12 @@ class ZSoapConversation implements ZConversation {
     public boolean isUnread() {
         return hasFlags() && mFlags.indexOf(ZConversation.Flag.unread.getFlagChar()) != -1;
     }
+
+    public boolean isForwarded() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.forwarded.getFlagChar()) != -1;
+    }
+
+    public boolean isRepliedTo() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.replied.getFlagChar()) != -1;
+    }
 }

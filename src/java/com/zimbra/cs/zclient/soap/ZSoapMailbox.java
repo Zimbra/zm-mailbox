@@ -25,15 +25,31 @@
 
 package com.zimbra.cs.zclient.soap;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZConversation;
 import com.zimbra.cs.zclient.ZFolder;
@@ -757,6 +773,87 @@ public class ZSoapMailbox extends ZMailbox {
         return new ZSoapContact(invoke(req).getElement(MailService.E_CONTACT));
     }
 
+    @Override
+    public String addMessage(String folderId, String tags, long receivedDate, String content, boolean noICal) throws ServiceException {
+        // TODO: file upload post instead of inline? 
+        // Or, another addMessage that takes an attachment id and a generic uploadAttachment call?
+        XMLElement req = new XMLElement(MailService.ADD_MSG_REQUEST);
+        Element m = req.addElement(MailService.E_MSG);        
+        m.addAttribute(MailService.A_FOLDER, folderId);
+        if (tags != null && tags.length() > 0) 
+            m.addAttribute(MailService.A_TAGS, tags);
+        if (receivedDate != 0)
+            m.addAttribute(MailService.A_DATE, receivedDate);
+        m.addElement(MailService.E_CONTENT).setText(content);
+        return invoke(req).getElement(MailService.E_MSG).getAttribute(MailService.A_ID);
+        
+    }
+
+    private URI getUploadURI()  throws ServiceException {
+        try {
+            URI uri = new URI(mTransport.getURI());
+            URI newUri = uri.resolve("/service/upload?fmt=raw");
+            return  newUri;
+        } catch (URISyntaxException e) {
+            throw SoapFaultException.CLIENT_ERROR("unable to parse URI: "+mTransport.getURI(), e);
+        }
+    }
+    
+    
+    Pattern sAttachmentId = Pattern.compile("\\d+,'.*','(.*)'");
+
+    private String getAttachmentId(String result) {
+        Matcher m = sAttachmentId.matcher(result);
+        return m.find() ? m.group(1) : null;
+    }
+    
+    @Override
+    public String uploadAttachments(File[] files, int msTimeout) throws ServiceException {
+        String aid = null;
+        
+        URI uri = getUploadURI();
+        boolean isAdmin = uri.getPort() == 7071; // TODO???
+        
+        Cookie cookie = new Cookie(uri.getHost(), 
+                        isAdmin ? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, 
+                        mTransport.getAuthToken(), "/", -1, false);
+        HttpState initialState = new HttpState();
+        initialState.addCookie(cookie);
+        HttpClient client = new HttpClient();
+        client.setState(initialState);
+        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+        
+        // make the post
+        PostMethod post = new PostMethod(uri.toString());
+        client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
+        int statusCode = -1;
+        try {
+            Part[] parts = new Part[files.length];
+            for (int i=0; i < files.length; i++) {
+                File file = files[i];
+                String contentType = URLConnection.getFileNameMap().getContentTypeFor(file.getName());
+                parts[i] = new FilePart(file.getName(), file, contentType, "UTF-8");
+            }
+            post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
+            statusCode = client.executeMethod(post);
+
+            // parse the response
+            if (statusCode == 200) {
+                String response = post.getResponseBodyAsString();
+                aid = getAttachmentId(response);
+                if (aid == null)
+                    throw SoapFaultException.FAILURE("Attachment post failed, unable to parse response: " + response, null);
+            } else {
+                throw SoapFaultException.FAILURE("Attachment post failed, status=" + statusCode, null);
+            }
+        } catch (IOException e) {
+            throw SoapFaultException.IO_ERROR(e.getMessage(), e);
+        } finally {
+            post.releaseConnection();
+        }
+        return aid;
+    }
+
     /*
  
  <AuthRequest xmlns="urn:zimbraAccount">
@@ -798,7 +895,7 @@ public class ZSoapMailbox extends ZMailbox {
 
  <SendMsgRequest>
  <SaveDraftRequest>
- <AddMsgRequest>
+ *<AddMsgRequest>
 
  *<CreateContactRequest>
  *<ModifyContactRequest replace="{replace-mode}">
