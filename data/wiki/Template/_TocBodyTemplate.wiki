@@ -1,6 +1,6 @@
-<div class="_toc">
-	<table class="_tocTable" cellpadding="2" cellspacing="0">
-		<tbody><tr><td colspan="3" class="_tocHeader"><wiklet class='MSG' key='wikiToc' /></td></tr>
+<div class="zmwiki-toc">
+	<table class="zmwiki-tocTable" cellpadding="2" cellspacing="0">
+		<tbody><tr><td colspan="3" class="zmwiki-tocHeader"><wiklet class='MSG' key='wikiToc' /></td></tr>
 		<wiklet class='CONTENT' />
 	</tbody></table>
 </div>

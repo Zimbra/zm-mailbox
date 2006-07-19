@@ -1,1 +1,1 @@
-<td class='_breadcrumb_separator'> &raquo; </td>
+<td class='zmwiki-breadcrumb_separator'> &raquo; </td>

@@ -453,7 +453,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 
 		public static final String[][] sTAGS =
 		{
-			{ "_toc_list", "_toc_simple" },
+			{ "zmwiki-tocList", "zmwiki-tocSimple" },
 			{ "ul",        "span" },
 			{ "li",        "span" }
 		};
@@ -508,7 +508,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
         	for (Folder f : subfolders) {
     	    	buf.append("<");
         		buf.append(sTAGS[sINNER][style]);
-        		buf.append(" class='_pageLink'>");
+        		buf.append(" class='zmwiki-pageLink'>");
         		buf.append(createLink(f.getName() + "/"));
         		buf.append("</");
         		buf.append(sTAGS[sINNER][style]);
@@ -520,7 +520,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
             		continue;
             	buf.append("<");
         		buf.append(sTAGS[sINNER][style]);
-            	buf.append(" class='_pageLink'>");
+            	buf.append(" class='zmwiki-pageLink'>");
             	String name;
             	if (doc instanceof WikiItem)
             		name = ((WikiItem)doc).getWikiWord();
@@ -620,7 +620,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			String format = params.get(sFORMAT);
 			if (format == null || format.equals(sSIMPLE)) {
 				StringBuffer buf = new StringBuffer();
-				buf.append("<span class='_breadcrumbs_simple'>");
+				buf.append("<span class='zmwiki-breadcrumbsSimple'>");
 				StringBuffer path = new StringBuffer();
 				path.append("/");
 				for (MailItem item : list) {
@@ -630,7 +630,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 					else
 						name = item.getSubject();
 					path.append(name);
-					buf.append("<span class='_pageLink'>");
+					buf.append("<span class='zmwiki-pageLink'>");
 					buf.append("[[").append(name).append("][").append(path).append("]]");
 					buf.append("</span>");
 					path.append("/");

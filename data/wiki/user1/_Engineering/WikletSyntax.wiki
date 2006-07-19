@@ -320,7 +320,7 @@
 		<ul>
 		<li>Should output as:
 			<div class='code'>
-			&nbsp;&nbsp;&lt;a href='mailto:&lt;wiklet class='CREATOR' />' class='_userlink'&gt;&lt;wiklet class='CREATOR' />&lt;/a&gt;
+			&nbsp;&nbsp;&lt;a href='mailto:&lt;wiklet class='CREATOR' />' class='zmwiki-userlink'&gt;&lt;wiklet class='CREATOR' />&lt;/a&gt;
 			</div>
 		<li>Client will have to munge anchor into a zimlet
 		</ul>
@@ -418,25 +418,25 @@
 		<ul>
 		<li>simple:<br>
 			<div class=code>
-			&lt;span class='_toc_simple'&gt;<br>
-			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/span&gt;<br>
-			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName2&#93;&#93;&lt;/span&gt;<br>
+			&lt;span class='zmwiki-tocSimple'&gt;<br>
+			&nbsp;&nbsp;&lt;span class='zmwiki-pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/span&gt;<br>
+			&nbsp;&nbsp;&lt;span class='zmwiki-pageLink'&gt;&#91;&#91;PageName2&#93;&#93;&lt;/span&gt;<br>
 			&lt;/span&gt;
 			</div>
 
 		<li><i>list</i>:<br>
 			<div class=code>
-			&lt;ul class='_toc_list'&gt;<br>
-			&nbsp;&nbsp;&lt;li class='_pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/li&gt;<br>
-			&nbsp;&nbsp;&lt;li class='_pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/li&gt;<br>
+			&lt;ul class='zmwiki-tocList'&gt;<br>
+			&nbsp;&nbsp;&lt;li class='zmwiki-pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/li&gt;<br>
+			&nbsp;&nbsp;&lt;li class='zmwiki-pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/li&gt;<br>
 			&nbsp;&nbsp;....<br>
 			&lt;/ul&gt;<br>
 			</div>
 
 		<li>bodyTemplate (sample):<br>
 				<div class=code>
-					&lt;table class='_toc_icon_table'&gt;<br>
-					&nbsp;&nbsp;&lt;tr&gt;&lt;td colspan=4 class='_tocHead'&gt;Contents of &lt;wiklet class='NAME' />&lt;/td&gt;&lt;/tr&gt;<br>
+					&lt;table class='zmwiki-tocIconTable'&gt;<br>
+					&nbsp;&nbsp;&lt;tr&gt;&lt;td colspan=4 class='zmwiki-tocHead'&gt;Contents of &lt;wiklet class='NAME' />&lt;/td&gt;&lt;/tr&gt;<br>
 					&nbsp;&nbsp;&lt;wiklet class='CONTENT' />
 					&lt;/table&gt;<br>
 				</div>
@@ -444,14 +444,14 @@
 		<li>itemTemplate (sample):<br>
 				<div class=code>
 						&lt;tr&gt;<br>
-						&nbsp;&nbsp;&lt;td class='_pageIcon'&gt;&lt;wiklet class='ICON' />&lt;/td&gt;<br>
-						&nbsp;&nbsp;&lt;td class='_pageLink'&gt;&lt;wiklet class='NAME' />&lt;/td&gt;<br>
-						&nbsp;&nbsp;&lt;td class='_author'&gt;&bull;&lt;wiklet class='MODIFIER' />&lt;/td&gt;<br>
-						&nbsp;&nbsp;&lt;td class='_history'&gt;&bull;&lt;wiklet class='MODIFYDATE' />&lt;/td&gt;<br>
+						&nbsp;&nbsp;&lt;td class='zmwiki-pageIcon'&gt;&lt;wiklet class='ICON' />&lt;/td&gt;<br>
+						&nbsp;&nbsp;&lt;td class='zmwiki-pageLink'&gt;&lt;wiklet class='NAME' />&lt;/td&gt;<br>
+						&nbsp;&nbsp;&lt;td class='zmwiki-author'&gt;&bull;&lt;wiklet class='MODIFIER' />&lt;/td&gt;<br>
+						&nbsp;&nbsp;&lt;td class='zmwiki-history'&gt;&bull;&lt;wiklet class='MODIFYDATE' />&lt;/td&gt;<br>
 						&lt;/tr&gt;<br>
 						&lt;tr&gt;<br>
 						&nbsp;&nbsp;&lt;td&gt;&lt;/td&gt;<br>
-						&nbsp;&nbsp;&lt;td class='_fragment' colspan='4'&gt;&lt;wiklet class='FRAGMENT' />&lt;/td&gt;<br>
+						&nbsp;&nbsp;&lt;td class='zmwiki-fragment' colspan='4'&gt;&lt;wiklet class='FRAGMENT' />&lt;/td&gt;<br>
 						&lt;/tr&gt;<br>
 				</div>
 		</ul>
@@ -482,22 +482,22 @@
 		<ul>
 		<li><i>simple</i>:
 			<div class='code'>
-			&lt;span class='_breadcrumbs_simple'&gt;<br>
-			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/span&gt; &gt;<br>
-			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName2&#93;&#93;&lt;/span&gt;<br>
+			&lt;span class='zmwiki-breadcrumbsSimple'&gt;<br>
+			&nbsp;&nbsp;&lt;span class='zmwiki-pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/span&gt; &gt;<br>
+			&nbsp;&nbsp;&lt;span class='zmwiki-pageLink'&gt;&#91;&#91;PageName2&#93;&#93;&lt;/span&gt;<br>
 			&lt;/span&gt;<br>
 			</div>
 		<li>bodyTemplate (sample):
 			<div class='code'>
-				&lt;table class='_breadcrumbs_table'&gt;<br>
+				&lt;table class='zmwiki-breadcrumbs_table'&gt;<br>
 				&nbsp;&nbsp;&lt;tr&gt;&lt;wiklet class='CONTENT' />&lt;/tr&gt;<br>
 				&lt;/table&gt;<br>
 			</div>
 		<li>itemTemplate:
 			<div class='code'>
-					&lt;td class='_pageIcon'&gt;&lt;wiklet class='ICON' />&lt;/td&gt;<br>
-					&lt;td class='_pageLink'&gt;&lt;wiklet class='NAME' />&lt;/td&gt;<br>
-					&lt;td class='_breadcrumb_separator'&gt;&nbsp;&gt;&nbsp;&lt;/td&gt;<br>
+					&lt;td class='zmwiki-pageIcon'&gt;&lt;wiklet class='ICON' />&lt;/td&gt;<br>
+					&lt;td class='zmwiki-pageLink'&gt;&lt;wiklet class='NAME' />&lt;/td&gt;<br>
+					&lt;td class='zmwiki-breadcrumb_separator'&gt;&nbsp;&gt;&nbsp;&lt;/td&gt;<br>
 			</div>
 		</ul>
 	</ul>
@@ -549,23 +549,23 @@
 		<ul>
 		<li>simple:
 			<div class='code'>
-			&lt;span class='_attachments_simple'&gt;<br>
-			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/span&gt; &gt;<br>
-			&nbsp;&nbsp;&lt;span class='_pageLink'&gt;&#91;&#91;PageName2&#93;&#93;&lt;/span&gt;<br>
+			&lt;span class='zmwiki-attachments_simple'&gt;<br>
+			&nbsp;&nbsp;&lt;span class='zmwiki-pageLink'&gt;&#91;&#91;PageName1&#93;&#93;&lt;/span&gt; &gt;<br>
+			&nbsp;&nbsp;&lt;span class='zmwiki-pageLink'&gt;&#91;&#91;PageName2&#93;&#93;&lt;/span&gt;<br>
 			&lt;/span&gt;<br>
 			</div>
 			
 		<li>bodyTemplate (sample):
 			<div class='code'>
-				&lt;table class='_breadcrumb_table'&gt;<br>
+				&lt;table class='zmwiki-breadcrumb_table'&gt;<br>
 				&nbsp;&nbsp;&lt;tr&gt;&lt;wiklet class='CONTENT' />&lt;/tr&gt;<br>
 				&lt;/table&gt;<br>
 			</div>
 
 		<li>itemTemplate (sample):
-					&lt;td class='_pageIcon'&gt;&lt;wiklet class='ICON' />&lt;/td&gt;<br>
-					&lt;td class='_pageLink'&gt;&lt;wiklet class='NAME' />&lt;/td&gt;<br>
-					&lt;td class='_breadcrumb_separator'&gt;&nbsp;&gt;&nbsp;&lt;/td&gt;<br>
+					&lt;td class='zmwiki-pageIcon'&gt;&lt;wiklet class='ICON' />&lt;/td&gt;<br>
+					&lt;td class='zmwiki-pageLink'&gt;&lt;wiklet class='NAME' />&lt;/td&gt;<br>
+					&lt;td class='zmwiki-breadcrumb_separator'&gt;&nbsp;&gt;&nbsp;&lt;/td&gt;<br>
 			</div>
 		</ul>
 	</td>
@@ -589,20 +589,20 @@
 		<ul>
 		<li>simple:
 			<div class='code'>
-					&lt;table class='_history_simple_table'&gt;<br>
+					&lt;table class='zmwiki-history_simple_table'&gt;<br>
 					&nbsp;&nbsp;&lt;tr&gt;<br>
-							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_historyLink'&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='zmwiki-historyLink'&gt;<br>
 								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;a href="&lt;wiklet class='URL' />?version=&lt;wiklet class='VERSION' />"&gt;Version &lt;wiklet class='VERSION' />&lt;/a&gt;<br>
 							&nbsp;&nbsp;&nbsp;&nbsp;&lt;/td&gt;<br>
-							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_author'&gt;&lt;wiklet class='MODIFIER' />&lt;/td&gt;<br>
-							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_history'&gt;&lt;wiklet class='MODIFYDATE' format='longdateandtime' /> &lt;/td&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='zmwiki-author'&gt;&lt;wiklet class='MODIFIER' />&lt;/td&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='zmwiki-history'&gt;&lt;wiklet class='MODIFYDATE' format='longdateandtime' /> &lt;/td&gt;<br>
 					&nbsp;&nbsp;&lt;/tr&gt;<br>
 					&nbsp;&nbsp;&lt;tr&gt;<br>
-							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_historyLink'&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='zmwiki-historyLink'&gt;<br>
 								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;a href="&lt;wiklet class='URL' />?version=&lt;wiklet class='VERSION' />&lt;/a&gt;<br>
 							&nbsp;&nbsp;&nbsp;&nbsp;&lt;/td&gt;<br>
-							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_author'&gt;&lt;wiklet class='MODIFIER' />&lt;/td&gt;<br>
-							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='_history'&gt;&lt;wiklet class='MODIFYDATE' format='longdateandtime' />&lt;/td&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='zmwiki-author'&gt;&lt;wiklet class='MODIFIER' />&lt;/td&gt;<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;&lt;td class='zmwiki-history'&gt;&lt;wiklet class='MODIFYDATE' format='longdateandtime' />&lt;/td&gt;<br>
 					&nbsp;&nbsp;&lt;/tr&gt;<br>
 					&nbsp;&nbsp;...<br>
 					&lt;/table&gt;<br>

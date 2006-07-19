@@ -1,2 +1,2 @@
-<td class='_pageIcon'><wiklet class='ICON' /></td>
-<td class='_pageLink'>[[<wiklet class='NAME' />]]</td>
+<td class='zmwiki-pageIcon'><wiklet class='ICON' /></td>
+<td class='zmwiki-pageLink'>[[<wiklet class='NAME' />]]</td>

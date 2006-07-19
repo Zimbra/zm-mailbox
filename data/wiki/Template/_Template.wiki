@@ -1,24 +1,24 @@
 <div id='ZimbraWikiPage'>
-	<table class="_chromeTable" cellpadding="0" cellspacing="0"><tbody>
-	<tr><td class="_headerContainer" colspan=2>
+	<table class="zmwiki-chromeTable" cellpadding="0" cellspacing="0"><tbody>
+	<tr><td class="zmwiki-headerContainer" colspan=2>
 		<wiklet class='INLINE' page="_Header" inherit="true" />
 		</td>
 	</tr>
 	<tr>
-		<td class="_sideBarContainer" valign="top" rowspan="2">
+		<td class="zmwiki-sideBarContainer" valign="top" rowspan="2">
 			<wiklet class='INLINE' page="_SideBar" inherit="true" />
 		</td>
 
-		<td class="_titleBarContainer" valign="top">
+		<td class="zmwiki-titleBarContainer" valign="top">
 			<wiklet class='INLINE' page="_TitleBar" inherit="true" />
 		</td>
 	</tr>
 	<tr>
-		<td class="_contentContainer" valign="top">
+		<td class="zmwiki-contentContainer" valign="top">
 			<wiklet class='CONTENT' />
 		</td>
 	</tr>
-	<tr><td class="_footerContainer" colspan=2>
+	<tr><td class="zmwiki-footerContainer" colspan=2>
 		<wiklet class='INLINE' page="_Footer" inherit="true" />
 	</td>
 	</tbody></table>
