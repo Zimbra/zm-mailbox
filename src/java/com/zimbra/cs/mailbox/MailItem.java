@@ -1519,6 +1519,10 @@ public abstract class MailItem implements Comparable {
                 parent.removeChild(this);
         }
 
+        // short-circuit now if nothing's actually being deleted
+        if (info.itemIds.isEmpty())
+            return;
+
         mMailbox.markItemDeleted(info.itemIds);
         // when applicable, record the deleted MailItem (rather than just its id)
         if (!childrenOnly && !info.incomplete)

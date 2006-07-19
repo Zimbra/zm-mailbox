@@ -744,12 +744,16 @@ public class Conversation extends MailItem {
         Message[] msgs = getMessages(SORT_ID_ASCENDING);
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
 
+        boolean excludeModify = false, excludeAccess = false;
         for (int i = 0; i < msgs.length; i++) {
             Message child = msgs[i];
-            if (!child.checkChangeID() || !TargetConstraint.checkItem(tcon, child) ||
-                    !child.canAccess(ACL.RIGHT_DELETE)) {
-                info.incomplete = MailItem.DELETE_CONTENTS;
+            // silently skip explicitly excluded messages, PERMISSION_DENIED messages, and MODIFY_CONFLICT messages
+            if (!TargetConstraint.checkItem(tcon, child)) {
                 continue;
+            } else if (!child.canAccess(ACL.RIGHT_DELETE)) {
+                excludeAccess = true;  continue;
+            } else if (!child.checkChangeID()) {
+                excludeModify = true;  continue;
             }
             Integer childId = new Integer(child.getId());
 
@@ -779,6 +783,15 @@ public class Conversation extends MailItem {
                 count.increment(1, child.getSize());
         }
 
+        if (info.itemIds.size() == 1) {
+            // if all messages have been excluded, some for "error" reasons, throw an exception
+            if (excludeAccess)
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+            if (excludeModify)
+                throw MailServiceException.MODIFY_CONFLICT();
+        }
+        if (info.itemIds.size() != msgs.length + 1)
+            info.incomplete = MailItem.DELETE_CONTENTS;
         return info;
     }
 
