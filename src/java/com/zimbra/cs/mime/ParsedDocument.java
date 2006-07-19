@@ -108,7 +108,7 @@ public class ParsedDocument {
         public InputStream getInputStream() throws IOException {
             return mStream = new DigestingInputStream(super.getInputStream());
         }
-        public OutputStream getOutputStream() throws IOException {
+        public OutputStream getOutputStream() {
             throw new UnsupportedOperationException();
         }
         public String getDigest() throws IOException  { checkStream();  return encodeDigest(mStream.getDigest()); }
@@ -127,14 +127,14 @@ public class ParsedDocument {
 
         public String getContentType() { return mContentType; }
         public String getName() { return mFilename; }
-        public InputStream getInputStream() throws IOException {
+        public InputStream getInputStream() {
             return new ByteArrayInputStream(mRawData);
         }
-        public OutputStream getOutputStream() throws IOException {
+        public OutputStream getOutputStream() {
             throw new UnsupportedOperationException();
         }
-        public String getDigest() throws IOException { return mMyDigest; }
-        public int getSize() throws IOException { return mRawData.length; }
+        public String getDigest() { return mMyDigest; }
+        public int getSize() { return mRawData.length; }
     }
 
     String mContentType;
