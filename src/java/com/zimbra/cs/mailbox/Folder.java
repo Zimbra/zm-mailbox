@@ -1003,6 +1003,7 @@ public class Folder extends MailItem {
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("folder: {");
+        sb.append("n:\"").append(getName()).append("\", ");
         appendCommonMembers(sb).append(", ");
         sb.append(CN_ATTRIBUTES).append(": ").append(mAttributes);
         sb.append("}");

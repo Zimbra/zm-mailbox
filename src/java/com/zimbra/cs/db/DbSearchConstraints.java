@@ -200,15 +200,16 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                 for (Folder f: collect) {
                     if (!atFirst) 
                         str.append(" ");
+                    
+                    if (!truthiness)
+                        str.append("-");
 
                     if (f instanceof Mountpoint) {
-                        if (!truthiness)
-                            str.append("-");
-                        str.append("inid:");
+                        str.append("INID:");
                         Mountpoint mpt = (Mountpoint)f;
                         str.append(mpt.getRemoteId());
                     } else {
-                        str.append("in:").append(f.getName());
+                        str.append("IN:").append(f.getName());
                     }
                     atFirst = false;
                 }
@@ -228,7 +229,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
 
                     if (!truthiness)
                     	str.append("-");
-                    str.append("inid:\"").append(id.toString()).append("\"");
+                    str.append("INID:\"").append(id.toString()).append("\"");
                     atFirst = false;
                 }
                 str.append(") ");

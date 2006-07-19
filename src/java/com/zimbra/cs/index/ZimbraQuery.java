@@ -56,15 +56,14 @@ import com.zimbra.cs.index.queryparser.ZimbraQueryParserConstants;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.SoapProtocol;
-import com.zimbra.soap.ZimbraSoapContext;
-
-
 
 /**
  * @author tim
@@ -667,15 +666,20 @@ public final class ZimbraQuery {
         }
     }
 
+    
     public static class InQuery extends BaseQuery
     {
         public static final Integer IN_ANY_FOLDER = new Integer(-2);
+        public static final Integer IN_LOCAL_FOLDER = new Integer(-3);
+        public static final Integer IN_REMOTE_FOLDER = new Integer(-4);
 
-        public static InQuery Create(Mailbox mailbox, Analyzer analyzer, int modifier, Integer folderId) throws ServiceException {
+        public static BaseQuery Create(Mailbox mailbox, Analyzer analyzer, int modifier, Integer folderId) throws ServiceException {
 //          try {
-            if (folderId == IN_ANY_FOLDER) {
-                return new InQuery(mailbox, analyzer, modifier);
-            } else { 
+            if (folderId < 0) {
+                InQuery toRet = new InQuery(mailbox, analyzer, folderId);
+                toRet.mSpecialTarget = folderId;
+                return toRet;
+            } else {
                 Folder folder = mailbox.getFolderById(null, folderId.intValue());
                 return new InQuery(mailbox, analyzer, modifier, folder);
             }
@@ -685,7 +689,7 @@ public final class ZimbraQuery {
 //          } 
         }
 
-        public static InQuery Create(Mailbox mailbox, Analyzer analyzer, int modifier, String folderName) throws ServiceException {
+        public static BaseQuery Create(Mailbox mailbox, Analyzer analyzer, int modifier, String folderName) throws ServiceException {
 //          try {
             Folder folder = mailbox.getFolderByPath(null, folderName);
             return new InQuery(mailbox, analyzer, modifier, folder);
@@ -695,51 +699,186 @@ public final class ZimbraQuery {
         }
         private Folder mFolder;
         private ItemId mInId;
+        private Integer mSpecialTarget = null;
+        private Mailbox mMailbox;
 
         public InQuery(Mailbox mailbox, Analyzer analyzer, int modifier, ItemId itemId) {
             super(modifier, ZimbraQueryParser.IN);
             mFolder = null;
             mInId = itemId;
+            mMailbox = mailbox;
         }
 
         public InQuery(Mailbox mailbox, Analyzer analyzer, int modifier, Folder folder) {
             super(modifier, ZimbraQueryParser.IN);
             assert(folder != null);
             mFolder = folder;
+            mMailbox = mailbox;
         }
-
-        /**
-         * Matches something in ANY folder
-         * 
-         * @param mailbox
-         * @param analyzer
-         * @param modifier
-         */
-        public InQuery(Mailbox mailbox, Analyzer analyzer, int modifier) {
+        
+        private InQuery(Mailbox mailbox, Analyzer analyzer, int modifier) {
             super(modifier, ZimbraQueryParser.IN);
-            mFolder = null;
+            mMailbox = mailbox;
         }
+        
+        protected QueryOperation getLocalFolderOperation(Mailbox mbox) {
 
+            try {
+                Folder root = mbox.getFolderById(null, Mailbox.ID_FOLDER_ROOT);
+                List<Folder> allFolders = root.getSubfolderHierarchy();
+                
+                Folder trash = mbox.getFolderById(null, Mailbox.ID_FOLDER_TRASH);
+                List<Folder> trashFolders = trash.getSubfolderHierarchy();
+                
+                allFolders.remove(trash);
+                for (Folder f : trashFolders) {
+                    allFolders.remove(f);
+                }
+                
+                Folder spam = mbox.getFolderById(null, Mailbox.ID_FOLDER_SPAM);
+                allFolders.remove(spam);
+                
+                if (allFolders.size() == 0) {
+                    return new NullQueryOperation();
+                } else {
+                    UnionQueryOperation outer = new UnionQueryOperation();
+                    
+                    for (Folder f : allFolders) {
+                        if (!(f instanceof Mountpoint) && !(f instanceof SearchFolder)) {
+                            System.out.println("Adding: "+f.toString());
+                            DBQueryOperation dbop = new DBQueryOperation();
+                            outer.add(dbop);
+                            dbop.addInClause(f, true);
+                        }
+                    }
+                    return outer;
+                }
+            } catch (ServiceException e) {
+                return new NullQueryOperation();
+            }
+        }
+        
+        protected QueryOperation getRemoteFolderOperation(boolean truth, Mailbox mbox) {
+            
+            try {
+                Folder root = mbox.getFolderById(null, Mailbox.ID_FOLDER_ROOT);
+                List<Folder> allFolders = root.getSubfolderHierarchy();
+                
+                Folder trash = mbox.getFolderById(null, Mailbox.ID_FOLDER_TRASH);
+                List<Folder> trashFolders = trash.getSubfolderHierarchy();
+                
+                allFolders.remove(trash);
+                for (Folder f : trashFolders) {
+                    
+                    allFolders.remove(f);
+                }
+                
+                Folder spam = mbox.getFolderById(null, Mailbox.ID_FOLDER_SPAM);
+                allFolders.remove(spam);
+                
+                for (Iterator<Folder> iter = allFolders.iterator(); iter.hasNext();) {
+                    Folder f = iter.next();
+                    if (!(f instanceof Mountpoint))
+                        iter.remove();
+                    else {
+                        Mountpoint mpt = (Mountpoint)f;
+//                        if (mpt. .getAccount() == mbox.getAccount()) {
+//                            iter.remove();
+//                        }
+                    }
+                }
+                
+                if (allFolders.size() == 0) {
+                    if (truth) {
+                        return new NullQueryOperation();
+                    }
+                } else {
+                    if (truth) {
+                        UnionQueryOperation outer = new UnionQueryOperation();
+                        
+                        for (Folder f : allFolders) {
+                            DBQueryOperation dbop = new DBQueryOperation();
+                            outer.add(dbop);
+                            dbop.addInClause(f, truth);
+                        }
+                        return outer;
+                    } else {
+                        IntersectionQueryOperation outer = new IntersectionQueryOperation();
+                        
+                        for (Folder f : allFolders) {
+                            DBQueryOperation dbop = new DBQueryOperation();
+                            outer.addQueryOp(dbop);
+                            dbop.addInClause(f, truth);
+                        }
+                        
+                        return outer;
+                    }
+                }
+            } catch (ServiceException e) {}
+            return new NullQueryOperation();
+        }
+        
         protected QueryOperation getQueryOperation(boolean truth) {
-            DBQueryOperation dbOp = DBQueryOperation.Create();
+            if (mSpecialTarget != null) {
+                if (mSpecialTarget == IN_ANY_FOLDER) {
+                    DBQueryOperation dbOp = DBQueryOperation.Create();
+                    dbOp.addAnyFolderClause(calcTruth(truth));
+                    return dbOp;
+                } else {
+                    if (calcTruth(truth)) {
+                        if (mSpecialTarget == IN_REMOTE_FOLDER) {
+                            return getRemoteFolderOperation(true, mMailbox);
+                        } else {
+                            assert(mSpecialTarget == IN_LOCAL_FOLDER);
+//                            DBQueryOperation dbOp = DBQueryOperation.Create();
+//                            dbOp.addLocalFolderClause(true, mMailbox);
+//                            return dbOp;
+                            return getLocalFolderOperation(mMailbox);
+                        }
+                    } else {
+                        if (mSpecialTarget == IN_REMOTE_FOLDER) {
+                            return getLocalFolderOperation(mMailbox);
+//                            
+//                            DBQueryOperation dbOp = DBQueryOperation.Create();
+//                            dbOp.addLocalFolderClause(true, mMailbox);
+//                            return dbOp;
+                        } else {
+                            assert(mSpecialTarget == IN_LOCAL_FOLDER);
+                            return getRemoteFolderOperation(true, mMailbox);
+                        }
+                    }
+                }
+            }
 
+            DBQueryOperation dbOp = DBQueryOperation.Create();
             if (mFolder != null) {
                 dbOp.addInClause(mFolder, calcTruth(truth));
             } else if (mInId != null) {
                 dbOp.addInIdClause(mInId, calcTruth(truth));
             } else {
-                dbOp.addAnyFolderClause(calcTruth(truth));
+                assert(false);
             }
 
             return dbOp;
         }
 
         public String toString(int expLevel) {
-            return super.toString(expLevel)+
-            ",IN:"+(mInId!=null ?
-                        mInId.toString() :
-                            (mFolder!=null?mFolder.getName():"ANY_FOLDER"))
-                            +")";
+            if (mSpecialTarget != null) {
+                String toRet = super.toString(expLevel)+",IN:";
+                if (mSpecialTarget == IN_ANY_FOLDER) {
+                    toRet = toRet + "ANY_FOLDER";
+                } else if (mSpecialTarget == IN_LOCAL_FOLDER) {
+                    toRet = toRet + "LOCAL";
+                } else if (mSpecialTarget == IN_REMOTE_FOLDER) {
+                    toRet = toRet + "REMOTE";
+                }
+                return toRet;
+            } else {
+                return super.toString(expLevel)+
+                ",IN:"+(mInId!=null ? mInId.toString() :
+                    (mFolder!=null?mFolder.getName():"ANY_FOLDER"))
+                    +")";
+            }
         }
     }
 
@@ -1615,8 +1754,6 @@ public final class ZimbraQuery {
             mSearchOrder = mSortByOverride;
         }
 
-        // 
-        // Optimize the query 
         BaseQuery head = getHead();
         if (null != head) {
 

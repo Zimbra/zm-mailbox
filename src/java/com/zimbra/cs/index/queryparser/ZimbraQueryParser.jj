@@ -140,17 +140,25 @@ public final class ZimbraQueryParser {
                           return new ZimbraQuery.ForwardedQuery(mbx, analyze, modifier, false);
                       } } );
 
-        sIsStrMap.put("anywhere",
-                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
-                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_ANY_FOLDER);
-                      } } );
-
         sIsStrMap.put("invite",
                       new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
                           return ZimbraQuery.DBTypeQuery.IS_INVITE(mbx, analyze, modifier);
                       } } );
-        
-        
+                      
+        sIsStrMap.put("anywhere",
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_ANY_FOLDER);
+                      } } );
+                      
+        sIsStrMap.put("local",
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_LOCAL_FOLDER);
+                      } } );
+
+        sIsStrMap.put("remote",
+                      new GetQueryCallback() { public ZimbraQuery.BaseQuery execute(Mailbox mbx, Analyzer analyze, int modifier) throws ServiceException {
+	                          return ZimbraQuery.InQuery.Create(mbx, analyze, modifier, ZimbraQuery.InQuery.IN_REMOTE_FOLDER);
+                      } } );
     }
 
     public ZimbraQuery.BaseQuery GetQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
@@ -178,7 +186,7 @@ public final class ZimbraQueryParser {
           case IN:
             if (folderId == null)
                 folderId = (Integer) sFolderStrMap.get(tok.toLowerCase());
-            ZimbraQuery.InQuery inq;
+            ZimbraQuery.BaseQuery inq;
             if (iid != null && !iid.belongsTo(mMailbox)) {
             	inq = new ZimbraQuery.InQuery(mMailbox, mAnalyzer, modifier, iid);
             } else if (folderId != null) {
