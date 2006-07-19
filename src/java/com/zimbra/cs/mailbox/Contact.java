@@ -240,8 +240,8 @@ public class Contact extends MailItem {
      * @param attrs
      */
     public static void normalizeFileAs(Map<String, String> attrs) {
-		String fileAs = attrs.get(A_fileAs);
-		if (fileAs == null || fileAs.length() == 0)
+		String fileAs = attrs.get(A_fullName);
+		if (fileAs == null || fileAs.trim().length() == 0)
 			return;
 
         String last = attrs.get(A_lastName);
