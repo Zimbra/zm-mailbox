@@ -54,6 +54,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -81,11 +82,12 @@ public class ZMailboxUtil implements DebugListener {
     private boolean mInteractive = false;
     private boolean mGlobalVerbose = false;
     private boolean mDebug = false;
-    private String mAccountName = null;
-    private String mTargetAccountName = null;    
+    private String mAdminAccountName = null;
+    private String mMailboxName = null;    
     private String mPassword = null;
     private ZAccount mAccount = null;
     private String mUrl = "http://localhost";
+    private static String mAdminUrl = "https://localhost:7071/";    
     
     private Map<String,Command> mCommandIndex;
     private ZMailbox mMbox;
@@ -109,9 +111,11 @@ public class ZMailboxUtil implements DebugListener {
     
     public void setVerbose(boolean verbose) { mGlobalVerbose = verbose; }
     
-    public void setAccountName(String account) { mAccountName = account; }
+    public void setInteractive(boolean interactive) { mInteractive = interactive; }
     
-    public void setTargetAccountName(String account) { mTargetAccountName = account; }    
+    public void setAdminAccountName(String account) { mAdminAccountName = account; }
+    
+    public void setMailboxName(String account) { mMailboxName = account; }    
 
     public void setPassword(String password) { mPassword = password; }
     
@@ -150,9 +154,10 @@ public class ZMailboxUtil implements DebugListener {
         System.out.println("  -h/--help                                display usage");
         System.out.println("  -f/--file                                use file as input stream");
         System.out.println("  -u/--url      http[s]://{host}[:{port}]  server hostname and optional port. must use admin port with -t");
-        System.out.println("  -a/--account  {name}                     account name to auth as");
-        System.out.println("  -t/--target   {name}                     target account name (defaults to auth'd account)");        
-        System.out.println("  -p/--password {pass}                     password for account");
+        System.out.println("  -a/--admin    {name}                     admin account name to auth as");
+        System.out.println("  -z/--zadmin                              use zimbra admin name/password from localconfig for admin/password");        
+        System.out.println("  -m/--mailbox  {name}                     mailbox to open");
+        System.out.println("  -p/--password {pass}                     password for admin account and/or mailbox");
         System.out.println("  -v/--verbose                             verbose mode (dumps full exception stack trace)");
         System.out.println("  -d/--debug                               debug mode (dumps SOAP messages)");
         System.out.println("");
@@ -385,16 +390,17 @@ public class ZMailboxUtil implements DebugListener {
         if (mProv == null)
             throw SoapFaultException.CLIENT_ERROR("can only select mailbox after adminAuth", null);
         SoapTransport.DebugListener listener = mDebug ? this : null;        
-        mTargetAccountName = targetAccount;
-        SoapAccountInfo sai = mProv.getAccountInfo(AccountBy.name, mTargetAccountName);
-        DelegateAuthResponse dar = mProv.delegateAuth(AccountBy.name, mTargetAccountName, 60*60*24);
+        mMailboxName = targetAccount;
+        SoapAccountInfo sai = mProv.getAccountInfo(AccountBy.name, mMailboxName);
+        DelegateAuthResponse dar = mProv.delegateAuth(AccountBy.name, mMailboxName, 60*60*24);
         mAccount = ZAccount.getAccount(dar.getAuthToken(), sai.getAdminSoapURL(), listener);
         mMbox = mAccount.getMailbox();
-        mPrompt = String.format("mbox %s> ", mTargetAccountName);
+        dumpMailboxConnect();
+        mPrompt = String.format("mbox %s> ", mMailboxName);
     }
     
     private void adminAuth(String name, String password, String uri) throws ServiceException {
-        mAccountName = name;
+        mAdminAccountName = name;
         mPassword = password;
         SoapTransport.DebugListener listener = mDebug ? this : null;
         mProv = new SoapProvisioning();
@@ -404,23 +410,48 @@ public class ZMailboxUtil implements DebugListener {
     }
     
     private void auth(String name, String password, String uri) throws ServiceException {
-        mAccountName = name;
+        mMailboxName = name;
         mPassword = password;
-        mAccount = ZAccount.getAccount(mAccountName, AccountBy.name, mPassword, getUrl(uri), mDebug ? this : null);
+        mAccount = ZAccount.getAccount(mMailboxName, AccountBy.name, mPassword, getUrl(uri), mDebug ? this : null);
         mMbox = mAccount.getMailbox();
-        mPrompt = String.format("mbox %s> ", mAccountName);        
+        mPrompt = String.format("mbox %s> ", mMailboxName);
+        dumpMailboxConnect();        
+    }
+
+    static class Stats {
+        int numMessages;
+        int numUnread;
+    }
+
+    private void computeStats(ZFolder f, Stats s) {
+        s.numMessages += f.getMessageCount();
+        s.numUnread += f.getUnreadCount();
+        for (ZFolder c : f.getSubFolders()) {
+            computeStats(c, s);
+        }
+    }
+
+    private void dumpMailboxConnect() {
+        if (!mInteractive) return;
+        Stats s = new Stats();
+        computeStats(mMbox.getUserRoot(), s);
+        System.out.format("# mailbox (%s), size(%s), messages(%d), unread(%d)%n", 
+                mMailboxName,
+                formatSize(mMbox.getSize()),
+                s.numMessages,
+                s.numUnread);
     }
 
     public void initMailbox() throws ServiceException, IOException {
-        if (mAccountName == null || mPassword == null) return;
-        if (mTargetAccountName != null) {
-            adminAuth(mAccountName, mPassword, mUrl);
-            selectMailbox(mTargetAccountName);
+        if (mMailboxName == null || mPassword == null) return;
+        if (mAdminAccountName != null) {
+            adminAuth(mAdminAccountName, mPassword, mUrl);
+            selectMailbox(mMailboxName);
         } else {
-            adminAuth(mAccountName, mPassword, mUrl);            
+            auth(mMailboxName, mPassword, mUrl);            
         }
     }
-    
+
     private ZTag lookupTag(String idOrName) throws SoapFaultException {
         ZTag tag = mMbox.getTagByName(idOrName);
         if (tag == null) tag = mMbox.getTagById(idOrName);
@@ -1433,7 +1464,6 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void interactive() throws IOException {
-        mInteractive = true;
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
             System.out.print(mPrompt);
@@ -1463,16 +1493,17 @@ public class ZMailboxUtil implements DebugListener {
 
     public static void main(String args[]) throws IOException, ParseException, SoapFaultException {
         Zimbra.toolSetup();
-        
+
         ZMailboxUtil pu = new ZMailboxUtil();
         CommandLineParser parser = new GnuParser();
         Options options = new Options();
+        options.addOption("a", "admin", true, "admin account name to auth as");
+        options.addOption("z", "zadmin", false, "use zimbra admin name/password from localconfig for admin/password");        
         options.addOption("h", "help", false, "display usage");
         options.addOption("f", "file", true, "use file as input stream"); 
         options.addOption("u", "url", true, "http[s]://host[:port] of server to connect to");
-        options.addOption("a", "account", true, "account name (not used with --ldap)");
-        options.addOption("t", "target", true, "target account name (defaults to auth'd account)");
-        options.addOption("p", "password", true, "password for account");
+        options.addOption("m", "mailbox", true, "mailbox to open");
+        options.addOption("p", "password", true, "password for admin/mailbox");
         options.addOption("v", "verbose", false, "verbose mode");
         options.addOption("d", "debug", false, "debug mode");        
         
@@ -1491,14 +1522,24 @@ public class ZMailboxUtil implements DebugListener {
         }
         
         pu.setVerbose(cl.hasOption('v'));
+        if (cl.hasOption('a')) {
+            pu.setAdminAccountName(cl.getOptionValue('a'));
+            pu.setUrl(mAdminUrl);            
+        }
+        if (cl.hasOption('z')) {
+            pu.setAdminAccountName(LC.zimbra_ldap_user.value());
+            pu.setPassword(LC.zimbra_ldap_password.value());
+            pu.setUrl(mAdminUrl);
+        }
         if (cl.hasOption('u')) pu.setUrl(cl.getOptionValue('u'));
-        if (cl.hasOption('a')) pu.setAccountName(cl.getOptionValue('a'));
-        if (cl.hasOption('t')) pu.setTargetAccountName(cl.getOptionValue('t'));        
+        if (cl.hasOption('m')) pu.setMailboxName(cl.getOptionValue('m'));        
         if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
         if (cl.hasOption('d')) pu.setDebug(true);
 
         args = cl.getArgs();
-        
+
+        pu.setInteractive(args.length < 1);
+
         try {
             pu.initMailbox();
             if (args.length < 1) {
