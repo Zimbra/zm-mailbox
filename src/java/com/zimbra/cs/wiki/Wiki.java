@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.wiki;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,20 +45,25 @@ import com.zimbra.cs.client.LmcDocument;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcSearchRequest;
 import com.zimbra.cs.client.soap.LmcSearchResponse;
+import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.ServiceException.Argument;
+import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.session.WikiSession;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Pair;
-//import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * This class represents a Wiki notebook.  A notebook corresponds to a folder
@@ -330,6 +336,28 @@ public abstract class Wiki {
 			return ww;
 		}
 		
+		public synchronized void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException {
+			WikiPage page = lookupWiki(newName);
+			if (page != null)
+				throw MailServiceException.MODIFY_CONFLICT(
+						new Argument(MailService.A_NAME, newName, Argument.Type.STR));
+			Mailbox mbox = Mailbox.getMailboxByAccountId(mWikiAccount);
+			MailItem item = mbox.getItemById(ctxt.octxt, id, MailItem.TYPE_UNKNOWN);
+			if (item.getType() != MailItem.TYPE_DOCUMENT && item.getType() != MailItem.TYPE_WIKI)
+				throw WikiServiceException.NOT_WIKI_ITEM("MailItem id " +id+ " is not a wiki item or a document");
+			Document doc = (Document) item;
+			doc.rename(newName);
+			byte[] contents;
+        	try {
+        		contents = ByteUtil.getContent(doc.getRawDocument(), 0);
+        	} catch (IOException ioe) {
+        		ZimbraLog.wiki.error("cannot read the item body", ioe);
+        		throw WikiServiceException.CANNOT_READ(doc.getSubject());
+        	}
+        	mbox.addDocumentRevision(ctxt.octxt, doc, contents, author);
+        	Wiki.remove(mWikiAccount, Integer.toString(mFolderId));
+		}
+		
 		public int getWikiFolderId() {
 			return mFolderId;
 		}
@@ -427,6 +455,9 @@ public abstract class Wiki {
 		}
 		
 		public synchronized WikiPage createDocument(WikiContext ctxt, String ct, String filename, String author, byte[] data, byte type) throws ServiceException {
+			throw WikiServiceException.ERROR("createDocument on a remote wiki: not implemented");
+		}
+		public synchronized void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException {
 			throw WikiServiceException.ERROR("createDocument on a remote wiki: not implemented");
 		}
 		public int getWikiFolderId() throws ServiceException {
@@ -653,6 +684,7 @@ public abstract class Wiki {
 	}
 
 	public abstract WikiPage createDocument(WikiContext ctxt, String ct, String filename, String author, byte[] data, byte type) throws ServiceException;
+	public abstract void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException;
 	
 	public void deleteWiki(WikiContext ctxt, String wikiWord) throws ServiceException {
 		WikiPage w = mWikiWords.remove(wikiWord);

@@ -82,11 +82,13 @@ public class Document extends MailItem {
 	
     protected String mContentType;
     protected String mFragment;
+    protected String mName;
     protected MetadataList mRevisionList;
 
 	public Document(Mailbox mbox, UnderlyingData data) throws ServiceException {
 		super(mbox, data);
 		mFragment = getLastRevision().getFragment();
+		mName = getSubject();
 	}
 
 	public String getFragment() {
@@ -94,7 +96,7 @@ public class Document extends MailItem {
 	}
 	
 	public String getFilename() {
-		return getSubject();
+		return mName;
 	}
 	
     public String getContentType() {
@@ -151,6 +153,10 @@ public class Document extends MailItem {
     	return getVersion() + 1;
     }
     
+    public void rename(String newName) {
+    	mName = newName;
+    }
+    
     private static Metadata getRevisionMetadata(int changeID, String author, ParsedDocument pd) {
     	Metadata rev = new Metadata();
     	rev.put(Metadata.FN_REV_ID, changeID);
@@ -170,6 +176,10 @@ public class Document extends MailItem {
         mData.contentChanged(mMailbox);
         mMailbox.updateSize(mData.size);
         DbMailItem.saveMetadata(this, pd.getSize(), encodeMetadata(new Metadata()).toString());
+        if (!mData.subject.equals(getFilename())) {
+        	mData.subject = getFilename();
+        	DbMailItem.saveSubject(this, 0);
+        }
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_DATE | Change.MODIFIED_CONTENT);
         pd.setVersion(getVersion());
         MessageCache.purge(this);

@@ -196,11 +196,11 @@
 //
 <WikiActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|update|spam|template" [tag="..."] [l="{folder}"] [t="..."]/>
+  <action id="{list}" op="delete|read|flag|tag|move|update|spam|template|rename" [tag="..."] [l="{folder}"] [t="..."] [name="{newName}"]/>
 </WikiActionRequest>
 
 <WikiActionResponse>
-  <action id="{list}" op="delete|read|flag|tag|move|update|spam|template"/>
+  <action id="{list}" op="delete|read|flag|tag|move|update|spam|template|rename"/>
 </WikiActionResponse>
 
 //
