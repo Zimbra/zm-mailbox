@@ -361,6 +361,48 @@ public class SoapProvisioning extends Provisioning {
     public void deleteZimlet(String name) throws ServiceException {
         throw new UnsupportedOperationException();
     }
+    
+    public static class DelegateAuthResponse {
+        private String mAuthToken;
+        private long mExpires;
+        private long mLifetime;
+
+        DelegateAuthResponse(Element e) throws ServiceException {
+            mAuthToken = e.getElement(AccountService.E_AUTH_TOKEN).getText();
+            mLifetime = e.getAttributeLong(AccountService.E_LIFETIME);
+            mExpires = System.currentTimeMillis() + mLifetime;
+            Element re = e.getOptionalElement(AccountService.E_REFERRAL); 
+        }
+
+        public String getAuthToken() {
+            return mAuthToken;
+        }
+        
+        public long getExpires() {
+            return mExpires;
+        }
+        
+        public long getLifetime() {
+            return mLifetime;
+        }
+    }
+    
+    public DelegateAuthResponse delegateAuth(AccountBy keyType, String key, int durationSeconds) throws ServiceException {
+        XMLElement req = new XMLElement(AdminService.DELEGATE_AUTH_REQUEST);
+        req.addAttribute(AdminService.A_DURATION, durationSeconds);
+        Element acct = req.addElement(AdminService.E_ACCOUNT);
+        acct.addAttribute(AccountService.A_BY, keyType.name());
+        acct.setText(key);
+        return new DelegateAuthResponse(invoke(req));
+    }
+
+    public SoapAccountInfo getAccountInfo(AccountBy keyType, String key) throws ServiceException {
+        XMLElement req = new XMLElement(AdminService.GET_ACCOUNT_INFO_REQUEST);
+        Element a = req.addElement(AdminService.E_ACCOUNT);
+        a.setText(key);
+        a.addAttribute(AdminService.A_BY, keyType.name());
+        return new SoapAccountInfo(invoke(req));
+    }
 
     @Override
     public Account get(AccountBy keyType, String key) throws ServiceException {

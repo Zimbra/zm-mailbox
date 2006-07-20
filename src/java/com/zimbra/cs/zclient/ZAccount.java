@@ -32,12 +32,12 @@ import com.zimbra.soap.SoapTransport;
 
 public abstract class ZAccount {
 
-    public static ZAccount getAccount(String authToken, String uri) throws ServiceException {
-        return ZSoapAccount.getAccount(authToken, uri);
+    public static ZAccount getAccount(String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
+        return new ZSoapAccount(authToken, uri, listener);
     }
     
     public static ZAccount getAccount(String key, AccountBy by, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-        return ZSoapAccount.getAccount(key, by, password, uri, listener);
+        return new ZSoapAccount(key, by, password, uri, listener);
     }
     
     public abstract ZMailbox getMailbox() throws ServiceException;

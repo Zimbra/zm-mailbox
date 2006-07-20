@@ -51,6 +51,9 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.soap.SoapAccountInfo;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -67,6 +70,7 @@ import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 import com.zimbra.cs.zclient.ZTag.Color;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
+import com.zimbra.soap.SoapTransport;
 import com.zimbra.soap.SoapTransport.DebugListener;
 
 /**
@@ -78,6 +82,7 @@ public class ZMailboxUtil implements DebugListener {
     private boolean mGlobalVerbose = false;
     private boolean mDebug = false;
     private String mAccountName = null;
+    private String mTargetAccountName = null;    
     private String mPassword = null;
     private ZAccount mAccount = null;
     private String mUrl = "http://localhost";
@@ -88,7 +93,8 @@ public class ZMailboxUtil implements DebugListener {
     ZSearchParams mSearchParams;
     ZSearchResult mSearchResult;
     ZSearchParams mConvSearchParams;    
-    ZSearchResult mConvSearchResult;    
+    ZSearchResult mConvSearchResult;
+    SoapProvisioning mProv;
     
     /** current command */
     private Command mCommand;
@@ -103,23 +109,30 @@ public class ZMailboxUtil implements DebugListener {
     
     public void setVerbose(boolean verbose) { mGlobalVerbose = verbose; }
     
-    public void setAccount(String account) { mAccountName = account; }
+    public void setAccountName(String account) { mAccountName = account; }
+    
+    public void setTargetAccountName(String account) { mTargetAccountName = account; }    
 
     public void setPassword(String password) { mPassword = password; }
     
-    public void setUrl(String url) throws SoapFaultException { 
+    public String getUrl(String url) throws SoapFaultException { 
         try {
             URI uri = new URI(url);
+            String service = (uri.getPort() == 7071) ? ZimbraServlet.ADMIN_SERVICE_URI : ZimbraServlet.USER_SERVICE_URI;
             if (uri.getPath() == null || uri.getPath().length() <= 1) {
                 if (url.charAt(url.length()-1) == '/') 
-                    url = url.substring(0, url.length()-1) + ZimbraServlet.USER_SERVICE_URI;
+                    url = url.substring(0, url.length()-1) + service;
                 else 
-                    url = url + ZimbraServlet.USER_SERVICE_URI;                
+                    url = url + service;
             }
-            mUrl = url;
+            return url;
         } catch (URISyntaxException e) {
             throw SoapFaultException.CLIENT_ERROR("invlaid URL: "+url, e);
         }
+    }
+    
+    public void setUrl(String url) throws SoapFaultException { 
+        mUrl = getUrl(url);
     }
 
     private void usage() {
@@ -136,8 +149,9 @@ public class ZMailboxUtil implements DebugListener {
         System.out.println("");
         System.out.println("  -h/--help                                display usage");
         System.out.println("  -f/--file                                use file as input stream");
-        System.out.println("  -u/--url      http[s]://{host}[:{port}]  server hostname and optional port");
+        System.out.println("  -u/--url      http[s]://{host}[:{port}]  server hostname and optional port. must use admin port with -t");
         System.out.println("  -a/--account  {name}                     account name to auth as");
+        System.out.println("  -t/--target   {name}                     target account name (defaults to auth'd account)");        
         System.out.println("  -p/--password {pass}                     password for account");
         System.out.println("  -v/--verbose                             verbose mode (dumps full exception stack trace)");
         System.out.println("  -d/--debug                               debug mode (dumps SOAP messages)");
@@ -148,6 +162,7 @@ public class ZMailboxUtil implements DebugListener {
 
     public static enum Category {
 
+        ADMIN("help on admin-related commands"),        
         COMMANDS("help on all commands"),
         CONTACT("help on contact-related commands"),
         CONVERSATION("help on conversation-related commands"),
@@ -170,7 +185,7 @@ public class ZMailboxUtil implements DebugListener {
     public static Option getOption(String shortName, String longName, boolean hasArgs, String help) {
         return new Option(shortName, longName, hasArgs, help);
     }
-    
+
     private static Option O_COLOR = new Option("c", "color", true, "color");
     private static Option O_CURRENT = new Option("c", "current", false, "current page of search results");
     private static Option O_DATE = new Option("d", "date", true,  "received date (msecs since epoch)");        
@@ -184,12 +199,14 @@ public class ZMailboxUtil implements DebugListener {
     private static Option O_REPLACE = new Option("r", "replace", false, "replace contact (default is to merge)");    
     private static Option O_TAGS = new Option("T", "tags", true, "list of tag ids/names");
     private static Option O_TYPES = new Option("t", "types", true, "list of types to search for (message,conversation,contact,wiki)");
+    private static Option O_URL = new Option("u", "url", true, "url to connect to");    
     private static Option O_VERBOSE = new Option("v", "verbose", false, "verbose output");
     private static Option O_VIEW = new Option("V", "view", true, "default type for folder (conversation,message,contact,appointment,wiki)");    
     
     enum Command {
-        
+        AUTHENTICATE("authenticate", "a", "{name} {password}", "authenticate as account and open mailbox", Category.MISC, 2, 2, O_URL),        
         ADD_MESSAGE("addMessage", "am", "{dest-folder-path} {filename-or-dir} [{filename-or-dir} ...]", "add a message to a folder", Category.MESSAGE, 2, Integer.MAX_VALUE, O_TAGS, O_DATE),
+        ADMIN_AUTHENTICATE("adminAuthenticate", "aa", "{admin-name} {admin-password}", "authenticate as an admin. can only be used by an admin", Category.ADMIN, 2, 2, O_URL),        
         CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER, O_IGNORE, O_TAGS),        
         CREATE_FOLDER("createFolder", "cf", "{folder-name}", "create folder", Category.FOLDER, 1, 1, O_VIEW, O_COLOR, O_FLAGS),
         CREATE_MOUNTPOINT("createMountpoint", "cm", "{folder-name} {owner-id-or-name} {remote-item-id-or-path}", "create mountpoint", Category.FOLDER, 3, 3, O_VIEW, O_COLOR, O_FLAGS),
@@ -212,6 +229,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_ALL_TAGS("getAllTags", "gat", "", "get all tags", Category.TAG, 0, 0, O_VERBOSE),
         GET_CONTACTS("getContacts", "gct", "{contact-ids} [attr1 [attr2...]]", "get contact(s)", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),                
         GET_CONVERSATION("getConversation", "gc", "{conv-id}", "get a converation", Category.CONVERSATION, 1, 1, O_VERBOSE),
+        GET_FOLDER("getFolder", "gf", "{folder-path}", "get folder", Category.FOLDER, 1, 1, O_VERBOSE),        
         GET_MESSAGE("getMessage", "gm", "{msg-id}", "get a message", Category.MESSAGE, 1, 1, O_VERBOSE),
         GET_MAILBOX_SIZE("getMailboxSize", "gms", "", "get mailbox size", Category.MISC, 0, 0, O_VERBOSE),
         HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
@@ -237,7 +255,8 @@ public class ZMailboxUtil implements DebugListener {
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
         SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
-        SEARCH_CONVERSATION("searchConv", "sc", "{conv-id} {query}", "perform search on conversation", Category.SEARCH, 0, 2, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),        
+        SEARCH_CONVERSATION("searchConv", "sc", "{conv-id} {query}", "perform search on conversation", Category.SEARCH, 0, 2, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
+        SELECT_MAILBOX("selectMailbox", "sm", "{account-name}", "select a different mailbox. can only be used by an admin", Category.ADMIN, 1, 1),
         SYNC_FOLDER("syncFolder", "sf", "{folder-path}", "synchronize folder's contents to the remote feed specified by folder's {url}", Category.FOLDER, 1, 1),
         TAG_CONTACT("tagContact", "tct", "{contact-ids} {tag-name} [0|1*]", "tag/untag contact(s)", Category.CONTACT, 2, 3),
         TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*]", "tag/untag conversation(s)", Category.CONVERSATION, 2, 3),
@@ -362,10 +381,44 @@ public class ZMailboxUtil implements DebugListener {
         initCommands();
     }
     
-    public void initMailbox() throws ServiceException, IOException {
-        mAccount = ZAccount.getAccount(mAccountName, AccountBy.name, mPassword, mUrl, mDebug ? this : null); 
+    private void selectMailbox(String targetAccount) throws ServiceException {
+        if (mProv == null)
+            throw SoapFaultException.CLIENT_ERROR("can only select mailbox after adminAuth", null);
+        SoapTransport.DebugListener listener = mDebug ? this : null;        
+        mTargetAccountName = targetAccount;
+        SoapAccountInfo sai = mProv.getAccountInfo(AccountBy.name, mTargetAccountName);
+        DelegateAuthResponse dar = mProv.delegateAuth(AccountBy.name, mTargetAccountName, 60*60*24);
+        mAccount = ZAccount.getAccount(dar.getAuthToken(), sai.getAdminSoapURL(), listener);
         mMbox = mAccount.getMailbox();
-        mPrompt = String.format("mbox %s> ", mAccountName);
+        mPrompt = String.format("mbox %s> ", mTargetAccountName);
+    }
+    
+    private void adminAuth(String name, String password, String uri) throws ServiceException {
+        mAccountName = name;
+        mPassword = password;
+        SoapTransport.DebugListener listener = mDebug ? this : null;
+        mProv = new SoapProvisioning();
+        mProv.soapSetURI(getUrl(uri));
+        if (listener != null) mProv.soapSetTransportDebugListener(listener);
+        mProv.soapAdminAuthenticate(name, password);
+    }
+    
+    private void auth(String name, String password, String uri) throws ServiceException {
+        mAccountName = name;
+        mPassword = password;
+        mAccount = ZAccount.getAccount(mAccountName, AccountBy.name, mPassword, getUrl(uri), mDebug ? this : null);
+        mMbox = mAccount.getMailbox();
+        mPrompt = String.format("mbox %s> ", mAccountName);        
+    }
+
+    public void initMailbox() throws ServiceException, IOException {
+        if (mAccountName == null || mPassword == null) return;
+        if (mTargetAccountName != null) {
+            adminAuth(mAccountName, mPassword, mUrl);
+            selectMailbox(mTargetAccountName);
+        } else {
+            adminAuth(mAccountName, mPassword, mUrl);            
+        }
     }
     
     private ZTag lookupTag(String idOrName) throws SoapFaultException {
@@ -464,6 +517,14 @@ public class ZMailboxUtil implements DebugListener {
         if (folder == null) throw SoapFaultException.CLIENT_ERROR("unknown folder: "+pathOrId, null);
         return folder.getId();
     }
+
+    private ZFolder lookupFolder(String pathOrId) throws ServiceException {
+        if (pathOrId == null || pathOrId.length() == 0) return null;
+        ZFolder folder = mMbox.getFolderById(pathOrId);
+        if (folder == null) folder = mMbox.getFolderByPath(pathOrId);
+        if (folder == null) throw SoapFaultException.CLIENT_ERROR("unknown folder: "+pathOrId, null);
+        return folder;
+    }
     
     private String param(String[] args, int index, String defaultValue) {
         return args.length > index ? args[index] : defaultValue;
@@ -498,6 +559,11 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private String flagsOpt()    { return mCommandLine.getOptionValue(O_FLAGS.getOpt()); }
+
+    private String urlOpt() throws SoapFaultException {
+        String url = mCommandLine.getOptionValue(O_URL.getOpt());
+        return (url == null) ? mUrl : url;
+    }
 
     private String typesOpt() throws SoapFaultException {
         String t = mCommandLine.getOptionValue(O_TYPES.getOpt());         
@@ -552,10 +618,28 @@ public class ZMailboxUtil implements DebugListener {
             usage();
             return true;
         }
-        
+
+        if (
+                mCommand != Command.EXIT &&
+                mCommand != Command.HELP &&
+                mCommand != Command.AUTHENTICATE &&                
+                mCommand != Command.ADMIN_AUTHENTICATE &&
+                mCommand != Command.SELECT_MAILBOX
+        ) {
+            if (mMbox == null) {
+                throw SoapFaultException.CLIENT_ERROR("no mailbox selected. select one with authenticate/adminAuthenticate/selectMailbox", null);
+            }
+        }
+            
         switch(mCommand) {
+        case AUTHENTICATE:
+            doAuth(args);
+            break;
         case ADD_MESSAGE:
             doAddMessage(args);
+            break;
+        case ADMIN_AUTHENTICATE:
+            doAdminAuth(args);
             break;
         case CREATE_CONTACT:
             ZContact cc = mMbox.createContact(lookupFolderId(folderOpt()),tagsOpt(), getContactMap(args, 0, !ignoreOpt()));
@@ -625,6 +709,9 @@ public class ZMailboxUtil implements DebugListener {
         case GET_CONVERSATION:
             doGetConversation(args);
             break;
+        case GET_FOLDER:
+            doGetFolder(args); 
+            break;            
         case GET_MAILBOX_SIZE:
             if (verboseOpt()) System.out.format("%d%n", mMbox.getSize()); 
             else System.out.format("%s%n", formatSize(mMbox.getSize())); 
@@ -703,7 +790,10 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case SEARCH_CONVERSATION:
             doSearchConv(args);
-            break;            
+            break;
+        case SELECT_MAILBOX:
+            selectMailbox(args[0]);
+            break;
         case SYNC_FOLDER:
             mMbox.syncFolder(lookupFolderId(args[0]));
             break;
@@ -723,6 +813,14 @@ public class ZMailboxUtil implements DebugListener {
             return false;
         }
         return true;
+    }
+
+    private void doAdminAuth(String[] args) throws ServiceException {
+        adminAuth(args[0], args[1], urlOpt());
+    }
+
+    private void doAuth(String[] args) throws ServiceException {
+        auth(args[0], args[1], urlOpt());
     }
 
     private void addMessage(String folderId, String tags, long date, File file) throws ServiceException, IOException {
@@ -1097,7 +1195,19 @@ public class ZMailboxUtil implements DebugListener {
             doDumpFolder(mMbox.getUserRoot(), true);
         }
     }        
-    
+
+    private void doGetFolder(String[] args) throws ServiceException {
+        ZFolder f = lookupFolder(args[0]);
+        System.out.println(f);
+        /*
+        if (verboseOpt()) {
+            
+        } else {
+            System.out
+        }
+        */
+    }        
+
     private void dumpAllContacts(List<ZContact> contacts) throws ServiceException {
         if (verboseOpt()) {
             System.out.println(contacts);
@@ -1361,6 +1471,7 @@ public class ZMailboxUtil implements DebugListener {
         options.addOption("f", "file", true, "use file as input stream"); 
         options.addOption("u", "url", true, "http[s]://host[:port] of server to connect to");
         options.addOption("a", "account", true, "account name (not used with --ldap)");
+        options.addOption("t", "target", true, "target account name (defaults to auth'd account)");
         options.addOption("p", "password", true, "password for account");
         options.addOption("v", "verbose", false, "verbose mode");
         options.addOption("d", "debug", false, "debug mode");        
@@ -1381,7 +1492,8 @@ public class ZMailboxUtil implements DebugListener {
         
         pu.setVerbose(cl.hasOption('v'));
         if (cl.hasOption('u')) pu.setUrl(cl.getOptionValue('u'));
-        if (cl.hasOption('a')) pu.setAccount(cl.getOptionValue('a'));
+        if (cl.hasOption('a')) pu.setAccountName(cl.getOptionValue('a'));
+        if (cl.hasOption('t')) pu.setTargetAccountName(cl.getOptionValue('t'));        
         if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
         if (cl.hasOption('d')) pu.setDebug(true);
 
@@ -1402,7 +1514,8 @@ public class ZMailboxUtil implements DebugListener {
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
             System.err.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
-                    (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));  
+                    (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));
+            if (pu.mGlobalVerbose) e.printStackTrace(System.err);            
             System.exit(2);
         }
     }

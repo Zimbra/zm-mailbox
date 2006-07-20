@@ -31,6 +31,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -66,6 +67,9 @@ public class GetAccountInfo extends AdminDocumentHandler  {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.fromString(key), value);
 
+        if (account == null)
+             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+        
         if (!canAccessAccount(lc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 

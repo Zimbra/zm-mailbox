@@ -30,6 +30,7 @@ import java.io.IOException;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.zclient.ZAccount;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.Element;
@@ -45,25 +46,22 @@ public class ZSoapAccount extends ZAccount {
     private SoapHttpTransport mTransport;
     private SoapTransport.DebugListener mListener;
 
-    public static ZAccount getAccount(String authToken, String uri) {
-        // TODO
-        return null;
-    }
-
-    public static ZAccount getAccount(String key, AccountBy by, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-        return new ZSoapAccount(key, by, password, uri, listener);
-    }
-
-    private ZSoapAccount(String key, AccountBy by, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
+    public ZSoapAccount(String key, AccountBy by, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
         mListener = listener;        
         setSoapURI(uri);
         AuthResult ar = auth(key, by, password);
         mAuthToken = ar.getAuthToken();
         mAuthTokenExpiration = ar.getExpires();
         mTransport.setAuthToken(mAuthToken);
-
     }
-    
+
+    public ZSoapAccount(String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
+        mListener = listener;        
+        setSoapURI(uri);
+        mAuthToken = authToken;
+        mTransport.setAuthToken(mAuthToken);
+    }
+
     /**
      * @param uri URI of server we want to talk to
      */
@@ -81,12 +79,13 @@ public class ZSoapAccount extends ZAccount {
     private static class AuthResult {
         private String mAuthToken;
         private long mExpires;
+        private long mLifetime;
         private String mRefer;
 
         AuthResult(Element e) throws ServiceException {
             mAuthToken = e.getElement(AccountService.E_AUTH_TOKEN).getText();
-            long lifetime = e.getAttributeLong(AccountService.E_LIFETIME);
-            mExpires = System.currentTimeMillis() + lifetime;
+            mLifetime = e.getAttributeLong(AccountService.E_LIFETIME);
+            mExpires = System.currentTimeMillis() + mLifetime;
             Element re = e.getOptionalElement(AccountService.E_REFERRAL); 
             if (re != null) mRefer = re.getText();
         }
@@ -99,14 +98,17 @@ public class ZSoapAccount extends ZAccount {
             return mExpires;
         }
         
+        public long getLifetime() {
+            return mLifetime;
+        }
+        
         public String getRefer() {
             return mRefer;
         }
     }
 
     private AuthResult auth(String key, AccountBy by, String password) throws ServiceException {
-        // TODO: nosession, nonotify
-        if (mTransport == null) throw SoapFaultException.CLIENT_ERROR("must call setURI before calling adminAuthenticate", null);
+        if (mTransport == null) throw SoapFaultException.CLIENT_ERROR("must call setURI before calling asuthenticate", null);
         XMLElement req = new XMLElement(AccountService.AUTH_REQUEST);
         Element account = req.addElement(AccountService.E_ACCOUNT);
         account.addAttribute(AccountService.A_BY, by.name());
