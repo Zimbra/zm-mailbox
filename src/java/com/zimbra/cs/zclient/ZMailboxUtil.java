@@ -153,7 +153,7 @@ public class ZMailboxUtil implements DebugListener {
         System.out.println("");
         System.out.println("  -h/--help                                display usage");
         System.out.println("  -f/--file                                use file as input stream");
-        System.out.println("  -u/--url      http[s]://{host}[:{port}]  server hostname and optional port. must use admin port with -t");
+        System.out.println("  -u/--url      http[s]://{host}[:{port}]  server hostname and optional port. must use admin port with -z/-a");
         System.out.println("  -a/--admin    {name}                     admin account name to auth as");
         System.out.println("  -z/--zadmin                              use zimbra admin name/password from localconfig for admin/password");        
         System.out.println("  -m/--mailbox  {name}                     mailbox to open");
