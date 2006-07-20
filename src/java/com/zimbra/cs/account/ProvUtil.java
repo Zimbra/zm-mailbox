@@ -1384,6 +1384,7 @@ public class ProvUtil implements DebugListener {
             Throwable cause = e.getCause();
             System.err.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
                     (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));  
+            if (pu.mVerbose) e.printStackTrace(System.err);
             System.exit(2);
         }
     }
