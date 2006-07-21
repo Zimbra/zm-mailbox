@@ -34,15 +34,15 @@ class ZSoapGrant implements ZGrant {
 
     private String mArgs;
     private String mGranteeName;
-    private String mGranteeType;
+    private GranteeType mGranteeType;
     private boolean mInherit;
-    private String mRights;
+    private String mPermissions;
 
     ZSoapGrant(Element e) throws ServiceException {
         mArgs = e.getAttribute(MailService.A_ARGS, null);
-        mRights = e.getAttribute(MailService.A_RIGHTS);
+        mPermissions = e.getAttribute(MailService.A_RIGHTS);
         mGranteeName = e.getAttribute(MailService.A_DISPLAY, null);
-        mGranteeType = e.getAttribute(MailService.A_GRANT_TYPE);
+        mGranteeType = GranteeType.fromString(e.getAttribute(MailService.A_GRANT_TYPE));
         mInherit = e.getAttributeBool(MailService.A_INHERIT);
     }
     
@@ -54,7 +54,7 @@ class ZSoapGrant implements ZGrant {
         return mGranteeName;
     }
 
-    public String getGranteeType() {
+    public GranteeType getGranteeType() {
         return mGranteeType;
     }
 
@@ -62,19 +62,46 @@ class ZSoapGrant implements ZGrant {
         return mInherit;
     }
 
-    public String getRights() {
-        return mRights;
+    public String getPermissions() {
+        return mPermissions;
     }
     
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
         sb.beginStruct();
-        sb.add("type", mGranteeType);
+        sb.add("type", mGranteeType.name());
         sb.add("name", mGranteeName);
-        sb.add("rights", mRights);
+        sb.add("permissions", mPermissions);
         sb.add("inherit", mInherit);
         sb.add("args", mArgs);
         sb.endStruct();
         return sb.toString();
+    }
+
+    private boolean hasPerm(Permission p) {
+        return (mPermissions != null) && mPermissions.indexOf(p.getPermissionChar()) != -1;
+    }
+    public boolean canAdminister() {
+        return hasPerm(Permission.administer);
+    }
+
+    public boolean canDelete() {
+        return hasPerm(Permission.delete);
+    }
+
+    public boolean canInsert() {
+        return hasPerm(Permission.insert);
+    }
+
+    public boolean canRead() {
+        return hasPerm(Permission.read);        
+    }
+
+    public boolean canWorkflow() {
+        return hasPerm(Permission.workflow);
+    }
+
+    public boolean canWrite() {
+        return hasPerm(Permission.write);
     }
 }

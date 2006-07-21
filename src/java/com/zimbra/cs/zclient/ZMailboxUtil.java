@@ -1093,16 +1093,20 @@ public class ZMailboxUtil implements DebugListener {
         }
         
         final int FROM_LEN = 20;
+        int id_len = 4;
+        for (ZSearchHit hit: sr.getHits()) {
+            id_len = Math.max(id_len, hit.getId().length());
+        }
         
         Calendar c = Calendar.getInstance();
-        String headerFormat = String.format("%%%d.%ds  %%10.10s  %%4s   %%-20.20s  %%-50.50s  %%s%%n", width, width);
+        String headerFormat = String.format("%%%d.%ds  %%%d.%ds  %%4s   %%-20.20s  %%-50.50s  %%s%%n", width, width, id_len, id_len);
         //String headerFormat = String.format("%10.10s  %-20.20s  %-50.50s  %-6.6s  %s%n");
         
-        String itemFormat = String.format(  "%%%d.%ds. %%10.10s  %%4s   %%-20.20s  %%-50.50s  %%tD %%<tR%%n", width, width);
+        String itemFormat = String.format(  "%%%d.%ds. %%%d.%ds  %%4s   %%-20.20s  %%-50.50s  %%tD %%<tR%%n", width, width, id_len, id_len);
         //String itemFormat = "%10.10s  %-20.20s  %-50.50s  %-6.6s  %tD %5$tR%n";
 
         System.out.format(headerFormat, "", "Id", "Type", "From", "Subject", "Date");
-        System.out.format(headerFormat, "", "----------", "----", "--------------------", "--------------------------------------------------", "--------------");
+        System.out.format(headerFormat, "", "----------------------------------------------------------------------------------------------------", "----", "--------------------", "--------------------------------------------------", "--------------");
         int i = first;
         for (ZSearchHit hit: sr.getHits()) {
             if (hit instanceof ZConversationHit) {
@@ -1165,16 +1169,20 @@ public class ZMailboxUtil implements DebugListener {
         }
         
         final int FROM_LEN = 20;
+        int id_len = 4;
+        for (ZSearchHit hit: sr.getHits()) {
+            id_len = Math.max(id_len, hit.getId().length());
+        }
         
         Calendar c = Calendar.getInstance();
-        String headerFormat = String.format("%%%d.%ds  %%10.10s  %%-20.20s  %%-50.50s  %%s%%n", width, width);
+        String headerFormat = String.format("%%%d.%ds  %%%d.%ds  %%-20.20s  %%-50.50s  %%s%%n", width, width, id_len, id_len);
         //String headerFormat = String.format("%10.10s  %-20.20s  %-50.50s  %-6.6s  %s%n");
         
-        String itemFormat = String.format(  "%%%d.%ds. %%10.10s  %%-20.20s  %%-50.50s  %%tD %%<tR%%n", width, width);
+        String itemFormat = String.format(  "%%%d.%ds. %%%d.%ds  %%-20.20s  %%-50.50s  %%tD %%<tR%%n", width, width,id_len, id_len);
         //String itemFormat = "%10.10s  %-20.20s  %-50.50s  %-6.6s  %tD %5$tR%n";
 
         System.out.format(headerFormat, "", "Id", "From", "Subject", "Date");
-        System.out.format(headerFormat, "", "----------", "--------------------", "--------------------------------------------------", "--------------");
+        System.out.format(headerFormat, "", "----------------------------------------------------------------------------------------------------", "--------------------", "--------------------------------------------------", "--------------");
         int i = first;
         for (ZSearchHit hit: sr.getHits()) {
             if (hit instanceof ZMessageHit) {
@@ -1306,10 +1314,15 @@ public class ZMailboxUtil implements DebugListener {
         
         if (conv.getMessageCount() == 0) return;
 
-        String headerFormat = String.format("%%%d.%ds  %%10.10s  %%-15.15s  %%-50.50s  %%s%%n", width, width); 
-        String itemFormat   = String.format("%%%d.%ds. %%10.10s  %%-15.15s  %%-50.50s  %%tD %%<tR%%n", width, width); 
+        int id_len = 4;
+        for (ZMessageSummary ms : conv.getMessageSummaries()) {
+            id_len = Math.max(id_len, ms.getId().length());
+        }
+
+        String headerFormat = String.format("%%%d.%ds  %%%d.%ds  %%-15.15s  %%-50.50s  %%s%%n", width, width, id_len, id_len); 
+        String itemFormat   = String.format("%%%d.%ds. %%%d.%ds  %%-15.15s  %%-50.50s  %%tD %%<tR%%n", width, width, id_len, id_len); 
         System.out.format(headerFormat, "","Id", "Sender", "Fragment", "Date");
-        System.out.format(headerFormat, "", "----------", "---------------", "--------------------------------------------------", "--------------");
+        System.out.format(headerFormat, "", "----------------------------------------------------------------------------------------------------", "---------------", "--------------------------------------------------", "--------------");
         int i = first;
         for (ZMessageSummary ms : conv.getMessageSummaries()) {
             System.out.format(itemFormat,

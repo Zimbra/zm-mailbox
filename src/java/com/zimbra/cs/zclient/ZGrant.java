@@ -25,19 +25,104 @@
 
 package com.zimbra.cs.zclient;
 
+import java.util.Arrays;
+
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.SoapFaultException;
+
 public interface ZGrant {
-    
+ 
+    public enum Permission {
+        read('r'),
+        write('w'),
+        insert('i'),        
+        delete('d'),
+        administer('a'),        
+        workflow('x');                
+
+        private char mPermChar;
+        
+        public char getPermissionChar() { return mPermChar; }
+
+        public static String toNameList(String perms) {
+            if (perms == null || perms.length() == 0) return "";            
+            StringBuilder sb = new StringBuilder();
+            for (int i=0; i < perms.length(); i++) {
+                String v = null;
+                for (Permission f : Permission.values()) {
+                    if (f.getPermissionChar() == perms.charAt(i)) {
+                        v = f.name();
+                        break;
+                    }
+                }
+                if (sb.length() > 0) sb.append(", ");
+                sb.append(v == null ? perms.substring(i, i+1) : v);
+            }
+            return sb.toString();
+        }
+        
+        Permission(char permChar) {
+            mPermChar = permChar;
+        }
+    }
+
+    public enum GranteeType {
+        /**
+         * access is granted to an authenticated user
+         */
+        usr, 
+        /**
+         * access is granted to a group of users
+         */
+        grp,
+        /**
+         * accesss is granted to public. no authentication needed.
+         */
+        pub,
+        /**
+         * access is granted to all authenticated users
+         */
+        all, 
+        /**
+         * access is granted to a COS 
+         */
+        cos,
+        /**
+         * access is granted to all users in a domain
+         */
+        dom, 
+        /**
+         * access is granted to a non-Zimbra email address and a password 
+         */
+        guest;
+
+        public static GranteeType fromString(String s) throws ServiceException {
+            try {
+                return GranteeType.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw SoapFaultException.CLIENT_ERROR("invalid grantee: "+s+", valid values: "+Arrays.asList(GranteeType.values()), e);
+            }
+        }
+    }
+
     /**
      *  some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister, workflow action (x)
      */
-    public String getRights();
+    public String getPermissions();
     
+    public boolean canRead();
+    public boolean canWrite();
+    public boolean canInsert();
+    public boolean canDelete();
+    public boolean canAdminister();
+    public boolean canWorkflow();
+
     /**
      * the type of grantee: "usr", "grp", "dom" (domain), "cos", 
      * "all" (all authenticated users), "pub" (public authenticated and unauthenticated access), 
      * "guest" (non-Zimbra email address and password)
      */
-    public String getGranteeType();
+    public GranteeType getGranteeType();
 
     /***
      * the display name (*not* the zimbra id) of the principal being granted rights;
