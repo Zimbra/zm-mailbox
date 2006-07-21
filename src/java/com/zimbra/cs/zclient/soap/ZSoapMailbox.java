@@ -140,7 +140,7 @@ public class ZSoapMailbox extends ZMailbox {
                         mNameToTag.put(tag.getName(), tag);
                     }
                 }
-            } else if (e.getName().equals(MailService.E_SEARCH) || e.getName().equals(MailService.E_FOLDER)) {
+            } else if (e.getName().equals(MailService.E_SEARCH) || e.getName().equals(MailService.E_FOLDER) || e.getName().equals(MailService.E_MOUNT)) {
                 ZSoapFolder f = (ZSoapFolder) getFolderById(e.getAttribute(MailService.A_ID));
                 if (f != null)
                     f.modifyNotification(e, this);
