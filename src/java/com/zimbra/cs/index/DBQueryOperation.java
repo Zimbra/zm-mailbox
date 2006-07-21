@@ -972,8 +972,11 @@ class DBQueryOperation extends QueryOperation
                 return null;
             }
 
-            if (dbOther.mAllResultsQuery)
+            if (dbOther.mAllResultsQuery) {
+                if (dbOther.hasSpamTrashSetting())
+                    this.forceHasSpamTrashSetting();
                 return this;
+            }
 
             if (mQueryTarget != QueryTarget.UNSPECIFIED && dbOther.mQueryTarget != QueryTarget.UNSPECIFIED) {
                 if (!mQueryTarget.equals(dbOther.mQueryTarget)) {
