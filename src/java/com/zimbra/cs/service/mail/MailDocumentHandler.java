@@ -27,6 +27,8 @@ package com.zimbra.cs.service.mail;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -63,10 +65,11 @@ public abstract class MailDocumentHandler extends DocumentHandler {
     protected static ItemId getProxyTarget(ZimbraSoapContext lc, ItemId iid, boolean checkMountpoint) throws ServiceException {
         if (lc == null || iid == null)
             return null;
-        if (!iid.belongsTo(getRequestedAccount(lc)))
+        Account acct = getRequestedAccount(lc);
+        if (!iid.belongsTo(acct))
             return iid;
 
-        if (!checkMountpoint)
+        if (!checkMountpoint || !Provisioning.onLocalServer(acct))
             return null;
         Mailbox mbox = getRequestedMailbox(lc);
         MailItem item = mbox.getItemById(lc.getOperationContext(), iid.getId(), MailItem.TYPE_FOLDER);

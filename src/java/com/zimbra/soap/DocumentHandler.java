@@ -225,10 +225,8 @@ public abstract class DocumentHandler {
         // if the "target account" is remote and the command is non-admin, proxy.
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         String acctId = zsc.getRequestedAccountId();
-        if (acctId != null && zsc.getProxyTarget() != null && !isAdminCommand()) {
-            if (!LOCAL_HOST.equalsIgnoreCase(getRequestedAccount(zsc).getAttr(Provisioning.A_zimbraMailHost)))
-                return proxyRequest(request, context, acctId);
-        }
+        if (acctId != null && zsc.getProxyTarget() == null && !isAdminCommand() && !Provisioning.onLocalServer(getRequestedAccount(zsc)))
+            return proxyRequest(request, context, acctId);
 
         return null;
     }
