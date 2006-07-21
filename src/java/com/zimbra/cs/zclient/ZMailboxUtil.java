@@ -436,7 +436,7 @@ public class ZMailboxUtil implements DebugListener {
         if (!mInteractive) return;
         Stats s = new Stats();
         computeStats(mMbox.getUserRoot(), s);
-        System.out.format("# mailbox (%s), size(%s), messages(%d), unread(%d)%n", 
+        System.out.format("mailbox: %s, size: %s, messages: %d, unread: %d%n",         
                 mMailboxName,
                 formatSize(mMbox.getSize()),
                 s.numMessages,
