@@ -158,19 +158,17 @@ public class FolderAction extends ItemAction {
             String zid   = grant.getAttribute(MailService.A_ZIMBRA_ID, null);
             String args   = grant.getAttribute(MailService.A_ARGS, null);
             NamedEntry nentry = null;
-            if (gtype == ACL.GRANTEE_AUTHUSER)
+            if (gtype == ACL.GRANTEE_AUTHUSER) {
                 zid = ACL.GUID_AUTHUSER;
-            else if (gtype == ACL.GRANTEE_PUBLIC)
+            } else if (gtype == ACL.GRANTEE_PUBLIC) {
                 zid = ACL.GUID_PUBLIC;
-            else if (gtype == ACL.GRANTEE_GUEST) {
+            } else if (gtype == ACL.GRANTEE_GUEST) {
                 zid = grant.getAttribute(MailService.A_DISPLAY);
-                if (zid == null || args == null || zid.indexOf('@') < 0) {
+                if (zid == null || args == null || zid.indexOf('@') < 0)
                 	throw ServiceException.INVALID_REQUEST("invalid guest id or password", null);
-                }
-            }
-            else if (zid != null)
+            } else if (zid != null) {
             	nentry = lookupGranteeByZimbraId(zid, gtype);
-            else {
+            } else {
             	nentry = lookupGranteeByName(grant.getAttribute(MailService.A_DISPLAY), gtype, lc);
             	zid = nentry.getId();
             	if (gtype == ACL.GRANTEE_USER && nentry instanceof DistributionList)
@@ -182,6 +180,8 @@ public class FolderAction extends ItemAction {
             result.addAttribute(MailService.A_ZIMBRA_ID, zid);
             if (nentry != null)
                 result.addAttribute(MailService.A_DISPLAY, nentry.getName());
+            else if (gtype == ACL.GRANTEE_GUEST)
+                result.addAttribute(MailService.A_DISPLAY, zid);
         } else if (operation.equals(OP_UPDATE)) {
             // duplicating code from ItemAction.java for now...
             String newName = action.getAttribute(MailService.A_NAME, null);
