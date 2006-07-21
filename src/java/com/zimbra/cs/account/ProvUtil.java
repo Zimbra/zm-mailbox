@@ -117,6 +117,8 @@ public class ProvUtil implements DebugListener {
         System.out.println("  -l/--ldap                      provision via LDAP instead of SOAP");
         System.out.println("  -a/--account  {name}           account name to auth as");
         System.out.println("  -p/--password {pass}           password for account");
+        System.out.println("  -P/--passfile {file}           read password from file");
+        System.out.println("  -z/--zadmin                    use zimbra admin name/password from localconfig for admin/password");
         System.out.println("  -v/--verbose                   verbose mode (dumps full exception stack trace)");
         System.out.println("  -d/--debug                     debug mode (dumps SOAP messages)");
         System.out.println("");
@@ -1342,6 +1344,8 @@ public class ProvUtil implements DebugListener {
         options.addOption("l", "ldap", false, "provision via LDAP");
         options.addOption("a", "account", true, "account name (not used with --ldap)");
         options.addOption("p", "password", true, "password for account");
+        options.addOption("P", "passfile", true, "filename with password in it");
+        options.addOption("z", "zadmin", false, "use zimbra admin name/password from localconfig for account/password");        
         options.addOption("v", "verbose", false, "verbose mode");
         options.addOption("d", "debug", false, "debug mode");        
         
@@ -1361,9 +1365,16 @@ public class ProvUtil implements DebugListener {
         
         pu.setVerbose(cl.hasOption('v'));
         if (cl.hasOption('l')) pu.setUseLdap(true);
+        if (cl.hasOption('z')) {
+            pu.setAccount(LC.zimbra_ldap_user.value());
+            pu.setPassword(LC.zimbra_ldap_password.value());
+        }
         if (cl.hasOption('s')) pu.setServer(cl.getOptionValue('s'));
         if (cl.hasOption('a')) pu.setAccount(cl.getOptionValue('a'));
         if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
+        if (cl.hasOption('P')) {
+            pu.setPassword(StringUtil.readSingleLineFromFile(cl.getOptionValue('P')));
+        }
         if (cl.hasOption('d')) pu.setDebug(true);
         
         args = cl.getArgs();

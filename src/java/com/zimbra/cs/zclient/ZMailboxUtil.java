@@ -158,6 +158,7 @@ public class ZMailboxUtil implements DebugListener {
         System.out.println("  -z/--zadmin                              use zimbra admin name/password from localconfig for admin/password");        
         System.out.println("  -m/--mailbox  {name}                     mailbox to open");
         System.out.println("  -p/--password {pass}                     password for admin account and/or mailbox");
+        System.out.println("  -P/--passfile {file}                     read password from file");
         System.out.println("  -v/--verbose                             verbose mode (dumps full exception stack trace)");
         System.out.println("  -d/--debug                               debug mode (dumps SOAP messages)");
         System.out.println("");
@@ -1504,6 +1505,7 @@ public class ZMailboxUtil implements DebugListener {
         options.addOption("u", "url", true, "http[s]://host[:port] of server to connect to");
         options.addOption("m", "mailbox", true, "mailbox to open");
         options.addOption("p", "password", true, "password for admin/mailbox");
+        options.addOption("P", "passfile", true, "filename with password in it");
         options.addOption("v", "verbose", false, "verbose mode");
         options.addOption("d", "debug", false, "debug mode");        
         
@@ -1534,6 +1536,9 @@ public class ZMailboxUtil implements DebugListener {
         if (cl.hasOption('u')) pu.setUrl(cl.getOptionValue('u'));
         if (cl.hasOption('m')) pu.setMailboxName(cl.getOptionValue('m'));        
         if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
+        if (cl.hasOption('P')) {
+            pu.setPassword(StringUtil.readSingleLineFromFile(cl.getOptionValue('P')));
+        }        
         if (cl.hasOption('d')) pu.setDebug(true);
 
         args = cl.getArgs();
