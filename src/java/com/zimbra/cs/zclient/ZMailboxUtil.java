@@ -1606,6 +1606,7 @@ public class ZMailboxUtil implements DebugListener {
                         System.out.print(c.getFullUsage());
                     else
                         System.out.print(c.getCommandHelp());
+                    System.out.println();
                 }
             }
         

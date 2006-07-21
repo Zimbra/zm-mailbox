@@ -1467,7 +1467,7 @@ public class ProvUtil implements DebugListener {
             for (Command c : Command.values()) {
                 if (!c.hasHelp()) continue;
                 if (cat == Category.COMMANDS || cat == c.getCategory())
-                    System.out.printf("  %s(%s) %s\n", c.getName(), c.getAlias(), c.getHelp());
+                    System.out.printf("  %s(%s) %s%n%n", c.getName(), c.getAlias(), c.getHelp());
             }
         
             if (cat == Category.CALENDAR) {
