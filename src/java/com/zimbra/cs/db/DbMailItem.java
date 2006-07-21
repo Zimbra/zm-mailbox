@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.db;
 
+import java.io.UnsupportedEncodingException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -79,6 +80,8 @@ public class DbMailItem {
     private static final Map<Integer, TagsetCache> sFlagsetCache =
         new TimeoutMap<Integer, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
 
+    private static final int MAX_TEXT_LENGTH = 65534;
+
 
     public static void create(Mailbox mbox, UnderlyingData data) throws ServiceException {
         if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0 || data.indexId == 0)
@@ -124,7 +127,7 @@ public class DbMailItem {
             stmt.setLong(pos++, data.tags);
             stmt.setString(pos++, data.sender);
             stmt.setString(pos++, data.subject);
-            stmt.setString(pos++, data.metadata);
+            stmt.setString(pos++, checkTextLength(data.metadata));
             stmt.setInt(pos++, data.modMetadata);
             stmt.setInt(pos++, data.dateChanged);
             stmt.setInt(pos++, data.modContent);
@@ -180,7 +183,7 @@ public class DbMailItem {
                 stmt.setShort(pos++, volumeId);                // VOLUME_ID specified by caller
             else
                 stmt.setNull(pos++, Types.TINYINT);            //   or, no VOLUME_ID
-            stmt.setString(pos++, metadata);                   // METADATA
+            stmt.setString(pos++, checkTextLength(metadata));  // METADATA
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
             stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
@@ -414,7 +417,7 @@ public class DbMailItem {
                     " WHERE id = ?");
 			stmt.setInt(1, (int) (item.getDate() / 1000));
 			stmt.setInt(2, (int) size);
-            stmt.setString(3, metadata);
+            stmt.setString(3, checkTextLength(metadata));
             stmt.setInt(4, mbox.getOperationChangeID());
             stmt.setInt(5, mbox.getOperationTimestamp());
             stmt.setInt(6, item.getSavedSequence());
@@ -486,7 +489,7 @@ public class DbMailItem {
             stmt.setInt(6, item.getInternalFlagBitmask());
             stmt.setString(7, sender);
             stmt.setString(8, subject);
-            stmt.setString(9, metadata);
+            stmt.setString(9, checkTextLength(metadata));
             stmt.setInt(10, mbox.getOperationChangeID());
             stmt.setInt(11, mbox.getOperationTimestamp());
             stmt.setInt(12, item.getSavedSequence());
@@ -2296,6 +2299,28 @@ public class DbMailItem {
         }
     }
 
+
+    /** Makes sure that the argument won't overflow the maximum length of a
+     *  MySQL TEXT column (65536 bytes) after conversion to UTF-8.
+     * 
+     * @param metadata  The string to check (can be null).
+     * @return The passed-in String.
+     * @throws ServiceException <code>service.FAILURE</code> is thrown if
+     *         the parameter would be silently truncated when inserted. */
+    static String checkTextLength(String metadata) throws ServiceException {
+        if (metadata == null)
+            return null;
+        if (StringUtil.isAsciiString(metadata)) {
+            if (metadata.length() > MAX_TEXT_LENGTH)
+                throw ServiceException.FAILURE("metadata too long", null);
+        } else {
+            try {
+                if (metadata.getBytes("utf-8").length > MAX_TEXT_LENGTH)
+                    throw ServiceException.FAILURE("metadata too long", null);
+            } catch (UnsupportedEncodingException uee) { }
+        }
+        return metadata;
+    }
 
     /**
      * Returns the name of the table that stores {@link MailItem} data.  The table name is qualified

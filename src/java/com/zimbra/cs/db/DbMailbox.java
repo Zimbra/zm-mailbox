@@ -247,7 +247,7 @@ public class DbMailbox {
             if (config == null)
                 stmt.setNull(1, Types.VARCHAR);
             else
-                stmt.setString(1, config.toString());
+                stmt.setString(1, DbMailItem.checkTextLength(config.toString()));
             stmt.setInt(2, mbox.getId());
             int num = stmt.executeUpdate();
             assert(num == 1);
