@@ -113,16 +113,16 @@ public class SyncFormatter extends Formatter {
             addXZimbraHeaders(context, appt, mm.getSize());
             mm.writeTo(context.resp.getOutputStream());
         } else { 
-            addXZimbraHeaders(context, appt, appt.getSize());
             InputStream is = appt.getRawMessage();
+            addXZimbraHeaders(context, appt, appt.getSize());
             ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
         }        
     }
 
     private void handleMessage(Context context, Message msg) throws IOException, ServiceException {
         context.resp.setContentType(Mime.CT_TEXT_PLAIN);
-        addXZimbraHeaders(context, msg, msg.getSize());
         InputStream is = msg.getRawMessage();
+        addXZimbraHeaders(context, msg, msg.getSize());
         ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
     }
 
