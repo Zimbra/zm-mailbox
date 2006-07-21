@@ -60,6 +60,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.wiki.WikiUtil;
+import com.zimbra.cs.zclient.ZMailboxUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapTransport.DebugListener;
 
@@ -77,6 +78,10 @@ public class ProvUtil implements DebugListener {
     private String mServer = LC.zimbra_zmprov_default_soap_server.value();
     private int mPort = LC.zimbra_admin_service_port.intValue();
     private Command mCommand;
+    
+    private Map<String,Command> mCommandIndex;
+    private Provisioning mProv;
+    private BufferedReader mReader;
     
     public void setDebug(boolean debug) { mDebug = debug; }
     
@@ -212,6 +217,7 @@ public class ProvUtil implements DebugListener {
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
         SEARCH_GAL("searchGal", "sg", "{domain} {name}", Category.SEARCH, 2, 2),
+        SELECT_MAILBOX("selectMailbox", "sm", "{account-name}", Category.MISC, 1, 1),        
         SET_ACCOUNT_COS("setAccountCos", "sac", "{name@domain|id} {cos-name|cos-id}", Category.ACCOUNT, 2, 2),
         SET_PASSWORD("setPassword", "sp", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
         SOAP(".soap", ".s"),
@@ -260,9 +266,6 @@ public class ProvUtil implements DebugListener {
     private static final int BY_ID = 1;
     private static final int BY_EMAIL = 2;
     private static final int BY_NAME = 3;
-    
-    private Map<String,Command> mCommandIndex;
-    private Provisioning mProv;
     
     private int guessType(String value) {
         if (value.indexOf("@") != -1)
@@ -528,6 +531,17 @@ public class ProvUtil implements DebugListener {
             break;
         case GET_MAILBOX_INFO:
             doGetMailboxInfo(args);
+            break;
+        case SELECT_MAILBOX:
+            if (!(mProv instanceof SoapProvisioning))
+                throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+             ZMailboxUtil util = new ZMailboxUtil();
+             util.setVerbose(mVerbose);
+             util.setDebug(mDebug);
+             util.setInteractive(true);
+             util.selectMailbox(args[1], (SoapProvisioning) mProv);
+             util.interactive(mReader);
+             
             break;
         case SOAP:
             // HACK FOR NOW
@@ -1303,9 +1317,9 @@ public class ProvUtil implements DebugListener {
         return attrs;
     }
 
-    private void interactive(InputStream is) throws IOException {
+    private void interactive(BufferedReader in) throws IOException {
+        mReader = in;
         mInteractive = true;
-        BufferedReader in = new BufferedReader(new InputStreamReader(is));
         while (true) {
             System.out.print("prov> ");
             String line = StringUtil.readLine(in);
@@ -1339,7 +1353,7 @@ public class ProvUtil implements DebugListener {
         CommandLineParser parser = new GnuParser();
         Options options = new Options();
         options.addOption("h", "help", false, "display usage");
-        options.addOption("f", "file", true, "use file as input stream");        
+        options.addOption("f", "file", true, "use file as input stream");
         options.addOption("s", "server", true, "host[:port] of server to connect to");
         options.addOption("l", "ldap", false, "provision via LDAP");
         options.addOption("a", "account", true, "account name (not used with --ldap)");
@@ -1382,7 +1396,8 @@ public class ProvUtil implements DebugListener {
         try {
             pu.initProvisioning();
             if (args.length < 1) {
-                pu.interactive(cl.hasOption('f') ? new FileInputStream(cl.getOptionValue('f')) : System.in);
+                InputStream is = cl.hasOption('f') ? new FileInputStream(cl.getOptionValue('f')) : System.in;
+                pu.interactive(new BufferedReader(new InputStreamReader(is)));
             } else {
                 try {
                     if (!pu.execute(args))

@@ -27,7 +27,9 @@ package com.zimbra.cs.zclient;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -383,21 +385,33 @@ public class ZMailboxUtil implements DebugListener {
         return mCommandIndex.get(command.toLowerCase());
     }
 
-    private ZMailboxUtil() {
+    public ZMailboxUtil() {
         initCommands();
     }
-    
-    private void selectMailbox(String targetAccount) throws ServiceException {
-        if (mProv == null)
-            throw SoapFaultException.CLIENT_ERROR("can only select mailbox after adminAuth", null);
+
+    public void selectMailbox(String targetAccount, SoapProvisioning prov) throws ServiceException {
+        if (prov == null) {
+            throw SoapFaultException.CLIENT_ERROR("can only select mailbox after adminAuth", null); 
+        } else if (mProv == null) { 
+            mProv = prov;
+        }
         SoapTransport.DebugListener listener = mDebug ? this : null;        
         mMailboxName = targetAccount;
-        SoapAccountInfo sai = mProv.getAccountInfo(AccountBy.name, mMailboxName);
-        DelegateAuthResponse dar = mProv.delegateAuth(AccountBy.name, mMailboxName, 60*60*24);
+        SoapAccountInfo sai = prov.getAccountInfo(AccountBy.name, mMailboxName);
+        DelegateAuthResponse dar = prov.delegateAuth(AccountBy.name, mMailboxName, 60*60*24);
         mAccount = ZAccount.getAccount(dar.getAuthToken(), sai.getAdminSoapURL(), listener);
         mMbox = mAccount.getMailbox();
         dumpMailboxConnect();
         mPrompt = String.format("mbox %s> ", mMailboxName);
+        mSearchParams = null;
+        mSearchResult = null;
+        mConvSearchParams = null;    
+        mConvSearchResult = null;
+        // TODO: mIndexToId.clear(), etc...
+    }
+    
+    public void selectMailbox(String targetAccount) throws ServiceException {
+        selectMailbox(targetAccount, mProv);
     }
     
     private void adminAuth(String name, String password, String uri) throws ServiceException {
@@ -626,7 +640,9 @@ public class ZMailboxUtil implements DebugListener {
         return (sort == null ? null : SearchSortBy.fromString(sort));
     }
     
-    private boolean execute(String args[]) throws ServiceException, ArgException, IOException {
+    enum ExecuteStatus {OK, UNKNOWN_COMMAND, EXIT};
+    
+    private ExecuteStatus execute(String args[]) throws ServiceException, IOException {
         
         mCommand = lookupCommand(args[0]);
         
@@ -636,19 +652,19 @@ public class ZMailboxUtil implements DebugListener {
         args = newArgs;
 
         if (mCommand == null)
-            return false;
+            return ExecuteStatus.UNKNOWN_COMMAND;
         
         try {
             mCommandLine = mParser.parse(mCommand.getOptions(), args, true);
             args = mCommandLine.getArgs();
         } catch (ParseException e) {
             usage();
-            return true;
+            return ExecuteStatus.OK;
         }
         
         if (!mCommand.checkArgsLength(args)) {
             usage();
-            return true;
+            return ExecuteStatus.OK;
         }
 
         if (
@@ -712,8 +728,8 @@ public class ZMailboxUtil implements DebugListener {
             mMbox.emptyFolder(lookupFolderId(args[0]));
             break;                        
         case EXIT:
-            System.exit(0);
-            break;
+            return ExecuteStatus.EXIT;
+            //break;
         case FLAG_CONTACT:
             mMbox.flagContact(id(args[0]), paramb(args, 1, true));
             break;            
@@ -842,9 +858,9 @@ public class ZMailboxUtil implements DebugListener {
             mMbox.tagMessage(id(args[0]), lookupTag(args[1]).getId(), paramb(args, 2, true));
             break;
         default:
-            return false;
+            return ExecuteStatus.UNKNOWN_COMMAND;
         }
-        return true;
+        return ExecuteStatus.OK;        
     }
 
     private void doAdminAuth(String[] args) throws ServiceException {
@@ -933,7 +949,7 @@ public class ZMailboxUtil implements DebugListener {
     private Stack<Integer> mSearchOffsets = new Stack<Integer>();
     private Map<Integer, String> mIndexToId = new HashMap<Integer, String>();
 
-    private void doSearch(String[] args) throws ServiceException, ArgException {
+    private void doSearch(String[] args) throws ServiceException {
         
         if (currrentOpt()) { doSearchRedisplay(args); return; }
         else if (previousOpt()) { doSearchPrevious(args); return; }
@@ -996,7 +1012,7 @@ public class ZMailboxUtil implements DebugListener {
 
     String mConvSearchConvId;
     
-    private void doSearchConv(String[] args) throws ServiceException, ArgException {
+    private void doSearchConv(String[] args) throws ServiceException {
         
         if (currrentOpt()) { doSearchConvRedisplay(args); return; }
         else if (previousOpt()) { doSearchConvPrevious(args); return; }
@@ -1270,7 +1286,7 @@ public class ZMailboxUtil implements DebugListener {
         dumpContacts(mMbox.getAllContacts(lookupFolderId(folderOpt()), null, true, getList(args, 0))); 
     }        
 
-    private void doGetContacts(String[] args) throws ServiceException, ArgException {
+    private void doGetContacts(String[] args) throws ServiceException {
         dumpContacts(mMbox.getContacts(id(args[0]), null, true, getList(args, 1)));
     }
 
@@ -1396,7 +1412,7 @@ public class ZMailboxUtil implements DebugListener {
         return false;
     }
 
-    private void doModifyContact(String[] args) throws ServiceException, ArgException {
+    private void doModifyContact(String[] args) throws ServiceException {
         ZContact mc = mMbox.modifyContact(id(args[0]),  mCommandLine.hasOption('r'), getContactMap(args, 1, !ignoreOpt()));
         System.out.println(mc.getId());
     }
@@ -1434,7 +1450,7 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
-    private Map<String, String> getContactMap(String[] args, int offset, boolean validate) throws ArgException, ServiceException {
+    private Map<String, String> getContactMap(String[] args, int offset, boolean validate) throws ServiceException {
         Map<String, String> result = getMap(args, offset);
         if (validate) {
             for (String name : result.keySet()) {
@@ -1444,12 +1460,12 @@ public class ZMailboxUtil implements DebugListener {
         return result;
     }
     
-    private Map<String, String> getMap(String[] args, int offset) throws ArgException {
+    private Map<String, String> getMap(String[] args, int offset) throws ServiceException {
         Map<String, String> attrs = new HashMap<String, String>();
         for (int i = offset; i < args.length; i+=2) {
             String n = args[i];
             if (i+1 >= args.length)
-                throw new ArgException("not enough arguments");
+                throw SoapFaultException.CLIENT_ERROR("not enough arguments", null);
             String v = args[i+1];
             attrs.put(n, v);
         }
@@ -1464,8 +1480,7 @@ public class ZMailboxUtil implements DebugListener {
         return attrs;
     }
 
-    private void interactive() throws IOException {
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+    public void interactive(BufferedReader in) throws IOException {
         while (true) {
             System.out.print(mPrompt);
             String line = StringUtil.readLine(in);
@@ -1478,16 +1493,19 @@ public class ZMailboxUtil implements DebugListener {
             if (args.length == 0)
                 continue;
             try {
-                if (!execute(args)) {
-                    System.out.println("Unknown command. Type: 'help commands' for a list");
+                switch(execute(args)) {
+                case UNKNOWN_COMMAND:
+                    System.out.println("Unknown command. Type: 'help commands' for a list");                    
+                    break;
+                case EXIT:
+                    return;
+                    //break;
                 }
             } catch (ServiceException e) {
                 Throwable cause = e.getCause();
                 System.err.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
                         (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));
                 if (mGlobalVerbose) e.printStackTrace(System.err);
-            } catch (ArgException e) {
-                    usage();
             }
         }
     }
@@ -1548,14 +1566,11 @@ public class ZMailboxUtil implements DebugListener {
         try {
             pu.initMailbox();
             if (args.length < 1) {
-                pu.interactive();
+                InputStream is = cl.hasOption('f') ? new FileInputStream(cl.getOptionValue('f')) : System.in;; 
+                pu.interactive(new BufferedReader(new InputStreamReader(is)));
             } else {
-                try {
-                    if (!pu.execute(args))
-                        pu.usage();
-                } catch (ArgException e) {
+                if (pu.execute(args) == ExecuteStatus.UNKNOWN_COMMAND)
                     pu.usage();
-                }
             }
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
@@ -1563,12 +1578,6 @@ public class ZMailboxUtil implements DebugListener {
                     (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));
             if (pu.mGlobalVerbose) e.printStackTrace(System.err);            
             System.exit(2);
-        }
-    }
-    
-    class ArgException extends Exception {
-        ArgException(String msg) {
-            super(msg);
         }
     }
 
