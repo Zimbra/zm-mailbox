@@ -178,7 +178,7 @@ public class SoapEngine {
                 	responseBody = zsc.getProxyTarget().dispatch(doc, zscTarget);
                     responseBody.detach();
                 } catch (SoapFaultException e) {
-                    responseBody = e.getFault().detach();
+                    responseBody = e.getFault() != null ? e.getFault().detach() : responseProto.soapFault(e); 
                     mLog.debug("proxy handler exception", e);
                 } catch (ServiceException e) {
                     responseBody = responseProto.soapFault(e);
@@ -260,7 +260,7 @@ public class SoapEngine {
             if (response == null)
                 response = handler.handle(request, context);
         } catch (SoapFaultException e) {
-            response = e.getFault().detach();
+            response = e.getFault() != null ? e.getFault().detach() : soapProto.soapFault(ServiceException.FAILURE(e.toString(), e)); 
             if (!e.isSourceLocal())
                 mLog.debug("handler exception", e);
         } catch (ServiceException e) {
