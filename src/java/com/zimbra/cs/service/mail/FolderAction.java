@@ -90,12 +90,12 @@ public class FolderAction extends ItemAction {
     }));
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
 
-        Element response = lc.createElement(MailService.FOLDER_ACTION_RESPONSE);
+        Element response = zsc.createElement(MailService.FOLDER_ACTION_RESPONSE);
         Element result = response.addUniqueElement(MailService.E_ACTION);
 
         if (operation.equals(OP_TAG) || operation.equals(OP_FLAG) || operation.equals(OP_UNTAG) || operation.equals(OP_UNFLAG))
@@ -117,10 +117,10 @@ public class FolderAction extends ItemAction {
     throws ServiceException {
         Element action = request.getElement(MailService.E_ACTION);
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
-        ItemId iid = new ItemId(action.getAttribute(MailService.A_ID), lc);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = zsc.getOperationContext();
+        ItemId iid = new ItemId(action.getAttribute(MailService.A_ID), zsc);
 
         if (operation.equals(OP_EMPTY)) {
             mbox.emptyFolder(octxt, iid.getId(), true);
@@ -156,7 +156,7 @@ public class FolderAction extends ItemAction {
             short rights = ACL.stringToRights(grant.getAttribute(MailService.A_RIGHTS));
             byte gtype   = stringToType(grant.getAttribute(MailService.A_GRANT_TYPE));
             String zid   = grant.getAttribute(MailService.A_ZIMBRA_ID, null);
-            String args   = grant.getAttribute(MailService.A_ARGS, null);
+            String password = null;
             NamedEntry nentry = null;
             if (gtype == ACL.GRANTEE_AUTHUSER) {
                 zid = ACL.GUID_AUTHUSER;
@@ -164,18 +164,28 @@ public class FolderAction extends ItemAction {
                 zid = ACL.GUID_PUBLIC;
             } else if (gtype == ACL.GRANTEE_GUEST) {
                 zid = grant.getAttribute(MailService.A_DISPLAY);
-                if (zid == null || args == null || zid.indexOf('@') < 0)
+                if (zid == null || password == null || zid.indexOf('@') < 0)
                 	throw ServiceException.INVALID_REQUEST("invalid guest id or password", null);
+                // make sure they didn't accidentally specify "guest" instead of "usr"
+                try {
+                    nentry = lookupGranteeByName(zid, ACL.GRANTEE_USER, zsc);
+                    zid = nentry.getId();
+                    gtype = nentry instanceof DistributionList ? ACL.GRANTEE_GROUP : ACL.GRANTEE_USER;
+                } catch (ServiceException e) {
+                    // this is the normal path, where lookupGranteeByName throws account.NO_SUCH_USER
+                    password = grant.getAttribute(MailService.A_ARGS, null);
+                }
             } else if (zid != null) {
             	nentry = lookupGranteeByZimbraId(zid, gtype);
             } else {
-            	nentry = lookupGranteeByName(grant.getAttribute(MailService.A_DISPLAY), gtype, lc);
+            	nentry = lookupGranteeByName(grant.getAttribute(MailService.A_DISPLAY), gtype, zsc);
             	zid = nentry.getId();
+                // make sure they didn't accidentally specify "usr" instead of "grp"
             	if (gtype == ACL.GRANTEE_USER && nentry instanceof DistributionList)
             		gtype = ACL.GRANTEE_GROUP;
             }
             
-            mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, inherit, args);
+            mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, inherit, password);
             // kinda hacky -- return the zimbra id and name of the grantee in the response
             result.addAttribute(MailService.A_ZIMBRA_ID, zid);
             if (nentry != null)
@@ -185,7 +195,7 @@ public class FolderAction extends ItemAction {
         } else if (operation.equals(OP_UPDATE)) {
             // duplicating code from ItemAction.java for now...
             String newName = action.getAttribute(MailService.A_NAME, null);
-            ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, "-1"), lc);
+            ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, "-1"), zsc);
             if (!iidFolder.belongsTo(mbox))
                 throw ServiceException.INVALID_REQUEST("cannot move folder between mailboxes", null);
             String flags = action.getAttribute(MailService.A_FLAGS, null);
@@ -218,7 +228,7 @@ public class FolderAction extends ItemAction {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
         }
 
-        return lc.formatItemId(iid);
+        return zsc.formatItemId(iid);
     }
 
     static byte stringToType(String typeStr) throws ServiceException {
@@ -253,7 +263,7 @@ public class FolderAction extends ItemAction {
     }
     
     static NamedEntry lookupGranteeByName(String name, byte type, ZimbraSoapContext lc) throws ServiceException {
-        if (type == ACL.GRANTEE_AUTHUSER || type == ACL.GRANTEE_PUBLIC|| type == ACL.GRANTEE_GUEST)
+        if (type == ACL.GRANTEE_AUTHUSER || type == ACL.GRANTEE_PUBLIC || type == ACL.GRANTEE_GUEST)
             return null;
 
         Provisioning prov = Provisioning.getInstance();
