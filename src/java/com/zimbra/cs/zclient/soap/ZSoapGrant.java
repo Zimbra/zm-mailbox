@@ -53,7 +53,7 @@ class ZSoapGrant implements ZGrant {
     }
 
     public String getGranteeName() {
-        return mGranteeName;
+        return mGranteeName == null ? mGranteeId : mGranteeName;
     }
 
     public String getGranteeId() {
@@ -77,6 +77,7 @@ class ZSoapGrant implements ZGrant {
         sb.beginStruct();
         sb.add("type", mGranteeType.name());
         sb.add("name", mGranteeName);
+        sb.add("id", mGranteeId);
         sb.add("permissions", mPermissions);
         sb.add("inherit", mInherit);
         sb.add("args", mArgs);
