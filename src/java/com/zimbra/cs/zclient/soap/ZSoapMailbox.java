@@ -60,6 +60,7 @@ import com.zimbra.cs.zclient.ZSearchFolder;
 import com.zimbra.cs.zclient.ZSearchParams;
 import com.zimbra.cs.zclient.ZSearchResult;
 import com.zimbra.cs.zclient.ZTag;
+import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 import com.zimbra.cs.zclient.ZTag.Color;
 import com.zimbra.soap.Element;
@@ -464,6 +465,28 @@ public class ZSoapMailbox extends ZMailbox {
     @Override
     public ZActionResult syncFolder(String ids) throws ServiceException {
         return doAction(folderAction("sync", ids));
+    }
+
+    @Override
+    public ZActionResult modifyFolderRevokeGrant(String folderId, String grantreeId) throws ServiceException
+    {
+        Element action = folderAction("!grant", folderId);
+        action.addAttribute(MailService.A_ZIMBRA_ID, grantreeId);
+        return doAction(action);
+    }
+    
+    @Override
+    public ZActionResult modifyFolderGrant(
+            String folderId, GranteeType granteeType, String grantreeId, 
+            String perms, String args, boolean inherit) throws ServiceException {
+        Element action = folderAction("grant", folderId);
+        Element grant = action.addElement(MailService.E_GRANT);
+        grant.addAttribute(MailService.A_INHERIT, inherit);
+        grant.addAttribute(MailService.A_RIGHTS, perms);
+        grant.addAttribute(MailService.A_DISPLAY, grantreeId);
+        grant.addAttribute(MailService.A_GRANT_TYPE, granteeType.name());
+        if (args != null) grant.addAttribute(MailService.A_ARGS, args);
+        return doAction(action);
     }
 
     private Element tagAction(String op, String id) throws ServiceException {

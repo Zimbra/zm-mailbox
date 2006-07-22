@@ -34,6 +34,7 @@ class ZSoapGrant implements ZGrant {
 
     private String mArgs;
     private String mGranteeName;
+    private String mGranteeId;
     private GranteeType mGranteeType;
     private boolean mInherit;
     private String mPermissions;
@@ -42,6 +43,7 @@ class ZSoapGrant implements ZGrant {
         mArgs = e.getAttribute(MailService.A_ARGS, null);
         mPermissions = e.getAttribute(MailService.A_RIGHTS);
         mGranteeName = e.getAttribute(MailService.A_DISPLAY, null);
+        mGranteeId = e.getAttribute(MailService.A_ZIMBRA_ID, null);        
         mGranteeType = GranteeType.fromString(e.getAttribute(MailService.A_GRANT_TYPE));
         mInherit = e.getAttributeBool(MailService.A_INHERIT);
     }
@@ -52,6 +54,10 @@ class ZSoapGrant implements ZGrant {
 
     public String getGranteeName() {
         return mGranteeName;
+    }
+
+    public String getGranteeId() {
+        return mGranteeId;
     }
 
     public GranteeType getGranteeType() {

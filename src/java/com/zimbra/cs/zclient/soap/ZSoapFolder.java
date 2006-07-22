@@ -120,7 +120,16 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         mRestURL = e.getAttribute(MailService.A_REST_URL, mRestURL);
         mRemoteURL = e.getAttribute(MailService.A_URL, mRemoteURL);
         mEffectivePerms = e.getAttribute(MailService.A_RIGHTS, mEffectivePerms);
-        // TODO: ACLs, sub/search/link?
+        
+        Element aclEl = e.getOptionalElement(MailService.E_ACL);
+        if (aclEl != null) {
+            mGrants.clear();
+            for (Element grant : aclEl.listElements(MailService.E_GRANT)) {
+                mGrants.add(new ZSoapGrant(grant));
+            }
+        }
+        // TODO: sub/search/link?
+        
     }
 
     void addChild(ZFolder folder)        { mSubFolders.add(folder); }

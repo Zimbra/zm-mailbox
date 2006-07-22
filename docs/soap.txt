@@ -653,7 +653,7 @@ Conversations:
 Folders:
 
   <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"] u="{unread}" n="{msg-count}" [view="{default-type}"] [url="{remote-url}"] [perm="{effective-perms}"] [rest="{rest-url}"]>
-    [<acl> <grant perm="{rights}" gt="{grantee-type}" d="{grantee-name}" [inh="0|1"] [args="{args}"]/>* </acl>]
+    [<acl> <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" d="{grantee-name}" [inh="0|1"] [args="{args}"]/>* </acl>]
   </folder>
 
   {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;

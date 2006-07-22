@@ -129,6 +129,11 @@ public interface ZGrant {
      * optional if {grantee-type} is "all"
      */
     public String getGranteeName();
+
+    /***
+     * the zimbraId of the granteee
+     */
+    public String getGranteeId();
     
     /**
      * whether rights granted on this folder are also granted on all subfolders

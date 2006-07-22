@@ -57,6 +57,7 @@ import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -65,6 +66,7 @@ import com.zimbra.cs.util.DateUtil;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
+import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
@@ -200,6 +202,7 @@ public class ZMailboxUtil implements DebugListener {
     private static Option O_FLAGS = new Option("F", "flags", true, "flags");
     private static Option O_FOLDER = new Option("f", "folder", true, "folder-path-or-id");
     private static Option O_IGNORE = new Option("i", "ignore", false, "ignore unknown contact attrs");            
+    private static Option O_INHERIT = new Option("i", "inherit", false, "whether rights granted on this folder are also granted on all subfolders");
     private static Option O_LIMIT = new Option("l", "limit", true, "max number of results to return");
     private static Option O_NEXT = new Option("n", "next", false, "next page of search results");    
     private static Option O_PREVIOUS = new Option("p", "previous", false,  "previous page of search results");
@@ -253,6 +256,7 @@ public class ZMailboxUtil implements DebugListener {
         MODIFY_FOLDER_CHECKED("modifyFolderChecked", "mfch", "{folder-path} [0|1*]", "modify whether a folder is checked in the UI", Category.FOLDER, 1, 2),
         MODIFY_FOLDER_COLOR("modifyFolderColor", "mfc", "{folder-path} {new-color}", "modify a folder's color", Category.FOLDER, 2, 2),
         MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", "change whether folder is excluded from free-busy", Category.FOLDER, 1, 2),        
+        MODIFY_FOLDER_GRANT("modifyFolderGrant", "mfg", "{folder-path} {account {name}|group {name}|domain {name}|all|public|guest {email} {password}] {permissions|none}}", "add/remove a grant to a folder", Category.FOLDER, 3, 5, O_INHERIT),                
         MODIFY_FOLDER_URL("modifyFolderURL", "mfu", "{folder-path} {url}", "modify a folder's URL", Category.FOLDER, 2, 2),
         MODIFY_TAG_COLOR("modifyTagColor", "mtc", "{tag-name} {tag-color}", "modify a tag's color", Category.TAG, 2, 2),
         MOVE_CONTACT("moveContact", "mct", "{contact-ids} {dest-folder-path}", "move contact(s) to a new folder", Category.CONTACT, 2, 2),
@@ -623,6 +627,8 @@ public class ZMailboxUtil implements DebugListener {
     
     private String folderOpt()   { return mCommandLine.getOptionValue(O_FOLDER.getOpt()); }
 
+    private boolean inheritOpt() { return mCommandLine.hasOption(O_INHERIT.getOpt()); }
+    
     private boolean replaceOpt() { return mCommandLine.hasOption(O_REPLACE.getOpt()); }
     
     private boolean ignoreOpt() { return mCommandLine.hasOption(O_IGNORE.getOpt()); }    
@@ -806,6 +812,9 @@ public class ZMailboxUtil implements DebugListener {
         case MODIFY_FOLDER_EXCLUDE_FREE_BUSY:
             mMbox.modifyFolderExcludeFreeBusy(lookupFolderId(args[0]), paramb(args, 1, true));
             break;
+        case MODIFY_FOLDER_GRANT:
+            doModifyFolderGrant(args);
+            break;
         case MODIFY_FOLDER_URL:
             mMbox.modifyFolderURL(lookupFolderId(args[0]), args[1]);
             break;
@@ -861,6 +870,68 @@ public class ZMailboxUtil implements DebugListener {
             return ExecuteStatus.UNKNOWN_COMMAND;
         }
         return ExecuteStatus.OK;        
+    }
+
+    private GranteeType getGranteeType(String name) throws ServiceException {
+        if (name.equalsIgnoreCase("account")) return GranteeType.usr;
+        else if (name.equalsIgnoreCase("group")) return GranteeType.grp;        
+        else if (name.equalsIgnoreCase("public")) return GranteeType.pub;
+        else if (name.equalsIgnoreCase("all")) return GranteeType.all;
+        else if (name.equalsIgnoreCase("cos")) return GranteeType.cos;
+        else if (name.equalsIgnoreCase("domain")) return GranteeType.dom;
+        else if (name.equalsIgnoreCase("guest")) return GranteeType.guest;
+        else throw SoapFaultException.CLIENT_ERROR("unnown grantee type: "+name, null);
+    }
+
+    private void doModifyFolderGrant(String[] args) throws ServiceException {
+        String folderId = lookupFolderId(args[0], false);
+
+        GranteeType type = getGranteeType(args[1]);
+        String grantee = null;
+        String perms = null;
+        String arg = null;
+        switch (type) {
+        case usr:
+        case grp:
+        case cos:
+        case dom:
+            grantee = args[2];
+            perms = args[3];
+            break;
+        case pub:
+            grantee = ACL.GUID_PUBLIC;
+            perms = args[2];
+            break;
+        case all:
+            grantee = ACL.GUID_AUTHUSER;
+            perms = args[2];
+            break;            
+        case guest:
+            grantee = args[2];
+            arg = args[3];            
+            perms = args[4];
+            break;    
+        }
+        boolean revoke = (perms != null && (perms.equalsIgnoreCase("none") || perms.length() == 0));        
+        
+        if (revoke) {
+            if (!isId(grantee)) {
+                ZFolder f = lookupFolder(folderId);
+                String zid = null;
+                for (ZGrant g : f.getGrants()) {
+                    if (grantee.equalsIgnoreCase(g.getGranteeName())) {
+                        zid = g.getGranteeId();
+                        break;
+                    }
+                }
+                if (zid == null) throw SoapFaultException.CLIENT_ERROR("unablle to resolve zimbra id for: "+grantee, null);
+                else grantee = zid;
+            }
+            
+            mMbox.modifyFolderRevokeGrant(folderId, grantee);
+        } else {
+            mMbox.modifyFolderGrant(folderId, type, grantee, perms, arg, inheritOpt());
+        }
     }
 
     private void doAdminAuth(String[] args) throws ServiceException {

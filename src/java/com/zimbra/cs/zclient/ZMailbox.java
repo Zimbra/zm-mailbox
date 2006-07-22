@@ -560,6 +560,28 @@ public abstract class ZMailbox {
     
     /** sets or unsets the folder's exclude from free busy state */
     public abstract ZActionResult modifyFolderExcludeFreeBusy(String folderId, boolean state) throws ServiceException;
+
+    /**
+     * 
+     * @param folderId
+     * @param grantreeType
+     * @param grantreeId
+     * @param perms permission mask ("rwid")
+     * @param args
+     * @param inherit
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult modifyFolderGrant(String folderId, ZGrant.GranteeType grantreeType, String grantreeId, String perms, String args, boolean inherit) throws ServiceException;
+
+    /**
+     * revoke a grant
+     * @param folderId
+     * @param grantreeId zimbra ID 
+     * @return
+     * @throws ServiceException
+     */
+    public abstract ZActionResult modifyFolderRevokeGrant(String folderId, String grantreeId) throws ServiceException;
     
     /** 
      * set the synchronization url on the folder to {target-url}, empty the folder, and 
