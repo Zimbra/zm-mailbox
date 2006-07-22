@@ -754,7 +754,6 @@ public abstract class MailItem implements Comparable {
     abstract boolean isIndexed();
 	abstract boolean canHaveChildren();
     boolean isDeletable()             { return true; }
-	boolean trackTags()               { return isTaggable(); }
 	boolean trackUnread()             { return true; }
 	boolean canParent(MailItem child) { return canHaveChildren(); }
 

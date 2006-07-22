@@ -148,7 +148,7 @@ public class Conversation extends MailItem {
         super(mbox, data);
         if (mData.type != TYPE_CONVERSATION && mData.type != TYPE_VIRTUAL_CONVERSATION)
             throw new IllegalArgumentException();
-        if (mData.inheritedTags != null && !mData.inheritedTags.equals("") && trackTags())
+        if (mData.inheritedTags != null && !mData.inheritedTags.equals(""))
             mInheritedTagSet = new TagSet(mData.inheritedTags);
         mData.inheritedTags = null;
     }
@@ -315,7 +315,6 @@ public class Conversation extends MailItem {
     boolean isIndexed()       { return false; }
     boolean canHaveChildren() { return true; }
 
-    boolean trackTags()       { return true; }
     boolean canParent(MailItem item) { return (item instanceof Message); }
 
 
@@ -467,7 +466,7 @@ public class Conversation extends MailItem {
     }
 
     protected void inheritedTagChanged(Tag tag, boolean add, boolean onChild) {
-        if (!trackTags() || tag == null)
+        if (tag == null)
             return;
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
 
