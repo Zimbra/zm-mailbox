@@ -30,27 +30,9 @@ import com.zimbra.cs.service.ServiceException;
 public class SoapFaultException extends ServiceException {
 
     /**
-     * IO exception happened
-     */
-    public static final String IO_ERROR        = "soap.IO_ERROR";
-    
-    /**
-     * generic client error
-     */
-    public static final String CLIENT_ERROR    = "soap.CLIENT_ERROR";    
-    
-    /**
      * used for default value and when we get a fault without a detail code
      */
     public static final String UNKNOWN = "soap.UNKNOWN";     
-
-    public static SoapFaultException IO_ERROR(String msg, Throwable cause) {
-        return new SoapFaultException(msg, IO_ERROR, SENDERS_FAULT, cause);
-    }
-
-    public static SoapFaultException CLIENT_ERROR(String msg, Throwable cause) {
-        return new SoapFaultException(msg, CLIENT_ERROR, SENDERS_FAULT, cause);
-    }
 
     private boolean mIsReceiversFault;
 //    private QName mCode;

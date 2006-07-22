@@ -30,8 +30,8 @@ import java.io.IOException;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.zclient.ZAccount;
+import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -108,7 +108,7 @@ public class ZSoapAccount extends ZAccount {
     }
 
     private AuthResult auth(String key, AccountBy by, String password) throws ServiceException {
-        if (mTransport == null) throw SoapFaultException.CLIENT_ERROR("must call setURI before calling asuthenticate", null);
+        if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling asuthenticate", null);
         XMLElement req = new XMLElement(AccountService.AUTH_REQUEST);
         Element account = req.addElement(AccountService.E_ACCOUNT);
         account.addAttribute(AccountService.A_BY, by.name());
@@ -123,7 +123,7 @@ public class ZSoapAccount extends ZAccount {
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
-            throw SoapFaultException.IO_ERROR("invoke "+e.getMessage(), e);
+            throw ZClientException.IO_ERROR("invoke "+e.getMessage(), e);
         }
     }
 

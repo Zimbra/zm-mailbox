@@ -29,7 +29,6 @@ import java.util.Arrays;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.SoapFaultException;
 
 public interface ZContact  {
     
@@ -91,7 +90,7 @@ public interface ZContact  {
             try {
                 return Attr.valueOf(s);
             } catch (IllegalArgumentException e) {
-                throw SoapFaultException.CLIENT_ERROR("invalid attr: "+s+", valid values: "+Arrays.asList(Attr.values()), e);
+                throw ZClientException.CLIENT_ERROR("invalid attr: "+s+", valid values: "+Arrays.asList(Attr.values()), e);
             }
         }
 

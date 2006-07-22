@@ -59,6 +59,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
@@ -118,7 +119,7 @@ public class SoapProvisioning extends Provisioning {
      * @throws IOException 
      */
     public void soapAdminAuthenticate(String name, String password) throws ServiceException {
-       if (mTransport == null) throw SoapFaultException.CLIENT_ERROR("must call setURI before calling adminAuthenticate", null);
+       if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling adminAuthenticate", null);
        XMLElement req = new XMLElement(AdminService.AUTH_REQUEST);
        req.addElement(AdminService.E_NAME).setText(name);
        req.addElement(AdminService.E_PASSWORD).setText(password);
@@ -154,7 +155,7 @@ public class SoapProvisioning extends Provisioning {
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
-            throw SoapFaultException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName(), e);
+            throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName(), e);
         }
     }
 
@@ -168,7 +169,7 @@ public class SoapProvisioning extends Provisioning {
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
-            throw SoapFaultException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName, e);
+            throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName, e);
         } finally {
             if (diff) soapSetURI(oldUri);
         }
@@ -182,7 +183,7 @@ public class SoapProvisioning extends Provisioning {
         return result;
     }
 
-    static void addAttrElements(Element req, Map<String, ? extends Object> attrs) throws SoapFaultException {
+    static void addAttrElements(Element req, Map<String, ? extends Object> attrs) throws ServiceException {
         if (attrs == null) return;
         
         for (Entry entry : attrs.entrySet()) {
@@ -200,7 +201,7 @@ public class SoapProvisioning extends Provisioning {
                     a.setText((String)v);                    
                 }
             } else {
-                throw SoapFaultException.CLIENT_ERROR("invalid attr type: "+key+" "+value.getClass().getName(), null);
+                throw ZClientException.CLIENT_ERROR("invalid attr type: "+key+" "+value.getClass().getName(), null);
             }
         }        
     }

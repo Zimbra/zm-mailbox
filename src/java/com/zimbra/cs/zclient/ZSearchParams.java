@@ -25,8 +25,8 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
-import com.zimbra.soap.SoapFaultException;
 
 public class ZSearchParams {
 
@@ -38,7 +38,7 @@ public class ZSearchParams {
     
     public static final String TYPE_APPOINTMENT = "appointment";
     
-    public static final String getCanonicalTypes(String list) throws SoapFaultException {
+    public static final String getCanonicalTypes(String list) throws ServiceException  {
         if (list == null || list.length() == 0) return "";
 
         StringBuilder sb = new StringBuilder();
@@ -53,7 +53,7 @@ public class ZSearchParams {
             else if (s.startsWith("a") && TYPE_APPOINTMENT.startsWith(s))
                 sb.append(TYPE_APPOINTMENT);
             else
-                throw SoapFaultException.CLIENT_ERROR("invlaid search type: "+s, null);
+                throw ZClientException.CLIENT_ERROR("invlaid search type: "+s, null);
         }
         return sb.toString();
     }

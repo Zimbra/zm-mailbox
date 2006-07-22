@@ -50,6 +50,7 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZConversation;
 import com.zimbra.cs.zclient.ZFolder;
@@ -106,7 +107,7 @@ public class ZSoapMailbox extends ZMailbox {
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
-            throw SoapFaultException.IO_ERROR("invoke "+e.getMessage(), e);
+            throw ZClientException.IO_ERROR("invoke "+e.getMessage(), e);
         } finally {
             handleResponseContext(mTransport.getZimbraContext());
         }
@@ -283,7 +284,7 @@ public class ZSoapMailbox extends ZMailbox {
 
     @Override
     public ZSearchResult searchConversation(String convId, ZSearchParams params) throws ServiceException {
-        if (convId == null) throw SoapFaultException.CLIENT_ERROR("conversation id must not be null", null);
+        if (convId == null) throw ZClientException.CLIENT_ERROR("conversation id must not be null", null);
         return internalSearch(convId, params);
     }
     
@@ -818,7 +819,7 @@ public class ZSoapMailbox extends ZMailbox {
             URI newUri = uri.resolve("/service/upload?fmt=raw");
             return  newUri;
         } catch (URISyntaxException e) {
-            throw SoapFaultException.CLIENT_ERROR("unable to parse URI: "+mTransport.getURI(), e);
+            throw ZClientException.CLIENT_ERROR("unable to parse URI: "+mTransport.getURI(), e);
         }
     }
     
@@ -870,7 +871,7 @@ public class ZSoapMailbox extends ZMailbox {
                 throw SoapFaultException.FAILURE("Attachment post failed, status=" + statusCode, null);
             }
         } catch (IOException e) {
-            throw SoapFaultException.IO_ERROR(e.getMessage(), e);
+            throw ZClientException.IO_ERROR(e.getMessage(), e);
         } finally {
             post.releaseConnection();
         }

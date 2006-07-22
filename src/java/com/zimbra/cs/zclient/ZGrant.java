@@ -28,7 +28,6 @@ package com.zimbra.cs.zclient;
 import java.util.Arrays;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.SoapFaultException;
 
 public interface ZGrant {
  
@@ -84,10 +83,6 @@ public interface ZGrant {
          */
         all, 
         /**
-         * access is granted to a COS 
-         */
-        cos,
-        /**
          * access is granted to all users in a domain
          */
         dom, 
@@ -100,7 +95,7 @@ public interface ZGrant {
             try {
                 return GranteeType.valueOf(s);
             } catch (IllegalArgumentException e) {
-                throw SoapFaultException.CLIENT_ERROR("invalid grantee: "+s+", valid values: "+Arrays.asList(GranteeType.values()), e);
+                throw ZClientException.CLIENT_ERROR("invalid grantee: "+s+", valid values: "+Arrays.asList(GranteeType.values()), e);
             }
         }
     }
@@ -118,7 +113,7 @@ public interface ZGrant {
     public boolean canWorkflow();
 
     /**
-     * the type of grantee: "usr", "grp", "dom" (domain), "cos", 
+     * the type of grantee: "usr", "grp", "dom" (domain),
      * "all" (all authenticated users), "pub" (public authenticated and unauthenticated access), 
      * "guest" (non-Zimbra email address and password)
      */
