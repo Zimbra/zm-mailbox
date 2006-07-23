@@ -30,8 +30,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.zclient.soap.ZSoapMailbox;
+import com.zimbra.soap.SoapTransport;
 
 public abstract class ZMailbox {
 
@@ -50,6 +53,14 @@ public abstract class ZMailbox {
                 throw ZClientException.CLIENT_ERROR("invalid sortBy: "+s+", valid values: "+Arrays.asList(SearchSortBy.values()), e); 
             }
         }
+   }
+   
+   public static ZMailbox getMailbox(String key, AccountBy by, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
+       return new ZSoapMailbox(key,by, password, uri, listener);
+   }
+
+   public static ZMailbox getMailbox(String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
+       return new ZSoapMailbox(authToken, uri, listener);
    }
    
     /**
@@ -93,7 +104,9 @@ public abstract class ZMailbox {
     /**
      * @return account name of mailbox
      */
-    public abstract String getName();
+    public abstract String getName() throws ServiceException;
+    
+    public abstract ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException;
     
     //  ------------------------
     

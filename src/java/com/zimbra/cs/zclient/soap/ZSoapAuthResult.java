@@ -23,25 +23,39 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.zclient;
+package com.zimbra.cs.zclient.soap;
 
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.zclient.soap.ZSoapAccount;
-import com.zimbra.soap.SoapTransport;
+import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.soap.Element;
 
-public abstract class ZAccount {
+class ZSoapAuthResult {
+    private String mAuthToken;
+    private long mExpires;
+    private long mLifetime;
+    private String mRefer;
 
-    public static ZAccount getAccount(String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-        return new ZSoapAccount(authToken, uri, listener);
+    ZSoapAuthResult(Element e) throws ServiceException {
+        mAuthToken = e.getElement(AccountService.E_AUTH_TOKEN).getText();
+        mLifetime = e.getAttributeLong(AccountService.E_LIFETIME);
+        mExpires = System.currentTimeMillis() + mLifetime;
+        Element re = e.getOptionalElement(AccountService.E_REFERRAL); 
+        if (re != null) mRefer = re.getText();
+    }
+
+    public String getAuthToken() {
+        return mAuthToken;
     }
     
-    public static ZAccount getAccount(String key, AccountBy by, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-        return new ZSoapAccount(key, by, password, uri, listener);
+    public long getExpires() {
+        return mExpires;
     }
     
-    public abstract ZMailbox getMailbox() throws ServiceException;
+    public long getLifetime() {
+        return mLifetime;
+    }
     
-    public abstract ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException;
+    public String getRefer() {
+        return mRefer;
+    }
 }
-

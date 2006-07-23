@@ -27,11 +27,9 @@ package com.zimbra.cs.zclient.soap;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,13 +47,16 @@ import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZConversation;
 import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZGetInfoResult;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZMountpoint;
@@ -82,25 +83,44 @@ public class ZSoapMailbox extends ZMailbox {
     private Map<String, ZSoapTag> mNameToTag;
     private Map<String, ZSoapItem> mIdToItem;
     private String mName;
-
+    private boolean mProcessedRefresh;
+    private ZGetInfoResult mGetInfoResult;
     private ZSoapFolder mUserRoot;
-
+    private SoapTransport.DebugListener mListener;
+    
     private long mSize;
 
-    ZSoapMailbox() {
+    public ZSoapMailbox(String key, AccountBy by, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
         mNameToTag = new HashMap<String, ZSoapTag>();
-        mIdToItem = new HashMap<String, ZSoapItem>();        
+        mIdToItem = new HashMap<String, ZSoapItem>();
+        mListener = listener;        
+        setSoapURI(uri);
+        if (listener != null) mTransport.setDebugListener(listener);
+        ZSoapAuthResult ar = auth(key, by, password);
+        mAuthToken = ar.getAuthToken();
+        mTransport.setAuthToken(mAuthToken);
+        getAccountInfo(true);        
     }
 
-    static ZMailbox getMailbox(ZSoapAccount acct, String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
+    public ZSoapMailbox(String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
+        mNameToTag = new HashMap<String, ZSoapTag>();
+        mIdToItem = new HashMap<String, ZSoapItem>();                
+        mListener = listener;
+        setSoapURI(uri);
+        if (listener != null) mTransport.setDebugListener(listener);
+        mAuthToken = authToken;
+        mTransport.setAuthToken(mAuthToken);
+        getAccountInfo(true);
+    }
 
-        ZSoapMailbox zmbx = new ZSoapMailbox();
-        zmbx.mName = acct.getAccountInfo(false).getName();        
-        zmbx.setSoapURI(uri);
-        if (listener != null) zmbx.mTransport.setDebugListener(listener);
-        zmbx.mTransport.setAuthToken(authToken);
-        zmbx.noOp();
-        return zmbx;
+    private ZSoapAuthResult auth(String key, AccountBy by, String password) throws ServiceException {
+        if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling asuthenticate", null);
+        XMLElement req = new XMLElement(AccountService.AUTH_REQUEST);
+        Element account = req.addElement(AccountService.E_ACCOUNT);
+        account.addAttribute(AccountService.A_BY, by.name());
+        account.setText(key);
+        req.addElement(AccountService.E_PASSWORD).setText(password);
+        return new ZSoapAuthResult(invoke(req));
     }
 
     /**
@@ -219,6 +239,7 @@ public class ZSoapMailbox extends ZMailbox {
      * @throws ServiceException
      */
     private void refreshHandler(Element refresh) throws ServiceException {
+        mProcessedRefresh = true;
         mNameToTag.clear();
         mIdToItem.clear();
         mTransport.setMaxNoitfySeq(0);
@@ -250,8 +271,8 @@ public class ZSoapMailbox extends ZMailbox {
     }
     
     @Override
-    public String getName() {
-        return mName;
+    public String getName() throws ServiceException  {
+        return getAccountInfo(false).getName();        
     }
 
     @Override
@@ -892,13 +913,23 @@ public class ZSoapMailbox extends ZMailbox {
         try {
             URI uri = new URI(mTransport.getURI());
             //URI newUri = uri.resolve("/home/" + URLEncoder.encode(mName, "UTF-8")+f.getPathUrlEncoded());
-            URI newUri = uri.resolve("/home/" + mName+f.getPathUrlEncoded());            
+            URI newUri = uri.resolve("/home/" + getName() + f.getPathUrlEncoded());            
             return  newUri.toString();
         } catch (URISyntaxException e) {
             throw ZClientException.CLIENT_ERROR("unable to parse URI: "+mTransport.getURI(), e);
         }
     }
 
+    
+    @Override
+    public ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException {
+        if (mGetInfoResult == null || refresh) {
+            XMLElement req = new XMLElement(AccountService.GET_INFO_REQUEST);
+            mGetInfoResult = new ZSoapGetInfoResult(invoke(req));            
+        }
+        return mGetInfoResult;
+    }
+    
     /*
  
  <AuthRequest xmlns="urn:zimbraAccount">

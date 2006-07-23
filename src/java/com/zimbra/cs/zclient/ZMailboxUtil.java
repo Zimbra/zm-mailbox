@@ -89,7 +89,6 @@ public class ZMailboxUtil implements DebugListener {
     private String mAdminAccountName = null;
     private String mMailboxName = null;    
     private String mPassword = null;
-    private ZAccount mAccount = null;
     private ZGetInfoResult mGetInfoResult;
     
     private String mUrl = "http://localhost";
@@ -406,15 +405,14 @@ public class ZMailboxUtil implements DebugListener {
         } else if (mProv == null) { 
             mProv = prov;
         }
+        mMbox = null; //make sure to null out current value so if select fails any further ops will fail        
         SoapTransport.DebugListener listener = mDebug ? this : null;        
         mMailboxName = targetAccount;
         SoapAccountInfo sai = prov.getAccountInfo(AccountBy.name, mMailboxName);
         DelegateAuthResponse dar = prov.delegateAuth(AccountBy.name, mMailboxName, 60*60*24);
-        mAccount = ZAccount.getAccount(dar.getAuthToken(), sai.getAdminSoapURL(), listener);
-        mMbox = null; //make sure to null out current value so if select fails any further ops will fail
-        mMbox = mAccount.getMailbox();
+        mMbox = ZMailbox.getMailbox(dar.getAuthToken(), sai.getAdminSoapURL(), listener);
         dumpMailboxConnect();
-        mPrompt = String.format("mbox %s> ", mMailboxName);
+        mPrompt = String.format("mbox %s> ", mMbox.getName());
         mSearchParams = null;
         mSearchResult = null;
         mConvSearchParams = null;    
@@ -440,9 +438,8 @@ public class ZMailboxUtil implements DebugListener {
     private void auth(String name, String password, String uri) throws ServiceException {
         mMailboxName = name;
         mPassword = password;
-        mAccount = ZAccount.getAccount(mMailboxName, AccountBy.name, mPassword, getUrl(uri), mDebug ? this : null);
-        mMbox = mAccount.getMailbox();
-        mPrompt = String.format("mbox %s> ", mMailboxName);
+        mMbox = ZMailbox.getMailbox(mMailboxName, AccountBy.name, mPassword, getUrl(uri), mDebug ? this : null);
+        mPrompt = String.format("mbox %s> ", mMbox.getName());
         dumpMailboxConnect();        
     }
 
@@ -459,12 +456,12 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
-    private void dumpMailboxConnect() {
+    private void dumpMailboxConnect() throws ServiceException {
         if (!mInteractive) return;
         Stats s = new Stats();
         computeStats(mMbox.getUserRoot(), s);
         System.out.format("mailbox: %s, size: %s, messages: %d, unread: %d%n",         
-                mMailboxName,
+                mMbox.getName(),
                 formatSize(mMbox.getSize()),
                 s.numMessages,
                 s.numUnread);

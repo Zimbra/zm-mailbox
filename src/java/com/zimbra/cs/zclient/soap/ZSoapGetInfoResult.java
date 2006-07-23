@@ -39,7 +39,7 @@ class ZSoapGetInfoResult implements ZGetInfoResult {
     }
     
     ZSoapGetInfoResult(Element e) throws ServiceException {
-        mId = e.getAttribute(AccountService.E_ID);        
+        mId = e.getAttribute(AccountService.E_ID, null); // TODO: ID was just added to GetInfo, remove ,null shortly...        
         mName = e.getAttribute(AccountService.E_NAME);
         mLifetime = e.getAttributeLong(AccountService.E_LIFETIME);
         mMailboxQuotaUsed = e.getAttributeLong(AccountService.E_QUOTA_USED, -1);        
