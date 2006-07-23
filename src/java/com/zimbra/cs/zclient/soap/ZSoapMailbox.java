@@ -91,28 +91,29 @@ public class ZSoapMailbox extends ZMailbox {
     private long mSize;
 
     public ZSoapMailbox(String key, AccountBy by, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-        mNameToTag = new HashMap<String, ZSoapTag>();
-        mIdToItem = new HashMap<String, ZSoapItem>();
-        mListener = listener;        
-        setSoapURI(uri);
-        if (listener != null) mTransport.setDebugListener(listener);
-        ZSoapAuthResult ar = auth(key, by, password);
-        mAuthToken = ar.getAuthToken();
-        mTransport.setAuthToken(mAuthToken);
-        getAccountInfo(true);        
+        initPreAuth(uri, listener);
+        initAuthToken(auth(key, by, password).getAuthToken());
     }
 
     public ZSoapMailbox(String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
+        initPreAuth(uri, listener);
+        initAuthToken(authToken);
+    }
+
+    public void initAuthToken(String authToken) throws ServiceException {
+        mAuthToken = authToken;
+        mTransport.setAuthToken(mAuthToken);
+        getAccountInfo(true);
+    }
+    
+    public void initPreAuth(String uri, SoapTransport.DebugListener listener) throws ServiceException {
         mNameToTag = new HashMap<String, ZSoapTag>();
         mIdToItem = new HashMap<String, ZSoapItem>();                
         mListener = listener;
         setSoapURI(uri);
         if (listener != null) mTransport.setDebugListener(listener);
-        mAuthToken = authToken;
-        mTransport.setAuthToken(mAuthToken);
-        getAccountInfo(true);
     }
-
+    
     private ZSoapAuthResult auth(String key, AccountBy by, String password) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling asuthenticate", null);
         XMLElement req = new XMLElement(AccountService.AUTH_REQUEST);
