@@ -149,6 +149,11 @@ public interface ZFolder {
      */
     public String getPath();
 
+    /** Returns the folder's absolute path, with special chars in the names
+     * URL encoded.
+     */
+    public String getPathUrlEncoded();
+
     /**
      * 
      * @return parent id of folder, or null if root folder.

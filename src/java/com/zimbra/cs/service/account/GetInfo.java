@@ -62,6 +62,7 @@ public class GetInfo extends DocumentHandler  {
         Account acct = getRequestedAccount(lc);
 		
         Element response = lc.createElement(AccountService.GET_INFO_RESPONSE);
+        response.addAttribute(AccountService.E_ID, acct.getId(), Element.DISP_CONTENT);        
         response.addAttribute(AccountService.E_NAME, acct.getName(), Element.DISP_CONTENT);
         long lifetime = lc.getAuthToken().getExpires() - System.currentTimeMillis();
         response.addAttribute(AccountService.E_LIFETIME, lifetime, Element.DISP_CONTENT);

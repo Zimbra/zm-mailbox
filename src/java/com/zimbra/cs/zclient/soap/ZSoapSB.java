@@ -27,6 +27,7 @@ package com.zimbra.cs.zclient.soap;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import com.zimbra.cs.util.StringUtil;
 
@@ -106,7 +107,7 @@ class ZSoapSB {
     
     private ZSoapSB addArrayElement(String value, boolean encode) {
         checkFirst();
-        mSb.append(encode ? StringUtil.jsEncode(value) : value);
+        mSb.append(encode ? quote(StringUtil.jsEncode(value)) : value);
         return this;
     }
     
@@ -150,5 +151,13 @@ class ZSoapSB {
 
     public String toString() {
         return mSb.toString();
+    }
+
+    public void add(String name, Map<String, List<String>> attrs) {
+        beginStruct(name);
+        for (Map.Entry<String, List<String>> entry : attrs.entrySet()) {
+            add(entry.getKey(), entry.getValue(), true, true);
+        }
+        endStruct();
     }
 }

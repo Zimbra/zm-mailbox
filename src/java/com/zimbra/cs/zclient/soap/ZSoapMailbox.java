@@ -27,9 +27,11 @@ package com.zimbra.cs.zclient.soap;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -79,6 +81,7 @@ public class ZSoapMailbox extends ZMailbox {
 
     private Map<String, ZSoapTag> mNameToTag;
     private Map<String, ZSoapItem> mIdToItem;
+    private String mName;
 
     private ZSoapFolder mUserRoot;
 
@@ -87,6 +90,17 @@ public class ZSoapMailbox extends ZMailbox {
     ZSoapMailbox() {
         mNameToTag = new HashMap<String, ZSoapTag>();
         mIdToItem = new HashMap<String, ZSoapItem>();        
+    }
+
+    static ZMailbox getMailbox(ZSoapAccount acct, String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
+
+        ZSoapMailbox zmbx = new ZSoapMailbox();
+        zmbx.mName = acct.getAccountInfo(false).getName();        
+        zmbx.setSoapURI(uri);
+        if (listener != null) zmbx.mTransport.setDebugListener(listener);
+        zmbx.mTransport.setAuthToken(authToken);
+        zmbx.noOp();
+        return zmbx;
     }
 
     /**
@@ -224,15 +238,6 @@ public class ZSoapMailbox extends ZMailbox {
     private void refreshFolders(Element folderEl) throws ServiceException {
         mUserRoot = new ZSoapFolder(folderEl, null, this);
     }
-
-    static ZMailbox getMailbox(String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-        ZSoapMailbox zmbx = new ZSoapMailbox();
-        zmbx.setSoapURI(uri);
-        if (listener != null) zmbx.mTransport.setDebugListener(listener);
-        zmbx.mTransport.setAuthToken(authToken);
-        zmbx.noOp();
-        return zmbx;
-    }
     
     @Override
     public ZFolder getUserRoot() {
@@ -242,6 +247,11 @@ public class ZSoapMailbox extends ZMailbox {
     @Override
     public long getSize() {
         return mSize;
+    }
+    
+    @Override
+    public String getName() {
+        return mName;
     }
 
     @Override
@@ -822,8 +832,7 @@ public class ZSoapMailbox extends ZMailbox {
             throw ZClientException.CLIENT_ERROR("unable to parse URI: "+mTransport.getURI(), e);
         }
     }
-    
-    
+     
     Pattern sAttachmentId = Pattern.compile("\\d+,'.*','(.*)'");
 
     private String getAttachmentId(String result) {
@@ -876,6 +885,18 @@ public class ZSoapMailbox extends ZMailbox {
             post.releaseConnection();
         }
         return aid;
+    }
+
+    @Override
+    public String getRestURL(ZFolder f) throws ServiceException {
+        try {
+            URI uri = new URI(mTransport.getURI());
+            //URI newUri = uri.resolve("/home/" + URLEncoder.encode(mName, "UTF-8")+f.getPathUrlEncoded());
+            URI newUri = uri.resolve("/home/" + mName+f.getPathUrlEncoded());            
+            return  newUri.toString();
+        } catch (URISyntaxException e) {
+            throw ZClientException.CLIENT_ERROR("unable to parse URI: "+mTransport.getURI(), e);
+        }
     }
 
     /*

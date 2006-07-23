@@ -340,8 +340,10 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
 </GetInfoRequest>
  
 <GetInfoResponse>
+   <id>{account-id}</id>
    <name>{account-name}</name>
    <lifetime>...</lifetime>   
+   <used>{used}</used>*
    <attrs>
     <attr name="{name}">{value}</a>
      ...
@@ -371,6 +373,7 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
  
   {account-name} = email address (user@domain)
   {life-time} = number of milliseconds until auth token expires
+  {used} = mailbox quota used in bytes
   prefs = user-settable preferences
   attrs = account attrs that aren't user-settable, but the front-end needs. 
           Only attributes listed in zimbraAccountClientAttrs will be returned.

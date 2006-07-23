@@ -25,6 +25,8 @@
 
 package com.zimbra.cs.zclient.soap;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -208,6 +210,23 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
         else {
             String pp = mParent.getPath();
             return pp.length() == 1 ? (pp + mName) : (pp + ZMailbox.PATH_SEPARATOR + mName);
+        }
+    }
+
+    public String getPathUrlEncoded() {
+        // TODO: CACHE? compute upfront?
+        if (mParent == null)
+            return ZMailbox.PATH_SEPARATOR;
+        else {
+            String pp = mParent.getPath();
+            String n;
+            try {
+                n = URLEncoder.encode(mName, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                // should never happen
+                n = mName;
+            }
+            return pp.length() == 1 ? (pp + n) : (pp + ZMailbox.PATH_SEPARATOR + n);
         }
     }
 

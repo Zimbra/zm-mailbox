@@ -32,6 +32,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.zclient.ZAccount;
 import com.zimbra.cs.zclient.ZClientException;
+import com.zimbra.cs.zclient.ZGetInfoResult;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -45,6 +46,7 @@ public class ZSoapAccount extends ZAccount {
     private long mAuthTokenExpiration;
     private SoapHttpTransport mTransport;
     private SoapTransport.DebugListener mListener;
+    private ZGetInfoResult mGetInfoResult;
 
     public ZSoapAccount(String key, AccountBy by, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
         mListener = listener;        
@@ -129,7 +131,16 @@ public class ZSoapAccount extends ZAccount {
 
     @Override
     public ZMailbox getMailbox() throws ServiceException {
-        return ZSoapMailbox.getMailbox(mAuthToken, mTransport.getURI(), mListener);
+        return ZSoapMailbox.getMailbox(this, mAuthToken, mTransport.getURI(), mListener);
+    }
+
+    @Override
+    public ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException {
+        if (mGetInfoResult == null || refresh) {
+            XMLElement req = new XMLElement(AccountService.GET_INFO_REQUEST);
+            mGetInfoResult = new ZSoapGetInfoResult(invoke(req));            
+        }
+        return mGetInfoResult;
     }
   
 }

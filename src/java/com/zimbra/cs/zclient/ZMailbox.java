@@ -89,6 +89,11 @@ public abstract class ZMailbox {
      * @return current size of mailbox in bytes
      */
     public abstract long getSize();
+
+    /**
+     * @return account name of mailbox
+     */
+    public abstract String getName();
     
     //  ------------------------
     
@@ -458,6 +463,14 @@ public abstract class ZMailbox {
      * @return ZFolder if found, null otherwise.
      */
     public abstract ZFolder getFolderById(String id);
+    
+    /**
+     * return the REST URL for the specified folder.
+     * @param f
+     * @return
+     * @throws ServiceException
+     */
+    public abstract String getRestURL(ZFolder f) throws ServiceException;
     
     /**
      * find the search folder with the specified id.

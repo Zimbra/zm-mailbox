@@ -90,6 +90,8 @@ public class ZMailboxUtil implements DebugListener {
     private String mMailboxName = null;    
     private String mPassword = null;
     private ZAccount mAccount = null;
+    private ZGetInfoResult mGetInfoResult;
+    
     private String mUrl = "http://localhost";
     private static String mAdminUrl = "https://localhost:7071/";    
     
@@ -101,6 +103,10 @@ public class ZMailboxUtil implements DebugListener {
     ZSearchParams mConvSearchParams;    
     ZSearchResult mConvSearchResult;
     SoapProvisioning mProv;
+    
+    private Stack<Cursor> mSearchCursors = new Stack<Cursor>();
+    private Stack<Integer> mSearchOffsets = new Stack<Integer>();
+    private Map<Integer, String> mIndexToId = new HashMap<Integer, String>();
     
     /** current command */
     private Command mCommand;
@@ -405,6 +411,7 @@ public class ZMailboxUtil implements DebugListener {
         SoapAccountInfo sai = prov.getAccountInfo(AccountBy.name, mMailboxName);
         DelegateAuthResponse dar = prov.delegateAuth(AccountBy.name, mMailboxName, 60*60*24);
         mAccount = ZAccount.getAccount(dar.getAuthToken(), sai.getAdminSoapURL(), listener);
+        mMbox = null; //make sure to null out current value so if select fails any further ops will fail
         mMbox = mAccount.getMailbox();
         dumpMailboxConnect();
         mPrompt = String.format("mbox %s> ", mMailboxName);
@@ -412,7 +419,8 @@ public class ZMailboxUtil implements DebugListener {
         mSearchResult = null;
         mConvSearchParams = null;    
         mConvSearchResult = null;
-        // TODO: mIndexToId.clear(), etc...
+        mIndexToId.clear();
+        // TODO: clear all other mailbox-state
     }
     
     public void selectMailbox(String targetAccount) throws ServiceException {
@@ -1055,10 +1063,6 @@ public class ZMailboxUtil implements DebugListener {
                     cmItem);
         System.out.println(cm.getId());
     }
-    
-    private Stack<Cursor> mSearchCursors = new Stack<Cursor>();
-    private Stack<Integer> mSearchOffsets = new Stack<Integer>();
-    private Map<Integer, String> mIndexToId = new HashMap<Integer, String>();
 
     private void doSearch(String[] args) throws ServiceException {
         

@@ -25,23 +25,25 @@
 
 package com.zimbra.cs.zclient;
 
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.zclient.soap.ZSoapAccount;
-import com.zimbra.soap.SoapTransport;
+import java.util.List;
+import java.util.Map;
 
-public abstract class ZAccount {
+public interface ZGetInfoResult {
 
-    public static ZAccount getAccount(String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-        return new ZSoapAccount(authToken, uri, listener);
-    }
+    public String getId();
+    public String getName();
+    public long getLifetime();
+    public long getExpiration();
     
-    public static ZAccount getAccount(String key, AccountBy by, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-        return new ZSoapAccount(key, by, password, uri, listener);
-    }
+    public long getMailboxQuotaUsed();
     
-    public abstract ZMailbox getMailbox() throws ServiceException;
+    public Map<String, List<String>> getAttrs();
     
-    public abstract ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException;
+    public Map<String, List<String>> getPrefs();
+    
+    public List<String> getMailURL();
+    
+    // TODO: zimlet
+
 }
 
