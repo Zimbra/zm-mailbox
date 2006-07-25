@@ -284,9 +284,7 @@ public abstract class Wiki {
 			mWikiAccount = acct.getId();
 			mFolderId = fid;
 			
-			Server acctServer = Provisioning.getInstance().getServer(acct);
-			Server localServer = Provisioning.getInstance().getLocalServer();
-			if (acctServer.getId().equals(localServer.getId())) {
+			if (Provisioning.onLocalServer(acct)) {
 				Mailbox mbox = Mailbox.getMailboxByAccount(acct);
 				if (mbox == null)
 					throw WikiServiceException.ERROR("wiki account mailbox not found");
@@ -577,11 +575,8 @@ public abstract class Wiki {
 			fid = Integer.parseInt(key);
 			return getInstance(ctxt, acct, fid);
 		} catch (NumberFormatException e) {
-			Provisioning prov = Provisioning.getInstance();
-			Account account = prov.get(Provisioning.AccountBy.id, acct);
-			Server acctServer = prov.getServer(account);
-			Server localServer = prov.getLocalServer();
-			if (acctServer.getId().equals(localServer.getId())) {
+			Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, acct);
+			if (Provisioning.onLocalServer(account)) {
 				Mailbox mbox = Mailbox.getMailboxByAccount(account);
 				if (key.equals("/"))
 					fid = Mailbox.ID_FOLDER_USER_ROOT;
@@ -662,11 +657,8 @@ public abstract class Wiki {
 	}
 	
 	public static WikiPage findPage(WikiContext ctxt, String accountId, int id) throws ServiceException {
-		Provisioning prov = Provisioning.getInstance();
-		Account account = prov.get(Provisioning.AccountBy.id, accountId);
-		Server acctServer = prov.getServer(account);
-		Server localServer = prov.getLocalServer();
-		if (!acctServer.getId().equals(localServer.getId())) {
+		Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, accountId);
+		if (!Provisioning.onLocalServer(account)) {
 			throw new WikiServiceException.NoSuchWikiException("not on local host");
 		}
 		Mailbox mbox = Mailbox.getMailboxByAccount(account);
