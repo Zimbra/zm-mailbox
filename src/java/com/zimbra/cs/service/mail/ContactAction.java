@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.ContactActionOperation;
@@ -58,7 +59,7 @@ public class ContactAction extends ItemAction {
     }));
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element action = request.getElement(MailService.E_ACTION);
         String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
@@ -71,7 +72,7 @@ public class ContactAction extends ItemAction {
         else
             successes = handleCommon(context, request, operation, MailItem.TYPE_CONTACT);
 
-        Element response = lc.createElement(MailService.CONTACT_ACTION_RESPONSE);
+        Element response = zsc.createElement(MailService.CONTACT_ACTION_RESPONSE);
         Element actionOut = response.addUniqueElement(MailService.E_ACTION);
         actionOut.addAttribute(MailService.A_ID, successes);
         actionOut.addAttribute(MailService.A_OPERATION, operation);
@@ -82,31 +83,34 @@ public class ContactAction extends ItemAction {
     throws ServiceException, SoapFaultException {
         Element action = request.getElement(MailService.E_ACTION);
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        SoapSession session = (SoapSession) lc.getSession(SessionCache.SESSION_SOAP);
-        OperationContext octxt = lc.getOperationContext();
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        SoapSession session = (SoapSession) zsc.getSession(SessionCache.SESSION_SOAP);
+        OperationContext octxt = zsc.getOperationContext();
 
 
         // figure out which items are local and which ones are remote, and proxy accordingly
         ArrayList<Integer> local = new ArrayList<Integer>();
         HashMap<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
-        partitionItems(lc, action.getAttribute(MailService.A_ID), local, remote);
+        partitionItems(zsc, action.getAttribute(MailService.A_ID), local, remote);
         StringBuffer successes = proxyRemoteItems(action, remote, request, context);
 
         if (!local.isEmpty()) {
             String localResults;
             if (operation.equals(OP_UPDATE)) {
                 // duplicating code from ItemAction.java for now...
-                ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, "-1"), lc);
+                String folderId = action.getAttribute(MailService.A_FOLDER, "-1");
+                ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
                 if (!iidFolder.belongsTo(mbox))
                     throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
+                else if (folderId != null && iidFolder.getId() <= 0)
+                    throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
                 String flags = action.getAttribute(MailService.A_FLAGS, null);
                 String tags  = action.getAttribute(MailService.A_TAGS, null);
                 byte color = (byte) action.getAttributeLong(MailService.A_COLOR, -1);
                 Map<String, String> fields = ModifyContact.parseFields(action.listElements(MailService.E_ATTRIBUTE));
 
-                localResults = ContactActionOperation.UPDATE(lc, session, octxt, mbox, Requester.SOAP,
+                localResults = ContactActionOperation.UPDATE(zsc, session, octxt, mbox, Requester.SOAP,
                                                              local, iidFolder, flags, tags, color, fields).getResult();
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);

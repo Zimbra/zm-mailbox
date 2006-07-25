@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
@@ -195,9 +196,12 @@ public class FolderAction extends ItemAction {
         } else if (operation.equals(OP_UPDATE)) {
             // duplicating code from ItemAction.java for now...
             String newName = action.getAttribute(MailService.A_NAME, null);
-            ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, "-1"), zsc);
+            String folderId = action.getAttribute(MailService.A_FOLDER, null);
+            ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
             if (!iidFolder.belongsTo(mbox))
                 throw ServiceException.INVALID_REQUEST("cannot move folder between mailboxes", null);
+            else if (folderId != null && iidFolder.getId() <= 0)
+                throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
             String flags = action.getAttribute(MailService.A_FLAGS, null);
             byte color = (byte) action.getAttributeLong(MailService.A_COLOR, -1);
             ACL acl = null;
