@@ -37,8 +37,14 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class WikiDocumentHandler extends MailDocumentHandler {
-    private static final String[] TARGET_WIKI_PATH = new String[] { MailService.E_WIKIWORD, MailService.A_ID };
-    protected String[] getProxiedIdPath(Element request)     { return TARGET_WIKI_PATH; }
+    private static final String[] TARGET_ID_PATH = new String[] { MailService.E_WIKIWORD, MailService.A_ID };
+    private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_WIKIWORD, MailService.A_FOLDER };
+    protected String[] getProxiedIdPath(Element request)     {
+    	String id = getXPath(request, TARGET_ID_PATH);
+    	if (id == null)
+    		return TARGET_FOLDER_PATH;
+    	return TARGET_ID_PATH; 
+    }
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
 	protected String getAuthor(ZimbraSoapContext lc) throws ServiceException {
