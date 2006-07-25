@@ -165,7 +165,7 @@ public class FolderAction extends ItemAction {
                 zid = ACL.GUID_PUBLIC;
             } else if (gtype == ACL.GRANTEE_GUEST) {
                 zid = grant.getAttribute(MailService.A_DISPLAY);
-                if (zid == null || password == null || zid.indexOf('@') < 0)
+                if (zid == null || zid.indexOf('@') < 0)
                 	throw ServiceException.INVALID_REQUEST("invalid guest id or password", null);
                 // make sure they didn't accidentally specify "guest" instead of "usr"
                 try {
@@ -174,7 +174,7 @@ public class FolderAction extends ItemAction {
                     gtype = nentry instanceof DistributionList ? ACL.GRANTEE_GROUP : ACL.GRANTEE_USER;
                 } catch (ServiceException e) {
                     // this is the normal path, where lookupGranteeByName throws account.NO_SUCH_USER
-                    password = grant.getAttribute(MailService.A_ARGS, null);
+                    password = grant.getAttribute(MailService.A_ARGS);
                 }
             } else if (zid != null) {
             	nentry = lookupGranteeByZimbraId(zid, gtype);
