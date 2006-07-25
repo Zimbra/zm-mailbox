@@ -56,10 +56,13 @@ import javax.mail.internet.MimePart;
 import javax.mail.internet.MimeUtility;
 import javax.mail.internet.ParseException;
 
+import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.net.QCodec;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -511,6 +514,15 @@ public class Mime {
         if (charset == null || charset.trim().equals(""))
             charset = P_CHARSET_DEFAULT;
         return charset;
+    }
+
+    public static String encodeFilename(String filename) {
+        try {
+            // JavaMail doesn't use RFC 2231 encoding, and we're not going to, either...
+            if (!StringUtil.isAsciiString(filename))
+                return new QCodec().encode(filename, "utf-8");
+        } catch (EncoderException ee) { }
+        return filename;
     }
 
     public static String getFilename(MimePart mp) throws MessagingException {

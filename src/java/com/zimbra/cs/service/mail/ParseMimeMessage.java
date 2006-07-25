@@ -49,7 +49,6 @@ import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ExceptionToString;
-import com.zimbra.cs.util.StringUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -64,8 +63,6 @@ import javax.activation.DataHandler;
 import javax.mail.*;
 import javax.mail.internet.*;
 
-import org.apache.commons.codec.EncoderException;
-import org.apache.commons.codec.net.QCodec;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -512,14 +509,8 @@ public class ParseMimeMessage {
             ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
             if (up.getName() != null) {
                 String filename = up.getName();
-                if (filename != null) {
-                    try {
-                        // JavaMail doesn't use RFC 2231 encoding, and we're not going to, either...
-                        if (!StringUtil.isAsciiString(filename))
-                            filename = new QCodec().encode(filename, "utf-8");
-                    } catch (EncoderException ee) { }
-                	cd.setParameter("filename", filename);
-                }
+                if (filename != null)
+                	cd.setParameter("filename", Mime.encodeFilename(filename));
             }
             mbp.setHeader("Content-Disposition", cd.toString());
 
@@ -544,7 +535,7 @@ public class ParseMimeMessage {
         VCard vcf = VCard.formatContact(contact);
 
         ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
-        cd.setParameter("filename", vcf.fn + ".vcf");
+        cd.setParameter("filename", Mime.encodeFilename(vcf.fn + ".vcf"));
 
         MimeBodyPart mbp = new MimeBodyPart();
         mbp.setText(vcf.formatted, Mime.P_CHARSET_UTF8);
@@ -571,7 +562,7 @@ public class ParseMimeMessage {
         ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
         String filename = Mime.getFilename(mp);
         if (filename != null)
-            cd.setParameter("filename", filename);
+            cd.setParameter("filename", Mime.encodeFilename(filename));
         mbp.setHeader("Content-Disposition", cd.toString());
 
         String desc = mp.getDescription();
@@ -595,7 +586,7 @@ public class ParseMimeMessage {
         ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
         String filename = Mime.getFilename(mp);
         if (filename != null)
-            cd.setParameter("filename", filename);
+            cd.setParameter("filename", Mime.encodeFilename(filename));
         mbp.setHeader("Content-Disposition", cd.toString());
 
         String desc = mp.getDescription();
@@ -604,7 +595,7 @@ public class ParseMimeMessage {
 
         mmp.addBodyPart(mbp);
     }
-    
+
 
     private static final class MessageAddresses {
         private final HashMap<String, Object> addrs = new HashMap<String, Object>();

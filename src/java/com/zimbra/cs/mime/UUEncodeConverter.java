@@ -73,7 +73,7 @@ public class UUEncodeConverter extends MimeVisitor {
                         MimeBodyPart mbp = new MimeBodyPart();
                         mbp.setHeader("Content-Type", Mime.CT_APPLICATION_OCTET_STREAM);
                         ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
-                        cd.setParameter("filename", uu.getFilename());
+                        cd.setParameter("filename", Mime.encodeFilename(uu.getFilename()));
                         mbp.setHeader("Content-Disposition", cd.toString());
                         mbp.setDataHandler(new DataHandler(uu.getDataSource()));
     
