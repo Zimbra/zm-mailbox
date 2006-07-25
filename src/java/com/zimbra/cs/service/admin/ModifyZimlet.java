@@ -54,12 +54,16 @@ public class ModifyZimlet extends AdminDocumentHandler {
         String cos = a.getAttribute(AdminService.A_COS, null);
         if (cos == null) return;
         String acl = a.getAttribute(AdminService.A_ACL, null);
+        if (acl == null)
+        	throw ServiceException.FAILURE("missing acl attribute", null);
 		acl = acl.toLowerCase();
 		try {
 			if (acl.equals("grant")) {
 				ZimletUtil.activateZimlet(name, cos);
 			} else if (acl.equals("deny")) {
 				ZimletUtil.deactivateZimlet(name, cos);
+			} else {
+				throw ServiceException.FAILURE("invalid acl setting "+acl, null);
 			}
 		} catch (ZimletException ze) {
 			throw ServiceException.FAILURE("cannot modify acl", ze);
