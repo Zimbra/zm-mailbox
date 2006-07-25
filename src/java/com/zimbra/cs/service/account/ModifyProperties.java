@@ -28,20 +28,16 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
 
 /**
- * 
  * @author jylee
- *
  */
-public class ModifyProperties extends DocumentHandler {
+public class ModifyProperties extends AccountDocumentHandler {
 
-	public Element handle(Element request, Map<String, Object> context)
-			throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
 

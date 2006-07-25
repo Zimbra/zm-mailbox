@@ -189,17 +189,19 @@ public abstract class DocumentHandler {
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><code>account.NO_SUCH_ACCOUNT</code> - if there is no Account
      *        with the specified ID
-     *    <li><code>account.NO_SUCH_SERVER</code> - if the Server associated
+     *    <li><code>account.PROXY_ERROR</code> - if the Server associated
      *        with the Account does not exist</ul> */
     protected static Server getServer(String acctId) throws ServiceException {
         Account acct = Provisioning.getInstance().get(AccountBy.id, acctId);
         if (acct == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
-        String hostname = acct.getAttr(Provisioning.A_zimbraMailHost);
 
+        String hostname = acct.getAttr(Provisioning.A_zimbraMailHost);
+        if (hostname == null)
+            throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(""), "");
         Server server = Provisioning.getInstance().get(ServerBy.name, hostname);
         if (server == null)
-            throw AccountServiceException.NO_SUCH_SERVER(hostname);
+            throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(hostname), "");
         return server;
     }
 

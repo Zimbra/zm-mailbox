@@ -100,6 +100,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
                 if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
                     return proxyRequest(request, context, server, zsc);
             }
+
+            return null;
         } catch (ServiceException e) {
             // if something went wrong proxying the request, just execute it locally
             if (ServiceException.PROXY_ERROR.equals(e.getCode()))
@@ -107,8 +109,6 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             // but if it's a real error, it's a real error
             throw e;
         }
-
-        return super.proxyIfNecessary(request, context);
     }
 
     /** Fetches the in-memory {@link Session} object appropriate for this request.

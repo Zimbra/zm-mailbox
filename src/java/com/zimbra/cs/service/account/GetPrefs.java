@@ -35,18 +35,14 @@ import java.util.Map.Entry;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
  */
-public class GetPrefs extends DocumentHandler  {
+public class GetPrefs extends AccountDocumentHandler  {
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
-	 */
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);

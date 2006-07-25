@@ -37,14 +37,13 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
  */
-public class SearchGal extends DocumentHandler {
+public class SearchGal extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         String n = request.getAttribute(AccountService.E_NAME);
@@ -80,7 +79,7 @@ public class SearchGal extends DocumentHandler {
         return true;
     }
 
-    public static void addContact(Element response, GalContact contact) throws ServiceException {
+    public static void addContact(Element response, GalContact contact) {
         Element cn = response.addElement(MailService.E_CONTACT);
         cn.addAttribute(MailService.A_ID, contact.getId());
         Map<String, Object> attrs = contact.getAttrs();

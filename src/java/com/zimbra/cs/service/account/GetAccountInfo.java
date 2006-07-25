@@ -37,18 +37,14 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
  */
-public class GetAccountInfo extends DocumentHandler  {
+public class GetAccountInfo extends AccountDocumentHandler  {
 
-    /* (non-Javadoc)
-     * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
-     */
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
    
@@ -73,7 +69,6 @@ public class GetAccountInfo extends DocumentHandler  {
     }
 
     static void addUrls(Element response, Account account) throws ServiceException {
-
         Server server = Provisioning.getInstance().getServer(account);
         if (server == null) return;
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);        

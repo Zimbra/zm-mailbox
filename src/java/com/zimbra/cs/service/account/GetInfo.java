@@ -45,18 +45,14 @@ import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.cs.zimlet.ZimletProperty;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
  */
-public class GetInfo extends DocumentHandler  {
+public class GetInfo extends AccountDocumentHandler  {
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
-	 */
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);

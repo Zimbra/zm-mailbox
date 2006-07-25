@@ -29,11 +29,10 @@ import java.util.Locale;
 import java.util.Map;
 
 import com.zimbra.cs.util.L10nUtil;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class GetAllLocales extends DocumentHandler {
+public class GetAllLocales extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) {
         ZimbraSoapContext lc = getZimbraSoapContext(context);

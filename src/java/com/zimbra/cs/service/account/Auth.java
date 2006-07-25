@@ -38,14 +38,13 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.ZimbraLog;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
  */
-public class Auth extends DocumentHandler  {
+public class Auth extends AccountDocumentHandler {
 
     /** Returns (or creates) the in-memory {@link Session} object appropriate
      *  for this request.<p>

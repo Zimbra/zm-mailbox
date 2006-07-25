@@ -39,25 +39,22 @@ import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class SearchCalendarResources extends DocumentHandler {
+public class SearchCalendarResources extends AccountDocumentHandler {
 
     public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
 
-    public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AccountService.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
         String sortBy = request.getAttribute(AccountService.A_SORT_BY, null);        
-        boolean sortAscending =
-            request.getAttributeBool(AccountService.A_SORT_ASCENDING, true);        
+        boolean sortAscending = request.getAttributeBool(AccountService.A_SORT_ASCENDING, true);        
         String attrsStr = request.getAttribute(AccountService.A_ATTRS, null);
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
@@ -65,8 +62,7 @@ public class SearchCalendarResources extends DocumentHandler {
         filter.andWith(sFilterActiveResourcesOnly);
 
         Provisioning prov = Provisioning.getInstance();
-        List resources = 
-            prov.searchCalendarResources(prov.getDomain(acct), filter, attrs, sortBy, sortAscending);
+        List resources = prov.searchCalendarResources(prov.getDomain(acct), filter, attrs, sortBy, sortAscending);
         for (Iterator iter = resources.iterator(); iter.hasNext(); ) {
             CalendarResource resource = (CalendarResource) iter.next();
             ToXML.encodeCalendarResource(response, resource);
@@ -74,9 +70,7 @@ public class SearchCalendarResources extends DocumentHandler {
         return response;
     }
 
-    public static EntrySearchFilter parseSearchFilter(Element request)
-    throws ServiceException {
-
+    public static EntrySearchFilter parseSearchFilter(Element request) throws ServiceException {
         Element filterElem = request.getElement(AccountService.E_ENTRY_SEARCH_FILTER);
         Element termElem = filterElem.getOptionalElement(AccountService.E_ENTRY_SEARCH_FILTER_MULTICOND);
         if (termElem == null)
