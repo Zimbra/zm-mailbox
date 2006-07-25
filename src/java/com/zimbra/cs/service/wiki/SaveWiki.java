@@ -51,11 +51,11 @@ public class SaveWiki extends WikiDocumentHandler {
 			throws ServiceException, SoapFaultException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         OperationContext octxt = lc.getOperationContext();
-		Wiki wiki = getRequestedWikiNotebook(request, lc);
 
         Element msgElem = request.getElement(MailService.E_WIKIWORD);
         String subject = msgElem.getAttribute(MailService.A_NAME, null);
         String id = msgElem.getAttribute(MailService.A_ID, null);
+        int ver = (int)msgElem.getAttributeLong(MailService.A_VERSION, 0);
         int itemId;
         if (id == null) {
         	itemId = 0;
@@ -64,22 +64,16 @@ public class SaveWiki extends WikiDocumentHandler {
         	itemId = iid.getId();
         }
 
-        validateRequest(lc,
-        				wiki,
-        				itemId,
-        				msgElem.getAttributeLong(MailService.A_VERSION, 0),
-        				subject);
-        
         byte[] rawData;
         try {
         	rawData = msgElem.getText().getBytes("UTF-8");
         } catch (IOException ioe) {
         	throw ServiceException.FAILURE("cannot convert", ioe);
         }
-        
         WikiContext ctxt = new WikiContext(octxt, lc.getRawAuthToken());
-        WikiPage ww = wiki.createWiki(ctxt, subject, getAuthor(lc), rawData);
-        Document wikiItem = ww.getWikiItem(ctxt);
+        WikiPage page = WikiPage.create(subject, getAuthor(lc), rawData);
+        Wiki.addPage(ctxt, page, itemId, ver, getRequestedFolder(request, lc));
+        Document wikiItem = page.getWikiItem(ctxt);
         
         Element response = lc.createElement(MailService.SAVE_WIKI_RESPONSE);
         Element m = response.addElement(MailService.E_WIKIWORD);

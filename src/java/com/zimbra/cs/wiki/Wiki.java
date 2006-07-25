@@ -45,7 +45,6 @@ import com.zimbra.cs.client.LmcDocument;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcSearchRequest;
 import com.zimbra.cs.client.soap.LmcSearchResponse;
-import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
@@ -58,6 +57,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.ServiceException.Argument;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.session.WikiSession;
@@ -318,24 +318,13 @@ public abstract class Wiki {
 		/*
 		 * populate the wiki list from the MailItem's in the Mailbox.
 		 */
-		private void loadWiki(WikiContext ctxt, Mailbox mbox) throws ServiceException {
+		private synchronized void loadWiki(WikiContext ctxt, Mailbox mbox) throws ServiceException {
 		    List<Document> wikiList = mbox.getWikiList(ctxt.octxt, mFolderId);
 		    for (Document item : wikiList) {
 		    	addDoc(item);
 		    }
 		}
 
-		public synchronized WikiPage createDocument(WikiContext ctxt, String ct, String filename, String author, byte[] data, byte type) throws ServiceException {
-			WikiPage ww = lookupWiki(filename);
-			
-			if (ww == null) {
-				ww = WikiPage.create(filename);
-				mWikiWords.put(filename, ww);
-			}
-			ww.addWikiItem(ctxt, mWikiAccount, mFolderId, filename, ct, author, data, type);
-			return ww;
-		}
-		
 		public synchronized void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException {
 			WikiPage page = lookupWiki(newName);
 			if (page != null)
@@ -404,7 +393,7 @@ public abstract class Wiki {
 		/*
 		 * populate the wiki list from the remote machine.
 		 */
-		private void loadRemoteWiki(Account acct, Server remoteServer) throws ServiceException {
+		private synchronized void loadRemoteWiki(Account acct, Server remoteServer) throws ServiceException {
 			try {
 				String auth = AuthToken.getZimbraAdminAuthToken().getEncoded();
 
@@ -437,7 +426,7 @@ public abstract class Wiki {
 			}
 		}
 		
-		public WikiPage lookupWiki(String wikiWord) {
+		public synchronized WikiPage lookupWiki(String wikiWord) {
 			WikiPage page = mWikiWords.get(wikiWord);
 			if (page == null) {
 				// if we have a cache of Wiki pages whose mailbox is on another machine,
@@ -454,10 +443,7 @@ public abstract class Wiki {
 			return page;
 		}
 		
-		public synchronized WikiPage createDocument(WikiContext ctxt, String ct, String filename, String author, byte[] data, byte type) throws ServiceException {
-			throw WikiServiceException.ERROR("createDocument on a remote wiki: not implemented");
-		}
-		public synchronized void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException {
+		public void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException {
 			throw WikiServiceException.ERROR("createDocument on a remote wiki: not implemented");
 		}
 		public int getWikiFolderId() throws ServiceException {
@@ -661,7 +647,7 @@ public abstract class Wiki {
 	}
 	public abstract WikiPage lookupWiki(String wikiWord);
 	
-	public void addDoc(Document doc) throws ServiceException {
+	public synchronized void addDoc(Document doc) throws ServiceException {
 		String wikiWord;
 		if (doc instanceof WikiItem) 
 			wikiWord = ((WikiItem)doc).getWikiWord();
@@ -675,18 +661,61 @@ public abstract class Wiki {
 		w.addWikiItem(doc);
 	}
 	
-	public synchronized WikiPage createWiki(WikiContext ctxt, String wikiword, String author, byte[] data) throws ServiceException {
-		return createDocument(ctxt, WikiItem.WIKI_CONTENT_TYPE, wikiword, author, data, MailItem.TYPE_WIKI);
+	public static WikiPage findPage(WikiContext ctxt, String accountId, int id) throws ServiceException {
+		Provisioning prov = Provisioning.getInstance();
+		Account account = prov.get(Provisioning.AccountBy.id, accountId);
+		Server acctServer = prov.getServer(account);
+		Server localServer = prov.getLocalServer();
+		if (!acctServer.getId().equals(localServer.getId())) {
+			throw new WikiServiceException.NoSuchWikiException("not on local host");
+		}
+		Mailbox mbox = Mailbox.getMailboxByAccount(account);
+		MailItem item = mbox.getItemById(ctxt.octxt, id, MailItem.TYPE_UNKNOWN);
+		String subject = item.getSubject();
+		int folderId = item.getFolderId();
+		Wiki w = Wiki.getInstance(ctxt, accountId, folderId);
+		return w.lookupWiki(subject);
 	}
 	
-	public synchronized WikiPage createDocument(WikiContext ctxt, String ct, String filename, String author, byte[] data) throws ServiceException {
-		return createDocument(ctxt, ct, filename, author, data, MailItem.TYPE_DOCUMENT);
-	}
+	public static void addPage(WikiContext ctxt, WikiPage page, int id, int ver, ItemId folder) throws ServiceException {
+		String wikiWord = page.getWikiWord();
+		String account;
+		int fid;
+		if (folder == null) {
+			fid = WIKI_FOLDER_ID;
+			Account acct = Provisioning.getInstance().get(AccountBy.name, page.getCreator());
+			account = acct.getId();
+		} else {
+			fid = folder.getId();
+			account = folder.getAccountId();
+		}
+		
+		if (id == 0) {
+			// absent id means new document.
+			// make sure another page with the same name does not exist.
+			Wiki w = Wiki.getInstance(ctxt, account, fid);
+			synchronized (w) {
+				if (w.lookupWiki(page.getWikiWord()) != null)
+					throw MailServiceException.ALREADY_EXISTS("wiki word "+wikiWord+" in folder "+folder,
+							new Argument(MailService.A_ID, id, Argument.Type.IID),
+							new Argument(MailService.A_VERSION, ver, Argument.Type.NUM));
 
-	public abstract WikiPage createDocument(WikiContext ctxt, String ct, String filename, String author, byte[] data, byte type) throws ServiceException;
+				// create a new page
+				page.create(ctxt, w);
+				w.mWikiWords.put(page.getWikiWord(), page);
+			}
+		} else {
+			// add a new revision
+			WikiPage oldPage = findPage(ctxt, account, id);
+			if (oldPage == null)
+				throw new WikiServiceException.NoSuchWikiException("page id="+id+" not found");
+			oldPage.add(ctxt, page);
+		}
+	}
+	
 	public abstract void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException;
 	
-	public void deleteWiki(WikiContext ctxt, String wikiWord) throws ServiceException {
+	public synchronized void deleteWiki(WikiContext ctxt, String wikiWord) throws ServiceException {
 		WikiPage w = mWikiWords.remove(wikiWord);
 		if (w != null) {
 			w.deleteAllRevisions(ctxt);

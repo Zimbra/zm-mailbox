@@ -125,6 +125,7 @@ public class SaveDocument extends WikiDocumentHandler {
         String name = docElem.getAttribute(MailService.A_NAME, doc.name);
         String ctype = docElem.getAttribute(MailService.A_CONTENT_TYPE, doc.contentType);
         String id = docElem.getAttribute(MailService.A_ID, null);
+        int ver = (int)docElem.getAttributeLong(MailService.A_VERSION, 0);
         int itemId;
         if (id == null) {
         	itemId = 0;
@@ -133,14 +134,10 @@ public class SaveDocument extends WikiDocumentHandler {
         	itemId = iid.getId();
         }
 
-        validateRequest(lc,
-        				wiki,
-        				itemId,
-        				docElem.getAttributeLong(MailService.A_VERSION, 0),
-        				name);
         WikiContext ctxt = new WikiContext(octxt, lc.getRawAuthToken());
-        WikiPage ww = wiki.createDocument(ctxt, ctype, name, getAuthor(lc), doc.contents);
-        Document docItem = ww.getWikiItem(ctxt);
+        WikiPage page = WikiPage.create(name, getAuthor(lc), ctype, doc.contents);
+        Wiki.addPage(ctxt, page, itemId, ver, getRequestedFolder(request, lc));
+        Document docItem = page.getWikiItem(ctxt);
 
         Element response = lc.createElement(MailService.SAVE_DOCUMENT_RESPONSE);
         Element m = response.addElement(MailService.E_DOC);

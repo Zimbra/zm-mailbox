@@ -45,18 +45,18 @@ public abstract class WikiDocumentHandler extends MailDocumentHandler {
 		return lc.getAuthtokenAccount().getName();
 	}
 	
-	protected ItemId getRequestedFolder(Element request) throws ServiceException {
+	protected ItemId getRequestedFolder(Element request, ZimbraSoapContext lc) throws ServiceException {
 		for (Element elem : request.listElements()) {
 	        String fid = elem.getAttribute(MailService.A_FOLDER, null);
 	        if (fid != null) {
-	        	return new ItemId(fid, null);
+	        	return new ItemId(fid, lc);
 	        }
 		}
 		return null;
 	}
 	
 	protected Wiki getRequestedWikiNotebook(Element request, ZimbraSoapContext lc) throws ServiceException {
-		ItemId fid = getRequestedFolder(request);
+		ItemId fid = getRequestedFolder(request, lc);
 		String accountId = lc.getAuthtokenAccountId();
 		WikiContext ctxt = new WikiContext(lc.getOperationContext(), lc.getRawAuthToken());
 		if (fid == null) {
@@ -83,7 +83,7 @@ public abstract class WikiDocumentHandler extends MailDocumentHandler {
 			if (ww == null) {
 				throw MailServiceException.MODIFY_CONFLICT(
 						new Argument(MailService.A_ID, itemId, Argument.Type.IID),
-						new Argument(MailService.A_VERSION, ver, Argument.Type.IID));
+						new Argument(MailService.A_VERSION, ver, Argument.Type.NUM));
 			}
 			ItemId iid = new ItemId(ww.getId(), lc);
 			if (iid.getId() != itemId) {

@@ -92,10 +92,12 @@
 // folder-id argument is valid when the new wiki document is being created,
 // otherwise it's ignored, and the subsequent revision is stored in the same folder.
 // 
-// When updating an existing Wiki page, the last known version of the page must be supplied
-// in 'ver' attribute.  This is used for checking collision.  If the version in the
-// server does not match the supplied last known version, the server will throw
-// an exception, indicating a collision happened while the page was being edited.
+// When updating an existing Wiki page, both id and ver attributes must
+// exist.  'id' attribute should contain the item id.  'ver' attribute should
+// contain the last known version of the page.  This is used for checking collision.
+// If the version in the server does not match the supplied last known version, 
+// the server will throw an exception, indicating a collision happened 
+// while the page was being edited.
 <SaveWikiRequest>
   <w name="{wikiword}" [id="{item-id}" ver="{last-known-version}"] [l="{folder-id}"]> ... contents ... </w>
 </SaveWikiRequest>

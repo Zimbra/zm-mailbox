@@ -63,7 +63,7 @@ public class GetWiki extends WikiDocumentHandler {
         WikiItem wikiItem;
         
         if (word != null) {
-        	ItemId fid = getRequestedFolder(request);
+        	ItemId fid = getRequestedFolder(request, lc);
         	if (fid == null)
         		fid = new ItemId("", Mailbox.ID_FOLDER_USER_ROOT);
         	WikiContext wctxt = new WikiContext(octxt, lc.getRawAuthToken());

@@ -35,6 +35,7 @@ import com.zimbra.cs.client.LmcWiki;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
@@ -45,6 +46,14 @@ public abstract class WikiPage {
 
 	public static WikiPage create(String wikiWord) {
 		return new LocalWikiPage(wikiWord);
+	}
+	
+	public static WikiPage create(String wikiWord, String author, byte[] data) {
+		return new LocalWikiPage(wikiWord, WikiItem.WIKI_CONTENT_TYPE, author, data, MailItem.TYPE_WIKI);
+	}
+
+	public static WikiPage create(String wikiWord, String author, String ctype, byte[] data) {
+		return new LocalWikiPage(wikiWord, ctype, author, data, MailItem.TYPE_DOCUMENT);
 	}
 
 	public static WikiPage create(String accountId, String wikiWord, String restUrl) {
@@ -66,14 +75,8 @@ public abstract class WikiPage {
 	protected String mModifiedBy;
 	protected String mFragment;
 
-	public abstract void addWikiItem(WikiContext ctxt,
-										String acctid,
-										int fid,
-										String wikiWord,
-										String mimeType,
-										String author,
-										byte[] data,
-										byte type) throws ServiceException;
+	public abstract void create(WikiContext ctxt, Wiki where) throws ServiceException;
+	public abstract void add(WikiContext ctxt, WikiPage page) throws ServiceException;
 	public abstract void addWikiItem(Document item) throws ServiceException;
 	public abstract void deleteAllRevisions(WikiContext ctxt) throws ServiceException;
 	public abstract Document getWikiItem(WikiContext ctxt) throws ServiceException;
@@ -123,29 +126,43 @@ public abstract class WikiPage {
 	
 	public static class LocalWikiPage extends WikiPage {
 		private Mailbox mMailbox;
-		private boolean mEmpty = true;
+		private String  mMimeType;
+		private byte[]  mData;
+		private byte    mType;
 
 		private LocalWikiPage(String wikiWord) {
 			mWikiWord = wikiWord;
 		}
-
-		public void addWikiItem(WikiContext ctxt, 
-								String acctid, 
-								int fid, 
-								String wikiWord, 
-								String mime, 
-								String author, 
-								byte[] data, 
-								byte type) throws ServiceException {
-			Mailbox mbox = Mailbox.getMailboxByAccountId(acctid);
-			if (mEmpty) {
-				addWikiItem(mbox.createDocument(ctxt.octxt, fid, wikiWord, mime, author, data, null, type));
-			} else {
-				addWikiItem(mbox.addDocumentRevision(ctxt.octxt, getWikiItem(ctxt), data, author));
-			}
-			mAccountId = acctid;
+		
+		private LocalWikiPage(String wikiWord, String mime, String author, byte[] data, byte type) {
+			mWikiWord = wikiWord;
+			mCreator = author;
+			mMimeType = mime;
+			mData = data;
+			mType = type;
 		}
 
+		public void create(WikiContext ctxt, Wiki where) throws ServiceException {
+			if (mMimeType == null || mData == null || mType == 0)
+				throw WikiServiceException.ERROR("cannot create", null);
+			Mailbox mbox = Mailbox.getMailboxByAccountId(where.mWikiAccount);
+			addWikiItem(mbox.createDocument(ctxt.octxt, where.getWikiFolderId(), mWikiWord, mMimeType, mCreator, mData, null, mType));
+		}
+
+		public void add(WikiContext ctxt, WikiPage p) throws ServiceException {
+			if (!(p instanceof LocalWikiPage))
+				throw WikiServiceException.ERROR("cannot add revision", null);
+			Mailbox mbox = Mailbox.getMailboxByAccountId(mAccountId);
+
+			LocalWikiPage newRev = (LocalWikiPage) p;
+			Document doc = getWikiItem(ctxt);
+			if (newRev.mWikiWord != null && !newRev.mWikiWord.equals(mWikiWord))
+				doc.rename(newRev.mWikiWord);
+			doc = mbox.addDocumentRevision(ctxt.octxt, doc, newRev.mData, newRev.mCreator);
+			addWikiItem(doc);
+			newRev.addWikiItem(doc);
+		}
+		
 		public void addWikiItem(Document newItem) throws ServiceException {
 			Document.DocumentRevision rev = newItem.getLastRevision();
 			mMailbox = newItem.getMailbox();
@@ -157,7 +174,7 @@ public abstract class WikiPage {
 			mCreator = newItem.getFirstRevision().getCreator();
 			mFolderId = newItem.getFolderId();
 			mFragment = newItem.getFragment();
-			mEmpty = false;
+			mAccountId = newItem.getMailbox().getAccountId();
 		}
 
 		public void deleteAllRevisions(WikiContext ctxt) throws ServiceException {
@@ -235,17 +252,14 @@ public abstract class WikiPage {
 			return mContents;
 		}
 		
-		public void addWikiItem(WikiContext ctxt, 
-								String acctid, 
-								int fid, 
-								String wikiWord, 
-								String mime, 
-								String author, 
-								byte[] data, 
-								byte type) throws ServiceException {
+		public void create(WikiContext ctxt, Wiki where) throws ServiceException {
+			throw WikiServiceException.ERROR("creating remote wiki page: not implemented");
+		}
+		
+		public void add(WikiContext ctxt, WikiPage page) throws ServiceException {
 			throw WikiServiceException.ERROR("updating remote wiki page: not implemented");
 		}
-
+		
 		public void addWikiItem(Document newItem) throws ServiceException {
 			throw WikiServiceException.ERROR("updating remote wiki page: not implemented");
 		}
