@@ -168,9 +168,6 @@ public class MailService implements DocumentService {
     public static final QName WIKI_ACTION_REQUEST = QName.get("WikiActionRequest", NAMESPACE);
     public static final QName WIKI_ACTION_RESPONSE = QName.get("WikiActionResponse", NAMESPACE);
 
-    public static final QName GET_ZIMLETS_REQUEST = QName.get("GetZimletsRequest", NAMESPACE);
-    public static final QName GET_ZIMLETS_RESPONSE = QName.get("GetZimletsResponse", NAMESPACE);
-
     public static final String E_MAILBOX = "mbx";
     public static final String E_CONV = "c";
     public static final String E_CURSOR = "cursor";

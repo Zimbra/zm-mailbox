@@ -27,7 +27,6 @@ package com.zimbra.cs.service.admin;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.service.ServiceException;
@@ -36,25 +35,24 @@ import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class GetZimlets extends AdminDocumentHandler  {
+public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
 
-    public boolean domainAuthSufficient(Map context) {
+    public boolean domainAuthSufficient(Map<String, Object> context) {
         return true;
     }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(lc);
 		
-        Element response = lc.createElement(AdminService.GET_ZIMLETS_RESPONSE);
+        Element response = lc.createElement(AdminService.GET_ADMIN_EXTENSION_ZIMLETS_RESPONSE);
         Element zimlets = response.addUniqueElement(AccountService.E_ZIMLETS);
-        doExtensionZimlets(zimlets, acct);
+        doExtensionZimlets(zimlets);
         
         return response;
     }
 
-	private void doExtensionZimlets(Element response, Account acct) throws ServiceException {
-		Iterator zimlets = Provisioning.getInstance().listAllZimlets().iterator();
+	private void doExtensionZimlets(Element response) throws ServiceException {
+		Iterator<Zimlet> zimlets = Provisioning.getInstance().listAllZimlets().iterator();
 		while (zimlets.hasNext()) {
 			Zimlet z = (Zimlet) zimlets.next();
 			if (z.isExtension()) {

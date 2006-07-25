@@ -205,16 +205,16 @@ public class AdminService implements DocumentService {
     
     public static final QName GET_ZIMLET_REQUEST = QName.get("GetZimletRequest", NAMESPACE);
     public static final QName GET_ZIMLET_RESPONSE = QName.get("GetZimletResponse", NAMESPACE);
-    public static final QName LIST_ALL_ZIMLETS_REQUEST = QName.get("ListAllZimletsRequest", NAMESPACE);
-    public static final QName LIST_ALL_ZIMLETS_RESPONSE = QName.get("ListAllZimletsResponse", NAMESPACE);
     public static final QName CREATE_ZIMLET_REQUEST = QName.get("CreateZimletRequest", NAMESPACE);
     public static final QName CREATE_ZIMLET_RESPONSE = QName.get("CreateZimletResponse", NAMESPACE);
     public static final QName DELETE_ZIMLET_REQUEST = QName.get("DeleteZimletRequest", NAMESPACE);
     public static final QName DELETE_ZIMLET_RESPONSE = QName.get("DeleteZimletResponse", NAMESPACE);
-    public static final QName GET_ZIMLETS_REQUEST = QName.get("GetZimletsRequest", NAMESPACE);
-    public static final QName GET_ZIMLETS_RESPONSE = QName.get("GetZimletsResponse", NAMESPACE);
+    public static final QName GET_ADMIN_EXTENSION_ZIMLETS_REQUEST = QName.get("GetAdminExtensionZimletsRequest", NAMESPACE);
+    public static final QName GET_ADMIN_EXTENSION_ZIMLETS_RESPONSE = QName.get("GetAdminExtensionZimletsResponse", NAMESPACE);
     public static final QName GET_ALL_ZIMLETS_REQUEST = QName.get("GetAllZimletsRequest", NAMESPACE);
     public static final QName GET_ALL_ZIMLETS_RESPONSE = QName.get("GetAllZimletsResponse", NAMESPACE);
+    public static final QName GET_ZIMLET_STATUS_REQUEST = QName.get("GetZimletStatusRequest", NAMESPACE);
+    public static final QName GET_ZIMLET_STATUS_RESPONSE = QName.get("GetZimletStatusResponse", NAMESPACE);
     public static final QName DEPLOY_ZIMLET_REQUEST = QName.get("DeployZimletRequest", NAMESPACE);
     public static final QName DEPLOY_ZIMLET_RESPONSE = QName.get("DeployZimletResponse", NAMESPACE);
     public static final QName UNDEPLOY_ZIMLET_REQUEST = QName.get("UndeployZimletRequest", NAMESPACE);
@@ -485,10 +485,10 @@ public class AdminService implements DocumentService {
         
         // zimlet
         dispatcher.registerHandler(GET_ZIMLET_REQUEST, new GetZimlet());
-        dispatcher.registerHandler(LIST_ALL_ZIMLETS_REQUEST, new ListAllZimlets());
         dispatcher.registerHandler(CREATE_ZIMLET_REQUEST, new CreateZimlet());
         dispatcher.registerHandler(DELETE_ZIMLET_REQUEST, new DeleteZimlet());
-        dispatcher.registerHandler(GET_ZIMLETS_REQUEST, new GetZimlets());
+        dispatcher.registerHandler(GET_ADMIN_EXTENSION_ZIMLETS_REQUEST, new GetAdminExtensionZimlets());
+        dispatcher.registerHandler(GET_ZIMLET_STATUS_REQUEST, new GetZimletStatus());
         dispatcher.registerHandler(GET_ALL_ZIMLETS_REQUEST, new GetAllZimlets());
         dispatcher.registerHandler(DEPLOY_ZIMLET_REQUEST, new DeployZimlet());
         dispatcher.registerHandler(UNDEPLOY_ZIMLET_REQUEST, new UndeployZimlet());
