@@ -266,7 +266,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>number of handler threads, should match MTA concurrency setting for this server</desc>
 </attr>
 
-<attr id="31" name="zimbraIsAdminAccount" type="boolean" cardinality="single" optionalIn="account">
+<attr id="31" name="zimbraIsAdminAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo">
   <desc>set to true for admin accounts</desc>
 </attr>
 
