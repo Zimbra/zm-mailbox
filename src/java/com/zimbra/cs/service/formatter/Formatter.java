@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -93,6 +94,7 @@ public abstract class Formatter {
                 throw (ServletException) cause;
             if (cause instanceof IOException)
                 throw (IOException) cause;
+            throw new UserServletException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), e);
         }
     }
 
@@ -108,6 +110,7 @@ public abstract class Formatter {
                 throw (ServletException) cause;
             if (cause instanceof IOException)
                 throw (IOException) cause;
+            throw new UserServletException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), e);
         }
     }
     
