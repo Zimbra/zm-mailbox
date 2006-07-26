@@ -772,6 +772,10 @@ public abstract class MailItem implements Comparable {
         return items;
     }
 
+    static MailItem getByImapId(Mailbox mbox, int id, int folderId) throws ServiceException {
+        return mbox.getItem(DbMailItem.getByImapId(mbox, id, folderId));
+    }
+
     /** Instantiates the appropriate subclass of <code>MailItem</code> for
      *  the item described by the {@link MailItem.UnderlyingData}.  Will
      *  not create memory-only <code>MailItem</code>s like {@link Flag}

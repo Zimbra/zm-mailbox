@@ -323,9 +323,23 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         if (req.peekChar() == '"') {
                             date = req.readDate(mTimeFormat);  req.skipSpace();
                         }
-                        byte[] content = req.readLiteral8();
-                        checkEOF(tag, req);
-                        return doAPPEND(tag, folder, flags, date, content);
+                        if (req.peekChar() == 'c' || req.peekChar() == 'C') {
+                            List<Object> parts = new LinkedList<Object>();
+                            req.skipAtom("CATENATE");  req.skipSpace();  req.skipChar('(');
+                            while (req.peekChar() != ')') {
+                                if (!parts.isEmpty())  req.skipSpace();
+                                String type = req.readAtom();  req.skipSpace();
+                                if (type.equals("TEXT"))      parts.add(req.readLiteral());
+                                else if (type.equals("URL"))  parts.add(new ImapURL(tag, mSession, req.readAstring()));
+                                else throw new ImapParseException(tag, "unknown CATENATE cat-part: " + type);
+                            }
+                            req.skipChar(')');  checkEOF(tag, req);
+                            return doCATENATE(tag, folder, flags, date, parts);
+                        } else {
+                            byte[] content = req.readLiteral8();
+                            checkEOF(tag, req);
+                            return doAPPEND(tag, folder, flags, date, content);
+                        }
                     }
                     break;
                 case 'C':
@@ -561,6 +575,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         // [STARTTLS]         RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [AUTH=PLAIN]       RFC 2595: Using TLS with IMAP, POP3 and ACAP
         // [BINARY]           RFC 3516: IMAP4 Binary Content Extension
+        // [CATENATE]         RFC 4469: Internet Message Access Protocol (IMAP) CATENATE Extension
         // [CHILDREN]         RFC 3348: IMAP4 Child Mailbox Extension
         // [ID]               RFC 2971: IMAP4 ID Extension
         // [IDLE]             RFC 2177: IMAP4 IDLE command
@@ -575,7 +590,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         String nologin = mServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
         String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN "; 
-        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CHILDREN ID LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR UIDPLUS UNSELECT");
+        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CATENATE CHILDREN ID LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR UIDPLUS UNSELECT");
     }
 
     boolean doNOOP(String tag) throws IOException {
@@ -1104,6 +1119,27 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
+    boolean doCATENATE(String tag, String folderName, List<String> flagNames, Date date, List<Object> parts) throws IOException, ImapParseException {
+        if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
+            return CONTINUE_PROCESSING;
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int size = 0;
+        for (Object part : parts) {
+            byte[] buffer;
+            if (part instanceof byte[])
+                buffer = (byte[]) part;
+            else
+                buffer = ((ImapURL) part).getContent(mSession, tag);
+
+            size += buffer.length;
+            if (size > ImapRequest.getMaxRequestLength())
+                throw new ImapParseException(tag, "TOOBIG", "request too long", false);
+            baos.write(buffer);
+        }
+        return doAPPEND(tag, folderName, flagNames, date, baos.toByteArray());
+    }
+
     boolean doAPPEND(String tag, String folderName, List<String> flagNames, Date date, byte[] content) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
@@ -1131,8 +1167,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 //          of the text of the tagged NO response."
                 if (ImapFolder.isPathCreatable('/' + folderName))
                     msg = "[TRYCREATE] APPEND failed: no such mailbox";
-            } else
+            } else {
                 ZimbraLog.imap.warn("APPEND failed", e);
+            }
             sendNO(tag, msg);
             return canContinue(e);
         }
@@ -1570,7 +1607,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     result.print((empty ? "" : " ") + "BINARY.SIZE[] " + i4msg.getSize(item));  empty = false;
                 }
                 if (!fullMessage.isEmpty()) {
-                    raw = i4msg.getContent(item);
+                    raw = ImapMessage.getContent(item);
                     for (ImapPartSpecifier pspec : fullMessage) {
                         result.print(empty ? "" : " ");  pspec.write(result, baos, raw);  empty = false;
                     }
@@ -1578,7 +1615,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 		        if (!parts.isEmpty() || (attributes & ~FETCH_FROM_MIME) != 0) {
                     try {
                         // don't use msg.getMimeMessage() because it implicitly expands TNEF/uuencode attachments
-                        InputStream is = raw != null ? new ByteArrayInputStream(raw) : i4msg.getContentStream(item);
+                        InputStream is = raw != null ? new ByteArrayInputStream(raw) : ImapMessage.getContentStream(item);
                         mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
                         is.close();
                     } catch (IOException e) {
@@ -1615,7 +1652,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             } catch (ImapPartSpecifier.BinaryDecodingException e) {
                 // don't write this response line if we're returning NO
                 baos = baosDebug = null;
-                throw new ImapParseException(tag, "UNKNOWN-CTE", "unknown content-type-encoding");
+                throw new ImapParseException(tag, "UNKNOWN-CTE", command + "failed: unknown content-type-encoding", false);
             } catch (ServiceException e) {
                 ZimbraLog.imap.warn("ignoring error during " + command + ": ", e);
                 continue;
@@ -2064,5 +2101,4 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readAtom());  req.skipSpace();  pieces.add(req.readFolder());  assert(req.eof());
         System.out.println(pieces);
     }
-
 }

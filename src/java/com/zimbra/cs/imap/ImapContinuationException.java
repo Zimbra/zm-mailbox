@@ -25,6 +25,8 @@
 package com.zimbra.cs.imap;
 
 final class ImapContinuationException extends ImapException {
+    private static final long serialVersionUID = 7925400980773927177L;
+
     boolean sendContinuation;
 
     ImapContinuationException(boolean send) {

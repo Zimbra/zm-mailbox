@@ -5,9 +5,11 @@ IMAP protocol and extensions suppoted:
     [STARTTLS]         RFC 3501: Internet Message Access Protocol - Version 4rev1
     [AUTH=PLAIN]       RFC 2595: Using TLS with IMAP, POP3 and ACAP
     [BINARY]           RFC 3516: IMAP4 Binary Content Extension
+    [CATENATE]         RFC 4469: Internet Message Access Protocol (IMAP) CATENATE Extension
     [CHILDREN]         RFC 3348: IMAP4 Child Mailbox Extension
     [ID]               RFC 2971: IMAP4 ID Extension
     [IDLE]             RFC 2177: IMAP4 IDLE command
+    [IMAPURL]          RFC 2192: IMAP URL Scheme
     [LITERAL+]         RFC 2088: IMAP4 non-synchronizing literals
     [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
     [NAMESPACE]        RFC 2342: IMAP4 Namespace
@@ -15,7 +17,7 @@ IMAP protocol and extensions suppoted:
     [SASL-IR]          draft-siemborski-imap-sasl-initial-response-04: IMAP Extension for SASL Initial Client Response
     [UIDPLUS]          RFC 2359: IMAP4 UIDPLUS extension
     [UNSELECT]         RFC 3691: IMAP UNSELECT command
-    [$MDNSent]         RFC 3503: Message Disposition Notification (MDN) profile for Internet Message Access Protocol (IMAP)]
+    [$MDNSent]         RFC 3503: Message Disposition Notification (MDN) profile for Internet Message Access Protocol (IMAP)
 
 POP protocol and extensions supported:
 

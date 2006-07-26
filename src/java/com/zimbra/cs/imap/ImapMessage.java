@@ -122,7 +122,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
 
     private static final byte[] EMPTY_CONTENT = new byte[0];
 
-    byte[] getContent(MailItem item) throws ServiceException {
+    static byte[] getContent(MailItem item) throws ServiceException {
         if (item instanceof Message) {
             return ((Message) item).getMessageContent();
         } else if (item instanceof Contact) {
@@ -141,13 +141,13 @@ public class ImapMessage implements Comparable<ImapMessage> {
                 baos.write(vcard.formatted.getBytes(Mime.P_CHARSET_UTF8));
                 return baos.toByteArray();
             } catch (Exception e) {
-                throw ServiceException.FAILURE("problems serializing contact " + msgId, e);
+                throw ServiceException.FAILURE("problems serializing contact " + item.getId(), e);
             }
         } else
             return EMPTY_CONTENT;
     }
 
-    InputStream getContentStream(MailItem item) throws ServiceException {
+    static InputStream getContentStream(MailItem item) throws ServiceException {
         if (item instanceof Message)
             return ((Message) item).getRawMessage();
         return new ByteArrayInputStream(getContent(item));

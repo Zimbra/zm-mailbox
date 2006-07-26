@@ -1270,9 +1270,36 @@ public class DbMailItem {
                 completeConversation(mbox, data);
             return data;
         } catch (SQLException e) {
-        	throw ServiceException.FAILURE("fetching item " + id, e);
+            throw ServiceException.FAILURE("fetching item " + id, e);
         } finally {
-        	DbPool.closeResults(rs);
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static UnderlyingData getByImapId(Mailbox mbox, int imapId, int folderId) throws ServiceException {
+        Connection conn = mbox.getOperationConnection();
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
+                    " FROM " + getMailItemTableName(mbox.getId(), "mi") +
+                    " WHERE folder_id = ? AND imap_id = ?");
+            stmt.setInt(1, folderId);
+            stmt.setInt(2, imapId);
+            rs = stmt.executeQuery();
+
+            if (!rs.next())
+                throw MailServiceException.NO_SUCH_ITEM(imapId);
+            UnderlyingData data = constructItem(rs);
+            if (data.type == MailItem.TYPE_CONVERSATION)
+                throw MailServiceException.NO_SUCH_ITEM(imapId);
+            return data;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching item " + imapId, e);
+        } finally {
+            DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
     }

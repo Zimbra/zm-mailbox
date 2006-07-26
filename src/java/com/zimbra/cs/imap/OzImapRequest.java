@@ -117,9 +117,10 @@ class OzImapRequest {
             throw new ImapParseException(mTag, "end of line or wrong character; expected '" + c + '\'');
     }
 
-    void skipNIL() throws ImapParseException {
-        if (!readAtom().equals("NIL"))
-            throw new ImapParseException(mTag, "did not find expected NIL");
+    void skipNIL() throws ImapParseException { skipAtom("NIL"); }
+    void skipAtom(String atom) throws ImapParseException {
+        if (!readAtom().equals(atom))
+            throw new ImapParseException(mTag, "did not find expected " + atom);
     }
 
     private String getCurrentLine() throws ImapParseException {
@@ -257,7 +258,7 @@ class OzImapRequest {
         try {
             return new String(readLiteral(), charset);
         } catch (UnsupportedEncodingException e) {
-            throw new ImapParseException(mTag, "BADCHARSET", "could not convert string to charset \"" + charset + '"');
+            throw new ImapParseException(mTag, "BADCHARSET", "could not convert string to charset \"" + charset + '"', true);
         }
     }
 
@@ -268,12 +269,19 @@ class OzImapRequest {
     String readAstring(String charset) throws ImapParseException {
         return readAstring(charset, ASTRING_CHARS);
     }
-    
+
     private String readAstring(String charset, boolean[] acceptable) throws ImapParseException {
         int c = peekChar();
         if (c == -1)        throw new ImapParseException(mTag, "unexpected end of line");
         else if (c == '{')  return readLiteral(charset != null ? charset : "utf-8");
         else if (c != '"')  return readContent(acceptable);
+        else                return readQuoted();
+    }
+
+    private String readAquoted() throws ImapParseException {
+        int c = peekChar();
+        if (c == -1)        throw new ImapParseException(mTag, "unexpected end of line");
+        else if (c != '"')  return readContent(ASTRING_CHARS);
         else                return readQuoted();
     }
 
@@ -428,51 +436,21 @@ class OzImapRequest {
                 else
                     parts.add(new ImapPartSpecifier(item, sectionPart, ""));
             } else if (item.equals("BODY") || item.equals("BODY.PEEK") || item.equals("BINARY") || item.equals("BINARY.PEEK")) {
-                boolean binary = item.startsWith("BINARY");
                 if (!item.endsWith(".PEEK"))
                     attributes |= ImapHandler.FETCH_MARK_READ;
-                String sectionPart = "", sectionText = "";
-                int partialStart = -1, partialCount = -1;
-                List<String> headers = null;
-                boolean done = false;
-
+                boolean binary = item.startsWith("BINARY");
                 skipChar('[');
-                while (Character.isDigit((char) peekChar())) {
-                    sectionPart += (sectionPart.equals("") ? "" : ".") + readNumber();
-                    if (!(done = (peekChar() != '.')))
-                        skipChar('.');
-                }
-                if (!done && peekChar() != ']') {
-                    if (binary)
-                        throw new ImapParseException(mTag, "section-text not permitted for BINARY");
-                    sectionText = readAtom();
-                    if (sectionText.equals("HEADER.FIELDS") || sectionText.equals("HEADER.FIELDS.NOT")) {
-                        headers = new ArrayList<String>();
-                        skipSpace();  skipChar('(');
-                        while (peekChar() != ')') {
-                            if (!headers.isEmpty())  skipSpace();
-                            headers.add(readAstring().toUpperCase());
-                        }
-                        if (headers.isEmpty())
-                            throw new ImapParseException(mTag, "header-list may not be empty");
-                        skipChar(')');
-                    } else if (sectionText.equals("MIME")) {
-                        if (sectionPart.equals(""))
-                            throw new ImapParseException(mTag, "\"MIME\" is not a valid section-spec");
-                    } else if (!sectionText.equals("HEADER") && !sectionText.equals("TEXT"))
-                        throw new ImapParseException(mTag, "unknown section-text \"" + sectionText + '"');
-                }
+                ImapPartSpecifier pspec = readPartSpecifier(binary, true);
                 skipChar(']');
                 if (peekChar() == '<') {
                     try {
-                        skipChar('<');  partialStart = Integer.parseInt(readNumber());
-                        skipChar('.');  partialCount = Integer.parseInt(readNumber());  skipChar('>');
+                        skipChar('<');  int partialStart = Integer.parseInt(readNumber());
+                        skipChar('.');  int partialCount = Integer.parseInt(readNumber());  skipChar('>');
+                        pspec.setPartial(partialStart, partialCount);
                     } catch (NumberFormatException e) {
                         throw new ImapParseException(mTag, "invalid partial fetch specifier");
                     }
                 }
-                ImapPartSpecifier pspec = new ImapPartSpecifier(binary ? "BINARY" : "BODY", sectionPart, sectionText, partialStart, partialCount);
-                pspec.setHeaders(headers);
                 parts.add(pspec);
             } else
                 throw new ImapParseException(mTag, "unknown FETCH attribute \"" + item + '"');
@@ -480,6 +458,42 @@ class OzImapRequest {
         } while (list && peekChar() != ')');
         if (list)  skipChar(')');
         return attributes;
+    }
+
+    ImapPartSpecifier readPartSpecifier(boolean binary, boolean literals) throws ImapParseException {
+        String sectionPart = "", sectionText = "";
+        List<String> headers = null;
+        boolean done = false;
+
+        while (Character.isDigit((char) peekChar())) {
+            sectionPart += (sectionPart.equals("") ? "" : ".") + readNumber();
+            if (!(done = (peekChar() != '.')))
+                skipChar('.');
+        }
+        if (!done && peekChar() != ']') {
+            if (binary)
+                throw new ImapParseException(mTag, "section-text not permitted for BINARY");
+            sectionText = readAtom();
+            if (sectionText.equals("HEADER.FIELDS") || sectionText.equals("HEADER.FIELDS.NOT")) {
+                headers = new ArrayList<String>();
+                skipSpace();  skipChar('(');
+                while (peekChar() != ')') {
+                    if (!headers.isEmpty())  skipSpace();
+                    headers.add((literals ? readAstring() : readAquoted()).toUpperCase());
+                }
+                if (headers.isEmpty())
+                    throw new ImapParseException(mTag, "header-list may not be empty");
+                skipChar(')');
+            } else if (sectionText.equals("MIME")) {
+                if (sectionPart.equals(""))
+                    throw new ImapParseException(mTag, "\"MIME\" is not a valid section-spec");
+            } else if (!sectionText.equals("HEADER") && !sectionText.equals("TEXT")) {
+                throw new ImapParseException(mTag, "unknown section-text \"" + sectionText + '"');
+            }
+        }
+        ImapPartSpecifier pspec = new ImapPartSpecifier(binary ? "BINARY" : "BODY", sectionPart, sectionText);
+        pspec.setHeaders(headers);
+        return pspec;
     }
 
     private static final Map<String, String> NEGATED_SEARCH = new HashMap<String, String>();
@@ -630,7 +644,7 @@ class OzImapRequest {
                     charsetOK = Charset.isSupported(charset);
                 } catch (IllegalCharsetNameException icne) { }
                 if (!charsetOK)
-                    throw new ImapParseException(mTag, "BADCHARSET", "unknown charset: " + charset);
+                    throw new ImapParseException(mTag, "BADCHARSET", "unknown charset: " + charset, true);
             } else {
                 mOffset = offset;  mIndex = index;
             }

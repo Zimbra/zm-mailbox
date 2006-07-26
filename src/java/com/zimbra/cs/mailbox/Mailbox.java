@@ -1992,6 +1992,31 @@ public class Mailbox {
         return MailItem.constructItem(this, data);
     }
 
+    /** mechanism for getting an item */
+    public synchronized MailItem getItemByImapId(OperationContext octxt, int id, int folderId) throws ServiceException {
+        boolean success = false;
+        try {
+            // tag/folder caches are populated in beginTransaction...
+            beginTransaction("getItemByImapId", octxt);
+            MailItem item = getCachedItem(id);
+            if (item == null) {
+                try {
+                    // in general, the item will not have been moved and its id will be the same as its IMAP id.
+                    item = checkAccess(MailItem.getById(this, id));
+                } catch (NoSuchItemException nsie) {
+                    // if it's not found, we have to search on the non-indexed IMAP_ID column...
+                    item = checkAccess(MailItem.getByImapId(this, id, folderId));
+                }
+            }
+            if (isCachedType(item.getType()) || item.getImapUid() != id || item.getFolderId() != folderId)
+                throw MailServiceException.NO_SUCH_ITEM(id);
+            success = true;
+            return item;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     /** Returns all the MailItems of a given type, optionally in a specified folder */
     public synchronized List<MailItem> getItemList(OperationContext octxt, byte type) throws ServiceException {
         return getItemList(octxt, type, -1);

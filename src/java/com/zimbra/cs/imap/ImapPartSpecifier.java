@@ -41,7 +41,7 @@ import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 class ImapPartSpecifier {
-    static class BinaryDecodingException extends Exception { }
+    static class BinaryDecodingException extends Exception { private static final long serialVersionUID = 8158363540973909369L; }
 
     private String mCommand;
     private String mPart;
@@ -84,22 +84,29 @@ class ImapPartSpecifier {
     private static final String[] NO_HEADERS = new String[0];
 
     public String toString() {
-        StringBuffer response = new StringBuffer(mCommand);
+        StringBuilder response = new StringBuilder(mCommand);
         if (mCommand.equals("BODY") || mCommand.equals("BINARY") || mCommand.equals("BINARY.SIZE")) {
-            response.append('[').append(mPart).append(mPart.equals("") || mModifier.equals("") ? "" : ".").append(mModifier);
-            if (mHeaders != null) {
-                boolean first = true;  response.append(" (");
-                for (Iterator it = mHeaders.iterator(); it.hasNext(); first = false)
-                    response.append(first ? "" : " ").append(((String) it.next()).toUpperCase());
-                response.append(')');
-            }
-            response.append(']');
+            response.append('[');  getSectionPart(response);  response.append(']');
             // 6.4.5: "BODY[]<0.2048> of a 1500-octet message will return
             //         BODY[]<0> with a literal of size 1500, not BODY[]."
             if (mOctetStart != -1)
                 response.append('<').append(mOctetStart).append('>');
         }
         return response.toString();
+    }
+
+    String getSectionSpec()  { return getSectionPart(null); }
+    private String getSectionPart(StringBuilder sb) {
+        if (sb == null)
+            sb = new StringBuilder();
+        sb.append(mPart).append(mPart.equals("") || mModifier.equals("") ? "" : ".").append(mModifier);
+        if (mHeaders != null) {
+            boolean first = true;  sb.append(" (");
+            for (Iterator it = mHeaders.iterator(); it.hasNext(); first = false)
+                sb.append(first ? "" : " ").append(((String) it.next()).toUpperCase());
+            sb.append(')');
+        }
+        return sb.toString();
     }
 
     void write(PrintStream ps, OutputStream os, byte[] content) throws IOException {
@@ -156,7 +163,7 @@ class ImapPartSpecifier {
 
     private static final byte[] NO_CONTENT = new byte[0];
 
-    private byte[] getContent(MimeMessage msg) throws BinaryDecodingException {
+    byte[] getContent(MimeMessage msg) throws BinaryDecodingException {
         try {
             MimePart mp = Mime.getMimePart(msg, mPart);
             if (mp == null)
@@ -197,13 +204,13 @@ class ImapPartSpecifier {
                 if (mModifier.equals("HEADER"))              headers = mm.getAllHeaderLines();
                 else if (mModifier.equals("HEADER.FIELDS"))  headers = mm.getMatchingHeaderLines(getHeaders());
                 else                                         headers = mm.getNonMatchingHeaderLines(getHeaders());
-                StringBuffer result = new StringBuffer();
+                StringBuilder result = new StringBuilder();
                 while (headers.hasMoreElements())
                     result.append(headers.nextElement()).append(ImapHandler.LINE_SEPARATOR);
                 return result.append(ImapHandler.LINE_SEPARATOR).toString().getBytes();
             } else if (mModifier.equals("MIME")) {
                 Enumeration mime = mp.getAllHeaderLines();
-                StringBuffer result = new StringBuffer();
+                StringBuilder result = new StringBuilder();
                 while (mime.hasMoreElements())
                     result.append(mime.nextElement()).append(ImapHandler.LINE_SEPARATOR);
                 return result.append(ImapHandler.LINE_SEPARATOR).toString().getBytes();

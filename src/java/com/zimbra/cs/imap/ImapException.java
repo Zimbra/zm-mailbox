@@ -25,6 +25,8 @@
 package com.zimbra.cs.imap;
 
 class ImapException extends Exception {
+    private static final long serialVersionUID = 2866867205785350690L;
+
     ImapException() {
         super();
     }
