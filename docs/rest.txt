@@ -54,6 +54,7 @@ URL
    http://server/home/[~][{username}]/[{folder}]?[{query-params}]
           fmt={ics, csv, etc}
           id={item-id}
+          imap_id={item-imap-id}  (must also specify folder)
           part={mime-part}
           query={search-query}
           types={types} // when searching
