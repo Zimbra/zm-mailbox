@@ -82,7 +82,7 @@ public abstract class Formatter {
         return MailboxIndex.SEARCH_FOR_MESSAGES;
     }
 
-    public final void format(UserServlet.Context context, MailItem item) throws UserServletException, IOException, ServletException {
+    public final void format(UserServlet.Context context, MailItem item) throws UserServletException, IOException, ServletException, ServiceException {
         try {
             FormatOperation op = new FormatOperation(context, item, this);
             op.schedule();
@@ -94,11 +94,11 @@ public abstract class Formatter {
                 throw (ServletException) cause;
             if (cause instanceof IOException)
                 throw (IOException) cause;
-            throw new UserServletException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), e);
+            throw e;
         }
     }
 
-    public final void save(byte[] body, UserServlet.Context context, Folder folder) throws UserServletException, IOException, ServletException {
+    public final void save(byte[] body, UserServlet.Context context, Folder folder) throws UserServletException, IOException, ServletException, ServiceException {
         try {
             SaveOperation op = new SaveOperation(body, context, folder, this);
             op.schedule();
@@ -110,7 +110,7 @@ public abstract class Formatter {
                 throw (ServletException) cause;
             if (cause instanceof IOException)
                 throw (IOException) cause;
-            throw new UserServletException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), e);
+            throw e;
         }
     }
     
