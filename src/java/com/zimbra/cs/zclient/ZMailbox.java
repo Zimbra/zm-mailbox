@@ -26,6 +26,9 @@
 package com.zimbra.cs.zclient;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +110,8 @@ public abstract class ZMailbox {
     public abstract String getName() throws ServiceException;
     
     public abstract ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException;
+    
+    public abstract String getAuthToken();
     
     //  ------------------------
     
@@ -478,12 +483,36 @@ public abstract class ZMailbox {
     public abstract ZFolder getFolderById(String id);
     
     /**
-     * return the REST URL for the specified folder.
-     * @param f
+     * returns a rest URL relative to this mailbox. 
+     * @param relativePath a relative path (i.e., "/Calendar", "Inbox?fmt=rss", etc).
      * @return
      * @throws ServiceException
      */
-    public abstract String getRestURL(ZFolder f) throws ServiceException;
+    public abstract URI getRestURI(String relativePath) throws ServiceException;
+    
+    /**
+     * 
+     * @param relativePath a relative path (i.e., "/Calendar", "Inbox?fmt=rss", etc).
+     * @param os the stream to send the output to
+     * @param closeOs whether or not to close the output stream when done
+     * @param msecTimeout connection timeout
+     * @throws ServiceException
+     */
+    public abstract void getRESTResource(String relativePath, OutputStream os, boolean closeOs, int msecTimeout) throws ServiceException;
+
+        
+    /**
+     * 
+     * @param relativePath a relative path (i.e., "/Calendar", "Inbox?fmt=rss", etc).
+     * @param is the input stream to post
+     * @param closeIs whether to close the input stream when done
+     * @param length length of inputstream, or 0/-1 if length is unknown.
+     * @param contentType optional content-type header value (defaults to "application/octect-stream")
+     * @param msecTimeout connection timeout
+     * @throws ServiceException
+     */
+    public abstract void postRESTResource(String relativePath, InputStream is, boolean closeIs, long length, String contentType, int msecTimeout) 
+        throws ServiceException; 
     
     /**
      * find the search folder with the specified id.

@@ -27,6 +27,8 @@ package com.zimbra.cs.zclient.soap;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
@@ -42,7 +44,10 @@ import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
@@ -52,6 +57,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZConversation;
@@ -124,10 +130,15 @@ public class ZSoapMailbox extends ZMailbox {
         return new ZSoapAuthResult(invoke(req));
     }
 
+    @Override
+    public String getAuthToken() {
+        return mAuthToken;
+    }
+
     /**
      * @param uri URI of server we want to talk to
      */
-    void setSoapURI(String uri) {
+    private void setSoapURI(String uri) {
         if (mTransport != null) mTransport.shutdown();
         mTransport = new SoapHttpTransport(uri);
         mTransport.setUserAgent("zclient", "1.0");
@@ -861,14 +872,9 @@ public class ZSoapMailbox extends ZMailbox {
         Matcher m = sAttachmentId.matcher(result);
         return m.find() ? m.group(1) : null;
     }
-    
-    @Override
-    public String uploadAttachments(File[] files, int msTimeout) throws ServiceException {
-        String aid = null;
-        
-        URI uri = getUploadURI();
+
+    HttpClient getHttpClient(URI uri) {
         boolean isAdmin = uri.getPort() == 7071; // TODO???
-        
         Cookie cookie = new Cookie(uri.getHost(), 
                         isAdmin ? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, 
                         mTransport.getAuthToken(), "/", -1, false);
@@ -877,6 +883,15 @@ public class ZSoapMailbox extends ZMailbox {
         HttpClient client = new HttpClient();
         client.setState(initialState);
         client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+        return client;
+    }
+    
+    @Override
+    public String uploadAttachments(File[] files, int msTimeout) throws ServiceException {
+        String aid = null;
+        
+        URI uri = getUploadURI();
+        HttpClient client = getHttpClient(uri);
         
         // make the post
         PostMethod post = new PostMethod(uri.toString());
@@ -910,18 +925,16 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public String getRestURL(ZFolder f) throws ServiceException {
+    public URI getRestURI(String relativePath)  throws ServiceException {
         try {
             URI uri = new URI(mTransport.getURI());
-            //URI newUri = uri.resolve("/home/" + URLEncoder.encode(mName, "UTF-8")+f.getPathUrlEncoded());
-            URI newUri = uri.resolve("/home/" + getName() + f.getPathUrlEncoded());            
-            return  newUri.toString();
+            URI newUri = uri.resolve("/home/" + getName() + (relativePath.startsWith("/") ? "" : "/") + relativePath); 
+            return  newUri;
         } catch (URISyntaxException e) {
             throw ZClientException.CLIENT_ERROR("unable to parse URI: "+mTransport.getURI(), e);
         }
     }
 
-    
     @Override
     public ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException {
         if (mGetInfoResult == null || refresh) {
@@ -930,13 +943,76 @@ public class ZSoapMailbox extends ZMailbox {
         }
         return mGetInfoResult;
     }
+
+    @Override
+    public void getRESTResource(String relativePath, OutputStream os, boolean closeOs, int msecTimeout) throws ServiceException {
+        GetMethod get = null;
+        InputStream is = null;
+        
+        int statusCode = -1;
+        try {
+            URI uri = getRestURI(relativePath);
+            HttpClient client = getHttpClient(uri);
+            
+            if (msecTimeout > 0)
+                client.getHttpConnectionManager().getParams().setConnectionTimeout(msecTimeout);
+
+            get = new GetMethod(uri.toString());
+            
+            statusCode = client.executeMethod(get);
+            // parse the response
+            if (statusCode == 200) {
+                is = get.getResponseBodyAsStream();
+                ByteUtil.copy(is, false, os, false);
+            } else {
+                throw SoapFaultException.FAILURE("GET failed, status=" + statusCode+" "+get.getStatusText(), null);
+            }
+        } catch (IOException e) {
+            throw ZClientException.IO_ERROR(e.getMessage(), e);
+        } finally {
+            if (is != null) try { is.close(); } catch (IOException e) {}
+            if (closeOs && os != null) try { os.close(); } catch (IOException e) {}            
+            if (get != null) get.releaseConnection();
+        }
+    }
+
+    @Override
+    public void postRESTResource(String relativePath, InputStream is, boolean closeIs, long length, String contentType, int msecTimeout) throws ServiceException {
+        PostMethod post = null;
+        
+        try {
+            URI uri = getRestURI(relativePath);
+            HttpClient client = getHttpClient(uri);
+
+            if (msecTimeout > 0)
+                client.getHttpConnectionManager().getParams().setConnectionTimeout(msecTimeout);
+
+            post = new PostMethod(uri.toString());            
+            RequestEntity entity = (length > 0) ? 
+                    new InputStreamRequestEntity(is, length, contentType != null ? contentType:  "application/octet-stream") :
+                    new InputStreamRequestEntity(is, contentType);
+            post.setRequestEntity(entity);
+           int statusCode = client.executeMethod(post);
+            // parse the response
+            if (statusCode == 200) {
+                //
+            } else {
+                throw SoapFaultException.FAILURE("POST failed, status=" + statusCode+" "+post.getStatusText(), null);
+            }
+        } catch (IOException e) {
+            throw ZClientException.IO_ERROR(e.getMessage(), e);
+        } finally {
+            if (is != null && closeIs) try { is.close(); } catch (IOException e) {}
+            if (post != null) post.releaseConnection();
+        }
+    }
     
     /*
  
  <AuthRequest xmlns="urn:zimbraAccount">
  <ChangePasswordRequest>
  <GetPrefsRequest>
- <GetInfoRequest>
+ *<GetInfoRequest> TODO - zimlets
  <GetAccountInfoRequest>
  <GetAvailableSkinsRequest/>
  <SearchGalRequest [type="{type}"]>
@@ -959,7 +1035,7 @@ public class ZSoapMailbox extends ZMailbox {
  *<MsgActionRequest>
  *<ConvActionRequest>
 
- *<FolderActionRequest>   - TODO: grant
+ *<FolderActionRequest>
 
  *<GetTagRequest/> (NOT NEEDED?)
  *<CreateTagRequest>

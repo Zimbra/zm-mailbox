@@ -28,11 +28,15 @@ package com.zimbra.cs.zclient;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -51,6 +55,15 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
 
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
@@ -90,9 +103,11 @@ public class ZMailboxUtil implements DebugListener {
     private String mMailboxName = null;    
     private String mPassword = null;
     private ZGetInfoResult mGetInfoResult;
+
+    private static final String DEFAULT_ADMIN_URL = "https://localhost:7071/";    
+    private static final String DEFAULT_URL = "http://localhost/";        
     
-    private String mUrl = "http://localhost";
-    private static String mAdminUrl = "https://localhost:7071/";    
+    private String mUrl = DEFAULT_URL;
     
     private Map<String,Command> mCommandIndex;
     private ZMailbox mMbox;
@@ -128,7 +143,7 @@ public class ZMailboxUtil implements DebugListener {
 
     public void setPassword(String password) { mPassword = password; }
     
-    public String getUrl(String url) throws ZClientException { 
+    public String resolveUrl(String url) throws ZClientException { 
         try {
             URI uri = new URI(url);
             String service = (uri.getPort() == 7071) ? ZimbraServlet.ADMIN_SERVICE_URI : ZimbraServlet.USER_SERVICE_URI;
@@ -145,7 +160,7 @@ public class ZMailboxUtil implements DebugListener {
     }
     
     public void setUrl(String url) throws ServiceException { 
-        mUrl = getUrl(url);
+        mUrl = resolveUrl(url);
     }
 
     private void usage() {
@@ -202,9 +217,11 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private static Option O_COLOR = new Option("c", "color", true, "color");
+    private static Option O_CONTENT_TYPE = new Option("c", "contentType", true, "content-type");    
     private static Option O_CURRENT = new Option("c", "current", false, "current page of search results");
     private static Option O_DATE = new Option("d", "date", true,  "received date (msecs since epoch)");        
     private static Option O_FLAGS = new Option("F", "flags", true, "flags");
+    private static Option O_OUTPUT_FILE = new Option("o", "output", true, "output filename");    
     private static Option O_FOLDER = new Option("f", "folder", true, "folder-path-or-id");
     private static Option O_IGNORE = new Option("i", "ignore", false, "ignore unknown contact attrs");            
     private static Option O_INHERIT = new Option("i", "inherit", false, "whether rights granted on this folder are also granted on all subfolders");
@@ -249,6 +266,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_FOLDER_GRANT("getFolderGrant", "gfg", "{folder-path}", "get folder grants", Category.FOLDER, 1, 1, O_VERBOSE),                
         GET_MESSAGE("getMessage", "gm", "{msg-id}", "get a message", Category.MESSAGE, 1, 1, O_VERBOSE),
         GET_MAILBOX_SIZE("getMailboxSize", "gms", "", "get mailbox size", Category.MISC, 0, 0, O_VERBOSE),
+        GET_REST_URL("getRestURL", "gru", "{relative-path}", "do a GET on a REST URL relative to the mailbox", Category.MISC, 1, 1, O_OUTPUT_FILE),
         HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
         IMPORT_URL_INTO_FOLDER("importURLIntoFolder", "iuif", "{folder-path} {url}", "add the contents to the remote feed at {target-url} to the folder", Category.FOLDER, 2, 2),
         MARK_CONVERSATION_READ("markConversationRead", "mcr", "{conv-ids} [0|1*]", "mark conversation(s) as read/unread", Category.CONVERSATION, 1, 2),
@@ -270,6 +288,7 @@ public class ZMailboxUtil implements DebugListener {
         MOVE_ITEM("moveItem", "mi", "{item-ids} {dest-folder-path}", "move item(s) to a new folder", Category.ITEM, 2, 2),
         MOVE_MESSAGE("moveMessage", "mm", "{msg-ids} {dest-folder-path}", "move message(s) to a new folder", Category.MESSAGE, 2, 2),
         NOOP("noOp", "no", "", "do a NoOp SOAP call to the server", Category.MISC, 0, 0),
+        POST_REST_URL("postRestURL", "pru", "{relative-path} {file-name}", "do a POST on a REST URL relative to the mailbox", Category.MISC, 2, 2, O_CONTENT_TYPE),        
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
         SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
@@ -430,7 +449,7 @@ public class ZMailboxUtil implements DebugListener {
         mPassword = password;
         SoapTransport.DebugListener listener = mDebug ? this : null;
         mProv = new SoapProvisioning();
-        mProv.soapSetURI(getUrl(uri));
+        mProv.soapSetURI(resolveUrl(uri));
         if (listener != null) mProv.soapSetTransportDebugListener(listener);
         mProv.soapAdminAuthenticate(name, password);
     }
@@ -438,7 +457,7 @@ public class ZMailboxUtil implements DebugListener {
     private void auth(String name, String password, String uri) throws ServiceException {
         mMailboxName = name;
         mPassword = password;
-        mMbox = ZMailbox.getMailbox(mMailboxName, AccountBy.name, mPassword, getUrl(uri), mDebug ? this : null);
+        mMbox = ZMailbox.getMailbox(mMailboxName, AccountBy.name, mPassword, resolveUrl(uri), mDebug ? this : null);
         mPrompt = String.format("mbox %s> ", mMbox.getName());
         dumpMailboxConnect();        
     }
@@ -621,6 +640,14 @@ public class ZMailboxUtil implements DebugListener {
         return (url == null) ? mUrl : url;
     }
 
+    private String outputFileOpt() throws SoapFaultException {
+        return mCommandLine.getOptionValue(O_OUTPUT_FILE.getOpt());
+    }
+
+    private String contentTypeOpt() throws SoapFaultException {
+        return mCommandLine.getOptionValue(O_CONTENT_TYPE.getOpt());
+    }
+
     private String typesOpt() throws ServiceException {
         String t = mCommandLine.getOptionValue(O_TYPES.getOpt());         
         return t == null ? null : ZSearchParams.getCanonicalTypes(t);
@@ -781,7 +808,10 @@ public class ZMailboxUtil implements DebugListener {
             break;                        
         case GET_MESSAGE:
             doGetMessage(args);
-            break;            
+            break;
+        case GET_REST_URL:
+            doGetRestURL(args);
+            break;
         case HELP:
             doHelp(args); 
             break;
@@ -844,6 +874,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case NOOP:
             mMbox.noOp();
+            break;
+        case POST_REST_URL:
+            doPostRestURL(args);
             break;
         case RENAME_FOLDER:
             mMbox.renameFolder(lookupFolderId(args[0]), args[1]);
@@ -1669,12 +1702,12 @@ public class ZMailboxUtil implements DebugListener {
         pu.setVerbose(cl.hasOption('v'));
         if (cl.hasOption('a')) {
             pu.setAdminAccountName(cl.getOptionValue('a'));
-            pu.setUrl(mAdminUrl);            
+            pu.setUrl(DEFAULT_ADMIN_URL);            
         }
         if (cl.hasOption('z')) {
             pu.setAdminAccountName(LC.zimbra_ldap_user.value());
             pu.setPassword(LC.zimbra_ldap_password.value());
-            pu.setUrl(mAdminUrl);
+            pu.setUrl(DEFAULT_ADMIN_URL);
         }
         if (cl.hasOption('u')) pu.setUrl(cl.getOptionValue('u'));
         if (cl.hasOption('m')) pu.setMailboxName(cl.getOptionValue('m'));        
@@ -1763,5 +1796,47 @@ public class ZMailboxUtil implements DebugListener {
         System.out.println("========== SOAP SEND ==========");
         System.out.println(envelope.prettyPrint());
         System.out.println("===============================");
+    }
+
+    private void addAuthCookoie(String name, URI uri, HttpState state) {
+        Cookie cookie = new Cookie(uri.getHost(), name, mMbox.getAuthToken(), "/", -1, false);    
+        state.addCookie(cookie);
+    }
+
+    private HttpClient getHttpClient(URI uri) {
+        boolean isAdmin = uri.getPort() == 7071; // TODO???
+
+        HttpState initialState = new HttpState();
+        if (isAdmin) 
+            addAuthCookoie(ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN, uri, initialState);
+        addAuthCookoie(ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, uri, initialState);  
+        HttpClient client = new HttpClient();
+        client.setState(initialState);
+        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+        return client;
+    }
+    
+    private void doGetRestURL(String args[]) throws ServiceException {
+        OutputStream os = null;
+        String outputFile = outputFileOpt();
+        boolean hasOutputFile = outputFile != null;
+        
+        try {
+            os = hasOutputFile ? new FileOutputStream(outputFile) : System.out;
+            mMbox.getRESTResource(args[0], os, hasOutputFile, 0);
+        } catch (IOException e) {
+            throw ZClientException.IO_ERROR(e.getMessage(), e);
+        } finally {
+            if (hasOutputFile && os != null) try { os.close(); } catch (IOException e) {}
+        }
+    }
+    
+    private void doPostRestURL(String args[]) throws ServiceException {
+        try {
+            File file = new File(args[1]);
+            mMbox.postRESTResource(args[0], new FileInputStream(file), true, file.length(), contentTypeOpt(), 0);
+        } catch (FileNotFoundException e) {
+            throw ZClientException.CLIENT_ERROR("file not found: "+args[1], e);
+        }
     }
 }
