@@ -94,27 +94,28 @@ their inherited permissions in the context of their new location.  This is
 probably the behavior that the user would expect.
 
 The set of rights that apply to a given folder is derived by starting at
-that folder and going up the folder hierarchy, taking the first set of
-rights that applies to the folder in question and then stopping.  In other
-words, take the *first* (and only the first) of the following that exists:
+that folder and going up the folder hierarchy, considering the first folder
+with explicitly set rights (whether or not they are inherited by the folder
+in question) and then stopping.  In other words, take the *first* (and only
+the first) of the following that exists:
 
     - the set of rights granted on the folder directly
-    - the set of inherited rights granted on the folder's parent
-    - the set of inherited rights granted on the folder's grandparent
+    - the inherited subset of rights granted on the folder's parent
+    - the inherited subset of rights granted on the folder's grandparent
       ...
-    - the set of inherited rights granted on the mailbox's root folder
+    - the inherited subset of rights granted on the mailbox's root folder
     - no rights at all
 
 So if the folder hierarchy looks like this:
 
                  root  <- inherited "read+write" granted to user A
                  /  \
-                W    X  <- "read" granted to users A and B
-                    / \
-                   Y   Z
+                V    W  <- "read" granted to users A and B
+               /    / \
+              X    Y   Z
 
-then user A has "write" rights on folders W, Y, and Z but not X, and user
-B has "read" rights on folder X but not W, Y, or Z.
+then user A has "write" rights on folders V and X, but not W, Y, and Z,
+and user B has "read" rights on folder W but not V, X, Y, or Z.
 
 COMBINING RIGHTS
 ================

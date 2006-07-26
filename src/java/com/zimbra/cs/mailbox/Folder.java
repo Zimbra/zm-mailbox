@@ -166,10 +166,10 @@ public class Folder extends MailItem {
      *  All other users must be explicitly granted access.<p>
      * 
      *  The set of rights that apply to a given folder is derived by starting
-     *  at that folder and going up the folder hierarchy, taking the first set
-     *  of rights that applies to the folder in question and then stopping.
-     *  In other words, take the *first* (and only the first) of the following
-     *  that exists:<ul>
+     *  at that folder and going up the folder hierarchy, considering the first
+     *  folder with explicitly set rights (whether or not they are inherited by
+     *  the folder in question) and then stopping.  In other words, take the
+     *  *first* (and only the first) of the following that exists:<ul>
      *    <li>the set of rights granted on the folder directly
      *    <li>the set of inherited rights granted on the folder's parent
      *    <li>the set of inherited rights granted on the folder's grandparent
@@ -180,11 +180,11 @@ public class Folder extends MailItem {
      *  So if the folder hierarchy looks like this:<pre>
      *           root  <- inherited "read+write" granted to user A
      *           /  \
-     *          W    X  <- "read" granted to users A and B
-     *              / \
-     *             Y   Z</pre>
-     *  then user A has "write" rights on folders W, Y, and Z but not X, and
-     *  user B has "read" rights on folder X but not W, Y, or Z.
+     *          V    W  <- "read" granted to users A and B
+     *         /    / \
+     *        X    Y   Z</pre>
+     *  then user A has "write" rights on folders V and X, but not W, Y, and Z,
+     *  and user B has "read" rights on folder W but not V, X, Y, or Z.
      * 
      * @param rightsNeeded  A set of rights (e.g. {@link ACL#RIGHT_READ}
      *                      and {@link ACL#RIGHT_DELETE}).

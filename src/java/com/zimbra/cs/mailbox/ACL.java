@@ -299,13 +299,13 @@ public class ACL {
      * @return A <code>Short</code> containing the OR'ed-together rights
      *         granted to the user, or <code>null</code>. */
     Short getGrantedRights(Account authuser, boolean inheritedOnly) throws ServiceException {
-        short rightsGranted = 0, matches = 0;
+        if (mGrants.isEmpty())
+            return null;
+        short rightsGranted = 0;
         for (Grant grant : mGrants)
-            if (!inheritedOnly || grant.isGrantInherited()) {
+            if (!inheritedOnly || grant.isGrantInherited())
                 rightsGranted |= grant.getGrantedRights(authuser);
-                matches++;
-            }
-        return (matches > 0 ? new Short(rightsGranted) : null);
+        return new Short(rightsGranted);
     }
 
     /** Returns whether there are any grants encapsulated by this ACL. */
