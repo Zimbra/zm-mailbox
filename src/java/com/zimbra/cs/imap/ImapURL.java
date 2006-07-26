@@ -25,16 +25,20 @@
 package com.zimbra.cs.imap;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.imap.ImapPartSpecifier.BinaryDecodingException;
@@ -45,6 +49,8 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -187,7 +193,7 @@ class ImapURL {
                 throw new ImapUrlException(tag, mURL, "cannot find user: " + mUsername);
 
             OperationContext octxt = session.getContext();
-            MailItem item = null;
+            byte[] content = null;
             // special-case the situation where the relevant folder is already SELECTed
             if (acct.getId().equals(session.getAccountId()) && state == ImapSession.STATE_SELECTED) {
                 ImapFolder i4folder = session.getFolder();
@@ -195,23 +201,30 @@ class ImapURL {
                     ImapMessage i4msg = i4folder.getByImapId(mUid);
                     if (i4msg == null || i4msg.isExpunged())
                         throw new ImapUrlException(tag, mURL, "no such message");
-                    item = session.getMailbox().getItemById(octxt, i4msg.msgId, i4msg.getType());
+                    MailItem item = session.getMailbox().getItemById(octxt, i4msg.msgId, i4msg.getType());
+                    content = ImapMessage.getContent(item);
                 }
             }
-            // if not, have to fetch by IMAP UID
-            if (item == null && Provisioning.onLocalServer(acct)) {
+            // if not, have to fetch by IMAP UID if we're local
+            if (content == null && Provisioning.onLocalServer(acct)) {
                 Mailbox mbox = Mailbox.getMailboxByAccount(acct);
                 Folder folder = mbox.getFolderByPath(octxt, mFolder);
-                item = mbox.getItemByImapId(octxt, mUid, folder.getId());
+                MailItem item = mbox.getItemByImapId(octxt, mUid, folder.getId());
                 if (item.getType() != MailItem.TYPE_MESSAGE && item.getType() != MailItem.TYPE_CONTACT)
                     throw new ImapUrlException(tag, mURL, "no such message");
+                content = ImapMessage.getContent(item);
             }
-            // can't handle off-server URLs yet...
-            if (item == null)
-                throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content cross-server");
+            // last option: handle off-server URLs
+            if (content == null) {
+                Account authacct = Provisioning.getInstance().get(AccountBy.id, session.getAccountId());
+                AuthToken auth = new AuthToken(authacct, System.currentTimeMillis() + 60 * 1000);
+                HashMap<String, String> params = new HashMap<String, String>();
+                params.put(UserServlet.QP_IMAP_ID, Integer.toString(mUid));
+                InputStream is = UserServlet.getResourceAsStream(auth, acct, mFolder, params);
+                content = ByteUtil.getContent(is, 2048, ImapRequest.getMaxRequestLength());
+            }
 
             // fetch the content of the message
-            byte[] content = ImapMessage.getContent(item);
             if (mPart == null)
                 return content;
 
@@ -221,6 +234,7 @@ class ImapURL {
             if (part == null)
                 throw new ImapUrlException(tag, mURL, "no such part");
             return part;
+
         } catch (NoSuchItemException e) {
             ZimbraLog.imap.info("no such message", e);
             throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
@@ -233,6 +247,9 @@ class ImapURL {
         } catch (BinaryDecodingException e) {
             ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
             throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
+        } catch (IOException e) {
+            ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
+            throw new ImapUrlException(tag, mURL, "error fetching remote IMAP URL content");
         }
     }
 

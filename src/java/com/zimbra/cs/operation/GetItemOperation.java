@@ -32,57 +32,64 @@ import com.zimbra.cs.session.Session;
 
 public class GetItemOperation extends Operation {
     private static int LOAD = 1;
-    static {
-        Operation.Config c = loadConfig(GetItemOperation.class);
-        if (c != null)
-            LOAD = c.mLoad;
-    }
+        static {
+            Operation.Config c = loadConfig(GetItemOperation.class);
+            if (c != null)
+                LOAD = c.mLoad;
+        }
 
+    enum ItemBy { ID, PATH, IMAP_ID };
+
+    ItemBy mMethod;
     String mPath;
     byte mType;
     int[] mIds;
-    
+    int mFolderId;
+
     MailItem[] mItems;
-    
-    public GetItemOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-                int id, byte type) throws ServiceException {
-        super(session, oc, mbox, req, LOAD);
 
-        mIds = new int[1];
-        mIds[0] = id;
+    public GetItemOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, int id, byte type) {
+        super(session, oc, mbox, req, LOAD);
+        mIds = new int[] { id };
         mType = type;
-        mPath = null;
+        mMethod = ItemBy.ID;
     }
-    
-    public GetItemOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-                int[] id, byte type) throws ServiceException {
-        super(session, oc, mbox, req, LOAD);
 
-        mIds = new int[1];
-        mIds = id;
+    public GetItemOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, int[] ids, byte type) {
+        super(session, oc, mbox, req, LOAD);
+        mIds = ids;
         mType = type;
-        mPath = null;
+        mMethod = ItemBy.ID;
     }
-    
-    public GetItemOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-                String path, byte type) throws ServiceException {
-        super(session, oc, mbox, req, LOAD);
 
-        mIds = null;
+    public GetItemOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, String path, byte type) {
+        super(session, oc, mbox, req, LOAD);
         mType = type;
         mPath = path;
+        mMethod = ItemBy.PATH;
     }
-    
+
+    public GetItemOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, int imapId, int folderId) {
+        super(session, oc, mbox, req, LOAD);
+        mIds = new int[] { imapId };
+        mFolderId = folderId;
+        mMethod = ItemBy.IMAP_ID;
+    }
+
+
     protected void callback() throws ServiceException {
-        if (mPath != null || mIds.length == 1) {
-            mItems = new MailItem[1];
-            if (mPath != null) {
-                mItems[0] = getMailbox().getItemByPath(getOpCtxt(), mPath, Mailbox.ID_FOLDER_USER_ROOT, false);
-            } else {
-                mItems[0] = getMailbox().getItemById(getOpCtxt(), mIds[0], mType);
-            }
-        } else {
+        if (mMethod == ItemBy.ID && mIds.length > 1) {
             mItems = getMailbox().getItemById(getOpCtxt(), mIds, mType);
+            return;
+        }
+
+        mItems = new MailItem[1];
+        if (mMethod == ItemBy.PATH) {
+            mItems[0] = getMailbox().getItemByPath(getOpCtxt(), mPath, Mailbox.ID_FOLDER_USER_ROOT, false);
+        } else if (mMethod == ItemBy.IMAP_ID) {
+            mItems[0] = getMailbox().getItemByImapId(getOpCtxt(), mIds[0], mFolderId);
+        } else {
+            mItems[0] = getMailbox().getItemById(getOpCtxt(), mIds[0], mType);
         }
     }
     
@@ -107,7 +114,6 @@ public class GetItemOperation extends Operation {
         }
         sb.append(") type=").append(mType);
         return sb.toString();
-        
     }
     
 }

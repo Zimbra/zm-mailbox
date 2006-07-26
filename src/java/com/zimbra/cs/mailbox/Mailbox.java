@@ -1998,7 +1998,7 @@ public class Mailbox {
         try {
             // tag/folder caches are populated in beginTransaction...
             beginTransaction("getItemByImapId", octxt);
-            MailItem item = getCachedItem(id);
+            MailItem item = checkAccess(getCachedItem(id));
             if (item == null) {
                 try {
                     // in general, the item will not have been moved and its id will be the same as its IMAP id.

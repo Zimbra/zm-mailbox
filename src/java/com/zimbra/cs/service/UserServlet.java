@@ -31,7 +31,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.RequestDispatcher;
@@ -60,6 +59,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.operation.GetFolderOperation;
 import com.zimbra.cs.operation.GetItemOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.formatter.*;
@@ -76,6 +76,7 @@ import com.zimbra.cs.util.ZimbraLog;
  *   http://server/service/user/[&tilde;][{username}]/[{folder}]?[{query-params}]
  *          fmt={ics, csv, etc}
  *          id={item-id}
+ *          imap_id={item-imap-id}
  *          part={mime-part}
  *          query={search-query}
  *          types={types} // when searching
@@ -102,12 +103,15 @@ import com.zimbra.cs.util.ZimbraLog;
  */
 
 public class UserServlet extends ZimbraServlet {
+    private static final long serialVersionUID = -5313094316561384586L;
 
     public static final String SERVLET_PATH = "/service/user";
 
     public static final String QP_FMT = "fmt"; // format query param
 
     public static final String QP_ID = "id"; // id query param
+
+    public static final String QP_IMAP_ID = "imap_id"; // IMAP id query param
 
     public static final String QP_PART = "part"; // part query param
 
@@ -175,8 +179,7 @@ public class UserServlet extends ZimbraServlet {
         return mFormatters.get(type);
     }
 
-    private void getAccount(Context context) throws IOException,
-    ServletException, UserServletException {
+    private void getAccount(Context context) throws IOException, ServletException {
         try {
             // check cookie first
             if (context.cookieAuthAllowed()) {
@@ -263,7 +266,7 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
-    private boolean checkAuthentication(HttpServletRequest req, HttpServletResponse resp, Context context) throws IOException, ServletException, ServiceException, UserServletException {
+    private boolean checkAuthentication(HttpServletRequest req, HttpServletResponse resp, Context context) throws IOException, ServletException, UserServletException {
         // if they specify /~/, we must auth
         if (context.targetAccount == null && context.accountPath.equals("~")) {
             getAccount(context);
@@ -383,20 +386,13 @@ public class UserServlet extends ZimbraServlet {
 
             context.opContext = new OperationContext(context.authAccount);
 
-            Folder folder = null;
-//            if (context.itemId != null)
-//                folder = mbox.getFolderById(context.opContext, context.itemId.getId());
-//            else
-//                folder = mbox.getFolderByPath(context.opContext, context.itemPath);
-            
             GetItemOperation op;
             if (context.itemId != null)
                 op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemId.getId(), MailItem.TYPE_FOLDER);
             else 
                 op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemPath, MailItem.TYPE_FOLDER);
-                
             op.schedule();
-            folder = op.getFolder();
+            Folder folder = op.getFolder();
 
             if (folder instanceof Mountpoint) {
                 // if the target is a mountpoint, proxy the request on to the resolved target
@@ -475,6 +471,15 @@ public class UserServlet extends ZimbraServlet {
             GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
             op.schedule();
             item = op.getItem();
+        } else if (context.imapId > 0) {
+            // fetch the folder from the path
+            GetFolderOperation gfop = new GetFolderOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemPath);
+            gfop.schedule();
+            Folder folder = gfop.getFolder();
+            // and then fetch the item from the "imap_id" query parameter
+            GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.imapId, folder.getId());
+            op.schedule();
+            item = op.getItem();
         } else {
             try {
                 // first, try the full path
@@ -551,6 +556,7 @@ public class UserServlet extends ZimbraServlet {
         public String authTokenCookie;
         public String itemPath;
         public ItemId itemId;
+        public int imapId = -1;
         public boolean sync;
         public Account authAccount;
         public Account targetAccount;
@@ -568,16 +574,13 @@ public class UserServlet extends ZimbraServlet {
             this.params = HttpUtil.getURIParams(request);
 
             String pathInfo = request.getPathInfo().toLowerCase();
-            if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("")
-                        || !pathInfo.startsWith("/")) {
-                throw new UserServletException(
-                            HttpServletResponse.SC_BAD_REQUEST, "invalid path");
+            if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("") || !pathInfo.startsWith("/")) {
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid path");
             }
 
             int pos = pathInfo.indexOf('/', 1);
             if (pos == -1) {
-                throw new UserServletException(
-                            HttpServletResponse.SC_BAD_REQUEST, "invalid path");
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid path");
             }
             String checkInternalDispatch = (String)request.getAttribute("zimbra-internal-dispatch");
             if (checkInternalDispatch != null &&
@@ -601,18 +604,19 @@ public class UserServlet extends ZimbraServlet {
             try {
                 this.itemId = id == null ? null : new ItemId(id, null);
             } catch (ServiceException e) {
-                throw new UserServletException(
-                            HttpServletResponse.SC_BAD_REQUEST,
-                "invalid id requested");
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid id requested");
+            }
+            try {
+                this.imapId = Integer.parseInt(this.params.get(QP_IMAP_ID));
+            } catch (NumberFormatException nfe) {
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid imap id requested");
             }
 
             if (this.format != null) {
                 this.format = this.format.toLowerCase();
                 this.formatter = servlet.getFormatter(this.format);
                 if (this.formatter == null)
-                    throw new UserServletException(
-                                HttpServletResponse.SC_NOT_IMPLEMENTED,
-                    "not implemented yet");
+                    throw new UserServletException(HttpServletResponse.SC_NOT_IMPLEMENTED, "not implemented yet");
             }                
 
             // see if we can get target account or not
@@ -762,10 +766,18 @@ public class UserServlet extends ZimbraServlet {
         super.destroy();
     }
 
-    public static InputStream getResourceAsStream(AuthToken auth, ItemId iid, Map<String,String> params) throws ServiceException {
+        
+    public static InputStream getResourceAsStream(AuthToken auth, ItemId iid, Map<String, String> params) throws ServiceException {
+        Account target = Provisioning.getInstance().get(AccountBy.id, iid.getAccountId());
+        Map<String, String> pcopy = new HashMap<String, String>(params);
+        pcopy.put(QP_ID, iid.toString());
+        return getResourceAsStream(auth, target, null, pcopy);
+    }
+
+    public static InputStream getResourceAsStream(AuthToken auth, Account target, String folder, Map<String,String> params) throws ServiceException {
         // fetch from remote store
-        Provisioning prov = Provisioning.getInstance();        
-        Server server = prov.getServer(prov.get(AccountBy.id, iid.getAccountId()));
+        Provisioning prov = Provisioning.getInstance();
+        Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
         int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
         boolean useHTTP = port > 0;
         if (!useHTTP)
@@ -774,14 +786,24 @@ public class UserServlet extends ZimbraServlet {
             throw ServiceException.FAILURE("remote server " + server.getName() + " has neither http nor https port enabled", null);
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
 
+        if (folder == null) {
+            folder = "";
+        } else {
+            if (folder.endsWith("/"))
+                folder = folder.substring(0, folder.length() - 1);
+            if (folder.startsWith("/"))
+                folder = folder.substring(1);
+        }
+
         StringBuffer url = new StringBuffer(useHTTP ? "http" : "https");
-        url.append("://").append(hostname).append(':').append(port);
-        url.append(SERVLET_PATH).append("/~/?");
-        url.append(QP_ID).append('=').append(iid.toString());
-        url.append('&').append(QP_AUTH).append('=').append(AUTH_COOKIE);
-        if (params != null)
+        url.append("://").append(hostname).append(':').append(port).append(SERVLET_PATH);
+        url.append('/').append(target == null ? "~" : target.getName());
+        url.append('/').append(folder).append("/?");
+        url.append(QP_AUTH).append('=').append(AUTH_COOKIE);
+        if (params != null) {
             for (Map.Entry<String, String> param : params.entrySet())
                 url.append('&').append(param.getKey()).append('=').append(param.getValue());
+        }
 
         // create an HTTP client with the same cookies
         HttpState state = new HttpState();
