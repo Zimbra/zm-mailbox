@@ -306,7 +306,7 @@ public class Mailbox {
     private Set<Session> mListeners      = new HashSet<Session>();
 
     private MailboxLock  mMaintenance = null;
-    private MailboxIndex mMailboxIndex = null;
+    private MailboxIndex mMailboxIndex = new MailboxIndex(this, null);
 
     /** flag: messages sent by me */
     public Flag mSentFlag;
@@ -2711,9 +2711,7 @@ public class Mailbox {
         }
     }
 
-    public synchronized MailboxIndex getMailboxIndex() throws ServiceException {
-        if (mMailboxIndex == null)
-            mMailboxIndex = new MailboxIndex(this, null);
+    public MailboxIndex getMailboxIndex() {
         return mMailboxIndex;
     }
 
@@ -4318,10 +4316,8 @@ public class Mailbox {
                         ZimbraLog.mailbox.warn("could not delete all index entries for items: " + deleted.itemIds);
                 } catch (IOException e) {
                     ZimbraLog.mailbox.warn("ignoring error while deleting index entries for items: " + deleted.itemIds, e);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.warn("ignoring error while getting index to delete entries for items: " + deleted.itemIds, e);
                 }
-
+                
                 // delete any blobs associated with items deleted from db/index
                 StoreManager sm = StoreManager.getInstance();
                 if (deleted != null && deleted.blobs != null)
