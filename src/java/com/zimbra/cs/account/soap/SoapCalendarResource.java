@@ -51,8 +51,7 @@ public class SoapCalendarResource extends SoapAccount implements
         XMLElement req = new XMLElement(AdminService.MODIFY_CALENDAR_RESOURCE_REQUEST);
         req.addElement(AdminService.E_ID).setText(getId());
         SoapProvisioning.addAttrElements(req, attrs);
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE));
-        resetData();        
+        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE)));
     }
 
     @Override
@@ -61,8 +60,7 @@ public class SoapCalendarResource extends SoapAccount implements
         Element a = req.addElement(AdminService.E_CALENDAR_RESOURCE);
         a.setText(getId());
         a.addAttribute(AdminService.A_BY, CalendarResourceBy.id.name());
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE));
-        resetData();        
+        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE)));
     }
 
     public String getResourceType() {

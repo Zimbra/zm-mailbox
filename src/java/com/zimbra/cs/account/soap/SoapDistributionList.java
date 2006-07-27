@@ -44,15 +44,15 @@ public class SoapDistributionList extends SoapNamedEntry implements Distribution
 
     public SoapDistributionList(Element e) throws ServiceException {
         super(e);
-        addDlm(e);
+        addDlm(e, getAttrs());
     }
 
-    private void addDlm(Element e) {
+    private void addDlm(Element e, Map<String, Object> attrs) {
         ArrayList<String> list = new ArrayList<String>();
         for (Element dlm : e.listElements(AdminService.E_DLM)) {
             list.add(dlm.getText());
         }
-        mAttrs.put(Provisioning.A_zimbraMailForwardingAddress, list.toArray(new String[list.size()]));
+        attrs.put(Provisioning.A_zimbraMailForwardingAddress, list.toArray(new String[list.size()]));
     }
 
     @Override
@@ -61,9 +61,9 @@ public class SoapDistributionList extends SoapNamedEntry implements Distribution
         req.addElement(AdminService.E_ID).setText(getId());
         SoapProvisioning.addAttrElements(req, attrs);
         Element dl = prov.invoke(req).getElement(AdminService.E_DL);
-        mAttrs = SoapProvisioning.getAttrs(dl);
-        addDlm(dl);
-        resetData();        
+        Map<String, Object> newAttrs = SoapProvisioning.getAttrs(dl);        
+        addDlm(dl, newAttrs);
+        setAttrs(newAttrs);        
     }
 
     @Override
@@ -72,10 +72,10 @@ public class SoapDistributionList extends SoapNamedEntry implements Distribution
         Element a = req.addElement(AdminService.E_DL);
         a.setText(getId());
         a.addAttribute(AdminService.A_BY, DistributionListBy.id.name());
-        Element dl = prov.invoke(req).getElement(AdminService.E_DL);        
-        mAttrs = SoapProvisioning.getAttrs(dl);
-        addDlm(dl);        
-        resetData();        
+        Element dl = prov.invoke(req).getElement(AdminService.E_DL);
+        Map<String, Object> attrs = SoapProvisioning.getAttrs(dl);
+        addDlm(dl, attrs);                
+        setAttrs(attrs);
     }
 
     public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {

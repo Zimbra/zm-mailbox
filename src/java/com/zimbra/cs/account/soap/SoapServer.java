@@ -54,8 +54,7 @@ public class SoapServer extends SoapNamedEntry implements Server {
         XMLElement req = new XMLElement(AdminService.MODIFY_SERVER_REQUEST);
         req.addElement(AdminService.E_ID).setText(getId());
         SoapProvisioning.addAttrElements(req, attrs);
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_SERVER));
-        resetData();        
+        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_SERVER)));
     }
 
     @Override
@@ -64,7 +63,6 @@ public class SoapServer extends SoapNamedEntry implements Server {
         Element a = req.addElement(AdminService.E_SERVER);
         a.setText(getId());
         a.addAttribute(AdminService.A_BY, ServerBy.id.name());
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_SERVER));        
-        resetData();        
+        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_SERVER)));        
     }
 }

@@ -47,14 +47,12 @@ public class SoapConfig extends SoapEntry implements Config {
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.MODIFY_CONFIG_REQUEST);
         SoapProvisioning.addAttrElements(req, attrs);
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req));
-        resetData();        
+        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req)));
     }
 
     @Override
     public void reload(SoapProvisioning prov) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.GET_ALL_CONFIG_REQUEST);
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req));
-        resetData();        
+        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req)));
     }
 }

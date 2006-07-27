@@ -84,8 +84,7 @@ public class SoapAccount extends SoapNamedEntry implements Account {
         XMLElement req = new XMLElement(AdminService.MODIFY_ACCOUNT_REQUEST);
         req.addElement(AdminService.E_ID).setText(getId());
         SoapProvisioning.addAttrElements(req, attrs);
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_ACCOUNT));
-        resetData();
+        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_ACCOUNT)));
     }
 
     @Override
@@ -94,8 +93,7 @@ public class SoapAccount extends SoapNamedEntry implements Account {
         Element a = req.addElement(AdminService.E_ACCOUNT);
         a.setText(getId());
         a.addAttribute(AdminService.A_BY, AccountBy.id.name());
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_ACCOUNT));
-        resetData();        
+        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_ACCOUNT)));
     }
 
     public String getAccountCOSId() {

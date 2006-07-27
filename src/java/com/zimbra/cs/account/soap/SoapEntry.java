@@ -40,7 +40,7 @@ import com.zimbra.cs.util.DateUtil;
 
 public abstract class SoapEntry implements Entry {
 
-    protected Map<String,Object> mAttrs;
+    private Map<String,Object> mAttrs;
     private Map<Object, Object> mData;
 
     private static String[] sEmptyMulti = new String[0];
@@ -53,14 +53,36 @@ public abstract class SoapEntry implements Entry {
      
     public abstract void reload(SoapProvisioning prov) throws ServiceException;
 
+    protected void setAttrs(Map<String,Object> attrs) {
+        mAttrs = attrs;
+        resetData();
+    }
+    
     protected void resetData()
     {
         if (mData != null)
             mData.clear();
     }
-        
-    public String getAttr(String name) {
+
+    /**
+     * looks up name in map, and if found, returns its value.
+     * if not found, iterate through key names and compare using equalsIgnoreCase
+     * @param name
+     * @return
+     */
+    private Object getObject(String name) {
         Object v = mAttrs.get(name);
+        if (v != null) return v;
+        
+        for (String key: mAttrs.keySet()) {
+            if (key.equalsIgnoreCase(name))
+                return mAttrs.get(key);
+        }
+        return null;
+    }
+    
+    public String getAttr(String name) {
+        Object v = getObject(name);
         if (v instanceof String) {
             return (String) v;
         } else if (v instanceof String[]) {
@@ -123,7 +145,7 @@ public abstract class SoapEntry implements Entry {
     }
 
     public String[] getMultiAttr(String name) {
-        Object v = mAttrs.get(name);
+        Object v = getObject(name);
         if (v instanceof String) return new String[] {(String) v};
         else if (v instanceof String[]) {
             return (String[])v;

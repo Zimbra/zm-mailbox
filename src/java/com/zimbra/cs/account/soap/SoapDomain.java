@@ -49,8 +49,7 @@ public class SoapDomain extends SoapNamedEntry implements Domain {
         XMLElement req = new XMLElement(AdminService.MODIFY_DOMAIN_REQUEST);
         req.addElement(AdminService.E_ID).setText(getId());
         SoapProvisioning.addAttrElements(req, attrs);
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_DOMAIN));        
-        resetData();        
+        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_DOMAIN)));        
     }
 
     @Override
@@ -59,8 +58,7 @@ public class SoapDomain extends SoapNamedEntry implements Domain {
         Element a = req.addElement(AdminService.E_DOMAIN);
         a.setText(getId());
         a.addAttribute(AdminService.A_BY, DomainBy.id.name());
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_DOMAIN));        
-        resetData();        
+        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_DOMAIN)));
     }
 
     public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {

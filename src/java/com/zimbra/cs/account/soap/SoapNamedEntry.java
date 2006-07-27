@@ -68,7 +68,11 @@ public abstract class SoapNamedEntry extends SoapEntry implements NamedEntry {
     public synchronized String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(getClass().getName()).append(": { name=").append(getName()).append(" id=").append(getId());
-        sb.append(mAttrs.toString());
+        try {
+            sb.append(getAttrs().toString());
+        } catch (ServiceException e) {
+            // should never happen, since getAttrs in SoapEntry doesn't throw an exception
+        }
         sb.append("}");
         return sb.toString();           
     }

@@ -49,8 +49,7 @@ public class SoapCos extends SoapNamedEntry implements Cos {
         XMLElement req = new XMLElement(AdminService.MODIFY_COS_REQUEST);
         req.addElement(AdminService.E_ID).setText(getId());
         SoapProvisioning.addAttrElements(req, attrs);
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_COS));        
-        resetData();        
+        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_COS)));        
     }
 
     @Override
@@ -59,8 +58,7 @@ public class SoapCos extends SoapNamedEntry implements Cos {
         Element a = req.addElement(AdminService.E_COS);
         a.setText(getId());
         a.addAttribute(AdminService.A_BY, CosBy.id.name());
-        mAttrs = SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_COS));        
-        resetData();
+        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_COS)));        
     }
     
 }
