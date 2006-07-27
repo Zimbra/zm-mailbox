@@ -36,7 +36,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -59,11 +58,6 @@ import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
 
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
@@ -679,19 +673,18 @@ public class ZMailboxUtil implements DebugListener {
         return (sort == null ? null : SearchSortBy.fromString(sort));
     }
     
-    enum ExecuteStatus {OK, UNKNOWN_COMMAND, EXIT};
+    enum ExecuteStatus {OK, EXIT};
     
-    private ExecuteStatus execute(String args[]) throws ServiceException, IOException {
-        
-        mCommand = lookupCommand(args[0]);
+    public ExecuteStatus execute(String argsIn[]) throws ServiceException, IOException {
+
+        mCommand = lookupCommand(argsIn[0]);
         
         // shift them over for parser
-        String newArgs[] = new String[args.length-1];
-        System.arraycopy(args, 1, newArgs, 0, newArgs.length);
-        args = newArgs;
+        String args[] = new String[argsIn.length-1];
+        System.arraycopy(argsIn, 1, args, 0, args.length);
 
         if (mCommand == null)
-            return ExecuteStatus.UNKNOWN_COMMAND;
+            throw ZClientException.CLIENT_ERROR("Unknown command: ("+argsIn[0]+ ") Type: 'help commands' for a list", null);
         
         try {
             mCommandLine = mParser.parse(mCommand.getOptions(), args, true);
@@ -909,7 +902,7 @@ public class ZMailboxUtil implements DebugListener {
             mMbox.tagMessage(id(args[0]), lookupTag(args[1]).getId(), paramb(args, 2, true));
             break;
         default:
-            return ExecuteStatus.UNKNOWN_COMMAND;
+            throw ZClientException.CLIENT_ERROR("Unhandled command: ("+mCommand.name()+ ")", null);            
         }
         return ExecuteStatus.OK;        
     }
@@ -1652,9 +1645,6 @@ public class ZMailboxUtil implements DebugListener {
                 continue;
             try {
                 switch(execute(args)) {
-                case UNKNOWN_COMMAND:
-                    System.out.println("Unknown command. Type: 'help commands' for a list");                    
-                    break;
                 case EXIT:
                     return;
                     //break;
@@ -1727,8 +1717,7 @@ public class ZMailboxUtil implements DebugListener {
                 InputStream is = cl.hasOption('f') ? new FileInputStream(cl.getOptionValue('f')) : System.in;; 
                 pu.interactive(new BufferedReader(new InputStreamReader(is)));
             } else {
-                if (pu.execute(args) == ExecuteStatus.UNKNOWN_COMMAND)
-                    pu.usage();
+                pu.execute(args);
             }
         } catch (ServiceException e) {
             Throwable cause = e.getCause();

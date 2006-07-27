@@ -873,13 +873,17 @@ public class ZSoapMailbox extends ZMailbox {
         return m.find() ? m.group(1) : null;
     }
 
+    private void addAuthCookoie(String name, URI uri, HttpState state) {
+        Cookie cookie = new Cookie(uri.getHost(), name, getAuthToken(), "/", -1, false);    
+        state.addCookie(cookie);
+    }
+
     HttpClient getHttpClient(URI uri) {
         boolean isAdmin = uri.getPort() == 7071; // TODO???
-        Cookie cookie = new Cookie(uri.getHost(), 
-                        isAdmin ? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, 
-                        mTransport.getAuthToken(), "/", -1, false);
-        HttpState initialState = new HttpState();
-        initialState.addCookie(cookie);
+        HttpState initialState = new HttpState();        
+        if (isAdmin) 
+            addAuthCookoie(ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN, uri, initialState);
+        addAuthCookoie(ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, uri, initialState); 
         HttpClient client = new HttpClient();
         client.setState(initialState);
         client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);

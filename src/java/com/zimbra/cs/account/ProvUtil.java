@@ -60,6 +60,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.wiki.WikiUtil;
+import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.cs.zclient.ZMailboxUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapTransport.DebugListener;
@@ -217,7 +218,7 @@ public class ProvUtil implements DebugListener {
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
         SEARCH_GAL("searchGal", "sg", "{domain} {name}", Category.SEARCH, 2, 2),
-        SELECT_MAILBOX("selectMailbox", "sm", "{account-name}", Category.MISC, 1, 1),        
+        SELECT_MAILBOX("selectMailbox", "sm", "{account-name} [{zmmailbox commands}]", Category.MISC, 1, Integer.MAX_VALUE),        
         SET_ACCOUNT_COS("setAccountCos", "sac", "{name@domain|id} {cos-name|cos-id}", Category.ACCOUNT, 2, 2),
         SET_PASSWORD("setPassword", "sp", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
         SOAP(".soap", ".s"),
@@ -538,10 +539,18 @@ public class ProvUtil implements DebugListener {
              ZMailboxUtil util = new ZMailboxUtil();
              util.setVerbose(mVerbose);
              util.setDebug(mDebug);
-             util.setInteractive(true);
+             boolean smInteractive = mInteractive && args.length < 3;
+             util.setInteractive(smInteractive);
              util.selectMailbox(args[1], (SoapProvisioning) mProv);
-             util.interactive(mReader);
-             
+             if (smInteractive) {
+                 util.interactive(mReader);
+             } else if (args.length > 2){
+                 String newArgs[] = new String[args.length-2];
+                 System.arraycopy(args, 2, newArgs, 0, newArgs.length);
+                 util.execute(newArgs);
+             } else {
+                 throw ZClientException.CLIENT_ERROR("command only valid in interactive mode or with arguments", null);
+             }
             break;
         case SOAP:
             // HACK FOR NOW
