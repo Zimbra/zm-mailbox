@@ -306,7 +306,7 @@ public class Mailbox {
     private Set<Session> mListeners      = new HashSet<Session>();
 
     private MailboxLock  mMaintenance = null;
-    private MailboxIndex mMailboxIndex = new MailboxIndex(this, null);
+    private MailboxIndex mMailboxIndex = null;
 
     /** flag: messages sent by me */
     public Flag mSentFlag;
@@ -344,6 +344,7 @@ public class Mailbox {
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
         initFlags();
+        mMailboxIndex =  new MailboxIndex(this, null);        
     }
 
     /** Returns the server-local numeric ID for this mailbox.  To get a
