@@ -179,6 +179,7 @@ public class UserServlet extends ZimbraServlet {
     }
 
     private void getAccount(Context context) throws IOException, ServletException {
+        boolean isAdminRequest = (context.req.getLocalPort() == ADMIN_PORT);
         try {
             // check cookie first
             if (context.cookieAuthAllowed()) {
@@ -186,7 +187,8 @@ public class UserServlet extends ZimbraServlet {
                 if (context.authAccount != null) {
                     context.cookieAuthHappened = true;
                     try {
-                        context.authTokenCookie = getAuthTokenFromCookie(context.req, context.resp, true).getEncoded();
+                        AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(context.req, context.resp, true) : getAuthTokenFromCookie(context.req, context.resp, true);
+                        context.authTokenCookie = at.getEncoded();
                     } catch (AuthTokenException e) {
                     }
                     return;
@@ -202,7 +204,7 @@ public class UserServlet extends ZimbraServlet {
                     if (!context.noSetCookie()) {
                         try {
                             context.authTokenCookie = new AuthToken(context.authAccount).getEncoded();
-                            context.resp.addCookie(new Cookie(COOKIE_ZM_AUTH_TOKEN, context.authTokenCookie));
+                            context.resp.addCookie(new Cookie(isAdminRequest ? COOKIE_ZM_ADMIN_AUTH_TOKEN : COOKIE_ZM_AUTH_TOKEN, context.authTokenCookie));
                         } catch (AuthTokenException e) {
                         }
                     }

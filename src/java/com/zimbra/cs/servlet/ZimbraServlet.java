@@ -66,6 +66,7 @@ import com.zimbra.soap.SoapProtocol;
  * provides some utility methods to subclasses.
  */
 public class ZimbraServlet extends HttpServlet {
+    private static final long serialVersionUID = 5025244890767551679L;
 
     private static Log mLog = LogFactory.getLog(ZimbraServlet.class);
 
@@ -85,6 +86,19 @@ public class ZimbraServlet extends HttpServlet {
     private static Map<String, ZimbraServlet> sServlets = new HashMap<String, ZimbraServlet>();
 
     private int[] mAllowedPorts;
+
+    /** Port number for the admin service. */
+    protected static int ADMIN_PORT;
+        static {
+            try {
+                ADMIN_PORT = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
+                if (ADMIN_PORT == -1)
+                    ZimbraLog.system.info("no admin port configured for local server; admin upload disabled");
+            } catch (ServiceException e) {
+                ADMIN_PORT = -1;
+                ZimbraLog.system.warn("error getting admin port for local server; admin upload disabled", e);
+            }
+        }
 
     public void init() throws ServletException {
         String portsCSV = getInitParameter(PARAM_ALLOWED_PORTS);
@@ -347,13 +361,14 @@ public class ZimbraServlet extends HttpServlet {
     
 
     protected Account cookieAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError) 
-        throws IOException, ServletException, ServiceException 
-    {
-        AuthToken at = getAuthTokenFromCookie(req, resp, doNotSendHttpError);
+    throws IOException, ServiceException {
+        boolean isAdminRequest = (req.getLocalPort() == ADMIN_PORT);
+        AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
         return at == null ? null : Provisioning.getInstance().get(AccountBy.id, at.getAccountId()); 
     }
 
-    protected Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge) throws IOException, ServletException, ServiceException {
+    protected Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge)
+    throws IOException, ServiceException {
         String auth = req.getHeader("Authorization");
 
         // TODO: more liberal parsing of Authorization value...

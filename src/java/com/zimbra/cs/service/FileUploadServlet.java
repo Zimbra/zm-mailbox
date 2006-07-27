@@ -73,9 +73,9 @@ import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.FileUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.ZimbraLog;
 
 public class FileUploadServlet extends ZimbraServlet {
+    private static final long serialVersionUID = -3156986245375108467L;
 
     /** The character separating upload IDs in a list */
     public static final String UPLOAD_DELIMITER = ",";
@@ -83,19 +83,6 @@ public class FileUploadServlet extends ZimbraServlet {
     private static final char UPLOAD_PART_DELIMITER = ':';
     /** The length of a fully-qualified upload ID (2 UUIDs and a ':') */
     private static final int UPLOAD_ID_LENGTH = 73;
-
-    /** Port number for the admin service. */
-    private static int ADMIN_PORT;
-        static {
-            try {
-                ADMIN_PORT = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
-                if (ADMIN_PORT == -1)
-                    ZimbraLog.system.info("no admin port configured for local server; admin upload disabled");
-            } catch (ServiceException e) {
-                ADMIN_PORT = -1;
-                ZimbraLog.system.warn("error getting admin port for local server; admin upload disabled", e);
-            }
-        }
 
     public static final class Upload {
         final String   accountId;
@@ -310,8 +297,8 @@ public class FileUploadServlet extends ZimbraServlet {
         do {
             // file upload requires authentication
             boolean isAdminRequest = (req.getLocalPort() == ADMIN_PORT);
-    		AuthToken authToken = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
-            if (authToken == null) {
+    		AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
+            if (at == null) {
                 status = HttpServletResponse.SC_UNAUTHORIZED;
                 break;
             }
@@ -320,7 +307,7 @@ public class FileUploadServlet extends ZimbraServlet {
                 try {
                     // make sure we're on the right host; proxy if we're not...
                     Provisioning prov = Provisioning.getInstance();
-                    Account acct = prov.get(AccountBy.id, authToken.getAccountId());
+                    Account acct = prov.get(AccountBy.id, at.getAccountId());
                     if (!Provisioning.onLocalServer(acct)) {
                         proxyServletRequest(req, resp, prov.getServer(acct), null);
                         return;
@@ -397,7 +384,7 @@ public class FileUploadServlet extends ZimbraServlet {
                     String name = filenames.get(fi);
                     if (name == null || name.trim().equals(""))
                         name = fi.getName();
-                    Upload up = new Upload(authToken.getAccountId(), fi, name);
+                    Upload up = new Upload(at.getAccountId(), fi, name);
 
                     mLog.debug("doPost(): added " + up);
                     synchronized (mPending) {
