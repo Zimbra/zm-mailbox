@@ -26,7 +26,6 @@
 package com.zimbra.cs.service;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -767,14 +766,14 @@ public class UserServlet extends ZimbraServlet {
     }
 
         
-    public static InputStream getResourceAsStream(AuthToken auth, ItemId iid, Map<String, String> params) throws ServiceException {
+    public static byte[] getRemoteResource(AuthToken auth, ItemId iid, Map<String, String> params) throws ServiceException {
         Account target = Provisioning.getInstance().get(AccountBy.id, iid.getAccountId());
         Map<String, String> pcopy = new HashMap<String, String>(params);
         pcopy.put(QP_ID, iid.toString());
-        return getResourceAsStream(auth, target, null, pcopy);
+        return getRemoteResource(auth, target, null, pcopy);
     }
 
-    public static InputStream getResourceAsStream(AuthToken auth, Account target, String folder, Map<String,String> params) throws ServiceException {
+    public static byte[] getRemoteResource(AuthToken auth, Account target, String folder, Map<String,String> params) throws ServiceException {
         // fetch from remote store
         Provisioning prov = Provisioning.getInstance();
         Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
@@ -819,11 +818,14 @@ public class UserServlet extends ZimbraServlet {
             int statusCode = client.executeMethod(get);
             if (statusCode != HttpStatus.SC_OK)
                 throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), null);
-            return get.getResponseBodyAsStream();
+            return get.getResponseBody();
         } catch (HttpException e) {
             throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
         } catch (IOException e) {
             throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
+        } finally {
+            if (get != null)
+                get.releaseConnection();
         }
     }
 }

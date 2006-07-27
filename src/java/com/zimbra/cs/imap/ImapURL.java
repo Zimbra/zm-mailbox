@@ -25,8 +25,6 @@
 package com.zimbra.cs.imap;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -220,8 +218,7 @@ class ImapURL {
                 AuthToken auth = new AuthToken(authacct, System.currentTimeMillis() + 60 * 1000);
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put(UserServlet.QP_IMAP_ID, Integer.toString(mUid));
-                InputStream is = UserServlet.getResourceAsStream(auth, acct, mFolder, params);
-                content = ByteUtil.getContent(is, 2048, ImapRequest.getMaxRequestLength());
+                content = UserServlet.getRemoteResource(auth, acct, mFolder, params);
             }
 
             // fetch the content of the message
@@ -247,9 +244,6 @@ class ImapURL {
         } catch (BinaryDecodingException e) {
             ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
             throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
-        } catch (IOException e) {
-            ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
-            throw new ImapUrlException(tag, mURL, "error fetching remote IMAP URL content");
         }
     }
 

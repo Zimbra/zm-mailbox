@@ -29,7 +29,6 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -147,8 +146,8 @@ public class CreateContact extends MailDocumentHandler  {
                     // fetch from remote store
                     Map<String, String> params = new HashMap<String, String>();
                     params.put(UserServlet.QP_PART, part);
-                    InputStream is = UserServlet.getResourceAsStream(lc.getAuthToken(), iid, params);
-                    text = new String(ByteUtil.getContent(is, 0));
+                    byte[] content = UserServlet.getRemoteResource(lc.getAuthToken(), iid, params);
+                    text = new String(content, "utf-8");
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("error reading vCard", e);
                 }
