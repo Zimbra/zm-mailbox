@@ -276,7 +276,7 @@ public abstract class Wiki {
 		protected int mFolderId;
 		protected int mParentFolderId;
 		
-		private WikiById(WikiContext ctxt, Account acct, int fid) throws ServiceException {
+		WikiById(WikiContext ctxt, Account acct, int fid) throws ServiceException {
 			if (!acct.getBooleanAttr("zimbraFeatureNotebookEnabled", false))
 				throw WikiServiceException.NOT_ENABLED();
 			
@@ -359,7 +359,7 @@ public abstract class Wiki {
 		private String mPath;
 		private String mRestUrl;
 		
-		private WikiByPath(Account acct, String path) throws ServiceException {
+		WikiByPath(Account acct, String path) throws ServiceException {
 			if (!acct.getBooleanAttr("zimbraFeatureNotebookEnabled", false))
 				throw WikiServiceException.NOT_ENABLED();
 			
@@ -561,7 +561,7 @@ public abstract class Wiki {
 			throw WikiServiceException.ERROR("wiki account mailbox not found");
 		mbox.getFolderById(ctxt.octxt, folderId);
 
-		Pair<String,String> key = Pair.get(acctId, Integer.toString(folderId));
+		Pair<String,String> key = new Pair<String,String>(acctId, Integer.toString(folderId));
 		Wiki wiki = (Wiki)sWikiNotebookCache.get(key);
 		if (wiki == null) {
 			wiki = Wiki.add(new WikiById(ctxt, acct, folderId), key);
@@ -589,7 +589,7 @@ public abstract class Wiki {
 				}
 				return getInstance(ctxt, acct, fid);
 			}
-			Pair<String,String> k = Pair.get(account.getId(), key);
+			Pair<String,String> k = new Pair<String,String>(account.getId(), key);
 			Wiki wiki = (Wiki)sWikiNotebookCache.get(k);
 			if (wiki == null) {
 				wiki = Wiki.add(new WikiByPath(account, key), k);
@@ -624,7 +624,7 @@ public abstract class Wiki {
 	
 	public static void remove(String acctId, String k) {
 		synchronized (sWikiNotebookCache) {
-			Pair<String,String> key = Pair.get(acctId, k);
+			Pair<String,String> key = new Pair<String,String>(acctId, k);
 			sWikiNotebookCache.remove(key);
 		}
 	}

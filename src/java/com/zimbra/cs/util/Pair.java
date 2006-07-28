@@ -24,37 +24,16 @@
  */
 package com.zimbra.cs.util;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class Pair<F,S> implements Comparable {
+public class Pair<F,S> {
 	private F mFirst;
 	private S mSecond;
-	
-	private static Map sPairMap = new HashMap();
-	
-	public static <F,S> Pair<F,S> get(F first, S second) {
-		if (first == null || second == null)
-			throw new IllegalArgumentException("null parameter not allowed");
-		Map<S,Pair<F,S>> sub = (Map<S,Pair<F,S>>)(sPairMap.get(first));
-		if (sub == null) {
-			sub = new HashMap<S,Pair<F,S>>();
-			sPairMap.put(first, sub);
-		}
-		Pair<F,S> val = sub.get(second);
-		if (val == null) {
-			val = new Pair<F,S>(first, second);
-			sub.put(second, val);
-		}
-		return val;
-	}
-	
-	private Pair(F first, S second) {
-		assert(first != null && second != null);
-		mFirst = first;
-		mSecond = second;
-	}
-	
+
+    public Pair(F first, S second) {
+        assert(first != null && second != null);
+        mFirst = first;
+        mSecond = second;
+    }
+
 	public F getFirst() {
 		return mFirst;
 	}
@@ -67,15 +46,31 @@ public class Pair<F,S> implements Comparable {
 	public S cdr() {
 		return getSecond();
 	}
-	public int compareTo(Object obj) {
-		if (!(obj instanceof Pair)) {
-			return 1;
-		}
-		Pair that = (Pair) obj;
-		if (mFirst.equals(that.mFirst) &&
-			mSecond.equals(that.mSecond)) {
-			return 0;
-		}
-		return 1;
-	}
+
+    public boolean equals(Object obj) {
+        if (obj instanceof Pair) {
+            Pair that = (Pair) obj;
+            if (mFirst != that.mFirst && (mFirst == null || !mFirst.equals(that.mFirst)))
+                return false;
+            if (mSecond != that.mSecond && (mSecond == null || !mSecond.equals(that.mSecond)))
+                return false;
+            return true;
+        } else {
+            return super.equals(obj);
+        }
+    }
+
+    public int hashCode() {
+        int code1 = mFirst == null ? 0 : mFirst.hashCode();
+        int code2 = mSecond == null ? 0 : mSecond.hashCode();
+        return code1 ^ code2;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(new Pair<String,String>("foo", "bar").equals(new Pair<String,String>("foo", "bar")));
+        System.out.println(new Pair<String,String>("foo", null).equals(new Pair<String,String>("fo" + 'o', null)));
+        System.out.println(new Pair<String,String>(null, "bar").equals(new Pair<String,String>(null, "foo")));
+        System.out.println(new Pair<String,String>("foo", "bar").equals(new Pair<String,Integer>("foo", 8)));
+        System.out.println(new Pair<String,String>(null, "bar").equals(new Pair<Integer,String>(0, "bar")));
+    }
 }

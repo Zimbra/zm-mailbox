@@ -74,7 +74,7 @@ public class WikiTemplateStore {
 	}
 	
 	public static WikiTemplateStore getInstance(String account, String k) {
-		Pair<String,String> key = Pair.get(account, k);
+		Pair<String,String> key = new Pair<String,String>(account, k);
 		WikiTemplateStore store;
 		long now = System.currentTimeMillis();
 		
