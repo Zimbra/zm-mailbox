@@ -64,4 +64,8 @@
     <value>true</value>
   </key>
 
+  <key name="nio_imap_enable">
+    <value>true</value>
+  </key>
+  
 </localconfig>
