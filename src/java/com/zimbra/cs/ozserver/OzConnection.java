@@ -31,7 +31,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.logging.Log;
 
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.util.ZimbraLog;
 
 public class OzConnection {
@@ -178,6 +178,12 @@ public class OzConnection {
 
     private boolean mChannelClosed;
 
+    private boolean isChannelClosed() {
+        synchronized (mTeardownLock) {
+            return mChannelClosed;
+        }        
+    }
+    
     /**
      * A teardown is the final step of a close where we cleanup the socket and
      * have the protocol handler cleanup also.
@@ -327,7 +333,7 @@ public class OzConnection {
                 addToNDC();
                 if (mDebug) mLog.debug("starting " + mName);
                 try {
-                    if (mChannelClosed) {
+                    if (isChannelClosed()) {
                         if (mDebug) mLog.debug("connection already closed, aborting " + mName);
                         return;
                     }
@@ -447,6 +453,65 @@ public class OzConnection {
         }
     }
 
+    private static final int WRITE_BUFFER_COMPACTION_PERCENT = LC.nio_write_buffer_compaction_percent.intValue();
+        
+    private static final class WriteQueue {
+        private LinkedList<ByteBuffer> mWriteBuffers = new LinkedList<ByteBuffer>();
+        int mCurrentCapacity = 0;
+        int mCapacityMax = Integer.MAX_VALUE;
+
+        boolean isEmpty() {
+            return mWriteBuffers.isEmpty();
+        }
+        
+        void clear() {
+            mWriteBuffers.clear();
+            mCurrentCapacity = 0;
+        }
+        
+        void add(ByteBuffer bb) throws IOException {
+            mWriteBuffers.add(bb);
+            mCurrentCapacity += bb.capacity();
+            if (mCurrentCapacity > mCapacityMax) {
+                int cc = mCurrentCapacity;
+                clear();
+                throw new IOException("write queue size " + cc + " too large (" + mCapacityMax + " allowed)");
+            }
+        }
+        
+        void addFirst(ByteBuffer bb) throws IOException {
+            mWriteBuffers.addFirst(bb);
+            mCurrentCapacity += bb.capacity();
+            if (mCurrentCapacity > mCapacityMax) {
+                int cc = mCurrentCapacity;
+                clear();
+                throw new IOException("write queue size " + cc + " too large (" + mCapacityMax + " allowed)");
+            }
+        }
+
+        ByteBuffer removeFirst() {
+            ByteBuffer bb = mWriteBuffers.removeFirst();
+            mCurrentCapacity -= bb.capacity();
+            return bb;
+        }
+
+        void setMaxCapacity(int capacity) {
+            mCapacityMax = capacity;
+        }
+    }
+    
+    private Object mWriteLock = new Object();
+
+    private boolean mCloseAfterWrite = false;
+
+    private final WriteQueue mWriteQueue = new WriteQueue();
+
+    public void setWriteQueueMaxCapacity(int capacity) {
+        synchronized (mWriteLock) {
+            mWriteQueue.setMaxCapacity(capacity);
+        }
+    }
+    
     private class OzPlainFilter extends OzFilter {
 
         public void read(ByteBuffer rbb) throws IOException {
@@ -499,12 +564,6 @@ public class OzConnection {
             rbb.clear();
         }
 
-        private Object mWriteLock = new Object();
-
-        private boolean mCloseAfterWrite = false;
-
-        private List<ByteBuffer> mWriteBuffers = new LinkedList<ByteBuffer>();
-        
         public void close() {
             synchronized (mWriteLock) {
                 mCloseAfterWrite = true;
@@ -516,13 +575,13 @@ public class OzConnection {
 
         boolean isWritePending() {
             synchronized (mWriteLock) {
-                return mWriteBuffers.size() > 0;
+                return !mWriteQueue.isEmpty();
             }
         }
 
         public void write(ByteBuffer buffer) throws IOException {
             synchronized (mWriteLock) {
-                mWriteBuffers.add(buffer);
+                mWriteQueue.add(buffer);
                 // We always try to flush so we fill up network buffers.
                 // Since this a non-blocking channel write() will return
                 // immediately if the network buffers are full.
@@ -537,10 +596,16 @@ public class OzConnection {
         }
         
         private boolean flushLocked() throws IOException {
+            // NB: this check will take teardown lock and we already hold write lock.
+            if (isChannelClosed()) {
+                mWriteQueue.clear();
+                throw new IOException("write requested on closed channel");
+            }
+     
             int totalWritten = 0;
             boolean allWritten = true;
-            for (Iterator<ByteBuffer> iter = mWriteBuffers.iterator(); iter.hasNext(); iter.remove()) {
-                ByteBuffer data = iter.next();
+            while (!mWriteQueue.isEmpty()) {
+                ByteBuffer data = mWriteQueue.removeFirst();
                 assert(data != null);
                 assert(data.hasRemaining());
 
@@ -571,6 +636,21 @@ public class OzConnection {
                     // Not all data was written. Note that write interest is
                     // enabled *elsewhere* when write is pending.
                     allWritten = false;
+
+                    // Compact if possible
+                    int capacity = data.capacity();
+                    int remaining = data.remaining();
+                    int fullness = 100 * remaining / capacity;
+                    if (fullness <= WRITE_BUFFER_COMPACTION_PERCENT) {
+                        ByteBuffer smaller = ByteBuffer.allocate(remaining);
+                        smaller.put(data);
+                        smaller.flip();
+                        mWriteQueue.addFirst(smaller);
+                        if (mDebug) mLog.debug("compacted write buffer " + data.capacity() + "->" + smaller.capacity());
+                    } else {
+                        mWriteQueue.addFirst(data);
+                    }
+                    
                     break;
                 }
             }

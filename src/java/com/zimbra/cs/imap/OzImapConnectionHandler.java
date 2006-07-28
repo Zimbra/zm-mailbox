@@ -651,6 +651,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             ImapSession session = startSession(account, hack, command, tag);
             if (session == null)
                 return CONTINUE_PROCESSING;
+            // Session timeout will take care of closing an IMAP connection with no activity.
+            ZimbraLog.imap.debug("disabling unauth connection alarm");
+            mConnection.cancelAlarm();
+            mConnection.setWriteQueueMaxCapacity(ImapServer.IMAP_WRITE_QUEUE_MAX_SIZE);
         } catch (ServiceException e) {
             if (mSession != null)
                 mSession.clearTagCache();
@@ -664,10 +668,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             return canContinue(e);
         }
         
-        // Session timeout will take care of closing an IMAP connection with no activity.
-        ZimbraLog.imap.debug("disabling unauth connection alarm");
-        mConnection.cancelAlarm();
-
         sendCapability();
         sendOK(tag, command + " completed");
         return CONTINUE_PROCESSING;
@@ -1557,7 +1557,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     result.print((empty ? "" : " ") + "BINARY.SIZE[] " + i4msg.getSize(item));  empty = false;
                 }
                 if (!fullMessage.isEmpty()) {
-                    raw = i4msg.getContent(item);
+                    raw = ImapMessage.getContent(item);
                     for (ImapPartSpecifier pspec : fullMessage) {
                         result.print(empty ? "" : " ");  pspec.write(result, baos, raw);  empty = false;
                     }
@@ -1565,7 +1565,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 if (!parts.isEmpty() || (attributes & ~FETCH_FROM_MIME) != 0) {
                     try {
                         // don't use msg.getMimeMessage() because it implicitly expands TNEF attachments
-                        InputStream is = raw != null ? new ByteArrayInputStream(raw) : i4msg.getContentStream(item);
+                        InputStream is = raw != null ? new ByteArrayInputStream(raw) : ImapMessage.getContentStream(item);
                         mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
                         is.close();
                     } catch (IOException e) {

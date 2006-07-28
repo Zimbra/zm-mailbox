@@ -96,6 +96,10 @@ implements RealtimeStatsCallback {
     /* Throw out connections that do not authenticate in a minute */
     public static final long IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS = 1 * Constants.MILLIS_PER_MINUTE;
     
+    public static final int IMAP_WRITE_QUEUE_MAX_SIZE = LC.nio_imap_write_queue_max_size.intValue();
+    
+    public static final int IMAP_WRITE_QUEUE_MAX_SIZE_UNAUTH = LC.nio_imap_write_queue_max_size_unauth.intValue();
+    
     public synchronized static void startupImapServer() throws ServiceException {
         if (sImapServer != null)
             return;
@@ -112,6 +116,7 @@ implements RealtimeStatsCallback {
             OzConnectionHandlerFactory imapHandlerFactory = new OzConnectionHandlerFactory() {
                 public OzConnectionHandler newConnectionHandler(OzConnection conn) {
                     conn.setAlarm(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
+                    conn.setWriteQueueMaxCapacity(IMAP_WRITE_QUEUE_MAX_SIZE_UNAUTH);
                     return new OzImapConnectionHandler(conn);
                 }
             };
@@ -152,6 +157,7 @@ implements RealtimeStatsCallback {
             OzConnectionHandlerFactory imapHandlerFactory = new OzConnectionHandlerFactory() {
                 public OzConnectionHandler newConnectionHandler(OzConnection conn) {
                     conn.setAlarm(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
+                    conn.setWriteQueueMaxCapacity(IMAP_WRITE_QUEUE_MAX_SIZE_UNAUTH);
                     conn.addFilter(new OzTLSFilter(conn, debugLogging, ZimbraLog.imap));
                     return new OzImapConnectionHandler(conn);
                 }
