@@ -455,7 +455,7 @@ public class OzConnection {
 
     private static final int WRITE_BUFFER_COMPACTION_PERCENT = LC.nio_write_buffer_compaction_percent.intValue();
         
-    private static final class WriteQueue {
+    private final class WriteQueue {
         private LinkedList<ByteBuffer> mWriteBuffers = new LinkedList<ByteBuffer>();
         int mCurrentCapacity = 0;
         int mCapacityMax = Integer.MAX_VALUE;
@@ -477,6 +477,7 @@ public class OzConnection {
                 clear();
                 throw new IOException("write queue size " + cc + " too large (" + mCapacityMax + " allowed)");
             }
+            mLog.info("add: write queue size " + mCurrentCapacity); // TODO: should be debug
         }
         
         void addFirst(ByteBuffer bb) throws IOException {
@@ -487,11 +488,13 @@ public class OzConnection {
                 clear();
                 throw new IOException("write queue size " + cc + " too large (" + mCapacityMax + " allowed)");
             }
+            mLog.info("addFirst: write queue size " + mCurrentCapacity); // TODO: should be debug
         }
 
         ByteBuffer removeFirst() {
             ByteBuffer bb = mWriteBuffers.removeFirst();
             mCurrentCapacity -= bb.capacity();
+            mLog.info("removeFirst: write queue size " + mCurrentCapacity); // TODO: should be debug
             return bb;
         }
 
