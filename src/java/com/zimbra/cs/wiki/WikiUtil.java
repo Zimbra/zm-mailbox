@@ -554,10 +554,17 @@ public abstract class WikiUtil {
         if (dom == null) {
             throw WikiServiceException.ERROR("invalid domain: " + domain);
         }
-        initWiki(dom);
+        initDomainWiki(dom);
     }
     
     public void initDomainWiki(Domain dom) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Config globalConfig = prov.getConfig();
+        String globalWikiAcct = globalConfig.getAttr(Provisioning.A_zimbraNotebookAccount, null);
+        if (globalWikiAcct == null)
+        	throw WikiServiceException.ERROR("must initialize global wiki before domain wiki");
+        if (globalWikiAcct.equals(mUsername))
+        	throw WikiServiceException.ERROR("domain wiki account must be different from global wiki account");
         initWiki(dom);
     }
     
