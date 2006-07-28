@@ -45,7 +45,7 @@ public abstract class WikiDocumentHandler extends MailDocumentHandler {
     		return TARGET_FOLDER_PATH;
     	return TARGET_ID_PATH; 
     }
-    protected boolean checkMountpointProxy(Element request)  { return false; }
+    protected boolean checkMountpointProxy(Element request)  { return true; }
 
 	protected String getAuthor(ZimbraSoapContext lc) throws ServiceException {
 		return lc.getAuthtokenAccount().getName();
