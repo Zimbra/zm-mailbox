@@ -607,8 +607,9 @@ public class UserServlet extends ZimbraServlet {
             } catch (ServiceException e) {
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid id requested");
             }
+            String imap = this.params.get(QP_IMAP_ID);
             try {
-                this.imapId = Integer.parseInt(this.params.get(QP_IMAP_ID));
+                this.imapId = imap == null ? -1 : Integer.parseInt(imap);
             } catch (NumberFormatException nfe) {
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid imap id requested");
             }
