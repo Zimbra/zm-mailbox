@@ -200,7 +200,6 @@ public class LC {
     
     public static final KnownKey nio_imap_enable;
     public static final KnownKey nio_imap_debug_logging;
-    public static final KnownKey nio_imap_write_queue_max_size;
     public static final KnownKey nio_imap_write_queue_max_size_unauth;
     public static final KnownKey nio_write_buffer_compaction_percent;
     
@@ -767,14 +766,6 @@ public class LC {
         nio_imap_debug_logging.setDoc
             ("Log extremely large amounts of detail from the NIO IMAP server framework.  Useful only for debugging the IO framework.");
 
-        nio_imap_write_queue_max_size = new KnownKey("nio_imap_write_queue_max_size");
-        nio_imap_write_queue_max_size.setDefault("10240000");        
-        nio_imap_write_queue_max_size.setDoc
-            ("If the OS buffers are full (not a common/normal occurence)," +
-             " the NIO framework has to queue the requested write in Java heap." +
-             " This is the max capacity of the write queue for an authenticated" +
-             " connection.");
-        
         nio_imap_write_queue_max_size_unauth = new KnownKey("nio_imap_write_queue_max_size_unauth");
         nio_imap_write_queue_max_size_unauth.setDefault("20480");        
         nio_imap_write_queue_max_size_unauth.setDoc

@@ -654,7 +654,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             // Session timeout will take care of closing an IMAP connection with no activity.
             ZimbraLog.imap.debug("disabling unauth connection alarm");
             mConnection.cancelAlarm();
-            mConnection.setWriteQueueMaxCapacity(ImapServer.IMAP_WRITE_QUEUE_MAX_SIZE);
+            
+            com.zimbra.cs.account.Config config = Provisioning.getInstance().getConfig();            
+            mConnection.setWriteQueueMaxCapacity(config.getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, ImapServer.IMAP_WRITE_QUEUE_MAX_SIZE));
         } catch (ServiceException e) {
             if (mSession != null)
                 mSession.clearTagCache();
