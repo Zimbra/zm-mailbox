@@ -457,7 +457,7 @@ public abstract class Wiki {
 			throw WikiServiceException.ERROR("empty config variable " + Provisioning.A_zimbraNotebookAccount);
 		Account acct = prov.get(AccountBy.name, defaultAcct);
 		if (acct == null)
-			throw WikiServiceException.ERROR("no such account " + Provisioning.A_zimbraNotebookAccount);
+			throw WikiServiceException.ERROR("no such account " + defaultAcct);
 		
 		return acct;
 	}
