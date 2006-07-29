@@ -104,7 +104,7 @@ import com.zimbra.cs.util.ZimbraLog;
 public class UserServlet extends ZimbraServlet {
     private static final long serialVersionUID = -5313094316561384586L;
 
-    public static final String SERVLET_PATH = "/service/user";
+    public static final String SERVLET_PATH = "/home";
 
     public static final String QP_FMT = "fmt"; // format query param
 
