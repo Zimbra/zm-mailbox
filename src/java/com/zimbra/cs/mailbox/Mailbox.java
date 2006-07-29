@@ -747,9 +747,6 @@ public class Mailbox {
         long timestamp = octxt == null ? System.currentTimeMillis() : octxt.getTimestamp();
         beginTransaction(caller, timestamp, octxt, recorder, conn);
     }
-    private void beginTransaction(String caller, OperationContext octxt, ParsedMessage pm, RedoableOp recorder) throws ServiceException {
-        beginTransaction(caller, pm.getReceivedDate(), octxt, recorder, null);
-    }
     private void beginTransaction(String caller, long time, OperationContext octxt, RedoableOp recorder, Connection conn) throws ServiceException {
         mCurrentChange.startChange(caller, octxt, recorder);
 
@@ -3022,11 +3019,9 @@ public class Mailbox {
         MailboxBlob mboxBlob = null;
         boolean success = false;
         try {
-            if (redoPlayer != null) {
-                beginTransaction("addMessage", octxt, redoRecorder);
+            beginTransaction("addMessage", octxt, redoRecorder);
+            if (redoPlayer != null)
                 rcptEmail = redoPlayer.getRcptEmail();
-            } else
-                beginTransaction("addMessage", octxt, pm, redoRecorder);
 
             // the caller can specify the received date via redo recorder, ParsedMessge constructor, or X-Zimbra-Received header
             long timestamp = getOperationTimestampMillis();
