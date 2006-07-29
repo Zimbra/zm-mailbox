@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -306,9 +307,10 @@ public abstract class RedoableOp {
 		if (mActive) {
 			mActive = false;
 			mRedoLogMgr.commit(this);
-            if (mChainedOp != null) {
-                mChainedOp.commit();
-                mChainedOp = null;
+            if (mChainedOps != null) {
+                for (RedoableOp rop : mChainedOps)
+                    rop.commit();
+                mChainedOps = null;
             }
 		}
         // We don't need to hang onto the byte arrays after commit/abort.
@@ -321,9 +323,10 @@ public abstract class RedoableOp {
 		if (mActive) {
 			mActive = false;
 			mRedoLogMgr.abort(this);
-            if (mChainedOp != null) {
-                mChainedOp.abort();
-                mChainedOp = null;
+            if (mChainedOps != null) {
+                for (RedoableOp rop : mChainedOps)
+                    rop.abort();
+                mChainedOps = null;
             }
 		}
         // We don't need to hang onto the byte arrays after commit/abort.
@@ -569,10 +572,12 @@ public abstract class RedoableOp {
 
     // indexing sub-operation that is chained to this operation
 
-    private RedoableOp mChainedOp;
+    private List<RedoableOp> mChainedOps;
 
-    public synchronized void setChainedOp(RedoableOp subOp) {
-    	mChainedOp = subOp;
+    public synchronized void addChainedOp(RedoableOp subOp) {
+        if (mChainedOps == null)
+            mChainedOps = new LinkedList<RedoableOp>();
+    	mChainedOps.add(subOp);
     }
 
 

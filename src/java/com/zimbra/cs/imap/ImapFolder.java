@@ -419,27 +419,28 @@ class ImapFolder implements Iterable<ImapMessage> {
 
         return result;
     }
-    static String encodeSubsequence(List items) {
+    static String encodeSubsequence(List<Integer> items) {
         if (items == null || items.size() == 0)
             return "";
         StringBuilder sb = new StringBuilder();
         int start = -1, last = -1;
         boolean done;
-        Iterator it = items.iterator();
+        Iterator<Integer> it = items.iterator();
         do {
             done = !it.hasNext();
-            int next = done ? -1 : ((Integer) it.next()).intValue();
-            if (last == -1)
+            int next = done ? -1 : it.next();
+            if (last == -1) {
                 last = start = next;
-            else if (done || next != last + 1) {
+            } else if (done || next != last + 1) {
                 if (sb.length() > 0)
                     sb.append(',');
                 sb.append(start);
                 if (start != last)
                     sb.append(':').append(last);
                 last = start = next;
-            } else
+            } else {
                 last = next;
+            }
         } while (!done);
         return sb.toString();
     }

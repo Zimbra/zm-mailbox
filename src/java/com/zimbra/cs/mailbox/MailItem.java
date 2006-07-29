@@ -169,18 +169,19 @@ public abstract class MailItem implements Comparable {
         public UnderlyingData duplicate(int newId, int newFolder, short newVolume) {
             UnderlyingData data = new UnderlyingData();
             data.id          = newId;
-            data.type        = type;
+            data.type        = this.type;
+            data.parentId    = this.parentId;
             data.folderId    = newFolder;
-            data.parentId    = parentId;
-            data.indexId     = indexId;
+            data.indexId     = this.indexId;
+            data.imapId      = this.imapId <= 0 ? this.imapId : newId;
             data.volumeId    = newVolume;
-            data.blobDigest  = blobDigest;
-            data.date        = date;
-            data.size        = size;
-            data.flags       = flags;
-            data.tags        = tags;
-            data.subject     = subject;
-            data.unreadCount = unreadCount;
+            data.blobDigest  = this.blobDigest;
+            data.date        = this.date;
+            data.size        = this.size;
+            data.flags       = this.flags;
+            data.tags        = this.tags;
+            data.subject     = this.subject;
+            data.unreadCount = this.unreadCount;
             return data;
         }
 
@@ -1280,7 +1281,7 @@ public abstract class MailItem implements Comparable {
      *  The copy is assigned the same IMAP UID as the original item.  The
      *  moved item is then explicitly assigned a new IMAP UID.  
      * 
-     * @param folder        The folder to copy the item to.
+     * @param target        The folder to copy the item to.
      * @param id            The item id for the newly-created copy.
      * @param destVolumeId  The id of the Volume to put the copied blob in.
      * @param imapId        The IMAP UID to assign to the <u>moved</u> item.
@@ -1294,42 +1295,49 @@ public abstract class MailItem implements Comparable {
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul>
      * @see com.zimbra.cs.store.Volume#getCurrentMessageVolume() */
-    MailItem icopy(Folder folder, int id, short destVolumeId, int imapId) throws IOException, ServiceException {
+    MailItem icopy(Folder target, int id, short destVolumeId, int imapId) throws IOException, ServiceException {
         if (!isCopyable())
             throw MailServiceException.CANNOT_COPY(mId);
         if (!isMovable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        if (!folder.canContain(this))
+        if (!target.canContain(this))
             throw MailServiceException.CANNOT_CONTAIN();
 
         // permissions required are the same as for copy()
         if (!canAccess(ACL.RIGHT_READ))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
-        if (!folder.canAccess(ACL.RIGHT_INSERT))
+        if (!target.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
-
-        Folder oldFolder = getFolder();
-        int oldImapId = getImapUid();
 
         // we'll share the index entry if this item can't change out from under us
         boolean shared = isIndexed() && !isMutable();
+        boolean moved = getFolderId() != target.getId();
+
+        int copyImapId = moved ? getImapUid() : imapId;
+        Folder oldFolder = getFolder();
+
+        // first, move the item to the target folder if necessary
+        if (moved) {
+            oldFolder.updateSize(-getSize());
+            target.updateSize(getSize());
+            oldFolder.updateUnread(-getUnreadCount());
+            target.updateUnread(getUnreadCount());
+            folderChanged(target, imapId);
+            DbMailItem.imove(this, shared, target, imapId);
+        } else if (shared && !isTagged(mMailbox.mCopiedFlag)) {
+            DbMailItem.alterTag(this, mMailbox.mCopiedFlag, true);
+        }
+
         if (shared)
             mData.flags |= Flag.BITMASK_COPIED;
 
-        // first, move the item to the target folder
-        oldFolder.updateSize(-getSize());
-        folder.updateSize(getSize());
-        oldFolder.updateUnread(-mData.unreadCount);
-        folder.updateUnread(mData.unreadCount);
-        folderChanged(folder, imapId);
-        DbMailItem.imove(this, shared, folder, imapId);
-
         // then copy it back to the original folder, leaving the copy out of the conversation
-        //   also, make sure that the new item's imap ID is the same as the old item's old imap ID
+        //   also, when moving make sure that the new item's imap ID is the same as the old item's old imap ID
         UnderlyingData data = mData.duplicate(id, oldFolder.getId(), destVolumeId);
         data.parentId = -1;
-        data.imapId   = oldImapId;
         data.metadata = encodeMetadata();
+        if (moved)
+            data.imapId = copyImapId;
         if (isIndexed() && !shared)
             data.indexId = id;
         data.contentChanged(mMailbox);

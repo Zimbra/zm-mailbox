@@ -51,6 +51,7 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.operation.AlterTagOperation;
+import com.zimbra.cs.operation.CopyOperation;
 import com.zimbra.cs.operation.CreateFolderOperation;
 import com.zimbra.cs.operation.CreateTagOperation;
 import com.zimbra.cs.operation.DeleteOperation;
@@ -72,6 +73,7 @@ import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.Pair;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -1751,7 +1753,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
         String command = (byUID ? "UID COPY" : "COPY");
         String copyuid = "";
-        List<MailItem> movedMessages = new ArrayList<MailItem>();
+        List<Pair<MailItem,MailItem>> movedMessages = new ArrayList<Pair<MailItem,MailItem>>();
+
         try {
             GetFolderOperation gfOp = new GetFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, folderName);
             gfOp.schedule();
@@ -1773,32 +1776,42 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             }
             // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
             //                  accessed mailbox that contains expunged messages."
-            if (i4set.contains(null) && !byUID) {
+            if (!byUID && i4set.contains(null)) {
                 sendNO(tag, "COPY rejected because some of the requested messages were expunged");
                 return CONTINUE_PROCESSING;
             }
+            i4set.remove(null);
 
-            List<Integer> srcUIDs = new ArrayList<Integer>(), copyUIDs = new ArrayList<Integer>();
             long checkpoint = System.currentTimeMillis();
+            List<Integer> srcUIDs = new ArrayList<Integer>(), copyUIDs = new ArrayList<Integer>();
+
+            int i = 0;
+            List<ImapMessage> i4list = new ArrayList<ImapMessage>(ImapCopyOperation.SUGGESTED_BATCH_SIZE);
             for (ImapMessage i4msg : i4set) {
-                if (i4msg == null)
-                    continue;
-                
                 i4msg.setGhost(true);
-                ImapCopyOperation op = new ImapCopyOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType(), folder.getId());
-                op.schedule();
-                MailItem moved = op.getSource();
-                if (moved == null)
+                i4list.add(i4msg);
+
+                // we're sending 'em off in batches of 100
+                if (++i % ImapCopyOperation.SUGGESTED_BATCH_SIZE != 0 && i != i4set.size())
                     continue;
 
-                movedMessages.add(moved);
-                srcUIDs.add(i4msg.imapUid);
-                copyUIDs.add(moved.getImapUid());
+                ImapCopyOperation op = new ImapCopyOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4list, folder.getId());
+                op.schedule();
+                for (Pair<MailItem,MailItem> target : op.getMessages()) {
+                    movedMessages.add(target);
+                    int id1 = target.getFirst().getImapUid(), id2 = target.getSecond().getImapUid();
+                    srcUIDs.add(Math.min(id1, id2));  copyUIDs.add(Math.max(id1, id2));
+                }
+
                 // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                 long now = System.currentTimeMillis();
                 if (now - checkpoint > MAXIMUM_IDLE_PROCESSING_MILLIS) {
                     sendIdleUntagged();  checkpoint = now;
                 }
+
+                for (ImapMessage i4processed : i4list)
+                    i4processed.setGhost(false);
+                i4list.clear();
             }
 
             if (srcUIDs.size() > 0)

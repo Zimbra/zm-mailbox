@@ -87,6 +87,7 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.Pair;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.SoapProtocol;
@@ -176,8 +177,7 @@ public class Mailbox {
         boolean    active;
         Connection conn      = null;
         RedoableOp recorder  = null;
-        MailItem   indexItem = null;
-        Object     indexData = null;
+        Map<MailItem, Object>  indexItems = new HashMap<MailItem, Object>();
         Map<Integer, MailItem> itemCache = null;
         OperationContext octxt = null;
         TargetConstraint tcon  = null;
@@ -235,7 +235,7 @@ public class Mailbox {
         RedoableOp getRedoPlayer()   { return (octxt == null ? null : octxt.player); }
         RedoableOp getRedoRecorder() { return recorder; }
 
-        void setIndexedItem(MailItem item, Object data)  { indexItem = item;  indexData = data; }
+        void addIndexedItem(MailItem item, Object data)  { indexItems.put(item, data); }
 
         void reset() {
             if (conn != null)
@@ -245,7 +245,7 @@ public class Mailbox {
             depth = 0;
             size = changeId = itemId = contacts = NO_CHANGE;
             sync = null;  config = null;
-            itemCache = null;  indexItem = null;  indexData = null;
+            itemCache = null;  indexItems.clear();
             mDirty.clear();  mOtherDirtyStuff.clear();
             if (ZimbraLog.mailbox.isDebugEnabled())
                 ZimbraLog.mailbox.debug("clearing change");
@@ -1990,22 +1990,26 @@ public class Mailbox {
         return MailItem.constructItem(this, data);
     }
 
-    /** mechanism for getting an item */
+    /** mechanism for getting an item via IMAP id */
     public synchronized MailItem getItemByImapId(OperationContext octxt, int id, int folderId) throws ServiceException {
         boolean success = false;
         try {
             // tag/folder caches are populated in beginTransaction...
             beginTransaction("getItemByImapId", octxt);
+
             MailItem item = checkAccess(getCachedItem(id));
+            // in general, the item will not have been moved and its id will be the same as its IMAP id.
             if (item == null) {
                 try {
-                    // in general, the item will not have been moved and its id will be the same as its IMAP id.
                     item = checkAccess(MailItem.getById(this, id));
-                } catch (NoSuchItemException nsie) {
-                    // if it's not found, we have to search on the non-indexed IMAP_ID column...
-                    item = checkAccess(MailItem.getByImapId(this, id, folderId));
-                }
+                    if (item.getImapUid() != id)
+                        item = null;
+                } catch (NoSuchItemException nsie) { }
             }
+            // if it's not found, we have to search on the non-indexed IMAP_ID column...
+            if (item == null)
+                item = checkAccess(MailItem.getByImapId(this, id, folderId));
+
             if (isCachedType(item.getType()) || item.getImapUid() != id || item.getFolderId() != folderId)
                 throw MailServiceException.NO_SUCH_ITEM(id);
             success = true;
@@ -3172,7 +3176,7 @@ public class Mailbox {
             }
             markOtherItemDirty(mboxBlob);
 
-            mCurrentChange.setIndexedItem(msg, pm);
+            mCurrentChange.addIndexedItem(msg, pm);
             success = true;
         } finally {
             if (storeRedoRecorder != null) {
@@ -3290,7 +3294,7 @@ public class Mailbox {
             redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
 
             // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
-            mCurrentChange.setIndexedItem(msg, pm);
+            mCurrentChange.addIndexedItem(msg, pm);
             success = true;
             return msg;
         } finally {
@@ -3483,7 +3487,7 @@ public class Mailbox {
 
             // if we're not sharing the index entry, we need to index the new item
             if (copy.getIndexId() == copy.getId())
-                mCurrentChange.setIndexedItem(copy, null);
+                mCurrentChange.addIndexedItem(copy, null);
 
             success = true;
             return copy;
@@ -3492,46 +3496,67 @@ public class Mailbox {
         }
     }
 
-    public synchronized MailItem imapCopy(OperationContext octxt, int itemId, byte type, int folderId) throws IOException, ServiceException {
+    public synchronized List<Pair<MailItem,MailItem>> imapCopy(OperationContext octxt, List<Integer> itemIds, byte type, int folderId) throws IOException, ServiceException {
         // this is an IMAP command, so we'd better be tracking IMAP changes by now...
         beginTrackingImap(octxt);
 
-        ImapCopyItem redoRecorder = new ImapCopyItem(mId, itemId, type, folderId);
+        short volumeId = Volume.getCurrentMessageVolume().getId();
+        ImapCopyItem redoRecorder = new ImapCopyItem(mId, type, folderId, volumeId);
 
         boolean success = false;
         try {
             beginTransaction("icopy", octxt, redoRecorder);
             ImapCopyItem redoPlayer = (ImapCopyItem) mCurrentChange.getRedoPlayer();
 
-            MailItem item = getItemById(itemId, type);
-            checkItemChangeID(item);
+            Folder target = getFolderById(folderId);
 
-            int newId, newImapId;
-            short destVolumeId;
-            if (redoPlayer == null) {
-                newId = getNextItemId(ID_AUTO_INCREMENT);
-                newImapId = getNextItemId(ID_AUTO_INCREMENT);
-                if (item.getVolumeId() != -1)
-                    destVolumeId = Volume.getCurrentMessageVolume().getId();
-                else
-                    destVolumeId = -1;
-            } else {
-                newId = getNextItemId(redoPlayer.getDestId());
-                newImapId = redoPlayer.getSrcImapId();
-                destVolumeId = redoPlayer.getDestVolumeId();
+            // fetch the items to copy and make sure the caller is up-to-date on change IDs
+            int ids[] = new int[itemIds.size()], i = 0;
+            for (Integer id : itemIds) {
+                int iid = (id == null ? -1 : id);
+                if (iid <= 0)
+                    throw MailItem.noSuchItem(iid, type);
+                ids[i++] = iid;
             }
-            MailItem copy = item.icopy(getFolderById(folderId), newId, destVolumeId, newImapId);
-            redoRecorder.setDestId(copy.getId());
-            redoRecorder.setSrcImapId(item.getImapUid());
-            redoRecorder.setDestVolumeId(copy.getVolumeId());
+            MailItem[] items = getItemById(ids, type);
+            for (MailItem item : items)
+                checkItemChangeID(item);
 
-            // if we're not sharing the index entry, we need to index the new item
-            if (copy.getIndexId() == copy.getId())
-                mCurrentChange.setIndexedItem(copy, null);
+            // for IMAP's sake, let's try to keep the IDs vaguely contiguous
+            LinkedList<Integer> newIds = null, newImapIds = null;
+            if (redoPlayer == null) {
+                newIds = new LinkedList<Integer>();
+                for (i = 0; i < itemIds.size(); i++)
+                    newIds.add(getNextItemId(ID_AUTO_INCREMENT));
+                newImapIds = new LinkedList<Integer>();
+                for (i = 0; i < itemIds.size(); i++)
+                    newImapIds.add(getNextItemId(ID_AUTO_INCREMENT));
+            }
+
+            List<Pair<MailItem,MailItem>> result = new ArrayList<Pair<MailItem,MailItem>>();
+
+            for (MailItem item : items) {
+                int srcId = item.getId(), newId, newImapId;
+                if (redoPlayer == null) {
+                    newId = newIds.removeFirst();
+                    newImapId = newImapIds.removeFirst();
+                } else {
+                    newId = getNextItemId(redoPlayer.getDestId(srcId));
+                    newImapId = redoPlayer.getSrcImapId(srcId);
+                }
+                MailItem copy = item.icopy(target, newId, item.getVolumeId() == -1 ? -1 : volumeId, newImapId);
+                redoRecorder.setDestId(srcId, newId);
+                redoRecorder.setSrcImapId(srcId, newImapId);
+    
+                // if we're not sharing the index entry, we need to index the new item
+                if (copy.getIndexId() == copy.getId())
+                    mCurrentChange.addIndexedItem(copy, null);
+
+                result.add(new Pair<MailItem,MailItem>(item, copy));
+            }
 
             success = true;
-            // NOTE! we're returning the *moved* item, not the copy that replaced it
-            return item;
+            return result;
         } finally {
             endTransaction(success);
         }
@@ -3671,7 +3696,7 @@ public class Mailbox {
 
             redoRecorder.setNoteId(note.getId());
             redoRecorder.setVolumeId(note.getVolumeId());
-            mCurrentChange.setIndexedItem(note, null);
+            mCurrentChange.addIndexedItem(note, null);
             success = true;
             return note;
         } finally {
@@ -3694,7 +3719,7 @@ public class Mailbox {
             checkItemChangeID(note);
 
             note.setContent(content);
-            mCurrentChange.setIndexedItem(note, null);
+            mCurrentChange.addIndexedItem(note, null);
             success = true;
         } finally {
             endTransaction(success);
@@ -3762,7 +3787,7 @@ public class Mailbox {
 
             redoRecorder.setContactId(con.getId());
             redoRecorder.setVolumeId(con.getVolumeId());
-            mCurrentChange.setIndexedItem(con, null);
+            mCurrentChange.addIndexedItem(con, null);
             success = true;
             return con;
         } finally {
@@ -3783,7 +3808,7 @@ public class Mailbox {
                 throw MailServiceException.MODIFY_CONFLICT();
             con.modify(attrs, replace);
 
-            mCurrentChange.setIndexedItem(con, null);
+            mCurrentChange.addIndexedItem(con, null);
             success = true;
         } finally {
             endTransaction(success);
@@ -4150,8 +4175,8 @@ public class Mailbox {
 
         RedoableOp redoRecorder = mCurrentChange.recorder;
         IndexItem indexRedo = null;
-        MailItem itemToIndex = mCurrentChange.indexItem;
-        boolean indexingNeeded = redoRecorder != null && itemToIndex != null && !DebugConfig.disableIndexing; 
+        Map<MailItem, Object> itemsToIndex = mCurrentChange.indexItems;
+        boolean indexingNeeded = redoRecorder != null && !itemsToIndex.isEmpty() && !DebugConfig.disableIndexing; 
 
         // 1. Log the change redo record for main transaction.
         //    If indexing is to be followed, log this entry
@@ -4164,28 +4189,30 @@ public class Mailbox {
         boolean allGood = false;
         try {
             if (indexingNeeded) {
-                indexRedo = new IndexItem(mId,
-                            itemToIndex.getId(),
-                            itemToIndex.getType());
-                indexRedo.start(getOperationTimestampMillis());
-                indexRedo.setParentOp(redoRecorder);
+                for (Map.Entry<MailItem, Object> entry : itemsToIndex.entrySet()) {
+                    MailItem item = entry.getKey();
 
-                // 2. Index the item before committing the main
-                // transaction.  This allows us to fail the entire
-                // transaction when indexing fails.  Write the change
-                // record for indexing only after indexing actually
-                // works.
-                itemToIndex.reindex(indexRedo, mCurrentChange.indexData);
+                    indexRedo = new IndexItem(mId, item.getId(), item.getType());
+                    indexRedo.start(getOperationTimestampMillis());
+                    indexRedo.setParentOp(redoRecorder);
 
-                // 3. Write the change redo record for indexing
-                //    sub-transaction to guarantee that it appears in the
-                //    redo log stream before the commit record for main
-                //    transaction.  If main transaction commit record is
-                //    written first and the server crashes before writing
-                //    the indexing change record, we won't be able to
-                //    re-execute indexing during crash recovery, and we will
-                //    end up with an unindexed item.
-                indexRedo.log();
+                    // 2. Index the item before committing the main
+                    // transaction.  This allows us to fail the entire
+                    // transaction when indexing fails.  Write the change
+                    // record for indexing only after indexing actually
+                    // works.
+                    item.reindex(indexRedo, entry.getValue());
+
+                    // 3. Write the change redo record for indexing
+                    //    sub-transaction to guarantee that it appears in the
+                    //    redo log stream before the commit record for main
+                    //    transaction.  If main transaction commit record is
+                    //    written first and the server crashes before writing
+                    //    the indexing change record, we won't be able to
+                    //    re-execute indexing during crash recovery, and we will
+                    //    end up with an unindexed item.
+                    indexRedo.log();
+                }
             }
 
             // 4. Commit the main transaction in database.
@@ -4607,8 +4634,7 @@ public class Mailbox {
         Blob blob = null;
         boolean success = false;
         try {
-            AddDocumentRevision redoRecorder =
-                new AddDocumentRevision(mId, digest, rawData.length, 0);
+            AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, digest, rawData.length, 0);
 
             beginTransaction("addDocumentRevision", octxt, redoRecorder);
             redoRecorder.setAuthor(author);
@@ -4620,7 +4646,7 @@ public class Mailbox {
 
             ParsedDocument pd = new ParsedDocument(rawData, digest, doc.getFilename(), doc.getContentType(), getOperationTimestampMillis());
             doc.addRevision(author, pd);
-            mCurrentChange.setIndexedItem(doc, pd);
+            mCurrentChange.addIndexedItem(doc, pd);
 
             sm.link(blob, this, doc.getId(), doc.getLastRevision().getRevId(), volumeId);
             doc.purgeOldRevisions(1);  // purge all but 1 revisions.
@@ -4786,7 +4812,7 @@ public class Mailbox {
             else
                 throw MailServiceException.INVALID_TYPE(type);
 
-            mCurrentChange.setIndexedItem(doc, pd);
+            mCurrentChange.addIndexedItem(doc, pd);
             sm.link(blob, this, itemId, doc.getLastRevision().getRevId(), volumeId);
             success = true;
 
