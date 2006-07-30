@@ -42,21 +42,20 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class SetItemTags extends RedoableOp {
 
-	private int mId;
+	private int[] mIds;
 	private byte mType;
 	private int mFlags;
     private long mTags;
     private String mConstraint;
 
 	public SetItemTags() {
-		mId = UNKNOWN_ID;
 		mType = MailItem.TYPE_UNKNOWN;
         mConstraint = null;
 	}
 
-	public SetItemTags(int mailboxId, int itemId, byte itemType, int flags, long tags, TargetConstraint tcon) {
+	public SetItemTags(int mailboxId, int[] itemIds, byte itemType, int flags, long tags, TargetConstraint tcon) {
 		setMailboxId(mailboxId);
-		mId = itemId;
+		mIds = itemIds;
 		mType = itemType;
 		mFlags = flags;
         mTags = tags;
@@ -68,8 +67,11 @@ public class SetItemTags extends RedoableOp {
 	}
 
 	protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("id=");
-        sb.append(mId).append(", type=").append(mType);
+        StringBuffer sb = new StringBuffer("ids=[");
+        if (mIds != null)
+            for (int i = 0; i < mIds.length; i++)
+                sb.append(i == 0 ? "" : ", ").append(mIds[i]);
+        sb.append("], type=").append(mType);
         sb.append(", flags=[").append(mFlags);
         sb.append("], tags=[").append(mTags).append("]");
         if (mConstraint != null)
@@ -78,7 +80,7 @@ public class SetItemTags extends RedoableOp {
 	}
 
 	protected void serializeData(DataOutput out) throws IOException {
-		out.writeInt(mId);
+		out.writeInt(-1);
 		out.writeByte(mType);
         out.writeInt(mFlags);
         out.writeLong(mTags);
@@ -86,15 +88,26 @@ public class SetItemTags extends RedoableOp {
         out.writeBoolean(hasConstraint);
         if (hasConstraint)
             out.writeUTF(mConstraint);
+        out.writeInt(mIds == null ? 0 : mIds.length);
+        if (mIds != null)
+            for (int i = 0; i < mIds.length; i++)
+                out.writeInt(mIds[i]);
 	}
 
 	protected void deserializeData(DataInput in) throws IOException {
-		mId = in.readInt();
+        int id = in.readInt();
+        if (id > 0)
+            mIds = new int[] { id };
 		mType = in.readByte();
         mFlags = in.readInt();
         mTags = in.readLong();
         if (in.readBoolean())
             mConstraint = in.readUTF();
+        if (id <= 0) {
+            mIds = new int[in.readInt()];
+            for (int i = 0; i < mIds.length; i++)
+                mIds[i] = in.readInt();
+        }
 	}
 
 	public void redo() throws Exception {
@@ -109,6 +122,6 @@ public class SetItemTags extends RedoableOp {
                 mLog.warn(e);
             }
 
-		mbox.setTags(getOperationContext(), mId, mType, mFlags, mTags, tcon);
+		mbox.setTags(getOperationContext(), mIds, mType, mFlags, mTags, tcon);
 	}
 }

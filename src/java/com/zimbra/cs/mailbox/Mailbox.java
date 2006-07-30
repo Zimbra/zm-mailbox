@@ -1856,9 +1856,9 @@ public class Mailbox {
         boolean relaxType = false;
         for (int i = 0; i < ids.length; i++) {
             // special-case -1 as a signal to return null...
-            if (ids[i] == ID_AUTO_INCREMENT)
+            if (ids[i] == ID_AUTO_INCREMENT) {
                 items[i] = null;
-            else {
+            } else {
                 Integer key = new Integer(ids[i]);
                 MailItem item = getCachedItem(key, type);
                 // special-case virtual conversations
@@ -1869,8 +1869,9 @@ public class Mailbox {
                     if (msg != null) {
                         if (msg.getConversationId() == ids[i])
                             item = new VirtualConversation(this, msg);
-                    } else
+                    } else {
                         relaxType = true;
+                    }
                 }
                 items[i] = item;
                 if (item == null)
@@ -3384,30 +3385,38 @@ public class Mailbox {
     }
 
     public synchronized void alterTag(OperationContext octxt, int itemId, byte type, int tagId, boolean addTag) throws ServiceException {
-        alterTag(octxt, itemId, type, tagId, addTag, null);
+        alterTag(octxt, new int[] { itemId }, type, tagId, addTag, null);
     }
     public synchronized void alterTag(OperationContext octxt, int itemId, byte type, int tagId, boolean addTag, TargetConstraint tcon)
     throws ServiceException {
-        AlterItemTag redoRecorder = new AlterItemTag(mId, itemId, type, tagId, addTag, tcon);
+        alterTag(octxt, new int[] { itemId }, type, tagId, addTag, tcon);
+    }
+    public synchronized void alterTag(OperationContext octxt, int[] itemIds, byte type, int tagId, boolean addTag, TargetConstraint tcon)
+    throws ServiceException {
+        AlterItemTag redoRecorder = new AlterItemTag(mId, itemIds, type, tagId, addTag, tcon);
 
         boolean success = false;
         try {
             beginTransaction("alterTag", octxt, redoRecorder);
             setOperationTargetConstraint(tcon);
 
-            MailItem item = getItemById(itemId, type);
-            if (!(item instanceof Conversation))
-                if (!checkItemChangeID(item) && item instanceof Tag)
-                    throw MailServiceException.MODIFY_CONFLICT();
+            MailItem[] items = getItemById(itemIds, type);
+            for (MailItem item : items) {
+                if (!(item instanceof Conversation))
+                    if (!checkItemChangeID(item) && item instanceof Tag)
+                        throw MailServiceException.MODIFY_CONFLICT();
+            }
 
-            if (tagId == Flag.ID_FLAG_UNREAD)
-                item.alterUnread(addTag);
-            else {
-                Tag tag = (tagId < 0 ? getFlagById(tagId) : getTagById(tagId));
-                // don't let the user tag things as "has attachments" or "draft"
-                if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
-                    throw MailServiceException.CANNOT_TAG(tag, item);
-                item.alterTag(tag, addTag);
+            for (MailItem item : items) {
+                if (tagId == Flag.ID_FLAG_UNREAD) {
+                    item.alterUnread(addTag);
+                } else {
+                    Tag tag = (tagId < 0 ? getFlagById(tagId) : getTagById(tagId));
+                    // don't let the user tag things as "has attachments" or "draft"
+                    if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
+                        throw MailServiceException.CANNOT_TAG(tag, item);
+                    item.alterTag(tag, addTag);
+                }
             }
             success = true;
         } finally {
@@ -3426,31 +3435,39 @@ public class Mailbox {
     }
     public synchronized void setTags(OperationContext octxt, int itemId, byte type, int flags, long tags, TargetConstraint tcon)
     throws ServiceException {
+        setTags(octxt, new int[] { itemId }, type, flags, tags, tcon);
+    }
+    public synchronized void setTags(OperationContext octxt, int[] itemIds, byte type, int flags, long tags, TargetConstraint tcon)
+    throws ServiceException {
         if (flags == MailItem.FLAG_UNCHANGED && tags == MailItem.TAG_UNCHANGED)
             return;
 
-        SetItemTags redoRecorder = new SetItemTags(mId, itemId, type, flags, tags, tcon);
+        SetItemTags redoRecorder = new SetItemTags(mId, itemIds, type, flags, tags, tcon);
 
         boolean success = false;
         try {
             beginTransaction("setTags", octxt, redoRecorder);
             setOperationTargetConstraint(tcon);
 
-            MailItem item = getItemById(itemId, type);
-            checkItemChangeID(item);
-
-            if ((flags & MailItem.FLAG_UNCHANGED) != 0)
-                flags = item.getFlagBitmask();
-            if ((tags & MailItem.TAG_UNCHANGED) != 0)
-                tags = item.getTagBitmask();
-
-            // Special-case the unread flag.  It's passed in as a flag from the outside,
-            // but treated as a separate argument inside the mailbox.
-            boolean unread = (flags & Flag.BITMASK_UNREAD) > 0;
-            flags &= ~Flag.BITMASK_UNREAD;
-            item.setTags(flags, tags);
-            if (mUnreadFlag.canTag(item))
-                item.alterUnread(unread);
+            MailItem[] items = getItemById(itemIds, type);
+            for (MailItem item : items)
+                checkItemChangeID(item);
+    
+            for (MailItem item : items) {
+                int iflags = flags;  long itags = tags;
+                if ((iflags & MailItem.FLAG_UNCHANGED) != 0)
+                    iflags = item.getFlagBitmask();
+                if ((itags & MailItem.TAG_UNCHANGED) != 0)
+                    itags = item.getTagBitmask();
+    
+                // Special-case the unread flag.  It's passed in as a flag from the outside,
+                // but treated as a separate argument inside the mailbox.
+                boolean iunread = (iflags & Flag.BITMASK_UNREAD) > 0;
+                iflags &= ~Flag.BITMASK_UNREAD;
+                item.setTags(iflags, itags);
+                if (mUnreadFlag.canTag(item))
+                    item.alterUnread(iunread);
+            }
 
             success = true;
         } finally {

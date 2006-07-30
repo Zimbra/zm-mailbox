@@ -43,42 +43,38 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class AlterItemTag extends RedoableOp {
 
-	private int mId;
+	private int[] mIds;
     private byte mType;
 	private int mTagId;
 	private boolean mTagged;
     private String mConstraint;
 
 	public AlterItemTag() {
-		mId = UNKNOWN_ID;
         mType = MailItem.TYPE_UNKNOWN;
 		mTagId = UNKNOWN_ID;
 		mTagged = false;
         mConstraint = null;
 	}
 
-	public AlterItemTag(int mailboxId, int id, byte type, int tagId, boolean tagged, TargetConstraint tcon) {
+	public AlterItemTag(int mailboxId, int[] ids, byte type, int tagId, boolean tagged, TargetConstraint tcon) {
 		setMailboxId(mailboxId);
-		mId = id;
+		mIds = ids;
         mType = type;
 		mTagId = tagId;
 		mTagged = tagged;
         mConstraint = (tcon == null ? null : tcon.toString());
 	}
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.Redoable#getOperationCode()
-	 */
 	public int getOpCode() {
 		return OP_ALTER_ITEM_TAG;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.Redoable#getRedoContent()
-	 */
 	protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("id=");
-        sb.append(mId).append(", type=").append(mType);
+        StringBuffer sb = new StringBuffer("ids=[");
+        if (mIds != null)
+            for (int i = 0; i < mIds.length; i++)
+                sb.append(i == 0 ? "" : ", ").append(mIds[i]);
+        sb.append("], type=").append(mType);
         sb.append(", tag=").append(mTagId).append(", tagged=").append(mTagged);
         if (mConstraint != null)
             sb.append(", constraint=").append(mConstraint);
@@ -87,22 +83,33 @@ public class AlterItemTag extends RedoableOp {
 
 	protected void serializeData(DataOutput out) throws IOException {
         boolean hasConstraint = mConstraint != null;
-		out.writeInt(mId);
+		out.writeInt(-1);
         out.writeByte(mType);
 		out.writeInt(mTagId);
 		out.writeBoolean(mTagged);
         out.writeBoolean(hasConstraint);
         if (hasConstraint)
             out.writeUTF(mConstraint);
+        out.writeInt(mIds == null ? 0 : mIds.length);
+        if (mIds != null)
+            for (int i = 0; i < mIds.length; i++)
+                out.writeInt(mIds[i]);
 	}
 
 	protected void deserializeData(DataInput in) throws IOException {
-		mId = in.readInt();
+		int id = in.readInt();
+        if (id > 0)
+            mIds = new int[] { id };
         mType = in.readByte();
 		mTagId = in.readInt();
 		mTagged = in.readBoolean();
         if (in.readBoolean())
             mConstraint = in.readUTF();
+        if (id <= 0) {
+            mIds = new int[in.readInt()];
+            for (int i = 0; i < mIds.length; i++)
+                mIds[i] = in.readInt();
+        }
 	}
 
 	public void redo() throws Exception {
@@ -117,6 +124,6 @@ public class AlterItemTag extends RedoableOp {
                 mLog.warn(e);
             }
 
-		mbox.alterTag(getOperationContext(), mId, mType, mTagId, mTagged, tcon);
+		mbox.alterTag(getOperationContext(), mIds, mType, mTagId, mTagged, tcon);
 	}
 }

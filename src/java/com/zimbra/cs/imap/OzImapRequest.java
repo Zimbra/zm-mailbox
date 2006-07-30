@@ -346,6 +346,9 @@ class OzImapRequest {
         boolean parens = (peekChar() == '(');
         if (parens)
             skipChar('(');
+        else if (mOffset == content.length())
+            throw new ImapParseException(mTag, "missing STORE flag list");
+
         if (!parens || peekChar() != ')')
             while (mOffset < content.length()) {
                 if (peekChar() == '\\') {
@@ -362,6 +365,7 @@ class OzImapRequest {
                 if (parens && peekChar() == ')')      break;
                 else if (mOffset < content.length())  skipSpace();
             }
+
         if (parens)
             skipChar(')');
         return tags;

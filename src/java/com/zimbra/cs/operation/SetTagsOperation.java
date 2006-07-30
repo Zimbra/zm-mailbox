@@ -23,6 +23,8 @@
  */
 package com.zimbra.cs.operation;
 
+import java.util.List;
+
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -32,47 +34,60 @@ import com.zimbra.cs.session.Session;
 public class SetTagsOperation extends Operation {
 
     private static int LOAD = 15;
-    static {
-        Operation.Config c = loadConfig(SetTagsOperation.class);
-        if (c != null)
-            LOAD = c.mLoad;
-    }
+        static {
+            Operation.Config c = loadConfig(SetTagsOperation.class);
+            if (c != null)
+                LOAD = c.mLoad;
+        }
     
-    int mItemId;
-    byte mType;
-    int mFlags;
-    long mTags;
-    TargetConstraint mTcon;
+    private int[] mItemIds;
+    private byte mType;
+    private int mFlags;
+    private long mTags;
+    private TargetConstraint mTcon;
 
     public SetTagsOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
                 int itemId, byte type, int flags, long tags)
     {
         this(session, oc, mbox, req, itemId, type, flags, tags, null);
     }
-    
-    
-    
+
     public SetTagsOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
                 int itemId, byte type, int flags, long tags, TargetConstraint tcon)
     {
         super(session, oc, mbox, req, LOAD);
         
-        mItemId = itemId;
         mType = type;
         mFlags = flags;
         mTags = tags;
         mTcon = tcon;
+        mItemIds = new int[] { itemId };
+    }
+
+    public SetTagsOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
+                List<Integer> itemIds, byte type, int flags, long tags, TargetConstraint tcon)
+    {
+        super(session, oc, mbox, req, LOAD);
+        
+        mType = type;
+        mFlags = flags;
+        mTags = tags;
+        mTcon = tcon;
+        mItemIds = new int[itemIds.size()];
+        int i = 0;
+        for (int id : itemIds)
+            mItemIds[i++] = id;
     }
     
     protected void callback() throws ServiceException {
-        getMailbox().setTags(getOpCtxt(), mItemId, mType, mFlags, mTags, mTcon);
+        getMailbox().setTags(getOpCtxt(), mItemIds, mType, mFlags, mTags, mTcon);
     }
     
     
     public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
 
-        toRet.append(" id=").append(mItemId).append(" type=").append(mType).append(" flags=").append(mFlags).append(" tags=").append(mTags);
+        toRet.append(" id=").append(mItemIds).append(" type=").append(mType).append(" flags=").append(mFlags).append(" tags=").append(mTags);
         
         return toRet.toString();
     }

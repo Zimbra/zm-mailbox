@@ -1575,10 +1575,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
         }
         boolean allPresent = byUID || !i4set.contains(null);
+        i4set.remove(null);
 
         for (ImapMessage i4msg : i4set) {
-            if (i4msg == null)
-                continue;
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ByteArrayOutputStream baosDebug = ZimbraLog.imap.isDebugEnabled() ? new ByteArrayOutputStream() : null;
 	        PrintStream result = new PrintStream(new ByteUtil.TeeOutputStream(baos, baosDebug), false, "utf-8");
@@ -1587,12 +1586,12 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 boolean empty = true;
                 byte[] raw = null;
                 MailItem item = null;
+                MimeMessage mm = null;
                 if (!fullMessage.isEmpty() || !parts.isEmpty() || (attributes & ~FETCH_FROM_CACHE) != 0) {
                     GetItemOperation op = new GetItemOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType());
                     op.schedule();
                     item = op.getItem();
                 }
-                MimeMessage mm = null;
 
                 result.print("* " + i4msg.sequence + " FETCH (");
                 if ((attributes & FETCH_UID) != 0) {
@@ -1702,6 +1701,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             i4set = mSession.getFolder().getSubsequence(sequenceSet, byUID);
         }
         boolean allPresent = byUID || !i4set.contains(null);
+        i4set.remove(null);
 
         try {
             // get set of relevant tags
@@ -1710,60 +1710,71 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 i4flags = findOrCreateTags(flagNames, newTags);
             }
 
+            // if we're doing a STORE FLAGS (i.e. replace), precompute the new set of flags for all the affected messages
+            long tags = 0;  int flags = Flag.BITMASK_UNREAD;  short sflags = 0;
+            if (operation == STORE_REPLACE) {
+                for (ImapFlag i4flag : i4flags) {
+                    if (Tag.validateId(i4flag.mId))
+                        tags = (i4flag.mPositive ? tags | i4flag.mBitmask : tags & ~i4flag.mBitmask);
+                    else if (!i4flag.mPermanent)
+                        sflags = (byte) (i4flag.mPositive ? sflags | i4flag.mBitmask : sflags & ~i4flag.mBitmask);
+                    else
+                        flags = (int) (i4flag.mPositive ? flags | i4flag.mBitmask : flags & ~i4flag.mBitmask);
+                }
+            }
+
             long checkpoint = System.currentTimeMillis();
-            for (ImapMessage i4msg : i4set) {
-                if (i4msg == null)
+
+            int i = 0;
+            List<ImapMessage> i4list = new ArrayList<ImapMessage>(AlterTagOperation.SUGGESTED_BATCH_SIZE);
+            List<Integer> idlist = new ArrayList<Integer>(AlterTagOperation.SUGGESTED_BATCH_SIZE);
+            for (ImapMessage msg : i4set) {
+                // we're sending 'em off in batches of 100
+                i4list.add(msg);  idlist.add(msg.msgId);
+                if (++i % AlterTagOperation.SUGGESTED_BATCH_SIZE != 0 && i != i4set.size())
                     continue;
 
-                if (!i4flags.isEmpty() || operation == STORE_REPLACE) {
-                    // FIXME: for replace, changed tag/flag mask could be precomputed outside the i4set loop
-                    short sflags = (operation != STORE_REPLACE ? i4msg.sflags : (short) (i4msg.sflags & ~ImapMessage.MUTABLE_SESSION_FLAGS));
-                    int  flags   = (operation != STORE_REPLACE ? i4msg.flags : Flag.BITMASK_UNREAD | (i4msg.flags & ~ImapMessage.IMAP_FLAGS));
-                    long tags    = (operation != STORE_REPLACE ? i4msg.tags : 0);
-                    for (ImapFlag i4flag : i4flags) {
-                        if (Tag.validateId(i4flag.mId))
-                            tags = (operation == STORE_REMOVE ^ !i4flag.mPositive ? tags & ~i4flag.mBitmask : tags | i4flag.mBitmask);
-                        else if (!i4flag.mPermanent)
-                            sflags = (byte) (operation == STORE_REMOVE ^ !i4flag.mPositive ? sflags & ~i4flag.mBitmask : sflags | i4flag.mBitmask);
-                        else
-                            flags = (int) (operation == STORE_REMOVE ^ !i4flag.mPositive ? flags & ~i4flag.mBitmask : flags | i4flag.mBitmask);
-                    }
-                    boolean persist = tags != i4msg.tags || flags != i4msg.flags;
+                try {
+                    // if it was a STORE [+-]?FLAGS.SILENT, temporarily disable notifications
+                    if (silent)
+                        mSession.getFolder().disableNotifications();
 
-                    synchronized (mMailbox) {
-                        if (persist || sflags != i4msg.sflags)
-                            try {
-                                // if it was a STORE [+-]?FLAGS.SILENT, temporarily disable notifications
-                                if (silent)
-                                    mSession.getFolder().disableNotifications();
-
-                                // actually alter the item's flags
-                                if (persist) {
-                                    SetTagsOperation op = new SetTagsOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType(), flags, tags);
-                                    op.schedule();
-                                }
-
-                                // i4msg's permanent flags/tags will be updated via notification
-                                i4msg.setSessionFlags(sflags);
-                            } catch (MailServiceException.NoSuchItemException nsie) {
-                                i4msg.setExpunged(true);
-                            } finally {
-                                // if it was a STORE [+-]?FLAGS.SILENT, reenable notifications
-                                mSession.getFolder().enableNotifications();
+                    if (operation == STORE_REPLACE) {
+                        // replace real tags and flags on all messages
+                        new SetTagsOperation(mSession, getContext(), mMailbox, Requester.IMAP, idlist, MailItem.TYPE_UNKNOWN, flags, tags, null).schedule();
+                        // replace session tags on all messages
+                        for (ImapMessage i4msg : i4list)
+                            i4msg.setSessionFlags(sflags);
+                    } else if (!i4flags.isEmpty()) {
+                        for (ImapFlag i4flag : i4flags) {
+                            boolean add = operation == STORE_ADD ^ !i4flag.mPositive;
+                            if (i4flag.mPermanent) {
+                                // real tag; do a batch update to the DB
+                                new AlterTagOperation(mSession, getContext(), mMailbox, Requester.IMAP, idlist, MailItem.TYPE_UNKNOWN, i4flag.mId, add, null).schedule();
+                            } else {
+                                // session tag; update one-by-one in memory only
+                                for (ImapMessage i4msg : i4list)
+                                    i4msg.setSessionFlags((short) (add ? i4msg.sflags | i4flag.mBitmask : i4msg.sflags & ~i4flag.mBitmask));
                             }
+                        }
                     }
+                } finally {
+                    // if it was a STORE [+-]?FLAGS.SILENT, reenable notifications
+                    mSession.getFolder().enableNotifications();
                 }
 
                 if (!silent) {
-                    mSession.getFolder().undirtyMessage(i4msg);
-                    StringBuffer ntfn = new StringBuffer();
-                    ntfn.append(i4msg.sequence).append(" FETCH (").append(i4msg.getFlags(mSession));
-                    // 6.4.8: "However, server implementations MUST implicitly include
-                    //         the UID message data item as part of any FETCH response
-                    //         caused by a UID command..."
-                    if (byUID)
-                        ntfn.append(" UID ").append(i4msg.imapUid);
-                    sendUntagged(ntfn.append(')').toString());
+                    for (ImapMessage i4msg : i4list) {
+                        mSession.getFolder().undirtyMessage(i4msg);
+                        StringBuffer ntfn = new StringBuffer();
+                        ntfn.append(i4msg.sequence).append(" FETCH (").append(i4msg.getFlags(mSession));
+                        // 6.4.8: "However, server implementations MUST implicitly include
+                        //         the UID message data item as part of any FETCH response
+                        //         caused by a UID command..."
+                        if (byUID)
+                            ntfn.append(" UID ").append(i4msg.imapUid);
+                        sendUntagged(ntfn.append(')').toString());
+                    }
                 } else {
                     // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                     long now = System.currentTimeMillis();
@@ -1838,7 +1849,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 i4msg.setGhost(true);
                 i4list.add(i4msg);
 
-                // we're sending 'em off in batches of 100
+                // we're sending 'em off in batches of 50
                 if (++i % ImapCopyOperation.SUGGESTED_BATCH_SIZE != 0 && i != i4set.size())
                     continue;
 
