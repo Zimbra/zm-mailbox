@@ -190,7 +190,6 @@ class ImapFolder implements Iterable<ImapMessage> {
             if (mFirstUnread == -1 && (i4msg.flags & Flag.BITMASK_UNREAD) != 0)
                 mFirstUnread = i4msg.sequence;
             i4msg.setAdded(false);
-            i4msg.setGhost(false);
         }
 
         mLastSize = mSequence.size();
@@ -328,12 +327,9 @@ class ImapFolder implements Iterable<ImapMessage> {
         mDirtyMessages.remove(i4msg);
     }
     void unghost(ImapMessage i4msg, int msgId) {
-        if (i4msg.isGhost()) {
-            mUIDs.remove(new Integer(-i4msg.msgId));
-            i4msg.msgId = msgId;
-            mUIDs.put(new Integer(-i4msg.msgId), i4msg);
-            i4msg.setGhost(false);
-        }
+        mUIDs.remove(new Integer(-i4msg.msgId));
+        i4msg.msgId = msgId;
+        mUIDs.put(new Integer(-i4msg.msgId), i4msg);
     }
     
     boolean checkpointSize()  { int last = mLastSize;  return last != (mLastSize = getSize()); }

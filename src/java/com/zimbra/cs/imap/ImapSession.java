@@ -273,12 +273,14 @@ public class ImapSession extends Session {
         if (!pns.hasNotifications())
             return;
 
-        if (pns.deleted != null)
-            if (!handleDeletes(pns.deleted))
-                return;
+        // technically, the order to proceed is deleted -> created -> modified,
+        //   but this should still work properly in the general case and do the right thing for COPY
         AddedItems added = (mSelectedFolder == null ? null : new AddedItems());
         if (pns.created != null)
             if (!handleCreates(pns.created, added))
+                return;
+        if (pns.deleted != null)
+            if (!handleDeletes(pns.deleted))
                 return;
         if (pns.modified != null)
             if (!handleModifies(pns.modified, added))
@@ -362,19 +364,19 @@ public class ImapSession extends Session {
     private boolean handleCreates(Map<Integer, MailItem> created, AddedItems newItems) {
         boolean selected = mSelectedFolder != null;
         for (MailItem item : created.values()) {
-            if (item instanceof Tag)
+            if (item instanceof Tag) {
                 cacheTag((Tag) item);
-            else if (!selected || item == null || item.getId() <= 0)
+            } else if (!selected || item == null || item.getId() <= 0) {
                 continue;
-            else if (!(item instanceof Message || item instanceof Contact))
+            } else if (!(item instanceof Message || item instanceof Contact)) {
                 continue;
-            else if (item.getFolderId() == mSelectedFolder.getId()) {
+            } else if (item.getFolderId() == mSelectedFolder.getId()) {
                 int msgId = item.getId();
                 // make sure this message hasn't already been detected in the folder
                 if (mSelectedFolder.getById(msgId) != null)
                     continue;
                 ImapMessage i4msg = mSelectedFolder.getByImapId(item.getImapUid());
-                if (i4msg != null && i4msg.isGhost())
+                if (i4msg != null && i4msg.msgId != item.getId())
                     mSelectedFolder.unghost(i4msg, item.getId());
                 else
                     newItems.add(item);
@@ -430,11 +432,10 @@ public class ImapSession extends Session {
                         if (debug)  ZimbraLog.imap.debug("  ** moved (ntfn): " + msg.getId());
                     }
                 } else if (!inFolder && !virtual) {
-                    if (!i4msg.isGhost())
-                        i4msg.setExpunged(true);
-                } else if ((chg.why & (Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) != 0)
+                    i4msg.setExpunged(true);
+                } else if ((chg.why & (Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) != 0) {
                     i4msg.setPermanentFlags(msg.getFlagBitmask(), msg.getTagBitmask());
-                else if ((chg.why & Change.MODIFIED_IMAP_UID) != 0) {
+                } else if ((chg.why & Change.MODIFIED_IMAP_UID) != 0) {
                     // if the IMAP uid changed, need to bump it to the back of the sequence!
                     i4msg.setExpunged(true);
                     if (!virtual)

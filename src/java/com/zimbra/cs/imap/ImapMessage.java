@@ -67,14 +67,13 @@ public class ImapMessage implements Comparable<ImapMessage> {
     static final short FLAG_IS_CONTACT   = 0x0010;
     static final short FLAG_ADDED        = 0x0100;
     static final short FLAG_EXPUNGED     = 0x0200;
-    static final short FLAG_GHOST        = 0x0400;
 
     static final int IMAP_FLAGS = Flag.BITMASK_UNREAD | Flag.BITMASK_FLAGGED | Flag.BITMASK_DELETED |
                                   Flag.BITMASK_DRAFT  | Flag.BITMASK_REPLIED | Flag.BITMASK_FORWARDED |
                                   Flag.BITMASK_NOTIFIED;
     static final short MUTABLE_SESSION_FLAGS = FLAG_SPAM | FLAG_NONSPAM | FLAG_JUNKRECORDED;
-    static final short SESSION_FLAGS = FLAG_ADDED | FLAG_EXPUNGED | FLAG_IS_CONTACT |
-                                       FLAG_GHOST | FLAG_RECENT   | MUTABLE_SESSION_FLAGS;
+    static final short SESSION_FLAGS = FLAG_ADDED  | FLAG_EXPUNGED | FLAG_IS_CONTACT |
+                                       FLAG_RECENT | MUTABLE_SESSION_FLAGS;
 
     int   sequence;
     int   msgId;
@@ -114,11 +113,9 @@ public class ImapMessage implements Comparable<ImapMessage> {
 
     boolean isExpunged()  { return (sflags & FLAG_EXPUNGED) != 0; }
     boolean isAdded()     { return (sflags & FLAG_ADDED) != 0; }
-    boolean isGhost()     { return (sflags & FLAG_GHOST) != 0; }
 
     void setExpunged(boolean expunged)  { sflags = (short) (expunged ? sflags | FLAG_EXPUNGED : sflags & ~FLAG_EXPUNGED); }
     void setAdded(boolean added)        { sflags = (short) (added ? sflags | FLAG_ADDED : sflags & ~FLAG_ADDED); }
-    void setGhost(boolean ghost)        { sflags = (short) (ghost ? sflags | FLAG_GHOST : sflags & ~FLAG_GHOST); }
 
     private static final byte[] EMPTY_CONTENT = new byte[0];
 

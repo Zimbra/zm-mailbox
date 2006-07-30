@@ -1846,10 +1846,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             int i = 0;
             List<ImapMessage> i4list = new ArrayList<ImapMessage>(ImapCopyOperation.SUGGESTED_BATCH_SIZE);
             for (ImapMessage i4msg : i4set) {
-                i4msg.setGhost(true);
-                i4list.add(i4msg);
-
                 // we're sending 'em off in batches of 50
+                i4list.add(i4msg);
                 if (++i % ImapCopyOperation.SUGGESTED_BATCH_SIZE != 0 && i != i4set.size())
                     continue;
 
@@ -1867,8 +1865,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     sendIdleUntagged();  checkpoint = now;
                 }
 
-                for (ImapMessage i4processed : i4list)
-                    i4processed.setGhost(false);
                 i4list.clear();
             }
 
