@@ -25,7 +25,7 @@ public class ImapCopyOperation extends Operation {
 
     static final int SUGGESTED_BATCH_SIZE = 50;
 
-    List<Integer> mItemIds;
+    int[] mItemIds;
     byte mType;
     int mFolderId;
 
@@ -38,7 +38,10 @@ public class ImapCopyOperation extends Operation {
         super(session, oc, mbox, req, LOAD * itemIds.size());
         mFolderId = folderId;
         mType = type;
-        mItemIds = itemIds;
+        mItemIds = new int[itemIds.size()];
+        int i = 0;
+        for (int id : itemIds)
+            mItemIds[i++] = id;
     }
 
     public ImapCopyOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
@@ -48,10 +51,11 @@ public class ImapCopyOperation extends Operation {
 
         mFolderId = folderId;
         mType = MailItem.TYPE_UNKNOWN;
-        mItemIds = new ArrayList<Integer>();
+        mItemIds = new int[i4set.size()];
+        int i = 0;
         for (ImapMessage i4msg : i4set) {
-            mItemIds.add(i4msg.msgId);
-            if (mItemIds.size() == 1)
+            mItemIds[i++] = i4msg.msgId;
+            if (i == 1)
                 mType = i4msg.getType();
             else if (i4msg.getType() != mType)
                 mType = MailItem.TYPE_UNKNOWN;

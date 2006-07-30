@@ -138,8 +138,13 @@ public class ImapCopyItem extends RedoableOp {
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = Mailbox.getMailboxById(mboxId);
+
+        int i = 0, itemIds[] = new int[mDestIds.size()];
+        for (int id : mDestIds.keySet())
+            itemIds[i] = id;
+
         try {
-            mbox.imapCopy(getOperationContext(), new ArrayList<Integer>(mDestIds.keySet()), mType, mDestFolderId);
+            mbox.imapCopy(getOperationContext(), itemIds, mType, mDestFolderId);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Item is already in mailbox " + mboxId);

@@ -3513,9 +3513,13 @@ public class Mailbox {
         }
     }
 
-    public synchronized List<Pair<MailItem,MailItem>> imapCopy(OperationContext octxt, List<Integer> itemIds, byte type, int folderId) throws IOException, ServiceException {
+    public synchronized List<Pair<MailItem,MailItem>> imapCopy(OperationContext octxt, int[] itemIds, byte type, int folderId) throws IOException, ServiceException {
         // this is an IMAP command, so we'd better be tracking IMAP changes by now...
         beginTrackingImap(octxt);
+
+        for (int id : itemIds)
+            if (id <= 0)
+                throw MailItem.noSuchItem(id, type);
 
         short volumeId = Volume.getCurrentMessageVolume().getId();
         ImapCopyItem redoRecorder = new ImapCopyItem(mId, type, folderId, volumeId);
@@ -3528,14 +3532,7 @@ public class Mailbox {
             Folder target = getFolderById(folderId);
 
             // fetch the items to copy and make sure the caller is up-to-date on change IDs
-            int ids[] = new int[itemIds.size()], i = 0;
-            for (Integer id : itemIds) {
-                int iid = (id == null ? -1 : id);
-                if (iid <= 0)
-                    throw MailItem.noSuchItem(iid, type);
-                ids[i++] = iid;
-            }
-            MailItem[] items = getItemById(ids, type);
+            MailItem[] items = getItemById(itemIds, type);
             for (MailItem item : items)
                 checkItemChangeID(item);
 
@@ -3543,10 +3540,10 @@ public class Mailbox {
             LinkedList<Integer> newIds = null, newImapIds = null;
             if (redoPlayer == null) {
                 newIds = new LinkedList<Integer>();
-                for (i = 0; i < itemIds.size(); i++)
+                for (int i = 0; i < itemIds.length; i++)
                     newIds.add(getNextItemId(ID_AUTO_INCREMENT));
                 newImapIds = new LinkedList<Integer>();
-                for (i = 0; i < itemIds.size(); i++)
+                for (int i = 0; i < itemIds.length; i++)
                     newImapIds.add(getNextItemId(ID_AUTO_INCREMENT));
             }
 
