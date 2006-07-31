@@ -30,6 +30,7 @@ import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.util.ArrayUtil;
 
 public class SetTagsOperation extends Operation {
 
@@ -67,7 +68,7 @@ public class SetTagsOperation extends Operation {
     public SetTagsOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
                 List<Integer> itemIds, byte type, int flags, long tags, TargetConstraint tcon)
     {
-        super(session, oc, mbox, req, LOAD);
+        super(session, oc, mbox, req, LOAD * itemIds.size());
         
         mType = type;
         mFlags = flags;
@@ -86,9 +87,7 @@ public class SetTagsOperation extends Operation {
     
     public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
-
-        toRet.append(" id=").append(mItemIds).append(" type=").append(mType).append(" flags=").append(mFlags).append(" tags=").append(mTags);
-        
+        toRet.append(" id=").append(ArrayUtil.toString(mItemIds)).append(" type=").append(mType).append(" flags=").append(mFlags).append(" tags=").append(mTags);
         return toRet.toString();
     }
 }

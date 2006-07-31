@@ -27,7 +27,6 @@ package com.zimbra.cs.redolog.op;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 

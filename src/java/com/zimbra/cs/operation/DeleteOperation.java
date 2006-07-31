@@ -23,50 +23,64 @@
  */
 package com.zimbra.cs.operation;
 
+import java.util.List;
+
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.util.ArrayUtil;
 
 
 public class DeleteOperation extends Operation {
     
     private static int LOAD = 15;
-    static {
-        Operation.Config c = loadConfig(DeleteOperation.class);
-        if (c != null)
-            LOAD = c.mLoad;
-    }
-    
-    int mItemId;
-    byte mType;
-    TargetConstraint mTcon;
-    
-    public DeleteOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-                int itemId, byte type, TargetConstraint tcon) {
-        super(session, oc, mbox, req, LOAD);
-        
-        mItemId = itemId;
-        mType = type;
-        mTcon = tcon;
-    }
-    
+        static {
+            Operation.Config c = loadConfig(DeleteOperation.class);
+            if (c != null)
+                LOAD = c.mLoad;
+        }
+
+    public static final int SUGGESTED_BATCH_SIZE = 30;
+
+    private int[] mItemIds;
+    private byte mType;
+    private TargetConstraint mTcon;
+
     public DeleteOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
                 int itemId, byte type) {
         this(session, oc, mbox, req, itemId, type, null);
     }
-    
-    
-    protected void callback() throws ServiceException {
-        this.getMailbox().delete(this.getOpCtxt(), mItemId, mType, mTcon);
+
+    public DeleteOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
+                int itemId, byte type, TargetConstraint tcon) {
+        super(session, oc, mbox, req, LOAD);
+
+        mType = type;
+        mTcon = tcon;
+        mItemIds = new int[] { itemId };
     }
-    
+
+    public DeleteOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
+                List<Integer> itemIds, byte type, TargetConstraint tcon) {
+        super(session, oc, mbox, req, LOAD * itemIds.size());
+
+        mType = type;
+        mTcon = tcon;
+        mItemIds = new int[itemIds.size()];
+        int i = 0;
+        for (int id : itemIds)
+            mItemIds[i++] = id;
+    }
+
+    protected void callback() throws ServiceException {
+        getMailbox().delete(getOpCtxt(), mItemIds, mType, mTcon);
+    }
+
     public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
-        
-        toRet.append(" id=").append(mItemId).append(" type=").append(mType);
-        
+        toRet.append(" id=").append(ArrayUtil.toString(mItemIds)).append(" type=").append(mType);
         return toRet.toString();
     }
 }

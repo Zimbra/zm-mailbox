@@ -1408,25 +1408,40 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         synchronized (mMailbox) {
             i4set = (sequenceSet == null ? null : i4folder.getSubsequence(sequenceSet, true));
         }
+        List<Integer> ids = new ArrayList<Integer>(DeleteOperation.SUGGESTED_BATCH_SIZE);
+
         long checkpoint = System.currentTimeMillis();
         for (int i = 1, max = i4folder.getSize(); i <= max; i++) {
             ImapMessage i4msg = i4folder.getBySequence(i);
             if (i4msg != null && !i4msg.isExpunged() && (i4msg.flags & Flag.BITMASK_DELETED) > 0)
-                if (i4set == null || i4set.contains(i4msg)) {
-                    // message tagged for deletion -- delete now
-                    // FIXME: should handle moves separately
-                    // FIXME: it'd be nice to have a bulk-delete Mailbox operation
-                    try {
-                        ZimbraLog.imap.debug("  ** deleting: " + i4msg.msgId);
-                        DeleteOperation op = new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4msg.msgId, i4msg.getType());
-                        op.schedule();
-                    } catch (MailServiceException.NoSuchItemException nsie) { }
-                    // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
-                    long now = System.currentTimeMillis();
-                    if (now - checkpoint > MAXIMUM_IDLE_PROCESSING_MILLIS) {
-                        sendIdleUntagged();  checkpoint = now;
+                if (i4set == null || i4set.contains(i4msg))
+                    ids.add(i4msg.msgId);
+
+            if (ids.size() >= (i == max ? 1 : DeleteOperation.SUGGESTED_BATCH_SIZE)) {
+                try {
+                    ZimbraLog.imap.debug("  ** deleting: " + ids);
+                    new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP, ids, MailItem.TYPE_UNKNOWN, null).schedule();
+                } catch (MailServiceException.NoSuchItemException e) {
+                    // something went wrong, so delete *this* batch one at a time
+                    for (int id : ids) {
+                        try {
+                            ZimbraLog.imap.debug("  ** fallback deleting: " + id);
+                            new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP, id, MailItem.TYPE_UNKNOWN, null).schedule();
+                        } catch (MailServiceException.NoSuchItemException nsie) {
+                            i4msg = i4folder.getById(id);
+                            if (i4msg != null)
+                                i4msg.setExpunged(true);
+                        }
                     }
                 }
+                ids.clear();
+
+                // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
+                long now = System.currentTimeMillis();
+                if (now - checkpoint > MAXIMUM_IDLE_PROCESSING_MILLIS) {
+                    sendIdleUntagged();  checkpoint = now;
+                }
+            }
         }
     }
 

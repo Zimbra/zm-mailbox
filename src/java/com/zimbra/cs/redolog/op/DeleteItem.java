@@ -37,61 +37,65 @@ import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ArrayUtil;
 
 /**
  * @author jhahm
  */
 public class DeleteItem extends RedoableOp {
 
-	private int mId;
+	private int[] mIds;
     private byte mType;
     private String mConstraint;
 
 	public DeleteItem() {
-		mId = UNKNOWN_ID;
         mType = MailItem.TYPE_UNKNOWN;
         mConstraint = null;
 	}
 
-	public DeleteItem(int mailboxId, int id, byte type, TargetConstraint tcon) {
+	public DeleteItem(int mailboxId, int[] ids, byte type, TargetConstraint tcon) {
 		setMailboxId(mailboxId);
-		mId = id;
+		mIds = ids;
         mType = type;
         mConstraint = (tcon == null ? null : tcon.toString());
 	}
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.Redoable#getOperationCode()
-	 */
 	public int getOpCode() {
 		return OP_DELETE_ITEM;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.Redoable#getRedoContent()
-	 */
 	protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
-        sb.append(mId).append(", type=").append(mType);
+        sb.append(ArrayUtil.toString(mIds)).append(", type=").append(mType);
         if (mConstraint != null)
             sb.append(", constraint=").append(mConstraint);
         return sb.toString();
 	}
 
 	protected void serializeData(DataOutput out) throws IOException {
-		out.writeInt(mId);
+		out.writeInt(-1);
         out.writeByte(mType);
         boolean hasConstraint = mConstraint != null;
         out.writeBoolean(hasConstraint);
         if (hasConstraint)
             out.writeUTF(mConstraint);
+        out.writeInt(mIds.length);
+        for (int id : mIds)
+            out.writeInt(id);
 	}
 
 	protected void deserializeData(DataInput in) throws IOException {
-		mId = in.readInt();
+		int id = in.readInt();
+        if (id > 0)
+            mIds = new int[] { id };
         mType = in.readByte();
         if (in.readBoolean())
             mConstraint = in.readUTF();
+        if (id <= 0) {
+            mIds = new int[in.readInt()];
+            for (int i = 0; i < mIds.length; i++)
+                mIds[i] = in.readInt();
+        }
 	}
 
 	public void redo() throws Exception {
@@ -107,10 +111,10 @@ public class DeleteItem extends RedoableOp {
             }
 
         try {
-    		mbox.delete(getOperationContext(), mId, mType, tcon);
+    		mbox.delete(getOperationContext(), mIds, mType, tcon);
         } catch (MailServiceException.NoSuchItemException e) {
             if (mLog.isInfoEnabled())
-                mLog.info("Item " + mId + " was already deleted from mailbox " + mboxId);
+                mLog.info("Item " + mIds + " was already deleted from mailbox " + mboxId);
         }
 	}
 }

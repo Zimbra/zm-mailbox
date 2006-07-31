@@ -36,6 +36,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.ArrayUtil;
 
 
 /**
@@ -70,11 +71,8 @@ public class AlterItemTag extends RedoableOp {
 	}
 
 	protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("ids=[");
-        if (mIds != null)
-            for (int i = 0; i < mIds.length; i++)
-                sb.append(i == 0 ? "" : ", ").append(mIds[i]);
-        sb.append("], type=").append(mType);
+        StringBuffer sb = new StringBuffer("ids=");
+        sb.append(ArrayUtil.toString(mIds)).append(", type=").append(mType);
         sb.append(", tag=").append(mTagId).append(", tagged=").append(mTagged);
         if (mConstraint != null)
             sb.append(", constraint=").append(mConstraint);

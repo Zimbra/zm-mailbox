@@ -3408,6 +3408,8 @@ public class Mailbox {
             }
 
             for (MailItem item : items) {
+                if (item == null)
+                    continue;
                 if (tagId == Flag.ID_FLAG_UNREAD) {
                     item.alterUnread(addTag);
                 } else {
@@ -3452,8 +3454,11 @@ public class Mailbox {
             MailItem[] items = getItemById(itemIds, type);
             for (MailItem item : items)
                 checkItemChangeID(item);
-    
+
             for (MailItem item : items) {
+                if (item == null)
+                    continue;
+
                 int iflags = flags;  long itags = tags;
                 if ((iflags & MailItem.FLAG_UNCHANGED) != 0)
                     iflags = item.getFlagBitmask();
@@ -3600,24 +3605,30 @@ public class Mailbox {
     }
 
     public synchronized void delete(OperationContext octxt, int itemId, byte type) throws ServiceException {
-        delete(octxt, itemId, type, null);
+        delete(octxt, new int[] { itemId }, type, null);
     }
     public synchronized void delete(OperationContext octxt, MailItem item, TargetConstraint tcon) throws ServiceException {
-        delete(octxt, item.getId(), item.getType(), tcon);
+        delete(octxt, new int[] { item.getId() }, item.getType(), tcon);
     }
     public synchronized void delete(OperationContext octxt, int itemId, byte type, TargetConstraint tcon) throws ServiceException {
-        DeleteItem redoRecorder = new DeleteItem(mId, itemId, type, tcon);
+        delete(octxt, new int[] { itemId }, type, tcon);
+    }
+    public synchronized void delete(OperationContext octxt, int[] itemIds, byte type, TargetConstraint tcon) throws ServiceException {
+        DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
 
         boolean success = false;
         try {
             beginTransaction("delete", octxt, redoRecorder);
             setOperationTargetConstraint(tcon);
 
-            MailItem item = getItemById(itemId, type);
-            if (!checkItemChangeID(item) && item instanceof Tag)
-                throw MailServiceException.MODIFY_CONFLICT();
+            MailItem[] items = getItemById(itemIds, type);
+            for (MailItem item : items)
+                if (!checkItemChangeID(item) && item instanceof Tag)
+                    throw MailServiceException.MODIFY_CONFLICT();
 
-            item.delete();
+            for (MailItem item : items)
+                if (item != null)
+                    item.delete();
             success = true;
         } finally {
             endTransaction(success);
