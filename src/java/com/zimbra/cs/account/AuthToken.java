@@ -73,7 +73,7 @@ public class AuthToken {
 	private String mEncoded;
     private boolean mIsAdmin;
     private boolean mIsDomainAdmin;    
-	private static AuthTokenKey mTempKey;
+//	private static AuthTokenKey mTempKey;
     
     public String toString() {
         return "AuthToken(acct="+mAccountId+" admin="+mAdminAccountId+" exp="
@@ -111,7 +111,7 @@ public class AuthToken {
         return at;
     }
     
-    public static AuthToken getZimbraAdminAuthToken() throws AuthTokenException, ServiceException {
+    public static AuthToken getZimbraAdminAuthToken() throws ServiceException {
         Account acct = Provisioning.getInstance().get(AccountBy.adminName, LC.zimbra_ldap_user.value());
         return new AuthToken(acct);
     }
@@ -166,11 +166,11 @@ public class AuthToken {
 	    this(acct, expires, false, null);
 	}
 
-    public AuthToken(Account acct) throws AccountServiceException {
+    public AuthToken(Account acct) {
         this(acct, null);
     }
 
-    public AuthToken(Account acct, Account adminAcct) throws AccountServiceException {
+    public AuthToken(Account acct, Account adminAcct) {
         mAccountId = acct.getId();
         mEncoded = null;
         mAdminAccountId = null;
@@ -258,7 +258,8 @@ public class AuthToken {
 	}
 	
 	static class ByteKey implements SecretKey {
-		private byte[] mKey;
+        private static final long serialVersionUID = -7237091299729195624L;
+        private byte[] mKey;
 		
 		ByteKey(byte[] key) {
 			mKey = key.clone();
@@ -284,14 +285,14 @@ public class AuthToken {
         long start = System.currentTimeMillis();
         String encoded = at.getEncoded();
         for (int i = 0; i < 1000; i++) {
-            AuthToken foo = new AuthToken(encoded);
+            new AuthToken(encoded);
         }
         long finish = System.currentTimeMillis();
         System.out.println(finish-start);
         
         start = System.currentTimeMillis();
         for (int i = 0; i < 1000; i++) {
-            AuthToken foo = getAuthToken(encoded);
+            getAuthToken(encoded);
         }
         finish = System.currentTimeMillis();
         System.out.println(finish-start);
