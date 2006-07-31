@@ -477,7 +477,7 @@ public class OzConnection {
                 clear();
                 throw new IOException("write queue size " + cc + " too large (" + mCapacityMax + " allowed)");
             }
-            mLog.info("add: write queue size " + mCurrentCapacity); // TODO: should be debug
+            //mLog.info("add: write queue size " + mCurrentCapacity); // TODO: should be debug
         }
         
         void addFirst(ByteBuffer bb) throws IOException {
@@ -488,13 +488,13 @@ public class OzConnection {
                 clear();
                 throw new IOException("write queue size " + cc + " too large (" + mCapacityMax + " allowed)");
             }
-            mLog.info("addFirst: write queue size " + mCurrentCapacity); // TODO: should be debug
+            //mLog.info("addFirst: write queue size " + mCurrentCapacity); // TODO: should be debug
         }
 
         ByteBuffer removeFirst() {
             ByteBuffer bb = mWriteBuffers.removeFirst();
             mCurrentCapacity -= bb.capacity();
-            mLog.info("removeFirst: write queue size " + mCurrentCapacity); // TODO: should be debug
+            //mLog.info("removeFirst: write queue size " + mCurrentCapacity); // TODO: should be debug
             return bb;
         }
 
