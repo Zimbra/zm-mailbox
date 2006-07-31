@@ -148,11 +148,9 @@ public class RolloverManager {
 	 * the filename.  Earlier-stamped file is considered "less" by the
 	 * comparison.
 	 */
-	private static class ArchiveLogFilenameComparator implements Comparator {
-		public int compare(Object o1, Object o2) {
-			File f1 = (File) o1;
-			File f2 = (File) o2;
-
+	private static class ArchiveLogFilenameComparator
+	implements Comparator<File> {
+		public int compare(File f1, File f2) {
 			long t1 = getEndTimeForFile(f1);
 			long t2 = getEndTimeForFile(f2);
 

@@ -24,13 +24,13 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MetadataList;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 public class SetPermissions extends RedoableOp {
 
@@ -58,14 +58,14 @@ public class SetPermissions extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mFolderId);
-        writeUTF8(out, mACL);
+        out.writeUTF(mACL);
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mFolderId = in.readInt();
-        mACL = readUTF8(in);
+        mACL = in.readUTF();
     }
 
     

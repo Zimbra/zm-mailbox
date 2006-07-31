@@ -25,11 +25,11 @@
 
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 public class SaveWiki extends SaveDocument {
 
@@ -54,12 +54,12 @@ public class SaveWiki extends SaveDocument {
     	mWikiword = w;
     }
     
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mWikiword);
         super.serializeData(out);
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mWikiword = in.readUTF();
         super.deserializeData(in);
     }

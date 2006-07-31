@@ -28,13 +28,13 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.redolog.TransactionId;
 
 /**
@@ -47,13 +47,13 @@ import com.zimbra.cs.redolog.TransactionId;
  */
 public class Checkpoint extends ControlOp {
 
-	LinkedHashSet /*<TxnId>*/ mTxnSet;
+	LinkedHashSet<TransactionId> mTxnSet;
 
 	public Checkpoint() {
-		mTxnSet = new LinkedHashSet();
+		mTxnSet = new LinkedHashSet<TransactionId>();
 	}
 
-	public Checkpoint(LinkedHashSet txns) {
+	public Checkpoint(LinkedHashSet<TransactionId> txns) {
 		mTxnSet = txns;
 		setTransactionId(new TransactionId());  // don't need a real txnid for checkpoint record
 	}
@@ -93,7 +93,7 @@ public class Checkpoint extends ControlOp {
 			return null;
 	}
 
-	protected void serializeData(DataOutput out) throws IOException {
+	protected void serializeData(RedoLogOutput out) throws IOException {
 		out.writeInt(mTxnSet.size());
 		for (Iterator it = mTxnSet.iterator(); it.hasNext(); ) {
 			TransactionId txn = (TransactionId) it.next();
@@ -101,7 +101,7 @@ public class Checkpoint extends ControlOp {
 		}
 	}
 
-	protected void deserializeData(DataInput in) throws IOException {
+	protected void deserializeData(RedoLogInput in) throws IOException {
 		int num = in.readInt();
 		for (int i = 0; i < num; i++) {
 			TransactionId txn = new TransactionId();

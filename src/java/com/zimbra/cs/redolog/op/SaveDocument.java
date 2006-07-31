@@ -25,11 +25,11 @@
 
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 public class SaveDocument extends CreateMessage {
 
@@ -72,14 +72,14 @@ public class SaveDocument extends CreateMessage {
     	mAuthor = a;
     }
     
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mFilename);
         out.writeUTF(mMimeType);
         out.writeUTF(mAuthor);
         super.serializeData(out);
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mFilename = in.readUTF();
         mMimeType = in.readUTF();
         mAuthor = in.readUTF();

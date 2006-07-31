@@ -25,8 +25,6 @@
 
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
@@ -36,6 +34,8 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedMessage;
 
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.Volume;
 
@@ -78,10 +78,10 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
         return sb.toString();
     }
 
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mAppointmentId);
         if (getVersion().atLeast(1, 1))
-            writeUTF8(out, mAppointmentPartStat);
+            out.writeUTF(mAppointmentPartStat);
         out.writeInt(mFolderId);
         if (getVersion().atLeast(1, 0))
             out.writeShort(mVolumeId);
@@ -98,10 +98,10 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
         out.writeUTF(Invite.encodeMetadata(mInvite).toString());
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mAppointmentId = in.readInt();
         if (getVersion().atLeast(1, 1))
-            mAppointmentPartStat = readUTF8(in);
+            mAppointmentPartStat = in.readUTF();
         mFolderId = in.readInt();
         if (getVersion().atLeast(1, 0))
             mVolumeId = in.readShort();

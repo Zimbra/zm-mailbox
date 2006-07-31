@@ -28,12 +28,12 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author jhahm
@@ -75,16 +75,16 @@ public class ReindexMailbox extends RedoableOp {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.DataOutput)
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.RedoLogOutput)
 	 */
-	protected void serializeData(DataOutput out) throws IOException {
+	protected void serializeData(RedoLogOutput out) throws IOException {
         // no members to serialize
 	}
 
 	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.DataInput)
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.RedoLogInput)
 	 */
-	protected void deserializeData(DataInput in) throws IOException {
+	protected void deserializeData(RedoLogInput in) throws IOException {
         // no members to deserialize
 	}
 }

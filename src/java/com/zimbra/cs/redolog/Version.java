@@ -31,8 +31,6 @@
  */
 package com.zimbra.cs.redolog;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 /**
@@ -44,7 +42,7 @@ public class Version {
 
 	// These should be incremented with changes to serialization format.
 	private static final short CURRENT_MAJOR = 1;  // range: 0 - Short.MAX_VALUE
-	private static final short CURRENT_MINOR = 2;  // range: 0 - Short.MAX_VALUE
+	private static final short CURRENT_MINOR = 3;  // range: 0 - Short.MAX_VALUE
 
 	/**
 	 * Returns a version object with latest major and minor version
@@ -112,12 +110,12 @@ public class Version {
 		return Integer.toString(mMajorVer) + "." + Integer.toString(mMinorVer);
 	}
 
-	public void serialize(DataOutput out) throws IOException {
+	public void serialize(RedoLogOutput out) throws IOException {
 		out.writeShort(mMajorVer);
 		out.writeShort(mMinorVer);
 	}
 
-	public void deserialize(DataInput in) throws IOException {
+	public void deserialize(RedoLogInput in) throws IOException {
 		mMajorVer = in.readShort();
 		mMinorVer = in.readShort();
 		if (mMajorVer < 0 || mMinorVer < 0)

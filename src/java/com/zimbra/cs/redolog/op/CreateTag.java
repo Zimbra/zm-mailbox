@@ -28,13 +28,12 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author jhahm
@@ -81,15 +80,15 @@ public class CreateTag extends RedoableOp {
         return sb.toString();
 	}
 
-	protected void serializeData(DataOutput out) throws IOException {
+	protected void serializeData(RedoLogOutput out) throws IOException {
 		out.writeInt(mTagId);
-		writeUTF8(out, mName);
+		out.writeUTF(mName);
 		out.writeByte(mColor);
 	}
 
-	protected void deserializeData(DataInput in) throws IOException {
+	protected void deserializeData(RedoLogInput in) throws IOException {
 		mTagId = in.readInt();
-		mName = readUTF8(in);
+		mName = in.readUTF();
 		mColor = in.readByte();
 	}
 

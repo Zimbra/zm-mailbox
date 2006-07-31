@@ -28,14 +28,14 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author jhahm
@@ -44,13 +44,13 @@ public class ModifyContact extends RedoableOp {
 
     private int mId;
     private boolean mReplace;
-    private Map mAttrs;
+    private Map<String, String> mAttrs;
 
     public ModifyContact() {
         mId = UNKNOWN_ID;
     }
 
-    public ModifyContact(int mailboxId, int id, Map attrs, boolean replace) {
+    public ModifyContact(int mailboxId, int id, Map<String, String> attrs, boolean replace) {
         setMailboxId(mailboxId);
         mId = id;
         mReplace = replace;
@@ -84,33 +84,33 @@ public class ModifyContact extends RedoableOp {
     }
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.DataOutput)
+     * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.RedoLogOutput)
      */
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeBoolean(mReplace);
         int numAttrs = mAttrs != null ? mAttrs.size() : 0;
         out.writeShort((short) numAttrs);
         for (Iterator it = mAttrs.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Map.Entry) it.next();
-            writeUTF8(out, (String) entry.getKey());
+            out.writeUTF((String) entry.getKey());
             String value = (String) entry.getValue();
-            writeUTF8(out, value != null ? value : "");
+            out.writeUTF(value != null ? value : "");
         }
     }
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.DataInput)
+     * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.RedoLogInput)
      */
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mReplace = in.readBoolean();
         int numAttrs = in.readShort();
         if (numAttrs > 0) {
-            mAttrs = new HashMap(numAttrs);
+            mAttrs = new HashMap<String, String>(numAttrs);
             for (int i = 0; i < numAttrs; i++) {
-                String key = readUTF8(in);
-                String value = readUTF8(in);
+                String key = in.readUTF();
+                String value = in.readUTF();
                 mAttrs.put(key, value);
             }
         }

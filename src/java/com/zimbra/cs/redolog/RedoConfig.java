@@ -31,9 +31,6 @@
  */
 package com.zimbra.cs.redolog;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.ServiceException;
@@ -47,8 +44,6 @@ import com.zimbra.cs.util.Zimbra;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public class RedoConfig {
-
-    private static Log mLog = LogFactory.getLog(RedoConfig.class);
 
     private static RedoConfig theInstance;
     static {

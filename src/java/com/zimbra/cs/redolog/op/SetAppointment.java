@@ -28,8 +28,6 @@
 package com.zimbra.cs.redolog.op;
 
 import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -44,6 +42,8 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.JMSession;
@@ -61,7 +61,7 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
 
     public SetAppointment() {}
     
-    static void serializeSetAppointmentData(DataOutput out, Mailbox.SetAppointmentData data) throws IOException, MessagingException {
+    static void serializeSetAppointmentData(RedoLogOutput out, Mailbox.SetAppointmentData data) throws IOException, MessagingException {
         out.writeBoolean(data.mForce);
         
         ICalTimeZone localTz = data.mInv.getTimeZoneMap().getLocalTimeZone();
@@ -79,7 +79,7 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
     }
     
     private Mailbox.SetAppointmentData deserializeSetAppointmentData(
-            DataInput in, boolean attachmentIndexingEnabled)
+            RedoLogInput in, boolean attachmentIndexingEnabled)
     throws IOException, MessagingException {
         Mailbox.SetAppointmentData toRet = new Mailbox.SetAppointmentData();
 
@@ -109,7 +109,7 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
         return toRet;
     }
     
-    protected void serializeData(DataOutput out) throws IOException 
+    protected void serializeData(RedoLogOutput out) throws IOException 
     {
         assert(getMailboxId() != 0);
         out.writeInt(mFolderId);
@@ -117,7 +117,7 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
             out.writeShort(mVolumeId);
         out.writeInt(mAppointmentId);
         if (getVersion().atLeast(1, 1))
-            writeUTF8(out, mAppointmentPartStat);
+            out.writeUTF(mAppointmentPartStat);
         if (getVersion().atLeast(1, 2))
             out.writeBoolean(mAttachmentIndexingEnabled);
         
@@ -141,13 +141,13 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
         }
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mFolderId = in.readInt();
         if (getVersion().atLeast(1, 0))
             mVolumeId = in.readShort();
         mAppointmentId = in.readInt();
         if (getVersion().atLeast(1, 1))
-            mAppointmentPartStat = readUTF8(in);
+            mAppointmentPartStat = in.readUTF();
         if (getVersion().atLeast(1, 2))
             mAttachmentIndexingEnabled = in.readBoolean();
         else

@@ -25,13 +25,15 @@
 
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
-
+/**
+ * This class is obsolete.
+ */
 public class ModifyInviteFlag extends RedoableOp {
 
     private int mId = UNKNOWN_ID;
@@ -55,8 +57,7 @@ public class ModifyInviteFlag extends RedoableOp {
     }
 
     public void redo() throws Exception {
-        Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
-
+        Mailbox.getMailboxById(getMailboxId());
 //        mbox.modifyInviteFlag(getOperationContext(), mId, mCompNum, mFlag, mAdd);
     }
 
@@ -67,14 +68,14 @@ public class ModifyInviteFlag extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeInt(mCompNum);
         out.writeInt(mFlag);
         out.writeBoolean(mAdd);
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mCompNum = in.readInt();
         mFlag = in.readInt();

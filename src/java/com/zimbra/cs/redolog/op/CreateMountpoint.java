@@ -27,12 +27,12 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author dkarp
@@ -84,10 +84,10 @@ public class CreateMountpoint extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
-        writeUTF8(out, mName);
-        writeUTF8(out, mOwnerId);
+        out.writeUTF(mName);
+        out.writeUTF(mOwnerId);
         out.writeInt(mRemoteId);
         out.writeInt(mFolderId);
         out.writeByte(mDefaultView);
@@ -95,10 +95,10 @@ public class CreateMountpoint extends RedoableOp {
         out.writeByte(mColor);
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
-        mName = readUTF8(in);
-        mOwnerId = readUTF8(in);
+        mName = in.readUTF();
+        mOwnerId = in.readUTF();
         mRemoteId = in.readInt();
         mFolderId = in.readInt();
         mDefaultView = in.readByte();

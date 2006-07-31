@@ -27,12 +27,12 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -76,24 +76,24 @@ public class GrantAccess extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mFolderId);
-        writeUTF8(out, mGrantee);
+        out.writeUTF(mGrantee);
         out.writeByte(mGranteeType);
         out.writeShort(mRights);
         out.writeBoolean(mInherit);
         if (getVersion().atLeast(1, 2))
-        	writeUTF8(out, mArgs);
+        	out.writeUTF(mArgs);
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mFolderId = in.readInt();
-        mGrantee = readUTF8(in);
+        mGrantee = in.readUTF();
         mGranteeType = in.readByte();
         mRights = in.readShort();
         mInherit = in.readBoolean();
         if (getVersion().atLeast(1, 2))
-        	mArgs = readUTF8(in);
+        	mArgs = in.readUTF();
     }
 
     public void redo() throws ServiceException {

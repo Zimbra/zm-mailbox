@@ -29,9 +29,6 @@
 package com.zimbra.cs.redolog.op;
 
 import java.io.ByteArrayOutputStream;
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,12 +44,13 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogManager;
+import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.Version;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -393,7 +391,7 @@ public abstract class RedoableOp {
 		mMailboxId = mboxId;
 	}
 
-	protected void serializeHeader(DataOutput out) throws IOException {
+	protected void serializeHeader(RedoLogOutput out) throws IOException {
 		out.write(REDO_MAGIC.getBytes());
 		mVersion.serialize(out);
 		out.writeInt(getOpCode());
@@ -405,7 +403,7 @@ public abstract class RedoableOp {
 		out.writeInt(mMailboxId);
 	}
 
-	private void deserialize(DataInput in) throws IOException {
+	private void deserialize(RedoLogInput in) throws IOException {
 		// We don't deserialize magic marker, version, and operation code
 		// because they were already deserialized by deserializeOp.
 
@@ -466,8 +464,8 @@ public abstract class RedoableOp {
 	protected abstract String getPrintableData();
 
 	// Used by serialize() and deserialize().
-	protected abstract void serializeData(DataOutput out) throws IOException;
-	protected abstract void deserializeData(DataInput in) throws IOException;
+	protected abstract void serializeData(RedoLogOutput out) throws IOException;
+	protected abstract void deserializeData(RedoLogInput in) throws IOException;
 
 	/**
 	 * Returns the next operation in the redo log stream.
@@ -477,28 +475,28 @@ public abstract class RedoableOp {
 	 *						  indicating the server may have died unexpectedly
 	 * @throws IOException - if any other error occurs
 	 */
-	public static RedoableOp deserializeOp(DataInput is)
+	public static RedoableOp deserializeOp(RedoLogInput in)
 	throws EOFException, IOException {
-		return deserializeOp(is, false);
+		return deserializeOp(in, false);
 	}
 
-	public static RedoableOp deserializeOp(DataInput is, boolean skipDetail)
+	public static RedoableOp deserializeOp(RedoLogInput in, boolean skipDetail)
 	throws EOFException, IOException {
 		RedoableOp op = null;
 		byte[] magicBuf = new byte[REDO_MAGIC.length()];
-		is.readFully(magicBuf, 0, magicBuf.length);
+		in.readFully(magicBuf, 0, magicBuf.length);
 		String magic = new String(magicBuf);
 		if (magic.compareTo(REDO_MAGIC) != 0)
 			throw new IOException("Missing redo item magic marker");
 
 		Version ver = new Version();
-		ver.deserialize(is);
+		ver.deserialize(in);
 		if (ver.tooHigh())
 			throw new IOException("Redo op version " + ver +
 								  " is higher than the highest known version " +
 								  Version.latest());
 
-		int opcode = is.readInt();
+		int opcode = in.readInt();
 		if (!skipDetail) {
 			String className = RedoableOp.getOpClassName(opcode);
 			if (className != null) {
@@ -526,7 +524,7 @@ public abstract class RedoableOp {
 			op = new HeaderOnlyOp(opcode);
 		}
 		op.setVersion(ver);
-		op.deserialize(is);
+		op.deserialize(in);
 		return op;
 	}
 
@@ -553,11 +551,11 @@ public abstract class RedoableOp {
     protected byte[] serializeToByteArray() throws IOException {
         byte[] buf;
         ByteArrayOutputStream baos = new ByteArrayOutputStream(512);
-        DataOutputStream dos = new DataOutputStream(baos);
-        serializeHeader(dos);
-        serializeData(dos);
+        RedoLogOutput out = new RedoLogOutput(baos);
+        serializeHeader(out);
+        serializeData(out);
         buf = baos.toByteArray();
-        dos.close();
+        baos.close();
         return buf;
     }
 
@@ -580,19 +578,6 @@ public abstract class RedoableOp {
     	mChainedOps.add(subOp);
     }
 
-
-    // Custom read/writeUTF8 methods to replace DataOutputStream.writeUTF()
-    // which has 64KB limit
-
-//    private static final int MAX_STRING_LEN = 10 * 1024 * 1024;     // 10MB
-
-    protected static void writeUTF8(DataOutput out, String str) throws IOException {
-        ByteUtil.writeUTF8(out, str);
-    }
-
-    protected static String readUTF8(DataInput in) throws IOException {
-        return ByteUtil.readUTF8(in);
-    }
 
     private static boolean checkSubclasses() {
         boolean allGood = true;

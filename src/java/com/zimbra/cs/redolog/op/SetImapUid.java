@@ -28,8 +28,6 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,6 +35,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author dkarp
@@ -81,7 +81,7 @@ public class SetImapUid extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mImapUids.size());
         for (Map.Entry<Integer, Integer> entry : mImapUids.entrySet()) {
             out.writeInt(entry.getKey());
@@ -89,7 +89,7 @@ public class SetImapUid extends RedoableOp {
         }
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         int count = in.readInt();
         for (int i = 0; i < count; i++) {
             int msgId = in.readInt();

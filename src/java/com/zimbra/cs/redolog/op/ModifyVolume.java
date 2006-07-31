@@ -25,10 +25,10 @@
 
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Volume;
 
 public class ModifyVolume extends RedoableOp {
@@ -37,7 +37,6 @@ public class ModifyVolume extends RedoableOp {
     private short mType;
     private String mName;
     private String mRootPath;
-    private String mIncomingMsgDir;
 
     private short mMboxGroupBits;
     private short mMboxBits;
@@ -80,22 +79,22 @@ public class ModifyVolume extends RedoableOp {
         return v.toString();
     }
 
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeShort(mId);
         out.writeShort(mType);
-        writeUTF8(out, mName);
-        writeUTF8(out, mRootPath);
+        out.writeUTF(mName);
+        out.writeUTF(mRootPath);
         out.writeShort(mMboxGroupBits);
         out.writeShort(mMboxBits);
         out.writeShort(mFileGroupBits);
         out.writeShort(mFileBits);
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readShort();
         mType = in.readShort();
-        mName = readUTF8(in);
-        mRootPath = readUTF8(in);
+        mName = in.readUTF();
+        mRootPath = in.readUTF();
         mMboxGroupBits = in.readShort();
         mMboxBits = in.readShort();
         mFileGroupBits = in.readShort();
@@ -103,7 +102,7 @@ public class ModifyVolume extends RedoableOp {
     }
 
     public void redo() throws Exception {
-        Volume vol = Volume.getById(mId);
+        Volume.getById(mId);  // make sure it exists
         Volume.update(mId, mType, mName, mRootPath,
                       mMboxGroupBits, mMboxBits,
                       mFileGroupBits, mFileBits,

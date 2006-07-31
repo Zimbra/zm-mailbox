@@ -28,8 +28,6 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,6 +43,8 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoException;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
@@ -261,21 +261,21 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
         }
     }
 
-    protected void serializeData(DataOutput out) throws IOException {
-        writeUTF8(out, mRcptEmail != null ? mRcptEmail : "");
+    protected void serializeData(RedoLogOutput out) throws IOException {
+        out.writeUTF(mRcptEmail != null ? mRcptEmail : "");
         out.writeBoolean(mShared);
-		writeUTF8(out, mDigest);
+		out.writeUTF(mDigest);
 		out.writeInt(mMsgSize);
 		out.writeInt(mMsgId);
 		out.writeInt(mFolderId);
 		out.writeInt(mConvId);
         out.writeInt(mAppointmentId);
         if (getVersion().atLeast(1, 1))
-            writeUTF8(out, mAppointmentPartStat);
+            out.writeUTF(mAppointmentPartStat);
         out.writeInt(mFlags);
         out.writeBoolean(mNoICal);
-		writeUTF8(out, mTags);
-        writeUTF8(out, mPath);
+		out.writeUTF(mTags);
+        out.writeUTF(mPath);
         out.writeShort(mVolumeId);
 
         out.writeByte(mMsgBodyType);
@@ -292,21 +292,21 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
         }
     }
 
-	protected void deserializeData(DataInput in) throws IOException {
-        mRcptEmail = readUTF8(in);
+	protected void deserializeData(RedoLogInput in) throws IOException {
+        mRcptEmail = in.readUTF();
         mShared = in.readBoolean();
-		mDigest = readUTF8(in);
+		mDigest = in.readUTF();
 		mMsgSize = in.readInt();
 		mMsgId = in.readInt();
 		mFolderId = in.readInt();
 		mConvId = in.readInt();
         mAppointmentId = in.readInt();
         if (getVersion().atLeast(1, 1))
-            mAppointmentPartStat = readUTF8(in);
+            mAppointmentPartStat = in.readUTF();
 		mFlags = in.readInt();
         mNoICal = in.readBoolean();
-		mTags = readUTF8(in);
-        mPath = readUTF8(in);
+		mTags = in.readUTF();
+        mPath = in.readUTF();
         mVolumeId = in.readShort();
 
         mMsgBodyType = in.readByte();

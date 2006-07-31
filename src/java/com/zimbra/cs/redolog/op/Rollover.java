@@ -31,10 +31,11 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
+
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author jhahm
@@ -86,18 +87,18 @@ public class Rollover extends RedoableOp {
 	}
 
 	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.DataOutput)
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.RedoLogOutput)
 	 */
-	protected void serializeData(DataOutput out) throws IOException {
+	protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeLong(mSeq);
-        writeUTF8(out, mFilename);
+        out.writeUTF(mFilename);
 	}
 
 	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.DataInput)
+	 * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.RedoLogInput)
 	 */
-	protected void deserializeData(DataInput in) throws IOException {
+	protected void deserializeData(RedoLogInput in) throws IOException {
         mSeq = in.readLong();
-        mFilename = readUTF8(in);
+        mFilename = in.readUTF();
 	}
 }

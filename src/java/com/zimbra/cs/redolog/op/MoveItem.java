@@ -28,15 +28,14 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.service.ServiceException;
-
 
 /**
  * @author jhahm
@@ -76,7 +75,7 @@ public class MoveItem extends RedoableOp {
         return sb.toString();
 	}
 
-	protected void serializeData(DataOutput out) throws IOException {
+	protected void serializeData(RedoLogOutput out) throws IOException {
 		out.writeInt(mId);
         out.writeByte(mType);
 		out.writeInt(mDestId);
@@ -86,7 +85,7 @@ public class MoveItem extends RedoableOp {
             out.writeUTF(mConstraint);
 	}
 
-	protected void deserializeData(DataInput in) throws IOException {
+	protected void deserializeData(RedoLogInput in) throws IOException {
 		mId = in.readInt();
         mType = in.readByte();
 		mDestId = in.readInt();

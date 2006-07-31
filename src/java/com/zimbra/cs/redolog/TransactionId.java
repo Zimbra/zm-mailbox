@@ -28,8 +28,6 @@
  */
 package com.zimbra.cs.redolog;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 /**
@@ -78,12 +76,12 @@ public class TransactionId {
 		return Integer.toString(mTime) + "." + Integer.toString(mCounter);
 	}
 
-	public void serialize(DataOutput out) throws IOException {
+	public void serialize(RedoLogOutput out) throws IOException {
 		out.writeInt(mTime);
 		out.writeInt(mCounter);
 	}
 
-	public void deserialize(DataInput in) throws IOException {
+	public void deserialize(RedoLogInput in) throws IOException {
 		mTime = in.readInt();
 		mCounter = in.readInt();
 	}

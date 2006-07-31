@@ -103,7 +103,7 @@ public class RedoLogManager {
 	// reading from or writing to this map must first acquire a read or
 	// write lock on mRWLock, then do "synchronzed (mActiveOps) { ... }".
 	// This is done to prevent deadlock.
-	private LinkedHashMap /*<TxnId, RedoableOp>*/ mActiveOps;
+	private LinkedHashMap<TransactionId, RedoableOp> mActiveOps;
 
 	private long mLogRolloverSizeLimit;
 
@@ -130,7 +130,7 @@ public class RedoLogManager {
     	mArchiveDir = archdir;
 
         mRWLock = new ReentrantWriterPreferenceReadWriteLock();
-        mActiveOps = new LinkedHashMap(100);
+        mActiveOps = new LinkedHashMap<TransactionId, RedoableOp>(100);
         mTxnIdGenerator = new TxnIdGenerator();
         setRolloverSizeLimit(RedoConfig.redoLogRolloverFileSizeKB() * 1024);
         mRolloverMgr = new RolloverManager(this, mLogFile);
@@ -214,7 +214,7 @@ public class RedoLogManager {
         long fsyncInterval = RedoConfig.redoLogFsyncIntervalMS();
         mLogWriter = createLogWriter(this, mLogFile, fsyncInterval);
 
-        ArrayList postStartupRecoveryOps = new ArrayList(100);
+        ArrayList<RedoableOp> postStartupRecoveryOps = new ArrayList<RedoableOp>(100);
         int numRecoveredOps = 0;
 		if (mSupportsCrashRecovery) {
 			mRecoveryMode = true;
@@ -473,16 +473,17 @@ public class RedoLogManager {
      * Should be called with write lock on mRWLock held.
      */
 	private void checkpoint() {
-		LinkedHashSet txns = null;
+		LinkedHashSet<TransactionId> txns = null;
 		synchronized (mActiveOps) {
             if (mActiveOps.size() == 0)
                 return;
 
             // Create an empty LinkedHashSet and insert keys from mActiveOps
 			// by iterating the keyset.
-            txns = new LinkedHashSet();
-			for (Iterator it = mActiveOps.entrySet().iterator(); it.hasNext(); ) {
-				Map.Entry entry = (Map.Entry) it.next();
+            txns = new LinkedHashSet<TransactionId>();
+			for (Iterator<Map.Entry<TransactionId, RedoableOp>>
+			     it = mActiveOps.entrySet().iterator(); it.hasNext(); ) {
+				Map.Entry<TransactionId, RedoableOp> entry = it.next();
 				txns.add(entry.getKey());
 			}
 		}
@@ -641,7 +642,7 @@ public class RedoLogManager {
     public File[] getArchivedLogsAfterSequence(long sequenceAtPrevFullBackup) throws IOException {
         File[] archivedLogs = RolloverManager.getArchiveLogs(mArchiveDir);
         
-        ArrayList toRet = new ArrayList();
+        ArrayList<File> toRet = new ArrayList<File>();
         
         for (int i = 0; i < archivedLogs.length; i++) {
             // if the file sequence comes after our previous backup, then it should be included

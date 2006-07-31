@@ -47,7 +47,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.redolog.RedoConfig;
 import com.zimbra.cs.redolog.RedoLogManager;
 import com.zimbra.cs.redolog.RolloverManager;
-import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
@@ -275,7 +274,6 @@ public class FileLogWriter implements LogWriter {
                 throw new IOException("Redolog file closed");
 
             // Record first transaction in header.
-            TransactionId txn = op.getTransactionId();
             long tstamp = op.getTimestamp();
             mLastOpTstamp = tstamp;
             if (mFirstOpTstamp == 0) {

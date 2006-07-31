@@ -25,10 +25,10 @@
 
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.store.VolumeServiceException;
 
@@ -52,18 +52,17 @@ public class DeleteVolume extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeShort(mId);
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readShort();
     }
 
     public void redo() throws Exception {
-        Volume vol = null;
         try {
-            vol = Volume.getById(mId);
+            Volume.getById(mId);  // make sure it exists
             Volume.delete(mId);
         } catch (VolumeServiceException e) {
             if (e.getCode() != VolumeServiceException.NO_SUCH_VOLUME)

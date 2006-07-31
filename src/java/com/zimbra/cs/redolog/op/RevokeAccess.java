@@ -27,12 +27,12 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author dkarp
@@ -63,14 +63,14 @@ public class RevokeAccess extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mFolderId);
-        writeUTF8(out, mGrantee);
+        out.writeUTF(mGrantee);
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mFolderId = in.readInt();
-        mGrantee = readUTF8(in);
+        mGrantee = in.readUTF();
     }
 
     public void redo() throws ServiceException {

@@ -27,10 +27,9 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author dkarp
@@ -53,11 +52,11 @@ public class TrackSync extends RedoableOp {
         return null;
     }
 
-    protected void serializeData(DataOutput out) {
+    protected void serializeData(RedoLogOutput out) {
         // no members to serialize
     }
 
-    protected void deserializeData(DataInput in) {
+    protected void deserializeData(RedoLogInput in) {
         // no members to deserialize
     }
 

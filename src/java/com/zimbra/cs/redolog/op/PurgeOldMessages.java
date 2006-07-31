@@ -28,10 +28,9 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author jhahm
@@ -73,16 +72,16 @@ public class PurgeOldMessages extends RedoableOp {
     }
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.DataOutput)
+     * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.RedoLogOutput)
      */
-    protected void serializeData(DataOutput out) {
+    protected void serializeData(RedoLogOutput out) {
         // no members to serialize
     }
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.DataInput)
+     * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.RedoLogInput)
      */
-    protected void deserializeData(DataInput in) {
+    protected void deserializeData(RedoLogInput in) {
         // no members to deserialize
     }
 }

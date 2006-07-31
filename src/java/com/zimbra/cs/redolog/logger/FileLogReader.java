@@ -38,6 +38,7 @@ import java.io.RandomAccessFile;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
 /**
@@ -55,6 +56,7 @@ public class FileLogReader {
 
     private File mFile;
 	private RandomAccessFile mRAF;
+	private RedoLogInput mIN;
 	private int mLogCount;
 	private boolean mReadOnly;
     private long mFileSizeAtOpen;
@@ -74,6 +76,7 @@ public class FileLogReader {
 
 	public synchronized void open() throws IOException {
 		mRAF = new RandomAccessFile(mFile, mReadOnly ? "r" : "rw");
+		mIN = new RedoLogInput(mRAF);
         mHeader.read(mRAF);
         mHeaderRead = true;
         mFileSizeAtOpen = mRAF.length();
@@ -104,7 +107,7 @@ public class FileLogReader {
             return null;
         }
 
-        RedoableOp op = RedoableOp.deserializeOp(mRAF);
+        RedoableOp op = RedoableOp.deserializeOp(mIN);
 		mLogCount++;
 		return op;
 	}

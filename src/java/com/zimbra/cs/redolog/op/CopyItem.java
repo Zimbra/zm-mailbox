@@ -28,13 +28,13 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 
 /**
@@ -100,7 +100,7 @@ public class CopyItem extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mSrcId);
         out.writeInt(mDestId);
         out.writeByte(mType);
@@ -108,7 +108,7 @@ public class CopyItem extends RedoableOp {
         out.writeShort(mDestVolumeId);
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mSrcId = in.readInt();
         mDestId = in.readInt();
         mType = in.readByte();

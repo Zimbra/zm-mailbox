@@ -27,11 +27,11 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author dkarp
@@ -65,16 +65,16 @@ public class SetSubscriptionData extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mFolderId);
         out.writeLong(mLastItemDate);
-        writeUTF8(out, mLastItemGuid);
+        out.writeUTF(mLastItemGuid);
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mFolderId = in.readInt();
         mLastItemDate = in.readLong();
-        mLastItemGuid = readUTF8(in);
+        mLastItemGuid = in.readUTF();
     }
 
     public void redo() throws Exception {

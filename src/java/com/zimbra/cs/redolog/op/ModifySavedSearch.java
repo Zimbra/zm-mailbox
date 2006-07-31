@@ -28,12 +28,11 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
-
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author jhahm
@@ -68,18 +67,18 @@ public class ModifySavedSearch extends RedoableOp {
         return sb.toString();
 	}
 
-	protected void serializeData(DataOutput out) throws IOException {
+	protected void serializeData(RedoLogOutput out) throws IOException {
 		out.writeInt(mSearchId);
-        writeUTF8(out, mQuery);
-        writeUTF8(out, mTypes);
-        writeUTF8(out, mSort);
+        out.writeUTF(mQuery);
+        out.writeUTF(mTypes);
+        out.writeUTF(mSort);
 	}
 
-	protected void deserializeData(DataInput in) throws IOException {
+	protected void deserializeData(RedoLogInput in) throws IOException {
 		mSearchId = in.readInt();
-        mQuery = readUTF8(in);
-        mTypes = readUTF8(in);
-        mSort = readUTF8(in);
+        mQuery = in.readUTF();
+        mTypes = in.readUTF();
+        mSort = in.readUTF();
 	}
 
 	public void redo() throws Exception {

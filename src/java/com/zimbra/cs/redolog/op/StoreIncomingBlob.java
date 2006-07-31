@@ -31,13 +31,12 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.StoreManager;
 
 /**
@@ -118,7 +117,7 @@ public class StoreIncomingBlob extends RedoableOp {
         }
     }
 
-    protected void serializeData(DataOutput out) throws IOException {
+    protected void serializeData(RedoLogOutput out) throws IOException {
     	if (getVersion().atLeast(1, 0)) {
     		if (mMailboxIdList != null) {
 				out.writeInt(mMailboxIdList.size());
@@ -127,8 +126,8 @@ public class StoreIncomingBlob extends RedoableOp {
     		} else
     			out.writeInt(0);
     	}
-        writeUTF8(out, mDigest);
-        writeUTF8(out, mPath);
+        out.writeUTF(mDigest);
+        out.writeUTF(mPath);
         out.writeShort(mVolumeId);
         out.writeInt(mMsgSize);
         out.writeInt(mData.length);
@@ -140,7 +139,7 @@ public class StoreIncomingBlob extends RedoableOp {
         //out.write(mData);  // Don't do this here!
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
     	if (getVersion().atLeast(1, 0)) {
     		int listLen = in.readInt();
     		if (listLen > MAX_MAILBOX_LIST_LENGTH)
@@ -153,8 +152,8 @@ public class StoreIncomingBlob extends RedoableOp {
 	    		mMailboxIdList = list;
     		}
     	}
-        mDigest = readUTF8(in);
-        mPath = readUTF8(in);
+        mDigest = in.readUTF();
+        mPath = in.readUTF();
         mVolumeId = in.readShort();
         mMsgSize = in.readInt();
         int dataLen = in.readInt();
@@ -181,9 +180,7 @@ public class StoreIncomingBlob extends RedoableOp {
 
         boolean success = false;
         try {
-            Blob blob =
-            	StoreManager.getInstance().storeIncoming(mData, mDigest, mPath,
-            											 mVolumeId);
+            StoreManager.getInstance().storeIncoming(mData, mDigest, mPath, mVolumeId);
             success = true;
         } finally {
         	if (success)

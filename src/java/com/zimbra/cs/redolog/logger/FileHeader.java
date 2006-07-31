@@ -33,13 +33,13 @@ package com.zimbra.cs.redolog.logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.redolog.Version;
 
 /**
@@ -197,11 +197,11 @@ public class FileHeader {
 
     private byte[] serialize() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(HEADER_LEN);
-        DataOutputStream dos = new DataOutputStream(baos);
-        dos.write(MAGIC);
-        dos.writeByte(mOpen);
-        dos.writeLong(mFileSize);
-        dos.writeLong(mSeq);
+        RedoLogOutput out = new RedoLogOutput(baos);
+        out.write(MAGIC);
+        out.writeByte(mOpen);
+        out.writeLong(mFileSize);
+        out.writeLong(mSeq);
 
         // ServerId field:
         //
@@ -216,28 +216,28 @@ public class FileHeader {
         // count on serverId being complete when reading the header.
         byte[] serverIdBuf =
             getStringBytes(mServerId, "UTF-8", SERVER_ID_FIELD_LEN);
-        dos.writeByte((byte) serverIdBuf.length);
-        dos.write(serverIdBuf);
+        out.writeByte((byte) serverIdBuf.length);
+        out.write(serverIdBuf);
         if (serverIdBuf.length < SERVER_ID_FIELD_LEN) {
             byte[] padding = new byte[SERVER_ID_FIELD_LEN - serverIdBuf.length];
             Arrays.fill(padding, (byte) 0); // might not be necessary
-            dos.write(padding);
+            out.write(padding);
         }
 
-        dos.writeLong(mFirstOpTstamp);
-        dos.writeLong(mLastOpTstamp);
-        mVersion.serialize(dos);
+        out.writeLong(mFirstOpTstamp);
+        out.writeLong(mLastOpTstamp);
+        mVersion.serialize(out);
 
         int currentLen = baos.size();
         if (currentLen < HEADER_LEN) {
             int paddingLen = HEADER_LEN - currentLen;
             byte[] b = new byte[paddingLen];
             Arrays.fill(b, (byte) 0);
-            dos.write(b);
+            out.write(b);
         }
 
         byte[] headerBuf = baos.toByteArray();
-        dos.close();
+        baos.close();
         if (headerBuf.length != HEADER_LEN)
             throw new IOException("Wrong redolog header length of " +
                                   headerBuf.length + "; should be " +
@@ -247,29 +247,29 @@ public class FileHeader {
 
     private void deserialize(byte[] headerBuf) throws IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(headerBuf);
-        DataInputStream dis = new DataInputStream(bais);
+        RedoLogInput in = new RedoLogInput(bais);
 
         try {
             byte[] magic = new byte[MAGIC.length];
-            dis.read(magic, 0, MAGIC.length);
+            in.readFully(magic, 0, MAGIC.length);
             if (!Arrays.equals(magic, MAGIC))
                 throw new IOException("Missing magic bytes in redolog header");
 
-            mOpen = dis.readByte();
-            mFileSize = dis.readLong();
-            mSeq = dis.readLong();
+            mOpen = in.readByte();
+            mFileSize = in.readLong();
+            mSeq = in.readLong();
 
-            int serverIdLen = (int) dis.readByte();
+            int serverIdLen = (int) in.readByte();
             if (serverIdLen > SERVER_ID_FIELD_LEN)
                 throw new IOException("ServerId too long (" + serverIdLen +
                                       " bytes) in redolog header");
             byte[] serverIdBuf = new byte[SERVER_ID_FIELD_LEN];
-            dis.read(serverIdBuf, 0, SERVER_ID_FIELD_LEN);
+            in.readFully(serverIdBuf, 0, SERVER_ID_FIELD_LEN);
             mServerId = new String(serverIdBuf, 0, serverIdLen, "UTF-8");
 
-            mFirstOpTstamp = dis.readLong();
-            mLastOpTstamp = dis.readLong();
-            mVersion.deserialize(dis);
+            mFirstOpTstamp = in.readLong();
+            mLastOpTstamp = in.readLong();
+            mVersion.deserialize(in);
             if (mVersion.tooHigh())
     			throw new IOException("Redo log version " + mVersion +
     								  " is higher than the highest known version " +
@@ -280,7 +280,7 @@ public class FileHeader {
             if (!mVersion.atLeast(1, 0))
             	mVersion = new Version(1, 0);
         } finally {
-            dis.close();
+            bais.close();
         }
     }
 

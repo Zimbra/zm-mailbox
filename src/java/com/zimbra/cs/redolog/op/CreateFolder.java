@@ -28,12 +28,12 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author jhahm
@@ -89,13 +89,13 @@ public class CreateFolder extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(DataOutput out) throws IOException {
-        writeUTF8(out, mName);
+    protected void serializeData(RedoLogOutput out) throws IOException {
+        out.writeUTF(mName);
         out.writeByte(mAttrs);
         out.writeByte(mDefaultView);
         out.writeInt(mFlags);
         out.writeByte(mColor);
-        writeUTF8(out, mUrl);
+        out.writeUTF(mUrl);
         if (mFolderIds != null) {
             out.writeInt(mFolderIds.length);
             for (int i = 0; i < mFolderIds.length; i++)
@@ -104,13 +104,13 @@ public class CreateFolder extends RedoableOp {
             out.writeInt(0);
     }
 
-    protected void deserializeData(DataInput in) throws IOException {
-        mName = readUTF8(in);
+    protected void deserializeData(RedoLogInput in) throws IOException {
+        mName = in.readUTF();
         mAttrs = in.readByte();
         mDefaultView = in.readByte();
         mFlags = in.readInt();
         mColor = in.readByte();
-        mUrl = readUTF8(in);
+        mUrl = in.readUTF();
         int numParentIds = in.readInt();
         if (numParentIds > 0) {
             mFolderIds = new int[numParentIds];

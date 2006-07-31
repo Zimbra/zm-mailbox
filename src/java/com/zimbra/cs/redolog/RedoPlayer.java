@@ -64,13 +64,15 @@ public class RedoPlayer {
 
     // Use a separate guard object to synchronize access to mOpsMap.
     // Don't synchronize on mOpsMap itself because it can get reassigned.
-    private LinkedHashMap mOpsMap;  // LinkedHashMap to ensure iteration order == insertion order
     private final Object mOpsMapGuard = new Object();
+
+    // LinkedHashMap to ensure iteration order == insertion order
+    private LinkedHashMap<TransactionId, RedoableOp> mOpsMap;
 
     private boolean mWriteable;
 
     public RedoPlayer(boolean writeable) {
-		mOpsMap = new LinkedHashMap(INITIAL_MAP_SIZE);
+		mOpsMap = new LinkedHashMap<TransactionId, RedoableOp>(INITIAL_MAP_SIZE);
         mWriteable = writeable;
     }
 
@@ -148,7 +150,8 @@ public class RedoPlayer {
     // used to detect/track if a commit/abort record is played back
     // before its change record
     private boolean mHasOrphanOps = false;
-    private Map mOrphanOps = new HashMap();
+    private Map<TransactionId, RedoableOp> mOrphanOps =
+    	new HashMap<TransactionId, RedoableOp>();
 
     public void playOp(RedoableOp op,
                        boolean redoCommitted,
@@ -312,7 +315,9 @@ public class RedoPlayer {
      * @return number of operations redone (regardless of their success)
      * @throws Exception
      */
-	public int runCrashRecovery(RedoLogManager redoLogMgr, List postStartupRecoveryOps) throws Exception {
+	public int runCrashRecovery(RedoLogManager redoLogMgr,
+								List<RedoableOp> postStartupRecoveryOps)
+	throws Exception {
         File redoLog = redoLogMgr.getLogFile();
         if (!redoLog.exists())
         	return 0;
@@ -377,13 +382,13 @@ public class RedoPlayer {
      * Returns a copy of the pending ops map.
      * @return
      */
-    protected LinkedHashMap getCopyOfUncommittedOpsMap() {
-        LinkedHashMap map;
+    protected LinkedHashMap<TransactionId, RedoableOp> getCopyOfUncommittedOpsMap() {
+        LinkedHashMap<TransactionId, RedoableOp> map;
         synchronized (mOpsMapGuard) {
             if (mOpsMap != null)
-                map = new LinkedHashMap(mOpsMap);
+                map = new LinkedHashMap<TransactionId, RedoableOp>(mOpsMap);
             else
-                map = new LinkedHashMap();
+                map = new LinkedHashMap<TransactionId, RedoableOp>();
         }
         return map;
     }
