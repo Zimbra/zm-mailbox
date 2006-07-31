@@ -141,7 +141,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr name="mail" type="string" immutable="1" optionalIn="account,distributionList"/>
 
-<attr name="objectClass" type="string" immutable="1"/>
+<attr name="objectClass" type="string"/>
 
 <attr name="o" type="string" optionalIn="account" flags="domainAdminModifiable"/>
 

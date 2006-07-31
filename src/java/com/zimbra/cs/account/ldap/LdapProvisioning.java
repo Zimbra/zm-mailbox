@@ -585,16 +585,11 @@ public class LdapProvisioning extends Provisioning {
                 addMailHost(attrs, mailHostPool, cos.getName());
             }
 
-            // if zimbraMailHost not specified default to local server's zimbraServiceHostname
+            // if zimbraMailHost still not specified, default to local server's zimbraServiceHostname if it has 
+            // the mailbox service enabled, otherwise look through all servers and pick first with the service enabled.
             // this means every account will always have a mailbox
             if (attrs.get(Provisioning.A_zimbraMailHost) == null) {
-            	String localMailHost = getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
-            	if (localMailHost != null) {
-                    attrs.put(Provisioning.A_zimbraMailHost, localMailHost);
-                    int lmtpPort = getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, com.zimbra.cs.util.Config.D_LMTP_BIND_PORT);
-                    String transport = "lmtp:" + localMailHost + ":" + lmtpPort;
-                    attrs.put(Provisioning.A_zimbraMailTransport, transport);
-            	}
+                addDefaultMailHost(attrs);
             }
 
             // set all the mail-related attrs if zimbraMailHost was specified
@@ -607,9 +602,11 @@ public class LdapProvisioning extends Provisioning {
                 if (attrs.get(Provisioning.A_zimbraMailDeliveryAddress) == null) {
                     attrs.put(A_zimbraMailDeliveryAddress, emailAddress);
                 }
-                attrs.put(A_mail, emailAddress);                
             }
-            
+
+            // amivisAccount requires the mail attr, so we always add it            
+            attrs.put(A_mail, emailAddress);                
+
             // required for organizationalPerson class
             if (attrs.get(Provisioning.A_cn) == null) {
                 Attribute a = attrs.get(Provisioning.A_displayName); 
@@ -642,6 +639,29 @@ public class LdapProvisioning extends Provisioning {
            throw ServiceException.FAILURE("unable to create account: "+emailAddress, e);
         } finally {
             LdapUtil.closeContext(ctxt);
+        }
+    }
+
+    private boolean addDefaultMailHost(Attributes attrs, Server server)  throws ServiceException {
+        String localMailHost = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
+        if (hasMailboxService && localMailHost != null) {
+            attrs.put(Provisioning.A_zimbraMailHost, localMailHost);
+            int lmtpPort = getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, com.zimbra.cs.util.Config.D_LMTP_BIND_PORT);
+            String transport = "lmtp:" + localMailHost + ":" + lmtpPort;
+            attrs.put(Provisioning.A_zimbraMailTransport, transport);
+            return true;
+        }
+        return false;
+    }
+
+    private void addDefaultMailHost(Attributes attrs)  throws ServiceException {
+        if (!addDefaultMailHost(attrs, getLocalServer())) {
+            for (Server server: getAllServers()) {
+                if (addDefaultMailHost(attrs, server)) {
+                    return;
+                }
+            }
         }
     }
 

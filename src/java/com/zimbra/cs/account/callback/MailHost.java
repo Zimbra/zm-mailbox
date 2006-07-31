@@ -52,6 +52,10 @@ public class MailHost implements AttributeCallback {
         for (Iterator it=servers.iterator(); it.hasNext(); ) {
             Server server = (Server) it.next();
             String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
+            boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
+            if (!hasMailboxService)
+                throw ServiceException.INVALID_REQUEST("specified "+Provisioning.A_zimbraMailHost+" does not correspond to a valid server with the mailbox service enabled: "+mailHost, null);    
+
             if (mailHost.equalsIgnoreCase(serviceName)) {
             	// Set zimbraMailTransport attr whenever zimbraMailHost is modified.
             	int lmtpPort = server.getIntAttr(Provisioning.A_zimbraLmtpBindPort, Config.D_LMTP_BIND_PORT);
@@ -60,7 +64,6 @@ public class MailHost implements AttributeCallback {
                 return;
             }
         }
-        
         throw ServiceException.INVALID_REQUEST("specified "+Provisioning.A_zimbraMailHost+" does not correspond to a valid server service hostname: "+mailHost, null);
     }
 
