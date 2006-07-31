@@ -30,6 +30,7 @@ import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Pair;
@@ -70,7 +71,9 @@ public class WikiTemplateStore {
 	}
 	
 	public static WikiTemplateStore getInstance(MailItem item) throws ServiceException {
-		return WikiTemplateStore.getInstance(item.getMailbox().getAccount().getId(), Integer.toString(item.getFolderId()));
+		int id = (item instanceof Folder) ? item.getId() : item.getFolderId();
+		return WikiTemplateStore.getInstance(item.getMailbox().getAccount().getId(), 
+				Integer.toString(id));
 	}
 	
 	public static WikiTemplateStore getInstance(String account, String k) {
