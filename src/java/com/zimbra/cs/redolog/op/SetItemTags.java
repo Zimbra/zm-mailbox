@@ -31,12 +31,12 @@ package com.zimbra.cs.redolog.op;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ArrayUtil;
 
 /**
  * @author jhahm
@@ -69,7 +69,7 @@ public class SetItemTags extends RedoableOp {
 
 	protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("ids=");
-        sb.append(ArrayUtil.toString(mIds)).append(", type=").append(mType);
+        sb.append(Arrays.toString(mIds)).append(", type=").append(mType);
         sb.append(", flags=[").append(mFlags);
         sb.append("], tags=[").append(mTags).append("]");
         if (mConstraint != null)

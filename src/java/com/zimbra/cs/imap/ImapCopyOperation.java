@@ -1,6 +1,7 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -11,7 +12,6 @@ import com.zimbra.cs.operation.CopyOperation;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
-import com.zimbra.cs.util.ArrayUtil;
 import com.zimbra.cs.util.Pair;
 
 public class ImapCopyOperation extends Operation {
@@ -74,7 +74,7 @@ public class ImapCopyOperation extends Operation {
 
     public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
-        toRet.append(" id=").append(ArrayUtil.toString(mItemIds)).append(" type=").append(mType).append(" target=").append(mFolderId);
+        toRet.append(" id=").append(Arrays.toString(mItemIds)).append(" type=").append(mType).append(" target=").append(mFolderId);
         return toRet.toString();
     }
 }

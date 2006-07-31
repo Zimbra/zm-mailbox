@@ -31,13 +31,13 @@ package com.zimbra.cs.redolog.op;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ArrayUtil;
 
 /**
  * @author jhahm
@@ -65,8 +65,8 @@ public class DeleteItem extends RedoableOp {
 	}
 
 	protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("id=");
-        sb.append(ArrayUtil.toString(mIds)).append(", type=").append(mType);
+        StringBuffer sb = new StringBuffer("ids=");
+        sb.append(Arrays.toString(mIds)).append(", type=").append(mType);
         if (mConstraint != null)
             sb.append(", constraint=").append(mConstraint);
         return sb.toString();

@@ -27,15 +27,6 @@ package com.zimbra.cs.util;
 
 public class ArrayUtil {
 
-    public static String toString(int[] array) {
-        if (array == null)
-            return "null";
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < array.length; i++)
-            sb.append(i == 0 ? "" : ",").append(array[i]);
-        return sb.append(']').toString();
-    }
-
     /**
      * Returns <code>true</code> if the given array is <code>null</code> or empty.
      */

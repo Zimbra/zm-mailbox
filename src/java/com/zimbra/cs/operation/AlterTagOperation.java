@@ -23,6 +23,7 @@
  */
 package com.zimbra.cs.operation;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.zimbra.cs.mailbox.Mailbox;
@@ -30,7 +31,6 @@ import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
-import com.zimbra.cs.util.ArrayUtil;
 
 public class AlterTagOperation extends Operation {
 
@@ -88,7 +88,7 @@ public class AlterTagOperation extends Operation {
     
     public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
-        toRet.append(" id=").append(ArrayUtil.toString(mItemIds)).append(" type=").append(mType).append(" tagId=").append(mTagId).append(" addTag=").append(mAddTag);
+        toRet.append(" id=").append(Arrays.toString(mItemIds)).append(" type=").append(mType).append(" tagId=").append(mTagId).append(" addTag=").append(mAddTag);
         return toRet.toString();
     }
 }
