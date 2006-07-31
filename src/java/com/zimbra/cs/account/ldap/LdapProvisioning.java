@@ -2371,7 +2371,7 @@ public class LdapProvisioning extends Provisioning {
         boolean locked = acct.getBooleanAttr(Provisioning.A_zimbraPasswordLocked, false);
         if (locked)
             throw AccountServiceException.PASSWORD_LOCKED();
-        setPassword(acct, newPassword);        
+        setPassword(acct, newPassword, true);        
     }
 
     /**
@@ -2447,7 +2447,7 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Account#setPassword(java.lang.String)
      */
     public void setPassword(Account acct, String newPassword) throws ServiceException {
-        setPassword(acct, newPassword, true);
+        setPassword(acct, newPassword, false);
     }
 
     private int getInt(Attributes attrs, String name, int defaultValue) throws NamingException {
