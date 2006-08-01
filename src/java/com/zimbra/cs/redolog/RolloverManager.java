@@ -151,22 +151,43 @@ public class RolloverManager {
 	private static class ArchiveLogFilenameComparator
 	implements Comparator<File> {
 		public int compare(File f1, File f2) {
-			long t1 = getEndTimeForFile(f1);
-			long t2 = getEndTimeForFile(f2);
-
-			long diff = t1 - t2;
-			if (diff < 0)
+			long t1 = getSeqForFile(f1);
+			long t2 = getSeqForFile(f2);
+			if (t1 < t2)
 				return -1;
-			else if (diff == 0)
-				return 0;
-			else
+			else if (t1 > t2)
 				return 1;
+
+			// We should never get here, but let's be safe.
+			t1 = getEndTimeForFile(f1);
+			t2 = getEndTimeForFile(f2);
+			if (t1 < t2)
+				return -1;
+			else if (t1 > t2)
+				return 1;
+			return 0;
 		}
 	}
 
-    public static long getEndTimeForFile(File f) {
+	public static long getSeqForFile(File f) {
+		String fname = f.getName();
+		int start = fname.lastIndexOf(SEQUENCE_PREFIX);
+		if (start == -1) return -1;
+		start += SEQUENCE_PREFIX.length();
+		int end = fname.indexOf(FILENAME_SUFFIX, start);
+		if (end == -1) return -1;
+		try {
+			String val = fname.substring(start, end);
+			return Long.parseLong(val);
+		} catch (StringIndexOutOfBoundsException se) {
+			return -1;
+		} catch (NumberFormatException ne) {
+			return -1;
+		}
+	}
+
+	public static long getEndTimeForFile(File f) {
         DateFormat fmt = new SimpleDateFormat(TIMESTAMP_FORMAT);
-        fmt.setTimeZone(TimeZone.getTimeZone("GMT"));
         fmt.setLenient(false);
         int prefixLen = ARCH_FILENAME_PREFIX.length();
         try {
@@ -177,25 +198,27 @@ public class RolloverManager {
         }
     }
 
-    public static String toArchiveLogFilename(long date) {
-    	return toArchiveLogFilename(new Date(date));
-    }
-
-    public static String toArchiveLogFilename(Date date) {
+    public static String toArchiveLogFilename(Date date, long seq) {
+        StringBuilder fname = new StringBuilder(ARCH_FILENAME_PREFIX);
         DateFormat fmt = new SimpleDateFormat(TIMESTAMP_FORMAT);
         fmt.setTimeZone(TimeZone.getTimeZone("GMT"));
-        String fname = ARCH_FILENAME_PREFIX + fmt.format(date) + ".log";
-        return fname;
+        fname.append(fmt.format(date));
+        fname.append(SEQUENCE_PREFIX).append(seq);
+        fname.append(FILENAME_SUFFIX);
+        // "redo-<yyyyMMdd.HHmmss>-s<seq>.log"
+        return fname.toString();
     }
 
-	private static final String ARCH_FILENAME_PREFIX = "arch.";
-	private static final String TEMP_FILENAME_PREFIX = "~tmp-redo.";
+	private static final String ARCH_FILENAME_PREFIX = "redo-";
+	private static final String TEMP_FILENAME_PREFIX = "~tmp-redo-";
+	private static final String SEQUENCE_PREFIX = "-seq";
+	private static final String FILENAME_SUFFIX = ".log";
 	private static final String TIMESTAMP_FORMAT = "yyyyMMdd.HHmmss.SSS";
 
 	public static class ArchiveLogFilenameFilter implements FilenameFilter {
 		public boolean accept(File dir, String name) {
 			if (name.indexOf(ARCH_FILENAME_PREFIX) == 0 &&
-				name.lastIndexOf(".log") == name.length() - 4)
+				name.lastIndexOf(FILENAME_SUFFIX) == name.length() - FILENAME_SUFFIX.length())
 				return true;
 			else
 				return false;
@@ -205,15 +228,15 @@ public class RolloverManager {
 	private static class TempLogFilenameFilter implements FilenameFilter {
 		public boolean accept(File dir, String name) {
 			if (name.indexOf(TEMP_FILENAME_PREFIX) == 0 &&
-				name.lastIndexOf(".log") == name.length() - 4)
+				name.lastIndexOf(FILENAME_SUFFIX) == name.length() - FILENAME_SUFFIX.length())
 				return true;
 			else
 				return false;
 		}
 	}
 
-	public File getRolloverFile() {
-        String fname = toArchiveLogFilename(new Date());
+	public File getRolloverFile(long seq) {
+        String fname = toArchiveLogFilename(new Date(), seq);
         File destDir = mRedoLogMgr.getRolloverDestDir();
         if (!destDir.exists()) {
             // Guard against someone messing around on server and
@@ -225,10 +248,15 @@ public class RolloverManager {
 		return new File(destDir, fname);
 	}
 
-	public String getTempFilename() {
-		DateFormat fmt = new SimpleDateFormat(TIMESTAMP_FORMAT);
-		fmt.setTimeZone(TimeZone.getTimeZone("GMT"));
-		return TEMP_FILENAME_PREFIX + fmt.format(new Date()) + ".log";
+	public String getTempFilename(long seq) {
+        StringBuilder fname = new StringBuilder(TEMP_FILENAME_PREFIX);
+        DateFormat fmt = new SimpleDateFormat(TIMESTAMP_FORMAT);
+        fmt.setTimeZone(TimeZone.getTimeZone("GMT"));
+        fname.append(fmt.format(new Date()));
+        fname.append(SEQUENCE_PREFIX).append(seq);
+        fname.append(FILENAME_SUFFIX);
+        // "~tmp-redo-<yyyyMMdd.HHmmss>-s<seq>.log"
+        return fname.toString();
 	}
 
     public synchronized long getCurrentSequence() {

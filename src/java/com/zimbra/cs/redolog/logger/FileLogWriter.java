@@ -332,6 +332,8 @@ public class FileLogWriter implements LogWriter {
     throws IOException {
         RolloverManager romgr = mRedoLogMgr.getRolloverManager();
 
+        long lastSeq = getSequence();
+
         // Close current log, so it's impossible for its content to change.
         noStat(true);
         close();
@@ -341,7 +343,7 @@ public class FileLogWriter implements LogWriter {
         String currentPath = mFile.getAbsolutePath();
 
         // Open a temporary logger.
-        File tempLogfile = new File(mFile.getParentFile(), romgr.getTempFilename());
+        File tempLogfile = new File(mFile.getParentFile(), romgr.getTempFilename(lastSeq + 1));
         FileLogWriter tempLogger =
             new FileLogWriter(mRedoLogMgr, tempLogfile, 0);
         tempLogger.open();
@@ -358,7 +360,7 @@ public class FileLogWriter implements LogWriter {
         tempLogger.close();
 
         // Rename the current log to rolled-over name.
-        File rolloverFile = romgr.getRolloverFile();
+        File rolloverFile = romgr.getRolloverFile(lastSeq);
         if (RedoConfig.redoLogDeleteOnRollover()) {
             // Delete the current log.  We don't need to hold on to the
             // indexing-only log files after rollover.
