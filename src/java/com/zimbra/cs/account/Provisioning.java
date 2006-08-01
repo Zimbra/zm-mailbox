@@ -866,6 +866,12 @@ public abstract class Provisioning {
     public static final String A_zimbraNotebookFolderCacheSize = "zimbraNotebookFolderCacheSize";
     public static final String A_zimbraNotebookMaxCachedTemplatesPerFolder = "zimbraNotebookMaxCachedTemplatesPerFolder";
     public static final String A_zimbraIsSystemResource        = "zimbraIsSystemResource";
+
+    /**
+     * If zimbraPublicServiceHostname is set for a mail domain, the name is used
+     * when generating public accessible URLs such as REST URL.
+     */
+    public static final String A_zimbraPublicServiceHostname = "zimbraPublicServiceHostname";
     
     private static Provisioning mProvisioning;
 
