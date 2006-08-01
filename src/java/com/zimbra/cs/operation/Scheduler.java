@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
@@ -144,11 +145,13 @@ public class Scheduler {
     public void schedule(IOperation op) throws ServiceException {
         mLock.lock();
         try {
+            int level = op.getPriority().getLevel();
+            
             if (opIsRunnable(op, null)) {
                 startRunning(op);
             } else {
                 ThreadedOperation blockedThread = new BlockedOperation(op, this);
-                mOpQueue[op.getPriority().getLevel()].add(blockedThread);
+                mOpQueue[level].add(blockedThread);
                 blockedThread.await();
                 assert(mLock.isHeldByCurrentThread());
                 assert(!mOpQueue[op.getPriority().getLevel()].contains(op));
@@ -164,8 +167,11 @@ public class Scheduler {
     public void runCompleted(IOperation op) {
         mLock.lock();
         try {
-            mRunningOperations--;
-            if (SPEW) System.out.println("Thread: " + Thread.currentThread().getName() + " runCompleted (1) "+mRunningOperations+" running");
+            mTotalRunningOperations--;
+            mRunningOperations[op.getPriority().getLevel()]--;
+            if (ZimbraLog.op.isDebugEnabled())
+                ZimbraLog.op.debug("Thread: " + Thread.currentThread().getName() + " runCompleted (1) "+mTotalRunningOperations+" running");
+            
             mCurLoad-=op.getLoad();
 
             do {
@@ -301,9 +307,11 @@ public class Scheduler {
             mSignaled = false;
             do {
                 try {
-                    if (SPEW)  System.out.println(Thread.currentThread().getName()+": Waiting on cond: "+mCond.toString() + " for lock " + mLock);
+                    if (ZimbraLog.op.isDebugEnabled())
+                        ZimbraLog.op.debug(Thread.currentThread().getName()+": Waiting on cond: "+mCond.toString() + " for lock " + mLock);
                     mCond.await();
-                    if (SPEW) System.out.println(Thread.currentThread().getName()+":  EXITING COND:  "+mCond.toString() + " for lock " + mLock);
+                    if (ZimbraLog.op.isDebugEnabled())
+                        ZimbraLog.op.debug(Thread.currentThread().getName()+":  EXITING COND:  "+mCond.toString() + " for lock " + mLock);
                 } catch (InterruptedException e) {}
             } while (!mSignaled);
 
@@ -316,7 +324,8 @@ public class Scheduler {
             mSignaled = true;
             assert(mCond != null);
 
-            if (SPEW) System.out.println("Signalling on cond: "+mCond.toString());
+            if (ZimbraLog.op.isDebugEnabled())
+                ZimbraLog.op.debug("Signalling on cond: "+mCond.toString());
             mCond.signal();
         }
 
@@ -357,9 +366,11 @@ public class Scheduler {
     private void startRunning(IOperation op) {
         assert(mLock.isHeldByCurrentThread());
 
-        if (SPEW) System.out.println("Thread: " + Thread.currentThread().getName() + " startRunning() "+mRunningOperations+" running");
-        mRunningOperations++;
-        assert(mRunningOperations <= mMaxSimultaneousOperations);
+        if (ZimbraLog.op.isDebugEnabled())
+            ZimbraLog.op.debug("Thread: " + Thread.currentThread().getName() + " startRunning() "+mTotalRunningOperations+" running");
+        mTotalRunningOperations++;
+        mRunningOperations[op.getPriority().getLevel()]++;
+//        assert(mRunningOperations[op.getPriority().getLevel()] <= mMaxSimultaneousOperations[op.getPriority().getLevel()]);
         mCurLoad+=op.getLoad();
     }
 
@@ -379,26 +390,29 @@ public class Scheduler {
                  see below for discussion) to see if we have too many
                  running at once.
          */
-        if (mRunningOperations == 0 || mCurLoad==0) {
-            // Don't check load in this case, always all the operation to (try to) run.
+        if (mTotalRunningOperations == 0 || mCurLoad==0) {
+            // Don't check load in this case, always allow the operation to (try to) run.
             // This just makes life easier -- if the system's max load gets set lower than 
             // one of the operation's load values, then the result will be that the op will run
             // but only while nothing else is happening -- that is a more reasonable result than
             // completely failing to run or throwing an exception 
             if (queue != null) {
                 IOperation removed = queue.remove(0);
-                if (SPEW) System.out.println("Removing: "+removed.toString());
+                if (ZimbraLog.op.isDebugEnabled())
+                    ZimbraLog.op.debug("Removing: "+removed.toString());
                 assert(removed == op);
             }
             return true;
         } else {
-            // skip #running check for highest-level operations, always let them run!
-            if  (op.getPriority() == Priority.ADMIN|| mRunningOperations+1 < mMaxSimultaneousOperations) {
-                int loadLeft = mTargetLoad[op.getPriority().getLevel()] - mCurLoad;
+            int level = op.getPriority().getLevel();
+            // skip running check for highest-level operations, always let them run!
+            if  (op.getPriority() == Priority.ADMIN || mTotalRunningOperations+1 < mMaxSimultaneousOperations[level]) {
+                int loadLeft = mTargetLoad[level] - mCurLoad;
                 if (op.getLoad() < loadLeft) {
                     if (queue != null) {
                         IOperation removed = queue.remove(0);
-                        if (SPEW) System.out.println("Removing: "+removed.toString());
+                        if (ZimbraLog.op.isDebugEnabled())
+                            ZimbraLog.op.debug("Removing: "+removed.toString());
                         assert(removed == op);
                     }
                     return true;
@@ -450,7 +464,10 @@ public class Scheduler {
 
             toRet.append("CurLoad=").append(mCurLoad).append(' ');
             assert(mLock.isHeldByCurrentThread());
-            toRet.append("Running=").append(mRunningOperations).append('\n');
+            toRet.append("Running=").append(mTotalRunningOperations).append("\n\t");
+            for (int i = 0; i < mRunningOperations.length; i++) 
+                toRet.append(mRunningOperations[i]).append(", ");
+            toRet.append('\n');
 
             for (Priority pri : Priority.values()) {
                 List<AsyncOperation> queue = mOpQueue[pri.getLevel()];
@@ -471,14 +488,13 @@ public class Scheduler {
     // runtime parameters
     //
     int[] mTargetLoad = new int[Priority.NUM_PRIORITIES];
-    int mMaxSimultaneousOperations;
-
+    int[] mMaxSimultaneousOperations = new int[Priority.NUM_PRIORITIES];
 
     ////////////// 
     // current state
     volatile int mCurLoad;
-    volatile int mRunningOperations;
-
+    volatile int mTotalRunningOperations;
+    volatile int mRunningOperations[] = new int[Priority.NUM_PRIORITIES];
 
     /**
      * If contention becomes a problem, this can be extended 
@@ -487,31 +503,86 @@ public class Scheduler {
     private static final Scheduler sScheduler[] = new Scheduler[1];
 
     static {
-        sScheduler[0] = new Scheduler(10000, 1000);
+        
+        int[] defaultOpsConcurrency = new int[] { 10000,10000,10000,10000,10000 };
+        int[] ops = readOpsFromLC();
+        if (ops == null)
+            ops = defaultOpsConcurrency;
+        
+        sScheduler[0] = new Scheduler(10000, ops);
     }
-
-    protected Scheduler(int targetLoad, int maxOps) {
-
+    
+    public static int[] readOpsFromString(String str) {
+        int[] toRet = new int[Priority.NUM_PRIORITIES];
+        
+        String[] strs = str.split(",");
+        if (strs.length < Priority.NUM_PRIORITIES)
+            return null;
+        
+        for (int i = 0; i < Priority.NUM_PRIORITIES; i++) {
+            try {
+                toRet[i] = Integer.parseInt(strs[i]);
+                if (toRet[i] <= 0) {
+                    ZimbraLog.system.warn("Error parsing zimbra_throttle_op_concurrency (\""+str+"\")");
+                    return null;
+                }
+            } catch (NumberFormatException e) {
+                ZimbraLog.system.warn("Error parsing zimbra_throttle_op_concurrency (\""+str+"\")");
+                return null;
+            }
+        }
+        return toRet;
+    }
+    
+    private static int[] readOpsFromLC() {
+        String value = LC.zimbra_throttle_op_concurrency.value();
+        return readOpsFromString(value);
+    }
+    
+    protected Scheduler(int targetLoad, int[] maxOps) {
+        
         for (int i = 0; i < Priority.NUM_PRIORITIES; i++)
             mOpQueue[i] = new ArrayList<AsyncOperation>();
 
         setParams(targetLoad, maxOps);
+        
+        for (int i = 0; i < Priority.NUM_PRIORITIES; i++)
+        {
+            ZimbraLog.op.warn("\t\tPRIORITY "+i+" ==> " + mMaxSimultaneousOperations[i]);
+        }
     }
-
-    private void setParams(int targetLoad, int maxOps) {
+    
+    public static void setConcurrency(int[] maxOps) {
+        for (Scheduler s : sScheduler) {
+            s.setMaxOps(maxOps);
+        }
+    }
+    
+    private void setMaxOps(int[] maxOps) {
         mMaxSimultaneousOperations = maxOps;
+    }
+    
+    public int[] getMaxOps() {
+        int[] toRet = new int[mMaxSimultaneousOperations.length];
+        System.arraycopy(mMaxSimultaneousOperations, 0, toRet, 0, mMaxSimultaneousOperations.length);
+        return toRet;
+    }
+    
 
-        mTargetLoad[0] = targetLoad;
-        for (int i = 1; i < Priority.NUM_PRIORITIES; i++) {
-            targetLoad = (targetLoad * 9) / 10;
-            if (targetLoad < 1)
-                targetLoad = 1;
-
+    private void setParams(int targetLoad, int[] maxOps) {
+        setMaxOps(maxOps);
+        
+        if (targetLoad < 1)
+            targetLoad = 1;
+        
+        mTargetLoad[Priority.NUM_PRIORITIES-1] = targetLoad;
+        for (int i = Priority.NUM_PRIORITIES-2; i >= 0; i--) {
+            targetLoad *= 2;
             mTargetLoad[i] = targetLoad;
         }
     }
-
-    public static void setSchedulerParams(int  targetLoad, int maxOps) {
+    
+    public static void setSchedulerParams(int  targetLoad, int[] maxOps) {
         int curSched  = 0;
         for (Scheduler s : sScheduler) {
             s.setParams(targetLoad, maxOps);
@@ -529,7 +600,6 @@ public class Scheduler {
         }
     }
 
-    static boolean SPEW = false;
     static final int MIN_LOAD = 1;
     ReentrantLock mLock = new ReentrantLock();
     ReentrantLock getLock() { return mLock; }
@@ -618,7 +688,7 @@ public class Scheduler {
      */
     public static void main(String[] args) {
 
-        Scheduler s = new Scheduler(30, 10);
+        Scheduler s = new Scheduler(30, new int[] {10000,10000,10000,10000,10000});
 
         int NUMTHREADS = 30;
 

@@ -112,13 +112,13 @@ public class ConfigLoader {
                 if (!root.getName().equals(E_SCHEDULER))
                     throw new DocumentException("config file " + configFile + " root tag is not " + E_SCHEDULER);
 
-                Element eConfig = root.element(E_CONFIG);
-                if (eConfig != null) {
-                    int maxLoad = getAttrAsInt(eConfig, A_MAX_LOAD, 10000); 
-                    int maxOps = getAttrAsInt(eConfig, A_MAX_OPS, 25);
-
-                    Scheduler.setSchedulerParams(maxLoad, maxOps);
-                }
+//                Element eConfig = root.element(E_CONFIG);
+//                if (eConfig != null) {
+//                    int maxLoad = getAttrAsInt(eConfig, A_MAX_LOAD, 10000); 
+//                    int maxOps = getAttrAsInt(eConfig, A_MAX_OPS, 25);
+//
+//                    Scheduler.setSchedulerParams(maxLoad, new int[] {10000,10000,10000,10000,10000});
+//                }
 
                 for (Iterator iter = root.elementIterator(E_OP); iter.hasNext();) {
                     Element e = (Element) iter.next();

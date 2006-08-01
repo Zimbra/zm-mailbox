@@ -108,6 +108,8 @@ public class LC {
     
     public static final KnownKey zimbra_spam_report_queue_size;
     
+    public static final KnownKey zimbra_throttle_op_concurrency;
+    
     public static final KnownKey stats_img_folder;
     
     public static final KnownKey ldap_host;
@@ -376,7 +378,12 @@ public class LC {
         zimbra_spam_report_queue_size.setDoc
             ("For Junk/Not Junk Msg/ConvActionRequests this queue size limits the" +
              " the server workqueue for processing the forwards");
-
+        
+        zimbra_throttle_op_concurrency = new KnownKey("zimbra_throttle_op_concurrency");
+        zimbra_throttle_op_concurrency.setDefault("1000,1000,1000,1000,1000");
+        zimbra_throttle_op_concurrency.setDoc("Comma-Separated list of concurrency values for each of the 5 priority levels " +
+                    "in order from highest priority to lowest priority");
+                    
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "work");
         stats_img_folder.setDoc

@@ -269,6 +269,9 @@ public class AdminService implements DocumentService {
     public static final QName INIT_NOTEBOOK_REQUEST  = QName.get("InitNotebookRequest",  NAMESPACE);
     public static final QName INIT_NOTEBOOK_RESPONSE = QName.get("InitNotebookResponse", NAMESPACE);
     
+    public static final QName SET_THROTTLE_REQUEST = QName.get("SetThrottleRequest", NAMESPACE);
+    public static final QName SET_THROTTLE_RESPOSNE = QName.get("SetThrottleResponse", NAMESPACE);
+    
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -399,6 +402,8 @@ public class AdminService implements DocumentService {
     public static final String E_TEMPLATE = "template";
     public static final String A_DEST = "dest";
     
+    public static final String A_CONCURRENCY = "concurrency";
+    
     public void registerHandlers(DocumentDispatcher dispatcher) {
         dispatcher.registerHandler(PING_REQUEST, new Ping());
         dispatcher.registerHandler(CHECK_HEALTH_REQUEST, new CheckHealth());
@@ -517,7 +522,10 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(INIT_NOTEBOOK_REQUEST, new InitNotebook());
         
         dispatcher.registerHandler(AUTO_COMPLETE_GAL_REQUEST, new AutoCompleteGal());
-        dispatcher.registerHandler(SEARCH_GAL_REQUEST, new SearchGal());        
+        dispatcher.registerHandler(SEARCH_GAL_REQUEST, new SearchGal());
+        
+        // throttling
+        dispatcher.registerHandler(SET_THROTTLE_REQUEST, new SetThrottle());
     }
 
     /**
