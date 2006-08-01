@@ -210,7 +210,8 @@ public class ToXML {
                 String name = folder.getName();
                 if (name != null && name.length() > 0)
                     elem.addAttribute(MailService.A_NAME, name);
-                if (folder.getDefaultView() == MailItem.TYPE_WIKI)
+                if (folder.getDefaultView() == MailItem.TYPE_WIKI ||
+                		folder.getDefaultView() == MailItem.TYPE_APPOINTMENT)
                 	encodeRestUrl(elem, folder);
             }
             if (needToOutput(fields, Change.MODIFIED_FOLDER))
