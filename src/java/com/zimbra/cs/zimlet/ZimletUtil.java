@@ -32,12 +32,13 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,6 +52,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.util.FileUtil;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.Pair;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
@@ -86,25 +88,32 @@ public class ZimletUtil {
 	}
 	
 	public static List<Zimlet> orderZimletsByPriority(List<Zimlet> zimlets) {
-		TreeMap<Version,Zimlet> versionMap = new TreeMap<Version,Zimlet>();
-		List<Zimlet> plist = new ArrayList<Zimlet>();
+		// create a sortable collection, sort, then return List<Zimlet> in the
+		// sorted order.  version is not comparable in String format.
+		List<Pair<Version,Zimlet>> plist = new ArrayList<Pair<Version,Zimlet>>();
 		for (Zimlet z : zimlets) {
 			String pstring = z.getPriority();
 			if (pstring == null) {
 				// no priority.  put it at the end of priority list
-				plist.add(z);
-			} else {
-				Version v = new Version(pstring);
-				versionMap.put(v, z);
+				pstring = Integer.toString(Integer.MAX_VALUE);
 			}
+			Version v = new Version(pstring);
+			plist.add(new Pair<Version,Zimlet>(v,z));
 		}
+		Collections.sort(plist, 
+			new Comparator<Pair<Version,Zimlet>>() {
+				public int compare(Pair<Version,Zimlet> first,
+									Pair<Version,Zimlet> second) {
+					return first.getFirst().compareTo(second.getFirst());
+				}
+			}
+		);
 		
-		// go from low to high priority
-		while (!versionMap.isEmpty()) {
-			Version v = versionMap.lastKey();
-			plist.add(0, versionMap.remove(v));
+		List<Zimlet> ret = new ArrayList<Zimlet>();
+		for (Pair<Version,Zimlet> p : plist) {
+			ret.add(p.getSecond());
 		}
-		return plist;
+		return ret;
 	}
 	
 	public static List<Zimlet> orderZimletsByPriority(String[] zimlets) {
@@ -871,10 +880,16 @@ public class ZimletUtil {
 		List<Zimlet> plist = orderZimletsByPriority();
 		Provisioning prov = Provisioning.getInstance();
 
+		Zimlet z = prov.getZimlet(zimlet);
+		setPriority(z, priority, plist);
+	}
+	
+	public static void setPriority(Zimlet z, int priority, List<Zimlet> plist) throws ServiceException {
 		// remove self first
-		for (Zimlet z : plist) {
-			if (z.getName().equals(zimlet)) {
-				plist.remove(z);
+		// XXX LdapEntry.equals() is not implemented
+		for (Zimlet zim : plist) {
+			if (zim.compareTo(z) == 0) {
+				plist.remove(zim);
 				break;
 			}
 		}
@@ -885,38 +900,20 @@ public class ZimletUtil {
 		Version newPriority;
 		if (priority == 0) {
 			newPriority = new Version("0");
+			z.setPriority(newPriority.toString());
+			plist.add(0, z);
 			if (plist.size() > 0) {
-				// take the current p0, bump down p0zimlet.
-				Zimlet p0zimlet = plist.get(0);
-				String pString = p0zimlet.getPriority();
-				if (pString == null) {
-					setPriority(p0zimlet.getName(), priority+1);
-				} else {
-					Version p0 = new Version(pString);
-					newPriority = new Version(p0);
-					if (plist.size() > 1) {
-						Zimlet p1zimlet = plist.get(1);
-						pString = p1zimlet.getPriority();
-						if (pString == null) {
-							p0.increment();
-							Version p1 = new Version(p0);
-							p1.increment();
-							p1zimlet.setPriority(p1.toString());
-						} else {
-							Version p1 = new Version(pString);
-							p0.increment(p1);
-						}
-					} else {
-						p0.increment();
-					}
-					p0zimlet.setPriority(p0.toString());
-				}
+				// make sure the previous p0 zimlet is now p1.
+				Zimlet p0zimlet = plist.get(1);
+				setPriority(p0zimlet, 1, plist);
 			}
 		} else {
 			// take the priority of previous zimlet
 			Zimlet oneAbove = plist.get(priority-1);
 			String pString = oneAbove.getPriority();
 			if (pString == null) {
+				// priority is mandatory now, but it could be from old version
+				// when we didn't have priorities.
 				pString = Integer.toString(priority);
 			}
 			newPriority = new Version(pString);
@@ -928,14 +925,23 @@ public class ZimletUtil {
 					pString = Integer.toString(priority+2);
 				}
 				Version nextPriority = new Version(pString);
-				newPriority.increment(nextPriority);
+				if (newPriority.compareTo(nextPriority) < 0)
+					newPriority.increment(nextPriority);
+				else {
+					// it really is an error because priorities of two zimlets
+					// shouldn't be the same.  bump the next one down
+					newPriority.increment();
+					z.setPriority(newPriority.toString());
+					plist.add(priority, z);
+					setPriority(oneBelow, priority + 1, plist);
+					return;
+				}
 			} else {
 				// simply increment from the previous priority
 				newPriority.increment();
 			}
+			z.setPriority(newPriority.toString());
 		}
-		Zimlet z = prov.getZimlet(zimlet);
-		z.setPriority(newPriority.toString());
 	}
 	
 	private static void test() {
