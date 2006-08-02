@@ -24,14 +24,11 @@
  */
 package com.zimbra.cs.service.wiki;
 
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.ServiceException.Argument;
 import com.zimbra.cs.service.mail.MailDocumentHandler;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -71,35 +68,5 @@ public abstract class WikiDocumentHandler extends MailDocumentHandler {
 			accountId = fid.getAccountId();
 		}
 		return Wiki.getInstance(ctxt, accountId, fid.getId());
-	}
-	
-	protected void validateRequest(ZimbraSoapContext lc, Wiki wiki, int itemId, long ver, String wikiWord) throws ServiceException {
-		if (itemId == 0 || ver == 0) {
-			if (itemId != 0 || ver != 0) {
-				throw new IllegalArgumentException("either itemId or version is zero");
-			}
-			WikiPage ww = wiki.lookupWiki(wikiWord);
-			if (ww != null) {
-				throw MailServiceException.ALREADY_EXISTS("wiki word "+wikiWord+" in folder "+wiki.getWikiFolderId(),
-						new Argument(MailService.A_ID, ww.getId(), Argument.Type.IID),
-						new Argument(MailService.A_VERSION, ww.getLastRevision(), Argument.Type.NUM));
-			}
-		} else {
-			WikiPage ww = wiki.lookupWiki(wikiWord);
-			if (ww == null) {
-				throw MailServiceException.MODIFY_CONFLICT(
-						new Argument(MailService.A_ID, itemId, Argument.Type.IID),
-						new Argument(MailService.A_VERSION, ver, Argument.Type.NUM));
-			}
-			ItemId iid = new ItemId(ww.getId(), lc);
-			if (iid.getId() != itemId) {
-				throw MailServiceException.INVALID_ID(itemId);
-			}
-			if (ww.getLastRevision() != ver) {
-				throw MailServiceException.MODIFY_CONFLICT(
-						new Argument(MailService.A_ID, ww.getId(), Argument.Type.IID),
-						new Argument(MailService.A_VERSION, ww.getLastRevision(), Argument.Type.NUM));
-			}
-		}
 	}
 }

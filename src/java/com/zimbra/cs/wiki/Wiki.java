@@ -688,7 +688,8 @@ public abstract class Wiki {
 			Wiki w = Wiki.getInstance(ctxt, account, fid);
 			synchronized (w) {
 				if (w.lookupWiki(page.getWikiWord()) != null)
-					throw MailServiceException.ALREADY_EXISTS("wiki word "+wikiWord+" in folder "+folder,
+					throw MailServiceException.ALREADY_EXISTS("wiki word "+wikiWord+" in folder "+fid,
+							new Argument(MailService.A_NAME, wikiWord, Argument.Type.STR),
 							new Argument(MailService.A_ID, id, Argument.Type.IID),
 							new Argument(MailService.A_VERSION, ver, Argument.Type.NUM));
 
@@ -701,6 +702,12 @@ public abstract class Wiki {
 			WikiPage oldPage = findPage(ctxt, account, id);
 			if (oldPage == null)
 				throw new WikiServiceException.NoSuchWikiException("page id="+id+" not found");
+			if (oldPage.getLastRevision() != ver) {
+				throw MailServiceException.MODIFY_CONFLICT(
+						new Argument(MailService.A_NAME, wikiWord, Argument.Type.STR),
+						new Argument(MailService.A_ID, oldPage.getId(), Argument.Type.IID),
+						new Argument(MailService.A_VERSION, oldPage.getLastRevision(), Argument.Type.NUM));
+			}
 			oldPage.add(ctxt, page);
 		}
 	}
