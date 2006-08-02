@@ -406,7 +406,7 @@
 	<target name="init-wiki" description="Initialize the default Wiki account">
 		<echo>Initializing wiki@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-l in ${wiki.user.default}@${zimbra.server.hostname} test123 data/wiki/Template Template" />
+			<arg line="in ${wiki.user.default}@${zimbra.server.hostname} test123 data/wiki/Template Template" />
 		</java>
 	</target>
 
@@ -608,7 +608,6 @@
 			zimbraMailQuota 0 \
 			zimbraHideInGal TRUE
 		mcf zimbraSpamIsNotSpamAccount ham-sink@${zimbra.server.hostname}
-		mcf zimbraNotebookAccount ${wiki.user.default}@${zimbra.server.hostname}
 		ccr room-mississippi@${zimbra.server.hostname} \
 					       displayName 'Mississippi Conference Room' \
 						   description 'Projector, DVD' \
