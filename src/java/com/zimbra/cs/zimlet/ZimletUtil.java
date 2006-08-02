@@ -902,7 +902,7 @@ public class ZimletUtil {
 			newPriority = new Version("0");
 			z.setPriority(newPriority.toString());
 			plist.add(0, z);
-			if (plist.size() > 0) {
+			if (plist.size() > 1) {
 				// make sure the previous p0 zimlet is now p1.
 				Zimlet p0zimlet = plist.get(1);
 				setPriority(p0zimlet, 1, plist);
