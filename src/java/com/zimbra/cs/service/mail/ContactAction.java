@@ -99,7 +99,7 @@ public class ContactAction extends ItemAction {
             String localResults;
             if (operation.equals(OP_UPDATE)) {
                 // duplicating code from ItemAction.java for now...
-                String folderId = action.getAttribute(MailService.A_FOLDER, "-1");
+                String folderId = action.getAttribute(MailService.A_FOLDER, null);
                 ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
                 if (!iidFolder.belongsTo(mbox))
                     throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);

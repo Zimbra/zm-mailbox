@@ -153,7 +153,7 @@ public class ItemAction extends MailDocumentHandler {
         		localResults = ItemActionOperation.SPAM(zsc, session, octxt, mbox,
         					Requester.SOAP, local, type, flagValue, tcon, folderId).getResult();
         	} else if (opStr.equals(OP_UPDATE)) {
-                String folderId = action.getAttribute(MailService.A_FOLDER, "-1");
+                String folderId = action.getAttribute(MailService.A_FOLDER, null);
                 ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
         		if (!iidFolder.belongsTo(mbox))
         			throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
