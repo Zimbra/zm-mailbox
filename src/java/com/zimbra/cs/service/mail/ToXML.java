@@ -1291,7 +1291,7 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_DATE))
             m.addAttribute(MailService.A_DATE, doc.getDate());
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
-            m.addAttribute(MailService.A_FOLDER, lc.formatItemId(doc.getFolderId()));
+            m.addAttribute(MailService.A_FOLDER, new ItemId(doc.getMailbox().getAccountId(), doc.getFolderId()).toString(lc));
         recordItemTags(m, doc, fields);
 
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
