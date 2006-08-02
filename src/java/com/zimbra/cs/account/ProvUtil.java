@@ -1143,7 +1143,7 @@ public class ProvUtil implements DebugListener {
     		toFolder = args[4];
     	}
     	
-    	WikiUtil wu = WikiUtil.getInstance(null, username, password);
+    	WikiUtil wu = WikiUtil.getInstance(mProv, mServer, username, password);
     	wu.initDefaultWiki();
     	
     	if (fromDir != null && toFolder != null) {
@@ -1151,7 +1151,6 @@ public class ProvUtil implements DebugListener {
     	}
     }
     private void initDomainNotebook(String[] args) throws ServiceException {
-    	int foo = args.length;
     	if (args.length != 4 && args.length != 6) {usage(); return; }
     	
     	String domain = null;
@@ -1168,7 +1167,7 @@ public class ProvUtil implements DebugListener {
     		toFolder = args[5];
     	}
     	
-    	WikiUtil wu = WikiUtil.getInstance(null, username, password);
+    	WikiUtil wu = WikiUtil.getInstance(mProv, mServer, username, password);
     	wu.initDomainWiki(domain);
     	
     	if (fromDir != null && toFolder != null) {
@@ -1190,7 +1189,7 @@ public class ProvUtil implements DebugListener {
     		toFolder = args[4];
     	}
     	
-    	WikiUtil wu = WikiUtil.getInstance(null, username, password);
+    	WikiUtil wu = WikiUtil.getInstance(mProv, mServer, username, password);
     	doImport(fromDir, toFolder, wu);
     }
     

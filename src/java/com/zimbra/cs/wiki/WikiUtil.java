@@ -48,9 +48,12 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.client.*;
 import com.zimbra.cs.client.soap.*;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
@@ -79,10 +82,13 @@ public abstract class WikiUtil {
     protected String mUsername;
     protected String mPassword;
     
+    protected Provisioning mProv;
+
     private static class WikiMboxUtil extends WikiUtil {
         public WikiMboxUtil(String user, String pass) {
             mUsername = user;
             mPassword = pass;
+            mProv = Provisioning.getInstance();
         }
         private void populateFolders(OperationContext octxt, Mailbox mbox, Folder where, File file) throws ServiceException, IOException {
             File[] list = file.listFiles();
@@ -149,8 +155,7 @@ public abstract class WikiUtil {
         }
         
         protected void emptyNotebooks(String where) throws ServiceException {
-            Provisioning prov = Provisioning.getInstance();
-            Account acct = prov.get(AccountBy.name, mUsername);
+            Account acct = mProv.get(AccountBy.name, mUsername);
             Mailbox mbox = Mailbox.getMailboxByAccount(acct);
             OperationContext octxt = new OperationContext(acct);
             
@@ -164,8 +169,7 @@ public abstract class WikiUtil {
         
         public void startImport(String where, File what) throws ServiceException, IOException {
             emptyNotebooks(where);
-            Provisioning prov = Provisioning.getInstance();
-            Account acct = prov.get(AccountBy.name, mUsername);
+            Account acct = mProv.get(AccountBy.name, mUsername);
             Mailbox mbox = Mailbox.getMailboxByAccount(acct);
             OperationContext octxt = new OperationContext(acct);
             
@@ -218,25 +222,19 @@ public abstract class WikiUtil {
         private String mUrl;
         private String mUploadUrl;
         
-        public WikiSoapUtil(String soapUrl, String user, String pass) throws ServiceException {
-            mUsername = user;
-            mPassword = pass;
-            if (pass == null)
-                mPassword = sDEFAULTPASSWORD;
-            
-            mUrl = soapUrl;
-
-            if (mUrl == null) {
-                Server s = Provisioning.getInstance().getLocalServer();
-                mUrl = URLUtil.getMailURL(s, ZimbraServlet.USER_SERVICE_URI, false);
-                mUploadUrl = URLUtil.getMailURL(s, "/service/upload", false);
-            } else {
-                int end = mUrl.length() - 1;
-                if (mUrl.charAt(end) == '/')
-                    end--;
-                int index = mUrl.lastIndexOf('/', end);
-                mUploadUrl = mUrl.substring(0, index) + "/upload";
-            }
+        public WikiSoapUtil(Provisioning soapProv, String server, String user, String pass) throws ServiceException {
+        	mProv = soapProv;
+        	mUsername = user;
+        	mPassword = pass;
+        	if (pass == null)
+        		mPassword = sDEFAULTPASSWORD;
+        	Server s;
+        	if (server == null || server.equals("localhost"))
+        		s = mProv.getLocalServer();
+        	else
+        		s = mProv.get(ServerBy.name, server);
+        	mUrl = URLUtil.getMailURL(s, ZimbraServlet.USER_SERVICE_URI, false);
+        	mUploadUrl = URLUtil.getMailURL(s, "/service/upload", false);
         }
         
         public void setVerbose() {
@@ -508,8 +506,12 @@ public abstract class WikiUtil {
     public abstract void setVerbose();
     
     public Account createWikiAccount() throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        Account account = prov.get(AccountBy.name, mUsername);
+        Account account = null;
+        try {
+        	account = mProv.get(AccountBy.name, mUsername);
+        } catch (Exception e) {
+        }
+        
         if (account == null) {
             if (mPassword == null) {
                 mPassword = sDEFAULTPASSWORD;
@@ -517,7 +519,7 @@ public abstract class WikiUtil {
             Map<String,Object> attrs = new HashMap<String, Object>();
             attrs.put(Provisioning.A_zimbraHideInGal, Provisioning.TRUE);
             attrs.put(Provisioning.A_zimbraIsSystemResource, Provisioning.TRUE);
-            account = prov.createAccount(mUsername, mPassword, attrs); 
+            account = mProv.createAccount(mUsername, mPassword, attrs); 
         }
         return account;
     }
@@ -540,8 +542,7 @@ public abstract class WikiUtil {
     }
     
     public void initDefaultWiki() throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        Config globalConfig = prov.getConfig();
+        Config globalConfig = mProv.getConfig();
         initWiki(globalConfig);
     }
     
@@ -549,8 +550,7 @@ public abstract class WikiUtil {
         if (domain == null) {
             throw WikiServiceException.ERROR("invalid argument - empty domain");
         }
-        Provisioning prov = Provisioning.getInstance();
-        Domain dom = prov.get(DomainBy.name, domain);
+        Domain dom = mProv.get(DomainBy.name, domain);
         if (dom == null) {
             throw WikiServiceException.ERROR("invalid domain: " + domain);
         }
@@ -558,8 +558,7 @@ public abstract class WikiUtil {
     }
     
     public void initDomainWiki(Domain dom) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        Config globalConfig = prov.getConfig();
+        Config globalConfig = mProv.getConfig();
         String globalWikiAcct = globalConfig.getAttr(Provisioning.A_zimbraNotebookAccount, null);
         if (globalWikiAcct == null)
         	throw WikiServiceException.ERROR("must initialize global wiki before domain wiki");
@@ -586,7 +585,7 @@ public abstract class WikiUtil {
             ZimbraLog.wiki.info("updating default account from " + prevAcct + " to " + mUsername);
             HashMap<String,String> attrs = new HashMap<String,String>();
             attrs.put(Provisioning.A_zimbraNotebookAccount, mUsername);
-            Provisioning.getInstance().modifyAttrs(entry, attrs);
+            mProv.modifyAttrs(entry, attrs);
         }
     }
     
@@ -600,8 +599,8 @@ public abstract class WikiUtil {
     /*
      * returns soap based implementation.  used for command line based usage.
      */
-    public static WikiUtil getInstance(String url, String user, String pass) throws ServiceException {
-        return new WikiSoapUtil(url, user, pass);
+    public static WikiUtil getInstance(Provisioning prov, String server, String user, String pass) throws ServiceException {
+        return new WikiSoapUtil(prov, server, user, pass);
     }
     
     public static void main(String[] args) throws Exception {
@@ -613,7 +612,7 @@ public abstract class WikiUtil {
         CommandLineParser parser = new GnuParser();
         Options options = new Options();
         options.addOption("v", "verbose",  false, "verbose");
-        options.addOption("s", "server",   true, "server URL");
+        options.addOption("s", "server",   true, "server name");
         options.addOption("u", "username", true, "username of the target account");
         options.addOption("p", "password", true, "password of the target account");
         
@@ -632,15 +631,20 @@ public abstract class WikiUtil {
         
         assert(cl != null);
         
-        String url, username, password;
+        String server, username, password;
         String dir = cl.getOptionValue("d");
         if (cl.hasOption("v")) 
             LmcSoapRequest.setDumpXML(true);
-        url = cl.getOptionValue("s", null);
+        server = cl.getOptionValue("s", LC.zimbra_zmprov_default_soap_server.value());
         username = cl.getOptionValue("u", defaultUsername);
         password = cl.getOptionValue("p", defaultPassword);
-        WikiUtil prog = WikiUtil.getInstance(url, username, password);
+        
+        SoapProvisioning sp = new SoapProvisioning();
+        sp.soapSetURI("https://"+server+":"+LC.zimbra_admin_service_port.intValue()+ZimbraServlet.ADMIN_SERVICE_URI);
+        sp.soapAdminAuthenticate(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
+
+        WikiUtil prog = WikiUtil.getInstance(sp, server, username, password);
         prog.initDefaultWiki();
-        prog.startImport("notebook", new File(dir));
+        prog.startImport("Template", new File(dir));
     }
 }
