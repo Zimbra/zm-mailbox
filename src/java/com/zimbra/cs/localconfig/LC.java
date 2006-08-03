@@ -203,6 +203,7 @@ public class LC {
     public static final KnownKey nio_imap_enable;
     public static final KnownKey nio_imap_debug_logging;
     public static final KnownKey nio_imap_write_queue_max_size_unauth;
+    public static final KnownKey nio_imap_write_queue_max_size;
     public static final KnownKey nio_write_buffer_compaction_percent;
     
     public static final KnownKey zimbra_mtareport_max_recipients;
@@ -781,7 +782,15 @@ public class LC {
              " This is the max capacity of the write queue for an connection" +
              " that has not yet logged in. Default is > 16K because" +
              " of SSLEngine.");
-                    
+        
+        nio_imap_write_queue_max_size = new KnownKey("nio_imap_write_queue_max_size");
+        nio_imap_write_queue_max_size.setDefault("10240000");        
+        nio_imap_write_queue_max_size.setDoc
+            ("If the OS buffers are full (not a common/normal occurence)," +
+             " the NIO framework has to queue the requested write in Java heap." +
+             " The larger of mta max message size or this is the max capacity of" +
+             " the write queue for an authenticated connection.");
+
         nio_write_buffer_compaction_percent = new KnownKey("nio_write_buffer_compaction_percent");
         nio_write_buffer_compaction_percent.setDefault("50");
         nio_write_buffer_compaction_percent.setDoc

@@ -656,8 +656,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             ZimbraLog.imap.debug("disabling unauth connection alarm");
             mConnection.cancelAlarm();
             
+            int lcMax = LC.nio_imap_write_queue_max_size.intValue();
             com.zimbra.cs.account.Config config = Provisioning.getInstance().getConfig();            
-            mConnection.setWriteQueueMaxCapacity(config.getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, ImapServer.IMAP_WRITE_QUEUE_MAX_SIZE));
+            int msgMax = config.getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, lcMax);
+            mConnection.setWriteQueueMaxCapacity(Math.max(lcMax, msgMax));
         } catch (ServiceException e) {
             if (mSession != null)
                 mSession.clearTagCache();
