@@ -80,7 +80,15 @@ public class RedoPlayer {
         mOpsMap.clear();
     }
 
-    /**
+	public void scanLog(File logfile,
+            boolean redoCommitted,
+            Map<Integer, Integer> mboxIDsMap,
+            long startTime)
+	throws IOException, ServiceException {
+        scanLog(logfile, redoCommitted, mboxIDsMap, startTime, Long.MAX_VALUE);
+	}
+
+	/**
 	 * Scans a redo log file.  An op that is neither committed nor aborted is
 	 * added to mOpsMap.  These are the ops that need to be reattempted during
 	 * crash recovery.  If redoCommitted is true, an op is reattempted as soon
@@ -94,14 +102,17 @@ public class RedoPlayer {
      *                   given by the value set of the map.  Thus, it is
      *                   possible to replay operations from one mailbox in
      *                   a different mailbox.
-     * @param mailboxIds[] - if set, then restrict the replay of log entries
-     *                       to ones which match Mailbox IDs
+     * @param startTime  Only process ops whose prepare time is at or later than
+     *                   this time.
+     * @param endTime    Only process ops whose commit time is before (but not
+     *                   at) this time.
 	 * @throws IOException
 	 */
 	public void scanLog(File logfile,
                         boolean redoCommitted,
                         Map<Integer, Integer> mboxIDsMap,
-                        long startingTime)
+                        long startTime,
+                        long endTime)
     throws IOException, ServiceException {
 		FileLogReader logReader = new FileLogReader(logfile, mWriteable);
 		logReader.open();
@@ -116,7 +127,7 @@ public class RedoPlayer {
 				if (mLog.isDebugEnabled())
 					mLog.debug("Read: " + op);
 
-                playOp(op, redoCommitted, mboxIDsMap, startingTime);
+                playOp(op, redoCommitted, mboxIDsMap, startTime, endTime);
 			}
 		} catch (IOException e) {
 			// The IOException could be a real I/O problem or it could mean
@@ -156,7 +167,8 @@ public class RedoPlayer {
     public void playOp(RedoableOp op,
                        boolean redoCommitted,
                        Map<Integer, Integer> mboxIDsMap,
-                       long startingTime)
+                       long startTime,
+                       long endTime)
     throws ServiceException {
 
         if (op.isStartMarker()) {
@@ -240,7 +252,8 @@ public class RedoPlayer {
                 }
 
                 if (redoCommitted && prepareOp != null && (op instanceof CommitTxn) &&
-                	(startingTime == -1 || prepareOp.getTimestamp() >= startingTime)) {
+                	(startTime == -1 || prepareOp.getTimestamp() >= startTime) &&
+                	op.getTimestamp() < endTime) {
                 	boolean allowRedo = false;
                 	if (mboxIDsMap == null) {
                 		// Caller doesn't care which mailbox(es) the op is for.
