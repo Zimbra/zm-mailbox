@@ -168,16 +168,25 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
+    private enum DeliveryAction {
+        discard, // local delivery is disabled
+        defer,   // can not deliver to mailbox right now - backup maybe in progress
+        deliver  // OK to deliver
+    }
+    
     private static class RecipientDetail {
     	public Account account;
         public Mailbox mbox;
         public ParsedMessage pm;
-        public boolean skip;  // whether delivery to mailbox should be skipped
-        public RecipientDetail(Account a, Mailbox m, ParsedMessage p, boolean skipping) {
+        public boolean esd; // whether endSharedDelivery should be called
+        public DeliveryAction action;
+        
+        public RecipientDetail(Account a, Mailbox m, ParsedMessage p, boolean endSharedDelivery, DeliveryAction da) {
         	account = a;
             mbox = m;
             pm = p;
-            skip = skipping;
+            esd = endSharedDelivery;
+            action = da;
         }
     }
 
@@ -212,6 +221,11 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         ZimbraLog.mailbox.warn("No account found delivering mail to " + rcptEmail);
                         continue;
                     }
+                    if (account.getBooleanAttr(Provisioning.A_zimbraPrefMailLocalDeliveryDisabled, false)) {
+                        if (mLog.isDebugEnabled()) mLog.debug("Local delivery disabled for account " + rcptEmail);
+                        rcptMap.put(recipient, new RecipientDetail(null, null, null, false, DeliveryAction.discard));
+                        continue;
+                    }
                     mbox = Mailbox.getMailboxByAccount(account);
                     if (mbox == null) {
                         ZimbraLog.mailbox.warn("No mailbox found delivering mail to " + rcptEmail);
@@ -221,8 +235,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 } catch (ServiceException se) {
                     if (se.isReceiversFault()) {
                     	ZimbraLog.mailbox.info("Recoverable exception getting mailbox for " + rcptEmail, se);
-                    	boolean skip = true;
-                    	rcptMap.put(recipient, new RecipientDetail(null, null, null, skip));
+                    	rcptMap.put(recipient, new RecipientDetail(null, null, null, false, DeliveryAction.defer));
                     } else {
                     	ZimbraLog.mailbox.warn("Unrecoverable exception getting mailbox for " + rcptEmail, se);
                     }
@@ -241,17 +254,21 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         pm = pmNoAttachIndex;
                     }
                     assert(pm != null);
-                    boolean skip;
+                    
+                    // For non-shared delivery (i.e. only one recipient),
+                    // always deliver regardless of backup mode.
+                    DeliveryAction da = DeliveryAction.deliver;
+                    boolean endSharedDelivery = false;
                     if (shared) {
-                        // Skip delivery to mailboxes in backup mode.
-                    	skip = !mbox.beginSharedDelivery();
-                    } else {
-                        // For non-shared delivery (i.e. only one recipient),
-                        // always deliver regardless of backup mode.
-                        skip = false;
+                    	if (mbox.beginSharedDelivery()) {
+                    	    endSharedDelivery = true;
+                        } else {
+                            // Skip delivery to mailboxes in backup mode.
+                            da = DeliveryAction.defer;
+                        }
                     }
-                    rcptMap.put(recipient, new RecipientDetail(account, mbox, pm, skip));
-                    if (!skip)
+                    rcptMap.put(recipient, new RecipientDetail(account, mbox, pm, endSharedDelivery, da));
+                    if (da == DeliveryAction.deliver)
 	                    targetMailboxIds.add(new Integer(mbox.getId()));
                 }
             }
@@ -272,7 +289,12 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     RecipientDetail rd = rcptMap.get(recipient);
                     try {
                         if (rd != null) {
-                            if (!rd.skip) {
+                            switch (rd.action) {
+                            case discard:
+                                mLog.info("accepted and discarded message for " + rcptEmail + ": local delivery is disabled");
+                                status = LmtpStatus.ACCEPT;
+                                break;
+                            case deliver:
                                 Account account = rd.account;
                                 Mailbox mbox = rd.mbox;
                                 ParsedMessage pm = rd.pm;
@@ -294,12 +316,14 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                     notify(account, mbox, msg, rcptEmail, envSender, pm);
                                 }
                                 status = LmtpStatus.ACCEPT;
-                            } else {
+                                break;
+                            case defer:
                                 // Delivery to mailbox skipped.  Let MTA retry again later.
                                 // This case happens for shared delivery to a mailbox in
                                 // backup mode.
                                 mLog.info("try again for message " + rcptEmail + ": mailbox skipped");
                                 status = LmtpStatus.TRYAGAIN;
+                                break;
                             }
                         } else {
                             // Account or mailbox not found.
@@ -326,9 +350,9 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     } finally {
                         ZimbraLog.clearContext();
                         recipient.setDeliveryStatus(status);
-                        if (shared && rd != null && !rd.skip) {
+                        if (shared && rd != null && rd.esd) {
                             rd.mbox.endSharedDelivery();
-                            rd.skip = true;
+                            rd.esd = false;
                         }
                     }
                 }
@@ -346,10 +370,12 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 }
             }
         } finally {
-            // Take mailboxes out of shared delivery mode.
+            // If there were any stray exceptions after the call to
+            // beginSharedDelivery that caused endSharedDelivery to be not
+            // called, we check and fix those here.
             if (shared) {
                 for (RecipientDetail rd : rcptMap.values()) {
-                    if (!rd.skip && rd.mbox != null)
+                    if (rd.esd && rd.mbox != null)
                         rd.mbox.endSharedDelivery();
                 }
             }

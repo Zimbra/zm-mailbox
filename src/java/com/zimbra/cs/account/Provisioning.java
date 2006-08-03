@@ -530,6 +530,8 @@ public abstract class Provisioning {
 
     public static final String A_zimbraPrefMailForwardingAddress = "zimbraPrefMailForwardingAddress";
 
+    public static final String A_zimbraPrefMailLocalDeliveryDisabled = "zimbraPrefMailLocalDeliveryDisabled";
+    
     public static final String A_zimbraPrefMailInitialSearch = "zimbraPrefMailInitialSearch";
 
     public static final String A_zimbraPrefGroupMailBy = "zimbraPrefGroupMailBy";
