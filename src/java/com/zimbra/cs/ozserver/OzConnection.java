@@ -475,7 +475,7 @@ public class OzConnection {
             // don't check for capacity on append - we try and
             // flush right away and at the time of the flush if
             // something could not be written then we will check
-            // capacity then because addFirst will be called
+            // capacity then because addFirst or addLast will be called
         }
         
         void addFirst(ByteBuffer bb) throws IOException {
@@ -484,10 +484,27 @@ public class OzConnection {
             if (mCurrentCapacity > mCapacityMax) {
                 int cc = mCurrentCapacity;
                 clear();
-                throw new IOException("write queue size " + cc + " too large (" + mCapacityMax + " allowed)");
+                throw new IOException("write queue size (first) " + cc + " too large (" + mCapacityMax + " allowed)");
             }
         }
 
+        void addLast(ByteBuffer bb) throws IOException {
+            mWriteBuffers.addLast(bb);
+            mCurrentCapacity += bb.capacity();
+            if (mCurrentCapacity > mCapacityMax) {
+                int cc = mCurrentCapacity;
+                clear();
+                throw new IOException("write queue size (last) " + cc + " too large (" + mCapacityMax + " allowed)");
+            }
+        }
+
+        
+        ByteBuffer removeLast() {
+            ByteBuffer bb = mWriteBuffers.removeLast();
+            mCurrentCapacity -= bb.capacity();
+            return bb;
+        }
+        
         ByteBuffer removeFirst() {
             ByteBuffer bb = mWriteBuffers.removeFirst();
             mCurrentCapacity -= bb.capacity();
@@ -580,27 +597,46 @@ public class OzConnection {
 
         public void write(ByteBuffer buffer) throws IOException {
             synchronized (mWriteLock) {
-                mWriteQueue.add(buffer);
                 // We always try to flush so we fill up network buffers.
                 // Since this a non-blocking channel write() will return
                 // immediately if the network buffers are full.
-                flush();
+                writeLocked(buffer);
             }
         }
 
         public boolean flush() throws IOException {
             synchronized (mWriteLock) {
-                return flushLocked();
+                return writeLocked(null);
             }
         }
         
-        private boolean flushLocked() throws IOException {
+        private ByteBuffer compactIfNecessary(ByteBuffer orig) {
+            int capacity = orig.capacity();
+            int remaining = orig.remaining();
+            int fullness = 100 * remaining / capacity;
+            if (fullness <= WRITE_BUFFER_COMPACTION_PERCENT) {
+                ByteBuffer smaller = ByteBuffer.allocate(remaining);
+                smaller.put(orig);
+                smaller.flip();
+                if (mDebug) mLog.debug("compacted write buffer " + orig.capacity() + "->" + smaller.capacity());
+                return smaller;
+            } else {
+                if (mDebug) mLog.debug("uncompacted write buffer " + orig.capacity());
+                return orig;
+            }    
+        }
+        
+        private boolean writeLocked(ByteBuffer newbb) throws IOException {
             // NB: this check will take teardown lock and we already hold write lock.
             if (isChannelClosed()) {
                 mWriteQueue.clear();
                 throw new IOException("write requested on closed channel");
             }
      
+            if (newbb != null) {
+                mWriteQueue.add(newbb);
+            }
+            
             int totalWritten = 0;
             boolean allWritten = true;
             while (!mWriteQueue.isEmpty()) {
@@ -636,20 +672,20 @@ public class OzConnection {
                     // enabled *elsewhere* when write is pending.
                     allWritten = false;
 
-                    // Compact if possible
-                    int capacity = data.capacity();
-                    int remaining = data.remaining();
-                    int fullness = 100 * remaining / capacity;
-                    if (fullness <= WRITE_BUFFER_COMPACTION_PERCENT) {
-                        ByteBuffer smaller = ByteBuffer.allocate(remaining);
-                        smaller.put(data);
-                        smaller.flip();
-                        mWriteQueue.addFirst(smaller);
-                        if (mDebug) mLog.debug("compacted write buffer " + data.capacity() + "->" + smaller.capacity());
-                    } else {
-                        mWriteQueue.addFirst(data);
+                    // Try and compact the new buffer
+                    if (data == newbb) { 
+                        data = compactIfNecessary(data);
+                    } else if (newbb != null) {
+                        if (mDebug) mLog.debug("compacting at end of write queue");
+                        ByteBuffer last = mWriteQueue.removeLast();
+                        if (last != newbb) {
+                            throw new IOException("internal error in write queue: last buffer is not the new buffer");
+                        }
+                        last = compactIfNecessary(last);
+                        mWriteQueue.addLast(last);
                     }
                     
+                    mWriteQueue.addFirst(data);
                     break;
                 }
             }
