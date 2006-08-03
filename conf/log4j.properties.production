@@ -8,7 +8,7 @@
 
 log4j.threshhold=OFF
 
-log4j.rootLogger=INFO,LOGFILE,SYSLOG
+log4j.rootLogger=INFO,LOGFILE
 
 # Appender LOGFILE writes to the file "/opt/zimbra/log/zimbra.log".
 #log4j.appender.LOGFILE=org.apache.log4j.FileAppender
