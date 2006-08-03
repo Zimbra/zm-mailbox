@@ -472,12 +472,10 @@ public class OzConnection {
         void add(ByteBuffer bb) throws IOException {
             mWriteBuffers.add(bb);
             mCurrentCapacity += bb.capacity();
-            if (mCurrentCapacity > mCapacityMax) {
-                int cc = mCurrentCapacity;
-                clear();
-                throw new IOException("write queue size " + cc + " too large (" + mCapacityMax + " allowed)");
-            }
-            //mLog.info("add: write queue size " + mCurrentCapacity); // TODO: should be debug
+            // don't check for capacity on append - we try and
+            // flush right away and at the time of the flush if
+            // something could not be written then we will check
+            // capacity then because addFirst will be called
         }
         
         void addFirst(ByteBuffer bb) throws IOException {
@@ -488,13 +486,11 @@ public class OzConnection {
                 clear();
                 throw new IOException("write queue size " + cc + " too large (" + mCapacityMax + " allowed)");
             }
-            //mLog.info("addFirst: write queue size " + mCurrentCapacity); // TODO: should be debug
         }
 
         ByteBuffer removeFirst() {
             ByteBuffer bb = mWriteBuffers.removeFirst();
             mCurrentCapacity -= bb.capacity();
-            //mLog.info("removeFirst: write queue size " + mCurrentCapacity); // TODO: should be debug
             return bb;
         }
 
