@@ -18,8 +18,8 @@
 			<wiklet class='CONTENT' />
 		</td>
 	</tr>
-	<tr><td class="zmwiki-footerContainer" colspan=2>
-		<wiklet class='INLINE' page="_Footer" inherit="true" />
-	</td>
+	<!--tr><td class="zmwiki-footerContainer" colspan=2>
+		<xwiklet class='INLINE' page="_Footer" inherit="true" />
+	</td></tr-->
 	</tbody></table>
 </div>
