@@ -485,13 +485,12 @@ public abstract class Wiki {
 		if (defaultWiki != null) {
 			//ZimbraLog.wiki.debug("defaultWiki " + defaultWiki);
 			Account defaultAccount = prov.get(Provisioning.AccountBy.name, defaultWiki);
-			if (defaultAccount.getId().equals(accountId))
-				return null;
 			if (target == null)
 				target = defaultAccount;
 		}
 		if (target == null)
-			return null;
+			throw WikiServiceException.ERROR("global and domain wiki accounts not found");
+		
 		WikiUrl wurl = new WikiUrl("//" + target.getName() + TEMPLATE_FOLDER_NAME);
 		//ZimbraLog.wiki.debug("wikiUrl for template: " + wurl.getFullUrl(ctxt, accountId));
 
@@ -512,7 +511,19 @@ public abstract class Wiki {
 
 		if (!traverse)
 			throw new WikiServiceException.NoSuchWikiException(url.getUrl());
+
+		Provisioning prov = Provisioning.getInstance();
+		String defaultWiki = prov.getConfig().getAttr(Provisioning.A_zimbraNotebookAccount, null);
+		if (defaultWiki == null) {
+			Account acct = prov.get(Provisioning.AccountBy.id, accountId);
+			defaultWiki = prov.getDomain(acct).getAttr(Provisioning.A_zimbraNotebookAccount, null);
+		}
+		if (defaultWiki != null) {
+			Account acct = prov.get(Provisioning.AccountBy.name, defaultWiki);
+			defaultWiki = acct.getId();
+		}
 		
+		boolean topLevelTemplateFolderReached = false;
 		String actualAccount = wiki.getWikiAccount();
 		String key = wiki.getParentKey();
 		while (wiki != null) {
@@ -532,8 +543,14 @@ public abstract class Wiki {
 					key = wiki.getParentKey();
 				}
 			}
+			if (topLevelTemplateFolderReached)
+				break;
 			try {
 				wiki = getDefaultStore(ctxt, actualAccount);
+				if (wiki.getWikiAccount().equals(defaultWiki)) {
+					// this is the Template folder of the same account.
+					topLevelTemplateFolderReached = true;
+				}
 			} catch (ServiceException se) {
 				wiki = null;
 			}
