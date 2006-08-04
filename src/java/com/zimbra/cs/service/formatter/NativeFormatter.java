@@ -159,18 +159,22 @@ public class NativeFormatter extends Formatter {
     }
 
     public static void sendbackOriginalDoc(MimePart mp, String contentType, HttpServletRequest req, HttpServletResponse resp) throws IOException, MessagingException {
-        String filename = Mime.getFilename(mp);
+        sendbackOriginalDoc(mp.getInputStream(), contentType, Mime.getFilename(mp), mp.getDescription(), req, resp);
+    }
+
+    public static void sendbackOriginalDoc(InputStream is,
+                                           String contentType,
+                                           String filename,
+                                           String desc,
+                                           HttpServletRequest req,
+                                           HttpServletResponse resp)
+    throws IOException {
         if (filename == null)
             filename = "unknown";
         String cd = Part.INLINE + "; filename=" + HttpUtil.encodeFilename(req, filename);
         resp.addHeader("Content-Disposition", cd);
-        String desc = mp.getDescription();
         if (desc != null)
             resp.addHeader("Content-Description", desc);
-        sendbackOriginalDoc(mp.getInputStream(), contentType, resp);
-    }
-
-    public static void sendbackOriginalDoc(InputStream is, String contentType, HttpServletResponse resp) throws IOException {
         resp.setContentType(contentType);
         ByteUtil.copy(is, true, resp.getOutputStream(), false);
     }
