@@ -1699,4 +1699,32 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Name to be used in public API such as REST or SOAP proxy.</desc>
 </attr>
 
+<attr id="378" name="zimbraPasswordLockoutEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether or not account lockout is enabled.</desc>
+</attr>
+
+<attr id="379" name="zimbraPasswordLockoutDuration" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>1h</defaultCOSValue>
+  <desc>how long an account is locked out. Use 0 to lockout an account until admin resets it</desc>
+</attr>
+
+<attr id="380" name="zimbraPasswordLockoutMaxFailures" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>10</defaultCOSValue>
+  <desc>number of consecutive failed login attempts until an account is locked out</desc>
+</attr>
+
+<attr id="381" name="zimbraPasswordLockoutFailureLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>the duration after which old consecutive failed login attempts are purged from the list, even though no  successful  authentication  has occurred</desc>
+</attr>
+
+<attr id="382" name="zimbraPasswordLockoutLockedTime" type="gentime" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
+  <desc>the time at which an account was locked</desc>
+</attr>
+
+<attr id="383" name="zimbraPasswordLockoutFailureTime" type="gentime" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
+  <desc>this attribute contains the timestamps of each of the consecutive  authentication failures made on an account</desc>
+</attr>
+
 </attrs>

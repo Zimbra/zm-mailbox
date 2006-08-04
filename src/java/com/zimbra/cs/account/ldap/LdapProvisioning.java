@@ -60,7 +60,6 @@ import javax.naming.NamingException;
 import javax.naming.SizeLimitExceededException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
-import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InvalidAttributeIdentifierException;
@@ -2283,11 +2282,30 @@ public class LdapProvisioning extends Provisioning {
         throw ServiceException.FAILURE(msg, null);
     }
 
+    private void verifyPassword(Account acct, String password) throws ServiceException {
+        LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
+        try {
+            if (lockoutPolicy.isLockedOut())
+                throw AccountServiceException.AUTH_FAILED(acct.getName());
+
+            // attempt to verify the password
+            verifyPasswordInternal(acct, password);
+
+            lockoutPolicy.successfulLogin();
+        } catch (AccountServiceException e) {
+            // TODO: only consider it failed if exception was due to password-mismatch
+            lockoutPolicy.failedLogin();
+            // re-throw original exception
+            throw e;
+        }
+    }
+
     /*
      * authAccount does all the status/mustChange checks, this just takes the
      * password and auths the user
      */
-    private void verifyPassword(Account acct, String password) throws ServiceException {
+
+    private void verifyPasswordInternal(Account acct, String password) throws ServiceException {
         String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
         
         String authMech = Provisioning.AM_ZIMBRA;        

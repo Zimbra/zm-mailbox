@@ -618,6 +618,89 @@ public abstract class Provisioning {
     public static final String A_zimbraPasswordMustChange = "zimbraPasswordMustChange";
     
     /**
+     * This attribute specifies the action that should be taken when
+     * a user has made a number of failed attempts to authenticate
+     * to Zimbra.  If zimbraPasswordLockoutEnabled is TRUE, the user
+     * will  not  be allowed to attempt to authenticate to Zimbra after
+     * there have been a specified number of consecutive failed login attempts.
+     * The maximum number of consecutive failed login attempts allowed 
+     * is specified by the zimbraPasswordLockoutMaxFailures attribute.  
+     *
+     * If zimbraPasswordLockoutEnabled is not present, or if its  value
+     * is "FALSE", the password may be used to authenticate no matter 
+     * how many consecutive failed login attempts have been made.
+     * 
+     */
+    public static final String A_zimbraPasswordLockoutEnabled = "zimbraPasswordLockoutEnabled";
+
+    /**
+     * This attribute contains the duration during which the password
+     * cannot  be  used  to  authenticate the user to Zimbra due to too
+     * many consecutive failed login attempts. 
+     *
+     * If zimbraPasswordLockoutDuration is not present, or if its value is 
+     * zero (0), the password cannot be used to authenticate the user to
+     * Zimbra again until it is reset by an administrator.
+     */
+    public static final String A_zimbraPasswordLockoutDuration = "zimbraPasswordLockoutDuration";    
+
+    /**
+     * This  attribute contains the number of consecutive failed login attempts
+     * after which the password may not be used to authenticate a user to
+     * Zimbra. If zimbraPasswordLockoutMaxFailures is not present, or its
+     * value is zero (0), then a user will be allowed to continue to attempt 
+     * to  authenticate  to Zimbra, no matter how many consecutive failed 
+     * login attempts have  occurred.
+     */
+    public static final String A_zimbraPasswordLockoutMaxFailures = "zimbraPasswordLockoutMaxFailures";
+   
+    /**
+     * This  attribute contains the duration after which old consecu-
+     * tive failed login attempts are purged from  the  list,  even though 
+     * no  successful  authentication  has occurred. It used to determine
+     * the window in which a failed login is considered "consecutive". 
+     *
+     * If zimbraPasswordLockoutFailureLifetime is not present, or its 
+     * value is  zero  (0), the  list will only be reset by a successful 
+     * authentication.
+     *
+     * For example, if this attribute is not set, and max failures is set 
+     * to 3, then one unsuccessful login attempt a day (with no successful 
+     * login attempts) will cause the account to be locked out on the third
+     * day. i.e.. If this attribute is set to be one hour, then there must 
+     * be three failed login attempts within an hour for the account to get
+     * locked out.
+     */
+    public static final String A_zimbraPasswordLockoutFailureLifetime = "zimbraPasswordLockoutFailureLifetime";
+
+    /**
+     * This attribute contains the time that the user's  account  was  locked.
+     * If  the  account has been locked, the password may no longer be used to
+     * authenticate the user to Zimbra.
+     * 
+     * An account is considered locked if the current time is less than the
+     * value zimbraPasswordLockoutLockedTime + zimbraPasswordLockoutDuration.
+     */
+    public static final String A_zimbraPasswordLockoutLockedTime = "zimbraPasswordLockoutLockedTime";
+
+    /**
+     * If zimbraPasswordLockoutEnabled is set, then this attribute contains the
+     * timestamps of each of the consecutive  authentication failures made on 
+     * an account.
+     *
+     * If more then zimbraPasswordLockoutMaxFailures timestamps accumulate
+     * here then the account will be locked, and 
+     * zimbraPasswordLockoutLockedTime will be set to the current time.
+     *
+     * Excess timestamps beyond those allowed by 
+     * zimbraPasswordLockoutMaxFailures  will be purged.  
+     *
+     * When a successful authentication is made, all 
+     * zimbraPasswordFailureTime entries are removed.
+     */
+    public static final String A_zimbraPasswordLockoutFailureTime = "zimbraPasswordLockoutFailureTime";
+    
+    /**
      * the mail .signature value
      */
     public static final String A_zimbraPrefMailSignature = "zimbraPrefMailSignature";
