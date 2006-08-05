@@ -56,7 +56,14 @@ public class ACL {
     /** The right to take a workflow action on an item (e.g. accept a meeting). */
     public static final short RIGHT_ACTION  = 0x0010;
     /** The right to grant permissions on the item. */
-	public static final short RIGHT_ADMIN   = 0x0100;
+    public static final short RIGHT_ADMIN   = 0x0100;
+    /** The calculated right to create subfolders in a folder. */
+    public static final short RIGHT_SUBFOLDER = 0x0200;
+
+    /** Bitmask of all rights that can be explicitly granted.  <i>Note:
+     *  CAN_CREATE_FOLDER is calculated and hence cannot be granted. */
+    private static final short GRANTABLE_RIGHTS = RIGHT_READ   | RIGHT_WRITE  | RIGHT_INSERT |
+                                                  RIGHT_DELETE | RIGHT_ACTION | RIGHT_ADMIN;
 
     /** The grantee of these rights is the zimbraId for a user. */
 	public static final byte GRANTEE_USER     = 1;
@@ -114,7 +121,7 @@ public class ACL {
     
     public static class GuestAccount extends AnonymousAccount {
     	public GuestAccount(String emailAddress, String password) {
-    		mEmailAddress = emailAddress; mPassword = password;
+    		mEmailAddress = emailAddress;  mPassword = password;
     	}
     	public String getName()                  { return mEmailAddress; }
     	public String getPassword()              { return mPassword; }
@@ -133,8 +140,8 @@ public class ACL {
         private short mRights;
         /** Whether subfolders inherit these same rights. */
         private boolean mInherit;
-        /** Extra argument.  For example the password for guest accounts. */
-        private String mArgs;
+        /** The password for guest accounts. */
+        private String mPassword;
 
         /** Creates a new Grant object granting access to a user or class
          *  of users.  <code>zimbraId</code> may be <code>null</code>
@@ -146,12 +153,15 @@ public class ACL {
          * @param inherit   Whether subfolders inherit these same rights.
          * @see ACL */
         Grant(String zimbraId, byte type, short rights, boolean inherit) {
-            mGrantee = zimbraId;  mType    = type;
-            mRights  = rights;    mInherit = inherit;
+            mGrantee = zimbraId;
+            mType    = type;
+            mRights  = (short) (rights & GRANTABLE_RIGHTS);
+            mInherit = inherit;
         }
-        Grant(String zimbraId, byte type, short rights, boolean inherit, String args) {
+        Grant(String zimbraId, byte type, short rights, boolean inherit, String password) {
         	this(zimbraId, type, rights, inherit);
-        	mArgs = args;
+            if (mType == GRANTEE_GUEST)
+                mPassword = password;
         }
 
         /** Creates a new Grant object from a decoded {@link Metadata} hash.
@@ -160,12 +170,12 @@ public class ACL {
          * @throws ServiceException if any required fields are missing. */
         Grant(Metadata meta) throws ServiceException {
             mType    = (byte) meta.getLong(FN_TYPE);
-            mRights  = (short) meta.getLong(FN_RIGHTS);
+            mRights  = (short) (meta.getLong(FN_RIGHTS) & GRANTABLE_RIGHTS);
             mInherit = meta.getBool(FN_INHERIT, false);
             if (hasGrantee())
                 mGrantee = meta.get(FN_GRANTEE);
-            if (hasArgs())
-            	mArgs = meta.get(FN_ARGS);
+            if (mType == ACL.GRANTEE_GUEST)
+            	mPassword = meta.get(FN_PASSWORD);
         }
 
         /** Returns true if there is an explicit grantee. */
@@ -178,8 +188,6 @@ public class ACL {
         public short getGrantedRights() { return mRights; }
         /** Returns whether subfolders inherit these same rights. */
         public boolean isGrantInherited() { return mInherit; }
-        /** Returns if the grant requires extra arguments. */
-        public boolean hasArgs() { return mType == ACL.GRANTEE_GUEST; }
         
         /** Returns the rights granted to the given {@link Account} by this
          *  <code>Grant</code>.  If the grant does not apply to the Account,
@@ -211,7 +219,7 @@ public class ACL {
         	if (!(acct instanceof GuestAccount))
         		return false;
         	GuestAccount ga = (GuestAccount) acct;
-        	return ga.getName().equals(mGrantee) && ga.getPassword().equals(mArgs);
+        	return ga.getName().equals(mGrantee) && ga.getPassword().equals(mPassword);
         }
         
         /** Utility function: Returns the zimbraId for a null-checked LDAP
@@ -244,33 +252,31 @@ public class ACL {
         void setRights(short rights, boolean inherit) {
             mRights = rights;  mInherit = inherit;
         }
-        
-        /**
-         * Update the args in the <code>Grant</code>.
-         * 
-         * @param args
-         */
-        void setArgs(String args) {
-        	if (args != null) mArgs = args;
+
+        /** For grants to external users, sets the password required to
+         *  access the resource. */
+        void setPassword(String password) {
+        	if (mType == GRANTEE_GUEST && password != null)
+                mPassword = password;
         }
 
 
-        private static final String FN_GRANTEE = "g";
-        private static final String FN_TYPE    = "t";
-        private static final String FN_RIGHTS  = "r";
-        private static final String FN_INHERIT = "i";
-        private static final String FN_ARGS    = "a";
+        private static final String FN_GRANTEE  = "g";
+        private static final String FN_TYPE     = "t";
+        private static final String FN_RIGHTS   = "r";
+        private static final String FN_INHERIT  = "i";
+        private static final String FN_PASSWORD = "a";
 
         /** Encapsulates this <code>Grant</code> as a {@link Metadata} object
          *  for serialization. */
         public Metadata encode() {
             Metadata meta = new Metadata();
-            meta.put(FN_GRANTEE, hasGrantee() ? mGrantee : null);
-            meta.put(FN_TYPE,    mType);
+            meta.put(FN_GRANTEE,  hasGrantee() ? mGrantee : null);
+            meta.put(FN_TYPE,     mType);
             // FIXME: use "rwidxsca" instead of numeric value
-            meta.put(FN_RIGHTS,  mRights);
-            meta.put(FN_INHERIT, mInherit);
-            meta.put(FN_ARGS, mArgs);
+            meta.put(FN_RIGHTS,   mRights);
+            meta.put(FN_INHERIT,  mInherit);
+            meta.put(FN_PASSWORD, mPassword);
             return meta;
         }
     }
@@ -301,10 +307,21 @@ public class ACL {
     Short getGrantedRights(Account authuser, boolean inheritedOnly) throws ServiceException {
         if (mGrants.isEmpty())
             return null;
+
         short rightsGranted = 0;
-        for (Grant grant : mGrants)
-            if (!inheritedOnly || grant.isGrantInherited())
-                rightsGranted |= grant.getGrantedRights(authuser);
+        boolean inheritedRead = false;
+        for (Grant grant : mGrants) {
+            boolean inherited = grant.isGrantInherited();
+            if (!inheritedOnly || inherited) {
+                short rights = grant.getGrantedRights(authuser);
+                rightsGranted |= rights;
+                if (inherited && (rights & RIGHT_READ) != 0)
+                    inheritedRead = true;
+            }
+        }
+        if (inheritedRead && (rightsGranted & RIGHT_INSERT) != 0)
+            rightsGranted |= RIGHT_SUBFOLDER;
+
         return new Short(rightsGranted);
     }
 
@@ -321,21 +338,25 @@ public class ACL {
      * @param type      The type of object the grantee's ID refers to.
      * @param rights    A bitmask of the rights being granted.
      * @param inherit   Whether subfolders inherit these same rights. */
-    public void grantAccess(String zimbraId, byte type, short rights, boolean inherit, String args) throws ServiceException {
+    public void grantAccess(String zimbraId, byte type, short rights, boolean inherit, String password)
+    throws ServiceException {
         if (type == GRANTEE_AUTHUSER)
             zimbraId = GUID_AUTHUSER;
         else if (type == GRANTEE_PUBLIC)
         	zimbraId = GUID_PUBLIC;
         else if (zimbraId == null)
             throw ServiceException.INVALID_REQUEST("missing grantee id", null);
-        if (!mGrants.isEmpty())
+
+        if (!mGrants.isEmpty()) {
             for (Grant grant : mGrants)
                 if (grant.isGrantee(zimbraId)) {
                     grant.setRights(rights, inherit);
-                    grant.setArgs(args);
+                    if (type == GRANTEE_GUEST)
+                        grant.setPassword(password);
                     return;
                 }
-        mGrants.add(new Grant(zimbraId, type, rights, inherit, args));
+        }
+        mGrants.add(new Grant(zimbraId, type, rights, inherit, password));
     }
 
     /** Removes the set of rights granted to the specified id.  If no rights
@@ -384,6 +405,7 @@ public class ACL {
     private static final char ABBR_DELETE = 'd';
     private static final char ABBR_ACTION = 'x';
     private static final char ABBR_ADMIN = 'a';
+    private static final char ABBR_CREATE_FOLDER = 'c';
 
     public static short stringToRights(String encoded) throws ServiceException {
         short rights = 0;
@@ -411,6 +433,7 @@ public class ACL {
         if ((rights & RIGHT_DELETE) != 0)  sb.append(ABBR_DELETE);
         if ((rights & RIGHT_ACTION) != 0)  sb.append(ABBR_ACTION);
         if ((rights & RIGHT_ADMIN) != 0)   sb.append(ABBR_ADMIN);
+        if ((rights & RIGHT_SUBFOLDER) != 0)  sb.append(ABBR_CREATE_FOLDER);
         return sb.toString();
     }
 }
