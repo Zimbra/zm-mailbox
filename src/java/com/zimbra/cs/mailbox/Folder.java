@@ -460,7 +460,7 @@ public class Folder extends MailItem {
             validateFolderName(name);
             if (parent.findSubfolder(name) != null)
                 throw MailServiceException.ALREADY_EXISTS(name);
-            if (!parent.canAccess(ACL.RIGHT_INSERT))
+            if (!parent.canAccess(ACL.RIGHT_SUBFOLDER))
                 throw ServiceException.PERM_DENIED("you do not have the required rights on the parent folder");
         }
         if (view != TYPE_UNKNOWN)

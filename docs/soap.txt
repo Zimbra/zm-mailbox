@@ -671,6 +671,8 @@ Folders:
   {remote-url}   = url (RSS, iCal, etc.) this folder syncs its contents to
   {rest-url}     = url to the folder on rest interface for rest-enabled apps (such as wiki and notebook)
   {effective-perms} = for remote folders, the access rights the authenticated user has on the folder
+                        - will contain the calculated (c)reate folder permission if the user has
+                          both (i)nsert and inherited (r)ead access on the folder
 
   folders can have an optional ACL set on them for sharing.  if they do (and the authenticated
     user has (a)dminister rights on the folder), an <acl> element will be returned containing
