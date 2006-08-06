@@ -232,7 +232,7 @@ public class ZimbraSoapContext {
         // <notify seq="nn">
 		Element notify = (ctxt == null ? null : ctxt.getOptionalElement(E_NOTIFY));
         if (notify != null) 
-            mNotificationSeqNo = (int)notify.getAttributeLong(A_SEQNO, 0);
+            mNotificationSeqNo = (int) notify.getAttributeLong(A_SEQNO, 0);
 
         // constrain operations if we know the max change number the client knows about
         Element change = (ctxt == null ? null : ctxt.getOptionalElement(E_CHANGE));
@@ -472,8 +472,7 @@ public class ZimbraSoapContext {
                     ((SoapSession) session).putRefresh(ctxt, this);
                 // put <notify> blocks back for any SoapSession objects
                 if (session instanceof SoapSession)
-                    ((SoapSession) session).putNotifications(this, ctxt, 
-                            mNotificationSeqNo >= 0 ? mNotificationSeqNo : 0);
+                    ((SoapSession) session).putNotifications(this, ctxt, mNotificationSeqNo);
             }
 //            if (ctxt != null && mAuthToken != null)
 //                ctxt.addAttribute(E_AUTH_TOKEN, mAuthToken.toString(), Element.DISP_CONTENT);

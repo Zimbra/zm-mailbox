@@ -39,23 +39,23 @@ import com.zimbra.cs.mailbox.Mailbox;
 
 public final class PendingModifications {
     public static final class Change {
-	    public static final int UNMODIFIED         = 0x00000000;
+        public static final int UNMODIFIED         = 0x00000000;
         public static final int MODIFIED_UNREAD    = 0x00000001;
-	    public static final int MODIFIED_TAGS      = 0x00000002;
-	    public static final int MODIFIED_FLAGS     = 0x00000004;
+        public static final int MODIFIED_TAGS      = 0x00000002;
+        public static final int MODIFIED_FLAGS     = 0x00000004;
         public static final int MODIFIED_CONFIG    = 0x00000008;
         public static final int MODIFIED_SIZE      = 0x00000010;
         public static final int MODIFIED_DATE      = 0x00000020;
         public static final int MODIFIED_SUBJECT   = 0x00000040;
         public static final int MODIFIED_MSG_COUNT = 0x00000080;
-	    public static final int MODIFIED_FOLDER    = 0x00000100;
-	    public static final int MODIFIED_PARENT    = 0x00000200;
-	    public static final int MODIFIED_CHILDREN  = 0x00000400;
+        public static final int MODIFIED_FOLDER    = 0x00000100;
+        public static final int MODIFIED_PARENT    = 0x00000200;
+        public static final int MODIFIED_CHILDREN  = 0x00000400;
         public static final int MODIFIED_SENDERS   = 0x00000800;
         public static final int MODIFIED_NAME      = 0x00001000;
-	    public static final int MODIFIED_COLOR     = 0x00002000;
-	    public static final int MODIFIED_POSITION  = 0x00004000;
-	    public static final int MODIFIED_QUERY     = 0x00008000;
+        public static final int MODIFIED_COLOR     = 0x00002000;
+        public static final int MODIFIED_POSITION  = 0x00004000;
+        public static final int MODIFIED_QUERY     = 0x00008000;
         public static final int MODIFIED_CONTENT   = 0x00010000;
         public static final int MODIFIED_INVITE    = 0x00020000;
         public static final int MODIFIED_URL       = 0x00040000;
@@ -65,20 +65,20 @@ public final class PendingModifications {
         public static final int MODIFIED_CONFLICT  = 0x00400000;
         public static final int INTERNAL_ONLY      = 0x10000000;
         public static final int ALL_FIELDS         = ~0;
-	
-	    public Object what;
-	    public int    why;
-	
-	    Change(Object thing, int reason)  { what = thing;  why = reason; }
-	}
+    
+        public Object what;
+        public int    why;
+    
+        Change(Object thing, int reason)  { what = thing;  why = reason; }
+    }
     
     public PendingModifications() { }
-    public PendingModifications(int seqno) { mSeqNo = seqno; }
+    public PendingModifications(int seqno) { mSequence = seqno; }
 
     /**
      * They key is MailItemID
      */
-	public HashMap<Integer, MailItem> created;
+    public HashMap<Integer, MailItem> created;
     public HashMap<Integer, Change> modified;
     public HashMap<Integer, Object> deleted;
     
@@ -90,10 +90,10 @@ public final class PendingModifications {
     /**
      * used by the Session object
      */
-    private int mSeqNo;
+    private int mSequence;
 
-    public int getSeqNo() { 
-        return mSeqNo; 
+    public int getSequence() { 
+        return mSequence; 
     }
     
     public boolean hasNotifications() {
