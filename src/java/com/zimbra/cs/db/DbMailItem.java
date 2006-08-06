@@ -58,6 +58,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.ListUtil;
+import com.zimbra.cs.util.Pair;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.TimeoutMap;
 import com.zimbra.cs.util.ZimbraLog;
@@ -1375,39 +1376,43 @@ public class DbMailItem {
         }
     }
 
-    public static List<UnderlyingData> getModifiedItems(Mailbox mbox, byte type, long lastSync) throws ServiceException {
+    private static final List<UnderlyingData> EMPTY_DATA = Collections.emptyList();
+    private static final List<Integer> EMPTY_INTEGER = Collections.emptyList();
+
+    public static Pair<List<UnderlyingData>,List<Integer>> getModifiedItems(Mailbox mbox, byte type, long lastSync, Set<Integer> visible)
+    throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
 
         // figure out what folders are visible and thus also if we can short-circuit this query
-        Set<Folder> visible = mbox.getVisibleFolders();
         if (visible != null && visible.isEmpty())
-            return Collections.emptyList();
+            return new Pair<List<UnderlyingData>,List<Integer>>(EMPTY_DATA, EMPTY_INTEGER);
 
         Connection conn = mbox.getOperationConnection();
         List<UnderlyingData> result = new ArrayList<UnderlyingData>();
+        List<Integer> missed = new ArrayList<Integer>();
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
+            String typeConstraint = type == MailItem.TYPE_UNKNOWN ? "type NOT IN " + FOLDER_AND_TAG_TYPES : "type IN " + typeConstraint(type);
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(mbox.getId(), "mi") +
-                    " WHERE type IN " + typeConstraint(type) +
-                    (visible == null ? "" : " AND folder_id IN" + DbUtil.suitableNumberOfVariables(visible)) + 
-                    " AND mi.mod_metadata > ? ORDER BY mi.mod_metadata");
-            int attr = 1;
-            if (visible != null)
-                for (Folder folder : visible)
-                    stmt.setInt(attr++, folder.getId());
-            stmt.setLong(attr++, lastSync);
+                    " WHERE mi.mod_metadata > ? AND " + typeConstraint +
+                    " ORDER BY mi.mod_metadata");
+            stmt.setLong(1, lastSync);
             rs = stmt.executeQuery();
 
-            while (rs.next())
-                result.add(constructItem(rs));
+            while (rs.next()) {
+                if (visible == null || visible.contains(rs.getInt(CI_FOLDER_ID)))
+                    result.add(constructItem(rs));
+                else
+                    missed.add(rs.getInt(CI_ID));
+            }
 
             if (type == MailItem.TYPE_CONVERSATION)
                 completeConversations(mbox, result);
-            return result;
+            return new Pair<List<UnderlyingData>,List<Integer>>(result, missed);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting items modified since " + lastSync, e);
         } finally {
