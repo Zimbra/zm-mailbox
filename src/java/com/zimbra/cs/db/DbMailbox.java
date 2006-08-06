@@ -34,7 +34,6 @@ import java.io.StringReader;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -239,20 +238,46 @@ public class DbMailbox {
         }
     }
 
-    public static void updateConfig(Mailbox mbox, Metadata config) throws ServiceException {
+    public static String getConfig(Mailbox mbox, String section) throws ServiceException {
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT metadata FROM mailbox_metadata WHERE mailbox_id = ? AND section = ?");
+            stmt.setInt(1, mbox.getId());
+            stmt.setString(2, section);
+            rs = stmt.executeQuery();
+            if (rs.next())
+                return rs.getString(1);
+            return null;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting metadata section '" + section + "' in mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void updateConfig(Mailbox mbox, String section, Metadata config) throws ServiceException {
+        boolean unset = config == null;
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE mailbox SET config = ? WHERE id = ?");
-            if (config == null)
-                stmt.setNull(1, Types.VARCHAR);
+            if (unset)
+                stmt = conn.prepareStatement("DELETE FROM mailbox_metadata WHERE mailbox_id = ? AND section = ?");
             else
-                stmt.setString(1, DbMailItem.checkTextLength(config.toString()));
-            stmt.setInt(2, mbox.getId());
-            int num = stmt.executeUpdate();
-            assert(num == 1);
+                stmt = conn.prepareStatement("INSERT INTO mailbox_metadata (mailbox_id, section, metadata) VALUES (?, ?, ?)" +
+                        " ON DUPLICATE KEY UPDATE metadata = ?");
+            stmt.setInt(1, mbox.getId());
+            stmt.setString(2, section);
+            if (!unset) {
+                String serialized = config.toString();
+                stmt.setString(3, serialized);
+                stmt.setString(4, serialized);
+            }
+            stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("turning on sync tracking for mailbox " + mbox.getId(), e);
+            throw ServiceException.FAILURE("setting metadata section '" + section + "' in mailbox " + mbox.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -327,9 +352,8 @@ public class DbMailbox {
         try {
             stmt = conn.prepareStatement(
                     "SELECT account_id, item_id_checkpoint, size_checkpoint, change_checkpoint, tracking_sync," +
-                    " tracking_imap, index_volume_id, config " +
-                    "FROM mailbox mb " +
-                    "WHERE mb.id = ?");
+                    " tracking_imap, index_volume_id " +
+                    "FROM mailbox mb WHERE mb.id = ?");
             stmt.setInt(1, mailboxId);
             rs = stmt.executeQuery();
 
@@ -345,12 +369,6 @@ public class DbMailbox {
             mbd.trackSync     = rs.getInt(5);
             mbd.trackImap     = rs.getBoolean(6);
             mbd.indexVolumeId = rs.getShort(7);
-            try {
-                mbd.config = new Metadata(rs.getString(8)); 
-            } catch (ServiceException e) {
-                ZimbraLog.misc.warn("unparseable config metadata in mailbox " + mailboxId);
-                mbd.config = new Metadata();
-            }
 
             // round lastItemId and lastChangeId up so that they get written on the next change
             long rounding = mbd.lastItemId % ITEM_CHECKPOINT_INCREMENT;
@@ -359,6 +377,19 @@ public class DbMailbox {
             rounding = mbd.lastChangeId % CHANGE_CHECKPOINT_INCREMENT;
             if (rounding != CHANGE_CHECKPOINT_INCREMENT - 1)
                 mbd.lastChangeId -= rounding + 1;
+
+            rs.close();
+            stmt.close();
+
+            stmt = conn.prepareStatement("SELECT section FROM mailbox_metadata WHERE mailbox_id = ?");
+            stmt.setInt(1, mailboxId);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                if (mbd.configKeys == null)
+                    mbd.configKeys = new HashSet<String>();
+                mbd.configKeys.add(rs.getString(1));
+            }
 
             return mbd;
         } catch (SQLException e) {
@@ -420,8 +451,7 @@ public class DbMailbox {
         }
     }
 
-    static Set<Long> getDistinctTagsets(Connection conn, int mailboxId)
-    throws ServiceException {
+    static Set<Long> getDistinctTagsets(Connection conn, int mailboxId) throws ServiceException {
         Set<Long> tagsets = new HashSet<Long>();
 
         PreparedStatement stmt = null;
@@ -442,8 +472,7 @@ public class DbMailbox {
         return tagsets;
     }
 
-    static Set<Long> getDistinctFlagsets(Connection conn, int mailboxId)
-    throws ServiceException {
+    static Set<Long> getDistinctFlagsets(Connection conn, int mailboxId) throws ServiceException {
         Set<Long> flagsets = new HashSet<Long>();
 
         PreparedStatement stmt = null;
