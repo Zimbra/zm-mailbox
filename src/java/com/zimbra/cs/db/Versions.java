@@ -61,7 +61,7 @@ public class Versions {
 	 * UPDATE THESE TO REQUIRE RESET-WORLD TO BE RUN
 	 *  
 	 */
-	public static final String DB_VERSION = "25";
+	public static final String DB_VERSION = "26";
 
 	/**
 	 * The INDEX_VERSION is stored into the config table of the DB when the DB is created.  
@@ -77,13 +77,11 @@ public class Versions {
     /////////////////////////////////////////////////////////////
 	// Called at boot time
     /////////////////////////////////////////////////////////////
-	public static boolean checkVersions()
-	{
+	public static boolean checkVersions() {
 		return (checkDBVersion() && checkIndexVersion());
 	}
 	
-	public static boolean checkDBVersion()
-	{
+	public static boolean checkDBVersion() {
 		String val = Config.getString("db.version", "0");
 		if (val.equals(DB_VERSION)) {
 			return true;
@@ -93,8 +91,7 @@ public class Versions {
 		}
 	}
 	
-	public static boolean checkIndexVersion()
-	{
+	public static boolean checkIndexVersion() {
 		String val = Config.getString("index.version", "0");
 		if (val.equals(INDEX_VERSION)) {
 			return true;

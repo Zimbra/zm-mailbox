@@ -160,13 +160,13 @@ public class Mailbox {
         public String  accountId;
         public long    size;
         public int     contacts;
+        public short   indexVolumeId;
         public int     lastItemId;
         public int     lastChangeId;
         public long    lastChangeDate;
         public int     trackSync;
         public boolean trackImap;
-        public Metadata config;
-        public short   indexVolumeId;
+        public Set<String> configKeys;
     }
 
     private static final class MailboxChange {
@@ -188,7 +188,7 @@ public class Mailbox {
         int      itemId   = NO_CHANGE;
         int      changeId = NO_CHANGE;
         int      contacts = NO_CHANGE;
-        Metadata config   = null;
+        Pair<String,Metadata> config = null;
 
         PendingModifications mDirty = new PendingModifications();
         List<Object> mOtherDirtyStuff = new LinkedList<Object>();
@@ -816,11 +816,10 @@ public class Mailbox {
             // make sure they have sufficient rights to view the config
             if (!hasFullAccess())
                 return null;
-
-            Metadata meta = mCurrentChange.config == null ? mData.config : mCurrentChange.config;
-            if (meta == null)
+            if (mData.configKeys == null || !mData.configKeys.contains(section))
                 return null;
-            String config = meta.get(section, null);
+
+            String config = DbMailbox.getConfig(this, section);
             if (config == null)
                 return null;
             try {
@@ -862,13 +861,8 @@ public class Mailbox {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
             mCurrentChange.mDirty.recordModified(this, Change.MODIFIED_CONFIG);
-            mCurrentChange.config = new Metadata().copy(mData.config);
-            if (config != null)
-                mCurrentChange.config.put(section, config.toString());
-            else
-                mCurrentChange.config.remove(section);
-
-            DbMailbox.updateConfig(this, mCurrentChange.config);
+            mCurrentChange.config = new Pair<String,Metadata>(section, config);
+            DbMailbox.updateConfig(this, section, config);
             success = true;
         } finally {
             endTransaction(success);
@@ -4340,11 +4334,19 @@ public class Mailbox {
                 mData.lastItemId = change.itemId;
             if (change.contacts != MailboxChange.NO_CHANGE)
                 mData.contacts = change.contacts;
-            if (change.config != null)
-                mData.config = change.config;
             if (change.changeId != MailboxChange.NO_CHANGE && change.changeId > mData.lastChangeId) {
                 mData.lastChangeId   = change.changeId;
                 mData.lastChangeDate = change.timestamp;
+            }
+            if (change.config != null) {
+                if (change.config.getSecond() == null) {
+                    if (mData.configKeys != null)
+                        mData.configKeys.remove(change.config.getFirst());
+                } else {
+                    if (mData.configKeys == null)
+                        mData.configKeys = new HashSet<String>(1);
+                    mData.configKeys.add(change.config.getFirst());
+                }
             }
 
             // accumulate all the info about deleted items; don't care about committed changes to external items
