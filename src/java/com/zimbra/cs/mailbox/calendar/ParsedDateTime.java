@@ -171,7 +171,7 @@ public final class ParsedDateTime {
             	// just in case it somehow comes to that (ie Outlook hack)
                 return parse(str.substring(0, 8), tzmap, tz, ICalTimeZone.getUTC(), utcOnly);
             } else
-                throw new ParseException("Invalid TimeString specified: " + str, 0);
+                throw new ParseException("Invalid date/time specified: " + str, 0);
         }
     }
 
