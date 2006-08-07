@@ -84,6 +84,11 @@ public class FileBlobStore extends StoreManager {
     throws IOException, ServiceException {
         byte[] writeData;
 
+        // Prevent bogus digest values.
+        if (!ByteUtil.isValidDigest(digest))
+            throw ServiceException.FAILURE(
+                "Invalid blob digest \"" + digest + "\"", null);
+
         Volume volume = Volume.getById(volumeId);
         if (volume.getCompressBlobs() && data.length > volume.getCompressionThreshold()) {
             writeData = ByteUtil.compress(data);
