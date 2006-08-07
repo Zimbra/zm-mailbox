@@ -51,6 +51,7 @@ import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.ZimbraLog;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -308,8 +309,12 @@ public class Message extends MailItem {
                 throw ServiceException.INVALID_REQUEST("unable to parse invite sender: " + pm.getSender(), e);
             }
 
-            components = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe, mbox, id);
-            methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
+            try {
+                components = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe, mbox, id);
+                methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
+            } catch (ServiceException e) {
+                ZimbraLog.calendar.warn("Unable to process iCalendar attachment", e);
+            }
         }
 
         UnderlyingData data = new UnderlyingData();

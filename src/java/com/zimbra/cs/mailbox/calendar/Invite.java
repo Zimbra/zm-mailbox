@@ -1708,10 +1708,9 @@ public class Invite {
                             newInv.setRecurrence(new Recurrence.RecurrenceRule(newInv.getStartTime(), duration, new InviteInfo(newInv), addRules, subRules));
                         }
                     }
-                } catch (ServiceException e) {
-                    ZimbraLog.calendar.debug(e.toString(), e);
                 } catch (ParseException e) {
-                	ZimbraLog.calendar.debug(e.toString(), e);
+                    throw ServiceException.PARSE_ERROR(
+                        "Unable to parse iCalendar data: " + e.getMessage(), e);
                 }
                 
                 break;
