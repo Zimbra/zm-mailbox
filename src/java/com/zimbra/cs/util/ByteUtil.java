@@ -258,6 +258,26 @@ public class ByteUtil {
 		return false;
 	}
 
+    private static String encodeFSSafeBase64(byte[] data) {
+        byte[] encoded = Base64.encodeBase64(data);
+        // Replace '/' with ',' to make the digest filesystem-safe.
+        for (int i = 0; i < encoded.length; i++) {
+            if (encoded[i] == (byte) '/')
+                encoded[i] = (byte) ',';
+        }
+        return new String(encoded);
+    }
+
+    private static byte[] decodeFSSafeBase64(String str) {
+        byte[] bytes = str.getBytes();
+        // Undo the mapping done in encodeFSSafeBase64().
+        for (int i = 0; i < bytes.length; i++) {
+            if (bytes[i] == (byte) ',')
+                bytes[i] = (byte) '/';
+        }
+        return Base64.decodeBase64(bytes);
+    }
+
 	/**
 	 * return the SHA1 digest of the supplied data.
 	 * @param data data to digest
@@ -269,15 +289,9 @@ public class ByteUtil {
 	    try {
 	        MessageDigest md = MessageDigest.getInstance("SHA1");
 	        byte[] digest = md.digest(data);
-	        if (base64) {
-	            byte[] encoded = Base64.encodeBase64(digest);
-	            // Replace '/' with ',' to make the digest filesystem-safe.
-	            for (int i = 0; i < encoded.length; i++) {
-	            	if (encoded[i] == (byte) '/')
-	            		encoded[i] = (byte) ',';
-	            }
-	            return new String(encoded);
-	        } else 
+	        if (base64)
+                return encodeFSSafeBase64(digest);
+	        else 
 	            return new String(Hex.encodeHex(digest));
 	    } catch (NoSuchAlgorithmException e) {
 	        // this should never happen unless the JDK is foobar
@@ -297,15 +311,9 @@ public class ByteUtil {
 	    try {
 	        MessageDigest md = MessageDigest.getInstance("MD5");
 	        byte[] digest = md.digest(data);
-	        if (base64) {
-	            byte[] encoded = Base64.encodeBase64(digest);
-	            // Replace '/' with ',' to make the digest filesystem-safe.
-	            for (int i = 0; i < encoded.length; i++) {
-	            	if (encoded[i] == (byte) '/')
-	            		encoded[i] = (byte) ',';
-	            }
-	            return new String(encoded);
-	        } else 
+	        if (base64)
+                return encodeFSSafeBase64(digest);
+	        else 
 	            return new String(Hex.encodeHex(digest));
 	    } catch (NoSuchAlgorithmException e) {
 	        // this should never happen unless the JDK is foobar
@@ -329,14 +337,19 @@ public class ByteUtil {
 	 * @return
 	 */
 	public static byte[] getBinaryDigest(String digest) {
-		byte[] bytes = digest.getBytes();
-		// Undo the mapping done in getSHA1Digest/getMD5Digest
-		for (int i = 0; i < bytes.length; i++) {
-			if (bytes[i] == (byte) ',')
-				bytes[i] = (byte) '/';
-		}
-		return Base64.decodeBase64(bytes);
+        return decodeFSSafeBase64(digest);
 	}
+
+    public static boolean isValidDigest(String digest) {
+        if (digest != null) {
+            byte[] bin = decodeFSSafeBase64(digest);
+            if (bin != null) {
+                String str = encodeFSSafeBase64(bin);
+                return digest.equals(str);
+            }
+        }
+        return false;
+    }
 
     /**
      * Copy an input stream fully to output stream.
