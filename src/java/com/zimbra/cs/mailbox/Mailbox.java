@@ -3108,9 +3108,6 @@ public class Mailbox {
             if (redoPlayer != null)
                 rcptEmail = redoPlayer.getRcptEmail();
 
-            // the caller can specify the received date via redo recorder, ParsedMessge constructor, or X-Zimbra-Received header
-            long timestamp = getOperationTimestampMillis();
-
             // "having attachments" is currently tracked via flags
             if (pm.hasAttachments())
                 flags |= Flag.BITMASK_ATTACHED;
@@ -3142,7 +3139,9 @@ public class Mailbox {
                 } else if (!isSpam && !isDraft && pm.isReply()) {
                     conv = getConversationByHash(hash = getHash(subject));
                     if (debug)  ZimbraLog.mailbox.debug("  found conversation " + (conv == null ? -1 : conv.getId()) + " for hash: " + hash);
-                    if (conv != null && timestamp > conv.getDate() + ONE_MONTH_MILLIS) {
+                    // the caller can specify the received date via ParsedMessge constructor or X-Zimbra-Received header
+                    if (conv != null && pm.getReceivedDate() > conv.getDate() + ONE_MONTH_MILLIS) {
+                        // if the last message in the conv was more than 1 month ago, it's probably not related...
                         conv = null;
                         if (debug)  ZimbraLog.mailbox.debug("  but rejected it because it's too old");
                     }
@@ -3209,7 +3208,7 @@ public class Mailbox {
                         new StoreIncomingBlob(
                                     digest, msgSize,
                                     sharedDeliveryCtxt.getMailboxIdList());
-                    storeRedoRecorder.start(timestamp);
+                    storeRedoRecorder.start(getOperationTimestamp());
                     storeRedoRecorder.setBlobBodyInfo(data, blobPath, blobVolumeId);
                     storeRedoRecorder.log();
 
