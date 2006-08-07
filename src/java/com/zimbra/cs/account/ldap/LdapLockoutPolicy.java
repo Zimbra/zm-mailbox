@@ -47,10 +47,12 @@ class LdapLockoutPolicy {
     private long mMaxFailures;
     private boolean mLockoutExpired;
     private boolean mIsLockedOut;
+    private String mAccountStatus;
     
     LdapLockoutPolicy(Provisioning prov, Account account) throws ServiceException {
         mAccount = account;
         mProv = prov;
+        mAccountStatus = account.getAccountStatus();
         mMaxFailures = mAccount.getLongAttr(Provisioning.A_zimbraPasswordLockoutMaxFailures, 0);
         mEnabled = mMaxFailures > 0 && mAccount.getBooleanAttr(Provisioning.A_zimbraPasswordLockoutEnabled, false);
         mFailures = mAccount.getMultiAttr(Provisioning.A_zimbraPasswordLockoutFailureTime);
@@ -78,8 +80,8 @@ class LdapLockoutPolicy {
             return false;
         }
 
-        // still locked out
-        return true;
+        // still locked out if status is set to lockout
+        return mAccountStatus.equalsIgnoreCase(Provisioning.ACCOUNT_STATUS_LOCKOUT);
     }
 
     public boolean isLockedOut() {
@@ -136,8 +138,12 @@ class LdapLockoutPolicy {
         Map<String, Object> attrs = new HashMap<String,Object>();
         if (mFailures.length > 0)
             attrs.put(Provisioning.A_zimbraPasswordLockoutFailureTime, "");
-        if (mLockoutExpired)
+        if (mLockoutExpired) {
+            if (mAccountStatus.equalsIgnoreCase(Provisioning.ACCOUNT_STATUS_LOCKOUT)) {
+                attrs.put(Provisioning.A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
+            }
             attrs.put(Provisioning.A_zimbraPasswordLockoutLockedTime, "");
+        }
 
         try {
             if (attrs.size() > 0)
@@ -157,6 +163,7 @@ class LdapLockoutPolicy {
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "Auth","account", mAccount.getName(), "error", "account lockout due to too many failed logins"}));
             attrs.put(Provisioning.A_zimbraPasswordLockoutLockedTime, DateUtil.toGeneralizedTime(new Date()));
+            attrs.put(Provisioning.A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_LOCKOUT);
         }
         
         try {

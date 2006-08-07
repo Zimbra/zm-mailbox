@@ -2177,7 +2177,9 @@ public class LdapProvisioning extends Provisioning {
             throw AccountServiceException.AUTH_FAILED(acct.getName());
         if (accountStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE)) 
             throw AccountServiceException.MAINTENANCE_MODE();
-        if (!accountStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+
+        if (!(accountStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
+                accountStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT)))
             throw AccountServiceException.AUTH_FAILED(acct.getName());
 
         verifyPassword(acct, password);

@@ -27,6 +27,7 @@ package com.zimbra.cs.account.callback;
 
 import java.util.Map;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
@@ -37,6 +38,7 @@ public class AccountStatus implements AttributeCallback {
     /**
      * check to make sure zimbraMailHost points to a valid server zimbraServiceHostname
      */
+    @SuppressWarnings("unchecked")
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
         
@@ -49,6 +51,14 @@ public class AccountStatus implements AttributeCallback {
             attrsToModify.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
         } else {
             attrsToModify.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
+        }
+       
+        
+        if ((entry instanceof Account) && (status.equals(Provisioning.ACCOUNT_STATUS_ACTIVE))) {
+            if (entry.getAttr(Provisioning.A_zimbraPasswordLockoutFailureTime, null) != null) 
+                attrsToModify.put(Provisioning.A_zimbraPasswordLockoutFailureTime, "");
+            if (entry.getAttr(Provisioning.A_zimbraPasswordLockoutLockedTime, null) != null)             
+                attrsToModify.put(Provisioning.A_zimbraPasswordLockoutLockedTime, "");
         }
     }
 

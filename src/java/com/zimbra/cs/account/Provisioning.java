@@ -110,6 +110,11 @@ public abstract class Provisioning {
      * the account is locked due to administrative reasons and shouldn't allow logins and/or access.
      */
     public static final String ACCOUNT_STATUS_LOCKED = "locked";
+    
+    /**
+     * the account is locked due to too many login failure attempts and shouldn't allow  logins and/or access.
+     */
+    public static final String ACCOUNT_STATUS_LOCKOUT = "lockout";
 
     /**
      * the account is marked closed (future garbage collection) and shouldn't allow logins and/or access.

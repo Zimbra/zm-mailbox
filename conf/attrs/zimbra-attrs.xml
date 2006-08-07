@@ -182,7 +182,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Zimbra Systems Unique ID</desc>
 </attr>
 
-<attr id="2" name="zimbraAccountStatus" type="enum" value="active,maintenance,locked,closed" callback="AccountStatus" cardinality="single" requiredIn="account" flags="domainAdminModifiable">
+<attr id="2" name="zimbraAccountStatus" type="enum" value="active,maintenance,locked,closed,lockout" callback="AccountStatus" cardinality="single" requiredIn="account" flags="domainAdminModifiable">
   <desc>account status (TODO: enumerate valid values here)</desc>
 </attr>
 
