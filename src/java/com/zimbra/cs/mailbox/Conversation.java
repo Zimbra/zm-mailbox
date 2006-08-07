@@ -270,7 +270,7 @@ public class Conversation extends MailItem {
      * @param sort  The sort order for the messages, specified by one of the
      *              <code>SORT_XXX</code> constants from {@link DbMailItem}. */
     Message[] getMessages(byte sort) throws ServiceException {
-        if ((sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_BY_ID) {
+        if (mData.children != null && (sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_BY_ID) {
             // try to get all our info from the cache to avoid a database trip
             Collections.sort(mData.children);
             if ((sort & DbMailItem.SORT_DIRECTION_MASK) == DbMailItem.SORT_DESCENDING)
