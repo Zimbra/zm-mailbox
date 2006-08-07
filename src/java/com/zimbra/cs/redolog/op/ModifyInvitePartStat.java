@@ -86,10 +86,11 @@ public class ModifyInvitePartStat extends RedoableOp
         Appointment appt =
             Mailbox.getMailboxById(getMailboxId()).
             getAppointmentById(null, mApptId);
-        RecurId recurId =
-            new RecurId(ParsedDateTime.parse(mRecurIdDt,
-                                             appt.getTimeZoneMap()),
-                        mRecurIdRange);
+        RecurId recurId = null;
+        if (mRecurIdDt != null)
+            recurId = new RecurId(ParsedDateTime.parse(mRecurIdDt,
+                                                       appt.getTimeZoneMap()),
+                                  mRecurIdRange);
         mbox.modifyPartStat(
                 getOperationContext(),
                 mApptId, recurId, mCnStr, mAddressStr,
