@@ -110,6 +110,7 @@ class LdapLockoutPolicy {
             }
         }
 
+        String currentFailure = DateUtil.toGeneralizedTime(new Date());
         // need to toss out the oldest if we are at our limit        
         boolean removeOldest = mFailures.length == mMaxFailures && mFailuresToRemove == null;
         if (removeOldest) {
@@ -119,15 +120,22 @@ class LdapLockoutPolicy {
                     j = i;
                 }
             }
-            // remove oldest
-            attrs.put("-" + Provisioning.A_zimbraPasswordLockoutFailureTime, mFailures[j]);
+            // remove oldest iif the one we are adding isn't already in, otherwise we
+            // are effectively removing one without adding another
+            for (String f: mFailures) {
+                if (f.equalsIgnoreCase(currentFailure)) {
+                    removeOldest = false;
+                    break;
+                }
+            }
+            if (removeOldest) attrs.put("-" + Provisioning.A_zimbraPasswordLockoutFailureTime, mFailures[j]);
         } else if (mFailuresToRemove != null) {
             // remove any expired
             attrs.put("-" + Provisioning.A_zimbraPasswordLockoutFailureTime, mFailuresToRemove);
         }
 
         // add latest failure
-        attrs.put("+" + Provisioning.A_zimbraPasswordLockoutFailureTime, DateUtil.toGeneralizedTime(new Date()));
+        attrs.put("+" + Provisioning.A_zimbraPasswordLockoutFailureTime, currentFailure);
         
         // return total of all outstanding failures, including latest
         return 1 + mFailures.length - (removeOldest ? 1 : 0 ) - (mFailuresToRemove == null ? 0 : mFailuresToRemove.size());
