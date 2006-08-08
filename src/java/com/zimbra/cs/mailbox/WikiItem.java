@@ -67,7 +67,7 @@ public class WikiItem extends Document {
         mWikiWord = meta.get(Metadata.FN_WIKI_WORD);
     }
 
-    public static final String WIKI_CONTENT_TYPE = "text/html";
+    public static final String WIKI_CONTENT_TYPE = "text/html; charset=utf-8";
 	
     static WikiItem create(int id, Folder folder, short volumeId, String wikiword, String author, ParsedDocument pd, MailItem parent)
     throws ServiceException {
