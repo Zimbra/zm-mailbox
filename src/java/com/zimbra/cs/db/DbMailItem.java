@@ -2114,25 +2114,25 @@ public class DbMailItem {
     }
 
     // these columns are specified by DB_FIELDS, below
-    private static final int CI_ID          = 1;
-    private static final int CI_TYPE        = 2;
-    private static final int CI_PARENT_ID   = 3;
-    private static final int CI_FOLDER_ID   = 4;
-    private static final int CI_INDEX_ID    = 5;
-    private static final int CI_IMAP_ID     = 6;
-    private static final int CI_DATE        = 7;
-    private static final int CI_SIZE        = 8;
-    private static final int CI_VOLUME_ID   = 9;
-    private static final int CI_BLOB_DIGEST = 10;
-    private static final int CI_UNREAD      = 11;
-    private static final int CI_FLAGS       = 12;
-    private static final int CI_TAGS        = 13;
-//    private static final int CI_SENDER      = 14;
-    private static final int CI_SUBJECT     = 14;
-    private static final int CI_METADATA    = 15;
-    private static final int CI_MODIFIED    = 16;
-    private static final int CI_MODIFY_DATE = 17;
-    private static final int CI_SAVED       = 18;
+    public static final int CI_ID          = 1;
+    public static final int CI_TYPE        = 2;
+    public static final int CI_PARENT_ID   = 3;
+    public static final int CI_FOLDER_ID   = 4;
+    public static final int CI_INDEX_ID    = 5;
+    public static final int CI_IMAP_ID     = 6;
+    public static final int CI_DATE        = 7;
+    public static final int CI_SIZE        = 8;
+    public static final int CI_VOLUME_ID   = 9;
+    public static final int CI_BLOB_DIGEST = 10;
+    public static final int CI_UNREAD      = 11;
+    public static final int CI_FLAGS       = 12;
+    public static final int CI_TAGS        = 13;
+//    public static final int CI_SENDER      = 14;
+    public static final int CI_SUBJECT     = 14;
+    public static final int CI_METADATA    = 15;
+    public static final int CI_MODIFIED    = 16;
+    public static final int CI_MODIFY_DATE = 17;
+    public static final int CI_SAVED       = 18;
 
     private static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.index_id, " +
                                             "mi.imap_id, mi.date, mi.size, mi.volume_id, mi.blob_digest, " +
