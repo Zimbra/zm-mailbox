@@ -59,6 +59,7 @@ import com.zimbra.cs.operation.GetItemOperation;
 import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.SetTagsOperation;
 import com.zimbra.cs.operation.Operation.Requester;
+import com.zimbra.cs.ozserver.OzAllMatcher;
 import com.zimbra.cs.ozserver.OzByteArrayMatcher;
 import com.zimbra.cs.ozserver.OzByteBufferGatherer;
 import com.zimbra.cs.ozserver.OzConnection;
@@ -66,9 +67,11 @@ import com.zimbra.cs.ozserver.OzConnectionHandler;
 import com.zimbra.cs.ozserver.OzCountingMatcher;
 import com.zimbra.cs.ozserver.OzMatcher;
 import com.zimbra.cs.ozserver.OzTLSFilter;
+import com.zimbra.cs.ozserver.OzUtil;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.JMSession;
@@ -171,10 +174,13 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     private boolean processCommand() throws IOException {
         OzImapRequest req = new OzImapRequest(mCurrentRequestTag, mCurrentRequestData, mSession);
         boolean keepGoing = CONTINUE_PROCESSING;
+        boolean popLogContext = false;
         try {
-            if (mSession != null)
-                ZimbraLog.addAccountNameToContext(mSession.getUsername());
-
+            if (mSession != null) {
+                ZimbraLog.pushbackContext(ZimbraLog.C_NAME, mSession.getUsername());
+                popLogContext = true;
+            }
+            
             // check account status before executing command
             if (mMailbox != null)
                 try {
@@ -199,7 +205,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             else
                 sendBAD(ipe.mTag, ipe.getMessage());
         } finally {
-            ZimbraLog.clearContext();
+            if (popLogContext)
+                ZimbraLog.popbackContext(ZimbraLog.C_NAME, mSession.getUsername());
         }
 
         return keepGoing;
@@ -1517,6 +1524,25 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     static final int FETCH_ALL  = FETCH_FAST  | FETCH_ENVELOPE;
     static final int FETCH_FULL = FETCH_ALL   | FETCH_BODY;
 
+    private class ConnectionOutputStream extends OutputStream {
+        @Override
+        public void write(int b) throws IOException {
+            byte[] ba = new byte[1];
+            ba[0] = (byte)b;
+            write(ba, 0, ba.length);
+        }
+
+        @Override
+        public void write(byte[] ba, int off, int len) throws IOException {
+            ByteBuffer bb = ByteBuffer.wrap(ba, off, len);
+            mConnection.write(bb);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            mConnection.flush();
+        }
+    }
 
     boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID) throws IOException, ImapParseException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
@@ -1547,8 +1573,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         i4set.remove(null);
 
         for (ImapMessage i4msg : i4set) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	        PrintStream result = new PrintStream(baos, false, "utf-8");
+            OutputStream baos = new BufferedOutputStream(new ConnectionOutputStream(), 4000); 
+            ByteArrayOutputStream baosDebug = ZimbraLog.imap.isDebugEnabled() ? new ByteArrayOutputStream() : null;
+            PrintStream result = new PrintStream(new ByteUtil.TeeOutputStream(baos, baosDebug), false, "utf-8");
         	try {
                 boolean markMessage = markRead && (i4msg.flags & Flag.BITMASK_UNREAD) != 0;
                 boolean empty = true;
@@ -1577,7 +1604,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 if (!fullMessage.isEmpty()) {
                     raw = ImapMessage.getContent(item);
                     for (ImapPartSpecifier pspec : fullMessage) {
+                        ZimbraLog.imap.info("before pspec.write");
                         result.print(empty ? "" : " ");  pspec.write(result, baos, raw);  empty = false;
+                        ZimbraLog.imap.info("after pspec.write");
                     }
                 }
                 if (!parts.isEmpty() || (attributes & ~FETCH_FROM_MIME) != 0) {
@@ -1630,10 +1659,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             } finally {
                 result.write(')');
                 result.write(LINE_SEPARATOR_BYTES, 0, LINE_SEPARATOR_BYTES.length);
-                if (baos != null) {
-                    ByteBuffer bb = ByteBuffer.wrap(baos.toByteArray());
-                    mConnection.write(bb);
-                    ZimbraLog.imap.debug("  S: " + baos);
+                baos.close();
+                if (baosDebug != null) {
+                    ZimbraLog.imap.debug("  S: " + baosDebug);
                 }
             }
         }
@@ -1982,6 +2010,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             if (mState == ConnectionState.CLOSED) {
                 throw new IllegalStateException("connection already closed");
             }
+
+            mConnection.setMatcher(new OzAllMatcher());
             
             if (mSession != null) {
                 mSession.setHandler(null);
@@ -2049,6 +2079,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     }
 
     public void handleInput(ByteBuffer buffer, boolean matched) throws IOException {
+        if (mState == ConnectionState.CLOSED) {
+            ZimbraLog.imap.info(OzUtil.byteBufferDebugDump("input arrived on closed connection", buffer, false));
+            mCurrentData.clear();
+            return;
+        }
+                
         mCurrentData.add(buffer);
 
         if (!matched)
@@ -2056,12 +2092,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
         mCurrentData.trim(mConnection.getMatcher().trailingTrimLength());
 
-        if (mState == ConnectionState.CLOSED) {
-            ZimbraLog.imap.info("input arrived on closed connection");
-            mCurrentData.clear();
-            return;
-        }
-                
         if (mState == ConnectionState.READLITERAL) {
             mCurrentRequestData.add(mCurrentData.array());
             /*

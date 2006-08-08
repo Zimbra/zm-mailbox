@@ -43,6 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.logging.Log;
 
 import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
 
 public class OzConnection {
@@ -170,6 +171,14 @@ public class OzConnection {
         try {
             mFilters.get(0).close();
         } catch (Throwable t) {
+            if (t instanceof OutOfMemoryError) {
+                String msg = null;
+                try {
+                    msg = "OOME closing connection (" + mServer.mServerName + ")";
+                } finally {
+                    Zimbra.halt(msg);
+                }
+            }
             teardown(TeardownReason.CLOSE_EXCEPTION);
         }
     }
@@ -209,6 +218,14 @@ public class OzConnection {
                 mChannelClosed = true;
                 cancelAlarm();
             } catch (Throwable t) {
+                if (t instanceof OutOfMemoryError) {
+                    String msg = null;
+                    try {
+                        msg = "OOME in teardown connection (" + mServer.mServerName + ")";
+                    } finally {
+                        Zimbra.halt(msg);
+                    }
+                }
                 mLog.warn("exception closing channel", t);
                 mConnectionHandler.handleDisconnect();
             }
@@ -243,6 +260,14 @@ public class OzConnection {
                 if (mDebug) mLog.debug("server task " + mName);
                 doTask();
             } catch (Throwable t) {
+                if (t instanceof OutOfMemoryError) {
+                    String msg = null;
+                    try {
+                        msg = "OOME in server task " + mName + " (" + mServer.mServerName + ")";
+                    } finally {
+                        Zimbra.halt(msg);
+                    }
+                }
                 mLog.warn("exception performing server task " + mName);
             } finally {
                 clearFromNDC();
@@ -348,8 +373,20 @@ public class OzConnection {
                         mServer.schedule(mServerRegisterWriteTask);
                     }
                 } catch (Throwable t) {
-                    mLog.info("exception occurred during " + mName + " task", t);
-                    teardown(TeardownReason.ABRUPT);
+                    if (t instanceof OutOfMemoryError) {
+                        String msg = null;
+                        try {
+                            msg = "OOME in task " + mName + " ("+ mServer.mServerName + ")";
+                        } finally {
+                            Zimbra.halt(msg);
+                        }
+                    }
+                    if (t instanceof IOException && isChannelClosed()) {
+                        mLog.info("ignoring IOException on a closed channel with message: " + t.getMessage());
+                    } else {
+                        mLog.info("exception occurred during " + mName + " task", t);
+                        teardown(TeardownReason.ABRUPT);
+                    }
                 } finally {
                     if (mDebug) mLog.debug("finished " + mName);
                     clearFromNDC();
@@ -665,7 +702,7 @@ public class OzConnection {
                 }
 
                 totalWritten += wrote;
-                if (mDebug) mLog.debug("channel wrote=" + wrote + " req=" + req + " partial=" + data.hasRemaining() + " total=" + totalWritten + " buffer: " + before + "->" + OzUtil.toString(data));
+                if (mTrace) mLog.trace("channel wrote=" + wrote + " req=" + req + " partial=" + data.hasRemaining() + " total=" + totalWritten + " buffer: " + before + "->" + OzUtil.toString(data));
 
                 if (data.hasRemaining()) {
                     // Not all data was written. Note that write interest is
@@ -730,6 +767,14 @@ public class OzConnection {
                         try {
                             mConnectionHandler.handleAlarm();
                         } catch (Throwable t) {
+                            if (t instanceof OutOfMemoryError) {
+                                String msg = null;
+                                try {
+                                    msg = "OOME handling alarm (" + mServer.mServerName + ")";
+                                } finally {
+                                    Zimbra.halt(msg);
+                                }
+                            }
                             teardown(TeardownReason.ALARM_EXCEPTION);
                         }
                     }
@@ -788,6 +833,10 @@ public class OzConnection {
 
     public void write(ByteBuffer wbb) throws IOException {
         mFilters.get(0).write(wbb);
+    }
+
+    public void flush() throws IOException {
+        mFilters.get(0).flush();
     }
 
     private Map<String, String> mProperties = new HashMap<String, String>();

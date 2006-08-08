@@ -47,6 +47,7 @@ import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 
 import com.zimbra.cs.ozserver.OzConnection.ServerTask;
 import com.zimbra.cs.ozserver.OzConnection.TeardownReason;
+import com.zimbra.cs.util.Zimbra;
 
 public class OzServer {
     
@@ -58,7 +59,7 @@ public class OzServer {
     
     private ServerSocketChannel mServerSocketChannel;
     
-    private String mServerName;
+    String mServerName;
     
     private Thread mServerThread;
     
@@ -186,6 +187,14 @@ public class OzServer {
                         readyConnection.doWriteReady();
                     }
                 } catch (Throwable t) {
+                    if (t instanceof OutOfMemoryError) {
+                        String msg = null;
+                        try {
+                            msg = "OOME processing selected keys (" + mServerName + ")";
+                        } finally {
+                            Zimbra.halt(msg);
+                        }
+                    }
                     if (readyConnection != null) {
                     	mLog.warn("exception occurred handling selecting key, closing connection", t);
                         readyConnection.teardown(TeardownReason.ABRUPT, false);
@@ -270,6 +279,14 @@ public class OzServer {
                     mLog.info("starting server loop");
                     serverLoop();
                 } catch (Throwable t) {
+                    if (t instanceof OutOfMemoryError) {
+                        String msg = null;
+                        try {
+                            msg = "OOME in server loop (" + mServerName + ")";
+                        } finally {
+                            Zimbra.halt(msg);
+                        }
+                    }
                     mLog.warn("server loop encountered exception", t);
                     shutdown();
                 } finally {
