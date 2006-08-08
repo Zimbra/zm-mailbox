@@ -89,7 +89,19 @@ public class DbPool {
         public void disableForeignKeyConstraints() throws ServiceException {
             PreparedStatement stmt = null;
             try {
-                stmt = mConnection.prepareStatement("SET FOREIGN_KEY_CHECKS=0");                
+                stmt = mConnection.prepareStatement("SET FOREIGN_KEY_CHECKS=0");
+                stmt.execute();
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("disabling foreign key constraints", e);
+            } finally {
+                DbPool.closeStatement(stmt);
+            }
+        }
+
+        public void enableForeignKeyConstraints() throws ServiceException {
+            PreparedStatement stmt = null;
+            try {
+                stmt = mConnection.prepareStatement("SET FOREIGN_KEY_CHECKS=1");
                 stmt.execute();
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("disabling foreign key constraints", e);

@@ -54,6 +54,20 @@ import com.zimbra.cs.util.ZimbraLog;
  */
 public class DbMailbox {
 
+    public static final int CI_ID                 = 1;
+    public static final int CI_ACCOUNT_ID         = 2;
+    public static final int CI_INDEX_VOLUME_ID    = 3;
+    public static final int CI_ITEM_ID_CHECKPOINT = 4;
+    public static final int CI_SIZE_CHECKPOINT    = 5;
+    public static final int CI_CHANGE_CHECKPOINT  = 6;
+    public static final int CI_TRACKING_SYNC      = 7;
+    public static final int CI_TRACKING_IMAP      = 8;
+    public static final int CI_COMMENT            = 9;
+
+    public static final int CI_METADATA_MAILBOX_ID = 1;
+    public static final int CI_METADATA_SECTION    = 2;
+    public static final int CI_METADATA_METADATA    = 3;
+
     private static String DATABASE_PREFIX = "mailbox";
 
     public synchronized static int createMailbox(Connection conn, int mailboxId, String accountId, String comment) throws ServiceException {
