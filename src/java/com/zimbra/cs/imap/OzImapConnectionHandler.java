@@ -2011,19 +2011,27 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 throw new IllegalStateException("connection already closed");
             }
 
-            mConnection.setMatcher(new OzAllMatcher());
-            
-            if (mSession != null) {
-                mSession.setHandler(null);
-                SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
-                mSession = null;
-            }
-            
-            if (sendBanner) {
-                if (!mGoodbyeSent) {
-                    sendUntagged(ImapServer.getGoodbye(), true);
+            try {
+                mConnection.setMatcher(new OzAllMatcher());
+
+                if (mSession != null) {
+                    // remove this when 9748 is fixed - this is for some aggressive GC
+                    if (mSession.isSelected()) {
+                        mSession.deselectFolder();
+                    }
+                    mSession.setHandler(null);
+                    SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
+                    mSession = null;
                 }
-                mGoodbyeSent = true;
+
+                if (sendBanner) {
+                    if (!mGoodbyeSent) {
+                        sendUntagged(ImapServer.getGoodbye(), true);
+                    }
+                    mGoodbyeSent = true;
+                }
+            } finally {
+                mState = ConnectionState.CLOSED;
             }
         }
     }
@@ -2035,7 +2043,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             ZimbraLog.imap.info("exception occurred when closing IMAP connection", ioe);
         } finally {
             mConnection.close();
-            mState = ConnectionState.CLOSED;
             if (ZimbraLog.imap.isDebugEnabled()) ZimbraLog.imap.debug("entered closed state: banner=" + sendBanner);
         }
     }
