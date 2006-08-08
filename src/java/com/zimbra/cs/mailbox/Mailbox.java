@@ -88,6 +88,7 @@ import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Pair;
+import com.zimbra.cs.util.SetUtil;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.SoapProtocol;
@@ -2181,45 +2182,120 @@ public class Mailbox {
         }
     }
 
-    /** Returns a List of the MailItems of the given type modified since a
-     *  given change number.  Modified {@link Tag}s are only returned if the
-     *  caller owns the Mailbox or is an admin.  All other items are returned
-     *  if and only if the caller has {@link ACL#RIGHT_READ} on them. */
-    public synchronized List<MailItem> getModifiedItems(OperationContext octxt, byte type, long lastSync) throws ServiceException {
-        if (type == MailItem.TYPE_UNKNOWN)
-            return null;
-        else if (lastSync >= getLastChangeID())
+    public synchronized List<Folder> getModifiedFolders(OperationContext octxt, final long lastSync) throws ServiceException {
+        return getModifiedFolders(octxt, lastSync, MailItem.TYPE_UNKNOWN);
+    }
+    public synchronized List<Folder> getModifiedFolders(OperationContext octxt, final long lastSync, final byte type) throws ServiceException {
+        if (lastSync >= getLastChangeID())
             return Collections.emptyList();
 
+        List<Folder> modified = new ArrayList<Folder>();
+        boolean success = false;
+        try {
+            beginTransaction("getModifiedFolders", octxt);
+            for (Folder subfolder : mFolderCache.values()) {
+                if (type == MailItem.TYPE_UNKNOWN || subfolder.getType() == type)
+                    if (subfolder.getModifiedSequence() > lastSync && subfolder.canAccess(ACL.RIGHT_READ))
+                        modified.add(subfolder);
+            }
+            Collections.sort(modified);
+            success = true;
+            return modified;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public synchronized List<Tag> getModifiedTags(OperationContext octxt, long lastSync) throws ServiceException {
+        if (lastSync >= getLastChangeID())
+            return Collections.emptyList();
+
+        List<Tag> modified = new ArrayList<Tag>();
+        boolean success = false;
+        try {
+            beginTransaction("getModifiedTags", octxt);
+            if (hasFullAccess()) {
+                for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
+                    if (entry.getKey() instanceof String) {
+                        Tag tag = entry.getValue();
+                        if (tag.getModifiedSequence() > lastSync && !(tag instanceof Flag))
+                            modified.add(tag);
+                    }
+            }
+            success = true;
+            return modified;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    /** Returns all MailItems modified since a given change number.  Will not
+     *  return modified folders or tags; for these you need to call
+     *  {@link #getModifiedFolders(OperationContext, long, byte)} or
+     *  {@link #getModifiedTags(OperationContext, long)}.  Modified items not
+     *  visible to the caller (i.e. the caller lacks {@link ACL#RIGHT_READ})
+     *  are returned in a separate Integer List in the returned Pair.
+     *  
+     * @param octxt     The context for this request (e.g. auth user id).
+     * @param lastSync  We return items with change ID larger than this value.
+     * @return A {@link Pair} containing:<ul>
+     *         <li>a List of all caller-visible MailItems modified since the
+     *             checkpoint, and
+     *         <li>a List of the IDs of all items modified since the checkpoint
+     *             but not currently visible to the caller</ul> */
+    public synchronized Pair<List<MailItem>,List<Integer>> getModifiedItems(OperationContext octxt, long lastSync) throws ServiceException {
+        return getModifiedItems(octxt, lastSync, MailItem.TYPE_UNKNOWN, null);
+    }
+
+    /** Returns the MailItems of the given type modified since a given change
+     *  number.  Will not return modified folders or tags; for these you need 
+     *  to call {@link #getModifiedFolders(OperationContext, long, byte)} or
+     *  {@link #getModifiedTags(OperationContext, long)}.  Modified items not
+     *  visible to the caller (i.e. the caller lacks {@link ACL#RIGHT_READ})
+     *  are returned in a separate Integer List in the returned Pair.  When
+     *  <code>type</code> is {@link MailItem#TYPE_UNKNOWN}, all modified non-
+     *  tag, non-folders are returned.
+     *  
+     * @param octxt     The context for this request (e.g. auth user id).
+     * @param lastSync  We return items with change ID larger than this value.
+     * @param type      The type of MailItems to return.
+     * @return A {@link Pair} containing:<ul>
+     *         <li>a List of all caller-visible MailItems of the given type
+     *             modified since the checkpoint, and
+     *         <li>a List of the IDs of all items of the given type modified
+     *             since the checkpoint but not currently visible to the
+     *             caller</ul> */
+    public synchronized Pair<List<MailItem>,List<Integer>> getModifiedItems(OperationContext octxt, long lastSync, byte type) throws ServiceException {
+        return getModifiedItems(octxt, lastSync, type, null);
+    }
+
+    public synchronized Pair<List<MailItem>,List<Integer>> getModifiedItems(OperationContext octxt, long lastSync, byte type, Set<Integer> folderIds) throws ServiceException {
+        if (lastSync >= getLastChangeID())
+            return new Pair(Collections.emptyList(), Collections.emptyList());
+
         List<MailItem> modified = new ArrayList<MailItem>();
+        List<Integer> elsewhere = null;
         boolean success = false;
         try {
             beginTransaction("getModifiedItems", octxt);
 
-            if (type == MailItem.TYPE_TAG) {
-                if (hasFullAccess())
-                    for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
-                        if (entry.getKey() instanceof String) {
-                            Tag tag = entry.getValue();
-                            if (tag.getModifiedSequence() > lastSync && !(tag instanceof Flag))
-                                modified.add(tag);
-                        }
-            } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER || type == MailItem.TYPE_MOUNTPOINT) {
-                for (Folder subfolder : mFolderCache.values())
-                    if (type == MailItem.TYPE_FOLDER || subfolder.getType() == type)
-                        if (subfolder.getModifiedSequence() > lastSync && subfolder.canAccess(ACL.RIGHT_READ))
-                            modified.add(subfolder);
-                Collections.sort(modified);
-            } else {
-                List<MailItem.UnderlyingData> dataList = DbMailItem.getModifiedItems(this, type, lastSync);
-                if (dataList == null)
-                    return null;
-                for (MailItem.UnderlyingData data : dataList)
-                    if (data != null)
-                        modified.add(getItem(data));
+            Set<Integer> visible = getVisibleFolderIds();
+            if (folderIds == null)
+                folderIds = visible;
+            else if (visible != null)
+                folderIds = SetUtil.intersect(folderIds, visible);
+
+            Pair<List<MailItem.UnderlyingData>,List<Integer>> dataList = DbMailItem.getModifiedItems(this, type, lastSync, folderIds);
+            if (dataList == null)
+                return null;
+            for (MailItem.UnderlyingData data : dataList.getFirst()) {
+                if (data != null)
+                    modified.add(getItem(data));
             }
+            elsewhere = dataList.getSecond();
+
             success = true;
-            return modified;
+            return new Pair<List<MailItem>,List<Integer>>(modified, elsewhere);
         } finally {
             endTransaction(success);
         }
@@ -2240,7 +2316,7 @@ public class Mailbox {
     /** Returns a list of all <code>Folder</code>s the authenticated user has
      *  {@link ACL#RIGHT_READ} access to.  Returns <code>null</code> if the
      *  authenticated user has read access to the entire Mailbox. */
-    public Set<Folder> getVisibleFolders() throws ServiceException {
+    Set<Folder> getVisibleFolders() throws ServiceException {
         if (!mCurrentChange.isActive())
             throw ServiceException.FAILURE("cannot get visible hierarchy outside transaction", null);
         if (hasFullAccess())
@@ -2254,6 +2330,16 @@ public class Mailbox {
             else
                 incomplete = true;
         return incomplete ? visible : null;
+    }
+
+    Set<Integer> getVisibleFolderIds() throws ServiceException {
+        Set<Folder> folders = getVisibleFolders();
+        if (folders == null)
+            return null;
+        Set<Integer> visible = new HashSet<Integer>(folders.size());
+        for (Folder folder : folders)
+            visible.add(folder.getId());
+        return visible;
     }
 
 

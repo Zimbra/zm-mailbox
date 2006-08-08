@@ -40,6 +40,7 @@ import com.zimbra.cs.operation.Scheduler;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.util.Pair;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -167,15 +168,6 @@ public class SyncOperation extends Operation {
         e.addAttribute(MailService.A_IDS, sb.toString());
     }
 
-    private static final byte[] SYNC_ORDER = new byte[] { 
-        MailItem.TYPE_FOLDER, 
-        MailItem.TYPE_TAG, 
-        MailItem.TYPE_MESSAGE,
-        MailItem.TYPE_CONTACT, 
-        MailItem.TYPE_NOTE,
-        MailItem.TYPE_APPOINTMENT,
-    };
-
     private static final int MUTABLE_FIELDS = Change.MODIFIED_FLAGS  | Change.MODIFIED_TAGS |
                                               Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT |
                                               Change.MODIFIED_NAME   | Change.MODIFIED_CONFLICT |
@@ -184,48 +176,57 @@ public class SyncOperation extends Operation {
     private void deltaSync(ZimbraSoapContext zsc, Element response, Mailbox mbox, long begin) throws ServiceException {
         if (begin >= mbox.getLastChangeID())
             return;
-
-        // first, handle deleted items
-        List<Integer> tombstones = mbox.getTombstones(begin);
-        if (tombstones != null && !tombstones.isEmpty()) {
-            StringBuilder deleted = new StringBuilder();
-            for (Integer id : tombstones)
-                deleted.append(deleted.equals("") ? "" : ",").append(id);
-            response.addElement(MailService.E_DELETED).addAttribute(MailService.A_IDS, deleted.toString());
-        }
-
-        //  now, handle created/modified items
         OperationContext octxt = zsc.getOperationContext();
-        for (byte type : SYNC_ORDER) {
-            if (type == MailItem.TYPE_FOLDER && zsc.isDelegatedRequest()) {
-                //  first, make sure that something changed...
-                OperationContext octxtOwner = new OperationContext(mbox.getAccount());
-                if (mbox.getModifiedItems(octxtOwner, type, begin).isEmpty())
-                    continue;
+
+        // first, fetch deleted items
+        List<Integer> tombstones = mbox.getTombstones(begin);
+        Element eDeleted = response.addElement(MailService.E_DELETED);
+
+        // then, handle created/modified folders
+        if (zsc.isDelegatedRequest()) {
+            //  first, make sure that something changed...
+            OperationContext octxtOwner = new OperationContext(mbox.getAccount());
+            if (!mbox.getModifiedFolders(octxtOwner, begin).isEmpty()) {
                 // special-case the folder hierarchy for delegated delta sync
                 Set<Folder> visible = mbox.getVisibleFolders(octxt);
                 boolean anyFolders = folderSync(zsc, response, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, SyncPhase.DELTA);
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     response.addElement(MailService.E_FOLDER);
-                continue;
             }
+        } else {
+            for (Folder folder : mbox.getModifiedFolders(octxt, begin))
+                ToXML.encodeFolder(response, zsc, folder, Change.ALL_FIELDS);
+        }
 
-            for (MailItem item : mbox.getModifiedItems(octxt, type, begin)) {
-                //      For items in the system, if the content has changed since the user last sync'ed 
-                //      (because it was edited or created), just send back the folder ID and saved date --
-                //      the client will request the whole object out of band -- potentially using the 
-                //      content servlet's "include metadata in headers" hack.
+        // next, handle created/modified tags
+        for (Tag tag : mbox.getModifiedTags(octxt, begin))
+            ToXML.encodeTag(response, zsc, tag, Change.ALL_FIELDS);
 
-                //      If it's just the metadata that changed, send back the set of mutable attributes.
+        // finally, handle created/modified "other items"
+        Pair<List<MailItem>,List<Integer>> changed = mbox.getModifiedItems(octxt, begin);
+        for (MailItem item : changed.getFirst()) {
+            //  For items in the system, if the content has changed since the user last sync'ed 
+            //      (because it was edited or created), just send back the folder ID and saved date --
+            //      the client will request the whole object out of band -- potentially using the 
+            //      content servlet's "include metadata in headers" hack.
+            //  If it's just the metadata that changed, send back the set of mutable attributes.
+            boolean created = item.getSavedSequence() > begin;
+            ToXML.encodeItem(response, zsc, item, created ? Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT : MUTABLE_FIELDS);
+        }
 
-                boolean isMetadataOnly = type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_TAG;
-                if (!isMetadataOnly && item.getSavedSequence() > begin)
-                    ToXML.encodeItem(response, zsc, item, Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT);
-                else
-                    ToXML.encodeItem(response, zsc, item, isMetadataOnly ? Change.ALL_FIELDS : MUTABLE_FIELDS);
-            }
+        // items that have been altered in non-visible folders will be returned as "deleted" in order to handle moves
+        if (changed.getSecond() != null)
+            tombstones.addAll(changed.getSecond());
+
+        // cleanup: only return a <deleted> element if we're sending back deleted item ids
+        if (tombstones == null || tombstones.isEmpty()) {
+            eDeleted.detach();
+        } else {
+            StringBuilder deleted = new StringBuilder();
+            for (Integer id : tombstones)
+                deleted.append(deleted.length() == 0 ? "" : ",").append(id);
+            eDeleted.addAttribute(MailService.A_IDS, deleted.toString());
         }
     }
 }
-
