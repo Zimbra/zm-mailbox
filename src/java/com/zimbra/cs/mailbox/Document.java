@@ -40,6 +40,7 @@ import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 
@@ -153,8 +154,20 @@ public class Document extends MailItem {
     	return getVersion() + 1;
     }
     
-    public void rename(String newName) {
+    public void rename(String newName) throws ServiceException {
+    	validateName(newName);
     	mName = newName;
+    }
+    
+    // name validation is the same as Folder
+    private static final String INVALID_CHARACTERS = ".*[:/\"\t\r\n].*";
+    private static final int MAX_NAME_LENGTH  = 128;
+    
+    private static void validateName(String name) throws ServiceException {
+        if (name == null || name != StringUtil.stripControlCharacters(name))
+            throw MailServiceException.INVALID_NAME(name);
+        if (name.trim().equals("") || name.length() > MAX_NAME_LENGTH || name.matches(INVALID_CHARACTERS))
+            throw MailServiceException.INVALID_NAME(name);
     }
     
     private static Metadata getRevisionMetadata(int changeID, String author, ParsedDocument pd) {
@@ -212,7 +225,8 @@ public class Document extends MailItem {
             throw MailServiceException.CANNOT_CONTAIN();
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-
+        validateName(subject);
+        
 		Mailbox mbox = folder.getMailbox();
     	MetadataList revisions = new MetadataList();
     	Metadata rev = getRevisionMetadata(mbox.getOperationChangeID(), creator, pd);
