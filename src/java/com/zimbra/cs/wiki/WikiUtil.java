@@ -443,6 +443,8 @@ public abstract class WikiUtil {
                 throw new IllegalArgumentException("null folder");
             }
             File[] list = file.listFiles();
+            if (list == null)
+            	throw WikiServiceException.ERROR("directory does not exist : "+file.getPath());
             for (int i = 0; i < list.length; i++) {
                 File f = list[i];
 
