@@ -50,13 +50,14 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.StringUtil;
 
 public abstract class Session {
-    protected String  mAccountId;
-    private   String  mSessionId;
-    private   int     mSessionType;
+    protected final String    mAccountId;
+    private   final String    mSessionId;
+    private   final int       mSessionType;
+    private   final IMPersona mPersona;
+
+    protected Mailbox mMailbox;
     private   long    mLastAccessed;
     private   boolean mCleanedUp = false;
-    private   Mailbox mMailbox;
-    private   IMPersona mPersona;
 
     /** Implementation of the Session interface */
     public Session(String accountId, String sessionId, int type) throws ServiceException {
@@ -65,7 +66,7 @@ public abstract class Session {
         mSessionType = type;
 
         Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
-        if (acct != null &&  Provisioning.onLocalServer(acct)) {
+        if (acct != null && Provisioning.onLocalServer(acct)) {
             // add this Session to the Mailbox or die trying
             mMailbox = Mailbox.getMailboxByAccountId(accountId);
             mMailbox.addListener(this);
@@ -76,8 +77,13 @@ public abstract class Session {
                     mPersona = IMRouter.getInstance().findPersona(null, mMailbox, false);
                     mPersona.addListener(this);
                 }
+            } else {
+                mPersona = null;
             }
+        } else {
+            mMailbox = null;  mPersona = null;
         }
+
         updateAccessTime();
     }
 
@@ -161,12 +167,14 @@ public abstract class Session {
         SENT_DATA, // notifications were waiting, have been sent
         WAITING; // none waiting, go ahead and block 
     }
+
     /**
      * A push channel has come online
      *
      * @return TRUE if the channel should stay open (wait for more data) or FALSE if the channel 
      *          has been used (data was sent         
      * @param conn
+     * @throws ServiceException 
      */
     public RegisterNotificationResult registerNotificationConnection(OzNotificationConnectionHandler conn)
     throws ServiceException { 
@@ -182,16 +190,17 @@ public abstract class Session {
             cleanup();
             if (mMailbox != null)
                 mMailbox.removeListener(this);
-            if (mPersona != null) 
-                synchronized(mMailbox) {
+            if (mPersona != null) {
+                synchronized (mMailbox) {
                     mPersona.removeListener(this);
                 }
+            }
         } finally {
             mCleanedUp = true;
         }
         mMailbox = null;
     }
-    
+
     abstract protected void cleanup();
 
     public void updateAccessTime() {
@@ -206,10 +215,10 @@ public abstract class Session {
     	return mAccountId;
     }
 
-    private SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
+    private SimpleDateFormat mDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
 
     public String toString() {
-        String dateString = sDateFormat.format(new Date(mLastAccessed));
+        String dateString = mDateFormat.format(new Date(mLastAccessed));
         return StringUtil.getSimpleClassName(this) + ": {sessionId: " + mSessionId +
             ", accountId: " + mAccountId + ", lastAccessed: " + dateString + "}";
     }

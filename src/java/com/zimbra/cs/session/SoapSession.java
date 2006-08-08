@@ -121,15 +121,13 @@ public class SoapSession extends Session {
             mPushChannel.close();
             mPushChannel = null;
         }
-        
-        if (!mNotify)
+
+        if (!mNotify || mMailbox == null)
             return RegisterNotificationResult.NO_NOTIFY;
-        
-        Mailbox mbox = Mailbox.getMailboxByAccountId(mAccountId);
-        
+
         // must lock the Mailbox before locking the Session to avoid deadlock
         //   because ToXML functions can now call back into the Mailbox
-        synchronized (mbox) {
+        synchronized (mMailbox) {
             synchronized (this) {
                 
                 // are there any notifications already pending given the passed-in seqno?
@@ -154,7 +152,7 @@ public class SoapSession extends Session {
             }
         }
     }
-    
+
     /** Handles the set of changes from a single Mailbox transaction.
      *  <p>
      *  Takes a set of new mailbox changes and caches it locally.  This is
@@ -166,16 +164,14 @@ public class SoapSession extends Session {
      * 
      * @param pms   A set of new change notifications from our Mailbox  */
     public void notifyPendingChanges(PendingModifications pms) {
-        if (!pms.hasNotifications() || !mNotify)
+        if (!pms.hasNotifications() || !mNotify || mMailbox == null)
             return;
         
         try {
-            Mailbox mbox = Mailbox.getMailboxByAccountId(mAccountId);
-        
             // must lock the Mailbox before locking the Session to avoid deadlock
             //   because ToXML functions can now call back into the Mailbox
-            synchronized(mbox) {
-                synchronized(this) {
+            synchronized (mMailbox) {
+                synchronized (this) {
                     // XXX: should constrain to folders, tags, and stuff relevant to the current query?
                     if (mNotify && pms.deleted != null)
                         for (Iterator it = pms.deleted.values().iterator(); it.hasNext(); ) {
@@ -240,24 +236,23 @@ public class SoapSession extends Session {
      * @param zc    The SOAP request's encapsulated context */
     public void putRefresh(Element ctxt, ZimbraSoapContext zc) throws ServiceException {
         synchronized (this) {
-            if (!mNotify)
+            if (!mNotify || mMailbox == null)
                 return;
             mSentChanges.clear();
         }
 
         Element eRefresh = ctxt.addUniqueElement(ZimbraNamespace.E_REFRESH);
 
-        Mailbox mbox = Mailbox.getMailboxByAccountId(mAccountId);
         Mailbox.OperationContext octxt = zc.getOperationContext();
         // Lock the mailbox but not the "this" object, to avoid deadlock
         // with another thread that calls a Session method from within a
         // synchronized Mailbox method.
-        synchronized (mbox) {
+        synchronized (mMailbox) {
             // dump current mailbox status (currently just size)
-            ToXML.encodeMailbox(eRefresh, mbox);
+            ToXML.encodeMailbox(eRefresh, mMailbox);
 
             // dump all tags under a single <tags> parent
-            List tags = mbox.getTagList(octxt);
+            List<Tag> tags = mMailbox.getTagList(octxt);
             if (tags != null && tags.size() > 0) {
                 Element eTags = eRefresh.addUniqueElement(ZimbraNamespace.E_TAGS);
                 for (Iterator it = tags.iterator(); it.hasNext(); ) {
@@ -273,7 +268,7 @@ public class SoapSession extends Session {
 //              GetFolder.handleFolder(mbox, root, eRefresh, zc, octxt);
             	
             	// use the operation here just so we can re-use the logic...
-            	GetFolderTreeOperation op = new GetFolderTreeOperation(this, octxt, mbox, Requester.SOAP, null);
+            	GetFolderTreeOperation op = new GetFolderTreeOperation(this, octxt, mMailbox, Requester.SOAP, null);
             	op.runImmediately();
             	GetFolder.encodeFolderNode(zc, eRefresh, op.getResult());
                 
@@ -285,7 +280,7 @@ public class SoapSession extends Session {
     }
     
     /**
-     * TEMP HACK FIXME TODO -- only until the client understands notification sequencing
+     * TEMP HACK FIXME: TODO -- only until the client understands notification sequencing
      * @return
      */
     public int getCurrentNotificationSeqNo() {
@@ -329,26 +324,19 @@ public class SoapSession extends Session {
      *         received (0 means none)
      * @return The passed-in <code>&lt;context></code> element */
     public Element putNotifications(ZimbraSoapContext zc, Element ctxt, int lastKnownSeqno) {
-        if (ctxt == null)
+        if (ctxt == null || mMailbox == null)
             return null;
 
-        Mailbox mbox;
-        try {
-            mbox = Mailbox.getMailboxByAccountId(getAccountId());
-        } catch (ServiceException e) {
-            ZimbraLog.session.warn("error fetching mailbox for account " + getAccountId(), e);
-            return ctxt;
-        }
         String explicitAcct = getAccountId().equals(zc.getAuthtokenAccountId()) ? null : getAccountId();
 
         // must lock the Mailbox before locking the Session to avoid deadlock
         //   because ToXML functions can now call back into the Mailbox
-        synchronized (mbox) {
+        synchronized (mMailbox) {
             synchronized (this) {
                 // send the <change> block
                 // <change token="555" [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
                 ctxt.addUniqueElement(ZimbraSoapContext.E_CHANGE)
-                    .addAttribute(ZimbraSoapContext.A_CHANGE_ID, mbox.getLastChangeID())
+                    .addAttribute(ZimbraSoapContext.A_CHANGE_ID, mMailbox.getLastChangeID())
                     .addAttribute(ZimbraSoapContext.A_ACCOUNT_ID, explicitAcct);
                 
                 if (mSentChanges.size() > 100) {
@@ -382,7 +370,7 @@ public class SoapSession extends Session {
                 
                     // send all the old changes
                     for (PendingModifications pm : mSentChanges)
-                        putPendingModifications(zc, pm, ctxt, mbox, explicitAcct);
+                        putPendingModifications(zc, pm, ctxt, mMailbox, explicitAcct);
                 }
             }
         }
