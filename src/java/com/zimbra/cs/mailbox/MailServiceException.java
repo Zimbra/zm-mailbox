@@ -231,7 +231,7 @@ public class MailServiceException extends ServiceException {
     }
 
     public static MailServiceException INVALID_NAME(String name) {
-        return new MailServiceException("invalid tag/folder name: " + name, INVALID_NAME, SENDERS_FAULT, new Argument(NAME, name, Argument.Type.STR));
+        return new MailServiceException("invalid name: " + name, INVALID_NAME, SENDERS_FAULT, new Argument(NAME, name, Argument.Type.STR));
     }
 
     public static MailServiceException INVALID_TYPE(byte type) {
