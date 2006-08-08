@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -106,7 +107,15 @@ public class WikiDigestFixup {
 
     private static List<WikiDigest> getWikiDigests(int mboxId)
     throws SQLException, IOException, ServiceException {
-        Mailbox mbox = Mailbox.getMailboxById(mboxId);
+        Mailbox mbox = null;
+        try {
+            mbox = Mailbox.getMailboxById(mboxId);
+        } catch (AccountServiceException e) {
+            if (AccountServiceException.NO_SUCH_ACCOUNT.equals(e.getCode()))
+                return null;
+            else
+                throw e;
+        }
         OperationContext octxt = new OperationContext(mbox);
         List<MailItem> wikis = mbox.getItemList(octxt, MailItem.TYPE_WIKI);
         int len = wikis != null ? wikis.size() : 0;
@@ -188,7 +197,7 @@ public class WikiDigestFixup {
                 System.out.println("Processing mailbox " + mboxId + " (" + m.getEmail() + ") ...");
                 System.out.println("Getting wiki items needing fixup...");
                 List<WikiDigest> digests = getWikiDigests(mboxId);
-                int howmany = digests.size();
+                int howmany = digests != null ? digests.size() : 0;
                 System.out.println("Got " + howmany + " wiki items to fixup.");
                 if (howmany > 0) {
                     fixupItems(conn, mboxId, digests);
