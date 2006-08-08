@@ -1084,17 +1084,16 @@ public class Mailbox {
      *        lives on a different host
      *    <li><code>account.NO_SUCH_ACCOUNT</code> - if the mailbox's Account
      *        has been deleted and <code>skipMailHostCheck=false</code></ul> */
-    public static Mailbox getMailboxById(int mailboxId,
-                boolean skipMailHostCheck)
+    public static Mailbox getMailboxById(int mailboxId, boolean skipMailHostCheck)
     throws ServiceException {
         if (mailboxId <= 0)
             throw MailServiceException.NO_SUCH_MBOX(mailboxId);
 
         synchronized (sMailboxCache) {
             Object obj = sMailboxCache.get(mailboxId);
-            if (obj instanceof Mailbox)
+            if (obj instanceof Mailbox) {
                 return (Mailbox) obj;
-            else if (obj instanceof MailboxLock) {
+            } else if (obj instanceof MailboxLock) {
                 MailboxLock lock = (MailboxLock) obj;
                 if (lock.owner != Thread.currentThread())
                     throw MailServiceException.MAINTENANCE(mailboxId);
@@ -1118,9 +1117,8 @@ public class Mailbox {
                     // exception forces the clients to reconnect to the new
                     // server.
                     Account account = mailbox.getAccount();
-                    if (!Provisioning.onLocalServer(account)) {
+                    if (!Provisioning.onLocalServer(account))
                         throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
-                    }
                 }
                 if (obj instanceof MailboxLock)
                     ((MailboxLock) obj).mailbox = mailbox;
@@ -1135,32 +1133,32 @@ public class Mailbox {
     }
 
     public static MailboxLock beginMaintenance(String accountId, int mailboxId) throws ServiceException {
-        synchronized (sMailboxCache) {
-            Integer mailboxKey = (Integer) sMailboxCache.get(accountId.toLowerCase());
-            if (mailboxKey != null) {
-                if (mailboxKey.intValue() != mailboxId)
-                    throw MailServiceException.WRONG_MAILBOX();
-            } else {
-                mailboxKey = new Integer(mailboxId);
-                if (sMailboxCache.values().contains(mailboxKey))
-                    throw MailServiceException.WRONG_MAILBOX();
+        Mailbox mbox = getMailboxByAccountId(accountId, false);
+        if (mbox == null) {
+            synchronized (sMailboxCache) {
+                if (sMailboxCache.get(accountId.toLowerCase()) == null) {
+                    MailboxLock lock = new MailboxLock(accountId, mailboxId);
+                    sMailboxCache.put(mailboxId, lock);
+                    return lock;
+                }
             }
+            mbox = getMailboxByAccountId(accountId);
+        }
 
-            Object obj = sMailboxCache.get(mailboxKey);
-            MailboxLock lock = null;
-            if (obj instanceof Mailbox)
-                lock = ((Mailbox) obj).beginMaintenance();
-            else if (obj instanceof MailboxLock)
-                throw MailServiceException.MAINTENANCE(mailboxKey.intValue());
-            else
-                lock = new MailboxLock(accountId, mailboxId);
-            sMailboxCache.put(mailboxKey, lock);
+        // mbox is non-null, and mbox.beginMaintenance() will throw if it's already in maintenance
+        synchronized (mbox) {
+            MailboxLock lock = mbox.beginMaintenance();
+            synchronized (sMailboxCache) {
+                sMailboxCache.put(mailboxId, lock);
+            }
             return lock;
         }
     }
+
     public static void endMaintenance(MailboxLock lock, boolean success, boolean removeFromCache) throws ServiceException {
         if (lock == null)
             throw ServiceException.INVALID_REQUEST("no lock provided", null);
+
         synchronized (sMailboxCache) {
             Integer mailboxKey = new Integer(lock.mailboxId);
             Object obj = sMailboxCache.get(mailboxKey);
@@ -1507,7 +1505,7 @@ public class Mailbox {
                 //   (so anyone asking for the Mailbox gets NO_SUCH_MBOX or creates a fresh new empty one with a different id)
                 synchronized (sMailboxCache) {
                     sMailboxCache.remove(mData.accountId);
-                    sMailboxCache.remove(new Integer(mId));
+                    sMailboxCache.remove(mId);
                 }
 
                 // attempt to nuke the store and index
