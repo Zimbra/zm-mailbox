@@ -1395,7 +1395,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            String typeConstraint = type == MailItem.TYPE_UNKNOWN ? "type NOT IN " + FOLDER_AND_TAG_TYPES : "type IN " + typeConstraint(type);
+            String typeConstraint = type == MailItem.TYPE_UNKNOWN ? "type NOT IN " + NON_SEARCHABLE_TYPES : "type IN " + typeConstraint(type);
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(mbox.getId(), "mi") +
                     " WHERE mi.mod_metadata > ? AND " + typeConstraint +
