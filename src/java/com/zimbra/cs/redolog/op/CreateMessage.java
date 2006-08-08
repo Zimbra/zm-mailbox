@@ -57,9 +57,12 @@ import com.zimbra.cs.util.JMSession;
 public class CreateMessage extends RedoableOp
 implements CreateAppointmentPlayer,CreateAppointmentRecorder {
 
+    private static final long RECEIVED_DATE_UNSET = -1;
+
     private static final byte MSGBODY_INLINE = 1;   // message body buffer is included in this op
     private static final byte MSGBODY_LINK   = 2;   // message link information is included in this op
 
+    private long mReceivedDate;     // email received date; not necessarily equal to operation time
     private String mRcptEmail;      // email address the message was delivered to
                                     // tracked for logging purpose only; useful because the same
                                     // mailbox may be addressed using any of the defined aliases
@@ -93,8 +96,22 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
         mNoICal = false;
 	}
 
-	public CreateMessage(int mailboxId,
+    protected CreateMessage(int mailboxId,
+                            String rcptEmail,
+                            boolean shared,
+                            String digest,
+                            int msgSize,
+                            int folderId,
+                            boolean noICal,
+                            int flags,
+                            String tags) {
+        this(mailboxId, rcptEmail, RECEIVED_DATE_UNSET, shared, digest,
+             msgSize, folderId, noICal, flags, tags);
+    }
+
+    public CreateMessage(int mailboxId,
                          String rcptEmail,
+                         long receivedDate,
                          boolean shared,
 						 String digest,
 						 int msgSize,
@@ -104,6 +121,7 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
 						 String tags) {
 		setMailboxId(mailboxId);
         mRcptEmail = rcptEmail;
+        mReceivedDate = receivedDate;
         mShared = shared;
 		mDigest = digest != null ? digest : "";
 		mMsgSize = msgSize;
@@ -115,6 +133,12 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
         mMsgBodyType = MSGBODY_INLINE;
         mNoICal = noICal;
 	}
+
+    public void start(long timestamp) {
+        super.start(timestamp);
+        if (mReceivedDate == RECEIVED_DATE_UNSET)
+            mReceivedDate = timestamp;
+    }
 
     public synchronized void commit() {
         // Override commit() and abort().  Null out mData (reference to message
@@ -227,6 +251,7 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=").append(mMsgId);
         sb.append(", rcpt=").append(mRcptEmail);
+        sb.append(", rcvDate=").append(mReceivedDate);
         sb.append(", shared=").append(mShared ? "true" : "false");
         sb.append(", blobDigest=\"").append(mDigest).append("\", size=").append(mMsgSize);
         sb.append(", conv=").append(mConvId).append(", folder=").append(mFolderId);
@@ -263,6 +288,8 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
 
     protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mRcptEmail != null ? mRcptEmail : "");
+        if (getVersion().atLeast(1, 4))
+            out.writeLong(mReceivedDate);
         out.writeBoolean(mShared);
 		out.writeUTF(mDigest);
 		out.writeInt(mMsgSize);
@@ -294,6 +321,10 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
 
 	protected void deserializeData(RedoLogInput in) throws IOException {
         mRcptEmail = in.readUTF();
+        if (getVersion().atLeast(1, 4))
+            mReceivedDate = in.readLong();
+        else
+            mReceivedDate = getTimestamp();
         mShared = in.readBoolean();
 		mDigest = in.readUTF();
 		mMsgSize = in.readInt();
@@ -344,9 +375,9 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
             InputStream is = StoreManager.getInstance().getContent(src);
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
             is.close();
-            pm = new ParsedMessage(mm, getTimestamp(), mbox.attachmentsIndexingEnabled());
+            pm = new ParsedMessage(mm, mReceivedDate, mbox.attachmentsIndexingEnabled());
         } else { // mMsgBodyType == MSGBODY_INLINE
-            pm = new ParsedMessage(mData, getTimestamp(), mbox.attachmentsIndexingEnabled());
+            pm = new ParsedMessage(mData, mReceivedDate, mbox.attachmentsIndexingEnabled());
         }
 
         try {
