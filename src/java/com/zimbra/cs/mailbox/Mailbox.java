@@ -3155,8 +3155,7 @@ public class Mailbox {
             if (convTarget != null && debug)
                 ZimbraLog.mailbox.debug("  placing message in existing conversation " + convTarget.getId());
 
-            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
-                        : redoPlayer.getVolumeId();
+            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
             ZVCalendar iCal = pm.getiCalendar();
             msg = Message.create(messageId, folder, convTarget, pm, msgSize, digest,
                         volumeId, unread, flags, tags, dinfo, noICal, iCal);
@@ -3191,12 +3190,9 @@ public class Mailbox {
                 // This mailbox is the only recipient, or it is the first
                 // of multiple recipients.  Save message to incoming directory.
                 if (redoPlayer == null)
-                    blob = sm.storeIncoming(data, digest,
-                                null, msg.getVolumeId());
+                    blob = sm.storeIncoming(data, digest, null, msg.getVolumeId());
                 else
-                    blob = sm.storeIncoming(data, digest,
-                                redoPlayer.getPath(),
-                                redoPlayer.getVolumeId());
+                    blob = sm.storeIncoming(data, digest, redoPlayer.getPath(), redoPlayer.getVolumeId());
                 String blobPath = blob.getPath();
                 short blobVolumeId = blob.getVolumeId();
 
@@ -3205,10 +3201,7 @@ public class Mailbox {
 
                     // Log entry in redolog for blob save.  Blob bytes are
                     // logged in StoreToIncoming entry.
-                    storeRedoRecorder =
-                        new StoreIncomingBlob(
-                                    digest, msgSize,
-                                    sharedDeliveryCtxt.getMailboxIdList());
+                    storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, sharedDeliveryCtxt.getMailboxIdList());
                     storeRedoRecorder.start(getOperationTimestamp());
                     storeRedoRecorder.setBlobBodyInfo(data, blobPath, blobVolumeId);
                     storeRedoRecorder.log();
@@ -4753,7 +4746,7 @@ public class Mailbox {
             redoRecorder.setAuthor(author);
             redoRecorder.setDocument(doc);
             short volumeId = Volume.getCurrentMessageVolume().getId();
-            blob = sm.storeIncoming(rawData, null, null, volumeId);
+            blob = sm.storeIncoming(rawData, digest, null, volumeId);
             redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
             markOtherItemDirty(blob);
 
