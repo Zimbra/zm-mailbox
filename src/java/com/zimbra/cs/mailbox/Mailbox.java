@@ -3088,7 +3088,10 @@ public class Mailbox {
             }
         }
 
-        CreateMessage redoRecorder = new CreateMessage(mId, rcptEmail, sharedDeliveryCtxt.getShared(), digest, msgSize, folderId, noICal, flags, tagStr);
+        CreateMessage redoRecorder =
+            new CreateMessage(mId, rcptEmail, pm.getReceivedDate(),
+                              sharedDeliveryCtxt.getShared(),
+                              digest, msgSize, folderId, noICal, flags, tagStr);
         StoreIncomingBlob storeRedoRecorder = null;
 
         // Strip out unread flag for internal storage.
