@@ -112,9 +112,13 @@ public abstract class Wiki {
 	public static class WikiContext {
 		OperationContext octxt;
 		String           auth;
+		String           view;
 		
 		public WikiContext(OperationContext o, String a) {
-			octxt = o; auth = a;
+			octxt = o; auth = a; view = null;
+		}
+		public WikiContext(OperationContext o, String a, String v) {
+			octxt = o; auth = a; view = v;
 		}
 	}
 	
