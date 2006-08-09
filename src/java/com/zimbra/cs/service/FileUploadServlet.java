@@ -61,6 +61,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -68,6 +69,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Constants;
@@ -308,10 +310,19 @@ public class FileUploadServlet extends ZimbraServlet {
                     // make sure we're on the right host; proxy if we're not...
                     Provisioning prov = Provisioning.getInstance();
                     Account acct = prov.get(AccountBy.id, at.getAccountId());
+                    if (acct == null)
+                        throw AccountServiceException.NO_SUCH_ACCOUNT(at.getAccountId());
                     if (!Provisioning.onLocalServer(acct)) {
                         proxyServletRequest(req, resp, prov.getServer(acct), null);
                         return;
                     }
+                    // make sure the authenticated account is active
+                    if (acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
+                        throw AccountServiceException.MAINTENANCE_MODE();
+                    else if (!acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                        throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
+                    // fetching the mailbox will except if it's in maintenance mode
+                    Mailbox.getMailboxByAccountId(acct.getId(), false);
                 } catch (ServiceException e) {
                     throw new ServletException(e);
                 }
