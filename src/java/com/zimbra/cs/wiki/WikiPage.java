@@ -125,7 +125,6 @@ public abstract class WikiPage {
 	}
 	
 	public static class LocalWikiPage extends WikiPage {
-		private Mailbox mMailbox;
 		private String  mMimeType;
 		private byte[]  mData;
 		private byte    mType;
@@ -165,7 +164,6 @@ public abstract class WikiPage {
 		
 		public void addWikiItem(Document newItem) throws ServiceException {
 			Document.DocumentRevision rev = newItem.getLastRevision();
-			mMailbox = newItem.getMailbox();
 			mId = newItem.getId();
 			mRevision = newItem.getVersion();
 			mModifiedDate = rev.getRevDate();
@@ -178,11 +176,13 @@ public abstract class WikiPage {
 		}
 
 		public void deleteAllRevisions(WikiContext ctxt) throws ServiceException {
-			mMailbox.delete(ctxt.octxt, mId, MailItem.TYPE_UNKNOWN);
+			Mailbox mbox = Mailbox.getMailboxByAccountId(mAccountId);
+			mbox.delete(ctxt.octxt, mId, MailItem.TYPE_UNKNOWN);
 		}
 
 		public Document getWikiItem(WikiContext ctxt) throws ServiceException {
-			return (Document)mMailbox.getItemById(ctxt.octxt, mId, MailItem.TYPE_UNKNOWN);
+			Mailbox mbox = Mailbox.getMailboxByAccountId(mAccountId);
+			return (Document)mbox.getItemById(ctxt.octxt, mId, MailItem.TYPE_UNKNOWN);
 		}
 		
 		public String getContents(WikiContext ctxt) throws ServiceException {
