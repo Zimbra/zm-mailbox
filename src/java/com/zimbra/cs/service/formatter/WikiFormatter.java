@@ -89,7 +89,9 @@ public class WikiFormatter extends Formatter {
     }
     
     private WikiContext createWikiContext(Context context) {
-    	return new WikiContext(context.opContext, context.cookieAuthHappened ? context.authTokenCookie : null);
+    	return new WikiContext(context.opContext, 
+    			context.cookieAuthHappened ? context.authTokenCookie : null,
+    			context.getView());
     }
     private void handleWikiFolder(Context context, Folder folder) throws IOException, ServiceException {
     	WikiTemplate template = getTemplate(context, folder, TOC);
