@@ -4897,8 +4897,11 @@ public class Mailbox {
             redoRecorder.setFilename(filename);
             redoRecorder.setMimeType(mimeType);
             redoRecorder.setAuthor(author);
-            int itemId = getNextItemId(ID_AUTO_INCREMENT);
-            short volumeId = Volume.getCurrentMessageVolume().getId();
+            redoRecorder.setItemType(type);
+            
+            SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.player);
+            int itemId  = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
+            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
 
             blob = sm.storeIncoming(rawData, digest, null, volumeId);
             redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
@@ -4919,6 +4922,7 @@ public class Mailbox {
             else
                 throw MailServiceException.INVALID_TYPE(type);
 
+            redoRecorder.setMessageId(doc.getId());
             mCurrentChange.addIndexedItem(doc, pd);
             sm.link(blob, this, itemId, doc.getLastRevision().getRevId(), volumeId);
             success = true;
