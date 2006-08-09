@@ -36,6 +36,7 @@ public class SaveDocument extends CreateMessage {
 	private String mFilename;
 	private String mMimeType;
 	private String mAuthor;
+	private byte mItemType;
 	
 	public SaveDocument() {
 	}
@@ -72,10 +73,19 @@ public class SaveDocument extends CreateMessage {
     	mAuthor = a;
     }
     
+    public byte getItemType() {
+    	return mItemType;
+    }
+    
+    public void setItemType(byte type) {
+    	mItemType = type;
+    }
+    
     protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mFilename);
         out.writeUTF(mMimeType);
         out.writeUTF(mAuthor);
+        out.writeByte(mItemType);
         super.serializeData(out);
     }
 
@@ -83,6 +93,7 @@ public class SaveDocument extends CreateMessage {
         mFilename = in.readUTF();
         mMimeType = in.readUTF();
         mAuthor = in.readUTF();
+        mItemType = in.readByte();
         super.deserializeData(in);
     }
 
@@ -95,6 +106,7 @@ public class SaveDocument extends CreateMessage {
 							mMimeType,
 							mAuthor,
 							getMessageBody(),
-							null);
+							null,
+							mItemType);
     }
 }

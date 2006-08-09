@@ -79,12 +79,9 @@ public class GetWiki extends WikiDocumentHandler {
         			throw new WikiServiceException.NoSuchWikiException(word);
         		}
         		Element wikiElem = ToXML.encodeWikiPage(response, wikiPage);
-        		try {
-        			String contents = wikiPage.getContents(wctxt);
-        			if (contents != null && contents != "") {
-                		wikiElem.addAttribute(MailService.A_BODY, contents, Element.DISP_CONTENT);
-        			}
-        		} catch (Exception ex) {
+        		String contents = wikiPage.getContents(wctxt);
+        		if (contents != null && contents != "") {
+        			wikiElem.addAttribute(MailService.A_BODY, contents, Element.DISP_CONTENT);
         		}
         		return response;
         	}
