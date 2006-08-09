@@ -174,11 +174,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
     private boolean processCommand() throws IOException {
         OzImapRequest req = new OzImapRequest(mCurrentRequestTag, mCurrentRequestData, mSession);
         boolean keepGoing = CONTINUE_PROCESSING;
-        boolean popLogContext = false;
+        String logPushedUsername = null;
         try {
             if (mSession != null) {
-                ZimbraLog.pushbackContext(ZimbraLog.C_NAME, mSession.getUsername());
-                popLogContext = true;
+                logPushedUsername = mSession.getUsername();
+                ZimbraLog.pushbackContext(ZimbraLog.C_NAME, logPushedUsername);
             }
             
             // check account status before executing command
@@ -205,8 +205,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             else
                 sendBAD(ipe.mTag, ipe.getMessage());
         } finally {
-            if (popLogContext)
-                ZimbraLog.popbackContext(ZimbraLog.C_NAME, mSession.getUsername());
+            if (logPushedUsername != null)
+                ZimbraLog.popbackContext(ZimbraLog.C_NAME, logPushedUsername);
         }
 
         return keepGoing;
@@ -1968,7 +1968,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         mConnection.writeAsciiWithCRLF(line);
     }
 
-    private static final int MAX_COMMAND_LENGTH = 2048;
+    private static final int MAX_COMMAND_LENGTH = 20480;
 
     private OzByteArrayMatcher mCommandMatcher = new OzByteArrayMatcher(OzByteArrayMatcher.CRLF, null);
     private OzCountingMatcher mLiteralMatcher = new OzCountingMatcher();
@@ -2015,10 +2015,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 mConnection.setMatcher(new OzAllMatcher());
 
                 if (mSession != null) {
-                    // remove this when 9748 is fixed - this is for some aggressive GC
-                    if (mSession.isSelected()) {
-                        mSession.deselectFolder();
-                    }
                     mSession.setHandler(null);
                     SessionCache.clearSession(mSession.getSessionId(), mSession.getAccountId());
                     mSession = null;
@@ -2092,6 +2088,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             return;
         }
                 
+        if (mSession != null) {
+            mSession.updateAccessTime();
+        }
+
         mCurrentData.add(buffer);
 
         if (!matched)
@@ -2136,6 +2136,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             }
         } else if (mState == ConnectionState.READLINE) {
             if (mCurrentData.overflowed()) {
+                ZimbraLog.imap.info("input request too long");
                 sendUntagged("BAD request too long", true);
                 gotoReadLineState(true);
                 return;
