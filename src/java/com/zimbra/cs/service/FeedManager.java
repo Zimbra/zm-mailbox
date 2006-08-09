@@ -101,6 +101,7 @@ public class FeedManager {
         client.setConnectionTimeout(10000);
         client.setTimeout(20000);
 
+        GetMethod get = null;
         BufferedInputStream content = null;
         try {
             String expectedCharset = Mime.P_CHARSET_DEFAULT;
@@ -126,7 +127,7 @@ public class FeedManager {
                 }
 
 
-                GetMethod get = new GetMethod(url);
+                get = new GetMethod(url);
                 get.setFollowRedirects(true);
                 get.setDoAuthentication(true);
                 get.addRequestHeader("User-Agent", HTTP_USER_AGENT);
@@ -137,6 +138,7 @@ public class FeedManager {
                 if (locationHeader != null) {
                     // update our target URL and loop again to do another HTTP GET
                     url = locationHeader.getValue();
+                    get.releaseConnection();
                 } else if (get.getStatusCode() != HttpServletResponse.SC_OK) {
                     throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusLine().toString(), null);
                 } else {
@@ -175,6 +177,9 @@ public class FeedManager {
             throw ServiceException.RESOURCE_UNREACHABLE("HttpException: " + e, e);
         } catch (IOException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("IOException: " + e, e);
+        } finally {
+            if (get != null)
+                get.releaseConnection();
         }
     }
 
@@ -219,7 +224,11 @@ public class FeedManager {
             } catch (javax.mail.internet.ParseException e) {
                 ctype = new ContentType("text", "plain", null);
             }
-            ctype.setParameter("name", FileUtil.trimFilename(URLDecoder.decode(mUrl)));
+            try {
+                ctype.setParameter("name", FileUtil.trimFilename(URLDecoder.decode(mUrl, "utf-8")));
+            } catch (UnsupportedEncodingException e) {
+                ctype.setParameter("name", FileUtil.trimFilename(mUrl));
+            }
             return ctype.toString();
         }
     }

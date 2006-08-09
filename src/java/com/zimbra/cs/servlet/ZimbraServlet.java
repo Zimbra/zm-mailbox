@@ -258,17 +258,17 @@ public class ZimbraServlet extends HttpServlet {
 
     protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, String accountId)
     throws IOException, ServletException {
-		try {
+        try {
             Provisioning prov = Provisioning.getInstance();
             Account acct = prov.get(AccountBy.id, accountId);
-    		if (acct == null) {
+            if (acct == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "no such user");
                 return;
             }
             proxyServletRequest(req, resp, prov.getServer(acct), null);
-		} catch (ServiceException e) {
-			throw new ServletException(e);
-		}
+        } catch (ServiceException e) {
+            throw new ServletException(e);
+        }
     }
 
     protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String authToken)
@@ -313,14 +313,16 @@ public class ZimbraServlet extends HttpServlet {
             // create a duplicate request (same method, same content, same X-headers)
             HttpMethod method = null;
             int hopcount = 0;
-            if (req.getMethod().equalsIgnoreCase("GET"))
+            if (req.getMethod().equalsIgnoreCase("GET")) {
                 method = new GetMethod(url.toString());
-            else if (req.getMethod().equalsIgnoreCase("POST") || req.getMethod().equalsIgnoreCase("PUT")) {
+            } else if (req.getMethod().equalsIgnoreCase("POST") || req.getMethod().equalsIgnoreCase("PUT")) {
                 PostMethod post = new PostMethod(url.toString());
                 post.setRequestEntity(new InputStreamRequestEntity(req.getInputStream()));
                 method = post;
-            } else
+            } else {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "cannot proxy method: " + req.getMethod());
+            }
+
             for (Enumeration enm = req.getHeaderNames(); enm.hasMoreElements(); ) {
                 String hname = (String) enm.nextElement(), hlc = hname.toLowerCase();
                 if (hlc.equals("x-zimbra-hopcount"))
@@ -332,28 +334,30 @@ public class ZimbraServlet extends HttpServlet {
                 throw ServiceException.TOO_MANY_HOPS();
             method.addRequestHeader("X-Zimbra-Hopcount", Integer.toString(hopcount + 1));
 
-            // dispatch the request and copy over the results
-            int statusCode = -1;
-            for (int retryCount = 3; statusCode == -1 && retryCount > 0; retryCount--)
-                try {
-                    statusCode = client.executeMethod(method);
-                } catch (HttpRecoverableException e) { }
-            if (statusCode != HttpStatus.SC_OK) {
-                if (statusCode == -1)
-                    resp.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "retry limit reached");
-                else
-                	resp.sendError(statusCode, method.getStatusText());
-                return;
+            try {
+                // dispatch the request and copy over the results
+                int statusCode = -1;
+                for (int retryCount = 3; statusCode == -1 && retryCount > 0; retryCount--)
+                    try {
+                        statusCode = client.executeMethod(method);
+                    } catch (HttpRecoverableException e) { }
+                if (statusCode != HttpStatus.SC_OK) {
+                    if (statusCode == -1)
+                        resp.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "retry limit reached");
+                    else
+                        resp.sendError(statusCode, method.getStatusText());
+                    return;
+                }
+                Header[] headers = method.getResponseHeaders();
+                for (int i = 0; i < headers.length; i++) {
+                    String hname = headers[i].getName(), hlc = hname.toLowerCase();
+                    if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.startsWith("www-"))
+                        resp.addHeader(hname, headers[i].getValue());
+                }
+                ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
+            } finally {
+                method.releaseConnection();
             }
-            Header[] headers = method.getResponseHeaders();
-            for (int i = 0; i < headers.length; i++) {
-                String hname = headers[i].getName(), hlc = hname.toLowerCase();
-                if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.startsWith("www-"))
-                    resp.addHeader(hname, headers[i].getValue());
-            }
-            ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
-
-            method.releaseConnection();
         } catch (ServiceException e) {
             throw new ServletException(e);
         }
@@ -373,10 +377,10 @@ public class ZimbraServlet extends HttpServlet {
 
         // TODO: more liberal parsing of Authorization value...
         if (auth == null || !auth.startsWith("Basic ")) {
-        	if (sendChallenge) {
-        		resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());            
-        		resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "must authenticate");
-        	}
+            if (sendChallenge) {
+                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());            
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "must authenticate");
+            }
             return null;
         }
 
@@ -406,19 +410,19 @@ public class ZimbraServlet extends HttpServlet {
 
         Account acct = prov.get(AccountBy.name, user);
         if (acct == null) {
-        	if (sendChallenge) {
-        		resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
-        		resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
-        	}
-        	return new ACL.GuestAccount(user, pass);
+            if (sendChallenge) {
+                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
+            }
+            return new ACL.GuestAccount(user, pass);
         }
         try {
             prov.authAccount(acct, pass);
         } catch (ServiceException se) {
-        	if (sendChallenge) {
-        		resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
-        		resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
-        	}
+            if (sendChallenge) {
+                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
+            }
             return null;
         }
         return acct;

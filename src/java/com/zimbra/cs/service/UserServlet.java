@@ -151,41 +151,41 @@ public class UserServlet extends ZimbraServlet {
     
     /** Returns the REST URL for the account. */
     public static String getRestUrl(Account acct) throws ServiceException {
-    	Provisioning prov = Provisioning.getInstance();
-    	Server server = prov.getServer(acct);
-    	Domain domain = prov.get(DomainBy.name, acct.getDomainName());
-    	String hostname = domain.getAttr(Provisioning.A_zimbraPublicServiceHostname, null);
-    	if (hostname == null)
-    		hostname = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
-    	if (hostname == null)
-    		throw ServiceException.FAILURE("unable to determine the service hostname for account " + acct.getName(), null);
+        Provisioning prov = Provisioning.getInstance();
+        Server server = prov.getServer(acct);
+        Domain domain = prov.get(DomainBy.name, acct.getDomainName());
+        String hostname = domain.getAttr(Provisioning.A_zimbraPublicServiceHostname, null);
+        if (hostname == null)
+            hostname = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
+        if (hostname == null)
+            throw ServiceException.FAILURE("unable to determine the service hostname for account " + acct.getName(), null);
 
-    	StringBuilder url = new StringBuilder();
+        StringBuilder url = new StringBuilder();
         int port = 0;
         String mode = server.getAttr(Provisioning.A_zimbraMailMode, MODE_HTTP);
         if (!mode.equals(MODE_HTTP))
         	port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
         if (port > 0) {
-        	url.append("https://").append(hostname);
-        	if (port != PORT_HTTPS)
-        		url.append(":").append(port);
+            url.append("https://").append(hostname);
+            if (port != PORT_HTTPS)
+                url.append(":").append(port);
         } else {
-        	port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
-        	if (port <= 0)
-        		throw ServiceException.FAILURE("server " + server.getName() + " has neither http nor https port enabled", null);
-        	url.append("http://").append(hostname);
-        	if (port != PORT_HTTP)
-        		url.append(":").append(port);
+            port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+            if (port <= 0)
+                throw ServiceException.FAILURE("server " + server.getName() + " has neither http nor https port enabled", null);
+            url.append("http://").append(hostname);
+            if (port != PORT_HTTP)
+                url.append(":").append(port);
         }
 
-    	url.append(UserServlet.SERVLET_PATH).append("/");
-    	Config config = prov.getConfig();
-    	String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
-    	if (defaultDomain == null || !defaultDomain.equals(acct.getDomainName()))
-    		url.append(acct.getName());
-    	else
-    		url.append(acct.getUid());
-    	return url.toString();
+        url.append(UserServlet.SERVLET_PATH).append("/");
+        Config config = prov.getConfig();
+        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
+        if (defaultDomain == null || !defaultDomain.equals(acct.getDomainName()))
+            url.append(acct.getName());
+        else
+            url.append(acct.getUid());
+        return url.toString();
     }
 
     public UserServlet() {
@@ -612,27 +612,24 @@ public class UserServlet extends ZimbraServlet {
             this.params = HttpUtil.getURIParams(request);
 
             String pathInfo = request.getPathInfo().toLowerCase();
-            if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("") || !pathInfo.startsWith("/")) {
+            if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("") || !pathInfo.startsWith("/"))
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid path");
-            }
-
             int pos = pathInfo.indexOf('/', 1);
-            if (pos == -1) {
+            if (pos == -1)
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid path");
-            }
-            String checkInternalDispatch = (String)request.getAttribute("zimbra-internal-dispatch");
-            if (checkInternalDispatch != null &&
-            		checkInternalDispatch.equals("yes")) {
-            	// XXX extra decoding is necessary if the HttpRequest was
-            	// re-dispatched internally from SetHeaderFilter class in
-            	// zimbra app.  it appears org.apache.catalina.core.ApplicationHttpRequest
-            	// does not perform URL decoding on pathInfo.  refer to
-            	// bug 8159.
-            	try {
-            		pathInfo = URLDecoder.decode(pathInfo, "UTF-8");
-            	} catch (UnsupportedEncodingException uee) {
-            		ZimbraLog.misc.info("cannot decode pathInfo " + pathInfo);
-            	}
+
+            String checkInternalDispatch = (String) request.getAttribute("zimbra-internal-dispatch");
+            if (checkInternalDispatch != null && checkInternalDispatch.equals("yes")) {
+                // XXX extra decoding is necessary if the HttpRequest was
+                // re-dispatched internally from SetHeaderFilter class in
+                // zimbra app.  it appears org.apache.catalina.core.ApplicationHttpRequest
+                // does not perform URL decoding on pathInfo.  refer to
+                // bug 8159.
+                try {
+                    pathInfo = URLDecoder.decode(pathInfo, "UTF-8");
+                } catch (UnsupportedEncodingException uee) {
+                    ZimbraLog.misc.info("cannot decode pathInfo " + pathInfo);
+                }
             }
             this.accountPath = pathInfo.substring(1, pos);
 
@@ -864,8 +861,7 @@ public class UserServlet extends ZimbraServlet {
         } catch (IOException e) {
             throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
         } finally {
-            if (get != null)
-                get.releaseConnection();
+            get.releaseConnection();
         }
     }
 }

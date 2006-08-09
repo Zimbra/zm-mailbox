@@ -126,7 +126,9 @@ public class StatsImageServlet extends ZimbraServlet {
 		            throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
 		        } catch (IOException e) {
 		            throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
-		        }	
+                } finally {
+                    get.releaseConnection();
+                }
 			}
         } catch (Exception ex) {
         	resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Image not found");
