@@ -112,7 +112,7 @@ public class ZSoapMailbox extends ZMailbox {
         getAccountInfo(true);
     }
     
-    public void initPreAuth(String uri, SoapTransport.DebugListener listener) throws ServiceException {
+    public void initPreAuth(String uri, SoapTransport.DebugListener listener) {
         mNameToTag = new HashMap<String, ZSoapTag>();
         mIdToItem = new HashMap<String, ZSoapItem>();                
         mListener = listener;
@@ -437,13 +437,13 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZFolder getFolderByPath(String path) throws ServiceException {
+    public ZFolder getFolderByPath(String path) {
         if (!path.startsWith(ZMailbox.PATH_SEPARATOR)) 
             path = ZMailbox.PATH_SEPARATOR + path;
         return getUserRoot().getSubFolderByPath(path.substring(1));
     }
 
-    private Element folderAction(String op, String ids) throws ServiceException {
+    private Element folderAction(String op, String ids) {
         XMLElement req = new XMLElement(MailService.FOLDER_ACTION_REQUEST);
         Element actionEl = req.addElement(MailService.E_ACTION);
         actionEl.addAttribute(MailService.A_ID, ids);
@@ -533,7 +533,7 @@ public class ZSoapMailbox extends ZMailbox {
         return doAction(action);
     }
 
-    private Element tagAction(String op, String id) throws ServiceException {
+    private Element tagAction(String op, String id) {
         XMLElement req = new XMLElement(MailService.TAG_ACTION_REQUEST);
         Element actionEl = req.addElement(MailService.E_ACTION);
         actionEl.addAttribute(MailService.A_ID, id);
@@ -561,7 +561,7 @@ public class ZSoapMailbox extends ZMailbox {
         return doAction(tagAction("color", id).addAttribute(MailService.A_COLOR, color.getValue()));        
     }
 
-    private Element convAction(String op, String id, String constraints) throws ServiceException {
+    private Element convAction(String op, String id, String constraints) {
         XMLElement req = new XMLElement(MailService.CONV_ACTION_REQUEST);
         Element actionEl = req.addElement(MailService.E_ACTION);
         actionEl.addAttribute(MailService.A_ID, id);
@@ -602,7 +602,7 @@ public class ZSoapMailbox extends ZMailbox {
         return doAction(convAction(tag ? "tag" : "!tag", ids, targetConstraints).addAttribute(MailService.A_TAG, tagId));        
     }
 
-    private Element messageAction(String op, String id) throws ServiceException {
+    private Element messageAction(String op, String id) {
         XMLElement req = new XMLElement(MailService.MSG_ACTION_REQUEST);
         Element actionEl = req.addElement(MailService.E_ACTION);
         actionEl.addAttribute(MailService.A_ID, id);
@@ -651,7 +651,7 @@ public class ZSoapMailbox extends ZMailbox {
         return doAction(actionEl);        
     }
 
-    private Element itemAction(String op, String id, String constraints) throws ServiceException {
+    private Element itemAction(String op, String id, String constraints) {
         XMLElement req = new XMLElement(MailService.ITEM_ACTION_REQUEST);
         Element actionEl = req.addElement(MailService.E_ACTION);
         actionEl.addAttribute(MailService.A_ID, id);
@@ -768,7 +768,7 @@ public class ZSoapMailbox extends ZMailbox {
         return new ZSoapContact(invoke(req).getElement(MailService.E_CONTACT));
     }
 
-    private Element contactAction(String op, String id) throws ServiceException {
+    private Element contactAction(String op, String id) {
         XMLElement req = new XMLElement(MailService.CONTACT_ACTION_REQUEST);
         Element actionEl = req.addElement(MailService.E_ACTION);
         actionEl.addAttribute(MailService.A_ID, id);
@@ -916,9 +916,9 @@ public class ZSoapMailbox extends ZMailbox {
                 String response = post.getResponseBodyAsString();
                 aid = getAttachmentId(response);
                 if (aid == null)
-                    throw SoapFaultException.FAILURE("Attachment post failed, unable to parse response: " + response, null);
+                    throw ServiceException.FAILURE("Attachment post failed, unable to parse response: " + response, null);
             } else {
-                throw SoapFaultException.FAILURE("Attachment post failed, status=" + statusCode, null);
+                throw ServiceException.FAILURE("Attachment post failed, status=" + statusCode, null);
             }
         } catch (IOException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
@@ -929,7 +929,7 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public URI getRestURI(String relativePath)  throws ServiceException {
+    public URI getRestURI(String relativePath) throws ServiceException {
         try {
             URI uri = new URI(mTransport.getURI());
             URI newUri = uri.resolve("/home/" + getName() + (relativePath.startsWith("/") ? "" : "/") + relativePath); 
@@ -969,14 +969,17 @@ public class ZSoapMailbox extends ZMailbox {
                 is = get.getResponseBodyAsStream();
                 ByteUtil.copy(is, false, os, false);
             } else {
-                throw SoapFaultException.FAILURE("GET failed, status=" + statusCode+" "+get.getStatusText(), null);
+                throw ServiceException.FAILURE("GET failed, status=" + statusCode+" "+get.getStatusText(), null);
             }
         } catch (IOException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
         } finally {
-            if (is != null) try { is.close(); } catch (IOException e) {}
-            if (closeOs && os != null) try { os.close(); } catch (IOException e) {}            
-            if (get != null) get.releaseConnection();
+            if (is != null)
+                try { is.close(); } catch (IOException e) {}
+            if (closeOs && os != null)
+                try { os.close(); } catch (IOException e) {}            
+            if (get != null)
+                get.releaseConnection();
         }
     }
 
@@ -1001,7 +1004,7 @@ public class ZSoapMailbox extends ZMailbox {
             if (statusCode == 200) {
                 //
             } else {
-                throw SoapFaultException.FAILURE("POST failed, status=" + statusCode+" "+post.getStatusText(), null);
+                throw ServiceException.FAILURE("POST failed, status=" + statusCode+" "+post.getStatusText(), null);
             }
         } catch (IOException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
