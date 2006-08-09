@@ -158,10 +158,6 @@ public abstract class Session {
      */
     protected abstract boolean shouldRegisterWithIM();
 
-    protected void finalize() {
-        doCleanup(); // just in case it hasn't happened yet...
-    }
-    
     public static enum RegisterNotificationResult {
         NO_NOTIFY, // notifications are not available for this session
         SENT_DATA, // notifications were waiting, have been sent
