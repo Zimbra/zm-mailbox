@@ -147,6 +147,7 @@ public class UserServlet extends ZimbraServlet {
 
     private static final int PORT_HTTP = 80;
     private static final int PORT_HTTPS = 443;
+    private static final String MODE_HTTP = "http";
     
     /** Returns the REST URL for the account. */
     public static String getRestUrl(Account acct) throws ServiceException {
@@ -160,7 +161,10 @@ public class UserServlet extends ZimbraServlet {
     		throw ServiceException.FAILURE("unable to determine the service hostname for account " + acct.getName(), null);
 
     	StringBuilder url = new StringBuilder();
-        int port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+        int port = 0;
+        String mode = server.getAttr(Provisioning.A_zimbraMailMode, MODE_HTTP);
+        if (!mode.equals(MODE_HTTP))
+        	port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
         if (port > 0) {
         	url.append("https://").append(hostname);
         	if (port != PORT_HTTPS)
