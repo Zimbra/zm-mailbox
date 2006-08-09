@@ -24,6 +24,8 @@
  */
 package com.zimbra.cs.operation;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.zimbra.cs.mailbox.Flag;
@@ -171,7 +173,7 @@ public class ItemActionOperation extends Operation {
 	
     protected String mResult;
 	
-    protected List<Integer> mIds;
+    protected int[] mIds;
 	protected Op mOp;
     protected byte mType;
     protected boolean mFlagValue;
@@ -252,17 +254,22 @@ public class ItemActionOperation extends Operation {
 		mTags = tags; 
 	}
 	
-	ItemActionOperation(ZimbraSoapContext zc, Session session, OperationContext oc,
+	ItemActionOperation(ZimbraSoapContext zsc, Session session, OperationContext oc,
 				Mailbox mbox, Requester req, int baseLoad, 
 				List<Integer> ids, Op op, byte type, 
-				boolean flagValue, TargetConstraint tcon) throws ServiceException {
+				boolean flagValue, TargetConstraint tcon)
+    throws ServiceException {
 		super(session, oc, mbox, req, req.getPriority(), Math.min(ids.size() > 0 ? ids.size() * (baseLoad / SCALE): baseLoad, MAX));
-		mZc = zc;
-		mIds = ids;
+		mZc = zsc;
+
+        int i = 0;
+		mIds = new int[ids.size()];
+        for (int id : ids)
+            mIds[i++] = id;
+
 		mOp = op;
-		if (mOp == null) {
+		if (mOp == null)
 			throw ServiceException.INVALID_REQUEST("unknown operation: null", null);
-		}
 		mType = type;
 		mFlagValue = flagValue;
 		mTcon = tcon;
@@ -272,47 +279,47 @@ public class ItemActionOperation extends Operation {
 		StringBuilder successes = new StringBuilder();
 		
 		// iterate over the local items and perform the requested operation
-		for (int id : mIds) {
-			switch (mOp) {
-				case FLAG:
-					getMailbox().alterTag(getOpCtxt(), id, mType, Flag.ID_FLAG_FLAGGED, mFlagValue, mTcon);
-					break;
-				case READ:
-					getMailbox().alterTag(getOpCtxt(), id, mType, Flag.ID_FLAG_UNREAD, !mFlagValue, mTcon);
-					break;
-				case TAG:
-					getMailbox().alterTag(getOpCtxt(), id, mType, mTagId, mFlagValue, mTcon);
-					break;
-				case COLOR:
-					getMailbox().setColor(getOpCtxt(), id, mType, mColor);
-					break;
-				case HARD_DELETE:
-					getMailbox().delete(getOpCtxt(), id, mType, mTcon);
-					break;
-				case MOVE:
-					getMailbox().move(getOpCtxt(), id, mType, mIidFolder.getId(), mTcon);
-					break;
-				case SPAM:
-					getMailbox().move(getOpCtxt(), id, mType, mFolderId, mTcon);
-					SpamHandler.getInstance().handle(getMailbox(), id, mType, mFlagValue);
-					break;
-				case UPDATE:
-					if (!mIidFolder.belongsTo(getMailbox()))
-						throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
-					
-					if (mIidFolder.getId() > 0)
-						getMailbox().move(getOpCtxt(), id, mType, mIidFolder.getId(), mTcon);
-					if (mTags != null || mFlags != null)
-						getMailbox().setTags(getOpCtxt(), id, mType, mFlags, mTags, mTcon);
-					if (mColor >= 0)
-						getMailbox().setColor(getOpCtxt(), id, mType, mColor);
-					break;
-				default:
-					throw ServiceException.INVALID_REQUEST("unknown operation: " + mOp, null);
-			}
-			
-			successes.append(successes.length() > 0 ? "," : "").append(mZc.formatItemId(id));
+		switch (mOp) {
+			case FLAG:
+				getMailbox().alterTag(getOpCtxt(), mIds, mType, Flag.ID_FLAG_FLAGGED, mFlagValue, mTcon);
+				break;
+			case READ:
+				getMailbox().alterTag(getOpCtxt(), mIds, mType, Flag.ID_FLAG_UNREAD, !mFlagValue, mTcon);
+				break;
+			case TAG:
+				getMailbox().alterTag(getOpCtxt(), mIds, mType, mTagId, mFlagValue, mTcon);
+				break;
+			case COLOR:
+				getMailbox().setColor(getOpCtxt(), mIds, mType, mColor);
+				break;
+			case HARD_DELETE:
+				getMailbox().delete(getOpCtxt(), mIds, mType, mTcon);
+				break;
+			case MOVE:
+				getMailbox().move(getOpCtxt(), mIds, mType, mIidFolder.getId(), mTcon);
+				break;
+			case SPAM:
+				getMailbox().move(getOpCtxt(), mIds, mType, mFolderId, mTcon);
+                for (int id : mIds)
+                    SpamHandler.getInstance().handle(getMailbox(), id, mType, mFlagValue);
+				break;
+			case UPDATE:
+				if (!mIidFolder.belongsTo(getMailbox()))
+					throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
+				
+				if (mIidFolder.getId() > 0)
+					getMailbox().move(getOpCtxt(), mIds, mType, mIidFolder.getId(), mTcon);
+				if (mTags != null || mFlags != null)
+					getMailbox().setTags(getOpCtxt(), mIds, mType, mFlags, mTags, mTcon);
+				if (mColor >= 0)
+					getMailbox().setColor(getOpCtxt(), mIds, mType, mColor);
+				break;
+			default:
+				throw ServiceException.INVALID_REQUEST("unknown operation: " + mOp, null);
 		}
+
+        for (int id : mIds)
+            successes.append(successes.length() > 0 ? "," : "").append(mZc.formatItemId(id));
 		mResult = successes.toString();
 	}
 	

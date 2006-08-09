@@ -3440,17 +3440,22 @@ public class Mailbox {
     }
 
     public synchronized void setColor(OperationContext octxt, int itemId, byte type, byte color) throws ServiceException {
-        ColorItem redoRecorder = new ColorItem(mId, itemId, type, color);
+        setColor(octxt, new int[] { itemId }, type, color);
+    }
+    public synchronized void setColor(OperationContext octxt, int[] itemIds, byte type, byte color) throws ServiceException {
+        ColorItem redoRecorder = new ColorItem(mId, itemIds, type, color);
 
         boolean success = false;
         try {
             beginTransaction("setColor", octxt, redoRecorder);
 
-            MailItem item = getItemById(itemId, type);
-            if (!checkItemChangeID(item))
-                throw MailServiceException.MODIFY_CONFLICT();
+            MailItem[] items = getItemById(itemIds, type);
+            for (MailItem item : items)
+                if (!checkItemChangeID(item))
+                    throw MailServiceException.MODIFY_CONFLICT();
 
-            item.setColor(color);
+            for (MailItem item : items)
+                item.setColor(color);
             success = true;
         } finally {
             endTransaction(success);
@@ -3507,6 +3512,12 @@ public class Mailbox {
         int flags = (flagStr == null ? MailItem.FLAG_UNCHANGED : Flag.flagsToBitmask(flagStr));
         long tags = (tagIDs == null ? MailItem.TAG_UNCHANGED : Tag.tagsToBitmask(tagIDs));
         setTags(octxt, itemId, type, flags, tags, tcon);
+    }
+    public synchronized void setTags(OperationContext octxt, int[] itemIds, byte type, String flagStr, String tagIDs, TargetConstraint tcon)
+    throws ServiceException {
+        int flags = (flagStr == null ? MailItem.FLAG_UNCHANGED : Flag.flagsToBitmask(flagStr));
+        long tags = (tagIDs == null ? MailItem.TAG_UNCHANGED : Tag.tagsToBitmask(tagIDs));
+        setTags(octxt, itemIds, type, flags, tags, tcon);
     }
     public synchronized void setTags(OperationContext octxt, int itemId, byte type, int flags, long tags, TargetConstraint tcon)
     throws ServiceException {
@@ -3654,24 +3665,29 @@ public class Mailbox {
         }
     }
 
-    public synchronized MailItem move(OperationContext octxt, int itemId, byte type, int targetId) throws ServiceException {
-        return move(octxt, itemId, type, targetId, null);
+    public synchronized void move(OperationContext octxt, int itemId, byte type, int targetId) throws ServiceException {
+        move(octxt, new int[] { itemId }, type, targetId, null);
     }
-    public synchronized MailItem move(OperationContext octxt, int itemId, byte type, int targetId, TargetConstraint tcon)
-    throws ServiceException {
-        MoveItem redoRecorder = new MoveItem(mId, itemId, type, targetId, tcon);
+    public synchronized void move(OperationContext octxt, int itemId, byte type, int targetId, TargetConstraint tcon) throws ServiceException {
+        move(octxt, new int[] { itemId }, type, targetId, tcon);
+    }
+    public synchronized void move(OperationContext octxt, int[] itemIds, byte type, int targetId, TargetConstraint tcon) throws ServiceException {
+        MoveItem redoRecorder = new MoveItem(mId, itemIds, type, targetId, tcon);
 
         boolean success = false;
         try {
             beginTransaction("move", octxt, redoRecorder);
             setOperationTargetConstraint(tcon);
 
-            MailItem item = getItemById(itemId, type);
-            checkItemChangeID(item);
+            Folder target = getFolderById(targetId);
 
-            item.move(getFolderById(targetId));
+            MailItem[] items = getItemById(itemIds, type);
+            for (MailItem item : items)
+                checkItemChangeID(item);
+
+            for (MailItem item : items)
+                item.move(target);
             success = true;
-            return item;
         } finally {
             endTransaction(success);
         }

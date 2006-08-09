@@ -23,7 +23,8 @@
  */
 package com.zimbra.cs.operation;
 
-import com.zimbra.cs.mailbox.MailItem;
+import java.util.Arrays;
+
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -39,43 +40,35 @@ public class MoveOperation extends Operation {
             LOAD = c.mLoad;
     }
     
-    int mItemId;
+    int[] mItemIds;
     byte mType;
     int mTargetId;
     TargetConstraint mTcon;
-
-    MailItem mResult;
     
     public MoveOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
                 int itemId, byte type, int targetId)
     {
-        this(session, oc, mbox, req, itemId, type, targetId, null);
+        this(session, oc, mbox, req, new int[] { itemId }, type, targetId, null);
     }
     
     public MoveOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-                int itemId, byte type, int targetId, TargetConstraint tcon)
+                int[] itemIds, byte type, int targetId, TargetConstraint tcon)
     {
         super(session, oc, mbox, req, LOAD);
         
-        mItemId = itemId;
+        mItemIds = itemIds;
         mType = type;
         mTargetId = targetId;
         mTcon = tcon;
     }
     
     protected void callback() throws ServiceException {
-        mResult = getMailbox().move(this.getOpCtxt(), mItemId, mType, mTargetId, mTcon);
+        getMailbox().move(this.getOpCtxt(), mItemIds, mType, mTargetId, mTcon);
     }
 
-    public MailItem getResult() {
-        return mResult;
-    }
-    
     public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
-
-        toRet.append(" id=").append(mItemId).append(" type=").append(mType).append(" target=").append(mTargetId);
-        
+        toRet.append(" id=").append(Arrays.toString(mItemIds)).append(" type=").append(mType).append(" target=").append(mTargetId);
         return toRet.toString();
     }
 }

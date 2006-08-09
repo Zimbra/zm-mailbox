@@ -31,17 +31,6 @@ public class ContactActionOperation extends ItemActionOperation {
     private Map<String, String> mFields;
 
 
-    public String toString() {
-        StringBuffer toRet = new StringBuffer(super.toString());
-
-        if (mOp == Op.UPDATE) {
-            if (mFields != null)
-                toRet.append(" Fields=").append(mFields);
-        }
-
-        return toRet.toString();
-    }
-
     public void setFields(Map<String, String> fields) {                        
         assert(mOp == Op.UPDATE);
         mFields = (fields == null || fields.isEmpty() ? null : fields); 
@@ -54,30 +43,38 @@ public class ContactActionOperation extends ItemActionOperation {
     }
 
     protected void callback() throws ServiceException {
-        StringBuilder successes = new StringBuilder();
-        
         // iterate over the local items and perform the requested operation
-        for (int id : mIds) {
-            switch (mOp) {
-                case UPDATE:
-                    if (!mIidFolder.belongsTo(getMailbox()))
-                        throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
-                    
-                    if (mIidFolder.getId() > 0)
-                        getMailbox().move(getOpCtxt(), id, mType, mIidFolder.getId(), mTcon);
-                    if (mTags != null || mFlags != null)
-                        getMailbox().setTags(getOpCtxt(), id, mType, mFlags, mTags, mTcon);
-                    if (mColor >= 0)
-                        getMailbox().setColor(getOpCtxt(), id, mType, mColor);
-                    if (mFields != null)
+        switch (mOp) {
+            case UPDATE:
+                if (!mIidFolder.belongsTo(getMailbox()))
+                    throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
+                
+                if (mIidFolder.getId() > 0)
+                    getMailbox().move(getOpCtxt(), mIds, mType, mIidFolder.getId(), mTcon);
+                if (mTags != null || mFlags != null)
+                    getMailbox().setTags(getOpCtxt(), mIds, mType, mFlags, mTags, mTcon);
+                if (mColor >= 0)
+                    getMailbox().setColor(getOpCtxt(), mIds, mType, mColor);
+                if (mFields != null)
+                    for (int id : mIds)
                         getMailbox().modifyContact(getOpCtxt(), id, mFields, true);
-                    break;
-                default:
-                    throw ServiceException.INVALID_REQUEST("unknown operation: " + mOp, null);
-            }
-            
-            successes.append(successes.length() > 0 ? "," : "").append(mZc.formatItemId(id));
+                break;
+            default:
+                throw ServiceException.INVALID_REQUEST("unknown operation: " + mOp, null);
         }
+
+        StringBuilder successes = new StringBuilder();
+        for (int id : mIds)
+            successes.append(successes.length() > 0 ? "," : "").append(mZc.formatItemId(id));
         mResult = successes.toString();
+    }
+
+    public String toString() {
+        StringBuffer toRet = new StringBuffer(super.toString());
+        if (mOp == Op.UPDATE) {
+            if (mFields != null)
+                toRet.append(" Fields=").append(mFields);
+        }
+        return toRet.toString();
     }
 }

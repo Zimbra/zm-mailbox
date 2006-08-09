@@ -29,6 +29,7 @@
 package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
@@ -42,21 +43,20 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class MoveItem extends RedoableOp {
 
-	private int mId;
+	private int[] mIds;
     private byte mType;
 	private int mDestId;
     private String mConstraint;
 
 	public MoveItem() {
-		mId = UNKNOWN_ID;
         mType = MailItem.TYPE_UNKNOWN;
 		mDestId = 0;
         mConstraint = null;
 	}
 
-	public MoveItem(int mailboxId, int msgId, byte type, int destId, TargetConstraint tcon) {
+	public MoveItem(int mailboxId, int[] ids, byte type, int destId, TargetConstraint tcon) {
 		setMailboxId(mailboxId);
-		mId = msgId;
+		mIds = ids;
         mType = type;
 		mDestId = destId;
         mConstraint = (tcon == null ? null : tcon.toString());
@@ -68,7 +68,7 @@ public class MoveItem extends RedoableOp {
 
 	protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
-        sb.append(mId).append(", type=").append(mType);
+        sb.append(Arrays.toString(mIds)).append(", type=").append(mType);
         sb.append(", dest=").append(mDestId);
         if (mConstraint != null)
             sb.append(", constraint=").append(mConstraint);
@@ -76,21 +76,32 @@ public class MoveItem extends RedoableOp {
 	}
 
 	protected void serializeData(RedoLogOutput out) throws IOException {
-		out.writeInt(mId);
+		out.writeInt(-1);
         out.writeByte(mType);
 		out.writeInt(mDestId);
         boolean hasConstraint = mConstraint != null;
         out.writeBoolean(hasConstraint);
         if (hasConstraint)
             out.writeUTF(mConstraint);
+        out.writeInt(mIds == null ? 0 : mIds.length);
+        if (mIds != null)
+            for (int i = 0; i < mIds.length; i++)
+                out.writeInt(mIds[i]);
 	}
 
 	protected void deserializeData(RedoLogInput in) throws IOException {
-		mId = in.readInt();
+        int id = in.readInt();
+        if (id > 0)
+            mIds = new int[] { id };
         mType = in.readByte();
 		mDestId = in.readInt();
         if (in.readBoolean())
             mConstraint = in.readUTF();
+        if (id <= 0) {
+            mIds = new int[in.readInt()];
+            for (int i = 0; i < mIds.length; i++)
+                mIds[i] = in.readInt();
+        }
 	}
 
 	public void redo() throws Exception {
@@ -106,6 +117,6 @@ public class MoveItem extends RedoableOp {
             }
 
         // No extra checking needed because Mailbox.move() is already idempotent.
-        mbox.move(getOperationContext(), mId, mType, mDestId, tcon);
+        mbox.move(getOperationContext(), mIds, mType, mDestId, tcon);
 	}
 }

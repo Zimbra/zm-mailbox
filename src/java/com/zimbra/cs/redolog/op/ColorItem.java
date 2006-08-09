@@ -28,6 +28,7 @@
 package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -38,17 +39,15 @@ import com.zimbra.cs.redolog.RedoLogOutput;
  */
 public class ColorItem extends RedoableOp {
 
-    private int mId;
+    private int[] mIds;
     private byte mType;
     private byte mColor;
 
-    public ColorItem() {
-        mId = UNKNOWN_ID;
-    }
+    public ColorItem() { }
 
-    public ColorItem(int mailboxId, int id, byte type, byte color) {
+    public ColorItem(int mailboxId, int[] ids, byte type, byte color) {
         setMailboxId(mailboxId);
-        mId = id;
+        mIds = ids;
         mType = type;
         mColor = color;
     }
@@ -59,25 +58,36 @@ public class ColorItem extends RedoableOp {
 
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
-        sb.append(mId).append(", color=").append(mColor);
+        sb.append(Arrays.toString(mIds)).append(", color=").append(mColor);
         return sb.toString();
     }
 
     protected void serializeData(RedoLogOutput out) throws IOException {
-        out.writeInt(mId);
+        out.writeInt(-1);
         out.writeByte(mType);
         out.writeByte(mColor);
+        out.writeInt(mIds == null ? 0 : mIds.length);
+        if (mIds != null)
+            for (int i = 0; i < mIds.length; i++)
+                out.writeInt(mIds[i]);
     }
 
     protected void deserializeData(RedoLogInput in) throws IOException {
-        mId = in.readInt();
+        int id = in.readInt();
+        if (id > 0)
+            mIds = new int[] { id };
         mType = in.readByte();
         mColor = in.readByte();
+        if (id <= 0) {
+            mIds = new int[in.readInt()];
+            for (int i = 0; i < mIds.length; i++)
+                mIds[i] = in.readInt();
+        }
     }
 
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mailbox = Mailbox.getMailboxById(mboxId);
-        mailbox.setColor(getOperationContext(), mId, mType, mColor);
+        mailbox.setColor(getOperationContext(), mIds, mType, mColor);
     }
 }
