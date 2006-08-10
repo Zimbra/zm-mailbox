@@ -50,6 +50,7 @@ class ImapFolder implements Iterable<ImapMessage> {
     private Map<Integer, ImapMessage> mUIDs     = new HashMap<Integer, ImapMessage>();
 
     private int mUIDValidityValue;
+    private int mInitialUIDNEXT = -1;
     private int mFirstUnread = -1;
     private int mLastSize    = 0;
 
@@ -85,6 +86,7 @@ class ImapFolder implements Iterable<ImapMessage> {
         }
         mWritable = select && isFolderWritable(folder, session);
         mUIDValidityValue = getUIDValidity(folder);
+        mInitialUIDNEXT = folder.getImapUIDNEXT();
 
         // fetch visible items from database
         List<ImapMessage> i4list;
@@ -180,6 +182,7 @@ class ImapFolder implements Iterable<ImapMessage> {
             throw ServiceException.INVALID_REQUEST("folder IDs do not match (was " + mFolderId + ", is " + folder.getId() + ')', null);
         mWritable = select && isFolderWritable(folder, session);
         mUIDValidityValue = getUIDValidity(folder);
+        mInitialUIDNEXT = folder.getImapUIDNEXT();
 
         mNotificationsSuspended = false;
         mDirtyMessages.clear();
@@ -207,6 +210,12 @@ class ImapFolder implements Iterable<ImapMessage> {
     /** Returns the folder's IMAP UID validity value.
      * @see #getUIDValidity(Folder) */
     int getUIDValidity()  { return mUIDValidityValue; }
+    /** Returns an indicator for determining whether a folder has had items
+     *  inserted since the last check.  This is <b>only</b> valid immediately
+     *  after the folder is initialized and is not updated as messages are
+     *  subsequently added.
+     * @see Folder#getImapUIDNEXT() */
+    int getInitialUIDNEXT()  { return mInitialUIDNEXT; }
     /** Returns the "sequence number" of the first unread message in the
      *  folder, or -1 if none are unread.  This is <b>only</b> valid
      *  immediately after the folder is initialized and is not updated

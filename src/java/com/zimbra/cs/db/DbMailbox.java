@@ -116,8 +116,7 @@ public class DbMailbox {
      * 
      * @throws ServiceException if the database creation fails
      */
-    public static void createMailboxDatabase(int mailboxId)
-    throws ServiceException {
+    public static void createMailboxDatabase(int mailboxId) throws ServiceException {
         ZimbraLog.mailbox.debug("createMailboxDatabase(" + mailboxId + ")");
 
         File file = Config.getPathRelativeToZimbraHome("db/create_database.sql");
@@ -153,8 +152,7 @@ public class DbMailbox {
      * 
      * @throws ServiceException if the database creation fails
      */
-    public static void dropMailboxDatabase(int mailboxId)
-    throws ServiceException {
+    public static void dropMailboxDatabase(int mailboxId) throws ServiceException {
         ZimbraLog.mailbox.debug("dropMailboxDatabase(" + mailboxId + ")");
 
         String dbName = getDatabaseName(mailboxId);
@@ -184,14 +182,17 @@ public class DbMailbox {
         }
     }
 
-    public static void updateHighestItem(Mailbox mbox) throws ServiceException {
+    public static void updateMailboxStats(Mailbox mbox) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE mailbox SET item_id_checkpoint = ?, size_checkpoint = ? WHERE id = ?");
+            stmt = conn.prepareStatement("UPDATE mailbox SET item_id_checkpoint = ?, contact_count = ?, change_checkpoint = ?, size_checkpoint = ?" +
+                    " WHERE id = ?");
             stmt.setInt(1, mbox.getLastItemId());
-            stmt.setLong(2, mbox.getSize());
-            stmt.setInt(3, mbox.getId());
+            stmt.setInt(2, mbox.getContactCount());
+            stmt.setInt(3, mbox.getLastChangeID());
+            stmt.setLong(4, mbox.getSize());
+            stmt.setInt(5, mbox.getId());
             int num = stmt.executeUpdate();
             assert(num == 1);
         } catch (SQLException e) {
@@ -201,32 +202,13 @@ public class DbMailbox {
         }
     }
 
-    public static void updateHighestChange(Mailbox mbox) throws ServiceException {
-        Connection conn = mbox.getOperationConnection();
-        PreparedStatement stmt = null;
-        try {
-            stmt = conn.prepareStatement("UPDATE mailbox SET change_checkpoint = ?, size_checkpoint = ? WHERE id = ?");
-            stmt.setInt(1, mbox.getLastChangeID());
-            stmt.setLong(2, mbox.getSize());
-            stmt.setInt(3, mbox.getId());
-            int num = stmt.executeUpdate();
-            assert(num == 1);
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("checkpointing change sequence number for mailbox " + mbox.getId(), e);
-        } finally {
-            DbPool.closeStatement(stmt);
-        }
-    }
-
     public static void startTrackingSync(Mailbox mbox) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE mailbox SET tracking_sync = ?, size_checkpoint = ? " +
-                    "WHERE id = ? AND tracking_sync <= 0");
+            stmt = conn.prepareStatement("UPDATE mailbox SET tracking_sync = ? WHERE id = ? AND tracking_sync <= 0");
             stmt.setInt(1, mbox.getLastChangeID());
-            stmt.setLong(2, mbox.getSize());
-            stmt.setInt(3, mbox.getId());
+            stmt.setInt(2, mbox.getId());
             int num = stmt.executeUpdate();
             assert(num == 1);
         } catch (SQLException e) {
@@ -240,9 +222,8 @@ public class DbMailbox {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE mailbox SET tracking_imap = 1, size_checkpoint = ? WHERE id = ?");
-            stmt.setLong(1, mbox.getSize());
-            stmt.setInt(2, mbox.getId());
+            stmt = conn.prepareStatement("UPDATE mailbox SET tracking_imap = 1 WHERE id = ?");
+            stmt.setInt(1, mbox.getId());
             int num = stmt.executeUpdate();
             assert(num == 1);
         } catch (SQLException e) {
@@ -365,7 +346,7 @@ public class DbMailbox {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(
-                    "SELECT account_id, item_id_checkpoint, size_checkpoint, change_checkpoint, tracking_sync," +
+                    "SELECT account_id, size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
                     " tracking_imap, index_volume_id " +
                     "FROM mailbox mb WHERE mb.id = ?");
             stmt.setInt(1, mailboxId);
@@ -376,13 +357,17 @@ public class DbMailbox {
             Mailbox.MailboxData mbd = new Mailbox.MailboxData();
             mbd.id            = mailboxId;
             mbd.accountId     = rs.getString(1);
-            mbd.size          = rs.getLong(3);
-            mbd.contacts      = 0;
-            mbd.lastItemId    = rs.getInt(2) + ITEM_CHECKPOINT_INCREMENT - 1;
-            mbd.lastChangeId  = rs.getInt(4) + CHANGE_CHECKPOINT_INCREMENT - 1;
-            mbd.trackSync     = rs.getInt(5);
-            mbd.trackImap     = rs.getBoolean(6);
-            mbd.indexVolumeId = rs.getShort(7);
+            mbd.size          = rs.getLong(2);
+            if (rs.wasNull())
+                mbd.size = -1;
+            mbd.contacts      = rs.getInt(3);
+            if (rs.wasNull())
+                mbd.contacts = -1;
+            mbd.lastItemId    = rs.getInt(4) + ITEM_CHECKPOINT_INCREMENT - 1;
+            mbd.lastChangeId  = rs.getInt(5) + CHANGE_CHECKPOINT_INCREMENT - 1;
+            mbd.trackSync     = rs.getInt(6);
+            mbd.trackImap     = rs.getBoolean(7);
+            mbd.indexVolumeId = rs.getShort(8);
 
             // round lastItemId and lastChangeId up so that they get written on the next change
             long rounding = mbd.lastItemId % ITEM_CHECKPOINT_INCREMENT;

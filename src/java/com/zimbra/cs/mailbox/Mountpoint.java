@@ -164,6 +164,6 @@ public class Mountpoint extends Folder {
     static Metadata encodeMetadata(Metadata meta, byte color, byte attrs, byte view, String owner, int remoteId) {
         meta.put(Metadata.FN_ACCOUNT_ID, owner);
         meta.put(Metadata.FN_REMOTE_ID, remoteId);
-        return Folder.encodeMetadata(meta, color, attrs, view, null, null);
+        return Folder.encodeMetadata(meta, color, attrs, view, null, null, 0);
     }
 }

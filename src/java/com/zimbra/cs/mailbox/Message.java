@@ -105,9 +105,9 @@ public class Message extends MailItem {
     /** Class logger for Message class */
     static Log sLog = LogFactory.getLog(Message.class);
 
-	private String mSender;
+    private String mSender;
     private String mRecipients;
-	private String mFragment;
+    private String mFragment;
     private String mRawSubject;
 
     private DraftInfo mDraftInfo;
@@ -121,13 +121,13 @@ public class Message extends MailItem {
      * @param ud
      * @throws ServiceException
      */
-	Message(Mailbox mbox, UnderlyingData ud) throws ServiceException {
-		super(mbox, ud);
+    Message(Mailbox mbox, UnderlyingData ud) throws ServiceException {
+        super(mbox, ud);
         if (mData.type != TYPE_MESSAGE)
-			throw new IllegalArgumentException();
+            throw new IllegalArgumentException();
         if (mData.parentId == -1)
             mData.parentId = -mId;
-	}
+    }
 
     /** Returns whether the Message was created as a draft.  Note that this
      *  can only be set when the Message is created; it cannot be altered
@@ -371,9 +371,9 @@ public class Message extends MailItem {
                        return; // for now, just ignore this Invitation
                    }
                } else {
-            	   // When updating an existing appointment, ignore the
-            	   // passed-in folderId which will usually be Inbox.  Leave
-            	   // the appointment in the folder it's currently in.
+                   // When updating an existing appointment, ignore the
+                   // passed-in folderId which will usually be Inbox.  Leave
+                   // the appointment in the folder it's currently in.
                    appt.processNewInvite(pm, cur, false, appt.getFolderId(), volumeId);
                }
            }
@@ -406,29 +406,6 @@ public class Message extends MailItem {
         return copy;
     }
 
-    /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
-     *         {@link ACL#RIGHT_READ} on the original item */
-    MailItem icopy(Folder folder, int id, short destVolumeId, int imapId) throws IOException, ServiceException {
-        Folder oldFolder = getFolder();
-        MailItem item = super.icopy(folder, id, destVolumeId, imapId);
-
-        // update folder counts *after* the op, as folders are more costly to re-cache
-        oldFolder.updateMessageCount(-1);
-        folder.updateMessageCount(1);
-        return item;
-    }
-
-    /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
-     *         {@link ACL#RIGHT_DELETE} on the source folder */
-    void move(Folder folder) throws ServiceException {
-        Folder oldFolder = getFolder();
-        super.move(folder);
-
-        // update folder counts *after* the op, as folders are more costly to re-cache
-        oldFolder.updateMessageCount(-1);
-        folder.updateMessageCount(1);
-    }
-
     public void reindex(IndexItem redo, Object indexData) throws ServiceException {
         ParsedMessage pm = (ParsedMessage) indexData;
         if (pm == null)
@@ -441,7 +418,7 @@ public class Message extends MailItem {
 
     public void reanalyze() throws ServiceException {
         ParsedMessage pm = new ParsedMessage(getMimeMessage(), getDate(), getMailbox().attachmentsIndexingEnabled());
-		reanalyze(pm);
+        reanalyze(pm);
     }
     void reanalyze(Object data) throws ServiceException {
         if (!(data instanceof ParsedMessage))
@@ -470,10 +447,9 @@ public class Message extends MailItem {
         if (subjectChanged)
             mData.parentId = -mId;
 
-		// update the METADATA and SIZE
+        // update the METADATA and SIZE
         if (mData.size != size) {
             mMailbox.updateSize(size - mData.size, false);
-            getFolder().updateSize(size - mData.size);
             mData.size = size;
         }
         String metadata = encodeMetadata(mColor, pm, mData.flags, mDraftInfo, mApptInfos);
@@ -488,7 +464,7 @@ public class Message extends MailItem {
         if (subjectChanged)
             parent.removeChild(this);
 //        else if (parent != null)
-//        	mMailbox.recalculateSenderList(parent.getId(), true);
+//            mMailbox.recalculateSenderList(parent.getId(), true);
     }
 
     void detach() throws ServiceException {
@@ -509,12 +485,12 @@ public class Message extends MailItem {
     }
 
     void delete() throws ServiceException {
-		MailItem parent = getParent();
-		if (parent instanceof Conversation && parent.mData.children.size() == 1)
-			parent.delete();
-		else
-			super.delete();
-	}
+        MailItem parent = getParent();
+        if (parent instanceof Conversation && parent.mData.children.size() == 1)
+            parent.delete();
+        else
+            super.delete();
+    }
 
 
     void decodeMetadata(Metadata meta) throws ServiceException {
@@ -544,7 +520,7 @@ public class Message extends MailItem {
         String rawSubject = meta.get(Metadata.FN_RAW_SUBJ, null);
         if (rawSubject != null)
             mRawSubject = rawSubject;
-	}
+    }
 
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mColor, mSender, mRecipients, mFragment, mData.subject, mRawSubject, mDraftInfo, mApptInfos);

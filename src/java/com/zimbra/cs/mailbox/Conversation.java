@@ -226,7 +226,6 @@ public class Conversation extends MailItem {
 
         mData.size = msgs.length;
         mData.unreadCount = 0;
-        mData.messageCount = 0;
 
         markItemModified(mData.size != oldSize ? Change.MODIFIED_SIZE : Change.INTERNAL_ONLY);
         if (!mRawSubject.equals(oldRaw))
@@ -536,11 +535,9 @@ public class Conversation extends MailItem {
                 }
             }
 
-            // handle message counts and sizes
-            source.updateMessageCount(-1);
-            target.updateMessageCount(1);
-            source.updateSize(-msg.getSize());
-            target.updateSize(msg.getSize());
+            // handle folder message counts
+            source.updateSize(-1);
+            target.updateSize(1);
 
             moved.add(msg.getId());
             msg.folderChanged(target, 0);

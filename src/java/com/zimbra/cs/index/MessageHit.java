@@ -29,6 +29,7 @@
 package com.zimbra.cs.index;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
@@ -56,17 +57,12 @@ import org.apache.commons.logging.LogFactory;
 public class MessageHit extends ZimbraHit {
 
     private static Log mLog = LogFactory.getLog(MessageHit.class);
-    
+
     private Document mDoc = null;
-
     private Message mMessage = null;
-
-    private ArrayList mMatchedParts = null;
-
+    private List<MessagePartHit> mMatchedParts = null;
     private int mConversationId = 0;
-
     private int mMessageId = 0;
-
     private ConversationHit mConversationHit = null;
 
     protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
@@ -117,14 +113,14 @@ public class MessageHit extends ZimbraHit {
 
     public void addPart(MessagePartHit part) {
         if (mMatchedParts == null)
-            mMatchedParts = new ArrayList();
+            mMatchedParts = new ArrayList<MessagePartHit>();
         
         if (!mMatchedParts.contains(part)) {
             mMatchedParts.add(part);
         }
     }
 
-    public ArrayList getMatchedMimePartNames() {
+    public List<MessagePartHit> getMatchedMimePartNames() {
         return mMatchedParts;
     }
 
@@ -132,7 +128,7 @@ public class MessageHit extends ZimbraHit {
     	return mMessageId;
     }
     
-    public byte getItemType() throws ServiceException {
+    public byte getItemType() {
         return MailItem.TYPE_MESSAGE;
     }
     
@@ -159,7 +155,7 @@ public class MessageHit extends ZimbraHit {
             String sizeStr = mDoc.get(LuceneFields.L_SIZE);
             return (int) ZimbraAnalyzer.SizeTokenFilter.DecodeSize(sizeStr);
         } else {
-            return (int) getMessage().getSize();
+            return getMessage().getSize();
         }
     }
 
@@ -168,7 +164,7 @@ public class MessageHit extends ZimbraHit {
     }
     
     void setItem(MailItem item) {
-        mMessage = (Message)item;
+        mMessage = (Message) item;
     }
     
     boolean itemIsLoaded() {

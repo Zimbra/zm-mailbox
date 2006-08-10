@@ -246,6 +246,11 @@ public class Tag extends MailItem {
         super.purgeCache(info, purgeItem);
     }
 
+    /** Persists the tag's current unread count to the database. */
+    protected void saveTagCounts() throws ServiceException {
+        DbMailItem.persistCounts(this, encodeMetadata());
+    }
+
 
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);

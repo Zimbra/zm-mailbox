@@ -819,19 +819,17 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         writable = i4folder.isWritable();
         mSession.selectFolder(i4folder);
 
-        // note: not sending back a "* OK [UIDNEXT ....]" response
+        // note: not sending back a "* OK [UIDNEXT ....]" response for search folders
         //    6.3.1: "If this is missing, the client can not make any assumptions about the
         //            next unique identifier value."
-        // note: \Deleted is a session flag for us and is not listed in PERMANENTFLAGS
-        //    7.1: "If the client attempts to STORE a flag that is not in the PERMANENTFLAGS
-        //          list, the server will either ignore the change or store the state change
-        //          for the remainder of the current session only."
         // FIXME: hardcoding "* 0 RECENT"
         sendUntagged(i4folder.getSize() + " EXISTS");
         sendUntagged(0 + " RECENT");
         if (i4folder.getFirstUnread() > 0)
         	sendUntagged("OK [UNSEEN " + i4folder.getFirstUnread() + ']');
         sendUntagged("OK [UIDVALIDITY " + i4folder.getUIDValidity() + ']');
+        if (!i4folder.isVirtual())
+            sendUntagged("OK [UIDNEXT " + i4folder.getInitialUIDNEXT() + ']');
         sendUntagged("FLAGS (" + mSession.getFlagList(false) + ')');
         sendUntagged("OK [PERMANENTFLAGS (" + (writable ? mSession.getFlagList(true) + " \\*" : "") + ")]");
         sendOK(tag, (writable ? "[READ-WRITE] " : "[READ-ONLY] ") + command + " completed");
@@ -1089,18 +1087,20 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             GetFolderOperation op = new GetFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, folderName);
             op.schedule();
             Folder folder = op.getFolder();
-        	
+
             if (!ImapFolder.isFolderVisible(folder, mSession)) {
                 ZimbraLog.imap.info("STATUS failed: folder not visible: " + folderName);
                 sendNO(tag, "STATUS failed");
                 return CONTINUE_PROCESSING;
             }
-            // note: we're not supporting UIDNEXT; see the comments in selectFolder()
             if ((status & STATUS_MESSAGES) != 0)
-                data.append(data.length() > 0 ? " " : "").append("MESSAGES ").append(folder.getMessageCount());
+                data.append(data.length() > 0 ? " " : "").append("MESSAGES ").append(folder.getSize());
             // FIXME: hardcoded "RECENT 0"
             if ((status & STATUS_RECENT) != 0)
                 data.append(data.length() > 0 ? " " : "").append("RECENT ").append(0);
+            // note: we're not supporting UIDNEXT for search folders; see the comments in selectFolder()
+            if ((status & STATUS_UIDNEXT) != 0 && !(folder instanceof SearchFolder))
+                data.append(data.length() > 0 ? " " : "").append("UIDNEXT ").append(folder.getImapUIDNEXT());
             if ((status & STATUS_UIDVALIDITY) != 0)
                 data.append(data.length() > 0 ? " " : "").append("UIDVALIDITY ").append(ImapFolder.getUIDValidity(folder));
             if ((status & STATUS_UNSEEN) != 0)
@@ -1781,7 +1781,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 if (!silent) {
                     for (ImapMessage i4msg : i4list) {
                         mSession.getFolder().undirtyMessage(i4msg);
-                        StringBuffer ntfn = new StringBuffer();
+                        StringBuilder ntfn = new StringBuilder();
                         ntfn.append(i4msg.sequence).append(" FETCH (").append(i4msg.getFlags(mSession));
                         // 6.4.8: "However, server implementations MUST implicitly include
                         //         the UID message data item as part of any FETCH response

@@ -147,7 +147,7 @@ public abstract class MailItem implements Comparable {
         public short  volumeId = -1;
         public String blobDigest;
         public int    date;
-        public long   size;
+        public int    size;
         public int    flags;
         public long   tags;
         public String sender;
@@ -160,12 +160,11 @@ public abstract class MailItem implements Comparable {
         public String inheritedTags;
         public List<Integer> children;
         public int    unreadCount;
-        public int    messageCount;
 
         public boolean isUnread() {
             return (unreadCount > 0);
         }
-        
+
         public UnderlyingData duplicate(int newId, int newFolder, short newVolume) {
             UnderlyingData data = new UnderlyingData();
             data.id          = newId;
@@ -306,10 +305,10 @@ public abstract class MailItem implements Comparable {
         }
     }
 
-	protected int            mId;
+    protected int            mId;
     protected byte           mColor;
-	protected UnderlyingData mData;
-	protected Mailbox        mMailbox;
+    protected UnderlyingData mData;
+    protected Mailbox        mMailbox;
     protected MailboxBlob    mBlob;
 
     MailItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
@@ -377,13 +376,13 @@ public abstract class MailItem implements Comparable {
     /** Returns the path to the MailItem.
      */
     public String getPath() throws ServiceException {
-    	Folder f = getMailbox().getFolderById(getFolderId());
-    	StringBuilder path = new StringBuilder();
-    	path.append(f.getPath());
-    	if (path.charAt(path.length() - 1) != '/')
-    		path.append('/');
-    	path.append(getSubject());
-    	return path.toString();
+        Folder f = getMailbox().getFolderById(getFolderId());
+        StringBuilder path = new StringBuilder();
+        path.append(f.getPath());
+        if (path.charAt(path.length() - 1) != '/')
+            path.append('/');
+        path.append(getSubject());
+        return path.toString();
     }
     
     /** Returns the ID the item is referenced by in the index.  Returns -1
@@ -457,7 +456,7 @@ public abstract class MailItem implements Comparable {
         return mData.modMetadata;
     }
 
-    public long getSize() {
+    public int getSize() {
         return mData.size;
     }
 
@@ -505,9 +504,9 @@ public abstract class MailItem implements Comparable {
     }
 
     public boolean isTagged(Tag tag) {
-		long bitmask = (tag == null ? 0 : (tag instanceof Flag ? mData.flags : mData.tags));
-		return ((bitmask & tag.getBitmask()) != 0);
-	}
+        long bitmask = (tag == null ? 0 : (tag instanceof Flag ? mData.flags : mData.tags));
+        return ((bitmask & tag.getBitmask()) != 0);
+    }
     
     public List<Tag> getTagList() throws ServiceException {
         return Tag.bitmaskToTagList(mMailbox, mData.tags);
@@ -728,39 +727,40 @@ public abstract class MailItem implements Comparable {
      * @throws ServiceException if there is an error retrieving the
      *         Mailbox's item cache or fetching the parent's data from 
      *         the database. */
-	MailItem getParent() throws ServiceException {
-		if (mData.parentId == -1)
-			return null;
-		return mMailbox.getItemById(mData.parentId, TYPE_UNKNOWN);
-	}
+    MailItem getParent() throws ServiceException {
+        if (mData.parentId == -1)
+            return null;
+        return mMailbox.getItemById(mData.parentId, TYPE_UNKNOWN);
+    }
 
     /** Returns the item's {@link Folder}.  All items in the system must
      *  have a containing folder.
      * 
      * @throws ServiceException if there is a problem fetching folder data
      *         from the database. */
-	Folder getFolder() throws ServiceException {
-		return mMailbox.getFolderById(mData.folderId);
-	}
+    Folder getFolder() throws ServiceException {
+        return mMailbox.getFolderById(mData.folderId);
+    }
 
     boolean checkChangeID() throws ServiceException {
         return mMailbox.checkItemChangeID(this);
     }
 
 
-	abstract boolean isTaggable();
+    abstract boolean isTaggable();
     abstract boolean isCopyable();
-	abstract boolean isMovable();
+    abstract boolean isMovable();
     abstract boolean isMutable();
     abstract boolean isIndexed();
-	abstract boolean canHaveChildren();
+    abstract boolean canHaveChildren();
     boolean isDeletable()             { return true; }
-	boolean trackUnread()             { return true; }
-	boolean canParent(MailItem child) { return canHaveChildren(); }
+    boolean isLeafNode()              { return true; }
+    boolean trackUnread()             { return true; }
+    boolean canParent(MailItem child) { return canHaveChildren(); }
 
-	static MailItem getById(Mailbox mbox, int id) throws ServiceException {
-		return getById(mbox, id, TYPE_UNKNOWN);
-	}
+    static MailItem getById(Mailbox mbox, int id) throws ServiceException {
+        return getById(mbox, id, TYPE_UNKNOWN);
+    }
     static MailItem getById(Mailbox mbox, int id, byte type) throws ServiceException {
         return mbox.getItem(DbMailItem.getById(mbox, id, type));
     }
@@ -784,48 +784,48 @@ public abstract class MailItem implements Comparable {
      * 
      * @param mbox  The {@link Mailbox} the item is created in.
      * @param data  The contents of a <code>MAIL_ITEM</code> database row. */
-	static MailItem constructItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
-		if (data == null)
-			throw noSuchItem(-1, TYPE_UNKNOWN);
-		switch (data.type) {
-			case TYPE_FOLDER:       return new Folder(mbox, data);
-			case TYPE_SEARCHFOLDER: return new SearchFolder(mbox, data);
-			case TYPE_TAG:          return new Tag(mbox, data);
-			case TYPE_CONVERSATION: return new Conversation(mbox,data);
-			case TYPE_MESSAGE:      return new Message(mbox, data);
-			case TYPE_CONTACT:      return new Contact(mbox,data);
-			case TYPE_DOCUMENT:     return new Document(mbox, data);
-			case TYPE_NOTE:         return new Note(mbox, data);
+    static MailItem constructItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
+        if (data == null)
+            throw noSuchItem(-1, TYPE_UNKNOWN);
+        switch (data.type) {
+            case TYPE_FOLDER:       return new Folder(mbox, data);
+            case TYPE_SEARCHFOLDER: return new SearchFolder(mbox, data);
+            case TYPE_TAG:          return new Tag(mbox, data);
+            case TYPE_CONVERSATION: return new Conversation(mbox,data);
+            case TYPE_MESSAGE:      return new Message(mbox, data);
+            case TYPE_CONTACT:      return new Contact(mbox,data);
+            case TYPE_DOCUMENT:     return new Document(mbox, data);
+            case TYPE_NOTE:         return new Note(mbox, data);
             case TYPE_APPOINTMENT:  return new Appointment(mbox, data);
             case TYPE_MOUNTPOINT:   return new Mountpoint(mbox, data);
             case TYPE_WIKI:         return new WikiItem(mbox, data);
-			default:                return null;
-		}
-	}
+            default:                return null;
+        }
+    }
     /** Returns {@link MailServiceException.NoSuchItemException} tailored
      *  for the given type.  Does not actually <u>throw</u> the exception;
      *  that's the caller's job.
      * 
      * @param id    The id of the missing item.
      * @param type  The type of the missing item (e.g. {@link #TYPE_TAG}). */
-	public static MailServiceException noSuchItem(int id, byte type) {
-		switch (type) {
+    public static MailServiceException noSuchItem(int id, byte type) {
+        switch (type) {
             case TYPE_SEARCHFOLDER:
             case TYPE_MOUNTPOINT:
-			case TYPE_FOLDER:       return MailServiceException.NO_SUCH_FOLDER(id);
-			case TYPE_FLAG:
-			case TYPE_TAG:          return MailServiceException.NO_SUCH_TAG(id);
+            case TYPE_FOLDER:       return MailServiceException.NO_SUCH_FOLDER(id);
+            case TYPE_FLAG:
+            case TYPE_TAG:          return MailServiceException.NO_SUCH_TAG(id);
             case TYPE_VIRTUAL_CONVERSATION:
             case TYPE_CONVERSATION: return MailServiceException.NO_SUCH_CONV(id);
-//			case TYPE_INVITE:
-			case TYPE_MESSAGE:      return MailServiceException.NO_SUCH_MSG(id);
-			case TYPE_CONTACT:      return MailServiceException.NO_SUCH_CONTACT(id);
-			case TYPE_DOCUMENT:     return MailServiceException.NO_SUCH_DOC(id);
+//          case TYPE_INVITE:
+            case TYPE_MESSAGE:      return MailServiceException.NO_SUCH_MSG(id);
+            case TYPE_CONTACT:      return MailServiceException.NO_SUCH_CONTACT(id);
+            case TYPE_DOCUMENT:     return MailServiceException.NO_SUCH_DOC(id);
             case TYPE_NOTE:         return MailServiceException.NO_SUCH_NOTE(id);
             case TYPE_APPOINTMENT:  return MailServiceException.NO_SUCH_APPT(id);
-			default:                return MailServiceException.NO_SUCH_ITEM(id);
-		}
-	}
+            default:                return MailServiceException.NO_SUCH_ITEM(id);
+        }
+    }
 
     /** Returns whether the an item type is a "subclass" of another item type.
      *  For instance, returns <code>true</code> if you have an item of type
@@ -880,36 +880,33 @@ public abstract class MailItem implements Comparable {
     /** Removes all this item's children from the {@link Mailbox}'s cache.
      *  Does not uncache the item itself. */
     void uncacheChildren() throws ServiceException {
-		if (mData.children != null)
+        if (mData.children != null)
             for (Integer childId : mData.children)
-				mMailbox.uncacheItem(childId);
-	}
+                mMailbox.uncacheItem(childId);
+    }
 
 
-	protected void finishCreation(MailItem parent) throws ServiceException {
-	    markItemCreated();
+    protected void finishCreation(MailItem parent) throws ServiceException {
+        markItemCreated();
 
-	    // let the parent know it's got a new child
-	    if (parent != null)
-	        parent.addChild(this);
+        // let the parent know it's got a new child
+        if (parent != null)
+            parent.addChild(this);
 
-	    // sanity-check the location of the newly-created item
-	    Folder folder = getFolder();
-	    if (!folder.canContain(this))
-	        throw MailServiceException.CANNOT_CONTAIN();
+        // sanity-check the location of the newly-created item
+        Folder folder = getFolder();
+        if (!folder.canContain(this))
+            throw MailServiceException.CANNOT_CONTAIN();
 
         // update mailbox and folder sizes
         mMailbox.updateSize(mData.size);
-        folder.updateSize(mData.size);
+        if (isLeafNode())
+            folder.updateSize(1);
 
-	    // let the folder and tags know if the new item is unread
-	    folder.updateUnread(mData.unreadCount);
-	    updateTagUnread(mData.unreadCount);
-
-	    // keep folder message counts correct
-	    if (this instanceof Message)
-	        folder.updateMessageCount(1);
-	}
+        // let the folder and tags know if the new item is unread
+        folder.updateUnread(mData.unreadCount);
+        updateTagUnread(mData.unreadCount);
+    }
 
     /** Changes the item's color.  The server does no value-to-color mapping;
      *  the supplied color is treated as an opaque byte.  Note than even
@@ -962,7 +959,6 @@ public abstract class MailItem implements Comparable {
         int size = (data == null ? 0 : data.length);
         if (mData.size != size) {
             mMailbox.updateSize(size - mData.size, false);
-            getFolder().updateSize(size - mData.size);
             mData.size = size;
         }
         mData.blobDigest = digest;
@@ -1012,32 +1008,32 @@ public abstract class MailItem implements Comparable {
      *    <li><code>service.FAILURE</code> - if there's a database failure
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul> */
-	void alterUnread(boolean unread) throws ServiceException {
-	    // detect NOOPs and bail
-	    if (unread == isUnread())
-	        return;
-	    if (!mMailbox.mUnreadFlag.canTag(this))
-	        throw MailServiceException.CANNOT_TAG(mMailbox.mUnreadFlag, this);
+    void alterUnread(boolean unread) throws ServiceException {
+        // detect NOOPs and bail
+        if (unread == isUnread())
+            return;
+        if (!mMailbox.mUnreadFlag.canTag(this))
+            throw MailServiceException.CANNOT_TAG(mMailbox.mUnreadFlag, this);
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
 
-	    markItemModified(Change.MODIFIED_UNREAD);
-	    mData.metadataChanged(mMailbox);
-	    updateUnread(unread ? 1 : -1);
-	    DbMailItem.alterUnread(this, unread);
-	}
+        markItemModified(Change.MODIFIED_UNREAD);
+        mData.metadataChanged(mMailbox);
+        updateUnread(unread ? 1 : -1);
+        DbMailItem.alterUnread(this, unread);
+    }
 
-	/** Tags or untags an item.  Persists the change to the database and
+    /** Tags or untags an item.  Persists the change to the database and
      *  cache.  If the item is unread and its tagged state is changing,
      *  updates the {@link Tag}'s unread count appropriately.<p>
      * 
      *  You must use {@link #alterUnread} to change an item's unread state.
      * 
-	 * @param tag  The tag or flag to add or remove from the item.
-	 * @param add  <code>true</code> to tag the item,
+     * @param tag  The tag or flag to add or remove from the item.
+     * @param add  <code>true</code> to tag the item,
      *             <code>false</code> to untag it.
      * @perms {@link ACL#RIGHT_WRITE} on the item
-	 * @throws ServiceException  The following error codes are possible:<ul>
+     * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><code>mail.CANNOT_TAG</code> - if the item can't be tagged
      *        with the specified tag
      *    <li><code>service.FAILURE</code> - if there's a database
@@ -1045,35 +1041,35 @@ public abstract class MailItem implements Comparable {
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul>
      * @see #alterUnread(boolean) */
-	void alterTag(Tag tag, boolean add) throws ServiceException {
-	    if (tag == null)
-	        throw ServiceException.FAILURE("no tag supplied when trying to tag item " + mId, null);
-	    if (!isTaggable() || (add && !tag.canTag(this)))
-	        throw MailServiceException.CANNOT_TAG(tag, this);
-	    if (tag.getId() == Flag.ID_FLAG_UNREAD)
-	        throw ServiceException.FAILURE("unread state must be set with alterUnread", null);
+    void alterTag(Tag tag, boolean add) throws ServiceException {
+        if (tag == null)
+            throw ServiceException.FAILURE("no tag supplied when trying to tag item " + mId, null);
+        if (!isTaggable() || (add && !tag.canTag(this)))
+            throw MailServiceException.CANNOT_TAG(tag, this);
+        if (tag.getId() == Flag.ID_FLAG_UNREAD)
+            throw ServiceException.FAILURE("unread state must be set with alterUnread", null);
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
-	    // detect NOOPs and bail
-	    if (add == isTagged(tag))
-	        return;
-	    markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
+        // detect NOOPs and bail
+        if (add == isTagged(tag))
+            return;
+        markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
 
-	    // change our cached tags
-	    tagChanged(tag, add);
+        // change our cached tags
+        tagChanged(tag, add);
 
-	    // tell our parent about the tag change (note: must precede DbMailItem.alterTags)
-	    MailItem parent = getCachedParent();
-	    if (parent != null)
-	        parent.inheritedTagChanged(tag, add, true);
+        // tell our parent about the tag change (note: must precede DbMailItem.alterTags)
+        MailItem parent = getCachedParent();
+        if (parent != null)
+            parent.inheritedTagChanged(tag, add, true);
 
-	    // since we're adding/removing a tag, the tag's unread count may change
-	    if (tag.trackUnread() && mData.unreadCount > 0)
-	        tag.updateUnread((add ? 1 : -1) * mData.unreadCount);
+        // since we're adding/removing a tag, the tag's unread count may change
+        if (tag.trackUnread() && mData.unreadCount > 0)
+            tag.updateUnread((add ? 1 : -1) * mData.unreadCount);
 
-	    // alter our tags in the DB
-	    DbMailItem.alterTag(this, tag, add);
-	}
+        // alter our tags in the DB
+        DbMailItem.alterTag(this, tag, add);
+    }
 
     /** Updates the object's in-memory state to reflect a {@link Tag} change.
      *  Does not update the database.
@@ -1081,48 +1077,48 @@ public abstract class MailItem implements Comparable {
      * @param tag  The tag that was added or rmeoved from this object.
      * @param add  <code>true</code> if the item was tagged,
      *             <code>false</code> if the item was untagged.*/
-	protected void tagChanged(Tag tag, boolean add) throws ServiceException {
-	    markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
-	    mData.metadataChanged(mMailbox);
+    protected void tagChanged(Tag tag, boolean add) throws ServiceException {
+        markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
+        mData.metadataChanged(mMailbox);
 
-	    if (tag instanceof Flag) {
-	        if (add)  mData.flags |= tag.getBitmask();
-	        else      mData.flags &= ~tag.getBitmask();
-	    } else {
-	        if (add)  mData.tags |= tag.getBitmask();
-	        else      mData.tags &= ~tag.getBitmask();
-	    }
-	}
+        if (tag instanceof Flag) {
+            if (add)  mData.flags |= tag.getBitmask();
+            else      mData.flags &= ~tag.getBitmask();
+        } else {
+            if (add)  mData.tags |= tag.getBitmask();
+            else      mData.tags &= ~tag.getBitmask();
+        }
+    }
 
     protected void inheritedTagChanged(Tag tag, boolean add, boolean onChild) { }
 
-	/** Updates the in-memory unread counts for the item.  Also updates the
+    /** Updates the in-memory unread counts for the item.  Also updates the
      *  item's folder, its tag, and its parent.  Note that the parent is not
      *  fetched from the database, so notifications may be off in the case of
      *  uncached {@link Conversation}s when a {@link Message} changes state.
-	 * 
+     * 
      * @param delta  The change in unread count for this item. */
-	protected void updateUnread(int delta) throws ServiceException {
-		if (delta == 0 || !trackUnread())
-			return;
+    protected void updateUnread(int delta) throws ServiceException {
+        if (delta == 0 || !trackUnread())
+            return;
         markItemModified(Change.MODIFIED_UNREAD);
 
-		// update our unread count (should we check that we don't have too many unread?)
-		mData.unreadCount += delta;
-		if (mData.unreadCount < 0)
-			throw ServiceException.FAILURE("inconsistent state: unread < 0 for " + getClass().getName() + " " + mId, null);
+        // update our unread count (should we check that we don't have too many unread?)
+        mData.unreadCount += delta;
+        if (mData.unreadCount < 0)
+            throw ServiceException.FAILURE("inconsistent state: unread < 0 for " + getClass().getName() + " " + mId, null);
 
-		// update the folder's unread count
-		getFolder().updateUnread(delta);
+        // update the folder's unread count
+        getFolder().updateUnread(delta);
 
-		// update the parent's unread count
-		MailItem parent = getCachedParent();
-		if (parent != null)
-			parent.updateUnread(delta);
+        // update the parent's unread count
+        MailItem parent = getCachedParent();
+        if (parent != null)
+            parent.updateUnread(delta);
 
-		// tell the tags about the new unread item
+        // tell the tags about the new unread item
         updateTagUnread(delta);
-	}
+    }
 
     /** Adds <code>delta</code> to the unread count of each {@link Tag}
      *  assigned to this <code>MailItem</code>.
@@ -1156,15 +1152,15 @@ public abstract class MailItem implements Comparable {
      *  not change system flags that are normally immutable after item
      *  creation, like {@link Flag#BITMASK_ATTACHED} and {@link Flag#BITMASK_DRAFT}.
      *  If a specified flag or tag does not exist, it is ignored.
-	 * 
+     * 
      * @param flags  The bitmask of user-settable flags to apply.
      * @param tags   The bitmask of tags to apply.
      * @perms {@link ACL#RIGHT_WRITE} on the item
-	 * @throws ServiceException  The following error codes are possible:<ul>
+     * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><code>service.FAILURE</code> - if there's a database failure
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul> */
-	void setTags(int flags, long tags) throws ServiceException {
+    void setTags(int flags, long tags) throws ServiceException {
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
 
@@ -1198,7 +1194,7 @@ public abstract class MailItem implements Comparable {
                 }
             }
         }
-	}
+    }
 
     /** Copies an item to a {@link Folder}.  Persists the new item to the
      *  database and the in-memory cache.  Copies to the same folder as the
@@ -1318,8 +1314,8 @@ public abstract class MailItem implements Comparable {
 
         // first, move the item to the target folder if necessary
         if (moved) {
-            oldFolder.updateSize(-getSize());
-            target.updateSize(getSize());
+            oldFolder.updateSize(-1);
+            target.updateSize(1);
             oldFolder.updateUnread(-getUnreadCount());
             target.updateUnread(getUnreadCount());
             folderChanged(target, imapId);
@@ -1376,13 +1372,13 @@ public abstract class MailItem implements Comparable {
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul> */
     void move(Folder folder) throws ServiceException {
-		if (mData.folderId == folder.getId())
-			return;
-		markItemModified(Change.MODIFIED_FOLDER);
-		if (!isMovable())
-			throw MailServiceException.IMMUTABLE_OBJECT(mId);
-		if (!folder.canContain(this))
-			throw MailServiceException.CANNOT_CONTAIN();
+        if (mData.folderId == folder.getId())
+            return;
+        markItemModified(Change.MODIFIED_FOLDER);
+        if (!isMovable())
+            throw MailServiceException.IMMUTABLE_OBJECT(mId);
+        if (!folder.canContain(this))
+            throw MailServiceException.CANNOT_CONTAIN();
 
         Folder oldFolder = getFolder();
         if (!oldFolder.canAccess(ACL.RIGHT_DELETE))
@@ -1390,84 +1386,86 @@ public abstract class MailItem implements Comparable {
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
 
-        oldFolder.updateSize(-getSize());
-        folder.updateSize(getSize());
+        if (isLeafNode()) {
+            oldFolder.updateSize(-1);
+            folder.updateSize(1);
+        }
 
         if (!inTrash() && folder.inTrash()) {
             // moving something to Trash also marks it as read
             if (mData.unreadCount > 0)
                 alterUnread(false);
         } else {
-    		oldFolder.updateUnread(-mData.unreadCount);
-    		folder.updateUnread(mData.unreadCount);
+            oldFolder.updateUnread(-mData.unreadCount);
+            folder.updateUnread(mData.unreadCount);
         }
         // moving a message (etc.) to Spam removes it from its conversation
         if (!inSpam() && folder.inSpam())
             detach();
 
-		DbMailItem.setFolder(this, folder);
-		folderChanged(folder, 0);
-	}
+        DbMailItem.setFolder(this, folder);
+        folderChanged(folder, 0);
+    }
 
-	/** Records all relevant changes to the in-memory object for when an item
+    /** Records all relevant changes to the in-memory object for when an item
      *  gets moved to a new {@link Folder}.  Does <u>not</u> persist those
      *  changes to the database.
      * 
-	 * @param newFolder  The folder the item is being moved to.
-	 * @param imapId     The new IMAP ID for the item after the operation.
-	 * @throws ServiceException if we're not in a transaction */
-	void folderChanged(Folder newFolder, int imapId) throws ServiceException {
+     * @param newFolder  The folder the item is being moved to.
+     * @param imapId     The new IMAP ID for the item after the operation.
+     * @throws ServiceException if we're not in a transaction */
+    void folderChanged(Folder newFolder, int imapId) throws ServiceException {
         if (mData.folderId == newFolder.getId())
             return;
-		markItemModified(Change.MODIFIED_FOLDER);
+        markItemModified(Change.MODIFIED_FOLDER);
         mData.metadataChanged(mMailbox);
-		mData.folderId = newFolder.getId();
+        mData.folderId = newFolder.getId();
         mData.imapId   = mMailbox.isTrackingImap() ? imapId : mData.imapId;
-	}
+    }
 
-	void addChild(MailItem child) throws ServiceException {
-		markItemModified(Change.MODIFIED_CHILDREN);
-		if (!canParent(child))
-			throw MailServiceException.CANNOT_PARENT();
-		if (mMailbox != child.getMailbox())
-			throw MailServiceException.WRONG_MAILBOX();
+    void addChild(MailItem child) throws ServiceException {
+        markItemModified(Change.MODIFIED_CHILDREN);
+        if (!canParent(child))
+            throw MailServiceException.CANNOT_PARENT();
+        if (mMailbox != child.getMailbox())
+            throw MailServiceException.WRONG_MAILBOX();
 
-		// update child list
-		if (mData.children == null)
-			(mData.children = new ArrayList<Integer>()).add(child.getId());
-		else if (!mData.children.contains(child.getId()))
-			mData.children.add(child.getId());
+        // update child list
+        if (mData.children == null)
+            (mData.children = new ArrayList<Integer>()).add(child.getId());
+        else if (!mData.children.contains(child.getId()))
+            mData.children.add(child.getId());
 
-		// update unread counts
-		updateUnread(child.mData.unreadCount);
-	}
+        // update unread counts
+        updateUnread(child.mData.unreadCount);
+    }
 
-	void removeChild(MailItem child) throws ServiceException {
+    void removeChild(MailItem child) throws ServiceException {
         markItemModified(Change.MODIFIED_CHILDREN);
 
-		// update child list
-		if (mData.children == null || !mData.children.contains(child.getId()))
-			throw MailServiceException.IS_NOT_CHILD();
+        // update child list
+        if (mData.children == null || !mData.children.contains(child.getId()))
+            throw MailServiceException.IS_NOT_CHILD();
         mData.children.remove((Integer) child.getId());
         
         // remove parent reference from the child 
         child.mData.parentId = -1;
 
-		// update unread counts
-		updateUnread(-child.mData.unreadCount);
-	}
+        // update unread counts
+        updateUnread(-child.mData.unreadCount);
+    }
 
     /** A record of all the relevant data about a set of items that we're
      *  in the process of deleting via a call to {@link MailItem#delete}. */
-	public static class PendingDelete {
+    public static class PendingDelete {
         /** The id of the item that {@link MailItem#delete} was called on. */
         public int  rootId;
         /** Whether some of the item's children are not being deleted. */
         public boolean incomplete;
         /** The total size of all the items being deleted. */
-		public long size;
+        public long size;
         /** The ids of all items being deleted. */
-		public List<Integer> itemIds   = new ArrayList<Integer>();
+        public List<Integer> itemIds   = new ArrayList<Integer>();
         /** The ids of all unread items being deleted.  This is a subset of
          *  {@link #itemIds}. */
         public List<Integer> unreadIds = new ArrayList<Integer>();
@@ -1506,7 +1504,7 @@ public abstract class MailItem implements Comparable {
             }
             return this;
         }
-	}
+    }
 
     static final boolean DELETE_ITEM = false, DELETE_CONTENTS = true;
 
@@ -1540,11 +1538,11 @@ public abstract class MailItem implements Comparable {
             markItemDeleted();
 
         // update the mailbox's size
-		mMailbox.updateSize(-info.size);
+        mMailbox.updateSize(-info.size);
         mMailbox.updateContactCount(-info.contacts);
 
         // update conversations and unread counts on folders and tags
-		propagateDeletion(info);
+        propagateDeletion(info);
 
         // actually delete the item from the DB
         if (info.incomplete)
@@ -1555,7 +1553,7 @@ public abstract class MailItem implements Comparable {
             DbMailItem.delete(this);
 
         // remove the deleted item(s) from the mailbox's cache
-		purgeCache(info, !childrenOnly && !info.incomplete);
+        purgeCache(info, !childrenOnly && !info.incomplete);
 
         // cascade any other deletes
         if (info.cascadeIds != null && !info.cascadeIds.isEmpty()) {
@@ -1566,7 +1564,7 @@ public abstract class MailItem implements Comparable {
 
         // deal with index sharing
         if (info.sharedIndex != null && !info.sharedIndex.isEmpty())
-        	DbMailItem.resolveSharedIndex(mMailbox, info);
+            DbMailItem.resolveSharedIndex(mMailbox, info);
 
         mMailbox.markOtherItemDirty(info);
 
@@ -1575,25 +1573,25 @@ public abstract class MailItem implements Comparable {
             DbMailItem.writeTombstone(mMailbox, info);
 
         // don't actually delete the blobs or index entries here; wait until after the commit
-	}
+    }
 
-	/** Determines the set of items to be deleted.  Assembles a new
+    /** Determines the set of items to be deleted.  Assembles a new
      *  {@link PendingDelete} object encapsulating the data on the items
      *  to be deleted.  If the caller has specified the maximum change
      *  number they know about, this set will also exclude any item for
      *  which the (modification/content) change number is greater.
      * 
      * @perms {@link ACL#RIGHT_DELETE} on the item
-	 * @return A fully-populated <code>PendingDelete</code> object. */
-	PendingDelete getDeletionInfo() throws ServiceException {
+     * @return A fully-populated <code>PendingDelete</code> object. */
+    PendingDelete getDeletionInfo() throws ServiceException {
         if (!canAccess(ACL.RIGHT_DELETE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
 
         Integer id = new Integer(mId);
-		PendingDelete info = new PendingDelete();
+        PendingDelete info = new PendingDelete();
         info.rootId = mId;
-		info.size   = mData.size;
-		info.itemIds.add(id);
+        info.size   = mData.size;
+        info.itemIds.add(id);
         if (mData.unreadCount != 0 && mMailbox.mUnreadFlag.canTag(this))
             info.unreadIds.add(id);
         if (mData.indexId > 0) {
@@ -1603,24 +1601,23 @@ public abstract class MailItem implements Comparable {
                 (info.sharedIndex = new HashSet<Integer>()).add(mData.indexId);
         }
         if (mData.blobDigest != null && mData.blobDigest.length() > 0)
-			try {
+            try {
                 MailboxBlob mblob = StoreManager.getInstance().getMailboxBlob(mMailbox, mId, mData.modContent, mData.volumeId);
                 if (mblob == null)
                     ZimbraLog.mailbox.error("missing blob for id: " + mId + ", change: " + mData.modContent);
                 else
                     info.blobs.add(mblob);
-			} catch (Exception e) { }
+            } catch (Exception e) { }
         int isMessage = (this instanceof Message ? 1 : 0);
         info.messages.put(new Integer(getFolderId()), new DbMailItem.LocationCount(isMessage, getSize()));
-		return info;
-	}
+        return info;
+    }
 
-	void propagateDeletion(PendingDelete info) throws ServiceException {
+    void propagateDeletion(PendingDelete info) throws ServiceException {
         for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.messages.entrySet()) {
             Folder folder = mMailbox.getFolderById(entry.getKey());
             DbMailItem.LocationCount lc = entry.getValue();
-            folder.updateMessageCount(-lc.count);
-            folder.updateSize(-lc.size);
+            folder.updateSize(-lc.count);
         }
 
         if (info.unreadIds.isEmpty())
@@ -1628,13 +1625,13 @@ public abstract class MailItem implements Comparable {
         // FIXME: try to get these from cache (use mMailbox.getItemById[])
         for (UnderlyingData data : DbMailItem.getById(mMailbox, info.unreadIds, TYPE_MESSAGE))
             mMailbox.getItem(data).updateUnread(-1);
-	}
+    }
 
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
-		// uncache cascades to uncache children
-		if (purgeItem)
-			mMailbox.uncache(this);
-	}
+        // uncache cascades to uncache children
+        if (purgeItem)
+            mMailbox.uncache(this);
+    }
 
 
     String encodeMetadata() {
@@ -1662,12 +1659,12 @@ public abstract class MailItem implements Comparable {
     }
     protected void saveMetadata(String metadata) throws ServiceException {
         mData.metadataChanged(mMailbox);
-        DbMailItem.saveMetadata(this, mData.size, metadata);
+        DbMailItem.saveMetadata(this, metadata);
     }
 
     protected void saveSubject() throws ServiceException {
         mData.contentChanged(mMailbox);
-        DbMailItem.saveSubject(this, mData.size);
+        DbMailItem.saveSubject(this);
     }
 
     protected void saveData(String sender) throws ServiceException {
@@ -1675,7 +1672,7 @@ public abstract class MailItem implements Comparable {
     }
     protected void saveData(String sender, String metadata) throws ServiceException {
         mData.metadataChanged(mMailbox);
-        DbMailItem.saveData(this, mData.size, sender, metadata);
+        DbMailItem.saveData(this, sender, metadata);
     }
 
 
@@ -1699,7 +1696,7 @@ public abstract class MailItem implements Comparable {
         sb.append(CN_ID).append(": ").append(mId).append(", ");
         sb.append(CN_TYPE).append(": ").append(mData.type).append(", ");
         if (mData.parentId > 0)
-        	sb.append(CN_PARENT_ID).append(": ").append(mData.parentId).append(", ");
+            sb.append(CN_PARENT_ID).append(": ").append(mData.parentId).append(", ");
         sb.append(CN_FOLDER_ID).append(": ").append(mData.folderId).append(", ");
         sb.append(CN_DATE).append(": ").append(mData.date).append(", ");
         sb.append(CN_SIZE).append(": ").append(mData.size).append(", ");
@@ -1707,13 +1704,13 @@ public abstract class MailItem implements Comparable {
         sb.append(CN_UNREAD_COUNT).append(": ").append(mData.unreadCount).append(", ");
         sb.append(CN_COLOR).append(": ").append(mColor).append(", ");
         if (mData.flags != 0)
-        	sb.append(CN_FLAGS).append(": ").append(getFlagString()).append(", ");
+            sb.append(CN_FLAGS).append(": ").append(getFlagString()).append(", ");
         if (mData.tags != 0)
-        	sb.append(CN_TAGS).append(": [").append(getTagString()).append("], ");
+            sb.append(CN_TAGS).append(": [").append(getTagString()).append("], ");
         if (mData.subject != null)
             sb.append(CN_SUBJECT).append(": ").append(mData.subject).append(", ");
         if (mData.children != null)
-        	sb.append(CN_CHILDREN).append(": [").append(mData.children.toString()).append("], ");
+            sb.append(CN_CHILDREN).append(": [").append(mData.children.toString()).append("], ");
         if (mData.blobDigest != null)
             sb.append(CN_BLOB_DIGEST).append(": ").append(mData.blobDigest);
         if (mData.imapId > 0)

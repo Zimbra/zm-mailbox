@@ -55,40 +55,40 @@ public class DocumentHit extends ZimbraHit {
         super(results, mbx, score);
     }
 
-    public long getDate() throws ServiceException {
+    public long getDate() {
         return mDocument.getDate();
     }
 
-    public int getSize() throws ServiceException {
-        return (int)mDocument.getSize();
+    public int getSize() {
+    	return mDocument.getSize();
     }
 
-    public int getConversationId() throws ServiceException {
+    public int getConversationId() {
         return 0;
     }
 
-    public int getItemId() throws ServiceException {
+    public int getItemId() {
         return mMessageId;
     }
 
-    public byte getItemType() throws ServiceException {
+    public byte getItemType() {
         return mDocument.getType();
     }
 
-    void setItem(MailItem item) throws ServiceException {
+    void setItem(MailItem item) {
         if (item instanceof com.zimbra.cs.mailbox.Document)
             mDocument = (com.zimbra.cs.mailbox.Document) item;
     }
 
-    boolean itemIsLoaded() throws ServiceException {
+    boolean itemIsLoaded() {
         return mDocument != null;
     }
 
-    public String getSubject() throws ServiceException {
+    public String getSubject() {
         return mDocument.getSubject();
     }
 
-    public String getName() throws ServiceException {
+    public String getName() {
         return getSubject();
     }
 

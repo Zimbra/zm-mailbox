@@ -113,15 +113,14 @@ public class DbMailItem {
             else
                 stmt.setInt(pos++, data.imapId);
             stmt.setInt(pos++, data.date);
-            stmt.setInt(pos++, (int) data.size);
+            stmt.setInt(pos++, data.size);
             if (data.volumeId >= 0)
                 stmt.setShort(pos++, data.volumeId);
             else
                 stmt.setNull(pos++, Types.TINYINT);
             stmt.setString(pos++, data.blobDigest);
-//            if (data.type == MailItem.TYPE_MESSAGE || data.type == MailItem.TYPE_INVITE)
-            if (data.type == MailItem.TYPE_MESSAGE)
-                stmt.setBoolean(pos++, data.isUnread());
+            if (data.type == MailItem.TYPE_MESSAGE || data.type == MailItem.TYPE_FOLDER)
+                stmt.setInt(pos++, data.unreadCount);
             else
                 stmt.setNull(pos++, java.sql.Types.BOOLEAN);
             stmt.setInt(pos++, data.flags);
@@ -408,16 +407,16 @@ public class DbMailItem {
         }
     }
 
-    public static void saveMetadata(MailItem item, long size, String metadata) throws ServiceException {
+    public static void saveMetadata(MailItem item, String metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
         Connection conn = mbox.getOperationConnection();
-		PreparedStatement stmt = null;
-		try {
-			stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-			        " SET date = ?, size = ?, metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
+                    " SET date = ?, size = ?, metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
                     " WHERE id = ?");
-			stmt.setInt(1, (int) (item.getDate() / 1000));
-			stmt.setInt(2, (int) size);
+            stmt.setInt(1, (int) (item.getDate() / 1000));
+            stmt.setInt(2, item.getSize());
             stmt.setString(3, checkTextLength(metadata));
             stmt.setInt(4, mbox.getOperationChangeID());
             stmt.setInt(5, mbox.getOperationTimestamp());
@@ -425,13 +424,36 @@ public class DbMailItem {
             stmt.setInt(7, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
-        	throw ServiceException.FAILURE("writing metadata for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
+            throw ServiceException.FAILURE("writing metadata for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
         } finally {
-        	DbPool.closeStatement(stmt);
+            DbPool.closeStatement(stmt);
         }
-	}
+    }
 
-    public static void saveSubject(MailItem item, long size) throws ServiceException {
+    public static void persistCounts(MailItem item, String metadata) throws ServiceException {
+        Mailbox mbox = item.getMailbox();
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
+                    " SET size = ?, unread = ?, metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
+                    " WHERE id = ?");
+            stmt.setInt(1, item.getSize());
+            stmt.setInt(2, item.getUnreadCount());
+            stmt.setString(3, checkTextLength(metadata));
+            stmt.setInt(4, mbox.getOperationChangeID());
+            stmt.setInt(5, mbox.getOperationTimestamp());
+            stmt.setInt(6, item.getSavedSequence());
+            stmt.setInt(7, item.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("writing metadata for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void saveSubject(MailItem item) throws ServiceException {
         Mailbox mbox = item.getMailbox();
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -446,7 +468,7 @@ public class DbMailItem {
                     " SET date = ?, size = ?, subject = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
                     " WHERE id = ?");
             stmt.setInt(1, (int) (item.getDate() / 1000));
-            stmt.setInt(2, (int) size);
+            stmt.setInt(2, item.getSize());
             stmt.setString(3, subject);
             stmt.setInt(4, mbox.getOperationChangeID());
             stmt.setInt(5, mbox.getOperationTimestamp());
@@ -460,7 +482,7 @@ public class DbMailItem {
         }
     }
 
-    public static void saveData(MailItem item, long size, String sender, String metadata)
+    public static void saveData(MailItem item, String sender, String metadata)
     throws ServiceException {
         Mailbox mbox = item.getMailbox();
         Connection conn = mbox.getOperationConnection();
@@ -485,7 +507,7 @@ public class DbMailItem {
             else
             	stmt.setInt(2, item.getParentId());
             stmt.setInt(3, (int) (item.getDate() / 1000));
-            stmt.setInt(4, (int) size);
+            stmt.setInt(4, item.getSize());
             stmt.setString(5, item.getDigest(true));
             stmt.setInt(6, item.getInternalFlagBitmask());
             stmt.setString(7, sender);
@@ -1051,14 +1073,14 @@ public class DbMailItem {
     }
 
 
-    public static Mailbox.MailboxData getFoldersAndTags(Mailbox mbox, Map<Integer, MailItem.UnderlyingData> folderData, Map<Integer, MailItem.UnderlyingData> tagData) throws ServiceException {
+    public static Mailbox.MailboxData getFoldersAndTags(Mailbox mbox, Map<Integer, UnderlyingData> folderData, Map<Integer, UnderlyingData> tagData, boolean reload)
+    throws ServiceException {
         boolean fetchFolders = folderData != null;
         boolean fetchTags    = tagData != null;
-        if (!fetchFolders && !fetchTags)
+        if (!fetchFolders && !fetchTags && !reload)
             return null;
         Connection conn = mbox.getOperationConnection();
 
-        Mailbox.MailboxData mbd = new Mailbox.MailboxData();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -1073,19 +1095,35 @@ public class DbMailItem {
                     folderData.put(data.id, data);
                 else if (fetchTags && MailItem.isAcceptableType(MailItem.TYPE_TAG, data.type))
                     tagData.put(data.id, data);
+
+                rs.getInt(CI_UNREAD);
+                reload |= rs.wasNull();
             }
+
+            if (!reload)
+                return null;
+
             rs.close();
             stmt.close();
 
+            // going to recalculate counts, so discard any existing counts...
+            if (fetchFolders)
+                for (UnderlyingData data : folderData.values())
+                    data.size = data.unreadCount = 0;
+            if (fetchTags)
+                for (UnderlyingData data : tagData.values())
+                    data.size = data.unreadCount = 0;
+
+            Mailbox.MailboxData mbd = new Mailbox.MailboxData();
             stmt = conn.prepareStatement("SELECT folder_id, type, tags, COUNT(*), SUM(unread), SUM(size)" +
-                    " FROM " + table + " GROUP BY folder_id, type, tags");
+                    " FROM " + table + " WHERE type NOT IN " + NON_SEARCHABLE_TYPES +
+                    " GROUP BY folder_id, type, tags");
             rs = stmt.executeQuery();
             while (rs.next()) {
                 byte type  = rs.getByte(2);
                 int count  = rs.getInt(4);
                 int unread = rs.getInt(5);
                 long size  = rs.getLong(6);
-
                 if (type == MailItem.TYPE_CONTACT)
                     mbd.contacts += count;
                 mbd.size += size;
@@ -1093,23 +1131,21 @@ public class DbMailItem {
                 if (fetchFolders) {
 	                UnderlyingData data = folderData.get(rs.getInt(1));
 	                assert(data != null);
-                    data.size += size;
 	                data.unreadCount += unread;
-//                    if (type == MailItem.TYPE_MESSAGE || type == MailItem.TYPE_INVITE)
-	                if (type == MailItem.TYPE_MESSAGE)
-                        data.messageCount += count;
+                    data.size += count;
                 }
 
                 if (fetchTags) {
                     long tags = rs.getLong(3);
-                    for (int i = 0; tags != 0 && i < MailItem.MAX_TAG_COUNT - 1; i++)
+                    for (int i = 0; tags != 0 && i < MailItem.MAX_TAG_COUNT - 1; i++) {
                         if ((tags & (1L << i)) != 0) {
         	                UnderlyingData data = tagData.get(i + MailItem.TAG_ID_OFFSET);
         	                if (data != null)
         	                    data.unreadCount += unread;
-                            // could track cumulative size if desired...
+                            // could track cumulative count if desired...
                             tags &= ~(1L << i);
                         }
+                    }
                 }
             }
             return mbd;
@@ -1466,7 +1502,6 @@ public class DbMailItem {
                             data.children      = children;
                             data.unreadCount   = unreadCount;
                             data.inheritedTags = StringUtil.join(",", inheritedTags);
-                            data.messageCount  = children.size();
                         }
                         lastConvId = convId;
                         children = new ArrayList<Integer>();
@@ -1488,7 +1523,6 @@ public class DbMailItem {
                     data.children      = children;
                     data.unreadCount   = unreadCount;
                     data.inheritedTags = StringUtil.join(",", inheritedTags);
-                    data.messageCount  = children.size();
                 } else {
                     // Data error: no messages found
                     StringBuilder msg = new StringBuilder("No messages found for conversations:");
