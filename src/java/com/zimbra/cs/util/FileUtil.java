@@ -98,14 +98,13 @@ public class FileUtil {
         try {
             FileOutputStream fos = new FileOutputStream(dest);
             byte[] buf = new byte[COPYBUFLEN];
-            BufferedOutputStream out = new BufferedOutputStream(fos);
             try {
                 int byteRead;
                 while ((byteRead = in.read(buf)) != -1) {
-                    out.write(buf, 0, byteRead);
+                    fos.write(buf, 0, byteRead);
                 }
             } finally {
-                out.close();
+                fos.close();
             }
         } finally {
             if (closeIn) {
