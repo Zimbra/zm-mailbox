@@ -82,6 +82,7 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.DateTimeUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.L10nUtil;
+import com.zimbra.cs.util.Pair;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.util.L10nUtil.MsgKey;
 
@@ -528,7 +529,7 @@ public class Appointment extends MailItem {
         return mInvites.get(num);
     }
     
-    public Invite getDefaultInvite() throws ServiceException {
+    public Invite getDefaultInvite() {
         Invite first = null;
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
             Invite cur = (Invite) iter.next();
@@ -539,11 +540,8 @@ public class Appointment extends MailItem {
         }
         if (first == null)
             ZimbraLog.calendar.error(
-                    "Invalid state: appointment " + getId() + " in mailbox " +
-                    getMailbox().getId() +
-                    " has no default invite; " +
-                    (mInvites != null ? ("invite count = " + mInvites.size())
-                                      : "null invite list"));
+                    "Invalid state: appointment " + getId() + " in mailbox " + getMailbox().getId() + " has no default invite; " +
+                    (mInvites != null ? ("invite count = " + mInvites.size()) : "null invite list"));
         return first;
     }
 
@@ -662,7 +660,7 @@ public class Appointment extends MailItem {
                                 || 
                                 (isCancel && (cur.getSeqNo() == newInvite.getSeqNo() && cur.getDTStamp() <= newInvite.getDTStamp()))))) 
                 {
-                    Invite inf = (Invite)mInvites.get(i);
+                    Invite inf = mInvites.get(i);
                     toRemove.add(inf);
                     
                     // add to FRONT of list, so when we iterate for the removals we go from HIGHER TO LOWER
@@ -990,8 +988,7 @@ public class Appointment extends MailItem {
                     multi.removeBodyPart(icalPartNum);
                     ZVCalendar cal = inv.newToICalendar();
                     String test = cal.toString();
-                    MimeBodyPart icalPart =
-                        CalendarMailSender.makeICalIntoMimePart(inv.getUid(), cal);
+                    MimeBodyPart icalPart = CalendarMailSender.makeICalIntoMimePart(inv.getUid(), cal);
                     multi.addBodyPart(icalPart, icalPartNum);
                     // Courtesy of JavaMail.  All three lines are necessary.
                     // Reasons unclear from JavaMail docs.
@@ -1103,7 +1100,7 @@ public class Appointment extends MailItem {
         
         static ReplyList decodeFromMetadata(Metadata md, TimeZoneMap tzMap) throws ServiceException {
             ReplyList toRet = new ReplyList();
-            int numReplies = (int)md.getLong(FN_NUM_REPLY_INFO);
+            int numReplies = (int) md.getLong(FN_NUM_REPLY_INFO);
             toRet.mReplies = new ArrayList(numReplies);
             for (int i = 0; i < numReplies; i++) {
                 ReplyInfo inf = ReplyInfo.decodeFromMetadata(md.getMap(FN_REPLY_INFO+i), tzMap);
@@ -1320,8 +1317,7 @@ public class Appointment extends MailItem {
      * @return
      * @throws ServiceException
      */
-    public String getEffectiveFreeBusyActual(Invite inv, Instance inst) throws ServiceException 
-    {
+    public String getEffectiveFreeBusyActual(Invite inv, Instance inst) throws ServiceException {
         Account acct = getMailbox().getAccount();
         ZAttendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
         if (at == null || inv.isOrganizer(at)) {
@@ -1344,8 +1340,7 @@ public class Appointment extends MailItem {
      * @return
      * @throws ServiceException
      */
-    public String getEffectivePartStat(Invite inv, Instance inst) throws ServiceException
-    {
+    public String getEffectivePartStat(Invite inv, Instance inst) throws ServiceException {
         Account acct = getMailbox().getAccount();
         ZAttendee at = mReplyList.getEffectiveAttendee(acct, inv, inst);
         if (at == null || inv.isOrganizer(at)) {
@@ -1542,7 +1537,31 @@ public class Appointment extends MailItem {
      * @return
      * @throws ServiceException
      */
-    public MimeMessage getMimeMessage(int subId) throws ServiceException {
+    public MimeMessage getSubpartMessage(int subId) throws ServiceException {
+        try {
+            MimeBodyPart mbp = findBodyBySubId(subId);
+            return mbp == null ? null : (MimeMessage) Mime.getMessageContent(mbp);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IOException while getting MimeMessage for item " + mId, e);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("MessagingException while getting MimeMessage for item " + mId, e);
+        }
+    }
+
+    public Pair<MimeMessage,Integer> getSubpartMessageData(int subId) throws ServiceException {
+        try {
+            MimeBodyPart mbp = findBodyBySubId(subId);
+            if (mbp == null)
+                return null;
+            return new Pair<MimeMessage,Integer>((MimeMessage) Mime.getMessageContent(mbp), mbp.getSize());
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IOException while getting MimeMessage for item " + mId, e);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("MessagingException while getting MimeMessage for item " + mId, e);
+        }
+    }
+
+    private MimeBodyPart findBodyBySubId(int subId) throws ServiceException {
         InputStream is = null;
         MimeMessage mm = null;
         try {
@@ -1555,8 +1574,7 @@ public class Appointment extends MailItem {
                     ((MimeVisitor) visitor.newInstance()).accept(mm);
             } catch (Exception e) {
                 // If the conversion bombs for any reason, revert to the original
-                ZimbraLog.mailbox.warn(
-                    "MIME converter failed for message " + getId(), e);
+                ZimbraLog.mailbox.warn("MIME converter failed for message " + getId(), e);
                 is = getRawMessage();
                 mm = new MimeMessage(JMSession.getSession(), is);
                 is.close();
@@ -1572,10 +1590,8 @@ public class Appointment extends MailItem {
                 MimeBodyPart mbp = (MimeBodyPart)mmp.getBodyPart(i);
                 String[] hdrs = mbp.getHeader("invId");
                 
-                if (hdrs != null && hdrs.length > 0 && (Integer.parseInt(hdrs[0])==subId)) {
-                    Object mbpContent = mbp.getContent();
-                    return (MimeMessage)mbpContent;
-                }
+                if (hdrs != null && hdrs.length > 0 && (Integer.parseInt(hdrs[0]) == subId))
+                    return mbp;
             }
             return null;
         } catch (IOException e) {
@@ -1584,7 +1600,6 @@ public class Appointment extends MailItem {
             throw ServiceException.FAILURE("MessagingException while getting MimeMessage for item " + mId, e);
         }
     }
-
 
     // code related to calendar resources
     // TODO: move this stuff to its own class(es)
@@ -1620,10 +1635,8 @@ public class Appointment extends MailItem {
 
         public static final int MAX_CONFLICT_LIST_SIZE = 5;
 
-        public static String getBusyTimesString(List<Availability> list, TimeZone tz, Locale lc)
-        throws ServiceException {
+        public static String getBusyTimesString(List<Availability> list, TimeZone tz, Locale lc) {
             StringBuilder sb = new StringBuilder();
-            int availCount = 0;
             boolean hasMoreConflicts = false;
             int conflictCount = 0;
             for (Availability avail : list) {

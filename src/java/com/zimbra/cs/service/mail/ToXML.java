@@ -709,7 +709,7 @@ public class ToXML {
         }
 
         try {
-            MimeMessage mm = appt.getMimeMessage(invId);
+            MimeMessage mm = appt.getSubpartMessage(invId);
             if (mm == null)
                 throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + lc.formatItemId(iid));
             if (!wholeMessage) {

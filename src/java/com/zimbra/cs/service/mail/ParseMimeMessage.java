@@ -282,7 +282,7 @@ public class ParseMimeMessage {
                                 attachPart(mmp, mbox.getMessageById(octxt, iid.getId()), part);
                             } else {
                                 Appointment appt = mbox.getAppointmentById(octxt, iid.getId());
-                                MimeMessage apptMm = appt.getMimeMessage(iid.getSubpartId());
+                                MimeMessage apptMm = appt.getSubpartMessage(iid.getSubpartId());
                                 MimePart apptMp = Mime.getMimePart(apptMm, part);
                                 if (apptMp == null)
                                     throw MailServiceException.NO_SUCH_PART(part);

@@ -24,7 +24,6 @@
  */
 package com.zimbra.cs.service.formatter;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -48,6 +47,7 @@ import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.HttpUtil;
+import com.zimbra.cs.util.Pair;
 
 public class SyncFormatter extends Formatter {
     
@@ -111,11 +111,9 @@ public class SyncFormatter extends Formatter {
         context.resp.setContentType(Mime.CT_TEXT_PLAIN);
         if (context.itemId.hasSubpart()) {
             // unfortunately, MimeMessage won't give you the length including headers...
-            MimeMessage mm = appt.getMimeMessage(context.itemId.getSubpartId());
-            ByteArrayOutputStream baos = new ByteArrayOutputStream(mm.getSize() + 2048);
-            mm.writeTo(baos);
-            addXZimbraHeaders(context, appt, baos.size());
-            context.resp.getOutputStream().write(baos.toByteArray());
+            Pair<MimeMessage,Integer> apptMsgData = appt.getSubpartMessageData(context.itemId.getSubpartId());
+            addXZimbraHeaders(context, appt, apptMsgData.getSecond());
+            apptMsgData.getFirst().writeTo(context.resp.getOutputStream());
         } else {
             InputStream is = appt.getRawMessage();
             addXZimbraHeaders(context, appt, appt.getSize());
