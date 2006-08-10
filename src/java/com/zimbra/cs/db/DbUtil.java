@@ -342,29 +342,11 @@ public class DbUtil {
      */
     public static void executeScript(DbPool.Connection conn, Reader scriptReader)
     throws IOException, ServiceException, SQLException {
-        StringBuffer buf = new StringBuffer();
-        BufferedReader br = new BufferedReader(scriptReader);
-        String line;
-        while ((line = br.readLine()) != null) {
-            // remove comments
-            int hash = line.indexOf('#');
-            if (hash != -1) {
-                line = line.substring(0, hash);
-            }
-            line = line.trim();
-            if (line.length() == 0) {
-                // ignore comments or blank lines
-                continue;
-            }
-            buf.append(line).append('\n');
-        }
-        br.close();
-        String script = buf.toString();
-        String[] sqls = script.split("\\s*;\\s*");
         PreparedStatement stmt = null;
+        String[] statements = parseScript(scriptReader);
         try {
-            for (int i = 0; i < sqls.length; i++) {
-                stmt = conn.prepareStatement(sqls[i]);
+            for (String sql : statements) {
+                stmt = conn.prepareStatement(sql);
                 stmt.execute();
                 stmt.close();
             }
@@ -373,5 +355,50 @@ public class DbUtil {
             DbPool.quietRollback(conn);
             throw e;
         } 
+    }
+    
+    /**
+     * Parses a SQL script into separate SQL statements, separated by semicolons.
+     * Removes comments that begin with <code>--</code> or <code>#</code>.
+     */
+    public static String[] parseScript(Reader scriptReader)
+    throws IOException {
+        StringBuffer buf = new StringBuffer();
+        BufferedReader br = new BufferedReader(scriptReader);
+        String line;
+        while ((line = br.readLine()) != null) {
+            line = removeComments(line);
+            buf.append(line);
+            line = line.trim();
+            if (line.length() == 0) {
+                // ignore comments or blank lines
+                continue;
+            }
+            buf.append('\n');
+        }
+        br.close();
+        String script = buf.toString();
+        return script.split("\\s*;\\s*");
+    }
+    
+    /**
+     * Removes trailing comments.  Comments begin with <code>--</code> or <code>#</code>.
+     * @return <code>sqlLine</code> without trailing comments
+     */
+    public static String removeComments(String sqlLine) {
+        // remove comments that start with "#" or "--"
+        int commentIndex = sqlLine.indexOf("--");
+        int hashIndex = sqlLine.indexOf('#');
+        if (hashIndex >= 0) {
+            if (commentIndex >= 0) {
+                commentIndex = Math.min(commentIndex, hashIndex);
+            } else {
+                commentIndex = hashIndex;
+            }
+        }
+        if (commentIndex != -1) {
+            sqlLine = sqlLine.substring(0, commentIndex);
+        }
+        return sqlLine;
     }
 }
