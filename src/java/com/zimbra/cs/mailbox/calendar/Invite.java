@@ -474,7 +474,7 @@ public class Invite {
      */
     public String getNotes() throws ServiceException {
         if (mAppt == null) return null;
-        MimeMessage mmInv = mAppt.getMimeMessage(mMailItemId);
+        MimeMessage mmInv = mAppt.getSubpartMessage(mMailItemId);
         return getNotes(mmInv);
     }
 
@@ -525,7 +525,7 @@ public class Invite {
      */
     public MimeMessage getMimeMessage() throws ServiceException {
         if (mAppt == null || mMailItemId <= 0) return null;
-        return mAppt.getMimeMessage(mMailItemId);
+        return mAppt.getSubpartMessage(mMailItemId);
     }
 
     /**

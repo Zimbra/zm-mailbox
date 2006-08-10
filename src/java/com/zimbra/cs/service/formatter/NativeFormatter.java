@@ -108,7 +108,7 @@ public class NativeFormatter extends Formatter {
         if (context.hasPart()) {
             MimePart mp = null;
             if (context.itemId.hasSubpart()) {
-                MimeMessage mbp = appt.getMimeMessage(context.itemId.getSubpartId());
+                MimeMessage mbp = appt.getSubpartMessage(context.itemId.getSubpartId());
                 mp = Mime.getMimePart(mbp, context.getPart());
             } else {
                 mp = getMimePart(appt, context.getPart());

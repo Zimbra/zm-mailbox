@@ -174,7 +174,7 @@ public class ContentServlet extends ZimbraServlet {
                         
                         resp.setContentType(Mime.CT_TEXT_PLAIN);
                         if (iid.hasSubpart()) {
-                            MimeMessage mm = appt.getMimeMessage(iid.getSubpartId());
+                            MimeMessage mm = appt.getSubpartMessage(iid.getSubpartId());
                             mm.writeTo(resp.getOutputStream());
                         } else { 
 //                            Invite[] invites = appt.getInvites();
@@ -197,7 +197,7 @@ public class ContentServlet extends ZimbraServlet {
                     } else {
                         Appointment appt = (Appointment) item;
                         if (iid.hasSubpart()) {
-                            MimeMessage mbp = appt.getMimeMessage(iid.getSubpartId());
+                            MimeMessage mbp = appt.getSubpartMessage(iid.getSubpartId());
                             mp = Mime.getMimePart(mbp, part);
                         } else {
                             mp = getMimePart(appt, part);
