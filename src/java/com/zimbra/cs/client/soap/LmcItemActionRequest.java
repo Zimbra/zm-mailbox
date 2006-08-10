@@ -34,10 +34,10 @@ import com.zimbra.cs.service.mail.MailService;
 
 public class LmcItemActionRequest extends LmcSoapRequest {
 
-    private String mIDList;
-    private String mOp;
-    private String mTag;
-    private String mFolder;
+    protected String mIDList;
+    protected String mOp;
+    protected String mTag;
+    protected String mFolder;
     
 
     /**
