@@ -655,7 +655,7 @@ public class ProvUtil implements DebugListener {
         }
     }
 
-    private void doGetAllAccounts(Domain domain, final boolean verbose) throws ServiceException {
+    private void doGetAllAccounts(Provisioning prov, Domain domain, final boolean verbose) throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
                 if (verbose)
@@ -664,7 +664,7 @@ public class ProvUtil implements DebugListener {
                     System.out.println(entry.getName());                        
             }
         };
-         mProv.getAllAccounts(domain, visitor);
+         prov.getAllAccounts(domain, visitor);
     }
     
     private void doGetAllAccounts(String[] args) throws ServiceException {
@@ -688,15 +688,18 @@ public class ProvUtil implements DebugListener {
             return;
         }
 
+        // always use LDAP
+        Provisioning prov = Provisioning.getInstance();
+
         if (d == null) {
-            List domains = mProv.getAllDomains();
+            List domains = prov.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain domain = (Domain) dit.next();
-                doGetAllAccounts(domain, verbose);
+                doGetAllAccounts(prov, domain, verbose);
             }
         } else {
             Domain domain = lookupDomain(d);
-            doGetAllAccounts(domain, verbose);
+            doGetAllAccounts(prov, domain, verbose);
         }
     }    
 
@@ -751,7 +754,7 @@ public class ProvUtil implements DebugListener {
             accounts = Provisioning.getInstance().searchAccounts(d, query, attrsToGet, sortBy, isSortAscending, flags);
         } else {
             //accounts = mProvisioning.searchAccounts(query, attrsToGet, sortBy, isSortAscending, Provisioning.SA_ACCOUNT_FLAG);
-            accounts = mProv.searchAccounts(query, attrsToGet, sortBy, isSortAscending, flags);
+            accounts = Provisioning.getInstance().searchAccounts(query, attrsToGet, sortBy, isSortAscending, flags);
         }
 
         //ArrayList accounts = (ArrayList) mProvisioning.searchAccounts(query);
