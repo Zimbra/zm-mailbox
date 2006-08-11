@@ -578,7 +578,7 @@ MimeParts:
  
   <mp part="{mime-part-name}" body="{is-body}" s="{size-in-bytes} mid="{message-id} cid="{conv-id}"
        ct="{content-type}" name="{name}" cd="{content-disposition}" filename="{filename} ci="{content-id} cl="{content-location}">
-    [<content [cte="{cont-encoding}"]>{content}</content>]
+    [<content>{content}</content>]
     <mp part="..." ...>
         <mp part="..." ...>
         </mp>
@@ -591,10 +591,9 @@ MimeParts:
    {name}         = name attribute from the Content-Type param list
    {cont-disp}    = MIME Content-Disposition
    {filename}     = filename attribute from the Content-Disposition param list
-   {content-id>   = MIME Content-ID (for display of embedded images)
-   {content-location> = MIME/Microsoft Content-Location (for display of embedded images)   
+   {content-id}   = MIME Content-ID (for display of embedded images)
+   {content-location} = MIME/Microsoft Content-Location (for display of embedded images)   
    {cont-desc} = MIME Content-Description.  Note cont-desc is not currently used in the code.
-   {cont-encoding} = content-xfer encoding. Only present if "base64"
    {content} = the content of the part, if requested
    {is-body} = set to 1, if this part is considered to be the "body" of the message for display
                purposes.
@@ -1482,23 +1481,6 @@ message. blah blah blah</content>
    </m>
   </c>
 </GetConvResponse>
- 
-EXAMPLE:
-
-<GetMsgPartRequest>
-  <m id="m1234">
-    <mp part="2.1.3"/>
-  </m>
-</GetMsgPartRequest>
-
-<GetMsgPartResponse>
-  <m id="...">
-   <mp part="2.1.3" ct="image/jpeg">
-      <content cte="base64">RKZezlj1hXbfPePrfm...rOIfTMUY=</content>
-   </mp>
-  </m>
-</GetMsgPartResponse>
-
 
 EXAMPLE:
 
