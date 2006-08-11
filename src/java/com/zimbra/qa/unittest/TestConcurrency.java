@@ -202,12 +202,10 @@ public class TestConcurrency extends TestCase {
                 LmcSession session = TestUtil.getSoapSession("user1");
                 // Search for messages containing "roland", so we don't run into problems
                 // with Asian character sets
-                Set ids = TestUtil.search(mMbox, "in:inbox roland", MailItem.TYPE_MESSAGE);
+                List<Integer> ids = TestUtil.search(mMbox, "in:inbox roland", MailItem.TYPE_MESSAGE);
                 
-                Iterator i = ids.iterator();
-                while (i.hasNext()) {
+                for (Integer id : ids) {
                     LmcGetMsgRequest req = new LmcGetMsgRequest();
-                    Integer id = (Integer) i.next();
                     req.setMsgToGet(id.toString());
                     req.setSession(session);
                     req.invoke(TestUtil.getSoapUrl());
@@ -243,11 +241,9 @@ public class TestConcurrency extends TestCase {
                 LmcSession session = TestUtil.getSoapSession("user1");
                 // Search for messages containing "roland", so we don't run into problems
                 // with Asian character sets
-                Set ids = TestUtil.search(mMbox, "in:inbox", MailItem.TYPE_MESSAGE);
+                List<Integer> ids = TestUtil.search(mMbox, "in:inbox", MailItem.TYPE_MESSAGE);
                 
-                Iterator i = ids.iterator();
-                while (i.hasNext()) {
-                    Integer id = (Integer) i.next();
+                for (Integer id : ids) {
                     LmcMsgActionRequest req = new LmcMsgActionRequest();
                     req.setOp("tag");
                     req.setMsgList(id.toString());
@@ -284,11 +280,9 @@ public class TestConcurrency extends TestCase {
             
             try {
                 LmcSession session = TestUtil.getSoapSession("user1");
-                Set ids = TestUtil.search(mMbox, "in:inbox", MailItem.TYPE_MESSAGE);
-                
-                Iterator i = ids.iterator();
-                while (i.hasNext()) {
-                    Integer id = (Integer) i.next();
+                List<Integer> ids = TestUtil.search(mMbox, "in:inbox", MailItem.TYPE_MESSAGE);
+
+                for (Integer id : ids) {
                     LmcMsgActionRequest req = new LmcMsgActionRequest();
                     req.setOp("move");
                     req.setMsgList(id.toString());

@@ -25,14 +25,19 @@
 
 package com.zimbra.qa.unittest;
 
+import java.util.List;
+
 import junit.framework.TestCase;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -48,7 +53,8 @@ public class TestFolders extends TestCase
     private Mailbox mMbox;
     private Account mAccount;
     private Connection mConn;
-    
+
+    private static String USER_NAME = "user1";
     private static String NAME_PREFIX = "TestFolders";
     
     /**
@@ -58,7 +64,7 @@ public class TestFolders extends TestCase
     throws Exception {
         super.setUp();
 
-        mAccount = TestUtil.getAccount("user1");
+        mAccount = TestUtil.getAccount(USER_NAME);
         mMbox = Mailbox.getMailboxByAccount(mAccount);
         mConn = DbPool.getConnection();
         
@@ -118,6 +124,119 @@ public class TestFolders extends TestCase
         assertEquals("Conversation size after folder delete", 1, conv.getSize());
     }
 
+    /**
+     * Tests renaming a folder.  Confirms that filter rules are updated when a folder is renamed.
+     */
+    public void testRename()
+    throws Exception {
+        // Save original rules
+        Mailbox mbox = Mailbox.getMailboxById(mMbox.getId());
+        Account account = Provisioning.getInstance().get(AccountBy.id, mbox.getAccountId());
+        RuleManager rm = RuleManager.getInstance();
+        String originalRules = rm.getRules(account);
+        
+        // Create folder
+        String name = NAME_PREFIX + "Rename";
+        String newName = NAME_PREFIX + "NewName";
+        Folder folder = mMbox.createFolder(
+            null, name, Mailbox.ID_FOLDER_USER_ROOT, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        String path = folder.getPath();
+        
+        // Create filter rules
+        String filterRules =
+            "require [\"fileinto\", \"reject\", \"tag\", \"flag\"];\n" +
+            "\n" +
+            "# " + name + "\n" +
+            "if anyof (header :is \"subject\" \"" + name + "\" )\n" +
+            "{\n" +
+            "    fileinto \"/" + name + "\"\n;" +
+            "    stop;\n" +
+            "}";
+        rm.setRules(account, filterRules);
+        
+        // Rename folder and make sure that the name and path are updated
+        mbox.renameFolder(null, folder.getId(), newName);
+        folder = mbox.getFolderById(null, folder.getId());
+        assertEquals(newName, folder.getName());
+        String newPath = path.replace(name, newName);
+        assertEquals(newPath, folder.getPath());
+
+        // Confirm that filter rules are updated
+        String rules = rm.getRules(account);
+        assertFalse("Found old path '" + path + " in rules: " + rules, rules.indexOf(path) >= 0);
+        assertTrue("Could not find new path '" + newPath + " in rules: " + rules, rules.indexOf(newPath) >= 0);
+
+        // Make sure the new folder is empty
+        List<Integer> ids = TestUtil.search(mbox, "in:" + newName, MailItem.TYPE_MESSAGE);
+        assertEquals("Folder " + newName + " is not empty", 0, ids.size());
+        
+        // Deliver message to mailbox and make sure it's filed in the folder
+        TestUtil.insertMessageLmtp(1, name, TestUtil.getAddress(USER_NAME), TestUtil.getAddress(USER_NAME));
+        ids = TestUtil.search(mbox, "in:" + newName, MailItem.TYPE_MESSAGE);
+        assertEquals("Message was not filed in folder " + newName, 1, ids.size());
+        
+        // Revert rules changes
+        rm.setRules(account, originalRules);
+    }
+    
+    public void testMove()
+    throws Exception {
+        // Save original rules
+        Mailbox mbox = Mailbox.getMailboxById(mMbox.getId());
+        Account account = Provisioning.getInstance().get(AccountBy.id, mbox.getAccountId());
+        RuleManager rm = RuleManager.getInstance();
+        String originalRules = rm.getRules(account);
+        
+        // Create folder
+        String name = NAME_PREFIX + "Move";
+        String parentName = NAME_PREFIX + "MoveParent";
+        Folder parentFolder = mMbox.createFolder(
+            null, parentName, Mailbox.ID_FOLDER_USER_ROOT, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        Folder folder = mMbox.createFolder(
+            null, name, Mailbox.ID_FOLDER_USER_ROOT, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        String path = folder.getPath();
+        
+        // Create filter rules
+        String filterRules =
+            "require [\"fileinto\", \"reject\", \"tag\", \"flag\"];\n" +
+            "\n" +
+            "# " + name + "\n" +
+            "if anyof (header :is \"subject\" \"" + name + "\" )\n" +
+            "{\n" +
+            "    fileinto \"/" + name + "\"\n;" +
+            "    stop;\n" +
+            "}";
+        rm.setRules(account, filterRules);
+        
+        // Make sure path check succeeds for original path
+        String rules = rm.getRules(account);
+        assertTrue("Could not find original path \"" + path + "\" in rules: " + rules,
+            rules.indexOf("\"" + path + "\"") >= 0);
+        
+        // Move folder and make sure that the path is updated
+        mbox.move(null, folder.getId(), folder.getType(), parentFolder.getId());
+        folder = mbox.getFolderById(null, folder.getId());
+        String newPath = "/" + parentName + "/" + name;
+        assertEquals(newPath, folder.getPath());
+
+        // Confirm that filter rules are updated
+        rules = rm.getRules(account);
+        assertFalse("Found old path \"" + path + "\" in rules: " + rules, rules.indexOf("\"" + path + "\"") >= 0);
+        assertTrue("Could not find new path '" + newPath + "' in rules: " + rules, rules.indexOf(newPath) >= 0);
+
+        // Make sure the new folder is empty
+        List<Integer> ids = TestUtil.search(mbox, "in:" + newPath, MailItem.TYPE_MESSAGE);
+        assertEquals("Folder " + newPath + " is not empty", 0, ids.size());
+        
+        // Deliver message to mailbox and make sure it's filed in the folder
+        TestUtil.insertMessageLmtp(1, name, TestUtil.getAddress(USER_NAME), TestUtil.getAddress(USER_NAME));
+        ids = TestUtil.search(mbox, "in:" + newPath, MailItem.TYPE_MESSAGE);
+        assertEquals("Message was not filed in folder " + newPath, 1, ids.size());
+        
+        // Revert rules changes
+        rm.setRules(account, originalRules);
+    }
+    
     private void cleanUp()
     throws Exception {
         deleteTestData(MailItem.TYPE_MESSAGE);

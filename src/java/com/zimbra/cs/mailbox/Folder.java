@@ -37,9 +37,11 @@ import java.util.Map;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.StringUtil;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author dkarp
@@ -605,6 +607,7 @@ public class Folder extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
 
         if (renamed) {
+            String originalPath = getPath();
             markItemModified(Change.MODIFIED_NAME);
             Folder existingFolder = target.findSubfolder(name);
             if (existingFolder != null && existingFolder != this)
@@ -612,10 +615,30 @@ public class Folder extends MailItem {
             mData.subject = name;
             mData.date = mMailbox.getOperationTimestamp();
             saveSubject();
+            updateRules(originalPath);
         }
 
         if (moved)
             move(target);
+    }
+
+    /**
+     * Updates filter rules after a folder's path changes (move or rename).
+     */
+    private void updateRules(String originalPath)
+    throws ServiceException {
+        Account account = getAccount();
+        RuleManager rm = RuleManager.getInstance();
+        String rules = rm.getRules(account);
+        if (rules != null) {
+            // Assume that we always put quotes around folder paths
+            String newPath = getPath();
+            String newRules = rules.replace("\"" + originalPath + "\"", "\"" + newPath + "\"");
+            rm.setRules(account, newRules);
+            ZimbraLog.mailbox.debug(
+                "Updated filter rules due to folder move or rename.  Old rules:\n" +
+                rules + ", new rules:\n" + newRules);
+        }
     }
 
     /** The regexp defining printable characters not permitted in folder
@@ -732,7 +755,10 @@ public class Folder extends MailItem {
             throw ServiceException.FAILURE("inconsistent state: unread < 0 for item " + mId, null);
     }
 
-    /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
+    /**
+     * Moves this folder so that it is a subfolder of <code>folder</code>.
+     * 
+     * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_DELETE} on the source folder */
     protected void move(Folder folder) throws ServiceException {
         markItemModified(Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT);
@@ -745,6 +771,8 @@ public class Folder extends MailItem {
         if (!folder.canContain(this))
             throw MailServiceException.CANNOT_CONTAIN();
 
+        String originalPath = getPath();
+        
         // moving a folder to the Trash marks its contents as read
         if (!inTrash() && folder.inTrash())
             recursiveAlterUnread(false);
@@ -758,6 +786,8 @@ public class Folder extends MailItem {
         mData.folderId = folder.getId();
         mData.parentId = folder.getId();
         mData.metadataChanged(mMailbox);
+        
+        updateRules(originalPath);
     }
 
     void addChild(MailItem child) throws ServiceException {

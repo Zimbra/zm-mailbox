@@ -25,6 +25,7 @@
 
 package com.zimbra.qa.unittest;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -284,9 +285,10 @@ public class TestTags extends TestCase
         }
     }
     
-    private Set search(String query, byte type)
+    private Set<Integer> search(String query, byte type)
     throws Exception {
-        return TestUtil.search(mMbox, query, type);
+        List<Integer> ids = TestUtil.search(mMbox, query, type);
+        return new HashSet<Integer>(ids);
     }
     
     private void refresh()
