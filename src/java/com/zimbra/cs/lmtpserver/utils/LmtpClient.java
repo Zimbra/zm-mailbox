@@ -41,8 +41,6 @@ import com.zimbra.cs.localconfig.LC;
 
 public class LmtpClient {
 
-	private String mHost;
-	private int mPort;
 	private Socket mConnection;
 	private String mGreetname;
 	private LmtpInputStream mIn;
@@ -52,8 +50,6 @@ public class LmtpClient {
 	private boolean mWarnOnRejectedRecipients = true;
 	
 	public LmtpClient(String host, int port) throws IOException {
-		mHost = host;
-		mPort = port;
 		mGreetname = LC.zimbra_server_hostname.value();
 
 		mConnection = new Socket(host, port);
@@ -122,7 +118,15 @@ public class LmtpClient {
 		return positiveReplyCode;
 	}
 	
-    public boolean sendMessage(byte[] msg, List /*<String>*/ recipients, String sender, String logLabel)
+    /**
+     * Sends a MIME message.
+     * @param msg the message body
+     * @param recipients recipient email addresses
+     * @param sender sender email address
+     * @param logLabel context string used for logging status
+     * @return <code>true</code> if the message was successfully delivered to all recipients
+     */
+    public boolean sendMessage(byte[] msg, List<String> recipients, String sender, String logLabel)
         throws IOException, LmtpProtocolException 
     {
         long start = System.currentTimeMillis();
@@ -150,9 +154,8 @@ public class LmtpClient {
 			throw new LmtpProtocolException(mResponse);
 		}
 
-        List /* String */ acceptedRecipients = new ArrayList();
-		for (Iterator iter = recipients.iterator(); iter.hasNext();) {
-			String recipient = (String) iter.next();
+        List<String> acceptedRecipients = new ArrayList<String>();
+		for (String recipient : recipients) {
 			sendLine("RCPT TO:<" + recipient + ">");
 			if (replyOk()) {
                 acceptedRecipients.add(recipient);

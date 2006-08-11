@@ -2688,7 +2688,7 @@ public class Mailbox {
     }
     
     /**
-     * You **MUST** call doneWithSearchResults() when you are done with the search results, otherwise
+     * You **MUST** call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results, otherwise
      * resources will be leaked.
      * 
      * @param octxt
@@ -2707,7 +2707,7 @@ public class Mailbox {
     }
 
     /**
-     * You **MUST** call doneWithSearchResults() when you are done with the search results, otherwise
+     * You **MUST** call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results, otherwise
      * resources will be leaked.
      * 
      * @param octxt
@@ -4162,7 +4162,9 @@ public class Mailbox {
                 redoRecorder.setParentIds(recorderParentIds);
             } else
                 parent = folder.getFolder();
+            
             folder.rename(name, parent);
+            
             success = true;
         } finally {
             endTransaction(success);

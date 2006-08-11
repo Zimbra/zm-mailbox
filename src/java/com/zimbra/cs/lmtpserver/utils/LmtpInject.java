@@ -256,19 +256,19 @@ public class LmtpInject {
             int succeeded = injector.getSuccessCount();
             int failedThisTime = injector.getFailureCount();
             long elapsedMS = injector.getElapsedTime();
-            double elapsed = ((double) elapsedMS) / 1000.0;
+            double elapsed = elapsedMS / 1000.0;
             double msPerMsg = 0.0;
             double msgSizeKB = 0.0;
             if (succeeded > 0) {
                 msPerMsg = elapsedMS;
                 msPerMsg /= succeeded;
-                msPerMsg = (double) ((long) Math.round(msPerMsg * 1000)) / 1000;
-                msgSizeKB = ((double) injector.mFileSizeTotal) / 1024.0;
+                msPerMsg = (double) (Math.round(msPerMsg * 1000)) / 1000;
+                msgSizeKB = injector.mFileSizeTotal / 1024.0;
                 msgSizeKB /= succeeded;
-                msgSizeKB = (double) ((long) Math.round(msgSizeKB * 1000)) / 1000;
+                msgSizeKB = (double) (Math.round(msgSizeKB * 1000)) / 1000;
             }
             double msgPerSec = ((double) succeeded / (double) elapsedMS) * 1000;
-            msgPerSec = (double) ((long) Math.round(msgPerSec * 1000)) / 1000;
+            msgPerSec = (double) (Math.round(msgPerSec * 1000)) / 1000;
             System.out.println();
             System.out.println("LmtpInject Finished");
             System.out.println("submitted=" + succeeded + " failed=" + failedThisTime);
@@ -291,7 +291,7 @@ public class LmtpInject {
 
 
 	private String mSender;
-	private List /*<String>*/ mRecipients;
+	private List<String> mRecipients;
 
 	private ThreadPool mThreadPool;
 	private LmtpClientPool mLmtpClientPool;
@@ -327,7 +327,7 @@ public class LmtpInject {
 	throws Exception {
 		mSender = sender;
 		if (recipients != null) {
-			mRecipients = new ArrayList(recipients.length);
+			mRecipients = new ArrayList<String>(recipients.length);
 			for (int i = 0; i < recipients.length; i++)
 				mRecipients.add(recipients[i]);
 		}
@@ -452,7 +452,7 @@ public class LmtpInject {
 	public synchronized int getSuccessCount() { return mSucceeded; }
 	public synchronized int getFailureCount() { return mFailed; }
 	public String getSender() { return mSender; }
-	public List /*<String>*/ getRecipients() { return mRecipients; }
+	public List<String> getRecipients() { return mRecipients; }
 
 	private void checkDone() {
 		if (mEndTime == 0 && mSucceeded + mFailed + mIgnored + mWarmUpThreshold == mNumInputFiles) {
@@ -582,18 +582,18 @@ public class LmtpInject {
 	}
 
 	private static class NamedLmtpClient extends LmtpClient {
-		private List /*<String>*/ mRecipients;
+		private List<String> mRecipients;
 
 		NamedLmtpClient(String recipient, String host, int port) throws IOException {
 			super(host, port);
-			mRecipients = new ArrayList(1);
+			mRecipients = new ArrayList<String>(1);
 			mRecipients.add(recipient);
 		}
 
-	    public boolean sendMessage(byte[] msg, List /*<String>*/ recipients, String sender, String logLabel)
+	    public boolean sendMessage(byte[] msg, List<String> recipients, String sender, String logLabel)
             throws IOException, LmtpProtocolException
 	    {
-	    	List rcpts = recipients != null ? recipients : mRecipients;
+	    	List<String> rcpts = recipients != null ? recipients : mRecipients;
 	    	return super.sendMessage(msg, rcpts, sender, logLabel);
 	    }
 	}
