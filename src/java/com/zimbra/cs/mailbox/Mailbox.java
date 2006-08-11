@@ -1791,8 +1791,8 @@ public class Mailbox {
      * @see #mFolderCache */
     public static boolean isCachedType(byte type) {
         return type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER ||
-        type == MailItem.TYPE_TAG    || type == MailItem.TYPE_FLAG ||
-        type == MailItem.TYPE_MOUNTPOINT;
+               type == MailItem.TYPE_TAG    || type == MailItem.TYPE_FLAG ||
+               type == MailItem.TYPE_MOUNTPOINT;
     }
 
     private MailItem checkAccess(MailItem item) throws ServiceException {
@@ -2734,16 +2734,16 @@ public class Mailbox {
         try {
             zq.executeRemoteOps(proto, octxt);
             
-            boolean success = false;
-            try {
-                synchronized(this) {
+            synchronized (this) {
+                boolean success = false;
+                try {
                     beginTransaction("search", octxt);
                     ZimbraQueryResults results = zq.execute(); 
                     success = true;
                     return results;
+                } finally {
+                    endTransaction(success);
                 }
-            } finally {
-                endTransaction(success);
             }
         } catch (IOException e) {
             zq.doneWithQuery();
