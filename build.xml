@@ -307,7 +307,7 @@
 		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod>
 	</target>
 
-	<target name="dev-dist" depends="war,package-zimlets,dev-dist-unix" description="Copies files into an install tree at specified ${dist.dir}">
+	<target name="dev-dist" depends="war,dev-dist-unix" description="Copies files into an install tree at specified ${dist.dir}">
 		<!-- bin, libexec -->
 		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production"/></copy>
 		<copy todir="${dist.dir}/libexec" overwrite="true"><fileset dir="${src.dir}/libexec" excludes="*.production"/></copy>
@@ -709,36 +709,12 @@
 		</echo>
 	</target>
 
-	<target name="reload-zimlets" depends="deploy-zimlets,restart-tomcat"/>
-
-	<target name="package-zimlets" depends="build-init,package-zimlets-core"/>
-
-	<target name="package-zimlets-core">
-		<foreach list="${zimlets}" target="package-zimlet" param="zimlet"/>
-		<!-- todo:  remove these classes from service.jar -->
-		<!-- todo2:  just use RegexHandler instead of creating custom classes -->
-		<zip destfile="${build.dir}/zimlets/com_zimbra_phone.zip" update="true">
-			<fileset dir="${build.classes.dir}" includes="**/NANPHandler.class"/>
-		</zip>
-		<zip destfile="${build.dir}/zimlets/com_zimbra_tracking.zip" update="true">
-			<fileset dir="${build.classes.dir}" includes="**/TrackingHandler.class"/>
-		</zip>
-		<zip destfile="${build.dir}/zimlets/com_zimbra_url.zip" update="true" >
-			<fileset dir="${build.classes.dir}" includes="**/URLHandler.class"/>
-		</zip>
-	</target>
-
-	<target name="package-zimlet">
-		<echo>${zimlet}</echo>
-		<zip destfile="${build.dir}/zimlets/${zimlet}.zip" update="true" >
-			<fileset dir="${config.dir}/zimlets/${zimlet}" />
-		</zip>
-	</target>
-
-	<target name="deploy-zimlets" depends="package-zimlets">
+	<target name="deploy-zimlets">
 		<foreach list="${zimlets}" target="install-zimlet" param="zimlet">
 			<param name="action" value="deploy"/>
 		</foreach>
+		<antcall target="restart-tomcat"/>
+		<sleep seconds="5"/>
 	</target>
 
 	<target name="install-zimlet">
@@ -746,7 +722,7 @@
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-q" />
 			<arg line="${action}" />
-			<arg file="${build.dir}/zimlets/${zimlet}.zip" />
+			<arg file="${config.dir}/zimlets/${zimlet}.zip" />
 		</java>
 	</target>
 	
