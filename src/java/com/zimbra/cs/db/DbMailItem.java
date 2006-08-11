@@ -742,10 +742,10 @@ public class DbMailItem {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET unread = ?, mod_metadata = ?, change_date = ?" +
                     " WHERE unread = ? AND " + relation + " AND type = " + MailItem.TYPE_MESSAGE);
-            stmt.setBoolean(1, unread);
+            stmt.setInt(1, unread ? 1 : 0);
             stmt.setInt(2, mbox.getOperationChangeID());
             stmt.setInt(3, mbox.getOperationTimestamp());
-            stmt.setBoolean(4, !unread);
+            stmt.setInt(4, unread ? 0 : 1);
             if (item instanceof Tag)
                 stmt.setLong(5, ((Tag) item).getBitmask());
             else if (item instanceof VirtualConversation)
@@ -770,12 +770,12 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                     " SET unread = ?, mod_metadata = ?, change_date = ?" +
-                    " WHERE unread = ? AND id IN" + DbUtil.suitableNumberOfVariables(itemIDs));
+                    " WHERE unread = ? AND id IN " + DbUtil.suitableNumberOfVariables(itemIDs) + " AND type = " + MailItem.TYPE_MESSAGE);
             int arg = 1;
-            stmt.setBoolean(arg++, unread);
+            stmt.setInt(arg++, unread ? 1 : 0);
             stmt.setInt(arg++, mbox.getOperationChangeID());
             stmt.setInt(arg++, mbox.getOperationTimestamp());
-            stmt.setBoolean(arg++, !unread);
+            stmt.setInt(arg++, unread ? 0 : 1);
             for (int id : itemIDs)
                 stmt.setInt(arg++, id);
             stmt.executeUpdate();
@@ -1232,7 +1232,7 @@ public class DbMailItem {
 
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(relativeTo.getMailboxId(), " mi") +
-                    " WHERE unread AND " + relation);
+                    " WHERE unread > 0 AND " + relation + " AND type NOT IN " + NON_SEARCHABLE_TYPES);
             if (relativeTo instanceof Tag)
                 stmt.setLong(1, ((Tag) relativeTo).getBitmask());
             else if (relativeTo instanceof VirtualConversation)
@@ -2075,7 +2075,7 @@ public class DbMailItem {
             for (long flagset : c.tagConstraints.searchFlagsets)
                 stmt.setLong(param++, flagset);
         if (c.tagConstraints.unread != null)
-            stmt.setBoolean(param++, c.tagConstraints.unread);
+            stmt.setInt(param++, c.tagConstraints.unread ? 1 : 0);
         Collection<Folder> targetFolders = (!ListUtil.isEmpty(c.folders)) ? c.folders : c.excludeFolders;
         if (targetFolders != null)
             for (Folder folder : targetFolders)
