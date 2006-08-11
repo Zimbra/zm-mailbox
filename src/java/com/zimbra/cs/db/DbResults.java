@@ -181,7 +181,7 @@ public class DbResults {
      * current row.
      */
     public Object getObject(int col) {
-        return getObject(getRowNum());
+        return getObject(getRowNum(), col);
     }
     
     /**
