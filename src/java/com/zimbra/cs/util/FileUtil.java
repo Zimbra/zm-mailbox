@@ -31,7 +31,6 @@
  */
 package com.zimbra.cs.util;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -98,14 +97,13 @@ public class FileUtil {
         try {
             FileOutputStream fos = new FileOutputStream(dest);
             byte[] buf = new byte[COPYBUFLEN];
-            BufferedOutputStream out = new BufferedOutputStream(fos);
             try {
                 int byteRead;
                 while ((byteRead = in.read(buf)) != -1) {
-                    out.write(buf, 0, byteRead);
+                    fos.write(buf, 0, byteRead);
                 }
             } finally {
-                out.close();
+                fos.close();
             }
         } finally {
             if (closeIn) {
