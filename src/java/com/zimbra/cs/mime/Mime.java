@@ -512,7 +512,7 @@ public class Mime {
     public static String getCharset(String contentType) {
         String charset = new MimeCompoundHeader.ContentType(contentType).getParameter(P_CHARSET);
         if (charset == null || charset.trim().equals(""))
-            charset = P_CHARSET_DEFAULT;
+            charset = null;
         return charset;
     }
 
