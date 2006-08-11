@@ -46,6 +46,14 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+/**
+ * Command-line utility used for running SQL statements.  Connects to a database
+ * server using the JDBC driver and URL specified on the command line.  Displays
+ * results of SELECT statements as either formatted or tab-separated.  For DML
+ * statements, shows number of rows affected.
+ *   
+ * @author bburtin
+ */
 public class JdbcClient {
 
     private static final String OPT_HELP = "h";
@@ -225,7 +233,9 @@ public class JdbcClient {
                 }
 
                 // Print first rows
-                if (!mBatch) {
+                if (!mBatch && mShowColumnNames) {
+                    // Skip if we're in batch mode.  If not displaying column names, don't
+                    // print the first divider.
                     printDivider(colWidths);
                 }
                 if (mShowColumnNames) {
