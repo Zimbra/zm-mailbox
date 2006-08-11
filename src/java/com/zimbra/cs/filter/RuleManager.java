@@ -76,12 +76,16 @@ public class RuleManager {
      * Saves the filter rules.
      * 
      * @param account the account for which the rules are to be saved
-     * @param script the sieve script
+     * @param script the sieve script, or <code>null</code> or empty string if
+     * all rules should be deleted
      * @throws ServiceException
      */
     public void setRules(Account account, String script) throws ServiceException {
         String accountId = account.getId();
         Mailbox mailbox =  Mailbox.getMailboxByAccount(account);
+        if (script == null) {
+            script = "";
+        }
         try {
             synchronized (mailbox) {
                 // invalidate the existing script
