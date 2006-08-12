@@ -1247,10 +1247,12 @@ public class ToXML {
                 }
             } else {
                 data = Mime.getStringContent(mp);
-            }            
-            data = StringUtil.stripControlCharacters(data);
-            
-            elt.addAttribute(MailService.E_CONTENT, data, Element.DISP_CONTENT);
+            }
+
+            if (data != null) {
+                data = StringUtil.stripControlCharacters(data);
+                elt.addAttribute(MailService.E_CONTENT, data, Element.DISP_CONTENT);                
+            }
             // TODO: CDATA worth the effort?
         }
     }
