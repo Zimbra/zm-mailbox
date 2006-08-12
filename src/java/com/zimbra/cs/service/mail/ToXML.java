@@ -29,6 +29,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.HashSet;
@@ -60,6 +61,7 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeCompoundHeader;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.mail.EmailElementCache.CacheNode;
@@ -1228,13 +1230,26 @@ public class ToXML {
         String ct = mpi.getContentType();
         if (ct.matches(Mime.CT_TEXT_WILD) || ct.matches(Mime.CT_XML_WILD)) {
             MimePart mp = mpi.getMimePart();
-
-            String cstr = Mime.getStringContent(mp);
-            String data = StringUtil.stripControlCharacters(cstr);
-
-            if (mpi.getContentType().equals(Mime.CT_TEXT_HTML))
-                data = HtmlDefang.defang(data, neuter);
-
+            String data = null;
+            if (mpi.getContentType().equals(Mime.CT_TEXT_HTML)) {
+                String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);
+                if (!(charset == null || charset.trim().equals(""))) {
+                    data = Mime.getStringContent(mp);
+                    data = HtmlDefang.defang(data, neuter);                    
+                } else {
+                    InputStream is = null;
+                    try {
+                        is = mp.getInputStream();
+                        data = HtmlDefang.defang(is, neuter);
+                    } finally {
+                        if (is != null) is.close();
+                    }
+                }
+            } else {
+                data = Mime.getStringContent(mp);
+            }            
+            data = StringUtil.stripControlCharacters(data);
+            
             elt.addAttribute(MailService.E_CONTENT, data, Element.DISP_CONTENT);
             // TODO: CDATA worth the effort?
         }
