@@ -37,6 +37,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.activation.DataSource;
 
@@ -73,16 +74,16 @@ public abstract class MimeHandler {
     
     public static final String CATCH_ALL_TYPE = "all";
 
-    private static Map mHandlers = new HashMap();
+    private static Map<String,HandlerInfo> mHandlers = new HashMap<String,HandlerInfo>();
     
     /**
      * maps file extension to its mime type
      */
     static final int MAX_EXT_CACHE = 100;
-    private static Map mExtToType;
-    static {
-        mExtToType = Collections.synchronizedMap(new LRUMap(MAX_EXT_CACHE));
-    }
+    private static Map<String,String> mExtToType;
+        static {
+            mExtToType = Collections.synchronizedMap(new LRUMap(MAX_EXT_CACHE));
+        }
     
     protected MimeTypeInfo mMimeTypeInfo;
 
@@ -108,7 +109,7 @@ public abstract class MimeHandler {
     	throws MimeHandlerException {
     	MimeHandler handler = null;
     	mimeType = Mime.getContentType(mimeType);
-    	HandlerInfo handlerInfo = (HandlerInfo) mHandlers.get(mimeType);
+    	HandlerInfo handlerInfo = mHandlers.get(mimeType);
     	if (handlerInfo == null)
     	    handlerInfo = loadHandler(mimeType);
         
@@ -184,17 +185,6 @@ public abstract class MimeHandler {
     
     public boolean isIndexingEnabled() {
         return mMimeTypeInfo.isIndexingEnabled();
-    }
-    
-    private static final int INT_MAX_STR_LEN = 10; // max length of an Integer.toString
-    
-    private static String sizeString(int size)
-    {
-    	String val = Integer.toString(size);
-    	if (val.length() < INT_MAX_STR_LEN) {
-    		val = "0000000000".substring(0, INT_MAX_STR_LEN - val.length()) + val;
-    	}
-    	return val;
     }
     
     /**
@@ -318,9 +308,8 @@ public abstract class MimeHandler {
      * @throws ObjectHandlerException
      * @throws ServiceException
      */
-    public Document getDocument()
-    	throws MimeHandlerException, ObjectHandlerException, ServiceException {
-        
+    public Document getDocument() throws MimeHandlerException, ObjectHandlerException, ServiceException {
+
         /*
          * Initialize the F_L_TYPE field with the content type from the
          * specified DataSouce. Additionally, if DataSource is an instance
@@ -360,24 +349,24 @@ public abstract class MimeHandler {
             ArrayList matchedObjects = new ArrayList();
             h.parse(text, matchedObjects, true);
             if (!matchedObjects.isEmpty()) {
-                     if (l_objects.length() > 0)
+                if (l_objects.length() > 0)
                     l_objects.append(',');
                 l_objects.append(h.getType());
 
                 if (false /*h.storeMatched()*/) {
-                    HashSet set = new HashSet();
+                    Set<String> set = new HashSet<String>();
                     for (Iterator mit = matchedObjects.iterator(); mit.hasNext(); ) {
                         MatchedObject mo = (MatchedObject) mit.next();
                         set.add(mo.getMatchedText());
                     }
-                
+
                     StringBuffer md = new StringBuffer();
-                    int i=0;                
-                    for (Iterator sit = set.iterator(); sit.hasNext();) {
+                    int i = 0;
+                    for (String match : set) {
                         //TODO: check md.length() and set an upper bound on
                         // how big we'll let the field be? Per-object or 
                         // system-wide policy?
-                        BlobMetaData.encodeMetaData(Integer.toString(i++), (String)sit.next(), md);
+                        BlobMetaData.encodeMetaData(Integer.toString(i++), match, md);
                     }
                     String fname = "l.object."+h.getType();
                     doc.add(Field.UnIndexed(fname, md.toString()));
@@ -416,9 +405,7 @@ public abstract class MimeHandler {
      * @param seq
      * @return
      */
-    public AttachmentInfo getDocInfoFromArchive(AttachmentInfo archiveDocInfo, String seq) 
-        throws IOException
-    {
+    public AttachmentInfo getDocInfoFromArchive(AttachmentInfo archiveDocInfo, String seq) throws IOException {
         return null;
     }
 
@@ -430,11 +417,10 @@ public abstract class MimeHandler {
      */
     public static String getContentTypeByExtension(String ext) {
         try {
-            String t = (String) mExtToType.get(ext.toLowerCase());
+            String t = mExtToType.get(ext.toLowerCase());
             if (t != null)
                 return t;
-            MimeTypeInfo mt = Provisioning.getInstance()
-                    .getMimeTypeByExtension(ext);
+            MimeTypeInfo mt = Provisioning.getInstance().getMimeTypeByExtension(ext);
             t = (mt == null ? CATCH_ALL_TYPE : mt.getType());
             mExtToType.put(ext.toLowerCase(), t);
             return t;
