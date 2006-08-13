@@ -36,6 +36,7 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -75,6 +76,7 @@ public class Mime {
     // content types
     public static final String CT_TEXT_PLAIN = "text/plain";
     public static final String CT_TEXT_HTML = "text/html";
+    public static final String CT_TEXT_ENRICHED = "text/enriched";
     public static final String CT_TEXT_CALENDAR = "text/calendar";
     public static final String CT_TEXT_VCARD = "text/x-vcard";
 	public static final String CT_MESSAGE_RFC822 = "message/rfc822";
@@ -605,15 +607,18 @@ public class Mime {
         return getBodySubpart(top, preferHtml);
     }
 
+    private static Set<String> TEXT_ALTERNATES = new HashSet<String>(Arrays.asList(new String[] { CT_TEXT_ENRICHED, CT_TEXT_HTML } ));
+    private static Set<String> HTML_ALTERNATES = new HashSet<String>(Arrays.asList(new String[] { CT_TEXT_ENRICHED, CT_TEXT_PLAIN } ));
+
     private static MPartInfo getBodySubpart(MPartInfo base, boolean preferHtml) {
         // short-circuit malformed messages
         if (!base.hasChildren())
             return null;
 
         List<MPartInfo> children;
-        if (base.getContentType().equals(CT_MULTIPART_ALTERNATIVE))
+        if (base.getContentType().equals(CT_MULTIPART_ALTERNATIVE)) {
             children = base.getChildren();
-        else {
+        } else {
             // for multipart/mixed (etc.), only the first part is really "body"
             children = new ArrayList<MPartInfo>();
             children.add(base.getChildren().get(0));
@@ -621,19 +626,19 @@ public class Mime {
 
         // go through top-level children, stopping at first text part we are interested in
         MPartInfo alternative = null;
-        for (MPartInfo p : children) {
-            boolean isAttachment = p.getDisposition().equals(Part.ATTACHMENT);
+        for (MPartInfo mpi : children) {
+            boolean isAttachment = mpi.getDisposition().equals(Part.ATTACHMENT);
             // the Content-Type we want and the one we'd settle for...
             String wantType = preferHtml ? CT_TEXT_HTML  : CT_TEXT_PLAIN;
-            String altType  = preferHtml ? CT_TEXT_PLAIN : CT_TEXT_HTML;
+            Set<String> altTypes = preferHtml ? HTML_ALTERNATES : TEXT_ALTERNATES;
 
-            if (p.getContentType().equals(wantType) && !isAttachment) {
-                return p;
-            } else if (p.getContentType().equals(altType) && !isAttachment) {
-                if (alternative == null)
-                    alternative = p;
-            } else if (p.getContentType().startsWith(CT_MULTIPART_PREFIX)) {
-                MPartInfo subpart = getBodySubpart(p, preferHtml);
+            String ctype = mpi.getContentType();
+            if (!isAttachment && ctype.equals(wantType)) {
+                return mpi;
+            } else if (!isAttachment && altTypes.contains(ctype)) {
+                alternative = mpi;
+            } else if (ctype.startsWith(CT_MULTIPART_PREFIX)) {
+                MPartInfo subpart = getBodySubpart(mpi, preferHtml);
                 if (subpart == null)
                 	continue;
                 if (subpart.getContentType().equals(wantType))

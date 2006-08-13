@@ -61,7 +61,7 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.MimeCompoundHeader;
+import com.zimbra.cs.mime.handler.TextEnrichedHandler;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.mail.EmailElementCache.CacheNode;
@@ -1116,8 +1116,8 @@ public class ToXML {
         part = prefix + (prefix.equals("") || part.equals("") ? "" : ".") + part;
         elem.addAttribute(MailService.A_PART, part);
 
-        String contentTypeString = StringUtil.stripControlCharacters(mpi.getContentType());
-        if (Mime.CT_XML_ZIMBRA_SHARE.equals(contentTypeString)) {
+        String ctype = StringUtil.stripControlCharacters(mpi.getContentType());
+        if (Mime.CT_XML_ZIMBRA_SHARE.equals(ctype)) {
             Element shr = parent.getParent().addElement("shr");
             try {
                 addContent(shr, mpi);
@@ -1126,9 +1126,11 @@ public class ToXML {
                     mLog.warn("error writing body part: ", e);
             } catch (MessagingException e) {
             }
+        } else if (Mime.CT_TEXT_ENRICHED.equals(ctype)) {
+            // we'll be replacing text/enriched with text/html
+            ctype = Mime.CT_TEXT_HTML;
         }
-
-        elem.addAttribute(MailService.A_CONTENT_TYPE, contentTypeString);
+        elem.addAttribute(MailService.A_CONTENT_TYPE, ctype);
 
         // figure out attachment size
         try {
@@ -1155,7 +1157,7 @@ public class ToXML {
         // figure out attachment name
         try {
             String fname = Mime.getFilename(mp);
-            if (fname == null && Mime.CT_MESSAGE_RFC822.equals(contentTypeString)) {
+            if (fname == null && Mime.CT_MESSAGE_RFC822.equals(ctype)) {
                 // "filename" for attached messages is the Subject
                 Object content = Mime.getMessageContent(mp);
                 if (content instanceof MimeMessage)
@@ -1227,34 +1229,37 @@ public class ToXML {
      * @see HtmlDefang#defang(String, boolean) */
     private static void addContent(Element elt, MPartInfo mpi, boolean neuter) throws IOException, MessagingException {
         // TODO: support other parts
-        String ct = mpi.getContentType();
-        if (ct.matches(Mime.CT_TEXT_WILD) || ct.matches(Mime.CT_XML_WILD)) {
-            MimePart mp = mpi.getMimePart();
-            String data = null;
-            if (mpi.getContentType().equals(Mime.CT_TEXT_HTML)) {
-                String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);
-                if (!(charset == null || charset.trim().equals(""))) {
-                    data = Mime.getStringContent(mp);
-                    data = HtmlDefang.defang(data, neuter);                    
-                } else {
-                    InputStream is = null;
-                    try {
-                        is = mp.getInputStream();
-                        data = HtmlDefang.defang(is, neuter);
-                    } finally {
-                        if (is != null) is.close();
-                    }
-                }
-            } else {
-                data = Mime.getStringContent(mp);
-            }
+        String ctype = mpi.getContentType();
+        if (!ctype.matches(Mime.CT_TEXT_WILD) && !ctype.matches(Mime.CT_XML_WILD))
+            return;
 
-            if (data != null) {
-                data = StringUtil.stripControlCharacters(data);
-                elt.addAttribute(MailService.E_CONTENT, data, Element.DISP_CONTENT);                
+        MimePart mp = mpi.getMimePart();
+        String data = null;
+        if (ctype.equals(Mime.CT_TEXT_HTML)) {
+            String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);
+            if (!(charset == null || charset.trim().equals(""))) {
+                data = Mime.getStringContent(mp);
+                data = HtmlDefang.defang(data, neuter);                    
+            } else {
+                InputStream is = null;
+                try {
+                    is = mp.getInputStream();
+                    data = HtmlDefang.defang(is, neuter);
+                } finally {
+                    if (is != null) is.close();
+                }
             }
-            // TODO: CDATA worth the effort?
+        } else if (ctype.equals(Mime.CT_TEXT_ENRICHED)) {
+            data = TextEnrichedHandler.convertToHTML(Mime.getStringContent(mp));
+        } else {
+            data = Mime.getStringContent(mp);
         }
+
+        if (data != null) {
+            data = StringUtil.stripControlCharacters(data);
+            elt.addAttribute(MailService.E_CONTENT, data, Element.DISP_CONTENT);                
+        }
+        // TODO: CDATA worth the effort?
     }
 
     /**

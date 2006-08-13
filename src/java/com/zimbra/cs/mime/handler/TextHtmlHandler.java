@@ -51,7 +51,7 @@ public class TextHtmlHandler extends MimeHandler {
     String mContent;
     private org.xml.sax.XMLReader mParser;
     private ContentExtractor mHandler;
-    private Reader mReader;
+    protected Reader mReader;
 
     private class ContentExtractor extends org.xml.sax.helpers.DefaultHandler {
         private StringBuffer sb = new StringBuffer();
@@ -135,14 +135,12 @@ public class TextHtmlHandler extends MimeHandler {
             mParser = new org.cyberneko.html.parsers.SAXParser();
             mHandler = new ContentExtractor();
             mParser.setContentHandler(mHandler);
+            mParser.setFeature("http://cyberneko.org/html/features/balance-tags", false); 
         } catch (Exception e) {
             throw new MimeHandlerException(e);
         }
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.mime.MimeHandler#populate(org.apache.lucene.document.Document)
-     */
     public void addFields(Document doc) throws MimeHandlerException {
         // make sure we've parsed the document
         getContentImpl();
@@ -154,9 +152,6 @@ public class TextHtmlHandler extends MimeHandler {
         doc.add(Field.Text("title", mHandler.getTitle()));
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.mime.MimeHandler#getContent()
-     */
     protected String getContentImpl() throws MimeHandlerException {
         if (mContent == null) {
             try {
@@ -179,9 +174,6 @@ public class TextHtmlHandler extends MimeHandler {
         return false;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.mime.MimeHandler#convert(com.zimbra.cs.convert.AttachmentInfo, java.lang.String)
-     */
     public String convert(AttachmentInfo doc, String baseURL) {
         throw new UnsupportedOperationException();
     }
