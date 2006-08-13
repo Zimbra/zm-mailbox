@@ -31,15 +31,12 @@
  */
 package com.zimbra.cs.mime.handler;
 
-import java.io.IOException;
-
 import javax.activation.DataSource;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.lucene.document.Document;
 
 import com.zimbra.cs.convert.AttachmentInfo;
-import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.mime.MimeHandler;
 import com.zimbra.cs.mime.MimeHandlerException;
 import com.zimbra.cs.util.JMSession;
@@ -66,7 +63,7 @@ public class MessageRFC822Handler extends MimeHandler {
     /* (non-Javadoc)
      * @see com.zimbra.cs.mime.MimeHandler#populate(org.apache.lucene.document.Document)
      */
-    public void addFields(Document doc) throws MimeHandlerException {
+    public void addFields(Document doc) {
     }
 
     /* (non-Javadoc)
@@ -94,8 +91,7 @@ public class MessageRFC822Handler extends MimeHandler {
     /* (non-Javadoc)
      * @see com.zimbra.cs.mime.MimeHandler#convert(com.zimbra.cs.convert.AttachmentInfo, java.lang.String)
      */
-    public String convert(AttachmentInfo doc, String baseURL) throws IOException, ConversionException {
+    public String convert(AttachmentInfo doc, String baseURL) {
         throw new IllegalStateException("no need to convert message/rfc822 content");
     }
-
 }
