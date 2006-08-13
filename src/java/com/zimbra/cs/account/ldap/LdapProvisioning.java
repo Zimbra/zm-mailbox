@@ -2916,9 +2916,9 @@ public class LdapProvisioning extends Provisioning {
             return new ArrayList<DistributionList>();
         StringBuilder sb = new StringBuilder();
         if (addrs.length > 1)
-            sb.append("(&");
+            sb.append("(|");
         for (int i=0; i < addrs.length; i++) {
-            sb.append(String.format("(%s=%s)", Provisioning.A_zimbraMailForwardingAddress, addrs[0]));    
+            sb.append(String.format("(%s=%s)", Provisioning.A_zimbraMailForwardingAddress, addrs[i]));    
         }
         if (addrs.length > 1)
             sb.append(")");
