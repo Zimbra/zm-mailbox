@@ -29,6 +29,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.HashSet;
@@ -1233,16 +1234,31 @@ public class ToXML {
         String ct = mpi.getContentType();
         if (ct.matches(Mime.CT_TEXT_WILD) || ct.matches(Mime.CT_XML_WILD)) {
             MimePart mp = mpi.getMimePart();
+            String data = null;
+            if (mpi.getContentType().equals(Mime.CT_TEXT_HTML)) {
+                String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);
+                if (!(charset == null || charset.trim().equals(""))) {
+                    data = Mime.getStringContent(mp);
+                    data = HtmlDefang.defang(data, neuter);                    
+                } else {
+                    InputStream is = null;
+                    try {
+                        is = mp.getInputStream();
+                        data = HtmlDefang.defang(is, neuter);
+                    } finally {
+                        if (is != null) is.close();
+                    }
+                }
+            } else {
+                data = Mime.getStringContent(mp);
+            }
 
-            String cstr = Mime.getStringContent(mp);
-            String data = StringUtil.stripControlCharacters(cstr);
-
-            if (mpi.getContentType().equals(Mime.CT_TEXT_HTML))
-                data = HtmlDefang.defang(data, neuter);
-
-            elt.addAttribute(MailService.E_CONTENT, data, Element.DISP_CONTENT);
+            if (data != null) {
+                data = StringUtil.stripControlCharacters(data);
+                elt.addAttribute(MailService.E_CONTENT, data, Element.DISP_CONTENT);                
+            }
             // TODO: CDATA worth the effort?
-        }
+        }        
     }
 
     /**
