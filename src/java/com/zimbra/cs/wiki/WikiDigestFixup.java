@@ -117,11 +117,17 @@ public class WikiDigestFixup {
                 throw e;
         }
         OperationContext octxt = new OperationContext(mbox);
+        List<MailItem> items = new ArrayList<MailItem>();
         List<MailItem> wikis = mbox.getItemList(octxt, MailItem.TYPE_WIKI);
-        int len = wikis != null ? wikis.size() : 0;
+        if (wikis != null && wikis.size() > 0)
+            items.addAll(wikis);
+        List<MailItem> documents = mbox.getItemList(octxt, MailItem.TYPE_DOCUMENT);
+        if (documents != null && documents.size() > 0)
+            items.addAll(documents);
+        int len = items != null ? items.size() : 0;
         List<WikiDigest> list = new ArrayList<WikiDigest>(len);
         if (len > 0) {
-            for (MailItem item : wikis) {
+            for (MailItem item : items) {
                 int id = item.getId();
                 int rev = item.getSavedSequence();
                 short vol = item.getVolumeId();
@@ -152,8 +158,11 @@ public class WikiDigestFixup {
     throws SQLException, ServiceException {
         StringBuilder sql = new StringBuilder("UPDATE ");
         sql.append(DbMailItem.getMailItemTableName(mboxId));
-        sql.append(" SET blob_digest = ? WHERE id = ? AND type = ");
+        sql.append(" SET blob_digest = ? WHERE id = ? AND type in (");
         sql.append(MailItem.TYPE_WIKI);
+        sql.append(", ");
+        sql.append(MailItem.TYPE_DOCUMENT);
+        sql.append(")");
         String sqlStr = sql.toString();
 
         boolean success = false;
