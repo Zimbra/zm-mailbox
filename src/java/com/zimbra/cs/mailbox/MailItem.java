@@ -678,13 +678,13 @@ public abstract class MailItem implements Comparable {
 
     public static final class SortSubjectAscending implements Comparator<MailItem> {
         public int compare(MailItem m1, MailItem m2) {
-            return m1.getSubject().compareTo(m2.getSubject());
+            return m1.getSubject().compareToIgnoreCase(m2.getSubject());
         }
     }
 
     public static final class SortSubjectDescending implements Comparator<MailItem> {
         public int compare(MailItem m1, MailItem m2) {
-            return -m1.getSubject().compareTo(m2.getSubject());
+            return -m1.getSubject().compareToIgnoreCase(m2.getSubject());
         }
     }
 
