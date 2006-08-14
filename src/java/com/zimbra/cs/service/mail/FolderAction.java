@@ -204,19 +204,7 @@ public class FolderAction extends ItemAction {
                 throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
             String flags = action.getAttribute(MailService.A_FLAGS, null);
             byte color = (byte) action.getAttributeLong(MailService.A_COLOR, -1);
-            ACL acl = null;
-            Element eAcl = action.getOptionalElement(MailService.E_ACL);
-            if (eAcl != null) {
-                acl = new ACL();
-                for (Element grant : eAcl.listElements(MailService.E_GRANT)) {
-                    String zid   = grant.getAttribute(MailService.A_ZIMBRA_ID);
-                    byte gtype   = stringToType(grant.getAttribute(MailService.A_GRANT_TYPE));
-                    short rights = ACL.stringToRights(grant.getAttribute(MailService.A_RIGHTS));
-                    boolean inherit = grant.getAttributeBool(MailService.A_INHERIT, false);
-                    String args   = grant.getAttribute(MailService.A_ARGS, null);
-                    acl.grantAccess(zid, gtype, rights, inherit, args);
-                }
-            }
+            ACL acl = parseACL(action.getOptionalElement(MailService.E_ACL));
 
             if (flags != null)
                 mbox.setTags(octxt, iid.getId(), MailItem.TYPE_FOLDER, flags, null, null);
@@ -233,6 +221,22 @@ public class FolderAction extends ItemAction {
         }
 
         return zsc.formatItemId(iid);
+    }
+
+    static ACL parseACL(Element eAcl) throws ServiceException {
+        if (eAcl == null)
+            return null;
+
+        ACL acl = new ACL();
+        for (Element grant : eAcl.listElements(MailService.E_GRANT)) {
+            String zid   = grant.getAttribute(MailService.A_ZIMBRA_ID);
+            byte gtype   = stringToType(grant.getAttribute(MailService.A_GRANT_TYPE));
+            short rights = ACL.stringToRights(grant.getAttribute(MailService.A_RIGHTS));
+            boolean inherit = grant.getAttributeBool(MailService.A_INHERIT, false);
+            String args   = grant.getAttribute(MailService.A_ARGS, null);
+            acl.grantAccess(zid, gtype, rights, inherit, args);
+        }
+        return acl;
     }
 
     static byte stringToType(String typeStr) throws ServiceException {

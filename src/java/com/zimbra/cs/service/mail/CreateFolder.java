@@ -30,6 +30,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -38,6 +39,7 @@ import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -66,10 +68,26 @@ public class CreateFolder extends MailDocumentHandler {
         String url       = t.getAttribute(MailService.A_URL, null);
         ItemId iidParent = new ItemId(t.getAttribute(MailService.A_FOLDER), lc);
         boolean fetchIfExists = t.getAttributeBool(MailService.A_FETCH_IF_EXISTS, false);
-        
+        ACL acl          = FolderAction.parseACL(t.getOptionalElement(MailService.E_ACL));
+
         CreateFolderOperation op = new CreateFolderOperation(session, octxt, mbox, Requester.SOAP, name, iidParent, view, flags, color, url, fetchIfExists);
         op.schedule();
-        Folder folder = op.getFolder(); 
+        Folder folder = op.getFolder();
+
+        // set the folder ACL as a separate operation, when appropriate
+        if (acl != null && !op.alreadyExisted()) {
+            try {
+                mbox.setPermissions(octxt, folder.getId(), acl);
+            } catch (ServiceException e) {
+                try {
+                    // roll back folder creation
+                    mbox.delete(null, folder.getId(), MailItem.TYPE_FOLDER);
+                } catch (ServiceException nse) {
+                    ZimbraLog.soap.warn("error ignored while rolling back folder create", nse);
+                }
+                throw e;
+            }
+        }
 
         Element response = lc.createElement(MailService.CREATE_FOLDER_RESPONSE);
         if (folder != null)
