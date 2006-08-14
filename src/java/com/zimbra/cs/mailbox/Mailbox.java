@@ -4863,6 +4863,7 @@ public class Mailbox {
         MailItem ret = null;
         if (path == null)
             throw MailServiceException.INVALID_NAME(path);
+        boolean preferFolder = path.endsWith("/");
         try {
             beginTransaction("getItemByPath", octxt);
             if (path.startsWith("/")) {
@@ -4883,24 +4884,27 @@ public class Mailbox {
                     folder = lastFolder.findSubfolder(lastToken);
                 }
 
-                if (folder != null) {
-                    ret = folder;
-                } else if (lastFolder != null && 
-                            lastToken != null && 
-                            !tok.hasMoreTokens()) {
-                    // we used up all the tokens.  must have matched all but
-                    // one folders in the path.  search the last folder
-                    // for a document or wikiitem matching the last token.
-                    if (getFolder)
-                        ret = lastFolder;
-                    else {
-                        for (Document doc : getWikiList(octxt, lastFolder.getId()))
-                            if (doc.getFilename().equalsIgnoreCase(lastToken)) {
-                                ret = doc;
-                                break;
-                            }
-                    }
+                boolean matchedAllButLastToken = lastFolder != null && lastToken != null && !tok.hasMoreTokens();
+
+                // if the caller prefers a folder, and a folder is found, then
+                // we are golden.  if the caller does not prefer a folder,
+                // or if there is no folder by that path, then search the
+                // last matched folder for a document or wiki item that matches
+                // the last token in the path.
+                MailItem wikiItem = null;
+                if ((!preferFolder || folder == null) && matchedAllButLastToken) {
+                	try {
+                		List<Document> wikis = getWikiList(octxt, lastFolder.getId(), DbMailItem.SORT_BY_SUBJECT);
+                		int wikiPos = Document.binarySearch(wikis, lastToken);
+                		if (wikiPos >= 0)
+                			wikiItem = wikis.get(wikiPos);
+                	} catch (ServiceException se) {
+                		wikiItem = null;
+                	}
                 }
+
+                // either the caller prefers a document, or folder is not found.
+                ret = (wikiItem == null) ? folder : wikiItem;
             }
             if (ret == null)
                 throw MailServiceException.NO_SUCH_ITEM(path);
