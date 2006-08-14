@@ -13,6 +13,17 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandlerException;
 
 public class TextEnrichedHandler extends TextHtmlHandler {
+
+    public void init(DataSource source) throws MimeHandlerException {
+        super.init(source);
+        try {
+            String content = Mime.decodeText(source.getInputStream(), source.getContentType());
+            mReader = new StringReader(convertToHTML(content));
+        } catch (IOException e) {
+            throw new MimeHandlerException(e);
+        }
+    }
+
     private static Map<String,String> sConversions = new HashMap<String,String>();
         static {
             sConversions.put("bold", "<b>");       sConversions.put("/bold", "</b>");
@@ -31,16 +42,6 @@ public class TextEnrichedHandler extends TextHtmlHandler {
             sConversions.put("/color", "</font>");
             sConversions.put("/fontfamily", "</font>");
         }
-
-    public void init(DataSource source) throws MimeHandlerException {
-        super.init(source);
-        try {
-            String content = Mime.decodeText(source.getInputStream(), source.getContentType());
-            mReader = new StringReader(convertToHTML(content));
-        } catch (IOException e) {
-            throw new MimeHandlerException(e);
-        }
-    }
 
     public static String convertToHTML(String content) {
         if (content == null)
@@ -61,7 +62,9 @@ public class TextEnrichedHandler extends TextHtmlHandler {
                 case '>':   sb.append("&gt;");  break;
                 case '<':
                     int gt = content.indexOf('>', pos);
-                    if (gt == -1 || gt - pos > 61 || content.charAt(pos + 1) == '<') {
+                    if (gt == -1 || gt - pos > 61) {
+                        sb.append("&lt;");  break;
+                    } else if (content.charAt(pos + 1) == '<') {
                         sb.append("&lt;");  pos++;  break;
                     }
                     String format = content.substring(pos + 1, gt).toLowerCase();
