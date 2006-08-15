@@ -1354,10 +1354,13 @@ public class ToXML {
 		try {
 			Account account = item.getMailbox().getAccount();
 			String url = UserServlet.getRestUrl(account);
+			String path = url + item.getPath();
+			if (item instanceof Folder)
+				path = path + "/";
 			if (url.startsWith("https"))
-				url = new HttpsURL(url + item.getPath()).toString();
+				url = new HttpsURL(path).toString();
 			else
-				url = new HttpURL(url + item.getPath()).toString();
+				url = new HttpURL(path).toString();
 			return m.addAttribute(MailService.A_REST_URL, url);
 		} catch (ServiceException se) {
 			mLog.error("cannot generate REST url", se);

@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -399,6 +400,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			addWiklet(new IncludeWiklet());
 			addWiklet(new InlineWiklet());
 			addWiklet(new WikilinkWiklet());
+			addWiklet(new UrlWiklet());
 		}
 		
 		private static void addWiklet(Wiklet w) {
@@ -509,7 +511,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
         		buf.append(">");
         	}
 	    	Mailbox mbox = ctxt.item.getMailbox();
-            for (Document doc : mbox.getWikiList(ctxt.wctxt.octxt, folder.getId())) {
+            for (Document doc : mbox.getWikiList(ctxt.wctxt.octxt, folder.getId(), (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING))) {
             	buf.append("<");
         		buf.append(sTAGS[sINNER][style]);
             	buf.append(" class='zmwiki-pageLink'>");
@@ -540,9 +542,9 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	    	
 	    	Mailbox mbox = ctxt.item.getMailbox();
 	    	if (ctxt.wctxt.view == null)
-	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.TYPE_WIKI, folder.getId()));
+	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.TYPE_WIKI, folder.getId(), (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING)));
 	    	else
-	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.getTypeForName(ctxt.wctxt.view), folder.getId()));
+	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.getTypeForName(ctxt.wctxt.view), folder.getId(), (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING)));
 
 			String bt = params.get(sBODYTEMPLATE);
 			String it = params.get(sITEMTEMPLATE);
@@ -987,6 +989,35 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				return buf.toString();
 			} catch (Exception e) {
 				return "<!-- invalid wiki url "+link+" -->" + title;
+			}
+		}
+	}
+	public static class UrlWiklet extends Wiklet {
+		public String getName() {
+			return "Url";
+		}
+		public String getPattern() {
+			return "URL";
+		}
+		public boolean isExpired(WikiTemplate template, Context ctxt) {
+			return false;
+		}
+		public WikiTemplate findInclusion(Context ctxt) {
+			return null;
+		}
+		public String apply(Context ctxt) throws ServiceException, IOException {
+			if (ctxt.item == null)
+				return "<!-- cannot resolve item for url wiklet -->";
+			String title = ctxt.item.getSubject();
+			WikiUrl wurl = new WikiUrl(ctxt.item);
+			try {
+				StringBuffer buf = new StringBuffer();
+				buf.append("<a href='");
+				buf.append(wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId()));
+				buf.append("'>").append(title).append("</a>");
+				return buf.toString();
+			} catch (Exception e) {
+				return "<!-- cannot generate URL for item "+title+" -->" + title;
 			}
 		}
 	}

@@ -4894,7 +4894,7 @@ public class Mailbox {
                 MailItem wikiItem = null;
                 if ((!preferFolder || folder == null) && matchedAllButLastToken) {
                 	try {
-                		List<Document> wikis = getWikiList(octxt, lastFolder.getId(), DbMailItem.SORT_BY_SUBJECT);
+                		List<Document> wikis = getWikiList(octxt, lastFolder.getId(), (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING));
                 		int wikiPos = Document.binarySearch(wikis, lastToken);
                 		if (wikiPos >= 0)
                 			wikiItem = wikis.get(wikiPos);
@@ -4923,12 +4923,41 @@ public class Mailbox {
         return getWikiList(octxt, folderId, DbMailItem.SORT_NONE);
     }
     public synchronized List<Document> getWikiList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
-        List<Document> docs = new ArrayList<Document>();
-        for (MailItem item : getItemList(octxt, MailItem.TYPE_DOCUMENT, folderId, sort))
-            docs.add((Document) item);
-        for (MailItem item : getItemList(octxt, MailItem.TYPE_WIKI, folderId, sort))
-            docs.add((Document) item);
-        return docs;
+    	List<MailItem> docs = getItemList(octxt, MailItem.TYPE_DOCUMENT, folderId, sort);
+    	List<MailItem> wikis = getItemList(octxt, MailItem.TYPE_WIKI, folderId, sort);
+    	List<Document> ret = new ArrayList<Document>();
+    	
+    	boolean doSort = (sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_BY_SUBJECT;
+    	
+    	// merge sort
+    	int docIndex = 0, wikiIndex = 0;
+    	while (docIndex < docs.size() || wikiIndex < wikis.size()) {
+    		MailItem doc = null;
+    		MailItem wiki = null;
+    		if (docIndex < docs.size())
+    			doc = docs.get(docIndex);
+    		if (wikiIndex < wikis.size())
+    			wiki = wikis.get(wikiIndex);
+
+    		if (doc == null) {
+    			wikiIndex++;
+    			if (wiki instanceof Document)
+    				ret.add((Document)wiki);
+    		} else if (wiki == null) {
+    			docIndex++;
+    			if (doc instanceof Document)
+    				ret.add((Document)doc);
+    		} else if (!doSort || doc.getSubject().compareToIgnoreCase(wiki.getSubject()) < 0) {
+    			docIndex++;
+    			if (doc instanceof Document)
+    				ret.add((Document)doc);
+    		} else {
+    			wikiIndex++;
+    			if (wiki instanceof Document)
+    				ret.add((Document)wiki);
+    		}
+    	}
+    	return ret;
     }
 
     public synchronized WikiItem createWiki(OperationContext octxt, 

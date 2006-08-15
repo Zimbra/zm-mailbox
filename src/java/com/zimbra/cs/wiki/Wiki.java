@@ -123,6 +123,11 @@ public abstract class Wiki {
 	}
 	
 	static class WikiUrl {
+		public WikiUrl(MailItem item) {
+			this(item.getSubject(), item.getFolderId());
+			if (item instanceof Folder)
+				mIsFolder = true;
+		}
 		public WikiUrl(String url) {
 			// url must be in absolute form
 			this(url, -1);
@@ -137,6 +142,7 @@ public abstract class Wiki {
 		private String mUrl;
 		private String mFilename;
 		private List<String> mTokens;
+		private boolean mIsFolder;
 		
 		private void parse() {
 			mTokens = new ArrayList<String>();
@@ -241,6 +247,8 @@ public abstract class Wiki {
 			for (String token : tokens) {
 				newPath.append("/").append(token);
 			}
+			if (mIsFolder)
+				newPath.append("/");
 			return newPath.toString();
 		}
 		public boolean isAbsolute() {
@@ -303,7 +311,7 @@ public abstract class Wiki {
 		}
 		
 		public WikiPage lookupWiki(String wikiWord) {
-			return mWikiWords.get(wikiWord);
+			return mWikiWords.get(wikiWord.toLowerCase());
 		}
 		
 		public String getKey() {
@@ -418,7 +426,7 @@ public abstract class Wiki {
 				for (Object obj : ls) {
 					if (obj instanceof LmcDocument) {
 						WikiPage wp = WikiPage.create(mWikiAccount, (LmcDocument)obj);
-						mWikiWords.put(wp.getWikiWord(), wp);
+						mWikiWords.put(wp.getWikiWord().toLowerCase(), wp);
 					} else {
 						// unhandled item
 					}
@@ -429,6 +437,7 @@ public abstract class Wiki {
 		}
 		
 		public synchronized WikiPage lookupWiki(String wikiWord) {
+			wikiWord = wikiWord.toLowerCase();
 			WikiPage page = mWikiWords.get(wikiWord);
 			if (page == null) {
 				// if we have a cache of Wiki pages whose mailbox is on another machine,
@@ -665,10 +674,7 @@ public abstract class Wiki {
 	
 	public synchronized void addDoc(Document doc) throws ServiceException {
 		String wikiWord;
-		if (doc instanceof WikiItem) 
-			wikiWord = ((WikiItem)doc).getWikiWord();
-		else
-			wikiWord = doc.getFilename();
+		wikiWord = doc.getSubject().toLowerCase();
 		WikiPage w = mWikiWords.get(wikiWord);
 		if (w == null) {
 			w = WikiPage.create(wikiWord);
