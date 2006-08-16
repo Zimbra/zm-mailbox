@@ -52,7 +52,6 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.ServiceException.Argument;
@@ -697,7 +696,7 @@ public abstract class Wiki {
 	}
 	
 	public static void addPage(WikiContext ctxt, WikiPage page, int id, int ver, ItemId folder) throws ServiceException {
-		String wikiWord = page.getWikiWord();
+		String wikiWord = page.getWikiWord().toLowerCase();
 		String account;
 		int fid;
 		if (folder == null) {
@@ -714,7 +713,7 @@ public abstract class Wiki {
 			// make sure another page with the same name does not exist.
 			Wiki w = Wiki.getInstance(ctxt, account, fid);
 			synchronized (w) {
-				if (w.lookupWiki(page.getWikiWord()) != null)
+				if (w.lookupWiki(wikiWord) != null)
 					throw MailServiceException.ALREADY_EXISTS("wiki word "+wikiWord+" in folder "+fid,
 							new Argument(MailService.A_NAME, wikiWord, Argument.Type.STR),
 							new Argument(MailService.A_ID, id, Argument.Type.IID),
@@ -722,7 +721,7 @@ public abstract class Wiki {
 
 				// create a new page
 				page.create(ctxt, w);
-				w.mWikiWords.put(page.getWikiWord(), page);
+				w.mWikiWords.put(wikiWord, page);
 			}
 		} else {
 			// add a new revision
@@ -742,7 +741,7 @@ public abstract class Wiki {
 	public abstract void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException;
 	
 	public synchronized void deleteWiki(WikiContext ctxt, String wikiWord) throws ServiceException {
-		WikiPage w = mWikiWords.remove(wikiWord);
+		WikiPage w = mWikiWords.remove(wikiWord.toLowerCase());
 		if (w != null) {
 			w.deleteAllRevisions(ctxt);
 		}
