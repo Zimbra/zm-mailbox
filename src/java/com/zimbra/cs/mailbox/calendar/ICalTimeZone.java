@@ -147,9 +147,7 @@ public class ICalTimeZone extends SimpleTimeZone
         sb.append("\nmDaylightOnset=\"").append(mDaylightOnset).append("\"");
         return sb.toString();
     }
-    
-    
-    private static Log sLog = LogFactory.getLog(ICalTimeZone.class);
+
 
     private static final String FN_TZ_NAME          = "tzid";
     private static final String FN_STD_OFFSET       = "so";
@@ -874,13 +872,29 @@ public class ICalTimeZone extends SimpleTimeZone
      * @param utcOffset
      * @return
      */
-    static int tzOffsetToTime(String utcOffset) {
+    private static int tzOffsetToTime(String utcOffset)
+    throws ServiceException {
+        int len = utcOffset != null ? utcOffset.length() : 0;
+        if (len != 5 && len != 7)
+            throw ServiceException.INVALID_REQUEST(
+                    "Invalid " +
+                    ICalTok.TZOFFSETFROM + "/" + ICalTok.TZOFFSETTO +
+                    " value \"" + utcOffset +
+                    "\"; must have format \"+/-hhmm[ss]\"", null);
+
         int toRet = 0;
-        
-        toRet += (Integer.parseInt(utcOffset.substring(1,3)) * MSEC_PER_HOUR);
-        toRet += (Integer.parseInt(utcOffset.substring(3,5)) * MSEC_PER_MIN);
-        if (utcOffset.length() >= 7) {
-            toRet += (Integer.parseInt(utcOffset.substring(5,7)) * MSEC_PER_SEC);
+        try {
+            toRet += (Integer.parseInt(utcOffset.substring(1,3)) * MSEC_PER_HOUR);
+            toRet += (Integer.parseInt(utcOffset.substring(3,5)) * MSEC_PER_MIN);
+            if (len == 7) {
+                toRet += (Integer.parseInt(utcOffset.substring(5,7)) * MSEC_PER_SEC);
+            }
+        } catch (NumberFormatException e) {
+            throw ServiceException.INVALID_REQUEST(
+                    "Invalid " +
+                    ICalTok.TZOFFSETFROM + "/" + ICalTok.TZOFFSETTO +
+                    " value \"" + utcOffset +
+                    "\"; must have format \"+/-hhmm[ss]\"", e);
         }
         if (utcOffset.charAt(0) == '-') {
             toRet *= -1;
@@ -967,7 +981,8 @@ public class ICalTimeZone extends SimpleTimeZone
             return tzComp1;
     }
 
-    public static ICalTimeZone fromVTimeZone(ZComponent comp) {
+    public static ICalTimeZone fromVTimeZone(ZComponent comp)
+    throws ServiceException {
         String tzname = comp.getPropVal(ICalTok.TZID, null);
 
         ZComponent standard = null;
