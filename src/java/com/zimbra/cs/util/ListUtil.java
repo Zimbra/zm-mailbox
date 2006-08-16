@@ -191,11 +191,11 @@ public class ListUtil {
     }
     
     static private void testListUtil() {
-        List in[] = new List[5];
+        List<Integer>[] in = (ArrayList<Integer>[]) new List[5];
 
         int i = 0;
         
-        in[i] = new ArrayList();
+        in[i] = new ArrayList<Integer>();
         in[i].add(new Integer(1));
         in[i].add(new Integer(3));
         in[i].add(new Integer(5));
@@ -203,7 +203,7 @@ public class ListUtil {
         in[i].add(new Integer(9));
         
         i = 1;
-        in[i] = new ArrayList();
+        in[i] = new ArrayList<Integer>();
         in[i].add(new Integer(1));
         in[i].add(new Integer(7));
         in[i].add(new Integer(12));
@@ -211,7 +211,7 @@ public class ListUtil {
         in[i].add(new Integer(13));
 
         i = 2;
-        in[i] = new ArrayList();
+        in[i] = new ArrayList<Integer>();
         in[i].add(new Integer(1));
         in[i].add(new Integer(2));
         in[i].add(new Integer(3));
@@ -220,7 +220,7 @@ public class ListUtil {
         
 
         i = 3;
-        in[i] = new ArrayList();
+        in[i] = new ArrayList<Integer>();
         in[i].add(new Integer(5));
         in[i].add(new Integer(6));
         in[i].add(new Integer(7));
@@ -229,7 +229,7 @@ public class ListUtil {
 
         
         i = 4;
-        in[i] = new ArrayList();
+        in[i] = new ArrayList<Integer>();
         in[i].add(new Integer(100));
         in[i].add(new Integer(101));
         in[i].add(new Integer(102));

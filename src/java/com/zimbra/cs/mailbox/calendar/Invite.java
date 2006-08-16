@@ -57,7 +57,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * Invite
@@ -242,7 +241,7 @@ public class Invite {
     }
     
 
-    private static final String FN_ADDRESS         = "a";
+    //private static final String FN_ADDRESS         = "a";
     private static final String FN_APPT_FLAGS      = "af";
     private static final String FN_ATTENDEE        = "at";
     private static final String FN_SENTBYME        = "byme";
@@ -844,7 +843,7 @@ public class Invite {
 
     private List<ZAttendee> mAttendees = new ArrayList<ZAttendee>();
     private ZOrganizer mOrganizer;
-    private ArrayList /* VAlarm */ mAlarms = new ArrayList();
+//    private ArrayList /* VAlarm */ mAlarms = new ArrayList();
 //    private Method mMethod;
     private ICalTok mMethod;
     
@@ -942,9 +941,9 @@ public class Invite {
      */
     public boolean updateMatchingAttendees(Invite other) throws ServiceException {
         // Find my ATTENDEE record in the Invite, it must be in our response
-        List attendees = getAttendees();
+        List<ZAttendee> attendees = getAttendees();
         
-        ArrayList /*ZAttendee */ toAdd = new ArrayList();
+        ArrayList<ZAttendee> toAdd = new ArrayList<ZAttendee>();
         
         boolean modified = false;
         
@@ -1535,7 +1534,7 @@ public class Invite {
     //     static public List /* Invite */  createFromICalendar(Account acct, String fragment, Calendar cal, boolean sentByMe) throws ServiceException
     public static List<Invite> createFromCalendar(Account account, String fragment, ZVCalendar cal, boolean sentByMe, Mailbox mbx, int mailItemId)
     throws ServiceException {
-        List <Invite> toRet = new ArrayList();
+        List<Invite> toRet = new ArrayList<Invite>();
         
         TimeZoneMap tzmap = new TimeZoneMap(Provisioning.getInstance().getTimeZone(account));
         
@@ -1564,8 +1563,8 @@ public class Invite {
                     
                     toRet.add(newInv);
                     
-                    ArrayList addRecurs = new ArrayList();
-                    ArrayList subRecurs = new ArrayList();
+                    List<ZRecur> addRecurs = new ArrayList<ZRecur>();
+                    List<ZRecur> subRecurs = new ArrayList<ZRecur>();
                     
                     newInv.setComponentNum(compNum);
                     if (mbx != null)
@@ -1671,7 +1670,7 @@ public class Invite {
                         }
                     }
                     
-                    ArrayList /* IInstanceGeneratingRule */ addRules = new ArrayList();
+                    List<IRecurrence> addRules = new ArrayList<IRecurrence>();
                     if (addRecurs.size() > 0) {
                         for (Iterator iter = addRecurs.iterator(); iter.hasNext();) {
                             Object next = iter.next();
@@ -1684,7 +1683,7 @@ public class Invite {
                             }
                         }
                     }
-                    ArrayList /* IInstanceGeneratingRule */  subRules = new ArrayList();
+                    List<IRecurrence> subRules = new ArrayList<IRecurrence>();
                     if (subRecurs.size() > 0) {
                         for (Iterator iter = subRecurs.iterator(); iter.hasNext();) {
                             Object next = iter.next();
@@ -1700,7 +1699,7 @@ public class Invite {
                     
                     if (newInv.hasRecurId()) {
                         if (addRules.size() > 0) {
-                            newInv.setRecurrence(new Recurrence.ExceptionRule(newInv.getRecurId(),  
+                            newInv.setRecurrence(new Recurrence.ExceptionRule(newInv.getRecurId(),
                                     newInv.getStartTime(), duration, new InviteInfo(newInv), addRules, subRules));
                         }
                     } else {
@@ -1734,7 +1733,7 @@ public class Invite {
 
                 switch (cur.getType()) { 
                 case Recurrence.TYPE_SINGLE_INSTANCE:
-                    Recurrence.SingleInstanceRule sir = (Recurrence.SingleInstanceRule)cur;
+                    //Recurrence.SingleInstanceRule sir = (Recurrence.SingleInstanceRule)cur;
                     // FIXME
                     break;
                 case Recurrence.TYPE_REPEATING:
@@ -1749,7 +1748,7 @@ public class Invite {
 
                 switch (cur.getType()) { 
                 case Recurrence.TYPE_SINGLE_INSTANCE:
-                    Recurrence.SingleInstanceRule sir = (Recurrence.SingleInstanceRule)cur;
+                    //Recurrence.SingleInstanceRule sir = (Recurrence.SingleInstanceRule)cur;
                     // FIXME
                     break;
                 case Recurrence.TYPE_REPEATING:

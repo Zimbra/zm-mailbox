@@ -364,7 +364,7 @@ public class Appointment extends MailItem {
     // * @param end
     // * @return list of Instances for the specified time period
     // */
-    public Collection /* Instance */expandInstances(long start, long end) {
+    public Collection<Instance> expandInstances(long start, long end) {
         List<Instance> instances = new ArrayList<Instance>();
 
         if (mRecurrence != null) {
@@ -987,7 +987,6 @@ public class Appointment extends MailItem {
                     updated = true;
                     multi.removeBodyPart(icalPartNum);
                     ZVCalendar cal = inv.newToICalendar();
-                    String test = cal.toString();
                     MimeBodyPart icalPart = CalendarMailSender.makeICalIntoMimePart(inv.getUid(), cal);
                     multi.addBodyPart(icalPart, icalPartNum);
                     // Courtesy of JavaMail.  All three lines are necessary.
@@ -1077,10 +1076,10 @@ public class Appointment extends MailItem {
      *
      */
     private static class ReplyList {
-        List /* ReplyInfo */ mReplies;
+        List<ReplyInfo> mReplies;
         
         public ReplyList() {
-            mReplies = new ArrayList();
+            mReplies = new ArrayList<ReplyInfo>();
         }
         
         private static final String FN_NUM_REPLY_INFO = "n";
@@ -1101,7 +1100,7 @@ public class Appointment extends MailItem {
         static ReplyList decodeFromMetadata(Metadata md, TimeZoneMap tzMap) throws ServiceException {
             ReplyList toRet = new ReplyList();
             int numReplies = (int) md.getLong(FN_NUM_REPLY_INFO);
-            toRet.mReplies = new ArrayList(numReplies);
+            toRet.mReplies = new ArrayList<ReplyInfo>(numReplies);
             for (int i = 0; i < numReplies; i++) {
                 ReplyInfo inf = ReplyInfo.decodeFromMetadata(md.getMap(FN_REPLY_INFO+i), tzMap);
                 toRet.mReplies.add(i, inf);
@@ -1266,8 +1265,8 @@ public class Appointment extends MailItem {
                 return defaultAt;
         }
         
-        List /* ReplyInfo */ getReplyInfo(Invite inv) {
-            ArrayList toRet = new ArrayList();
+        List<ReplyInfo> getReplyInfo(Invite inv) {
+            List<ReplyInfo> toRet = new ArrayList<ReplyInfo>();
             
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
