@@ -110,8 +110,10 @@ public class WikiDigestFixup {
         Mailbox mbox = null;
         try {
             mbox = Mailbox.getMailboxById(mboxId);
-        } catch (AccountServiceException e) {
-            if (AccountServiceException.NO_SUCH_ACCOUNT.equals(e.getCode()))
+        } catch (ServiceException e) {
+            String code = e.getCode();
+            if (AccountServiceException.NO_SUCH_ACCOUNT.equals(code) ||
+                ServiceException.WRONG_HOST.equals(code))
                 return null;
             else
                 throw e;
