@@ -72,6 +72,7 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
 	private int mMsgId;				// ID assigned to newly created message
 	private int mFolderId;			// folder to which the message belongs
 	private int mConvId;			// conversation to which the message belongs; may be newly created
+    private int mConvFirstMsgId;    // first message of conversation, if creating new conversation
 	private int mFlags;				// flags applied to the new message
 	private String mTags;			// tags applied to the new message
     private int mAppointmentId;     // new appointment created if this is meeting invite message
@@ -91,6 +92,7 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
 		mMsgId = UNKNOWN_ID;
 		mFolderId = UNKNOWN_ID;
 		mConvId = UNKNOWN_ID;
+        mConvFirstMsgId = UNKNOWN_ID;
 		mFlags = 0;
         mMsgBodyType = MSGBODY_INLINE;
         mNoICal = false;
@@ -128,6 +130,7 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
 		mMsgId = UNKNOWN_ID;
 		mFolderId = folderId;
 		mConvId = UNKNOWN_ID;
+        mConvFirstMsgId = UNKNOWN_ID;
 		mFlags = flags;
 		mTags = tags != null ? tags : "";
         mMsgBodyType = MSGBODY_INLINE;
@@ -178,13 +181,21 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
 		mMsgId = msgId;
 	}
 
-	public int getConversationId() {
+	public int getConvId() {
 		return mConvId;
 	}
 
-	public void setConversationId(int convId) {
+	public void setConvId(int convId) {
 		mConvId = convId;
 	}
+
+    public int getConvFirstMsgId() {
+        return mConvFirstMsgId;
+    }
+
+    public void setConvFirstMsgId(int convFirstMsgId) {
+        mConvFirstMsgId = convFirstMsgId;
+    }
 
     public void setAppointmentAttrs(int appointmentId,
 									int folderId,
@@ -254,7 +265,9 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
         sb.append(", rcvDate=").append(mReceivedDate);
         sb.append(", shared=").append(mShared ? "true" : "false");
         sb.append(", blobDigest=\"").append(mDigest).append("\", size=").append(mMsgSize);
-        sb.append(", conv=").append(mConvId).append(", folder=").append(mFolderId);
+        sb.append(", folder=").append(mFolderId);
+        sb.append(", conv=").append(mConvId);
+        sb.append(", convFirstMsgId=").append(mConvFirstMsgId);
         if (mAppointmentId != UNKNOWN_ID)
             sb.append(", apptId=").append(mAppointmentId);
         sb.append(", apptPartStat=").append(mAppointmentPartStat);
@@ -296,6 +309,8 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
 		out.writeInt(mMsgId);
 		out.writeInt(mFolderId);
 		out.writeInt(mConvId);
+        if (getVersion().atLeast(1, 5))
+            out.writeInt(mConvFirstMsgId);
         out.writeInt(mAppointmentId);
         if (getVersion().atLeast(1, 1))
             out.writeUTF(mAppointmentPartStat);
@@ -331,6 +346,8 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
 		mMsgId = in.readInt();
 		mFolderId = in.readInt();
 		mConvId = in.readInt();
+        if (getVersion().atLeast(1, 5))
+            mConvFirstMsgId = in.readInt();
         mAppointmentId = in.readInt();
         if (getVersion().atLeast(1, 1))
             mAppointmentPartStat = in.readUTF();

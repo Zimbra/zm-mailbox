@@ -3090,11 +3090,12 @@ public class Mailbox {
             conversationId = ID_AUTO_INCREMENT;
 
         CreateMessage redoPlayer = (octxt == null ? null : (CreateMessage) octxt.player);
+        boolean isRedo = redoPlayer != null;
 
         // quick check to make sure we don't deliver 5 copies of the same message
         String msgidHeader = pm.getMessageID();
         boolean isSent = ((flags & Flag.BITMASK_FROM_ME) != 0);
-        boolean checkDuplicates = (redoPlayer == null && msgidHeader != null);
+        boolean checkDuplicates = (!isRedo && msgidHeader != null);
         if (checkDuplicates && !isSent && mSentMessageIDs.containsKey(msgidHeader)) {
             Integer sentMsgID = (Integer) mSentMessageIDs.get(msgidHeader);
             // if the rules say to drop this duplicated incoming message, return null now
@@ -3128,7 +3129,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("addMessage", octxt, redoRecorder);
-            if (redoPlayer != null)
+            if (isRedo)
                 rcptEmail = redoPlayer.getRcptEmail();
 
             // "having attachments" is currently tracked via flags
@@ -3142,9 +3143,9 @@ public class Mailbox {
             long   tags    = Tag.tagsToBitmask(tagStr);
 
             // step 1: get an ID assigned for the new message
-            int messageId  = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
-            if (redoPlayer != null)
-                conversationId = redoPlayer.getConversationId();
+            int messageId  = getNextItemId(!isRedo ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
+            if (isRedo)
+                conversationId = redoPlayer.getConvId();
 
             // step 2: figure out where the message belongs
             Conversation conv = null;
@@ -3159,7 +3160,7 @@ public class Mailbox {
                             throw e;
                         if (debug)  ZimbraLog.mailbox.debug("  could not find explicitly-specified conversation " + conversationId);
                     }
-                } else if (!isSpam && !isDraft && pm.isReply()) {
+                } else if (!isRedo && !isSpam && !isDraft && pm.isReply()) {
                     conv = getConversationByHash(hash = getHash(subject));
                     if (debug)  ZimbraLog.mailbox.debug("  found conversation " + (conv == null ? -1 : conv.getId()) + " for hash: " + hash);
                     // the caller can specify the received date via ParsedMessge constructor or X-Zimbra-Received header
@@ -3177,7 +3178,7 @@ public class Mailbox {
             if (convTarget != null && debug)
                 ZimbraLog.mailbox.debug("  placing message in existing conversation " + convTarget.getId());
 
-            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
+            short volumeId = !isRedo ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
             ZVCalendar iCal = pm.getiCalendar();
             msg = Message.create(messageId, folder, convTarget, pm, msgSize, digest,
                         volumeId, unread, flags, tags, dinfo, noICal, iCal);
@@ -3189,9 +3190,42 @@ public class Mailbox {
                 if (conv == null && conversationId == ID_AUTO_INCREMENT) {
                     conv = VirtualConversation.create(this, msg);
                     if (debug)  ZimbraLog.mailbox.debug("  placed message " + msg.getId() + " in vconv " + conv.getId());
+                    redoRecorder.setConvFirstMsgId(-1);
                 } else {
-                    VirtualConversation vconv = (VirtualConversation) conv;
-                    Message[] contents = (conv == null ? new Message[] { msg } : new Message[] { vconv.getMessage(), msg });
+                    Message[] contents = null;
+                    VirtualConversation vconv = null;
+                    if (!isRedo) {
+                        vconv = (VirtualConversation) conv;
+                        contents = (conv == null ? new Message[] { msg } : new Message[] { vconv.getMessage(), msg });
+                    } else {
+                        // Executing redo.
+                        int convFirstMsgId = redoPlayer.getConvFirstMsgId();
+                        Message convFirstMsg = null;
+                        // If there was a virtual conversation, then...
+                        if (convFirstMsgId > 0) {
+                            try {
+                                convFirstMsg = getMessageById(octxt, redoPlayer.getConvFirstMsgId());
+                            } catch (MailServiceException e) {
+                                if (!MailServiceException.NO_SUCH_MSG.equals(e.getCode()))
+                                    throw e;
+                                // The first message of conversation may have been deleted
+                                // by user between the time of original operation and redo.
+                                // Handle the case by skipping the updating of its
+                                // conversation ID.
+                            }
+                            // The message may have become part of a real conversation
+                            // between the original operation and redo.  Leave it alone
+                            // in that case, and only join it to this message's conversation
+                            // if it is still a standalone message.
+                            if (convFirstMsg != null && convFirstMsg.getConversationId() < 0) {
+                                contents = new Message[] { convFirstMsg, msg };
+                                vconv = new VirtualConversation(this, convFirstMsg);
+                            }
+                        }
+                        if (contents == null)
+                            contents = new Message[] { msg };
+                    }
+                    redoRecorder.setConvFirstMsgId(vconv != null ? vconv.getMessageId() : -1);
                     conv = createConversation(contents, conversationId);
                     if (vconv != null) {
                         if (debug)  ZimbraLog.mailbox.debug("  removed vconv " + vconv.getId());
@@ -3200,8 +3234,11 @@ public class Mailbox {
                 }
                 if (!isSpam && !isDraft)
                     openConversation(conv, hash);
+            } else {
+                // conversation feature turned off
+                redoRecorder.setConvFirstMsgId(-1);
             }
-            redoRecorder.setConversationId(conv != null && !(conv instanceof VirtualConversation) ? conv.getId() : -1);
+            redoRecorder.setConvId(conv != null && !(conv instanceof VirtualConversation) ? conv.getId() : -1);
 
             // step 5: store the blob
             // TODO: Add partition support.  Need to store as many times as there
@@ -3211,7 +3248,7 @@ public class Mailbox {
             if (blob == null) {
                 // This mailbox is the only recipient, or it is the first
                 // of multiple recipients.  Save message to incoming directory.
-                if (redoPlayer == null)
+                if (!isRedo)
                     blob = sm.storeIncoming(data, digest, null, msg.getVolumeId());
                 else
                     blob = sm.storeIncoming(data, digest, redoPlayer.getPath(), redoPlayer.getVolumeId());
