@@ -67,14 +67,11 @@ public class ZRecur {
     }
     
     public static class ZWeekDayNum {
-        public static class DayOnlyComparator implements Comparator
+        public static class DayOnlyComparator implements Comparator<ZWeekDayNum>
         {
-            public int compare(Object lhs, Object rhs)
+            public int compare(ZWeekDayNum lhs, ZWeekDayNum rhs)
             {
-                ZWeekDayNum zlhs = (ZWeekDayNum)lhs;
-                ZWeekDayNum zrhs = (ZWeekDayNum)rhs;
-                
-                return zlhs.mDay.getCalendarDay() - zrhs.mDay.getCalendarDay();
+                return lhs.mDay.getCalendarDay() - rhs.mDay.getCalendarDay();
             }
             
         }

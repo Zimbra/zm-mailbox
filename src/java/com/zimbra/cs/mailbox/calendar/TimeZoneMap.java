@@ -31,6 +31,7 @@ package com.zimbra.cs.mailbox.calendar;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -39,9 +40,9 @@ import com.zimbra.cs.service.ServiceException;
 
 public class TimeZoneMap {
 
-    static HashMap sDayWeekDayMap;
+    static HashMap<ZRecur.ZWeekDay, Integer> sDayWeekDayMap;
     static {
-        sDayWeekDayMap = new HashMap();
+        sDayWeekDayMap = new HashMap<ZRecur.ZWeekDay, Integer>();
         sDayWeekDayMap.put(ZRecur.ZWeekDay.SU, new Integer(java.util.Calendar.SUNDAY));
         sDayWeekDayMap.put(ZRecur.ZWeekDay.MO, new Integer(java.util.Calendar.MONDAY));
         sDayWeekDayMap.put(ZRecur.ZWeekDay.TU, new Integer(java.util.Calendar.TUESDAY));
@@ -52,7 +53,7 @@ public class TimeZoneMap {
     }
     
     
-    private Map /*<String, ICalTimeZone>*/ mTzMap;
+    private Map<String, ICalTimeZone> mTzMap;
     private ICalTimeZone mLocalTZ;
     
     
@@ -61,7 +62,7 @@ public class TimeZoneMap {
      * @param localTZ local time zone of user account
      */
     public TimeZoneMap(ICalTimeZone localTZ) {
-    	mTzMap = new HashMap();
+    	mTzMap = new HashMap<String, ICalTimeZone>();
         mLocalTZ = localTZ;
     }
     
@@ -74,7 +75,7 @@ public class TimeZoneMap {
      * 
      * @param localTZ local time zone of user account
      */
-    private TimeZoneMap(Map m, ICalTimeZone localTZ) {
+    private TimeZoneMap(Map<String, ICalTimeZone> m, ICalTimeZone localTZ) {
         mTzMap = m;
         mLocalTZ = localTZ;
     }
@@ -102,7 +103,7 @@ public class TimeZoneMap {
     public Metadata encodeAsMetadata() {
         // don't put TZs in there muliple times
         Metadata meta = new Metadata();
-        ArrayList tzList = new ArrayList(); 
+        List<ICalTimeZone> tzList = new ArrayList<ICalTimeZone>();
 
         for (Iterator it = mTzMap.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Entry) it.next();
@@ -146,7 +147,7 @@ public class TimeZoneMap {
             }
         }
 
-        Map tzmap = new HashMap();
+        Map<String, ICalTimeZone> tzmap = new HashMap<String, ICalTimeZone>();
         // second time, build the real map
         for (Iterator it = map.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Entry) it.next();

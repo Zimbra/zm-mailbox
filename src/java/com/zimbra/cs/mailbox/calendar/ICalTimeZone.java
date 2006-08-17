@@ -35,9 +35,6 @@ import java.util.Map;
 import java.util.SimpleTimeZone;
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.mailbox.Metadata;
@@ -319,7 +316,7 @@ public class ICalTimeZone extends SimpleTimeZone
                         throw new IllegalArgumentException("Invalid day of week value: " + value);
                     dayOfWeek = day.intValue();
                 } else {
-                    String s = t.nextToken();  // skip value of unused param
+                    t.nextToken();  // skip value of unused param
                 }
             }
         } else {
@@ -366,7 +363,8 @@ public class ICalTimeZone extends SimpleTimeZone
     }
 
     // maps iCalendar weekday name to Java weekday number
-    private static Map /*<String, Integer>*/ sDayOfWeekMap = new HashMap(7);
+    private static Map<String, Integer> sDayOfWeekMap =
+        new HashMap<String, Integer>(7);
     static {
         sDayOfWeekMap.put("SU", new Integer(Calendar.SUNDAY));     // 1
         sDayOfWeekMap.put("MO", new Integer(Calendar.MONDAY));     // 2
@@ -588,7 +586,6 @@ public class ICalTimeZone extends SimpleTimeZone
             int year = cal.get(Calendar.YEAR); 
             int month = cal.get(Calendar.MONTH); 
             int day = cal.get(Calendar.DAY_OF_MONTH);
-            int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
             int minute = cal.get(Calendar.MINUTE);
             int second = cal.get(Calendar.SECOND);
 
@@ -729,7 +726,6 @@ public class ICalTimeZone extends SimpleTimeZone
             if (indexT == -1)
                 return null;
             String time = text.substring(indexT);
-            int length = 1;
             if (time.length() < 7)
                 return null;
             return time.substring(0, 7);
@@ -823,7 +819,6 @@ public class ICalTimeZone extends SimpleTimeZone
         private static Calendar findOnsetTime(ICalTimeZone tz,
                                               Calendar onsetDate,
                                               long beforeOffset) {
-            String offsetStr = offsetToHHMM((int) beforeOffset);
             Calendar lowerBound = (Calendar) onsetDate.clone();
             lowerBound.set(Calendar.HOUR_OF_DAY, 0);
             lowerBound.set(Calendar.MINUTE, 0);

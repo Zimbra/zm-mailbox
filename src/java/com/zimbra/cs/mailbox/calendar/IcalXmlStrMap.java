@@ -76,8 +76,8 @@ public class IcalXmlStrMap
     public static IcalXmlStrMap sRoleMap = new IcalXmlStrMap("Role");
     public static IcalXmlStrMap sCUTypeMap = new IcalXmlStrMap("CUType");
     
-    private HashMap fwdMap = new HashMap();
-    private HashMap bakMap = new HashMap();
+    private HashMap<String, String> fwdMap = new HashMap<String, String>();
+    private HashMap<String, String> bakMap = new HashMap<String, String>();
     private String mMapName;
     
 
