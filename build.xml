@@ -608,7 +608,7 @@
 			zimbraMailQuota 0 \
 			zimbraHideInGal TRUE
 		mcf zimbraSpamIsNotSpamAccount ham-sink@${zimbra.server.hostname}
-		ccr room-mississippi@${zimbra.server.hostname} \
+		ccr room-mississippi@${zimbra.server.hostname} test123 \
 					       displayName 'Mississippi Conference Room' \
 						   description 'Projector, DVD' \
 						   zimbraNotes 'The door squeaks.' \
@@ -632,7 +632,7 @@
 						   co USA \
 					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-		ccr room-amazon@${zimbra.server.hostname} \
+		ccr room-amazon@${zimbra.server.hostname} test123 \
 					       displayName 'Amazon Conference Room' \
 						   description 'TV, VCR; room is always available' \
 					       zimbraNotes 'A/C not working well' \
@@ -651,7 +651,7 @@
 						   zimbraCalResContactPhone '(650)555-1212' \
 					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-		ccr room-nile@${zimbra.server.hostname} \
+		ccr room-nile@${zimbra.server.hostname} test123 \
 					       displayName 'Nile Conference Room' \
 						   description 'Projector; for single meetings only' \
 						   zimbraNotes 'need to get some more chairs in here' \
@@ -670,7 +670,7 @@
 						   zimbraCalResContactPhone '(650)555-1212' \
 					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-		ccr projector1@${zimbra.server.hostname} \
+		ccr projector1@${zimbra.server.hostname} test123 \
 					       displayName 'Projector' \
 						   description '800x600 max resolution' \
 						   zimbraNotes 'usually works okay' \
@@ -688,7 +688,7 @@
 						   zimbraCalResContactPhone '(650)555-1212' \
 					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-		ccr pencil1@${zimbra.server.hostname} \
+		ccr pencil1@${zimbra.server.hostname} test123 \
 					       displayName '#2 pencil' \
 						   description 'a writing tool' \
 					       zimbraNotes 'must occasionally be sharpened' \

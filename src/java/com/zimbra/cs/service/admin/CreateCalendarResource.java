@@ -54,13 +54,14 @@ public class CreateCalendarResource extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
 
         String name = request.getAttribute(AdminService.E_NAME).toLowerCase();
+        String password = request.getAttribute(AdminService.E_PASSWORD, null);
         Map<String, Object> attrs = AdminService.getAttrs(request, true);
 
         if (!canAccessEmail(lc, name))
             throw ServiceException.PERM_DENIED(
                     "cannot access calendar resource account:" + name);
 
-        CalendarResource resource = prov.createCalendarResource(name, attrs);
+        CalendarResource resource = prov.createCalendarResource(name,password, attrs);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "CreateCalendarResource","name", name},

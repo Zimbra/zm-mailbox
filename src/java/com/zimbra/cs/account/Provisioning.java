@@ -1317,7 +1317,7 @@ public abstract class Provisioning {
      * @return
      * @throws ServiceException
      */
-    public abstract CalendarResource createCalendarResource(String emailAddress, Map<String, Object> attrs) throws ServiceException;
+    public abstract CalendarResource createCalendarResource(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException;
 
     /**
      * deletes the specified calendar resource, removing the account and all email aliases.
