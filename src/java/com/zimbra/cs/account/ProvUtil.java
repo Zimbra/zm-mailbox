@@ -162,7 +162,7 @@ public class ProvUtil implements DebugListener {
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
         CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
         CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk"),  //("  CreateBulkAccounts(cabulk) {domain} {namemask} {number of accounts to create} ");
-        CREATE_CALENDAR_RESOURCE("createCalendarResource",  "ccr", "{name@domain} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 1, Integer.MAX_VALUE),
+        CREATE_CALENDAR_RESOURCE("createCalendarResource",  "ccr", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 2, Integer.MAX_VALUE),
         CREATE_COS("createCos", "cc", "{name} [attr1 value1 [attr2 value2...]]", Category.COS, 1, Integer.MAX_VALUE),
         CREATE_DISTRIBUTION_LIST("createDistributionList", "cdl", "{list@domain}", Category.LIST, 1, Integer.MAX_VALUE),
         CREATE_DISTRIBUTION_LISTS_BULK("createDistributionListsBulk", "cdlbulk"),
@@ -498,7 +498,7 @@ public class ProvUtil implements DebugListener {
             mProv.renameDistributionList(lookupDistributionList(args[1]).getId(), args[2]);
             break;
         case CREATE_CALENDAR_RESOURCE:
-            System.out.println(mProv.createCalendarResource(args[1], getMap(args, 2)).getId());
+            System.out.println(mProv.createCalendarResource(args[1], args[2].equals("")? null : args[2], getMap(args, 3)).getId());
             break;
         case DELETE_CALENDAR_RESOURCE:
             mProv.deleteCalendarResource(lookupCalendarResource(args[1]).getId());

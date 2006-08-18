@@ -2704,7 +2704,7 @@ public class LdapProvisioning extends Provisioning {
     	}
     }
 
-    public CalendarResource createCalendarResource(String emailAddress,
+    public CalendarResource createCalendarResource(String emailAddress,String password, 
                                                    Map<String, Object> calResAttrs)
     throws ServiceException {
         emailAddress = emailAddress.toLowerCase().trim();
@@ -2715,7 +2715,7 @@ public class LdapProvisioning extends Provisioning {
         HashMap attrManagerContext = new HashMap();
         AttributeManager.getInstance().
             preModify(calResAttrs, null, attrManagerContext, true, true);
-        createAccount(emailAddress, null, calResAttrs,
+        createAccount(emailAddress, password, calResAttrs,
                       new String[] { C_zimbraCalendarResource });
         LdapCalendarResource resource =
             (LdapCalendarResource) getCalendarResourceByName(emailAddress);

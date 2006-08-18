@@ -260,10 +260,11 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public CalendarResource createCalendarResource(String emailAddress,
+    public CalendarResource createCalendarResource(String emailAddress, String password,
             Map<String, Object> attrs) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.CREATE_CALENDAR_RESOURCE_REQUEST);
         req.addElement(AdminService.E_NAME).setText(emailAddress);
+        req.addElement(AdminService.E_PASSWORD).setText(password);
         addAttrElements(req, attrs);
         return new SoapCalendarResource(invoke(req).getElement(AdminService.E_CALENDAR_RESOURCE));
     }
