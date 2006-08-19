@@ -713,8 +713,6 @@
 		<foreach list="${zimlets}" target="install-zimlet" param="zimlet">
 			<param name="action" value="deploy"/>
 		</foreach>
-		<antcall target="restart-tomcat"/>
-		<sleep seconds="5"/>
 	</target>
 
 	<target name="install-zimlet">
