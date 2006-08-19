@@ -39,7 +39,6 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.Constants;
 
 // TODO mailbox migration between servers
 // TODO backup/restore
@@ -61,7 +60,7 @@ public class DbOutOfOffice {
      * @throws ServiceException if a database error occrurs
      */
     public static boolean alreadySent(
-            Connection conn, Mailbox mbox, String sentTo, int numDays)
+            Connection conn, Mailbox mbox, String sentTo, long cacheDurationMillis)
     throws ServiceException
     {
         PreparedStatement stmt = null;
@@ -69,7 +68,7 @@ public class DbOutOfOffice {
         sentTo = sentTo.toLowerCase();
         boolean result = false;
         Timestamp cutoff = new Timestamp(
-            System.currentTimeMillis() - (numDays * Constants.MILLIS_PER_DAY));
+                System.currentTimeMillis() - cacheDurationMillis);
         
         try {
             stmt = conn.prepareStatement(
@@ -187,13 +186,13 @@ public class DbOutOfOffice {
         }
     }
     
-    public static void prune(Connection conn, int numDays)
+    public static void prune(Connection conn, long cacheDurationMillis)
     throws ServiceException
     {
         PreparedStatement stmt = null;
         try {
             Timestamp cutoff = new Timestamp(
-                System.currentTimeMillis() - Constants.MILLIS_PER_DAY * numDays);
+                    System.currentTimeMillis() - cacheDurationMillis);
             stmt = conn.prepareStatement(
                     "DELETE FROM " + TABLE_NAME + " " +
                     "WHERE sent_on <= ?");

@@ -30,6 +30,7 @@ import java.util.Map;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -75,7 +76,7 @@ public class OutOfOfficeCallback implements AttributeCallback {
             //  Convenient place to prune old data, until we determine that this
             // needs to be a separate scheduled process.
             // TODO: only prune once a day?
-            DbOutOfOffice.prune(conn, Notification.OUT_OF_OFFICE_CACHE_NUM_DAYS);
+            DbOutOfOffice.prune(conn, account.getTimeInterval(Provisioning.A_zimbraPrefOutOfOfficeCacheDuration, Notification.DEFAULT_OUT_OF_OFFICE_CACHE_DURATION_MILLIS));
             conn.commit();
         } catch (ServiceException e) {
             DbPool.quietRollback(conn);

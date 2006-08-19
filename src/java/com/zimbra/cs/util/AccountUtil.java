@@ -62,21 +62,34 @@ public class AccountUtil {
     }
 
     public static boolean isDirectRecipient(Account acct, MimeMessage mm) throws ServiceException, MessagingException {
-        return isDirectRecipient(acct, mm, -1);
+        return isDirectRecipient(acct, null, mm, -1);
     }
     
-    public static boolean isDirectRecipient(Account acct, MimeMessage mm, int maxToCheck) throws ServiceException, MessagingException {
+    public static boolean isDirectRecipient(Account acct, String[] otherAccountAddrs, MimeMessage mm, int maxToCheck) throws ServiceException, MessagingException {
         String accountAddress = acct.getName();
         String canonicalAddress = getCanonicalAddress(acct);
         String[] accountAliases = acct.getAliases();
         Address[] recipients = mm.getAllRecipients();
+        
+        if (recipients == null) {
+            return false;
+        }
 
         int numRecipientsToCheck = (maxToCheck <= 0 ? recipients.length : Math.min(recipients.length, maxToCheck));
         for (int i = 0; i < numRecipientsToCheck; i++) {
             String msgAddress = ((InternetAddress) recipients[i]).getAddress();
             if (addressMatchesAccount(accountAddress, canonicalAddress, accountAliases, msgAddress)) 
                 return true;
+            
+            if (otherAccountAddrs != null) {
+                for (String otherAddr: otherAccountAddrs) {
+                    if (otherAddr.equalsIgnoreCase(msgAddress)) {
+                        return true;
+                    }
+                }
+            }
         }
+        
         return false;
     }
 

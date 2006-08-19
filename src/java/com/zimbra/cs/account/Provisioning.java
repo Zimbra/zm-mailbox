@@ -553,6 +553,14 @@ public abstract class Provisioning {
 
     public static final String A_zimbraPrefOutOfOfficeReplyEnabled = "zimbraPrefOutOfOfficeReplyEnabled";
 
+    public static final String A_zimbraPrefOutOfOfficeFromDate = "zimbraPrefOutOfOfficeFromDate";
+    
+    public static final String A_zimbraPrefOutOfOfficeUntilDate = "zimbraPrefOutOfOfficeUntilDate";
+    
+    public static final String A_zimbraPrefOutOfOfficeCacheDuration = "zimbraPrefOutOfOfficeCacheDuration";
+    
+    public static final String A_zimbraPrefOutOfOfficeDirectAddress = "zimbraPrefOutOfOfficeDirectAddress";
+
     public static final String A_zimbraPrefReplyToAddress = "zimbraPrefReplyToAddress";
 
     public static final String A_zimbraPrefUseKeyboardShortcuts = "zimbraPrefUseKeyboardShortcuts";

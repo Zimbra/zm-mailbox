@@ -71,6 +71,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     boolean.....TRUE|FALSE
     duration....^\d+[hmsd]?$.  If [hmsd] is not specified, the default
                 is milliseconds.
+    gentime.....time expressed as \d{14}[zZ]
     enum........value attr is comma-separated list of valid values
     email.......valid email address. must have a "@" and no personal
                 part.
@@ -1727,4 +1728,22 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>this attribute contains the timestamps of each of the consecutive  authentication failures made on an account</desc>
 </attr>
 
+<attr id="384" name="zimbraPrefOutOfOfficeFromDate" type="gentime" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
+  <desc>out of office notifications (if enabled) are sent only if current date is after this date</desc>
+</attr>
+
+<attr id="385" name="zimbraPrefOutOfOfficeUntilDate" type="gentime" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
+  <desc>out of office notifications (if enabled) are sent only if current date is before this date</desc>
+</attr>
+
+<attr id="386" name="zimbraPrefOutOfOfficeCacheDuration" type="duration" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable">
+  <defaultCOSValue>7d</defaultCOSValue>
+  <desc>server remembers addresses to which notifications have been sent for this interval, and does not send duplicate notifications in this interval</desc>
+</attr>
+
+<attr id="387" name="zimbraPrefOutOfOfficeDirectAddress" type="email" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
+  <desc>per RFC 3834 no out of office notifications are sent if recipients address is not directly specified in the To/CC headers - for this check, we check to see if To/CC contained accounts address, aliases, canonical address.  But when external accounts are forwarded to Zimbra, and you want notifications sent to messages that contain their external address in To/Cc, add those address, then you can specify those external addresses here.</desc>
+</attr>
+  
 </attrs>
+  

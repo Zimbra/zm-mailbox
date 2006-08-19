@@ -40,9 +40,11 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.EmailUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
@@ -54,8 +56,8 @@ public class Notification {
     /**
      * Do not send someone an out of office reply within this number of days.
      */
-    public static final int OUT_OF_OFFICE_CACHE_NUM_DAYS = 7;
-
+    public static final long DEFAULT_OUT_OF_OFFICE_CACHE_DURATION_MILLIS = 7 * Constants.MILLIS_PER_DAY;
+    
     /** 
      * We have to check all of a user's addresses against all of the 
      * to,cc addresses in the message.  This is an M x N problem.
@@ -94,6 +96,19 @@ public class Notification {
             return;
         }
 
+        // Check if we are in any configured out of office interval
+        Date now = new Date();
+        Date fromDate = account.getGeneralizedTimeAttr(Provisioning.A_zimbraPrefOutOfOfficeFromDate, null);
+        if (fromDate != null && now.before(fromDate)) {
+            ofailed("from date not reached", destination, rcpt, msg);
+            return;
+        }
+        Date untilDate = account.getGeneralizedTimeAttr(Provisioning.A_zimbraPrefOutOfOfficeUntilDate, null);
+        if (untilDate != null && now.after(untilDate)) {
+            ofailed("until date reached", destination, rcpt, msg);
+            return;
+        }
+        
         // Get the JavaMail mime message - we have to look at headers to 
         // see this message qualifies for an out of office response.
         MimeMessage mm = pm.getMimeMessage();
@@ -141,7 +156,6 @@ public class Notification {
             return;
         }
 
-
         // Check if the envelope sender indicates a mailing list owner and such
         String[] envSenderAddrParts = EmailUtil.getLocalPartAndDomain(destination);
         if (envSenderAddrParts == null) {
@@ -179,7 +193,8 @@ public class Notification {
         }
 
         // Check if recipient was direclty mentioned in to/cc of this message
-        if (!AccountUtil.isDirectRecipient(account, mm, OUT_OF_OFFICE_DIRECT_CHECK_NUM_RECIPIENTS)) {
+        String[] otherAccountAddrs = account.getMultiAttr(Provisioning.A_zimbraPrefOutOfOfficeDirectAddress);
+        if (!AccountUtil.isDirectRecipient(account, otherAccountAddrs, mm, OUT_OF_OFFICE_DIRECT_CHECK_NUM_RECIPIENTS)) {
             ofailed("not direct", destination, rcpt, msg);
             return;
         }
@@ -188,7 +203,7 @@ public class Notification {
         Connection conn = null;
         try {
             conn = DbPool.getConnection();
-            if (DbOutOfOffice.alreadySent(conn, mbox, destination, OUT_OF_OFFICE_CACHE_NUM_DAYS)) {
+            if (DbOutOfOffice.alreadySent(conn, mbox, destination, account.getTimeInterval(Provisioning.A_zimbraPrefOutOfOfficeCacheDuration, DEFAULT_OUT_OF_OFFICE_CACHE_DURATION_MILLIS))) {
                 ofailed("already sent", destination, rcpt, msg);
                 return;
             }
@@ -232,7 +247,7 @@ public class Notification {
             
             // Body
             String body = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, "");
-            out.setText(body);
+            out.setText(body, Mime.P_CHARSET_UTF8);
             
             out.setEnvelopeFrom("<>");
 
@@ -356,7 +371,7 @@ public class Notification {
             address = new InternetAddress(destination);
             out.setRecipient(javax.mail.Message.RecipientType.TO, address);
             out.setSubject(subject);
-            out.setText(body);
+            out.setText(body, Mime.P_CHARSET_UTF8);
             out.setEnvelopeFrom("<>");
             Transport.send(out);
             ZimbraLog.mailbox.info("notification sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msg.getId());
