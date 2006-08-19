@@ -175,6 +175,7 @@ public class ParsedDocument {
             handler.setMessageDigest(mDigest = ds.getDigest());
             mDocument = handler.getDocument();
             mDocument.add(Field.Text(LuceneFields.L_SIZE, Integer.toString(mSize = ds.getSize())));
+            mDocument.add(Field.Text(LuceneFields.L_H_SUBJECT, filename));
             mDocument.add(Field.Text(LuceneFields.L_CONTENT, filename));
             mDocument.add(Field.Text(LuceneFields.L_FILENAME, filename));
         } catch (MimeHandlerException mhe) {
