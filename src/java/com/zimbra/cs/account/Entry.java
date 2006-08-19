@@ -88,7 +88,7 @@ public interface Entry {
      * (d = days, h = hours, m = minutes, s = seconds. If no character unit is specified, the default is
      * seconds.
      * 
-     * the time interval is returned in miliseconds.
+     * the time interval is returned in milliseconds.
      * 
      * @param name name of the attribute to retreive. 
      * @param defaultValue value to use if attr is not present or can't be parsed.
