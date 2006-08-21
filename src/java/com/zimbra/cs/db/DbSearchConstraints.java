@@ -390,12 +390,13 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         excludeTags = tu.union(excludeTags, other.excludeTags);
         
         // bug 2426
-        for (Tag t : tags) {
-            if (excludeTags.contains(t)) {
-                noResults = true;
-                return;
+        if (tags != null && excludeTags != null)
+            for (Tag t : tags) {
+                if (excludeTags.contains(t)) {
+                    noResults = true;
+                    return;
+                }
             }
-        }
             
         // has tags 
         if (hasTags == null)
