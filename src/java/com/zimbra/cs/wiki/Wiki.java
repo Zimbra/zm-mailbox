@@ -708,11 +708,12 @@ public abstract class Wiki {
 			// make sure another page with the same name does not exist.
 			Wiki w = Wiki.getInstance(ctxt, account, fid);
 			synchronized (w) {
-				if (w.lookupWiki(page.getWikiWord()) != null)
+				WikiPage pg = w.lookupWiki(wikiWord);
+				if (pg != null)
 					throw MailServiceException.ALREADY_EXISTS("wiki word "+wikiWord+" in folder "+fid,
 							new Argument(MailService.A_NAME, wikiWord, Argument.Type.STR),
-							new Argument(MailService.A_ID, id, Argument.Type.IID),
-							new Argument(MailService.A_VERSION, ver, Argument.Type.NUM));
+							new Argument(MailService.A_ID, pg.getId(), Argument.Type.IID),
+							new Argument(MailService.A_VERSION, pg.getLastRevision(), Argument.Type.NUM));
 
 				// create a new page
 				page.create(ctxt, w);
