@@ -695,7 +695,7 @@ public class LC {
 		postfix_version.setDoc("postfix_version");
 
 		postfix_virtual_alias_domains  = new KnownKey("postfix_virtual_alias_domains");
-		postfix_virtual_alias_domains.setDefault("ldap://opt/zimbra/conf/ldap-vad.cf");
+		postfix_virtual_alias_domains.setDefault("ldap:/opt/zimbra/conf/ldap-vad.cf");
 		postfix_virtual_alias_domains.setDoc("postfix_virtual_alias_domains");
 
 		postfix_virtual_alias_maps  = new KnownKey("postfix_virtual_alias_maps");
