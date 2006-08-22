@@ -30,8 +30,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
@@ -43,9 +45,13 @@ public class MetadataDump {
     }
 
     private static String getSQL(int mboxId, int itemId) {
-        return
-            "SELECT metadata FROM mailbox" + mboxId +
-            ".mail_item WHERE id=" + itemId;
+        StringBuilder sql = new StringBuilder("SELECT metadata from ");
+        sql.append(DbMailItem.getMailItemTableName(mboxId));
+        sql.append(" WHERE ");
+        if (DebugConfig.enableMailboxGroup)
+            sql.append("mailbox_id = ").append(mboxId).append(" AND ");
+        sql.append("id = ").append(itemId);
+        return sql.toString();
     }
 
     private static String getMetadata(int mboxId, int itemId)

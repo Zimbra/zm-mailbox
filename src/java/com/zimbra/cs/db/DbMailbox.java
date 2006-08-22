@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
@@ -68,7 +69,8 @@ public class DbMailbox {
     public static final int CI_METADATA_SECTION    = 2;
     public static final int CI_METADATA_METADATA    = 3;
 
-    private static String DATABASE_PREFIX = "mailbox";
+    private static String DB_PREFIX_DB_PER_MAILBOX = "mailbox";
+    private static String DB_PREFIX_MAILBOX_GROUP = "mboxgroup";
 
     public synchronized static int createMailbox(Connection conn, int mailboxId, String accountId, String comment) throws ServiceException {
         PreparedStatement stmt = null;
@@ -76,13 +78,16 @@ public class DbMailbox {
         try {
             boolean explicitId = (mailboxId != Mailbox.ID_AUTO_INCREMENT);
             String idSource = (explicitId ? "?" : "next_mailbox_id");
-            stmt = conn.prepareStatement("INSERT INTO mailbox(account_id, id, index_volume_id, item_id_checkpoint, comment)" +
-                                         " SELECT ?, " + idSource + ", index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
+            stmt = conn.prepareStatement("INSERT INTO mailbox(account_id, id, " + (DebugConfig.enableMailboxGroup ? "group_id, " : "") + "index_volume_id, item_id_checkpoint, comment)" +
+                                         " SELECT ?, " + idSource + (DebugConfig.enableMailboxGroup ? ", " + idSource : "") +", index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
                                          " FROM current_volumes ORDER BY index_volume_id LIMIT 1");
             int attr = 1;
             stmt.setString(attr++, accountId);
-            if (explicitId)
+            if (explicitId) {
                 stmt.setInt(attr++, mailboxId);
+                if (DebugConfig.enableMailboxGroup)
+                    stmt.setInt(attr++, mailboxId);
+            }
             stmt.setString(attr++, comment);
             stmt.executeUpdate();
             stmt.close();
@@ -125,6 +130,8 @@ public class DbMailbox {
         PreparedStatement stmt = null;
         try {
             conn = DbPool.getConnection();
+            if (DebugConfig.enableMailboxGroup && databaseExists(conn, mailboxId))
+                return;
 
             // Create the new database
             String dbName = getDatabaseName(mailboxId);
@@ -146,21 +153,54 @@ public class DbMailbox {
         }
     }
 
+    private static String[] sTables;
+
+    static {
+        sTables = new String[4];
+        sTables[0] = "mail_item";
+        sTables[1] = "open_conversation";
+        sTables[2] = "appointment";
+        sTables[3] = "tombstone";
+    }
+
+    private static boolean databaseExists(Connection conn, int mailboxId)
+    throws ServiceException {
+        for (int i = 0; i < sTables.length; i++) {
+            String table = getDatabaseName(mailboxId) + "." + sTables[i];
+
+            String sql = "DESCRIBE " + table;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+            try {
+                stmt = conn.prepareStatement(sql);
+                rs = stmt.executeQuery();
+                while (rs.next()) {}
+            } catch (SQLException e) {
+                return false;
+            } finally {
+                DbPool.closeResults(rs);
+                DbPool.closeStatement(stmt);
+            }
+        }
+        return true;
+    }
+
     /**
      * Drop the database for the specified mailbox.  The DDL runs on its own connection
      * so that it doesn't interfere with transactions on the main connection.
      * 
      * @throws ServiceException if the database creation fails
      */
-    public static void dropMailboxDatabase(int mailboxId) throws ServiceException {
+    private static void dropMailboxDatabase(int mailboxId)
+    throws ServiceException {
         ZimbraLog.mailbox.debug("dropMailboxDatabase(" + mailboxId + ")");
 
         String dbName = getDatabaseName(mailboxId);
-        if (!dbName.startsWith(DATABASE_PREFIX)) {
+        if (!dbName.startsWith(DB_PREFIX_DB_PER_MAILBOX)) {
             // Additional safeguard to make sure we don't drop the wrong database
             throw ServiceException.FAILURE("Attempted to drop database " + dbName, null);
         }
-        
+
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
@@ -180,6 +220,36 @@ public class DbMailbox {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
+    }
+
+    private static void dropMailboxFromGroup(int mailboxId)
+    throws ServiceException {
+        Connection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            String dbname = getDatabaseName(mailboxId);
+
+            // Delete in reverse order.
+            for (int i = sTables.length - 1; i >= 0; i--) {
+                String table = dbname + "." + sTables[i];
+                String sql = "DELETE FROM " + table + " WHERE mailbox_id = " + mailboxId;
+                DbUtil.executeUpdate(conn, sql);
+                conn.commit();
+            }
+        } catch (ServiceException e) {
+            DbPool.quietRollback(conn);
+            throw ServiceException.FAILURE("dropMailboxDatabase(" + mailboxId + ")", e);
+        } finally {
+            DbPool.quietClose(conn);
+        }
+    }
+
+    public static void clearMailboxContent(int mailboxId)
+    throws ServiceException {
+        if (DebugConfig.enableMailboxGroup)
+            dropMailboxFromGroup(mailboxId);
+        else
+            dropMailboxDatabase(mailboxId);
     }
 
     public static void updateMailboxStats(Mailbox mbox) throws ServiceException {
@@ -425,13 +495,16 @@ public class DbMailbox {
 
     /** @return the name of the database that contains tables for the specified <code>mailboxId</code>. */
     public static String getDatabaseName(int mailboxId) {
-        return DATABASE_PREFIX + mailboxId;
+        if (DebugConfig.enableMailboxGroup) {
+            int which = (mailboxId - 1) / DebugConfig.mailboxGroupSize + 1;
+            return DB_PREFIX_MAILBOX_GROUP + which;
+        } else {
+            return DB_PREFIX_DB_PER_MAILBOX + mailboxId;
+        }
     }
 
     /**
      * Deletes the row for the specified mailbox from the <code>mailbox</code> table.
-     * To completely clean up the mailbox data, a call to this method must
-     * be followed by a call to {@link DbMailbox#dropMailboxDatabase(int)}.
      *  
      * @throws ServiceException if the database operation failed
      */
@@ -457,7 +530,10 @@ public class DbMailbox {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT DISTINCT tags " +
-                "FROM " + DbMailItem.getMailItemTableName(mailboxId));
+                    "FROM " + DbMailItem.getMailItemTableName(mailboxId) +
+                    (DebugConfig.enableMailboxGroup ? " WHERE mailbox_id = ?" : ""));
+            if (DebugConfig.enableMailboxGroup)
+                stmt.setInt(1, mailboxId);
             rs = stmt.executeQuery();
             while (rs.next())
                 tagsets.add(rs.getLong(1));
@@ -478,7 +554,10 @@ public class DbMailbox {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT DISTINCT flags " +
-                "FROM " + DbMailItem.getMailItemTableName(mailboxId));
+                    "FROM " + DbMailItem.getMailItemTableName(mailboxId) +
+                    (DebugConfig.enableMailboxGroup ? " WHERE mailbox_id = ?" : ""));
+            if (DebugConfig.enableMailboxGroup)
+                stmt.setInt(1, mailboxId);
             rs = stmt.executeQuery();
             while (rs.next())
                 flagsets.add(rs.getLong(1));

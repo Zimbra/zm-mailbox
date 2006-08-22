@@ -81,6 +81,9 @@ public class DebugConfig {
     // If true, turns off object detection feature.
     public static boolean disableObjects;
 
+    public static boolean enableMailboxGroup;
+    public static int mailboxGroupSize;
+
     static {
         validateOutgoingICalendar = booleanValue("debug_validate_outgoing_icalendar", false);        
         disableConversation = booleanValue("debug_disable_conversation", false);
@@ -100,6 +103,11 @@ public class DebugConfig {
         }
         disableIndexingAttachmentsSeparately = booleanValue("debug_disable_indexing_attachments_separately", false);
         disableIndexingAttachmentsTogether = booleanValue("debug_disable_indexing_attachments_together", false);
+
+        enableMailboxGroup = booleanValue("debug_enable_mailbox_group", false);
+        mailboxGroupSize = intValue("debug_mailbox_group_size", 100);
+        if (mailboxGroupSize < 1)
+            mailboxGroupSize = 1;
     }
 
     private static boolean booleanValue(String key, boolean defaultValue) {
@@ -107,5 +115,12 @@ public class DebugConfig {
         if (val.length() < 1)
             return defaultValue;
         return Boolean.valueOf(val).booleanValue();
+    }
+
+    private static int intValue(String key, int defaultValue) {
+        String val = LC.get(key);
+        if (val.length() < 1)
+            return defaultValue;
+        return Integer.valueOf(val).intValue();
     }
 }

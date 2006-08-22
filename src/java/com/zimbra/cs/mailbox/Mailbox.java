@@ -1351,7 +1351,7 @@ public class Mailbox {
                         if (conn != null)
                             conn.rollback();
                         if (data != null)
-                            DbMailbox.dropMailboxDatabase(data.id);
+                            DbMailbox.clearMailboxContent(data.id);
                     }
                 } finally {
                     if (conn != null)
@@ -1514,8 +1514,14 @@ public class Mailbox {
             try {
                 // remove all the relevant entries from the database
                 Connection conn = getOperationConnection();
-                DbMailbox.deleteMailbox(conn, this);
-                DbMailbox.dropMailboxDatabase(getId());
+                if (DebugConfig.enableMailboxGroup) {
+                    DbMailbox.clearMailboxContent(getId());
+                    DbMailbox.deleteMailbox(conn, this);
+                } else {
+                    // Preserve original order of code with old schema.
+                    DbMailbox.deleteMailbox(conn, this);
+                    DbMailbox.clearMailboxContent(getId());
+                }
 
                 success = true;
             } finally {

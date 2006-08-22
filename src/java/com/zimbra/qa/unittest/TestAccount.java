@@ -96,9 +96,6 @@ public class TestAccount extends TestCase {
         results = DbUtil.executeQuery(
             "SELECT COUNT(*) FROM mailbox WHERE id = " + mbox.getId());
         assertEquals("Unexpected row in mailbox table", 0, results.getInt(1));
-        
-        results = DbUtil.executeQuery("SHOW DATABASES LIKE '" + dbName + "'");
-        assertEquals("Found mailbox database", 0, results.size());
     }
     
     private void cleanUp()

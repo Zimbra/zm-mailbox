@@ -38,6 +38,7 @@ import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -255,7 +256,9 @@ public class TestFolders extends TestCase
         String sql =
             "SELECT id " +
             "FROM " + DbMailItem.getMailItemTableName(mMbox) +
-            " WHERE type = " + type + " AND subject LIKE '%" + NAME_PREFIX + "%' " +
+            " WHERE " +
+            (DebugConfig.enableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
+            "type = " + type + " AND subject LIKE '%" + NAME_PREFIX + "%' " +
             "ORDER BY id DESC";
         DbResults results = DbUtil.executeQuery(sql);
         while (results.next()) {

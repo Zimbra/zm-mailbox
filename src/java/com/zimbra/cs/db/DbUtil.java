@@ -326,7 +326,7 @@ public class DbUtil {
      * @param size the number of question marks
      */
     public static String suitableNumberOfVariables(int size) {
-        StringBuffer sb = new StringBuffer(" (");
+        StringBuilder sb = new StringBuilder(" (");
         for (int i = 0; i < size; i++)
             sb.append(i == 0 ? "?" : ", ?");
         return sb.append(") ").toString();
@@ -363,7 +363,7 @@ public class DbUtil {
      */
     public static String[] parseScript(Reader scriptReader)
     throws IOException {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         BufferedReader br = new BufferedReader(scriptReader);
         String line;
         while ((line = br.readLine()) != null) {

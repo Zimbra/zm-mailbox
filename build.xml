@@ -345,6 +345,7 @@
 
 		<!-- db schema -->
 		<copy todir="${dist.dir}/db" overwrite="true"><fileset dir="${src.dir}/db" includes="*.sql"/></copy>
+		<copy todir="${dist.dir}/db" overwrite="true"><fileset dir="${db.schema.dir}" includes="db.sql,create_database.sql"/></copy>
 		<copy todir="${dist.dir}/db" file="${build.dir}/versions-init.sql" overwrite="true"/>
 
 		<!-- wikis, zimlets -->
@@ -482,12 +483,23 @@
 	</target>
 
 	<target name="db-init" description="Recreate the database tables">
-		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra" classpathref="class.path" onerror="continue" keepformat="true" src="src/db/dropdb.sql" />
-
-		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
-			 classpathref="class.path" onerror="abort" keepformat="true" src="src/db/db.sql" />
-
-		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+		<java classname="com.zimbra.cs.localconfig.Main" fork="true" classpathref="class.path"
+			  outputproperty="LC.mbox.group.enabled" failonerror="true">
+			<arg line="-q -c conf/localconfig.xml -m nokey debug_enable_mailbox_group"/>
+		</java>
+		<condition property="db.schema.dir" value="src/db/mbox_group">
+			<equals arg1="${LC.mbox.group.enabled}" arg2="true" casesensitive="false" trim="true"/>
+		</condition>
+		<condition property="db.schema.dir" value="src/db">
+			<not><isset property="db.schema.dir"/></not>
+		</condition>
+		<echo>Using database schema in ${db.schema.dir}</echo>
+		<copy todir="${zimbra.home.dir}/db" overwrite="true"><fileset dir="${db.schema.dir}" includes="db.sql,create_database.sql"/></copy>
+		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
+			 classpathref="class.path" onerror="continue" keepformat="true" src="src/db/dropdb.sql" />
+		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
+			 classpathref="class.path" onerror="abort" keepformat="true" src="${db.schema.dir}/db.sql" />
+		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
 			 classpathref="class.path" onerror="abort" keepformat="false" src="${build.dir}/versions-init.sql" />
 	</target>
 
