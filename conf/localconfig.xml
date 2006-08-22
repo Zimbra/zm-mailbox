@@ -67,5 +67,11 @@
   <key name="nio_imap_enable">
     <value>true</value>
   </key>
-  
+
+  <key name="debug_enable_mailbox_group">
+    <value>false</value>
+  </key>
+  <key name="debug_mailbox_group_size">
+    <value>2</value>
+  </key>
 </localconfig>
