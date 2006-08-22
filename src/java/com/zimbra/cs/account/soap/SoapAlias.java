@@ -27,26 +27,26 @@ package com.zimbra.cs.account.soap;
 
 import java.util.Map;
 
+import com.zimbra.cs.account.AbstractNamedEntry;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 
-public class SoapAlias extends SoapNamedEntry implements Alias {
+class SoapAlias extends AbstractNamedEntry implements Alias, SoapEntry {
 
-    public SoapAlias(String name, String id, Map<String, Object> attrs) {
+    SoapAlias(String name, String id, Map<String, Object> attrs) {
         super(name, id, attrs);
     }
 
-    public SoapAlias(Element e) throws ServiceException {
-        super(e);
+    SoapAlias(Element e) throws ServiceException {
+        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e));
     }
 
-    @Override
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public void reload(SoapProvisioning prov) throws ServiceException {
 
     }

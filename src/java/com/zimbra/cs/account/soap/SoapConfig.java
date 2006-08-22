@@ -27,30 +27,29 @@ package com.zimbra.cs.account.soap;
 
 import java.util.Map;
 
+import com.zimbra.cs.account.AbstractEntry;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 
-public class SoapConfig extends SoapEntry implements Config {
+class SoapConfig extends AbstractEntry implements Config, SoapEntry {
 
-    public SoapConfig(Map<String, Object> attrs) {
+    SoapConfig(Map<String, Object> attrs) {
         super(attrs);
     }
 
-    public SoapConfig(Element e) throws ServiceException {
+    SoapConfig(Element e) throws ServiceException {
         super(SoapProvisioning.getAttrs(e));
     }
 
-    @Override
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.MODIFY_CONFIG_REQUEST);
         SoapProvisioning.addAttrElements(req, attrs);
         setAttrs(SoapProvisioning.getAttrs(prov.invoke(req)));
     }
 
-    @Override
     public void reload(SoapProvisioning prov) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.GET_ALL_CONFIG_REQUEST);
         setAttrs(SoapProvisioning.getAttrs(prov.invoke(req)));

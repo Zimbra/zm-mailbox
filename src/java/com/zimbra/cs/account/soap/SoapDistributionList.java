@@ -28,6 +28,7 @@ package com.zimbra.cs.account.soap;
 import java.util.ArrayList;
 import java.util.Map;
 
+import com.zimbra.cs.account.AbstractNamedEntry;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
@@ -36,14 +37,14 @@ import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 
-public class SoapDistributionList extends SoapNamedEntry implements DistributionList {
+class SoapDistributionList extends AbstractNamedEntry implements DistributionList, SoapEntry {
 
-    public SoapDistributionList(String name, String id, Map<String, Object> attrs) {
+    SoapDistributionList(String name, String id, Map<String, Object> attrs) {
         super(name, id, attrs);
     }
 
-    public SoapDistributionList(Element e) throws ServiceException {
-        super(e);
+    SoapDistributionList(Element e) throws ServiceException {
+        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e));
         addDlm(e, getAttrs());
     }
 
@@ -55,7 +56,6 @@ public class SoapDistributionList extends SoapNamedEntry implements Distribution
         attrs.put(Provisioning.A_zimbraMailForwardingAddress, list.toArray(new String[list.size()]));
     }
 
-    @Override
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.MODIFY_DISTRIBUTION_LIST_REQUEST);
         req.addElement(AdminService.E_ID).setText(getId());
@@ -66,7 +66,6 @@ public class SoapDistributionList extends SoapNamedEntry implements Distribution
         setAttrs(newAttrs);        
     }
 
-    @Override
     public void reload(SoapProvisioning prov) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.GET_DISTRIBUTION_LIST_REQUEST);
         Element a = req.addElement(AdminService.E_DL);

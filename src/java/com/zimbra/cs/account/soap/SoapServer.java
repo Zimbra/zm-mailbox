@@ -27,6 +27,7 @@ package com.zimbra.cs.account.soap;
 
 import java.util.Map;
 
+import com.zimbra.cs.account.AbstractNamedEntry;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.service.ServiceException;
@@ -34,14 +35,14 @@ import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 
-public class SoapServer extends SoapNamedEntry implements Server {
+class SoapServer extends AbstractNamedEntry implements Server, SoapEntry {
 
-    public SoapServer(String name, String id, Map<String, Object> attrs) {
+    SoapServer(String name, String id, Map<String, Object> attrs) {
         super(name, id, attrs);
     }
 
-    public SoapServer(Element e) throws ServiceException {
-        super(e);
+    SoapServer(Element e) throws ServiceException {
+        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e));
     }
 
     public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {
@@ -49,7 +50,6 @@ public class SoapServer extends SoapNamedEntry implements Server {
         return getAttrs();
     }
     
-    @Override
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.MODIFY_SERVER_REQUEST);
         req.addElement(AdminService.E_ID).setText(getId());
@@ -57,7 +57,6 @@ public class SoapServer extends SoapNamedEntry implements Server {
         setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_SERVER)));
     }
 
-    @Override
     public void reload(SoapProvisioning prov) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.GET_SERVER_REQUEST);
         Element a = req.addElement(AdminService.E_SERVER);

@@ -35,14 +35,14 @@ import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 
-public class SoapCalendarResource extends SoapAccount implements
+class SoapCalendarResource extends SoapAccount implements
         CalendarResource {
 
-    public SoapCalendarResource(String name, String id, Map<String, Object> attrs) {
+    SoapCalendarResource(String name, String id, Map<String, Object> attrs) {
         super(name, id, attrs);
     }
 
-    public SoapCalendarResource(Element e) throws ServiceException {
+    SoapCalendarResource(Element e) throws ServiceException {
         super(e);
     }
     

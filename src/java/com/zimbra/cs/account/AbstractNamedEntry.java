@@ -23,27 +23,19 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.account.soap;
+package com.zimbra.cs.account;
 
 import java.util.Map;
 
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.admin.AdminService;
-import com.zimbra.soap.Element;
 
-public abstract class SoapNamedEntry extends SoapEntry implements NamedEntry {
+public abstract class AbstractNamedEntry extends AbstractEntry implements NamedEntry {
 
     protected String mName;
     protected String mId;
 
-    protected SoapNamedEntry(Element e) throws ServiceException {
-        super(SoapProvisioning.getAttrs(e));
-        mName = e.getAttribute(AdminService.A_NAME);
-        mId = e.getAttribute(AdminService.A_ID);
-    }
-    
-    protected SoapNamedEntry(String name, String id, Map<String, Object> attrs) {
+    protected AbstractNamedEntry(String name, String id, Map<String, Object> attrs) {
         super(attrs);
         mName = name;
         mId = id;
@@ -64,14 +56,13 @@ public abstract class SoapNamedEntry extends SoapEntry implements NamedEntry {
         return getName().compareTo(other.getName());
     }
     
-
     public synchronized String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(getClass().getName()).append(": { name=").append(getName()).append(" id=").append(getId());
         try {
             sb.append(getAttrs().toString());
         } catch (ServiceException e) {
-            // should never happen, since getAttrs in SoapEntry doesn't throw an exception
+            // should never happen, since getAttrs in AbstractEntry doesn't throw an exception
         }
         sb.append("}");
         return sb.toString();           
