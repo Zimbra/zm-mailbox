@@ -218,7 +218,7 @@ class ImapURL {
                 AuthToken auth = new AuthToken(authacct, System.currentTimeMillis() + 60 * 1000);
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put(UserServlet.QP_IMAP_ID, Integer.toString(mUid));
-                content = UserServlet.getRemoteResource(auth, acct, mFolder, params);
+                content = UserServlet.getRemoteContent(auth, acct, mFolder, params);
             }
 
             // fetch the content of the message

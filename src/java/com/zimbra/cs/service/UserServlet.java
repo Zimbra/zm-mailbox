@@ -38,6 +38,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpState;
@@ -69,6 +70,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.DateUtil;
 import com.zimbra.cs.util.HttpUtil;
+import com.zimbra.cs.util.Pair;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -802,15 +804,23 @@ public class UserServlet extends ZimbraServlet {
         super.destroy();
     }
 
-        
-    public static byte[] getRemoteResource(AuthToken auth, ItemId iid, Map<String, String> params) throws ServiceException {
+
+    public static byte[] getRemoteContent(AuthToken auth, ItemId iid, Map<String, String> params) throws ServiceException {
+        return getRemoteResource(auth, iid, params).getSecond();
+    }
+
+    public static byte[] getRemoteContent(AuthToken auth, Account target, String folder, Map<String,String> params) throws ServiceException {
+        return getRemoteResource(auth, target, folder, params).getSecond();
+    }
+
+    public static Pair<Header[], byte[]> getRemoteResource(AuthToken auth, ItemId iid, Map<String, String> params) throws ServiceException {
         Account target = Provisioning.getInstance().get(AccountBy.id, iid.getAccountId());
         Map<String, String> pcopy = new HashMap<String, String>(params);
         pcopy.put(QP_ID, iid.toString());
         return getRemoteResource(auth, target, null, pcopy);
     }
 
-    public static byte[] getRemoteResource(AuthToken auth, Account target, String folder, Map<String,String> params) throws ServiceException {
+    public static Pair<Header[], byte[]> getRemoteResource(AuthToken auth, Account target, String folder, Map<String,String> params) throws ServiceException {
         // fetch from remote store
         Provisioning prov = Provisioning.getInstance();
         Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
@@ -855,7 +865,9 @@ public class UserServlet extends ZimbraServlet {
             int statusCode = client.executeMethod(get);
             if (statusCode != HttpStatus.SC_OK)
                 throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), null);
-            return get.getResponseBody();
+
+            Header[] headers = get.getResponseHeaders();
+            return new Pair<Header[], byte[]>(headers, get.getResponseBody());
         } catch (HttpException e) {
             throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
         } catch (IOException e) {

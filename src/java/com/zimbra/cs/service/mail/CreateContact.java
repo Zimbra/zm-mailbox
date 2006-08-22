@@ -146,7 +146,7 @@ public class CreateContact extends MailDocumentHandler  {
                     // fetch from remote store
                     Map<String, String> params = new HashMap<String, String>();
                     params.put(UserServlet.QP_PART, part);
-                    byte[] content = UserServlet.getRemoteResource(lc.getAuthToken(), iid, params);
+                    byte[] content = UserServlet.getRemoteContent(lc.getAuthToken(), iid, params);
                     text = new String(content, "utf-8");
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("error reading vCard", e);
