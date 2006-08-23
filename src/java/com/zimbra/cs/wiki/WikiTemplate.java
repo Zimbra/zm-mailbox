@@ -119,21 +119,8 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	
 	public String getComposedPage(Context ctxt, String chrome)
 	throws ServiceException, IOException {
-		long t0, t1;
-		t0 = System.currentTimeMillis();
-		
 		Wiki wiki = Wiki.getInstance(ctxt.wctxt, ctxt.item);
-		
-		t1 = System.currentTimeMillis();
-		ZimbraLog.wiki.info((t1 - t0) + " Wiki.getInstance");
-		t0 = System.currentTimeMillis();
-
 		WikiTemplate chromeTemplate = wiki.getTemplate(ctxt.wctxt, chrome);
-		
-		t1 = System.currentTimeMillis();
-		ZimbraLog.wiki.info((t1 - t0) + " getTemplate(chrome)");
-		t0 = System.currentTimeMillis();
-		
 		String templateVal;
 
 		if (ctxt.item instanceof WikiItem)
@@ -143,10 +130,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			ctxt.content = inner;
 			templateVal = chromeTemplate.toString(ctxt);
 		}
-
-		t1 = System.currentTimeMillis();
-		ZimbraLog.wiki.info((t1 - t0) + " template.toString");
-		t0 = System.currentTimeMillis();
 
 		return templateVal;
 	}

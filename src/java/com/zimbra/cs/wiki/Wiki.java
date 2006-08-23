@@ -816,8 +816,6 @@ public abstract class Wiki {
 	}
 
 	public WikiTemplate getTemplate(WikiContext ctxt, String name) throws ServiceException, IOException {
-		long t0 = System.currentTimeMillis();
-		try {
 		// check if the request is for the chrome.
 		WikiPage page;
 		if (name.startsWith("_")) {
@@ -843,10 +841,6 @@ public abstract class Wiki {
 
 		// the page hasn't been found.
 		return new WikiTemplate("<!-- missing template "+name+" -->");
-		} finally {
-			long t1 = System.currentTimeMillis();
-			ZimbraLog.wiki.info("getTemplate "+name+" : "+(t1-t0));
-		}
 	}
 	
 	public static void expireTemplate(Document item) {
