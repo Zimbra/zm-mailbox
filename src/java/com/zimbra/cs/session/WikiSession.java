@@ -25,17 +25,17 @@
 package com.zimbra.cs.session;
 
 import com.zimbra.cs.im.IMNotification;
-import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.wiki.Wiki;
-import com.zimbra.cs.wiki.WikiTemplateStore;
 
 public class WikiSession extends Session {
 
 	public static WikiSession getInstance() throws ServiceException {
-		if (sSession == null) {
-			sSession = new WikiSession(Wiki.getDefaultWikiAccount().getId());
+		synchronized (WikiSession.class) {
+			if (sSession == null) {
+				sSession = new WikiSession(Wiki.getDefaultWikiAccount().getId());
+			}
 		}
 		return sSession;
 	}
@@ -80,14 +80,8 @@ public class WikiSession extends Session {
 	}
 
 	private void expireItem(Object obj) {
-		if (obj != null && obj instanceof WikiItem) {
-			try {
-				WikiItem item = (WikiItem) obj;
-				WikiTemplateStore wiki = WikiTemplateStore.getInstance(item);
-				wiki.expireTemplate(item.getWikiWord());
-			} catch (ServiceException se) {
-				ZimbraLog.wiki.error("can't expire WikiItem", se);
-			}
+		if (obj != null && obj instanceof Document) {
+			Wiki.expireTemplate((Document) obj);
 		}
 	}
 }

@@ -36,9 +36,10 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.wiki.PageCache;
+import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.cs.wiki.WikiTemplate;
-import com.zimbra.cs.wiki.WikiTemplateStore;
 
 public class WikiFormatter extends Formatter {
 
@@ -65,9 +66,18 @@ public class WikiFormatter extends Formatter {
         ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
     }
     
+    private static PageCache sCache = new PageCache();
+    
     private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
-    	WikiTemplate wt = getTemplate(context, wiki);
-    	String template = wt.getComposedPage(createWikiContext(context), wiki, CHROME);
+    	WikiContext ctxt = createWikiContext(context);
+    	// fully rendered pages are cached in <code>PageCache</code>.
+    	String key = sCache.generateKey(ctxt, wiki);
+    	String template = sCache.getPage(key);
+    	if (template == null) {
+    		WikiTemplate wt = getTemplate(context, wiki);
+    		template = wt.getComposedPage(ctxt, wiki, CHROME);
+    		sCache.addPage(key, template);
+    	}
 		printWikiPage(context, template);
 	}
 
@@ -81,11 +91,12 @@ public class WikiFormatter extends Formatter {
     	return getTemplate(context, folder.getMailbox().getAccountId(), folder.getId(), name);
     }
     private WikiTemplate getTemplate(Context context, String accountId, int folderId, String name) throws IOException, ServiceException {
-    	WikiTemplateStore wiki = WikiTemplateStore.getInstance(accountId, Integer.toString(folderId));
-    	return wiki.getTemplate(createWikiContext(context), name);
+    	WikiContext wctxt = createWikiContext(context);
+    	Wiki wiki = Wiki.getInstance(wctxt, accountId, Integer.toString(folderId));
+    	return wiki.getTemplate(wctxt, name);
     }
     private WikiTemplate getDefaultTOC() {
-    	return WikiTemplateStore.getDefaultTOC();
+    	return WikiTemplate.getDefaultTOC();
     }
     
     private WikiContext createWikiContext(Context context) {
@@ -94,13 +105,19 @@ public class WikiFormatter extends Formatter {
     			context.getView());
     }
     private void handleWikiFolder(Context context, Folder folder) throws IOException, ServiceException {
-    	WikiTemplate template = getTemplate(context, folder, TOC);
-    	
+    	WikiContext ctxt = createWikiContext(context);
+    	String key = sCache.generateKey(ctxt, folder);
+    	String template = sCache.getPage(key);
     	if (template == null) {
-    		template = getDefaultTOC();
+        	WikiTemplate wt = getTemplate(context, folder, TOC);
+        	
+        	if (wt == null)
+        		wt = getDefaultTOC();
+        	
+        	template = wt.getComposedPage(ctxt, folder, CHROME);
+    		sCache.addPage(key, template);
     	}
-    	String ret = template.getComposedPage(createWikiContext(context), folder, CHROME);
-		printWikiPage(context, ret);
+		printWikiPage(context, template);
     }
 
 	/**

@@ -151,22 +151,6 @@
 // the list of wiki words are managed by the server.  
 
 //
-// ListWiki
-// XXX ListWiki is under the review.  using the search is probably a better long term solution.
-// returns list of wiki words for this account.  if folder-id is specified, then the list
-// will include only the items in the folder.
-// created-date: date the first revision was created.
-// modified-date: date the last revision was made.
-// last-edited-by: user that made the last revision.
-<ListWikiRequest [l="{folder-id}"]/>
-
-<ListWikiResponse>
-  [<w name="{word}" ver="{head-version}" cd="{created-date}" md="{modified-date}" cr="{creator}" leb="{last-edited-by}" l="{folder}">
-     <fr>... fragment ...</fr>
-  </w>]+
-</ListWikiResponse>
-
-//
 // GetWiki
 // returns the latest version if version is omitted from the request.
 // if count attribute is present it will return the N revision history of the metadata and fragment,
