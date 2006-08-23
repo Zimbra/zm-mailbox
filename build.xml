@@ -308,9 +308,6 @@
 	</target>
 
 	<target name="dev-dist" depends="war,dev-dist-unix,choose-db-schema" description="Copies files into an install tree at specified ${dist.dir}">
-		<!-- db -->
-		<copy todir="${zimbra.home.dir}/db" overwrite="true"><fileset dir="${db.schema.dir}" includes="db.sql,create_database.sql"/></copy>
-
 		<!-- bin, libexec -->
 		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production"/></copy>
 		<copy todir="${dist.dir}/libexec" overwrite="true"><fileset dir="${src.dir}/libexec" excludes="*.production"/></copy>
@@ -347,7 +344,7 @@
 		<copy todir="${dist.dir}/${slapd.etc.dir}/schema" overwrite="true"><fileset dir="${build.dir}/ldap-config" includes="*.schema"/></copy>
 
 		<!-- db schema -->
-		<copy todir="${dist.dir}/db" overwrite="true"><fileset dir="${src.dir}/db" includes="*.sql"/></copy>
+		<copy todir="${dist.dir}/db" overwrite="true"><fileset dir="${src.dir}/db" includes="*.sql" excludes="db.sql,create_database.sql"/></copy>
 		<copy todir="${dist.dir}/db" overwrite="true"><fileset dir="${db.schema.dir}" includes="db.sql,create_database.sql"/></copy>
 		<copy todir="${dist.dir}/db" file="${build.dir}/versions-init.sql" overwrite="true"/>
 
@@ -453,14 +450,13 @@
 		<echo message="If the following deletes fail, wait for your tomcat" />
 		<echo message="to stop (or stop your tomcat as the case may be)" />
 		<echo message="and try again later." />
-		<delete>
+		<delete failonerror="no">
 			<fileset dir="${zimbra.home.dir}/db" excludes="data/**"/>
 		</delete>
 		
 		<delete dir="${zimbra.home.dir}/store" />
 		<delete dir="${zimbra.home.dir}/index" />
 		<delete dir="${zimbra.home.dir}/redolog" />
-		<delete dir="${zimbra.home.dir}/repl" />
 		<delete dir="${zimbra.home.dir}/backup" />
 		<delete dir="${zimbra.home.dir}/lib/ext" />
 		<delete dir="${zimbra.home.dir}/conf/msgs" />
@@ -480,7 +476,6 @@
 		<mkdir dir="${zimbra.home.dir}/index" />
 		<mkdir dir="${zimbra.home.dir}/redolog" />
 		<mkdir dir="${zimbra.home.dir}/redolog/archive" />
-		<mkdir dir="${zimbra.home.dir}/repl" />
 		<mkdir dir="${zimbra.home.dir}/backup" />
 		<antcall target="make-dirs"><param name="base.dir" value="${zimbra.home.dir}"/></antcall>
 	</target>
