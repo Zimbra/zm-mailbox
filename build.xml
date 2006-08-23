@@ -307,7 +307,10 @@
 		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod>
 	</target>
 
-	<target name="dev-dist" depends="war,dev-dist-unix" description="Copies files into an install tree at specified ${dist.dir}">
+	<target name="dev-dist" depends="war,dev-dist-unix,choose-db-schema" description="Copies files into an install tree at specified ${dist.dir}">
+		<!-- db -->
+		<copy todir="${zimbra.home.dir}/db" overwrite="true"><fileset dir="${db.schema.dir}" includes="db.sql,create_database.sql"/></copy>
+
 		<!-- bin, libexec -->
 		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production"/></copy>
 		<copy todir="${dist.dir}/libexec" overwrite="true"><fileset dir="${src.dir}/libexec" excludes="*.production"/></copy>
@@ -482,7 +485,7 @@
 		<antcall target="make-dirs"><param name="base.dir" value="${zimbra.home.dir}"/></antcall>
 	</target>
 
-	<target name="db-init" description="Recreate the database tables">
+	<target name="choose-db-schema">
 		<java classname="com.zimbra.cs.localconfig.Main" fork="true" classpathref="class.path"
 			  outputproperty="LC.mbox.group.enabled" failonerror="true">
 			<arg line="-q -c conf/localconfig.xml -m nokey debug_enable_mailbox_group"/>
@@ -494,7 +497,9 @@
 			<not><isset property="db.schema.dir"/></not>
 		</condition>
 		<echo>Using database schema in ${db.schema.dir}</echo>
-		<copy todir="${zimbra.home.dir}/db" overwrite="true"><fileset dir="${db.schema.dir}" includes="db.sql,create_database.sql"/></copy>
+	</target>
+
+	<target name="db-init" depends="choose-db-schema" description="Recreate the database tables">
 		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
 			 classpathref="class.path" onerror="continue" keepformat="true" src="src/db/dropdb.sql" />
 		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
