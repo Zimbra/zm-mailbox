@@ -366,15 +366,12 @@ public class LdapUtil {
      * the value is an array of Strings.
      * 
      * @param attrs the attributes to enumerate over
-     * @param map the map to populate
-     * @param prefix returns only attrs that start with prefex
      * @throws NamingException
      */
-    public static void getAttrs(Attributes attrs, Map<String, Object> map, String prefix) throws NamingException  {
+    static Map<String, Object> getAttrs(Attributes attrs) throws NamingException  {
+        Map<String,Object> map = new HashMap<String,Object>();        
         for (NamingEnumeration ne = attrs.getAll(); ne.hasMore(); ) {
             Attribute attr = (Attribute) ne.next();
-            if (prefix != null && ! attr.getID().startsWith(prefix))
-                continue;
             if (attr.size() == 1) {
                 Object o = attr.get();
                 if (o instanceof String)
@@ -393,6 +390,7 @@ public class LdapUtil {
                 map.put(attr.getID(), result);
             }
         }
+        return map;
     }
     
     /**
@@ -437,11 +435,11 @@ public class LdapUtil {
     /**
      * "modify" the entry. If value is null or "", then remove attribute, otherwise replace/add it.
      */
-    private static void modifyAttr(ArrayList<ModificationItem> modList, String name, String value, Attributes currentAttrs) {
+    private static void modifyAttr(ArrayList<ModificationItem> modList, String name, String value, com.zimbra.cs.account.Entry entry) {
         int mod_op = (value == null || value.equals("")) ? DirContext.REMOVE_ATTRIBUTE : DirContext.REPLACE_ATTRIBUTE;
         if (mod_op == DirContext.REMOVE_ATTRIBUTE) {
             // make sure it exists
-            if (currentAttrs.get(name) == null)
+            if (entry.getAttr(name, null) == null)
                 return;
         }
         BasicAttribute ba = new BasicAttribute(name);
@@ -453,25 +451,32 @@ public class LdapUtil {
     /**
      * remove the attr with the specified value
      */
-    private static void removeAttr(ArrayList<ModificationItem> modList, String name, String value, Attributes currentAttrs) {
-        Attribute a = currentAttrs.get(name);
-        if (a == null || !a.contains(value)) return;
+    private static void removeAttr(ArrayList<ModificationItem> modList, String name, String value, com.zimbra.cs.account.Entry entry) {
+        if (!contains(entry.getMultiAttr(name), value)) return;
         
         BasicAttribute ba = new BasicAttribute(name);
         ba.add(value);
         modList.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));
     }
 
+    private static boolean contains(String[] values, String val) {
+        if (values == null) return false;
+        for (String s : values) {
+            if (s.compareToIgnoreCase(val) == 0) return true;
+        }
+        return false;
+    }
+    
     /**
      * remove the attr with the specified value
      */
-    private static void removeAttr(ArrayList<ModificationItem> modList, String name, String value[], Attributes currentAttrs) {
-        Attribute a = currentAttrs.get(name);
-        if (a == null) return;
+    private static void removeAttr(ArrayList<ModificationItem> modList, String name, String value[], com.zimbra.cs.account.Entry entry) {
+        String[] currentValues = entry.getMultiAttr(name);
+        if (currentValues == null || currentValues.length == 0) return;
 
         BasicAttribute ba = null;
         for (int i=0; i < value.length; i++) {
-            if (!a.contains(value[i])) continue;
+            if (!contains(currentValues, value[i])) continue;
             if (ba == null) ba = new BasicAttribute(name);
             ba.add(value[i]);
         }
@@ -482,9 +487,8 @@ public class LdapUtil {
     /**
      * add an additional attr with the specified value
      */
-    private static void addAttr(ArrayList<ModificationItem> modList, String name, String value, Attributes currentAttrs) {
-        Attribute a = currentAttrs.get(name);
-        if (a != null && a.contains(value)) return;
+    private static void addAttr(ArrayList<ModificationItem> modList, String name, String value, com.zimbra.cs.account.Entry entry) {
+        if (contains(entry.getMultiAttr(name), value)) return;        
         
         BasicAttribute ba = new BasicAttribute(name);
         ba.add(value);
@@ -495,12 +499,12 @@ public class LdapUtil {
     /**
      * add an additional attr with the specified value
      */
-    private static void addAttr(ArrayList<ModificationItem> modList, String name, String value[], Attributes currentAttrs) {
-        Attribute a = currentAttrs.get(name);
-
+    private static void addAttr(ArrayList<ModificationItem> modList, String name, String value[], com.zimbra.cs.account.Entry entry) {
+        String[] currentValues = entry.getMultiAttr(name);
+        
         BasicAttribute ba = null;
         for (int i=0; i < value.length; i++) {
-            if (a != null && a.contains(value[i])) continue;
+            if (contains(currentValues, value[i])) continue;
             if (ba == null) ba = new BasicAttribute(name);
             ba.add(value[i]);
         }
@@ -518,7 +522,7 @@ public class LdapUtil {
      *     in which case a multi-valued attr is updated</li>
      * </ul>
      */
-    public static void modifyAttrs(DirContext ctxt, String dn, Map attrs, Attributes currentAttrs) throws NamingException, ServiceException {
+    public static void modifyAttrs(DirContext ctxt, String dn, Map attrs, com.zimbra.cs.account.Entry entry) throws NamingException, ServiceException {
         ArrayList<ModificationItem> modlist = new ArrayList<ModificationItem>();
         for (Iterator mit=attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry me = (Entry) mit.next();
@@ -546,7 +550,7 @@ public class LdapUtil {
                 Collection c = (Collection) v;
                 if (c.size() == 0) {
                     // make sure it exists
-                    if (currentAttrs.get(key) != null) {
+                    if (entry.getAttr(key, null) != null) {
                         BasicAttribute ba = new BasicAttribute(key);
                         modlist.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));
                     }
@@ -559,8 +563,8 @@ public class LdapUtil {
                     }
                     
                     // Add attrs
-                    if (doAdd) addAttr(modlist, key, sa, currentAttrs);
-                    else if (doRemove) removeAttr(modlist, key, sa, currentAttrs);
+                    if (doAdd) addAttr(modlist, key, sa, entry);
+                    else if (doRemove) removeAttr(modlist, key, sa, entry);
                     else {
                         BasicAttribute ba = new BasicAttribute(key);
                         for (i=0; i < sa.length; i++)
@@ -572,30 +576,13 @@ public class LdapUtil {
                 throw ServiceException.FAILURE("Map is not a supported value type", null);
             } else {
                 String s = (v == null ? null : v.toString());
-                if (doAdd) addAttr(modlist, key, s, currentAttrs);
-                else if (doRemove) removeAttr(modlist, key, s, currentAttrs);
-                else modifyAttr(modlist, key, s, currentAttrs);
+                if (doAdd) addAttr(modlist, key, s, entry);
+                else if (doRemove) removeAttr(modlist, key, s, entry);
+                else modifyAttr(modlist, key, s, entry);
             }
         }
         ModificationItem[] mods = new ModificationItem[modlist.size()];
         modlist.toArray(mods);
-        ctxt.modifyAttributes(dn, mods);
-    }
-
-    /**
-     * Adds the specified attr to the given dn.
-     * 
-     * @param ctxt
-     * @param dn
-     * @param name
-     * @param value
-     * @throws NamingException
-     */
-    public static void addAttr(DirContext ctxt, String dn, String name, String value) throws NamingException {
-        BasicAttribute ba = new BasicAttribute(name);
-        ba.add(value);
-        ModificationItem item = new ModificationItem(DirContext.ADD_ATTRIBUTE, ba); 
-        ModificationItem[] mods = new ModificationItem[] { item };
         ctxt.modifyAttributes(dn, mods);
     }
 
@@ -619,24 +606,6 @@ public class LdapUtil {
                 attrs.put(a);
             }
         }
-    }
-
-    /**
-     * removes the specified attributed.
-     *	
-     * @param ctxt
-     * @param dn
-     * @param name
-     * @param value
-     * @throws NamingException
-     */
-    public static void removeAttr(DirContext ctxt, String dn, String name, String value) throws NamingException {
-        BasicAttribute ba = new BasicAttribute(name);
-        if (value != null)
-            ba.add(value);
-        ModificationItem item = new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba); 
-        ModificationItem[] mods = new ModificationItem[] { item };
-        ctxt.modifyAttributes(dn, mods);
     }
 
     private static String domainToDN(String parts[], int offset) {

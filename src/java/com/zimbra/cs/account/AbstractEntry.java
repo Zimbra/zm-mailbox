@@ -42,8 +42,9 @@ public abstract class AbstractEntry implements Entry {
 
     private Map<String,Object> mAttrs;
     private Map<Object, Object> mData;
+    private Map<String, Set<String>> mMultiAttrSetCache;
 
-    private static String[] sEmptyMulti = new String[0];
+    protected static String[] sEmptyMulti = new String[0];
 
     protected AbstractEntry(Map<String,Object> attrs) {
         mAttrs = attrs;
@@ -56,6 +57,8 @@ public abstract class AbstractEntry implements Entry {
     
     protected void resetData()
     {
+        if (mMultiAttrSetCache != null)            
+            mMultiAttrSetCache.clear();
         if (mData != null)
             mData.clear();
     }
@@ -151,7 +154,14 @@ public abstract class AbstractEntry implements Entry {
     }
 
     public Set<String> getMultiAttrSet(String name) {
-        return new HashSet<String>(Arrays.asList(getMultiAttr(name)));
+        if (mMultiAttrSetCache == null)        
+            mMultiAttrSetCache = new HashMap<String, Set<String>>();        
+        Set<String> result = mMultiAttrSetCache.get(name);
+        if (result == null) {
+            result = new HashSet<String>(Arrays.asList(getMultiAttr(name)));
+            mMultiAttrSetCache.put(name, result);
+        }
+        return result;
     }
 
     public long getTimeInterval(String name, long defaultValue) {

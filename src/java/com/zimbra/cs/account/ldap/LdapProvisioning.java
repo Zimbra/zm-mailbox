@@ -78,6 +78,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.Account.CalendarUserType;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -256,8 +257,49 @@ public class LdapProvisioning extends Provisioning {
                             boolean allowCallback)
     throws ServiceException {
         LdapEntry le = (LdapEntry) e;
-        le.modifyAttrs(attrs, checkImmutable, allowCallback);
+        HashMap context = new HashMap();
+        AttributeManager.getInstance().preModify(attrs, le, context, false,
+                checkImmutable, allowCallback);
+        modifyAttrsInternal(le, null, attrs);
+        AttributeManager.getInstance().postModify(attrs, le, context, false,
+                allowCallback);
     }
+
+    /**
+     * should only be called internally.
+     * 
+     * @param initCtxt
+     * @param attrs
+     * @throws ServiceException
+     */
+    private synchronized void modifyAttrsInternal(LdapEntry le, DirContext initCtxt, Map attrs)
+            throws ServiceException {
+        DirContext ctxt = initCtxt;
+        try {
+            if (ctxt == null)
+                ctxt = LdapUtil.getDirContext(true);
+            LdapUtil.modifyAttrs(ctxt, le.getDN(), attrs, le);
+            le.refresh(ctxt);
+        } catch (InvalidAttributeIdentifierException e) {
+            throw AccountServiceException.INVALID_ATTR_NAME(
+                    "invalid attr name: " + e.getMessage(), e);
+        } catch (InvalidAttributeValueException e) {
+            throw AccountServiceException.INVALID_ATTR_VALUE(
+                    "invalid attr value: " + e.getMessage(), e);
+        } catch (InvalidAttributesException e) {
+            throw ServiceException.INVALID_REQUEST(
+                    "invalid set of attributes: " + e.getMessage(), e);
+        } catch (SchemaViolationException e) {
+            throw ServiceException.INVALID_REQUEST("LDAP schema violation: "
+                    + e.getMessage(), e);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to modify attrs: "
+                    + e.getMessage(), e);
+        } finally {
+            if (initCtxt == null)
+                LdapUtil.closeContext(ctxt);
+        }
+    }  
 
     /**
      * reload/refresh the entry.
@@ -1012,7 +1054,7 @@ public class LdapProvisioning extends Provisioning {
             attrs.put(Provisioning.A_zimbraMailAlias, addMultiValue(entry, Provisioning.A_zimbraMailAlias, alias));
             attrs.put(Provisioning.A_mail, addMultiValue(entry, Provisioning.A_mail, alias));
             // UGH
-            ((LdapNamedEntry) entry).modifyAttrsInternal(ctxt, attrs);
+            modifyAttrsInternal(((LdapNamedEntry) entry), ctxt, attrs);
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(alias);
         } catch (InvalidNameException e) {
@@ -1058,7 +1100,7 @@ public class LdapProvisioning extends Provisioning {
                 HashMap<String, String[]> attrs = new HashMap<String, String[]>();
                 attrs.put(Provisioning.A_mail, removeMultiValue(entry, Provisioning.A_mail, alias));
                 attrs.put(Provisioning.A_zimbraMailAlias, removeMultiValue(entry, Provisioning.A_zimbraMailAlias, alias));                
-                ((LdapNamedEntry)entry).modifyAttrsInternal(ctxt, attrs);
+                modifyAttrsInternal(((LdapNamedEntry)entry), ctxt, attrs);
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("unable to remove zimbraMailAlias/mail attrs: "+alias);
                 // try to remove alias
@@ -1551,7 +1593,7 @@ public class LdapProvisioning extends Provisioning {
             // this is non-atomic. i.e., rename could succeed and updating zimbraMailDeliveryAddress
             // could fail. So catch service exception here and log error            
             try {
-                acc.modifyAttrsInternal(ctxt, amap);
+                modifyAttrsInternal(acc, ctxt, amap);
             } catch (ServiceException e) {
                 ZimbraLog.account.error("account renamed to "+newName+
                         " but failed to update zimbraMailDeliveryAddress", e);
@@ -1596,7 +1638,7 @@ public class LdapProvisioning extends Provisioning {
                     if (key.startsWith("zimbra")) 
                         attrs.put(key, "");
                 }
-                d.modifyAttrs(attrs, false);
+                modifyAttrs(d, attrs, false);
             }
 
             String defaultDomain = getConfig().getAttr(A_zimbraDefaultDomainName, null);
@@ -2032,7 +2074,7 @@ public class LdapProvisioning extends Provisioning {
             // this is non-atomic. i.e., rename could succeed and updating A_mail
             // could fail. So catch service exception here and log error            
             try {
-                dl.modifyAttrsInternal(ctxt, attrs);
+                modifyAttrsInternal(dl, ctxt, attrs);
             } catch (ServiceException e) {
                 ZimbraLog.account.error("distribution list renamed to " + newLocal +
                         " but failed to move old name's LDAP attributes", e);
@@ -2834,13 +2876,13 @@ public class LdapProvisioning extends Provisioning {
                               Provisioning.SA_CALENDAR_RESOURCE_FLAG);
     }
 
-    private static LdapAccount makeLdapAccount(String dn, Attributes attrs, LdapProvisioning prov) {
-        LdapAccount account = new LdapAccount(dn, attrs, prov);
-        if (account.getCalendarUserType().
-                equals(Account.CalendarUserType.RESOURCE))
-            return new LdapCalendarResource(account);
+    private static LdapAccount makeLdapAccount(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException {
+        Attribute a = attrs.get(Provisioning.A_zimbraAccountCalendarUserType);
+        boolean isAccount = (a == null) || a.contains(CalendarUserType.USER.toString());
+        if (isAccount)
+            return new LdapAccount(dn, attrs, prov);            
         else
-            return account;
+            return new LdapCalendarResource(dn, attrs, prov);
     }
 
     /**
@@ -3328,13 +3370,13 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public void addMembers(DistributionList list, String[] members) throws ServiceException {
         LdapDistributionList ldl = (LdapDistributionList) list;
-        ldl.addMembers(members);
+        ldl.addMembers(members, this);
     }
 
     @Override
     public void removeMembers(DistributionList list, String[] members) throws ServiceException {
         LdapDistributionList ldl = (LdapDistributionList) list;
-        ldl.removeMembers(members);        
+        ldl.removeMembers(members, this);        
     }
 
 }

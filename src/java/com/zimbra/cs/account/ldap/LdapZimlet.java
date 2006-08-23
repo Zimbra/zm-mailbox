@@ -27,6 +27,7 @@ package com.zimbra.cs.account.ldap;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Provisioning;
@@ -38,7 +39,7 @@ import com.zimbra.cs.zimlet.ZimletUtil;
 
 public class LdapZimlet extends LdapNamedEntry implements Zimlet, ObjectType {
 
-	public LdapZimlet(String dn, Attributes attrs) {
+	public LdapZimlet(String dn, Attributes attrs) throws NamingException {
 		super(dn, attrs);
 	}
 	
@@ -85,30 +86,12 @@ public class LdapZimlet extends LdapNamedEntry implements Zimlet, ObjectType {
     public boolean isEnabled() {
     	return getBooleanAttr(Provisioning.A_zimbraZimletEnabled, false);
     }
-
-    public void setEnabled(boolean enabled) throws ServiceException {
-    	Map<String,String> attr = new HashMap<String,String>();
-    	attr.put(Provisioning.A_zimbraZimletEnabled, enabled ? Provisioning.TRUE : Provisioning.FALSE);
-   		modifyAttrs(attr);
-    }
     
     public String getPriority() {
     	return getAttr(Provisioning.A_zimbraZimletPriority);
     }
     
-    public void setPriority(String priority) throws ServiceException {
-    	Map<String,String> attr = new HashMap<String,String>();
-    	attr.put(Provisioning.A_zimbraZimletPriority, priority);
-    	modifyAttrs(attr);
-    }
-    
     public boolean isExtension() {
     	return getBooleanAttr(Provisioning.A_zimbraZimletIsExtension, false);
-    }
-
-    public void setExtension(boolean extension) throws ServiceException {
-    	Map<String,String> attr = new HashMap<String,String>();
-    	attr.put(Provisioning.A_zimbraZimletIsExtension, extension ? Provisioning.TRUE : Provisioning.FALSE);
-   		modifyAttrs(attr);
     }
 }

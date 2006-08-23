@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.account.ldap;
 
+import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import org.apache.commons.logging.Log;
@@ -46,7 +47,7 @@ public class LdapWellKnownTimeZone extends LdapNamedEntry implements WellKnownTi
 
     private static Log mLog = LogFactory.getLog(LdapWellKnownTimeZone.class);
 
-    LdapWellKnownTimeZone(String dn, Attributes attrs) {
+    LdapWellKnownTimeZone(String dn, Attributes attrs) throws NamingException {
         super(dn, attrs);
     }
 

@@ -29,237 +29,55 @@
  */
 package com.zimbra.cs.account.ldap;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
-import javax.naming.directory.InvalidAttributeIdentifierException;
-import javax.naming.directory.InvalidAttributeValueException;
-import javax.naming.directory.InvalidAttributesException;
-import javax.naming.directory.SchemaViolationException;
 
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.AbstractEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.DateUtil;
 
 /**
  * @author schemers
- *
+ * 
  */
-public class LdapEntry implements Entry {
+public class LdapEntry extends AbstractEntry {
 
-    protected Attributes mAttrs;
     protected String mDn;
-    private Map<String, String[]> mMultiAttrCache;
-    private Map<String, Set<String>> mMultiAttrSetCache;
-    private Map<Object, Object> mData;
-    
-    protected static final String[] sEmptyMulti = new String[0];
 
-    LdapEntry(String dn, Attributes attrs) {
+    LdapEntry(String dn, Attributes attrs) throws NamingException {
+        super(LdapUtil.getAttrs(attrs));
         mDn = dn;
-        mAttrs = attrs;
     }
 
     public String getDN() {
         return mDn;
     }
 
-    public synchronized String getAttr(String name) {
+    void reload() throws ServiceException {
         try {
-            return LdapUtil.getAttrString(mAttrs, name);
+            refresh(null);
         } catch (NamingException e) {
-            return null;
+            throw ServiceException
+                    .FAILURE("unable to refresh entry: " + mDn, e);
         }
     }
 
-    public void reload() throws ServiceException {
-        try {
-            refresh(null, 0);
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to refresh entry: "+mDn, e);
-        }
-    }
-    
-    private synchronized void refresh(DirContext initCtxt, long curr) throws NamingException, ServiceException {
+    synchronized void refresh(DirContext initCtxt)
+            throws NamingException, ServiceException {
         DirContext ctxt = initCtxt;
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
-            if (mMultiAttrCache != null)
-                mMultiAttrCache.clear();
-            if (mMultiAttrSetCache != null)            
-                mMultiAttrSetCache.clear();
-            if (mData != null)
-                mData.clear();
-            mAttrs = ctxt.getAttributes(mDn);
+            setAttrs(LdapUtil.getAttrs(ctxt.getAttributes(mDn)));
         } finally {
             if (initCtxt == null)
                 LdapUtil.closeContext(ctxt);
         }
     }
 
-
-    public void modifyAttrs(Map<String, ? extends Object> attrs) throws ServiceException {
-        modifyAttrs(attrs, false, true);
-    }
-
-    public void modifyAttrs(Map<String, ? extends Object> attrs,
-                            boolean checkImmutable)
-    throws ServiceException {
-        modifyAttrs(attrs, checkImmutable, true);
-    }
-
-    public void modifyAttrs(Map<String, ? extends Object> attrs,
-                            boolean checkImmutable,
-                            boolean allowCallback)
-    throws ServiceException {
-        HashMap context = new HashMap();
-        AttributeManager.getInstance().preModify(attrs, this, context, false, checkImmutable, allowCallback);
-        modifyAttrsInternal(null, attrs);
-        AttributeManager.getInstance().postModify(attrs, this, context, false, allowCallback);
-    }
-
-  
-    /**
-     * should only be called internally.
-     * 
-     * @param initCtxt
-     * @param attrs
-     * @throws ServiceException
-     */
-    synchronized void modifyAttrsInternal(DirContext initCtxt, Map attrs) throws ServiceException {
-        DirContext ctxt = initCtxt;
-        try {
-            if (ctxt == null)
-                ctxt = LdapUtil.getDirContext(true);
-            LdapUtil.modifyAttrs(ctxt, mDn,  attrs, mAttrs);
-            refresh(ctxt, 0);
-        } catch (InvalidAttributeIdentifierException e) {
-            throw AccountServiceException.INVALID_ATTR_NAME("invalid attr name: "+e.getMessage(), e);
-        } catch (InvalidAttributeValueException e) {
-            throw AccountServiceException.INVALID_ATTR_VALUE("invalid attr value: "+e.getMessage(), e);            
-        } catch (InvalidAttributesException e) {
-            throw ServiceException.INVALID_REQUEST("invalid set of attributes: "+e.getMessage(), e);
-        } catch (SchemaViolationException e) {
-            throw ServiceException.INVALID_REQUEST("LDAP schema violation: " + e.getMessage(), e);
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to modify attrs: "+e.getMessage(), e);
-        } finally {
-            if (initCtxt == null)
-                LdapUtil.closeContext(ctxt);
-        }
-    }
-
-    protected synchronized void addAttr(DirContext ctxt, String name, String value) throws NamingException, ServiceException {
-        LdapUtil.addAttr(ctxt, mDn,  name, value);
-        refresh(ctxt, 0);
-    }
-    
-    protected synchronized void removeAttr(DirContext ctxt, String name, String value) throws NamingException, ServiceException {
-        LdapUtil.removeAttr(ctxt, mDn,  name, value);
-        refresh(ctxt, 0);        
-    }
-    
-    public synchronized void setCachedData(Object key, Object value) {
-        if (mData == null)
-            mData = new HashMap<Object, Object>();
-        mData.put(key, value);
-    }
-
-    public synchronized Object getCachedData(Object key) {
-        if (mData == null)
-            mData = new HashMap<Object, Object>();
-        return mData.get(key);
-    }
-
-    public synchronized String[] getMultiAttr(String name) {
-        if (mMultiAttrCache == null)
-            mMultiAttrCache = new HashMap<String, String[]>();
-        try {
-            String[] result = mMultiAttrCache.get(name);
-            if (result == null) {
-                result = LdapUtil.getMultiAttrString(mAttrs, name); 
-                if (result != null)
-                    mMultiAttrCache.put(name, result);
-            }
-            return result;
-        } catch (NamingException e) {
-            return sEmptyMulti;
-        }        
-    }
-
-    public synchronized Set<String> getMultiAttrSet(String name) {
-        if (mMultiAttrSetCache == null)        
-            mMultiAttrSetCache = new HashMap<String, Set<String>>();        
-        Set<String> result = mMultiAttrSetCache.get(name);
-        if (result == null) {
-            result =  new HashSet<String>(Arrays.asList(getMultiAttr(name)));
-            mMultiAttrSetCache.put(name, result);
-        }
-        return result;        
-    }
-
-    public boolean getBooleanAttr(String name, boolean defaultValue) {
-        String v = getAttr(name);
-        return v == null ? defaultValue : Provisioning.TRUE.equals(v);
-    }
-
-    public int getIntAttr(String name, int defaultValue) {
-        String v = getAttr(name);
-        try {
-            return v == null ? defaultValue : Integer.parseInt(v);
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
-    }
-
-    public long getTimeInterval(String name, long defaultValue) {
-        return DateUtil.getTimeInterval(getAttr(name), defaultValue);
-    }
-    
-    public long getLongAttr(String name, long defaultValue) {
-        String v = getAttr(name);
-        try {
-            return v == null ? defaultValue : Long.parseLong(v);
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
-    }
-
-    public String getAttr(String name, String defaultValue) {
-        String v = getAttr(name);
-        return v == null ? defaultValue : v; 
-    }
-
-    public Date getGeneralizedTimeAttr(String name, Date defaultValue) {    
-        String v = getAttr(name);
-        if (v == null)
-            return defaultValue;
-        Date d = DateUtil.parseGeneralizedTime(v);
-        return d == null ? defaultValue : d;
-    }
-
-    public synchronized Map<String, Object> getAttrs() throws ServiceException {
-        HashMap<String, Object> attrs = new HashMap<String, Object>();
-        try {
-            LdapUtil.getAttrs(mAttrs, attrs, null);
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to get all attrs: "+e.getMessage(), e);
-        }
-        return attrs;
-    }
-    
 
     private Locale mLocale;
 
@@ -281,9 +99,15 @@ public class LdapEntry implements Entry {
 
     public synchronized String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append(getClass().getName()).append(": { dn=").append(mDn).append(" ");
-        sb.append(mAttrs.toString());
+        sb.append(getClass().getName()).append(": { dn=").append(mDn).append(
+                " ");
+        try {
+            sb.append(getAttrs().toString());
+        } catch (ServiceException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         sb.append("}");
-        return sb.toString();    	    
-	}
+        return sb.toString();
+    }
 }

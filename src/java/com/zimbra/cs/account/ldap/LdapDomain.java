@@ -51,7 +51,7 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
 
     private LdapProvisioning mProv;
    
-    LdapDomain(String dn, Attributes attrs, LdapProvisioning prov) {
+    LdapDomain(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException {
         super(dn, attrs);
         mProv = prov;
     }
@@ -100,24 +100,21 @@ public class LdapDomain extends LdapNamedEntry implements Domain {
 
     public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        try {
-            // get all the server attrs
-            LdapUtil.getAttrs(mAttrs, attrs, null);
+
+        // get all the server attrs
+        attrs.putAll(super.getAttrs());
             
-            if (!applyConfig)
-                return attrs;
-            // then enumerate through all inheritable attrs and add them if needed
-            Config c = mProv.getConfig();
-            Set<String> inheritable = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.domainInherited);
-            for (String attr : inheritable) {
-                Object value = attrs.get(attr);
-                if (value == null)
-                    value = c.getMultiAttr(attr);
-                if (value != null)
-                    attrs.put(attr, value);
-            }
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to get attrs", e);
+        if (!applyConfig)
+            return attrs;
+        // then enumerate through all inheritable attrs and add them if needed
+        Config c = mProv.getConfig();
+        Set<String> inheritable = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.domainInherited);
+        for (String attr : inheritable) {
+            Object value = attrs.get(attr);
+            if (value == null)
+                value = c.getMultiAttr(attr);
+            if (value != null)
+                attrs.put(attr, value);
         }
         return attrs;
     }

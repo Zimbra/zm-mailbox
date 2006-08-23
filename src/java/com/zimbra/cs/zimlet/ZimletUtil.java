@@ -428,7 +428,7 @@ public class ZimletUtil {
 		
 		// set the priority
 		if (priority != null) {
-			z.setPriority(priority);
+			setPriority(z, priority);
 		} else {
 			setPriority(zimletName, P_MAX);
 		}
@@ -527,7 +527,9 @@ public class ZimletUtil {
 		try {
 			Zimlet zim = prov.createZimlet(zimletName, attrs);
 			if (zd.isExtension()) {
-				zim.setExtension(true);
+                Map<String,String> attr = new HashMap<String,String>();
+                attr.put(Provisioning.A_zimbraZimletIsExtension, Provisioning.TRUE);
+                prov.modifyAttrs(zim, attr);
 			}
 			return zim;
 		} catch (ServiceException se) {
@@ -623,7 +625,9 @@ public class ZimletUtil {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			Zimlet z = prov.getZimlet(zimlet);
-			z.setEnabled(enabled);
+            Map<String,String> attr = new HashMap<String,String>();
+            attr.put(Provisioning.A_zimbraZimletEnabled, enabled ? Provisioning.TRUE : Provisioning.FALSE);
+            prov.modifyAttrs(z, attr);
 		} catch (Exception e) {
 			throw ZimletException.CANNOT_ENABLE(zimlet, e.getCause().getMessage());
 		}
@@ -883,7 +887,15 @@ public class ZimletUtil {
 		Zimlet z = prov.getZimlet(zimlet);
 		setPriority(z, priority, plist);
 	}
-	
+
+    
+    public static void setPriority(Zimlet zimlet, String priority) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Map<String,String> attr = new HashMap<String,String>();
+        attr.put(Provisioning.A_zimbraZimletPriority, priority);
+        prov.modifyAttrs(zimlet, attr);
+    }
+    
 	public static void setPriority(Zimlet z, int priority, List<Zimlet> plist) throws ServiceException {
 		// remove self first
 		// XXX LdapEntry.equals() is not implemented
@@ -900,7 +912,7 @@ public class ZimletUtil {
 		Version newPriority;
 		if (priority == 0) {
 			newPriority = new Version("0");
-			z.setPriority(newPriority.toString());
+			setPriority(z, newPriority.toString());
 			plist.add(0, z);
 			if (plist.size() > 1) {
 				// make sure the previous p0 zimlet is now p1.
@@ -931,7 +943,7 @@ public class ZimletUtil {
 					// it really is an error because priorities of two zimlets
 					// shouldn't be the same.  bump the next one down
 					newPriority.increment();
-					z.setPriority(newPriority.toString());
+					setPriority(z, newPriority.toString());
 					plist.add(priority, z);
 					setPriority(oneBelow, priority + 1, plist);
 					return;
@@ -940,7 +952,7 @@ public class ZimletUtil {
 				// simply increment from the previous priority
 				newPriority.increment();
 			}
-			z.setPriority(newPriority.toString());
+			setPriority(z, newPriority.toString());
 		}
 	}
 	

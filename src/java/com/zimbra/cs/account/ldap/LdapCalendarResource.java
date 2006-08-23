@@ -25,6 +25,9 @@
 
 package com.zimbra.cs.account.ldap;
 
+import javax.naming.NamingException;
+import javax.naming.directory.Attributes;
+
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 
@@ -34,8 +37,8 @@ import com.zimbra.cs.account.Provisioning;
 public class LdapCalendarResource
 extends LdapAccount implements CalendarResource {
 
-    LdapCalendarResource(LdapAccount account) {
-        super(account.mDn, account.mAttrs, account.mProv);
+    LdapCalendarResource(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException {
+        super(dn, attrs, prov);
     }
 
     public String getResourceType() {

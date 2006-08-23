@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.AccountServiceException;
@@ -42,7 +43,7 @@ import com.zimbra.cs.util.EmailUtil;
 public class LdapDistributionList extends LdapNamedEntry implements DistributionList {
     private String mName;
 
-    LdapDistributionList(String dn, Attributes attrs) {
+    LdapDistributionList(String dn, Attributes attrs) throws NamingException {
         super(dn, attrs);
         mName = LdapUtil.dnToEmail(mDn);
     }
@@ -55,7 +56,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         return mName;
     }
     
-    void addMembers(String[] members) throws ServiceException {
+    void addMembers(String[] members, LdapProvisioning prov) throws ServiceException {
     	Set<String> existing = getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
     	Set<String> mods = new HashSet<String>();
     	
@@ -80,10 +81,10 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         
         Map<String,String[]> modmap = new HashMap<String,String[]>();
         modmap.put("+" + Provisioning.A_zimbraMailForwardingAddress, (String[])mods.toArray(new String[0]));
-        modifyAttrs(modmap);
+        prov.modifyAttrs(this, modmap, true);
     }
 
-    void removeMembers(String[] members) throws ServiceException {
+    void removeMembers(String[] members, LdapProvisioning prov) throws ServiceException {
     	Set<String> existing = getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
     	Set<String> mods = new HashSet<String>();
     	HashSet<String> failed = new HashSet<String>();
@@ -121,7 +122,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         
         Map<String,String[]> modmap = new HashMap<String,String[]>();
         modmap.put("-" + Provisioning.A_zimbraMailForwardingAddress, (String[])mods.toArray(new String[0]));
-        modifyAttrs(modmap);
+        prov.modifyAttrs(this, modmap);
     }
 
     public String[] getAllMembers() {

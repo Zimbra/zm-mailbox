@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.account.ldap;
 
+import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Alias;
@@ -33,7 +34,7 @@ import com.zimbra.cs.account.Provisioning;
 public class LdapAlias extends LdapNamedEntry implements Alias {
     private String mName;
 
-    LdapAlias(String dn, Attributes attrs)
+    LdapAlias(String dn, Attributes attrs) throws NamingException
     {
         super(dn, attrs);
         mName = LdapUtil.dnToEmail(mDn);

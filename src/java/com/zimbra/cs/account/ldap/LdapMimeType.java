@@ -29,6 +29,7 @@
  */
 package com.zimbra.cs.account.ldap;
 
+import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Provisioning;
@@ -45,8 +46,9 @@ public class LdapMimeType extends LdapEntry implements MimeTypeInfo {
     /**
      * @param dn
      * @param attrs
+     * @throws NamingException 
      */
-    LdapMimeType(String dn, Attributes attrs) {
+    LdapMimeType(String dn, Attributes attrs) throws NamingException {
         super(dn, attrs);
     }
 

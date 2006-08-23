@@ -50,7 +50,7 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     private String mName;
     private String mDomainName;
     
-    LdapAccount(String dn, Attributes attrs, LdapProvisioning prov) {
+    LdapAccount(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException {
         super(dn, attrs);
         mProv = prov;
         initNameAndDomain();
@@ -132,20 +132,6 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     public String getAccountCOSId() {
         return super.getAttr(Provisioning.A_zimbraCOSId);
     }
-
-    public Map getPrefs() throws ServiceException {
-        Map<String, Object> prefs = new HashMap<String, Object>();
-        try {
-            LdapCos cos = (LdapCos) mProv.getCOS(this);
-            // get the COS prefs first
-            LdapUtil.getAttrs(cos.mAttrs, prefs, "zimbraPref");
-            // and override with the account ones
-            LdapUtil.getAttrs(mAttrs, prefs, "zimbraPref");
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to get prefs", e);
-        }
-        return prefs;
-    }
     
     public Map<String, Object> getAttrs() throws ServiceException {
         return getAttrs(true);
@@ -153,24 +139,21 @@ public class LdapAccount extends LdapNamedEntry implements Account {
 
     public Map<String, Object> getAttrs(boolean applyCos) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        try {
-            // get all the account attrs
-            LdapUtil.getAttrs(mAttrs, attrs, null);
+        
+        // get all the account attrs
+        attrs.putAll(super.getAttrs());
             
-            if (!applyCos)
-                return attrs;
+        if (!applyCos)
+            return attrs;
             
-            // then enumerate through all inheritable attrs and add them if needed
-            Set<String> inheritable =  AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInherited);
-            for (String attr : inheritable) {
-                Object value = attrs.get(inheritable);
-                if (value == null)
-                    value = getMultiAttr(attr);
-                if (value != null)
-                    attrs.put(attr, value);
-            }
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to get prefs", e);
+        // then enumerate through all inheritable attrs and add them if needed
+        Set<String> inheritable =  AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInherited);
+        for (String attr : inheritable) {
+            Object value = attrs.get(inheritable);
+            if (value == null)
+                value = getMultiAttr(attr);
+            if (value != null)
+                attrs.put(attr, value);
         }
         return attrs;
     }

@@ -30,6 +30,7 @@
  */
 package com.zimbra.cs.account.ldap;
 
+import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Cos;
@@ -42,7 +43,7 @@ public class LdapCos extends LdapNamedEntry implements Cos {
 
 //    private LdapProvisioning mProv;
 
-    LdapCos(String dn, Attributes attrs, LdapProvisioning prov) {
+    LdapCos(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException {
         super(dn, attrs);
     }
 

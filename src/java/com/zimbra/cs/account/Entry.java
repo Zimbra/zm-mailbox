@@ -58,7 +58,7 @@ public interface Entry {
     public Set<String> getMultiAttrSet(String name);
 
     public Map<String, Object> getAttrs() throws ServiceException;
- 
+    
     /**
      * 
      * @param name name of the attribute to retreive. 
