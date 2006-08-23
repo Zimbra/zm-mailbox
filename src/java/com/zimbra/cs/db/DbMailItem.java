@@ -84,6 +84,8 @@ public class DbMailItem {
 
     private static final int MAX_TEXT_LENGTH = 65534;
 
+    static final String IN_THIS_MAILBOX_AND = (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "");
+
 
     public static void create(Mailbox mbox, UnderlyingData data) throws ServiceException {
         if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0 || data.indexId == 0)
@@ -93,13 +95,11 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mbox) +
-                    "(" +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id, " : "") +
-                    "id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
+                    "(" + (DebugConfig.enableMailboxGroup ? "mailbox_id, " : "") +
+                    " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
                     " unread, flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
-                    "VALUES (" +
-                    (DebugConfig.enableMailboxGroup ? "?, " : "") +
-                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "VALUES (" + (DebugConfig.enableMailboxGroup ? "?, " : "") +
+                    " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -173,16 +173,13 @@ public class DbMailItem {
         try {
             String table = getMailItemTableName(mbox);
             stmt = conn.prepareStatement("INSERT INTO " + table +
-                    "(" +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id, " : "") +
-                    "id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
+                    "(" + (DebugConfig.enableMailboxGroup ? "mailbox_id, " : "") +
+                    " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
                     " unread, flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
-                    "(SELECT " +
-                    (DebugConfig.enableMailboxGroup ? "?, " : "") +
-                    "?, type, ?, ?, ?, ?, date, size, ?, blob_digest, unread," +
-                    " flags, tags, sender, subject, ?, ?, ?, ? FROM " + table + " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "id = ?)");
+                    "(SELECT " + (DebugConfig.enableMailboxGroup ? "?, " : "") +
+                    " ?, type, ?, ?, ?, ?, date, size, ?, blob_digest, unread," +
+                    " flags, tags, sender, subject, ?, ?, ?, ? FROM " + table +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id = ?)");
             int mboxId = mbox.getId();
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
@@ -231,16 +228,13 @@ public class DbMailItem {
         try {
             String table = getMailItemTableName(mbox);
             stmt = conn.prepareStatement("INSERT INTO " + table +
-                    "(" +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id, " : "") +
-                    "id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
+                    "(" + (DebugConfig.enableMailboxGroup ? "mailbox_id, " : "") +
+                    " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
                     " unread, flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
-                    "(SELECT " +
-                    (DebugConfig.enableMailboxGroup ? "?, " : "") +
-                    "?, type, NULL, ?, ?, ?, date, size, ?, blob_digest," +
-                    " unread, flags, tags, sender, subject, metadata, ?, ?, ? FROM " + table + " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "id = ?)");
+                    "(SELECT " + (DebugConfig.enableMailboxGroup ? "?, " : "") +
+                    " ?, type, NULL, ?, ?, ?, date, size, ?, blob_digest," +
+                    " unread, flags, tags, sender, subject, metadata, ?, ?, ? FROM " + table +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id = ?)");
             int mboxId = mbox.getId();
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
@@ -285,7 +279,7 @@ public class DbMailItem {
             String flags = shared ? "flags = flags | " + Flag.BITMASK_COPIED + ", " : "";
             stmt = conn.prepareStatement("UPDATE " + table +
                     " SET folder_id = ?, " + flags + "imap_id = ?, mod_metadata = ?, change_date = ?" +
-                    " WHERE " + (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") + "id = ?");
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, folder.getId());
             stmt.setInt(pos++, imapId);
@@ -307,9 +301,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                    " SET type = ? WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "id = ?");
+                    " SET type = ? WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, type);
             if (DebugConfig.enableMailboxGroup)
@@ -336,22 +328,16 @@ public class DbMailItem {
             if (item instanceof Folder) {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                         " SET parent_id = ?, folder_id = ?, mod_metadata = ?, change_date = ?" +
-                        " WHERE " +
-                        (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                        "id = ? AND folder_id != ?");
+                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ? AND folder_id != ?");
                 stmt.setInt(attr++, folder.getId());
             } else if (item instanceof Conversation && !(item instanceof VirtualConversation)) {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                         " SET folder_id = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
-                        " WHERE " +
-                        (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                        "parent_id = ? AND folder_id != ?");
+                        " WHERE " + IN_THIS_MAILBOX_AND + "parent_id = ? AND folder_id != ?");
             } else {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                         " SET folder_id = ?, mod_metadata = ?, change_date = ? " + imapRenumber +
-                        " WHERE " +
-                        (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                        "id = ? AND folder_id != ?");
+                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ? AND folder_id != ?");
             }
             stmt.setInt(attr++, folder.getId());
             stmt.setInt(attr++, mbox.getOperationChangeID());
@@ -379,9 +365,7 @@ public class DbMailItem {
             String imapRenumber = mbox.isTrackingImap() ? ", imap_id = IF(imap_id IS NULL, NULL, 0)" : "";
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
                     " SET folder_id = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
             int arg = 1;
             stmt.setInt(arg++, folder.getId());
             stmt.setInt(arg++, mbox.getOperationChangeID());
@@ -408,9 +392,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(parent) +
                     " SET parent_id = ?, mod_metadata = ?, change_date = ?" +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "id IN " + DbUtil.suitableNumberOfVariables(children));
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(children));
             int arg = 1;
             if (parent == null || parent instanceof VirtualConversation)
                 stmt.setNull(arg++, Types.INTEGER);
@@ -443,9 +425,8 @@ public class DbMailItem {
             String relation = (oldParent instanceof VirtualConversation ? "id = ?" : "parent_id = ?");
 
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(oldParent) +
-                    " SET parent_id = ?, mod_metadata = ?, change_date = ? WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    relation);
+                    " SET parent_id = ?, mod_metadata = ?, change_date = ?" +
+                    " WHERE " + IN_THIS_MAILBOX_AND + relation);
             int pos = 1;
             if (newParent instanceof VirtualConversation)
                 stmt.setNull(pos++, Types.INTEGER);
@@ -471,9 +452,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET date = ?, size = ?, metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "id = ?");
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
             stmt.setInt(pos++, item.getSize());
@@ -499,9 +478,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET size = ?, unread = ?, metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "id = ?");
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, item.getSize());
             stmt.setInt(pos++, item.getUnreadCount());
@@ -533,12 +510,10 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET date = ?, size = ?, subject = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "id = ?");
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
-            stmt.setInt(pos++, (int) item.getSize());
+            stmt.setInt(pos++, item.getSize());
             stmt.setString(pos++, subject);
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
@@ -567,13 +542,9 @@ public class DbMailItem {
             subject = ((Message) item).getNormalizedSubject();
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                    " SET type = ?, parent_id = ?, date = ?, size = ?, blob_digest = ?, flags = ?," +
-                    " sender = ?, subject = ?, metadata = ?," +
-                    " mod_metadata = ?, change_date = ?, mod_content = ?," +
-                    " volume_id = ?" +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "id = ?");
+                    " SET type = ?, parent_id = ?, date = ?, size = ?, blob_digest = ?, flags = ?, sender = ?, subject = ?," +
+                    "  metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?, volume_id = ?" +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setByte(pos++, item.getType());
             if (item.getParentId() <= 0)
@@ -582,7 +553,7 @@ public class DbMailItem {
             else
             	stmt.setInt(pos++, item.getParentId());
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
-            stmt.setInt(pos++, (int) item.getSize());
+            stmt.setInt(pos++, item.getSize());
             stmt.setString(pos++, item.getDigest(true));
             stmt.setInt(pos++, item.getInternalFlagBitmask());
             stmt.setString(pos++, sender);
@@ -646,9 +617,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("DELETE FROM " + getConversationTableName(item.getMailboxId()) +
-                " WHERE " +
-                (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                "hash = ? AND conv_id = ?");
+                " WHERE " + IN_THIS_MAILBOX_AND + "hash = ? AND conv_id = ?");
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(pos++, item.getMailboxId());
@@ -667,9 +636,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getConversationTableName(oldTarget.getMailboxId()) +
-                " SET conv_id = ? WHERE " +
-                (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                "conv_id = ?");
+                " SET conv_id = ? WHERE " + IN_THIS_MAILBOX_AND + "conv_id = ?");
             int pos = 1;
             stmt.setInt(pos++, newTarget.getId());
             if (DebugConfig.enableMailboxGroup)
@@ -689,9 +656,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox.getId()) +
-                " SET imap_id = ? WHERE " +
-                (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                "id = ?");
+                " SET imap_id = ? WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, item.getImapUid());
             if (DebugConfig.enableMailboxGroup)
@@ -726,9 +691,7 @@ public class DbMailItem {
             String precondition = (add ? "NOT (" : "(") + column + " & ?)";
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET " + column + " = " + column + (add ? " | ?" : " & ?") + ", mod_metadata = ?, change_date = ?" +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    precondition + " AND " + relation);
+                    " WHERE " + IN_THIS_MAILBOX_AND + precondition + " AND " + relation);
 
             int pos = 1;
             stmt.setLong(pos++, add ? tag.getBitmask() : ~tag.getBitmask());
@@ -774,9 +737,7 @@ public class DbMailItem {
             String precondition = (add ? "NOT (" : "(") + column + " & ?)";
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
                     " SET " + column + " = " + column + (add ? " | ?" : " & ?") + ", mod_metadata = ?, change_date = ?" +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    precondition + " AND id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
+                    " WHERE " + IN_THIS_MAILBOX_AND + precondition + " AND id IN " + DbUtil.suitableNumberOfVariables(itemIDs));
             int arg = 1;
             stmt.setLong(arg++, add ? tag.getBitmask() : ~tag.getBitmask());
             stmt.setInt(arg++, mbox.getOperationChangeID());
@@ -811,9 +772,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
                     " SET tags = tags & ?, mod_metadata = ?, change_date = ?" +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "tags & ?");
+                    " WHERE " + IN_THIS_MAILBOX_AND + "tags & ?");
             int pos = 1;
             stmt.setLong(pos++, ~tag.getBitmask());
             stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -856,9 +815,7 @@ public class DbMailItem {
 
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET unread = ?, mod_metadata = ?, change_date = ?" +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "unread = ? AND " + relation + " AND type = " + MailItem.TYPE_MESSAGE);
+                    " WHERE " + IN_THIS_MAILBOX_AND + "unread = ? AND " + relation + " AND type = " + MailItem.TYPE_MESSAGE);
             int pos = 1;
             stmt.setInt(pos++, unread ? 1 : 0);
             stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -890,9 +847,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                     " SET unread = ?, mod_metadata = ?, change_date = ?" +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "unread = ? AND id IN " + DbUtil.suitableNumberOfVariables(itemIDs) + " AND type = " + MailItem.TYPE_MESSAGE);
+                    " WHERE " + IN_THIS_MAILBOX_AND + "unread = ? AND id IN " + DbUtil.suitableNumberOfVariables(itemIDs) + " AND type = " + MailItem.TYPE_MESSAGE);
             int pos = 1;
             stmt.setInt(pos++, unread ? 1 : 0);
             stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -928,14 +883,10 @@ public class DbMailItem {
         try {
             String table = getMailItemTableName(folder);
             stmt = conn.prepareStatement("UPDATE " + table + ", " +
-                    "(SELECT parent_id pid, COUNT(*) count FROM " +
-                    getMailItemTableName(folder) + " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "folder_id = ? AND parent_id IS NOT NULL GROUP BY parent_id) x" +
+                    "(SELECT parent_id pid, COUNT(*) count FROM " + getMailItemTableName(folder) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND parent_id IS NOT NULL GROUP BY parent_id) x" +
                     " SET size = size - count, metadata = NULL, mod_metadata = ?, change_date = ?" +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "id = pid AND type = " + MailItem.TYPE_CONVERSATION);
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id = pid AND type = " + MailItem.TYPE_CONVERSATION);
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -977,13 +928,9 @@ public class DbMailItem {
                 int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, ids.size() - i);
                 stmt = conn.prepareStatement("UPDATE " + table + ", " +
                         "(SELECT parent_id pid, COUNT(*) count FROM " + getMailItemTableName(mbox) +
-                        " WHERE " +
-                        (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                        "id IN" + DbUtil.suitableNumberOfVariables(count) + "AND parent_id IS NOT NULL GROUP BY parent_id) x" +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count) + "AND parent_id IS NOT NULL GROUP BY parent_id) x" +
                         " SET size = size - count, metadata = NULL, mod_metadata = ?, change_date = ?" +
-                        " WHERE " +
-                        (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                        "id = pid AND type = " + MailItem.TYPE_CONVERSATION);
+                        " WHERE " + IN_THIS_MAILBOX_AND + "id = pid AND type = " + MailItem.TYPE_CONVERSATION);
                 int attr = 1;
                 if (DebugConfig.enableMailboxGroup)
                     stmt.setInt(attr++, mbox.getId());
@@ -1013,9 +960,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "type = " + MailItem.TYPE_CONVERSATION + " AND size <= 0");
+                    " WHERE " + IN_THIS_MAILBOX_AND + "type = " + MailItem.TYPE_CONVERSATION + " AND size <= 0");
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
@@ -1066,9 +1011,7 @@ public class DbMailItem {
             try {
                 int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, targets.size() - i);
                 stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(mbox) +
-                        " WHERE " +
-                        (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                        "id IN" + DbUtil.suitableNumberOfVariables(count));
+                        " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count));
                 int pos = 1;
                 if (DebugConfig.enableMailboxGroup)
                     stmt.setInt(pos++, mbox.getId());
@@ -1095,9 +1038,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(item) +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    target + " AND type NOT IN " + FOLDER_TYPES);
+                    " WHERE " + IN_THIS_MAILBOX_AND + target + " AND type NOT IN " + FOLDER_TYPES);
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -1160,9 +1101,8 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT ids FROM " + getTombstoneTableName(mbox.getId()) +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "sequence > ? AND ids IS NOT NULL ORDER BY sequence");
+                    " WHERE " + IN_THIS_MAILBOX_AND + "sequence > ? AND ids IS NOT NULL" +
+                    " ORDER BY sequence");
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -1253,10 +1193,8 @@ public class DbMailItem {
         try {
             String table = getMailItemTableName(mbox.getId(), "mi");
 
-            stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + table + " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "type IN " + FOLDER_AND_TAG_TYPES);
+            stmt = conn.prepareStatement("SELECT " + DB_FIELDS + " FROM " + table +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + FOLDER_AND_TAG_TYPES);
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
@@ -1287,9 +1225,7 @@ public class DbMailItem {
 
             Mailbox.MailboxData mbd = new Mailbox.MailboxData();
             stmt = conn.prepareStatement("SELECT folder_id, type, tags, COUNT(*), SUM(unread), SUM(size)" +
-                    " FROM " + table + " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "type NOT IN " + NON_SEARCHABLE_TYPES +
+                    " FROM " + table + " WHERE " + IN_THIS_MAILBOX_AND + "type NOT IN " + NON_SEARCHABLE_TYPES +
                     " GROUP BY folder_id, type, tags");
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(1, mbox.getId());
@@ -1343,9 +1279,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(mbox.getId(), " mi") +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "type IN " + typeConstraint(type) + sortQuery(sort));
+                    " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + typeConstraint(type) + sortQuery(sort));
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
@@ -1375,9 +1309,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(parent.getMailboxId(), " mi") +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "parent_id = ? " + sortQuery(sort));
+                    " WHERE " + IN_THIS_MAILBOX_AND + "parent_id = ? " + sortQuery(sort));
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -1416,9 +1348,7 @@ public class DbMailItem {
 
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(relativeTo.getMailboxId(), " mi") +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "unread > 0 AND " + relation + " AND type NOT IN " + NON_SEARCHABLE_TYPES);
+                    " WHERE " + IN_THIS_MAILBOX_AND + "unread > 0 AND " + relation + " AND type NOT IN " + NON_SEARCHABLE_TYPES);
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -1457,9 +1387,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(folder.getMailboxId(), " mi") +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "folder_id = ? AND type IN " + typeConstraint(type) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + typeConstraint(type) +
                     sortQuery(sort));
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
@@ -1488,9 +1416,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(mbox.getId(), "mi") +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "id = ?");
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -1521,9 +1447,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(mbox.getId(), "mi") +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "folder_id = ? AND imap_id = ?");
+                    " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND imap_id = ?");
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -1563,9 +1487,7 @@ public class DbMailItem {
                 int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, ids.size() - i);
                 stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                         " FROM " + getMailItemTableName(mbox.getId(), "mi") +
-                        " WHERE " +
-                        (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                        "id IN " + DbUtil.suitableNumberOfVariables(count));
+                        " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
                 int pos = 1;
                 if (DebugConfig.enableMailboxGroup)
                     stmt.setInt(pos++, mbox.getId());
@@ -1650,9 +1572,7 @@ public class DbMailItem {
             String typeConstraint = type == MailItem.TYPE_UNKNOWN ? "type NOT IN " + NON_SEARCHABLE_TYPES : "type IN " + typeConstraint(type);
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(mbox.getId(), "mi") +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "mi.mod_metadata > ? AND " + typeConstraint +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "mi.mod_metadata > ? AND " + typeConstraint +
                     " ORDER BY mi.mod_metadata");
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
@@ -1697,9 +1617,7 @@ public class DbMailItem {
                 int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, convData.size() - i);
                 String sql = "SELECT parent_id, id, unread, flags, tags" +
                              " FROM " + getMailItemTableName(mbox.getId()) +
-                             " WHERE " +
-                             (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                             "parent_id IN " + DbUtil.suitableNumberOfVariables(count) +
+                             " WHERE " + IN_THIS_MAILBOX_AND + "parent_id IN " + DbUtil.suitableNumberOfVariables(count) +
                              " ORDER BY parent_id";
                 stmt = conn.prepareStatement(sql);
                 int pos = 1;
@@ -1795,9 +1713,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                     " FROM " + getMailItemTableName(folder) +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "folder_id = ? AND type NOT IN " + FOLDER_TYPES);
+                    " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type NOT IN " + FOLDER_TYPES);
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -1835,9 +1751,7 @@ public class DbMailItem {
 
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                     " FROM " + getMailItemTableName(mbox) +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    constraint);
+                    " WHERE " + IN_THIS_MAILBOX_AND + constraint);
             int attr = 1;
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(attr++, mbox.getId());
@@ -1940,9 +1854,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT index_id FROM " + getMailItemTableName(mbox) +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "index_id IN " + DbUtil.suitableNumberOfVariables(info.sharedIndex));
+                    " WHERE " + IN_THIS_MAILBOX_AND + "index_id IN " + DbUtil.suitableNumberOfVariables(info.sharedIndex));
             int attr = 1;
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(attr++, mbox.getId());
@@ -1976,9 +1888,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + IMAP_FIELDS +
                     " FROM " + getMailItemTableName(folder.getMailboxId(), " mi") +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "folder_id = ? AND type IN " + IMAP_TYPES);
+                    " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + IMAP_TYPES);
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -2011,9 +1921,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + POP3_FIELDS +
                     " FROM " + getMailItemTableName(folder.getMailboxId(), " mi") +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "folder_id = ? AND type IN " + POP3_TYPES);
+                    " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + POP3_TYPES);
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -2385,9 +2293,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT id, index_id, type, date FROM " + getMailItemTableName(folder) +
-                    " WHERE " +
-                    (DebugConfig.enableMailboxGroup ? "mailbox_id = ? AND " : "") +
-                    "type = ? AND folder_id = ?" +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "type = ? AND folder_id = ?" +
                     " ORDER BY date" + (descending ? " DESC" : ""));
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
