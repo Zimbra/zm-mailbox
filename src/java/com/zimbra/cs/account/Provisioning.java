@@ -1068,7 +1068,6 @@ public abstract class Provisioning {
         }
         return cos;
     }
-      
     
     /**
      * Returns account's time zone

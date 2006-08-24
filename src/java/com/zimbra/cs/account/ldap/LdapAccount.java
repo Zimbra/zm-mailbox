@@ -25,17 +25,12 @@
 
 package com.zimbra.cs.account.ldap;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AttributeFlag;
-import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -44,15 +39,13 @@ import com.zimbra.cs.service.ServiceException;
 /**
  * @author schemers
  */
-public class LdapAccount extends LdapNamedEntry implements Account {
+ class LdapAccount extends LdapNamedEntry implements Account {
 
-    protected LdapProvisioning mProv;
     private String mName;
     private String mDomainName;
     
-    LdapAccount(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException {
-        super(dn, attrs);
-        mProv = prov;
+    LdapAccount(String dn, Attributes attrs, Map<String, Object> defaults) throws NamingException {
+        super(dn, attrs, defaults);
         initNameAndDomain();
     }
 
@@ -68,6 +61,10 @@ public class LdapAccount extends LdapNamedEntry implements Account {
         return mName;
     }
 
+    void initDefaults(Map<String,Object> defaults) {
+        setDefaults(defaults);
+    }
+    
     /**`<
      * @return the domain name for this account (foo.com), or null if an admin account. 
      */
@@ -89,41 +86,6 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     public String getAccountStatus() {
         return super.getAttr(Provisioning.A_zimbraAccountStatus);
     }
-     
-    public String getAttr(String name) {
-        String v = super.getAttr(name);
-        if (v != null)
-            return v;
-        try {
-            if (!AttributeManager.getInstance().isAccountInherited(name))
-                return null;
-            Cos cos = mProv.getCOS(this);
-            if (cos != null)
-                return cos.getAttr(name);
-            else
-                return null;            
-        } catch (ServiceException e) {
-            return null;
-        }
-    }
-
-    public String[] getMultiAttr(String name) {
-        String v[] = super.getMultiAttr(name);
-        if (v.length > 0)
-            return v;
-        try {
-            if (!AttributeManager.getInstance().isAccountInherited(name))
-                return sEmptyMulti;
-
-            Cos cos = mProv.getCOS(this);
-            if (cos != null)
-                return cos.getMultiAttr(name);
-            else
-                return sEmptyMulti;
-        } catch (ServiceException e) {
-            return null;
-        }
-    }
     
     public String[] getAliases() {
         return getMultiAttr(Provisioning.A_zimbraMailAlias);
@@ -131,31 +93,6 @@ public class LdapAccount extends LdapNamedEntry implements Account {
     
     public String getAccountCOSId() {
         return super.getAttr(Provisioning.A_zimbraCOSId);
-    }
-    
-    public Map<String, Object> getAttrs() throws ServiceException {
-        return getAttrs(true);
-    }
-
-    public Map<String, Object> getAttrs(boolean applyCos) throws ServiceException {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        
-        // get all the account attrs
-        attrs.putAll(super.getAttrs());
-            
-        if (!applyCos)
-            return attrs;
-            
-        // then enumerate through all inheritable attrs and add them if needed
-        Set<String> inheritable =  AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInherited);
-        for (String attr : inheritable) {
-            Object value = attrs.get(inheritable);
-            if (value == null)
-                value = getMultiAttr(attr);
-            if (value != null)
-                attrs.put(attr, value);
-        }
-        return attrs;
     }
 
     private ICalTimeZone mTimeZone;

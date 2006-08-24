@@ -24,8 +24,6 @@
  */
 package com.zimbra.cs.account;
 
-import com.zimbra.cs.service.ServiceException;
-
 public interface Zimlet extends NamedEntry {
 	public boolean isEnabled();
 	public String getPriority();

@@ -35,8 +35,8 @@ public abstract class AbstractNamedEntry extends AbstractEntry implements NamedE
     protected String mName;
     protected String mId;
 
-    protected AbstractNamedEntry(String name, String id, Map<String, Object> attrs) {
-        super(attrs);
+    protected AbstractNamedEntry(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
+        super(attrs, defaults);
         mName = name;
         mId = id;
     }

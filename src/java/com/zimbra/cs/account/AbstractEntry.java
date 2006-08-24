@@ -41,17 +41,34 @@ import com.zimbra.cs.util.DateUtil;
 public abstract class AbstractEntry implements Entry {
 
     private Map<String,Object> mAttrs;
+    private Map<String,Object> mDefaults;    
     private Map<Object, Object> mData;
     private Map<String, Set<String>> mMultiAttrSetCache;
 
     protected static String[] sEmptyMulti = new String[0];
 
-    protected AbstractEntry(Map<String,Object> attrs) {
+    private AbstractEntry(Map<String,Object> attrs) {
         mAttrs = attrs;
     }
 
+    protected AbstractEntry(Map<String,Object> attrs, Map<String,Object> defaults) {
+        this(attrs);
+        mDefaults = defaults;
+    }
+
+    protected void setAttrs(Map<String,Object> attrs, Map<String,Object> defaults) {
+        mAttrs = attrs;
+        mDefaults = defaults;
+        resetData();
+    }
+    
     protected void setAttrs(Map<String,Object> attrs) {
         mAttrs = attrs;
+        resetData();
+    }
+    
+    public void setDefaults(Map<String,Object> defaults) {
+        mDefaults = defaults;
         resetData();
     }
     
@@ -77,6 +94,16 @@ public abstract class AbstractEntry implements Entry {
             if (key.equalsIgnoreCase(name))
                 return mAttrs.get(key);
         }
+        
+        if (mDefaults == null) return null;
+        
+        v = mDefaults.get(name);
+        if (v != null) return v;
+        
+        for (String key: mDefaults.keySet()) {
+            if (key.equalsIgnoreCase(name))
+                return mDefaults.get(key);
+        }
         return null;
     }
     
@@ -98,7 +125,20 @@ public abstract class AbstractEntry implements Entry {
     }
 
     public Map<String, Object> getAttrs() throws ServiceException {
-        return mAttrs;
+        return getAttrs(true);
+    }
+
+    public Map<String, Object> getAttrs(boolean applyDefaults) throws ServiceException {
+        if (applyDefaults && mDefaults != null) {
+            Map<String, Object> attrs = new HashMap<String, Object>();
+            // put the defaults
+            attrs.putAll(mDefaults);
+            // override with currently set
+            attrs.putAll(mAttrs);
+            return attrs;
+        } else {
+            return mAttrs;
+        }
     }
 
     public boolean getBooleanAttr(String name, boolean defaultValue) {
@@ -172,6 +212,16 @@ public abstract class AbstractEntry implements Entry {
         if (mData == null)
             mData = new HashMap<Object, Object>();
         mData.put(key, value);
+    }
+    
+    protected void getDefaults(AttributeFlag flag, Map<String,Object> defaults) throws ServiceException {
+        defaults.clear();
+        Set<String> attrs = AttributeManager.getInstance().getAttrsWithFlag(flag);
+        for (String a : attrs) {
+            Object obj = getObject(a);
+            if (obj != null) defaults.put(a, obj);
+        }
+        //return Collections.unmodifiableMap(defaults);
     }
 
     public synchronized String toString() {

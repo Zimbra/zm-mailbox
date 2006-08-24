@@ -40,11 +40,11 @@ import com.zimbra.soap.Element.XMLElement;
 class SoapDistributionList extends AbstractNamedEntry implements DistributionList, SoapEntry {
 
     SoapDistributionList(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs);
+        super(name, id, attrs, null);
     }
 
     SoapDistributionList(Element e) throws ServiceException {
-        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e));
+        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e), null);
         addDlm(e, getAttrs());
     }
 
@@ -75,11 +75,6 @@ class SoapDistributionList extends AbstractNamedEntry implements DistributionLis
         Map<String, Object> attrs = SoapProvisioning.getAttrs(dl);
         addDlm(dl, attrs);                
         setAttrs(attrs);
-    }
-
-    public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {
-        // TODO CORRECTLY HANDLE        
-        return getAttrs();
     }
 
     public String[] getAliases() throws ServiceException {

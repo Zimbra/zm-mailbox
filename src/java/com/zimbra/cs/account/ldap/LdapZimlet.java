@@ -24,23 +24,19 @@
  */
 package com.zimbra.cs.account.ldap;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.object.ObjectType;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.zimlet.ZimletHandler;
 import com.zimbra.cs.zimlet.ZimletUtil;
 
 public class LdapZimlet extends LdapNamedEntry implements Zimlet, ObjectType {
 
 	public LdapZimlet(String dn, Attributes attrs) throws NamingException {
-		super(dn, attrs);
+		super(dn, attrs, null);
 	}
 	
 	public String getName() {

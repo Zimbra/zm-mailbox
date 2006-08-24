@@ -30,11 +30,16 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.Map;
+
+import com.zimbra.cs.service.ServiceException;
+
 /**
  * @author schemers
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public interface Cos extends NamedEntry {
-    
+ 
+    Map<String, Object> getAccountDefaults() throws ServiceException;
 }

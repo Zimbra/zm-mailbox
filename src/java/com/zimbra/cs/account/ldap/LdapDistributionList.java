@@ -44,7 +44,7 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
     private String mName;
 
     LdapDistributionList(String dn, Attributes attrs) throws NamingException {
-        super(dn, attrs);
+        super(dn, attrs, null);
         mName = LdapUtil.dnToEmail(mDn);
     }
 

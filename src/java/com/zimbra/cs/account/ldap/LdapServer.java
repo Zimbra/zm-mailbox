@@ -30,30 +30,21 @@
  */
 package com.zimbra.cs.account.ldap;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
-import com.zimbra.cs.account.AttributeFlag;
-import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
  */
 public class LdapServer extends LdapNamedEntry implements Server {
 
-    private Provisioning mProv;
-    
-    LdapServer(String dn, Attributes attrs, Provisioning prov) throws NamingException {
-        super(dn, attrs);
-        mProv = prov;
+    LdapServer(String dn, Attributes attrs, Map<String,Object> defaults) throws NamingException {
+        super(dn, attrs, defaults);
     }
 
     public String getName() {
@@ -62,61 +53,5 @@ public class LdapServer extends LdapNamedEntry implements Server {
 
     public String getId() {
         return getAttr(Provisioning.A_zimbraId);
-    }
-    
-    public String getAttr(String name) {
-        String v = super.getAttr(name);
-        if (v != null)
-            return v;
-        try {
-            Config c = mProv.getConfig();
-            if (!AttributeManager.getInstance().isServerInherited(name))
-                return null;
-            else
-                return c.getAttr(name);
-        } catch (ServiceException e) {
-            return null;
-        }
-    }
-
-    public String[] getMultiAttr(String name) {
-        String v[] = super.getMultiAttr(name);
-        if (v.length > 0)
-            return v;
-        try {
-            Config c = mProv.getConfig();
-            if (!AttributeManager.getInstance().isServerInherited(name))
-                return sEmptyMulti;
-            else
-                return c.getMultiAttr(name);
-        } catch (ServiceException e) {
-            return sEmptyMulti;
-        }
-    }
-
-    public Map<String, Object> getAttrs() throws ServiceException {
-        return getAttrs(true);
-    }    
-
-    public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        
-        // get all the server attrs
-        attrs.putAll(super.getAttrs());
-            
-        if (!applyConfig)
-            return attrs;
-            
-        // then enumerate through all inheritable attrs and add them if needed
-        Config c = mProv.getConfig();
-        Set<String> inheritable = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.serverInherited);
-        for (String attr : inheritable) {
-            Object value = attrs.get(attr);
-            if (value == null)
-                value = c.getMultiAttr(attr);
-            if (value != null)
-                attrs.put(attr, value);
-        }
-        return attrs;
     }
 }

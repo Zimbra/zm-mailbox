@@ -24,15 +24,44 @@
  */
 package com.zimbra.cs.account.ldap;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
+import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.Config;
+import com.zimbra.cs.service.ServiceException;
 
 public class LdapConfig extends LdapEntry implements Config {
-
-    LdapConfig(String dn, Attributes attrs) throws NamingException {
-        super(dn, attrs);
+    
+    private Map<String, Object> mDomainDefaults = new HashMap<String, Object>();
+    private Map<String, Object> mServerDefaults = new HashMap<String, Object>();    
+    
+    LdapConfig(String dn, Attributes attrs, Map<String,Object> defaults) throws NamingException {
+        super(dn, attrs, defaults);
+        resetData();
     }
 
+    @Override
+    public void resetData() {
+        super.resetData();
+        try {
+            getDefaults(AttributeFlag.domainInherited, mDomainDefaults);
+            getDefaults(AttributeFlag.serverInherited, mServerDefaults);            
+        } catch (ServiceException e) {
+            // TODO log?
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getDomainDefaults() throws ServiceException {
+        return mDomainDefaults;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getServerDefaults() throws ServiceException {
+        return mServerDefaults;
+    }
 }

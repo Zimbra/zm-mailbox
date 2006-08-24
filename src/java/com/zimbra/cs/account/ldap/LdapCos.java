@@ -30,21 +30,27 @@
  */
 package com.zimbra.cs.account.ldap;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
+import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
  */
 public class LdapCos extends LdapNamedEntry implements Cos {
 
-//    private LdapProvisioning mProv;
+    private Map<String, Object> mAccountDefaults = new HashMap<String, Object>();
 
-    LdapCos(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException {
-        super(dn, attrs);
+    LdapCos(String dn, Attributes attrs) throws NamingException, ServiceException {
+        super(dn, attrs, null);
+        resetData();
     }
 
     public String getName() {
@@ -53,5 +59,20 @@ public class LdapCos extends LdapNamedEntry implements Cos {
 
     public String getId() {
         return getAttr(Provisioning.A_zimbraId);
+    }
+
+    @Override
+    protected void resetData() {
+        super.resetData();
+        try {
+            getDefaults(AttributeFlag.accountInherited, mAccountDefaults);
+        } catch (ServiceException e) {
+            // TODO log
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getAccountDefaults() throws ServiceException {
+        return mAccountDefaults;
     }
 }

@@ -49,7 +49,7 @@ public class LdapMimeType extends LdapEntry implements MimeTypeInfo {
      * @throws NamingException 
      */
     LdapMimeType(String dn, Attributes attrs) throws NamingException {
-        super(dn, attrs);
+        super(dn, attrs, null);
     }
 
     /* (non-Javadoc)

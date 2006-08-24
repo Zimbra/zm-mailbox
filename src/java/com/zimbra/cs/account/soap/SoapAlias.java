@@ -36,11 +36,11 @@ import com.zimbra.soap.Element;
 class SoapAlias extends AbstractNamedEntry implements Alias, SoapEntry {
 
     SoapAlias(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs);
+        super(name, id, attrs, null);
     }
 
     SoapAlias(Element e) throws ServiceException {
-        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e));
+        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e), null);
     }
 
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {

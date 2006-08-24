@@ -39,11 +39,11 @@ import com.zimbra.soap.Element.XMLElement;
 class SoapAccount extends AbstractNamedEntry implements Account, SoapEntry {
         
     SoapAccount(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs);
+        super(name, id, attrs, null);
     }
 
     SoapAccount(Element e) throws ServiceException {
-        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e));
+        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e), null);
     }
 
     public String getAccountStatus() {
@@ -52,12 +52,6 @@ class SoapAccount extends AbstractNamedEntry implements Account, SoapEntry {
 
     public String[] getAliases() throws ServiceException {
         return getMultiAttr(Provisioning.A_zimbraMailAlias);        
-    }
-
-    public Map<String, Object> getAttrs(boolean applyCos)
-            throws ServiceException {
-        // TODO CORRECTLY HANDLE
-        return getAttrs();
     }
 
     public CalendarUserType getCalendarUserType() throws ServiceException {

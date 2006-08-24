@@ -38,11 +38,11 @@ import com.zimbra.soap.Element.XMLElement;
 class SoapDomain extends AbstractNamedEntry implements Domain, SoapEntry {
 
     SoapDomain(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs);
+        super(name, id, attrs, null);
     }
 
     SoapDomain(Element e) throws ServiceException {
-        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e));
+        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e), null);
     }
 
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
@@ -58,10 +58,5 @@ class SoapDomain extends AbstractNamedEntry implements Domain, SoapEntry {
         a.setText(getId());
         a.addAttribute(AdminService.A_BY, DomainBy.id.name());
         setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_DOMAIN)));
-    }
-
-    public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {
-        // TODO CORRECTLY HANDLE        
-        return getAttrs();
     }
 }

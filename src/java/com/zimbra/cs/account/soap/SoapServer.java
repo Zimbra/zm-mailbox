@@ -38,18 +38,13 @@ import com.zimbra.soap.Element.XMLElement;
 class SoapServer extends AbstractNamedEntry implements Server, SoapEntry {
 
     SoapServer(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs);
+        super(name, id, attrs, null);
     }
 
     SoapServer(Element e) throws ServiceException {
-        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e));
+        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e), null);
     }
 
-    public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException {
-        // TODO CORRECTLY HANDLE
-        return getAttrs();
-    }
-    
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.MODIFY_SERVER_REQUEST);
         req.addElement(AdminService.E_ID).setText(getId());

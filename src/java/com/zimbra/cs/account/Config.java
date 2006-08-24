@@ -30,6 +30,10 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.Map;
+
+import com.zimbra.cs.service.ServiceException;
+
 /**
  * @author schemers
  *
@@ -37,4 +41,8 @@ package com.zimbra.cs.account;
  */
 public interface Config extends Entry {
 
+    Map<String, Object> getDomainDefaults() throws ServiceException;
+    
+    Map<String, Object> getServerDefaults() throws ServiceException;    
+    
 }

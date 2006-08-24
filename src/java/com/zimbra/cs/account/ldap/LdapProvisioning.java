@@ -279,7 +279,7 @@ public class LdapProvisioning extends Provisioning {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext(true);
             LdapUtil.modifyAttrs(ctxt, le.getDN(), attrs, le);
-            le.refresh(ctxt);
+            le.refresh(ctxt, this);
         } catch (InvalidAttributeIdentifierException e) {
             throw AccountServiceException.INVALID_ATTR_NAME(
                     "invalid attr name: " + e.getMessage(), e);
@@ -307,7 +307,7 @@ public class LdapProvisioning extends Provisioning {
     public void reload(Entry e) throws ServiceException
     {    
         LdapEntry le = (LdapEntry) e;
-        le.reload();
+        le.refresh(null, this);
     }
     
     /**
@@ -340,7 +340,7 @@ public class LdapProvisioning extends Provisioning {
                     try {
                         ctxt = LdapUtil.getDirContext();
                         Attributes attrs = ctxt.getAttributes(CONFIG_BASE);
-                        sConfig = new LdapConfig(CONFIG_BASE, attrs);
+                        sConfig = new LdapConfig(CONFIG_BASE, attrs, null);
                     } catch (NamingException e) {
                         throw ServiceException.FAILURE("unable to get config", e);
                     } finally {
@@ -898,7 +898,7 @@ public class LdapProvisioning extends Provisioning {
                         if (objectclass == null || objectclass.contains(C_zimbraAccount)) visitor.visit(makeLdapAccount(dn, attrs, this));
                         else if (objectclass.contains(C_zimbraAlias)) visitor.visit(new LdapAlias(dn, attrs));
                         else if (objectclass.contains(C_zimbraMailList)) visitor.visit(new LdapDistributionList(dn, attrs));
-                        else if (objectclass.contains(C_zimbraDomain)) visitor.visit(new LdapDomain(dn, attrs, this));                        
+                        else if (objectclass.contains(C_zimbraDomain)) visitor.visit(new LdapDomain(dn, attrs, getConfig().getDomainDefaults()));                        
                     }
                     cookie = getCookie(lctxt);
                 } while (cookie != null);
@@ -1221,7 +1221,7 @@ public class LdapProvisioning extends Provisioning {
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
-                return new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), this);
+                return new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getDomainDefaults());
             }
         } catch (NameNotFoundException e) {
             return null;
@@ -1308,7 +1308,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = ctxt.search("", "(objectclass=zimbraDomain)", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                result.add(new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), this));
+                result.add(new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getDomainDefaults()));
             }
             ne.close();
         } catch (NamingException e) {
@@ -1421,7 +1421,7 @@ public class LdapProvisioning extends Provisioning {
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
-                return new LdapCos(sr.getNameInNamespace(), sr.getAttributes(), this);
+                return new LdapCos(sr.getNameInNamespace(), sr.getAttributes());
             }
         } catch (NameNotFoundException e) {
             return null;
@@ -1478,7 +1478,7 @@ public class LdapProvisioning extends Provisioning {
                 ctxt = LdapUtil.getDirContext();
             String dn = cosNametoDN(name);            
             Attributes attrs = ctxt.getAttributes(dn);
-            cos  = new LdapCos(dn, attrs, this);
+            cos  = new LdapCos(dn, attrs);
             sCosCache.put(cos);            
             return cos;
         } catch (NameNotFoundException e) {
@@ -1504,7 +1504,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = ctxt.search(COS_BASE, "(objectclass=zimbraCOS)", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                result.add(new LdapCos(sr.getNameInNamespace(), sr.getAttributes(),this));
+                result.add(new LdapCos(sr.getNameInNamespace(), sr.getAttributes()));
             }
             ne.close();
         } catch (NamingException e) {
@@ -1743,7 +1743,7 @@ public class LdapProvisioning extends Provisioning {
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
-                return new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), this);
+                return new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getServerDefaults());
             }
         } catch (NameNotFoundException e) {
             return null;
@@ -1813,7 +1813,7 @@ public class LdapProvisioning extends Provisioning {
             ctxt = LdapUtil.getDirContext();
             String dn = serverNametoDN(name);            
             Attributes attrs = ctxt.getAttributes(dn);
-            LdapServer s = new LdapServer(dn, attrs, this);
+            LdapServer s = new LdapServer(dn, attrs, getConfig().getServerDefaults());
             sServerCache.put(s);            
             return s;
         } catch (NameNotFoundException e) {
@@ -1845,7 +1845,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = ctxt.search(SERVER_BASE, filter, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                LdapServer s = new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), this);
+                LdapServer s = new LdapServer(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getServerDefaults());
                 result.add(s);
             }
             ne.close();
@@ -2876,13 +2876,13 @@ public class LdapProvisioning extends Provisioning {
                               Provisioning.SA_CALENDAR_RESOURCE_FLAG);
     }
 
-    private static LdapAccount makeLdapAccount(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException {
+    private LdapAccount makeLdapAccount(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
         Attribute a = attrs.get(Provisioning.A_zimbraAccountCalendarUserType);
         boolean isAccount = (a == null) || a.contains(CalendarUserType.USER.toString());
-        if (isAccount)
-            return new LdapAccount(dn, attrs, prov);            
-        else
-            return new LdapCalendarResource(dn, attrs, prov);
+        LdapAccount acct = (isAccount) ? new LdapAccount(dn, attrs, null) : new LdapCalendarResource(dn, attrs, null);
+        Cos cos = getCOS(acct);
+        acct.initDefaults(cos.getAccountDefaults());
+        return acct;
     }
 
     /**

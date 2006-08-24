@@ -30,12 +30,14 @@
 package com.zimbra.cs.account.ldap;
 
 import java.util.Locale;
+import java.util.Map;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 
 import com.zimbra.cs.account.AbstractEntry;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 
@@ -47,8 +49,8 @@ public class LdapEntry extends AbstractEntry {
 
     protected String mDn;
 
-    LdapEntry(String dn, Attributes attrs) throws NamingException {
-        super(LdapUtil.getAttrs(attrs));
+    LdapEntry(String dn, Attributes attrs, Map<String,Object> defaults) throws NamingException {
+        super(LdapUtil.getAttrs(attrs), defaults);
         mDn = dn;
     }
 
@@ -56,28 +58,28 @@ public class LdapEntry extends AbstractEntry {
         return mDn;
     }
 
-    void reload() throws ServiceException {
-        try {
-            refresh(null);
-        } catch (NamingException e) {
-            throw ServiceException
-                    .FAILURE("unable to refresh entry: " + mDn, e);
-        }
-    }
-
-    synchronized void refresh(DirContext initCtxt)
-            throws NamingException, ServiceException {
+    synchronized void refresh(DirContext initCtxt, LdapProvisioning prov)
+            throws ServiceException {
         DirContext ctxt = initCtxt;
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
             setAttrs(LdapUtil.getAttrs(ctxt.getAttributes(mDn)));
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to refresh entry", e);
         } finally {
             if (initCtxt == null)
                 LdapUtil.closeContext(ctxt);
         }
+        if (this instanceof LdapAccount) {
+            Cos cos = prov.getCOS((LdapAccount)this);
+            if (cos != null) setDefaults(cos.getAccountDefaults());
+        } else if (this instanceof LdapDomain) {
+            setDefaults(prov.getConfig().getDomainDefaults());
+        } else if (this instanceof LdapServer) {
+            setDefaults(prov.getConfig().getServerDefaults());            
+        }
     }
-
 
     private Locale mLocale;
 

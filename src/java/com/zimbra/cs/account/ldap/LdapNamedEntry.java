@@ -29,6 +29,8 @@
  */
 package com.zimbra.cs.account.ldap;
 
+import java.util.Map;
+
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
@@ -41,8 +43,8 @@ import javax.naming.directory.Attributes;
  */
 public abstract class LdapNamedEntry extends LdapEntry implements Comparable {
 
-    LdapNamedEntry(String dn, Attributes attrs) throws NamingException {
-        super(dn, attrs);
+    LdapNamedEntry(String dn, Attributes attrs, Map<String,Object> defaults) throws NamingException {
+        super(dn, attrs, defaults);
     }
     
     public abstract String getId();

@@ -59,6 +59,8 @@ public interface Entry {
 
     public Map<String, Object> getAttrs() throws ServiceException;
     
+    public Map<String, Object> getAttrs(boolean applyDefaults) throws ServiceException;    
+    
     /**
      * 
      * @param name name of the attribute to retreive. 

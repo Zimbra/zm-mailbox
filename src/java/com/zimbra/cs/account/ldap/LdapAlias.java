@@ -36,7 +36,7 @@ public class LdapAlias extends LdapNamedEntry implements Alias {
 
     LdapAlias(String dn, Attributes attrs) throws NamingException
     {
-        super(dn, attrs);
+        super(dn, attrs, null);
         mName = LdapUtil.dnToEmail(mDn);
     }
 

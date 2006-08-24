@@ -48,7 +48,7 @@ public class LdapWellKnownTimeZone extends LdapNamedEntry implements WellKnownTi
     private static Log mLog = LogFactory.getLog(LdapWellKnownTimeZone.class);
 
     LdapWellKnownTimeZone(String dn, Attributes attrs) throws NamingException {
-        super(dn, attrs);
+        super(dn, attrs, null);
     }
 
     public String getName() {
