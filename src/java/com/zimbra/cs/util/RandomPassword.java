@@ -25,7 +25,6 @@
 
 package com.zimbra.cs.util;
 
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 public class RandomPassword {
@@ -70,12 +69,7 @@ public class RandomPassword {
      * Generate a random password of random length.
      */
     public static String generate(int minLength, int maxLength) {
-        SecureRandom random = null;
-        try {
-            random = SecureRandom.getInstance("SHA1PRNG");
-        } catch (NoSuchAlgorithmException e) {
-            return null;
-        }
+        SecureRandom random = new SecureRandom();
 
         // Calculate the desired length of the password
         int length;

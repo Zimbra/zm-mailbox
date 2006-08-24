@@ -31,7 +31,6 @@
  */
 package com.zimbra.cs.account;
 
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.HashMap;
 
@@ -69,18 +68,14 @@ public class AuthTokenKey {
     }
 
     AuthTokenKey(long version, byte[] key) throws ServiceException {
-        try {
-            mVersion = version;
-            mCreated = System.currentTimeMillis();
-            if (key != null) { 
-                mKey = key;
-            } else {
-                SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-                mKey = new byte[KEY_SIZE_BYTES];
-                random.nextBytes(mKey);
-            }
-        } catch (NoSuchAlgorithmException e) {
-            throw ServiceException.FAILURE("unable to initialize SecureRandom", e);
+        mVersion = version;
+        mCreated = System.currentTimeMillis();
+        if (key != null) { 
+            mKey = key;
+        } else {
+            SecureRandom random = new SecureRandom();
+            mKey = new byte[KEY_SIZE_BYTES];
+            random.nextBytes(mKey);
         }
     }
 
