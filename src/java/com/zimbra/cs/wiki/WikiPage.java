@@ -25,9 +25,9 @@
 package com.zimbra.cs.wiki;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
-import java.net.URLConnection;
+
+import org.apache.commons.httpclient.Header;
 
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.client.LmcDocument;
@@ -36,9 +36,11 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.Pair;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 
 public abstract class WikiPage {
@@ -237,19 +239,19 @@ public abstract class WikiPage {
 					auth = null;
 				}
 			}
-			String content = null;
+			String hostname;
 			try {
-				URL url = new URL(mRestUrl + "?fmt=native");
-				URLConnection uconn = url.openConnection();
-				uconn.addRequestProperty("cookie", "ZM_AUTH_TOKEN=" + auth);
-				Object obj = uconn.getContent();
-				if (obj instanceof InputStream) {
-					content = new String(ByteUtil.getContent((InputStream)obj, 0), "UTF-8");
-				}
-			} catch (Exception e) {
-				throw WikiServiceException.ERROR("can't get contents", e);
+				hostname = new URL(mRestUrl).getHost();
+			} catch (java.net.MalformedURLException mue) {
+	            throw ServiceException.RESOURCE_UNREACHABLE("invalid url", mue);
 			}
-			return content;
+			String url = mRestUrl + "?fmt=native";
+			Pair<Header[], byte[]> resource = UserServlet.getRemoteResource(auth, hostname, url);
+			try {
+				return new String(resource.getSecond(), "UTF-8");
+			} catch (IOException ioe) {
+	            throw ServiceException.RESOURCE_UNREACHABLE("invalid url", ioe);
+			}
 		}
 		
 		public void create(WikiContext ctxt, Wiki where) throws ServiceException {
