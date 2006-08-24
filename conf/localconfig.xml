@@ -64,6 +64,10 @@
     <value>true</value>
   </key>
 
+  <key name="calendar_outlook_compatible_allday_events">
+    <value>true</value>
+  </key>
+
   <key name="nio_imap_enable">
     <value>true</value>
   </key>
