@@ -883,11 +883,10 @@ public class CalendarUtils {
             List<ZAttendee> forAttendees, RecurId recurId,
             boolean incrementSeq)
     throws ServiceException {
-        // TimeZoneMap tzMap = new TimeZoneMap(acct.getTimeZone());
         Invite cancel = new Invite(ICalTok.CANCEL.toString(),
                                    inv.getTimeZoneMap());
 
-        // ORGANIZER (FIXME: should check to make sure it is us!)
+        // ORGANIZER
         cancel.setOrganizer(inv.getOrganizer());
 
         // ATTENDEEs
@@ -920,8 +919,13 @@ public class CalendarUtils {
 
         // SEQUENCE
         int seq = inv.getSeqNo();
-        if (incrementSeq)
-            seq++;
+        if (incrementSeq) {
+            // Increment only if this account is the organizer.  If this
+            // account is a non-organizer attendee, leave the sequence at
+            // present value.  (bug 8465)
+            if (acct != null && inv.thisAcctIsOrganizer(acct))
+                seq++;
+        }
         cancel.setSeqNo(seq);
 
         // STATUS
