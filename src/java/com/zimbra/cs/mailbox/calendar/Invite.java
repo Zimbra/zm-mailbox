@@ -400,11 +400,17 @@ public class Invite {
         
         String methodStr = meta.get(FN_METHOD, ICalTok.PUBLISH.toString());
         
+        int flags = (int) meta.getLong(FN_APPT_FLAGS, 0);
         try {
             // DtStart
             dtStart = ParsedDateTime.parse(meta.get(FN_START, null), tzMap);
             // DtEnd
             dtEnd = ParsedDateTime.parse(meta.get(FN_END, null), tzMap);
+            if ((flags & APPT_FLAG_ALLDAY)!=0) {
+                // Fixup historic data with incorrect all-day start/end format.
+                dtStart.forceDateOnly();
+                dtEnd.forceDateOnly();
+            }
             // Duration
             duration = ParsedDuration.parse(meta.get(FN_DURATION, null));
             
@@ -421,7 +427,6 @@ public class Invite {
         String name = meta.get(FN_NAME, "");
         String loc = meta.get(FN_LOCATION, null);
         
-        int flags = (int) meta.getLong(FN_APPT_FLAGS, 0);
         // For existing invites with no partstat, default to ACCEPTED status.
         String partStat = meta.get(FN_PARTSTAT, IcalXmlStrMap.PARTSTAT_ACCEPTED);
         // For existing invites with no RSVP, default to true.
@@ -1789,7 +1794,7 @@ public class Invite {
         // DTEND
         ParsedDateTime dtend = getEndTime();
         if (dtend != null) 
-            event.addProperty(getEndTime().toProperty(ICalTok.DTEND));
+            event.addProperty(dtend.toProperty(ICalTok.DTEND));
         
         // DURATION
         ParsedDuration dur = getDuration();

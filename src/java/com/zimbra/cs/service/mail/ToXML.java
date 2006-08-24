@@ -986,32 +986,34 @@ public class ToXML {
                 e.addAttribute(MailService.A_APPT_IS_EXCEPTION, true);
             }
 
-            if (invite.isAllDayEvent())
+            boolean allDay = invite.isAllDayEvent();
+            if (allDay)
                 e.addAttribute(MailService.A_APPT_ALLDAY, true);
 
-            if (invite.getStartTime() != null) {
+            ParsedDateTime dtStart = invite.getStartTime();
+            if (dtStart != null) {
                 Element startElt = e.addElement(MailService.E_APPT_START_TIME);
-                ParsedDateTime dtStart = invite.getStartTime();
-                startElt.addAttribute(MailService.A_APPT_DATETIME, dtStart.getDateTimePartString());
-                String tzName = dtStart.getTZName();
-                if (tzName != null) {
-                    startElt.addAttribute(MailService.A_APPT_TIMEZONE, tzName);
+                startElt.addAttribute(MailService.A_APPT_DATETIME, dtStart.getDateTimePartString(false));
+                if (!allDay) {
+                    String tzName = dtStart.getTZName();
+                    if (tzName != null)
+                        startElt.addAttribute(MailService.A_APPT_TIMEZONE, tzName);
                 }
             }
 
             ParsedDateTime dtEnd = invite.getEndTime();
             if (dtEnd != null) {
                 Element endElt = e.addElement(MailService.E_APPT_END_TIME);
-                if (invite.isAllDayEvent()) {
+                if (!allDay) {
+                    String tzName = dtEnd.getTZName();
+                    if (tzName != null)
+                        endElt.addAttribute(MailService.A_APPT_TIMEZONE, tzName);
+                } else {
                     // See CalendarUtils.parseInviteElementCommon, where we parse DTEND
                     // for a description of why we add -1d when sending to the client
                     dtEnd = dtEnd.add(ParsedDuration.NEGATIVE_ONE_DAY);
                 }
-                endElt.addAttribute(MailService.A_APPT_DATETIME, dtEnd.getDateTimePartString());
-                String tzName = dtEnd.getTZName();
-                if (tzName != null) {
-                    endElt.addAttribute(MailService.A_APPT_TIMEZONE, tzName);
-                }
+                endElt.addAttribute(MailService.A_APPT_DATETIME, dtEnd.getDateTimePartString(false));
             }
 
             ParsedDuration dur = invite.getDuration();

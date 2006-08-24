@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.WellKnownTimeZone;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
@@ -49,7 +50,8 @@ public final class ParsedDateTime {
      * This means that "Date" events are treated as having a time of 00:00:00 in the
      * creator's default timezone, UNLESS they have the "UTC only" flag set
      */
-    public static final boolean USE_BROKEN_OUTLOOK_MODE = true;
+    private static final boolean OUTLOOK_COMPAT_ALLDAY =
+        LC.calendar_outlook_compatible_allday_events.booleanValue();
     
     public static void main(String[] args) {
         ICalTimeZone utc = ICalTimeZone.getUTC();
@@ -128,8 +130,8 @@ public final class ParsedDateTime {
                 //}
             } else {
             	// no timezone if it is a DATE entry....note that we *DO* need a
-            	// 'local time zone' as a fallback: if we're in BROKEN_OUTLOOK_MODE
-            	// we will need to use this local time zone as the zone to render
+            	// 'local time zone' as a fallback: if we're in OUTLOOK_COMPAT_ALLDAY
+            	// mode we will need to use this local time zone as the zone to render
             	// the appt in (remember, outlook all-day-appts must be 0:00-0:00 in 
             	// the client's timezone!)
             	tz = null;
@@ -423,7 +425,7 @@ public final class ParsedDateTime {
      * @return The YYYYMMDD['T'HHMMSS[Z]] part  
      */
     public String getDateTimePartString() {
-        return getDateTimePartString(USE_BROKEN_OUTLOOK_MODE);
+        return getDateTimePartString(OUTLOOK_COMPAT_ALLDAY);
     }
 
     /**
@@ -498,7 +500,7 @@ public final class ParsedDateTime {
      * @return The name of the TimeZone
      */
     public String getTZName() {
-        if ((mHasTime || USE_BROKEN_OUTLOOK_MODE) && mICalTimeZone!=null && !isUTC() ) {
+        if ((mHasTime || OUTLOOK_COMPAT_ALLDAY) && mICalTimeZone!=null && !isUTC() ) {
             return mICalTimeZone.getID();
         }
         return null;
@@ -530,14 +532,17 @@ public final class ParsedDateTime {
     }
 
     public String toString() {
-        return getTZParamString() + getDateTimePartString();
+        if (mHasTime)
+            return getTZParamString() + getDateTimePartString();
+        else
+            return "VALUE=DATE:" + getDateTimePartString(false);
     }
     
     public ZProperty toProperty(ICalTok tok) {
         ZProperty toRet = new ZProperty(tok, getDateTimePartString());
         
         String tzName = getTZName();
-        if (!USE_BROKEN_OUTLOOK_MODE && !hasTime()) {
+        if (!OUTLOOK_COMPAT_ALLDAY && !hasTime()) {
             toRet.addParameter(new ZParameter(ICalTok.VALUE, ICalTok.DATE.toString()));
         } else {
             assert(isUTC() || tzName != null);
@@ -574,5 +579,9 @@ public final class ParsedDateTime {
 	        }
         }
         return zone;
+    }
+
+    void forceDateOnly() {
+        mHasTime = false;
     }
 }

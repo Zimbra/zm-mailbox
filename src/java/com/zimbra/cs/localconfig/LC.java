@@ -199,7 +199,9 @@ public class LC {
     public static final KnownKey zimlet_directory;
     public static final KnownKey wiki_enabled;
     public static final KnownKey wiki_user;
-    
+
+    public static final KnownKey calendar_outlook_compatible_allday_events;
+
     public static final KnownKey nio_imap_enable;
     public static final KnownKey nio_imap_debug_logging;
     public static final KnownKey nio_imap_write_queue_max_size_unauth;
@@ -763,7 +765,12 @@ public class LC {
         wiki_user.setDefault("wiki");
         wiki_user.setDoc
             ("Wiki user.");
-        
+
+        calendar_outlook_compatible_allday_events = new KnownKey("calendar_outlook_compatible_allday_events");
+        calendar_outlook_compatible_allday_events.setDefault("true");
+        calendar_outlook_compatible_allday_events.setDoc
+            ("Use Outlook-compatible all-day events.  True by default.");
+
         nio_imap_enable = new KnownKey("nio_imap_enable");
         nio_imap_enable.setDefault("false");
         nio_imap_enable.setDoc
