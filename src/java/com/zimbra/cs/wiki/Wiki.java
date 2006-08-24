@@ -34,7 +34,6 @@ import org.apache.commons.collections.map.LRUMap;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -285,7 +284,6 @@ public abstract class Wiki {
 	 */
 	public static class WikiById extends Wiki {
 		protected int mFolderId;
-		protected int mParentFolderId;
 		
 		WikiById(WikiContext ctxt, Account acct, int fid) throws ServiceException {
 			if (!acct.getBooleanAttr("zimbraFeatureNotebookEnabled", false))
@@ -298,8 +296,6 @@ public abstract class Wiki {
 				Mailbox mbox = Mailbox.getMailboxByAccount(acct);
 				if (mbox == null)
 					throw WikiServiceException.ERROR("wiki account mailbox not found");
-				Folder f = mbox.getFolderById(ctxt.octxt, mFolderId);
-				mParentFolderId = f.getFolderId();
 				mbox.addListener(WikiSession.getInstance());
 			} else {
 				// for some reason if the account is not local, but we have folder id.
@@ -351,17 +347,6 @@ public abstract class Wiki {
 			}
 		}
 		
-		public String getKey() {
-			return Integer.toString(mFolderId);
-		}
-		
-		public String getParentKey() {
-			if (mParentFolderId == Mailbox.ID_FOLDER_ROOT) {
-				return null;
-			}
-			return Integer.toString(mParentFolderId);
-		}
-
 		public synchronized void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException {
 			WikiPage p = lookupWiki(ctxt, newName);
 			if (p != null)
@@ -404,17 +389,6 @@ public abstract class Wiki {
 			mPath = path;
 		}
 
-		public String getKey() {
-			return mPath;
-		}
-		
-		public String getParentKey() {
-			int pos = mPath.lastIndexOf('/');
-			if (pos < 1)
-				return null;
-			return mPath.substring(0, pos);
-		}
-		
 		private String createQueryString(String wikiWord) {
 			StringBuilder buf = new StringBuilder();
 			buf.append("in:");
@@ -512,47 +486,6 @@ public abstract class Wiki {
 		return acct;
 	}
 	
-	public static Wiki getDefaultStore(WikiContext ctxt, String accountId) throws ServiceException {
-		return getByUrl(ctxt, getDefaultStoreUrl(accountId));
-	}
-	public static WikiUrl getDefaultStoreUrl(String accountId) throws ServiceException {
-		Provisioning prov = Provisioning.getInstance();
-		Account acct = prov.get(Provisioning.AccountBy.id, accountId);
-		Domain dom = prov.getDomain(acct);
-		Config globalConfig = prov.getConfig();
-		
-		String domainWiki = dom.getAttr(Provisioning.A_zimbraNotebookAccount, null);
-		String defaultWiki = globalConfig.getAttr(Provisioning.A_zimbraNotebookAccount, null);
-
-		//ZimbraLog.wiki.debug("template store for " + accountId);
-		Account target = null;
-		if (domainWiki != null) {
-			//ZimbraLog.wiki.debug("domainWiki " + domainWiki);
-			target = prov.get(Provisioning.AccountBy.name, domainWiki);
-			if (target.getId().equals(accountId))
-				target = null;
-		}
-		if (defaultWiki != null) {
-			//ZimbraLog.wiki.debug("defaultWiki " + defaultWiki);
-			Account defaultAccount = prov.get(Provisioning.AccountBy.name, defaultWiki);
-			if (target == null)
-				target = defaultAccount;
-		}
-		if (target == null)
-			throw WikiServiceException.ERROR("global and domain wiki accounts not found");
-		
-		StringBuilder buf = new StringBuilder();
-		buf.append("//");
-		buf.append(target.getName());
-		buf.append(TEMPLATE_FOLDER_NAME);
-		buf.append("/");
-		
-		WikiUrl wurl = new WikiUrl(buf.toString());
-		//ZimbraLog.wiki.debug("wikiUrl for template: " + wurl.getFullUrl(ctxt, accountId));
-
-		return wurl;
-	}
-	
 	public static WikiPage findWikiPageByPath(WikiContext ctxt, String accountId, int fid, String path, boolean traverse) throws ServiceException {
 		return findWikiPageByPath(ctxt, accountId, new WikiUrl(path, fid), traverse);
 	}
@@ -593,50 +526,7 @@ public abstract class Wiki {
 		if (!traverse)
 			throw new WikiServiceException.NoSuchWikiException(url.getUrl());
 
-		Provisioning prov = Provisioning.getInstance();
-		String defaultWiki = prov.getConfig().getAttr(Provisioning.A_zimbraNotebookAccount, null);
-		if (defaultWiki == null) {
-			Account acct = prov.get(Provisioning.AccountBy.id, accountId);
-			defaultWiki = prov.getDomain(acct).getAttr(Provisioning.A_zimbraNotebookAccount, null);
-		}
-		if (defaultWiki != null) {
-			Account acct = prov.get(Provisioning.AccountBy.name, defaultWiki);
-			defaultWiki = acct.getId();
-		}
-		
-		boolean topLevelTemplateFolderReached = false;
-		String actualAccount = wiki.getWikiAccount();
-		String key = wiki.getParentKey();
-		while (wiki != null) {
-			actualAccount = wiki.getWikiAccount();
-			key = wiki.getKey();
-			while (wiki != null && actualAccount != null && key != null) {
-				try {
-					wiki = Wiki.getInstance(ctxt, actualAccount, key);
-				} catch (ServiceException se) {
-					wiki = null;
-				}
-				if (wiki != null) {
-					page = wiki.lookupWiki(ctxt, pageName);
-					if (page != null) {
-						return page;
-					}
-					key = wiki.getParentKey();
-				}
-			}
-			if (topLevelTemplateFolderReached)
-				break;
-			try {
-				wiki = getDefaultStore(ctxt, actualAccount);
-				if (wiki.getWikiAccount().equals(defaultWiki)) {
-					// this is the Template folder of the same account.
-					topLevelTemplateFolderReached = true;
-				}
-			} catch (ServiceException se) {
-				wiki = null;
-			}
-		}
-		throw new WikiServiceException.NoSuchWikiException(url.getUrl());
+		return getChrome(ctxt, pageName, accountId);
 	}
 	
 	public static Wiki getInstance(WikiContext ctxt, MailItem item) throws ServiceException {
@@ -704,20 +594,6 @@ public abstract class Wiki {
 		}
 	}
 	
-	public static Wiki getByUrl(WikiContext ctxt, WikiUrl url) throws ServiceException {
-		if (url == null) {
-			throw WikiServiceException.ERROR("empty url");
-		}
-		if (!url.inAnotherMailbox()) {
-			throw WikiServiceException.ERROR("no account name in the path");
-		}
-		Account account = url.getOwnerAccount(null);
-		if (account == null) {
-			throw WikiServiceException.INVALID_PATH("no account in : " + url.getFullUrl(ctxt, null));
-		}
-		return getInstance(ctxt, account.getId(), url.getFolderPath(ctxt, null));
-	}
-	
 	public static Wiki get(String acctId, String k) {
 		return get(new Pair<String,String>(acctId, k));
 	}
@@ -744,12 +620,6 @@ public abstract class Wiki {
 		}
 	}
 
-	public String getWikiAccount() {
-		return mWikiAccount;
-	}
-	
-	public abstract String getKey();
-	public abstract String getParentKey() throws ServiceException;
 	public abstract int getWikiFolderId() throws ServiceException;
 	
 	public abstract WikiPage lookupWiki(WikiContext ctxt, String wikiWord) throws ServiceException;
@@ -812,9 +682,6 @@ public abstract class Wiki {
 	
 	public abstract void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException;
 	
-	public synchronized void deleteWiki(WikiContext ctxt, String wikiWord) throws ServiceException {
-	}
-
 	public WikiTemplate getTemplate(WikiContext ctxt, String name) throws ServiceException, IOException {
 		// check if the request is for the chrome.
 		WikiPage page;
