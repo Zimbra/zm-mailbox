@@ -140,7 +140,7 @@ public class ImapCopyItem extends RedoableOp {
 
         int i = 0, itemIds[] = new int[mDestIds.size()];
         for (int id : mDestIds.keySet())
-            itemIds[i] = id;
+            itemIds[i++] = id;
 
         try {
             mbox.imapCopy(getOperationContext(), itemIds, mType, mDestFolderId);
