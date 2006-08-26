@@ -27,7 +27,6 @@ package com.zimbra.cs.account.soap;
 
 import java.util.Map;
 
-import com.zimbra.cs.account.AbstractNamedEntry;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.service.ServiceException;
@@ -35,7 +34,7 @@ import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 
-class SoapDomain extends AbstractNamedEntry implements Domain, SoapEntry {
+class SoapDomain extends Domain implements SoapEntry {
 
     SoapDomain(String name, String id, Map<String, Object> attrs) {
         super(name, id, attrs, null);

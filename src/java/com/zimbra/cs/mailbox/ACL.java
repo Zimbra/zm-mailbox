@@ -28,12 +28,10 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
@@ -86,46 +84,20 @@ public class ACL {
     /** The pseudo-GUID signifying "all authenticated and unauthenticated users". */
     public static final String GUID_PUBLIC   = "99999999-9999-9999-9999-999999999999";
 
-    public static final Account ANONYMOUS_ACCT = new AnonymousAccount();
-    
-    private static class AnonymousAccount implements Account {
-    	// useful fields
-        public String getId()           { return GUID_PUBLIC; }
-        public String getUid()          { return "public"; }
-        public boolean isCorrectHost()  { return true; }
-        
-        // empty fields
-        public String getAttr(String name)                      { return null; }
-        public String[] getMultiAttr(String name)               { return null; }    
-        public String getAttr(String name, String defaultValue) { return defaultValue; }
-        public Set<String> getMultiAttrSet(String name)         { return null; }
-        public Map<String, Object> getAttrs()                   { return null; }
-        public boolean getBooleanAttr(String name, boolean defaultValue)   { return defaultValue; }
-        public int getIntAttr(String name, int defaultValue)               { return 0; }
-        public long getLongAttr(String name, long defaultValue)            { return 0; }
-        public long getTimeInterval(String name, long defaultValue)        { return defaultValue; }
-        public Date getGeneralizedTimeAttr(String name, Date defaultValue) { return defaultValue; }
-        public void setCachedData(Object key, Object value)  { return; }
-        public Object getCachedData(Object key)   { return null; }
-        public Locale getLocale()                 { return null; }
-        public String getName()                   { return "public"; }
-        public String getDomainName()             { return null; }
-        public String getAccountStatus()          { return null; }
-        public Map<String, Object> getAttrs(boolean applyCos) { return null; }
-        public String[] getAliases()              { return new String[0]; }
-        public CalendarUserType getCalendarUserType() { return null; }
-        public boolean saveToSent()               { return false; }
-        public int compareTo(Object o)            { return 0; }
-        public String getAccountCOSId()           { return null; }
+    public static final Account ANONYMOUS_ACCT = new Account("public", GUID_PUBLIC, getAnonAttrs(), null);
+
+    private static Map<String, Object> getAnonAttrs() {
+        Map<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_uid, "public");
+        return attrs;
     }
     
-    public static class GuestAccount extends AnonymousAccount {
+    public static class GuestAccount extends Account {
     	public GuestAccount(String emailAddress, String password) {
-    		mEmailAddress = emailAddress;  mPassword = password;
+            super(emailAddress, GUID_PUBLIC, getAnonAttrs(), null);
+            mPassword = password;
     	}
-    	public String getName()                  { return mEmailAddress; }
     	public String getPassword()              { return mPassword; }
-    	private String mEmailAddress;
     	private String mPassword;
     }
 

@@ -31,12 +31,17 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.Map;
+
 /**
  * @author anandp
  *
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public interface Alias extends NamedEntry {
+public class Alias extends NamedEntry {
 
+    public Alias(String name, String id, Map<String, Object> attrs) {
+        super(name, id, attrs, null);
+    }
 }

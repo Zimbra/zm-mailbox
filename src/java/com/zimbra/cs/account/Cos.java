@@ -30,6 +30,7 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
@@ -39,7 +40,26 @@ import com.zimbra.cs.service.ServiceException;
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public interface Cos extends NamedEntry {
+public class Cos extends NamedEntry {
  
-    Map<String, Object> getAccountDefaults() throws ServiceException;
+    private Map<String, Object> mAccountDefaults = new HashMap<String, Object>();
+
+    public Cos(String name, String id, Map<String,Object> attrs) {
+        super(name, id, attrs, null);
+        resetData();
+    }
+
+    @Override
+    protected void resetData() {
+        super.resetData();
+        try {
+            getDefaults(AttributeFlag.accountInherited, mAccountDefaults);
+        } catch (ServiceException e) {
+            // TODO log
+        }
+    }
+
+    public Map<String, Object> getAccountDefaults() {
+        return mAccountDefaults;
+    }
 }

@@ -24,8 +24,22 @@
  */
 package com.zimbra.cs.account;
 
-public interface Zimlet extends NamedEntry {
-	public boolean isEnabled();
-	public String getPriority();
-	public boolean isExtension();
+import java.util.Map;
+
+public class Zimlet extends NamedEntry {
+	protected Zimlet(String name, String id, Map<String, Object> attrs) {
+        super(name, id, attrs, null);
+    }
+
+    public boolean isEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraZimletEnabled, false);
+    }
+    
+    public String getPriority() {
+        return getAttr(Provisioning.A_zimbraZimletPriority);
+    }
+    
+    public boolean isExtension() {
+        return getBooleanAttr(Provisioning.A_zimbraZimletIsExtension, false);
+    }
 }

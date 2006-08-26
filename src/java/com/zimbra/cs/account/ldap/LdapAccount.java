@@ -32,102 +32,23 @@ import javax.naming.directory.Attributes;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.WellKnownTimeZone;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
  */
- class LdapAccount extends LdapNamedEntry implements Account {
+ class LdapAccount extends Account implements LdapEntry {
 
-    private String mName;
-    private String mDomainName;
+    private String mDn;
     
     LdapAccount(String dn, Attributes attrs, Map<String, Object> defaults) throws NamingException {
-        super(dn, attrs, defaults);
-        initNameAndDomain();
+        super(LdapUtil.dnToEmail(dn), 
+                LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId),
+                LdapUtil.getAttrs(attrs), defaults);
+        mDn = dn;
     }
 
-    public String getId() {
-        return super.getAttr(Provisioning.A_zimbraId);
+    public String getDN() {
+        return mDn;
     }
 
-    public String getUid() {
-        return super.getAttr(Provisioning.A_uid);
-    }
-    
-    public String getName() {
-        return mName;
-    }
-
-    void initDefaults(Map<String,Object> defaults) {
-        setDefaults(defaults);
-    }
-    
-    /**`<
-     * @return the domain name for this account (foo.com), or null if an admin account. 
-     */
-    public String getDomainName() {
-        return mDomainName;
-    }
-
-    private void initNameAndDomain() {
-        String uid = getUid(); 
-        mDomainName = LdapUtil.dnToDomain(mDn);
-        if (!mDomainName.equals("")) {
-            mName =  uid+"@"+mDomainName;
-        } else {
-            mName = uid;
-            mDomainName = null;
-        }
-    }
-
-    public String getAccountStatus() {
-        return super.getAttr(Provisioning.A_zimbraAccountStatus);
-    }
-    
-    public String[] getAliases() {
-        return getMultiAttr(Provisioning.A_zimbraMailAlias);
-    }
-    
-    public String getAccountCOSId() {
-        return super.getAttr(Provisioning.A_zimbraCOSId);
-    }
-
-    private ICalTimeZone mTimeZone;
-
-    public synchronized ICalTimeZone getTimeZone() throws ServiceException {
-        String tzId = getAttr(Provisioning.A_zimbraPrefTimeZoneId);
-        if (tzId == null) {
-        	if (mTimeZone != null)
-                return mTimeZone;
-            mTimeZone = ICalTimeZone.getUTC();
-            return mTimeZone;
-        }
-
-        if (mTimeZone != null) {
-            if (mTimeZone.getID().equals(tzId))
-                return mTimeZone;
-            // Else the account's time zone was updated.  Discard the cached
-            // ICalTimeZone object.
-        }
-
-    	WellKnownTimeZone z = Provisioning.getInstance().getTimeZoneById(tzId);
-        if (z != null)
-            mTimeZone = z.toTimeZone();
-        if (mTimeZone == null)
-            mTimeZone = ICalTimeZone.getUTC();
-        return mTimeZone;
-    }
-
-    public CalendarUserType getCalendarUserType() {
-        String cutype = getAttr(Provisioning.A_zimbraAccountCalendarUserType,
-                                CalendarUserType.USER.toString());
-        return CalendarUserType.valueOf(cutype);
-    }
-
-    public boolean saveToSent() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, false);
-    }
 }

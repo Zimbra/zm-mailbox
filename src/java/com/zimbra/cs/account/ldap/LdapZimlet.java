@@ -33,18 +33,15 @@ import com.zimbra.cs.object.ObjectType;
 import com.zimbra.cs.zimlet.ZimletHandler;
 import com.zimbra.cs.zimlet.ZimletUtil;
 
-public class LdapZimlet extends LdapNamedEntry implements Zimlet, ObjectType {
+class LdapZimlet extends Zimlet implements LdapEntry, ObjectType {
 
+    private String mDn;
+    
 	public LdapZimlet(String dn, Attributes attrs) throws NamingException {
-		super(dn, attrs, null);
-	}
-	
-	public String getName() {
-		return getType();
-	}
-	
-	public String getId() {
-		return getType();
+        super(LdapUtil.getAttrString(attrs, Provisioning.A_cn),
+                LdapUtil.getAttrString(attrs, Provisioning.A_cn),                 
+                LdapUtil.getAttrs(attrs));
+        mDn = dn;
 	}
 	
     public String getType() {
@@ -79,15 +76,7 @@ public class LdapZimlet extends LdapNamedEntry implements Zimlet, ObjectType {
     	return getAttr(Provisioning.A_zimbraZimletServerIndexRegex);
     }
 
-    public boolean isEnabled() {
-    	return getBooleanAttr(Provisioning.A_zimbraZimletEnabled, false);
-    }
-    
-    public String getPriority() {
-    	return getAttr(Provisioning.A_zimbraZimletPriority);
-    }
-    
-    public boolean isExtension() {
-    	return getBooleanAttr(Provisioning.A_zimbraZimletIsExtension, false);
+    public String getDN() {
+        return mDn;
     }
 }

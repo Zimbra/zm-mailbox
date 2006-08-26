@@ -32,13 +32,14 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
-import com.zimbra.cs.service.ServiceException;
-
 /**
  * @author schemers
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public interface Server extends NamedEntry {
-    public Map<String, Object> getAttrs(boolean applyConfig) throws ServiceException;
+public class Server extends NamedEntry {
+    
+    public Server(String name, String id, Map<String,Object> attrs, Map<String,Object> defaults) {
+        super(name, id, attrs, defaults);
+    }
 }

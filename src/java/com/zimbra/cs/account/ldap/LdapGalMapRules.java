@@ -34,7 +34,7 @@ import javax.naming.directory.Attributes;
 /*
  * maps LDAP attrs into contact attrs. 
  */
-public class LdapGalMapRules {
+class LdapGalMapRules {
     
     private List<LdapGalMapRule> mRules;
     private String mLdapAttrs[];

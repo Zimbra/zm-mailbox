@@ -27,20 +27,19 @@ package com.zimbra.cs.account.soap;
 
 import java.util.Map;
 
-import com.zimbra.cs.account.AbstractNamedEntry;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 
-class SoapAlias extends AbstractNamedEntry implements Alias, SoapEntry {
+class SoapAlias extends Alias implements SoapEntry {
 
     SoapAlias(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs, null);
+        super(name, id, attrs);
     }
 
     SoapAlias(Element e) throws ServiceException {
-        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e), null);
+        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e));
     }
 
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {

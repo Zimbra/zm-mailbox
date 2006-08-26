@@ -30,21 +30,47 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.Map;
+
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.service.ServiceException;
 
-/**
- * @author schemers
- *
- * Window - Preferences - Java - Code Style - Code Templates
- */
-public interface NamedEntry extends Entry, Comparable {
-    
+public abstract class NamedEntry extends Entry implements Comparable {
+
+    protected String mName;
+    protected String mId;
+
     public interface Visitor  {
         public void visit(NamedEntry entry) throws ServiceException;
     }
 
-    public String getName();
+    protected NamedEntry(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
+        super(attrs, defaults);
+        mName = name;
+        mId = id;
+    }
+
+    public String getId() {
+        return mId;
+    }
+
+    public String getName() {
+        return mName;
+    }
+
+    public int compareTo(Object obj) {
+        if (!(obj instanceof NamedEntry))
+            return 0;
+        NamedEntry other = (NamedEntry) obj;
+        return getName().compareTo(other.getName());
+    }
     
-    public String getId();
+    public synchronized String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getClass().getName()).append(": { name=").append(getName()).append(" id=").append(getId());
+        sb.append(getAttrs().toString());
+        sb.append("}");
+        return sb.toString();           
+    }
 
 }

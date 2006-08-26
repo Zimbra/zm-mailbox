@@ -25,11 +25,19 @@
 
 package com.zimbra.cs.account;
 
-import com.zimbra.cs.service.ServiceException;
+import java.util.Map;
 
-public interface DistributionList extends NamedEntry {
+public class DistributionList extends NamedEntry {
 
-    public String[] getAllMembers() throws ServiceException;
+    protected DistributionList(String name, String id, Map<String, Object> attrs) {
+        super(name, id, attrs, null);
+    }
 
-    public String[] getAliases() throws ServiceException;
+    public String[] getAllMembers() {
+        return getMultiAttr(Provisioning.A_zimbraMailForwardingAddress);
+    }
+    
+    public String[] getAliases() {
+        return getMultiAttr(Provisioning.A_zimbraMailAlias);
+    }
 }

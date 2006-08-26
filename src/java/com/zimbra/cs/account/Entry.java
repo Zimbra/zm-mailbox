@@ -15,7 +15,7 @@
  * The Original Code is: Zimbra Collaboration Suite Server.
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
- * Portions created by Zimbra are Copyright (C) 2005, 2006 Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
  * All Rights Reserved.
  * 
  * Contributor(s): 
@@ -23,51 +23,138 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Sep 23, 2004
- *
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package com.zimbra.cs.account;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.DateUtil;
 
-/**
- * @author schemers
- *
- * Window - Preferences - Java - Code Style - Code Templates
- */
-public interface Entry {
+public abstract class Entry {
 
-    public String getAttr(String name);
+    private Map<String,Object> mAttrs;
+    private Map<String,Object> mDefaults;    
+    private Map<String, Object> mData;
+    private Map<String, Set<String>> mMultiAttrSetCache;
 
-    public String[] getMultiAttr(String name);    
+    protected static String[] sEmptyMulti = new String[0];
 
-    public String getAttr(String name, String defaultValue);
+    protected Entry(Map<String,Object> attrs, Map<String,Object> defaults) {
+        mAttrs = attrs;
+        mDefaults = defaults;
+    }
+    
+    public void setAttrs(Map<String,Object> attrs, Map<String,Object> defaults) {
+        mAttrs = attrs;
+        mDefaults = defaults;
+        resetData();
+    }
+    
+    public void setAttrs(Map<String,Object> attrs) {
+        mAttrs = attrs;
+        resetData();
+    }
+    
+    public void setDefaults(Map<String,Object> defaults) {
+        mDefaults = defaults;
+        resetData();
+    }
+    
+    protected synchronized void resetData()
+    {
+        if (mMultiAttrSetCache != null)            
+            mMultiAttrSetCache.clear();
+        if (mData != null) {
+            for (String key : mData.keySet()) {
+                if (key.charAt(0) != '_')
+                    mData.remove(key);
+            }
+        }
+    }
 
     /**
-     * place all the values for the specified attr in a set and return it.
+     * looks up name in map, and if found, returns its value.
+     * if not found, iterate through key names and compare using equalsIgnoreCase
      * @param name
      * @return
      */
-    public Set<String> getMultiAttrSet(String name);
+    private Object getObject(String name) {
+        Object v = mAttrs.get(name);
+        if (v != null) return v;
+        
+        for (String key: mAttrs.keySet()) {
+            if (key.equalsIgnoreCase(name))
+                return mAttrs.get(key);
+        }
+        
+        if (mDefaults == null) return null;
+        
+        v = mDefaults.get(name);
+        if (v != null) return v;
+        
+        for (String key: mDefaults.keySet()) {
+            if (key.equalsIgnoreCase(name))
+                return mDefaults.get(key);
+        }
+        return null;
+    }
+    
+    public String getAttr(String name) {
+        Object v = getObject(name);
+        if (v instanceof String) {
+            return (String) v;
+        } else if (v instanceof String[]) {
+            String[] a = (String[]) v;
+            return a.length > 0 ? a[0] : null;
+        } else {
+            return null;
+        }
+    }
 
-    public Map<String, Object> getAttrs() throws ServiceException;
-    
-    public Map<String, Object> getAttrs(boolean applyDefaults) throws ServiceException;    
-    
+    public String getAttr(String name, String defaultValue) {
+        String v = getAttr(name);
+        return v == null ? defaultValue : v;
+    }
+
+    protected Map<String, Object> getRawAttrs() {
+        return mAttrs;
+    }
+
+    public Map<String, Object> getAttrs() {
+        return getAttrs(true);
+    }
+
+    public Map<String, Object> getAttrs(boolean applyDefaults) {
+        if (applyDefaults && mDefaults != null) {
+            Map<String, Object> attrs = new HashMap<String, Object>();
+            // put the defaults
+            attrs.putAll(mDefaults);
+            // override with currently set
+            attrs.putAll(mAttrs);
+            return attrs;
+        } else {
+            return mAttrs;
+        }
+    }
+
     /**
      * 
      * @param name name of the attribute to retreive. 
      * @param defaultValue value to use if attr is not present
      * @return
      */
-    public boolean getBooleanAttr(String name, boolean defaultValue);
+    public boolean getBooleanAttr(String name, boolean defaultValue) {
+        String v = getAttr(name);
+        return v == null ? defaultValue : Provisioning.TRUE.equals(v);
+    }
 
     /**
      * 
@@ -75,7 +162,13 @@ public interface Entry {
      * @param defaultValue value to use if attr is not present or can't be parsed.
      * @return
      */
-    public int getIntAttr(String name, int defaultValue);
+    public Date getGeneralizedTimeAttr(String name, Date defaultValue) {
+        String v = getAttr(name);
+        if (v == null)
+            return defaultValue;
+        Date d = DateUtil.parseGeneralizedTime(v);
+        return d == null ? defaultValue : d;
+    }
 
     /**
      * 
@@ -83,7 +176,68 @@ public interface Entry {
      * @param defaultValue value to use if attr is not present or can't be parsed.
      * @return
      */
-    public long getLongAttr(String name, long defaultValue);
+    public int getIntAttr(String name, int defaultValue) {
+        String v = getAttr(name);
+        try {
+            return v == null ? defaultValue : Integer.parseInt(v);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    private Locale mLocale;
+    
+    public Locale getLocale() throws ServiceException {
+        // Don't synchronize the entire method because Provisioning.getLocale
+        // can recursively call LdapEntry.getLocale() on multiple entries.
+        // If LdapEntry.getLocale() was synchronized, we might get into a
+        // deadlock.
+        synchronized (this) {
+            if (mLocale != null)
+                return mLocale;
+        }
+        Locale lc = Provisioning.getInstance().getLocale(this);
+        synchronized (this) {
+            mLocale = lc;
+            return mLocale;
+        }
+    }
+
+    /**
+     * 
+     * @param name name of the attribute to retreive. 
+     * @param defaultValue value to use if attr is not present or can't be parsed.
+     * @return
+     */
+    public long getLongAttr(String name, long defaultValue) {
+        String v = getAttr(name);
+        try {
+            return v == null ? defaultValue : Long.parseLong(v);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    public String[] getMultiAttr(String name) {
+        Object v = getObject(name);
+        if (v instanceof String) return new String[] {(String) v};
+        else if (v instanceof String[]) {
+            return (String[])v;
+        } else {
+            return sEmptyMulti;
+        }
+    }
+
+    public Set<String> getMultiAttrSet(String name) {
+        if (mMultiAttrSetCache == null)        
+            mMultiAttrSetCache = new HashMap<String, Set<String>>();        
+        Set<String> result = mMultiAttrSetCache.get(name);
+        if (result == null) {
+            result = new HashSet<String>(Arrays.asList(getMultiAttr(name)));
+            mMultiAttrSetCache.put(name, result);
+        }
+        return result;
+    }
 
     /**
      * get a time interval, which is a number, optional followed by a character denoting the units
@@ -96,34 +250,48 @@ public interface Entry {
      * @param defaultValue value to use if attr is not present or can't be parsed.
      * @return interval in milliseconds
      */
-    public long getTimeInterval(String name, long defaultValue);
+    public long getTimeInterval(String name, long defaultValue) {
+        return DateUtil.getTimeInterval(getAttr(name), defaultValue);        
+    }
 
     /**
-     * 
-     * @param name name of the attribute to retreive. 
-     * @param defaultValue value to use if attr is not present or can't be parsed.
-     * @return
-     */
-    public Date getGeneralizedTimeAttr(String name, Date defaultValue);    
-    
-    /**
-     * temporarily associate a key/value pair with this entry. When an entry is reloaded, any cached data is cleared.
+     * temporarily associate a key/value pair with this entry. When an entry is reloaded, any cached data is cleared via
+     * a call to resetData. Any keys that start with "_" will not be reset.
      * @param key
      * @param value
      */
-    public void setCachedData(Object key, Object value);
+    public synchronized void setCachedData(String key, Object value) {
+        if (mData == null)
+            mData = new HashMap<String, Object>();
+        mData.put(key, value);
+    }
 
     /**
      * get an entry from the cache.
      * @param key
      * @return
      */
-    public Object getCachedData(Object key);
+    public synchronized Object getCachedData(String key) {
+        if (mData == null) return null;
+        return mData.get(key);
+    }
+    
+    protected void getDefaults(AttributeFlag flag, Map<String,Object> defaults) throws ServiceException {
+        defaults.clear();
+        Set<String> attrs = AttributeManager.getInstance().getAttrsWithFlag(flag);
+        for (String a : attrs) {
+            Object obj = getObject(a);
+            if (obj != null) defaults.put(a, obj);
+        }
+        //return Collections.unmodifiableMap(defaults);
+    }
 
-    /**
-     * return the entry's Locale
-     * @return
-     * @throws ServiceException
-     */
-    public Locale getLocale() throws ServiceException ;
+    public synchronized String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getClass().getName()).append(": {  ");        
+        //sb.append(getClass().getName()).append(": { name=").append(getName()).append(" ");
+        sb.append(mAttrs.toString());
+        sb.append("}");
+        return sb.toString();           
+    }
 }

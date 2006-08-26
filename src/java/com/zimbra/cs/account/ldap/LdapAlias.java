@@ -31,22 +31,18 @@ import javax.naming.directory.Attributes;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.Provisioning;
 
-public class LdapAlias extends LdapNamedEntry implements Alias {
-    private String mName;
+class LdapAlias extends Alias implements LdapEntry {
+    private String mDn;
 
     LdapAlias(String dn, Attributes attrs) throws NamingException
     {
-        super(dn, attrs, null);
-        mName = LdapUtil.dnToEmail(mDn);
+        super(LdapUtil.dnToEmail(dn),
+                LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
+                LdapUtil.getAttrs(attrs));
+        mDn = dn;
     }
 
-    public String getId() {
-        return getAttr(Provisioning.A_zimbraId);
+    public String getDN() {
+        return mDn;
     }
-
-    public String getName() {
-        return mName;
-    }
-    
-    
 }

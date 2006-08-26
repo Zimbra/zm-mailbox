@@ -28,24 +28,139 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 
 /**
  * @author jhahm
  */
-public interface WellKnownTimeZone extends NamedEntry {
+public class WellKnownTimeZone extends NamedEntry {
 
-    public ICalTimeZone toTimeZone();
+    private static Log mLog = LogFactory.getLog(WellKnownTimeZone.class);
+    
+    protected WellKnownTimeZone(String name, String id, Map<String, Object> attrs) {
+        super(name, id, attrs, null);
+    }
 
-    public String getStandardDtStart();
 
-    public String getStandardOffset();
+    private ICalTimeZone mTimeZone;
 
-    public String getStandardRecurrenceRule();
+    public synchronized ICalTimeZone toTimeZone() {
+        if (mTimeZone != null)
+            return mTimeZone;
 
-    public String getDaylightDtStart();
+        String tzId = getId();
+        try {
+            int standardOffset = getStandardOffsetMins();
+            int daylightOffset = getDaylightOffsetMins();
+            mTimeZone = new ICalTimeZone(tzId,
+                                         standardOffset * 60 * 1000,
+                                         getStandardDtStart(),
+                                         getStandardRecurrenceRule(),
+                                         daylightOffset * 60 * 1000,
+                                         getDaylightDtStart(),
+                                         getDaylightRecurrenceRule());
+        } catch (Exception e) {
+            mLog.error("Invalid time zone entry: " + tzId, e);
+            mTimeZone = new ICalTimeZone(tzId,
+                                         0,
+                                         "16010101T000000",
+                                         null,
+                                         0,
+                                         "16010101T000000",
+                                         null);
+        }
+        return mTimeZone;
+    }
 
-    public String getDaylightOffset();
+    public String getStandardDtStart() {
+        return getAttr(Provisioning.A_zimbraTimeZoneStandardDtStart);
+    }
 
-    public String getDaylightRecurrenceRule();
+    public String getStandardOffset() {
+        return getAttr(Provisioning.A_zimbraTimeZoneStandardOffset);
+    }
+
+    boolean mStandardOffsetMinsCached = false;
+    int mStandardOffsetMins;
+
+    private synchronized int getStandardOffsetMins() {
+        if (!mStandardOffsetMinsCached) {
+            mStandardOffsetMins = offsetToInt(getStandardOffset());
+            mStandardOffsetMinsCached = true;
+        }
+        return mStandardOffsetMins;
+    }
+
+    public String getStandardRecurrenceRule() {
+        return getAttr(Provisioning.A_zimbraTimeZoneStandardRRule);
+    }
+
+    public String getDaylightDtStart() {
+        return getAttr(Provisioning.A_zimbraTimeZoneDaylightDtStart);
+    }
+
+    public String getDaylightOffset() {
+        return getAttr(Provisioning.A_zimbraTimeZoneDaylightOffset);
+    }
+
+    boolean mDaylightOffsetMinsCached = false;
+    int mDaylightOffsetMins;
+
+    private synchronized int getDaylightOffsetMins() {
+        if (!mDaylightOffsetMinsCached) {
+            mDaylightOffsetMins = offsetToInt(getDaylightOffset());
+            mDaylightOffsetMinsCached = true;
+        }
+        return mDaylightOffsetMins;
+    }
+
+    public String getDaylightRecurrenceRule() {
+        return getAttr(Provisioning.A_zimbraTimeZoneDaylightRRule);
+    }
+
+    /**
+     * First sort by the offset from GMT in minutes, then alphabetically
+     * by substring of the time zone name following the "(GMT+/-HHMM) " prefix.
+     */
+    public int compareTo(Object obj) {
+        if (!(obj instanceof WellKnownTimeZone))
+            return 0;
+        WellKnownTimeZone other = (WellKnownTimeZone) obj;
+
+        int thisOffset = getStandardOffsetMins();
+        int otherOffset = other.getStandardOffsetMins();
+        if (thisOffset < otherOffset)
+            return -1;
+        else if (thisOffset > otherOffset)
+            return 1;
+
+        String thisId = getId();
+        if (thisId.indexOf("(GMT") == 0)
+            thisId = thisId.substring(thisId.indexOf(')') + 1);
+        String otherId = other.getId();
+        if (otherId.indexOf("(GMT") == 0)
+            otherId = otherId.substring(otherId.indexOf(')') + 1);
+        return thisId.compareTo(otherId);
+    }
+
+    private static int offsetToInt(String offset) {
+        try {
+            boolean negative = offset.charAt(0) == '-';
+            int hour = Integer.parseInt(offset.substring(1, 3));
+            int min = Integer.parseInt(offset.substring(3, 5));
+            int offsetMins = hour * 60 + min;
+            if (negative)
+                offsetMins *= -1;
+            return offsetMins;
+        } catch (StringIndexOutOfBoundsException se) {
+            return 0;
+        } catch (NumberFormatException ne) {
+            return 0;
+        }
+    }
 }

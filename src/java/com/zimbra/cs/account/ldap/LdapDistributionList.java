@@ -40,20 +40,14 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.EmailUtil;
 
-public class LdapDistributionList extends LdapNamedEntry implements DistributionList {
-    private String mName;
+class LdapDistributionList extends DistributionList implements LdapEntry {
+    private String mDn;
 
     LdapDistributionList(String dn, Attributes attrs) throws NamingException {
-        super(dn, attrs, null);
-        mName = LdapUtil.dnToEmail(mDn);
-    }
-
-    public String getId() {
-        return getAttr(Provisioning.A_zimbraId);
-    }
-
-    public String getName() {
-        return mName;
+        super(LdapUtil.dnToEmail(dn),
+                LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
+                LdapUtil.getAttrs(attrs));
+        mDn = dn;
     }
     
     void addMembers(String[] members, LdapProvisioning prov) throws ServiceException {
@@ -125,11 +119,9 @@ public class LdapDistributionList extends LdapNamedEntry implements Distribution
         prov.modifyAttrs(this, modmap);
     }
 
-    public String[] getAllMembers() {
-        return getMultiAttr(Provisioning.A_zimbraMailForwardingAddress);
+    public String getDN() {
+        return mDn;
     }
-    
-    public String[] getAliases() {
-        return getMultiAttr(Provisioning.A_zimbraMailAlias);
-    }
+
+
 }

@@ -41,17 +41,18 @@ import com.zimbra.cs.account.Server;
 /**
  * @author schemers
  */
-public class LdapServer extends LdapNamedEntry implements Server {
+class LdapServer extends Server implements LdapEntry {
+
+    private String mDn;
 
     LdapServer(String dn, Attributes attrs, Map<String,Object> defaults) throws NamingException {
-        super(dn, attrs, defaults);
+        super(LdapUtil.getAttrString(attrs, Provisioning.A_cn), 
+                LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
+                LdapUtil.getAttrs(attrs), defaults);
+        mDn = dn;
     }
 
-    public String getName() {
-        return getAttr(Provisioning.A_cn);
-    }
-
-    public String getId() {
-        return getAttr(Provisioning.A_zimbraId);
+    public String getDN() {
+        return mDn;
     }
 }

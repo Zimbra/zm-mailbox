@@ -25,25 +25,74 @@
 
 package com.zimbra.cs.account;
 
+import java.util.Map;
+
 /**
  * @author jhahm
  */
-public interface CalendarResource extends Account {
+public class CalendarResource extends Account {
 
-    public String getResourceType();
-    public boolean autoAcceptDecline();
-    public boolean autoDeclineIfBusy();
-    public boolean autoDeclineRecurring();
+    public CalendarResource(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
+        super(name, id, attrs, defaults);
+    }
 
-    public String getDisplayName();
-    public String getLocationDisplayName();
-    public String getSite();
-    public String getBuilding();
-    public String getFloor();
-    public String getRoom();
-    public int getCapacity();
+    public String getResourceType() {
+        return getAttr(Provisioning.A_zimbraCalResType, "Location");
+    }
 
-    public String getContactName();
-    public String getContactEmail();
-    public String getContactPhone();
+    public boolean autoAcceptDecline() {
+        return getBooleanAttr(
+                Provisioning.A_zimbraCalResAutoAcceptDecline, true);
+    }
+
+    public boolean autoDeclineIfBusy() {
+        return getBooleanAttr(
+                Provisioning.A_zimbraCalResAutoDeclineIfBusy, true);
+    }
+
+    public boolean autoDeclineRecurring() {
+        return getBooleanAttr(
+                Provisioning.A_zimbraCalResAutoDeclineRecurring, false);
+    }
+
+    public String getDisplayName() {
+        return getAttr(Provisioning.A_displayName);
+    }
+
+    public String getLocationDisplayName() {
+        return getAttr(Provisioning.A_zimbraCalResLocationDisplayName);
+    }
+
+    public String getSite() {
+        return getAttr(Provisioning.A_zimbraCalResSite);
+    }
+
+    public String getBuilding() {
+        return getAttr(Provisioning.A_zimbraCalResBuilding);
+    }
+
+    public String getFloor() {
+        return getAttr(Provisioning.A_zimbraCalResFloor);
+    }
+
+    public String getRoom() {
+        return getAttr(Provisioning.A_zimbraCalResRoom);
+    }
+
+    public int getCapacity() {
+        return getIntAttr(Provisioning.A_zimbraCalResCapacity, 0);
+    }
+
+    public String getContactName() {
+        return getAttr(Provisioning.A_zimbraCalResContactName);
+    }
+
+    public String getContactEmail(){
+        return getAttr(Provisioning.A_zimbraCalResContactEmail);
+    }
+
+    public String getContactPhone(){
+        return getAttr(Provisioning.A_zimbraCalResContactPhone);
+    }    
+    
 }

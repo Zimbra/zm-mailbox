@@ -32,6 +32,7 @@ package com.zimbra.cs.account.ldap;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
 
@@ -41,15 +42,18 @@ import com.zimbra.cs.mime.MimeTypeInfo;
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public class LdapMimeType extends LdapEntry implements MimeTypeInfo {
+class LdapMimeType extends Entry implements LdapEntry, MimeTypeInfo {
 
+    private String mDn;
+    
     /**
      * @param dn
      * @param attrs
      * @throws NamingException 
      */
     LdapMimeType(String dn, Attributes attrs) throws NamingException {
-        super(dn, attrs, null);
+        super(LdapUtil.getAttrs(attrs), null);
+        mDn = dn;
     }
 
     /* (non-Javadoc)
@@ -89,6 +93,10 @@ public class LdapMimeType extends LdapEntry implements MimeTypeInfo {
 
     public String getExtension() {
         return super.getAttr(Provisioning.A_zimbraMimeHandlerExtension, null);
+    }
+
+    public String getDN() {
+        return mDn;
     }
 
 }

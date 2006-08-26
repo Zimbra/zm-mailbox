@@ -36,69 +36,16 @@ import com.zimbra.cs.account.Provisioning;
 /**
  * @author jhahm
  */
-public class LdapCalendarResource
-extends LdapAccount implements CalendarResource {
+class LdapCalendarResource extends CalendarResource implements LdapEntry {
+
+    private String mDn;
 
     LdapCalendarResource(String dn, Attributes attrs, Map<String, Object> defaults) throws NamingException {
-        super(dn, attrs, null);
+        super(LdapUtil.dnToEmail(dn),
+                LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), 
+                LdapUtil.getAttrs(attrs), defaults);
+        mDn = dn;
     }
 
-    public String getResourceType() {
-        return getAttr(Provisioning.A_zimbraCalResType, "Location");
-    }
-
-    public boolean autoAcceptDecline() {
-        return getBooleanAttr(
-                Provisioning.A_zimbraCalResAutoAcceptDecline, true);
-    }
-
-    public boolean autoDeclineIfBusy() {
-        return getBooleanAttr(
-                Provisioning.A_zimbraCalResAutoDeclineIfBusy, true);
-    }
-
-    public boolean autoDeclineRecurring() {
-        return getBooleanAttr(
-                Provisioning.A_zimbraCalResAutoDeclineRecurring, false);
-    }
-
-    public String getDisplayName() {
-        return getAttr(Provisioning.A_displayName);
-    }
-
-    public String getLocationDisplayName() {
-        return getAttr(Provisioning.A_zimbraCalResLocationDisplayName);
-    }
-
-    public String getSite() {
-        return getAttr(Provisioning.A_zimbraCalResSite);
-    }
-
-    public String getBuilding() {
-        return getAttr(Provisioning.A_zimbraCalResBuilding);
-    }
-
-    public String getFloor() {
-        return getAttr(Provisioning.A_zimbraCalResFloor);
-    }
-
-    public String getRoom() {
-        return getAttr(Provisioning.A_zimbraCalResRoom);
-    }
-
-    public int getCapacity() {
-        return getIntAttr(Provisioning.A_zimbraCalResCapacity, 0);
-    }
-
-    public String getContactName() {
-        return getAttr(Provisioning.A_zimbraCalResContactName);
-    }
-
-    public String getContactEmail(){
-        return getAttr(Provisioning.A_zimbraCalResContactEmail);
-    }
-
-    public String getContactPhone(){
-        return getAttr(Provisioning.A_zimbraCalResContactPhone);
-    }
+    public String getDN() { return mDn; }
 }

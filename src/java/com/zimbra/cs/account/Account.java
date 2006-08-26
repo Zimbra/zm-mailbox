@@ -27,52 +27,93 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers
  */
-public interface Account extends NamedEntry {
+public class Account extends NamedEntry {
+
+    private String mDomain;
+    
+    public Account(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
+        super(name, id, attrs, defaults);
+        int index = name.indexOf('@');
+        if (index != -1) mDomain = name.substring(index+1);
+    }
 
     public static enum CalendarUserType {
         USER,       // regular person account
         RESOURCE    // calendar resource
     }
 
-    public String getUid();
-
-    /**
-     * Returns the *account's* COSId, that is, returns the zimbraCOSId directly set on the account, or null if not set.
-     * Use Provisioning.getCos(account) to get the actual COS object.
-     * @return 
-     */
-    public String getAccountCOSId();
-    
     /**
      * @return the domain name for this account (foo.com), or null if an admin account. 
      */
-    public String getDomainName();
-    
-    public String getAccountStatus();
-    
-    /**
-     * combines all the attributes from the Account and the COS and returns as a map. Account attrs
-     * override COS attrs
-     *  
-     * @param applyCos apply COS attributes
-     * @return
-     * @throws ServiceException
-     */
-    public Map<String, Object> getAttrs(boolean applyCos) throws ServiceException;    
-
-    public String[] getAliases() throws ServiceException;
+    public String getDomainName() {
+        return mDomain;
+    }
 
     /**
      * Returns calendar user type
      * @return USER (default) or RESOURCE
      * @throws ServiceException
      */
-    public CalendarUserType getCalendarUserType() throws ServiceException;
+    public CalendarUserType getCalendarUserType() {
+        String cutype = getAttr(Provisioning.A_zimbraAccountCalendarUserType,
+                CalendarUserType.USER.toString());
+        return CalendarUserType.valueOf(cutype);
+    }
 
-    public boolean saveToSent() throws ServiceException;
+    public String getUid() {
+        return super.getAttr(Provisioning.A_uid);
+    }
+
+    public boolean saveToSent() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, false);
+    }
+    
+    public String getAccountStatus() {
+        return super.getAttr(Provisioning.A_zimbraAccountStatus);
+    }
+    
+    public String[] getAliases() {
+        return getMultiAttr(Provisioning.A_zimbraMailAlias);
+    }
+
+    /**
+     * Returns the *account's* COSId, that is, returns the zimbraCOSId directly set on the account, or null if not set.
+     * Use Provisioning.getCos(account) to get the actual COS object.
+     * @return 
+     */
+    public String getAccountCOSId() {
+        return getAttr(Provisioning.A_zimbraCOSId);
+    }
+    
+    private ICalTimeZone mTimeZone;
+    
+    public synchronized ICalTimeZone getTimeZone() throws ServiceException {
+        String tzId = getAttr(Provisioning.A_zimbraPrefTimeZoneId);
+        if (tzId == null) {
+            if (mTimeZone != null)
+                return mTimeZone;
+            mTimeZone = ICalTimeZone.getUTC();
+            return mTimeZone;
+        }
+
+        if (mTimeZone != null) {
+            if (mTimeZone.getID().equals(tzId))
+                return mTimeZone;
+            // Else the account's time zone was updated.  Discard the cached
+            // ICalTimeZone object.
+        }
+
+        WellKnownTimeZone z = Provisioning.getInstance().getTimeZoneById(tzId);
+        if (z != null)
+            mTimeZone = z.toTimeZone();
+        if (mTimeZone == null)
+            mTimeZone = ICalTimeZone.getUTC();
+        return mTimeZone;
+    }
 }

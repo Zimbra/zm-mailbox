@@ -27,16 +27,14 @@ package com.zimbra.cs.account.soap;
 
 import java.util.Map;
 
-import com.zimbra.cs.account.AbstractNamedEntry;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 
-class SoapAccount extends AbstractNamedEntry implements Account, SoapEntry {
+class SoapAccount extends Account implements SoapEntry {
         
     SoapAccount(String name, String id, Map<String, Object> attrs) {
         super(name, id, attrs, null);
@@ -44,34 +42,6 @@ class SoapAccount extends AbstractNamedEntry implements Account, SoapEntry {
 
     SoapAccount(Element e) throws ServiceException {
         super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e), null);
-    }
-
-    public String getAccountStatus() {
-        return getAttr(Provisioning.A_zimbraAccountStatus);
-    }
-
-    public String[] getAliases() throws ServiceException {
-        return getMultiAttr(Provisioning.A_zimbraMailAlias);        
-    }
-
-    public CalendarUserType getCalendarUserType() throws ServiceException {
-        String cutype = getAttr(Provisioning.A_zimbraAccountCalendarUserType,
-                CalendarUserType.USER.toString());
-        return CalendarUserType.valueOf(cutype);
-    }
-
-    public String getDomainName() {
-        int index = mName.indexOf('@');
-        if (index != -1) return mName.substring(index+1);
-        else return null;
-    }
-
-    public String getUid() {
-        return super.getAttr(Provisioning.A_uid);        
-    }
-
-    public boolean saveToSent() throws ServiceException {
-        return getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, false);
     }
 
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
@@ -87,10 +57,6 @@ class SoapAccount extends AbstractNamedEntry implements Account, SoapEntry {
         a.setText(getId());
         a.addAttribute(AdminService.A_BY, AccountBy.id.name());
         setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_ACCOUNT)));
-    }
-
-    public String getAccountCOSId() {
-        return getAttr(Provisioning.A_zimbraCOSId);
     }
 
 }

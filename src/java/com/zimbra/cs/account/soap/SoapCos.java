@@ -25,11 +25,8 @@
 
 package com.zimbra.cs.account.soap;
 
-import java.util.HashMap;
 import java.util.Map;
 
-import com.zimbra.cs.account.AbstractNamedEntry;
-import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.service.ServiceException;
@@ -37,40 +34,21 @@ import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 
-class SoapCos extends AbstractNamedEntry implements Cos, SoapEntry {
-    
-    private Map<String, Object> mAccountDefaults = new HashMap<String, Object>();
+class SoapCos extends Cos implements SoapEntry {
     
     SoapCos(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs, null);
-        resetData();
+        super(name, id, attrs);
     }
 
     SoapCos(Element e) throws ServiceException {
-        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e), null);
-        resetData();
+        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e));
     }
     
-    @Override
-    protected void resetData() {
-        super.resetData();
-        try {
-            getDefaults(AttributeFlag.accountInherited, mAccountDefaults);
-        } catch (ServiceException e) {
-            // TODO log
-        }
-    }
-
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.MODIFY_COS_REQUEST);
         req.addElement(AdminService.E_ID).setText(getId());
         SoapProvisioning.addAttrElements(req, attrs);
         setAttrs(SoapProvisioning.getAttrs(prov.invoke(req).getElement(AdminService.E_COS)));        
-    }
-
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> getAccountDefaults() throws ServiceException {
-        return mAccountDefaults;
     }
 
     public void reload(SoapProvisioning prov) throws ServiceException {

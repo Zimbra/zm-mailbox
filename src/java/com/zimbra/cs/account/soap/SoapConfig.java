@@ -25,41 +25,22 @@
 
 package com.zimbra.cs.account.soap;
 
-import java.util.HashMap;
 import java.util.Map;
 
-import com.zimbra.cs.account.AbstractEntry;
-import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 
-class SoapConfig extends AbstractEntry implements Config, SoapEntry {
-
-    private Map<String, Object> mDomainDefaults = new HashMap<String, Object>();
-    private Map<String, Object> mServerDefaults = new HashMap<String, Object>();    
+class SoapConfig extends Config implements SoapEntry {
     
     SoapConfig(Map<String, Object> attrs) {
-        super(attrs, null);
-        resetData();
+        super(attrs);
     }
 
     SoapConfig(Element e) throws ServiceException {
-        super(SoapProvisioning.getAttrs(e), null);
-        resetData();        
-    }
-
-    @Override
-    public void resetData() {
-        super.resetData();
-        try {
-            getDefaults(AttributeFlag.domainInherited, mDomainDefaults);
-            getDefaults(AttributeFlag.serverInherited, mServerDefaults);            
-        } catch (ServiceException e) {
-            // TODO log?
-        }
+        super(SoapProvisioning.getAttrs(e));
     }
     
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
@@ -71,15 +52,5 @@ class SoapConfig extends AbstractEntry implements Config, SoapEntry {
     public void reload(SoapProvisioning prov) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.GET_ALL_CONFIG_REQUEST);
         setAttrs(SoapProvisioning.getAttrs(prov.invoke(req)));
-    }
-    
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> getDomainDefaults() throws ServiceException {
-        return mDomainDefaults;
-    }
-
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> getServerDefaults() throws ServiceException {
-        return mServerDefaults;
     }
 }

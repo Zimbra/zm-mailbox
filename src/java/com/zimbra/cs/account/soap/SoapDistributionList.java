@@ -28,7 +28,6 @@ package com.zimbra.cs.account.soap;
 import java.util.ArrayList;
 import java.util.Map;
 
-import com.zimbra.cs.account.AbstractNamedEntry;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
@@ -37,15 +36,15 @@ import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 
-class SoapDistributionList extends AbstractNamedEntry implements DistributionList, SoapEntry {
+class SoapDistributionList extends DistributionList implements SoapEntry {
 
     SoapDistributionList(String name, String id, Map<String, Object> attrs) {
-        super(name, id, attrs, null);
+        super(name, id, attrs);
     }
 
     SoapDistributionList(Element e) throws ServiceException {
-        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e), null);
-        addDlm(e, getAttrs());
+        super(e.getAttribute(AdminService.A_NAME), e.getAttribute(AdminService.A_ID), SoapProvisioning.getAttrs(e));
+        addDlm(e, getRawAttrs());
     }
 
     private void addDlm(Element e, Map<String, Object> attrs) {
@@ -75,13 +74,5 @@ class SoapDistributionList extends AbstractNamedEntry implements DistributionLis
         Map<String, Object> attrs = SoapProvisioning.getAttrs(dl);
         addDlm(dl, attrs);                
         setAttrs(attrs);
-    }
-
-    public String[] getAliases() throws ServiceException {
-        return getMultiAttr(Provisioning.A_zimbraMailAlias);
-    }
-
-    public String[] getAllMembers() throws ServiceException {
-        return getMultiAttr(Provisioning.A_zimbraMailForwardingAddress);        
     }
 }

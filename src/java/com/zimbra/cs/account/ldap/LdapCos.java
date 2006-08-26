@@ -30,13 +30,9 @@
  */
 package com.zimbra.cs.account.ldap;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
-import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
@@ -44,35 +40,16 @@ import com.zimbra.cs.service.ServiceException;
 /**
  * @author schemers
  */
-public class LdapCos extends LdapNamedEntry implements Cos {
+class LdapCos extends Cos implements LdapEntry {
 
-    private Map<String, Object> mAccountDefaults = new HashMap<String, Object>();
+    private String mDn;
 
     LdapCos(String dn, Attributes attrs) throws NamingException, ServiceException {
-        super(dn, attrs, null);
-        resetData();
+        super(LdapUtil.getAttrString(attrs, Provisioning.A_cn), LdapUtil.getAttrString(attrs, Provisioning.A_zimbraId), LdapUtil.getAttrs(attrs));
+        mDn = dn;
     }
 
-    public String getName() {
-        return getAttr(Provisioning.A_cn);
-    }
-
-    public String getId() {
-        return getAttr(Provisioning.A_zimbraId);
-    }
-
-    @Override
-    protected void resetData() {
-        super.resetData();
-        try {
-            getDefaults(AttributeFlag.accountInherited, mAccountDefaults);
-        } catch (ServiceException e) {
-            // TODO log
-        }
-    }
-    
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> getAccountDefaults() throws ServiceException {
-        return mAccountDefaults;
+    public String getDN() {
+        return mDn; 
     }
 }

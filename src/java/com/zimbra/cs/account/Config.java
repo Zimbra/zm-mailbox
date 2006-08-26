@@ -30,6 +30,7 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
@@ -39,10 +40,34 @@ import com.zimbra.cs.service.ServiceException;
  *
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public interface Config extends Entry {
+public class Config extends Entry {
+    
+    private Map<String, Object> mDomainDefaults = new HashMap<String, Object>();
+    private Map<String, Object> mServerDefaults = new HashMap<String, Object>();    
 
-    Map<String, Object> getDomainDefaults() throws ServiceException;
+    public Config(Map<String, Object> attrs) {
+        super(attrs, null);
+        resetData();
+    }
+
+    @Override
+    public void resetData() {
+        super.resetData();
+        try {
+            getDefaults(AttributeFlag.domainInherited, mDomainDefaults);
+            getDefaults(AttributeFlag.serverInherited, mServerDefaults);            
+        } catch (ServiceException e) {
+            // TODO log?
+        }
+    }
     
-    Map<String, Object> getServerDefaults() throws ServiceException;    
-    
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getDomainDefaults() {
+        return mDomainDefaults;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getServerDefaults() {
+        return mServerDefaults;
+    }
 }
