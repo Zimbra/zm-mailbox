@@ -192,10 +192,10 @@ public class RecurId
         return md;
     }
     
-    public ZProperty toProperty() {
+    public ZProperty toProperty(boolean useOutlookCompatMode) {
 //        ZProperty toRet = new ZProperty(ICalTok.RECURRENCE_ID, toString());
 //        return toRet;
-        ZProperty toRet = mDateTime.toProperty(ICalTok.RECURRENCE_ID);
+        ZProperty toRet = mDateTime.toProperty(ICalTok.RECURRENCE_ID, useOutlookCompatMode);
         String range = getRangeStr();
         if (range != null) 
             toRet.addParameter(new ZParameter(ICalTok.RANGE, range));

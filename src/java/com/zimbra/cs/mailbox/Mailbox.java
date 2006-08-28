@@ -2604,7 +2604,10 @@ public class Mailbox {
         return getItemList(octxt, MailItem.TYPE_APPOINTMENT, folderId);
     }
 
-    public synchronized ZVCalendar getZCalendarForAppointments(Collection<Appointment> appts) throws ServiceException {
+    public synchronized ZVCalendar getZCalendarForAppointments(
+            Collection<Appointment> appts,
+            boolean useOutlookCompatMode)
+    throws ServiceException {
         ZVCalendar cal = new ZVCalendar();
 
         // REPLY
@@ -2628,17 +2631,20 @@ public class Mailbox {
 
         // build all the event components and add them to the Calendar
         for (Appointment appt : appts)
-            appt.appendRawCalendarData(cal);
+            appt.appendRawCalendarData(cal, useOutlookCompatMode);
         return cal;
     }
 
-    public synchronized ZVCalendar getZCalendarForRange(OperationContext octxt, long start, long end, int folderId)
+    public synchronized ZVCalendar getZCalendarForRange(
+            OperationContext octxt,
+            long start, long end, int folderId,
+            boolean useOutlookCompatMode)
     throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getCalendarForRange", octxt);
             Collection<Appointment> appts = getAppointmentsForRange(octxt, start, end, folderId, null);
-            return getZCalendarForAppointments(appts);
+            return getZCalendarForAppointments(appts, useOutlookCompatMode);
         } finally {
             endTransaction(success);
         }

@@ -46,6 +46,8 @@ import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.Constants;
+import com.zimbra.cs.util.HttpUtil;
+import com.zimbra.cs.util.HttpUtil.Browser;
 
 public class IcsFormatter extends Formatter {
 
@@ -90,8 +92,10 @@ public class IcsFormatter extends Formatter {
         context.resp.setCharacterEncoding(Mime.P_CHARSET_UTF8);
         context.resp.setContentType(Mime.CT_TEXT_CALENDAR );
 
+        Browser browser = HttpUtil.guessBrowser(context.req);
+        boolean useOutlookCompatMode = Browser.IE.equals(browser);
 //        try {
-            ZVCalendar cal = context.targetMailbox.getZCalendarForAppointments(appts);
+            ZVCalendar cal = context.targetMailbox.getZCalendarForAppointments(appts, useOutlookCompatMode);
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             OutputStreamWriter wout = new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
             cal.toICalendar(wout);

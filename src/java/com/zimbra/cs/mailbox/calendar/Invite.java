@@ -43,6 +43,7 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
@@ -68,6 +69,9 @@ import com.zimbra.cs.util.ByteUtil;
  * This is our smallest "chunk" of raw iCal data -- it has a single UUID, etc etc
  */
 public class Invite {
+
+    private static final boolean OUTLOOK_COMPAT_ALLDAY =
+        LC.calendar_outlook_compatible_allday_events.booleanValue();
     
     static Log sLog = LogFactory.getLog(Invite.class);
     
@@ -1453,8 +1457,13 @@ public class Invite {
 //        
 //        return toRet;
 //    }
-    
+
     public ZVCalendar newToICalendar() throws ServiceException {
+        return newToICalendar(OUTLOOK_COMPAT_ALLDAY);
+    }
+
+    public ZVCalendar newToICalendar(boolean useOutlookCompatMode)
+    throws ServiceException {
         ZVCalendar vcal = new ZVCalendar();
         
         vcal.addProperty(new ZProperty(ICalTok.METHOD, mMethod.toString()));
@@ -1472,7 +1481,7 @@ public class Invite {
         }
         
         
-        vcal.addComponent(newToVEvent());
+        vcal.addComponent(newToVEvent(useOutlookCompatMode));
         return vcal;
     }
     
@@ -1725,8 +1734,8 @@ public class Invite {
     }
     
     
-    public ZComponent newToVEvent() throws ServiceException
-    {
+    public ZComponent newToVEvent(boolean useOutlookCompatMode)
+    throws ServiceException {
         ZComponent event = new ZComponent(ICalTok.VEVENT);
         
         event.addProperty(new ZProperty(ICalTok.UID, getUid()));
@@ -1789,12 +1798,12 @@ public class Invite {
             event.addProperty(new ZProperty(ICalTok.COMMENT, comment));
         
         // DTSTART
-        event.addProperty(getStartTime().toProperty(ICalTok.DTSTART));
+        event.addProperty(getStartTime().toProperty(ICalTok.DTSTART, useOutlookCompatMode));
         
         // DTEND
         ParsedDateTime dtend = getEndTime();
         if (dtend != null) 
-            event.addProperty(dtend.toProperty(ICalTok.DTEND));
+            event.addProperty(dtend.toProperty(ICalTok.DTEND, useOutlookCompatMode));
         
         // DURATION
         ParsedDuration dur = getDuration();
@@ -1826,11 +1835,11 @@ public class Invite {
         // RECURRENCE-ID
         RecurId recurId = getRecurId();
         if (recurId != null) 
-            event.addProperty(recurId.toProperty());
+            event.addProperty(recurId.toProperty(useOutlookCompatMode));
         
         // DTSTAMP
         ParsedDateTime dtStamp = ParsedDateTime.fromUTCTime(getDTStamp());
-        event.addProperty(dtStamp.toProperty(ICalTok.DTSTAMP));
+        event.addProperty(dtStamp.toProperty(ICalTok.DTSTAMP, useOutlookCompatMode));
         
         // SEQUENCE
         event.addProperty(new ZProperty(ICalTok.SEQUENCE, getSeqNo()));

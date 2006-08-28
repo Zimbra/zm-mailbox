@@ -35,10 +35,19 @@ import javax.servlet.http.HttpServletRequest;
 
 public class HttpUtil {
 
-    public enum Browser { IE, FIREFOX, MOZILLA, OPERA, SAFARI, UNKNOWN };
+    public enum Browser { IE, FIREFOX, MOZILLA, OPERA, SAFARI, APPLE_ICAL, UNKNOWN };
 
     public static Browser guessBrowser(HttpServletRequest req) {
         String ua = req.getHeader("User-Agent");
+        return guessBrowser(ua);
+    }
+
+    /**
+     * 
+     * @param ua User-Agent string
+     * @return
+     */
+    public static Browser guessBrowser(String ua) {
         if (ua == null || ua.trim().equals(""))
             return Browser.UNKNOWN;
         else if (ua.indexOf("MSIE") != -1)
@@ -49,6 +58,8 @@ public class HttpUtil {
             return Browser.SAFARI;
         else if (ua.indexOf("Opera") != -1)
             return Browser.OPERA;
+        else if (ua.indexOf("iCal") != -1)
+            return Browser.APPLE_ICAL;
         else
             return Browser.UNKNOWN;
     }

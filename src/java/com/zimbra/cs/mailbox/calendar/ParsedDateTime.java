@@ -538,11 +538,11 @@ public final class ParsedDateTime {
             return "VALUE=DATE:" + getDateTimePartString(false);
     }
     
-    public ZProperty toProperty(ICalTok tok) {
-        ZProperty toRet = new ZProperty(tok, getDateTimePartString());
+    public ZProperty toProperty(ICalTok tok, boolean useOutlookCompatMode) {
+        ZProperty toRet = new ZProperty(tok, getDateTimePartString(useOutlookCompatMode));
         
         String tzName = getTZName();
-        if (!OUTLOOK_COMPAT_ALLDAY && !hasTime()) {
+        if (!useOutlookCompatMode && !hasTime()) {
             toRet.addParameter(new ZParameter(ICalTok.VALUE, ICalTok.DATE.toString()));
         } else {
             assert(isUTC() || tzName != null);

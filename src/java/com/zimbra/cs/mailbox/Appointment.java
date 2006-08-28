@@ -1459,7 +1459,8 @@ public class Appointment extends MailItem {
 //    }
     
 
-    void appendRawCalendarData(ZVCalendar cal) throws ServiceException {
+    void appendRawCalendarData(ZVCalendar cal, boolean useOutlookCompatMode)
+    throws ServiceException {
         for (Iterator invIter = mInvites.iterator(); invIter.hasNext();) {
             Invite inv = (Invite)invIter.next();
             
@@ -1472,7 +1473,7 @@ public class Appointment extends MailItem {
 //            }
 //            Component comp = inv.toVEvent();
 //            cal.getComponents().add(comp);
-            cal.addComponent(inv.newToVEvent());
+            cal.addComponent(inv.newToVEvent(useOutlookCompatMode));
         }
     }
     

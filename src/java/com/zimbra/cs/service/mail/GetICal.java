@@ -38,6 +38,8 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.HttpUtil;
+import com.zimbra.cs.util.HttpUtil.Browser;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -58,7 +60,9 @@ public class GetICal extends MailDocumentHandler {
         
 //        int compNum = (int)request.getAttributeLong(MailService.A_APPT_COMPONENT_NUM);
         int compNum = 0;
-        
+
+        Browser browser = HttpUtil.guessBrowser(lc.getUserAgent());
+        boolean useOutlookCompatMode = Browser.IE.equals(browser);
         try {
             try {
                 ZVCalendar cal = null;
@@ -72,9 +76,9 @@ public class GetICal extends MailDocumentHandler {
                     if (inv == null) {
                         throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
                     }
-                    cal = inv.newToICalendar();
+                    cal = inv.newToICalendar(useOutlookCompatMode);
                 } else {
-                    cal = mbx.getZCalendarForRange(octxt, rangeStart, rangeEnd, Mailbox.ID_FOLDER_CALENDAR);
+                    cal = mbx.getZCalendarForRange(octxt, rangeStart, rangeEnd, Mailbox.ID_FOLDER_CALENDAR, useOutlookCompatMode);
                 }
                 
                 ByteArrayOutputStream buf = new ByteArrayOutputStream();
