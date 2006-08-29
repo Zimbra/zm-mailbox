@@ -106,6 +106,12 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
         	return;
         }
         
+        if (authToken == null) {
+	    	ZimbraLog.zimlet.info("no authToken in the request");
+        	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+    		return;
+        }
+        
     	String zimletName = getZimletName(req);
     	if (zimletName == null) {
 	    	ZimbraLog.zimlet.info("no zimlet in the request");
