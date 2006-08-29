@@ -280,6 +280,10 @@ public class Mailbox {
 
         public RedoableOp getPlayer() { return player; }
 
+        public boolean needRedo() {
+            return player == null || !player.getUnloggedReplay();
+        }
+
         public Account getAuthenticatedUser() { return authuser; }
 
         long getTimestamp() {
@@ -768,19 +772,20 @@ public class Mailbox {
         if (conn != null)
             setOperationConnection(conn);
 
+        boolean needRedo = octxt == null || octxt.needRedo();
         // have a single, consistent timestamp for anything affected by this operation
         mCurrentChange.setTimestamp(time);
-        if (recorder != null)
+        if (recorder != null && needRedo)
             recorder.start(time);
 
         // if the caller has specified a constraint on the range of affected items, store it
-        if (recorder != null && octxt != null && octxt.change > 0)
+        if (recorder != null && needRedo && octxt != null && octxt.change > 0)
             recorder.setChangeConstraint(octxt.changetype, octxt.change);
 
         // if we're redoing an op, preserve the old change ID
         if (octxt != null && octxt.getChangeId() >= 0)
             setOperationChangeID(octxt.getChangeId());
-        if (recorder != null)
+        if (recorder != null && needRedo)
             recorder.setChangeId(getOperationChangeID());
 
         // keep a hard reference to the item cache to avoid having it GCed during the op 
@@ -797,7 +802,7 @@ public class Mailbox {
             throw MailServiceException.MAINTENANCE(mId);
 
         // we can only start a redoable operation as the transaction's base change
-        if (recorder != null && mCurrentChange.depth > 1)
+        if (recorder != null && needRedo && mCurrentChange.depth > 1)
             throw ServiceException.FAILURE("cannot start a logged transaction from within another transaction", null);
 
         // we'll need folders and tags loaded in order to handle ACLs
@@ -1505,11 +1510,13 @@ public class Mailbox {
                 throw e;
         }
 
+        boolean needRedo = octxt == null || octxt.needRedo();
         DeleteMailbox redoRecorder = new DeleteMailbox(mId);
         boolean success = false;
         try {
             beginTransaction("deleteMailbox", octxt, redoRecorder);
-            redoRecorder.log();
+            if (needRedo)
+                redoRecorder.log();
 
             try {
                 // remove all the relevant entries from the database
@@ -1554,10 +1561,12 @@ public class Mailbox {
                 lock.mailbox = null;
             }
         } finally {
-            if (success)
-                redoRecorder.commit();
-            else
-                redoRecorder.abort();
+            if (needRedo) {
+                if (success)
+                    redoRecorder.commit();
+                else
+                    redoRecorder.abort();
+            }
         }
     }
 
@@ -1611,6 +1620,7 @@ public class Mailbox {
 
     public void reIndex(OperationContext octxt) throws ServiceException {
         ReindexMailbox redoRecorder = new ReindexMailbox(mId);
+        boolean needRedo = octxt == null || octxt.needRedo();
 
         Collection msgs = null;
         boolean redoInitted = false;
@@ -1630,9 +1640,11 @@ public class Mailbox {
                     // running transaction, and we don't want endTransaction to log it
                     // again, resulting in two entries for the same operation in redolog.
                     beginTransaction("reIndex", octxt, null);
-                    redoRecorder.start(getOperationTimestamp());
-                    redoRecorder.log();
-                    redoInitted = true;
+                    if (needRedo) {
+                        redoRecorder.start(getOperationTimestamp());
+                        redoRecorder.log();
+                        redoInitted = true;
+                    }
 
                     DbSearchConstraints c = new DbSearchConstraints();
                     c.mailboxId = this.getId();
@@ -3101,6 +3113,7 @@ public class Mailbox {
         if (conversationId <= HIGHEST_SYSTEM_ID)
             conversationId = ID_AUTO_INCREMENT;
 
+        boolean needRedo = octxt == null || octxt.needRedo();
         CreateMessage redoPlayer = (octxt == null ? null : (CreateMessage) octxt.player);
         boolean isRedo = redoPlayer != null;
 
@@ -3272,10 +3285,12 @@ public class Mailbox {
 
                     // Log entry in redolog for blob save.  Blob bytes are
                     // logged in StoreToIncoming entry.
-                    storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, sharedDeliveryCtxt.getMailboxIdList());
-                    storeRedoRecorder.start(getOperationTimestamp());
-                    storeRedoRecorder.setBlobBodyInfo(data, blobPath, blobVolumeId);
-                    storeRedoRecorder.log();
+                    if (needRedo) {
+                        storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, sharedDeliveryCtxt.getMailboxIdList());
+                        storeRedoRecorder.start(getOperationTimestamp());
+                        storeRedoRecorder.setBlobBodyInfo(data, blobPath, blobVolumeId);
+                        storeRedoRecorder.log();
+                    }
 
                     // Create a link in mailbox directory and leave the incoming
                     // copy alone, so other recipients can link to it later.
@@ -4372,17 +4387,20 @@ public class Mailbox {
             return;
         }
 
+        boolean needRedo = true;
+        if (mCurrentChange.octxt != null)
+            needRedo = mCurrentChange.octxt.needRedo();
         RedoableOp redoRecorder = mCurrentChange.recorder;
         IndexItem indexRedo = null;
         Map<MailItem, Object> itemsToIndex = mCurrentChange.indexItems;
-        boolean indexingNeeded = redoRecorder != null && !itemsToIndex.isEmpty() && !DebugConfig.disableIndexing; 
+        boolean indexingNeeded = !itemsToIndex.isEmpty() && !DebugConfig.disableIndexing;
 
         // 1. Log the change redo record for main transaction.
         //    If indexing is to be followed, log this entry
         //    without requiring fsync, because logging for
         //    indexing entry will do fsync, which will fsync
         //    this entry at the same time.
-        if (redoRecorder != null)
+        if (redoRecorder != null && needRedo)
             redoRecorder.log(!indexingNeeded);
 
         boolean allGood = false;
@@ -4391,9 +4409,11 @@ public class Mailbox {
                 for (Map.Entry<MailItem, Object> entry : itemsToIndex.entrySet()) {
                     MailItem item = entry.getKey();
 
-                    indexRedo = new IndexItem(mId, item.getId(), item.getType());
-                    indexRedo.start(getOperationTimestampMillis());
-                    indexRedo.setParentOp(redoRecorder);
+                    if (needRedo) {
+                        indexRedo = new IndexItem(mId, item.getId(), item.getType());
+                        indexRedo.start(getOperationTimestampMillis());
+                        indexRedo.setParentOp(redoRecorder);
+                    }
 
                     // 2. Index the item before committing the main
                     // transaction.  This allows us to fail the entire
@@ -4410,7 +4430,8 @@ public class Mailbox {
                     //    the indexing change record, we won't be able to
                     //    re-execute indexing during crash recovery, and we will
                     //    end up with an unindexed item.
-                    indexRedo.log();
+                    if (needRedo)
+                        indexRedo.log();
                 }
             }
 
@@ -4444,10 +4465,12 @@ public class Mailbox {
                 // abort record for main.  This prevents indexing from
                 // being redone during crash recovery when main transaction
                 // was never committed.
-                if (indexRedo != null)
-                    indexRedo.abort();
-                if (redoRecorder != null)
-                    redoRecorder.abort();
+                if (needRedo) {
+                    if (indexRedo != null)
+                        indexRedo.abort();
+                    if (redoRecorder != null)
+                        redoRecorder.abort();
+                }
                 if (conn != null)
                     DbPool.quietRollback(conn);
                 rollbackCache(mCurrentChange);
@@ -4455,30 +4478,32 @@ public class Mailbox {
         }
 
         if (allGood) {
-            // 5. Write commit record for main transaction.
-            //    By writing the commit record for main transaction before
-            //    calling MailItem.reindex(), we are guaranteed to see the
-            //    commit-main record in the redo stream before
-            //    commit-index record.  This order ensures that during
-            //    crash recovery the main transaction is redone before
-            //    indexing.  If the order were reversed, crash recovery
-            //    would attempt to index an item which hasn't been created
-            //    yet or would attempt to index the item with
-            //    pre-modification value.  The first case would result in
-            //    a redo error, and the second case would index the wrong
-            //    value.
-            if (redoRecorder != null)
-                redoRecorder.commit();
-
-            // 6. The commit redo record for indexing sub-transaction is
-            //    written in batch by another thread.  To avoid the batch
-            //    commit thread's writing commit-index before this thread's
-            //    writing commit-main (step 5 above), the index redo object
-            //    is initialized to block the commit attempt by default.
-            //    At this point we've written the commit-main record, so
-            //    unblock the commit on indexing.
-            if (indexRedo != null)
-                indexRedo.allowCommit();
+            if (needRedo) {
+                // 5. Write commit record for main transaction.
+                //    By writing the commit record for main transaction before
+                //    calling MailItem.reindex(), we are guaranteed to see the
+                //    commit-main record in the redo stream before
+                //    commit-index record.  This order ensures that during
+                //    crash recovery the main transaction is redone before
+                //    indexing.  If the order were reversed, crash recovery
+                //    would attempt to index an item which hasn't been created
+                //    yet or would attempt to index the item with
+                //    pre-modification value.  The first case would result in
+                //    a redo error, and the second case would index the wrong
+                //    value.
+                if (redoRecorder != null)
+                    redoRecorder.commit();
+    
+                // 6. The commit redo record for indexing sub-transaction is
+                //    written in batch by another thread.  To avoid the batch
+                //    commit thread's writing commit-index before this thread's
+                //    writing commit-main (step 5 above), the index redo object
+                //    is initialized to block the commit attempt by default.
+                //    At this point we've written the commit-main record, so
+                //    unblock the commit on indexing.
+                if (indexRedo != null)
+                    indexRedo.allowCommit();
+            }
 
             // 7. We are finally done with database and redo commits.
             //    Cache update comes last.

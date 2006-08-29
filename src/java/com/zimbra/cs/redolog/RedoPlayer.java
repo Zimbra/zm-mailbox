@@ -70,10 +70,16 @@ public class RedoPlayer {
     private LinkedHashMap<TransactionId, RedoableOp> mOpsMap;
 
     private boolean mWriteable;
+    private boolean mUnloggedReplay;
 
     public RedoPlayer(boolean writeable) {
+        this(writeable, false);
+    }
+
+    public RedoPlayer(boolean writeable, boolean unloggedReplay) {
 		mOpsMap = new LinkedHashMap<TransactionId, RedoableOp>(INITIAL_MAP_SIZE);
         mWriteable = writeable;
+        mUnloggedReplay = unloggedReplay;
     }
 
     public void shutdown() {
@@ -309,6 +315,7 @@ public class RedoPlayer {
                         try {
                             if (mLog.isDebugEnabled())
                                 mLog.debug("Redoing: " + prepareOp.toString());
+                            prepareOp.setUnloggedReplay(mUnloggedReplay);
                             prepareOp.redo();
                         } catch(Exception e) {
                             throw ServiceException.FAILURE("Error executing redoOp", e);

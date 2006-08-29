@@ -189,10 +189,22 @@ public class Volume {
     }
 
     public static Volume create(short id, short type,
+            String name, String path,
+            short mboxGroupBits, short mboxBits,
+            short fileGroupBits, short fileBits,
+            boolean compressBlobs, long compressionThreshold)
+    throws ServiceException {
+        return create(id, type, name, path,
+                      mboxGroupBits, mboxBits, fileGroupBits, fileBits,
+                      compressBlobs, compressionThreshold, false);
+    }
+
+    public static Volume create(short id, short type,
                                 String name, String path,
                                 short mboxGroupBits, short mboxBits,
                                 short fileGroupBits, short fileBits,
-                                boolean compressBlobs, long compressionThreshold)
+                                boolean compressBlobs, long compressionThreshold,
+                                boolean noRedo)
     throws ServiceException {
         path = normalizePath(path);
         validateArgs(id, type, name, path,
@@ -205,11 +217,14 @@ public class Volume {
         fileGroupBits = DEFAULT_FILE_GROUP_BITS;
         fileBits = DEFAULT_FILE_BITS;
 
-        CreateVolume redoRecorder = new CreateVolume(type, name, path,
-                                                     mboxGroupBits, mboxBits,
-                                                     fileGroupBits, fileBits,
-                                                     compressBlobs, compressionThreshold);
-        redoRecorder.start(System.currentTimeMillis());
+        CreateVolume redoRecorder = null;
+        if (!noRedo) {
+            redoRecorder = new CreateVolume(type, name, path,
+                                            mboxGroupBits, mboxBits,
+                                            fileGroupBits, fileBits,
+                                            compressBlobs, compressionThreshold);
+            redoRecorder.start(System.currentTimeMillis());
+        }
 
         Short key = null;
         Volume vol = null;
@@ -222,8 +237,10 @@ public class Volume {
                                   fileGroupBits, fileBits,
                                   compressBlobs, compressionThreshold);
             success = true;
-            redoRecorder.setId(vol.getId());
-            redoRecorder.log();
+            if (!noRedo) {
+                redoRecorder.setId(vol.getId());
+                redoRecorder.log();
+            }
             key = new Short(vol.getId());
             return vol;
         } finally {
@@ -237,10 +254,22 @@ public class Volume {
     }
 
     public static Volume update(short id, short type,
+            String name, String path,
+            short mboxGroupBits, short mboxBits,
+            short fileGroupBits, short fileBits,
+            boolean compressBlobs, long compressionThreshold)
+    throws ServiceException {
+        return update(id, type, name, path,
+                      mboxGroupBits, mboxBits, fileGroupBits, fileBits,
+                      compressBlobs, compressionThreshold, false);
+    }
+
+    public static Volume update(short id, short type,
                                 String name, String path,
                                 short mboxGroupBits, short mboxBits,
                                 short fileGroupBits, short fileBits,
-                                boolean compressBlobs, long compressionThreshold)
+                                boolean compressBlobs, long compressionThreshold,
+                                boolean noRedo)
     throws ServiceException {
         path = normalizePath(path);
         validateArgs(id, type, name, path,
@@ -268,11 +297,14 @@ public class Volume {
             }
         }
 
-        ModifyVolume redoRecorder = new ModifyVolume(id, type, name, path,
-                                                     mboxGroupBits, mboxBits,
-                                                     fileGroupBits, fileBits,
-                                                     compressBlobs, compressionThreshold);
-        redoRecorder.start(System.currentTimeMillis());
+        ModifyVolume redoRecorder = null;
+        if (!noRedo) {
+            redoRecorder = new ModifyVolume(id, type, name, path,
+                                            mboxGroupBits, mboxBits,
+                                            fileGroupBits, fileBits,
+                                            compressBlobs, compressionThreshold);
+            redoRecorder.start(System.currentTimeMillis());
+        }
 
         Connection conn = null;
         boolean success = false;
@@ -283,7 +315,8 @@ public class Volume {
                                   fileGroupBits, fileBits,
                                   compressBlobs, compressionThreshold);
             success = true;
-            redoRecorder.log();
+            if (!noRedo)
+                redoRecorder.log();
             return vol;
         } finally {
             endTransaction(success, conn, redoRecorder);
@@ -296,6 +329,10 @@ public class Volume {
         }
     }
 
+    public static boolean delete(short id) throws ServiceException {
+        return delete(id, false);
+    }
+
     /**
      * Remove the volume from the system.  Files on the volume being deleted
      * are not removed.
@@ -304,11 +341,14 @@ public class Volume {
      * @return true if actual deletion occurred
      * @throws ServiceException
      */
-    public static boolean delete(short id)
+    public static boolean delete(short id, boolean noRedo)
     throws ServiceException {
         validateID(id);
-        DeleteVolume redoRecorder = new DeleteVolume(id);
-        redoRecorder.start(System.currentTimeMillis());
+        DeleteVolume redoRecorder = null;
+        if (!noRedo) {
+            redoRecorder = new DeleteVolume(id);
+            redoRecorder.start(System.currentTimeMillis());
+        }
 
         Volume vol = null;
         Short key = new Short(id);
@@ -333,7 +373,8 @@ public class Volume {
             conn = DbPool.getConnection();
             boolean deleted = DbVolume.delete(conn, id);
             success = true;
-            redoRecorder.log();
+            if (!noRedo)
+                redoRecorder.log();
             return deleted;
         } finally {
             endTransaction(success, conn, redoRecorder);
@@ -434,19 +475,27 @@ public class Volume {
         }
     }
 
+    public static void setCurrentVolume(short volType, short id)
+    throws ServiceException {
+        setCurrentVolume(volType, id, false);
+    }
+
     /**
      * Set the current volume of given type.  Pass ID_NONE for id to unset.
      * @param volType
      * @param id
      * @throws ServiceException
      */
-    public static void setCurrentVolume(short volType, short id)
+    public static void setCurrentVolume(short volType, short id, boolean noRedo)
     throws ServiceException {
         validateType(volType);
         validateID(id, true);
 
-        SetCurrentVolume redoRecorder = new SetCurrentVolume(volType, id);
-        redoRecorder.start(System.currentTimeMillis());
+        SetCurrentVolume redoRecorder = null;
+        if (!noRedo) {
+            redoRecorder = new SetCurrentVolume(volType, id);
+            redoRecorder.start(System.currentTimeMillis());
+        }
 
         Volume vol = null;
         if (id != ID_NONE) {
@@ -471,7 +520,8 @@ public class Volume {
             }
 
             success = true;
-            redoRecorder.log();
+            if (!noRedo)
+                redoRecorder.log();
         } finally {
             endTransaction(success, conn, redoRecorder);
         }
@@ -481,19 +531,19 @@ public class Volume {
                                        Connection conn,
                                        RedoableOp redoRecorder)
     throws ServiceException {
-        if (conn != null) {
-            if (success) {
+        if (success) {
+            if (conn != null) {
                 conn.commit();
-                redoRecorder.commit();
-            } else {
-                conn.rollback();
-                redoRecorder.abort();
+                DbPool.quietClose(conn);
             }
-            DbPool.quietClose(conn);
-        } else if (redoRecorder != null) {
-            if (success)
+            if (redoRecorder != null)
                 redoRecorder.commit();
-            else
+        } else {
+            if (conn != null) {
+                conn.rollback();
+                DbPool.quietClose(conn);
+            }
+            if (redoRecorder != null)
                 redoRecorder.abort();
         }
     }

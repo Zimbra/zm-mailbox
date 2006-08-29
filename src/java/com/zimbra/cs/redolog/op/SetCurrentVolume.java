@@ -65,6 +65,6 @@ public class SetCurrentVolume extends RedoableOp {
     }
 
     public void redo() throws Exception {
-        Volume.setCurrentVolume(mType, mId);
+        Volume.setCurrentVolume(mType, mId, getUnloggedReplay());
     }
 }

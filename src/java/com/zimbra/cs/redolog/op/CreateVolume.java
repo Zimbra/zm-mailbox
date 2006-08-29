@@ -116,7 +116,8 @@ public class CreateVolume extends RedoableOp {
             Volume.create(mId, mType, mName, mRootPath,
                           mMboxGroupBits, mMboxBits,
                           mFileGroupBits, mFileBits,
-                          mCompressBlobs, mCompressionThreshold);
+                          mCompressBlobs, mCompressionThreshold,
+                          getUnloggedReplay());
         } catch (VolumeServiceException e) {
             if (e.getCode() == VolumeServiceException.ALREADY_EXISTS)
                 mLog.info("Volume " + mId + " already exists");

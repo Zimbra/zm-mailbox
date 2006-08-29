@@ -172,21 +172,26 @@ public class StoreIncomingBlob extends RedoableOp {
         // ops this is handled by Mailbox class, but StoreIncomingBlob is an
         // exception because of the way it is used in Mailbox.
 
-        StoreIncomingBlob redoRecorder =
-        	new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
-        redoRecorder.start(getTimestamp());
-        redoRecorder.setBlobBodyInfo(mData, mPath, mVolumeId);
-        redoRecorder.log();
+        StoreIncomingBlob redoRecorder = null;
+        if (!getUnloggedReplay()) {
+            redoRecorder =
+            	new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
+            redoRecorder.start(getTimestamp());
+            redoRecorder.setBlobBodyInfo(mData, mPath, mVolumeId);
+            redoRecorder.log();
+        }
 
         boolean success = false;
         try {
             StoreManager.getInstance().storeIncoming(mData, mDigest, mPath, mVolumeId);
             success = true;
         } finally {
-        	if (success)
-                redoRecorder.commit();
-            else
-                redoRecorder.abort();
+            if (redoRecorder != null) {
+            	if (success)
+                    redoRecorder.commit();
+                else
+                    redoRecorder.abort();
+            }
         }
     }
 }

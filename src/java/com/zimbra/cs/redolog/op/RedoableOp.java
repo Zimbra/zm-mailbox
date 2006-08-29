@@ -227,6 +227,7 @@ public abstract class RedoableOp {
     private int mChangeConstraint;
 	private int mMailboxId;
 	private RedoLogManager mRedoLogMgr;
+    private boolean mUnloggedReplay;  // true if redo of this op is not redo-logged
 
 	public RedoableOp() {
 		mRedoLogMgr = RedoLogProvider.getInstance().getRedoLogManager();
@@ -234,12 +235,16 @@ public abstract class RedoableOp {
 		mTxnId = null;
 		mActive = false;
 		mMailboxId = UNKNOWN_ID;
+        mUnloggedReplay = false;
 	}
 
 	protected Version getVersion() { return mVersion; }
 	private void setVersion(Version v) { mVersion = v; }
 
-	public void start(long timestamp) {
+    public boolean getUnloggedReplay() { return mUnloggedReplay; }
+    public void setUnloggedReplay(boolean b) { mUnloggedReplay = b; }
+
+    public void start(long timestamp) {
 		// Assign timestamp and txn ID to the operation.
 		// Doing the assignment in this method means we timestamp and sequence
 		// the operation start time, not when the operation get committed or
@@ -277,29 +282,6 @@ public abstract class RedoableOp {
         }
         return octxt;
     }
-
-	/**
-	 * Does commit or rollback of current database transaction and writes
-	 * COMMIT/ABORT record into the redo log appropriately.
-	 * @param conn
-	 * @param success true if commit is requested, false if rollback is requested
-	 * @throws ServiceException
-	 */
-	public void dbCommit(Connection conn, boolean success) throws ServiceException {
-    	if (success) {
-    		try {
-    			conn.commit();
-		    	commit();
-    		} catch (ServiceException e) {
-    			abort();
-        		DbPool.quietRollback(conn);
-    			throw e;
-    		}
-    	} else {
-    		abort();
-    		DbPool.quietRollback(conn);
-    	}
-	}
 
 	public synchronized void commit() {
 		if (mActive) {

@@ -89,7 +89,7 @@ public class IndexItem extends RedoableOp {
 		int mboxId = getMailboxId();
 		Mailbox mbox = Mailbox.getMailboxById(mboxId);
 		Indexer indexer = Indexer.GetInstance();
-        indexer.indexItem(mbox, mId, mType, getTimestamp());
+        indexer.indexItem(mbox, mId, mType, getTimestamp(), getUnloggedReplay());
 	}
 
     /**

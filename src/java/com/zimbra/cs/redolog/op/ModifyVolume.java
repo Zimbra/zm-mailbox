@@ -106,6 +106,7 @@ public class ModifyVolume extends RedoableOp {
         Volume.update(mId, mType, mName, mRootPath,
                       mMboxGroupBits, mMboxBits,
                       mFileGroupBits, mFileBits,
-                      mCompressBlobs, mCompressionThreshold);
+                      mCompressBlobs, mCompressionThreshold,
+                      getUnloggedReplay());
     }
 }

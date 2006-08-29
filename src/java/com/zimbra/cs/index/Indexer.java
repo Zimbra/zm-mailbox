@@ -76,7 +76,7 @@ public class Indexer
         return new MailboxIndex.AdminInterface(Mailbox.getMailboxById(mailboxId).getMailboxIndex());
     }
 
-    public void indexItem(Mailbox mbox, int itemId, byte itemType, long timestamp)
+    public void indexItem(Mailbox mbox, int itemId, byte itemType, long timestamp, boolean noRedo)
     throws IOException, ServiceException {
         int mboxId = mbox.getId();
         MailboxIndex idx = mbox.getMailboxIndex();
@@ -94,10 +94,13 @@ public class Indexer
             return;
         }
 
-        IndexItem redo = new IndexItem(mboxId, item.getId(), itemType);
-        redo.start(System.currentTimeMillis());
-        redo.log();
-        redo.allowCommit();
+        IndexItem redo = null;
+        if (!noRedo) {
+            redo = new IndexItem(mboxId, item.getId(), itemType);
+            redo.start(System.currentTimeMillis());
+            redo.log();
+            redo.allowCommit();
+        }
         switch (itemType) {
             case MailItem.TYPE_APPOINTMENT:
                 break;
@@ -122,7 +125,8 @@ public class Indexer
 
                     // Write abort record for this item, to prevent repeat calls
                     // to index this unindexable item.
-                    redo.abort();
+                    if (redo != null)
+                        redo.abort();
                 } finally {
                     is.close();
                 }
@@ -134,7 +138,8 @@ public class Indexer
                 indexNote(redo, idx, itemId, (Note) item);
                 break;
             default:
-                redo.abort();
+                if (redo != null)
+                    redo.abort();
             throw ServiceException.FAILURE("Invalid item type for indexing: type=" + itemType, null);
         }
     }

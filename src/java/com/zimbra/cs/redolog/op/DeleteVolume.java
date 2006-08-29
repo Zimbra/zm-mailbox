@@ -63,7 +63,7 @@ public class DeleteVolume extends RedoableOp {
     public void redo() throws Exception {
         try {
             Volume.getById(mId);  // make sure it exists
-            Volume.delete(mId);
+            Volume.delete(mId, getUnloggedReplay());
         } catch (VolumeServiceException e) {
             if (e.getCode() != VolumeServiceException.NO_SUCH_VOLUME)
                 throw e;
