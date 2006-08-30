@@ -1419,8 +1419,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>calendar user type - USER (default) or RESOURCE</desc>
 </attr>
 
-<attr id="314" name="zimbraCalResType" type="string" max="32" cardinality="single" requiredIn="calendarResource" flags="domainAdminModifiable">
-  <desc>calendar resource type - Location, Equipment, etc.</desc>
+<attr id="314" name="zimbraCalResType" type="enum" value="Location,Equipment" cardinality="single" requiredIn="calendarResource" flags="domainAdminModifiable">
+  <desc>calendar resource type - Location or Equipment</desc>
 </attr>
 
 <attr id="315" name="zimbraCalResAutoAcceptDecline" type="boolean" cardinality="single" optionalIn="calendarResource" flags="domainAdminModifiable">
