@@ -1643,18 +1643,16 @@ public class Mailbox {
                         throw ServiceException.INTERRUPTED("ReIndexing Canceled");
                     }
                     mReIndexStatus.mNumProcessed++;
-                }
 
-                SearchResult sr = (SearchResult) iter.next();
-
-                try {
-                    MailboxIndex idx = getMailboxIndex();
-                    idx.reIndexItem(sr.id, sr.type);
-                } catch(ServiceException e) {
-                    synchronized(this) {
+                    SearchResult sr = (SearchResult) iter.next();
+    
+                    try {
+                        MailboxIndex idx = getMailboxIndex();
+                        idx.reIndexItem(sr.id, sr.type);
+                    } catch(ServiceException e) {
                         mReIndexStatus.mNumFailed++;
+                        ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on msg "+sr.id+".  Message will not be indexed.", e);
                     }
-                    ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on msg "+sr.id+".  Message will not be indexed.", e);
                 }
             }
 
