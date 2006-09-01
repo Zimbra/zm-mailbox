@@ -698,7 +698,7 @@ public class ProvUtil implements DebugListener {
                 doGetAllAccounts(prov, domain, verbose);
             }
         } else {
-            Domain domain = lookupDomain(d);
+            Domain domain = lookupDomain(d, prov);
             doGetAllAccounts(prov, domain, verbose);
         }
     }    
@@ -1245,14 +1245,18 @@ public class ProvUtil implements DebugListener {
     }
 
     private Domain lookupDomain(String key) throws ServiceException {
+        return lookupDomain(key, mProv);
+    }
+    
+    private Domain lookupDomain(String key, Provisioning prov) throws ServiceException {
         Domain d = null;
         switch(guessType(key)) {
         case BY_ID:
-            d = mProv.get(DomainBy.id, key);
+            d = prov.get(DomainBy.id, key);
             break;
         case BY_NAME:
         default:
-            d = mProv.get(DomainBy.name, key);
+            d = prov.get(DomainBy.name, key);
             break;
         }
         
