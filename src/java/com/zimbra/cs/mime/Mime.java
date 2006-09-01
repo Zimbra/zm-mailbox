@@ -522,7 +522,7 @@ public class Mime {
         try {
             // JavaMail doesn't use RFC 2231 encoding, and we're not going to, either...
             if (!StringUtil.isAsciiString(filename))
-                return new QCodec().encode(filename, "utf-8");
+                return new QCodec().encode(filename, P_CHARSET_UTF8);
         } catch (EncoderException ee) { }
         return filename;
     }
@@ -545,6 +545,11 @@ public class Mime {
             return null;
 
         // catch (illegal, but common) RFC 2047 encoded-words
+        if (name.startsWith("=?") && name.endsWith("?="))
+            try {
+                return MimeUtility.decodeWord(name);
+            } catch (UnsupportedEncodingException uee) { }
+
         if (name.indexOf("=?") != -1 && name.indexOf("?=") != -1)
             try {
                 return MimeUtility.decodeText(name);
