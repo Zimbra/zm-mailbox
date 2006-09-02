@@ -110,7 +110,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             if (authorizeId.equals(""))
                 authorizeId = authenticateId;
 
-            mContinue = login(authenticateId, authorizeId, password, "AUTHENTICATE", mTag);
+            mContinue = login(authorizeId, authenticateId, password, "AUTHENTICATE", mTag);
             return true;
         }
     }
@@ -687,15 +687,18 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             return CONTINUE_PROCESSING;
         }
 
-        return login(username, username, password, "LOGIN", tag);
+        return login(username, "", password, "LOGIN", tag);
     }
 
-    boolean login(String authenticateId, String username, String password, String command, String tag) throws IOException {
+    boolean login(String username, String authenticateId, String password, String command, String tag) throws IOException {
         // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username
         EnabledHack hack = EnabledHack.NONE;
         if (username.endsWith("/wm")) {
             username = username.substring(0, username.length() - 3);
             hack = EnabledHack.WM5;
+        } else if (username.endsWith("/tb")) {
+            username = username.substring(0, username.length() - 3);
+            hack = EnabledHack.THUNDERBIRD;
         }
 
         try {
@@ -724,7 +727,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     private Account authenticate(String authenticateId, String username, String password, String command, String tag) throws ServiceException, IOException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, username);
-        Account authacct = username.equals("") ? account : prov.get(AccountBy.name, authenticateId);
+        Account authacct = authenticateId.equals("") ? account : prov.get(AccountBy.name, authenticateId);
         if (account == null || authacct == null) {
             sendNO(tag, command + " failed");
             return null;
@@ -1156,7 +1159,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         StringBuilder appendHint = new StringBuilder();
         try {
         	ImapAppendOperation op = new ImapAppendOperation(mSession, getContext(), mMailbox,
-        				new FindOrCreateTags(), folderName, flagNames, date, content,  newTags, appendHint);
+        				new FindOrCreateTags(), folderName, flagNames, date, content, newTags, appendHint);
         	op.schedule();
         } catch (ServiceException e) {
             deleteTags(newTags);

@@ -54,7 +54,7 @@ public class ImapSession extends Session {
      *  deal with client weirdnesses.  These modes are specified by appending
      *  various suffixes to the USERNAME when logging into the IMAP server; for
      *  instance, the Windows Mobile 5 hack is enabled via the suffix "/wm". */
-    static enum EnabledHack { NONE, WM5 };
+    static enum EnabledHack { NONE, WM5, THUNDERBIRD };
 
     static final byte STATE_NOT_AUTHENTICATED = 0;
     static final byte STATE_AUTHENTICATED     = 1;
