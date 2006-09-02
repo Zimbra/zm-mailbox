@@ -123,8 +123,7 @@ public class LdapProvisioning extends Provisioning {
     private static final String[] sInvalidAccountCreateModifyAttrs = {
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraMailDeliveryAddress,
-            Provisioning.A_uid,
-            Provisioning.A_userPassword
+            Provisioning.A_uid
     };
 
     private static final String[] sMinimalDlAttrs = {
@@ -623,9 +622,7 @@ public class LdapProvisioning extends Provisioning {
             
             attrs.put(A_uid, uid);
 
-            if (password != null) {
-                setPassword(cos, attrs, password);
-            }
+            setInitialPassword(cos, attrs, password);
             
             String dn = emailToDN(uid, domain);
             createSubcontext(ctxt, dn, attrs, "createAccount");
@@ -2484,23 +2481,25 @@ public class LdapProvisioning extends Provisioning {
     }
 
     // called by create account
-    private void setPassword(Cos cos, Attributes attrs, String newPassword) throws AccountServiceException, NamingException {
-        int minLength = getInt(attrs, Provisioning.A_zimbraPasswordMinLength, -1);
-        if (minLength == -1) minLength = cos != null ? cos.getIntAttr(Provisioning.A_zimbraPasswordMinLength, 0) : 0;
+    private void setInitialPassword(Cos cos, Attributes attrs, String newPassword) throws AccountServiceException, NamingException {
+        String userPassword = LdapUtil.getAttrString(attrs, Provisioning.A_userPassword);
+        if (userPassword == null && (newPassword == null || "".equals(newPassword))) return;
 
-        if (minLength > 0 && newPassword.length() < minLength)
-            throw AccountServiceException.INVALID_PASSWORD("too short");
+        if (userPassword == null) {
+            int minLength = getInt(attrs, Provisioning.A_zimbraPasswordMinLength, -1);
+            if (minLength == -1) minLength = cos != null ? cos.getIntAttr(Provisioning.A_zimbraPasswordMinLength, 0) : 0;
+
+            if (minLength > 0 && newPassword.length() < minLength)
+                throw AccountServiceException.INVALID_PASSWORD("too short");
         
-        int maxLength = getInt(attrs, Provisioning.A_zimbraPasswordMaxLength, -1);
-        if (maxLength == -1) maxLength = cos != null ? cos.getIntAttr(Provisioning.A_zimbraPasswordMaxLength, 0) : 0;
+            int maxLength = getInt(attrs, Provisioning.A_zimbraPasswordMaxLength, -1);
+            if (maxLength == -1) maxLength = cos != null ? cos.getIntAttr(Provisioning.A_zimbraPasswordMaxLength, 0) : 0;
         
-        if (maxLength > 0 && newPassword.length() > maxLength)
-            throw AccountServiceException.INVALID_PASSWORD("too long");
-
-
-        String encodedPassword = LdapUtil.generateSSHA(newPassword, null);
-
-        attrs.put(Provisioning.A_userPassword, encodedPassword);
+            if (maxLength > 0 && newPassword.length() > maxLength)
+                throw AccountServiceException.INVALID_PASSWORD("too long");
+            userPassword = LdapUtil.generateSSHA(newPassword, null);
+        }
+        attrs.put(Provisioning.A_userPassword, userPassword);
         attrs.put(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
     }
     
