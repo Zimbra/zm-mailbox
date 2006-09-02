@@ -168,7 +168,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr name="uid" type="string" immutable="1" optionalIn="alias" requiredIn="account,distributionList"/>
 
-<attr name="userPassword" type="string" immutable="1" optionalIn="account"/>
+<attr name="userPassword" type="string" optionalIn="account"/>
 
 
 <!-- zimbraHsmAge is special. We set parentOid to keep the same OID it had before -->
