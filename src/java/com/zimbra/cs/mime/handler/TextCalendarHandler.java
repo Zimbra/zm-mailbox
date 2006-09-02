@@ -34,7 +34,7 @@ import javax.mail.internet.ParseException;
 import org.apache.lucene.document.Document;
 
 import com.zimbra.cs.convert.AttachmentInfo;
-import com.zimbra.cs.mailbox.calendar.ZCalendar;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -83,15 +83,24 @@ public class TextCalendarHandler extends MimeHandler {
             Reader reader =
                 new InputStreamReader(source.getInputStream(), charset);
             miCalendar = ZCalendarBuilder.build(reader);
-            ZComponent vevent = miCalendar.getComponent(ZCalendar.ICalTok.VEVENT);
-            if (vevent != null) {
-                mContent = vevent.getPropVal(ZCalendar.ICalTok.DESCRIPTION, null);
-                if (mContent == null || mContent.trim().equals("")) {
-                    mContent = vevent.getPropVal(ZCalendar.ICalTok.SUMMARY, "");
-                } 
+            ICalTok types[] = { ICalTok.VEVENT, ICalTok.VTODO };
+            mContent = "";
+            for (ICalTok type : types) {
+                ZComponent comp = miCalendar.getComponent(ICalTok.VEVENT);
+                if (comp != null) {
+                    String content = comp.getPropVal(ICalTok.DESCRIPTION, "");
+                    content = content.trim();
+                    if (content.equals("")) {
+                        content = comp.getPropVal(ICalTok.SUMMARY, null);
+                        content = content.trim();
+                    }
+                    if (!content.equals("")) {
+                        if (!mContent.equals(""))
+                            mContent += " ";
+                        mContent += content;
+                    }
+                }
             }
-            if (mContent == null)
-                mContent = "";
         } catch (Exception e) {
             mContent = "";
             ZimbraLog.index.warn("error reading text/calendar mime part", e);

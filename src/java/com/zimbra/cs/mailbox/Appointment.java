@@ -1473,7 +1473,7 @@ public class Appointment extends MailItem {
 //            }
 //            Component comp = inv.toVEvent();
 //            cal.getComponents().add(comp);
-            cal.addComponent(inv.newToVEvent(useOutlookCompatMode));
+            cal.addComponent(inv.newToVComponent(useOutlookCompatMode));
         }
     }
     

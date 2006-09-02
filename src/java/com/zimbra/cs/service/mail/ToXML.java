@@ -948,6 +948,8 @@ public class ToXML {
 
         Account acct = appt.getMailbox().getAccount();
         if (allFields) {
+            e.addAttribute(MailService.A_APPT_TYPE, invite.getCompType());
+
             try {
                 e.addAttribute("x_uid", invite.getUid());
                 e.addAttribute(MailService.A_APPT_SEQUENCE, invite.getSeqNo());
@@ -967,20 +969,25 @@ public class ToXML {
                 ex.printStackTrace();
             }
 
-            e.addAttribute(MailService.A_APPT_TYPE, invite.getType());
-
             e.addAttribute(MailService.A_APPT_STATUS, invite.getStatus());
 
-            e.addAttribute(MailService.A_APPT_FREEBUSY, invite.getFreeBusy());
+            String priority = invite.getPriority();
+            if (priority != null)
+                e.addAttribute(MailService.A_APPT_PRIORITY, priority);
 
-            Instance inst = Instance.fromInvite(appt, invite);
-            e.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL,
-                        appt.getEffectiveFreeBusyActual(invite, inst));
+            if (invite.isEvent()) {
+                e.addAttribute(MailService.A_APPT_FREEBUSY, invite.getFreeBusy());
+    
+                Instance inst = Instance.fromInvite(appt, invite);
+                e.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL,
+                            appt.getEffectiveFreeBusyActual(invite, inst));
+    
+                e.addAttribute(MailService.A_APPT_TRANSPARENCY, invite.getTransparency());
+    
+            }
 
             if (includeReplies)
                 encodeReplies(e, appt, invite);
-
-            e.addAttribute(MailService.A_APPT_TRANSPARENCY, invite.getTransparency());
 
             if (invite.getRecurId() != null) {
                 e.addAttribute(MailService.A_APPT_IS_EXCEPTION, true);
@@ -1023,6 +1030,13 @@ public class ToXML {
 
             e.addAttribute(MailService.A_NAME, invite.getName());
             e.addAttribute(MailService.A_APPT_LOCATION, invite.getLocation());
+
+            // Percent Complete (VTODO)
+            if (invite.isTodo()) {
+                String pct = invite.getPercentComplete();
+                if (pct != null)
+                    e.addAttribute(MailService.A_APPT_PERCENT_COMPLETE, pct);
+            }
 
             // Organizer
             if (invite.hasOrganizer()) {

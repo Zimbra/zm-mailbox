@@ -103,6 +103,8 @@
             [loc="LOCATION"]
             [isOrg="0|1"]		// Am I the organizer?  (default = 0)
             [seq="num"]         // sequence number (default = 0)
+            [priority="num"]    // priority (0 - 9; default = 0)
+            [percentComplete="num (integer)"]  // percent complete for VTODO (0 - 100; default = 0)
         >
 
            [<replies>
@@ -395,6 +397,8 @@ OR
       [name="NAME"] [loc="LOCATION"] 
       invId="default_invite_mail_item_id" compNum="default_invite_component_number"
       isOrg="default_am_i_organizer_flag"
+      [priority="num"]
+      [percentComplete="num"]
    >
    <dur DURATION/> // default duration
    <fr>FRAGMENT</fr>

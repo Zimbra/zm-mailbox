@@ -34,18 +34,15 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.service.ServiceException;
 
-public class IcalXmlStrMap
-{
+public class IcalXmlStrMap {
+
     IcalXmlStrMap(String name) {
         mMapName = name;
     }
     
     public void add(String ical, String xml) {
-        ical = ical.toUpperCase();
-        xml = xml.toUpperCase();
-        
-        fwdMap.put(ical, xml);
-        bakMap.put(xml, ical);
+        fwdMap.put(ical.toUpperCase(), xml);
+        bakMap.put(xml.toUpperCase(), ical);
     }
     
     public String toXml(String name) {
@@ -60,13 +57,14 @@ public class IcalXmlStrMap
     }
     
     public boolean validXml(String str) {
-        return bakMap.containsKey(str);
+        return bakMap.containsKey(str.toUpperCase());
     }
     
     public boolean validICal(String str) {
-        return fwdMap.containsKey(str);
+        return fwdMap.containsKey(str.toUpperCase());
     }
-    
+
+    public static IcalXmlStrMap sCompTypeMap = new IcalXmlStrMap("CompType");
     public static IcalXmlStrMap sFreqMap = new IcalXmlStrMap("Freq");
     public static IcalXmlStrMap sTranspMap = new IcalXmlStrMap("Transparency");
     public static IcalXmlStrMap sFreeBusyMap = new IcalXmlStrMap("FreeBusy");
@@ -82,9 +80,17 @@ public class IcalXmlStrMap
     
 
     
+    // component type
+    public final static String COMPTYPE_EVENT = "event";
+    public final static String COMPTYPE_TODO = "todo";
+    public final static String COMPTYPE_JOURNAL = "journal";
+    public final static String COMPTYPE_FREEBUSY = "freebusy";
+    public final static String COMPTYPE_TIMEZONE = "tz";
+    public final static String COMPTYPE_ALARM = "alarm";
+
     // frequency 
-    public final static String FREQ_YEARLY= "YEA";
-    public final static String FREQ_WEEKLY= "WEE";
+    public final static String FREQ_YEARLY = "YEA";
+    public final static String FREQ_WEEKLY = "WEE";
     public final static String FREQ_SECONDLY = "SEC";
     public final static String FREQ_MONTHLY = "MON";
     public final static String FREQ_MINUTELY = "MIN";
@@ -132,7 +138,14 @@ public class IcalXmlStrMap
     public final static String CUTYPE_UNKNOWN    = "UNK";
 
     static {
-    	sCUTypeMap.add(ICalTok.INDIVIDUAL.toString(), CUTYPE_INDIVIDUAL);
+        sCompTypeMap.add(ICalTok.VEVENT.toString(), COMPTYPE_EVENT);
+        sCompTypeMap.add(ICalTok.VTODO.toString(), COMPTYPE_TODO);
+        sCompTypeMap.add(ICalTok.VJOURNAL.toString(), COMPTYPE_JOURNAL);
+        sCompTypeMap.add(ICalTok.VFREEBUSY.toString(), COMPTYPE_FREEBUSY);
+        sCompTypeMap.add(ICalTok.VTIMEZONE.toString(), COMPTYPE_TIMEZONE);
+        sCompTypeMap.add(ICalTok.VALARM.toString(), COMPTYPE_ALARM);
+
+        sCUTypeMap.add(ICalTok.INDIVIDUAL.toString(), CUTYPE_INDIVIDUAL);
     	sCUTypeMap.add(ICalTok.GROUP.toString(), CUTYPE_GROUP);
     	sCUTypeMap.add(ICalTok.RESOURCE.toString(), CUTYPE_RESOURCE);
     	sCUTypeMap.add(ICalTok.ROOM.toString(), CUTYPE_ROOM);

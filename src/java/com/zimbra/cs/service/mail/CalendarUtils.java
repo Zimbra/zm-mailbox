@@ -621,6 +621,11 @@ public class CalendarUtils {
     	TimeZoneMap tzMap = newInv.getTimeZoneMap();
         parseTimeZones(element.getParent(), tzMap);
 
+        // component type (event, todo, or journal)
+        String compType = element.getAttribute(MailService.A_APPT_TYPE,
+                                               IcalXmlStrMap.COMPTYPE_EVENT);
+        newInv.setCompType(compType);
+
         // UID
         String uid = element.getAttribute(MailService.A_UID, null);
         if (uid == null || uid.length() == 0)
@@ -689,13 +694,13 @@ public class CalendarUtils {
             newInv.setDtStart(dt);
         }
 
-        // DTEND
+        // DTEND (for VEVENT) or DUE (for VTODO)
         {
             Element e = element.getOptionalElement(MailService.E_APPT_END_TIME);
             if (e != null) {
                 if (element.getOptionalElement(MailService.E_APPT_DURATION) != null) {
                     throw ServiceException.INVALID_REQUEST(
-                                    "<inv> may have <e> end or <d> duration but not both",
+                                    "<comp> may have <e> end or <d> duration but not both",
                                     null);
                 }
                 ParsedDateTime dt = parseDtElement(e, tzMap, newInv);
@@ -746,11 +751,6 @@ public class CalendarUtils {
         // LOCATION
         newInv.setLocation(location);
 
-        // FreeBusy
-        String fb = element.getAttribute(MailService.A_APPT_FREEBUSY,
-                IcalXmlStrMap.FBTYPE_BUSY);
-        newInv.setFreeBusy(fb);
-
         // STATUS
         String status = element.getAttribute(MailService.A_APPT_STATUS,
                 IcalXmlStrMap.STATUS_CONFIRMED);
@@ -758,12 +758,29 @@ public class CalendarUtils {
                 status);
         newInv.setStatus(status);
 
-        // TRANSPARENCY
-        String transp = element.getAttribute(MailService.A_APPT_TRANSPARENCY,
-                IcalXmlStrMap.TRANSP_OPAQUE);
-        validateAttr(IcalXmlStrMap.sTranspMap, MailService.A_APPT_TRANSPARENCY,
-                transp);
-        newInv.setTransparency(transp);
+        // PRIORITY
+        String priority = element.getAttribute(MailService.A_APPT_PRIORITY, null);
+        newInv.setPriority(priority);
+
+        if (newInv.isEvent()) {
+            // FreeBusy
+            String fb = element.getAttribute(MailService.A_APPT_FREEBUSY,
+                    IcalXmlStrMap.FBTYPE_BUSY);
+            newInv.setFreeBusy(fb);
+    
+            // TRANSPARENCY
+            String transp = element.getAttribute(MailService.A_APPT_TRANSPARENCY,
+                    IcalXmlStrMap.TRANSP_OPAQUE);
+            validateAttr(IcalXmlStrMap.sTranspMap, MailService.A_APPT_TRANSPARENCY,
+                    transp);
+            newInv.setTransparency(transp);
+        }
+
+        if (newInv.isTodo()) {
+            // PERCENT-COMPLETE
+            String pctComplete = element.getAttribute(MailService.A_APPT_PERCENT_COMPLETE, null);
+            newInv.setPercentComplete(pctComplete);
+        }
 
         // ATTENDEEs
         boolean hasAttendees = false;
@@ -883,7 +900,7 @@ public class CalendarUtils {
             List<ZAttendee> forAttendees, RecurId recurId,
             boolean incrementSeq)
     throws ServiceException {
-        Invite cancel = new Invite(ICalTok.CANCEL.toString(),
+        Invite cancel = new Invite(inv.getCompType(), ICalTok.CANCEL.toString(),
                                    inv.getTimeZoneMap());
 
         // ORGANIZER

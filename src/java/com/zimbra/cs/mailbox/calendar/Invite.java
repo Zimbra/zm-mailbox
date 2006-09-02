@@ -58,6 +58,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * Invite
@@ -82,11 +83,14 @@ public class Invite {
      * @param start
      */
     Invite(
+            String compType,
             String methodStr,
             TimeZoneMap tzmap,
             Appointment appt,
             String uid,
             String status,
+            String priority,
+            String pctComplete,
             String freebusy,
             String transp,
             ParsedDateTime start,
@@ -110,11 +114,14 @@ public class Invite {
             boolean sentByMe,
             String fragment)
             {
+        setCompType(compType);
         mMethod = lookupMethod(methodStr);
         mTzMap = tzmap;
         mAppt = appt;
         mUid = uid;
         mStatus = status;
+        mPriority = priority;
+        mPercentComplete = pctComplete;
         mFreeBusy = freebusy;
         mTransparency = transp;
         mStart = start;
@@ -176,10 +183,13 @@ public class Invite {
      */
     public static Invite createInvite(
             int mailboxId,
+            String compType,
             String method,
             TimeZoneMap tzMap, 
-            String uidOrNull,       
+            String uidOrNull,
             String status,
+            String priority,
+            String pctComplete,
             String freeBusy,
             String transparency,
             boolean allDayEvent,
@@ -201,11 +211,14 @@ public class Invite {
             boolean sentByMe) throws ServiceException
     {
         return new Invite(
+                compType,
                 method,
                 tzMap,
                 null, // no appointment yet
                 uidOrNull,
                 status,
+                priority,
+                pctComplete,
                 freeBusy,
                 transparency,
                 dtStart,
@@ -246,6 +259,7 @@ public class Invite {
     
 
     //private static final String FN_ADDRESS         = "a";
+    private static final String FN_COMPTYPE        = "ct";
     private static final String FN_APPT_FLAGS      = "af";
     private static final String FN_ATTENDEE        = "at";
     private static final String FN_SENTBYME        = "byme";
@@ -272,7 +286,9 @@ public class Invite {
     private static final String FN_TRANSP          = "tr";
     private static final String FN_TZMAP           = "tzm"; // calendaring: timezone map
     private static final String FN_UID             = "u";
-        
+    private static final String FN_PRIORITY        = "prio";
+    private static final String FN_PCT_COMPLETE    = "pctcompl";
+
     
     /**
      * This is only really public to support serializing RedoOps -- you
@@ -283,7 +299,8 @@ public class Invite {
      */
     public static Metadata encodeMetadata(Invite inv) {
         Metadata meta = new Metadata();
-        
+
+        meta.put(FN_COMPTYPE, inv.getCompType());
         meta.put(FN_UID, inv.getUid());
         meta.put(FN_INVMSGID, inv.getMailItemId());
         meta.put(FN_COMPNUM, inv.getComponentNum());
@@ -328,11 +345,14 @@ public class Invite {
             ZAttendee at = (ZAttendee)iter.next();
             meta.put(FN_ATTENDEE + i, at.encodeAsMetadata());
         }
+
+        meta.put(FN_PRIORITY, inv.getPriority());
+        meta.put(FN_PCT_COMPLETE, inv.getPercentComplete());
         
         return meta;
     }
-    
-//    public static final Map METHOD_MAP = new HashMap();
+
+    //    public static final Map METHOD_MAP = new HashMap();
 //    static {
 //        METHOD_MAP.put(Method.REQUEST.getValue(), Method.REQUEST);
 //        METHOD_MAP.put(Method.CANCEL.getValue(), Method.CANCEL);
@@ -378,6 +398,7 @@ public class Invite {
      */
     public static Invite decodeMetadata(int mailboxId, Metadata meta, Appointment appt, ICalTimeZone accountTZ) 
     throws ServiceException {
+        String type = meta.get(FN_COMPTYPE, IcalXmlStrMap.COMPTYPE_EVENT);
         String uid = meta.get(FN_UID, null);
         int mailItemId = (int)meta.getLong(FN_INVMSGID);
         int componentNum = (int)meta.getLong(FN_COMPNUM);
@@ -459,8 +480,12 @@ public class Invite {
                         + " invite "+mailItemId+"-" + componentNum);
             }
         }
-            
-        return new Invite(methodStr, tzMap, appt, uid, status, freebusy, transp,
+
+        String priority = meta.get(FN_PRIORITY, null);
+        String pctComplete = meta.get(FN_PCT_COMPLETE, null);
+
+        return new Invite(type, methodStr, tzMap, appt, uid, status,
+                priority, pctComplete, freebusy, transp,
                 dtStart, dtEnd, duration, recurrence, org, attendees,
                 name, comment, loc, flags, partStat, rsvp,
                 recurrenceId, dtstamp, seqno,
@@ -653,6 +678,10 @@ public class Invite {
     public void setDtEnd(ParsedDateTime dtend) { mEnd = dtend; }
     public ParsedDuration getDuration() { return mDuration; }
     public void setDuration(ParsedDuration dur) { mDuration = dur; }
+    public String getPriority() { return mPriority; }
+    public void setPriority(String prio) { mPriority = prio; }
+    public String getPercentComplete() { return mPercentComplete; }
+    public void setPercentComplete(String pct) { mPercentComplete = pct; }
     
     public String getFreeBusyActual() {
         assert(mFreeBusy != null);
@@ -853,24 +882,32 @@ public class Invite {
     private List<ZAttendee> mAttendees = new ArrayList<ZAttendee>();
     private ZOrganizer mOrganizer;
 //    private ArrayList /* VAlarm */ mAlarms = new ArrayList();
-//    private Method mMethod;
+
+    private String mPriority;         // 0 .. 9
+    private String mPercentComplete;  // 0 .. 100
+
+    private boolean mIsEvent;
+    private boolean mIsTodo;
+    private String mCompType;  // event, todo, or journal
+
     private ICalTok mMethod;
-    
+
     public Invite(String method, TimeZoneMap tzMap) {
+        setCompType(IcalXmlStrMap.COMPTYPE_EVENT);
         mMethod = lookupMethod(method);
         mTzMap = tzMap;
         mFragment = "";
     }
 
-    public Invite(TimeZoneMap tzMap) {
-        mMethod = ICalTok.PUBLISH;
+    public Invite(String compType, String method, TimeZoneMap tzMap) {
+        setCompType(compType);
+        mMethod = lookupMethod(method);
         mTzMap = tzMap;
         mFragment = "";
     }
     
     
     public String getMethod() { return mMethod.toString(); }
-    
     public void setMethod(String methodStr) { mMethod = lookupMethod(methodStr); }
     
     public boolean sentByMe() { return mSentByMe; }
@@ -1216,11 +1253,16 @@ public class Invite {
             return !hasOtherAttendees();
         }
     }
-    
-    public String getType() {
-        return "event";
+
+    public boolean isEvent()    { return mIsEvent; }
+    public boolean isTodo()     { return mIsTodo; }
+    public String getCompType() { return mCompType; }
+    public void setCompType(String compType) {
+        mIsEvent = IcalXmlStrMap.COMPTYPE_EVENT.equals(compType);
+        mIsTodo = IcalXmlStrMap.COMPTYPE_TODO.equals(compType);
+        mCompType = compType;
     }
-    
+
     TimeZoneMap mTzMap;
     
     public TimeZoneMap getTimeZoneMap() { return mTzMap; }
@@ -1481,7 +1523,7 @@ public class Invite {
         }
         
         
-        vcal.addComponent(newToVEvent(useOutlookCompatMode));
+        vcal.addComponent(newToVComponent(useOutlookCompatMode));
         return vcal;
     }
     
@@ -1567,13 +1609,20 @@ public class Invite {
             }
         }
         
-        // now, process the other components (currently, only VEVENT)
+        // now, process the other components (currently, only VEVENT and VTODO)
         for (ZComponent comp : cal.mComponents) {
-            switch(comp.getTok()) {
+            ICalTok compTypeTok = comp.getTok();
+            String compType = IcalXmlStrMap.sCompTypeMap.toXml(compTypeTok.toString());
+            if (compType == null)
+                compType = IcalXmlStrMap.COMPTYPE_EVENT;
+
+            switch (compTypeTok) {
             case VEVENT:
+            case VTODO:
+                boolean isEvent = ICalTok.VEVENT.equals(compTypeTok);
+                boolean isTodo = ICalTok.VTODO.equals(compTypeTok);
                 try {
-                    Invite newInv = new Invite(tzmap);
-                    newInv.setMethod(methodStr);
+                    Invite newInv = new Invite(compType, methodStr, tzmap);
                     
                     toRet.add(newInv);
                     
@@ -1586,7 +1635,7 @@ public class Invite {
                     newInv.setMailItemId(mailItemId);
                     newInv.setSentByMe(sentByMe);
                     compNum++;
-                    
+
                     for (ZProperty prop : comp.mProperties) {
                         if (prop.mTok == null) 
                             continue;
@@ -1616,8 +1665,17 @@ public class Invite {
                             	newInv.setIsAllDayEvent(true);
                             break;
                         case DTEND:
-                            ParsedDateTime dtend = ParsedDateTime.parse(prop, tzmap);
-                            newInv.setDtEnd(dtend);
+                            if (isEvent) {
+                                ParsedDateTime dtend = ParsedDateTime.parse(prop, tzmap);
+                                newInv.setDtEnd(dtend);
+                            }
+                            break;
+                        case DUE:
+                            if (isTodo) {
+                                ParsedDateTime due = ParsedDateTime.parse(prop, tzmap);
+                                // DUE is for VTODO what DTEND is for VEVENT.
+                                newInv.setDtEnd(due);
+                            }
                             break;
                         case DURATION:
                             ParsedDuration dur = ParsedDuration.parse(prop.getValue());
@@ -1658,19 +1716,37 @@ public class Invite {
                                 newInv.setStatus(status);
                             break;
                         case TRANSP:
-                            String transp = IcalXmlStrMap.sTranspMap.toXml(prop.getValue());
-                            if (transp!=null) {
-                                newInv.setTransparency(transp);
+                            if (isEvent) {
+                                String transp = IcalXmlStrMap.sTranspMap.toXml(prop.getValue());
+                                if (transp!=null) {
+                                    newInv.setTransparency(transp);
+                                }
                             }
                             break;
                         case X_MICROSOFT_CDO_ALLDAYEVENT:
-                            if (prop.getBoolValue()) 
-                                newInv.setIsAllDayEvent(true);
+                            if (isEvent) {
+                                if (prop.getBoolValue()) 
+                                    newInv.setIsAllDayEvent(true);
+                            }
                             break;
                         case X_MICROSOFT_CDO_BUSYSTATUS:
-                            String fb = IcalXmlStrMap.sOutlookFreeBusyMap.toXml(prop.getValue());
-                            if (fb != null)
-                                newInv.setFreeBusy(fb);
+                            if (isEvent) {
+                                String fb = IcalXmlStrMap.sOutlookFreeBusyMap.toXml(prop.getValue());
+                                if (fb != null)
+                                    newInv.setFreeBusy(fb);
+                            }
+                            break;
+                        case PRIORITY:
+                            String prio = prop.getValue();
+                            if (prio != null)
+                                newInv.setPriority(prio);
+                            break;
+                        case PERCENT_COMPLETE:
+                            if (isTodo) {
+                                String pctComplete = prop.getValue();
+                                if (pctComplete != null)
+                                    newInv.setPercentComplete(pctComplete);
+                            }
                             break;
                         }
                     }
@@ -1734,10 +1810,10 @@ public class Invite {
     }
     
     
-    public ZComponent newToVEvent(boolean useOutlookCompatMode)
+    public ZComponent newToVComponent(boolean useOutlookCompatMode)
     throws ServiceException {
-        ZComponent event = new ZComponent(ICalTok.VEVENT);
-        
+        ZComponent event = new ZComponent(IcalXmlStrMap.sCompTypeMap.toIcal(mCompType));
+
         event.addProperty(new ZProperty(ICalTok.UID, getUid()));
         
         IRecurrence recur = getRecurrence();
@@ -1778,10 +1854,6 @@ public class Invite {
         if (hasOrganizer())
             event.addProperty(getOrganizer().toProperty());
         
-        // allDay
-        if (isAllDayEvent())
-            event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_ALLDAYEVENT, true));
-        
         // SUMMARY (aka Name or Subject)
         String name = getName();
         if (name != null && name.length()>0)
@@ -1800,10 +1872,14 @@ public class Invite {
         // DTSTART
         event.addProperty(getStartTime().toProperty(ICalTok.DTSTART, useOutlookCompatMode));
         
-        // DTEND
+        // DTEND or DUE
         ParsedDateTime dtend = getEndTime();
-        if (dtend != null) 
-            event.addProperty(dtend.toProperty(ICalTok.DTEND, useOutlookCompatMode));
+        if (dtend != null) {
+            ICalTok prop = ICalTok.DTEND;
+            if (isTodo())
+                prop = ICalTok.DUE;
+            event.addProperty(dtend.toProperty(prop, useOutlookCompatMode));
+        }
         
         // DURATION
         ParsedDuration dur = getDuration();
@@ -1817,16 +1893,22 @@ public class Invite {
         
         // STATUS
         event.addProperty(new ZProperty(ICalTok.STATUS, IcalXmlStrMap.sStatusMap.toIcal(getStatus())));
-        
-        // Microsoft Outlook compatibility for free-busy status
-        {
-            String outlookFreeBusy = IcalXmlStrMap.sOutlookFreeBusyMap.toIcal(getFreeBusy());
-            event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_BUSYSTATUS, outlookFreeBusy));
-            event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_INTENDEDSTATUS, outlookFreeBusy));
+
+        if (isEvent()) {
+            // allDay
+            if (isAllDayEvent())
+                event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_ALLDAYEVENT, true));
+            
+            // Microsoft Outlook compatibility for free-busy status
+            {
+                String outlookFreeBusy = IcalXmlStrMap.sOutlookFreeBusyMap.toIcal(getFreeBusy());
+                event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_BUSYSTATUS, outlookFreeBusy));
+                event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_INTENDEDSTATUS, outlookFreeBusy));
+            }
+
+            // TRANSPARENCY
+            event.addProperty(new ZProperty(ICalTok.TRANSP, IcalXmlStrMap.sTranspMap.toIcal(getTransparency())));
         }
-        
-        // TRANSPARENCY
-        event.addProperty(new ZProperty(ICalTok.TRANSP, IcalXmlStrMap.sTranspMap.toIcal(getTransparency())));
         
         // ATTENDEES
         for (ZAttendee at : (List<ZAttendee>)getAttendees()) 
@@ -1843,7 +1925,15 @@ public class Invite {
         
         // SEQUENCE
         event.addProperty(new ZProperty(ICalTok.SEQUENCE, getSeqNo()));
-        
+
+        // PRIORITY
+        if (mPriority != null)
+            event.addProperty(new ZProperty(ICalTok.PRIORITY, mPriority));
+
+        // PERCENT-COMPLETE
+        if (isTodo() && mPercentComplete != null)
+            event.addProperty(new ZProperty(ICalTok.PERCENT_COMPLETE, mPercentComplete));
+
         return event;
     }
 }

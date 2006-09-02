@@ -147,7 +147,7 @@ public class GetApptSummaries extends MailDocumentHandler {
                         
                         String instFba = appointment.getEffectiveFreeBusyActual(inv, inst);
                         String instPtSt = appointment.getEffectivePartStat(inv, inst);
-                        if (!defaultFba.equals(instFba)) {
+                        if (inv.isEvent() && !defaultFba.equals(instFba)) {
                             instElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, instFba); 
                         }
                         if (!defaultPtSt.equals(instPtSt)) {
@@ -184,15 +184,28 @@ public class GetApptSummaries extends MailDocumentHandler {
                             if (!defaultInvite.getStatus().equals(inv.getStatus())) {
                                 instElt.addAttribute(MailService.A_APPT_STATUS, inv.getStatus());
                             }
-                            
-                            if (!defaultInvite.getFreeBusy().equals(inv.getFreeBusy())) {
-                                instElt.addAttribute(MailService.A_APPT_FREEBUSY, inv.getFreeBusy());
+
+                            String prio = inv.getPriority();
+                            if (prio != null && !prio.equals(defaultInvite.getPriority())) {
+                                instElt.addAttribute(MailService.A_APPT_PRIORITY, prio);
                             }
-                            
-                            if (!defaultInvite.getTransparency().equals(inv.getTransparency())) {
-                                instElt.addAttribute(MailService.A_APPT_TRANSPARENCY, inv.getTransparency());
+
+                            if (inv.isEvent()) {
+                                if (!defaultInvite.getFreeBusy().equals(inv.getFreeBusy())) {
+                                    instElt.addAttribute(MailService.A_APPT_FREEBUSY, inv.getFreeBusy());
+                                }
+                                if (!defaultInvite.getTransparency().equals(inv.getTransparency())) {
+                                    instElt.addAttribute(MailService.A_APPT_TRANSPARENCY, inv.getTransparency());
+                                }
                             }
-                            
+
+                            if (inv.isTodo()) {
+                                String pctComplete = inv.getPercentComplete();
+                                if (pctComplete != null && !pctComplete.equals(defaultInvite.getPercentComplete())) {
+                                    instElt.addAttribute(MailService.A_APPT_PERCENT_COMPLETE, pctComplete);
+                                }
+                            }
+
                             if (!defaultInvite.getName().equals(inv.getName())) {
                                 instElt.addAttribute(MailService.A_NAME, inv.getName());
                             }
@@ -222,11 +235,22 @@ public class GetApptSummaries extends MailDocumentHandler {
                 
                 
                 if (someInRange) { // if we found any appointments at all, we have to encode the "Default" data here
+                    apptElt.addAttribute(MailService.A_APPT_TYPE, defaultInvite.getCompType());
                     apptElt.addAttribute(MailService.A_APPT_STATUS, defaultInvite.getStatus());
+                    String defaultPriority = defaultInvite.getPriority();
+                    if (defaultPriority != null)
+                        apptElt.addAttribute(MailService.A_APPT_PRIORITY, defaultPriority);
                     apptElt.addAttribute(MailService.A_APPT_PARTSTAT, defaultPtSt);
-                    apptElt.addAttribute(MailService.A_APPT_FREEBUSY, defaultInvite.getFreeBusy());
-                    apptElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, defaultFba);
-                    apptElt.addAttribute(MailService.A_APPT_TRANSPARENCY, defaultInvite.getTransparency());
+                    if (defaultInvite.isEvent()) {
+                        apptElt.addAttribute(MailService.A_APPT_FREEBUSY, defaultInvite.getFreeBusy());
+                        apptElt.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL, defaultFba);
+                        apptElt.addAttribute(MailService.A_APPT_TRANSPARENCY, defaultInvite.getTransparency());
+                    }
+                    if (defaultInvite.isTodo()) {
+                        String pctComplete = defaultInvite.getPercentComplete();
+                        if (pctComplete != null)
+                            apptElt.addAttribute(MailService.A_APPT_PERCENT_COMPLETE, pctComplete);
+                    }
                     apptElt.addAttribute(MailService.A_APPT_ISORG, defIsOrg);
                     
                     apptElt.addAttribute(MailService.A_APPT_DURATION, defDurationMsecs);
