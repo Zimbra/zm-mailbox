@@ -307,7 +307,7 @@ public abstract class Wiki {
 			StringBuilder buf = new StringBuilder();
 			buf.append("inid:");
 			buf.append(mFolderId);
-			buf.append(" filename:");
+			buf.append(" subject:");
 			buf.append(wikiWord);
 			return buf.toString();
 		}
@@ -393,7 +393,7 @@ public abstract class Wiki {
 			StringBuilder buf = new StringBuilder();
 			buf.append("in:");
 			buf.append(mPath);
-			buf.append(" filename:");
+			buf.append(" subject:");
 			buf.append(wikiWord);
 			return buf.toString();
 		}
