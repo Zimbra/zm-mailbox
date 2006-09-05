@@ -389,8 +389,11 @@ public class CalendarMailSender {
             reply.addAttendee(meReply);
         }
 
-        // DTSTART (outlook seems to require this, even though it shouldn't)
+        // DTSTART, DTEND, LOCATION (outlook seems to require these,
+        // even though it shouldn't)
         reply.setDtStart(oldInv.getStartTime());
+        reply.setDtEnd(oldInv.getEffectiveEndTime());
+        reply.setLocation(oldInv.getLocation());
 
         // ORGANIZER
         reply.setOrganizer(oldInv.getOrganizer());
