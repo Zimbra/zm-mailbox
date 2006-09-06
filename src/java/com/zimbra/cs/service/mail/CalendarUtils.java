@@ -931,8 +931,11 @@ public class CalendarUtils {
             }
         }
 
-        // DTSTART (outlook seems to require this, even though it shouldn't)
+        // DTSTART, DTEND, LOCATION (outlook seems to require these,
+        // even though it shouldn't)
         cancel.setDtStart(inv.getStartTime());
+        cancel.setDtEnd(inv.getEffectiveEndTime());
+        cancel.setLocation(inv.getLocation());
 
         // SEQUENCE
         int seq = inv.getSeqNo();
