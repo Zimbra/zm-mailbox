@@ -26,9 +26,17 @@ package com.zimbra.cs.mime;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.HashMap;
+import java.util.BitSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
+
+import javax.mail.Part;
+import javax.mail.internet.MimeUtility;
+
+import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.net.QCodec;
+import org.apache.commons.codec.net.URLCodec;
 
 public class MimeCompoundHeader {
     private enum RFC2231State { PARAM, CONTINUED, EXTENDED, EQUALS, CHARSET, LANG, VALUE, QVALUE, SLOP };
@@ -75,6 +83,10 @@ public class MimeCompoundHeader {
                 } catch (UnsupportedEncodingException uee) { 
                     System.out.println(uee);
                 }
+            } else if (pvalue.startsWith("=?") && pvalue.endsWith("?=")) {
+                try {
+                    pvalue = MimeUtility.decodeWord(pvalue);
+                } catch (Exception e) { }
             }
             String existing = continued ? attrs.get(pname) : null;
             attrs.put(pname, existing == null ? pvalue : existing + pvalue);
@@ -83,11 +95,15 @@ public class MimeCompoundHeader {
     }
 
     private String mValue;
-    private Map<String, String> mParams = new HashMap<String, String>();
+    private Map<String, String> mParams = new LinkedHashMap<String, String>();
+    private boolean force2047Encoding;
 
-    public MimeCompoundHeader(String header) {
-        if (header == null)
-            return;
+    public MimeCompoundHeader(String header) { this(header, false); }
+    public MimeCompoundHeader(String header, boolean force2047) {
+        force2047Encoding = force2047;
+        if (header == null) {
+            normalizeValue();  return;
+        }
         header = header.trim();
 
         RFC2231Data rfc2231 = new RFC2231Data();
@@ -167,62 +183,193 @@ public class MimeCompoundHeader {
 
         rfc2231.saveParameter(mParams);
         mValue = mParams.remove(null);
+        normalizeValue();
     }
 
-    public String getValue()            { return mValue; }
-    public void setValue(String value)  { mValue = value; }
+    void normalizeValue()  {}
 
-    public boolean containsParameter(String name)        { return mParams.containsKey(name); }
-    public String getParameter(String name)              { return mParams.get(name); }
-    public void setParameter(String name, String value)  { mParams.put(name, value); }
+    public String getValue()                          { return mValue; }
+    public MimeCompoundHeader setValue(String value)  { mValue = value;  normalizeValue();  return this; }
+
+    public boolean containsParameter(String name)  { return mParams.containsKey(name); }
+    public String getParameter(String name)        { return mParams.get(name); }
+    public MimeCompoundHeader setParameter(String name, String value) {
+        if (value == null)
+            mParams.remove(name);
+        else
+            mParams.put(name, value);
+        return this;
+    }
 
     public Iterator<Map.Entry<String, String>> getParameterIterator()  { return mParams.entrySet().iterator(); }
+
+    private static final boolean USE_2231_ENCODING = false;
+    private static final int LINE_WRAP_LENGTH = 76;
+    private static final boolean[] TSPECIALS = new boolean[128];
+        static {
+            TSPECIALS['('] = TSPECIALS[')'] = TSPECIALS['<'] = TSPECIALS['>']  = true;
+            TSPECIALS[','] = TSPECIALS[';'] = TSPECIALS[':'] = TSPECIALS['\\'] = true;
+            TSPECIALS['/'] = TSPECIALS['['] = TSPECIALS[']'] = TSPECIALS['?']  = true;
+            TSPECIALS['@'] = TSPECIALS['"'] = TSPECIALS['='] = TSPECIALS[' ']  = true;
+        }
+    // special subclass of URLCodec that replaces ' ' with "%20" rather than with "+"
+    private static class URLEncoder extends URLCodec {
+        private static final BitSet WWW_URL = (BitSet) WWW_FORM_URL.clone();
+            static { WWW_URL.clear(' '); }
+        public byte[] encode(byte[] bytes)  { return encodeUrl(WWW_URL, bytes); }
+    }
+
+    public String toString()                   { return toString(null, 0); }
+    public String toString(String hdrName)     { return toString(hdrName, 0); }
+    public String toString(int leadingOffset)  { return toString(null, leadingOffset); }
+    private String toString(String hdrName, int leadingOffset) {
+        StringBuilder line = new StringBuilder();
+        if (hdrName != null && !hdrName.trim().equals(""))
+            line.append(hdrName.trim()).append(": ");
+        if (mValue != null)
+            line.append(mValue);
+
+        int position = line.length() + leadingOffset;
+        for (Map.Entry<String,String> param : mParams.entrySet()) {
+            String value = param.getValue();
+            if (value == null)
+                continue;
+            line.append(';');  position++;
+
+            boolean quoted = false, nonascii = false;
+            for (int i = 0, max = value.length(); i < max; i++) {
+                char c = value.charAt(i);
+                if (c >= 0x7F || (c < 0x20 && c != '\t')) {
+                    nonascii = true;  break;
+                } else if (TSPECIALS[c]) {
+                    quoted = true;
+                }
+            }
+
+            StringBuilder sb = new StringBuilder();
+            if (!nonascii) {
+                if (quoted || value.length() == 0) {
+                    sb.append(param.getKey()).append("=\"");
+                    for (int i = 0, max = value.length(); i < max; i++) {
+                        char c = value.charAt(i);
+                        if (c == '"' || c == '\\')  sb.append('\\');
+                        sb.append(c);
+                    }
+                    sb.append('"');
+                } else {
+                    sb.append(param.getKey()).append('=').append(value);
+                }
+            } else if (USE_2231_ENCODING && !force2047Encoding) {
+                try {
+                    sb.append(param.getKey()).append("*=utf-8''").append(new URLEncoder().encode(value));
+                } catch (EncoderException e) { }
+            } else {
+                try {
+                    sb.append(param.getKey()).append("=\"").append(new QCodec().encode(value, "utf-8")).append('"');
+                } catch (EncoderException e) { }
+            }
+
+            if (position + sb.length() > LINE_WRAP_LENGTH) {
+                line.append("\n\t");  position = 8;
+            } else {
+                line.append(' ');  position++;
+            }
+            line.append(sb);  position += sb.length();
+        }
+        return line.toString();
+    }
 
 
     public static class ContentType extends MimeCompoundHeader {
         private String mPrimaryType, mSubType;
 
-        public ContentType(String header)  { super(header);  parseValue(); }
+        public ContentType(String header)                     { super(header); }
+        public ContentType(String header, boolean force2047)  { super(header, force2047); }
 
-        public void setValue(String value) { super.setValue(value);  parseValue(); }
+        public ContentType setValue(String value)                   { super.setValue(value);  return this; }
+        public ContentType setParameter(String name, String value)  { super.setParameter(name, value);  return this; }
 
         public String getPrimaryType()  { return mPrimaryType; }
         public String getSubType()      { return mSubType; }
 
-        private void parseValue() {
+        void normalizeValue() {
             String value = getValue();
-            if (value == null)
+            if (value == null || value.trim().equals("")) {
+                // default to "text/plain" if no content-type specified
                 setValue(Mime.CT_DEFAULT);
-            else {
-                value = value.trim().toLowerCase();
-                int slash = value.indexOf('/');
-                if (slash <= 0 || slash >= value.length() - 1)
-                    setValue(Mime.CT_DEFAULT);
-                else {
-                    mPrimaryType = value.substring(0, slash).trim();
-                    mSubType = value.substring(slash + 1).trim();
-                    if (mPrimaryType.equals("") || mSubType.equals(""))
-                        setValue(Mime.CT_DEFAULT);
-                    else 
-                        super.setValue(value.toLowerCase());
+            } else {
+                if (!value.equals(value.trim().toLowerCase())) {
+                    // downcase the content-type if necessary
+                    setValue(value.trim().toLowerCase());
+                } else {
+                    int slash = value.indexOf('/');
+                    if (slash <= 0 || slash >= value.length() - 1) {
+                        // malformed content-type; default as best we can
+                        setValue(value.equals("text") ? Mime.CT_TEXT_PLAIN : Mime.CT_APPLICATION_OCTET_STREAM);
+                    } else {
+                        mPrimaryType = value.substring(0, slash).trim();
+                        mSubType = value.substring(slash + 1).trim();
+                        if (mPrimaryType.equals("") || mSubType.equals(""))
+                            setValue(mPrimaryType.equals("text") ? Mime.CT_DEFAULT : Mime.CT_APPLICATION_OCTET_STREAM);
+                    }
                 }
             }
         }
+
+        public String toString()  { return toString(14); }
     }
+
+
+    public static class ContentDisposition extends MimeCompoundHeader {
+        public ContentDisposition(String header)                     { super(header); }
+        public ContentDisposition(String header, boolean force2047)  { super(header, force2047); }
+
+        public ContentDisposition setValue(String value)                   { super.setValue(value);  return this; }
+        public ContentDisposition setParameter(String name, String value)  { super.setParameter(name, value);  return this; }
+
+        void normalizeValue() {
+            String value = getValue();
+            if (value == null || value.trim().equals("")) {
+                setValue(Part.ATTACHMENT);
+            } else {
+                if (!value.equals(value.trim().toLowerCase()))
+                    setValue(value.trim().toLowerCase());
+                else if (!value.equals(Part.ATTACHMENT) && !value.equals(Part.INLINE))
+                    setValue(Part.ATTACHMENT);
+            }
+        }
+
+        public String toString()  { return toString(21); }
+    }
+
 
     public static void main(String[] args) {
         MimeCompoundHeader mch;
-        mch = new MimeCompoundHeader("text/plain; charset=US-ASCII;\r\n\tFormat=Flowed   DelSp=Yes\r\n");
-        System.out.println(mch.getValue() + " - " + mch.mParams);
-        mch = new MimeCompoundHeader("   \n  attachment;\n filename*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%83%AC%E3%82%A4.rtf\n  \n ");
-        System.out.println(mch.getValue() + " - " + mch.mParams);
-        mch = new MimeCompoundHeader("application/x-stuff; title*0*=us-ascii'en'This%20is%20even%20more%20; title*1*=%2A%2A%2Afun%2A%2A%2A%20; title*2=\"isn't it!\"\n");
-        System.out.println(mch.getValue() + " - " + mch.mParams);
-        mch = new MimeCompoundHeader("multipart/mixed; charset=us-ascii;\n foo=\n  boundary=\"---\" \n");
-        System.out.println(mch.getValue() + " - " + mch.mParams);
-        mch = new MimeCompoundHeader("message/external-body; access-type=URL;\n URL*0=\"ftp://\";\n URL*1=\"cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar\"\n");
-        System.out.println(mch.getValue() + " - " + mch.mParams);
-        mch = new MimeCompoundHeader("application/x-stuff;\n\ttitle*=us-ascii'en-us'This%20is%20%2A%2A%2Afun%2A%2A%2A");
-        System.out.println(mch.getValue() + " - " + mch.mParams);
+        mch = new ContentType("text/plain; charset=US-ASCII;\r\n\tFormat=Flowed   DelSp=Yes\r\n");
+        System.out.println(mch.toString("Content-Type"));
+
+        mch = new ContentDisposition("   \n  INline;\n filename=\"=?utf-8?Q?=E3=82=BD=E3=83=AB=E3=83=86=E3=82=A3=E3=83=AC=E3=82=A4.rtf?=\"\n  \n ", false);
+        System.out.println(mch.toString("Content-Disposition"));
+        mch = new ContentDisposition("   \n  gropp;\n filename*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%83%AC%E3%82%A4.rtf\n  \n ", true);
+        System.out.println(mch.toString("Content-Disposition"));
+        mch = new ContentDisposition(mch.toString());
+        System.out.println(mch.toString("Content-Disposition"));
+
+        mch = new ContentType("application/x-stuff; title*0*=us-ascii'en'This%20is%20even%20more%20; title*1*=%2A%2A%2Afun%2A%2A%2A%20; title*2=\"isn't it!\"\n");
+        System.out.println(mch.toString("Content-Type"));
+        mch = new ContentType("multipart/MIXED; charset=us-ascii;\n foo=\n  boundary=\"---\" \n");
+        System.out.println(mch.toString("Content-Type"));
+        mch = new ContentType("message/external-body; access-type=URL;\n URL*0=\"ftp://\";\n URL*1=\"cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar\"\n");
+        System.out.println(mch.toString("Content-Type"));
+        mch = new ContentType("application/x-stuff;\n\ttitle*=us-ascii'en-us'This%20is%20%2A%2A%2Afun%2A%2A%2A");
+        System.out.println(mch.toString("Content-Type"));
+        mch = new ContentType("application/pdf;\n    x-unix-mode=0644;\n    name=Zimbra on Mac OS X success story.pdf");
+        System.out.println(mch.toString("Content-Type"));
+        mch = new ContentType("c; name=TriplePlay_Converged_Network_v5.pdf;\n x-mac-creator=70727677; x-mac-type=50444620");
+        System.out.println(mch.toString("Content-Type"));
+        mch = new ContentType("text;\n name=\"spam\\\"bag\\\\wall\"");
+        System.out.println(mch.toString("Content-Type"));
+        mch = new ContentType(null);
+        System.out.println(mch.toString("Content-Type"));
     }
 }

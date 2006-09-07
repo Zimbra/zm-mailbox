@@ -54,7 +54,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
-import javax.mail.internet.MimeUtility;
 import javax.mail.internet.ParseException;
 
 import org.apache.commons.codec.EncoderException;
@@ -527,7 +526,7 @@ public class Mime {
         return filename;
     }
 
-    public static String getFilename(MimePart mp) throws MessagingException {
+    public static String getFilename(MimePart mp) {
         String name = null;
 
         // first, check the Content-Disposition header for the "filename" parameter
@@ -557,17 +556,6 @@ public class Mime {
 
         if (name == null)
             return null;
-
-        // catch (illegal, but common) RFC 2047 encoded-words
-        if (name.startsWith("=?") && name.endsWith("?="))
-            try {
-                return MimeUtility.decodeWord(name);
-            } catch (UnsupportedEncodingException uee) { }
-
-        if (name.indexOf("=?") != -1 && name.indexOf("?=") != -1)
-            try {
-                return MimeUtility.decodeText(name);
-            } catch (UnsupportedEncodingException uee) { }
 
         // catch (illegal, but less common) character entities
         if (name.indexOf("&#") != -1 && name.indexOf(';') != -1)

@@ -35,11 +35,11 @@ import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.MessagingException;
 import javax.mail.Part;
-import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.cs.mime.MimeCompoundHeader.ContentDisposition;
 import com.zimbra.cs.util.FileUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -72,9 +72,7 @@ public class UUEncodeConverter extends MimeVisitor {
     
                         MimeBodyPart mbp = new MimeBodyPart();
                         mbp.setHeader("Content-Type", Mime.CT_APPLICATION_OCTET_STREAM);
-                        ContentDisposition cd = new ContentDisposition(Part.ATTACHMENT);
-                        cd.setParameter("filename", Mime.encodeFilename(uu.getFilename()));
-                        mbp.setHeader("Content-Disposition", cd.toString());
+                        mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT).setParameter("filename", uu.getFilename()).toString());
                         mbp.setDataHandler(new DataHandler(uu.getDataSource()));
     
                         if (mmp == null)
