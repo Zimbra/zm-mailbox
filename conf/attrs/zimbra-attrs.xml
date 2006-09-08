@@ -1744,6 +1744,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="387" name="zimbraPrefOutOfOfficeDirectAddress" type="email" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
   <desc>per RFC 3834 no out of office notifications are sent if recipients address is not directly specified in the To/CC headers - for this check, we check to see if To/CC contained accounts address, aliases, canonical address.  But when external accounts are forwarded to Zimbra, and you want notifications sent to messages that contain their external address in To/Cc, add those address, then you can specify those external addresses here.</desc>
 </attr>
+
+<attr id="388" name="zimbraHttpProxyURL" type="astring" max="512" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+  <desc>the http proxy URL to connect to when making outgoing connections (Zimlet proxy, RSS/ATOM feeds, etc)</desc>
+</attr>
   
 </attrs>
   

@@ -69,6 +69,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.DateUtil;
 import com.zimbra.cs.util.FileUtil;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.NetUtil;
 import com.zimbra.soap.Element;
 
 /**
@@ -98,6 +99,7 @@ public class FeedManager {
 
     public static SubscriptionData retrieveRemoteDatasource(Account acct, String url, Folder.SyncData fsd) throws ServiceException {
         HttpClient client = new HttpClient();
+        NetUtil.configureProxy(client);
         client.setConnectionTimeout(10000);
         client.setTimeout(20000);
 
