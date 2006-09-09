@@ -32,6 +32,7 @@ import java.util.Set;
 
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
@@ -95,7 +96,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     // these should all be moved OUT of DbSearchConstraints and passed as parameters 
     // to the DbMailItem.search() function!
     //
-    public int mailboxId = 0;                        /* required */
+    public Mailbox mailbox;                          /* required */
     public byte sort;                                /* required */
     public int offset = -1;                 /* optional */
     public int limit = -1;                  /* optional */

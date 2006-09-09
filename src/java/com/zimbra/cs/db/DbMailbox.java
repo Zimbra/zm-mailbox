@@ -55,16 +55,37 @@ import com.zimbra.cs.util.ZimbraLog;
  */
 public class DbMailbox {
 
-    public static final int CI_ID                 = 1;
-    public static final int CI_ACCOUNT_ID         = 2;
-    public static final int CI_INDEX_VOLUME_ID    = 3;
-    public static final int CI_ITEM_ID_CHECKPOINT = 4;
-    public static final int CI_CONTACT_COUNT      = 5;
-    public static final int CI_SIZE_CHECKPOINT    = 6;
-    public static final int CI_CHANGE_CHECKPOINT  = 7;
-    public static final int CI_TRACKING_SYNC      = 8;
-    public static final int CI_TRACKING_IMAP      = 9;
-    public static final int CI_COMMENT            = 10;
+    public static final int CI_ID;
+    public static final int CI_GROUP_ID;
+    public static final int CI_ACCOUNT_ID;
+    public static final int CI_INDEX_VOLUME_ID;
+    public static final int CI_ITEM_ID_CHECKPOINT;
+    public static final int CI_CONTACT_COUNT;
+    public static final int CI_SIZE_CHECKPOINT;
+    public static final int CI_CHANGE_CHECKPOINT;
+    public static final int CI_TRACKING_SYNC;
+    public static final int CI_TRACKING_IMAP;
+    public static final int CI_COMMENT;
+
+    static {
+        int pos = 1;
+        // Order must match the order of column definition in zimbra.mailbox
+        // table in db.sql script.
+        CI_ID = pos++;
+        if (DebugConfig.enableMailboxGroup)
+            CI_GROUP_ID = pos++;
+        else
+            CI_GROUP_ID = -1;
+        CI_ACCOUNT_ID = pos++;
+        CI_INDEX_VOLUME_ID = pos++;
+        CI_ITEM_ID_CHECKPOINT = pos++;
+        CI_CONTACT_COUNT = pos++;
+        CI_SIZE_CHECKPOINT = pos++;
+        CI_CHANGE_CHECKPOINT = pos++;
+        CI_TRACKING_SYNC = pos++;
+        CI_TRACKING_IMAP = pos++;
+        CI_COMMENT = pos++;
+    }
 
     public static final int CI_METADATA_MAILBOX_ID = 1;
     public static final int CI_METADATA_SECTION    = 2;
@@ -73,41 +94,66 @@ public class DbMailbox {
     private static String DB_PREFIX_DB_PER_MAILBOX = "mailbox";
     private static String DB_PREFIX_MAILBOX_GROUP = "mboxgroup";
 
-    public synchronized static int createMailbox(Connection conn, int mailboxId, String accountId, String comment) throws ServiceException {
+    public static class NewMboxId {
+        public int id;
+        public int groupId;
+    }
+
+    public synchronized static NewMboxId createMailbox(Connection conn, int mailboxId, String accountId, String comment) throws ServiceException {
+        NewMboxId ret = new NewMboxId();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             boolean explicitId = (mailboxId != Mailbox.ID_AUTO_INCREMENT);
             String idSource = (explicitId ? "?" : "next_mailbox_id");
             stmt = conn.prepareStatement("INSERT INTO mailbox(account_id, id, " + (DebugConfig.enableMailboxGroup ? "group_id, " : "") + "index_volume_id, item_id_checkpoint, comment)" +
-                                         " SELECT ?, " + idSource + (DebugConfig.enableMailboxGroup ? ", " + idSource : "") +", index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
+                                         " SELECT ?, " + idSource + (DebugConfig.enableMailboxGroup ? ", 0" : "") +", index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
                                          " FROM current_volumes ORDER BY index_volume_id LIMIT 1");
             int attr = 1;
             stmt.setString(attr++, accountId);
-            if (explicitId) {
+            if (explicitId)
                 stmt.setInt(attr++, mailboxId);
-                if (DebugConfig.enableMailboxGroup)
-                    stmt.setInt(attr++, mailboxId);
-            }
             stmt.setString(attr++, comment);
             stmt.executeUpdate();
             stmt.close();
+            stmt = null;
 
             stmt = conn.prepareStatement("UPDATE current_volumes SET next_mailbox_id = IF(? > next_mailbox_id, ?, next_mailbox_id) + 1");
             stmt.setInt(1, mailboxId);
             stmt.setInt(2, mailboxId);
             stmt.executeUpdate();
             stmt.close();
+            stmt = null;
 
-            if (explicitId)
-                return mailboxId;
+            if (explicitId) {
+                ret.id = mailboxId;
+                ret.groupId = getMailboxGroupId(ret.id);
+                return ret;
+            }
 
             stmt = conn.prepareStatement("SELECT id FROM mailbox WHERE account_id = ?");
             stmt.setString(1, accountId);
             rs = stmt.executeQuery();
             if (rs.next())
-                return rs.getInt(1);
-            throw ServiceException.FAILURE("determining new account id for mailbox: " + accountId, null);
+                ret.id = rs.getInt(1);
+            else
+                throw ServiceException.FAILURE("determining new account id for mailbox: " + accountId, null);
+            rs.close();
+            rs = null;
+            stmt.close();
+            stmt = null;
+
+            if (DebugConfig.enableMailboxGroup) {
+                ret.groupId = getMailboxGroupId(ret.id);
+                stmt = conn.prepareStatement("UPDATE mailbox SET group_id = ? WHERE id = ?");
+                stmt.setInt(1, ret.groupId);
+                stmt.setInt(2, ret.id);
+                stmt.executeUpdate();
+                stmt.close();
+                stmt = null;
+            }
+
+            return ret;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("writing new mailbox row for account " + accountId, e);
         } finally {
@@ -122,7 +168,8 @@ public class DbMailbox {
      * 
      * @throws ServiceException if the database creation fails
      */
-    public static void createMailboxDatabase(int mailboxId) throws ServiceException {
+    public static void createMailboxDatabase(int mailboxId, int groupId)
+    throws ServiceException {
         ZimbraLog.mailbox.debug("createMailboxDatabase(" + mailboxId + ")");
 
         File file = Config.getPathRelativeToZimbraHome("db/create_database.sql");
@@ -131,11 +178,11 @@ public class DbMailbox {
         PreparedStatement stmt = null;
         try {
             conn = DbPool.getConnection();
-            if (DebugConfig.enableMailboxGroup && databaseExists(conn, mailboxId))
+            if (DebugConfig.enableMailboxGroup && databaseExists(conn, mailboxId, groupId))
                 return;
 
             // Create the new database
-            String dbName = getDatabaseName(mailboxId);
+            String dbName = getDatabaseName(mailboxId, groupId);
             ZimbraLog.mailbox.info("Creating database " + dbName);
 
             String template = new String(ByteUtil.getContent(file));
@@ -164,10 +211,10 @@ public class DbMailbox {
         sTables[3] = "tombstone";
     }
 
-    private static boolean databaseExists(Connection conn, int mailboxId)
+    private static boolean databaseExists(Connection conn, int mailboxId, int groupId)
     throws ServiceException {
         for (int i = 0; i < sTables.length; i++) {
-            String table = getDatabaseName(mailboxId) + "." + sTables[i];
+            String table = getDatabaseName(mailboxId, groupId) + "." + sTables[i];
 
             String sql = "DESCRIBE " + table;
             PreparedStatement stmt = null;
@@ -192,11 +239,11 @@ public class DbMailbox {
      * 
      * @throws ServiceException if the database creation fails
      */
-    private static void dropMailboxDatabase(int mailboxId)
+    private static void dropMailboxDatabase(int mailboxId, int groupId)
     throws ServiceException {
         ZimbraLog.mailbox.debug("dropMailboxDatabase(" + mailboxId + ")");
 
-        String dbName = getDatabaseName(mailboxId);
+        String dbName = getDatabaseName(mailboxId, groupId);
         if (!dbName.startsWith(DB_PREFIX_DB_PER_MAILBOX)) {
             // Additional safeguard to make sure we don't drop the wrong database
             throw ServiceException.FAILURE("Attempted to drop database " + dbName, null);
@@ -223,12 +270,13 @@ public class DbMailbox {
         }
     }
 
-    private static void dropMailboxFromGroup(int mailboxId)
+    private static void dropMailboxFromGroup(int mailboxId, int groupId)
     throws ServiceException {
+        ZimbraLog.mailbox.info("Clearing contents of mailbox " + mailboxId + ", group " + groupId);
         Connection conn = null;
         try {
             conn = DbPool.getConnection();
-            String dbname = getDatabaseName(mailboxId);
+            String dbname = getDatabaseName(mailboxId, groupId);
 
             // Delete in reverse order.
             for (int i = sTables.length - 1; i >= 0; i--) {
@@ -245,12 +293,18 @@ public class DbMailbox {
         }
     }
 
-    public static void clearMailboxContent(int mailboxId)
+    public static void clearMailboxContent(int mailboxId, int groupId)
     throws ServiceException {
         if (DebugConfig.enableMailboxGroup)
-            dropMailboxFromGroup(mailboxId);
+            dropMailboxFromGroup(mailboxId, groupId);
         else
-            dropMailboxDatabase(mailboxId);
+            dropMailboxDatabase(mailboxId, groupId);
+    }
+    public static void clearMailboxContent(Mailbox mbox)
+    throws ServiceException {
+        int id = mbox.getId();
+        int gid = mbox.getSchemaGroupId();
+        clearMailboxContent(id, gid);
     }
 
     public static void updateMailboxStats(Mailbox mbox) throws ServiceException {
@@ -417,28 +471,32 @@ public class DbMailbox {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(
-                    "SELECT account_id, size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
+                    "SELECT account_id, " + (DebugConfig.enableMailboxGroup ? "group_id, " : "") +
+                    "size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
                     " tracking_imap, index_volume_id " +
-                    "FROM mailbox mb WHERE mb.id = ?");
+                    "FROM mailbox WHERE id = ?");
             stmt.setInt(1, mailboxId);
             rs = stmt.executeQuery();
 
             if (!rs.next())
                 return null;
+            int pos = 1;
             Mailbox.MailboxData mbd = new Mailbox.MailboxData();
             mbd.id            = mailboxId;
-            mbd.accountId     = rs.getString(1);
-            mbd.size          = rs.getLong(2);
+            mbd.accountId     = rs.getString(pos++);
+            if (DebugConfig.enableMailboxGroup)
+                mbd.schemaGroupId = rs.getInt(pos++);
+            mbd.size          = rs.getLong(pos++);
             if (rs.wasNull())
                 mbd.size = -1;
-            mbd.contacts      = rs.getInt(3);
+            mbd.contacts      = rs.getInt(pos++);
             if (rs.wasNull())
                 mbd.contacts = -1;
-            mbd.lastItemId    = rs.getInt(4) + ITEM_CHECKPOINT_INCREMENT - 1;
-            mbd.lastChangeId  = rs.getInt(5) + CHANGE_CHECKPOINT_INCREMENT - 1;
-            mbd.trackSync     = rs.getInt(6);
-            mbd.trackImap     = rs.getBoolean(7);
-            mbd.indexVolumeId = rs.getShort(8);
+            mbd.lastItemId    = rs.getInt(pos++) + ITEM_CHECKPOINT_INCREMENT - 1;
+            mbd.lastChangeId  = rs.getInt(pos++) + CHANGE_CHECKPOINT_INCREMENT - 1;
+            mbd.trackSync     = rs.getInt(pos++);
+            mbd.trackImap     = rs.getBoolean(pos++);
+            mbd.indexVolumeId = rs.getShort(pos++);
 
             // round lastItemId and lastChangeId up so that they get written on the next change
             long rounding = mbd.lastItemId % ITEM_CHECKPOINT_INCREMENT;
@@ -494,14 +552,22 @@ public class DbMailbox {
         }
     }
 
+    public static int getMailboxGroupId(int mailboxId) {
+        int mboxPerGroup = DebugConfig.mailboxGroupSize;
+        return (mailboxId - 1) / DebugConfig.mailboxGroupSize + 1;
+    }
+
     /** @return the name of the database that contains tables for the specified <code>mailboxId</code>. */
-    public static String getDatabaseName(int mailboxId) {
-        if (DebugConfig.enableMailboxGroup) {
-            int which = (mailboxId - 1) / DebugConfig.mailboxGroupSize + 1;
-            return DB_PREFIX_MAILBOX_GROUP + which;
-        } else {
+    public static String getDatabaseName(int mailboxId, int groupId) {
+        if (DebugConfig.enableMailboxGroup)
+            return DB_PREFIX_MAILBOX_GROUP + groupId;
+        else
             return DB_PREFIX_DB_PER_MAILBOX + mailboxId;
-        }
+    }
+    public static String getDatabaseName(Mailbox mbox) {
+        int id = mbox.getId();
+        int gid = mbox.getSchemaGroupId();
+        return getDatabaseName(id, gid);
     }
 
     /**
@@ -524,17 +590,17 @@ public class DbMailbox {
         }
     }
 
-    static Set<Long> getDistinctTagsets(Connection conn, int mailboxId) throws ServiceException {
+    static Set<Long> getDistinctTagsets(Connection conn, Mailbox mbox) throws ServiceException {
         Set<Long> tagsets = new HashSet<Long>();
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT DISTINCT tags " +
-                    "FROM " + DbMailItem.getMailItemTableName(mailboxId) +
+                    "FROM " + DbMailItem.getMailItemTableName(mbox) +
                     (DebugConfig.enableMailboxGroup ? " WHERE mailbox_id = ?" : ""));
             if (DebugConfig.enableMailboxGroup)
-                stmt.setInt(1, mailboxId);
+                stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
             while (rs.next())
                 tagsets.add(rs.getLong(1));
@@ -548,17 +614,17 @@ public class DbMailbox {
         return tagsets;
     }
 
-    static Set<Long> getDistinctFlagsets(Connection conn, int mailboxId) throws ServiceException {
+    static Set<Long> getDistinctFlagsets(Connection conn, Mailbox mbox) throws ServiceException {
         Set<Long> flagsets = new HashSet<Long>();
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT DISTINCT flags " +
-                    "FROM " + DbMailItem.getMailItemTableName(mailboxId) +
+                    "FROM " + DbMailItem.getMailItemTableName(mbox) +
                     (DebugConfig.enableMailboxGroup ? " WHERE mailbox_id = ?" : ""));
             if (DebugConfig.enableMailboxGroup)
-                stmt.setInt(1, mailboxId);
+                stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
             while (rs.next())
                 flagsets.add(rs.getLong(1));

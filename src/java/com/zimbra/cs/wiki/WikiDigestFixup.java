@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.MailItem;
@@ -159,7 +158,7 @@ public class WikiDigestFixup {
     private static void fixupItems(Connection conn, int mboxId, List<WikiDigest> digests)
     throws SQLException, ServiceException {
         StringBuilder sql = new StringBuilder("UPDATE ");
-        sql.append(DbMailItem.getMailItemTableName(mboxId));
+        sql.append("mailbox" + mboxId + ".mail_item");
         sql.append(" SET blob_digest = ? WHERE id = ? AND type in (");
         sql.append(MailItem.TYPE_WIKI);
         sql.append(", ");

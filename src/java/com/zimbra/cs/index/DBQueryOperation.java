@@ -611,7 +611,7 @@ class DBQueryOperation extends QueryOperation
             try {
                 conn = DbPool.getConnection();
                 boolean hasValidTypes = prepareSearchConstraints();
-                int mboxId = getMailbox().getId();
+                Mailbox mbox = getMailbox();
                 byte sort = getSortOrderForDb();
 
                 if (!hasValidTypes || mConstraints.hasNoResults()) {
@@ -628,7 +628,7 @@ class DBQueryOperation extends QueryOperation
                         if (this.isTopLevelQueryOp())
                             extra = DbMailItem.SearchResult.ExtraData.MAIL_ITEM;
                         mDBHits = new ArrayList<SearchResult>();
-                        DbMailItem.search(mDBHits, conn, mConstraints, mboxId, sort, mOffset, mLimit, extra);
+                        DbMailItem.search(mDBHits, conn, mConstraints, mbox, sort, mOffset, mLimit, extra);
                         
                         // exponentially expand the chunk size in case we have to go back to the DB
                         mHitsPerChunk*=2;
@@ -657,7 +657,7 @@ class DBQueryOperation extends QueryOperation
                             if (this.isTopLevelQueryOp())
                                 extra = DbMailItem.SearchResult.ExtraData.MAIL_ITEM;
                             Collection<SearchResult> dbRes = new ArrayList<SearchResult>();
-                            DbMailItem.search(dbRes, conn, mConstraints, mboxId, sort, mOffset, mLimit, extra);
+                            DbMailItem.search(dbRes, conn, mConstraints, mbox, sort, mOffset, mLimit, extra);
 
                             if (dbRes.size() == MAX_DBFIRST_RESULTS) {
                                 mLog.info("FAILED DB-FIRST: Too many results");
@@ -745,7 +745,7 @@ class DBQueryOperation extends QueryOperation
                                     mDBHits = new ArrayList<SearchResult>();
                                     
                                     // must not ask for offset,limit here b/c of indexId constraints!  
-                                    DbMailItem.search(mDBHits, conn, mConstraints, mboxId, sort, -1, -1, extra);
+                                    DbMailItem.search(mDBHits, conn, mConstraints, mbox, sort, -1, -1, extra);
 
                                     if (getSortBy() == SortBy.SCORE_DESCENDING) {
                                         // We have to re-sort the chunk by score here b/c the DB doesn't

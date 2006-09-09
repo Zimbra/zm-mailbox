@@ -105,8 +105,9 @@ public class DebugConfig {
         disableIndexingAttachmentsTogether = booleanValue("debug_disable_indexing_attachments_together", false);
 
         enableMailboxGroup = booleanValue("debug_enable_mailbox_group", false);
-        mailboxGroupSize = intValue("debug_mailbox_group_size", 100);
-        if (mailboxGroupSize < 1)
+        if (enableMailboxGroup)
+            mailboxGroupSize = Math.max(intValue("debug_mailbox_group_size", 1), 1);
+        else
             mailboxGroupSize = 1;
     }
 

@@ -144,11 +144,11 @@ public class DbMailItem {
 
             // Track the tags and flags for fast lookup later
             if (areTagsetsLoaded(mbox.getId())) {
-                TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
+                TagsetCache tagsets = getTagsetCache(conn, mbox);
                 tagsets.addTagset(data.tags);
             }
             if (areFlagsetsLoaded(mbox.getId())) {
-                TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
+                TagsetCache flagsets = getFlagsetCache(conn, mbox);
                 flagsets.addTagset(data.flags);
             }
         } catch (SQLException e) {
@@ -575,7 +575,7 @@ public class DbMailItem {
             // Update the flagset cache.  Assume that the item's in-memory
             // data has already been updated.
             if (areFlagsetsLoaded(mbox.getId())) {
-                TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
+                TagsetCache flagsets = getFlagsetCache(conn, mbox);
                 flagsets.addTagset(item.getInternalFlagBitmask());
             }
         } catch (SQLException e) {
@@ -589,7 +589,7 @@ public class DbMailItem {
         Connection conn = item.getMailbox().getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("INSERT INTO " + getConversationTableName(item.getMailboxId()) +
+            stmt = conn.prepareStatement("INSERT INTO " + getConversationTableName(item) +
                 "(" +
                 (DebugConfig.enableMailboxGroup ? "mailbox_id, " : "") +
                 "hash, conv_id) VALUES (" +
@@ -616,7 +616,7 @@ public class DbMailItem {
         Connection conn = item.getMailbox().getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("DELETE FROM " + getConversationTableName(item.getMailboxId()) +
+            stmt = conn.prepareStatement("DELETE FROM " + getConversationTableName(item) +
                 " WHERE " + IN_THIS_MAILBOX_AND + "hash = ? AND conv_id = ?");
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
@@ -635,7 +635,7 @@ public class DbMailItem {
         Connection conn = oldTarget.getMailbox().getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE " + getConversationTableName(oldTarget.getMailboxId()) +
+            stmt = conn.prepareStatement("UPDATE " + getConversationTableName(oldTarget) +
                 " SET conv_id = ? WHERE " + IN_THIS_MAILBOX_AND + "conv_id = ?");
             int pos = 1;
             stmt.setInt(pos++, newTarget.getId());
@@ -655,7 +655,7 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox.getId()) +
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                 " SET imap_id = ? WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, item.getImapUid());
@@ -711,10 +711,10 @@ public class DbMailItem {
             // Update the flagset or tagset cache.  Assume that the item's in-memory
             // data has already been updated.
             if (tag instanceof Flag && areFlagsetsLoaded(mbox.getId())) {
-                TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
+                TagsetCache flagsets = getFlagsetCache(conn, mbox);
                 flagsets.addTagset(item.getInternalFlagBitmask());
             } else if (areTagsetsLoaded(mbox.getId())) {
-                TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
+                TagsetCache tagsets = getTagsetCache(conn, mbox);
                 tagsets.addTagset(item.getTagBitmask());
             }
         } catch (SQLException e) {
@@ -752,10 +752,10 @@ public class DbMailItem {
             // Update the flagset or tagset cache.  Assume that the item's in-memory
             // data has already been updated.
             if (tag instanceof Flag && areFlagsetsLoaded(mbox.getId())) {
-                TagsetCache flagsets = getFlagsetCache(conn, mbox.getId());
+                TagsetCache flagsets = getFlagsetCache(conn, mbox);
                 flagsets.applyMask(tag.getBitmask(), add);
             } else if (areTagsetsLoaded(mbox.getId())) {
-                TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
+                TagsetCache tagsets = getTagsetCache(conn, mbox);
                 tagsets.applyMask(tag.getBitmask(), add);
             }
         } catch (SQLException e) {
@@ -783,7 +783,7 @@ public class DbMailItem {
             stmt.executeUpdate();
 
             if (areTagsetsLoaded(mbox.getId())) {
-                TagsetCache tagsets = getTagsetCache(conn, mbox.getId());
+                TagsetCache tagsets = getTagsetCache(conn, mbox);
                 tagsets.applyMask(tag.getTagBitmask(), false);
             }
         } catch (SQLException e) {
@@ -1068,7 +1068,7 @@ public class DbMailItem {
                     ids.append(i == 0 ? "" : ",").append(info.itemIds.get(i));
             }
 
-            stmt = conn.prepareStatement("INSERT INTO " + getTombstoneTableName(mbox.getId()) + "(" +
+            stmt = conn.prepareStatement("INSERT INTO " + getTombstoneTableName(mbox) + "(" +
                     (DebugConfig.enableMailboxGroup ? "mailbox_id, " : "") +
                     "sequence, date, ids) VALUES (" +
                     (DebugConfig.enableMailboxGroup ? "?, " : "") +
@@ -1100,7 +1100,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT ids FROM " + getTombstoneTableName(mbox.getId()) +
+            stmt = conn.prepareStatement("SELECT ids FROM " + getTombstoneTableName(mbox) +
                     " WHERE " + IN_THIS_MAILBOX_AND + "sequence > ? AND ids IS NOT NULL" +
                     " ORDER BY sequence");
             int pos = 1;
@@ -1191,7 +1191,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            String table = getMailItemTableName(mbox.getId(), "mi");
+            String table = getMailItemTableName(mbox, "mi");
 
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS + " FROM " + table +
                     " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + FOLDER_AND_TAG_TYPES);
@@ -1278,7 +1278,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + getMailItemTableName(mbox.getId(), " mi") +
+                    " FROM " + getMailItemTableName(mbox, " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + typeConstraint(type) + sortQuery(sort));
             if (DebugConfig.enableMailboxGroup)
                 stmt.setInt(1, mbox.getId());
@@ -1308,7 +1308,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + getMailItemTableName(parent.getMailboxId(), " mi") +
+                    " FROM " + getMailItemTableName(parent.getMailbox(), " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "parent_id = ? " + sortQuery(sort));
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
@@ -1347,7 +1347,7 @@ public class DbMailItem {
             else                                            relation = " id = ?";
 
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + getMailItemTableName(relativeTo.getMailboxId(), " mi") +
+                    " FROM " + getMailItemTableName(relativeTo.getMailbox(), " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "unread > 0 AND " + relation + " AND type NOT IN " + NON_SEARCHABLE_TYPES);
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
@@ -1386,7 +1386,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + getMailItemTableName(folder.getMailboxId(), " mi") +
+                    " FROM " + getMailItemTableName(folder.getMailbox(), " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + typeConstraint(type) +
                     sortQuery(sort));
             int pos = 1;
@@ -1415,7 +1415,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + getMailItemTableName(mbox.getId(), "mi") +
+                    " FROM " + getMailItemTableName(mbox, "mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
@@ -1446,7 +1446,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + getMailItemTableName(mbox.getId(), "mi") +
+                    " FROM " + getMailItemTableName(mbox, "mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND imap_id = ?");
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
@@ -1486,7 +1486,7 @@ public class DbMailItem {
             try {
                 int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, ids.size() - i);
                 stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                        " FROM " + getMailItemTableName(mbox.getId(), "mi") +
+                        " FROM " + getMailItemTableName(mbox, "mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
                 int pos = 1;
                 if (DebugConfig.enableMailboxGroup)
@@ -1523,8 +1523,8 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + getMailItemTableName(mbox.getId(), "mi") + ", " +
-                               getConversationTableName(mbox.getId(), "oc") +
+                    " FROM " + getMailItemTableName(mbox, "mi") + ", " +
+                               getConversationTableName(mbox, "oc") +
                     " WHERE " +
                     (DebugConfig.enableMailboxGroup ? "oc.mailbox_id = ? AND " : "") +
                     "oc.hash = ? AND " +
@@ -1571,7 +1571,7 @@ public class DbMailItem {
         try {
             String typeConstraint = type == MailItem.TYPE_UNKNOWN ? "type NOT IN " + NON_SEARCHABLE_TYPES : "type IN " + typeConstraint(type);
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + getMailItemTableName(mbox.getId(), "mi") +
+                    " FROM " + getMailItemTableName(mbox, "mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "mi.mod_metadata > ? AND " + typeConstraint +
                     " ORDER BY mi.mod_metadata");
             int pos = 1;
@@ -1616,7 +1616,7 @@ public class DbMailItem {
             try {
                 int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, convData.size() - i);
                 String sql = "SELECT parent_id, id, unread, flags, tags" +
-                             " FROM " + getMailItemTableName(mbox.getId()) +
+                             " FROM " + getMailItemTableName(mbox) +
                              " WHERE " + IN_THIS_MAILBOX_AND + "parent_id IN " + DbUtil.suitableNumberOfVariables(count) +
                              " ORDER BY parent_id";
                 stmt = conn.prepareStatement(sql);
@@ -1887,7 +1887,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT " + IMAP_FIELDS +
-                    " FROM " + getMailItemTableName(folder.getMailboxId(), " mi") +
+                    " FROM " + getMailItemTableName(folder.getMailbox(), " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + IMAP_TYPES);
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
@@ -1920,7 +1920,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT " + POP3_FIELDS +
-                    " FROM " + getMailItemTableName(folder.getMailboxId(), " mi") +
+                    " FROM " + getMailItemTableName(folder.getMailbox(), " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + POP3_TYPES);
             int pos = 1;
             if (DebugConfig.enableMailboxGroup)
@@ -1996,18 +1996,19 @@ public class DbMailItem {
         return search(result, conn, c, SearchResult.ExtraData.NONE);
     }
     public static Collection<SearchResult> search(Collection<SearchResult> result, Connection conn, DbSearchConstraints c, SearchResult.ExtraData extra) throws ServiceException {
-        return search(result, conn, c, c.mailboxId, c.sort, c.offset, c.limit, extra);
+        return search(result, conn, c, c.mailbox, c.sort, c.offset, c.limit, extra);
     }
     public static Collection<SearchResult> search(Collection<SearchResult> result, Connection conn, DbSearchConstraintsNode node, 
-                                                  int mailboxId, byte sort, int offset, int limit, SearchResult.ExtraData extra)
+                                                  Mailbox mbox, byte sort, int offset, int limit, SearchResult.ExtraData extra)
     throws ServiceException {
+        int mailboxId = mbox.getId();
         // Assemble the search query
         StringBuilder statement = new StringBuilder("SELECT id, index_id, type, " + sortField(sort));
         if (extra == SearchResult.ExtraData.MAIL_ITEM)
             statement.append(", " + DB_FIELDS);
         else if (extra == SearchResult.ExtraData.IMAP_MSG)
             statement.append(", mi.imap_id, mi.unread, mi.flags, mi.tags");
-        statement.append(" FROM " + getMailItemTableName(mailboxId, "mi"));
+        statement.append(" FROM " + getMailItemTableName(mbox, "mi"));
         statement.append(" WHERE ");
         if (DebugConfig.enableMailboxGroup)
             statement.append("mailbox_id = ? AND ");
@@ -2020,7 +2021,7 @@ public class DbMailItem {
              *    (AND folder_id [NOT] IN (?,?,?)) (AND date > ?) (AND date < ?) (AND mod_metadata > ?) (AND mod_metadata < ?)
              *    ORDER BY date|subject|sender (DESC)? LIMIT ?, ?
              */
-            encodeConstraint(mailboxId, node, statement, conn);
+            encodeConstraint(mbox, node, statement, conn);
 
             statement.append(sortQuery(sort));
             if (offset >= 0 && limit >= 0)
@@ -2054,7 +2055,7 @@ public class DbMailItem {
         }
     }
 
-    private static void encodeConstraint(int mailboxId, DbSearchConstraintsNode node, StringBuilder statement, Connection conn) throws ServiceException {
+    private static void encodeConstraint(Mailbox mbox, DbSearchConstraintsNode node, StringBuilder statement, Connection conn) throws ServiceException {
         DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
         if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
             boolean first = true, and = ntype == DbSearchConstraintsNode.NodeType.AND;
@@ -2062,7 +2063,7 @@ public class DbMailItem {
             for (DbSearchConstraintsNode subnode : node.getSubNodes()) {
                 if (!first)
                     statement.append(and ? " AND " : " OR ");
-                encodeConstraint(mailboxId, subnode, statement, conn);
+                encodeConstraint(mbox, subnode, statement, conn);
                 first = false;
             }
             statement.append(')');
@@ -2091,7 +2092,7 @@ public class DbMailItem {
             statement.append(" AND type NOT IN").append(DbUtil.suitableNumberOfVariables(c.excludeTypes));
 
         // Determine the set of matching tags
-        TagConstraints tc = TagConstraints.getTagContraints(mailboxId, c, conn);
+        TagConstraints tc = TagConstraints.getTagContraints(mbox, c, conn);
         if (tc.noMatches)
             statement.append(" AND FALSE");
 
@@ -2153,7 +2154,7 @@ public class DbMailItem {
         Boolean unread;
         boolean noMatches;
 
-        static TagConstraints getTagContraints(int mailboxId, DbSearchConstraints c, Connection conn) throws ServiceException {
+        static TagConstraints getTagContraints(Mailbox mbox, DbSearchConstraints c, Connection conn) throws ServiceException {
             TagConstraints tc = c.tagConstraints = new TagConstraints();
             if (ListUtil.isEmpty(c.tags) && ListUtil.isEmpty(c.excludeTags))
                 return tc;
@@ -2184,8 +2185,8 @@ public class DbMailItem {
                         tagMask |= t.getBitmask();
                     }
 
-            TagsetCache tcFlags = getFlagsetCache(conn, mailboxId);
-            TagsetCache tcTags  = getTagsetCache(conn, mailboxId);
+            TagsetCache tcFlags = getFlagsetCache(conn, mbox);
+            TagsetCache tcTags  = getTagsetCache(conn, mbox);
             if (setTagMask != 0 || tagMask != 0) {
                 tc.searchTagsets = tcTags.getMatchingTagsets(tagMask, setTagMask);
                 // if no items match the specified tags...
@@ -2383,8 +2384,8 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             String sql = "SELECT " + DB_FIELDS +
-                    " FROM " + getAppointmentTableName(mbox.getId(), "appt") + ", " +
-                               getMailItemTableName(mbox.getId(), "mi") +
+                    " FROM " + getAppointmentTableName(mbox, "appt") + ", " +
+                               getMailItemTableName(mbox, "mi") +
                     " WHERE " +
                     (DebugConfig.enableMailboxGroup ? "appt.mailbox_id = ? AND " : "") +
                     "appt.uid = ? AND " +
@@ -2432,8 +2433,8 @@ public class DbMailItem {
                 excludeFolderPart = "AND folder_id NOT IN" + DbUtil.suitableNumberOfVariables(excludeFolderIds);
             
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                     " FROM " + getAppointmentTableName(mbox.getId(), "appt") + ", " +
-                                getMailItemTableName(mbox.getId(), "mi") +
+                     " FROM " + getAppointmentTableName(mbox, "appt") + ", " +
+                                getMailItemTableName(mbox, "mi") +
                      " WHERE " +
                      (DebugConfig.enableMailboxGroup ? "appt.mailbox_id = ? AND " : "") +
                      "appt.start_time < ? AND appt.end_time > ? AND " +
@@ -2485,7 +2486,7 @@ public class DbMailItem {
             }
             
             stmt = conn.prepareStatement("INSERT INTO " +
-                    getAppointmentTableName(mbox.getId()) +
+                    getAppointmentTableName(mbox) +
                     " (" +
                     (DebugConfig.enableMailboxGroup ? "mailbox_id, " : "") +
                     "uid, item_id, start_time, end_time)" +
@@ -2525,7 +2526,7 @@ public class DbMailItem {
             }
             
             stmt = conn.prepareStatement("INSERT INTO " +
-                    getAppointmentTableName(mbox.getId()) +
+                    getAppointmentTableName(mbox) +
                     " (" +
                     (DebugConfig.enableMailboxGroup ? "mailbox_id, " : "") +
                     "uid, item_id, start_time, end_time)" +
@@ -2581,47 +2582,76 @@ public class DbMailItem {
      * Returns the name of the table that stores {@link MailItem} data.  The table name is qualified
      * by the name of the database (e.g. <code>mailbox1.mail_item</code>).
      */
+    public static String getMailItemTableName(int mailboxId, int groupId) {
+        return DbMailbox.getDatabaseName(mailboxId, groupId) + ".mail_item";
+    }
     public static String getMailItemTableName(Mailbox mbox) {
-        return getMailItemTableName(mbox.getId());
+        int id = mbox.getId();
+        int gid = mbox.getSchemaGroupId();
+        return getMailItemTableName(id, gid);
+    }
+    public static String getMailItemTableName(Mailbox mbox, String alias) {
+        int id = mbox.getId();
+        int gid = mbox.getSchemaGroupId();
+        return getMailItemTableName(id, gid) + " " + alias;
     }
     public static String getMailItemTableName(MailItem item) {
-        return getMailItemTableName(item.getMailboxId());
-    }
-    public static String getMailItemTableName(int mailboxId) {
-        return DbMailbox.getDatabaseName(mailboxId) + ".mail_item";
-    }
-    public static String getMailItemTableName(int mailboxId, String alias) {
-        return DbMailbox.getDatabaseName(mailboxId) + ".mail_item " + alias;
+        return getMailItemTableName(item.getMailbox());
     }
 
     /**
      * Returns the name of the table that stores {@link Appointment} data.  The table name is qualified
      * by the name of the database (e.g. <code>mailbox1.appointment</code>).
      */
-    public static String getAppointmentTableName(int mailboxId) {
-        return DbMailbox.getDatabaseName(mailboxId) + ".appointment";
+    public static String getAppointmentTableName(int mailboxId, int groupId) {
+        return DbMailbox.getDatabaseName(mailboxId, groupId) + ".appointment";
     }
-    public static String getAppointmentTableName(int mailboxId, String alias) {
-        return DbMailbox.getDatabaseName(mailboxId) + ".appointment " + alias;
+    public static String getAppointmentTableName(Mailbox mbox) {
+        int id = mbox.getId();
+        int gid = mbox.getSchemaGroupId();
+        return getAppointmentTableName(id, gid);
+    }
+    public static String getAppointmentTableName(Mailbox mbox, String alias) {
+        int id = mbox.getId();
+        int gid = mbox.getSchemaGroupId();
+        return getAppointmentTableName(id, gid) + " " + alias;
     }
 
     /**
      * Returns the name of the table that maps subject hashes to {@link Conversation} ids.  The table 
      * name is qualified by the name of the database (e.g. <code>mailbox1.open_conversation</code>).
      */
-    public static String getConversationTableName(int mailboxId) {
-        return DbMailbox.getDatabaseName(mailboxId) + ".open_conversation";
+    public static String getConversationTableName(int mailboxId, int groupId) {
+        return DbMailbox.getDatabaseName(mailboxId, groupId) + ".open_conversation";
     }
-    public static String getConversationTableName(int mailboxId, String alias) {
-        return DbMailbox.getDatabaseName(mailboxId) + ".open_conversation " + alias;
+    public static String getConversationTableName(int mailboxId, int groupId, String alias) {
+        return DbMailbox.getDatabaseName(mailboxId, groupId) + ".open_conversation " + alias;
+    }
+    public static String getConversationTableName(Mailbox mbox) {
+        int id = mbox.getId();
+        int gid = mbox.getSchemaGroupId();
+        return getConversationTableName(id, gid);
+    }
+    public static String getConversationTableName(Mailbox mbox, String alias) {
+        int id = mbox.getId();
+        int gid = mbox.getSchemaGroupId();
+        return getConversationTableName(id, gid) + " " + alias;
+    }
+    public static String getConversationTableName(MailItem item) {
+        return getConversationTableName(item.getMailbox());
     }
 
     /**
      * Returns the name of the table that stores data on deleted items for the purpose of sync.
      * The table name is qualified by the name of the database (e.g. <code>mailbox1.tombstone</code>).
      */
-    public static String getTombstoneTableName(int mailboxId) {
-        return DbMailbox.getDatabaseName(mailboxId) + ".tombstone";
+    public static String getTombstoneTableName(int mailboxId, int groupId) {
+        return DbMailbox.getDatabaseName(mailboxId, groupId) + ".tombstone";
+    }
+    public static String getTombstoneTableName(Mailbox mbox) {
+        int id = mbox.getId();
+        int gid = mbox.getSchemaGroupId();
+        return getTombstoneTableName(id, gid);
     }
     
     private static boolean areTagsetsLoaded(int mailboxId) {
@@ -2630,8 +2660,9 @@ public class DbMailItem {
         }
     }
 
-    static TagsetCache getTagsetCache(Connection conn, int mailboxId)
+    static TagsetCache getTagsetCache(Connection conn, Mailbox mbox)
     throws ServiceException {
+        int mailboxId = mbox.getId();
         Integer id = new Integer(mailboxId);
         TagsetCache tagsets = null;
 
@@ -2645,7 +2676,7 @@ public class DbMailItem {
         if (tagsets == null) {
             ZimbraLog.cache.info("Loading tagset cache");
             tagsets = new TagsetCache("Mailbox " + mailboxId + " tags");
-            tagsets.addTagsets(DbMailbox.getDistinctTagsets(conn, mailboxId));
+            tagsets.addTagsets(DbMailbox.getDistinctTagsets(conn, mbox));
 
             synchronized (sTagsetCache) {
                 sTagsetCache.put(id, tagsets);
@@ -2661,8 +2692,9 @@ public class DbMailItem {
         }
     }
 
-    static TagsetCache getFlagsetCache(Connection conn, int mailboxId)
+    static TagsetCache getFlagsetCache(Connection conn, Mailbox mbox)
     throws ServiceException {
+        int mailboxId = mbox.getId();
         Integer id = new Integer(mailboxId);
         TagsetCache flagsets = null;
 
@@ -2676,7 +2708,7 @@ public class DbMailItem {
         if (flagsets == null) {
             ZimbraLog.cache.info("Loading tagset cache");
             flagsets = new TagsetCache("Mailbox " + mailboxId + " flags");
-            flagsets.addTagsets(DbMailbox.getDistinctFlagsets(conn, mailboxId));
+            flagsets.addTagsets(DbMailbox.getDistinctFlagsets(conn, mbox));
 
             synchronized (sFlagsetCache) {
                 sFlagsetCache.put(id, flagsets);
@@ -2708,8 +2740,8 @@ public class DbMailItem {
         orClause.addSubNode(andClause);
 
         // "is:unread" (first 5 results)
-        System.out.println(search(new ArrayList<SearchResult>(), DbPool.getConnection(), isUnread, 1, DEFAULT_SORT_ORDER, 0, 5, SearchResult.ExtraData.NONE));
+        //System.out.println(search(new ArrayList<SearchResult>(), DbPool.getConnection(), isUnread, 1, DEFAULT_SORT_ORDER, 0, 5, SearchResult.ExtraData.NONE));
         // "has:tags or (in:trash is:unread)" (first 5 results)
-        System.out.println(search(new ArrayList<SearchResult>(), DbPool.getConnection(), orClause, 1, DEFAULT_SORT_ORDER, 0, 5, SearchResult.ExtraData.NONE));
+        //System.out.println(search(new ArrayList<SearchResult>(), DbPool.getConnection(), orClause, 1, DEFAULT_SORT_ORDER, 0, 5, SearchResult.ExtraData.NONE));
     }
 }

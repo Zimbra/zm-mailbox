@@ -47,6 +47,7 @@ import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
+import com.zimbra.cs.db.DbMailbox.NewMboxId;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.imap.ImapMessage;
@@ -158,6 +159,7 @@ public class Mailbox {
 
     public static final class MailboxData {
         public int     id;
+        public int     schemaGroupId;
         public String  accountId;
         public long    size;
         public int     contacts;
@@ -365,6 +367,10 @@ public class Mailbox {
      * @see #getAccount() */
     public String getAccountId() {
         return mData.accountId;
+    }
+
+    public int getSchemaGroupId() {
+        return mData.schemaGroupId;
     }
 
     /** Returns the {@link Account} object for this mailbox's owner.  At
@@ -1319,8 +1325,10 @@ public class Mailbox {
                 // create the mailbox row and the mailbox database
                 CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.player);
                 int id = (redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
-                data.id = DbMailbox.createMailbox(conn, id, data.accountId, account.getName());
-                DbMailbox.createMailboxDatabase(data.id);
+                NewMboxId newMboxId = DbMailbox.createMailbox(conn, id, data.accountId, account.getName());
+                data.id = newMboxId.id;
+                data.schemaGroupId = newMboxId.groupId;
+                DbMailbox.createMailboxDatabase(data.id, data.schemaGroupId);
 
                 // The above initialization of data is incomplete because it
                 // is missing the message/index volume information.  Query
@@ -1356,7 +1364,7 @@ public class Mailbox {
                         if (conn != null)
                             conn.rollback();
                         if (data != null)
-                            DbMailbox.clearMailboxContent(data.id);
+                            DbMailbox.clearMailboxContent(data.id, data.schemaGroupId);
                     }
                 } finally {
                     if (conn != null)
@@ -1522,12 +1530,12 @@ public class Mailbox {
                 // remove all the relevant entries from the database
                 Connection conn = getOperationConnection();
                 if (DebugConfig.enableMailboxGroup) {
-                    DbMailbox.clearMailboxContent(getId());
+                    DbMailbox.clearMailboxContent(this);
                     DbMailbox.deleteMailbox(conn, this);
                 } else {
                     // Preserve original order of code with old schema.
                     DbMailbox.deleteMailbox(conn, this);
-                    DbMailbox.clearMailboxContent(getId());
+                    DbMailbox.clearMailboxContent(this);
                 }
 
                 success = true;
@@ -1647,7 +1655,7 @@ public class Mailbox {
                     }
 
                     DbSearchConstraints c = new DbSearchConstraints();
-                    c.mailboxId = this.getId();
+                    c.mailbox = this;
                     c.sort = DbMailItem.SORT_BY_DATE;
 
                     msgs = DbMailItem.search(getOperationConnection(), c);

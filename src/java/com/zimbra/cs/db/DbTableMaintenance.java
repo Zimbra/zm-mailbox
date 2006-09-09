@@ -100,7 +100,7 @@ public class DbTableMaintenance {
             int id = mailboxIds[i];
             Mailbox mbox = Mailbox.getMailboxById(id);
             MailboxLock lock = null;
-            String dbName = DbMailbox.getDatabaseName(id);
+            String dbName = DbMailbox.getDatabaseName(mbox);
             DbResults results = DbUtil.executeQuery("SHOW TABLE STATUS FROM `" + dbName + "`");
             
             try {
@@ -186,7 +186,7 @@ public class DbTableMaintenance {
     
     private static boolean maintainTable(Mailbox mbox, String tableName, int numRows)
     throws ServiceException {
-        String dbName = DbMailbox.getDatabaseName(mbox.getId());
+        String dbName = DbMailbox.getDatabaseName(mbox);
         
         Connection conn = null;
         PreparedStatement stmt = null;

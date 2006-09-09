@@ -56,7 +56,7 @@ public class TestAccount extends TestCase {
     throws Exception {
         cleanUp();
         
-        Map attrs = new HashMap();
+        Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put("zimbraMailHost", LC.zimbra_server_hostname.value());
         attrs.put("cn", "TestAccount");
         attrs.put("displayName", "TestAccount unit test user");
@@ -75,7 +75,7 @@ public class TestAccount extends TestCase {
         // Get the account and mailbox
         Account account = TestUtil.getAccount(USER_NAME);
         Mailbox mbox = Mailbox.getMailboxByAccount(account);
-        String dbName = DbMailbox.getDatabaseName(mbox.getId());
+        String dbName = DbMailbox.getDatabaseName(mbox);
         ZimbraLog.test.debug("Account=" + account.getId() + ", mbox=" + mbox.getId());
         
         // Confirm that the mailbox database exists

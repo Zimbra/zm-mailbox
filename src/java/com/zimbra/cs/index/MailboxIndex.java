@@ -1382,15 +1382,12 @@ public final class MailboxIndex
         Connection conn = null;
         conn = DbPool.getConnection();
         
-        DbSearchConstraints c = new DbSearchConstraints();
-        
-        c.mailboxId = mMailboxId;
-        c.sort = DbMailItem.SORT_BY_DATE;
-        
-        Collection msgs = DbMailItem.search(conn, c);
-        
         Mailbox mbx = Mailbox.getMailboxById(mMailboxId);
-        
+        DbSearchConstraints c = new DbSearchConstraints();        
+        c.mailbox = mbx;
+        c.sort = DbMailItem.SORT_BY_DATE;        
+        Collection msgs = DbMailItem.search(conn, c);
+
         try {
             deleteIndex();
 
@@ -1420,8 +1417,7 @@ public final class MailboxIndex
                         
                         // force the pm's received-date to be the correct one
                         long msgDate = ((Long)sr.sortkey).longValue();
-                        Mailbox mbox = Mailbox.getMailboxById(mMailboxId);
-                        pm = new ParsedMessage(msg.getMimeMessage(), msgDate, mbox.attachmentsIndexingEnabled());
+                        pm = new ParsedMessage(msg.getMimeMessage(), msgDate, mbx.attachmentsIndexingEnabled());
                         
                         split = System.currentTimeMillis();
                         parseMsgTime += (split - s);
@@ -1661,6 +1657,7 @@ public final class MailboxIndex
         
         Connection conn = null;
         conn = DbPool.getConnection();
+        Mailbox mbox = Mailbox.getMailboxById(mMailboxId);
         
         
         ///////////////////////////////
@@ -1670,7 +1667,7 @@ public final class MailboxIndex
         {
             DbSearchConstraints c = new DbSearchConstraints();
             
-            c.mailboxId = mMailboxId;
+            c.mailbox = mbox;
             c.sort = DbMailItem.SORT_BY_DATE;
             c.types = new HashSet<Byte>();
             c.types.add(MailItem.TYPE_CONTACT); 
@@ -1711,7 +1708,7 @@ public final class MailboxIndex
             // SORT_BY__DATE_ASC
             DbSearchConstraints c = new DbSearchConstraints();
             
-            c.mailboxId = mMailboxId;
+            c.mailbox = mbox;
             c.sort = DbMailItem.SORT_BY_DATE | DbMailItem.SORT_ASCENDING;
             c.types = new HashSet<Byte>();
             c.types.add(MailItem.TYPE_CONTACT); 
@@ -1756,7 +1753,7 @@ public final class MailboxIndex
             // SORT_BY__DATE_ASC
             DbSearchConstraints c = new DbSearchConstraints();
             
-            c.mailboxId = mMailboxId;
+            c.mailbox = mbox;
             c.sort = DbMailItem.SORT_BY_DATE | DbMailItem.SORT_DESCENDING;
             
             c.types = new HashSet<Byte>();

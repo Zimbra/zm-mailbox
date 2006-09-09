@@ -44,9 +44,32 @@ public class MetadataDump {
         return "Usage: MetadataDump <mailbox ID> <mail item ID>";
     }
 
-    private static String getSQL(int mboxId, int itemId) {
-        StringBuilder sql = new StringBuilder("SELECT metadata from ");
-        sql.append(DbMailItem.getMailItemTableName(mboxId));
+    private static int getMailboxGroup(Connection conn, int mboxId)
+    throws SQLException, ServiceException {
+        int gid = 0;
+        if (DebugConfig.enableMailboxGroup) {
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+            try {
+                stmt = conn.prepareStatement(
+                        "SELECT group_id FROM mailbox WHERE id = ?");
+                stmt.setInt(1, mboxId);
+                rs = stmt.executeQuery();
+                if (rs.next())
+                    gid = rs.getInt(1);
+            } finally {
+                if (rs != null)
+                    rs.close();
+                if (stmt != null)
+                    stmt.close();
+            }
+        }
+        return gid;
+    }
+
+    private static String getSQL(int mboxId, int groupId, int itemId) {
+        StringBuilder sql = new StringBuilder("SELECT metadata FROM "); 
+        sql.append(DbMailItem.getMailItemTableName(mboxId, groupId));
         sql.append(" WHERE ");
         if (DebugConfig.enableMailboxGroup)
             sql.append("mailbox_id = ").append(mboxId).append(" AND ");
@@ -61,7 +84,8 @@ public class MetadataDump {
         ResultSet rs = null;
         try {
             conn = DbPool.getConnection();
-            stmt = conn.prepareStatement(getSQL(mboxId, itemId));
+            int gid = getMailboxGroup(conn, mboxId);
+            stmt = conn.prepareStatement(getSQL(mboxId, gid, itemId));
             rs = stmt.executeQuery();
 
             if (!rs.next())
