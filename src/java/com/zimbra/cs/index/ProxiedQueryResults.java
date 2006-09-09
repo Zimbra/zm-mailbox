@@ -36,7 +36,9 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ParseMailboxID;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
+import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapProtocol;
 import com.zimbra.soap.SoapTransport;
@@ -224,6 +226,18 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         toRet.setTargetAcctId(mTargetAcctId);
         return toRet;
     }
+    
+    public String toString() {
+        String url;
+        try {
+            Server server = Provisioning.getInstance().get(ServerBy.name, mServer);
+            url = URLUtil.getAdminURL(server);
+        } catch (ServiceException ex) {
+            url = mServer; 
+        }
+        
+        return "ProxiedQueryResults(url="+url+", acctId="+mTargetAcctId+")";
+    }
 
     /**
      * Always does a request -- caller is responsible for checking to see if this is necessary or not
@@ -285,7 +299,22 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
 
             // call the remote server now!
             transp.setSoapProtocol(searchElt instanceof Element.JavaScriptElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12);
-            Element searchResp = transp.invokeWithoutSession(searchElt);
+            Element searchResp  = null;            
+            try {
+                if (ZimbraLog.index.isInfoEnabled()) ZimbraLog.index.info("Fetching remote search results from "+transp.toString());
+                
+                searchResp = transp.invokeWithoutSession(searchElt);
+            } catch (SoapFaultException ex) {
+                ZimbraLog.index.warn("Unable to ("+ex.toString()+") fetch search results from remote server "+transp.toString());
+                mAtEndOfList = true;
+                mBufferEndOffset = mIterOffset;
+                return false;
+            } catch (java.net.ConnectException ex) {
+                ZimbraLog.index.warn("Unable to ("+ex.toString()+") fetch search results from remote server "+transp.toString());
+                mAtEndOfList = true;
+                mBufferEndOffset = mIterOffset;
+                return false;
+            }
 
 
             int hitOffset = (int) searchResp.getAttributeLong(MailService.A_QUERY_OFFSET);
