@@ -76,6 +76,6 @@
     <value>false</value>
   </key>
   <key name="debug_mailbox_group_size">
-    <value>2</value>
+    <value>1</value>
   </key>
 </localconfig>
