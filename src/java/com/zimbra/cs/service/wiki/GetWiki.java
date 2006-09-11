@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.service.wiki;
 
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.Map;
 
@@ -110,8 +111,13 @@ public class GetWiki extends WikiDocumentHandler {
         } else {
         	Document.DocumentRevision revision = (rev > 0) ? wikiItem.getRevision(rev) : wikiItem.getLastRevision(); 
         	try {
-        		byte[] raw = ByteUtil.getContent(revision.getContent(), 0);
-        		wikiElem.addAttribute(MailService.A_BODY, new String(raw, "UTF-8"), Element.DISP_CONTENT);
+        		InputStream is = revision.getContent();
+        		// when the revisions get pruned after each save, the contents of
+        		// old revision is gone, and revision.getContent() returns null.
+        		if (is != null) {
+        			byte[] raw = ByteUtil.getContent(is, 0);
+        			wikiElem.addAttribute(MailService.A_BODY, new String(raw, "UTF-8"), Element.DISP_CONTENT);
+        		}
         	} catch (IOException ioe) {
         		ZimbraLog.wiki.error("cannot read the wiki message body", ioe);
         		throw WikiServiceException.CANNOT_READ(wikiItem.getWikiWord());
