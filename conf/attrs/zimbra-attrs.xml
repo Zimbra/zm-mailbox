@@ -1748,6 +1748,26 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="388" name="zimbraHttpProxyURL" type="astring" max="512" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
   <desc>the http proxy URL to connect to when making outgoing connections (Zimlet proxy, RSS/ATOM feeds, etc)</desc>
 </attr>
-  
+
+<attr id="389" name="zimbraPasswordMinUpperCaseChars" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>minimum number of upper case characters required in a password</desc>
+</attr>
+
+<attr id="390" name="zimbraPasswordMinLowerCaseChars" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>minimum number of lower case characters required in a password</desc>
+</attr>
+
+<attr id="391" name="zimbraPasswordMinPunctuationChars" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>minimum number of ascii punctuation characters required in a password</desc>
+</attr>
+
+<attr id="392" name="zimbraPasswordMinNumericChars" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>minimum number of numeric characters required in a password</desc>
+</attr>
+
 </attrs>
   

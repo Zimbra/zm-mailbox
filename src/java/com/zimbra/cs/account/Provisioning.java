@@ -611,6 +611,26 @@ public abstract class Provisioning {
     public static final String A_zimbraPasswordMaxLength = "zimbraPasswordMaxLength";
 
     /**
+     * minimum number of upper case characters required in a password
+     */
+    public static final String A_zimbraPasswordMinUpperCaseChars = "zimbraPasswordMinUpperCaseChars";
+
+    /**
+     * minimum number of lower case characters required in a password
+     */
+    public static final String A_zimbraPasswordMinLowerCaseChars = "zimbraPasswordMinLowerCaseChars";
+
+    /**
+     * minimum number of punctuation characters required in a password
+     */
+    public static final String A_zimbraPasswordMinPunctuationChars = "zimbraPasswordMinPunctuationChars";
+
+    /**
+     * minimum number of numeric characters required in a password
+     */
+    public static final String A_zimbraPasswordMinNumericChars = "zimbraPasswordMinNumericChars";
+    
+    /**
      * minimum password lifetime in days. 0 means no limit.
      */
     public static final String A_zimbraPasswordMinAge = "zimbraPasswordMinAge";

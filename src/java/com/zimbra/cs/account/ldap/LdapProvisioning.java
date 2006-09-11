@@ -2557,10 +2557,13 @@ public class LdapProvisioning extends Provisioning {
         setPassword(acct, newPassword, false);
     }
 
-    private int getInt(Attributes attrs, String name, int defaultValue) throws NamingException {
+    private int getInt(Account acct, Cos cos, Attributes attrs, String name, int defaultValue) throws NamingException {
+        if (acct != null)
+            return acct.getIntAttr(name, defaultValue);
+        
         String v = LdapUtil.getAttrString(attrs, name);
         if (v == null)
-            return defaultValue;
+            return cos.getIntAttr(name, defaultValue);
         else {
             try {
                 return Integer.parseInt(v);
@@ -2570,23 +2573,67 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
+    
+    /**
+     * called to check password strength. Should pass in either an Account, or Cos/Attributes (during creation).
+     * 
+     * @param password
+     * @param acct
+     * @param cos
+     * @param attrs
+     * @throws ServiceException
+     */
+    private void checkPasswordStrength(String password, Account acct, Cos cos, Attributes attrs) throws ServiceException {
+        try {
+            int minLength = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinLength, 0);
+            if (minLength > 0 && password.length() < minLength)
+                throw AccountServiceException.INVALID_PASSWORD("too short");
+
+            int maxLength = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMaxLength, 0);        
+            if (maxLength > 0 && password.length() > maxLength)
+                throw AccountServiceException.INVALID_PASSWORD("too long");
+            
+            int minUpperCase = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinUpperCaseChars, 0);
+            int minLowerCase = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinLowerCaseChars, 0);
+            int minPunctuation = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinPunctuationChars, 0);
+            int minNumeric = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinNumericChars, 0);
+            
+            if (minUpperCase > 0 || minLowerCase > 0 || minPunctuation > 0 || minNumeric > 0) {
+                int upper=0, lower=0, punctuation = 0, numeric = 0;
+                for (int i=0; i < password.length(); i++) {
+                    int ch = password.charAt(i);
+                    if (Character.isUpperCase(ch)) upper++;
+                    else if (Character.isLowerCase(ch)) lower++;
+                    else if (Character.isDigit(ch)) numeric++;
+                    else if (isAsciiPunc(ch)) numeric++;
+                }
+                
+                if (upper < minUpperCase) throw AccountServiceException.INVALID_PASSWORD("not enough upper case characters");
+                if (lower < minLowerCase) throw AccountServiceException.INVALID_PASSWORD("not enough lower case characters");
+                if (numeric < minNumeric) throw AccountServiceException.INVALID_PASSWORD("not enough numeric characters");
+                if (punctuation < minPunctuation) throw AccountServiceException.INVALID_PASSWORD("not enough punctuation characters");                
+            }
+            
+        } catch (NamingException ne) {
+            throw ServiceException.FAILURE(ne.getMessage(), ne);
+        }
+    }
+
+    private boolean isAsciiPunc(int ch) {
+        return 
+            (ch >= 33 && ch <= 47) || // ! " # $ % & ' ( ) * + , - . /
+            (ch >= 58 && ch <= 64) || // : ; < = > ? @ 
+            (ch >= 91 && ch <= 96) || // [ \ ] ^ _ ` 
+            (ch >=123 && ch <= 126);  // { | } ~ 
+    }
+
     // called by create account
-    private void setInitialPassword(Cos cos, Attributes attrs, String newPassword) throws AccountServiceException, NamingException {
+    private void setInitialPassword(Cos cos, Attributes attrs, String newPassword) throws ServiceException, NamingException {
         String userPassword = LdapUtil.getAttrString(attrs, Provisioning.A_userPassword);
         if (userPassword == null && (newPassword == null || "".equals(newPassword))) return;
 
         if (userPassword == null) {
-            int minLength = getInt(attrs, Provisioning.A_zimbraPasswordMinLength, -1);
-            if (minLength == -1) minLength = cos != null ? cos.getIntAttr(Provisioning.A_zimbraPasswordMinLength, 0) : 0;
-
-            if (minLength > 0 && newPassword.length() < minLength)
-                throw AccountServiceException.INVALID_PASSWORD("too short");
-        
-            int maxLength = getInt(attrs, Provisioning.A_zimbraPasswordMaxLength, -1);
-            if (maxLength == -1) maxLength = cos != null ? cos.getIntAttr(Provisioning.A_zimbraPasswordMaxLength, 0) : 0;
-        
-            if (maxLength > 0 && newPassword.length() > maxLength)
-                throw AccountServiceException.INVALID_PASSWORD("too long");
+            checkPasswordStrength(newPassword, null, cos, attrs);
             userPassword = LdapUtil.generateSSHA(newPassword, null);
         }
         attrs.put(Provisioning.A_userPassword, userPassword);
@@ -2599,13 +2646,7 @@ public class LdapProvisioning extends Provisioning {
     void setPassword(Account acct, String newPassword, boolean enforcePolicy) throws ServiceException {
 
         if (enforcePolicy) {
-            int minLength = acct.getIntAttr(Provisioning.A_zimbraPasswordMinLength, 0);
-            if (minLength > 0 && newPassword.length() < minLength)
-                throw AccountServiceException.INVALID_PASSWORD("too short");
-            int maxLength = acct.getIntAttr(Provisioning.A_zimbraPasswordMaxLength, 0);        
-            if (maxLength > 0 && newPassword.length() > maxLength)
-                throw AccountServiceException.INVALID_PASSWORD("too long");
-
+            checkPasswordStrength(newPassword, acct, null, null);
             int minAge = acct.getIntAttr(Provisioning.A_zimbraPasswordMinAge, 0);
             if (minAge > 0) {
                 Date lastChange = acct.getGeneralizedTimeAttr(Provisioning.A_zimbraPasswordModifiedTime, null);
