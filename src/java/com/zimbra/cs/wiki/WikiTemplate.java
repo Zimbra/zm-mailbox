@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -50,13 +51,16 @@ import com.zimbra.cs.wiki.Wiki.WikiUrl;
  * the context the wiklet is run (privilege of the requestor, location of
  * the requested page, location of the page referred by the wiklet).
  * 
- * Each parsed templates are cached in the class <code>WikiTemplateStore</code>.
+ * Each parsed templates are cached in the class <code>Wiki</code>.
  * 
  * @author jylee
  *
  */
 public class WikiTemplate implements Comparable<WikiTemplate> {
-	
+
+	public static WikiTemplate getDefaultTOC() {
+		return new WikiTemplate("{{TOC}}");
+	}
 	public WikiTemplate(String item, String id, String key, String name) {
 		this(item);
 		StringBuilder buf = new StringBuilder();
@@ -75,12 +79,10 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		touch();
 	}
 	
-	private static PageCache sCache = new PageCache();
-	
 	public static WikiTemplate findTemplate(Context ctxt, String name)
 	throws IOException,ServiceException {
-    	WikiTemplateStore ts = WikiTemplateStore.getInstance(ctxt.item);
-    	return ts.getTemplate(ctxt.wctxt, name);
+    	Wiki wiki = Wiki.getInstance(ctxt.wctxt, ctxt.item);
+    	return wiki.getTemplate(ctxt.wctxt, name);
 	}
 	
 	public String toString(WikiContext ctxt, MailItem item)
@@ -92,6 +94,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		if (!mParsed) {
 			parse();
 		}
+
 		StringBuffer buf = new StringBuffer();
 		for (Token tok : mTokens) {
 			ctxt.token = tok;
@@ -116,35 +119,19 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	
 	public String getComposedPage(Context ctxt, String chrome)
 	throws ServiceException, IOException {
-		WikiTemplateStore ts = WikiTemplateStore.getInstance(ctxt.item);
-		WikiTemplate chromeTemplate = ts.getTemplate(ctxt.wctxt, chrome);
-		String templateVal = sCache.getPage(ctxt, chromeTemplate);
-		if (templateVal == null || chromeTemplate.isExpired(ctxt)) {
-			ZimbraLog.wiki.debug("reloading wiki template " + ctxt.item.getSubject());
-			if (ctxt.item instanceof WikiItem)
-				templateVal = chromeTemplate.toString(ctxt);
-			else {
-				String inner = toString(ctxt);
-				ctxt.content = inner;
-				templateVal = chromeTemplate.toString(ctxt);
-			}
-			sCache.addPage(ctxt, chromeTemplate, templateVal);
+		Wiki wiki = Wiki.getInstance(ctxt.wctxt, ctxt.item);
+		WikiTemplate chromeTemplate = wiki.getTemplate(ctxt.wctxt, chrome);
+		String templateVal;
+
+		if (ctxt.item instanceof WikiItem)
+			templateVal = chromeTemplate.toString(ctxt);
+		else {
+			String inner = toString(ctxt);
+			ctxt.content = inner;
+			templateVal = chromeTemplate.toString(ctxt);
 		}
+
 		return templateVal;
-	}
-	
-	public boolean isExpired(Context ctxt) throws ServiceException, IOException {
-		for (Token tok : mTokens) {
-			if (tok.getType() == Token.TokenType.TEXT)
-				continue;
-			ctxt.token = tok;
-			Wiklet w = Wiklet.get(tok);
-			if (w != null && w.isExpired(this, ctxt)) {
-				ZimbraLog.wiki.debug("failed validation " + ctxt.item.getSubject() + " because of " + tok);
-				return true;
-			}
-		}
-		return false;
 	}
 	
 	public void parse() {
@@ -162,6 +149,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	}
 
 	public void getInclusions(Context ctxt, List<WikiTemplate> inclusions) {
+		parse();
 		for (Token tok : mTokens) {
 			if (tok.getType() == Token.TokenType.TEXT)
 				continue;
@@ -356,7 +344,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public abstract String getName();
 		public abstract String getPattern();
 		public abstract String apply(Context ctxt) throws ServiceException,IOException;
-		public abstract boolean isExpired(WikiTemplate template, Context ctxt) throws ServiceException,IOException;
 		public abstract WikiTemplate findInclusion(Context ctxt) throws ServiceException,IOException;
 		public String reportError(String errorMsg) {
 			String msg = "Error handling wiklet " + getName() + ": " + errorMsg;
@@ -399,6 +386,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			addWiklet(new IncludeWiklet());
 			addWiklet(new InlineWiklet());
 			addWiklet(new WikilinkWiklet());
+			addWiklet(new UrlWiklet());
 		}
 		
 		private static void addWiklet(Wiklet w) {
@@ -471,9 +459,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public String getPattern() {
 			return "TOC";
 		}
-		public boolean isExpired(WikiTemplate template, Context ctxt) {
-			return true;  // always generate fresh TOC.
-		}
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
@@ -509,7 +494,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
         		buf.append(">");
         	}
 	    	Mailbox mbox = ctxt.item.getMailbox();
-            for (Document doc : mbox.getWikiList(ctxt.wctxt.octxt, folder.getId())) {
+            for (Document doc : mbox.getWikiList(ctxt.wctxt.octxt, folder.getId(), (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING))) {
             	buf.append("<");
         		buf.append(sTAGS[sINNER][style]);
             	buf.append(" class='zmwiki-pageLink'>");
@@ -540,9 +525,9 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	    	
 	    	Mailbox mbox = ctxt.item.getMailbox();
 	    	if (ctxt.wctxt.view == null)
-	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.TYPE_WIKI, folder.getId()));
+	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.TYPE_WIKI, folder.getId(), (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING)));
 	    	else
-	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.getTypeForName(ctxt.wctxt.view), folder.getId()));
+	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.getTypeForName(ctxt.wctxt.view), folder.getId(), (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING)));
 
 			String bt = params.get(sBODYTEMPLATE);
 			String it = params.get(sITEMTEMPLATE);
@@ -584,9 +569,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 		public String getPattern() {
 			return "PATH";
-		}
-		public boolean isExpired(WikiTemplate template, Context ctxt) {
-			return false;
 		}
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
@@ -652,9 +634,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public String getPattern() {
 			return "ICON";
 		}
-		public boolean isExpired(WikiTemplate template, Context ctxt) {
-			return false;
-		}
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
@@ -672,9 +651,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 		public String getPattern() {
 			return "NAME";
-		}
-		public boolean isExpired(WikiTemplate template, Context ctxt) {
-			return false;
 		}
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
@@ -695,9 +671,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public String getPattern() {
 			return "FRAGMENT";
 		}
-		public boolean isExpired(WikiTemplate template, Context ctxt) {
-			return false;
-		}
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
@@ -715,9 +688,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public String getPattern() {
 			return "Creator";
 		}
-		public boolean isExpired(WikiTemplate template, Context ctxt) {
-			return false;
-		}
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
@@ -734,9 +704,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 		public String getPattern() {
 			return "MODIFIER";
-		}
-		public boolean isExpired(WikiTemplate template, Context ctxt) {
-			return false;
 		}
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
@@ -784,10 +751,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			sFORMATS.put(sMEDIUMDATETIME, DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM));
 			sFORMATS.put(sLONGDATETIME,   DateFormat.getDateTimeInstance(DateFormat.LONG,   DateFormat.LONG));
 			sFORMATS.put(sFULLDATETIME,   DateFormat.getDateTimeInstance(DateFormat.FULL,   DateFormat.FULL));
-		}
-		
-		public boolean isExpired(WikiTemplate template, Context ctxt) {
-			return false;
 		}
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
@@ -844,9 +807,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public String getPattern() {
 			return "VERSION";
 		}
-		public boolean isExpired(WikiTemplate template, Context ctxt) {
-			return false;
-		}
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
@@ -867,18 +827,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public WikiTemplate findInclusion(Context ctxt) throws ServiceException, IOException {
 			WikiItem wiki = (WikiItem) ctxt.item;
 			return WikiTemplate.findTemplate(ctxt, wiki.getWikiWord());
-		}
-		public boolean isExpired(WikiTemplate template, Context ctxt) throws ServiceException, IOException {
-			if (ctxt.content == null) {
-				if (!(ctxt.item instanceof WikiItem))
-					return true;
-				WikiItem wiki = (WikiItem) ctxt.item;
-				WikiTemplate t = WikiTemplate.findTemplate(ctxt, wiki.getWikiWord());
-				if (t.getModifiedTime() > template.getModifiedTime())
-					return true;
-				return t.isExpired(ctxt);
-			}
-			return false;
 		}
 		public String apply(Context ctxt) throws ServiceException, IOException {
 			if (ctxt.content != null)
@@ -912,14 +860,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			}
 			return WikiTemplate.findTemplate(ctxt, page);
 		}
-		public boolean isExpired(WikiTemplate template, Context ctxt) throws ServiceException, IOException {
-			try {
-				WikiTemplate includedTemplate = findInclusion(ctxt);
-				return includedTemplate.getModifiedTime() > template.getModifiedTime();
-			} catch (Exception e) {
-				return false;
-			}
-		}
 		public String apply(Context ctxt) throws ServiceException, IOException {
 			try {
 				WikiTemplate template = findInclusion(ctxt);
@@ -938,9 +878,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 		public String getPattern() {
 			return "WIKILINK";
-		}
-		public boolean isExpired(WikiTemplate template, Context ctxt) {
-			return false;
 		}
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
@@ -987,6 +924,32 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				return buf.toString();
 			} catch (Exception e) {
 				return "<!-- invalid wiki url "+link+" -->" + title;
+			}
+		}
+	}
+	public static class UrlWiklet extends Wiklet {
+		public String getName() {
+			return "Url";
+		}
+		public String getPattern() {
+			return "URL";
+		}
+		public WikiTemplate findInclusion(Context ctxt) {
+			return null;
+		}
+		public String apply(Context ctxt) throws ServiceException, IOException {
+			if (ctxt.item == null)
+				return "<!-- cannot resolve item for url wiklet -->";
+			String title = ctxt.item.getSubject();
+			WikiUrl wurl = new WikiUrl(ctxt.item);
+			try {
+				StringBuffer buf = new StringBuffer();
+				buf.append("<a href='");
+				buf.append(wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId()));
+				buf.append("'>").append(title).append("</a>");
+				return buf.toString();
+			} catch (Exception e) {
+				return "<!-- cannot generate URL for item "+title+" -->" + title;
 			}
 		}
 	}

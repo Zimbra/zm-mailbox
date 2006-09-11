@@ -843,17 +843,22 @@ public class UserServlet extends ZimbraServlet {
             for (Map.Entry<String, String> param : params.entrySet())
                 url.append('&').append(param.getKey()).append('=').append(param.getValue());
         }
-
-        // create an HTTP client with the same cookies
-        HttpState state = new HttpState();
+        
         try {
-            state.addCookie(new org.apache.commons.httpclient.Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, auth.getEncoded(), "/", null, false));
+            return getRemoteResource(auth.getEncoded(), hostname, url.toString());
         } catch (AuthTokenException ate) {
             throw ServiceException.PROXY_ERROR(ate, url.toString());
         }
+    }
+    
+    public static byte[] getRemoteResource(String auth, String hostname, String url) throws ServiceException {
+
+        // create an HTTP client with the same cookies
+        HttpState state = new HttpState();
+        state.addCookie(new org.apache.commons.httpclient.Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, auth, "/", null, false));
         HttpClient client = new HttpClient();
         client.setState(state);
-        GetMethod get = new GetMethod(url.toString());
+        GetMethod get = new GetMethod(url);
         try {
             int statusCode = client.executeMethod(get);
             if (statusCode != HttpStatus.SC_OK)

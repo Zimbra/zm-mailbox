@@ -24,16 +24,15 @@
  */
 package com.zimbra.cs.wiki;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.apache.commons.collections.map.LRUMap;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.wiki.WikiTemplate.Context;
+import com.zimbra.cs.util.Pair;
+import com.zimbra.cs.wiki.Wiki.WikiContext;
 
 /**
  * Cache for the composited Wiki / Notebook pages.  Each pages are fully
@@ -53,6 +52,7 @@ import com.zimbra.cs.wiki.WikiTemplate.Context;
  */
 public class PageCache {
 	private static final int DEFAULT_CACHE_SIZE = 10240;
+	private static final int TTL = 10 * 60 * 1000;  // 10 min
 	private LRUMap mCache;
 	private static final String SEP = ":";
 	
@@ -71,25 +71,35 @@ public class PageCache {
 		mCache = new LRUMap(cacheSize);
 	}
 	
-	public synchronized void addPage(Context ctxt, WikiTemplate template, String page) {
-		String key = generateKey(ctxt, template);
-		mCache.put(key, page);
+	public synchronized void addPage(String key, String page) {
+		Pair<Long,String> v = new Pair<Long,String>(getExpirationTime(), page);
+		mCache.put(key, v);
 	}
 	
-	public synchronized String getPage(Context ctxt, WikiTemplate template) {
-		String key = generateKey(ctxt, template);
-		return (String)mCache.get(key);
+	private long getExpirationTime() {
+		return System.currentTimeMillis() + TTL;
 	}
 	
-	private String generateKey(Context ctxt, WikiTemplate template) {
-		List<WikiTemplate> inclusions = new ArrayList<WikiTemplate>();
-		template.getInclusions(ctxt, inclusions);
-		Collections.sort(inclusions);
-		StringBuilder name = new StringBuilder();
-		name.append(template.getId()).append(SEP);
-		for (WikiTemplate t : inclusions) {
-			name.append(t.getId()).append(SEP);
+	public synchronized String getPage(String key) {
+		Pair v = (Pair)mCache.get(key);
+		if (v != null && (Long)v.getFirst() < System.currentTimeMillis()) {
+			mCache.remove(key);
+			v = null;
 		}
-		return name.toString();
+		if (v == null)
+			return null;
+		return (String)v.getSecond();
+	}
+	
+	public String generateKey(WikiContext ctxt, MailItem item) {
+		Account user = ctxt.octxt.getAuthenticatedUser();
+		String auth;
+		if (user == null)
+			auth = "guest";
+		else
+			auth = user.getId();
+		StringBuilder buf = new StringBuilder();
+		buf.append(auth).append(SEP).append(item.getMailboxId()).append(SEP).append(item.getId());
+		return buf.toString();
 	}
 }

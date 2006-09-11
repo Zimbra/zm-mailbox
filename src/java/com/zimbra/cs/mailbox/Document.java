@@ -30,6 +30,7 @@ package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Indexer;
@@ -293,6 +294,24 @@ public class Document extends MailItem {
     private static final String CN_EDITOR    = "edited_by";
     private static final String CN_VERSION   = "version";
 
+    /*
+     * Search the sorted List of Documents for the one that matches
+     * the subject.
+     */
+    public static int binarySearch(List<Document> docList, String subject) {
+    	int low = 0, high = docList.size() - 1;
+    	while (low <= high) {
+    		int mid = (low + high) >>> 1;
+    		int compared = docList.get(mid).getSubject().compareToIgnoreCase(subject);
+    		if (compared == 0)
+    			return mid;
+    		else if (compared < 0)
+    			low = mid + 1;
+    		else high = mid - 1;
+    	}
+    	return -1;
+    }
+    
     @Override 
     public String toString() {
         StringBuffer sb = new StringBuffer();

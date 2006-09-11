@@ -1334,6 +1334,7 @@ public class ToXML {
     }
     public static Element encodeWikiPage(Element parent, WikiPage page) {
         Element m = parent.addElement(MailService.E_WIKIWORD);
+        m.addAttribute(MailService.A_NAME, page.getWikiWord());
         m.addAttribute(MailService.A_ID, page.getId());
         m.addAttribute(MailService.A_REST_URL, page.getRestUrl());
         //m.addAttribute(MailService.A_SIZE, page.getSize());
