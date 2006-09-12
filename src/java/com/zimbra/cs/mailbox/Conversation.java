@@ -450,6 +450,9 @@ public class Conversation extends MailItem {
             if (msg.isTagged(tag) != add && msg.checkChangeID() &&
                     TargetConstraint.checkItem(tcon, msg) &&
                     msg.canAccess(ACL.RIGHT_WRITE)) {
+                // don't let the user tag things as "has attachments" or "draft"
+                if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
+                    throw MailServiceException.CANNOT_TAG(tag, msg);
                 // since we're adding/removing a tag, the tag's unread count may change
             	if (tag.trackUnread() && msg.isUnread())
                     tag.updateUnread(add ? 1 : -1);

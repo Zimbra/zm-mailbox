@@ -1051,9 +1051,14 @@ public abstract class MailItem implements Comparable {
             throw ServiceException.FAILURE("unread state must be set with alterUnread", null);
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
+
         // detect NOOPs and bail
         if (add == isTagged(tag))
             return;
+        // don't let the user tag things as "has attachments" or "draft"
+        if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
+            throw MailServiceException.CANNOT_TAG(tag, this);
+
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
 
         // change our cached tags

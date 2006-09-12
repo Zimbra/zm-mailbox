@@ -3584,9 +3584,6 @@ public class Mailbox {
                     item.alterUnread(addTag);
                 } else {
                     Tag tag = (tagId < 0 ? getFlagById(tagId) : getTagById(tagId));
-                    // don't let the user tag things as "has attachments" or "draft"
-                    if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
-                        throw MailServiceException.CANNOT_TAG(tag, item);
                     item.alterTag(tag, addTag);
                 }
             }
