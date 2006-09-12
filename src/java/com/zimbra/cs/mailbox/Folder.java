@@ -631,13 +631,17 @@ public class Folder extends MailItem {
         RuleManager rm = RuleManager.getInstance();
         String rules = rm.getRules(account);
         if (rules != null) {
-            // Assume that we always put quotes around folder paths
+            // Assume that we always put quotes around folder paths.  Replace
+            // any paths that start with this folder's original path.  This will
+            // take care of rules for children affected by a parent's move or rename.
             String newPath = getPath();
-            String newRules = rules.replace("\"" + originalPath + "\"", "\"" + newPath + "\"");
-            rm.setRules(account, newRules);
-            ZimbraLog.mailbox.debug(
-                "Updated filter rules due to folder move or rename.  Old rules:\n" +
-                rules + ", new rules:\n" + newRules);
+            String newRules = rules.replace("\"" + originalPath, "\"" + newPath);
+            if (!newRules.equals(rules)) {
+                rm.setRules(account, newRules);
+                ZimbraLog.mailbox.debug(
+                    "Updated filter rules due to folder move or rename.  Old rules:\n" +
+                    rules + ", new rules:\n" + newRules);
+            }
         }
     }
 

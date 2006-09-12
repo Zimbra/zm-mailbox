@@ -4024,7 +4024,7 @@ public class Mailbox {
     public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte defaultView, int flags, byte color, String url)
     throws ServiceException {
         Folder.validateFolderName(name);
-        String path = getFolderById(parentId).getPath() + (parentId == ID_FOLDER_USER_ROOT ? "" : "/") + name;
+        String path = getFolderById(octxt, parentId).getPath() + (parentId == ID_FOLDER_USER_ROOT ? "" : "/") + name;
         return createFolder(octxt, path, (byte) 0, defaultView, flags, color, url);
     }
     public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView) throws ServiceException {

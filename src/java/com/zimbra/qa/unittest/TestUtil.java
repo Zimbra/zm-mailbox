@@ -60,6 +60,7 @@ import com.zimbra.soap.SoapFaultException;
  * @author bburtin
  */
 public class TestUtil {
+    
     public static Account getAccount(String userName)
     throws ServiceException {
         String address = getAddress(userName);
@@ -76,6 +77,12 @@ public class TestUtil {
         String domain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
         assert(domain != null && domain.length() > 0);
         return domain;
+    }
+    
+    public static Mailbox getMailbox(String userName)
+    throws ServiceException {
+        Account account = getAccount(userName);
+        return Mailbox.getMailboxByAccount(account);
     }
     
     public static String getAddress(String userName)
@@ -177,6 +184,7 @@ public class TestUtil {
         List<String> recipients = new ArrayList<String>();
         recipients.add(recipient);
         lmtp.sendMessage(message.getBytes(), recipients, sender, "TestUtil");
+        lmtp.close();
     }
     
     /**

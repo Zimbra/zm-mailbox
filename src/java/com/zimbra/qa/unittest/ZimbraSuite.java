@@ -67,6 +67,7 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestConversion.class));
         suite.addTest(new TestSuite(TestMailItem.class));
         suite.addTest(new TestSuite(TestConcurrency.class));
+        suite.addTest(new TestSuite(TestFolderFilterRules.class));
         
         synchronized (sAdditionalTests) {
             for (Test additional : sAdditionalTests) {
