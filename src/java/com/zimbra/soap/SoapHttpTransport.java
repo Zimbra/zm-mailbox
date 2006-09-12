@@ -53,6 +53,10 @@ public class SoapHttpTransport extends SoapTransport {
     private int mTimeout;
     private String mUri;
 	private HttpClient mClient;
+    
+    public String toString() { 
+        return "SoapHTTPTransport(uri="+mUri+")";
+    }
 
     /**
      * Create a new SoapHttpTransport object for the specified URI.
