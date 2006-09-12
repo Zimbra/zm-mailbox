@@ -42,6 +42,8 @@
 	<property name="src.dir" location="src" />
 	<property name="src.java.dir" location="${src.dir}/java" />
 	<property name="config.dir" location="conf" />
+	<property name="zimlet.dir" location="../Zimlet/build/dist" />
+	<property file="${zimlet.dir}/build.properties" />
 
 	<property name="deploy.war" value="${warfile}" />
 	<property name="deploy.host" value="localhost" />
@@ -55,8 +57,6 @@
 	<property name="tomcat.home.dir" location="${zimbra.home.dir}/tomcat" />
 
 	<property name="ical4j.jar" value="ical4j-0.9.16-patched.jar" />
-
-	<property name="zimlets" value="com_zimbra_phone,com_zimbra_url,com_zimbra_email,com_zimbra_date"/>
 
 	<property name="wiki.user.default" value="wiki" /><!-- global wiki account -->
 
@@ -128,14 +128,12 @@
 		<mkdir dir="${base.dir}/tomcat/conf"/>
 		<mkdir dir="${base.dir}/tomcat/webapps"/>
 		<mkdir dir="${base.dir}/wiki"/>
-		<mkdir dir="${base.dir}/zimlets"/>
 	</target>
 
 	<target name="build-init">
 		<mkdir dir="${build.classes.dir}"/>
 		<mkdir dir="${generated.java.dir}"/>
 		<mkdir dir="${build.dir}/wiki"/>
-		<mkdir dir="${build.dir}/zimlets"/>
 		<mkdir dir="${build.dir}/data"/>
 		<antcall target="make-dirs"><param name="base.dir" value="${dist.dir}"/></antcall>
 	</target>
@@ -348,9 +346,8 @@
 		<copy todir="${dist.dir}/db" overwrite="true"><fileset dir="${db.schema.dir}" includes="db.sql,create_database.sql"/></copy>
 		<copy todir="${dist.dir}/db" file="${build.dir}/versions-init.sql" overwrite="true"/>
 
-		<!-- wikis, zimlets -->
+		<!-- wikis -->
 		<copy todir="${dist.dir}/wiki" overwrite="true"><fileset dir="data/wiki" includes="**"/></copy>
-		<copy todir="${dist.dir}/zimlets" overwrite="true"><fileset dir="${build.dir}/zimlets"/></copy>
 	</target>
 
 	<target name="dev-dist-unix" if="is-unix">
@@ -721,8 +718,11 @@
 		</echo>
 	</target>
 
-	<target name="deploy-zimlets">
-		<foreach list="${zimlets}" target="install-zimlet" param="zimlet">
+	<target name="deploy-zimlets" if="dist.zimlet.dir">
+		<foreach target="install-zimlet" param="zimlet">
+			<path>
+				<fileset dir="${dist.zimlet.dir}" includes="**/*.zip"/>
+			</path>
 			<param name="action" value="deploy"/>
 		</foreach>
 	</target>
@@ -732,7 +732,7 @@
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-q" />
 			<arg line="${action}" />
-			<arg file="${config.dir}/zimlets/${zimlet}.zip" />
+			<arg file="${zimlet}" />
 		</java>
 	</target>
 	
