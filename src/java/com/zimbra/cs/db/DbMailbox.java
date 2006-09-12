@@ -72,7 +72,7 @@ public class DbMailbox {
         // Order must match the order of column definition in zimbra.mailbox
         // table in db.sql script.
         CI_ID = pos++;
-        if (DebugConfig.enableMailboxGroup)
+        if (!DebugConfig.disableMailboxGroup)
             CI_GROUP_ID = pos++;
         else
             CI_GROUP_ID = -1;
@@ -106,8 +106,8 @@ public class DbMailbox {
         try {
             boolean explicitId = (mailboxId != Mailbox.ID_AUTO_INCREMENT);
             String idSource = (explicitId ? "?" : "next_mailbox_id");
-            stmt = conn.prepareStatement("INSERT INTO mailbox(account_id, id, " + (DebugConfig.enableMailboxGroup ? "group_id, " : "") + "index_volume_id, item_id_checkpoint, comment)" +
-                                         " SELECT ?, " + idSource + (DebugConfig.enableMailboxGroup ? ", 0" : "") +", index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
+            stmt = conn.prepareStatement("INSERT INTO mailbox(account_id, id, " + (!DebugConfig.disableMailboxGroup ? "group_id, " : "") + "index_volume_id, item_id_checkpoint, comment)" +
+                                         " SELECT ?, " + idSource + (!DebugConfig.disableMailboxGroup ? ", 0" : "") +", index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?" +
                                          " FROM current_volumes ORDER BY index_volume_id LIMIT 1");
             int attr = 1;
             stmt.setString(attr++, accountId);
@@ -143,7 +143,7 @@ public class DbMailbox {
             stmt.close();
             stmt = null;
 
-            if (DebugConfig.enableMailboxGroup) {
+            if (!DebugConfig.disableMailboxGroup) {
                 ret.groupId = getMailboxGroupId(ret.id);
                 stmt = conn.prepareStatement("UPDATE mailbox SET group_id = ? WHERE id = ?");
                 stmt.setInt(1, ret.groupId);
@@ -178,7 +178,7 @@ public class DbMailbox {
         PreparedStatement stmt = null;
         try {
             conn = DbPool.getConnection();
-            if (DebugConfig.enableMailboxGroup && databaseExists(conn, mailboxId, groupId))
+            if (!DebugConfig.disableMailboxGroup && databaseExists(conn, mailboxId, groupId))
                 return;
 
             // Create the new database
@@ -295,7 +295,7 @@ public class DbMailbox {
 
     public static void clearMailboxContent(int mailboxId, int groupId)
     throws ServiceException {
-        if (DebugConfig.enableMailboxGroup)
+        if (!DebugConfig.disableMailboxGroup)
             dropMailboxFromGroup(mailboxId, groupId);
         else
             dropMailboxDatabase(mailboxId, groupId);
@@ -471,7 +471,7 @@ public class DbMailbox {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(
-                    "SELECT account_id, " + (DebugConfig.enableMailboxGroup ? "group_id, " : "") +
+                    "SELECT account_id, " + (!DebugConfig.disableMailboxGroup ? "group_id, " : "") +
                     "size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
                     " tracking_imap, index_volume_id " +
                     "FROM mailbox WHERE id = ?");
@@ -484,7 +484,7 @@ public class DbMailbox {
             Mailbox.MailboxData mbd = new Mailbox.MailboxData();
             mbd.id            = mailboxId;
             mbd.accountId     = rs.getString(pos++);
-            if (DebugConfig.enableMailboxGroup)
+            if (!DebugConfig.disableMailboxGroup)
                 mbd.schemaGroupId = rs.getInt(pos++);
             mbd.size          = rs.getLong(pos++);
             if (rs.wasNull())
@@ -554,12 +554,12 @@ public class DbMailbox {
 
     public static int getMailboxGroupId(int mailboxId) {
         int mboxPerGroup = DebugConfig.mailboxGroupSize;
-        return (mailboxId - 1) / DebugConfig.mailboxGroupSize + 1;
+        return (mailboxId - 1) / mboxPerGroup + 1;
     }
 
     /** @return the name of the database that contains tables for the specified <code>mailboxId</code>. */
     public static String getDatabaseName(int mailboxId, int groupId) {
-        if (DebugConfig.enableMailboxGroup)
+        if (!DebugConfig.disableMailboxGroup)
             return DB_PREFIX_MAILBOX_GROUP + groupId;
         else
             return DB_PREFIX_DB_PER_MAILBOX + mailboxId;
@@ -598,8 +598,8 @@ public class DbMailbox {
         try {
             stmt = conn.prepareStatement("SELECT DISTINCT tags " +
                     "FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    (DebugConfig.enableMailboxGroup ? " WHERE mailbox_id = ?" : ""));
-            if (DebugConfig.enableMailboxGroup)
+                    (!DebugConfig.disableMailboxGroup ? " WHERE mailbox_id = ?" : ""));
+            if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
             while (rs.next())
@@ -622,8 +622,8 @@ public class DbMailbox {
         try {
             stmt = conn.prepareStatement("SELECT DISTINCT flags " +
                     "FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    (DebugConfig.enableMailboxGroup ? " WHERE mailbox_id = ?" : ""));
-            if (DebugConfig.enableMailboxGroup)
+                    (!DebugConfig.disableMailboxGroup ? " WHERE mailbox_id = ?" : ""));
+            if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
             while (rs.next())

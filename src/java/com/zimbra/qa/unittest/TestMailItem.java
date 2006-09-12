@@ -48,7 +48,7 @@ public class TestMailItem extends TestCase {
         // Get item count per folder/type
         String sql = "SELECT folder_id, type, count(*) AS item_count " +
             "FROM " + DbMailItem.getMailItemTableName(mbox) + " " +
-            (DebugConfig.enableMailboxGroup ? "WHERE mailbox_id = " + mbox.getId() + " " : "") +
+            (!DebugConfig.disableMailboxGroup ? "WHERE mailbox_id = " + mbox.getId() + " " : "") +
             "GROUP BY folder_id, type";
         DbResults results = DbUtil.executeQuery(sql);
         assertTrue("No results returned", results.size() > 0);

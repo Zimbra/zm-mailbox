@@ -47,7 +47,7 @@ public class MetadataDump {
     private static int getMailboxGroup(Connection conn, int mboxId)
     throws SQLException, ServiceException {
         int gid = 0;
-        if (DebugConfig.enableMailboxGroup) {
+        if (!DebugConfig.disableMailboxGroup) {
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
@@ -71,7 +71,7 @@ public class MetadataDump {
         StringBuilder sql = new StringBuilder("SELECT metadata FROM "); 
         sql.append(DbMailItem.getMailItemTableName(mboxId, groupId));
         sql.append(" WHERE ");
-        if (DebugConfig.enableMailboxGroup)
+        if (!DebugConfig.disableMailboxGroup)
             sql.append("mailbox_id = ").append(mboxId).append(" AND ");
         sql.append("id = ").append(itemId);
         return sql.toString();

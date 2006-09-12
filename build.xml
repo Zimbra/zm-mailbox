@@ -482,11 +482,11 @@
 
 	<target name="choose-db-schema">
 		<java classname="com.zimbra.cs.localconfig.Main" fork="true" classpathref="class.path"
-			  outputproperty="LC.mbox.group.enabled" failonerror="true">
-			<arg line="-q -c conf/localconfig.xml -m nokey debug_enable_mailbox_group"/>
+			  outputproperty="LC.mbox.group.disabled" failonerror="true">
+			<arg line="-q -c conf/localconfig.xml -m nokey debug_disable_mailbox_group"/>
 		</java>
-		<condition property="db.schema.dir" value="src/db/mbox_group">
-			<equals arg1="${LC.mbox.group.enabled}" arg2="true" casesensitive="false" trim="true"/>
+		<condition property="db.schema.dir" value="src/db/old_schema">
+			<equals arg1="${LC.mbox.group.disabled}" arg2="true" casesensitive="false" trim="true"/>
 		</condition>
 		<condition property="db.schema.dir" value="src/db">
 			<not><isset property="db.schema.dir"/></not>

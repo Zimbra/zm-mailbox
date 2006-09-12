@@ -469,7 +469,7 @@ public class TestUnread extends TestCase
             "SELECT COUNT(*) " +
             "FROM " + DbMailItem.getMailItemTableName(mMbox) +
             " WHERE " +
-            (DebugConfig.enableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
+            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
             "flags & " + Flag.BITMASK_UNREAD + " > 0");
         int numRows = results.getInt(1);
         assertEquals("Found " + numRows + " items with old unread flag set", 0, numRows);
@@ -492,7 +492,7 @@ public class TestUnread extends TestCase
                 "SELECT unread " +
                 "FROM " + DbMailItem.getMailItemTableName(item) +
                 " WHERE " +
-                (DebugConfig.enableMailboxGroup ? "mailbox_id = " + item.getMailboxId() + " AND " : "") +
+                (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + item.getMailboxId() + " AND " : "") +
                 "id = " + item.getId());
             assertEquals("Verify unread flag in the database", item.isUnread(), results.getBoolean(1));
         }

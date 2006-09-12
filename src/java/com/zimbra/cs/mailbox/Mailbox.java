@@ -1529,7 +1529,7 @@ public class Mailbox {
             try {
                 // remove all the relevant entries from the database
                 Connection conn = getOperationConnection();
-                if (DebugConfig.enableMailboxGroup) {
+                if (!DebugConfig.disableMailboxGroup) {
                     DbMailbox.clearMailboxContent(this);
                     DbMailbox.deleteMailbox(conn, this);
                 } else {

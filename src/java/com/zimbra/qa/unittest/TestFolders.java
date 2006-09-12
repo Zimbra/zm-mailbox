@@ -257,7 +257,7 @@ public class TestFolders extends TestCase
             "SELECT id " +
             "FROM " + DbMailItem.getMailItemTableName(mMbox) +
             " WHERE " +
-            (DebugConfig.enableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
+            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
             "type = " + type + " AND subject LIKE '%" + NAME_PREFIX + "%' " +
             "ORDER BY id DESC";
         DbResults results = DbUtil.executeQuery(sql);

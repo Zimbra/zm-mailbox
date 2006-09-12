@@ -81,8 +81,8 @@ public class DebugConfig {
     // If true, turns off object detection feature.
     public static boolean disableObjects;
 
-    public static boolean enableMailboxGroup;
-    public static int mailboxGroupSize;
+    public static final boolean disableMailboxGroup;
+    public static final int mailboxGroupSize;
 
     static {
         validateOutgoingICalendar = booleanValue("debug_validate_outgoing_icalendar", false);        
@@ -104,9 +104,9 @@ public class DebugConfig {
         disableIndexingAttachmentsSeparately = booleanValue("debug_disable_indexing_attachments_separately", false);
         disableIndexingAttachmentsTogether = booleanValue("debug_disable_indexing_attachments_together", false);
 
-        enableMailboxGroup = booleanValue("debug_enable_mailbox_group", false);
-        if (enableMailboxGroup)
-            mailboxGroupSize = Math.max(intValue("debug_mailbox_group_size", 1), 1);
+        disableMailboxGroup = booleanValue("debug_disable_mailbox_group", false);
+        if (!disableMailboxGroup)
+            mailboxGroupSize = Math.max(LC.zimbra_mailbox_group_size.intValue(), 1);
         else
             mailboxGroupSize = 1;
     }
