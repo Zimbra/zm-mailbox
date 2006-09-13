@@ -48,10 +48,12 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -172,8 +174,8 @@ public class ProxyServlet extends ZimbraServlet {
 		HttpMethod method = null;
 		try {
 			HttpClient client = new HttpClient();
+            NetUtil.configureProxy(client);
 			String reqMethod = req.getMethod();
-			
 			if (reqMethod.equalsIgnoreCase("GET"))
 				method = new GetMethod(target);
 			else if (reqMethod.equalsIgnoreCase("POST")) {
