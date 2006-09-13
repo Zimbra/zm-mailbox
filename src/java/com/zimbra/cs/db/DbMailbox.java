@@ -58,11 +58,12 @@ public class DbMailbox {
     public static final int CI_ACCOUNT_ID         = 2;
     public static final int CI_INDEX_VOLUME_ID    = 3;
     public static final int CI_ITEM_ID_CHECKPOINT = 4;
-    public static final int CI_SIZE_CHECKPOINT    = 5;
-    public static final int CI_CHANGE_CHECKPOINT  = 6;
-    public static final int CI_TRACKING_SYNC      = 7;
-    public static final int CI_TRACKING_IMAP      = 8;
-    public static final int CI_COMMENT            = 9;
+    public static final int CI_CONTACT_COUNT      = 5;
+    public static final int CI_SIZE_CHECKPOINT    = 6;
+    public static final int CI_CHANGE_CHECKPOINT  = 7;
+    public static final int CI_TRACKING_SYNC      = 8;
+    public static final int CI_TRACKING_IMAP      = 9;
+    public static final int CI_COMMENT            = 10;
 
     public static final int CI_METADATA_MAILBOX_ID = 1;
     public static final int CI_METADATA_SECTION    = 2;
