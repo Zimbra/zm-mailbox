@@ -29,12 +29,17 @@ package com.zimbra.cs.zimlet;
  * @author jylee
  *
  */
+@SuppressWarnings("serial")
 public class ZimletException extends Exception {
 
 	private ZimletException(String msg) {
 		super(msg);
 	}
 
+	private ZimletException(String msg, Throwable cause) {
+		super(msg, cause);
+	}
+	
 	public static ZimletException ZIMLET_HANDLER_ERROR(String msg) {
 		return new ZimletException(msg);
 	}
@@ -47,31 +52,27 @@ public class ZimletException extends Exception {
 		return new ZimletException(msg);
 	}
 	
-	public static ZimletException CANNOT_CREATE(String zimlet, String reason) {
-		return new ZimletException("Cannot create Zimlet " + zimlet + ": " + reason);
+	public static ZimletException CANNOT_CREATE(String zimlet, Throwable cause) {
+		return new ZimletException("Cannot create Zimlet " + zimlet, cause);
 	}
 	
-	public static ZimletException CANNOT_DELETE(String zimlet, String reason) {
-		return new ZimletException("Cannot delete Zimlet " + zimlet + ": " + reason);
+	public static ZimletException CANNOT_DELETE(String zimlet, Throwable cause) {
+		return new ZimletException("Cannot delete Zimlet " + zimlet, cause);
 	}
-
-	public static ZimletException CANNOT_ACTIVATE(String zimlet, String reason) {
-		return new ZimletException("Cannot activate Zimlet " + zimlet + ": " + reason);
+	
+	public static ZimletException CANNOT_ACTIVATE(String zimlet, Throwable cause) {
+		return new ZimletException("Cannot activate Zimlet " + zimlet, cause);
 	}
-
-	public static ZimletException CANNOT_DEACTIVATE(String zimlet, String reason) {
-		return new ZimletException("Cannot deactivate Zimlet " + zimlet + ": " + reason);
+	
+	public static ZimletException CANNOT_DEACTIVATE(String zimlet, Throwable cause) {
+		return new ZimletException("Cannot deactivate Zimlet " + zimlet, cause);
 	}
-
-	public static ZimletException CANNOT_ENABLE(String zimlet, String reason) {
-		return new ZimletException("Cannot enable Zimlet " + zimlet + ": " + reason);
+	
+	public static ZimletException CANNOT_ENABLE(String zimlet, Throwable cause) {
+		return new ZimletException("Cannot enable Zimlet " + zimlet, cause);
 	}
-
-	public static ZimletException CANNOT_DISABLE(String zimlet, String reason) {
-		return new ZimletException("Cannot disable Zimlet " + zimlet + ": " + reason);
-	}
-
-	public static ZimletException SERVICE_ERROR(com.zimbra.cs.service.ServiceException se) {
-		return new ZimletException("ServiceException: "+((se.getCause() == null) ? se.getMessage() : se.getCause().getMessage()));
+	
+	public static ZimletException CANNOT_DISABLE(String zimlet, Throwable cause) {
+		return new ZimletException("Cannot disable Zimlet " + zimlet, cause);
 	}
 }

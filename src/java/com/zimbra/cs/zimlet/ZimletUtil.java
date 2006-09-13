@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -146,18 +147,13 @@ public class ZimletUtil {
     }
 
 	public static ZimletConfig getZimletConfig(String zimlet) {
-		loadZimlets();
-		loadDevZimlets();
-		ZimletFile zf;
-		zf = sZimlets.get(zimlet);
-		if (zf == null) {
-			zf = sDevZimlets.get(zimlet);
-		}
-		if (zf == null) {
-			return null;
-		}
+		Provisioning prov = Provisioning.getInstance();
 		try {
-			return zf.getZimletConfig();
+			Zimlet z = prov.getZimlet(zimlet);
+			String cf = z.getAttr(Provisioning.A_zimbraZimletHandlerConfig);
+			if (cf == null)
+				return null;
+			return new ZimletConfig(cf);
 		} catch (Exception e) {
 			ZimbraLog.zimlet.info("error loading zimlet "+zimlet, e);
 		}
@@ -340,8 +336,8 @@ public class ZimletUtil {
 		}
 	}
 
-	private static Map descToMap(ZimletDescription zd) throws ZimletException {
-		Map<String,String> attrs = new HashMap<String,String>();
+	private static Map<String,Object> descToMap(ZimletDescription zd) throws ZimletException {
+		Map<String,Object> attrs = new HashMap<String,Object>();
 		attrs.put(Provisioning.A_zimbraZimletKeyword,         zd.getName());
 		attrs.put(Provisioning.A_zimbraZimletVersion,         zd.getVersion().toString());
 		attrs.put(Provisioning.A_zimbraZimletDescription,     zd.getDescription());
@@ -518,7 +514,7 @@ public class ZimletUtil {
 	public static Zimlet ldapDeploy(ZimletFile zf) throws IOException, ZimletException {
 		ZimletDescription zd = zf.getZimletDescription();
 		String zimletName = zd.getName();
-		Map attrs = descToMap(zd);
+		Map<String,Object> attrs = descToMap(zd);
 		
 		ZimbraLog.zimlet.info("Deploying Zimlet " + zimletName + " in LDAP.");
 
@@ -533,10 +529,7 @@ public class ZimletUtil {
 			}
 			return zim;
 		} catch (ServiceException se) {
-			if (se.getCause() != null) {
-				throw ZimletException.CANNOT_CREATE(zimletName, se.getCause().getMessage());
-			}
-			throw ZimletException.CANNOT_CREATE(zimletName, se.getMessage());
+			throw ZimletException.CANNOT_CREATE(zimletName, se);
 		}
 	}
 	
@@ -567,7 +560,7 @@ public class ZimletUtil {
 			}
 			prov.deleteZimlet(zimlet);
 		} catch (ServiceException se) {
-			throw ZimletException.CANNOT_DELETE(zimlet, se.getCause().getMessage());
+			throw ZimletException.CANNOT_DELETE(zimlet, se);
 		}
 	}
 	
@@ -584,11 +577,19 @@ public class ZimletUtil {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			Cos c = prov.get(CosBy.name, cos);
-            Map attrs = new HashMap<String, Object>();
+			if (c == null)
+				throw ZimletException.CANNOT_ACTIVATE("no such cos " + cos, null);
+            Map<String,Object> attrs = new HashMap<String, Object>();
             attrs.put("+"+Provisioning.A_zimbraZimletAvailableZimlets, zimlet);
             prov.modifyAttrs(c, attrs);            
-		} catch (Exception e) {
-			throw ZimletException.CANNOT_ACTIVATE(zimlet, e.getCause().getMessage());
+            ZimletConfig zc = getZimletConfig(zimlet);
+            if (zc == null)
+            	return;
+            String allowedDomains = zc.getConfigValue(ZIMLET_ALLOWED_DOMAINS);
+            if (allowedDomains != null)
+            	addAllowedDomains(allowedDomains, cos);
+		} catch (ServiceException e) {
+			throw ZimletException.CANNOT_ACTIVATE(zimlet, e);
 		}
 	}
 	
@@ -605,11 +606,39 @@ public class ZimletUtil {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			Cos c = prov.get(CosBy.name, cos);
-            Map attrs = new HashMap<String, Object>();
+			if (c == null)
+				throw ZimletException.CANNOT_ACTIVATE("no such cos " + cos, null);
+            Map<String,Object> attrs = new HashMap<String, Object>();
             attrs.put("-"+Provisioning.A_zimbraZimletAvailableZimlets, zimlet);
             prov.modifyAttrs(c, attrs);
-		} catch (Exception e) {
-			throw ZimletException.CANNOT_DEACTIVATE(zimlet, e.getCause().getMessage());
+            ZimletConfig zc = getZimletConfig(zimlet);
+            if (zc == null)
+            	return;
+            String domains = zc.getConfigValue(ZIMLET_ALLOWED_DOMAINS);
+            if (domains == null)
+            	return;
+            String[] domainArray = domains.toLowerCase().split(",");
+            Set<String> domainsToRemove = new HashSet<String>();
+            for (String d : domainArray)
+            	domainsToRemove.add(d);
+            String[] zimlets = c.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+            for (String z : zimlets) {
+            	if (z.equals(zimlet))
+            		continue;
+            	zc = getZimletConfig(z);
+            	if (zc == null)
+            		continue;
+            	domains = zc.getConfigValue(ZIMLET_ALLOWED_DOMAINS);
+            	if (domains == null)
+            		continue;
+            	domainArray = domains.toLowerCase().split(",");
+            	for (String d : domainArray)
+            		domainsToRemove.remove(d);
+            }
+            if (!domainsToRemove.isEmpty())
+            	removeAllowedDomains(domainsToRemove, cos);
+		} catch (ServiceException e) {
+			throw ZimletException.CANNOT_DEACTIVATE(zimlet, e);
 		}
 	}
 	
@@ -629,7 +658,10 @@ public class ZimletUtil {
             attr.put(Provisioning.A_zimbraZimletEnabled, enabled ? Provisioning.TRUE : Provisioning.FALSE);
             prov.modifyAttrs(z, attr);
 		} catch (Exception e) {
-			throw ZimletException.CANNOT_ENABLE(zimlet, e.getCause().getMessage());
+			if (enabled)
+				throw ZimletException.CANNOT_ENABLE(zimlet, e);
+			else
+				throw ZimletException.CANNOT_DISABLE(zimlet, e);
 		}
 	}
 	
@@ -854,11 +886,11 @@ public class ZimletUtil {
 	    prov.modifyAttrs(cos, newlist);
 	}
 
-	public static void removeAllowedDomains(String domains, String cosName) throws ServiceException {
+	public static void removeAllowedDomains(Set<String> domains, String cosName) throws ServiceException {
 	    Provisioning prov = Provisioning.getInstance();            
 	    Cos cos = prov.get(CosBy.name, cosName);
 	    Set<String> domainSet = cos.getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
-	    String[] domainArray = domains.toLowerCase().split(",");
+	    String[] domainArray = domains.toArray(new String[0]);
 	    for (int i = 0; i < domainArray.length; i++) {
 	        domainSet.remove(domainArray[i]);
 	    }
