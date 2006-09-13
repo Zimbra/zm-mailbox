@@ -899,9 +899,10 @@ public abstract class MailItem implements Comparable {
             throw MailServiceException.CANNOT_CONTAIN();
 
         // update mailbox and folder sizes
-        mMailbox.updateSize(mData.size);
-        if (isLeafNode())
+        if (isLeafNode()) {
+            mMailbox.updateSize(mData.size);
             folder.updateSize(1);
+        }
 
         // let the folder and tags know if the new item is unread
         folder.updateUnread(mData.unreadCount);

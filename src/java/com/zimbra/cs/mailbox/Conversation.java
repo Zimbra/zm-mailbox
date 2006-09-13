@@ -577,8 +577,6 @@ public class Conversation extends MailItem {
 
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS);
 
-        mMailbox.updateSize(1);
-
         // FIXME: this ordering is to work around the fact that when getSenderList has to
         //   recalc the metadata, it uses the already-updated DB message state to do it...
         mData.date = mMailbox.getOperationTimestamp();
@@ -646,7 +644,6 @@ public class Conversation extends MailItem {
 
         // need to postpone this until *after* any sender list recalculation, as that can reset the conversation size
         mData.size--;
-        mMailbox.updateSize(-1);
 
         if (recalcSubject) {
             try {
@@ -753,7 +750,7 @@ public class Conversation extends MailItem {
             }
             Integer childId = new Integer(child.getId());
 
-            info.size += child.getSize() + 1;   // +1 is for the reduction in conversation size
+            info.size += child.getSize();
             info.itemIds.add(childId);
             if (child.isUnread())
                 info.unreadIds.add(childId);
