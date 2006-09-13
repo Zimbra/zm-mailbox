@@ -100,7 +100,7 @@ public final class NoteHit extends ZimbraHit {
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.ZimbraHit#getConversationId()
      */
-    public int getConversationId() throws ServiceException {
+    public int getConversationId() {
         // TODO Auto-generated method stub
         return 0;
     }
@@ -108,27 +108,21 @@ public final class NoteHit extends ZimbraHit {
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.ZimbraHit#getMessageId()
      */
-    public int getItemId() throws ServiceException {
+    public int getItemId() {
     	return mMailItemId;
     }
     
-    public byte getItemType() throws ServiceException {
+    public byte getItemType() {
         return MailItem.TYPE_NOTE;
     }
     
     public int getSize() throws ServiceException {
-        Note n = this.getNote();
-        return (int) n.getSize();
+        return getNote().getSize();
     }
     
 
     public String toString() {
-        int convId = 0;
-        try {
-            convId = getConversationId();
-        } catch (ServiceException e) {
-            e.printStackTrace();
-        }
+        int convId = getConversationId();
         String msgStr = "";
         String noteStr = "";
         try {

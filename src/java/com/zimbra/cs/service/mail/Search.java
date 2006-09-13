@@ -31,6 +31,7 @@ package com.zimbra.cs.service.mail;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -159,9 +160,7 @@ public class Search extends MailDocumentHandler  {
             mLog.debug("Search results beginning with offset "+offset);
 
         int totalNumHits = 0;
-
-        for (ZimbraHit hit : (java.util.List<ZimbraHit>) pager.getHits()) {
-
+        for (ZimbraHit hit : pager.getHits()) {
 //          for (ZimbraHit hit = results.skipToHit(offset); hit != null; hit = results.getNext()) {
             if (++totalNumHits > limit) {
                 if (mLog.isDebugEnabled()) {
@@ -171,6 +170,7 @@ public class Search extends MailDocumentHandler  {
             }
             boolean inline = (totalNumHits == 1 && params.getFetchFirst());
             boolean addSortField = true;
+
             Element e = null;
             if (hit instanceof ConversationHit) {
                 ConversationHit ch = (ConversationHit) hit;
@@ -287,10 +287,9 @@ public class Search extends MailDocumentHandler  {
 
         m.addAttribute(MailService.A_CONTENTMATCHED, true);
 
-        ArrayList parts = mh.getMatchedMimePartNames();
+        List<MessagePartHit> parts = mh.getMatchedMimePartNames();
         if (parts != null) {
-            for (Iterator mpit = parts.iterator(); mpit.hasNext(); ) {
-                MessagePartHit mph = (MessagePartHit) mpit.next();
+            for (MessagePartHit mph : parts) {
                 String partNameStr = mph.getPartName();
 
                 if (partNameStr.length() > 0) {

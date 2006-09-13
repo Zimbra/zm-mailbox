@@ -93,19 +93,19 @@ public class AppointmentHit extends ZimbraHit {
     }
     
     public int getSize() throws ServiceException {
-        return (int)getAppointment().getSize();
+        return getAppointment().getSize();
     }
     
-    public int getConversationId() throws ServiceException {
+    public int getConversationId() {
         assert(false);
         return 0;
     }
     
-    public int getItemId() throws ServiceException {
+    public int getItemId() {
         return mId;
     }
     
-    public byte getItemType() throws ServiceException {
+    public byte getItemType() {
         return MailItem.TYPE_APPOINTMENT;
     }
 

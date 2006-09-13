@@ -72,14 +72,13 @@ public final class ContactHit extends ZimbraHit {
     }
     
     public int getSize() throws ServiceException {
-        Contact c = getContact();
-        return (int) c.getSize();
+        return getContact().getSize();
     }
     
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.ZimbraHit#getConversationId()
      */
-    public int getConversationId() throws ServiceException {
+    public int getConversationId() {
         // TODO Auto-generated method stub
         return 0;
     }
@@ -87,30 +86,30 @@ public final class ContactHit extends ZimbraHit {
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.ZimbraHit#getMessageId()
      */
-    public int getItemId() throws ServiceException {
+    public int getItemId() {
         return mItemId;
     }
-    public byte getItemType() throws ServiceException {
+
+    public byte getItemType() {
         return MailItem.TYPE_CONTACT;
     }
+
     void setItem(MailItem item) {
-        mContact = (Contact)item;
+        mContact = (Contact) item;
     }
     
     boolean itemIsLoaded() {
-        return mContact!=null;
+        return mContact != null;
     }
     
-    public String getSubject() throws ServiceException
-    {
+    public String getSubject() throws ServiceException {
         if (mCachedSubj == null) {
             mCachedSubj = getContact().getSubject();
         }
         return mCachedSubj;
     }
     
-    public String getName() throws ServiceException 
-    {
+    public String getName() throws ServiceException {
         if (mCachedName == null) {
             mCachedName = getContact().getFileAsString();
         }
@@ -119,12 +118,7 @@ public final class ContactHit extends ZimbraHit {
     
 
     public String toString() {
-        int convId = 0;
-        try {
-            convId = getConversationId();
-        } catch (ServiceException e) {
-            e.printStackTrace();
-        }
+        int convId = getConversationId();
         String msgStr = "";
         String contactStr = "";
         try {

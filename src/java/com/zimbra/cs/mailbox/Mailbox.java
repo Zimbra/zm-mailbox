@@ -428,6 +428,12 @@ public class Mailbox {
         mListeners.clear();
     }
 
+    /** Posts an IM-related notification to all the Mailbox's sessions. */
+    public synchronized void postIMNotification(IMNotification imn) {
+        for (Session session : mListeners)
+            session.notifyIM(imn);
+    }
+
     /** Returns whether the server is keeping track of message deletes
      *  (etc.) for sync clients.  By default, sync tracking is off.
      * 
@@ -491,7 +497,7 @@ public class Mailbox {
         // need to keep the current change ID regardless of whether it's a highwater mark
         mCurrentChange.changeId = nextId;
         if (nextId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT > lastId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT)
-            DbMailbox.updateHighestChange(this);
+            DbMailbox.updateMailboxStats(this);
     }
 
     /** Returns the change sequence number for the current transaction.
@@ -559,7 +565,7 @@ public class Mailbox {
         if (nextId > lastId) {
             mCurrentChange.itemId = nextId;
             if (nextId / DbMailbox.ITEM_CHECKPOINT_INCREMENT > lastId / DbMailbox.ITEM_CHECKPOINT_INCREMENT)
-                DbMailbox.updateHighestItem(this);
+                DbMailbox.updateMailboxStats(this);
         }
         return nextId;
     }
@@ -633,6 +639,13 @@ public class Mailbox {
         long quota = getAccount().getLongAttr(Provisioning.A_zimbraMailQuota, 0);
         if (quota != 0 && mCurrentChange.size > quota)
             throw MailServiceException.QUOTA_EXCEEDED(quota);
+    }
+
+    /** Returns the numer of contacts currently in the mailbox.
+     * 
+     * @see #updateContactCount(int) */
+    public int getContactCount() {
+        return (mCurrentChange.contacts == MailboxChange.NO_CHANGE ? mData.contacts : mCurrentChange.contacts);
     }
 
     /** Updates the count of contacts currently in the mailbox.  The
@@ -1371,7 +1384,7 @@ public class Mailbox {
         // the new mailbox's caches are created and the default set of tags are
         // loaded by the earlier call to loadFoldersAndTags in beginTransaction
 
-        byte hidden = Folder.FOLDER_IS_IMMUTABLE | Folder.FOLDER_NO_UNREAD_COUNT;
+        byte hidden = Folder.FOLDER_IS_IMMUTABLE | Folder.FOLDER_DONT_TRACK_COUNTS;
         Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT", hidden, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
         Folder.create(ID_FOLDER_TAGS,          this, root, "Tags",          hidden, MailItem.TYPE_TAG, 0, MailItem.DEFAULT_COLOR, null);
         Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.TYPE_CONVERSATION, 0, MailItem.DEFAULT_COLOR, null);
@@ -1408,15 +1421,19 @@ public class Mailbox {
     }
 
     private void loadFoldersAndTags() throws ServiceException {
-        if (mFolderCache != null && mTagCache != null)
+        // if the persisted mailbox sizes aren't available, we *must* recalculate
+        boolean initial = mData.contacts < 0 || mData.size < 0;
+
+        if (mFolderCache != null && mTagCache != null && !initial)
             return;
         ZimbraLog.cache.info("Initializing folder and tag caches for mailbox " + getId());
 
         try {
-            Map<Integer, MailItem.UnderlyingData> folderData = (mFolderCache == null ? new HashMap<Integer, MailItem.UnderlyingData>() : null);
-            Map<Integer, MailItem.UnderlyingData> tagData    = (mTagCache == null ? new HashMap<Integer, MailItem.UnderlyingData>() : null);
-            MailboxData stats = DbMailItem.getFoldersAndTags(this, folderData, tagData);
+            Map<Integer, MailItem.UnderlyingData> folderData = new HashMap<Integer, MailItem.UnderlyingData>();
+            Map<Integer, MailItem.UnderlyingData> tagData    = new HashMap<Integer, MailItem.UnderlyingData>();
+            MailboxData stats = DbMailItem.getFoldersAndTags(this, folderData, tagData, initial);
 
+            boolean persist = stats != null;
             if (stats != null) {
                 if (mData.size != stats.size) {
                     mCurrentChange.mDirty.recordModified(this, Change.MODIFIED_SIZE);
@@ -1427,6 +1444,7 @@ public class Mailbox {
                     ZimbraLog.mailbox.debug("setting contact count to " + stats.contacts + " (was " + mData.contacts + ") for mailbox " + mId);
                     mData.contacts = stats.contacts;
                 }
+                DbMailbox.updateMailboxStats(this);
             }
 
             if (folderData != null) {
@@ -1440,14 +1458,19 @@ public class Mailbox {
                     // FIXME: side effect of this is that parent is marked as dirty...
                     if (parent != null)
                         parent.addChild(folder);
+                    if (persist)
+                        folder.saveFolderCounts(initial);
                 }
             }
 
             if (tagData != null) {
                 mTagCache = new HashMap<Object, Tag>();
                 // create the tag objects and, as a side-effect, populate the new cache
-                for (MailItem.UnderlyingData ud : tagData.values())
-                    new Tag(this, ud);
+                for (MailItem.UnderlyingData ud : tagData.values()) {
+                    Tag tag = new Tag(this, ud);
+                    if (persist)
+                        tag.saveTagCounts();
+                }
                 // flags don't change and thus can be reused in the new cache
                 for (int i = 0; i < mFlags.length; i++) {
                     if (mFlags[i] == null)
@@ -1850,13 +1873,13 @@ public class Mailbox {
             if (ids[i] == ID_AUTO_INCREMENT) {
                 items[i] = null;
             } else {
-                Integer key = new Integer(ids[i]);
+                Integer key = ids[i];
                 MailItem item = getCachedItem(key, type);
                 // special-case virtual conversations
                 if (item == null && ids[i] <= -FIRST_USER_ID) {
                     if (!MailItem.isAcceptableType(type, MailItem.TYPE_CONVERSATION))
                         throw MailItem.noSuchItem(ids[i], type);
-                    Message msg = getCachedMessage(key = new Integer(-ids[i]));
+                    Message msg = getCachedMessage(key = -ids[i]);
                     if (msg != null) {
                         if (msg.getConversationId() == ids[i])
                             item = new VirtualConversation(this, msg);
@@ -1884,20 +1907,19 @@ public class Mailbox {
             if (ids[i] != ID_AUTO_INCREMENT && items[i] == null) {
                 if (ids[i] <= -FIRST_USER_ID) {
                     // special-case virtual conversations
-                    MailItem item = getCachedItem(new Integer(-ids[i]));
+                    MailItem item = getCachedItem(-ids[i]);
                     if (!(item instanceof Message))
                         throw MailItem.noSuchItem(ids[i], type);
                     else if (item.getParentId() == ids[i])
                         items[i] = new VirtualConversation(this, (Message) item);
                     else {
-                        items[i] = getCachedItem(new Integer(item.getParentId()));
+                        items[i] = getCachedItem(item.getParentId());
                         if (items[i] == null)
-                            uncached.add(new Integer(item.getParentId()));
+                            uncached.add(item.getParentId());
                     }
                 } else
-                    if ((items[i] = getCachedItem(new Integer(ids[i]))) == null)
+                    if ((items[i] = getCachedItem(ids[i])) == null)
                         throw MailItem.noSuchItem(ids[i], type);
-                items[i] = items[i];
             }
 
         // special case asking for VirtualConversation but having it be a real Conversation
@@ -1905,10 +1927,10 @@ public class Mailbox {
             MailItem.getById(this, uncached, MailItem.TYPE_CONVERSATION);
             for (int i = 0; i < ids.length; i++)
                 if (ids[i] <= -FIRST_USER_ID && items[i] == null) {
-                    MailItem item = getCachedItem(new Integer(-ids[i]));
+                    MailItem item = getCachedItem(-ids[i]);
                     if (!(item instanceof Message) || item.getParentId() == ids[i])
                         throw ServiceException.FAILURE("item should be cached but is not: " + -ids[i], null);
-                    items[i] = getCachedItem(new Integer(item.getParentId()));
+                    items[i] = getCachedItem(item.getParentId());
                     if (items[i] == null)
                         throw MailItem.noSuchItem(ids[i], type);
                 }
@@ -4295,6 +4317,17 @@ public class Mailbox {
             return;
 
         Connection conn = mCurrentChange.conn;
+        ServiceException exception = null;
+
+        // update mailbox size and folder unread/message counts
+        if (success) {
+            try {
+                snapshotCounts();
+            } catch (ServiceException e) {
+                exception = e;
+                success = false;
+            }
+        }
 
         // Failure case is very simple.  Just rollback the database and cache
         // and return.  We haven't logged anything to the redo log for this
@@ -4303,7 +4336,8 @@ public class Mailbox {
             if (conn != null)
                 DbPool.quietRollback(conn);
             rollbackCache(mCurrentChange);
-
+            if (exception != null)
+                throw exception;
             return;
         }
 
@@ -4421,9 +4455,29 @@ public class Mailbox {
         }
     }
 
-    public synchronized void postIMNotification(IMNotification imn) {
-        for (Session session : mListeners)
-            session.notifyIM(imn);
+    private void snapshotCounts() throws ServiceException {
+        if (mCurrentChange.size != MailboxChange.NO_CHANGE || mCurrentChange.contacts != MailboxChange.NO_CHANGE)
+            DbMailbox.updateMailboxStats(this);
+
+        if (mCurrentChange.mDirty != null && mCurrentChange.mDirty.hasNotifications()) {
+            if (mCurrentChange.mDirty.created != null) {
+                for (MailItem item : mCurrentChange.mDirty.created.values()) {
+                    if (item instanceof Folder && item.getSize() != 0)
+                        ((Folder) item).saveFolderCounts(false);
+                    else if (item instanceof Tag && item.isUnread())
+                        ((Tag) item).saveTagCounts();
+                }
+            }
+
+            if (mCurrentChange.mDirty.modified != null) {
+                for (Change change : mCurrentChange.mDirty.modified.values()) {
+                    if ((change.why & (Change.MODIFIED_UNREAD | Change.MODIFIED_SIZE)) != 0 && change.what instanceof Folder)
+                        ((Folder) change.what).saveFolderCounts(false);
+                    else if ((change.why & Change.MODIFIED_UNREAD) != 0 && change.what instanceof Tag)
+                        ((Tag) change.what).saveTagCounts();
+                }
+            }
+        }
     }
 
     private void commitCache(MailboxChange change) {

@@ -47,7 +47,7 @@ public final class PendingModifications {
         public static final int MODIFIED_SIZE      = 0x00000010;
         public static final int MODIFIED_DATE      = 0x00000020;
         public static final int MODIFIED_SUBJECT   = 0x00000040;
-        public static final int MODIFIED_MSG_COUNT = 0x00000080;
+        public static final int MODIFIED_IMAP_UID  = 0x00000080;
 	    public static final int MODIFIED_FOLDER    = 0x00000100;
 	    public static final int MODIFIED_PARENT    = 0x00000200;
 	    public static final int MODIFIED_CHILDREN  = 0x00000400;
@@ -59,7 +59,6 @@ public final class PendingModifications {
         public static final int MODIFIED_CONTENT   = 0x00010000;
         public static final int MODIFIED_INVITE    = 0x00020000;
         public static final int MODIFIED_URL       = 0x00040000;
-        public static final int MODIFIED_IMAP_UID  = 0x00080000;
         public static final int MODIFIED_VIEW      = 0x00100000;
         public static final int MODIFIED_ACL       = 0x00200000;
         public static final int MODIFIED_CONFLICT  = 0x00400000;
@@ -71,38 +70,34 @@ public final class PendingModifications {
 	
 	    Change(Object thing, int reason)  { what = thing;  why = reason; }
 	}
-    
+
+
     public PendingModifications() { }
     public PendingModifications(int seqno) { mSeqNo = seqno; }
 
-    /**
-     * They key is MailItemID
-     */
+    // The key is MailItemID
 	public HashMap<Integer, MailItem> created;
     public HashMap<Integer, Change> modified;
     public HashMap<Integer, Object> deleted;
-    
-    /**
-     * IMNotifications are strictly sequential right now
-     */
+
+    /** IMNotifications are strictly sequential right now */
     public List<IMNotification> imNotifications;
-    
-    /**
-     * used by the Session object
-     */
+
+    /** used by the Session object */
     private int mSeqNo;
+
 
     public int getSeqNo() { 
         return mSeqNo; 
     }
-    
+
     public boolean hasNotifications() {
         return ((imNotifications != null && imNotifications.size() > 0) ||
                 (deleted  != null && deleted.size() > 0) ||
                 (created  != null && created.size() > 0) ||
                 (modified != null && modified.size() > 0));
     }
-    
+
     public void addIMNotification(IMNotification not) {
         if (imNotifications == null) 
             imNotifications = new LinkedList<IMNotification>();

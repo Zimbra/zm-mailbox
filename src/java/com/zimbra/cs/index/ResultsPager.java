@@ -118,7 +118,7 @@ public class ResultsPager
         forward();
     }
     
-    public List getHits() { return mHits; }
+    public List<ZimbraHit> getHits() { return mHits; }
     public boolean hasNext() throws ServiceException { return mResults.hasNext(); }
     
     private ZimbraHit getDummyHit() {

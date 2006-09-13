@@ -70,7 +70,7 @@ public class Metadata {
     static final String FN_FRAGMENT        = "f";
     static final String FN_FIRST           = "f";
     static final String FN_FIELDS          = "fld";
-    static final String FN_IMAP_ID         = "i4";
+//    static final String FN_IMAP_ID         = "i4";
     static final String FN_REMOTE_ID       = "id";
     static final String FN_INV             = "inv";
     static final String FN_BOUNDS          = "l";
@@ -94,6 +94,7 @@ public class Metadata {
     static final String FN_TYPES           = "t";
     static final String FN_TZMAP           = "tzm"; // calendaring: timezone map
     static final String FN_UID             = "u";
+    static final String FN_UIDNEXT         = "unxt";
     static final String FN_URL             = "url";
     static final String FN_MD_VERSION      = "v"; // metadata version
     static final String FN_VERSION         = "ver";

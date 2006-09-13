@@ -31,7 +31,6 @@ package com.zimbra.cs.mailbox;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -61,14 +60,15 @@ public class Folder extends MailItem {
     }
 
     public static final byte FOLDER_IS_IMMUTABLE    = 0x01;
-    public static final byte FOLDER_NO_UNREAD_COUNT = 0x02;
+    public static final byte FOLDER_DONT_TRACK_COUNTS = 0x02;
 
-	protected byte    mAttributes;
+    protected byte    mAttributes;
     protected byte    mDefaultView;
-	private List<Folder> mSubfolders;
+    private List<Folder> mSubfolders;
     private Folder    mParent;
     private ACL       mRights;
     private SyncData  mSyncData;
+    private int       mImapUIDNEXT;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -76,11 +76,6 @@ public class Folder extends MailItem {
             throw new IllegalArgumentException();
     }
 
-
-    /** Returns the number of {@link Message}s in this folder. */
-    public int getMessageCount() {
-        return mData.messageCount;
-    }
 
     /** Returns the folder's name.  Note that this is the folder's
      *  name (e.g. <code>"foo"</code>), not its absolute pathname
@@ -114,7 +109,7 @@ public class Folder extends MailItem {
 
     /** Returns the folder's set of special attributes.
      * @see #FOLDER_IS_IMMUTABLE
-     * @see #FOLDER_NO_UNREAD_COUNT */
+     * @see #FOLDER_DONT_TRACK_COUNTS */
     public byte getAttributes() {
         return mAttributes;
     }
@@ -131,6 +126,10 @@ public class Folder extends MailItem {
      * @see #setUrl(String) */
     public SyncData getSyncData() {
         return mSyncData;
+    }
+
+    public int getImapUIDNEXT() {
+        return mImapUIDNEXT;
     }
 
     /** Returns whether the folder is the Trash folder or any of its
@@ -341,17 +340,18 @@ public class Folder extends MailItem {
         return list;
     }
 
-    /** Updates the total size of the folder's contents.  Only items in the
-     *  folder are summed; items in subfolders are included only in the size
-     *  of the subfolder.
-     * 
-     * @param delta  The change in size, negative or positive. */
-    void updateSize(long delta) {
-        if (delta == 0)
+    /** Updates the number of items in the folder.  Only "leaf node" items in
+     *  the folder are summed; items in subfolders are included only in the
+     *  size of the subfolder.
+     * @param delta  The change in item count, negative or positive. */
+    void updateSize(int delta) {
+        if (delta == 0 || !trackSize())
             return;
         // if we go negative, that's OK!  just pretend we're at 0.
         markItemModified(Change.MODIFIED_SIZE);
         mData.size = Math.max(0, mData.size + delta);
+        if (delta > 0)
+            mImapUIDNEXT = mMailbox.getLastItemId() + 1;
     }
 
     boolean isTaggable()       { return false; }
@@ -361,7 +361,9 @@ public class Folder extends MailItem {
     boolean isIndexed()        { return false; }
     boolean canHaveChildren()  { return true; }
     public boolean isDeletable()  { return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0); }
-    boolean trackUnread()      { return ((mAttributes & FOLDER_NO_UNREAD_COUNT) == 0); }
+    boolean isLeafNode()       { return false; }
+    boolean trackUnread()      { return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0); }
+    boolean trackSize()        { return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0); }
 
     boolean canParent(MailItem child)  { return (child instanceof Folder); }
 
@@ -371,9 +373,9 @@ public class Folder extends MailItem {
      * 
      * @param child  The {@link MailItem} object to check. */
     boolean canContain(MailItem child) {
-        if (!canContain(child.getType()))
+        if (!canContain(child.getType())) {
             return false;
-        else if (child instanceof Folder) {
+        } else if (child instanceof Folder) {
             // may not contain our parents or grandparents (c.f. Back to the Future)
             for (Folder folder = this; folder.getId() != Mailbox.ID_FOLDER_ROOT; folder = folder.mParent)
                 if (folder.getId() == child.getId())
@@ -451,7 +453,7 @@ public class Folder extends MailItem {
      * @see #validateFolderName(String)
      * @see #canContain(byte)
      * @see #FOLDER_IS_IMMUTABLE
-     * @see #FOLDER_NO_UNREAD_COUNT */
+     * @see #FOLDER_DONT_TRACK_COUNTS */
     static Folder create(int id, Mailbox mbox, Folder parent, String name, byte attributes, byte view, int flags, byte color, String url)
     throws ServiceException {
         if (id != Mailbox.ID_FOLDER_ROOT) {
@@ -474,7 +476,7 @@ public class Folder extends MailItem {
         data.date        = mbox.getOperationTimestamp();
         data.flags       = flags & Flag.FLAGS_FOLDER;
         data.subject     = name;
-		data.metadata    = encodeMetadata(color, attributes, view, null, new SyncData(url));
+        data.metadata    = encodeMetadata(color, attributes, view, null, new SyncData(url), id + 1);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
 
@@ -675,8 +677,9 @@ public class Folder extends MailItem {
                 msg.updateUnread(-1);
                 msg.mData.metadataChanged(mMailbox);
                 targets.add(msg.getId());
-            } else
+            } else {
                 missed = true;
+            }
         }
 
         // mark all messages in this folder as read in the database
@@ -758,19 +761,19 @@ public class Folder extends MailItem {
     }
 
     void addChild(MailItem child) throws ServiceException {
-        if (child == null || !canParent(child))
+        if (child == null || !canParent(child)) {
             throw MailServiceException.CANNOT_CONTAIN();
-        else if (child == this) {
+        } else if (child == this) {
             if (mId != Mailbox.ID_FOLDER_ROOT)
                 throw MailServiceException.CANNOT_CONTAIN();
-        } else if (!(child instanceof Folder))
+        } else if (!(child instanceof Folder)) {
             super.addChild(child);
-        else {
+        } else {
             markItemModified(Change.MODIFIED_CHILDREN);
             Folder subfolder = (Folder) child;
-            if (mSubfolders == null)
+            if (mSubfolders == null) {
                 mSubfolders = new ArrayList<Folder>();
-            else {
+            } else {
                 Folder existing = findSubfolder(subfolder.getName());
                 if (existing == child)
                     return;
@@ -783,11 +786,11 @@ public class Folder extends MailItem {
     }
 
     void removeChild(MailItem child) throws ServiceException {
-        if (child == null)
+        if (child == null) {
             throw MailServiceException.CANNOT_CONTAIN();
-        else if (!(child instanceof Folder))
+        } else if (!(child instanceof Folder)) {
             super.removeChild(child);
-        else {
+        } else {
             markItemModified(Change.MODIFIED_CHILDREN);
             Folder subfolder = (Folder) child;
             if (mSubfolders == null)
@@ -798,16 +801,6 @@ public class Folder extends MailItem {
             mSubfolders.remove(index);
             subfolder.mParent = null;
         }
-    }
-
-    void updateMessageCount(int delta) throws ServiceException {
-        if (delta == 0 || !trackUnread())
-            return;
-
-        markItemModified(Change.MODIFIED_MSG_COUNT);
-        mData.messageCount += delta;
-        if (mData.messageCount < 0)
-            throw ServiceException.FAILURE("inconsistent state: msg count < 0 for folder " + mId, null);
     }
 
     /** Deletes this folder and all its subfolders. */
@@ -895,11 +888,10 @@ public class Folder extends MailItem {
         mbox.markItemDeleted(info.itemIds);
 
         // update message counts
-        for (Iterator it = info.messages.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
-            int folderID = ((Integer) entry.getKey()).intValue();
-            int msgCount = ((DbMailItem.LocationCount) entry.getValue()).count;
-            mbox.getFolderById(folderID).updateMessageCount(-msgCount);
+        for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.messages.entrySet()) {
+            int folderID = entry.getKey();
+            int msgCount = entry.getValue().count;
+            mbox.getFolderById(folderID).updateSize(-msgCount);
         }
 
         // update the mailbox's size
@@ -939,17 +931,19 @@ public class Folder extends MailItem {
         // don't actually delete the blobs or index entries here; wait until after the commit
     }
 
-    protected void saveMetadata(String metadata) throws ServiceException {
-        mData.metadataChanged(mMailbox);
-        DbMailItem.saveMetadata(this, 0, metadata);
-    }
-    protected void saveSubject() throws ServiceException {
-        mData.contentChanged(mMailbox);
-        DbMailItem.saveSubject(this, 0);
+    /** Persists the folder's current unread/message counts and IMAP UIDNEXT
+     *  value to the database.
+     * @param initial  Whether this is the first time we're saving folder
+     *                 counts, in which case we also initialize the IMAP
+     *                 UIDNEXT value. */
+    protected void saveFolderCounts(boolean initial) throws ServiceException {
+        if (initial)
+            mImapUIDNEXT = mMailbox.getLastItemId() + 1;
+        DbMailItem.persistCounts(this, encodeMetadata());
     }
 
 
-	void decodeMetadata(Metadata meta) throws ServiceException {
+    void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
 
         // avoid a painful data migration...
@@ -965,6 +959,7 @@ public class Folder extends MailItem {
         }
         mDefaultView = (byte) meta.getLong(Metadata.FN_VIEW, view);
         mAttributes  = (byte) meta.getLong(Metadata.FN_ATTRS, 0);
+        mImapUIDNEXT = (int) meta.getLong(Metadata.FN_UIDNEXT, 0);
 
         if (meta.containsKey(Metadata.FN_URL))
             mSyncData = new SyncData(meta.get(Metadata.FN_URL), meta.get(Metadata.FN_SYNC_GUID, null), meta.getLong(Metadata.FN_SYNC_DATE, 0));
@@ -974,18 +969,20 @@ public class Folder extends MailItem {
             if ((mRights = new ACL(mlistACL)).isEmpty())
                 mRights = null;
     }
-	
-	Metadata encodeMetadata(Metadata meta) {
-		return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mRights, mSyncData);
-	}
-    private static String encodeMetadata(byte color, byte attributes, byte hint, ACL rights, SyncData fsd) {
-        return encodeMetadata(new Metadata(), color, attributes, hint, rights, fsd).toString();
+
+    Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT);
     }
-	static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, SyncData fsd) {
-        if (attributes != 0)
-            meta.put(Metadata.FN_ATTRS, attributes);
+    private static String encodeMetadata(byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext) {
+        return encodeMetadata(new Metadata(), color, attributes, hint, rights, fsd, uidnext).toString();
+    }
+    static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext) {
         if (hint != TYPE_UNKNOWN)
             meta.put(Metadata.FN_VIEW, hint);
+        if (attributes != 0)
+            meta.put(Metadata.FN_ATTRS, attributes);
+        if (uidnext > 0)
+            meta.put(Metadata.FN_UIDNEXT, uidnext);
         if (rights != null)
             meta.put(Metadata.FN_RIGHTS, rights.encode());
         if (fsd != null && fsd.url != null && !fsd.url.equals("")) {
@@ -994,8 +991,8 @@ public class Folder extends MailItem {
             if (fsd.lastDate > 0)
                 meta.put(Metadata.FN_SYNC_DATE, fsd.lastDate);
         }
-		return MailItem.encodeMetadata(meta, color);
-	}
+        return MailItem.encodeMetadata(meta, color);
+    }
 
 
     private static final String CN_ATTRIBUTES = "attributes";

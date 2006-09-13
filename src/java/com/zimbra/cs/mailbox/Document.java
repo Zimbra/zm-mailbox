@@ -154,7 +154,7 @@ public class Document extends MailItem {
     public int getNextVersion() {
     	return getVersion() + 1;
     }
-    
+
     public void rename(String newName) throws ServiceException {
     	validateName(newName);
     	mName = newName;
@@ -189,10 +189,10 @@ public class Document extends MailItem {
     	mData.size = pd.getSize();
         mData.contentChanged(mMailbox);
         mMailbox.updateSize(mData.size);
-        DbMailItem.saveMetadata(this, pd.getSize(), encodeMetadata(new Metadata()).toString());
+        DbMailItem.saveMetadata(this, encodeMetadata(new Metadata()).toString());
         if (!mData.subject.equals(getFilename())) {
         	mData.subject = getFilename();
-        	DbMailItem.saveSubject(this, 0);
+        	DbMailItem.saveSubject(this);
         }
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_DATE | Change.MODIFIED_CONTENT);
         pd.setVersion(getVersion());
@@ -217,7 +217,7 @@ public class Document extends MailItem {
 	        rev.put(Metadata.FN_REV_ID, 0);
 	        mRevisionList.mList.set(last, rev.mMap);  // rev is a copy.
     	}
-        DbMailItem.saveMetadata(this, getSize(), encodeMetadata(new Metadata()).toString());
+        DbMailItem.saveMetadata(this, encodeMetadata(new Metadata()).toString());
     }
     
     protected static UnderlyingData prepareCreate(byte tp, int id, Folder folder, short volumeId, String subject, String creator, String type, ParsedDocument pd, Document parent, Metadata meta) 

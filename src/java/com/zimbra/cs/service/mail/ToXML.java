@@ -146,12 +146,7 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_SIZE)) {
             long size = folder.getSize();
             if (size > 0 || fields != NOTIFY_FIELDS)
-                elem.addAttribute(MailService.A_SIZE, size);
-        }
-        if (needToOutput(fields, Change.MODIFIED_MSG_COUNT)) {
-            int msgs = folder.getMessageCount();
-            if (msgs > 0 || fields != NOTIFY_FIELDS)
-                elem.addAttribute(MailService.A_NUM, msgs);
+                elem.addAttribute(MailService.A_NUM, size);
         }
         if (needToOutput(fields, Change.MODIFIED_URL)) {
             String url = folder.getUrl();
@@ -801,7 +796,7 @@ public class ToXML {
         }
 
         Element content = m.addUniqueElement(MailService.E_CONTENT);
-        int size = (int) msg.getSize() + 2048;
+        int size = msg.getSize() + 2048;
         if (!wholeMessage)
             content.addAttribute(MailService.A_URL, CONTENT_SERVLET_URI + lc.formatItemId(msg) + PART_PARAM_STRING + part);
         else if (size > MAX_INLINE_MSG_SIZE)

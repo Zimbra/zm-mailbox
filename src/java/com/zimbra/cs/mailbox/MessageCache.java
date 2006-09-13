@@ -113,7 +113,7 @@ public class MessageCache {
         if (!cacheHit) {
             try {
                 // wasn't cached; fetch, cache, and return it
-                int size = (int) item.getSize();
+                int size = item.getSize();
                 InputStream is = fetchFromStore(item);
                 cnode = new CacheNode(size, ByteUtil.getContent(is, size));
 
@@ -175,7 +175,7 @@ public class MessageCache {
         if (!cacheHit) {
             try {
                 // wasn't cached; fetch the content and create the MimeMessage
-                int size = (int) msg.getSize();
+                int size = msg.getSize();
                 InputStream is = (cnOrig == null ? fetchFromStore(msg) : new ByteArrayInputStream(cnOrig.mContent));
                 cnode = new CacheNode(size, new Mime.FixedMimeMessage(JMSession.getSession(), is));
                 is.close();
