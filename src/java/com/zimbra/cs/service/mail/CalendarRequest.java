@@ -282,7 +282,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             } catch (MessagingException e) { }
 
             boolean saveToSent = csd.mSaveToSent && hasRecipients && !lc.isDelegatedRequest();
-            int saveFolderId = saveToSent ? MailSender.getSentFolder(octxt, mbox) : 0;
+            int saveFolderId = saveToSent ? MailSender.getSentFolder(mbox) : 0;
             
             int msgId = 0;
 

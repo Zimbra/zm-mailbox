@@ -35,7 +35,6 @@ import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.Transport;
 import javax.mail.Message.RecipientType;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
@@ -58,14 +57,12 @@ import com.zimbra.cs.util.ZimbraLog;
 
 public class MailSender {
 
-    public static final String MSGTYPE_REPLY =
-        Flag.getAbbreviation(Flag.ID_FLAG_REPLIED) + "";
-    public static final String MSGTYPE_FORWARD =
-        Flag.getAbbreviation(Flag.ID_FLAG_FORWARDED) + "";
+    public static final String MSGTYPE_REPLY = Flag.getAbbreviation(Flag.ID_FLAG_REPLIED) + "";
+    public static final String MSGTYPE_FORWARD = Flag.getAbbreviation(Flag.ID_FLAG_FORWARDED) + "";
 
     private static Log mLog = LogFactory.getLog(MailSender.class);
 
-    public static int getSentFolder(OperationContext octxt, Mailbox mbox)
+    public static int getSentFolder(Mailbox mbox)
     throws ServiceException{
         int folderId = Mailbox.ID_FOLDER_SENT;
 
@@ -73,7 +70,7 @@ public class MailSender {
         String sentFolder = acct.getAttr(Provisioning.A_zimbraPrefSentMailFolder, null);
         if (sentFolder != null)
             try {
-                folderId = mbox.getFolderByPath(octxt, sentFolder).getId();
+                folderId = mbox.getFolderByPath(null, sentFolder).getId();
             } catch (NoSuchItemException nsie) { }
         return folderId;
     }
@@ -109,7 +106,7 @@ public class MailSender {
                                       List<InternetAddress> newContacts, List<Upload> uploads,
                                       int origMsgId, String replyType, boolean ignoreFailedAddresses)
     throws ServiceException {
-        int sentFolderId = saveToSent ? MailSender.getSentFolder(octxt, mbox) : 0;
+        int sentFolderId = saveToSent ? MailSender.getSentFolder(mbox) : 0;
         return sendMimeMessage(octxt, mbox, sentFolderId, mm, newContacts, uploads, origMsgId, replyType, ignoreFailedAddresses);
     }
 
@@ -146,6 +143,11 @@ public class MailSender {
                 convId = mbox.getConversationIdFromReferent(mm, origMsgId);
 
             Account acct = mbox.getAccount();
+            Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
+            if (authuser == null)
+                authuser = acct;
+            boolean delegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
+
             String replyTo = acct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
             boolean overrideFromHeader = true;
             try {
@@ -156,11 +158,12 @@ public class MailSender {
                         overrideFromHeader = false;
                 }
             } catch (Exception e) { }
+            InternetAddress sender = delegatedRequest ? AccountUtil.getFriendlyEmailAddress(authuser) : null;
 
             // set various headers on the outgoing message
             if (overrideFromHeader)
                 mm.setFrom(AccountUtil.getFriendlyEmailAddress(acct));
-            mm.setSender(null);
+            mm.setSender(sender);
             mm.setSentDate(new Date());
             if (replyTo != null && !replyTo.trim().equals(""))
                 mm.setHeader("Reply-To", replyTo);
@@ -181,7 +184,13 @@ public class MailSender {
                 ParsedMessage pm = new ParsedMessage(mm, mm.getSentDate().getTime(),
                                                      mbox.attachmentsIndexingEnabled());
                 // save it to the requested folder
-                msg = mbox.addMessage(octxt, pm, saveToFolder, true, flags, null, convId);
+                try {
+                    msg = mbox.addMessage(octxt, pm, saveToFolder, true, flags, null, convId);
+                } catch (ServiceException e) {
+                    if (e.getCode() != ServiceException.PERM_DENIED)
+                        throw e;
+                    ZimbraLog.misc.warn("could not save to sent folder (perm denied); continuing", e);
+                }
             }
 
             // send the message via SMTP
