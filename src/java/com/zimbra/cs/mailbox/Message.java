@@ -312,7 +312,7 @@ public class Message extends MailItem {
             try {
                 components = Invite.createFromCalendar(acct, pm.getFragment(), cal, sentByMe, mbox, id);
                 methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
-            } catch (ServiceException e) {
+            } catch (Exception e) {
                 ZimbraLog.calendar.warn("Unable to process iCalendar attachment", e);
             }
         }
@@ -340,8 +340,13 @@ public class Message extends MailItem {
         Message msg = new Message(mbox, data);
 
         // process the components in this invite (must do this last so blob is created, etc)
-        if (components != null)
-            msg.processInvitesAfterCreate(methodStr, folder.getId(), volumeId, !noICal, pm, components);
+        if (components != null) {
+            try {
+                msg.processInvitesAfterCreate(methodStr, folder.getId(), volumeId, !noICal, pm, components);
+            } catch (Exception e) {
+                ZimbraLog.calendar.warn("Unable to process iCalendar attachment", e);
+            }
+        }
 
         msg.finishCreation(conv);
         return msg;
