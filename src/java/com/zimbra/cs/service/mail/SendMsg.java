@@ -97,11 +97,6 @@ public class SendMsg extends MailDocumentHandler {
         int origId = (int) msgElem.getAttributeLong(MailService.A_ORIG_ID, 0);
         String replyType = msgElem.getAttribute(MailService.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
 
-//      int msgId = MailSender.sendMimeMessage(
-//      octxt, mbox, saveToSent, mm,
-//      mimeData.newContacts, mimeData.uploads,
-//      origId, replyType, false);
-
         SendMsgOperation op = new SendMsgOperation(session, octxt, mbox, Requester.SOAP,
                     saveToSent, mm,
                     mimeData.newContacts, mimeData.uploads,

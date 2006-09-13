@@ -35,6 +35,7 @@ import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.Transport;
 import javax.mail.Message.RecipientType;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
@@ -104,18 +105,11 @@ public class MailSender {
         FORWARD    // Forwarding another message
     }
 
-    public static int sendMimeMessage(OperationContext octxt,
-                                      Mailbox mbox,
-                                      boolean saveToSent,
-                                      MimeMessage mm,
-                                      List<InternetAddress> newContacts,
-                                      List<Upload> uploads,
-                                      int origMsgId,
-                                      String replyType,
-                                      boolean ignoreFailedAddresses)
+    public static int sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
+                                      List<InternetAddress> newContacts, List<Upload> uploads,
+                                      int origMsgId, String replyType, boolean ignoreFailedAddresses)
     throws ServiceException {
-        int sentFolderId =
-            saveToSent ? MailSender.getSentFolder(octxt, mbox) : 0;
+        int sentFolderId = saveToSent ? MailSender.getSentFolder(octxt, mbox) : 0;
         return sendMimeMessage(octxt, mbox, sentFolderId, mm, newContacts, uploads, origMsgId, replyType, ignoreFailedAddresses);
     }
 
@@ -141,15 +135,9 @@ public class MailSender {
      * @return
      * @throws ServiceException
      */
-    public static int sendMimeMessage(OperationContext octxt,
-                                      Mailbox mbox,
-                                      int saveToFolder,
-                                      MimeMessage mm,
-                                      List<InternetAddress> newContacts,
-                                      List<Upload> uploads,
-                                      int origMsgId,
-                                      String replyType,
-                                      boolean ignoreFailedAddresses)
+    public static int sendMimeMessage(OperationContext octxt, Mailbox mbox, int saveToFolder, MimeMessage mm,
+                                      List<InternetAddress> newContacts, List<Upload> uploads,
+                                      int origMsgId, String replyType, boolean ignoreFailedAddresses)
     throws ServiceException {
         try {
             // slot the message in the parent's conversation if subjects match
@@ -159,7 +147,20 @@ public class MailSender {
 
             Account acct = mbox.getAccount();
             String replyTo = acct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
-            mm.setFrom(AccountUtil.getFriendlyEmailAddress(acct));
+            boolean overrideFromHeader = true;
+            try {
+                String fromHdr = mm.getHeader("From", null);
+                if (fromHdr != null && !fromHdr.equals("")) {
+                    InternetAddress from = new InternetAddress(fromHdr);
+                    if (AccountUtil.addressMatchesAccount(acct, from.getAddress()))
+                        overrideFromHeader = false;
+                }
+            } catch (Exception e) { }
+
+            // set various headers on the outgoing message
+            if (overrideFromHeader)
+                mm.setFrom(AccountUtil.getFriendlyEmailAddress(acct));
+            mm.setSender(null);
             mm.setSentDate(new Date());
             if (replyTo != null && !replyTo.trim().equals(""))
                 mm.setHeader("Reply-To", replyTo);
@@ -202,8 +203,8 @@ public class MailSender {
 
                             // if there are NO valid addrs, then give up!
                             if ((to == null || to.length == 0) &&
-                                (cc == null || cc.length == 0) &&
-                                (bcc == null || bcc.length == 0))
+                                    (cc == null || cc.length == 0) &&
+                                    (bcc == null || bcc.length == 0))
                                 retry = false;
 
                             mm.setRecipients(RecipientType.TO, to);

@@ -163,7 +163,15 @@ public class EmailElementCache {
             return null;
         return encode(parent, node, type);
     }
-    
+
+
+    public static final String TYPE_FROM     = "f";
+    public static final String TYPE_SENDER   = "s";
+    public static final String TYPE_TO       = "t";
+    public static final String TYPE_REPLY_TO = "r";
+    public static final String TYPE_CC       = "c";
+    public static final String TYPE_BCC      = "b";
+
     private Element encode(Element parent, CacheNode node, int type) {
         Element elem = parent.addElement(MailService.E_EMAIL);
         if (node.first) {
@@ -182,12 +190,12 @@ public class EmailElementCache {
 
         String t = null;
         switch (type) {
-            case EMAIL_TYPE_FROM:      t = "f";  break;
-            case EMAIL_TYPE_SENDER:    t = "s";  break;
-            case EMAIL_TYPE_TO:        t = "t";  break;
-            case EMAIL_TYPE_REPLY_TO:  t = "r";  break;
-            case EMAIL_TYPE_CC:        t = "c";  break;
-            case EMAIL_TYPE_BCC:       t = "b";  break;
+            case EMAIL_TYPE_FROM:      t = TYPE_FROM;      break;
+            case EMAIL_TYPE_SENDER:    t = TYPE_SENDER;    break;
+            case EMAIL_TYPE_TO:        t = TYPE_TO;        break;
+            case EMAIL_TYPE_REPLY_TO:  t = TYPE_REPLY_TO;  break;
+            case EMAIL_TYPE_CC:        t = TYPE_CC;        break;
+            case EMAIL_TYPE_BCC:       t = TYPE_BCC;       break;
         }
         if (t != null)
             elem.addAttribute(MailService.A_ADDRESS_TYPE, t);

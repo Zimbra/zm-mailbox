@@ -240,7 +240,7 @@ public class ParseMimeMessage {
             if (inviteElem != null) {
                 int additionalLen = 0;
                 if (additionalParts != null) {
-                    additionalLen+=additionalParts.length;
+                    additionalLen += additionalParts.length;
                 }
                 alternatives = new MimeBodyPart[additionalLen+1];
                 int curAltPart = 0;
@@ -341,12 +341,10 @@ public class ParseMimeMessage {
 	                unsupportedChildElement(elem, msgElem);
 	            }
 	        }
-            // this will be legal once we implement drafts...
-//            if (maddrs.isEmpty())
-//                throw ServiceException.INVALID_REQUEST("no recipients specified", null);
-            if (!maddrs.isEmpty()) {
+
+            // can have no addresses specified if it's a draft...
+            if (!maddrs.isEmpty())
                 addRecipients(mm, maddrs);
-            }
 
 			if (!hasContent && !isMultipart)
 				mm.setText("", Mime.P_CHARSET_DEFAULT);
@@ -608,12 +606,12 @@ public class ParseMimeMessage {
                 newContacts.add(addr);
 
             Object content = addrs.get(addressType);
-            if (content == null)
+            if (content == null || addressType.equals(EmailElementCache.TYPE_FROM)) {
                 addrs.put(addressType, addr);
-            else if (content instanceof List)
+            } else if (content instanceof List) {
                 ((List<InternetAddress>) content).add(addr);
-            else {
-                ArrayList<InternetAddress> list = new ArrayList<InternetAddress>();
+            } else {
+                List<InternetAddress> list = new ArrayList<InternetAddress>();
                 list.add((InternetAddress) content);
                 list.add(addr);
                 addrs.put(addressType, list);
@@ -622,11 +620,11 @@ public class ParseMimeMessage {
 
         public InternetAddress[] get(String addressType) {
             Object content = addrs.get(addressType);
-            if (content == null)
+            if (content == null) {
                 return null;
-            else if (content instanceof InternetAddress)
+            } else if (content instanceof InternetAddress) {
                 return new InternetAddress[] { (InternetAddress) content };
-            else {
+            } else {
                 ArrayList list = (ArrayList) content;
                 InternetAddress[] result = new InternetAddress[list.size()];
                 for (int i = 0; i < list.size(); i++)
@@ -642,27 +640,29 @@ public class ParseMimeMessage {
 
     private static void addRecipients(MimeMessage mm, MessageAddresses maddrs)
     throws MessagingException {
-        InternetAddress[] addrs = maddrs.get("t");
+        InternetAddress[] addrs = maddrs.get(EmailElementCache.TYPE_TO);
         if (addrs != null) {
             mm.addRecipients(Message.RecipientType.TO, addrs);
             mLog.debug("\t\tTO: " + addrs);
         }
 
-        addrs = maddrs.get("c");
+        addrs = maddrs.get(EmailElementCache.TYPE_CC);
         if (addrs != null) {
             mm.addRecipients(Message.RecipientType.CC, addrs);
             mLog.debug("\t\tCC: " + addrs);
         }
 
-        addrs = maddrs.get("b");
+        addrs = maddrs.get(EmailElementCache.TYPE_BCC);
         if (addrs != null) {
             mm.addRecipients(Message.RecipientType.BCC, addrs);
             mLog.debug("\t\tBCC: " + addrs);
         }
 
-        addrs = maddrs.get("f");
-        if (addrs != null)
-            mLog.warn("Client-Specified FROM address, not currently supported");
+        addrs = maddrs.get(EmailElementCache.TYPE_FROM);
+        if (addrs != null && addrs.length == 1) {
+            mm.setFrom(addrs[0]);
+            mLog.debug("\t\tFrom: " + addrs[0]);
+        }
     }
 
     private static void dumpMessage(MimeMessage mm) {
