@@ -24,13 +24,16 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
+import com.zimbra.cs.imap.ImapSession.EnabledHack;
 import com.zimbra.cs.imap.ImapSession.ImapFlag;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -42,6 +45,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.JMSession;
 
 public class ImapAppendOperation extends Operation  {
     private static int LOAD = 10;
@@ -99,10 +103,18 @@ public class ImapAppendOperation extends Operation  {
                 }
             }
 
+            // if we're using Thunderbird, try to set INTERNALDATE to the message's Date: header
+            if (mDate == null && mImapSession.isHackEnabled(EnabledHack.THUNDERBIRD)) {
+                try {
+                    // inefficient, but must be done before creating the ParsedMessage
+                    mDate = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(mContent)).getSentDate();
+                } catch (MessagingException e) { }
+            }
+
             try {
                 boolean idxAttach = mMailbox.attachmentsIndexingEnabled();
                 ParsedMessage pm = mDate != null ? new ParsedMessage(mContent, mDate.getTime(), idxAttach) :
-                    new ParsedMessage(mContent, idxAttach);
+                                                   new ParsedMessage(mContent, idxAttach);
                 try {
                     if (!pm.getSender().equals("")) {
                         InternetAddress ia = new InternetAddress(pm.getSender());
