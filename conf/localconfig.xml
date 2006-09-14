@@ -75,7 +75,7 @@
   <key name="debug_disable_mailbox_group">
     <value>false</value>
   </key>
-  <key name="zimbra_mailbox_group_size">
-    <value>1</value>
+  <key name="zimbra_mailbox_groups">
+    <value>1000</value>
   </key>
 </localconfig>
