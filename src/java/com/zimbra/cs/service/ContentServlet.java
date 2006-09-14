@@ -31,7 +31,6 @@ import java.io.InputStream;
 
 import javax.mail.MessagingException;
 import javax.mail.Part;
-import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletRequest;
@@ -56,6 +55,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeCompoundHeader.ContentDisposition;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.*;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -70,6 +70,7 @@ import com.zimbra.cs.util.ZimbraLog;
  */
 
 public class ContentServlet extends ZimbraServlet {
+    private static final long serialVersionUID = 6466028729668217319L;
 
     protected static final String SERVLET_PATH = "/service/content";
 
@@ -266,17 +267,14 @@ public class ContentServlet extends ZimbraServlet {
                 return;
             }
 
-            ContentDisposition cd = new ContentDisposition(Part.INLINE);
             String filename = up.getName();
-            cd.setParameter("filename", filename == null ? "unknown" : Mime.encodeFilename(filename));
+            ContentDisposition cd = new ContentDisposition(Part.INLINE, true).setParameter("filename", filename == null ? "unknown" : filename);
             resp.addHeader("Content-Disposition", cd.toString());
             sendbackOriginalDoc(up.getInputStream(), up.getContentType(), resp);
 
             FileUploadServlet.deleteUpload(up);
         } catch (ServiceException e) {
             throw new ServletException(e);
-        } catch (MessagingException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (AuthTokenException e) {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
