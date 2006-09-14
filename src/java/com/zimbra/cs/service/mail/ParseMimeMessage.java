@@ -392,9 +392,9 @@ public class ParseMimeMessage {
         ContentType ct = new ContentType(type);
 
         // is the client passing us a multipart?
-        if (type.startsWith(Mime.CT_MULTIPART_PREFIX)) {
-            // yes!  Find out what the subtype is (assume "mixed" if none or invalid one is specified)
-            String subType = ct.getPrimaryType().equals("multipart") ? "mixed" : ct.getSubType();
+        if (ct.getPrimaryType().equals("multipart")) {
+            // yes!  Find out what the subtype is
+            String subType = ct.getSubType();
 
             // do we need to add a multipart/alternative for the alternatives?
             if (alternatives == null || subType.equals("alternative")) {
