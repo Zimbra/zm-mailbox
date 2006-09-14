@@ -4948,7 +4948,9 @@ public class Mailbox {
                 fid = ID_FOLDER_USER_ROOT;
             }
             Folder folder = getFolderById(fid);
-            if (!path.equals("")) {
+            if (path.equals("")) {
+            	ret = folder;
+            } else {
                 StringTokenizer tok = new StringTokenizer(path, "/");
                 String lastToken = null;
                 Folder lastFolder = null;

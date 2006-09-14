@@ -636,6 +636,8 @@ public class UserServlet extends ZimbraServlet {
             this.accountPath = pathInfo.substring(1, pos);
 
             this.itemPath = pathInfo.substring(pos + 1);
+            if (itemPath.equals(""))
+            	itemPath = "/";
             this.format = this.params.get(QP_FMT);
             String id = this.params.get(QP_ID);
             try {
