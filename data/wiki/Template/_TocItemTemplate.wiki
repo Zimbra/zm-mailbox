@@ -1,7 +1,7 @@
 <tr><td colspan=3 class='zmwiki-tocLineSeparator'><div></div></td></tr>
 <tr>
 	<td class='zmwiki-pageIcon' width=16><wiklet class='ICON' /></td>
-	<td class='zmwiki-pageLink'>[[<wiklet class='NAME' />]]</td>
+	<td class='zmwiki-pageLink'>[[<wiklet class='ID' />|<wiklet class='NAME' />]]</td>
 	<td class='zmwiki-tocPageInfo zmwiki-smallGrayLinks' width='*'
 		><wiklet class='MODIFIER' /> &bull; <wiklet class='MODIFYDATE' /> &bull; <a href="#">v. <wiklet class='VERSION' /></a></td>
 </tr>
