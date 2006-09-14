@@ -211,7 +211,7 @@ public class LC {
     public static final KnownKey zimbra_mtareport_max_recipients;
     public static final KnownKey zimbra_mtareport_max_senders;
 
-    public static final KnownKey zimbra_mailbox_group_size;
+    public static final KnownKey zimbra_mailbox_groups;
 
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  Changing this setting does not immediately reflect in MySQL server.  You will have to, with abundant precaution, re-generate my.cnf and restart MySQL server for the change to take effect.";
@@ -834,10 +834,10 @@ public class LC {
         zimbra_zmprov_default_soap_server =
             new KnownKey("zimbra_zmprov_default_soap_server", "localhost", "default soap server for zmprov to connect to");
 
-        zimbra_mailbox_group_size = new KnownKey("zimbra_mailbox_group_size");
-        zimbra_mailbox_group_size.setDefault("1");
-        zimbra_mailbox_group_size.setDoc
-            ("Number of mailbox in each mailbox group");
+        zimbra_mailbox_groups = new KnownKey("zimbra_mailbox_groups");
+        zimbra_mailbox_groups.setDefault("1000");
+        zimbra_mailbox_groups.setDoc
+            ("Number of mailbox groups to distribute new mailboxes to");
     }
 
 }

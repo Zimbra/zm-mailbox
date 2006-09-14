@@ -553,8 +553,8 @@ public class DbMailbox {
     }
 
     public static int getMailboxGroupId(int mailboxId) {
-        int mboxPerGroup = DebugConfig.mailboxGroupSize;
-        return (mailboxId - 1) / mboxPerGroup + 1;
+        int groups = DebugConfig.numMailboxGroups;
+        return (mailboxId - 1) % groups + 1;
     }
 
     /** @return the name of the database that contains tables for the specified <code>mailboxId</code>. */

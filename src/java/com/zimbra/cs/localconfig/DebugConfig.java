@@ -82,7 +82,7 @@ public class DebugConfig {
     public static boolean disableObjects;
 
     public static final boolean disableMailboxGroup;
-    public static final int mailboxGroupSize;
+    public static final int numMailboxGroups;
 
     static {
         validateOutgoingICalendar = booleanValue("debug_validate_outgoing_icalendar", false);        
@@ -106,9 +106,9 @@ public class DebugConfig {
 
         disableMailboxGroup = booleanValue("debug_disable_mailbox_group", false);
         if (!disableMailboxGroup)
-            mailboxGroupSize = Math.max(LC.zimbra_mailbox_group_size.intValue(), 1);
+            numMailboxGroups = Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
         else
-            mailboxGroupSize = 1;
+            numMailboxGroups = 32000;
     }
 
     private static boolean booleanValue(String key, boolean defaultValue) {
