@@ -526,18 +526,32 @@ public class Mime {
     }
 
     public static String getFilename(MimePart mp) throws MessagingException {
-        String name = mp.getFileName();
+        String name = null;
 
-        // catch (legal, but uncommon) RFC 2231 encoded filenames
+        // first, check the Content-Disposition header for the "filename" parameter
         try {
-            String cd = mp.getHeader("Content-Disposition", null);
-            if (cd != null && cd.indexOf('*') != -1) {
-                // catch things like filename*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3.rtf
-                MimeCompoundHeader mhdr = new MimeCompoundHeader(cd);
+            String cdisp = mp.getHeader("Content-Disposition", null);
+            if (cdisp != null) {
+                // will also catch (legal, but uncommon) RFC 2231 encoded filenames
+                //   (things like filename*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3.rtf)
+                MimeCompoundHeader mhdr = new MimeCompoundHeader(cdisp);
                 if (mhdr.containsParameter("filename"))
                     name = mhdr.getParameter("filename");
             }
         } catch (MessagingException me) { }
+
+        // if we didn't find anything, check the Content-Type header for the "name" parameter
+        if (name == null)
+            try {
+                String ctype = mp.getHeader("Content-Type", null);
+                if (ctype != null) {
+                    // will also catch (legal, but uncommon) RFC 2231 encoded filenames
+                    //   (things like name*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3.rtf)
+                    MimeCompoundHeader mhdr = new MimeCompoundHeader(ctype);
+                    if (mhdr.containsParameter("name"))
+                        name = mhdr.getParameter("name");
+                }
+            } catch (MessagingException me) { }
 
         if (name == null)
             return null;
