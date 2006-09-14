@@ -2198,46 +2198,7 @@ public class LdapProvisioning extends Provisioning {
     
     public static final long TIMESTAMP_WINDOW = Constants.MILLIS_PER_MINUTE * 5; 
 
-    public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth) throws ServiceException {
-        if (preAuth == null || preAuth.length() == 0)
-            throw ServiceException.INVALID_REQUEST("preAuth must not be empty", null);
-
-        // see if domain is configured for preauth
-        Provisioning prov = Provisioning.getInstance();
-        String domainPreAuthKey = prov.getDomain(acct).getAttr(Provisioning.A_zimbraPreAuthKey, null);
-        if (domainPreAuthKey == null)
-            throw ServiceException.INVALID_REQUEST("domain is not configured for preauth", null);
-        
-        // see if request is recent
-        long now = System.currentTimeMillis();
-        long diff = Math.abs(now-timestamp);
-        if (diff > TIMESTAMP_WINDOW)
-            throw AccountServiceException.AUTH_FAILED(acct.getName()+" (preauth timestamp is too old)");
-        
-        // compute expected preAuth
-        HashMap<String,String> params = new HashMap<String,String>();
-        params.put("account", acctValue);
-        params.put("by", acctBy);
-        params.put("timestamp", timestamp+"");
-        params.put("expires", expires+"");
-        String computedPreAuth = PreAuthKey.computePreAuth(params, domainPreAuthKey);
-        if (!computedPreAuth.equalsIgnoreCase(preAuth))
-            throw AccountServiceException.AUTH_FAILED(acct.getName()+" (preauth mismatch)");
-    }
-    
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Account#authAccount(java.lang.String)
-     */
-    public void authAccount(Account acct, String password) throws ServiceException {
-        if (password == null || password.equals(""))
-            throw AccountServiceException.AUTH_FAILED(acct.getName()+ " (empty password)");
-        authAccount(acct, password, true);
-    }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Account#authAccount(java.lang.String)
-     */
-    private void authAccount(Account acct, String password, boolean checkPasswordPolicy) throws ServiceException {
+    private void checkAccountStatus(Account acct) throws ServiceException {
         reload(acct);
         String accountStatus = acct.getAccountStatus();
         if (accountStatus == null)
@@ -2248,7 +2209,64 @@ public class LdapProvisioning extends Provisioning {
         if (!(accountStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
                 accountStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT)))
             throw AccountServiceException.AUTH_FAILED(acct.getName());
+    }
+    
+    @Override
+    public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth) throws ServiceException {
+        try {
+            checkAccountStatus(acct);
+            if (preAuth == null || preAuth.length() == 0)
+                throw ServiceException.INVALID_REQUEST("preAuth must not be empty", null);
 
+            // see if domain is configured for preauth
+            Provisioning prov = Provisioning.getInstance();
+            String domainPreAuthKey = prov.getDomain(acct).getAttr(Provisioning.A_zimbraPreAuthKey, null);
+            if (domainPreAuthKey == null)
+                throw ServiceException.INVALID_REQUEST("domain is not configured for preauth", null);
+        
+            // see if request is recent
+            long now = System.currentTimeMillis();
+            long diff = Math.abs(now-timestamp);
+            if (diff > TIMESTAMP_WINDOW)
+                throw AccountServiceException.AUTH_FAILED(acct.getName()+" (preauth timestamp is too old)");
+        
+            // compute expected preAuth
+            HashMap<String,String> params = new HashMap<String,String>();
+            params.put("account", acctValue);
+            params.put("by", acctBy);
+            params.put("timestamp", timestamp+"");
+            params.put("expires", expires+"");
+            String computedPreAuth = PreAuthKey.computePreAuth(params, domainPreAuthKey);
+            if (!computedPreAuth.equalsIgnoreCase(preAuth))
+                throw AccountServiceException.AUTH_FAILED(acct.getName()+" (preauth mismatch)");
+        } catch (ServiceException e) {
+            
+        }
+    }
+    
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.account.Account#authAccount(java.lang.String)
+     */
+    @Override    
+    public void authAccount(Account acct, String password, String proto) throws ServiceException {
+        try {
+            if (password == null || password.equals(""))
+                throw AccountServiceException.AUTH_FAILED(acct.getName()+ " (empty password)");
+            authAccount(acct, password, true);
+            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto}));
+        } catch (ServiceException e) {
+            ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
+                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto, "error", e.getMessage()}));             
+            throw e;
+        }
+    }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.account.Account#authAccount(java.lang.String)
+     */
+    private void authAccount(Account acct, String password, boolean checkPasswordPolicy) throws ServiceException {
+        checkAccountStatus(acct);
         verifyPassword(acct, password);
 
         if (!checkPasswordPolicy)

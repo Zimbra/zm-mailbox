@@ -512,7 +512,7 @@ public class Pop3Handler extends ProtocolHandler {
                 throw new Pop3CmdException("invalid username/password");
             if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false))
                 throw new Pop3CmdException("pop access not enabled for account");                
-            prov.authAccount(acct, password);
+            prov.authAccount(acct, password, "pop3");
             mAccountId = acct.getId();
             mAccountName = acct.getName();
             Mailbox mailbox = Mailbox.getMailboxByAccountId(mAccountId);

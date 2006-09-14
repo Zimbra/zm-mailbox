@@ -80,7 +80,7 @@ public class Auth extends AdminDocumentHandler {
                     new String[] {"cmd", "AdminAuth","account", name})); 
 
         
-            prov.authAccount(acct, password);
+            prov.authAccount(acct, password, "soap");
             
             isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
             boolean isAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);            

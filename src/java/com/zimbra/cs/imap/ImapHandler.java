@@ -733,7 +733,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             return null;
         }
         // authenticate the authentication principal
-        prov.authAccount(authacct, password);
+        prov.authAccount(authacct, password, "imap");
         // authorize as the target user
         if (!account.getId().equals(authacct.getId())) {
             // check domain/global admin if auth credentials != target account

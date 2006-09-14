@@ -226,7 +226,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public void authAccount(Account acct, String password)
+    public void authAccount(Account acct, String password, String proto)
             throws ServiceException {
         XMLElement req = new XMLElement(AccountService.AUTH_REQUEST);
         Element a = req.addElement(AccountService.E_ACCOUNT);

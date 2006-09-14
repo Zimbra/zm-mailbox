@@ -1272,7 +1272,7 @@ public abstract class Provisioning {
     
     public abstract void modifyAccountStatus(Account acct, String newStatus) throws ServiceException;
 
-    public abstract void authAccount(Account acct, String password) throws ServiceException;
+    public abstract void authAccount(Account acct, String password, String proto) throws ServiceException;
     
     public abstract void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires, String preAuth) throws ServiceException;
     

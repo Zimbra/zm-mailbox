@@ -37,7 +37,6 @@ import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
-import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -88,23 +87,15 @@ public class Auth extends AccountDocumentHandler {
 
         long expires = 0;
 
-		try {
-            if (password != null) {
-                prov.authAccount(acct, password);
-            } else if (preAuthEl != null) {
-                long timestamp = preAuthEl.getAttributeLong(AccountService.A_TIMESTAMP);
-                expires = preAuthEl.getAttributeLong(AccountService.A_EXPIRES, 0);
-                String preAuth = preAuthEl.getTextTrim();
-                prov.preAuthAccount(acct, value, byStr, timestamp, expires, preAuth);
-            } else {
-                throw ServiceException.INVALID_REQUEST("must specify "+AccountService.E_PASSWORD, null);
-            }
-            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "Auth","account", acct.getName()}));
-        } catch (ServiceException se) {
-            ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "Auth","account", acct.getName(), "error", se.getMessage()}));             
-            throw se;
+        if (password != null) {
+            prov.authAccount(acct, password, "soap");
+        } else if (preAuthEl != null) {
+            long timestamp = preAuthEl.getAttributeLong(AccountService.A_TIMESTAMP);
+            expires = preAuthEl.getAttributeLong(AccountService.A_EXPIRES, 0);
+            String preAuth = preAuthEl.getTextTrim();
+            prov.preAuthAccount(acct, value, byStr, timestamp, expires, preAuth);
+        } else {
+            throw ServiceException.INVALID_REQUEST("must specify "+AccountService.E_PASSWORD, null);
         }
 
         AuthToken at = expires ==  0 ? new AuthToken(acct) : new AuthToken(acct, expires);

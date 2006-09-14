@@ -417,7 +417,7 @@ public class ZimbraServlet extends HttpServlet {
             return new ACL.GuestAccount(user, pass);
         }
         try {
-            prov.authAccount(acct, pass);
+            prov.authAccount(acct, pass, "http/basic");
         } catch (ServiceException se) {
             if (sendChallenge) {
                 resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
