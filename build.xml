@@ -721,7 +721,7 @@
 	<target name="deploy-zimlets" if="dist.zimlet.dir">
 		<foreach target="install-zimlet" param="zimlet">
 			<path>
-				<fileset dir="${dist.zimlet.dir}" includes="**/*.zip"/>
+				<fileset dir="${zimlet.dir}/zimlets" includes="**/*.zip"/>
 			</path>
 			<param name="action" value="deploy"/>
 		</foreach>
