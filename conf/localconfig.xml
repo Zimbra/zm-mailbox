@@ -76,6 +76,6 @@
     <value>false</value>
   </key>
   <key name="zimbra_mailbox_groups">
-    <value>1000</value>
+    <value>100</value>
   </key>
 </localconfig>
