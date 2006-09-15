@@ -83,7 +83,7 @@ public abstract class DocumentHandler {
         String id = zsc.getRequestedAccountId();
         Mailbox mbox = Mailbox.getMailboxByAccountId(id);
         if (mbox != null)
-            ZimbraLog.addToContext(mbox);
+            ZimbraLog.addMboxToContext(mbox.getId());
         return mbox; 
     }
 

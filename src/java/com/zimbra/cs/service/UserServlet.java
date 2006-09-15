@@ -361,7 +361,7 @@ public class UserServlet extends ZimbraServlet {
         Mailbox mbox = context.targetMailbox = Mailbox.getMailboxByAccount(context.targetAccount);
         if (mbox == null)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
-        ZimbraLog.addToContext(mbox);
+        ZimbraLog.addMboxToContext(mbox.getId());
 
         if (ZimbraLog.mailbox.isDebugEnabled()) {
             StringBuffer reqURL = context.req.getRequestURL();
@@ -420,7 +420,7 @@ public class UserServlet extends ZimbraServlet {
             Mailbox mbox = context.targetMailbox = Mailbox.getMailboxByAccount(context.targetAccount);
             if (mbox == null)
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
-            ZimbraLog.addToContext(mbox);
+            ZimbraLog.addMboxToContext(mbox.getId());
 
             ZimbraLog.mailbox.info("UserServlet (POST): " + context.req.getRequestURL().toString());
 

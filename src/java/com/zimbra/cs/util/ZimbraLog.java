@@ -37,7 +37,6 @@ import org.apache.log4j.PropertyConfigurator;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -326,8 +325,8 @@ public class ZimbraLog {
         ZimbraLog.addToContext(C_CONNECTIONID, connectionId);
     }
     
-    public static void addToContext(Mailbox mbx) {
-        addToContext(C_MID, Integer.toString(mbx.getId()));
+    public static void addMboxToContext(int mboxId) {
+        addToContext(C_MID, Integer.toString(mboxId));
     }
     
     private static boolean checkContext(String context, String key) {

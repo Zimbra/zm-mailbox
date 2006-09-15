@@ -130,7 +130,7 @@ public class ContentServlet extends ZimbraServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
                 return;				
             }
-            ZimbraLog.addToContext(mbox);
+            ZimbraLog.addMboxToContext(mbox.getId());
 
             MailItem item = mbox.getItemById(new Mailbox.OperationContext(authId), iid.getId(), MailItem.TYPE_UNKNOWN);
             if (item == null) {
