@@ -835,7 +835,7 @@ public class LC {
             new KnownKey("zimbra_zmprov_default_soap_server", "localhost", "default soap server for zmprov to connect to");
 
         zimbra_mailbox_groups = new KnownKey("zimbra_mailbox_groups");
-        zimbra_mailbox_groups.setDefault("1000");
+        zimbra_mailbox_groups.setDefault("100");
         zimbra_mailbox_groups.setDoc
             ("Number of mailbox groups to distribute new mailboxes to");
     }
