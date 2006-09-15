@@ -54,6 +54,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.ServiceException.Argument;
+import com.zimbra.cs.service.formatter.WikiFormatter;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
@@ -720,5 +721,6 @@ public abstract class Wiki {
 				wiki.mWikiPages.remove(wikiWord);
 			}
 		}
+		WikiFormatter.expireCacheItem(item);
 	}
 }

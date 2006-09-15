@@ -91,8 +91,13 @@ public class PageCache {
 		return (String)v.getSecond();
 	}
 	
-	public String generateKey(WikiContext ctxt, MailItem item) {
-		Account user = ctxt.octxt.getAuthenticatedUser();
+	public synchronized void removePage(String key) {
+		Pair v = (Pair)mCache.get(key);
+		if (v != null)
+			mCache.remove(key);
+	}
+	
+	public String generateKey(Account user, MailItem item) {
 		String auth;
 		if (user == null)
 			auth = "guest";

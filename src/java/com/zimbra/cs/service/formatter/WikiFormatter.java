@@ -36,6 +36,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.wiki.PageCache;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
@@ -68,10 +69,19 @@ public class WikiFormatter extends Formatter {
     
     private static PageCache sCache = new PageCache();
     
+    public static void expireCacheItem(MailItem item) {
+    	try {
+    		String key = sCache.generateKey(item.getAccount(), item);
+    		sCache.removePage(key);
+    	} catch (ServiceException e) {
+    		ZimbraLog.wiki.info("unable to expire item from cache", e);
+    	}
+    }
+    
     private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
     	WikiContext ctxt = createWikiContext(context);
     	// fully rendered pages are cached in <code>PageCache</code>.
-    	String key = sCache.generateKey(ctxt, wiki);
+    	String key = sCache.generateKey(context.opContext.getAuthenticatedUser(), wiki);
     	String template = sCache.getPage(key);
     	if (template == null) {
     		WikiTemplate wt = getTemplate(context, wiki);
@@ -106,7 +116,7 @@ public class WikiFormatter extends Formatter {
     }
     private void handleWikiFolder(Context context, Folder folder) throws IOException, ServiceException {
     	WikiContext ctxt = createWikiContext(context);
-    	String key = sCache.generateKey(ctxt, folder);
+    	String key = sCache.generateKey(context.opContext.getAuthenticatedUser(), folder);
     	String template = sCache.getPage(key);
     	if (template == null) {
         	WikiTemplate wt = getTemplate(context, folder, TOC);
