@@ -255,8 +255,8 @@ public class MimeCompoundHeader {
 
         int position = line.length() + leadingOffset;
         for (Map.Entry<String,String> param : mParams.entrySet()) {
-            String value = param.getValue();
-            if (value == null)
+            String key = param.getKey(), value = param.getValue();
+            if (key == null || key.equals("") || value == null)
                 continue;
             line.append(';');  position++;
 
@@ -391,7 +391,7 @@ public class MimeCompoundHeader {
         System.out.println(mch.toString("Content-Type"));
         mch = new ContentType("c; name=TriplePlay_Converged_Network_v5.pdf;\n x-mac-creator=70727677; x-mac-type=50444620");
         System.out.println(mch.toString("Content-Type"));
-        mch = new ContentType("text;\n pflaum; name=\"spam\\\"bag\\\\wall\" \n\t((plain; text=missing); (pissed=off); where=myrtle);;a=b;c;\n (a)foo=bar");
+        mch = new ContentType("text;\n pflaum;=foo; name=\"spam\\\"bag\\\\wall\" \n\t((plain; text=missing); (pissed=off); where=myrtle);;a=b;c;=d;\n (a)foo=bar");
         System.out.println(mch.toString("Content-Type"));
         mch = new ContentType(null);
         System.out.println(mch.toString("Content-Type"));
