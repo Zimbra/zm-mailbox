@@ -39,17 +39,21 @@ import org.apache.commons.codec.net.QCodec;
 import org.apache.commons.codec.net.URLCodec;
 
 public class MimeCompoundHeader {
-    private enum RFC2231State { PARAM, CONTINUED, EXTENDED, EQUALS, CHARSET, LANG, VALUE, QVALUE, SLOP };
+    private enum RFC2231State { PARAM, CONTINUED, EXTENDED, EQUALS, CHARSET, LANG, VALUE, QVALUE, SLOP, COMMENT };
 
     private class RFC2231Data {
         RFC2231State state = RFC2231State.EQUALS;
         StringBuilder key = null;
         StringBuilder value = new StringBuilder();
         boolean continued = false;
-        boolean encoded = false;
-        StringBuilder charset = null;
+        private boolean encoded = false;
+        private StringBuilder charset = null;
+        int comment = 0;
+        RFC2231State precomment;
     
         void setState(RFC2231State newstate) {
+            if (newstate == RFC2231State.COMMENT && state != RFC2231State.COMMENT)
+                precomment = state;
             state = newstate;
             if (newstate == RFC2231State.PARAM) {
                 key = new StringBuilder();  value = new StringBuilder();
@@ -112,8 +116,12 @@ public class MimeCompoundHeader {
         for (int i = 0, count = header.length(); i < count; i++) {
             char c = header.charAt(i);
             if (rfc2231.state == RFC2231State.SLOP) {
-                if (c == ';' || c == '\n' || c == '\r')
+                if (c == ';' || c == '\n' || c == '\r') {
                     rfc2231.setState(RFC2231State.PARAM);
+                } else if (c == '(') {
+                    escaped = false;  rfc2231.comment++;
+                    rfc2231.setState(RFC2231State.COMMENT);
+                }
             } else if (c == '\r' || c == '\n') {
                 if (!mParams.isEmpty() || rfc2231.value.length() > 0) {
                     rfc2231.saveParameter(mParams);
@@ -121,12 +129,19 @@ public class MimeCompoundHeader {
                 }
                 // otherwise, it's just folding and we can effectively just ignore the CR/LF
             } else if (rfc2231.state == RFC2231State.PARAM) {
-                if (c == '=')
+                if (c == '=') {
                     rfc2231.setState(RFC2231State.EQUALS);
-                else if (c == '*')
+                } else if (c == '*') {
                     rfc2231.setState(RFC2231State.EXTENDED);
-                else if (c != ' ' && c != '\t')
+                } else if (c == '(' && rfc2231.key.length() == 0) {
+                    escaped = false;  rfc2231.comment++;
+                    rfc2231.setState(RFC2231State.COMMENT);
+                } else if (c == ';') {
+                    rfc2231.saveParameter(mParams);
+                    rfc2231.setState(RFC2231State.PARAM);
+                } else if (c != ' ' && c != '\t') {
                     rfc2231.addKeyChar(c);
+                }
             } else if (rfc2231.state == RFC2231State.VALUE) {
                 if (c != ';' && c != ' ' && c != '\t') {
                     rfc2231.addValueChar(c);
@@ -178,6 +193,15 @@ public class MimeCompoundHeader {
             } else if (rfc2231.state == RFC2231State.LANG) {
                 if (c == '\'')
                     rfc2231.setState(RFC2231State.VALUE);
+            } else if (rfc2231.state == RFC2231State.COMMENT) {
+                if (escaped)
+                    escaped = false;
+                else if (c == '\\')
+                    escaped = true;
+                else if (c == '(')
+                    rfc2231.comment++;
+                else if (c == ')' && --rfc2231.comment == 0)
+                    rfc2231.setState(rfc2231.precomment);
             }
         }
 
@@ -367,7 +391,7 @@ public class MimeCompoundHeader {
         System.out.println(mch.toString("Content-Type"));
         mch = new ContentType("c; name=TriplePlay_Converged_Network_v5.pdf;\n x-mac-creator=70727677; x-mac-type=50444620");
         System.out.println(mch.toString("Content-Type"));
-        mch = new ContentType("text;\n name=\"spam\\\"bag\\\\wall\"");
+        mch = new ContentType("text;\n pflaum; name=\"spam\\\"bag\\\\wall\" \n\t((plain; text=missing); (pissed=off); where=myrtle);;a=b;c;\n (a)foo=bar");
         System.out.println(mch.toString("Content-Type"));
         mch = new ContentType(null);
         System.out.println(mch.toString("Content-Type"));
