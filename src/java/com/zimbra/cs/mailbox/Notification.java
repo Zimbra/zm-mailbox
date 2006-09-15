@@ -40,6 +40,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.AccountUtil;
@@ -232,7 +233,7 @@ public class Notification {
             
             // Body
             String body = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, "");
-            out.setText(body);
+            out.setText(body, Mime.P_CHARSET_UTF8);
             
             out.setEnvelopeFrom("<>");
 
@@ -356,7 +357,7 @@ public class Notification {
             address = new InternetAddress(destination);
             out.setRecipient(javax.mail.Message.RecipientType.TO, address);
             out.setSubject(subject);
-            out.setText(body);
+            out.setText(body, Mime.P_CHARSET_UTF8);
             out.setEnvelopeFrom("<>");
             Transport.send(out);
             ZimbraLog.mailbox.info("notification sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msg.getId());
