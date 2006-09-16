@@ -45,6 +45,7 @@ class ZSoapMessageHit implements ZMessageHit {
     private String mSortField;
     private String mTags;
     private String mConvId;
+    private String mFolderId;
     private float mScore;
     private long mDate;
     private int mSize;
@@ -54,6 +55,7 @@ class ZSoapMessageHit implements ZMessageHit {
         
     ZSoapMessageHit(Element e, Map<String,ZSoapEmailAddress> cache) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
+        mFolderId = e.getAttribute(MailService.A_FOLDER);
         mFlags = e.getAttribute(MailService.A_FLAGS, null);
         mDate = e.getAttributeLong(MailService.A_DATE);
         mTags = e.getAttribute(MailService.A_TAGS, null);
@@ -185,5 +187,9 @@ class ZSoapMessageHit implements ZMessageHit {
 
     public boolean isUnread() {
         return hasFlags() && mFlags.indexOf(ZMessage.Flag.unread.getFlagChar()) != -1;
+    }
+
+    public String getFolderId() {
+        return mFolderId;
     }
 }

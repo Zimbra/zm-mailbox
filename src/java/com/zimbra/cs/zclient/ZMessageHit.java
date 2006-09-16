@@ -35,6 +35,8 @@ public interface ZMessageHit extends ZSearchHit {
     public String getId();
 
     public String getFlags();
+    
+    public String getFolderId();
 
     public long getSize();
 
