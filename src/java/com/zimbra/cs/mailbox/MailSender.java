@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.mailbox;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -42,7 +43,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.MimeVisitor;
@@ -51,19 +54,20 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.cs.zclient.ZMailbox;
 
 public class MailSender {
 
     public static final String MSGTYPE_REPLY = Flag.getAbbreviation(Flag.ID_FLAG_REPLIED) + "";
     public static final String MSGTYPE_FORWARD = Flag.getAbbreviation(Flag.ID_FLAG_FORWARDED) + "";
 
-    private static Log mLog = LogFactory.getLog(MailSender.class);
+    static Log mLog = LogFactory.getLog(MailSender.class);
 
-    public static int getSentFolder(Mailbox mbox)
-    throws ServiceException{
+    public static int getSentFolder(Mailbox mbox) throws ServiceException {
         int folderId = Mailbox.ID_FOLDER_SENT;
 
         Account acct = mbox.getAccount();
@@ -110,6 +114,27 @@ public class MailSender {
         return sendMimeMessage(octxt, mbox, sentFolderId, mm, newContacts, uploads, origMsgId, replyType, ignoreFailedAddresses);
     }
 
+    static class RollbackData {
+        Mailbox mbox;
+        ZMailbox zmbox;
+        int msgId;
+
+        RollbackData(Mailbox m, int i)      { mbox = m;  msgId = i; }
+        RollbackData(Message msg)           { mbox = msg.getMailbox();  msgId = msg.getId(); }
+        RollbackData(ZMailbox z, String s)  { zmbox = z;  msgId = Integer.parseInt(s); }
+
+        void rollback() {
+            try {
+                if (mbox != null)
+                    mbox.delete(null, msgId, MailItem.TYPE_MESSAGE);
+                else
+                    zmbox.deleteMessage("" + msgId);
+            } catch (ServiceException e) {
+                mLog.warn("ignoring error while deleting saved sent message: " + msgId, e);
+            }
+        }
+    }
+
     /**
      * Send MimeMessage out as an email.
      * Returns the msg-id of the copy in the first saved folder, or 0 if none
@@ -146,7 +171,7 @@ public class MailSender {
             Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
             if (authuser == null)
                 authuser = acct;
-            boolean delegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
+            boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
 
             String replyTo = acct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
             boolean overrideFromHeader = true;
@@ -158,7 +183,7 @@ public class MailSender {
                         overrideFromHeader = false;
                 }
             } catch (Exception e) { }
-            InternetAddress sender = delegatedRequest ? AccountUtil.getFriendlyEmailAddress(authuser) : null;
+            InternetAddress sender = isDelegatedRequest ? AccountUtil.getFriendlyEmailAddress(authuser) : null;
 
             // set various headers on the outgoing message
             if (overrideFromHeader)
@@ -178,18 +203,37 @@ public class MailSender {
             }
 
             // if requested, save a copy of the message to the Sent Mail folder
-            Message msg = null;
-            if (saveToFolder != 0) {
-                int flags = Flag.BITMASK_FROM_ME;
-                ParsedMessage pm = new ParsedMessage(mm, mm.getSentDate().getTime(),
-                                                     mbox.attachmentsIndexingEnabled());
-                // save it to the requested folder
-                try {
-                    msg = mbox.addMessage(octxt, pm, saveToFolder, true, flags, null, convId);
-                } catch (ServiceException e) {
-                    if (e.getCode() != ServiceException.PERM_DENIED)
-                        throw e;
-                    ZimbraLog.misc.warn("could not save to sent folder (perm denied); continuing", e);
+            RollbackData rdata = null;
+            if (saveToFolder > 0) {
+                // figure out where to save the save-to-sent copy
+                Mailbox mboxSave = isDelegatedRequest ? null : mbox;
+                if (isDelegatedRequest && Provisioning.onLocalServer(authuser)) {
+                    mboxSave = Mailbox.getMailboxByAccount(authuser);
+                    saveToFolder = getSentFolder(mboxSave);
+                }
+
+                if (mboxSave != null) {
+                    int flags = Flag.BITMASK_FROM_ME;
+                    ParsedMessage pm = new ParsedMessage(mm, mm.getSentDate().getTime(),
+                                                         mboxSave.attachmentsIndexingEnabled());
+                    // save it to the requested folder
+                    Message msg = mboxSave.addMessage(octxt, pm, saveToFolder, true, flags, null, convId);
+                    rdata = new RollbackData(msg);
+                } else {
+                    // delegated request, not local
+                    String uri = getSoapUri(authuser);
+                    if (uri != null)
+                        try {
+                            ZMailbox zmbox = ZMailbox.getMailbox(new AuthToken(authuser).getEncoded(), uri, null);
+                            String sentFolder = authuser.getAttr(Provisioning.A_zimbraPrefSentMailFolder, "" + Mailbox.ID_FOLDER_SENT);
+                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                            mm.writeTo(baos);
+    
+                            String msgId = zmbox.addMessage(sentFolder, "s", null, mm.getSentDate().getTime(), baos.toString(), true);
+                            rdata = new RollbackData(zmbox, msgId);
+                        } catch (Exception e) {
+                            ZimbraLog.misc.warn("could not save to remote sent folder (perm denied); continuing", e);
+                        }
                 }
             }
 
@@ -223,10 +267,10 @@ public class MailSender {
                     } while(retry);
                 }
             } catch (MessagingException e) {
-                rollbackMessage(octxt, mbox, msg);
+                if (rdata != null)  rdata.rollback();
                 throw e;
             } catch (RuntimeException e) {
-                rollbackMessage(octxt, mbox, msg);
+                if (rdata != null)  rdata.rollback();
                 throw e;
             } 
 
@@ -260,7 +304,7 @@ public class MailSender {
                 }
             }
 
-            return (msg != null ? msg.getId() : 0);
+            return (!isDelegatedRequest && rdata != null ? rdata.msgId : 0);
 
         } catch (SendFailedException sfe) {
             mLog.warn("exception ocurred during SendMsg", sfe);
@@ -275,14 +319,12 @@ public class MailSender {
                         msg.append(invalidAddrs[i]);
                     }
                 }
-                if (JMSession.getSmtpConfig().getSendPartial()) {
+                if (JMSession.getSmtpConfig().getSendPartial())
                     throw MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
-                } else {
+                else
                     throw MailServiceException.SEND_ABORTED_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
-                }
             } else {
-                throw MailServiceException.SEND_FAILURE("SMTP server reported: " + sfe.getMessage().trim(),
-                                                        sfe, invalidAddrs, validUnsentAddrs);
+                throw MailServiceException.SEND_FAILURE("SMTP server reported: " + sfe.getMessage().trim(), sfe, invalidAddrs, validUnsentAddrs);
             }
         } catch (IOException ioe) {
             mLog.warn("exception occured during send msg", ioe);
@@ -293,16 +335,22 @@ public class MailSender {
         }
     }
 
-    private static void rollbackMessage(OperationContext octxt, Mailbox mbox, Message msg) {
-        // clean up save-to-sent if needed
-        if (msg == null)
-            return;
+    private static String getSoapUri(Account acct) {
         try {
-            // make sure the Mailbox will allow us to delete that message...
-            octxt = new OperationContext(octxt).setChangeConstraint(OperationContext.CHECK_CREATED, msg.getSavedSequence());
-            mbox.delete(octxt, msg.getId(), msg.getType());
-        } catch (Exception e) {
-            mLog.warn("ignoring error while deleting saved sent message: " + msg.getId(), e);
+            Server server = Provisioning.getInstance().getServer(acct);
+            String host = server.getAttr(Provisioning.A_zimbraServiceHostname);
+            int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+            if (port > 0) {
+                return "http://" + host + ':' + port + ZimbraServlet.USER_SERVICE_URI;
+            } else {
+                port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+                if (port > 0)
+                    return "https://" + host + ':' + port + ZimbraServlet.USER_SERVICE_URI;
+            }
+            mLog.warn("no service port available on host " + host);
+        } catch (ServiceException e) {
+            mLog.warn("error fetching URI for account " + acct.getName());
         }
+        return null;
     }
 }
