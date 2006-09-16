@@ -229,7 +229,7 @@ public class MailSender {
                             ByteArrayOutputStream baos = new ByteArrayOutputStream();
                             mm.writeTo(baos);
     
-                            String msgId = zmbox.addMessage(sentFolder, "s", null, mm.getSentDate().getTime(), baos.toString(), true);
+                            String msgId = zmbox.addMessage(sentFolder, "s", null, mm.getSentDate().getTime(), baos.toByteArray(), true);
                             rdata = new RollbackData(zmbox, msgId);
                         } catch (Exception e) {
                             ZimbraLog.misc.warn("could not save to remote sent folder (perm denied); continuing", e);

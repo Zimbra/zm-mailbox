@@ -407,6 +407,8 @@ public abstract class ZMailbox {
     /* ------------------------------------------------- */
 
     public abstract String uploadAttachments(File[] files, int msTimeout) throws ServiceException;
+
+    public abstract String uploadAttachment(String name, byte[] attachment, String contentType, int msTimeout) throws ServiceException;
     
     /**
      * @param folderId (required) folderId of folder to add message to
@@ -418,6 +420,17 @@ public abstract class ZMailbox {
      * @return ID of newly created message
      */
     public abstract String addMessage(String folderId, String flags, String tags, long receivedDate, String content, boolean noICal) throws ServiceException;
+    
+    /**
+     * @param folderId (required) folderId of folder to add message to
+     * @param flags non-comma-separated list of flags, e.g. "sf" for "sent by me and flagged"
+     * @param tags coma-spearated list of tags, or null for no tags
+     * @param receivedDate (optional) time the message was originally received, in MILLISECONDS since the epoch 
+     * @param content message content
+     * @param noICal if TRUE, then don't process iCal attachments.
+     * @return ID of newly created message
+     */
+    public abstract String addMessage(String folderId, String flags, String tags, long receivedDate, byte[] content, boolean noICal) throws ServiceException;
     
     public abstract ZMessage getMessage(String id, boolean markRead, boolean defangedHtml, boolean rawContent, String part, String subId) throws ServiceException;
     

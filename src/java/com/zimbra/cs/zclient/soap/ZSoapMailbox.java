@@ -48,6 +48,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
+import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
@@ -842,8 +843,6 @@ public class ZSoapMailbox extends ZMailbox {
 
     @Override
     public String addMessage(String folderId, String flags, String tags, long receivedDate, String content, boolean noICal) throws ServiceException {
-        // TODO: file upload post instead of inline? 
-        // Or, another addMessage that takes an attachment id and a generic uploadAttachment call?
         XMLElement req = new XMLElement(MailService.ADD_MSG_REQUEST);
         Element m = req.addElement(MailService.E_MSG);        
         m.addAttribute(MailService.A_FOLDER, folderId);
@@ -854,6 +853,26 @@ public class ZSoapMailbox extends ZMailbox {
         if (receivedDate != 0)
             m.addAttribute(MailService.A_DATE, receivedDate);
         m.addElement(MailService.E_CONTENT).setText(content);
+        return invoke(req).getElement(MailService.E_MSG).getAttribute(MailService.A_ID);
+        
+    }
+
+    @Override
+    public String addMessage(String folderId, String flags, String tags, long receivedDate, byte[] content, boolean noICal) throws ServiceException {
+        // first, upload the content via the FileUploadServlet
+        String aid = uploadAttachment("message", content, "message/rfc822", 5000);
+
+        // now, use the returned upload ID to do the message send
+        XMLElement req = new XMLElement(MailService.ADD_MSG_REQUEST);
+        Element m = req.addElement(MailService.E_MSG);        
+        m.addAttribute(MailService.A_FOLDER, folderId);
+        if (flags != null && flags.length() > 0) 
+            m.addAttribute(MailService.A_FLAGS, flags);
+        if (tags != null && tags.length() > 0) 
+            m.addAttribute(MailService.A_TAGS, tags);
+        if (receivedDate > 0)
+            m.addAttribute(MailService.A_DATE, receivedDate);
+        m.addAttribute(MailService.A_ATTACHMENT_ID, aid);
         return invoke(req).getElement(MailService.E_MSG).getAttribute(MailService.A_ID);
         
     }
@@ -894,6 +913,29 @@ public class ZSoapMailbox extends ZMailbox {
     
     @Override
     public String uploadAttachments(File[] files, int msTimeout) throws ServiceException {
+        Part[] parts = new Part[files.length];
+        for (int i = 0; i < files.length; i++) {
+            File file = files[i];
+            String contentType = URLConnection.getFileNameMap().getContentTypeFor(file.getName());
+            try {
+                parts[i] = new FilePart(file.getName(), file, contentType, "UTF-8");
+            } catch (IOException e) {
+                throw ZClientException.IO_ERROR(e.getMessage(), e);
+            }
+        }
+
+        return doUpload(parts, msTimeout);
+    }
+
+    @Override
+    public String uploadAttachment(String name, byte[] content, String contentType, int msTimeout) throws ServiceException {
+        FilePart part = new FilePart(name, new ByteArrayPartSource(name, content));
+        part.setContentType(contentType);
+
+        return doUpload(new Part[] { part }, msTimeout);
+    }
+
+    private String doUpload(Part[] parts, int msTimeout) throws ServiceException {
         String aid = null;
         
         URI uri = getUploadURI();
@@ -904,12 +946,6 @@ public class ZSoapMailbox extends ZMailbox {
         client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
         int statusCode = -1;
         try {
-            Part[] parts = new Part[files.length];
-            for (int i=0; i < files.length; i++) {
-                File file = files[i];
-                String contentType = URLConnection.getFileNameMap().getContentTypeFor(file.getName());
-                parts[i] = new FilePart(file.getName(), file, contentType, "UTF-8");
-            }
             post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
             statusCode = client.executeMethod(post);
 
