@@ -841,12 +841,14 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public String addMessage(String folderId, String tags, long receivedDate, String content, boolean noICal) throws ServiceException {
+    public String addMessage(String folderId, String flags, String tags, long receivedDate, String content, boolean noICal) throws ServiceException {
         // TODO: file upload post instead of inline? 
         // Or, another addMessage that takes an attachment id and a generic uploadAttachment call?
         XMLElement req = new XMLElement(MailService.ADD_MSG_REQUEST);
         Element m = req.addElement(MailService.E_MSG);        
         m.addAttribute(MailService.A_FOLDER, folderId);
+        if (flags != null && flags.length() > 0) 
+            m.addAttribute(MailService.A_FLAGS, flags);
         if (tags != null && tags.length() > 0) 
             m.addAttribute(MailService.A_TAGS, tags);
         if (receivedDate != 0)

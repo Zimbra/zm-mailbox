@@ -1262,7 +1262,7 @@ u attribute is present iff count > 0
 ---------------------------- 
 
   <AddMsgRequest>
-    <m t="{tags}" l="{folder}" [d="{received-date}"] [aid="{uploaded-MIME-body-ID}"] [noICal="0|1"]>
+    <m l="{folder}" [f="{flags}"] [t="{tags}"] [d="{received-date}"] [aid="{uploaded-MIME-body-ID}"] [noICal="0|1"]>
        <content>
           ...
        </content>
@@ -1273,6 +1273,8 @@ u attribute is present iff count > 0
     </m>
   </AddMsgRequest>
 
+  {flags} = (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me, for(w)arded,
+            (d)raft, deleted (x), (n)otification sent
   {tags} = comma-separated list of tag IDs
   {folder} = folder pathname (starts with '/') or folder ID
   {received-date} = (optional) time the message was originally received, in MILLISECONDS since the epoch 

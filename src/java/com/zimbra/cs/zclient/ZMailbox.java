@@ -45,9 +45,8 @@ public abstract class ZMailbox {
     
     public final static char PATH_SEPARATOR_CHAR = '/';    
 
-   public enum SearchSortBy {
-        
-       dateDesc, dateAsc, subjDesc, subjAsc, nameDesc, nameAsc;
+    public enum SearchSortBy {
+        dateDesc, dateAsc, subjDesc, subjAsc, nameDesc, nameAsc;
 
         public static SearchSortBy fromString(String s) throws ServiceException {
             try {
@@ -56,15 +55,15 @@ public abstract class ZMailbox {
                 throw ZClientException.CLIENT_ERROR("invalid sortBy: "+s+", valid values: "+Arrays.asList(SearchSortBy.values()), e); 
             }
         }
-   }
+    }
    
-   public static ZMailbox getMailbox(String key, AccountBy by, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-       return new ZSoapMailbox(key,by, password, uri, listener);
-   }
+    public static ZMailbox getMailbox(String key, AccountBy by, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
+        return new ZSoapMailbox(key, by, password, uri, listener);
+    }
 
-   public static ZMailbox getMailbox(String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-       return new ZSoapMailbox(authToken, uri, listener);
-   }
+    public static ZMailbox getMailbox(String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
+        return new ZSoapMailbox(authToken, uri, listener);
+    }
    
     /**
      * returns the parent folder path. First removes a trailing {@link #PATH_SEPARATOR} if one is present, then
@@ -411,22 +410,16 @@ public abstract class ZMailbox {
     
     /**
      * @param folderId (required) folderId of folder to add message to
+     * @param flags non-comma-separated list of flags, e.g. "sf" for "sent by me and flagged"
      * @param tags coma-spearated list of tags, or null for no tags
      * @param receivedDate (optional) time the message was originally received, in MILLISECONDS since the epoch 
      * @param content message content
      * @param noICal if TRUE, then don't process iCal attachments.
      * @return ID of newly created message
      */
-    public abstract String addMessage(String folderId, String tags, long receivedDate, String content, boolean noICal) throws ServiceException;
+    public abstract String addMessage(String folderId, String flags, String tags, long receivedDate, String content, boolean noICal) throws ServiceException;
     
-    public abstract ZMessage getMessage(
-            String id, 
-            boolean markRead,
-            boolean defangedHtml, 
-            boolean rawContent,
-            String part,
-            String subId
-            ) throws ServiceException;
+    public abstract ZMessage getMessage(String id, boolean markRead, boolean defangedHtml, boolean rawContent, String part, String subId) throws ServiceException;
     
     /** hard delete message(s) */
     public abstract ZActionResult deleteMessage(String ids) throws ServiceException;

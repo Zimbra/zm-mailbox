@@ -1015,7 +1015,7 @@ public class ZMailboxUtil implements DebugListener {
 
     private void addMessage(String folderId, String tags, long date, File file) throws ServiceException, IOException {
         //String aid = mMbox.uploadAttachments(new File[] {file}, 5000);
-        String id = mMbox.addMessage(folderId, tags, date, new String(ByteUtil.getContent(file)), false);
+        String id = mMbox.addMessage(folderId, null, tags, date, new String(ByteUtil.getContent(file)), false);
         System.out.format("%s (%s)%n", id, file.getPath());
     }
 
