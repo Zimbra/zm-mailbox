@@ -29,7 +29,6 @@ import java.io.IOException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -43,7 +42,7 @@ public class AddMsgOperation extends Operation {
 	
 	long mDate;
 	String mTagsStr;
-	Folder mFolder;
+	int mFolderId;
 	String mFlagsStr;
 	boolean mNoICal;
 	MimeMessage mMm;
@@ -51,13 +50,13 @@ public class AddMsgOperation extends Operation {
 	
 
 	public AddMsgOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-				long date, String tags, Folder folder, String flags, boolean noIcal, MimeMessage mm)
+				long date, String tags, int folderId, String flags, boolean noIcal, MimeMessage mm)
 	{
 		super(session, oc, mbox, req, LOAD);
 
 		mDate = date;
 		mTagsStr = tags;
-		mFolder = folder;
+		mFolderId = folderId;
 		mFlagsStr = flags;
 		mNoICal = noIcal;
 		mMm = mm;
@@ -66,7 +65,7 @@ public class AddMsgOperation extends Operation {
 	protected void callback() throws ServiceException {
 		try {
 			ParsedMessage pm = new ParsedMessage(mMm, mDate, getMailbox().attachmentsIndexingEnabled());
-			Message msg = getMailbox().addMessage(getOpCtxt(), pm, mFolder.getId(), mNoICal, Flag.flagsToBitmask(mFlagsStr), mTagsStr);
+			Message msg = getMailbox().addMessage(getOpCtxt(), pm, mFolderId, mNoICal, Flag.flagsToBitmask(mFlagsStr), mTagsStr);
 			if (msg != null)
 				mMessageId = msg.getId();
 		} catch(IOException ioe) {
@@ -80,8 +79,7 @@ public class AddMsgOperation extends Operation {
 		StringBuffer toRet = new StringBuffer("<AddMsg ");
 		if (mTagsStr != null)
 			toRet.append(" tags=\"").append(mTagsStr).append("\"");
-		if (mFolder!= null)
-			toRet.append(" folder=\"").append(mFolder.getName()).append("\"");
+		toRet.append(" folder=\"").append(mFolderId).append("\"");
 		toRet.append(">");
 		return toRet.toString();
 	}

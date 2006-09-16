@@ -37,7 +37,6 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.AddMsgOperation;
 import com.zimbra.cs.operation.Operation.Requester;
@@ -56,7 +55,10 @@ public class AddMsg extends MailDocumentHandler {
     private static Log mLog = LogFactory.getLog(AddMsg.class);
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_MSG, MailService.A_FOLDER };
-    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
+    protected String[] getProxiedIdPath(Element request) {
+        String folder = getXPath(request, TARGET_FOLDER_PATH);
+        return folder != null && folder.indexOf(':') > 0 ? TARGET_FOLDER_PATH : null;
+    }
     protected boolean checkMountpointProxy(Element request)  { return true; }
 
     /* (non-Javadoc)
@@ -85,7 +87,7 @@ public class AddMsg extends MailDocumentHandler {
             toPrint.append(">");
             mLog.debug(toPrint);
         }
-        
+
         // sanity-check the supplied tag list
         if (tagsStr != null) {
             String[] splitTags = tagsStr.split("\\s*,\\s*");
@@ -98,21 +100,20 @@ public class AddMsg extends MailDocumentHandler {
                     } catch (NumberFormatException e) {};
                 }
         }
-        
+
+        int folderId = -1;
         Folder folder = null;
-        if (folderStr != null) {
-            try {
-                ItemId iidFolder = new ItemId(folderStr, lc);
-                folder = mbox.getFolderById(octxt, iidFolder.getId());
-            } catch (NoSuchItemException nsie) {
-            } catch (NumberFormatException e) {}
-            
-            if (folder == null)
-                folder = mbox.getFolderByPath(octxt, folderStr);
-            
-            if (mLog.isDebugEnabled())
-                mLog.debug("folder = " + folder.toString());
+        try {
+            folderId = new ItemId(folderStr, lc).getId();
+        } catch (ServiceException e) { }
+        if (folderId > 0) {
+            folder = mbox.getFolderById(octxt, folderId);
+        } else {
+            folder = mbox.getFolderByPath(octxt, folderStr);
+            folderId = folder.getId();
         }
+        if (mLog.isDebugEnabled())
+            mLog.debug("folder = " + folder.getName());
         
         // check to see whether the entire message has been uploaded under separate cover
         String attachment = msgElem.getAttribute(MailService.A_ATTACHMENT_ID, null);
@@ -124,8 +125,7 @@ public class AddMsg extends MailDocumentHandler {
         else
             mm = ParseMimeMessage.importMsgSoap(msgElem);
         
-        AddMsgOperation op = new AddMsgOperation(session, octxt, mbox, Requester.SOAP,
-        			date, tagsStr, folder, flagsStr, noICal, mm);
+        AddMsgOperation op = new AddMsgOperation(session, octxt, mbox, Requester.SOAP, date, tagsStr, folderId, flagsStr, noICal, mm);
         op.schedule();
         int messageId = op.getMessageId();
         
