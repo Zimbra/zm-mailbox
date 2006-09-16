@@ -52,6 +52,10 @@ public class ZimletException extends Exception {
 		return new ZimletException(msg);
 	}
 	
+	public static ZimletException CANNOT_DEPLOY(String zimlet, Throwable cause) {
+		return new ZimletException("Cannot deploy Zimlet " + zimlet, cause);
+	}
+	
 	public static ZimletException CANNOT_CREATE(String zimlet, Throwable cause) {
 		return new ZimletException("Cannot create Zimlet " + zimlet, cause);
 	}

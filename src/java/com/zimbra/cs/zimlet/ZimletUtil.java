@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,19 +44,40 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
+import org.dom4j.DocumentHelper;
+
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.client.LmcSession;
+import com.zimbra.cs.client.soap.LmcAuthRequest;
+import com.zimbra.cs.client.soap.LmcAuthResponse;
+import com.zimbra.cs.client.soap.LmcSoapRequest;
+import com.zimbra.cs.client.soap.LmcSoapResponse;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.FileUtil;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Pair;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.soap.DomUtil;
 import com.zimbra.soap.Element;
 
 /**
@@ -1004,6 +1026,111 @@ public class ZimletUtil {
 
 	}
 	
+	private static class ZimletSoapUtil extends LmcSoapRequest {
+		private String mUsername;
+		private String mPassword;
+		private String mAttachmentId;
+		private LmcSession mSession;
+
+		public ZimletSoapUtil() {
+			mUsername = LC.zimbra_ldap_user.value();
+			mPassword = LC.zimbra_ldap_password.value();
+		}
+		
+		public ZimletSoapUtil(String username, String password) {
+			mUsername = username; mPassword = password;
+			//LmcSoapRequest.setDumpXML(true);
+		}
+		
+		public void deployZimlet(String zimlet) throws ServiceException {
+			File zf = new File(zimlet);
+			Provisioning prov = Provisioning.getInstance();
+			List<Server> allServers = prov.getAllServers();
+			for (Server server : allServers) {
+				ZimbraLog.zimlet.info("Deploying on " + server.getName());
+				deployZimletOnServer(zf, server);
+			}
+		}
+		
+		public void deployZimletOnServer(File zimlet, Server server) {
+			try {
+				// auth
+				String adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI);
+				AdminAuthRequest auth = new AdminAuthRequest();
+				LmcAuthResponse resp = (LmcAuthResponse) auth.invoke(adminUrl);
+				mSession = resp.getSession();
+
+				// upload
+				String uploadUrl = URLUtil.getAdminURL(server, "/service/upload");
+				mAttachmentId = postAttachment(uploadUrl, zimlet, server.getName());
+				
+				// deploy
+				setSession(mSession);
+				invoke(adminUrl);
+				ZimbraLog.zimlet.info("Deploy successful");
+			} catch (Exception e) {
+				ZimbraLog.zimlet.info("Couldn't install Zimlet " + zimlet + " on " + server.getName(), e);
+			}
+		}
+		
+		protected org.dom4j.Element getRequestXML() {
+			org.dom4j.Element request = DocumentHelper.createElement(AdminService.DEPLOY_ZIMLET_REQUEST);
+			DomUtil.addAttr(DomUtil.add(request, MailService.E_CONTENT, ""), 
+					MailService.A_ATTACHMENT_ID, 
+					mAttachmentId);
+			return request;
+		}
+		protected LmcSoapResponse parseResponseXML(org.dom4j.Element response) {
+			return null;
+		}
+	    protected String postAttachment(String uploadURL, File f, String domain) throws ZimletException {
+	    	String aid = null;
+
+	    	Cookie cookie = new Cookie(domain, "ZM_ADMIN_AUTH_TOKEN", mSession.getAuthToken(), "/", -1, false);
+	    	HttpState initialState = new HttpState();
+	    	initialState.addCookie(cookie);
+	    	HttpClient client = new HttpClient();
+	    	client.setState(initialState);
+	    	client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+
+	    	PostMethod post = new PostMethod(uploadURL);
+	    	client.getHttpConnectionManager().getParams().setConnectionTimeout(10000);
+	    	int statusCode = -1;
+	    	try {
+	    		String contentType = URLConnection.getFileNameMap().getContentTypeFor(f.getName());
+	    		Part[] parts = { new FilePart(f.getName(), f, contentType, "UTF-8") };
+	    		post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
+	    		statusCode = client.executeMethod(post);
+
+	    		if (statusCode == 200) {
+	    			String response = post.getResponseBodyAsString();
+	    			int lastQuote = response.lastIndexOf("'");
+	    			int firstQuote = response.indexOf("','") + 3;
+	    			if (lastQuote == -1 || firstQuote == -1) {
+	    				throw ZimletException.CANNOT_DEPLOY("Attachment post failed, unexpected response: " + response, null);
+	    			}
+	    			aid = response.substring(firstQuote, lastQuote);
+	    		} else {
+    				throw ZimletException.CANNOT_DEPLOY("Attachment post failed, status=" + statusCode, null);
+	    		}
+	    	} catch (IOException e) {
+	    		throw ZimletException.CANNOT_DEPLOY("Attachment post failed", e);
+	    	} finally {
+	    		post.releaseConnection();
+	    	}
+
+	    	return aid;
+	    }
+		private class AdminAuthRequest extends LmcAuthRequest {
+			protected org.dom4j.Element getRequestXML() {
+				org.dom4j.Element request = DocumentHelper.createElement(AdminService.AUTH_REQUEST);
+				DomUtil.add(request, AccountService.E_NAME, mUsername);
+				DomUtil.add(request, AccountService.E_PASSWORD, mPassword);
+				return request;
+			}
+		}
+	}
+	
 	private static final int INSTALL_ZIMLET = 10;
 	private static final int UNINSTALL_ZIMLET = 11;
 	private static final int LIST_ZIMLETS = 12;
@@ -1063,7 +1190,7 @@ public class ZimletUtil {
 	private static void usage() {
 		System.out.println("zmzimletctl: [command] [ zimlet.zip | config.xml | zimlet ]");
 		System.out.println("\tdeploy {zimlet.zip} - install, ldapDeploy, grant ACL on default COS, then enable Zimlet");
-		System.out.println("\tundeploy {zimlet} - remove the Zimlet entry from the system");
+		System.out.println("\tundeploy {zimlet} - remove the Zimlet from the system");
 		System.out.println("\tinstall {zimlet.zip} - installs the Zimlet files on this host");
 		System.out.println("\tldapDeploy {zimlet} - add the Zimlet entry to the system");
 		System.out.println("\tenable {zimlet} - enables the Zimlet");
@@ -1111,7 +1238,8 @@ public class ZimletUtil {
 			String zimlet = args[argPos++];
 			switch (cmd) {
 			case DEPLOY_ZIMLET:
-				deployZimlet(new ZimletFile(zimlet));
+				ZimletSoapUtil soapUtil = new ZimletSoapUtil();
+				soapUtil.deployZimlet(zimlet);
 				break;
 			case INSTALL_ZIMLET:
 				installZimlet(new ZimletFile(zimlet));
