@@ -250,12 +250,13 @@ public class SoapEngine {
             }
         }
         
-        Element response;
+        Element response = null;
         try {
             // fault in a session for this handler (if necessary) before executing the command
             handler.getSession(context);
-            // try to proxy the request if necesary
-            response = handler.proxyIfNecessary(request, context);
+            // try to proxy the request if necesary (don't proxy commands that don't require auth)
+            if (needsAuth || needsAdminAuth)
+                response = handler.proxyIfNecessary(request, context);
             // if no proxy, execute the request locally
             if (response == null)
                 response = handler.handle(request, context);
