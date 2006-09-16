@@ -32,6 +32,7 @@ import java.util.Map;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.ZEmailAddress;
+import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZMessageHit;
 import com.zimbra.soap.Element;
 
@@ -149,5 +150,40 @@ class ZSoapMessageHit implements ZMessageHit {
 
     public boolean hasTags() {
         return mTags != null && mTags.length() > 0;
+    }
+    public boolean hasAttachment() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.attachment.getFlagChar()) != -1;
+    }
+
+    public boolean isDeleted() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.deleted.getFlagChar()) != -1;
+    }
+
+    public boolean isDraft() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.draft.getFlagChar()) != -1;
+    }
+
+    public boolean isFlagged() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.flagged.getFlagChar()) != -1;
+    }
+
+    public boolean isForwarded() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.forwarded.getFlagChar()) != -1;
+    }
+
+    public boolean isNotificationSent() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.notificationSent.getFlagChar()) != -1;
+    }
+
+    public boolean isRepliedTo() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.replied.getFlagChar()) != -1;
+    }
+
+    public boolean isSentByMe() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.sentByMe.getFlagChar()) != -1;
+    }
+
+    public boolean isUnread() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.unread.getFlagChar()) != -1;
     }
 }

@@ -42,6 +42,24 @@ public interface ZMessageHit extends ZSearchHit {
     
     public String getConversationId();
     
+    public boolean isUnread();
+
+    public boolean isFlagged();
+
+    public boolean hasAttachment();
+
+    public boolean isRepliedTo();
+
+    public boolean isSentByMe();
+
+    public boolean isForwarded();
+
+    public boolean isDraft();
+
+    public boolean isDeleted();
+
+    public boolean isNotificationSent();
+    
     /**
      * @return comma-separated list of tag ids
      */
