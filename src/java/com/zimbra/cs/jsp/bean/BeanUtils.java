@@ -30,10 +30,10 @@ import com.zimbra.cs.zclient.ZEmailAddress;
 
 public class BeanUtils {
 
-    private static void addAddr(StringBuilder sb, ZEmailAddress email) {
+    private static void addAddr(StringBuilder sb, ZEmailAddress email, int size) {
         if (email == null) return;
-        if (sb.length() > 0) sb.append(", ");        
-        if (email.getDisplay() != null)
+        if (sb.length() > 0) sb.append(", ");
+        if (size > 1 && email.getDisplay() != null)
             sb.append(email.getDisplay());        
         else if (email.getPersonal() != null)
             sb.append(email.getPersonal());
@@ -43,9 +43,10 @@ public class BeanUtils {
     
     public static String getAddrs(List<ZEmailAddress> addrs) {
         if ( addrs == null) return "";
+        int len = addrs.size();
         StringBuilder sb = new StringBuilder();
         for (ZEmailAddress addr: addrs) {
-            addAddr(sb, addr);
+            addAddr(sb, addr, addrs.size());
         }
         return sb.toString();
     }

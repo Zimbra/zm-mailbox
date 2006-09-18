@@ -78,7 +78,7 @@ Mail
 <table cellpadding=2 cellspacing=0 >
 
 <tr>
-<th width=1% nowrap>
+<th width=1% nowrap>&nbsp;
 <th width=1% nowrap><img src="images/FlagRed.gif" width=16 height=16 border=0 alt="">
 <th width=30%>From
 <th width=1% nowrap><img src="images/Attachment.gif" width=16 height=16 border=0 alt="">

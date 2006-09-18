@@ -80,9 +80,9 @@ Mail
 <tr>
 <th width=1% nowrap>
 <th width=1% nowrap><img src="images/FlagRed.gif" width=16 height=16 border=0 alt="">
-<th width=30%>From
+<th width=20%>From
 <th width=1% nowrap><img src="images/Attachment.gif" width=16 height=16 border=0 alt="">
-<th width=68%>Fragment
+<th width=78%>Fragment
 <th width=1% nowrap>Size
 <th width=1% nowrap>Received
 </tr>

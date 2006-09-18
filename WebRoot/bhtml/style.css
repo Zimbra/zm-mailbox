@@ -64,9 +64,8 @@ border-color: #E0E0E0 #555555 #bed8ee #E0E0E0;
 }
 
 .Tree {
-	background-color: #bed8ee;
 	background-color: #F7F7F7;
-	margin: 10px 0px 10px 10px; 
+	margin: 10px 0px 10px 10px;
 	border: 1px solid;
 	border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 }
@@ -78,12 +77,15 @@ border-color: #E0E0E0 #555555 #bed8ee #E0E0E0;
 
 .Tree TH,.List TH {
 	text-align: left;
-	background-color:#a2b8ca;
+    background-color: #abc2d6;	
+	/*background-color:#a2b8ca;*/
 	font-weight:bold;
 	height:18px;
 	padding-right:5px;
 	border: 1px solid;
-	border-color: #E0E0E0 #555555 #555555 #E0E0E0;
+/*	border-bottom-color: #56616b;*/
+	border-color: #E0E0E0 56616b 56616b #E0E0E0;
+/*	border-color: #E0E0E0 #555555 #555555 #E0E0E0;	*/
 	padding-top:1px;
 	padding-left:2px;
 	margin-left:2px;
@@ -93,8 +95,9 @@ border-color: #E0E0E0 #555555 #bed8ee #E0E0E0;
 
 .List {
 background-color: #F7F7F7;
-margin: 5px 10px 5px 10px;
-padding:5px; 
+margin: 0px 10px 0px 10px;
+/*margin: 5px 10px 5px 10px;*/
+padding:0px; 
 border: 1px solid;
 border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 }
@@ -138,6 +141,7 @@ border-right: 1px solid #0C0C0C;
 .MessageHeader table {
 background-color: #EEEEEE;
 margin: 5px 0px 5px 0px;
+/*margin: 5px 0px 5px 0px;*/
 padding:5px; 
 border: 1px solid;
 border-color: #E0E0E0 #555555 #555555 #E0E0E0;
