@@ -1,0 +1,37 @@
+
+<zm:forEachTag var="tag">
+
+sets "tag" to a ZTagBean
+
+</zm:forEachTag>
+
+-------------------------------------
+
+<zm:forEachFolder var="folder">
+
+sets "folder" to a ZFolderBean
+
+</zm:forEachFolder> 
+
+-------------------------------------
+
+<zm:search query="{query-string}" var="result" 
+        [limit="..."] [offset="..."] 
+        [sort="{sort-by}"] [types="{types}"]/>
+
+
+sets result to a ZSearchResultBean
+
+result.count = number of items returned
+result.hasMore = more search results remain
+result.hits = array list of items
+result.previousOffset = offset to page back (based on limit/offset)
+result.nextOffset = offset to page forward (based on limit/offset)
+
+-------------
+
+<zm:getMessage var="message" id="{msg-id}" 
+      [markread="*true/false"]
+      [defangedhtml="*true/false"]
+      [part="{part-name}"]
+      [subid="{subid}"]      
