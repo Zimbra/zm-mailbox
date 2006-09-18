@@ -54,6 +54,7 @@ import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpURL;
+import org.apache.commons.httpclient.HttpsURL;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -120,7 +121,7 @@ public class FeedManager {
 
                 // username and password are encoded in the URL as http://user:pass@host/...
                 if (url.indexOf('@') != -1) {
-                    HttpURL httpurl = new HttpURL(url);
+                    HttpURL httpurl = lcurl.startsWith("https:") ? new HttpsURL(url) : new HttpURL(url);
                     if (httpurl.getUser() != null) {
                         UsernamePasswordCredentials creds = new UsernamePasswordCredentials(httpurl.getUser(), httpurl.getPassword());
                         client.getState().setCredentials(AuthScope.ANY, creds);
