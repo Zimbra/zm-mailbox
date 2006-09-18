@@ -62,7 +62,6 @@ public class RegexHandler implements ZimletHandler {
 			handlerConfig.replaceAll("&gt;", ">");
 			handlerConfig.replaceAll("&apos;", "'");
 			handlerConfig.replaceAll("&quot;", "\"");
-			com.zimbra.cs.util.ZimbraLog.zimlet.info(handlerConfig);
 	        mPattern = Pattern.compile(handlerConfig);
 	    }
         Matcher m = mPattern.matcher(text);
