@@ -49,6 +49,16 @@
 	<property name="deploy.host" value="localhost" />
 	<property name="deploy.port" value="7070" />
 
+	<condition property="deploy.dir" value="${env.DEPLOY_DIR}">
+	    <isset property="env.DEPLOY_DIR" />
+	</condition>	
+
+	<condition property="deploy.dir" value="/opt/zimbra/tomcat/webapps">
+	  <not><isset property="env.DEPLOY_DIR"/></not>
+	</condition>	
+	
+	<property name="deploy.path" value="/service" />
+		
 	<property name="lmtp.host" value="localhost" />
 	<property name="lmtp.port" value="7025" />
 	<property name="lmtpinject.numthreads" value="2" />
@@ -266,7 +276,7 @@
 	     which can be redeployed. Please copy
 	     {mail,activation,zimbra-native}.jar to
 	     $TOMCAT\common\lib -->
-	<property name="war.exclude" value="${ical4j.jar},servlet-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar"/>
+	<property name="war.exclude" value="${ical4j.jar},servlet-api.jar,jsp-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar"/>
 
 	<target name="war" depends="jar">
 		<echo>war.exclude=${war.exclude}</echo>
@@ -275,7 +285,20 @@
 			<lib file="${jarfile}" />
 			<lib dir="${jars.dir}" includes="*.jar" excludes="${war.exclude}" />
 			<classes dir="${config.dir}" includes="sieveConfig.xml" />
+		        <webinf dir="WebRoot/WEB-INF" includes="tlds/*"/>
 		</war>
+	</target>
+
+	  <!-- 
+	  This target is meant only to be run after a full deploy has
+	  been done once. It does not deal with the java code used by the
+	  ZimbraWebClient webapp, so if there are any java changes, another
+	  deploy will have to be run.
+	  -->
+	<target name="dev-sync">
+	  <copy verbose="true" todir="${deploy.dir}${deploy.path}">
+	    <fileset dir="WebRoot"/>
+	  </copy>
 	</target>
 
 	<target name="service-deploy" depends="refresh-opt-zimbra,deploy-war,deploy-zimlets" description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
