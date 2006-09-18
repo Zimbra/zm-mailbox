@@ -57,6 +57,12 @@ public class RegexHandler implements ZimletHandler {
 			if (handlerConfig == null) {
 				throw ZimletException.ZIMLET_HANDLER_ERROR("null regex value");
 			}
+			handlerConfig.replaceAll("&amp;", "&");
+			handlerConfig.replaceAll("&lt;", "<");
+			handlerConfig.replaceAll("&gt;", ">");
+			handlerConfig.replaceAll("&apos;", "'");
+			handlerConfig.replaceAll("&quot;", "\"");
+			com.zimbra.cs.util.ZimbraLog.zimlet.info(handlerConfig);
 	        mPattern = Pattern.compile(handlerConfig);
 	    }
         Matcher m = mPattern.matcher(text);
