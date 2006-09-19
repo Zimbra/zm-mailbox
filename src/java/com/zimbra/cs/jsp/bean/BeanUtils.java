@@ -25,6 +25,8 @@
 package com.zimbra.cs.jsp.bean;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.zimbra.cs.zclient.ZEmailAddress;
 
@@ -59,6 +61,37 @@ public class BeanUtils {
             return addr.getAddress();
         else
             return "";
+    }
+    
+    private static String replaceAll(String text, Pattern pattern, String replace) {
+        Matcher m = pattern.matcher(text);
+        StringBuffer sb = null;
+        while (m.find()) {
+            if (sb == null) sb = new StringBuffer();
+            m.appendReplacement(sb, replace);
+        }
+        if (sb != null) m.appendTail(sb);
+        return sb == null ? text : sb.toString();
+    }
+    
+    private static final Pattern sAMP = Pattern.compile("&", Pattern.MULTILINE);
+    private static final Pattern sTWO_SPACES = Pattern.compile("  ", Pattern.MULTILINE);
+    private static final Pattern sLEADING_SPACE = Pattern.compile("^ ", Pattern.MULTILINE);
+    private static final Pattern sTAB = Pattern.compile("\\t", Pattern.MULTILINE);
+    private static final Pattern sLT = Pattern.compile("<", Pattern.MULTILINE);
+    private static final Pattern sGT = Pattern.compile(">", Pattern.MULTILINE);
+    private static final Pattern sNL = Pattern.compile("\\r?\\n", Pattern.MULTILINE);    
+    
+    public static String textToHtml(String text) {
+        if (text == null || text.length() == 0) return "";
+        String s = replaceAll(text, sAMP, "&amp;");
+        s = replaceAll(s, sTWO_SPACES, " &nbsp;");
+        s = replaceAll(s, sLEADING_SPACE, "&nbsp;");
+        s = replaceAll(s, sTAB, "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+        s = replaceAll(s, sLT, "&lt;");
+        s = replaceAll(s, sGT, "&gt;");
+        s = replaceAll(s, sNL, "<br />");
+        return s;
     }
 
 }

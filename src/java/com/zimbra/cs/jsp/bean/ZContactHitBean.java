@@ -53,4 +53,18 @@ public class ZContactHitBean extends ZSearchHitBean {
      * @return time in msecs
      */
     public long getMetaDataChangedDate() { return mHit.getMetaDataChangedDate(); }
+    
+    /**
+     * @return first email from email/2/3 that is set, or an empty string
+     */
+    public String getDisplayEmail() {
+        if (getEmail() != null && getEmail().length() > 0) 
+            return getEmail();
+        else if (getEmail2() != null && getEmail2().length() > 0) 
+            return getEmail2();
+        else if (getEmail3() != null && getEmail3().length() > 0) 
+            return getEmail3();
+        else
+            return "";
+    }
 }
