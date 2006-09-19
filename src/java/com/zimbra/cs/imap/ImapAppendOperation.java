@@ -130,7 +130,7 @@ public class ImapAppendOperation extends Operation  {
                     if (sflags != 0 && mImapSession.isSelected()) {
                         ImapMessage i4msg = mImapSession.getFolder().getById(msg.getId());
                         if (i4msg != null)
-                            i4msg.setSessionFlags(sflags);
+                            i4msg.setSessionFlags(sflags, mImapSession.getFolder());
                     }
                 }
             } catch (IOException e) {
