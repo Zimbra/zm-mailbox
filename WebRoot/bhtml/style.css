@@ -132,7 +132,9 @@ border-right: 1px solid #0C0C0C;
 .Tb SPAN { vertical-align: middle; font-weight: bold; }
 
 .Unread {	font-weight:bold; }
-.Selected { background-color: #DDDDDD; }
+.RowSelected { background-color: #fdf8ba; }
+
+.TreeSelected { background-color: #DDDDDD; }
 
 .MsgHdr TABLE {
 background-color: background-color: #abc2d6;	

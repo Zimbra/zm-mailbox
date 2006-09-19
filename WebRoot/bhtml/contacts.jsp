@@ -21,7 +21,7 @@
 &nbsp;
     </td>
     <td class='Tab'>
-Mail
+<a href="clv.jsp">Mail</a>
     </td>
 
     <td class='TabSelected'>
@@ -51,11 +51,11 @@ Mail
 </td>
 <td align=right>
  <c:if test="${param.offset > 0}">
-   <a href="?offset=${searchResult.previousOffset}"><img src="images/arrows/PreviousPage.gif" border=0></a>
+   <a href="?offset=${searchResult.previousOffset}"><img src="images/arrows/LeftArrow.gif" border=0></a>
  </c:if>
  <span>${param.offset+1} - ${param.offset+searchResult.size}</span>
  <c:if test="${searchResult.hasMore}">
-   <a href="?offset=${searchResult.nextOffset}"><img src="images/arrows/NextPage.gif" border=0></a>
+   <a href="?offset=${searchResult.nextOffset}"><img src="images/arrows/RightArrow.gif" border=0></a>
  </c:if>         	
 </td>
 </tr>

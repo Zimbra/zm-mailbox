@@ -50,11 +50,11 @@ Mail
 </td>
 <td align=right>
  <c:if test="${param.offset > 0}">
-   <a href="?offset=${searchResult.previousOffset}"><img src="images/arrows/PreviousPage.gif" border=0></a>
+   <a href="?offset=${searchResult.previousOffset}"><img src="images/arrows/LeftArrow.gif" border=0></a>
  </c:if>
  <span>${param.offset+1} - ${param.offset+searchResult.size}</span>
  <c:if test="${searchResult.hasMore}">
-   <a href="?offset=${searchResult.nextOffset}"><img src="images/arrows/NextPage.gif" border=0></a>
+   <a href="?offset=${searchResult.nextOffset}"><img src="images/arrows/RightArrow.gif" border=0></a>
  </c:if>         	
 </td>
 </tr>
@@ -87,8 +87,10 @@ Mail
 <th width=1% nowrap>Received
 </tr>
 
+<c:set value="${searchResult.hits[0].id}" var="cid"/>
+
 <c:forEach items="${searchResult.hits}" var="conv">
-<tr class='ConvRow${conv.isUnread ? ' Unread':''}'>
+<tr class='Row ${conv.isUnread ? ' Unread':''}${conv.id == cid ? ' RowSelected' : ''}'>
 <td width=1% nowrap><input type=checkbox name=t value="1"></td>
 <td width=1% nowrap><img src="images/${conv.isFlagged? 'FlagRed.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Starred></td>
 <td><c:out value="${conv.displayRecipients}" default="<Unknown>"/></td>

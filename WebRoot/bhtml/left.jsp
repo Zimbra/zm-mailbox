@@ -4,7 +4,7 @@
 <div class=Tree>
 <table>
    <tr><th class=TreeHeading>Folders</th></tr>
-   <tr><td class=Selected><a href="clv.jsp?query=in:inbox">Inbox</a></td></tr>   
+   <tr><td class=TreeSelected><a href="clv.jsp?query=in:inbox">Inbox</a></td></tr>   
    <tr><td><a href="?">Sent</a></td></tr>
    <tr><td><a href="?">Drafts</a></td></tr>      
    <tr><td><a href="?">Junk</a></td></tr>
