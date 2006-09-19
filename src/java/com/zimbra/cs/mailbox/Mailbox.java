@@ -2752,7 +2752,7 @@ public class Mailbox {
      */
     public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize) 
     throws IOException, ParseException, ServiceException {
-        return search(SoapProtocol.Soap12, octxt, queryString, types, sortBy, chunkSize, true, SearchResultMode.NORMAL);
+        return search(SoapProtocol.Soap12, octxt, queryString, null, types, sortBy, chunkSize, true, SearchResultMode.NORMAL);
     }
 
     /**
@@ -2769,7 +2769,7 @@ public class Mailbox {
      * @throws ParseException
      * @throws ServiceException
      */
-    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize, boolean prefetch, SearchResultMode mode) 
+    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, String queryString, java.util.TimeZone tz, byte[] types, SortBy sortBy, int chunkSize, boolean prefetch, SearchResultMode mode) 
     throws IOException, ParseException, ServiceException {
         
         if (octxt == null)
@@ -2779,7 +2779,7 @@ public class Mailbox {
         boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
         boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
         
-        ZimbraQuery zq = new ZimbraQuery(queryString, this, types, sortBy, includeTrash, includeSpam, chunkSize, prefetch, mode);
+        ZimbraQuery zq = new ZimbraQuery(queryString, tz, this, types, sortBy, includeTrash, includeSpam, chunkSize, prefetch, mode);
         try {
             zq.executeRemoteOps(proto, octxt);
             

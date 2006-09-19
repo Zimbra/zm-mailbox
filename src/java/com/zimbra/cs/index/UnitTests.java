@@ -51,12 +51,13 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author tim
  */
 public class UnitTests extends TestCase {
-
+    
     public UnitTests() {
     }
     /*
@@ -72,7 +73,11 @@ public class UnitTests extends TestCase {
     public void testSearch() throws ServiceException 
     { 
         
-        assertTrue(runTestQuery(1, "(linux or has:ssn) and before:1/1/2009 and -subject:\"zipped document\"", false, new QueryResult[]
+
+        runTestQuery(mMailboxId, "in:inbox", false, NO_EXPECTED_CHECK);
+        
+        
+        assertTrue(runTestQuery(mMailboxId, "(linux or has:ssn) and before:1/1/2009 and -subject:\"zipped document\"", false, new QueryResult[]
                                                                                                                                      {
                                                                                   new QueryResult("Frequent system freezes after kernel bug"),
                                                                                   new QueryResult("Linux Desktop Info")
@@ -80,7 +85,7 @@ public class UnitTests extends TestCase {
                                                                                                                                      }
                                                                           ));        
 
-        assertTrue(runTestQuery(1, "from:ross and not roland", true, new QueryResult[]
+        assertTrue(runTestQuery(mMailboxId, "from:ross and not roland", true, new QueryResult[]
                                                                                      {
                                                                                              new QueryResult("meeting")
                                                                                       }
@@ -90,70 +95,70 @@ public class UnitTests extends TestCase {
         /////////////////////////////////
         // BROKEN AND MUST BE FIXED:
         /////////////////////////////////
-        assertTrue(runTestQuery(1, "date:(01/01/2001 02/02/2002)", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "date:-1d date:(01/01/2001 02/02/2002)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "date:(01/01/2001 02/02/2002)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "date:-1d date:(01/01/2001 02/02/2002)", false, NO_EXPECTED_CHECK));
         
         
-        assertTrue(runTestQuery(1, "in:(trash -junk)", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "date:(-1d or -2d)", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "date:\"-4d\"", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "date:-4d", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "date:\"+1d\"", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "date:+2w", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "in:(trash -junk)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "date:(-1d or -2d)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "date:\"-4d\"", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "date:-4d", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "date:\"+1d\"", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "date:+2w", false, NO_EXPECTED_CHECK));
         
-        assertTrue(runTestQuery(1, "not date:(1/1/2004 or 2/1/2004)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "not date:(1/1/2004 or 2/1/2004)", false, NO_EXPECTED_CHECK));
         
         
         /////////////////////////////////
         // Parser-only checks
         /////////////////////////////////
-        assertTrue(runTestQuery(1, "content:foo", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "content:\"foo bar\"", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "from:foo@bar.com", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "from:\"foo bar\"", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "to:foo@bar.com", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "to:\"foo bar\"", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "cc:foo@bar.com", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "cc:\"foo bar\"", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "subject:this_is_my_subject subject:\"this is_my_subject\"", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "in:inbox", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "has:attachment has:phone has:url", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "filename:foo filename:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "type:attachment type:text type:application type:word type:msword "+
+        assertTrue(runTestQuery(mMailboxId, "content:foo", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "content:\"foo bar\"", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "from:foo@bar.com", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "from:\"foo bar\"", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "to:foo@bar.com", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "to:\"foo bar\"", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "cc:foo@bar.com", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "cc:\"foo bar\"", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "subject:this_is_my_subject subject:\"this is_my_subject\"", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "in:inbox", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "has:attachment has:phone has:url", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "filename:foo filename:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "type:attachment type:text type:application type:word type:msword "+
                 "type:excel type:xls type:ppt type:pdf type:ms-tnef type:image type:jpeg type:gif type:bmp "+
                 "type:none type:any", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "is:(read unread flagged unflagged \"sent\" received replied unreplied forwarded unforwarded)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "is:(read unread flagged unflagged \"sent\" received replied unreplied forwarded unforwarded)", false, NO_EXPECTED_CHECK));
 
         // known broken:
-//        assertTrue(runTestQuery(1, "date:2001/01/13", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "date:+1d", false, NO_EXPECTED_CHECK));
+//        assertTrue(runTestQuery(mM, "date:2001/01/13", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "date:+1d", false, NO_EXPECTED_CHECK));
         
-//        assertTrue(runTestQuery(1, "before:-1d before:(01/01/2001 2/2/2002)", false, NO_EXPECTED_CHECK));
+//        assertTrue(runTestQuery(mM, "before:-1d before:(01/01/2001 2/2/2002)", false, NO_EXPECTED_CHECK));
         
         // broken:
-//        assertTrue(runTestQuery(1, "before:-1d before:(-1d 10d -100d 1w -10w -100h 1y -10y)", false, NO_EXPECTED_CHECK));
+//        assertTrue(runTestQuery(mM, "before:-1d before:(-1d 10d -100d 1w -10w -100h 1y -10y)", false, NO_EXPECTED_CHECK));
 
-//        assertTrue(runTestQuery(1, "after:-1d after:(01/01/2001 2/2/2002)", false, NO_EXPECTED_CHECK));
+//        assertTrue(runTestQuery(mM, "after:-1d after:(01/01/2001 2/2/2002)", false, NO_EXPECTED_CHECK));
 
         // broken:
-        //assertTrue(runTestQuery(1, "after:-1d after:(01/01/2001 2001/01/02 +1d -1d +10d -100d +1w -10w -100h 1y -10y)", false, NO_EXPECTED_CHECK));
+        //assertTrue(runTestQuery(mM, "after:-1d after:(01/01/2001 2001/01/02 +1d -1d +10d -100d +1w -10w -100h 1y -10y)", false, NO_EXPECTED_CHECK));
         
-        assertTrue(runTestQuery(1, "size:(1 20 300 1k <1k 10k >10k 100kb 34mb)", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "larger:(1 20 300 100kb 34mb)", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "smaller:(1 20 300 100kb 34mb)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "size:(1 20 300 1k <1k 10k >10k 100kb 34mb)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "larger:(1 20 300 100kb 34mb)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "smaller:(1 20 300 100kb 34mb)", false, NO_EXPECTED_CHECK));
         
-        assertTrue(runTestQuery(1, "author:foo author:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "title:foo title:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "keywords:foo keywords:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "company:foo company:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "metadata:foo metadata:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "author:foo author:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "title:foo title:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "keywords:foo keywords:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "company:foo company:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "metadata:foo metadata:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
 
         
         /////////////////////////////////
         // Search checks -- if you change the default data set these may start to fail!
         //                  just update the expected value list (order matters but case doesn't!)
         /////////////////////////////////
-        assertTrue(runTestQuery(1, "contributing to xmlbeans ", false, 
+        assertTrue(runTestQuery(mMailboxId, "contributing to xmlbeans ", false, 
                 new QueryResult[] { 
                 new QueryResult("Contributing to XMLBeans"),
                 new QueryResult("XmlBeans.jar size"),
@@ -161,7 +166,7 @@ public class UnitTests extends TestCase {
         })
         );
         
-//      assertTrue(runTestQuery(1, "ski and not \"voice mail\"", false, 
+//      assertTrue(runTestQuery(mM, "ski and not \"voice mail\"", false, 
 //      new QueryResult[] { 
 //      new QueryResult("Here are my ski pictures!")
 //      })
@@ -169,13 +174,13 @@ public class UnitTests extends TestCase {
         
         
 		// skip this test -- it returns different results with or without verity, and that's annoying
-        //assertTrue(runTestQuery(1, "desktop -zipped", true, 
+        //assertTrue(runTestQuery(mM, "desktop -zipped", true, 
 //		new QueryResult[] { 
 //		new QueryResult("Linux Desktop Info")
 //		}
 //		));
         
-        assertTrue(runTestQuery(1, "before:1/1/2004 and source", false, new QueryResult[]
+        assertTrue(runTestQuery(mMailboxId, "before:1/1/2004 and source", false, new QueryResult[]
         {
                 new QueryResult("Contributing to XMLBeans")
                 ,new QueryResult("XmlBeans.jar size")
@@ -192,7 +197,6 @@ public class UnitTests extends TestCase {
                 ,new QueryResult("Finalizers")
                 ,new QueryResult("Mapping XML type QName to Java Class name?")
                 ,new QueryResult("xmlbeans javadocs?")
-                ,new QueryResult("xmlbeans javadocs?")
                 ,new QueryResult("licenses for jaxb-api.jar and jax-qname.jar...?")
                 ,new QueryResult("code to contribute: JAM")
                 ,new QueryResult("STAX")
@@ -206,33 +210,31 @@ public class UnitTests extends TestCase {
                 ,new QueryResult("XmlBeans source code has been checked in ...")
                 ,new QueryResult("XmlBeans source code has been checked in ...")
                 ,new QueryResult("XmlBeans source code has been checked in ...")
-                ,new QueryResult("XmlBeans source code has been checked in ...")
-                ,new QueryResult("XmlBeans source code has been checked in ...")
                 ,new QueryResult("Source Code")
                 ,new QueryResult("Source Code")
                 ,new QueryResult("Source Code")
         }
         ));
         
-        assertTrue(runTestQuery(1, "subject:linux", false, new QueryResult[]
+        assertTrue(runTestQuery(mMailboxId, "subject:linux", false, new QueryResult[]
                                                                            {
                 new QueryResult("Linux Desktop Info")
                                                                            }
         ));
         
-        assertTrue(runTestQuery(1, "subject:\"code has\"", false, new QueryResult[]
+        assertTrue(runTestQuery(mMailboxId, "subject:\"code has\"", false, new QueryResult[]
                                                                                 {
                 new QueryResult("XmlBeans source code has been checked in ...")
                 ,new QueryResult("XmlBeans source code has been checked in ...")
                 ,new QueryResult("XmlBeans source code has been checked in ...")
                 ,new QueryResult("XmlBeans source code has been checked in ...")
                 ,new QueryResult("XmlBeans source code has been checked in ...")
-                ,new QueryResult("XmlBeans source code has been checked in ...")
-                ,new QueryResult("XmlBeans source code has been checked in ...")
+//                ,new QueryResult("XmlBeans source code has been checked in ...")
+//                ,new QueryResult("XmlBeans source code has been checked in ...")
                                                                                 }
         ));        
 
-        assertTrue(runTestQuery(1, "(linux or has:ssn) and before:1/1/2009 and -subject:\"zipped document\"", false, new QueryResult[]
+        assertTrue(runTestQuery(mMailboxId, "(linux or has:ssn) and before:1/1/2009 and -subject:\"zipped document\"", false, new QueryResult[]
                                                                    {
                 new QueryResult("Frequent system freezes after kernel bug"),
                 new QueryResult("Linux Desktop Info")
@@ -240,10 +242,10 @@ public class UnitTests extends TestCase {
                                                                    }
         ));        
     
-        assertTrue(runTestQuery(1, "larger:1M", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(1, "foo or not foo", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "larger:1M", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "foo or not foo", false, NO_EXPECTED_CHECK));
 		
-        assertTrue(runTestQuery(1, "(foo or not foo) and larger:1M", false, new QueryResult[]
+        assertTrue(runTestQuery(mMailboxId, "(foo or not foo) and larger:1M", false, new QueryResult[]
                                                                                             {
                                      new QueryResult("Here are my ski pictures!")
                                      ,new QueryResult("AdminGuide...")
@@ -272,7 +274,7 @@ public class UnitTests extends TestCase {
                             cmpId == msgFolderId);
                 } 
             };
-            runTestQuery(1, "in:inbox", false, NO_EXPECTED_CHECK, val);
+            runTestQuery(mMailboxId, "in:inbox", false, NO_EXPECTED_CHECK, val);
         }
         {
             final Date compDate = (new GregorianCalendar(2004, 1, 1)).getTime();
@@ -287,7 +289,7 @@ public class UnitTests extends TestCase {
                 } 
             };
             
-            runTestQuery(1, "before:1/1/2004", false, NO_EXPECTED_CHECK, val);
+            runTestQuery(mMailboxId, "before:1/1/2004", false, NO_EXPECTED_CHECK, val);
         }
         
         
@@ -309,7 +311,7 @@ public class UnitTests extends TestCase {
             QueryResult[] ret = RunQuery(mailboxId, qstr, conv, null);
             
             String qstr2 = qstr.replaceAll("\"", "\\\\\"");
-            System.out.println("assertTrue(runTestQuery(1, \""+
+            System.out.println("assertTrue(runTestQuery(mM, \""+
                     qstr2+"\", false, new QueryResult[]\n{");
             
             if (ret.length > 0) {
@@ -357,14 +359,16 @@ public class UnitTests extends TestCase {
                         mh.isTagged(compTag));
             } 
         };
-        runTestQuery(1, "tag:"+tagName, false, NO_EXPECTED_CHECK, val);
+        runTestQuery(mMailboxId, "tag:"+tagName, false, NO_EXPECTED_CHECK, val);
     }
 
     public static abstract class ResultValidator {
         public abstract void validate(ZimbraHit hit) throws ServiceException;
     }
     
-    public static final QueryResult[] NO_EXPECTED_CHECK = {}; 
+    public static final QueryResult[] NO_EXPECTED_CHECK = {};
+    
+    public int mMailboxId = 2;
     
     public boolean runTestQuery(int mailboxId, String qstr, boolean conv, 
             QueryResult[] expected)
@@ -377,6 +381,7 @@ public class UnitTests extends TestCase {
             QueryResult[] expected, ResultValidator validator)
     {
 //        System.out.println("\n\nrunTestQuery("+mailboxId+","+qstr+")");
+//        Zimbra.toolSetup("DEBUG");
         
         try {
             QueryResult[] ret = RunQuery(mailboxId, qstr, conv, validator);
@@ -460,7 +465,7 @@ public class UnitTests extends TestCase {
     
     public static QueryResult[] RunQuery(int mailboxId, String qstr, 
     		boolean conv, ResultValidator validator) throws IOException, MailServiceException, ParseException, ServiceException {
-    	ArrayList ret = new ArrayList();
+    	ArrayList<QueryResult> ret = new ArrayList<QueryResult>();
 
     	MailboxIndex searcher = Mailbox.getMailboxById(mailboxId).getMailboxIndex();
 
@@ -484,9 +489,9 @@ public class UnitTests extends TestCase {
 
     	Mailbox mbox = Mailbox.getMailboxById(mailboxId);
 
-    	ZimbraQuery zq = new ZimbraQuery(qstr, mbox, 
+    	ZimbraQuery zq = new ZimbraQuery(qstr, null, mbox, 
     			types, SortBy.DATE_DESCENDING,
-    			false, false, 100);
+    			false, false, 100, true, Mailbox.SearchResultMode.NORMAL);
 
     	ZimbraQueryResults res = zq.execute();
 
@@ -577,7 +582,9 @@ public class UnitTests extends TestCase {
 
     public static void main(String[] args)
     {
-        Zimbra.toolSetup();
+        Zimbra.toolSetup("DEBUG");
+        ZimbraLog.account.info("INFO TEST!");
+        ZimbraLog.account.debug("DEBUG TEST!");
 
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -597,6 +604,9 @@ public class UnitTests extends TestCase {
         }
         
         runTests();
+        
+        // hack: some system thread isn't cleaned up...just exit
+        System.exit(1);
     }
     
     public static void runTests()

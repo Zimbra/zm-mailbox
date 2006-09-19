@@ -77,7 +77,7 @@ public class SearchOperation extends Operation {
 		try {
 			byte[] types = MailboxIndex.parseGroupByString(mParams.getTypesStr());
 			
-			mResults = getMailbox().search(mProto, getOpCtxt(), mParams.getQueryStr(), types, mParams.getSortBy(), mParams.getLimit() + mParams.getOffset(), mPrefetch, mMode);
+			mResults = getMailbox().search(mProto, getOpCtxt(), mParams.getQueryStr(), mParams.getTimeZone(), types, mParams.getSortBy(), mParams.getLimit() + mParams.getOffset(), mPrefetch, mMode);
 			
 		} catch (IOException e) {
 			throw ServiceException.FAILURE("IO error", e);

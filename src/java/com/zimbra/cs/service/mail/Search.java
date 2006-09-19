@@ -33,11 +33,13 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Appointment;
@@ -91,7 +93,24 @@ public class Search extends MailDocumentHandler  {
             results.doneWithSearchResults();
         }
     }
+    
+    protected java.util.TimeZone parseTimeZonePart(Element tzElt, ZimbraSoapContext zc) throws ServiceException {
+        String id = tzElt.getAttribute(MailService.A_ID);
 
+        // is it a well-known timezone?  if so then we're done here
+        WellKnownTimeZone knownTZ = Provisioning.getInstance().getTimeZoneById(id);
+        if (knownTZ != null)
+            return knownTZ.toTimeZone();
+
+        // custom timezone!
+        
+        String test = tzElt.getAttribute(MailService.A_APPT_TZ_STDOFFSET, null);
+        if (test == null)
+            throw ServiceException.INVALID_REQUEST("Unknown TZ: \""+id+"\" and no "+MailService.A_APPT_TZ_STDOFFSET+" specified", null);
+        
+        return CalendarUtils.parseTzElement(tzElt);
+    }
+    
     protected SearchParams parseCommonParameters(Element request, ZimbraSoapContext zc) throws ServiceException {
         String query = request.getAttribute(MailService.E_QUERY, null);
         if (query == null)
@@ -101,6 +120,14 @@ public class Search extends MailDocumentHandler  {
             throw ServiceException.INVALID_REQUEST("no query submitted and no default query found", null);
 
         SearchParams params = new SearchParams();
+        
+        TimeZone tz = null;
+        Element tzElt = request.getOptionalElement(MailService.E_APPT_TZ);
+        if (tzElt != null) {
+            tz = parseTimeZonePart(tzElt, zc);
+            params.setTimeZone(tz);
+        }
+        
         params.setOffset(getOffset(request));
         params.setLimit(getLimit(request));
         params.setQueryStr(query);

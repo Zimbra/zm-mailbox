@@ -272,8 +272,6 @@ public final class ZimbraQuery {
 
     public static class DateQuery extends BaseQuery
     {
-
-
         private Date mDate = null;
         private Date mEndDate = null;
 
@@ -323,7 +321,7 @@ public final class ZimbraQuery {
         protected static final Pattern sAbsYLastPattern = Pattern.compile(ABSDATE_YLAST_PATTERN);
         protected static final Pattern sRelDatePattern = Pattern.compile(RELDATE_PATTERN);
 
-        public void parseDate(int modifier, String s) throws com.zimbra.cs.index.queryparser.ParseException
+        public void parseDate(int modifier, String s, TimeZone tz) throws com.zimbra.cs.index.queryparser.ParseException
         {
             //          * DATE:  absolute-date = mm/dd/yyyy | yyyy/dd/mm  OR
             //          *        relative-date = [+/-]nnnn{minute,hour,day,week,month,year}
@@ -339,6 +337,8 @@ public final class ZimbraQuery {
                     if (s.equalsIgnoreCase("today")) 
                     {
                         GregorianCalendar cal = new GregorianCalendar();
+                        if (tz != null)
+                            cal.setTimeZone(tz);
                         cal.setTime(new Date());
 
                         cal.set(Calendar.HOUR_OF_DAY, 0);
@@ -352,6 +352,9 @@ public final class ZimbraQuery {
 
                     } else if (s.equalsIgnoreCase("yesterday")) {
                         GregorianCalendar cal = new GregorianCalendar();
+                        if (tz != null)
+                            cal.setTimeZone(tz);
+                        
                         cal.setTime(new Date());
 
                         cal.set(Calendar.HOUR_OF_DAY, 0);
@@ -439,6 +442,9 @@ public final class ZimbraQuery {
                     //                System.out.println("RELDATE: MOD=\""+mod+"\" AMT=\""+reltime+"\" TYPE="+type);
 
                     GregorianCalendar cal = new GregorianCalendar();
+                    if (tz != null)
+                        cal.setTimeZone(tz);
+                    
                     cal.setTime(new Date());
 
                     int num = Integer.parseInt(reltime);
@@ -485,6 +491,7 @@ public final class ZimbraQuery {
                     int year = 0;
 
                     Calendar cal = Calendar.getInstance();
+                    cal.setTimeZone(tz);
 
                     if (yearStr == null || monthStr == null || dayStr == null) {
 
@@ -1391,6 +1398,7 @@ public final class ZimbraQuery {
     private ZimbraQueryResults mResults;
     private boolean mPrefetch;
     private Mailbox.SearchResultMode mMode;
+    private java.util.TimeZone mTimeZone;
     
     private static String[] unquotedTokenImage;
 
@@ -1711,17 +1719,18 @@ public final class ZimbraQuery {
      * @throws ParseException
      * @throws ServiceException
      */
-    public ZimbraQuery(String queryString, Mailbox mbox, byte[] types, SortBy searchOrder, boolean includeTrash, boolean includeSpam, int chunkSize, boolean prefetch, Mailbox.SearchResultMode mode) 
+    public ZimbraQuery(String queryString, java.util.TimeZone tz, Mailbox mbox, byte[] types, SortBy searchOrder, boolean includeTrash, boolean includeSpam, int chunkSize, boolean prefetch, Mailbox.SearchResultMode mode) 
     throws ParseException, ServiceException
     {
         mMbox = mbox;
         mPrefetch = prefetch;
         mMode = mode;
+        mTimeZone = tz;
 
         //
         // Step 1: parse the text using the JavaCC parser
         ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(queryString));
-        parser.init(new ZimbraAnalyzer(), mMbox);
+        parser.init(new ZimbraAnalyzer(), mMbox, mTimeZone);
         mClauses = parser.Parse();
 
         String sortByStr = parser.getSortByStr();

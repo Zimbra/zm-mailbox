@@ -38,6 +38,7 @@ PARSER_BEGIN(ZimbraQueryParser)
 
 package com.zimbra.cs.index.queryparser;
 
+import java.util.TimeZone;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
@@ -225,7 +226,7 @@ public final class ZimbraQueryParser {
           case CONV_END:
           {
               ZimbraQuery.DateQuery q = new ZimbraQuery.DateQuery(mAnalyzer, target);
-              q.parseDate(modifier, tok);
+              q.parseDate(modifier, tok, mTimeZone);
               return q;
           }
           case TO:
@@ -249,6 +250,7 @@ public final class ZimbraQueryParser {
     
     private Analyzer mAnalyzer = null;
     private Mailbox mMailbox = null;
+    private TimeZone mTimeZone = null;
     
 	// the query string can OPTIONALLY have a "sortby:" element which will override the
 	// sortBy specified in the <SearchRequest> xml...this is basically to allow people
@@ -256,9 +258,10 @@ public final class ZimbraQueryParser {
     private String mSortByStr = null;
     public String getSortByStr() { return mSortByStr; }
     
-    public void init(Analyzer analyzer, Mailbox mbx) {
+    public void init(Analyzer analyzer, Mailbox mbx, TimeZone tz) {
        mAnalyzer = analyzer;
 	   mMailbox = mbx;
+	   mTimeZone = tz;
     }
     
     public ArrayList Parse() throws ServiceException, ParseException {

@@ -547,34 +547,46 @@ public class CalendarUtils {
         for (Iterator iter = parent.elementIterator(MailService.E_APPT_TZ); iter
                 .hasNext();) {
             Element tzElem = (Element) iter.next();
-            String tzid = tzElem.getAttribute(MailService.A_ID);
-            int standardOffset = (int) tzElem
-                    .getAttributeLong(MailService.A_APPT_TZ_STDOFFSET);
-            int daylightOffset = (int) tzElem.getAttributeLong(
-                    MailService.A_APPT_TZ_DAYOFFSET, standardOffset);
-            // minutes to milliseconds
-            standardOffset *= 60 * 1000;
-            daylightOffset *= 60 * 1000;
-
-            SimpleOnset standardOnset = null;
-            SimpleOnset daylightOnset = null;
-            if (daylightOffset != standardOffset) {
-                Element standard = tzElem
-                        .getOptionalElement(MailService.E_APPT_TZ_STANDARD);
-                Element daylight = tzElem
-                        .getOptionalElement(MailService.E_APPT_TZ_DAYLIGHT);
-                if (standard == null || daylight == null)
-                    throw ServiceException.INVALID_REQUEST(
-                                    "DST time zone missing standard and/or daylight onset",
-                                    null);
-                standardOnset = parseSimpleOnset(standard);
-                daylightOnset = parseSimpleOnset(daylight);
-            }
-
-            ICalTimeZone tz = new ICalTimeZone(tzid, standardOffset,
-                    standardOnset, daylightOffset, daylightOnset);
+            ICalTimeZone tz = parseTzElement(tzElem);
             tzMap.add(tz);
         }
+    }
+    
+    /**
+     * Parse a <tz> definition, as described in soap-calendar.txt and soap.txt (SearchRequest)
+     *
+     * @param tzElem
+     * @return
+     * @throws ServiceException
+     */
+    public static ICalTimeZone parseTzElement(Element tzElem) throws ServiceException {
+        String tzid = tzElem.getAttribute(MailService.A_ID);
+        int standardOffset = (int) tzElem
+                .getAttributeLong(MailService.A_APPT_TZ_STDOFFSET);
+        int daylightOffset = (int) tzElem.getAttributeLong(
+                MailService.A_APPT_TZ_DAYOFFSET, standardOffset);
+        // minutes to milliseconds
+        standardOffset *= 60 * 1000;
+        daylightOffset *= 60 * 1000;
+
+        SimpleOnset standardOnset = null;
+        SimpleOnset daylightOnset = null;
+        if (daylightOffset != standardOffset) {
+            Element standard = tzElem
+                    .getOptionalElement(MailService.E_APPT_TZ_STANDARD);
+            Element daylight = tzElem
+                    .getOptionalElement(MailService.E_APPT_TZ_DAYLIGHT);
+            if (standard == null || daylight == null)
+                throw ServiceException.INVALID_REQUEST(
+                                "DST time zone missing standard and/or daylight onset",
+                                null);
+            standardOnset = parseSimpleOnset(standard);
+            daylightOnset = parseSimpleOnset(daylight);
+        }
+
+        ICalTimeZone tz = new ICalTimeZone(tzid, standardOffset,
+                standardOnset, daylightOffset, daylightOnset);
+        return tz;
     }
 
     private static SimpleOnset parseSimpleOnset(Element element)

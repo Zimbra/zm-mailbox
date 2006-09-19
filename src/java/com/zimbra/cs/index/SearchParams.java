@@ -32,6 +32,8 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.TimeZone;
+
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
@@ -66,49 +68,50 @@ public final class SearchParams
 
     public void setQueryStr(String queryStr) { mQueryStr = queryStr; }
     public void setOffset(int offset) { mOffset = offset; }
-    
+
     public void setLimit(int limit) { mLimit = limit; }
-    
+
     // since the results are iterator-based, the "limit" is really the same as the chunk size at this point
     // ie, the limit is used to tell the system approximately how many results you want and it tries to get them
     // in a single chunk --- but it isn't until you do the results iteration that the limit is enforced.
     public void setChunkSize(int chunkSize) { setLimit(chunkSize); } 
-    
+
     public void setTypesStr(String groupByStr) throws ServiceException {
         mGroupByStr = groupByStr;
         types = MailboxIndex.parseGroupByString(getTypesStr());
     }
     public void setTypes(byte[] _types) { 
-    	types = _types;
-    	boolean atFirst = true;
-    	StringBuilder s = new StringBuilder();
-    	for (byte b : _types) {
-    		if (!atFirst)
-    			s.append(',');
-    		s.append(MailItem.getNameForType(b));
-    		atFirst = false;
-    	}
-    	mGroupByStr = s.toString();
+        types = _types;
+        boolean atFirst = true;
+        StringBuilder s = new StringBuilder();
+        for (byte b : _types) {
+            if (!atFirst)
+                s.append(',');
+            s.append(MailItem.getNameForType(b));
+            atFirst = false;
+        }
+        mGroupByStr = s.toString();
     }
-    
-    
+
+
     public void setSortBy(SortBy sortBy) {
-    	mSortBy = sortBy;
-    	mSortByStr = mSortBy.toString(); 
+        mSortBy = sortBy;
+        mSortByStr = mSortBy.toString(); 
     }
     public void setSortByStr(String sortByStr) throws ServiceException { 
         mSortByStr = sortByStr;
         mSortBy = MailboxIndex.SortBy.lookup(sortByStr);
         if (mSortBy == null) {
-        	mSortBy = SortBy.DATE_DESCENDING;
-        	mSortByStr = mSortBy.toString();
+            mSortBy = SortBy.DATE_DESCENDING;
+            mSortByStr = mSortBy.toString();
         }
     }
     public void setFetchFirst(boolean fetch) { mFetchFirst = fetch; }
     public void setMarkRead(boolean read) { mMarkRead = read; }
     public void setWantHtml(boolean html) { mWantHtml = html; }
     public void setWantRecipients(boolean recips) { mRecipients = recips; }
-    
+    public void setTimeZone(TimeZone tz) { mTimeZone = tz; }
+
     public boolean hasCursor() { return mHasCursor; }
     public void setCursor(ItemId prevMailItemId, String prevSort, int prevOffset) {
         mHasCursor = true;
@@ -125,6 +128,7 @@ public final class SearchParams
     public String getPrevSortValueStr() { return mPrevSortValueStr; }
     public long getPrevSortValueLong() { return mPrevSortValueLong; }
     public int getPrevOffset() { return mPrevOffset; }
+    public TimeZone getTimeZone() { return mTimeZone; }
 
     private String mQueryStr;
     private int mOffset;
@@ -134,9 +138,10 @@ public final class SearchParams
     private boolean mWantHtml;
     private boolean mRecipients;
     
-    
+    private TimeZone mTimeZone; // timezone that the query should be parsed in (for date/time queries)
+
     private boolean mHasCursor = false;
-    
+
     /////////////////////
     // "Cursor" Data -- the three pieces of info below are enough for us to find out place in
     // the previous result set, even if entries have been added or removed from the result
@@ -145,12 +150,12 @@ public final class SearchParams
     private String mPrevSortValueStr; // the sort value of the last item in the previous result set
     private long mPrevSortValueLong; // the sort value of the last item in the previous result set
     private int mPrevOffset; // the offset of the last item in the previous result set 
-    
+
 
     // unparsed -- these need to go away!
     private String mGroupByStr;
     private String mSortByStr;
-    
+
     // parsed:
     private MailboxIndex.SortBy mSortBy;
     private byte[] types; // types to seach for

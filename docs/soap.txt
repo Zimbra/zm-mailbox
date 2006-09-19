@@ -715,7 +715,49 @@ Tags:
 
 <SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"] [types="{types}"] [fetch="*0|1"] [html="*0|1"] [read="*0|1"] [recip="*0|1"]>
   [<cursor id="prevId" sortVal="prevSortValue" />]
+  
+  [   // OPTIONAL: client timezone identification (necessary to time-correct a user-specified date/time query)
+  
+      <tz id="timezonename"/>    // References an existing server-known timezone by ID
+      
+           OR
+
+      // This format is identical to the one defined in soap-calendar.txt, make sure the documents stay in sync
+      <tz           
+           id="timezonename"        // this name is ignored by the server, but it must be present
+           stdoff="<minutes>"       // offset from UTC in standard time; local = UTC + offset
+           [dayoff="<minutes>"]     // offset from UTC in daylight time; present only if DST is used
+       >
+       [                            // If daylight savings time is not used, <standard> and <daylight> must be
+                                    // omitted.  If DST is used, both <standard> and <daylight> must be present.
+           <standard                // time/rule for transitioning from daylight time to standard time
+                                    // Either specify week/wkday combo, or mday.
+               [
+                   week="<number>"  // week number; 1=first, 2=second, 3=third, 4=fourth, -1=last
+                   wkday="<number>" // day of week; 1=Sunday, 2=Monday, etc.
+               ]
+               mon="<number>"        // month; 1=January, 2=February, etc.
+               [mday="<number>"]     // day of month (1..31) 
+               hour="<number>"       // transition hour (0..23)
+               min="<number>"        // transition minute (0..59)
+               sec="<number>"        // transition second; 0..59, usually 0
+           />
+           <daylight                 // time/rule for transitioning from standard time to daylight time
+               [
+                   week="<number>"
+                   wkday="<number>"
+               ]
+               mon="<number>"
+               [mday="<number>"]
+               hour="<number>"
+               min="<number>"
+               sec="<number>"
+           />
+       ]  // optional STANDARD/DAYLIGHT definition
+  ]   // optional TIMEZONE specifier
+  
   <query>{query-string}</query>
+  
 </SearchRequest>
 
 limit is an integer specifying the maximum number of results to return. if limt <= 0 or limit > 1000 then it defaults to 30.
