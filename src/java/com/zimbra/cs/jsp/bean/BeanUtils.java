@@ -112,9 +112,9 @@ public class BeanUtils {
         String s = replaceAll(text, sAMP, "&amp;");
         s = replaceAll(s, sTWO_SPACES, " &nbsp;");
         s = replaceAll(s, sLEADING_SPACE, "&nbsp;");
-        s = replaceAll(s, sTAB, "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
         s = replaceAll(s, sLT, "&lt;");
         s = replaceAll(s, sGT, "&gt;");
+        s = replaceAll(s, sTAB, "<pre style='display:inline;'>\t</pre>");        
         s = replaceAll(s, sNL, "<br />");
         return s;
     }
