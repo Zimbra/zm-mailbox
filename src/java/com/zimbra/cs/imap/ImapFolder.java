@@ -46,8 +46,8 @@ class ImapFolder implements Iterable<ImapMessage> {
     private boolean mWritable;
     private String  mQuery;
 
-    private List<ImapMessage>         mSequence = new ArrayList<ImapMessage>();
-    private Map<Integer, ImapMessage> mUIDs     = new HashMap<Integer, ImapMessage>();
+    private List<ImapMessage>         mSequence   = new ArrayList<ImapMessage>();
+    private Map<Integer, ImapMessage> mMessageIds = new HashMap<Integer, ImapMessage>();
 
     private int mUIDValidityValue;
     private int mInitialUIDNEXT = -1;
@@ -198,35 +198,44 @@ class ImapFolder implements Iterable<ImapMessage> {
         mLastSize = mSequence.size();
     }
 
+
     /** Returns the selected folder's zimbra ID. */
     int getId()           { return mFolderId; }
+
     /** Returns the number of messages in the folder.  Messages that have been
      *  received or deleted since the client was last notified are still
      *  included in this count. */
     int getSize()         { return mSequence.size(); }
+
     /** Returns the search folder query associated with this IMAP folder, or
      *  <code>""</code> if the SELECTed folder is not a search folder. */
     String getQuery()     { return mQuery == null ? "" : mQuery; }
+
     /** Returns the folder's IMAP UID validity value.
      * @see #getUIDValidity(Folder) */
     int getUIDValidity()  { return mUIDValidityValue; }
+
     /** Returns an indicator for determining whether a folder has had items
      *  inserted since the last check.  This is <b>only</b> valid immediately
      *  after the folder is initialized and is not updated as messages are
      *  subsequently added.
      * @see Folder#getImapUIDNEXT() */
     int getInitialUIDNEXT()  { return mInitialUIDNEXT; }
+
     /** Returns the "sequence number" of the first unread message in the
      *  folder, or -1 if none are unread.  This is <b>only</b> valid
      *  immediately after the folder is initialized and is not updated
      *  as messages are marked read and unread. */
     int getFirstUnread()  { return mFirstUnread; }
+
     /** Returns whether this folder is a "virtual" folder (i.e. a search
      *  folder).
      * @see #loadVirtualFolder(SearchFolder, Mailbox, OperationContext) */
     boolean isVirtual()   { return mQuery != null; }
+
     /** Returns whether this folder was opened for write. */
     boolean isWritable()  { return mWritable; }
+
 
     public Iterator<ImapMessage> iterator()  { return mSequence.iterator(); }
 
@@ -257,6 +266,7 @@ class ImapFolder implements Iterable<ImapMessage> {
                !path.toLowerCase().matches("\\s*contacts\\s*(/.*)?") &&
                !path.toLowerCase().matches("\\s*calendar\\s*(/.*)?");
     }
+
 
     /** Formats a folder path as an IMAP-UTF-7 quoted-string.  Applies all
      *  special hack-specific path transforms.
@@ -308,13 +318,57 @@ class ImapFolder implements Iterable<ImapMessage> {
     String getQuotedPath()          { return '"' + mPath + '"'; }
     void updatePath(Folder folder)  { mPath = folder.getPath(); }
 
-    static int getUIDValidity(Folder folder) { return Math.max(folder.getSavedSequence(), 1); }
 
-    ImapMessage getById(int id)        { if (id <= 0) return null;   return checkRemoved(mUIDs.get(new Integer(-id))); }
-    ImapMessage getByImapId(int uid)   { if (uid <= 0) return null;  return checkRemoved(mUIDs.get(new Integer(uid))); }
+    /** Returns the UID Validity Value for the {@link Folder}.  This is the
+     *  folder's <code>MOD_CONTENT</code> change sequence number.
+     * @see Folder#getSavedSequence() */
+    static int getUIDValidity(Folder folder)  { return Math.max(folder.getSavedSequence(), 1); }
+
+
+    /** Retrieves the index of the ImapMessage with the given IMAP UID in the
+     *  folder's {@link #mSequence} message list.  This retrieval is done via
+     *  binary search rather than direct lookup.
+     * @return index of the search key, if it is contained in the list;
+     *         otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The
+     *         <i>insertion point</i> is defined as the point at which the
+     *         key would be inserted into the list: the index of the first
+     *         element greater than the key, or <tt>list.size()</tt>, if all
+     *         elements in the list are less than the specified key.  Note
+     *         that this guarantees that the return value will be &gt;= 0 if
+     *         and only if the key is found.
+     * @see Collections#binarySearch(java.util.List, T) */
+    private int uidSearch(int uid) {
+        int low = 0, high = mSequence.size() - 1;
+        while (low <= high) {
+            int mid = (low + high) >> 1;
+            int targetUid = mSequence.get(mid).imapUid;
+            if (targetUid < uid)      low = mid + 1;
+            else if (targetUid> uid)  high = mid - 1;
+            else                      return mid;  // key found
+        }
+        return -(low + 1);  // key not found
+    }
+
+    /** Returns the ImapMessage with the given Zimbra item ID from the
+     *  folder's {@link #mSequence} message list. */
+    ImapMessage getById(int id)        { if (id <= 0) return null;   return checkRemoved(mMessageIds.get(new Integer(id))); }
+
+    /** Returns the ImapMessage with the given IMAP UID from the folder's
+     *  {@link #mSequence} message list. */
+    ImapMessage getByImapId(int uid)   { if (uid <= 0) return null;  return getBySequence(uidSearch(uid) + 1); }
+
+    /** Returns the ImapMessage with the given 1-based sequence number in the
+     *  folder's {@link #mSequence} message list. */
     ImapMessage getBySequence(int seq) { return checkRemoved(seq > 0 && seq <= mSequence.size() ? (ImapMessage) mSequence.get(seq - 1) : null); }
-    ImapMessage getLastMessage()       { return getBySequence(mSequence.size()); }
+
+    /** Returns the last ImapMessage in the folder's {@link #mSequence}
+     *  message list.  This message corresponds to the "*" IMAP UID. */
+    private ImapMessage getLastMessage()  { return getBySequence(mSequence.size()); }
+
+    /** Returns the passed-in ImapMessage, or <coode>null</code> if the
+     *  message has already been expunged.*/
     private ImapMessage checkRemoved(ImapMessage i4msg)  { return (i4msg == null || i4msg.isExpunged() ? null : i4msg); }
+
 
     ImapMessage cache(ImapMessage i4msg) {
         // provide the information missing from the DB search
@@ -327,18 +381,16 @@ class ImapFolder implements Iterable<ImapMessage> {
     }
     void setIndex(ImapMessage i4msg, int position) {
         i4msg.sequence = position;
-        mUIDs.put(new Integer(i4msg.imapUid), i4msg);
-        mUIDs.put(new Integer(-i4msg.msgId), i4msg);
+        mMessageIds.put(new Integer(i4msg.msgId), i4msg);
     }
     void uncache(ImapMessage i4msg) {
-        mUIDs.remove(new Integer(i4msg.imapUid));
-        mUIDs.remove(new Integer(-i4msg.msgId));
+        mMessageIds.remove(new Integer(i4msg.msgId));
         mDirtyMessages.remove(i4msg);
     }
     void unghost(ImapMessage i4msg, int msgId) {
-        mUIDs.remove(new Integer(-i4msg.msgId));
+        mMessageIds.remove(new Integer(i4msg.msgId));
         i4msg.msgId = msgId;
-        mUIDs.put(new Integer(-i4msg.msgId), i4msg);
+        mMessageIds.put(new Integer(i4msg.msgId), i4msg);
     }
     
     boolean checkpointSize()  { int last = mLastSize;  return last != (mLastSize = getSize()); }
@@ -414,12 +466,14 @@ class ImapFolder implements Iterable<ImapMessage> {
                     upper = Math.min(lastID, upper);
                     for (int seq = Math.max(0, lower); seq <= upper; seq++)
                         result.add(getBySequence(seq));
-                } else
-                    for (int seq = 0; seq < mSequence.size(); seq++)
-                        if ((i4msg = getBySequence(seq + 1)) != null && i4msg.imapUid >= lower && i4msg.imapUid <= upper)
+                } else {
+                    int start = uidSearch(lower), end = uidSearch(upper);
+                    if (start < 0)  start = -start - 1;
+                    if (end < 0)    end = -end - 2;
+                    for (int seq = start; seq <= end; seq++)
+                        if ((i4msg = getBySequence(seq + 1)) != null)
                             result.add(i4msg);
-                        else if (i4msg != null && i4msg.imapUid > upper)
-                            break;
+                }
             }
 
         return result;
