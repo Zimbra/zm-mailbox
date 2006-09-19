@@ -432,7 +432,7 @@ public abstract class ZMailbox {
      */
     public abstract String addMessage(String folderId, String flags, String tags, long receivedDate, byte[] content, boolean noICal) throws ServiceException;
     
-    public abstract ZMessage getMessage(String id, boolean markRead, boolean defangedHtml, boolean rawContent, String part, String subId) throws ServiceException;
+    public abstract ZMessage getMessage(String id, boolean markRead, boolean wantHtml, boolean neuterImages, boolean rawContent, String part) throws ServiceException;
     
     /** hard delete message(s) */
     public abstract ZActionResult deleteMessage(String ids) throws ServiceException;

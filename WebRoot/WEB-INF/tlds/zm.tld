@@ -110,4 +110,67 @@ current item of the iteration.
     
   </tag>
 
+
+
+ <tag>
+    <description>
+      Retreive a message.
+    </description>
+
+    <name>getMessage</name>
+
+    <tag-class>com.zimbra.cs.jsp.tag.GetMessageTag</tag-class>
+
+    <body-content>empty</body-content>
+
+    <attribute>
+        <description>
+           Name of the exported scoped variable to store the ZMessageBean in.
+        </description>
+	  <name>var</name>
+	  <required>true</required>
+    </attribute>
+
+    <attribute>
+      <description>message id</description>
+	  <name>id</name>
+      <rtexprvalue>true</rtexprvalue>	
+	  <required>true</required>
+    </attribute>
+
+    <attribute>
+      <description>mark message as read</description>
+	  <name>markread</name>
+      <rtexprvalue>true</rtexprvalue>	
+    </attribute>
+
+   <attribute>
+      <description>prefer HTML</description>
+	  <name>wanthtml</name>
+      <rtexprvalue>true</rtexprvalue>	
+    </attribute>
+
+   <attribute>
+      <description>return the raw message content</description>
+	  <name>raw</name>
+      <rtexprvalue>true</rtexprvalue>	
+    </attribute>
+
+   <attribute>
+      <description>"1" to "neuter" IMG tags returned in HTML content; this involves switching
+    the "src" attribute to "dfsrc" so that images don't display by default
+      </description>
+	  <name>neuterimages</name>
+      <rtexprvalue>true</rtexprvalue>	
+    </attribute>
+
+   <attribute>
+      <description>supply a "part" and the retrieved data will be on the specified message/rfc822 subpart.
+    if the part does not exist or is not a message/rfc822 part, mail.NO_SUCH_PART</description>
+	  <name>part</name>
+      <rtexprvalue>true</rtexprvalue>	
+    </attribute>
+    
+  </tag>
+
 </taglib>

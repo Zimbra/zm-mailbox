@@ -722,10 +722,15 @@ public class ZSoapMailbox extends ZMailbox {
     }
 
     @Override
-    public ZMessage getMessage(String id, boolean markRead, boolean defangedHtml, boolean rawContent, String part, String subId) throws ServiceException {
+    public ZMessage getMessage(String id, boolean markRead, boolean wantHtml, boolean neuterImages, boolean rawContent, String part) throws ServiceException {
         XMLElement req = new XMLElement(MailService.GET_MSG_REQUEST);
         Element msgEl = req.addElement(MailService.E_MSG);
-        msgEl.addAttribute(MailService.A_ID, id);
+        msgEl.addAttribute(MailService.A_ID, id);;
+        if (part != null) msgEl.addAttribute(MailService.A_PART, part);
+        msgEl.addAttribute(MailService.A_MARK_READ, markRead);
+        msgEl.addAttribute(MailService.A_WANT_HTML, wantHtml);
+        msgEl.addAttribute(MailService.A_NEUTER, neuterImages);
+        msgEl.addAttribute(MailService.A_RAW, rawContent);
         Map<String,ZSoapEmailAddress> cache = new HashMap<String, ZSoapEmailAddress>();
         return new ZSoapMessage(invoke(req).getElement(MailService.E_MSG), cache);
     }

@@ -31,7 +31,8 @@ result.nextOffset = offset to page forward (based on limit/offset)
 -------------
 
 <zm:getMessage var="message" id="{msg-id}" 
-      [markread="*true/false"]
-      [defangedhtml="*true/false"]
-      [part="{part-name}"]
-      [subid="{subid}"]      
+      [markread="true/*false"]
+      [wanthtml="true/*false"]
+      [neuterimages="true/*false"]
+      [raw="true/*false"]
+      [part="{part-name}"]/>

@@ -88,7 +88,8 @@ Mail
 <tr>
 <td width=1% nowrap><input type=checkbox name=t value="1"></td>
 <td><c:out value="${contact.fileAsStr}"/></td>
-<td><c:out value="${contact.email}"/></td>
+<td><c:if test="${empty contact.displayEmail}">&nbsp;</c:if><c:out value="${contact.displayEmail}"/></td>
+
 </tr>   
 </c:forEach>
 

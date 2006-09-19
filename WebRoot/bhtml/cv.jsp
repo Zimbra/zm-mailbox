@@ -103,6 +103,23 @@ Mail
 
 </table>
 </div> <%-- list --%>
+
+<zm:getMessage var="msg" id="526" markread="true" wanthtml="false" neuterimages="false"/>
+ 
+<div width=100% height=100% class=Message>
+ <div class=MessageHeader>
+   <table width=100% cellpadding=2 cellspacing=0 border=0 class=Tabs>
+   <tr><td align=right><b>Subject:</b></td><td><c:out value="${msg.subject}"/></td></tr>
+   <tr><td align=right><b>From:</b></td><td>"Apple Computer" &lt;support@mac.com&gt;</td></tr>
+   <tr><td align=right><b>To:</b></td><td>.Mac user &lt;noreply@mac.com&gt;</td></tr>
+   <tr><td align=right><b>Date:</b></td><td><c:out value="${msg.displaySentDate}"/></td></tr>
+  </table>
+ </div>
+ <div class=MessageBody>
+   ${msg.displayBodyHtml}
+ </div>
+</div>
+
 <div class='RightTbBottom'>${toolbar}</div>
 <jsp:directive.include file="footer.jsp" />
 

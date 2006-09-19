@@ -27,6 +27,7 @@ package com.zimbra.cs.jsp.bean;
 import java.util.Date;
 import java.util.List;
 
+import com.zimbra.cs.util.DateUtil;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
@@ -79,6 +80,8 @@ public class ZMessageBean {
     public Date getReceivedDate() { return new Date(mMsg.getReceivedDate()); }
     
     public Date getSentDate() { return new Date(mMsg.getSentDate()); }
+    
+    public String getDisplaySentDate() { return DateUtil.toRFC822Date(getSentDate()); }
 
     public String getMessageIdHeader() { return mMsg.getMessageIdHeader(); }
     
@@ -94,4 +97,38 @@ public class ZMessageBean {
     /** if raw is specified and message too big or not ASCII, a content servlet URL is returned */
     public String getContentURL() { return mMsg.getContentURL(); }
 
+    public String getDisplayBody() {
+        return getBody(mMsg.getMimeStructure());
+    }
+
+    public String getDisplayBodyHtml() {
+        return BeanUtils.textToHtml(getBody(mMsg.getMimeStructure()));
+    }
+
+    // TODO: LOTS OF CRAP. handle html, format text -> html, etc
+    private String getBody(ZMimePart mp) {
+        if (mp == null) return null;
+        else if (mp.isBody()) return mp.getContent();
+        for (ZMimePart child : mp.getChildren()) {
+            String content = getBody(child);
+            if (content != null) return content;
+        }
+        return "";
+    }
+    
+    
+    
+    /*
+
+    str = str
+        .replace(/&/mg, "&amp;")
+        .replace(/  /mg, " &nbsp;")
+        .replace(/^ /mg, "&nbsp;")
+        .replace(/\t/mg, "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
+        .replace(/</mg, "&lt;")
+        .replace(/>/mg, "&gt;")
+        .replace(/\r?\n/mg, "<br />");
+    return str;
+
+     */
 }
