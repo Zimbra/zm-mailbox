@@ -111,29 +111,29 @@ Mail
 <div width=100% height=100% class=Msg>
  <div class=MsgHdr>
    <table width=100% cellpadding=2 cellspacing=0 border=0 class=Tabs>
-   <tr><td class='MsgHdrName MsgHdrSub'>Subject:</td><td class='MsgHdrSub'><c:out value="${msg.subject}"/></td></tr>
+   <tr><td class='MsgHdrName MsgHdrSub'>Subject:</td><td class='MsgHdrValue MsgHdrSub'><c:out value="${msg.subject}"/></td></tr>
    <tr>
       <td class='MsgHdrName'>Sent by:</td>
-      <td><c:out value="${msg.displayFrom}" default='<Unknown>'/>; On: <c:out value="${msg.displaySentDate}"/></td></tr>
+      <td class='MsgHdrValue'><c:out value="${msg.displayFrom}" default='<Unknown>'/>; On: <c:out value="${msg.displaySentDate}"/></td></tr>
 
    <c:set var="to" value="${msg.displayTo}"/>
    <c:if test="${!(empty to)}">
-      <tr><td class='MsgHdrName'>To:</td><td><c:out value="${to}"/></td></tr>
+      <tr><td class='MsgHdrName'>To:</td><td class='MsgHdrValue'><c:out value="${to}"/></td></tr>
    </c:if>
 
    <c:set var="cc" value="${msg.displayCc}"/>
    <c:if test="${!(empty cc)}">
-      <tr><td class='MsgHdrName'>Cc:</td><td><c:out value="${cc}"/></td></tr>
+      <tr><td class='MsgHdrName'>Cc:</td><td class='MsgHdrValue'><c:out value="${cc}"/></td></tr>
    </c:if>
 
    <c:set var="bcc" value="${msg.displayBcc}"/>
    <c:if test="${!(empty bcc)}">
-      <tr><td class='MsgHdrName'>Bcc:</td><td><c:out value="${bcc}"/></td></tr>
+      <tr><td class='MsgHdrName'>Bcc:</td><td class='MsgHdrValue'><c:out value="${bcc}"/></td></tr>
    </c:if>
 
    <c:set var="replyto" value="${msg.displayReplyTo}"/>   
    <c:if test="${!(empty replyto)}">
-      <tr><td class='MsgHdrName'>Reply To:</td><td><c:out value="${replyto}"/></td></tr>
+      <tr><td class='MsgHdrName'>Reply To:</td><td class='MsgHdrValue'><c:out value="${replyto}"/></td></tr>
    </c:if>   
 
   </table>

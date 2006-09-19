@@ -151,8 +151,14 @@ border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 }
 
 .MsgHdrName {
-  padding: 3px 5px 3px 0px;
+  padding: 3px 0px 3px 0px;
+  vertical-align: top;
   text-align: right;
+}
+
+.MsgHdrValue {
+  padding: 3px 3px 3px 3px;
+  vertical-align: top;
 }
 
 .MsgHdrSub {
