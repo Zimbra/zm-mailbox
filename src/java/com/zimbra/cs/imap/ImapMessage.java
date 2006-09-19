@@ -81,7 +81,6 @@ public class ImapMessage implements Comparable<ImapMessage> {
     int   flags;
     long  tags;
     short sflags;
-    ImapFolder parent;
 
     public ImapMessage(int id, byte type, int imapId, int flag, long tag) {
         msgId   = id;
@@ -195,18 +194,20 @@ public class ImapMessage implements Comparable<ImapMessage> {
         }
         return result.append(')').toString();
     }
-    void setPermanentFlags(int f, long t) {
+    void setPermanentFlags(int f, long t, ImapFolder parent) {
         if (t == tags && (f & IMAP_FLAGS) == (flags & IMAP_FLAGS))
             return;
         flags = (f & IMAP_FLAGS) | (flags & ~IMAP_FLAGS);
         tags  = t;
-        parent.dirtyMessage(this);
+        if (parent != null)
+            parent.dirtyMessage(this);
     }
-    void setSessionFlags(short s) {
+    void setSessionFlags(short s, ImapFolder parent) {
         if ((s & MUTABLE_SESSION_FLAGS) == (sflags & MUTABLE_SESSION_FLAGS))
             return;
         sflags = (short) ((s & MUTABLE_SESSION_FLAGS) | (sflags & ~MUTABLE_SESSION_FLAGS));
-        parent.dirtyMessage(this);
+        if (parent != null)
+            parent.dirtyMessage(this);
     }
 
     private static final byte[] NIL = { 'N', 'I', 'L' };

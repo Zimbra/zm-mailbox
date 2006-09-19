@@ -373,7 +373,6 @@ class ImapFolder implements Iterable<ImapMessage> {
     ImapMessage cache(ImapMessage i4msg) {
         // provide the information missing from the DB search
         i4msg.sflags |= mFolderId == Mailbox.ID_FOLDER_SPAM ? (byte) (ImapMessage.FLAG_SPAM | ImapMessage.FLAG_JUNKRECORDED) : 0;
-        i4msg.parent = this;
         // update the folder information
         mSequence.add(i4msg);
         setIndex(i4msg, mSequence.size());

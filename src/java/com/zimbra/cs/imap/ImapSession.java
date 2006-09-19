@@ -434,7 +434,7 @@ public class ImapSession extends Session {
                 } else if (!inFolder && !virtual) {
                     i4msg.setExpunged(true);
                 } else if ((chg.why & (Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) != 0) {
-                    i4msg.setPermanentFlags(msg.getFlagBitmask(), msg.getTagBitmask());
+                    i4msg.setPermanentFlags(msg.getFlagBitmask(), msg.getTagBitmask(), mSelectedFolder);
                 } else if ((chg.why & Change.MODIFIED_IMAP_UID) != 0) {
                     // if the IMAP uid changed, need to bump it to the back of the sequence!
                     i4msg.setExpunged(true);

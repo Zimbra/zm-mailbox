@@ -1721,6 +1721,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         boolean allPresent = byUID || !i4set.contains(null);
         i4set.remove(null);
 
+        ImapFolder i4folder = mSession.getFolder();
+
         try {
             // get set of relevant tags
             List<ImapFlag> i4flags;
@@ -1755,14 +1757,14 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 try {
                     // if it was a STORE [+-]?FLAGS.SILENT, temporarily disable notifications
                     if (silent)
-                        mSession.getFolder().disableNotifications();
+                        i4folder.disableNotifications();
 
                     if (operation == STORE_REPLACE) {
                         // replace real tags and flags on all messages
                         new SetTagsOperation(mSession, getContext(), mMailbox, Requester.IMAP, idlist, MailItem.TYPE_UNKNOWN, flags, tags, null).schedule();
                         // replace session tags on all messages
                         for (ImapMessage i4msg : i4list)
-                            i4msg.setSessionFlags(sflags);
+                            i4msg.setSessionFlags(sflags, i4folder);
                     } else if (!i4flags.isEmpty()) {
                         for (ImapFlag i4flag : i4flags) {
                             boolean add = operation == STORE_ADD ^ !i4flag.mPositive;
@@ -1772,18 +1774,18 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                             } else {
                                 // session tag; update one-by-one in memory only
                                 for (ImapMessage i4msg : i4list)
-                                    i4msg.setSessionFlags((short) (add ? i4msg.sflags | i4flag.mBitmask : i4msg.sflags & ~i4flag.mBitmask));
+                                    i4msg.setSessionFlags((short) (add ? i4msg.sflags | i4flag.mBitmask : i4msg.sflags & ~i4flag.mBitmask), i4folder);
                             }
                         }
                     }
                 } finally {
                     // if it was a STORE [+-]?FLAGS.SILENT, reenable notifications
-                    mSession.getFolder().enableNotifications();
+                    i4folder.enableNotifications();
                 }
 
                 if (!silent) {
                     for (ImapMessage i4msg : i4list) {
-                        mSession.getFolder().undirtyMessage(i4msg);
+                        i4folder.undirtyMessage(i4msg);
                         StringBuilder ntfn = new StringBuilder();
                         ntfn.append(i4msg.sequence).append(" FETCH (").append(i4msg.getFlags(mSession));
                         // 6.4.8: "However, server implementations MUST implicitly include
