@@ -115,20 +115,29 @@ public class ZMessageBean {
         }
         return "";
     }
-    
-    
-    
-    /*
 
-    str = str
-        .replace(/&/mg, "&amp;")
-        .replace(/  /mg, " &nbsp;")
-        .replace(/^ /mg, "&nbsp;")
-        .replace(/\t/mg, "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
-        .replace(/</mg, "&lt;")
-        .replace(/>/mg, "&gt;")
-        .replace(/\r?\n/mg, "<br />");
-    return str;
+    public String getDisplayTo() {
+        return BeanUtils.getHeaderAddrs(getEmailAddresses(), ZEmailAddress.EMAIL_TYPE_TO);
+    }
+    
+    public String getDisplayFrom() {
+        return BeanUtils.getHeaderAddrs(getEmailAddresses(), ZEmailAddress.EMAIL_TYPE_FROM);
+    }
+    
+    public String getDisplayCc() {
+        return BeanUtils.getHeaderAddrs(getEmailAddresses(), ZEmailAddress.EMAIL_TYPE_CC);
+    }
+    
+    public String getDisplayBcc() {
+        return BeanUtils.getHeaderAddrs(getEmailAddresses(), ZEmailAddress.EMAIL_TYPE_BCC);
+    }
+    
+    public String getDisplaySender() {
+        return BeanUtils.getHeaderAddrs(getEmailAddresses(), ZEmailAddress.EMAIL_TYPE_SENDER);
+    }
 
-     */
+    public String getDisplayReplyTo() {
+        return BeanUtils.getHeaderAddrs(getEmailAddresses(), ZEmailAddress.EMAIL_TYPE_REPLY_TO);
+    }
+    
 }

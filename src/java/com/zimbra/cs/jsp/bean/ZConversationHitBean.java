@@ -68,7 +68,7 @@ public class ZConversationHitBean extends ZSearchHitBean {
     
     public List<String> getMatchedMessageIds() { return mHit.getMatchedMessageIds(); }
     
-    public List<ZEmailAddress> getRawRecipients() { return mHit.getRecipients(); }
+    public List<ZEmailAddress> getRecipients() { return mHit.getRecipients(); }
     
-    public String getRecipients() { return BeanUtils.getAddrs(mHit.getRecipients()); }    
+    public String getDisplayRecipients() { return BeanUtils.getAddrs(mHit.getRecipients()); }    
 }
