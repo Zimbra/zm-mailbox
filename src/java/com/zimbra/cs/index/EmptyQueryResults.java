@@ -32,6 +32,7 @@
 package com.zimbra.cs.index;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * @author tim
@@ -42,8 +43,8 @@ import com.zimbra.cs.index.MailboxIndex.SortBy;
 class EmptyQueryResults extends ZimbraQueryResultsImpl {
 
     
-    EmptyQueryResults(byte[] types, SortBy searchOrder) {
-        super(types, searchOrder);
+    EmptyQueryResults(byte[] types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
+        super(types, searchOrder, mode);
     }
     
     public void resetIterator()  {

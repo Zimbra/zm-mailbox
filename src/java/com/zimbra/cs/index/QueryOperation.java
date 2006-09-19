@@ -68,6 +68,8 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
 
     private static final int MIN_CHUNK_SIZE = 26;
     private static final int MAX_CHUNK_SIZE = 5000;
+    
+    private static final boolean USE_PRELOADING_GROUPER = true;
 
     abstract int getOpType(); 
 
@@ -95,14 +97,12 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
 
     final static QueryOpSortComparator sQueryOpSortComparator = new QueryOpSortComparator();
 
-    private final static boolean USE_PRELOADING_GROUPER = true; // mostly useful for debugging
-
     private SortBy mSortOrder = null;
     public SortBy getSortBy() { return mSortOrder; }
 
     ////////////////////
     // Top-Level Execution  
-    final ZimbraQueryResults run(Mailbox mbox, MailboxIndex mbidx, byte[] types, SortBy searchOrder, int chunkSize) throws IOException, ServiceException
+    final ZimbraQueryResults run(Mailbox mbox, MailboxIndex mbidx, byte[] types, SortBy searchOrder, int chunkSize, boolean prefetch, Mailbox.SearchResultMode mode) throws IOException, ServiceException
     {
         mIsToplevelQueryOp = true;
         mSortOrder = searchOrder;
@@ -134,39 +134,39 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
 
         switch (retType) {
             case MailboxIndex.SEARCH_RETURN_CONVERSATIONS:
-                if (USE_PRELOADING_GROUPER) {
-                    chunkSize+= 2; // one for the ConvQueryResults, one for the Grouper 
-                    setupResults(mbox, new ConvQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
+                if (prefetch && USE_PRELOADING_GROUPER) {
+                    chunkSize+= 2; // one for the ConvQueryResults, one for the Grouper  
+                    setupResults(mbox, new ConvQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder, mode));
                     chunkSize*=2; // guess 2 msgs per conv
                 } else {
                     chunkSize++; // one for the ConvQueryResults
-                    setupResults(mbox, new ConvQueryResults(this, types, searchOrder));
+                    setupResults(mbox, new ConvQueryResults(this, types, searchOrder, mode));
                     chunkSize*=2;
                 }
                 preloadOuterResults = true;
                 break;
             case MailboxIndex.SEARCH_RETURN_MESSAGES:
-                if (USE_PRELOADING_GROUPER) {
+                if (prefetch && USE_PRELOADING_GROUPER) {
                     chunkSize+= 2; // one for the MsgQueryResults, one for the Grouper 
-                    setupResults(mbox, new MsgQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
+                    setupResults(mbox, new MsgQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder, mode));
                 } else {
                     chunkSize++; // one for the MsgQueryResults
-                    setupResults(mbox, new MsgQueryResults(this, types, searchOrder));
+                    setupResults(mbox, new MsgQueryResults(this, types, searchOrder, mode));
                 }
                 break;
             case MailboxIndex.SEARCH_RETURN_DOCUMENTS:
-                if (USE_PRELOADING_GROUPER) {
+                if (prefetch && USE_PRELOADING_GROUPER) {
                     chunkSize++; // one for the grouper
-                    setupResults(mbox, new UngroupedQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder));
+                    setupResults(mbox, new UngroupedQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder, mode));
                 } else {
-                    setupResults(mbox, new UngroupedQueryResults(this, types, searchOrder));
+                    setupResults(mbox, new UngroupedQueryResults(this, types, searchOrder, mode));
                 }
                 break;
         }
 
         prepare(mMailbox, mResults, mbidx, chunkSize);
 
-        if (USE_PRELOADING_GROUPER && preloadOuterResults) {
+        if (USE_PRELOADING_GROUPER && preloadOuterResults && prefetch) {
             return new ItemPreloadingGrouper(mResults, outerChunkSize, mbox);
         } else {
             return mResults;

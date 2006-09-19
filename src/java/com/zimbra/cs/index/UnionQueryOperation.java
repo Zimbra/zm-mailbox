@@ -226,7 +226,7 @@ class UnionQueryOperation extends QueryOperation
         }
     }
     
-    QueryOperation runRemoteSearches(SoapProtocol proto, Mailbox mbox, OperationContext octxt, MailboxIndex mbidx, byte[] types, SortBy searchOrder, int offset, int limit) 
+    QueryOperation runRemoteSearches(SoapProtocol proto, Mailbox mbox, OperationContext octxt, MailboxIndex mbidx, byte[] types, SortBy searchOrder, int offset, int limit, Mailbox.SearchResultMode mode) 
     throws ServiceException, IOException {
 
         boolean hasRemoteOps = false;
@@ -306,7 +306,7 @@ class UnionQueryOperation extends QueryOperation
             // this actually runs the remote operation
             for (QueryOperation toSetup : mQueryOperations) {
                 if (toSetup instanceof RemoteQueryOperation) {
-                    ((RemoteQueryOperation)toSetup).setup(proto, octxt.getAuthenticatedUser(), types, searchOrder, offset, limit);
+                    ((RemoteQueryOperation)toSetup).setup(proto, octxt.getAuthenticatedUser(), types, searchOrder, offset, limit, mode);
                 }
             }
         }

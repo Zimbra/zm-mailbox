@@ -32,6 +32,7 @@
 package com.zimbra.cs.index;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 
 /*
@@ -43,8 +44,8 @@ class UngroupedQueryResults extends ZimbraQueryResultsImpl
 {
     ZimbraQueryResults mResults;
     
-    public UngroupedQueryResults(ZimbraQueryResults results, byte[] types, SortBy searchOrder) {
-        super(types, searchOrder);
+    public UngroupedQueryResults(ZimbraQueryResults results, byte[] types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
+        super(types, searchOrder, mode);
         mResults = results;
     }
     

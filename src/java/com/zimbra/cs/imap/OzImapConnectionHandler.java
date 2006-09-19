@@ -1455,7 +1455,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 params.setTypes(ITEM_TYPES);
                 params.setSortBy(MailboxIndex.SortBy.DATE_ASCENDING);
                 params.setChunkSize(2000);
-                SearchOperation op = new SearchOperation(mSession, getContext(), mMailbox, Requester.IMAP, params);   
+                SearchOperation op = new SearchOperation(mSession, getContext(), mMailbox, Requester.IMAP, params, false, Mailbox.SearchResultMode.IDS);   
                 op.schedule();
                 ZimbraQueryResults zqr = op.getResults();
                 

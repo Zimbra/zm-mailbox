@@ -32,6 +32,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.mail.MailService;
@@ -94,8 +95,8 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      * @param server hostname of server
      * @param params
      */
-    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String targetAccountId, String server, SearchParams params) {
-        super(params.getTypes(), params.getSortBy());
+    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String targetAccountId, String server, SearchParams params, Mailbox.SearchResultMode mode) {
+        super(params.getTypes(), params.getSortBy(), mode);
 
         this.mSearchParams = params;
         this.mAuthToken = encodedAuthToken;
@@ -111,8 +112,8 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      * @param server hostname of server
      * @param params
      */
-    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params) {
-        super(params.getTypes(), params.getSortBy());
+    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params, Mailbox.SearchResultMode mode) {
+        super(params.getTypes(), params.getSortBy(), mode);
 
         this.mSearchParams = params;
         this.mAuthToken = encodedAuthToken;
@@ -128,8 +129,8 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      * @param params
      * @param searchAllMailboxes -- must be set to SEARCH_ALL_MAILBOXES
      */
-    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params, int searchAllMailboxes) {
-        super(params.getTypes(), params.getSortBy());
+    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params, Mailbox.SearchResultMode mode, int searchAllMailboxes) {
+        super(params.getTypes(), params.getSortBy(), mode);
 
         assert(searchAllMailboxes == SEARCH_ALL_MAILBOXES);
 
@@ -148,9 +149,9 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      * @param server
      * @param params
      */
-    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params, List /*ParseMailboxID*/ mailboxes)
+    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params, Mailbox.SearchResultMode mode, List /*ParseMailboxID*/ mailboxes)
     {
-        super(params.getTypes(), params.getSortBy());
+        super(params.getTypes(), params.getSortBy(), mode);
 
         this.mSearchParams = params;
         this.mAuthToken = encodedAuthToken;

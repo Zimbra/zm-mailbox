@@ -42,6 +42,8 @@ public class SearchOperation extends Operation {
 	SearchParams mParams;
 	ZimbraQueryResults mResults;
 	SoapProtocol mProto = SoapProtocol.Soap12;
+    Mailbox.SearchResultMode mMode = Mailbox.SearchResultMode.NORMAL;
+    boolean mPrefetch = true;
 	
 	private static int LOAD = 5;
 	static {
@@ -49,11 +51,16 @@ public class SearchOperation extends Operation {
 		if (c != null)
 			LOAD = c.mLoad;
 	}
-	
-	public SearchOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, SearchParams params) throws ServiceException {
-		super(session, oc, mbox, req, req.getPriority(), LOAD);
-		mParams = params;
-	}
+    public SearchOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, SearchParams params, boolean prefetch, Mailbox.SearchResultMode mode) throws ServiceException {
+        super(session, oc, mbox, req, req.getPriority(), LOAD);
+        mParams = params;
+        mMode = mode;
+    }
+    
+    public SearchOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, SearchParams params) throws ServiceException {
+        super(session, oc, mbox, req, req.getPriority(), LOAD);
+        mParams = params;
+    }
     
 	public SearchOperation(Session session, ZimbraSoapContext zc, OperationContext oc, Mailbox mbox, Requester req, SearchParams params) throws ServiceException {
         super(session, oc, mbox, req, req.getPriority(), LOAD);
@@ -70,7 +77,7 @@ public class SearchOperation extends Operation {
 		try {
 			byte[] types = MailboxIndex.parseGroupByString(mParams.getTypesStr());
 			
-			mResults = getMailbox().search(mProto, getOpCtxt(), mParams.getQueryStr(), types, mParams.getSortBy(), mParams.getLimit() + mParams.getOffset());
+			mResults = getMailbox().search(mProto, getOpCtxt(), mParams.getQueryStr(), types, mParams.getSortBy(), mParams.getLimit() + mParams.getOffset(), mPrefetch, mMode);
 			
 		} catch (IOException e) {
 			throw ServiceException.FAILURE("IO error", e);

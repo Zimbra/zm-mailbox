@@ -76,8 +76,9 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
     private HashMap<Integer, NoteHit>  mNoteHits;
     private HashMap<Integer, AppointmentHit> mApptHits;
   
-  ZimbraQueryResultsImpl(byte[] types, SortBy searchOrder) { 
+  ZimbraQueryResultsImpl(byte[] types, SortBy searchOrder, Mailbox.SearchResultMode mode) { 
       mTypes = types;
+      mMode = mode;
       
       mSearchOrder = searchOrder;
       
@@ -96,6 +97,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
   
   private byte[] mTypes;
   private SortBy mSearchOrder;
+  private Mailbox.SearchResultMode mMode;
   
   public SortBy getSortBy() {
       return mSearchOrder;
@@ -104,6 +106,8 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
   byte[] getTypes() { 
       return mTypes;
   }
+  
+  public Mailbox.SearchResultMode getSearchMode() { return mMode; }
   
   protected ConversationHit getConversationHit(Mailbox mbx, int convId, float score) {
       ConversationHit ch = (ConversationHit) mConversationHits.get(convId);

@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -40,8 +41,8 @@ class ConvQueryResults extends ZimbraQueryResultsImpl {
     ZimbraQueryResults mResults;
 
     public ConvQueryResults(ZimbraQueryResults results, byte[] types,
-            SortBy searchOrder) {
-        super(types, searchOrder);
+            SortBy searchOrder, Mailbox.SearchResultMode mode) {
+        super(types, searchOrder, mode);
         mResults = results;
     }
 

@@ -63,6 +63,16 @@ public class ItemId {
     public ItemId(String acctId, int id, int subId) {
         mAccountId = acctId;  mId = id;  mSubpartId = subId;
     }
+    
+    public static void main(String[] args) {
+        ItemId foo = null;
+        try {
+            foo = new ItemId("34480-508bc90b-d85e-45d6-bca2-7c34b7c407cb:34479", null);
+        } catch (ServiceException e) {
+            e.printStackTrace();
+        }
+        System.out.println(foo.toString());
+    }
 
     public ItemId(String encoded, ZimbraSoapContext lc) throws ServiceException {
         if (encoded == null || encoded.equals(""))

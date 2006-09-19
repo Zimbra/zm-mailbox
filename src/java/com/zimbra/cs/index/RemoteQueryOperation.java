@@ -119,7 +119,7 @@ class RemoteQueryOperation extends QueryOperation {
         return null;
     }
 
-    protected void setup(SoapProtocol proto, Account authenticatedAccount, byte[] types, SortBy searchOrder, int offset, int limit) throws ServiceException {
+    protected void setup(SoapProtocol proto, Account authenticatedAccount, byte[] types, SortBy searchOrder, int offset, int limit, Mailbox.SearchResultMode mode) throws ServiceException {
         Provisioning prov  = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.id, mTarget.toString());
         if (acct == null)
@@ -138,7 +138,7 @@ class RemoteQueryOperation extends QueryOperation {
 
         params.setQueryStr(mOp.toQueryString());
         try {
-            mResults = new ProxiedQueryResults(proto, new AuthToken(authenticatedAccount).getEncoded(), mTarget.toString(), remoteServer.getName(), params);
+            mResults = new ProxiedQueryResults(proto, new AuthToken(authenticatedAccount).getEncoded(), mTarget.toString(), remoteServer.getName(), params, mode);
         } catch (AuthTokenException e) {
             throw ServiceException.FAILURE("AuthTokenException getting auth token: "+e.toString(), e);
         }

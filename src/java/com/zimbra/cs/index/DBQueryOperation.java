@@ -606,6 +606,24 @@ class DBQueryOperation extends QueryOperation
         if (mCurHitsOffset == -1 || mEndOfHits) {
             return;
         }
+        
+        DbMailItem.SearchResult.ExtraData extra = DbMailItem.SearchResult.ExtraData.NONE;
+        switch (super.getResultsSet().getSearchMode()) {
+            case NORMAL:
+                if (isTopLevelQueryOp()) {
+                    extra = DbMailItem.SearchResult.ExtraData.MAIL_ITEM;
+                } else {
+                    extra = DbMailItem.SearchResult.ExtraData.NONE;
+                }
+                break;
+            case IMAP:
+                extra = DbMailItem.SearchResult.ExtraData.IMAP_MSG;
+                break;
+            case IDS:
+                extra = DbMailItem.SearchResult.ExtraData.NONE;
+                break;
+        }
+        
         if (!hasNoResults()) {
             Connection conn = null;
             try {
@@ -624,9 +642,6 @@ class DBQueryOperation extends QueryOperation
                         mOffset = mCurHitsOffset;
                         mLimit = mHitsPerChunk;
 
-                        DbMailItem.SearchResult.ExtraData extra = DbMailItem.SearchResult.ExtraData.NONE;
-                        if (this.isTopLevelQueryOp())
-                            extra = DbMailItem.SearchResult.ExtraData.MAIL_ITEM;
                         mDBHits = new ArrayList<SearchResult>();
                         DbMailItem.search(mDBHits, conn, mConstraints, mbox, sort, mOffset, mLimit, extra);
                         
@@ -653,9 +668,6 @@ class DBQueryOperation extends QueryOperation
                             mOffset = 0;
                             mLimit = MAX_DBFIRST_RESULTS;
 
-                            DbMailItem.SearchResult.ExtraData extra = DbMailItem.SearchResult.ExtraData.NONE;
-                            if (this.isTopLevelQueryOp())
-                                extra = DbMailItem.SearchResult.ExtraData.MAIL_ITEM;
                             Collection<SearchResult> dbRes = new ArrayList<SearchResult>();
                             DbMailItem.search(dbRes, conn, mConstraints, mbox, sort, mOffset, mLimit, extra);
 
@@ -739,9 +751,6 @@ class DBQueryOperation extends QueryOperation
 
                                     mDBHits = new ArrayList<SearchResult>(); 
                                 } else {
-                                    DbMailItem.SearchResult.ExtraData extra = DbMailItem.SearchResult.ExtraData.NONE;
-                                    if (this.isTopLevelQueryOp())
-                                        extra = DbMailItem.SearchResult.ExtraData.MAIL_ITEM;
                                     mDBHits = new ArrayList<SearchResult>();
                                     
                                     // must not ask for offset,limit here b/c of indexId constraints!  

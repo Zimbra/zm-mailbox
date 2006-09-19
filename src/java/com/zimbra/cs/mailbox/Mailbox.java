@@ -2717,6 +2717,25 @@ public class Mailbox {
         }
     }
     
+    //
+    // Search return types:
+    //   - Full rows
+    //   - Imap Messages
+    //   - Just ID's
+    //  -  ID & mod_metadata (future)
+    //
+    // Prefetch?
+    //
+    
+    /**
+     * Specifies the type of result we want from the call to search()
+     */
+    public static enum SearchResultMode {
+        NORMAL,        // everything
+        IMAP,           // only IMAP data
+        IDS;            // only IDs
+    }
+    
     /**
      * You **MUST** call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results, otherwise
      * resources will be leaked.
@@ -2733,7 +2752,7 @@ public class Mailbox {
      */
     public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize) 
     throws IOException, ParseException, ServiceException {
-        return search(SoapProtocol.Soap12, octxt, queryString, types, sortBy, chunkSize);
+        return search(SoapProtocol.Soap12, octxt, queryString, types, sortBy, chunkSize, true, SearchResultMode.NORMAL);
     }
 
     /**
@@ -2750,9 +2769,9 @@ public class Mailbox {
      * @throws ParseException
      * @throws ServiceException
      */
-    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize) 
+    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize, boolean prefetch, SearchResultMode mode) 
     throws IOException, ParseException, ServiceException {
-
+        
         if (octxt == null)
             throw ServiceException.INVALID_REQUEST("The OperationContext must not be null", null);
         
@@ -2760,7 +2779,7 @@ public class Mailbox {
         boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
         boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
         
-        ZimbraQuery zq = new ZimbraQuery(queryString, this, types, sortBy, includeTrash, includeSpam, chunkSize);
+        ZimbraQuery zq = new ZimbraQuery(queryString, this, types, sortBy, includeTrash, includeSpam, chunkSize, prefetch, mode);
         try {
             zq.executeRemoteOps(proto, octxt);
             

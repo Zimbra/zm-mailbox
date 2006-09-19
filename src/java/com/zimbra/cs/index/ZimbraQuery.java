@@ -1389,7 +1389,9 @@ public final class ZimbraQuery {
     private int mChunkSize;
     private Mailbox mMbox;
     private ZimbraQueryResults mResults;
-
+    private boolean mPrefetch;
+    private Mailbox.SearchResultMode mMode;
+    
     private static String[] unquotedTokenImage;
 
     static {
@@ -1709,10 +1711,12 @@ public final class ZimbraQuery {
      * @throws ParseException
      * @throws ServiceException
      */
-    public ZimbraQuery(String queryString, Mailbox mbox, byte[] types, SortBy searchOrder, boolean includeTrash, boolean includeSpam, int chunkSize) 
+    public ZimbraQuery(String queryString, Mailbox mbox, byte[] types, SortBy searchOrder, boolean includeTrash, boolean includeSpam, int chunkSize, boolean prefetch, Mailbox.SearchResultMode mode) 
     throws ParseException, ServiceException
     {
         mMbox = mbox;
+        mPrefetch = prefetch;
+        mMode = mode;
 
         //
         // Step 1: parse the text using the JavaCC parser
@@ -1832,12 +1836,12 @@ public final class ZimbraQuery {
 
             if (targets.size() > 1) {
                 UnionQueryOperation union = (UnionQueryOperation)mOp;
-                mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mTypes, mSearchOrder, 0, mChunkSize);
+                mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mTypes, mSearchOrder, 0, mChunkSize, mMode);
             } else {
                 if (targets.hasExternalTargets()) {
                     RemoteQueryOperation remote = new RemoteQueryOperation();
                     remote.tryAddOredOperation(mOp);
-                    remote.setup(proto, octxt.getAuthenticatedUser(), mTypes, mSearchOrder, 0, mChunkSize);
+                    remote.setup(proto, octxt.getAuthenticatedUser(), mTypes, mSearchOrder, 0, mChunkSize, mMode);
                     mOp = remote;
                 } else {
                     // 1 local target...HACK: for now we'll temporarily wrap it in a UnionQueryOperation,
@@ -1845,7 +1849,7 @@ public final class ZimbraQuery {
                     // important code there (permissions checks).  FIXME!
                     UnionQueryOperation union = new UnionQueryOperation();
                     union.add(mOp);
-                    mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mTypes, mSearchOrder, 0, mChunkSize);
+                    mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mTypes, mSearchOrder, 0, mChunkSize, mMode);
                     mOp = mOp.optimize(mMbox);
                 }
             }
@@ -1889,14 +1893,14 @@ public final class ZimbraQuery {
             // if we've only got one target, and it is external, then mOp must be a RemoteQueryOp
             assert(targets.size() >1 || !targets.hasExternalTargets() || mOp instanceof RemoteQueryOperation);
 
-            mResults = mOp.run(mMbox, mbidx, mTypes, mSearchOrder, mChunkSize);
+            mResults = mOp.run(mMbox, mbidx, mTypes, mSearchOrder, mChunkSize, mPrefetch, mMode);
             mResults = new HitIdGrouper(mResults, mSearchOrder);
             return mResults;
         } else {
             mLog.debug("Operation optimized to nothing.  Returning no results");
         }
 
-        return new EmptyQueryResults(mTypes, mSearchOrder);
+        return new EmptyQueryResults(mTypes, mSearchOrder, mMode);
     }
 
     public String toString() {
