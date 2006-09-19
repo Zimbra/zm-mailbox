@@ -21,18 +21,13 @@ HTML>BODY INPUT {		/* clean border that works in FF */
  border-color: black AAAAAA AAAAAA black;
 }
 
-a:link, a:active, a:visited {
-	color: black;
-	text-decoration: none;
-}
-
 .Top {
 background-color:#bed8ee; /* #a2b8ca;*/
 border-bottom:1px solid black;
 }
 
 .Tabs {
-background-color: #a2b8ca; /*#C7C7C7;*/zzz
+background-color: #a2b8ca; /*#C7C7C7;*/
 }
 
 .TabFiller {
@@ -102,7 +97,17 @@ border: 1px solid;
 border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 }
 
-.List a:hover {	text-decoration: underline; }
+.List a:hover, .Tree a:hover, .Tab a:hover, .TabSelected a:hover {	
+	color: black;
+    text-decoration: underline; 
+}
+
+.List a:link, .List a:visited, .Tree a:link, .Tree a:visited, .Tab a:link, .Tab a:visited, .TabSelected a:link, .TabSelected a:visited  {
+	color: black;
+	text-decoration: none;
+}
+
+
 
 /* .Tree a:hover {	display:block; background-color:#EAF5F5; } */
 /* .Tree .Selected a:hover {}*/
@@ -126,6 +131,8 @@ border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 .TbBt A {
 padding: 0px 10px 0px 10px;
 border-right: 1px solid #0C0C0C;
+color: black;
+text-decoration: none;
 }
 
 .Tb IMG { vertical-align: middle; }
@@ -178,5 +185,51 @@ border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 .Fragment { 
 	color: gray; 
 	font-weight: normal; 
+}
+
+
+/* Container for big display of one contact  */
+.ZmContactInfoView {
+        background-color:#eff5fb;
+        padding:5px;    
+        border:2px solid; 
+        border-color:#8597a7;
+        -moz-border-left-colors:#8597a7 #5f6c77;      -moz-border-top-colors: #8597a7 #5f6c77;
+   -moz-border-bottom-colors: #abc2d6 #8597a7;             -moz-border-right-colors: #abc2d6 #8597a7;
+        overflow: hidden;
+margin: 5px 10px 5px 10px;
+
+}
+
+.contactLabel {
+        color: black;  white-space:nowrap; overflow:hidden;
+        width: 1%;
+        text-align: right;
+}
+
+.sectionLabel {
+        color: black;  white-space:nowrap; overflow:hidden; border-bottom: 1px solid #8597a7; font-size:15px; font-weight:bold;
+}
+
+.companyName {
+        font-size:15px; font-weight:bold;
+}
+
+.companyFolder {
+        font-size:13px;
+        white-space:nowrap; overflow:hidden;
+        width: 1%;
+}
+
+.contactHeaderRow {
+        background-color:#E9E9E9; /* TODO: dynamic based on folder */
+        height:36px;
+}
+
+.contactHeader {
+        font-size:15px; font-weight:bold;
+        color: black;
+        white-space:nowrap; overflow:hidden;
+        padding: 3 0 3 2;
 }
 

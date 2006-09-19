@@ -34,7 +34,7 @@ public interface ZContact  {
     
     public enum Attr {
 
-        assitantPhone,
+        assistantPhone,
         birthday,
         callbackPhone,
         carPhone,

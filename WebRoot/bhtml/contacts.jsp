@@ -1,9 +1,10 @@
 <%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <%@ taglib prefix="zm" uri="com.zimbra.zm" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <html>
  <head>
-  <title>Zimbra: Inbox</title>
+  <title>Zimbra: Contacts</title>
   <style type="text/css">
     @import url("style.css");
   </style>
@@ -80,6 +81,7 @@
 
 <tr>
 <th width=1% nowrap>&nbsp;
+<th width=1% nowrap>&nbsp;
 <th>Name
 <th>Email
 </tr>
@@ -87,8 +89,9 @@
 <c:forEach items="${searchResult.hits}" var="contact">
 <tr>
 <td width=1% nowrap><input type=checkbox name=t value="1"></td>
-<td width=40%><c:out value="${contact.fileAsStr}"/></td>
-<td width=40%><c:if test="${empty contact.displayEmail}">&nbsp;</c:if><c:out value="${contact.displayEmail}"/></td>
+<td width=1% nowrap><img src="images/Contact.gif" alt=Contact></td>
+<td width=40%><a href="contact.jsp?id=${contact.id}">${fn:escapeXml(contact.fileAsStr)}</a></td>
+<td width=40%><c:if test="${empty contact.displayEmail}">&nbsp;</c:if>${fn:escapeXml(contact.displayEmail)}</td>
 
 </tr>   
 </c:forEach>

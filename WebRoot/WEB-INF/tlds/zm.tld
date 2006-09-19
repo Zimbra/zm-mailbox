@@ -173,4 +173,45 @@ current item of the iteration.
     
   </tag>
 
+
+ <tag>
+    <description>
+      Retreive a contact.
+    </description>
+
+    <name>getContact</name>
+
+    <tag-class>com.zimbra.cs.jsp.tag.GetContactTag</tag-class>
+
+    <body-content>empty</body-content>
+
+    <attribute>
+        <description>
+           Name of the exported scoped variable to store the ZContactBean in.
+        </description>
+	  <name>var</name>
+	  <required>true</required>
+    </attribute>
+
+    <attribute>
+      <description>contact id</description>
+	  <name>id</name>
+      <rtexprvalue>true</rtexprvalue>	
+	  <required>true</required>
+    </attribute>
+
+    <attribute>
+      <description>return modified date</description>
+	  <name>sync</name>
+      <rtexprvalue>true</rtexprvalue>	
+	  <required>false</required>
+    </attribute>
+  </tag>
+
+   <function>
+     <name>anySet</name>
+     <function-class>com.zimbra.cs.jsp.bean.ZContactBean</function-class>
+     <function-signature>boolean anySet(com.zimbra.cs.jsp.bean.ZContactBean,java.lang.String)</function-signature>
+   </function>
+
 </taglib>

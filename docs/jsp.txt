@@ -29,10 +29,18 @@ result.previousOffset = offset to page back (based on limit/offset)
 result.nextOffset = offset to page forward (based on limit/offset)
 
 -------------
-
 <zm:getMessage var="message" id="{msg-id}" 
       [markread="true/*false"]
       [wanthtml="true/*false"]
       [neuterimages="true/*false"]
       [raw="true/*false"]
       [part="{part-name}"]/>
+
+sets "message" to ZMessageBean
+
+-------------
+<zm:getContact var="contact" id="{contact-id}"/>
+
+sets "contact" to ZContactBean
+
+      
