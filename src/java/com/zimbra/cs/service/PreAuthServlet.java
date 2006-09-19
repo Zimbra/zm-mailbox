@@ -44,6 +44,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.service.account.Auth;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -59,8 +60,6 @@ public class PreAuthServlet extends ZimbraServlet {
     public static final String PARAM_REDIRECT_URL = "redirectURL";
     public static final String PARAM_TIMESTAMP = "timestamp";
     public static final String PARAM_EXPIRES = "expires";    
-    
-    private static final String DEFAULT_MAIL_URL = "/zimbra/mail";
     
     private static final HashSet<String> sPreAuthParams = new HashSet<String>();
     
@@ -181,7 +180,7 @@ public class PreAuthServlet extends ZimbraServlet {
         resp.sendRedirect(sb.toString());
     }
 
-    private void setCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, String authToken) throws IOException {
+    private void setCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, String authToken) throws IOException, ServiceException {
         Cookie c = new Cookie(COOKIE_ZM_AUTH_TOKEN, authToken);
         c.setPath("/");
         resp.addCookie(c);
@@ -192,10 +191,19 @@ public class PreAuthServlet extends ZimbraServlet {
         } else {
             StringBuilder sb = new StringBuilder();
             addNonPreAuthParams(req, sb, true);
+	    Provisioning prov = Provisioning.getInstance();
+	    Server server = prov.getLocalServer();
+	    String redirectUrl = server.getAttr(Provisioning.A_zimbraMailURL);
+	    // NB: do we really have to add the mail app to the end?
+	    if (redirectUrl.charAt(redirectUrl.length() - 1) == '/') {
+		redirectUrl += "mail";
+	    } else {
+		redirectUrl += "/mail";
+	    }
             if (sb.length() > 0) {
-                resp.sendRedirect(DEFAULT_MAIL_URL + "?" + sb.toString());
+                resp.sendRedirect(redirectUrl + "?" + sb.toString());
             } else {
-                resp.sendRedirect(DEFAULT_MAIL_URL);
+                resp.sendRedirect(redirectUrl);
             }
         }
     }
