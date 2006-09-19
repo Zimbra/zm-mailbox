@@ -100,22 +100,45 @@ Mail
 <td nowrap>Feb&nbsp;27
 </tr>   
 </c:forEach>
-
+<tr><td colspan=7>&nbsp;</td></tr>
 </table>
 </div> <%-- list --%>
 
-<zm:getMessage var="msg" id="526" markread="true" wanthtml="false" neuterimages="false"/>
+<c:set value="${searchResult.hits[0].id}" var="mid"/>
+
+<zm:getMessage var="msg" id="${mid}" markread="true" wanthtml="false" neuterimages="false"/>
  
-<div width=100% height=100% class=Message>
- <div class=MessageHeader>
+<div width=100% height=100% class=Msg>
+ <div class=MsgHdr>
    <table width=100% cellpadding=2 cellspacing=0 border=0 class=Tabs>
-   <tr><td align=right><b>Subject:</b></td><td><c:out value="${msg.subject}"/></td></tr>
-   <tr><td align=right><b>From:</b></td><td>"Apple Computer" &lt;support@mac.com&gt;</td></tr>
-   <tr><td align=right><b>To:</b></td><td>.Mac user &lt;noreply@mac.com&gt;</td></tr>
-   <tr><td align=right><b>Date:</b></td><td><c:out value="${msg.displaySentDate}"/></td></tr>
+   <tr><td class='MsgHdrName MsgHdrSub'>Subject:</td><td class='MsgHdrSub'><c:out value="${msg.subject}"/></td></tr>
+   <tr>
+      <td class='MsgHdrName'>Sent by:</td>
+      <td><c:out value="${msg.displayFrom}" default='<Unknown>'/>; On: <c:out value="${msg.displaySentDate}"/></td></tr>
+
+   <c:set var="to" value="${msg.displayTo}"/>
+   <c:if test="${!(empty to)}">
+      <tr><td class='MsgHdrName'>To:</td><td><c:out value="${to}"/></td></tr>
+   </c:if>
+
+   <c:set var="cc" value="${msg.displayCc}"/>
+   <c:if test="${!(empty cc)}">
+      <tr><td class='MsgHdrName'>Cc:</td><td><c:out value="${cc}"/></td></tr>
+   </c:if>
+
+   <c:set var="bcc" value="${msg.displayBcc}"/>
+   <c:if test="${!(empty bcc)}">
+      <tr><td class='MsgHdrName'>Bcc:</td><td><c:out value="${bcc}"/></td></tr>
+   </c:if>
+
+   <c:set var="replyto" value="${msg.displayReplyTo}"/>   
+   <c:if test="${!(empty replyto)}">
+      <tr><td class='MsgHdrName'>Reply To:</td><td><c:out value="${replyto}"/></td></tr>
+   </c:if>   
+
   </table>
  </div>
- <div class=MessageBody>
+ <div class=MsgBody>
    ${msg.displayBodyHtml}
  </div>
 </div>

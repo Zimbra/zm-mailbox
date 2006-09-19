@@ -91,9 +91,9 @@ Mail
 <tr class='ConvRow${conv.isUnread ? ' Unread':''}'>
 <td width=1% nowrap><input type=checkbox name=t value="1"></td>
 <td width=1% nowrap><img src="images/${conv.isFlagged? 'FlagRed.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Starred></td>
-<td><c:out value="${conv.recipients}"/></td>
+<td><c:out value="${conv.displayRecipients}" default="<Unknown>"/></td>
 <td width=1% nowrap><img src="images/${conv.hasAttachment? 'Attachment.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Attachment></td>
-<td><a href="cv.jsp?id=${conv.id}&query=${param.query}"><c:out value="${empty conv.subject ? '(none)' : conv.subject}"/> 
+<td><a href="cv.jsp?id=${conv.id}&query=${param.query}"><c:out value="${empty conv.subject ? '<No Subject>' : conv.subject}"/> 
 <%-- <c:if test="${!(empty conv.fragment)}"><span class='Fragment'> - <c:out value="${conv.fragment}"/></span></c:if>  --%>
 </a></td>
 <td nowrap><c:if test="${conv.messageCount > 1}">(${conv.messageCount})&nbsp;</c:if><c:if test="${conv.messageCount < 2}">&nbsp</c:if>

@@ -79,7 +79,7 @@ Mail
 <table cellpadding=2 cellspacing=0 >
 
 <tr>
-<th width=1% nowrap>
+<th width=1% nowrap>&nbsp;
 <th>Name
 <th>Email
 </tr>
@@ -87,8 +87,8 @@ Mail
 <c:forEach items="${searchResult.hits}" var="contact">
 <tr>
 <td width=1% nowrap><input type=checkbox name=t value="1"></td>
-<td><c:out value="${contact.fileAsStr}"/></td>
-<td><c:if test="${empty contact.displayEmail}">&nbsp;</c:if><c:out value="${contact.displayEmail}"/></td>
+<td width=40%><c:out value="${contact.fileAsStr}"/></td>
+<td width=40%><c:if test="${empty contact.displayEmail}">&nbsp;</c:if><c:out value="${contact.displayEmail}"/></td>
 
 </tr>   
 </c:forEach>

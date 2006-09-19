@@ -44,25 +44,50 @@ public class BeanUtils {
     }
     
     public static String getAddrs(List<ZEmailAddress> addrs) {
-        if ( addrs == null) return "";
+        if ( addrs == null) return null;
         int len = addrs.size();
         StringBuilder sb = new StringBuilder();
         for (ZEmailAddress addr: addrs) {
             addAddr(sb, addr, addrs.size());
         }
-        return sb.toString();
+        String result = sb.toString();
+        return result.length() == 0 ? null : result; 
     }
     
+    public static String getHeaderAddrs(List<ZEmailAddress> addrs, String type) {
+        if ( addrs == null) return null;
+        int len = addrs.size();
+        StringBuilder sb = new StringBuilder();
+        for (ZEmailAddress addr: addrs) {
+            if (type != null && addr.getType().equals(type)) {
+                if (sb.length() > 0) sb.append("; ");
+                String p = addr.getPersonal();
+                boolean useP = p!= null && p.length() > 0;
+                if (useP) sb.append(p);
+                String a = addr.getAddress();
+                if (a != null && a.length() > 0) {
+                    if (useP) sb.append(" <");
+                    sb.append(a);
+                    if (useP) sb.append('>');
+                }
+            }
+        }
+        String result = sb.toString();
+        return result.length() == 0 ? null : result; 
+    }
+
     public static String getAddr(ZEmailAddress addr) {
-        if ( addr == null) return "";
+        String result = null;
+        if ( addr == null) return null;
         else if (addr.getPersonal() != null)
-            return addr.getPersonal();
+            result = addr.getPersonal();
         else if (addr.getAddress() != null)
-            return addr.getAddress();
+            result = addr.getAddress();
         else
-            return "";
+            return null;
+        return result.length() == 0 ? null : result;         
     }
-    
+
     private static String replaceAll(String text, Pattern pattern, String replace) {
         Matcher m = pattern.matcher(text);
         StringBuffer sb = null;

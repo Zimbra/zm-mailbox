@@ -131,14 +131,10 @@ border-right: 1px solid #0C0C0C;
 .Tb IMG { vertical-align: middle; }
 .Tb SPAN { vertical-align: middle; font-weight: bold; }
 
-.ConvRow, .MsgRow {
-	background-color: #FFFFFF;
-}
-
 .Unread {	font-weight:bold; }
 .Selected { background-color: #DDDDDD; }
 
-.MessageHeader table {
+.MsgHdr TABLE {
 background-color: background-color: #abc2d6;	
 margin: 5px 0px 0px 0px;
 /*margin: 5px 0px 5px 0px;*/
@@ -147,16 +143,25 @@ border: 1px solid;
 border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 }
 
-.Message {
-Xbackground-color: white;
+.Msg {
 margin: 0px 10px 5px 10px;
 padding:0px; 
 border: 1px solid;
 border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 }
 
-.MessageBody {
- background-color: white;
+.MsgHdrName {
+  padding: 3px 5px 3px 0px;
+  text-align: right;
+}
+
+.MsgHdrSub {
+  font-size: 15px;
+  font-weight:bold;  
+}
+
+.MsgBody {
+ background-color: #FFFFFF;
  font-family:monospace;
  font-size:13px;
  padding: 10px;
