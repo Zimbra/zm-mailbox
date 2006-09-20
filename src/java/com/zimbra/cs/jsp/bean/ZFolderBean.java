@@ -74,6 +74,8 @@ public class ZFolderBean {
      * @return number of unread items in folder
      */
     public int getUnreadCount() { return mFolder.getUnreadCount(); }
+    
+    public boolean getHasUnread() { return getUnreadCount() > 0; }
 
     /**
      * @return number of unread items in folder
@@ -142,4 +144,27 @@ public class ZFolderBean {
     
     //public ZFolder getSubFolderByPath(String path);
     
+    public boolean getIsInbox() { return mFolder.getId().equals(ZFolder.ID_INBOX); }
+    public boolean getIsTrash() { return mFolder.getId().equals(ZFolder.ID_TRASH); }
+    public boolean getIsSpam() { return mFolder.getId().equals(ZFolder.ID_SPAM); }
+    public boolean getIsSent() { return mFolder.getId().equals(ZFolder.ID_SENT); }    
+    public boolean getIsDrafts() { return mFolder.getId().equals(ZFolder.ID_DRAFTS); }
+    public boolean getIsContacts() { return mFolder.getId().equals(ZFolder.ID_CONTACTS); }
+    public boolean getIsCalendar() { return mFolder.getId().equals(ZFolder.ID_CALENDAR); }    
+    public boolean getIsNotebook() { return mFolder.getId().equals(ZFolder.ID_NOTEBOOK); }    
+    public boolean getIsAutoContacts() { return mFolder.getId().equals(ZFolder.ID_AUTO_CONTACTS); }
+    
+    public boolean getIsMailView() { 
+        ZFolder.View view = mFolder.getDefaultView();
+        return view == null || view == ZFolder.View.message || view == ZFolder.View.conversation;
+    }
+    
+    public boolean getIsNullView() { return mFolder.getDefaultView() == null; }    
+    public boolean getIsMessageView() { return mFolder.getDefaultView() == ZFolder.View.message; }
+    public boolean getIsContactView() { return mFolder.getDefaultView() == ZFolder.View.contact; }    
+    public boolean getIsConversationView() { return mFolder.getDefaultView() == ZFolder.View.conversation; }        
+    public boolean getIsAppointmentView() { return mFolder.getDefaultView() == ZFolder.View.appointment; }
+    public boolean getIsWikiView() { return mFolder.getDefaultView() == ZFolder.View.wiki; }
+    
+    public boolean getIsSystemFolder() { return mFolder.isSystemFolder(); }
 }

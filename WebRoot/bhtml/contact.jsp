@@ -100,9 +100,9 @@
    <tr>
      <td width="5">&nbsp;</td>
      <td class="contactOutput">
-        <c:if test="${!empty contact.email}">${fn:escapeXml(contact.email)}<br/></c:if>
-        <c:if test="${!empty contact.email2}">${fn:escapeXml(contact.email2)}<br/></c:if>
-        <c:if test="${!empty contact.email3}">${fn:escapeXml(contact.email3)}<br/></c:if>
+       <zm:contactLine line="${contact.email}"/>
+       <zm:contactLine line="${contact.email2}"/>
+	   <zm:contactLine line="${contact.email3}"/>
      </td>
    </tr>
    <tr><td><br></td></tr>
@@ -114,11 +114,11 @@
      <td width="5">&nbsp;</td>
      <td valign="top" width="385">
          <div class="contactOutput">
-            <c:if test="${!empty contact.workStreet}">${fn:escapeXml(contact.workStreet)}<br/></c:if>
-            <c:if test="${!empty contact.workCity}">${fn:escapeXml(contact.workCity)}<br/></c:if>
-            <c:if test="${!empty contact.workState}">${fn:escapeXml(contact.workState)}<br/></c:if>
-            <c:if test="${!empty contact.workPostalCode}">${fn:escapeXml(contact.workPostalCode)}<br/></c:if>            
-            <c:if test="${!empty contact.workCountry}">${fn:escapeXml(contact.workCountry)}<br/></c:if>                        
+            <zm:contactLine line="${contact.workStreet}"/>
+            <zm:contactLine line="${contact.workCity}"/>
+            <zm:contactLine line="${contact.workState}"/>
+            <zm:contactLine line="${contact.workPostalCode}"/>
+            <zm:contactLine line="${contact.workCountry}"/>            
             <c:if test="${!empty contact.workURL}">
               <a target=_new href="<c:url value="${contact.workURL}"/>">${fn:escapeXml(contact.workURL)}</a>
             </c:if>
@@ -127,24 +127,12 @@
      <td valign="top">
        <table border="0">
         <tbody>
-         <c:if test="${!empty contact.workPhone}">
-          <tr><td class="contactLabel">Phone:</td><td class="contactOutput">${fn:escapeXml(contact.workPhone)}</td></tr>
-         </c:if>
-         <c:if test="${!empty contact.workPhone2}">
-          <tr><td class="contactLabel">Phone 2:</td><td class="contactOutput">${fn:escapeXml(contact.workPhone2)}</td></tr>
-         </c:if>         
-         <c:if test="${!empty contact.workFax}">
-          <tr><td class="contactLabel">Fax:</td><td class="contactOutput">${fn:escapeXml(contact.workFax)}</td></tr>
-         </c:if>         
-         <c:if test="${!empty contact.assistantPhone}">
-          <tr><td class="contactLabel">Assistant:</td><td class="contactOutput">${fn:escapeXml(contact.assistantPhone)}</td></tr>
-         </c:if>         
-         <c:if test="${!empty contact.companyPhone}">
-          <tr><td class="contactLabel">Company:</td><td class="contactOutput">${fn:escapeXml(contact.companyPhone)}</td></tr>
-         </c:if>
-         <c:if test="${!empty contact.callbackPhone}">
-          <tr><td class="contactLabel">Callback:</td><td class="contactOutput">${fn:escapeXml(contact.callbackPhone)}</td></tr>
-         </c:if>
+        <zm:contactPhone label="Phone" phone="${contact.workPhone}"/>
+        <zm:contactPhone label="Phone 2" phone="${contact.workPhone2}"/>       
+        <zm:contactPhone label="Fax" phone="${contact.workFax}"/>
+        <zm:contactPhone label="Assistant" phone="${contact.assistantPhone}"/>
+        <zm:contactPhone label="Company" phone="${contact.companyPhone}"/>
+        <zm:contactPhone label="Callback" phone="${contact.callbackPhone}"/>
         </tbody>
        </table>
      </td>
@@ -163,11 +151,11 @@
      <td width="5">&nbsp;</td>
      <td valign="top" width="385">
          <div class="contactOutput">
-            <c:if test="${!empty contact.homeStreet}">${fn:escapeXml(contact.homeStreet)}<br/></c:if>
-            <c:if test="${!empty contact.homeCity}">${fn:escapeXml(contact.homeCity)}<br/></c:if>
-            <c:if test="${!empty contact.homeState}">${fn:escapeXml(contact.homeState)}<br/></c:if>
-            <c:if test="${!empty contact.homePostalCode}">${fn:escapeXml(contact.homePostalCode)}<br/></c:if>
-            <c:if test="${!empty contact.homeCountry}">${fn:escapeXml(contact.homeCountry)}<br/></c:if>
+            <zm:contactLine line="${contact.homeStreet}"/>
+            <zm:contactLine line="${contact.homeCity}"/>
+            <zm:contactLine line="${contact.homeState}"/>
+            <zm:contactLine line="${contact.homePostalCode}"/>
+            <zm:contactLine line="${contact.homeCountry}"/>
             <c:if test="${!empty contact.homeURL}">
               <a target=_new href="<c:url value="${contact.workURL}"/>">${fn:escapeXml(contact.homeURL)}</a>
             </c:if>
@@ -175,26 +163,14 @@
      </td>
      <td valign="top">
        <table border="0">
-         <tbody>
-         <c:if test="${!empty contact.homePhone}">
-          <tr><td class="contactLabel">Phone:</td><td class="contactOutput">${fn:escapeXml(contact.homePhone)}</td></tr>
-         </c:if>
-         <c:if test="${!empty contact.homePhone2}">
-          <tr><td class="contactLabel">Phone 2:</td><td class="contactOutput">${fn:escapeXml(contact.homePhone2)}</td></tr>
-         </c:if>         
-         <c:if test="${!empty contact.homeFax}">
-          <tr><td class="contactLabel">Fax:</td><td class="contactOutput">${fn:escapeXml(contact.homeFax)}</td></tr>
-         </c:if>         
-         <c:if test="${!empty contact.mobilePhone}">
-          <tr><td class="contactLabel">Mobile:</td><td class="contactOutput">${fn:escapeXml(contact.mobilePhone)}</td></tr>
-         </c:if>         
-         <c:if test="${!empty contact.pager}">
-          <tr><td class="contactLabel">Pager:</td><td class="contactOutput">${fn:escapeXml(contact.pager)}</td></tr>
-         </c:if>
-         <c:if test="${!empty contact.carPhone}">
-          <tr><td class="contactLabel">Car:</td><td class="contactOutput">${fn:escapeXml(contact.carPhone)}</td></tr>
-         </c:if>
-         </tbody>
+        <tbody>
+        <zm:contactPhone label="Phone" phone="${contact.homePhone}"/>
+        <zm:contactPhone label="Phone 2" phone="${contact.homePhone2}"/>
+        <zm:contactPhone label="Fax" phone="${contact.homeFax}"/>
+        <zm:contactPhone label="Mobile" phone="${contact.mobilePhone}"/>
+        <zm:contactPhone label="Pager" phone="${contact.pager}"/>
+        <zm:contactPhone label="Car" phone="${contact.carPhone}"/>
+        </tbody>
        </table>
      </td>
    </tr>
@@ -211,11 +187,11 @@
      <td width="5">&nbsp;</td>
      <td valign="top" width="385">
          <div class="contactOutput">
-            <c:if test="${!empty contact.otherStreet}">${fn:escapeXml(contact.otherStreet)}<br/></c:if>
-            <c:if test="${!empty contact.otherCity}">${fn:escapeXml(contact.otherCity)}<br/></c:if>
-            <c:if test="${!empty contact.otherState}">${fn:escapeXml(contact.otherState)}<br/></c:if>
-            <c:if test="${!empty contact.otherPostalCode}">${fn:escapeXml(contact.otherPostalCode)}<br/></c:if>
-            <c:if test="${!empty contact.otherCountry}">${fn:escapeXml(contact.otherCountry)}<br/></c:if>
+            <zm:contactLine line="${contact.otherStreet}"/>
+            <zm:contactLine line="${contact.otherCity}"/>
+            <zm:contactLine line="${contact.otherState}"/>
+            <zm:contactLine line="${contact.otherPostalCode}"/>
+            <zm:contactLine line="${contact.otherCountry}"/>
             <c:if test="${!empty contact.otherURL}">
               <a target=_new href="<c:url value="${contact.workURL}"/>">${fn:escapeXml(contact.otherURL)}</a>
             </c:if>
@@ -223,14 +199,10 @@
      </td>
      <td valign="top">
        <table border="0">
-         <tbody>
-         <c:if test="${!empty contact.otherPhone}">
-          <tr><td class="contactLabel">Other Phone:</td><td class="contactOutput">${fn:escapeXml(contact.otherPhone)}</td></tr>
-         </c:if>
-         <c:if test="${!empty contact.otherFax}">
-          <tr><td class="contactLabel">Other Fax:</td><td class="contactOutput">${fn:escapeXml(contact.otherFax)}</td></tr>
-         </c:if>         
-         </tbody>
+        <tbody>
+         <zm:contactPhone label="Other Phone" phone="${contact.otherPhone}"/>
+         <zm:contactPhone label="Other Fax" phone="${contact.otherFax}"/>
+        </tbody>
        </table>
      </td>
    </tr>

@@ -274,5 +274,12 @@ class ZSoapFolder implements ZFolder, ZSoapItem {
     public boolean isIMAPSubscribed() {
         return hasFlags() && mFlags.indexOf(Flag.imapSubscribed.getFlagChar()) != -1;
     }    
-
+    
+    public boolean isSystemFolder() {
+        try {
+            return Integer.parseInt(mId) < Integer.parseInt(ZFolder.ID_FIRST_USER_ID);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
 }

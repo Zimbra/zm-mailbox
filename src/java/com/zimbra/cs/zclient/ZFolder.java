@@ -45,7 +45,8 @@ public interface ZFolder {
     public static final String ID_ROOT = "11";
     public static final String ID_NOTEBOOK = "12";
     public static final String ID_AUTO_CONTACTS = "13";
-    
+    public static final String ID_FIRST_USER_ID = "256";
+
     public enum Flag {
         checkedInUI('#'),
         excludeFreeBusyInfo('b'),
@@ -233,4 +234,5 @@ public interface ZFolder {
      */
     public ZFolder getSubFolderByPath(String path);
 
+    public boolean isSystemFolder();
 }

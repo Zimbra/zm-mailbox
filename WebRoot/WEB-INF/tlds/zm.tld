@@ -214,4 +214,19 @@ current item of the iteration.
      <function-signature>boolean anySet(com.zimbra.cs.jsp.bean.ZContactBean,java.lang.String)</function-signature>
    </function>
 
+   <tag-file>
+     <name>overviewFolder</name>
+     <path>/WEB-INF/tags/overviewFolder.tag</path>
+   </tag-file> 
+
+   <tag-file>
+     <name>contactPhone</name>
+     <path>/WEB-INF/tags/contactPhone.tag</path>
+   </tag-file> 
+   
+   <tag-file>
+     <name>contactLine</name>
+     <path>/WEB-INF/tags/contactLine.tag</path>
+   </tag-file> 
+   
 </taglib>

@@ -9,6 +9,11 @@
    <tr><td><a href="?">Drafts</a></td></tr>      
    <tr><td><a href="?">Junk</a></td></tr>
    <tr><td><a href="?">Trash</a></td></tr>
+   <zm:forEachFolder var="folder">
+    <c:if test="${!folder.isSystemFolder and (folder.isNullView or folder.isMessageView or folder.isConversationView) and !folder.isSearchFolder}">
+      <zm:overviewFolder folder="${folder}"/>
+    </c:if>
+   </zm:forEachFolder>      
 </table>
 </div>
 
