@@ -4,8 +4,8 @@
 <zm:getMailbox var="mailbox"/>
 
 <div class=Tree>
-<table>
-   <tr><th class=TreeHeading>Folders</th></tr>
+<table cellpadding=0 cellspacing=0>
+   <tr><th>Folders</th></tr>
 
    <zm:overviewFolder selected='2' folder="${mailbox.inbox}" label="Inbox" icon="Inbox.gif"/>
    <zm:overviewFolder folder="${mailbox.sent}" label="Sent" icon="SentFolder.gif"/>
@@ -24,8 +24,8 @@
 </div>
 
 <div class=Tree>
-<table>
- <tr><th class=TreeHeading>Searches</th></tr>
+<table cellpadding=0 cellspacing=0>
+ <tr><th>Searches</th></tr>
    <zm:forEachFolder var="folder">
      <c:if test="${folder.isSearchFolder}">
        <zm:overviewSearchFolder folder="${folder}"/>
@@ -35,13 +35,10 @@
 </div>
 
 <div class=Tree>
-<table>
-   <tr><th class=TreeHeading>Tags</th></tr>
+<table cellpadding=0 cellspacing=0>
+   <tr><th>Tags</th></tr>
    <zm:forEachTag var="tag">
-     <tr><td class='${tag.hasUnread ? ' Unread':''}'>
-     <a href="clv.jsp?query=tag:<c:out value="${tag.name}"/>"><c:out value="${tag.name}"/>
-     <c:if test="${tag.hasUnread}"> (${tag.unreadCount}) </c:if>
-     </a>
+	<zm:overviewTag tag="${tag}"/>
   </zm:forEachTag>
 </table>
 </div>

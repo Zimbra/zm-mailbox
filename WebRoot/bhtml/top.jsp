@@ -1,4 +1,7 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="zm" uri="com.zimbra.zm" %>
+
+<zm:getMailbox var="mailbox"/>
 
   <table cellspacing=0 class=Top>
    <tr height=40>
@@ -8,9 +11,10 @@
     </td>
     <td style='padding-right:5px'>
      <table>
-      <tr> <td align=right valign=top> <b>schemers@zimbra.com</b> </td></tr>
+      <tr> <td align=right valign=top> <b>${mailbox.name}</b> </td></tr>
       <tr>
        <td align=right valign=bottom >
+         <a href="?op=options" target=_blank>Options</a> |
          <a href="?op=help" target=_blank>Help</a> |
          <a href="?logout">Log Off</a>
        </td>

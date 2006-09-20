@@ -19,31 +19,7 @@
   <jsp:directive.include file="top.jsp" />
 
   <! --------- TABS ------>
-  <table cellspacing=0 class=Tabs>
-   <tr> 
-    <td class='TabFiller'>
-&nbsp;
-    </td>
-    <td class='Tab'>
-<a href="clv.jsp">Mail</a>
-    </td>
-
-    <td class='TabSelected'>
-
-<a href="contacts.jsp">Contacts</a>
-    </td>
-    <td class='Tab'>
-<a href="">Calendar</a>
-    </td>
-    <td class='TabFiller'>
-&nbsp;
-    </td>
-    <td class='Tab'>
-<a href="">Options</a>
-    </td>
-   </tr>
-  </table>
-
+  <zm:appTabs selected='contacts'/>  
 
 <c:set var="toolbar">
  <table cellspacing=0 class='Tb'>
@@ -61,11 +37,11 @@
   <table>
    <tr>
     <!------- LEFT -->
-    <td valign=top style='width:150px'>
+    <td valign=top class='Left'>
       <jsp:directive.include file="left.jsp" />
     </td>
     <!-- right -->
-    <td valign='top'>
+    <td valign='top' class='Right'>
      <div class='RightTbTop'>${toolbar}</div>
 
 <div class='ZmContactInfoView'>

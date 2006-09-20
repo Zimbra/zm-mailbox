@@ -16,30 +16,7 @@
   <jsp:directive.include file="top.jsp" />
 
   <! --------- TABS ------>
-  <table cellspacing=0 class=Tabs>
-   <tr> 
-    <td class='TabFiller'>
-&nbsp;
-    </td>
-    <td class='Tab'>
-<a href="clv.jsp">Mail</a>
-    </td>
-
-    <td class='TabSelected'>
-
-<a href="contacts.jsp">Contacts</a>
-    </td>
-    <td class='Tab'>
-<a href="">Calendar</a>
-    </td>
-    <td class='TabFiller'>
-&nbsp;
-    </td>
-    <td class='Tab'>
-<a href="">Options</a>
-    </td>
-   </tr>
-  </table>
+  <zm:appTabs selected='contacts'/>    
 
 <zm:search var="searchResult" limit="25" query="in:contacts" offset="${param.offset}" types="contact" sort="nameAsc"/>
 <c:set var="toolbar">
@@ -64,16 +41,15 @@
 </c:set>     
 
 
-
   <! --------- LEFT/RIGHT ------>
   <table>
    <tr>
     <!------- LEFT -->
-    <td valign=top style='width:150px'>
+    <td valign=top class='Left'>
       <jsp:directive.include file="left.jsp" />
     </td>
     <!-- right -->
-    <td valign='top'>
+    <td valign='top' class='Right'>
      <div class='RightTbTop'>${toolbar}</div>
 
 <div class=List>
@@ -90,7 +66,7 @@
 <tr>
 <td width=1% nowrap><input type=checkbox name=t value="1"></td>
 <td width=1% nowrap><img src="images/Contact.gif" alt=Contact></td>
-<td width=40%><a href="contact.jsp?id=${contact.id}">${fn:escapeXml(empty contact.fileAsStr ? '<None>' : contact.fileAsStr)}</a></td>
+<td width=40%><span style='padding:3px'><a href="contact.jsp?id=${contact.id}">${fn:escapeXml(empty contact.fileAsStr ? '<None>' : contact.fileAsStr)}</a></span></td>
 <td width=40%><c:if test="${empty contact.displayEmail}">&nbsp;</c:if>${fn:escapeXml(contact.displayEmail)}</td>
 
 </tr>   

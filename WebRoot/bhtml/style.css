@@ -21,54 +21,37 @@ HTML>BODY INPUT {		/* clean border that works in FF */
  border-color: black AAAAAA AAAAAA black;
 }
 
-.Top {
-background-color:#bed8ee; /* #a2b8ca;*/
-border-bottom:1px solid black;
-}
-
-.Tabs {
-background-color: #a2b8ca; /*#C7C7C7;*/
-}
-
 .TabFiller {
-margin: 10px 10px 0px 10px;
 padding:5px; 
-border: 1px solid;
-border-color: #E0E0E0 #555555 #555555 #E0E0E0;  
+border: none;
+
 }
 
 .Tab {
-width: 10em;
-text-align: center;
-font-weight:bold;
-margin: 10px 10px 0px 10px;
-padding:5px; 
-border: 1px solid;
-border-color: #E0E0E0 #555555 #555555 #E0E0E0;  
+ width: 10em;
+ text-align: center;
+ vertical-align: middle;
+ font-weight:bold;
+ padding:5px; 
+ border: 1px solid;
+ background-color: #bed8ee;
+ border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 }
 
-.TabSelected {
-width: 10em;
-text-align: center;
-font-weight:bold;
-background-color: #bed8ee;
-margin: 10px 10px 0px 10px;
-padding:5px; 
-border: 1px solid;
-border-color: #E0E0E0 #555555 #bed8ee #E0E0E0;
+.Tab.Selected {
+ background-color: #a2b8ca;
+ border-color: #E0E0E0 #555555  #a2b8ca #E0E0E0;
 }
 
 .Tree {
-    background-color:#eff5fb;
-	margin: 10px 0px 10px 10px;
-	border: 1px solid;
-	border-color: #E0E0E0 #555555 #555555 #E0E0E0;
+/*    background-color:#eff5fb;*/
+	border: none;
+ border: 1px solid;
+ border-color: #E0E0E0 #555555 #555555 #E0E0E0;   
 }
 
-.Tree TABLE { margin: 2px; }
-
 .List TD {border-bottom:1px solid #bbb; padding: 0; }
-.Tree TD { padding-left: 10px; }
+.Tree TD { padding-left: 10px; padding-top: 2px; padding-bottom: 2px;    background-color:#eff5fb;}
 
 .Tree TH,.List TH {
 	text-align: left;
@@ -82,47 +65,46 @@ border-color: #E0E0E0 #555555 #bed8ee #E0E0E0;
 	border-color: #E0E0E0 56616b 56616b #E0E0E0;
 /*	border-color: #E0E0E0 #555555 #555555 #E0E0E0;	*/
 	padding-top:1px;
-	padding-left:2px;
-	margin-left:2px;
-	margin-bottom:2px;
+	padding-left:10px;
 	cursor: default;
 }
 
 .List {
 background-color: #F7F7F7;
-margin: 0px 10px 0px 10px;
+XXmargin: 0px 10px 0px 10px;
 /*margin: 5px 10px 5px 10px;*/
 padding:0px; 
 border: 1px solid;
 border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 }
 
-.List a:hover, .Tree a:hover, .Tab a:hover, .TabSelected a:hover {	
+.List a:hover, .Tree a:hover, .Tab a:hover {	
 	color: black;
     text-decoration: underline; 
 }
 
-.List a:link, .List a:visited, .Tree a:link, .Tree a:visited, .Tab a:link, .Tab a:visited, .TabSelected a:link, .TabSelected a:visited  {
+.List a:link, .List a:visited, .Tree a:link, .Tree a:visited, .Tab a:link, .Tab a:visited  {
 	color: black;
 	text-decoration: none;
 }
 
-
+.Left { width: 150px; padding:0px 0px 0px 5px; }
+.Right { padding:0px 5px 0px 5px; }
 
 /* .Tree a:hover {	display:block; background-color:#EAF5F5; } */
 /* .Tree .Selected a:hover {}*/
 
 .RightTbTop {
 background-color: #98adbe;
-margin: 10px 10px 0px 10px;
+XXmargin: 10px 10px 0px 10px;
 padding:5px; 
 border: 1px solid;
-border-color: #E0E0E0 #555555 #555555 #E0E0E0;
+border-color: #98adbe #555555 #555555 #E0E0E0;
 }
 
 .RightTbBottom {
 background-color: #98adbe;
-margin: 0px 10px 0px 10px;
+XXmargin: 0px 10px 0px 10px;
 padding:5px; 
 border: 1px solid;
 border-color: #E0E0E0 #555555 #555555 #E0E0E0;
@@ -144,13 +126,12 @@ text-decoration: none;
 
 
 .Folder { padding-bottom: 2px;  }
-
-.Folder IMG { border: none; vertical-align: middle; }
-.Folder SPAN { vertical-align: middle; padding-left: 3px; }
+.Folder IMG, .Tab IMG { border: none; vertical-align: middle; }
+.Folder SPAN, .Tab SPAN { vertical-align: middle; padding-left: 3px; }
 .Folder.Selected { background-color: #DDDDDD; }
 
 .MsgHdr TABLE {
-background-color: background-color: #abc2d6;	
+background-color: #abc2d6;	
 margin: 5px 0px 0px 0px;
 /*margin: 5px 0px 5px 0px;*/
 padding:5px; 
@@ -159,7 +140,7 @@ border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 }
 
 .Msg {
-margin: 0px 10px 5px 10px;
+XXmargin: 0px 10px 5px 10px;
 padding:0px; 
 border: 1px solid;
 border-color: #E0E0E0 #555555 #555555 #E0E0E0;
@@ -203,7 +184,7 @@ border-color: #E0E0E0 #555555 #555555 #E0E0E0;
         -moz-border-left-colors:#8597a7 #5f6c77;      -moz-border-top-colors: #8597a7 #5f6c77;
    -moz-border-bottom-colors: #abc2d6 #8597a7;             -moz-border-right-colors: #abc2d6 #8597a7;
         overflow: hidden;
-margin: 5px 10px 5px 10px;
+XXmargin: 5px 10px 5px 10px;
 
 }
 

@@ -16,29 +16,7 @@
   <jsp:directive.include file="top.jsp" />
 
   <! --------- TABS ------>
-  <table cellspacing=0 class=Tabs>
-   <tr> 
-    <td class='TabFiller'>
-&nbsp;
-    </td>
-    <td class='TabSelected'>
-Mail
-    </td>
-
-    <td class='Tab'>
-<a href="contacts.jsp">Contacts</a>
-    </td>
-    <td class='Tab'>
-<a href="">Calendar</a>
-    </td>
-    <td class='TabFiller'>
-&nbsp;
-    </td>
-    <td class='Tab'>
-<a href="">Options</a>
-    </td>
-   </tr>
-  </table>
+  <zm:appTabs selected='mail'/>
 
 <zm:search var="searchResult" limit="25" query="${param.query}" offset="${param.offset}" conv="${param.id}"/>
 <c:set var="toolbar">
@@ -68,11 +46,11 @@ Mail
   <table>
    <tr>
     <!------- LEFT -->
-    <td valign=top style='width:150px'>
+    <td valign=top class='Left'>
       <jsp:directive.include file="left.jsp" />
     </td>
     <!-- right -->
-    <td valign='top'>
+    <td valign='top' class='Right'>
      <div class='RightTbTop'>${toolbar}</div>
 
 <div class=List>
@@ -113,7 +91,7 @@ ${fn:escapeXml(empty mess.fragment ? '(none)' : zm:truncate(mess.fragment,100, t
  
 <div width=100% height=100% class=Msg>
  <div class=MsgHdr>
-   <table width=100% cellpadding=2 cellspacing=0 border=0 class=Tabs>
+   <table width=100% cellpadding=2 cellspacing=0 border=0>
    <tr><td class='MsgHdrName MsgHdrSub'>Subject:</td><td class='MsgHdrValue MsgHdrSub'>${fn:escapeXml(msg.subject)}</td></tr>
    <tr>
       <td class='MsgHdrName'>Sent by:</td>
