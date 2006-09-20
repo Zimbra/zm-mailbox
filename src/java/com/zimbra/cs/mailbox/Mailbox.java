@@ -36,6 +36,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.collections.map.LRUMap;
+import org.apache.lucene.analysis.Analyzer;
 
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -53,6 +54,7 @@ import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -371,6 +373,10 @@ public class Mailbox {
 
     public int getSchemaGroupId() {
         return mData.schemaGroupId;
+    }
+    
+    public Analyzer getAnalyzer() {
+        return ZimbraAnalyzer.getDefaultAnalyzer();
     }
 
     /** Returns the {@link Account} object for this mailbox's owner.  At
@@ -2752,7 +2758,7 @@ public class Mailbox {
      */
     public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize) 
     throws IOException, ParseException, ServiceException {
-        return search(SoapProtocol.Soap12, octxt, queryString, null, types, sortBy, chunkSize, true, SearchResultMode.NORMAL);
+        return search(SoapProtocol.Soap12, octxt, queryString, null, null, types, sortBy, chunkSize, true, SearchResultMode.NORMAL);
     }
 
     /**
@@ -2769,7 +2775,7 @@ public class Mailbox {
      * @throws ParseException
      * @throws ServiceException
      */
-    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, String queryString, java.util.TimeZone tz, byte[] types, SortBy sortBy, int chunkSize, boolean prefetch, SearchResultMode mode) 
+    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, String queryString, java.util.TimeZone tz, Locale locale, byte[] types, SortBy sortBy, int chunkSize, boolean prefetch, SearchResultMode mode) 
     throws IOException, ParseException, ServiceException {
         
         if (octxt == null)
@@ -2779,7 +2785,7 @@ public class Mailbox {
         boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
         boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
         
-        ZimbraQuery zq = new ZimbraQuery(queryString, tz, this, types, sortBy, includeTrash, includeSpam, chunkSize, prefetch, mode);
+        ZimbraQuery zq = new ZimbraQuery(queryString, tz, locale, this, types, sortBy, includeTrash, includeSpam, chunkSize, prefetch, mode);
         try {
             zq.executeRemoteOps(proto, octxt);
             

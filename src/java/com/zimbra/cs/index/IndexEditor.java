@@ -173,7 +173,7 @@ public class IndexEditor {
 	    public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy) throws IOException, MailServiceException, ParseException, ServiceException
 	    {
 	    	Mailbox mbox = Mailbox.getMailboxById(mMailboxId);
-	    	ZimbraQuery zq = new ZimbraQuery(qstr, null, mbox, types, sortBy, false, false, 100, true, Mailbox.SearchResultMode.NORMAL);
+	    	ZimbraQuery zq = new ZimbraQuery(qstr, null, null, mbox, types, sortBy, false, false, 100, true, Mailbox.SearchResultMode.NORMAL);
             
 	    	return zq.execute(); 
 	    }
@@ -203,7 +203,7 @@ public class IndexEditor {
 	    	ZimbraQueryResults[] res = new ZimbraQueryResults[mMailboxId.length];
 	        for (int i = 0; i < mMailboxId.length; i++) {
 	        	Mailbox mbox = Mailbox.getMailboxById(mMailboxId[i]);
-	        	ZimbraQuery zq = new ZimbraQuery(qstr, null, mbox, types, sortBy, false, false, 100, true, Mailbox.SearchResultMode.NORMAL);
+	        	ZimbraQuery zq = new ZimbraQuery(qstr, null, null, mbox, types, sortBy, false, false, 100, true, Mailbox.SearchResultMode.NORMAL);
 	        	res[i] = zq.execute();
 	        }
 	        return new HitIdGrouper(new MultiQueryResults(res, sortBy), sortBy);

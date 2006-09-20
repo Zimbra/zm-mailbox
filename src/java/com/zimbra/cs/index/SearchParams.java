@@ -32,6 +32,7 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.Locale;
 import java.util.TimeZone;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -111,6 +112,7 @@ public final class SearchParams
     public void setWantHtml(boolean html) { mWantHtml = html; }
     public void setWantRecipients(boolean recips) { mRecipients = recips; }
     public void setTimeZone(TimeZone tz) { mTimeZone = tz; }
+    public void setLocale(Locale loc) { mLocale = loc; }
 
     public boolean hasCursor() { return mHasCursor; }
     public void setCursor(ItemId prevMailItemId, String prevSort, int prevOffset) {
@@ -129,6 +131,7 @@ public final class SearchParams
     public long getPrevSortValueLong() { return mPrevSortValueLong; }
     public int getPrevOffset() { return mPrevOffset; }
     public TimeZone getTimeZone() { return mTimeZone; }
+    public Locale getLocale() { return mLocale; }
 
     private String mQueryStr;
     private int mOffset;
@@ -139,6 +142,7 @@ public final class SearchParams
     private boolean mRecipients;
     
     private TimeZone mTimeZone; // timezone that the query should be parsed in (for date/time queries)
+    private Locale mLocale; 
 
     private boolean mHasCursor = false;
 

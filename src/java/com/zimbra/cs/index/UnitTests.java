@@ -489,7 +489,7 @@ public class UnitTests extends TestCase {
 
     	Mailbox mbox = Mailbox.getMailboxById(mailboxId);
 
-    	ZimbraQuery zq = new ZimbraQuery(qstr, null, mbox, 
+    	ZimbraQuery zq = new ZimbraQuery(qstr, null, null, mbox, 
     			types, SortBy.DATE_DESCENDING,
     			false, false, 100, true, Mailbox.SearchResultMode.NORMAL);
 

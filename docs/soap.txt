@@ -755,6 +755,18 @@ Tags:
            />
        ]  // optional STANDARD/DAYLIGHT definition
   ]   // optional TIMEZONE specifier
+
+  [ // OPTIONAL: client locale identification
+      <locale>LOCALE-STRING</locale>  // Where locale string is of the form LL-CC[-V+] where
+                                      //     LL is two character language code
+                                      //     CC is two character country code
+                                      //     V+ is optional variant identifier string
+                                      //
+                                      // ISO Language Codes: http://www.ics.uci.edu/pub/ietf/http/related/iso639.txt
+                                      // ISO Country Codes: http://www.chemie.fu-berlin.de/diverse/doc/ISO_3166.html
+                                      //
+                                      //
+  ]
   
   <query>{query-string}</query>
   

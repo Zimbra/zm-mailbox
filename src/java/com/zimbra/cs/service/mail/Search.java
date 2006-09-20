@@ -32,8 +32,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -94,6 +97,43 @@ public class Search extends MailDocumentHandler  {
         }
     }
     
+    protected static final String LOCALE_PATTERN = "([a-zA-Z]{2})[-_]([a-zA-Z]{2})([-_](.+))?";
+    protected final static Pattern sLocalePattern = Pattern.compile(LOCALE_PATTERN);
+    
+    protected Locale parseLocale(Element localeElt, ZimbraSoapContext zc) {
+        String locStr = localeElt.getText();
+        
+        if (locStr != null && locStr.length() > 0) {
+            Matcher m = sLocalePattern.matcher(locStr);
+            if (m.lookingAt()) {
+                String lang=null, country=null, variant=null;
+                
+                if (m.start(1) != -1)
+                    lang = locStr.substring(m.start(1), m.end(1));
+                
+                if (lang == null || lang.length()<=0)
+                    return null;
+                
+                if (m.start(2) != -1)
+                    country = locStr.substring(m.start(2), m.end(2));
+                
+                if (m.start(4) != -1)
+                    variant = locStr.substring(m.start(4), m.end(4));
+                
+                if (variant != null && country != null && variant.length() > 0 && country.length() > 0)
+                    return new Locale(lang, country, variant);
+                
+                if (country != null && country.length() > 0)
+                    return new Locale(lang, country);
+                
+                return new Locale(lang);
+            }
+        }
+        
+        
+        return null;
+    }
+    
     protected java.util.TimeZone parseTimeZonePart(Element tzElt, ZimbraSoapContext zc) throws ServiceException {
         String id = tzElt.getAttribute(MailService.A_ID);
 
@@ -121,10 +161,19 @@ public class Search extends MailDocumentHandler  {
 
         SearchParams params = new SearchParams();
         
-        TimeZone tz = null;
+        //
+        // <loc>
+        Element locElt = request.getOptionalElement(MailService.E_LOCALE);
+        if (locElt != null) {
+            Locale loc = parseLocale(locElt, zc);
+            params.setLocale(loc);
+        }
+
+        //
+        // <tz>
         Element tzElt = request.getOptionalElement(MailService.E_APPT_TZ);
         if (tzElt != null) {
-            tz = parseTimeZonePart(tzElt, zc);
+            TimeZone tz = parseTimeZonePart(tzElt, zc);
             params.setTimeZone(tz);
         }
         

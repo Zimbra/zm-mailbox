@@ -30,6 +30,7 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.text.DateFormat;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -50,6 +51,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
+import com.zimbra.cs.index.queryparser.Token;
 import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.index.queryparser.ZimbraQueryParserConstants;
@@ -321,13 +323,23 @@ public final class ZimbraQuery {
         protected static final Pattern sAbsYLastPattern = Pattern.compile(ABSDATE_YLAST_PATTERN);
         protected static final Pattern sRelDatePattern = Pattern.compile(RELDATE_PATTERN);
 
-        public void parseDate(int modifier, String s, TimeZone tz) throws com.zimbra.cs.index.queryparser.ParseException
+        public void parseDate(int modifier, String s, TimeZone tz, Locale locale) throws com.zimbra.cs.index.queryparser.ParseException
         {
+            
             //          * DATE:  absolute-date = mm/dd/yyyy | yyyy/dd/mm  OR
             //          *        relative-date = [+/-]nnnn{minute,hour,day,week,month,year}
             //          *        (need to figure out how to represent "this week", "last
             //          *        week", "this month", etc)
 
+            mDate = null;
+            mEndDate = null;
+            
+            //
+            // Step 1: special-case 'yesterday' and 'today' and also map
+            //    DATE/DAY/WEEK/MONTH/YEAR to general "date" -- basically we're
+            //    undoing some of the work the parser did, because it is easier to
+            //    do all the date parsing here
+            //
             int origType = getQueryType();
             switch (origType) {
                 case ZimbraQueryParser.DATE:
@@ -378,186 +390,147 @@ public final class ZimbraQuery {
                     break;
             }
 
-            {
-                Matcher m;
-
-                String mod = null;
-
-                m = sRelDatePattern.matcher(s);
-                if (m.lookingAt()) 
+            if (mDate == null) {
+                //
+                // Now, do the actual parsing.  There are two cases: a relative date 
+                // or an absolute date.  
+                //
                 {
-                    //
-                    // RELATIVE DATE!
-                    //
-                    String reltime;
-                    String what;
+                    Matcher m;
+                    String mod = null;
+                    m = sRelDatePattern.matcher(s);
+                    if (m.lookingAt()) 
+                    {
+                        //
+                        // RELATIVE DATE!
+                        //
+                        String reltime;
+                        String what;
 
-                    mod = s.substring(m.start(1), m.end(1));
-                    reltime = s.substring(m.start(2), m.end(2));
+                        mod = s.substring(m.start(1), m.end(1));
+                        reltime = s.substring(m.start(2), m.end(2));
 
-                    int field = 0;
+                        int field = 0;
 
-                    if (m.start(3) == -1) {
-                        // no period specified -- use the defualt for the current operator
-                        switch (origType) {
-                            case ZimbraQueryParser.DATE:
-                            case ZimbraQueryParser.DAY:
-                                field = Calendar.DATE;
-                                break;
-                            case ZimbraQueryParser.WEEK:
-                                field = Calendar.WEEK_OF_YEAR;
-                                break;
-                            case ZimbraQueryParser.MONTH:
-                                field = Calendar.MONTH;
-                                break;
-                            case ZimbraQueryParser.YEAR:
-                                field = Calendar.YEAR;
-                                break;
-                        }
-                    } else {
-                        what = s.substring(m.start(3), m.end(3));
+                        if (m.start(3) == -1) {
+                            // no period specified -- use the defualt for the current operator
+                            switch (origType) {
+                                case ZimbraQueryParser.DATE:
+                                case ZimbraQueryParser.DAY:
+                                    field = Calendar.DATE;
+                                    break;
+                                case ZimbraQueryParser.WEEK:
+                                    field = Calendar.WEEK_OF_YEAR;
+                                    break;
+                                case ZimbraQueryParser.MONTH:
+                                    field = Calendar.MONTH;
+                                    break;
+                                case ZimbraQueryParser.YEAR:
+                                    field = Calendar.YEAR;
+                                    break;
+                            }
+                        } else {
+                            what = s.substring(m.start(3), m.end(3));
 
 
-                        switch (what.charAt(0)) {
-                            case 'm':
-                                field = Calendar.MONTH;
-                                if (what.length() > 1 && what.charAt(1) == 'i') {
-                                    field = Calendar.MINUTE;
-                                }
-                                break;
-                            case 'h':
-                                field = Calendar.HOUR;
-                                break;
-                            case 'd':
-                                field = Calendar.DATE;
-                                break;
-                            case 'w':
-                                field = Calendar.WEEK_OF_YEAR;
-                                break;
-                            case 'y':
-                                field = Calendar.YEAR;
-                                break;
-                        }
-                    }
-                    //                System.out.println("RELDATE: MOD=\""+mod+"\" AMT=\""+reltime+"\" TYPE="+type);
-
-                    GregorianCalendar cal = new GregorianCalendar();
-                    if (tz != null)
-                        cal.setTimeZone(tz);
-                    
-                    cal.setTime(new Date());
-
-                    int num = Integer.parseInt(reltime);
-                    if (mod.equals("-")) {
-                        num = num * -1;
-                    }
-
-                    cal.add(field,num);
-                    mDate = cal.getTime();
-
-                    cal.add(field,1);
-                    mEndDate = cal.getTime();
-                } else {
-                    //
-                    // ABSOLUTE dates:
-                    //
-                    String yearStr = null;
-                    String monthStr = null;
-                    String dayStr = null;
-
-                    char first = s.charAt(0);
-                    if (first == '-' || first == '+') {
-                        s = s.substring(1);
-                    }
-                    m = sAbsYFirstPattern.matcher(s);
-                    if (m.lookingAt()) {
-                        yearStr = s.substring(m.start(1), m.end(1));
-                        monthStr = s.substring(m.start(2), m.end(2));
-                        dayStr = s.substring(m.start(3), m.end(3));
-                    } else {
-                        m = sAbsYLastPattern.matcher(s);
-                        if (m.lookingAt()) {
-                            monthStr = s.substring(m.start(1), m.end(1));
-                            dayStr = s.substring(m.start(2), m.end(2));
-                            yearStr = s.substring(m.start(3), m.end(3));
-                            if (yearStr.length() == 2) {
-                                yearStr = "20"+yearStr;
+                            switch (what.charAt(0)) {
+                                case 'm':
+                                    field = Calendar.MONTH;
+                                    if (what.length() > 1 && what.charAt(1) == 'i') {
+                                        field = Calendar.MINUTE;
+                                    }
+                                    break;
+                                case 'h':
+                                    field = Calendar.HOUR;
+                                    break;
+                                case 'd':
+                                    field = Calendar.DATE;
+                                    break;
+                                case 'w':
+                                    field = Calendar.WEEK_OF_YEAR;
+                                    break;
+                                case 'y':
+                                    field = Calendar.YEAR;
+                                    break;
                             }
                         }
-                    }
+                        //                System.out.println("RELDATE: MOD=\""+mod+"\" AMT=\""+reltime+"\" TYPE="+type);
 
-                    int month = 0;
-                    int day = 0;
-                    int year = 0;
+                        GregorianCalendar cal = new GregorianCalendar();
+                        if (tz != null)
+                            cal.setTimeZone(tz);
 
-                    Calendar cal = Calendar.getInstance();
-                    cal.setTimeZone(tz);
+                        cal.setTime(new Date());
 
-                    if (yearStr == null || monthStr == null || dayStr == null) {
-
-                        int num;
-
-                        try {
-                            num = Integer.parseInt(s);
-                        } catch (Exception e) {
-                            throw new ParseException("Error parsing date: \""+s+"\"");
+                        int num = Integer.parseInt(reltime);
+                        if (mod.equals("-")) {
+                            num = num * -1;
                         }
 
+                        cal.add(field,num);
+                        mDate = cal.getTime();
+
+                        cal.add(field,1);
+                        mEndDate = cal.getTime();
+                    } else {
+                        //
+                        // ABSOLUTE dates:
+                        //       use Locale information to parse date correctly
+                        //
+
+                        char first = s.charAt(0);
+                        if (first == '-' || first == '+') {
+                            s = s.substring(1);
+                        }
+                        
+                        DateFormat df;
+                        if (locale != null)
+                            df = DateFormat.getDateInstance(DateFormat.SHORT, locale); 
+                        else
+                            df = DateFormat.getDateInstance(DateFormat.SHORT);
+                            
+                        df.setLenient(false);
+                        if (tz != null) {
+                            df.setTimeZone(tz);
+                        }
+                        
+                        try {
+                            mDate = df.parse(s);
+                        } catch (java.text.ParseException ex) {
+                            Token fake = new Token();
+                            fake.image = s;
+                            ParseException pe = new ParseException(ex.getLocalizedMessage());
+                            pe.currentToken = fake;
+                            throw pe;
+                        }
+                        
+                        Calendar cal = Calendar.getInstance();
+                        if (tz != null)
+                            cal.setTimeZone(tz);
+                        
+                        cal.setTime(mDate);
+                        
                         switch (origType) {
                             case ZimbraQueryParser.DATE:
                             case ZimbraQueryParser.DAY:
-                                throw new ParseException("Error parsing date: \""+s+"\"");
-                            case ZimbraQueryParser.WEEK:
-                                throw new ParseException("Error parsing date: \""+s+"\"");
-                            case ZimbraQueryParser.MONTH:
-                                throw new ParseException("Error parsing date: \""+s+"\"");
-                            case ZimbraQueryParser.YEAR:
-                                month = 1;
-                                day = 1;
-                                year = num;
+                                cal.add(Calendar.DATE,1);
+                                mEndDate = cal.getTime();
                                 break;
-                        }
-                    } else {
-
-                        year = Integer.parseInt(yearStr);
-                        if (year < 100) {
-                            year += 2000;
-                        }
-
-                        month = Integer.parseInt(monthStr);
-                        day = Integer.parseInt(dayStr);
-                    }
-
-                    if (mLog.isDebugEnabled()) {
-                        mLog.debug("Setting to year="+year+" month="+month+" day="+day);
-                    }
-
-                    // January is 0-indexed, so subtract 1
-                    cal.set(year,month+(Calendar.JANUARY-1),day,0,0,0);
-
-                    mDate = cal.getTime();
-
-                    switch (origType) {
-                        case ZimbraQueryParser.DATE:
-                        case ZimbraQueryParser.DAY:
-                            cal.add(Calendar.DATE,1);
-                            mEndDate = cal.getTime();
-                            break;
-                        case ZimbraQueryParser.WEEK:
-                            cal.add(Calendar.WEEK_OF_YEAR,1);
-                            mEndDate = cal.getTime();
-                            break;
-                        case ZimbraQueryParser.MONTH:
-                            cal.add(Calendar.MONTH,1);
-                            mEndDate = cal.getTime();
-                            break;
-                        case ZimbraQueryParser.YEAR:
-                            cal.add(Calendar.YEAR,1);
-                            mEndDate = cal.getTime();
-                            break;
-                    }
-
-                }
+                            case ZimbraQueryParser.WEEK:
+                                cal.add(Calendar.WEEK_OF_YEAR,1);
+                                mEndDate = cal.getTime();
+                                break;
+                            case ZimbraQueryParser.MONTH:
+                                cal.add(Calendar.MONTH,1);
+                                mEndDate = cal.getTime();
+                                break;
+                            case ZimbraQueryParser.YEAR:
+                                cal.add(Calendar.YEAR,1);
+                                mEndDate = cal.getTime();
+                                break;
+                        } 
+                    } // else (relative/absolute check)
+                } // (if mDate!=null)
 
                 if (mLog.isDebugEnabled()) {
                     if (mEndDate == null) { mEndDate = mDate; };
@@ -1399,6 +1372,7 @@ public final class ZimbraQuery {
     private boolean mPrefetch;
     private Mailbox.SearchResultMode mMode;
     private java.util.TimeZone mTimeZone;
+    private Locale mLocale;
     
     private static String[] unquotedTokenImage;
 
@@ -1719,18 +1693,19 @@ public final class ZimbraQuery {
      * @throws ParseException
      * @throws ServiceException
      */
-    public ZimbraQuery(String queryString, java.util.TimeZone tz, Mailbox mbox, byte[] types, SortBy searchOrder, boolean includeTrash, boolean includeSpam, int chunkSize, boolean prefetch, Mailbox.SearchResultMode mode) 
+    public ZimbraQuery(String queryString, java.util.TimeZone tz, Locale locale, Mailbox mbox, byte[] types, SortBy searchOrder, boolean includeTrash, boolean includeSpam, int chunkSize, boolean prefetch, Mailbox.SearchResultMode mode) 
     throws ParseException, ServiceException
     {
         mMbox = mbox;
         mPrefetch = prefetch;
         mMode = mode;
         mTimeZone = tz;
+        mLocale = locale;
 
         //
         // Step 1: parse the text using the JavaCC parser
         ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(queryString));
-        parser.init(new ZimbraAnalyzer(), mMbox, mTimeZone);
+        parser.init(new ZimbraAnalyzer(), mMbox, mTimeZone, mLocale);
         mClauses = parser.Parse();
 
         String sortByStr = parser.getSortByStr();
