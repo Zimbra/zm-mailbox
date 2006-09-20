@@ -417,7 +417,7 @@
 		</java>
 	</target>
 
-	<target name="npscontacts-inject" depends="compile" description="Insert large addr book in user4">
+	<target name="inject-npscontacts" depends="compile" description="Insert large addr book in user4">
 		<echo>Inserting NPS contacts: user4@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-f data/soap/nps-contacts-orig.xml" />
