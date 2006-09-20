@@ -173,7 +173,6 @@ current item of the iteration.
     
   </tag>
 
-
  <tag>
     <description>
       Retreive a contact.
@@ -208,15 +207,46 @@ current item of the iteration.
     </attribute>
   </tag>
 
+ <tag>
+    <description>
+      Retreive the ZMailboxBean
+    </description>
+
+    <name>getMailbox</name>
+
+    <tag-class>com.zimbra.cs.jsp.tag.GetMailboxTag</tag-class>
+
+    <body-content>empty</body-content>
+
+    <attribute>
+        <description>
+           Name of the exported scoped variable to store the ZMailboxBean in.
+        </description>
+	  <name>var</name>
+	  <required>true</required>
+    </attribute>
+  </tag>
+
    <function>
      <name>anySet</name>
      <function-class>com.zimbra.cs.jsp.bean.ZContactBean</function-class>
      <function-signature>boolean anySet(com.zimbra.cs.jsp.bean.ZContactBean,java.lang.String)</function-signature>
    </function>
 
+   <function>
+     <name>truncate</name>
+     <function-class>com.zimbra.cs.jsp.bean.BeanUtils</function-class>
+     <function-signature>java.lang.String truncate(java.lang.String,int,boolean)</function-signature>
+   </function>
+
    <tag-file>
      <name>overviewFolder</name>
      <path>/WEB-INF/tags/overviewFolder.tag</path>
+   </tag-file> 
+
+   <tag-file>
+     <name>overviewSearchFolder</name>
+     <path>/WEB-INF/tags/overviewSearchFolder.tag</path>
    </tag-file> 
 
    <tag-file>

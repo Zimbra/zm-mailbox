@@ -1,6 +1,7 @@
 <%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <%@ taglib prefix="zm" uri="com.zimbra.zm" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <html>
  <head>
   <title>Zimbra: Inbox</title>
@@ -93,10 +94,12 @@ Mail
 <tr class='Row${mess.isUnread ? ' Unread':''}${mess.id == mid ? ' RowSelected' : ''}'>
 <td width=1% nowrap><input type=checkbox name=t value="1"></td>
 <td width=1% nowrap><img src="images/${mess.isFlagged? 'FlagRed.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Starred></td>
-<td><c:out value="${mess.displaySender}"/></td>
+<td>${fn:escapeXml(mess.displaySender)}</td>
 <td width=1% nowrap><img src="images/${mess.hasAttachment? 'Attachment.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Attachment></td>
-<td><a href="cv.jsp?id=${mess.id}"><c:out value="${empty mess.fragment ? '(none)' : mess.fragment}"/> 
-<%-- <c:if test="${!(empty mess.fragment)}"><span class='Fragment'> - <c:out value="${mess.fragment}"/></span></c:if>  --%>
+<td><a href="cv.jsp?id=${mess.id}">
+
+${fn:escapeXml(empty mess.fragment ? '(none)' : zm:truncate(mess.fragment,100, true))}
+
 </a></td>
 <td nowrap>${mess.size}
 <td nowrap>Feb&nbsp;27
@@ -111,7 +114,7 @@ Mail
 <div width=100% height=100% class=Msg>
  <div class=MsgHdr>
    <table width=100% cellpadding=2 cellspacing=0 border=0 class=Tabs>
-   <tr><td class='MsgHdrName MsgHdrSub'>Subject:</td><td class='MsgHdrValue MsgHdrSub'><c:out value="${msg.subject}"/></td></tr>
+   <tr><td class='MsgHdrName MsgHdrSub'>Subject:</td><td class='MsgHdrValue MsgHdrSub'>${fn:escapeXml(msg.subject)}</td></tr>
    <tr>
       <td class='MsgHdrName'>Sent by:</td>
       <td class='MsgHdrValue'><c:out value="${msg.displayFrom}" default='<Unknown>'/>; On: <c:out value="${msg.displaySentDate}"/></td></tr>

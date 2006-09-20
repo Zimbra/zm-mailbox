@@ -1,9 +1,10 @@
 <%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <%@ taglib prefix="zm" uri="com.zimbra.zm" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <html>
  <head>
-  <title>Zimbra: Inbox</title>
+  <title>Zimbra: ${fn:escapeXml(empty param.query ? 'Inbox' : param.query)}</title>
   <style type="text/css">
     @import url("style.css");
   </style>
@@ -49,10 +50,12 @@ Mail
  <a href="">Reply All</a>
 </td>
 <td align=right>
- <c:if test="${param.offset > 0}">
+ <c:if test="${param.offset gt 0}">
    <a href="?offset=${searchResult.previousOffset}"><img src="images/arrows/LeftArrow.gif" border=0></a>
  </c:if>
+ <c:if test="${searchResult.size gt 0}">
  <span>${param.offset+1} - ${param.offset+searchResult.size}</span>
+ </c:if>
  <c:if test="${searchResult.hasMore}">
    <a href="?offset=${searchResult.nextOffset}"><img src="images/arrows/RightArrow.gif" border=0></a>
  </c:if>         	
@@ -95,7 +98,12 @@ Mail
 <td width=1% nowrap><img src="images/${conv.isFlagged? 'FlagRed.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Starred></td>
 <td><c:out value="${conv.displayRecipients}" default="<Unknown>"/></td>
 <td width=1% nowrap><img src="images/${conv.hasAttachment? 'Attachment.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Attachment></td>
-<td><a href="cv.jsp?id=${conv.id}&query=${param.query}"><c:out value="${empty conv.subject ? '<No Subject>' : conv.subject}"/> 
+
+
+<td><a href="<c:url value="cv.jsp">
+  <c:param name='id' value='${conv.id}'/>
+  <c:param name='query' value='${param.query}'/></c:url>"><c:out value="${empty conv.subject ? '<No Subject>' : conv.subject}"/> 
+
 <%-- <c:if test="${!(empty conv.fragment)}"><span class='Fragment'> - ${fn:escapeXml(conv.fragment)}</span></c:if>  --%>
 </a></td>
 <td nowrap><c:if test="${conv.messageCount > 1}">(${conv.messageCount})&nbsp;</c:if><c:if test="${conv.messageCount < 2}">&nbsp</c:if>
@@ -104,7 +112,11 @@ Mail
 </c:forEach>
 
 </table>
+ <c:if test="${searchResult.size == 0}">
+ <div class='NoResults'>No results found.</div>
+ </c:if>
 </div> <%-- list --%>
+
 <div class='RightTbBottom'>${toolbar}</div>
 <jsp:directive.include file="footer.jsp" />
 

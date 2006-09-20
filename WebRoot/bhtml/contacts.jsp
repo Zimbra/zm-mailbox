@@ -90,7 +90,7 @@
 <tr>
 <td width=1% nowrap><input type=checkbox name=t value="1"></td>
 <td width=1% nowrap><img src="images/Contact.gif" alt=Contact></td>
-<td width=40%><a href="contact.jsp?id=${contact.id}">${fn:escapeXml(contact.fileAsStr)}</a></td>
+<td width=40%><a href="contact.jsp?id=${contact.id}">${fn:escapeXml(empty contact.fileAsStr ? '<None>' : contact.fileAsStr)}</a></td>
 <td width=40%><c:if test="${empty contact.displayEmail}">&nbsp;</c:if>${fn:escapeXml(contact.displayEmail)}</td>
 
 </tr>   

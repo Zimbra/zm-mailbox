@@ -7,11 +7,9 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
-<tr><td class='Folder<c:if test="${folder.hasUnread}"> Unread</c:if><c:if test="${folder.id eq selected}"> Selected</c:if>' >
- <a href='clv.jsp?query=in:"${folder.pathUrlEncoded}"'>
-   <img src="images/${empty icon ? 'Folder.gif' : icon}"/>
-   <span>${fn:escapeXml(empty label ? folder.name : label)} <c:if test="${folder.hasUnread}"> (${folder.unreadCount}) </c:if></span>
+<tr><td class='Folder<c:if test="${folder.id eq selected}"> Selected</c:if>' >
+ <a href='clv.jsp?query=${fn:escapeXml(folder.query)}'>
+   <img src="images/${empty icon ? 'SearchFolder.gif' : icon}"/>
+   <span>${fn:escapeXml(empty label ? folder.name : label)}</span>
  </a>
-
 </td></tr>
-

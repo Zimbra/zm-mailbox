@@ -73,7 +73,7 @@
  <table cellspacing=0 cellpadding=0>
   <tr class='contactHeaderRow'>
 	<td width=20><center><img src="images/Contact.gif"/></center></td>
-	<td><div class='contactHeader'>${fn:escapeXml(contact.displayFileAs)}</div></td>
+	<td><div class='contactHeader'>${fn:escapeXml(empty contact.displayFileAs ? '<None>' : contact.displayFileAs)}</div></td>
 	<td align='right'><!-- tags--> </td>
   </tr>
  </table>

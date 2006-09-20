@@ -59,7 +59,7 @@ border-color: #E0E0E0 #555555 #bed8ee #E0E0E0;
 }
 
 .Tree {
-	background-color: #F7F7F7;
+    background-color:#eff5fb;
 	margin: 10px 0px 10px 10px;
 	border: 1px solid;
 	border-color: #E0E0E0 #555555 #555555 #E0E0E0;
@@ -136,12 +136,18 @@ text-decoration: none;
 }
 
 .Tb IMG { vertical-align: middle; }
+
 .Tb SPAN { vertical-align: middle; font-weight: bold; }
 
 .Unread {	font-weight:bold; }
 .RowSelected { background-color: #fdf8ba; }
 
-.TreeSelected { background-color: #DDDDDD; }
+
+.Folder { padding-bottom: 2px;  }
+
+.Folder IMG { border: none; vertical-align: middle; }
+.Folder SPAN { vertical-align: middle; padding-left: 3px; }
+.Folder.Selected { background-color: #DDDDDD; }
 
 .MsgHdr TABLE {
 background-color: background-color: #abc2d6;	
@@ -240,4 +246,11 @@ margin: 5px 10px 5px 10px;
        border:1px solid; 
        border-color:black #abc2d6 #abc2d6 black;
        height:20px;
+}
+
+.NoResults { 
+	text-align: center;
+    background-color:#eff5fb;	
+	padding: 20px 0px 20px 0px;
+	font-weight: bold;
 }
