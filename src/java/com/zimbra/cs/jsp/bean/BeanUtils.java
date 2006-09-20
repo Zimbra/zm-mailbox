@@ -119,4 +119,21 @@ public class BeanUtils {
         return s;
     }
 
+    /**
+     * truncat given text at length, then walk back until you hit a whitespace.
+     *  
+     * @param text
+     * @param length
+     * @return
+     */
+    public static String truncate(String text, int length, boolean ellipses) {
+        if (text.length() < length) return text;
+        for (int i=length--; i > 0; i--) {
+            if (Character.isWhitespace(text.charAt(i))) {
+                return text.substring(0, i)+(ellipses ? " ..." : "");
+            }
+        }
+        return text.subSequence(0, length)+(ellipses ? " ..." : "");
+    }
+
 }

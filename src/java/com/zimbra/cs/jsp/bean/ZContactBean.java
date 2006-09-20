@@ -34,6 +34,7 @@ import com.zimbra.cs.zclient.ZContact;
 public class ZContactBean {
 
     private ZContact mContact;
+    private String mFileAs;
     
     public ZContactBean(ZContact contact) {
         mContact = contact;
@@ -168,12 +169,15 @@ public class ZContactBean {
 
     public String getWorkURL() { return mContact.getAttrs().get("workURL"); }
 
-    public String getDisplayFileAs() { 
-        try {
-            return Contact.getFileAsString(mContact.getAttrs());
-        } catch (ServiceException e) {
-            return null;
+    public String getDisplayFileAs() {
+        if (mFileAs == null) {
+            try {
+                mFileAs = Contact.getFileAsString(mContact.getAttrs());
+            } catch (ServiceException e) {
+                mFileAs = "";
+            }
         }
+        return mFileAs;
     }
     
     private static final Pattern sCOMMA_OR_SP = Pattern.compile("[, ]");

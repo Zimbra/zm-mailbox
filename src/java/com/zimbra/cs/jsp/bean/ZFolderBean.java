@@ -73,7 +73,9 @@ public class ZFolderBean {
     /**
      * @return number of unread items in folder
      */
-    public int getUnreadCount() { return mFolder.getUnreadCount(); }
+    public int getUnreadCount() { 
+        return getIsDrafts() ? getMessageCount() : mFolder.getUnreadCount();
+    }
     
     public boolean getHasUnread() { return getUnreadCount() > 0; }
 
