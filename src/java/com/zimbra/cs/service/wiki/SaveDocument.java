@@ -39,6 +39,7 @@ import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.wiki.Wiki;
@@ -48,7 +49,7 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class SaveDocument extends WikiDocumentHandler {
-    private static final String[] TARGET_DOC_PATH = new String[] { MailService.E_DOC, MailService.A_ID };
+    private static final String[] TARGET_DOC_PATH = new String[] { MailService.E_DOC, MailService.A_FOLDER };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_DOC_PATH; }
 
 	private static class Doc {
@@ -142,6 +143,7 @@ public class SaveDocument extends WikiDocumentHandler {
         Element m = response.addElement(MailService.E_DOC);
         m.addAttribute(MailService.A_ID, lc.formatItemId(docItem));
         m.addAttribute(MailService.A_VERSION, docItem.getVersion());
+        ToXML.encodeRestUrl(m, docItem);
         doc.cleanup();
         return response;
 	}
