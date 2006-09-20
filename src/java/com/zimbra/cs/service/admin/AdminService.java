@@ -339,7 +339,8 @@ public class AdminService implements DocumentService {
     public static final String A_TOTAL = "total";
     public static final String A_TOKEN = "token";
     public static final String A_VIA = "via";
-
+    public static final String A_EXCLUDE = "exclude";
+    
     public static final String BY_ID = "id";
     public static final String BY_QUERY = "query";
     public static final String BY_NAME = "name";
@@ -392,10 +393,12 @@ public class AdminService implements DocumentService {
     public static final String E_ACL = "acl";
     public static final String E_PRIORITY = "priority";
     public static final String A_EXTENSION = "extension";
+    public static final String A_MAIL = "mail";    
     public static final String A_VALUE = "value";
     public static final String A_PRIORITY = "priority";
     public static final String A_ACL = "acl";
-
+    public static final String A_NONE = "none";
+    
     public static final String A_QUOTA_USED = "used";
     public static final String A_QUOTA_LIMIT = "limit";
 

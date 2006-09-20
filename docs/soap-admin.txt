@@ -1212,7 +1212,7 @@ Access: domain admin sufficient
 
 -----------------------------
 
-<GetAllZimletsRequest/>
+<GetAllZimletsRequest exclude="{exclude}"/>
 
 <GetAllZimletsResponse>
   <zimlet name="{name}" id="{id}">
@@ -1220,6 +1220,13 @@ Access: domain admin sufficient
   </zimlet>+
 </GetAllZimletsResponse>
 
+Notes:
+	{exclude} can be "none|admin|mail"
+	when exclude="admin" is specified the response returns only mail Zimlets
+	when exclude="mail" is specified the response returns only admin extensions
+	when exclude = "none" both mail and admin zimlets are returned
+	
+	default is "none"
 -----------------------------
 
 <CreateZimletRequest>

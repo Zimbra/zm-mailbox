@@ -41,15 +41,28 @@ public class GetAllZimlets extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+		String exclude = request.getAttribute(AdminService.A_EXCLUDE, AdminService.A_NONE);
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
 		List<Zimlet> zimlets = prov.listAllZimlets();
 
 	    Element response = lc.createElement(AdminService.GET_ALL_ZIMLETS_RESPONSE);
-	    for (Zimlet zimlet : zimlets)
-	    	GetZimlet.doZimlet(response, zimlet);
-	    
+    	if(AdminService.A_EXTENSION.equalsIgnoreCase(exclude)) {
+		    for (Zimlet zimlet : zimlets) {
+		    	if(!zimlet.isExtension())
+		    		GetZimlet.doZimlet(response, zimlet);
+		    }
+    	} else if(AdminService.A_MAIL.equalsIgnoreCase(exclude)) {
+		    for (Zimlet zimlet : zimlets) {
+		    	if(zimlet.isExtension())
+		    		GetZimlet.doZimlet(response, zimlet);
+		    }
+    	} else {
+		    for (Zimlet zimlet : zimlets) 
+	    		GetZimlet.doZimlet(response, zimlet);
+    		
+    	}
 	    return response;
 	}
 }
