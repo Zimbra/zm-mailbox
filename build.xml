@@ -417,6 +417,13 @@
 		</java>
 	</target>
 
+	<target name="npscontacts-inject" depends="compile" description="Insert large addr book in user4">
+		<echo>Inserting NPS contacts: user4@${zimbra.server.hostname}</echo>
+		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-f data/soap/nps-contacts-orig.xml" />
+		</java>
+	</target>
+
 	<target name="import-wiki-templates" description="Import Wiki templates to the wiki account">
 		<echo>Importing Wiki templates from ${data.wiki.dir}/Template</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
