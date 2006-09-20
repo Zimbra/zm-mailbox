@@ -58,7 +58,7 @@ public class GetZimlet extends AdminDocumentHandler {
 	    Map<String,Object> attrs = zimlet.getAttrs();
 	    
         Element zim = response.addElement(AdminService.E_ZIMLET);
-    	zim.addAttribute(AdminService.A_N, zimlet.getName());
+    	zim.addAttribute(AdminService.A_NAME, zimlet.getName());
     	zim.addAttribute(AdminService.A_ID, zimlet.getId());
         for (Map.Entry<String, Object> entry : attrs.entrySet()) {
             String name = entry.getKey();
