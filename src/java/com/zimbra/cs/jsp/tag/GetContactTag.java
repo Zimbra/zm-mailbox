@@ -42,6 +42,7 @@ import javax.servlet.jsp.PageContext;
 import com.zimbra.cs.jsp.bean.ZContactBean;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.zclient.ZContact;
+import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 
 public class GetContactTag extends ZimbraSimpleTag {
@@ -59,8 +60,12 @@ public class GetContactTag extends ZimbraSimpleTag {
         try {
             ZMailbox mbox = getMailbox();
             List<ZContact> contacts = mbox.getContacts(mId, null, mSync, null);
-            if (contacts.size() == 1)
-                jctxt.setAttribute(mVar, new ZContactBean(contacts.get(0)),  PageContext.PAGE_SCOPE);
+            if (contacts.size() == 1) {
+                ZContact c = contacts.get(0);
+                ZFolder f = mbox.getFolderById(c.getFolderId());
+                String folderName = f == null ? null : f.getName(); 
+                jctxt.setAttribute(mVar, new ZContactBean(c, folderName),  PageContext.PAGE_SCOPE);
+            }
         } catch (ServiceException e) {
             getJspContext().getOut().write(e.toString());
         }

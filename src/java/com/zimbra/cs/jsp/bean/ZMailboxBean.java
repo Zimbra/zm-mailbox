@@ -40,7 +40,6 @@ public class ZMailboxBean {
     
     public long getSize() { return mMbox.getSize(); }
        
-    
     private ZFolderBean getFolderBeanById(String id) {
         ZFolder folder = mMbox.getFolderById(id);
         return folder == null ? null : new ZFolderBean(folder);
@@ -59,5 +58,7 @@ public class ZMailboxBean {
     public ZFolderBean getCalendar() { return getFolderBeanById(ZFolder.ID_CALENDAR); }
     
     public ZFolderBean getContacts() { return getFolderBeanById(ZFolder.ID_CONTACTS); }    
+    
+    public ZFolderBean getAutoContacts() { return getFolderBeanById(ZFolder.ID_AUTO_CONTACTS); }
     
 }
