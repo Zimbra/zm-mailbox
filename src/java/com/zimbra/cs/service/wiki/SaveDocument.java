@@ -49,8 +49,14 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class SaveDocument extends WikiDocumentHandler {
-    private static final String[] TARGET_DOC_PATH = new String[] { MailService.E_DOC, MailService.A_FOLDER };
-    protected String[] getProxiedIdPath(Element request)     { return TARGET_DOC_PATH; }
+    private static String[] TARGET_DOC_ID_PATH = new String[] { MailService.E_DOC, MailService.A_ID };
+    private static String[] TARGET_DOC_FOLDER_PATH = new String[] { MailService.E_DOC, MailService.A_FOLDER };
+    protected String[] getProxiedIdPath(Element request)     {
+    	String id = getXPath(request, TARGET_DOC_ID_PATH);
+    	if (id == null)
+    		return TARGET_DOC_FOLDER_PATH;
+    	return TARGET_DOC_ID_PATH; 
+    }
 
 	private static class Doc {
 		public byte[] contents;
