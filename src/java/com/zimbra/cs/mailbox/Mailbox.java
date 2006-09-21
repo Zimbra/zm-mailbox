@@ -50,6 +50,7 @@ import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbMailbox.NewMboxId;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.LuceneFields;
@@ -375,10 +376,6 @@ public class Mailbox {
         return mData.schemaGroupId;
     }
     
-    public Analyzer getAnalyzer() {
-        return ZimbraAnalyzer.getDefaultAnalyzer();
-    }
-
     /** Returns the {@link Account} object for this mailbox's owner.  At
      *  present, each account can have at most one <code>Mailbox</code>.
      *  
@@ -1703,7 +1700,7 @@ public class Mailbox {
     
                     try {
                         MailboxIndex idx = getMailboxIndex();
-                        idx.reIndexItem(sr.id, sr.type);
+                        idx.reIndexItem(this, sr.id, sr.type);
                     } catch(ServiceException e) {
                         mReIndexStatus.mNumFailed++;
                         ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on msg "+sr.id+".  Message will not be indexed.", e);

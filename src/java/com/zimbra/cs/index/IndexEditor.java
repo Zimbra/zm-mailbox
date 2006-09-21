@@ -94,8 +94,9 @@ public class IndexEditor {
 	public void deleteIndex(int mailboxId) throws IOException, ServiceException {
 		MailboxIndex.AdminInterface admin = null;
 		try {
-			admin = Indexer.GetInstance().getAdminInterface(mailboxId);
-			admin.deleteIndex();
+		    Mailbox mbox = Mailbox.getMailboxById(mailboxId);
+		    admin = mbox.getMailboxIndex().getAdminInterface();
+		    admin.deleteIndex();
 		} finally {
 			if (admin!=null) {
 				admin.close();
@@ -145,8 +146,9 @@ public class IndexEditor {
     public void reIndexMsg(int mailboxId, int msg) {
         MailboxIndex midx = null;
         try {
-            midx = Mailbox.getMailboxById(mailboxId).getMailboxIndex();  
-            midx.reIndexItem(msg, MailItem.TYPE_MESSAGE);
+            Mailbox mbox = Mailbox.getMailboxById(mailboxId);
+            midx = mbox.getMailboxIndex();  
+            midx.reIndexItem(mbox, msg, MailItem.TYPE_MESSAGE);
         } catch(Exception e) {
             outputStream.println("Re-index FAILED with " + ExceptionToString.ToString(e));
         } finally {
@@ -611,7 +613,8 @@ public class IndexEditor {
 //			Collection c = new ArrayList();
 			Collection c = new TreeSet(new MailboxIndex.AdminInterface.TermInfo.FreqComparator());
 
-            admin = Indexer.GetInstance().getAdminInterface(mailboxId);
+            Mailbox mbox = Mailbox.getMailboxById(mailboxId);
+            admin = mbox.getMailboxIndex().getAdminInterface();
             
             admin.enumerateTerms(c, field);
 
@@ -694,7 +697,8 @@ public class IndexEditor {
 //			Collection c = new ArrayList();
 			Collection c = new TreeSet(new MailboxIndex.AdminInterface.TermInfo.FreqComparator());
 
-            admin = Indexer.GetInstance().getAdminInterface(mailboxId);
+            Mailbox mbox = Mailbox.getMailboxById(mailboxId);
+            admin = mbox.getMailboxIndex().getAdminInterface();
             
             admin.enumerateTerms(c, field);
 
@@ -770,7 +774,8 @@ public class IndexEditor {
 	{
 		MailboxIndex.AdminInterface admin = null;		
 		try {
-		    admin = Indexer.GetInstance().getAdminInterface(mailboxId);
+		    Mailbox mbox = Mailbox.getMailboxById(mailboxId);
+		    admin = mbox.getMailboxIndex().getAdminInterface();
 		    
 		    ByteArrayOutputStream out = new ByteArrayOutputStream();
 		    admin.backupIndex(out);
@@ -870,7 +875,8 @@ public class IndexEditor {
 		
 		MailboxIndex.AdminInterface admin = null;		
 		try {
-			admin = Indexer.GetInstance().getAdminInterface(mailboxId);
+		    Mailbox mbox = Mailbox.getMailboxById(mailboxId);
+		    admin = mbox.getMailboxIndex().getAdminInterface();
 //			IndexReader reader = admin.getIndexReader();
 			int printNum = 1; //c.size() / 10;
 			if (printNum < 1) {
@@ -956,7 +962,8 @@ public class IndexEditor {
     {
         MailboxIndex.AdminInterface admin = null;       
         try {
-            admin = Indexer.GetInstance().getAdminInterface(mailboxId);
+            Mailbox mbox = Mailbox.getMailboxById(mailboxId);
+            admin = mbox.getMailboxIndex().getAdminInterface();
             admin.hackIndex();
         } finally {
             if (admin!=null) {

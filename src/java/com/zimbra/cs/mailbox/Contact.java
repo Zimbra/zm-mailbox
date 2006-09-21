@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
@@ -417,7 +416,7 @@ public class Contact extends MailItem {
     public void reindex(IndexItem redo, Object indexData) throws ServiceException {
         // FIXME: need to note this as dirty so we can reindex if things fail
         if (!DebugConfig.disableIndexing)
-            Indexer.GetInstance().indexContact(redo, mMailbox.getMailboxIndex(), mId, this);
+            mMailbox.getMailboxIndex().indexContact(mMailbox, redo, mId, this);
     }
 
     void reanalyze(Object data) throws ServiceException {

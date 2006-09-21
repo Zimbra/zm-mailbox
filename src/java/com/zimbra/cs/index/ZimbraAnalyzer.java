@@ -34,6 +34,7 @@ package com.zimbra.cs.index;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.IOException;
+import java.util.HashMap;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharTokenizer;
@@ -43,7 +44,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.ServiceException;
 
 /***
  * 
@@ -56,108 +57,49 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public class ZimbraAnalyzer extends StandardAnalyzer 
 {
-    public static ZimbraAnalyzer getInstance()
-    {
-        return sInstance;
+    /***
+     * Returns the Analyzer to be used 
+     * 
+     * @param name
+     * @return
+     * @throws ServiceException
+     */
+    public static Analyzer getAnalyzer(String name) {
+        Analyzer toRet = sAnalyzerMap.get(name);
+        if (toRet == null)
+            return getDefaultAnalyzer();
+        return toRet;
     }
-
-//  public static ZimbraAnalyzer getAnalyzer(Account
-
-    private static ZimbraAnalyzer sInstance = new ZimbraAnalyzer();
     
+    //
+    // We maintain a single global instance for our default analyzer, 
+    // since it is completely thread safe
+    private static ZimbraAnalyzer sInstance = new ZimbraAnalyzer();
     public static Analyzer getDefaultAnalyzer() { return sInstance; }
     
-    public static void main(String[] args)
-    {
-        {
-            String src = "\"Tim Brennan\" <first@domain.com>";
-            String concat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, src);
 
-            System.out.println("SRC="+src+" OUT=\""+concat+"\"");
-        }
+    ///////////////////////
+    //
+    // Extension Analyzer Map
+    //
+    // Extension analyzers must call registerAnalyzer() on startup.  
+    //
+    private static HashMap<String, Analyzer> sAnalyzerMap = new HashMap<String, Analyzer>();
+    public static void registerAnalyzer(String name, Analyzer analyzer) throws ServiceException {
+        if (sAnalyzerMap.containsKey(name)) 
+            throw ServiceException.FAILURE("Cannot register analyzer: "+name+" because there is one already registered with that name.", null);
 
-        {
-            String src = "dharma@dharma.com";
-            String concat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, src);
-
-            System.out.println("SRC="+src+" OUT=\""+concat+"\"");
-        }        
-
-
-        MultiTokenFilter.sPrintNewTokens = true;
-        ZimbraAnalyzer la = new ZimbraAnalyzer();
-        String str = "tim (tim@foo.com),image/jpeg, bugzilla-daemon@eric.example.zimbra.com, zug zug [zug@gug.com], Foo.gub, \"My Mom\" <mmm@nnnn.com>,asd foo bar aaa/bbb ccc/ddd/eee fff@ggg.com hhh@iiii";
-        {
-            System.out.print("AddressTokenFilter:\n-------------------------");
-            StringReader reader = new StringReader(str);
-
-            TokenStream filter1 = la.tokenStream(LuceneFields.L_H_FROM, reader);
-//          int  i = 1;
-            Token tok = null;
-            do {
-                try {
-                    tok = filter1.next();
-                } catch (IOException e) {}
-                if (tok!=null) {
-                    System.out.println("    "+tok.termText());
-                }
-            } while(tok != null);
-        }
-
-
-        {
-            System.out.print("\nATTACHMENTS: MimeTypeTokenFilter:\n-------------------------");
-            StringReader reader = new StringReader(str);
-            TokenStream filter1 = la.tokenStream(LuceneFields.L_ATTACHMENTS, reader);
-
-//          int  i = 1;
-            Token tok = null;
-            do {
-                try {
-                    tok = filter1.next();
-                } catch (IOException e) {}
-                if (tok!=null) {
-                    System.out.println("    "+tok.termText());
-                }
-            } while(tok != null);
-        }
-        {
-            System.out.print("\nTYPE: MimeTypeTokenFilter:\n-------------------------");
-            StringReader reader = new StringReader(str);
-            TokenStream filter1 = la.tokenStream(LuceneFields.L_MIMETYPE, reader);
-
-            //  		int  i = 1;
-            Token tok = null;
-            do {
-                try {
-                    tok = filter1.next();
-                } catch (IOException e) {}
-                if (tok!=null) {
-                    System.out.println("    "+tok.termText());
-                }
-            } while(tok != null);
-        }
-
-        {
-            str = "123 26 1000000 100000000 1,000,000,000 1,000,000,000,000,000";
-            System.out.println("\nMimeTypeTokenFilter:\n-------------------------");
-            StringReader reader = new StringReader(str);
-            TokenStream filter1 = la.tokenStream(LuceneFields.L_SIZE, reader);
-
-//          int  i = 1;
-            Token tok = null;
-            do {
-                try {
-                    tok = filter1.next();
-                } catch (IOException e) {}
-                if (tok!=null) {
-                    System.out.println("    "+tok.termText());
-                }
-            } while(tok != null);
-        }
-
+        sAnalyzerMap.put(name, analyzer); 
     }
+    public static void unregisterAnalyzer(String name) { sAnalyzerMap.remove(name); }
 
+
+    
+    
+    ///////////////////////////
+    //
+    //
+    //
     public static String getAllTokensConcatenated(String fieldName, String text) {
         Reader reader = new StringReader(text);
         return getAllTokensConcatenated(fieldName, reader);
@@ -184,7 +126,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
     }
 
 
-    public ZimbraAnalyzer() {
+    protected ZimbraAnalyzer() {
         super();
     }
 
@@ -539,6 +481,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
      * image/jpeg --> "image/jpeg" and "image" 
      */
     public static class MimeTypeTokenFilter extends MultiTokenFilter
+    
     {
 
         MimeTypeTokenFilter(TokenFilter in) {
@@ -583,5 +526,96 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         }
     }
 
+    
+    public static void main(String[] args)
+    {
+        {
+            String src = "\"Tim Brown\" <first@domain.com>";
+            String concat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, src);
+
+            System.out.println("SRC="+src+" OUT=\""+concat+"\"");
+        }
+
+        {
+            String src = "dharma@dharma.com";
+            String concat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, src);
+
+            System.out.println("SRC="+src+" OUT=\""+concat+"\"");
+        }        
+
+
+        MultiTokenFilter.sPrintNewTokens = true;
+        ZimbraAnalyzer la = new ZimbraAnalyzer();
+        String str = "tim (tim@foo.com),image/jpeg, bugzilla-daemon@eric.example.zimbra.com, zug zug [zug@gug.com], Foo.gub, \"My Mom\" <mmm@nnnn.com>,asd foo bar aaa/bbb ccc/ddd/eee fff@ggg.com hhh@iiii";
+        {
+            System.out.print("AddressTokenFilter:\n-------------------------");
+            StringReader reader = new StringReader(str);
+
+            TokenStream filter1 = la.tokenStream(LuceneFields.L_H_FROM, reader);
+//          int  i = 1;
+            Token tok = null;
+            do {
+                try {
+                    tok = filter1.next();
+                } catch (IOException e) {}
+                if (tok!=null) {
+                    System.out.println("    "+tok.termText());
+                }
+            } while(tok != null);
+        }
+
+
+        {
+            System.out.print("\nATTACHMENTS: MimeTypeTokenFilter:\n-------------------------");
+            StringReader reader = new StringReader(str);
+            TokenStream filter1 = la.tokenStream(LuceneFields.L_ATTACHMENTS, reader);
+
+//          int  i = 1;
+            Token tok = null;
+            do {
+                try {
+                    tok = filter1.next();
+                } catch (IOException e) {}
+                if (tok!=null) {
+                    System.out.println("    "+tok.termText());
+                }
+            } while(tok != null);
+        }
+        {
+            System.out.print("\nTYPE: MimeTypeTokenFilter:\n-------------------------");
+            StringReader reader = new StringReader(str);
+            TokenStream filter1 = la.tokenStream(LuceneFields.L_MIMETYPE, reader);
+
+            //          int  i = 1;
+            Token tok = null;
+            do {
+                try {
+                    tok = filter1.next();
+                } catch (IOException e) {}
+                if (tok!=null) {
+                    System.out.println("    "+tok.termText());
+                }
+            } while(tok != null);
+        }
+
+        {
+            str = "123 26 1000000 100000000 1,000,000,000 1,000,000,000,000,000";
+            System.out.println("\nMimeTypeTokenFilter:\n-------------------------");
+            StringReader reader = new StringReader(str);
+            TokenStream filter1 = la.tokenStream(LuceneFields.L_SIZE, reader);
+
+//          int  i = 1;
+            Token tok = null;
+            do {
+                try {
+                    tok = filter1.next();
+                } catch (IOException e) {}
+                if (tok!=null) {
+                    System.out.println("    "+tok.termText());
+                }
+            } while(tok != null);
+        }
+
+    }
 }
 

@@ -44,7 +44,7 @@ import java.util.Map.Entry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.index.Indexer;
+import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.op.AbortTxn;
 import com.zimbra.cs.redolog.op.Checkpoint;
@@ -393,7 +393,7 @@ public class RedoPlayer {
         }
 
         // Flush out all uncommitted Lucene index writes.
-        Indexer.GetInstance().flush();
+        MailboxIndex.flushAllWriters();
 
         return numOps;
 	}

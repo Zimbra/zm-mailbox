@@ -1705,7 +1705,8 @@ public final class ZimbraQuery {
         //
         // Step 1: parse the text using the JavaCC parser
         ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(queryString));
-        parser.init(new ZimbraAnalyzer(), mMbox, mTimeZone, mLocale);
+        mbox.getMailboxIndex().initAnalyzer(mbox);
+        parser.init(mbox.getMailboxIndex().getAnalyzer(), mMbox, mTimeZone, mLocale);
         mClauses = parser.Parse();
 
         String sortByStr = parser.getSortByStr();

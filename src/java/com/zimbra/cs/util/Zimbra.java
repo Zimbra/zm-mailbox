@@ -34,7 +34,7 @@ import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.imap.ImapServer;
-import com.zimbra.cs.index.Indexer;
+import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.lmtpserver.LmtpServer;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.pop3.Pop3Server;
@@ -96,7 +96,7 @@ public class Zimbra {
     	
     	//ZimletUtil.loadZimlets();
     	
-        Indexer.GetInstance().startup();
+        MailboxIndex.startup();
         
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         redoLog.startup();
@@ -139,7 +139,7 @@ public class Zimbra {
 
         SessionCache.shutdown();
         
-        Indexer.GetInstance().shutdown();
+        MailboxIndex.shutdown();
         IMRouter.getInstance().shutdown();
 
         redoLog.shutdown();

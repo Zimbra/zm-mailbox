@@ -33,7 +33,6 @@ import java.io.InputStream;
 import java.util.List;
 
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
@@ -130,7 +129,7 @@ public class Document extends MailItem {
         if (!DebugConfig.disableIndexing &&
         		indexData != null &&
         		indexData instanceof ParsedDocument)
-            Indexer.GetInstance().indexDocument(redo, mMailbox.getMailboxIndex(), mId, (ParsedDocument) indexData);
+            mMailbox.getMailboxIndex().indexDocument(mMailbox, redo, mId, (ParsedDocument) indexData);
     }
 
     public DocumentRevision getRevision(int rev) throws ServiceException {

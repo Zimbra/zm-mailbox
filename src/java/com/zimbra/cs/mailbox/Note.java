@@ -29,7 +29,6 @@
 package com.zimbra.cs.mailbox;
 
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
@@ -148,7 +147,7 @@ public class Note extends MailItem {
     public void reindex(IndexItem redo, Object indexData) throws ServiceException {
         // FIXME: need to note this as dirty so we can reindex if things fail
         if (!DebugConfig.disableIndexing)
-            Indexer.GetInstance().indexNote(redo, mMailbox.getMailboxIndex(), mId, this);
+            mMailbox.getMailboxIndex().indexNote(mMailbox, redo, mId, this);
     }
 
     void setContent(String content) throws ServiceException {

@@ -40,7 +40,6 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.calendar.*;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
@@ -418,7 +417,7 @@ public class Message extends MailItem {
 
         // FIXME: need to note this as dirty so we can reindex if things fail
         if (!DebugConfig.disableIndexing)
-            Indexer.GetInstance().indexMessage(redo, mMailbox.getMailboxIndex(), mId, pm);
+            mMailbox.getMailboxIndex().indexMessage(mMailbox, redo, mId, pm);
     }
 
     public void reanalyze() throws ServiceException {
