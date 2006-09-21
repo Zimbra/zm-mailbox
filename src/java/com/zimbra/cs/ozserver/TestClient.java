@@ -168,6 +168,7 @@ class TestClient {
     
     public void close() {
         try {
+            mLog.info("client closing socket");
             mSocket.close();
         } catch (IOException ioe) {
             mLog.warn("exception occurred closing client socket", ioe);

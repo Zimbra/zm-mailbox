@@ -125,7 +125,7 @@ public class OzUtil {
         }
     }
 
-    private static String opsToString(int ops) {
+    static String opsToString(int ops) {
         StringBuilder sb = new StringBuilder();
         if ((ops & SelectionKey.OP_READ) != 0) {
             sb.append("READ,");

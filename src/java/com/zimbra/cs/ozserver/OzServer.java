@@ -92,7 +92,8 @@ public class OzServer {
         
         /* TODO revisit these thread pool defaults; also make them
          * configurable. */
-        mPooledExecutor = new PooledExecutor(new BoundedLinkedQueue(1024));
+        mPooledExecutorQueue = new BoundedLinkedQueue(1024);
+        mPooledExecutor = new PooledExecutor(mPooledExecutorQueue);
         mPooledExecutor.setMaximumPoolSize(50);
         mPooledExecutor.setMinimumPoolSize(Runtime.getRuntime().availableProcessors() * 2);
         mPooledExecutor.runWhenBlocked();
@@ -127,6 +128,9 @@ public class OzServer {
     }
     
     private void serverLoop() {
+        long debugLoopCount = 0;
+        long debugNumTasks = 0;
+        
         while (true) {
             synchronized (this) {
                 if (mShutdownRequested) {
@@ -144,14 +148,34 @@ public class OzServer {
                 mLog.warn("OzServer IOException in select", ioe);
             }
 
+            debugLoopCount++;
+            
             synchronized (mServerTaskList) {
+                debugNumTasks = mServerTaskList.size();
                 for (Iterator<ServerTask> iter = mServerTaskList.iterator(); iter.hasNext(); iter.remove()) {
                     ServerTask task = iter.next();
                     task.run();
                 }
             }
             
-            if (mLog.isDebugEnabled()) mLog.debug("selected " + readyCount + " set " + mSelector.selectedKeys().size());
+            if (mLog.isDebugEnabled()) mLog.debug("select: ready=" + readyCount + "/" + mSelector.keys().size
+                    () + " loop=" + debugLoopCount + " tasks=" + debugNumTasks);
+
+            if (readyCount == 0 && debugNumTasks == 0) {
+                for (SelectionKey allKey : mSelector.keys()) {
+                    Object attach = allKey.attachment();
+                    String attachStr = "[no attachment]";
+                    if (attach != null) {
+                        attachStr = "[cid=" + ((OzConnection)attach).getIdString() + "]";
+                    }
+                    mLog.info("spurious wakeup [" + debugLoopCount + "] " + attachStr +
+                            " interest=" + OzUtil.opsToString(allKey.interestOps()) + 
+                            " ready=" + OzUtil.opsToString(allKey.readyOps()) + 
+                            " key=" + Integer.toHexString(allKey.hashCode()) +
+                            " poolSize=" + mPooledExecutor.getPoolSize() +
+                            " queueSize=" + mPooledExecutorQueue.size());
+                }
+            }
 
             Iterator<SelectionKey> iter = mSelector.selectedKeys().iterator();
             while (iter.hasNext()) {
@@ -299,6 +323,8 @@ public class OzServer {
     }
 
     private PooledExecutor mPooledExecutor;
+
+    private BoundedLinkedQueue mPooledExecutorQueue;
 
     void execute(Runnable task) {
         try {
