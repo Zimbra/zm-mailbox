@@ -326,6 +326,7 @@ public abstract class Wiki {
 				while (results.hasNext()) {
 					MailItem item = results.getNext().getMailItem();
 					if (item.getFolderId() == mFolderId &&
+							item.getSubject().equalsIgnoreCase(wikiWord) &&
 							(item.getType() == MailItem.TYPE_DOCUMENT ||
 							 item.getType() == MailItem.TYPE_WIKI)) {
 						page = WikiPage.create((Document) item);
@@ -413,7 +414,7 @@ public abstract class Wiki {
 				sreq.setRequestedAccountId(acct.getId());
 				sreq.setSession(session);
 				sreq.setTypes("wiki,document");
-				sreq.setLimit("1");
+				sreq.setLimit("10");
 				sreq.setOffset("0");
 				sreq.setQuery(createQueryString(page));
 
@@ -422,7 +423,7 @@ public abstract class Wiki {
 				@SuppressWarnings("unchecked")
 				List<Object> ls = (List<Object>)sresp.getResults();
 				for (Object obj : ls) {
-					if (obj instanceof LmcDocument) {
+					if (obj instanceof LmcDocument && ((LmcDocument)obj).getName().equalsIgnoreCase(page)) {
 						WikiPage wp = WikiPage.create(mWikiAccount, mPath, (LmcDocument)obj);
 						return wp;
 					} else {
