@@ -142,8 +142,10 @@ public class GetApptSummaries extends MailDocumentHandler {
                         
                         instElt.addAttribute(MailService.A_APPT_START_TIME, instStart);
                         ICalTimeZone instTz = inv.getStartTime().getTimeZone();
-                        long offset = instTz.getOffset(instStart);
-                        instElt.addAttribute(MailService.A_APPT_TZ_OFFSET, offset);
+                        if (inv.isAllDayEvent()) {
+                            long offset = instTz.getOffset(instStart);
+                            instElt.addAttribute(MailService.A_APPT_TZ_OFFSET, offset);
+                        }
                         
                         String instFba = appointment.getEffectiveFreeBusyActual(inv, inst);
                         String instPtSt = appointment.getEffectivePartStat(inv, inst);
