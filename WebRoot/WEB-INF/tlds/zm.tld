@@ -294,4 +294,14 @@ current item of the iteration.
      <path>/WEB-INF/tags/overviewTree.tag</path>
    </tag-file> 
    
+   <tag-file>
+     <name>contact</name>
+     <path>/WEB-INF/tags/contact.tag</path>
+   </tag-file> 
+   
+   <tag-file>
+     <name>message</name>
+     <path>/WEB-INF/tags/message.tag</path>
+   </tag-file> 
+   
 </taglib>
