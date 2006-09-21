@@ -9,17 +9,18 @@
     <td class='TabFiller'>
 &nbsp;
     </td>
-    <td valign=middle class='Tab${selected=='mail' ? ' Selected' :''}'>
+    <td class='Tab ${selected=='mail' ? 'Selected' :'Normal'}'>
 	 <a href="clv.jsp">               
        <img src="images/MailApp.gif"/>
        <span>Mail</span>
       </a>       
     </td>
-
-    <td class='Tab${selected=='contacts' ? ' Selected' :''}'>
+    <td class='TabSpacer'>
+    <td class='Tab ${selected=='contacts' ? 'Selected' :'Normal'}'>
        <a href="contacts.jsp"><img src="images/ContactsApp.gif"/><span>Contacts</span></a>
     </td>
-    <td class='Tab${selected=='calendar' ? ' Selected' :''}'>
+    <td class='TabSpacer'>    
+    <td class='Tab ${selected=='calendar' ? ' Selected' :' Normal'}'>
        <img src="images/CalendarApp.gif"/>    
 <span>Calendar</span>
     </td>

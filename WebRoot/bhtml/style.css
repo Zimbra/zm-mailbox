@@ -24,17 +24,26 @@ HTML>BODY INPUT {		/* clean border that works in FF */
 .TabFiller {
 padding:5px; 
 border: none;
+}
 
+.TabSpacer {
+padding:5px; 
+width: 5px;
+border: none;
 }
 
 .Tab {
- width: 10em;
+ width: 8em;
  text-align: center;
  vertical-align: middle;
  font-weight:bold;
- padding:5px; 
+ Xpadding:5px; 
  border: 1px solid;
+}
+
+.Tab.Normal {
  background-color: #bed8ee;
+ background-color:#eff5fb;
  border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 }
 
@@ -71,8 +80,6 @@ border: none;
 
 .List {
 background-color: #F7F7F7;
-XXmargin: 0px 10px 0px 10px;
-/*margin: 5px 10px 5px 10px;*/
 padding:0px; 
 border: 1px solid;
 border-color: #E0E0E0 #555555 #555555 #E0E0E0;
@@ -88,15 +95,14 @@ border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 	text-decoration: none;
 }
 
-.Left { width: 150px; padding:0px 0px 0px 5px; }
-.Right { padding:0px 5px 0px 5px; }
+.Left { width: 150px; padding:0px 0px 0px 10px; }
+.Right { padding:0px 10px 0px 10px; }
 
 /* .Tree a:hover {	display:block; background-color:#EAF5F5; } */
 /* .Tree .Selected a:hover {}*/
 
 .RightTbTop {
 background-color: #98adbe;
-XXmargin: 10px 10px 0px 10px;
 padding:5px; 
 border: 1px solid;
 border-color: #98adbe #555555 #555555 #E0E0E0;
@@ -104,7 +110,6 @@ border-color: #98adbe #555555 #555555 #E0E0E0;
 
 .RightTbBottom {
 background-color: #98adbe;
-XXmargin: 0px 10px 0px 10px;
 padding:5px; 
 border: 1px solid;
 border-color: #E0E0E0 #555555 #555555 #E0E0E0;
@@ -132,15 +137,12 @@ text-decoration: none;
 
 .MsgHdr TABLE {
 background-color: #abc2d6;	
-margin: 5px 0px 0px 0px;
-/*margin: 5px 0px 5px 0px;*/
 padding:5px; 
 border: 1px solid;
 border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 }
 
 .Msg {
-XXmargin: 0px 10px 5px 10px;
 padding:0px; 
 border: 1px solid;
 border-color: #E0E0E0 #555555 #555555 #E0E0E0;
@@ -184,8 +186,6 @@ border-color: #E0E0E0 #555555 #555555 #E0E0E0;
         -moz-border-left-colors:#8597a7 #5f6c77;      -moz-border-top-colors: #8597a7 #5f6c77;
    -moz-border-bottom-colors: #abc2d6 #8597a7;             -moz-border-right-colors: #abc2d6 #8597a7;
         overflow: hidden;
-XXmargin: 5px 10px 5px 10px;
-
 }
 
 .contactLabel {

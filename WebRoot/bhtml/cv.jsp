@@ -59,7 +59,7 @@
 <tr>
 <th width=1% nowrap>
 <th width=1% nowrap><img src="images/FlagRed.gif" width=16 height=16 border=0 alt="">
-<th width=20%>From
+<th width=15%>From
 <th width=1% nowrap><img src="images/Attachment.gif" width=16 height=16 border=0 alt="">
 <th width=78%>Fragment
 <th width=1% nowrap>Size
@@ -71,9 +71,9 @@
 <c:forEach items="${searchResult.hits}" var="mess">
 <tr class='Row${mess.isUnread ? ' Unread':''}${mess.id == mid ? ' RowSelected' : ''}'>
 <td width=1% nowrap><input type=checkbox name=t value="1"></td>
-<td width=1% nowrap><img src="images/${mess.isFlagged? 'FlagRed.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Starred></td>
+<td width=1% nowrap align=center><img src="images/${mess.isFlagged? 'FlagRed.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Starred></td>
 <td>${fn:escapeXml(mess.displaySender)}</td>
-<td width=1% nowrap><img src="images/${mess.hasAttachment? 'Attachment.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Attachment></td>
+<td width=1% nowrap align=center><img src="images/${mess.hasAttachment? 'Attachment.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Attachment></td>
 <td><a href="cv.jsp?id=${mess.id}">
 
 ${fn:escapeXml(empty mess.fragment ? '(none)' : zm:truncate(mess.fragment,100, true))}

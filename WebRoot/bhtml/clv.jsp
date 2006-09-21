@@ -74,9 +74,9 @@
 <c:forEach items="${searchResult.hits}" var="conv">
 <tr class='Row ${conv.isUnread ? ' Unread':''}${conv.id == cid ? ' RowSelected' : ''}'>
 <td width=1% nowrap><input type=checkbox name=t value="1"></td>
-<td width=1% nowrap><img src="images/${conv.isFlagged? 'FlagRed.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Starred></td>
+<td width=1% nowrap align=center><img src="images/${conv.isFlagged? 'FlagRed.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Starred></td>
 <td><c:out value="${conv.displayRecipients}" default="<Unknown>"/></td>
-<td width=1% nowrap><img src="images/${conv.hasAttachment? 'Attachment.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Attachment></td>
+<td width=1% nowrap align=center><img src="images/${conv.hasAttachment? 'Attachment.gif' : 'Blank_16.gif'}" width=16 height=16 border=0 alt=Attachment></td>
 
 
 <td><a href="<c:url value="cv.jsp">

@@ -45,7 +45,6 @@ class ZSoapTag implements ZTag, ZSoapItem {
     }
 
     void modifyNotification(Element e) throws ServiceException {
-        mColor = Color.fromString(e.getAttribute(MailService.A_COLOR, "0"));
         int newColor = (int) e.getAttributeLong(MailService.A_COLOR, mColor.getValue());
         if (newColor != mColor.getValue())
             mColor = Color.fromString(e.getAttribute(MailService.A_COLOR, "0"));

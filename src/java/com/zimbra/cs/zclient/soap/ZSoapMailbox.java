@@ -288,9 +288,12 @@ public class ZSoapMailbox extends ZMailbox {
         return getAccountInfo(false).getName();        
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public List<ZTag> getAllTags() {
-        return new ArrayList<ZTag>(mNameToTag.values());
+        List result = new ArrayList<ZTag>(mNameToTag.values());
+        Collections.sort(result);
+        return result;
     }
 
     @Override
