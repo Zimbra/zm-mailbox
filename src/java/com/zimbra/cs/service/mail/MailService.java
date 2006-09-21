@@ -153,6 +153,8 @@ public class MailService implements DocumentService {
     public static final QName GET_FREE_BUSY_RESPONSE = QName.get("GetFreeBusyResponse", NAMESPACE);
     public static final QName GET_ICAL_REQUEST = QName.get("GetICalRequest", NAMESPACE);
     public static final QName GET_ICAL_RESPONSE = QName.get("GetICalResponse", NAMESPACE);
+    public static final QName ICAL_REPLY_REQUEST = QName.get("ICalReplyRequest", NAMESPACE);
+    public static final QName ICAL_REPLY_RESPONSE = QName.get("ICalReplyResponse", NAMESPACE);
     // spell checking
     public static final QName CHECK_SPELLING_REQUEST = QName.get("CheckSpellingRequest", NAMESPACE);
     public static final QName CHECK_SPELLING_RESPONSE = QName.get("CheckSpellingResponse", NAMESPACE);
@@ -182,7 +184,7 @@ public class MailService implements DocumentService {
     public static final String E_HIT_MIMEPART = "hp";
     public static final String E_ACL = "acl";
     public static final String E_GRANT = "grant";
-    
+
 	public static final String E_EMAIL = "e";
 	public static final String E_SUBJECT = "su";
     public static final String E_FRAG = "fr";
@@ -381,9 +383,15 @@ public class MailService implements DocumentService {
     public static final String A_APPT_NEEDS_REPLY = "needsReply";
     public static final String A_APPT_TYPE = "type";
     public static final String A_APPT_SENDUPDATE = "sendUpd";
+    public static final String A_APPT_SENTBY = "sentBy";
+    public static final String A_APPT_DIR = "dir";
+    public static final String A_APPT_LANGUAGE = "lang";
     public static final String A_APPT_CUTYPE = "cutype";
     public static final String A_APPT_ROLE = "role";
     public static final String A_APPT_RSVP = "rsvp";
+    public static final String A_APPT_MEMBER = "member";
+    public static final String A_APPT_DELEGATED_TO = "delTo";
+    public static final String A_APPT_DELEGATED_FROM = "delFrom"; 
     public static final String A_APPT_OTHER_ATTENDEES = "otherAtt";
     public static final String A_APPT_ALARM = "alarm";
     public static final String A_APPT_RECUR = "recur";
@@ -527,7 +535,8 @@ public class MailService implements DocumentService {
         
         dispatcher.registerHandler(GET_FREE_BUSY_REQUEST, new GetFreeBusy());
         dispatcher.registerHandler(GET_ICAL_REQUEST, new GetICal());
-        
+        dispatcher.registerHandler(ICAL_REPLY_REQUEST, new ICalReply());
+
         // spell check
         dispatcher.registerHandler(CHECK_SPELLING_REQUEST, new CheckSpelling());
 

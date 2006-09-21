@@ -75,8 +75,11 @@ public class SendInviteReply extends CalendarRequest {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(lc);
         Account acct = getRequestedAccount(lc);
+        Account authAcct = lc.getAuthtokenAccount();
         OperationContext octxt = lc.getOperationContext();
-        
+
+        boolean onBehalfOf = lc.isDelegatedRequest();
+
         ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
         int compNum = (int) request.getAttributeLong(MailService.A_APPT_COMPONENT_NUM);
         
@@ -147,15 +150,14 @@ public class SendInviteReply extends CalendarRequest {
                 if (organizer != null)
                     locale = organizer.getLocale();
                 else
-                    locale = acct.getLocale();
+                    locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
                 String replySubject =
                     CalendarMailSender.getReplySubject(verb, oldInv, locale);
 
-                CalSendData csd = new CalSendData();
+                CalSendData csd = new CalSendData(acct, authAcct, onBehalfOf);
                 csd.mOrigId = oldInv.getMailItemId();
                 csd.mReplyType = MailSender.MSGTYPE_REPLY;
-                csd.mSaveToSent = acct.saveToSent();
-                csd.mInvite = CalendarMailSender.replyToInvite(acct, oldInv, verb, replySubject, exceptDt);
+                csd.mInvite = CalendarMailSender.replyToInvite(acct, authAcct, onBehalfOf, oldInv, verb, replySubject, exceptDt);
                 
                 ZVCalendar iCal = csd.mInvite.newToICalendar();
                 
@@ -178,7 +180,7 @@ public class SendInviteReply extends CalendarRequest {
                 } else {
                     // build a default "Accepted" response
                     csd.mMm = CalendarMailSender.createDefaultReply(
-                            acct, appt, oldInv, null, replySubject,
+                            acct, authAcct, onBehalfOf, appt, oldInv, null, replySubject,
                             verb, null, iCal);
                 }
 
@@ -207,8 +209,12 @@ public class SendInviteReply extends CalendarRequest {
             
             mbox.modifyPartStat(octxt, apptId, recurId, cnStr, addressStr, null, role, verb.getXmlPartStat(), Boolean.FALSE, seqNo, dtStamp);
             
-            // move the invite to the Trash if (a) the user wants it and (b) the user is doing the action themselves
-            if (acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true) && !lc.isDelegatedRequest()) {
+            // move the invite to the Trash if the user wants it
+            // TODO: Fix ACL issue so we can move-to-trash even for on-behalf-of
+            // requests.  Currently it's not possible to move-to-trash because
+            // the authenticated account doesn't have rights to the target
+            // mailbox's Inbox and Trash folders.
+            if (!onBehalfOf && acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true)) {
                 try {
                     mbox.move(octxt, inviteMsgId, MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
                 } catch (MailServiceException.NoSuchItemException nsie) {

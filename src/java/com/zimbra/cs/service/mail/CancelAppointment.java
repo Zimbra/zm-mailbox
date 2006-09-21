@@ -114,18 +114,19 @@ public class CancelAppointment extends CalendarRequest {
     
     void cancelInstance(ZimbraSoapContext lc, Element request, Account acct, Mailbox mbox, Appointment appt, Invite defaultInv, RecurId recurId) 
     throws ServiceException {
-        Locale locale = acct.getLocale();
+        boolean onBehalfOf = lc.isDelegatedRequest();
+        Account authAcct = lc.getAuthtokenAccount();
+        Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
         String text = L10nUtil.getMessage(MsgKey.calendarCancelAppointmentInstance, locale);
 
         if (sLog.isDebugEnabled()) {
             sLog.debug("Sending cancellation message for \"" + defaultInv.getName() + "\" for instance " + recurId + " of invite " + defaultInv);
         }
 
-        Invite cancelInvite = CalendarUtils.buildCancelInstanceCalendar(acct, defaultInv, text, recurId);
-        CalSendData dat = new CalSendData();
+        Invite cancelInvite = CalendarUtils.buildCancelInstanceCalendar(acct, authAcct.getName(), onBehalfOf, defaultInv, text, recurId);
+        CalSendData dat = new CalSendData(acct, authAcct, onBehalfOf);
         dat.mOrigId = defaultInv.getMailItemId();
         dat.mReplyType = MailSender.MSGTYPE_REPLY;
-        dat.mSaveToSent = acct.saveToSent();
         dat.mInvite = cancelInvite;
 
         ZVCalendar iCal = dat.mInvite.newToICalendar();
@@ -150,7 +151,8 @@ public class CancelAppointment extends CalendarRequest {
             List<Address> rcpts =
                 CalendarMailSender.toListFromAttendees(defaultInv.getAttendees());
             dat.mMm = CalendarMailSender.createCancelMessage(
-                    acct, rcpts, defaultInv, cancelInvite, text, iCal);
+                    acct, rcpts, onBehalfOf, authAcct,
+                    defaultInv, cancelInvite, text, iCal);
         }
         
         if (!defaultInv.thisAcctIsOrganizer(acct)) {
@@ -170,17 +172,18 @@ public class CancelAppointment extends CalendarRequest {
 
     protected void cancelInvite(ZimbraSoapContext lc, Element request, Account acct, Mailbox mbox, Appointment appt, Invite inv)
     throws ServiceException {
-        Locale locale = acct.getLocale();
+        boolean onBehalfOf = lc.isDelegatedRequest();
+        Account authAcct = lc.getAuthtokenAccount();
+        Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
         String text = L10nUtil.getMessage(MsgKey.calendarCancelAppointment, locale);
 
         if (sLog.isDebugEnabled())
             sLog.debug("Sending cancellation message for \"" + inv.getName() + "\" for " + inv.toString());
         
-        CalSendData dat = new CalSendData();
+        CalSendData dat = new CalSendData(acct, authAcct, onBehalfOf);
         dat.mOrigId = inv.getMailItemId();
         dat.mReplyType = MailSender.MSGTYPE_REPLY;
-        dat.mSaveToSent = acct.saveToSent();
-        dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, inv, text);
+        dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct.getName(), onBehalfOf, inv, text);
         
         ZVCalendar iCal = dat.mInvite.newToICalendar();
         
@@ -205,7 +208,8 @@ public class CancelAppointment extends CalendarRequest {
             List<Address> rcpts =
                 CalendarMailSender.toListFromAttendees(inv.getAttendees());
             dat.mMm = CalendarMailSender.createCancelMessage(
-                    acct, rcpts, inv, null, text, iCal);
+                    acct, rcpts, onBehalfOf, authAcct,
+                    inv, null, text, iCal);
         }
         
         if (!inv.thisAcctIsOrganizer(acct)) {

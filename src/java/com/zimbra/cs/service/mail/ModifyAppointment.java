@@ -150,10 +150,11 @@ public class ModifyAppointment extends CalendarRequest {
             return;
         }
 
-        Locale locale = acct.getLocale();
+        boolean onBehalfOf = lc.isDelegatedRequest();
+        Account authAcct = lc.getAuthtokenAccount();
+        Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
 
-        CalSendData dat = new CalSendData();
-        dat.mSaveToSent = acct.saveToSent();
+        CalSendData dat = new CalSendData(acct, authAcct, onBehalfOf);
         dat.mOrigId = inv.getMailItemId();
         dat.mReplyType = MailSender.MSGTYPE_REPLY;
 
@@ -168,9 +169,9 @@ public class ModifyAppointment extends CalendarRequest {
 
         List<Address> rcpts = CalendarMailSender.toListFromAttendees(toCancel);
         try {
-            dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, inv, text, toCancel);
+            dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct.getName(), onBehalfOf, inv, text, toCancel);
             ZVCalendar cal = dat.mInvite.newToICalendar();
-            dat.mMm = CalendarMailSender.createCancelMessage(acct, rcpts, inv, null, text, cal);
+            dat.mMm = CalendarMailSender.createCancelMessage(acct, rcpts, onBehalfOf, authAcct, inv, null, text, cal);
             sendCalendarCancelMessage(lc, appt.getFolderId(),
                                       acct, mbox, dat, false);
         } catch (ServiceException ex) {

@@ -708,5 +708,10 @@ public abstract class ZMailbox {
             SharedItemBy itemBy,
             String sharedItem
             ) throws ServiceException;
-}
 
+    /**
+     * Sends an iCalendar REPLY object
+     * @param ical iCalendar data
+     */
+    public abstract void iCalReply(String ical) throws ServiceException;
+}

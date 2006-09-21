@@ -125,13 +125,33 @@
            )   // one is required
 
 //           [ <desc>DESCRIPTION</desc> ]? // Will use message FRAGMENT if not specified
-           
-           <or d="friendly name" a="address"> // organizer
-           <at d="friendly name" a="address" role="ROLE" ptst="status" [cutype="CUTYPE"]/>* // attendee
+
+           // organizer
+           <or a="address"         // email address (without "MAILTO:")
+               d="friendly name"   // CN in iCalendar
+               [sentBy="sent-by"]  // SENT-BY
+               [dir="dir"]         // DIR
+               [lang="language"]   // LANGUAGE (e.g. "en-US")
+           />
+           // attendee(s)
+           <at a="address"                  // email address (without "MAILTO:")
+               d="friendly name"            // CN in iCalendar
+               [sentBy="sent-by"]           // SENT-BY
+               [dir="dir"]                  // DIR
+               [lang="language"]            // LANGUAGE (e.g. "en-US")
+               role="ROLE"                  // ROLE
+               ptst="participation status"  // PARTSTAT
+               [rsvp="0|1"]                 // RSVP
+               [cutype="CUTYPE"]            // CUTYPE
+               [member="MEMBER"]            // MEMBER
+               [delTo="delegated to"]       // DELEGATED-FROM
+               [delFrom="delegated from"]   // DELEGATED-TO
+           />*
              // role = CHAir, REQuired, OPTional, NON-participant (ie informational)
              // ptst (ParTSTat - participation status) = NEeds-action, TEntative, ACcept, DEclined,
              // DG (delegated), COmpleted (todo), IN-process (todo)
              // cutype (calendar user type) = INDividual, GROup, RESource, ROOm, UNKnown
+             // sentBy, member, delTo and delFrom values are email addresses
 
            [ <alarm rel-start="RELATIVE_TIME_POSITIVE_MEANS_BEFORE"/> ]*
 

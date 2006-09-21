@@ -45,7 +45,6 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.MimeVisitor;
@@ -54,7 +53,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
@@ -108,10 +106,11 @@ public class MailSender {
 
     public static int sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
                                       List<InternetAddress> newContacts, List<Upload> uploads,
-                                      int origMsgId, String replyType, boolean ignoreFailedAddresses)
+                                      int origMsgId, String replyType, boolean ignoreFailedAddresses,
+                                      boolean replyToSender)
     throws ServiceException {
         int sentFolderId = saveToSent ? MailSender.getSentFolder(mbox) : 0;
-        return sendMimeMessage(octxt, mbox, sentFolderId, mm, newContacts, uploads, origMsgId, replyType, ignoreFailedAddresses);
+        return sendMimeMessage(octxt, mbox, sentFolderId, mm, newContacts, uploads, origMsgId, replyType, ignoreFailedAddresses, replyToSender);
     }
 
     static class RollbackData {
@@ -154,12 +153,17 @@ public class MailSender {
      *                  reply nor forward)
      * @param ignoreFailedAddresses If TRUE, then will attempt to send even if
      *                              some addresses fail (no error is returned!)
+     * @param replyToSender if true and if setting Sender header, set Reply-To
+     *                      header to the same address, otherwise don't set
+     *                      Reply-To, letting the recipient MUA choose to whom
+     *                      to send reply
      * @return
      * @throws ServiceException
      */
     public static int sendMimeMessage(OperationContext octxt, Mailbox mbox, int saveToFolder, MimeMessage mm,
                                       List<InternetAddress> newContacts, List<Upload> uploads,
-                                      int origMsgId, String replyType, boolean ignoreFailedAddresses)
+                                      int origMsgId, String replyType, boolean ignoreFailedAddresses,
+                                      boolean replyToSender)
     throws ServiceException {
         try {
             // slot the message in the parent's conversation if subjects match
@@ -173,7 +177,6 @@ public class MailSender {
                 authuser = acct;
             boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
 
-            String replyTo = acct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
             boolean overrideFromHeader = true;
             try {
                 String fromHdr = mm.getHeader("From", null);
@@ -188,10 +191,16 @@ public class MailSender {
             // set various headers on the outgoing message
             if (overrideFromHeader)
                 mm.setFrom(AccountUtil.getFriendlyEmailAddress(acct));
-            mm.setSender(sender);
             mm.setSentDate(new Date());
-            if (replyTo != null && !replyTo.trim().equals(""))
-                mm.setHeader("Reply-To", replyTo);
+            if (sender == null) {
+                String replyTo = acct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
+                if (replyTo != null && !replyTo.trim().equals(""))
+                    mm.setHeader("Reply-To", replyTo);
+            } else {
+                mm.setSender(sender);
+                if (replyToSender)
+                    mm.setReplyTo(new Address[]{sender});
+            }
             mm.saveChanges();
 
             try {
@@ -221,7 +230,7 @@ public class MailSender {
                     rdata = new RollbackData(msg);
                 } else {
                     // delegated request, not local
-                    String uri = getSoapUri(authuser);
+                    String uri = AccountUtil.getSoapUri(authuser);
                     if (uri != null)
                         try {
                             ZMailbox zmbox = ZMailbox.getMailbox(new AuthToken(authuser).getEncoded(), uri, null);
@@ -333,24 +342,5 @@ public class MailSender {
             mLog.warn("exception occurred during SendMsg", me);
             throw ServiceException.FAILURE("MessagingException", me);
         }
-    }
-
-    private static String getSoapUri(Account acct) {
-        try {
-            Server server = Provisioning.getInstance().getServer(acct);
-            String host = server.getAttr(Provisioning.A_zimbraServiceHostname);
-            int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
-            if (port > 0) {
-                return "http://" + host + ':' + port + ZimbraServlet.USER_SERVICE_URI;
-            } else {
-                port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-                if (port > 0)
-                    return "https://" + host + ':' + port + ZimbraServlet.USER_SERVICE_URI;
-            }
-            mLog.warn("no service port available on host " + host);
-        } catch (ServiceException e) {
-            mLog.warn("error fetching URI for account " + acct.getName());
-        }
-        return null;
     }
 }

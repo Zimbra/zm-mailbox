@@ -218,7 +218,7 @@ public class CalendarUtils {
                     "Missing uid in a cancel invite", null);
 
         Invite sanitized =
-            cancelInvite(account, cancel, cancel.getComment(),
+            cancelInvite(account, null, false, cancel, cancel.getComment(),
                          cancel.getAttendees(), cancel.getRecurId(),
                          false);
 
@@ -676,10 +676,13 @@ public class CalendarUtils {
             throw ServiceException.INVALID_REQUEST(
                     "Event must have an Organizer", null);
         } else {
-            String cn = orgElt.getAttribute(MailService.A_DISPLAY, null);
             String address = orgElt.getAttribute(MailService.A_ADDRESS);
+            String cn = orgElt.getAttribute(MailService.A_DISPLAY, null);
+            String sentBy = orgElt.getAttribute(MailService.A_APPT_SENTBY, null);
+            String dir = orgElt.getAttribute(MailService.A_APPT_DIR, null);
+            String lang = orgElt.getAttribute(MailService.A_APPT_LANGUAGE, null);
 
-            ZOrganizer org = new ZOrganizer(cn, address);
+            ZOrganizer org = new ZOrganizer(address, cn, sentBy, dir, lang);
             newInv.setOrganizer(org);
         }
 
@@ -800,8 +803,11 @@ public class CalendarUtils {
                 .elementIterator(MailService.E_APPT_ATTENDEE); iter.hasNext();) {
             Element cur = (Element) (iter.next());
 
-            String cn = cur.getAttribute(MailService.A_DISPLAY, null);
             String address = cur.getAttribute(MailService.A_ADDRESS);
+            String cn = cur.getAttribute(MailService.A_DISPLAY, null);
+            String sentBy = cur.getAttribute(MailService.A_APPT_SENTBY, null);
+            String dir = cur.getAttribute(MailService.A_APPT_DIR, null);
+            String lang = cur.getAttribute(MailService.A_APPT_LANGUAGE, null);
 
             String cutype = cur.getAttribute(MailService.A_APPT_CUTYPE, null);
             if (cutype != null)
@@ -814,14 +820,19 @@ public class CalendarUtils {
             validateAttr(IcalXmlStrMap.sPartStatMap,
                     MailService.A_APPT_PARTSTAT, partStat);
 
+            String member = cur.getAttribute(MailService.A_APPT_MEMBER, null);
+            String delTo = cur.getAttribute(MailService.A_APPT_DELEGATED_TO, null);
+            String delFrom = cur.getAttribute(MailService.A_APPT_DELEGATED_FROM, null);
+
             boolean rsvp = cur.getAttributeBool(MailService.A_APPT_RSVP, false);
+//            if (partStat.equals(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION))
+//                rsvp = true;
 
-            if (partStat.equals(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION)) {
-                rsvp = true;
-            }
-
-            ZAttendee at = new ZAttendee(address, cn, cutype, role, partStat,
-                    rsvp ? Boolean.TRUE : Boolean.FALSE);
+            ZAttendee at =
+                new ZAttendee(address, cn, sentBy, dir, lang,
+                              cutype, role, partStat,
+                              rsvp ? Boolean.TRUE : Boolean.FALSE,
+                              member, delTo, delFrom);
             newInv.addAttendee(at);
             hasAttendees = true;
         }
@@ -852,19 +863,22 @@ public class CalendarUtils {
 
     }
 
-    static Invite buildCancelInviteCalendar(Account acct, Invite inv,
+    static Invite buildCancelInviteCalendar(
+            Account acct, String senderAddr, boolean onBehalfOf, Invite inv,
             String comment, List<ZAttendee> forAttendees) throws ServiceException {
-        return cancelInvite(acct, inv, comment, forAttendees, null);
+        return cancelInvite(acct, senderAddr, onBehalfOf, inv, comment, forAttendees, null);
     }
 
-    static Invite buildCancelInviteCalendar(Account acct, Invite inv,
+    static Invite buildCancelInviteCalendar(
+            Account acct, String senderAddr, boolean onBehalfOf, Invite inv,
             String comment) throws ServiceException {
-        return cancelInvite(acct, inv, comment, null, null);
+        return cancelInvite(acct, senderAddr, onBehalfOf, inv, comment, null, null);
     }
 
-    static Invite buildCancelInstanceCalendar(Account acct, Invite inv,
+    static Invite buildCancelInstanceCalendar(
+            Account acct, String senderAddr, boolean onBehalfOf, Invite inv,
             String comment, RecurId recurId) throws ServiceException {
-        return cancelInvite(acct, inv, comment, null, recurId);
+        return cancelInvite(acct, senderAddr, onBehalfOf, inv, comment, null, recurId);
     }
 
     /**
@@ -901,14 +915,17 @@ public class CalendarUtils {
      * @throws ServiceException
      */
     static Invite cancelInvite(
-            Account acct, Invite inv, String comment,
+            Account acct, String senderAddr, boolean onBehalfOf,
+            Invite inv, String comment,
             List<ZAttendee> forAttendees, RecurId recurId)
     throws ServiceException {
-        return cancelInvite(acct, inv, comment, forAttendees, recurId, true);
+        return cancelInvite(acct, senderAddr, onBehalfOf,
+                            inv, comment, forAttendees, recurId, true);
     }
 
     private static Invite cancelInvite(
-            Account acct, Invite inv, String comment,
+            Account acct, String senderAddr, boolean onBehalfOf,
+            Invite inv, String comment,
             List<ZAttendee> forAttendees, RecurId recurId,
             boolean incrementSeq)
     throws ServiceException {
@@ -916,7 +933,10 @@ public class CalendarUtils {
                                    inv.getTimeZoneMap());
 
         // ORGANIZER
-        cancel.setOrganizer(inv.getOrganizer());
+        ZOrganizer org = new ZOrganizer(inv.getOrganizer());
+        if (onBehalfOf)
+            org.setSentBy(senderAddr);
+        cancel.setOrganizer(org);
 
         // ATTENDEEs
         List<ZAttendee> attendees =

@@ -57,6 +57,13 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         MimeMessage mMm;
         boolean mSaveToSent;
         Invite mInvite;
+
+        public CalSendData(Account fromAcct, Account senderAcct, boolean onBehalfOf) {
+            if (onBehalfOf && senderAcct != null)
+                mSaveToSent = senderAcct.saveToSent();
+            else
+                mSaveToSent = fromAcct.saveToSent();
+        }
     }
 
     /**
@@ -74,7 +81,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     protected static CalSendData handleMsgElement(ZimbraSoapContext lc, Element msgElem, Account acct,
                                                   Mailbox mbox, ParseMimeMessage.InviteParser inviteParser)
     throws ServiceException {
-        CalSendData csd = new CalSendData();
+        CalSendData csd = new CalSendData(acct, lc.getAuthtokenAccount(), lc.isDelegatedRequest());
 
         assert(inviteParser.getResult() == null);
 
@@ -94,8 +101,6 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
         csd.mInvite = inviteParser.getResult().mInvite;
         
-        csd.mSaveToSent = acct.saveToSent();
-
         return csd;
     }
     
@@ -237,7 +242,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         synchronized (mbox) {
             OperationContext octxt = lc.getOperationContext();
 
-            boolean notifyOwner = lc.isDelegatedRequest() && acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, false);
+            boolean onBehalfOf = lc.isDelegatedRequest();
+            boolean notifyOwner = onBehalfOf && acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, false);
             if (notifyOwner) {
                 try {
                     InternetAddress addr = AccountUtil.getFriendlyEmailAddress(acct);
@@ -251,7 +257,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
             // Never send a notification to the person making the SOAP request
             // in a non-delegated request.
-            if (!lc.isDelegatedRequest()) {
+            if (!onBehalfOf) {
                 String[] aliases = acct.getAliases();
                 String[] addrs;
                 if (aliases != null && aliases.length > 0) {
@@ -281,7 +287,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 hasRecipients = csd.mMm.getAllRecipients() != null;
             } catch (MessagingException e) { }
 
-            boolean saveToSent = csd.mSaveToSent && hasRecipients && !lc.isDelegatedRequest();
+            boolean saveToSent = csd.mSaveToSent && hasRecipients;
             int saveFolderId = saveToSent ? MailSender.getSentFolder(mbox) : 0;
             
             int msgId = 0;
@@ -314,7 +320,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             msgId = MailSender.sendMimeMessage(
                     octxt, mbox, saveFolderId, csd.mMm,
                     csd.newContacts, csd.uploads, csd.mOrigId,
-                    csd.mReplyType, ignoreFailedAddresses);
+                    csd.mReplyType, ignoreFailedAddresses, true);
 //            }
 
             if (updateOwnAppointment) {

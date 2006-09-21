@@ -1059,7 +1059,16 @@ public class ZSoapMailbox extends ZMailbox {
             if (post != null) post.releaseConnection();
         }
     }
-    
+
+    @Override
+    public void iCalReply(String ical) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.ICAL_REPLY_REQUEST);
+        Element icalElem = req.addElement(MailService.E_APPT_ICAL);        
+        icalElem.setText(ical);
+        invoke(req);
+    }
+
+
     /*
  
  <AuthRequest xmlns="urn:zimbraAccount">
@@ -1119,6 +1128,8 @@ public class ZSoapMailbox extends ZMailbox {
 
  <CheckSpellingRequest>
  <GetAllLocalesRequest/>
+
+ <ICalReplyRequest>
    
      */
 }

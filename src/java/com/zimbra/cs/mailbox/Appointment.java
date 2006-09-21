@@ -1063,7 +1063,8 @@ public class Appointment extends MailItem {
             }
             toRet.mSeqNo = (int)md.getLong(FN_SEQNO);
             toRet.mDtStamp = md.getLong(FN_DTSTAMP);
-            toRet.mAttendee = ZAttendee.parseAtFromMetadata(md.getMap(FN_ATTENDEE));
+            Metadata metaAttendee = md.getMap(FN_ATTENDEE);
+            toRet.mAttendee = metaAttendee != null ? new ZAttendee(metaAttendee) : null;
             
             return toRet;
         }
@@ -1185,10 +1186,16 @@ public class Appointment extends MailItem {
                         ZAttendee newAt = new ZAttendee(
                                 cur.mAttendee.getAddress(),
                                 cnStr,
+                                cur.mAttendee.getSentBy(),
+                                cur.mAttendee.getDir(),
+                                cur.mAttendee.getLanguage(),
                                 cutypeStr,
                                 roleStr,
                                 partStatStr,
-                                needsReply
+                                needsReply,
+                                cur.mAttendee.getMember(),
+                                cur.mAttendee.getDelegatedTo(),
+                                cur.mAttendee.getDelegatedFrom()
                                 );
                         
                         cur.mAttendee = newAt;
@@ -1201,7 +1208,10 @@ public class Appointment extends MailItem {
             
             // no existing partstat for this instance...add a new one 
             ReplyInfo inf = new ReplyInfo();
-            inf.mAttendee = new ZAttendee(addressStr, cnStr, cutypeStr, roleStr, partStatStr, needsReply);
+            inf.mAttendee =
+                new ZAttendee(addressStr, cnStr, null, null, null,
+                              cutypeStr, roleStr, partStatStr, needsReply,
+                              null, null, null);
             inf.mRecurId = recurId;
             inf.mDtStamp = dtStamp;
             inf.mSeqNo = seqNo;

@@ -58,7 +58,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * Invite
@@ -335,9 +334,9 @@ public class Invite {
         meta.put(FN_SEQ_NO, inv.getSeqNo());
         
         if (inv.hasOrganizer()) {
-            meta.put(FN_ORGANIZER, inv.getOrganizer().encodeAsMetadata());
+            meta.put(FN_ORGANIZER, inv.getOrganizer().encodeMetadata());
         }
-        
+
         List ats = inv.getAttendees();
         meta.put(FN_NUM_ATTENDEES, String.valueOf(ats.size()));
         int i = 0;
@@ -461,7 +460,8 @@ public class Invite {
         
         ZOrganizer org = null;
         try {
-            org = ZOrganizer.parseOrgFromMetadata(meta.getMap(FN_ORGANIZER, true));
+            Metadata metaOrg = meta.getMap(FN_ORGANIZER, true);
+            org = metaOrg != null ? new ZOrganizer(metaOrg) : null;
         } catch (ServiceException e) {
             sLog.warn("Problem decoding organizer for appt " 
                     + appt!=null ? Integer.toString(appt.getId()) : "(null)"
@@ -472,8 +472,9 @@ public class Invite {
         ArrayList<ZAttendee> attendees = new ArrayList<ZAttendee>((int) numAts);
         for (int i = 0; i < numAts; i++) {
             try {
-                ZAttendee at = ZAttendee.parseAtFromMetadata(meta.getMap(FN_ATTENDEE + i, true));
-                attendees.add(at);
+                Metadata metaAttendee = meta.getMap(FN_ATTENDEE + i, true);
+                if (metaAttendee != null)
+                    attendees.add(new ZAttendee(metaAttendee));
             } catch (ServiceException e) {
                 sLog.warn("Problem decoding attendee " + i + " for appointment " 
                         + appt!=null ? Integer.toString(appt.getId()) : "(null)"
@@ -604,7 +605,7 @@ public class Invite {
         } else {
             ZAttendee at = getMatchingAttendee(acct);
             if (at != null) {
-            	setRsvp(at.getRsvp().booleanValue());
+            	setRsvp(at.hasRsvp() ? at.getRsvp().booleanValue() : false);
             	//
             	// for BUG 4866 -- basically, if the incoming invite doesn't have a
             	// PARTSTAT for us, assume it is "NEEDS-ACTION" iff this Invite supports
@@ -967,7 +968,7 @@ public class Invite {
             ZAttendee at = (ZAttendee)(iter.next());
             
             String thisAtEmail = at.getAddress();
-            if (thisAtEmail.equalsIgnoreCase(atName)) {
+            if (thisAtEmail != null && thisAtEmail.equalsIgnoreCase(atName)) {
                 return at;
             }
         }
@@ -1642,10 +1643,10 @@ public class Invite {
                         
                         switch (prop.mTok) {
                         case ORGANIZER:
-                            newInv.setOrganizer(ZOrganizer.fromProperty(prop));
+                            newInv.setOrganizer(new ZOrganizer(prop));
                             break;
                         case ATTENDEE:
-                            newInv.addAttendee(ZAttendee.fromProperty(prop));
+                            newInv.addAttendee(new ZAttendee(prop));
                             break;
                         case DTSTAMP:
                             ParsedDateTime dtstamp = ParsedDateTime.parse(prop, tzmap);

@@ -72,7 +72,7 @@ public class SendMsgOperation extends Operation {
     protected void callback() throws ServiceException {
         mMsgId = MailSender.sendMimeMessage(getOpCtxt(), getMailbox(), mSaveToSent, mMm,
                     mNewContacts, mUploads,
-                    mOrigMsgId, mReplyType, mIgnoreFailedAddresses);
+                    mOrigMsgId, mReplyType, mIgnoreFailedAddresses, false);
     }
 
     public int getMsgId() { return mMsgId; }

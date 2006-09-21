@@ -35,9 +35,11 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class AccountUtil {
 
@@ -148,6 +150,25 @@ public class AccountUtil {
         return false;
     }
     
+    public static String getSoapUri(Account account) {
+        try {
+            Server server = Provisioning.getInstance().getServer(account);
+            String host = server.getAttr(Provisioning.A_zimbraServiceHostname);
+            int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+            if (port > 0) {
+                return "http://" + host + ':' + port + ZimbraServlet.USER_SERVICE_URI;
+            } else {
+                port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+                if (port > 0)
+                    return "https://" + host + ':' + port + ZimbraServlet.USER_SERVICE_URI;
+            }
+            ZimbraLog.account.warn("no service port available on host " + host);
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("error fetching SOAP URI for account " + account.getName());
+        }
+        return null;
+    }
+
 //    /**
 //     * True if this mime message has at least one recipient that is NOT the same as the specified account
 //     * 

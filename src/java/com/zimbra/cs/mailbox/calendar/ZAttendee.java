@@ -24,112 +24,218 @@
  */
 package com.zimbra.cs.mailbox.calendar;
 
-import java.io.UnsupportedEncodingException;
-
-import javax.mail.Address;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.StringUtil;
 
-public class ZAttendee {
-    
-    private String mAddress;
-    private String mCn;
+public class ZAttendee extends CalendarUser {
+
+    private static final String FN_CUTYPE          = "cut";
+    private static final String FN_ROLE            = "r";
+    private static final String FN_PARTSTAT        = "ptst";
+    private static final String FN_RSVP_BOOL       = "v";
+    private static final String FN_MEMBER          = "member";
+    private static final String FN_DELEGATED_TO    = "delto";
+    private static final String FN_DELEGATED_FROM  = "delfrom";
+
     private String mCUType;
     private String mRole;
     private String mPartStat;
     private Boolean mRsvp;
-    
-    public ZAttendee(String address, String cn, String cutype, String role, String ptst, Boolean rsvp) {
-        setAddress(address);
-        mCn = cn;
-        setCUType(cutype);
-        setRole(role);
-        setPartStat(ptst);
-        mRsvp = rsvp;
-    }
-    
-    public ZAttendee(String address) {
-        setAddress(address);
-    }
-    
-    private static final String FN_ADDRESS         = "a";
-    private static final String FN_CN              = "cn";
-    private static final String FN_PARTSTAT        = "ptst";
-    private static final String FN_CUTYPE          = "cut";
-    private static final String FN_ROLE            = "r";
-    private static final String FN_RSVP_BOOL       = "v";
+    private String mMember;
+    private String mDelegatedTo;
+    private String mDelegatedFrom;
 
-    public String getAddress() {
-        return mAddress != null ? mAddress : "";
-    }
-    public String getCn() { return mCn != null ? mCn : ""; }
+    public boolean hasCUType() { return !StringUtil.isNullOrEmpty(mCUType); }
     public String getCUType() { return mCUType != null ? mCUType : ""; }
-    public String getRole() { return mRole != null ? mRole : ""; }
-    public String getPartStat() { return mPartStat != null ? mPartStat : ""; }
-    public Boolean getRsvp() { return mRsvp != null ? mRsvp : Boolean.FALSE; }
-
-    public Address getFriendlyAddress() throws MailServiceException {
-        InternetAddress addr;
-        try {
-            if (hasCn())
-                addr = new InternetAddress(getAddress(),
-                                           getCn(),
-                                           Mime.P_CHARSET_UTF8);
-            else
-                addr = new InternetAddress(getAddress());
-            return addr;
-        } catch (UnsupportedEncodingException e) {
-            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
-        } catch (AddressException e) {
-            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
-        }
-    }
-    
-    public void setAddress(String address) {
-        if (address != null) {
-            if (address.toLowerCase().startsWith("mailto:")) {
-                // MAILTO:  --> 
-                address = address.substring(7); 
-            }
-        }
-        mAddress = address; 
-    }
-    public void setCn(String cn) { mCn = cn; }
     public void setCUType(String cutype) {
         if (cutype != null && !IcalXmlStrMap.sCUTypeMap.validXml(cutype)) {
             cutype = IcalXmlStrMap.sCUTypeMap.toXml(cutype);
         }
         mCUType = cutype; 
     }
+
+    public boolean hasRole() { return !StringUtil.isNullOrEmpty(mRole); }
+    public String getRole() { return mRole != null ? mRole : ""; }
     public void setRole(String role) {
         if (role != null && !IcalXmlStrMap.sRoleMap.validXml(role)) {
             role = IcalXmlStrMap.sRoleMap.toXml(role);
         }
         mRole = role; 
     }
+
+    public boolean hasPartStat() { return !StringUtil.isNullOrEmpty(mPartStat); }
+    public String getPartStat() { return mPartStat != null ? mPartStat : ""; }
     public void setPartStat(String partStat) { 
         if (partStat != null && !IcalXmlStrMap.sPartStatMap.validXml(partStat)) {
             partStat = IcalXmlStrMap.sPartStatMap.toXml(partStat);
         }
         mPartStat = partStat; 
     }
-    
-    public void setRsvp(Boolean rsvp) { mRsvp = rsvp; }
-    
-    public boolean hasCn() { return !StringUtil.isNullOrEmpty(mCn); }
-    public boolean hasCUType() { return !StringUtil.isNullOrEmpty(mCUType); }
-    public boolean hasRole() { return !StringUtil.isNullOrEmpty(mRole); }
-    public boolean hasPartStat() { return !StringUtil.isNullOrEmpty(mPartStat); }
+
     public boolean hasRsvp() { return mRsvp != null; }
+    public Boolean getRsvp() { return mRsvp; }
+    public void setRsvp(Boolean rsvp) { mRsvp = rsvp; }
+
+    public boolean hasMember() { return !StringUtil.isNullOrEmpty(mMember); }
+    public String getMember() { return mMember; }
+    public void setMember(String member) { mMember = getMailToAddress(member); }
+
+    public boolean hasDelegatedTo() { return !StringUtil.isNullOrEmpty(mDelegatedTo); }
+    public String getDelegatedTo() { return mDelegatedTo; }
+    public void setDelegatedTo(String delTo) { mDelegatedTo = getMailToAddress(delTo); }
+
+    public boolean hasDelegatedFrom() { return !StringUtil.isNullOrEmpty(mDelegatedFrom); }
+    public String getDelegatedFrom() { return mDelegatedFrom; }
+    public void setDelegatedFrom(String delFrom) { mDelegatedFrom = getMailToAddress(delFrom); }
+
+    public ZAttendee(String address,
+                     String cn,
+                     String sentBy,
+                     String dir,
+                     String language,
+                     String cutype,
+                     String role,
+                     String ptst,
+                     Boolean rsvp,
+                     String member,
+                     String delegatedTo,
+                     String delegatedFrom
+                     ) {
+        super(address, cn, sentBy, dir, language);
+        setCUType(cutype);
+        setRole(role);
+        setPartStat(ptst);
+        setRsvp(rsvp);
+        setMember(member);
+        setDelegatedTo(delegatedTo);
+        setDelegatedFrom(delegatedFrom);
+    }
+
+    public ZAttendee(String address) {
+        this(address, null, null, null, null,
+             null, null, null, null, null, null, null);
+    }
+
+    public ZAttendee(ZProperty prop) {
+        super(prop);
+        setCUType(prop.paramVal(ICalTok.CUTYPE, null));
+        setRole(prop.paramVal(ICalTok.ROLE, null));
+        setPartStat(prop.paramVal(ICalTok.PARTSTAT, null));
+
+        String rsvpStr = prop.paramVal(ICalTok.RSVP, "FALSE");
+        boolean rsvp = false;
+        if (rsvpStr.equalsIgnoreCase("TRUE"))
+            rsvp = true;
+        setRsvp(rsvp);
+
+        setMember(prop.paramVal(ICalTok.MEMBER, null));
+        setDelegatedTo(prop.paramVal(ICalTok.DELEGATED_TO, null));
+        setDelegatedFrom(prop.paramVal(ICalTok.DELEGATED_FROM, null));
+    }
+
+    public ZAttendee(Metadata meta) throws ServiceException {
+        super(meta);
+        setCUType(meta.get(FN_CUTYPE, null));
+        setRole(meta.get(FN_ROLE, null));
+        setPartStat(meta.get(FN_PARTSTAT, null));
+
+        Boolean rsvp = null;
+        if (meta.containsKey(FN_RSVP_BOOL)) {
+            if (meta.getBool(FN_RSVP_BOOL))
+                rsvp = Boolean.TRUE;
+            else
+                rsvp = Boolean.FALSE;
+        }
+        setRsvp(rsvp);
+
+        setMember(meta.get(FN_MEMBER, null));
+        setDelegatedTo(meta.get(FN_DELEGATED_TO, null));
+        setDelegatedFrom(meta.get(FN_DELEGATED_FROM, null));
+    }
+
+    public Metadata encodeAsMetadata() {
+        Metadata meta = super.encodeMetadata();
+        if (hasCUType())
+            meta.put(FN_CUTYPE, getCUType());
+        if (hasRole())
+            meta.put(FN_ROLE, getRole());
+        if (hasPartStat())
+            meta.put(FN_PARTSTAT, getPartStat());
+        if (hasRsvp() && getRsvp().booleanValue())
+            meta.put(FN_RSVP_BOOL, "1");
+        if (hasMember())
+            meta.put(FN_MEMBER, getMember());
+        if (hasDelegatedTo())
+            meta.put(FN_DELEGATED_TO, getDelegatedTo());
+        if (hasDelegatedFrom())
+            meta.put(FN_DELEGATED_FROM, getDelegatedFrom());
+
+        return meta;
+    }
+
+    protected ICalTok getPropertyName() {
+        return ICalTok.ATTENDEE;
+    }
+
+    protected void setProperty(ZProperty prop) throws ServiceException {
+        super.setProperty(prop);
+        if (hasCUType())
+            prop.addParameter(new ZParameter(ICalTok.CUTYPE, IcalXmlStrMap.sCUTypeMap.toIcal(getCUType())));
+        if (hasRole())
+            prop.addParameter(new ZParameter(ICalTok.ROLE, IcalXmlStrMap.sRoleMap.toIcal(getRole())));
+        if (hasPartStat())
+            prop.addParameter(new ZParameter(ICalTok.PARTSTAT, IcalXmlStrMap.sPartStatMap.toIcal(getPartStat())));
+        if (hasRsvp())
+            prop.addParameter(new ZParameter(ICalTok.RSVP, getRsvp()));
+        if (hasMember())
+            prop.addParameter(new ZParameter(ICalTok.MEMBER, "MAILTO:" + getMember()));
+        if (hasDelegatedTo())
+            prop.addParameter(new ZParameter(ICalTok.DELEGATED_TO, "MAILTO:" + getDelegatedTo()));
+        if (hasDelegatedFrom())
+            prop.addParameter(new ZParameter(ICalTok.DELEGATED_FROM, "MAILTO:" + getDelegatedFrom()));
+    }
+
+    protected StringBuilder addToStringBuilder(StringBuilder sb) {
+        if (hasCUType()) {
+            if (sb.length() > 0) sb.append(';');
+            sb.append("CUTYPE=").append(getCUType());
+        }
+        if (hasRole()) {
+            if (sb.length() > 0) sb.append(';');
+            sb.append("ROLE=").append(getRole());
+        }
+        if (hasPartStat()) {
+            if (sb.length() > 0) sb.append(';');
+            sb.append("PARTSTAT=").append(getPartStat());
+        }
+        if (hasRsvp()) {
+            if (sb.length() > 0) sb.append(';');
+            sb.append("RSVP=");
+            if (getRsvp().booleanValue())
+                sb.append("TRUE");
+            else
+                sb.append("FALSE");
+        }
+        if (hasMember()) {
+            if (sb.length() > 0) sb.append(';');
+            sb.append("MEMBER=\"MAILTO:").append(getMember()).append('"');
+        }
+        if (hasDelegatedTo()) {
+            if (sb.length() > 0) sb.append(';');
+            sb.append("DELEGATED-TO=\"MAILTO:").append(getDelegatedTo()).append('"');
+        }
+        if (hasDelegatedTo()) {
+            if (sb.length() > 0) sb.append(';');
+            sb.append("DELEGATED-FROM=\"MAILTO:").append(getDelegatedFrom()).append('"');
+        }
+
+        sb = super.addToStringBuilder(sb);
+        return sb;
+    }
 
     public boolean addressesMatch(ZAttendee other) {
         return getAddress().equalsIgnoreCase(other.getAddress());
@@ -137,106 +243,5 @@ public class ZAttendee {
 
     public boolean addressMatches(String addr) {
         return getAddress().equalsIgnoreCase(addr);
-    }
-    
-    public String toString() {
-        StringBuffer toRet = new StringBuffer("ZATTENDEE:");
-        if (hasCn()) {
-            toRet.append("CN=").append(mCn).append(";");
-        }
-        if (hasRole()) {
-            toRet.append("ROLE=").append(mRole).append(";");
-        }
-        if (hasPartStat()) {
-            toRet.append("PARTSTAT=").append(mPartStat).append(";");
-        }
-        if (hasRsvp()) {
-            toRet.append("RSVP=").append(mRsvp).append(";");
-        }
-        if (hasCUType()) {
-            toRet.append("CUTYPE=").append(mCUType).append(";");
-        }
-        
-        toRet.append(mAddress);
-        return toRet.toString();
-    }
-    
-    public Metadata encodeAsMetadata() {
-        Metadata meta = new Metadata();
-        
-        meta.put(FN_ADDRESS, mAddress);
-        
-        if (mCn != null) {
-            meta.put(FN_CN, mCn);
-        }
-
-        if (mCUType != null) {
-        	meta.put(FN_CUTYPE, mCUType);
-        }
-
-        if (mRole != null) {
-            meta.put(FN_ROLE, mRole);
-        }
-        
-        if (mPartStat!= null) {
-            meta.put(FN_PARTSTAT, mPartStat);
-        }
-        
-        if (mRsvp != null) {
-            meta.put(FN_RSVP_BOOL, "1");
-        }
-        return meta;
-    }
-    
-    public static ZAttendee parseAtFromMetadata(Metadata meta) throws ServiceException {
-        if (meta == null) {
-            return null;
-        }
-        String addressStr = meta.get(FN_ADDRESS, null);
-        String cnStr = meta.get(FN_CN, null);
-        String cutypeStr = meta.get(FN_CUTYPE, null);
-        String roleStr = meta.get(FN_ROLE, null);
-        String partStatStr = meta.get(FN_PARTSTAT, null);
-        Boolean rsvpBool = null;
-        if (meta.containsKey(FN_RSVP_BOOL)) {
-            if (meta.getBool(FN_RSVP_BOOL)) {
-                rsvpBool = Boolean.TRUE;
-            } else {
-                rsvpBool = Boolean.FALSE;
-            }
-        }
-        
-        return new ZAttendee(addressStr, cnStr, cutypeStr, roleStr, partStatStr, rsvpBool);
-    }
-    
-    public static ZAttendee fromProperty(ZProperty prop) {
-        String cn = prop.paramVal(ICalTok.CN, null);
-        String role = prop.paramVal(ICalTok.ROLE, null);
-        String cutype = prop.paramVal(ICalTok.CUTYPE, null);
-        String partstat = prop.paramVal(ICalTok.PARTSTAT, null);
-        String rsvpStr = prop.paramVal(ICalTok.RSVP, "FALSE");
-        boolean rsvp = false;
-        if (rsvpStr.equalsIgnoreCase("TRUE")) {
-            rsvp = true;
-        }
-        
-        ZAttendee toRet = new ZAttendee(prop.mValue, cn, cutype, role, partstat, rsvp);
-        return toRet;
-    }
-    
-    public ZProperty toProperty() throws ServiceException {
-        ZProperty toRet = new ZProperty(ICalTok.ATTENDEE, "MAILTO:"+getAddress());
-        if (hasCn()) 
-            toRet.addParameter(new ZParameter(ICalTok.CN, getCn()));
-        if (hasPartStat())
-            toRet.addParameter(new ZParameter(ICalTok.PARTSTAT, IcalXmlStrMap.sPartStatMap.toIcal(getPartStat())));
-        if (hasRsvp())
-            toRet.addParameter(new ZParameter(ICalTok.RSVP, getRsvp()));
-        if (hasRole())
-            toRet.addParameter(new ZParameter(ICalTok.ROLE, IcalXmlStrMap.sRoleMap.toIcal(getRole())));
-        if (hasCUType())
-            toRet.addParameter(new ZParameter(ICalTok.CUTYPE, IcalXmlStrMap.sCUTypeMap.toIcal(getCUType())));
-        
-        return toRet;
     }
 }

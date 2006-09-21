@@ -119,6 +119,8 @@ public class CalendarMailSender {
     }
 
     public static MimeMessage createDefaultReply(Account fromAccount,
+                                                 Account authAccount,
+                                                 boolean onBehalfOf,
                                                  Appointment appt,
                                                  Invite inv,
                                                  MimeMessage mmInv,
@@ -136,7 +138,7 @@ public class CalendarMailSender {
                 organizerAddress =
                     AccountUtil.getFriendlyEmailAddress(organizer);
             } else {
-                lc = fromAccount.getLocale();
+                lc = authAccount.getLocale();
                 if (inv.hasOrganizer())
                     organizerAddress = inv.getOrganizer().getFriendlyAddress();
                 else
@@ -188,8 +190,12 @@ public class CalendarMailSender {
             List<Address> toList = new ArrayList<Address>(1);
             if (organizerAddress != null)
                 toList.add(organizerAddress);
+            Address senderAddr = null;
+            if (onBehalfOf)
+                senderAddr = AccountUtil.getFriendlyEmailAddress(authAccount);
             return createDefaultCalendarMessage(
                     AccountUtil.getFriendlyEmailAddress(fromAccount),
+                    senderAddr,
                     toList, replySubject,
                     replyText.toString(), inv.getUid(), iCal);
         } catch (UnsupportedEncodingException e) {
@@ -250,12 +256,14 @@ public class CalendarMailSender {
 
     public static MimeMessage createCancelMessage(Account fromAccount,
                                                   List<Address> toAddrs,
+                                                  boolean onBehalfOf,
+                                                  Account senderAccount,
                                                   Invite defaultInv,
                                                   Invite cancelInstanceInv,
                                                   String text,
                                                   ZVCalendar iCal)
     throws ServiceException {
-        Locale locale = fromAccount.getLocale();
+        Locale locale = !onBehalfOf ? fromAccount.getLocale() : senderAccount.getLocale();
         String sbj = getCancelSubject(defaultInv, locale);
         StringBuilder sb = new StringBuilder(text);
         sb.append("\r\n\r\n");
@@ -273,19 +281,27 @@ public class CalendarMailSender {
         if (mmInv != null)
             attachInviteSummary(sb, mmInv, locale);
         
-        Address sender;
+        Address from;
         try {
-            sender = AccountUtil.getFriendlyEmailAddress(fromAccount);
+            from = AccountUtil.getFriendlyEmailAddress(fromAccount);
         } catch (UnsupportedEncodingException e) {
             throw MailServiceException.ADDRESS_PARSE_ERROR(e);
         }
+        Address sender = null;
+        if (onBehalfOf) {
+            try {
+                sender = AccountUtil.getFriendlyEmailAddress(senderAccount);
+            } catch (UnsupportedEncodingException e) {
+                throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+            }
+        }
 
         return createDefaultCalendarMessage(
-                sender, toAddrs, sbj, sb.toString(), defaultInv.getUid(), iCal);
+                from, sender, toAddrs, sbj, sb.toString(), defaultInv.getUid(), iCal);
     }
 
     private static MimeMessage createDefaultCalendarMessage(
-            Address fromAddr, List<Address> toAddrs,
+            Address fromAddr, Address senderAddr, List<Address> toAddrs,
             String subject, String text,
             String uid, ZCalendar.ZVCalendar cal)
     throws ServiceException {
@@ -331,6 +347,10 @@ public class CalendarMailSender {
             toAddrs.toArray(addrs);
             mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
             mm.setFrom(fromAddr);
+            if (senderAddr != null) {
+                mm.setSender(senderAddr);
+                mm.setReplyTo(new Address[]{senderAddr});
+            }
             mm.setSentDate(new Date());
             mm.saveChanges();
 
@@ -352,20 +372,23 @@ public class CalendarMailSender {
      * END:VCALENDAR
      * 
      * @param acct
+     * @param authAcct authenticated account acting on behalf of acct
      * @param oldInv
      * @param verb
      * @param replySubject
      * @return
      * @throws ServiceException
      */
-    public static Invite replyToInvite(Account acct, Invite oldInv,
+    public static Invite replyToInvite(Account acct, Account authAcct,
+                                       boolean onBehalfOf,
+                                       Invite oldInv,
                                        Verb verb, String replySubject,
                                        ParsedDateTime exceptDt)
     throws ServiceException {
-        
         Invite reply =
             new Invite(oldInv.getCompType(), ICalTok.REPLY.toString(),
-                       new TimeZoneMap(Provisioning.getInstance().getTimeZone(acct)));
+                       new TimeZoneMap(
+                               Provisioning.getInstance().getTimeZone(onBehalfOf ? authAcct : acct)));
 
         reply.getTimeZoneMap().add(oldInv.getTimeZoneMap());
 
@@ -381,11 +404,15 @@ public class CalendarMailSender {
                 meReply.setCUType(me.getCUType());
             if (me.hasCn())
                 meReply.setCn(me.getCn());
+            if (onBehalfOf)
+                meReply.setSentBy(authAcct.getName());
             reply.addAttendee(meReply);
         } else {
             String name = acct.getName();
             meReply = new ZAttendee(name);
             meReply.setPartStat(verb.getXmlPartStat());
+            if (onBehalfOf)
+                meReply.setSentBy(authAcct.getName());
             reply.addAttendee(meReply);
         }
 
@@ -455,28 +482,36 @@ public class CalendarMailSender {
                                 Invite inv,
                                 MimeMessage mmInv)
     throws ServiceException {
+        boolean onBehalfOf = false;
         Account acct = mbox.getAccount();
+        Account authAcct = acct;
+        if (octxt != null) {
+            Account authuser = octxt.getAuthenticatedUser();
+            onBehalfOf = !acct.getId().equalsIgnoreCase(authuser.getId());
+            if (onBehalfOf)
+                authAcct = authuser;
+        }
         Locale lc;
         Account organizer = inv.getOrganizerAccount();
         if (organizer != null)
             lc = organizer.getLocale();
         else
-            lc = acct.getLocale();
+            lc = authAcct.getLocale();
         String replySubject = getReplySubject(verb, inv, lc);
 
         String replyType = MailSender.MSGTYPE_REPLY;
         // TODO: Handle Exception ID. (last arg of replyToInvite)
-        Invite replyInv = replyToInvite(acct, inv, verb, replySubject, null);
+        Invite replyInv = replyToInvite(acct, authAcct, onBehalfOf, inv, verb, replySubject, null);
 
         ZVCalendar iCal = replyInv.newToICalendar();
         MimeMessage mm = createDefaultReply(
-                acct, appt, inv, mmInv, replySubject,
+                acct, authAcct, onBehalfOf, appt, inv, mmInv, replySubject,
                 verb, additionalMsgBody, iCal);
 
         int replyMsgId = MailSender.sendMimeMessage(
                 octxt, mbox, saveToSent, mm,
                 null, null, inv.getMailItemId(),
-                replyType, false);
+                replyType, false, true);
         return replyMsgId;
     }
 

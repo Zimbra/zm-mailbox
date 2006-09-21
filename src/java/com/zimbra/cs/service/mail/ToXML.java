@@ -31,7 +31,6 @@ package com.zimbra.cs.service.mail;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -1042,41 +1041,57 @@ public class ToXML {
             if (invite.hasOrganizer()) {
                 ZOrganizer org = invite.getOrganizer();
                 Element orgElt = e.addUniqueElement(MailService.E_APPT_ORGANIZER);                
-                if (org.hasCn())
-                    orgElt.addAttribute(MailService.A_DISPLAY, org.getCn());
                 String str = org.getAddress();
                 orgElt.addAttribute(MailService.A_URL, str);
+                if (org.hasCn())
+                    orgElt.addAttribute(MailService.A_DISPLAY, org.getCn());
+                if (org.hasSentBy())
+                    orgElt.addAttribute(MailService.A_APPT_SENTBY, org.getSentBy());
+                if (org.hasDir())
+                    orgElt.addAttribute(MailService.A_APPT_DIR, org.getDir());
+                if (org.hasLanguage())
+                    orgElt.addAttribute(MailService.A_APPT_LANGUAGE, org.getLanguage());
             }
 
             // Attendee(s)
-            Collection /*Invite.ZAttendee*/ ats = invite.getAttendees();
-            for (Iterator atsIter = ats.iterator();atsIter.hasNext();) {
+            List<ZAttendee> attendees = invite.getAttendees();
+            for (ZAttendee at : attendees) {
                 Element atElt = e.addElement(MailService.E_APPT_ATTENDEE);
-
-                ZAttendee at = (ZAttendee)atsIter.next();
-
-                // display name 
-                if (at.hasCn()) {
-                    atElt.addAttribute(MailService.A_DISPLAY, at.getCn());
-                }
-
-                // calendar user type
-                if (at.hasCUType()) {
-                    atElt.addAttribute(MailService.A_APPT_CUTYPE, at.getCUType());
-                }
-
-                // role
-                if (at.hasRole()) {
-                    atElt.addAttribute(MailService.A_APPT_ROLE, at.getRole());
-                }
-
-                // participation status
-                if (at.hasPartStat()) {
-                    atElt.addAttribute(MailService.A_APPT_PARTSTAT, at.getPartStat());
-                }
-
-                // uri
+                // address
                 atElt.addAttribute(MailService.A_URL, at.getAddress());
+                // CN
+                if (at.hasCn())
+                    atElt.addAttribute(MailService.A_DISPLAY, at.getCn());
+                // SENT-BY
+                if (at.hasSentBy())
+                    atElt.addAttribute(MailService.A_APPT_SENTBY, at.getSentBy());
+                // DIR
+                if (at.hasDir())
+                    atElt.addAttribute(MailService.A_APPT_DIR, at.getDir());
+                // LANGUAGE
+                if (at.hasLanguage())
+                    atElt.addAttribute(MailService.A_APPT_LANGUAGE, at.getLanguage());
+                // CUTYPE
+                if (at.hasCUType())
+                    atElt.addAttribute(MailService.A_APPT_CUTYPE, at.getCUType());
+                // ROLE
+                if (at.hasRole())
+                    atElt.addAttribute(MailService.A_APPT_ROLE, at.getRole());
+                // PARTSTAT
+                if (at.hasPartStat())
+                    atElt.addAttribute(MailService.A_APPT_PARTSTAT, at.getPartStat());
+                // RSVP
+                if (at.hasRsvp())
+                    atElt.addAttribute(MailService.A_APPT_RSVP, at.getRsvp().booleanValue());
+                // MEMBER
+                if (at.hasMember())
+                    atElt.addAttribute(MailService.A_APPT_MEMBER, at.getMember());
+                // DELEGATED-TO
+                if (at.hasDelegatedTo())
+                    atElt.addAttribute(MailService.A_APPT_DELEGATED_TO, at.getDelegatedTo());
+                // DELEGATED-FROM
+                if (at.hasDelegatedFrom())
+                    atElt.addAttribute(MailService.A_APPT_DELEGATED_FROM, at.getDelegatedFrom());
             }
         }
 
