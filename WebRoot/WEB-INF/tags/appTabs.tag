@@ -17,7 +17,7 @@
     </td>
     <td class='TabSpacer'>
     <td class='Tab ${selected=='contacts' ? 'Selected' :'Normal'}'>
-       <a href="contacts.jsp"><img src="images/ContactsApp.gif"/><span>Contacts</span></a>
+       <a href="contacts.jsp"><img src="images/ContactsFolder.gif"/><span>Contacts</span></a>
     </td>
     <td class='TabSpacer'>    
     <td class='Tab ${selected=='calendar' ? ' Selected' :' Normal'}'>
