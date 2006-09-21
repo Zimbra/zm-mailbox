@@ -44,4 +44,23 @@ public class ZTagBean {
 
     public String getColor() { return mTag.getColor().name(); }
     
+    public String getImage() {
+        switch(mTag.getColor()) {
+        case blue:
+            return "TagBlue.gif";
+        case cyan:
+            return "TagCyan.gif";
+        case green:
+            return "TagGreen.gif";
+        case purple: 
+            return "TagPurple.gif";
+        case red:
+            return "TagRed.gif";
+        case yellow: 
+            return "TagYellow.gif";
+        case orange:
+        default:
+            return "TagOrange.gif";   
+        }
+    }
 }
