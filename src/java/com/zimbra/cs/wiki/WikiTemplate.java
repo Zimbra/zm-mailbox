@@ -387,6 +387,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			addWiklet(new InlineWiklet());
 			addWiklet(new WikilinkWiklet());
 			addWiklet(new UrlWiklet());
+			addWiklet(new FragmentWiklet());
 		}
 		
 		private static void addWiklet(Wiklet w) {
