@@ -12,10 +12,7 @@
 
  <body>
 
-  <! --------- TOP ------>
   <jsp:directive.include file="top.jsp" />
-
-  <! --------- TABS ------>
   <zm:appTabs selected='mail'/>
 
 <zm:search var="searchResult" limit="25" query="${param.query}" offset="${param.offset}"/>
@@ -45,14 +42,11 @@
 
 
 
-  <! --------- LEFT/RIGHT ------>
   <table>
    <tr>
-    <!------- LEFT -->
     <td valign=top class='Left'>
       <zm:overviewTree folders="true" tags="true" searches="true"/>
     </td>
-    <!-- right -->
     <td valign='top' class='Right'>
      <div class='RightTbTop'>${toolbar}</div>
 
@@ -82,8 +76,6 @@
 <td><a href="<c:url value="cv.jsp">
   <c:param name='id' value='${conv.id}'/>
   <c:param name='query' value='${param.query}'/></c:url>"><c:out value="${empty conv.subject ? '<No Subject>' : conv.subject}"/> 
-
-<%-- <c:if test="${!(empty conv.fragment)}"><span class='Fragment'> - ${fn:escapeXml(conv.fragment)}</span></c:if>  --%>
 </a></td>
 <td nowrap><c:if test="${conv.messageCount > 1}">(${conv.messageCount})&nbsp;</c:if><c:if test="${conv.messageCount < 2}">&nbsp</c:if>
 <td nowrap>Feb&nbsp;27

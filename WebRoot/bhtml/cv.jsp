@@ -12,10 +12,7 @@
 
  <body>
 
-  <! --------- TOP ------>
   <jsp:directive.include file="top.jsp" />
-
-  <! --------- TABS ------>
   <zm:appTabs selected='mail'/>
 
 <zm:search var="searchResult" limit="25" query="${param.query}" offset="${param.offset}" conv="${param.id}"/>
@@ -42,14 +39,11 @@
 
 
 
-  <! --------- LEFT/RIGHT ------>
   <table>
    <tr>
-    <!------- LEFT -->
     <td valign=top class='Left'>
       <zm:overviewTree folders="true" tags="true" searches="true"/>    
     </td>
-    <!-- right -->
     <td valign='top' class='Right'>
      <div class='RightTbTop'>${toolbar}</div>
 

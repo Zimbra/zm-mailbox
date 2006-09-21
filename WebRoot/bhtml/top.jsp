@@ -13,7 +13,7 @@
      <table>
       <tr> <td align=right valign=top> <b>${mailbox.name}</b> </td></tr>
       <tr>
-       <td align=right valign=bottom >
+       <td nowrap align=right valign=bottom >
          <a href="?op=options" target=_blank>Options</a> |
          <a href="?op=help" target=_blank>Help</a> |
          <a href="?logout">Log Off</a>

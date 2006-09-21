@@ -12,10 +12,7 @@
 
  <body>
 
-  <! --------- TOP ------>
   <jsp:directive.include file="top.jsp" />
-
-  <! --------- TABS ------>
   <zm:appTabs selected='contacts'/>    
 
 
@@ -42,14 +39,11 @@
 </c:set>     
 
 
-  <! --------- LEFT/RIGHT ------>
   <table>
    <tr>
-    <!------- LEFT -->
     <td valign=top class='Left'>
       <zm:overviewTree contacts="true" tags="true"/>
     </td>
-    <!-- right -->
     <td valign='top' class='Right'>
      <div class='RightTbTop'>${toolbar}</div>
 
