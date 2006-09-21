@@ -38,7 +38,7 @@
    <tr>
     <!------- LEFT -->
     <td valign=top class='Left'>
-      <jsp:directive.include file="left.jsp" />
+      <zm:overviewTree contacts="true" tags="true"/>
     </td>
     <!-- right -->
     <td valign='top' class='Right'>
@@ -64,7 +64,7 @@
           <c:if test="${!((empty contact.jobTitle) or (empty contact.company))}">,</c:if>
           ${fn:escapeXml(contact.company)}
        </c:if>           
-     </td><td width="20"><img src="images/ContactsFolder.gif"></div></td><td class="companyFolder">Contacts</td>
+     </td><td width="20"><img src="images/ContactsFolder.gif"></div></td><td class="companyFolder">${contact.folderName}</td>
    </tr>
  </tbody></table>
 

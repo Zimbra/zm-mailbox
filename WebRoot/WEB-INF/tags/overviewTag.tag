@@ -9,7 +9,7 @@
 
 <tr><td class='Folder ${tag.hasUnread ? ' Unread':''}'>
  <a href='clv.jsp?query=tag:"${fn:escapeXml(tag.name)}"'/>
- <img src="images/${tag.image}"/>
+ <img src="images/tags/${tag.image}"/>
  <span>
  <c:out value="${tag.name}"/>
  <c:if test="${tag.hasUnread}"> (${tag.unreadCount}) </c:if>

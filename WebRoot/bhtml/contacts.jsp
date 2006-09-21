@@ -18,7 +18,8 @@
   <! --------- TABS ------>
   <zm:appTabs selected='contacts'/>    
 
-<zm:search var="searchResult" limit="25" query="in:contacts" offset="${param.offset}" types="contact" sort="nameAsc"/>
+
+<zm:search var="searchResult" limit="25" query="${empty param.query ? 'in:contacts' : param.query}" offset="${param.offset}" types="contact" sort="nameAsc"/>
 <c:set var="toolbar">
  <table cellspacing=0 class='Tb'>
    <tr>
@@ -46,7 +47,7 @@
    <tr>
     <!------- LEFT -->
     <td valign=top class='Left'>
-      <jsp:directive.include file="left.jsp" />
+      <zm:overviewTree contacts="true" tags="true"/>
     </td>
     <!-- right -->
     <td valign='top' class='Right'>

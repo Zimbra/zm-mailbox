@@ -50,7 +50,7 @@
    <tr>
     <!------- LEFT -->
     <td valign=top class='Left'>
-      <jsp:directive.include file="left.jsp" />
+      <zm:overviewTree folders="true" tags="true" searches="true"/>
     </td>
     <!-- right -->
     <td valign='top' class='Right'>

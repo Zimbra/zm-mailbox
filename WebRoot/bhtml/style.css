@@ -157,6 +157,7 @@ border-color: #E0E0E0 #555555 #555555 #E0E0E0;
 .MsgHdrValue {
   padding: 3px 3px 3px 3px;
   vertical-align: top;
+  overflow: hidden;
 }
 
 .MsgHdrSub {

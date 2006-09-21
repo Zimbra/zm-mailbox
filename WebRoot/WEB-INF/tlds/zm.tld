@@ -269,4 +269,29 @@ current item of the iteration.
      <path>/WEB-INF/tags/appTabs.tag</path>
    </tag-file> 
    
+   <tag-file>
+     <name>tagTree</name>
+     <path>/WEB-INF/tags/tagTree.tag</path>
+   </tag-file> 
+   
+   <tag-file>
+     <name>folderTree</name>
+     <path>/WEB-INF/tags/folderTree.tag</path>
+   </tag-file> 
+   
+   <tag-file>
+     <name>searchFolderTree</name>
+     <path>/WEB-INF/tags/searchFolderTree.tag</path>
+   </tag-file> 
+   
+   <tag-file>
+     <name>contactFolderTree</name>
+     <path>/WEB-INF/tags/contactFolderTree.tag</path>
+   </tag-file> 
+   
+   <tag-file>
+     <name>overviewTree</name>
+     <path>/WEB-INF/tags/overviewTree.tag</path>
+   </tag-file> 
+   
 </taglib>

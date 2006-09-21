@@ -35,9 +35,11 @@ public class ZContactBean {
 
     private ZContact mContact;
     private String mFileAs;
+    private String mFolderName;
     
-    public ZContactBean(ZContact contact) {
+    public ZContactBean(ZContact contact, String folderName) {
         mContact = contact;
+        mFolderName = folderName;
     }
        
     public String getId() { return mContact.getId(); }
@@ -57,6 +59,8 @@ public class ZContactBean {
     public String getFolderId() { return mContact.getFolderId(); }
 
     public String getRevision() { return mContact.getRevision(); }
+    
+    public String getFolderName() { return mFolderName; }
 
     /**
      * @return time in msecs
