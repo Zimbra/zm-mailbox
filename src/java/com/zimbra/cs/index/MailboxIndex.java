@@ -1277,7 +1277,7 @@ public final class MailboxIndex
      * @param out OutputStream to write binary encoded index data out
      * @throws IOException
      */
-    synchronized void backupIndex(OutputStream out) throws IOException
+    public synchronized void backupIndex(OutputStream out) throws IOException
     {
         flush(); // make sure all writes are complete.
 
