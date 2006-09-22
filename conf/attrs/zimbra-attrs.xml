@@ -1769,5 +1769,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>minimum number of numeric characters required in a password</desc>
 </attr>
 
+<attr id="393" name="zimbraTextAnalyzer" type="string" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+  <desc>The registered name of the Zimbra Analyzer Extension for this account to use</desc>
+</attr>
+
 </attrs>
   
