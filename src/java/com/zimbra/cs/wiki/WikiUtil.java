@@ -325,15 +325,13 @@ public abstract class WikiUtil {
                 return true;
             auth();
             if (folder.getView() == null ||
-                !folder.getView().equals(sDEFAULTVIEW) ||
-                folder.getName().equals(sDEFAULTFOLDER) ||
-                folder.getName().equals(sDEFAULTTEMPLATEFOLDER)) {
+                !folder.getView().equals(sDEFAULTVIEW)) {
                 return false;
             }
             LmcFolderActionRequest req = new LmcFolderActionRequest();
             req.setSession(mSession);
             req.setFolderList(folder.getFolderID());
-            req.setOp("delete");
+            req.setOp("empty");
             req.invoke(mUrl);
             return true;
         }
