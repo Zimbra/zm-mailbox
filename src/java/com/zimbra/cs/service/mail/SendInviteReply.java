@@ -210,12 +210,14 @@ public class SendInviteReply extends CalendarRequest {
             mbox.modifyPartStat(octxt, apptId, recurId, cnStr, addressStr, null, role, verb.getXmlPartStat(), Boolean.FALSE, seqNo, dtStamp);
             
             // move the invite to the Trash if the user wants it
-            // TODO: Fix ACL issue so we can move-to-trash even for on-behalf-of
-            // requests.  Currently it's not possible to move-to-trash because
-            // the authenticated account doesn't have rights to the target
-            // mailbox's Inbox and Trash folders.
-            if (!onBehalfOf && acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true)) {
+            if (acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true)) {
                 try {
+                    if (onBehalfOf) {
+                        // HACK: Run the move in the context of the organizer
+                        // mailbox because the authenticated account doesn't
+                        // have rights on Inbox and Trash folders.
+                        octxt = new OperationContext(mbox);
+                    }
                     mbox.move(octxt, inviteMsgId, MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
                 } catch (MailServiceException.NoSuchItemException nsie) {
                     sLog.debug("can't move nonexistent invite to Trash: " + inviteMsgId);
