@@ -107,12 +107,21 @@ public class ZSoapMailbox extends ZMailbox {
         initAuthToken(authToken);
     }
 
+    public ZSoapMailbox(String authToken, String targetAccount, AccountBy by,
+                        String uri, SoapTransport.DebugListener listener)
+    throws ServiceException {
+        initPreAuth(uri, listener);
+        initAuthToken(authToken);
+        if (targetAccount != null)
+            initTargetAccount(targetAccount, by);
+    }
+
     public void initAuthToken(String authToken) throws ServiceException {
         mAuthToken = authToken;
         mTransport.setAuthToken(mAuthToken);
         getAccountInfo(true);
     }
-    
+
     public void initPreAuth(String uri, SoapTransport.DebugListener listener) {
         mNameToTag = new HashMap<String, ZSoapTag>();
         mIdToItem = new HashMap<String, ZSoapItem>();                
@@ -120,7 +129,14 @@ public class ZSoapMailbox extends ZMailbox {
         setSoapURI(uri);
         if (listener != null) mTransport.setDebugListener(listener);
     }
-    
+
+    private void initTargetAccount(String key, AccountBy by) {
+        if (AccountBy.id.equals(by))
+            mTransport.setTargetAcctId(key);
+        else if (AccountBy.name.equals(by))
+            mTransport.setTargetAcctName(key);
+    }
+
     private ZSoapAuthResult auth(String key, AccountBy by, String password) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling asuthenticate", null);
         XMLElement req = new XMLElement(AccountService.AUTH_REQUEST);

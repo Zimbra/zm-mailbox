@@ -30,7 +30,6 @@ package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -40,8 +39,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.calendar.*;
@@ -54,7 +51,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.ZimbraLog;
-import com.zimbra.cs.zclient.ZMailbox;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -367,66 +363,13 @@ public class Message extends MailItem {
        // and see if it updates an existing Appointment in the Appointments table, or whatever...
        boolean updatedMetadata = false;
 
-       int fid;
        for (Invite cur : invites) {
-           fid = folderId;
-
-           // The iCalendar object may be a REPLY to an event this mailbox user
-           // created on behalf of another user.  There won't be an Appointment
-           // in this user's mailbox!  The REPLY must be "forwarded" to the
-           // organizer mailbox, which may or may not be on this host.
-           boolean isRemote = false;
-           Mailbox mbox = mMailbox;
-           if (method.equals(ICalTok.REPLY.toString())) {
-               if (cur.hasOrganizer()) {
-                   ZOrganizer org = cur.getOrganizer();
-                   if (!AccountUtil.addressMatchesAccount(getAccount(), org.getAddress())) {
-                       Account orgAccount = cur.getOrganizerAccount();
-                       // Unknown organizer
-                       if (orgAccount == null) {
-                           // TODO: log something
-                           continue;
-                       }
-
-                       if (false && Provisioning.onLocalServer(orgAccount)) {
-                           mbox = Mailbox.getMailboxByAccount(orgAccount);
-                           fid = Mailbox.ID_FOLDER_CALENDAR;
-                       } else {
-                           // Organizer's mailbox is on a remote server.
-                           String uri = AccountUtil.getSoapUri(orgAccount);
-                           if (uri != null) {
-                               try {
-                                   String ical;
-                                   StringWriter sr = null;
-                                   try {
-                                       sr = new StringWriter();
-                                       cur.newToICalendar().toICalendar(sr);
-                                       ical = sr.toString();
-                                   } finally {
-                                       if (sr != null)
-                                           sr.close();
-                                   }
-
-                                   ZMailbox zmbox = ZMailbox.getMailbox(new AuthToken(orgAccount).getEncoded(), uri, null);
-                                   zmbox.iCalReply(ical);
-                               } catch (Exception e) {
-                                   ZimbraLog.misc.warn("could not save to remote sent folder (perm denied); continuing", e);
-                               }
-                           } else {
-                               // TODO: log something
-                           }
-                           continue;
-                       }
-                   }
-               }
-           }
-
-           Appointment appt = mbox.getAppointmentByUid(cur.getUid());
+           Appointment appt = mMailbox.getAppointmentByUid(cur.getUid());
            if (createAppt) {
                if (appt == null) { 
                    // ONLY create an appointment if this is a REQUEST method...otherwise don't.
                    if (method.equals(ICalTok.REQUEST.toString())) {
-                       appt = mbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur);
+                       appt = mMailbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur);
                    } else {
                        sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no Appointment could be found");
                        return; // for now, just ignore this Invitation

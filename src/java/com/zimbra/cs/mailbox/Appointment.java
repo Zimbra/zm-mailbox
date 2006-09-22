@@ -575,7 +575,7 @@ public class Appointment extends MailItem {
         if (method.equals(ICalTok.REQUEST.toString()) || method.equals(ICalTok.CANCEL.toString()) || method.equals(ICalTok.PUBLISH.toString())) {
             processNewInviteRequestOrCancel(originalOrganizer, pm, invite, force, folderId, volumeId);
         } else if (method.equals("REPLY")) {
-            processNewInviteReply(pm, invite, force);
+            processNewInviteReply(invite, force);
         }
     }
     
@@ -1386,7 +1386,7 @@ public class Appointment extends MailItem {
         mReplyList.modifyPartStat(acctOrNull, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
     }
     
-    private void processNewInviteReply(ParsedMessage pm, Invite reply, boolean force)
+    void processNewInviteReply(Invite reply, boolean force)
     throws ServiceException {
         if (!canAccess(ACL.RIGHT_ACTION))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions to change this appointment's state");

@@ -453,7 +453,7 @@ public class ZMailboxUtil implements DebugListener {
         mPassword = password;
         mMbox = ZMailbox.getMailbox(mMailboxName, AccountBy.name, mPassword, resolveUrl(uri), mDebug ? this : null);
         mPrompt = String.format("mbox %s> ", mMbox.getName());
-        dumpMailboxConnect();        
+        dumpMailboxConnect();
     }
 
     static class Stats {

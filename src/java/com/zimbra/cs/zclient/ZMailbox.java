@@ -43,7 +43,7 @@ public abstract class ZMailbox {
 
     public final static String PATH_SEPARATOR = "/";
     
-    public final static char PATH_SEPARATOR_CHAR = '/';    
+    public final static char PATH_SEPARATOR_CHAR = '/';
 
     public enum SearchSortBy {
         dateDesc, dateAsc, subjDesc, subjAsc, nameDesc, nameAsc;
@@ -64,7 +64,11 @@ public abstract class ZMailbox {
     public static ZMailbox getMailbox(String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
         return new ZSoapMailbox(authToken, uri, listener);
     }
-   
+
+    public static ZMailbox getMailbox(String authToken, String targetAccount, AccountBy targetBy, String uri, SoapTransport.DebugListener listener) throws ServiceException {
+        return new ZSoapMailbox(authToken, targetAccount, targetBy, uri, listener);
+    }
+
     /**
      * returns the parent folder path. First removes a trailing {@link #PATH_SEPARATOR} if one is present, then
      * returns the value of the path preceeding the last {@link #PATH_SEPARATOR} in the path.

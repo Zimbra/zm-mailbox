@@ -29,6 +29,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.ref.SoftReference;
 import java.util.*;
 
@@ -36,11 +37,12 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.collections.map.LRUMap;
-import org.apache.lucene.analysis.Analyzer;
 
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
@@ -50,12 +52,10 @@ import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
 import com.zimbra.cs.db.DbMailbox.NewMboxId;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -71,6 +71,7 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -95,6 +96,7 @@ import com.zimbra.cs.util.Pair;
 import com.zimbra.cs.util.SetUtil;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.SoapProtocol;
 
 
@@ -3082,6 +3084,94 @@ public class Mailbox {
         return ID_AUTO_INCREMENT;
     }
 
+    /**
+     * Process an iCalendar REPLY containing a single VEVENT or VTODO.
+     * @param octxt
+     * @param inv REPLY iCalendar object
+     * @throws ServiceException
+     */
+    public synchronized void processICalReply(OperationContext octxt, Invite inv)
+    throws ServiceException {
+        ICalReply redoRecorder = new ICalReply(getId(), inv);
+        boolean success = false;
+        try {
+            beginTransaction("iCalReply", octxt, redoRecorder);
+            String uid = inv.getUid();
+            Appointment appt = getAppointmentByUid(uid);
+            if (appt == null) {
+                ZimbraLog.calendar.warn(
+                        "Unknown appointment UID " + uid + " in mailbox " + getId());
+                return;
+            }
+            appt.processNewInviteReply(inv, false);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    private void processICalReplies(OperationContext octxt, ZVCalendar cal)
+    throws ServiceException {
+        List<Invite> components = Invite.createFromCalendar(
+                getAccount(), null, cal, false);
+        for (Invite inv : components) {
+            if (!inv.hasOrganizer()) {
+                ZimbraLog.calendar.warn("No ORGANIZER found in REPLY");
+                continue;
+            }
+            ZOrganizer org = inv.getOrganizer();
+            String orgAddress = org.getAddress();
+            if (AccountUtil.addressMatchesAccount(getAccount(), orgAddress)) {
+                processICalReply(octxt, inv);
+            } else {
+                Account orgAccount = inv.getOrganizerAccount();
+                // Unknown organizer
+                if (orgAccount == null) {
+                    ZimbraLog.calendar.warn(
+                            "Unknown organizer " + orgAddress + " in REPLY");
+                    continue;
+                }
+                if (Provisioning.onLocalServer(orgAccount)) {
+                    // Run in the context of organizer's mailbox.
+                    Mailbox mbox = Mailbox.getMailboxByAccount(orgAccount);
+                    OperationContext orgOctxt = new OperationContext(mbox);
+                    mbox.processICalReply(orgOctxt, inv);
+                } else {
+                    // Organizer's mailbox is on a remote server.
+                    String uri = AccountUtil.getSoapUri(orgAccount);
+                    if (uri == null) {
+                        ZimbraLog.calendar.warn(
+                                "Unable to determine URI for organizer account " + orgAddress);
+                        continue;
+                    }
+                    try {
+                        // TODO: Get the iCalendar data from the
+                        // MIME part since we already have it.
+                        String ical;
+                        StringWriter sr = null;
+                        try {
+                            sr = new StringWriter();
+                            inv.newToICalendar().toICalendar(sr);
+                            ical = sr.toString();
+                        } finally {
+                            if (sr != null)
+                                sr.close();
+                        }
+                        ZMailbox zmbox = ZMailbox.getMailbox(
+                                new AuthToken(getAccount()).getEncoded(),
+                                orgAccount.getName(), AccountBy.name,
+                                uri, null);
+                        zmbox.iCalReply(ical);
+                    } catch (IOException e) {
+                        throw ServiceException.FAILURE("Error while posting REPLY to organizer mailbox host", e);
+                    } catch (AuthTokenException e) {
+                        throw ServiceException.FAILURE("Error while posting REPLY to organizer mailbox host", e);
+                    }
+                }
+            }
+        }
+    }
+
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags, int conversationId)
     throws IOException, ServiceException {
         SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
@@ -3113,6 +3203,35 @@ public class Mailbox {
         }
         // and then actually add the message
         long start = ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.start();
+
+        // We process calendar replies here, where no transaction has yet
+        // been started on the current mailbox.  This is because some replies
+        // may require starting a transaction on another mailbox.  We thus avoid
+        // starting a nested transaction, which doesn't work.
+        //
+        // In addition, the current mailbox is not locked/synchronized at this
+        // point.  If we were synchronized and a reply processing enters a
+        // synchronized method on another mailbox, we're locking two mailboxes
+        // and that can easily lead to deadlocks.
+        //
+        // TODO: Generalize this technique for all calendar operations, not
+        // just REPLY's.
+        //
+        if (!noICal) {
+            try {
+                ZVCalendar cal = pm.getiCalendar();
+                if (cal != null) {
+                    ICalTok method = cal.getMethod();
+                    if (ICalTok.REPLY.equals(method)) {
+                        processICalReplies(octxt, cal);
+                        noICal = true;
+                    }
+                }
+            } catch (Exception e) {
+                ZimbraLog.calendar.warn("Error during calendar processing.  Continuing with message add", e);
+            }
+        }
+
         Message msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId,
                     rcptEmail, null, sharedDeliveryCtxt);
         ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);

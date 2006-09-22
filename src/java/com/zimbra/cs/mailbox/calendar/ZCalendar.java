@@ -197,6 +197,20 @@ public class ZCalendar {
                 }
             }
         }
+
+        public ICalTok getMethod() {
+            ICalTok ret = null;
+            ZProperty method = getProperty(ICalTok.METHOD);
+            if (method != null) {
+                String methodStr = method.getValue();
+                if (methodStr != null) {
+                    try {
+                        ret = ICalTok.valueOf(methodStr);
+                    } catch (IllegalArgumentException e) {}
+                }
+            }
+            return ret;
+        }
     }
     
     /**

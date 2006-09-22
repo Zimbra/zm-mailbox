@@ -41,8 +41,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogManager;
@@ -50,7 +48,6 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.Version;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -147,7 +144,9 @@ public abstract class RedoableOp {
     public static final int OP_TRACK_IMAP               = 55;
     public static final int OP_IMAP_COPY_ITEM           = 56;
 
-    public static final int OP_LAST				        = 57;
+    public static final int OP_ICAL_REPLY               = 57;
+
+    public static final int OP_LAST				        = 58;
 
 	// Element index is same as Redoable.OP_* constants.
 	// The strings must match the class names.
@@ -209,6 +208,7 @@ public abstract class RedoableOp {
         "AddDocumentRevision",
         "TrackImap",
         "ImapCopyItem",
+        "ICalReply"
 	};
 
 	public static String getOpClassName(int opcode) {

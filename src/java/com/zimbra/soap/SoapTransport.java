@@ -29,12 +29,10 @@
 
 package com.zimbra.soap;
 
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.SoapProtocol;
 import com.zimbra.soap.SoapFaultException;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.dom4j.DocumentException;
 

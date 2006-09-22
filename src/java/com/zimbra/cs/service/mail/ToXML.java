@@ -658,16 +658,19 @@ public class ToXML {
         List /*Appointment.ReplyInfo */ replies = appt.getReplyInfo(inv);
         for (Iterator iter = replies.iterator(); iter.hasNext(); ) {
             Appointment.ReplyInfo repInfo = (Appointment.ReplyInfo) iter.next();
+            ZAttendee attendee = repInfo.mAttendee;
 
             Element curElt = repliesElt.addElement(MailService.E_APPT_REPLY);
             if (repInfo.mRecurId != null) {
                 repInfo.mRecurId.toXml(curElt);
             }
-            if (repInfo.mAttendee.hasPartStat()) {
-                curElt.addAttribute(MailService.A_APPT_PARTSTAT, repInfo.mAttendee.getPartStat());
+            if (attendee.hasPartStat()) {
+                curElt.addAttribute(MailService.A_APPT_PARTSTAT, attendee.getPartStat());
             }
             curElt.addAttribute(MailService.A_DATE, repInfo.mDtStamp);
-            curElt.addAttribute(MailService.A_APPT_ATTENDEE, repInfo.mAttendee.getAddress());
+            curElt.addAttribute(MailService.A_APPT_ATTENDEE, attendee.getAddress());
+            if (attendee.hasSentBy())
+                curElt.addAttribute(MailService.A_APPT_SENTBY, attendee.getSentBy());
         }
     }
 
