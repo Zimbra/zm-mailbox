@@ -73,6 +73,7 @@ import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Volume;
+import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 
@@ -2224,6 +2225,15 @@ public final class MailboxIndex
                 }
 
                 item.reindex(null, pm);
+            } else if (item.getType() == MailItem.TYPE_DOCUMENT || item.getType() == MailItem.TYPE_WIKI) {
+            	com.zimbra.cs.mailbox.Document doc = (com.zimbra.cs.mailbox.Document) item;
+            	try {
+                	byte[] buf = ByteUtil.getContent(doc.getRawDocument(), 0);
+            		ParsedDocument pd = new ParsedDocument(buf, doc.getDigest(), doc.getFilename(), doc.getContentType(), doc.getChangeDate());
+                	item.reindex(null, pd);
+            	} catch (IOException ioe) {
+            		throw ServiceException.FAILURE("reIndexItem caught IOException", ioe);
+            	}
             } else {
                 item.reindex(null, null);
             }
