@@ -84,11 +84,6 @@ public class ICalTimeZone extends SimpleTimeZone
         public int getMinute()     { return mMinute; }     // 0..59
         public int getSecond()     { return mSecond; }     // 0..59
 
-        // whether this onset is defined with a recurrence rule or as a specific date
-        public boolean hasRule() {
-            return mWeek != 0;
-        }
-
         public SimpleOnset(int week, int dayOfWeek, int month, int dayOfMonth,
                            int hour, int minute, int second) {
             mWeek = week;
@@ -109,7 +104,6 @@ public class ICalTimeZone extends SimpleTimeZone
             sb.append(", hour=").append(mHour);
             sb.append(", minute=").append(mMinute);
             sb.append(", second=").append(mSecond);
-            sb.append(", hasRule=").append(hasRule());
             return sb.toString();
         }
     }
@@ -247,8 +241,8 @@ public class ICalTimeZone extends SimpleTimeZone
         public SimpleTimeZoneRule(SimpleOnset onset) {
             // iCalendar month is 1-based.  Java month is 0-based.
             mMonth = onset.getMonth() - 1;
-            if (onset.hasRule()) {
-                int week = onset.getWeek();
+            int week = onset.getWeek();
+            if (week != 0) {
                 if (week < 0) {
                     // For specifying day-of-week of last Nth week of month,
                     // e.g. -2SA for Saturday of 2nd to last week of month,
@@ -291,7 +285,9 @@ public class ICalTimeZone extends SimpleTimeZone
                  t.hasMoreTokens();) {
                 String token = t.nextToken();
                 if ("BYMONTH".equals(token)) {
-                    month = Integer.parseInt(t.nextToken());
+                    try {
+                        month = Integer.parseInt(t.nextToken());
+                    } catch (NumberFormatException ne) {}
                 } else if ("BYDAY".equals(token)) {
                     boolean negative = false;
                     int weekNum = 1;
@@ -315,6 +311,10 @@ public class ICalTimeZone extends SimpleTimeZone
                     if (day == null)
                         throw new IllegalArgumentException("Invalid day of week value: " + value);
                     dayOfWeek = day.intValue();
+                } else if ("BYMONTHDAY".equals(token)) {
+                    try {
+                        dayOfMonth = Integer.parseInt(t.nextToken());
+                    } catch (NumberFormatException ne) {}
                 } else {
                     t.nextToken();  // skip value of unused param
                 }
@@ -326,8 +326,9 @@ public class ICalTimeZone extends SimpleTimeZone
             if (dtstart != null) {
                 try {
                     month = Integer.parseInt(dtstart.substring(4, 6));
-                    dayOfWeek = Integer.parseInt(dtstart.substring(6, 8));
-                } catch (StringIndexOutOfBoundsException se) {}
+                    dayOfMonth = Integer.parseInt(dtstart.substring(6, 8));
+                } catch (StringIndexOutOfBoundsException se) {
+                } catch (NumberFormatException ne) {}
             }
         }
 
@@ -507,11 +508,20 @@ public class ICalTimeZone extends SimpleTimeZone
     }
 
     private static String toICalRRule(SimpleOnset onset) {
-        if (!onset.hasRule()) return null;
-        StringBuffer sb =
-            new StringBuffer("FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=");
-        sb.append(onset.getMonth()).append(";BYDAY=");
-        sb.append(onset.getWeek()).append(sDayOfWeekNames[onset.getDayOfWeek()]);
+        int week = onset.getWeek();
+        int mday = onset.getDayOfMonth();
+        StringBuilder sb =
+            new StringBuilder("FREQ=YEARLY;INTERVAL=1;BYMONTH=");
+        sb.append(onset.getMonth());
+        if (week != 0) {
+            sb.append(";BYDAY=");
+            sb.append(week).append(sDayOfWeekNames[onset.getDayOfWeek()]);
+            sb.append(";WKST=MO");
+        } else if (mday > 0) {
+            sb.append(";BYMONTHDAY=").append(mday);
+        } else {
+            return null;
+        }
         return sb.toString();
     }
 

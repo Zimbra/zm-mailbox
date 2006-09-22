@@ -905,8 +905,9 @@ public class ToXML {
                     e.addAttribute(MailService.A_APPT_TZ_DAYOFFSET, tz.getDaylightOffset() / 60 / 1000);
 
                     Element std = e.addElement(MailService.E_APPT_TZ_STANDARD);
-                    if (standard.hasRule()) {
-                        std.addAttribute(MailService.A_APPT_TZ_WEEK, standard.getWeek());
+                    int standardWeek = standard.getWeek();
+                    if (standardWeek != 0) {
+                        std.addAttribute(MailService.A_APPT_TZ_WEEK, standardWeek);
                         std.addAttribute(MailService.A_APPT_TZ_DAYOFWEEK, standard.getDayOfWeek());
                     } else
                         std.addAttribute(MailService.A_APPT_TZ_DAYOFMONTH, standard.getDayOfMonth());
@@ -916,8 +917,9 @@ public class ToXML {
                     std.addAttribute(MailService.A_APPT_TZ_SECOND, standard.getSecond());
 
                     Element day = e.addElement(MailService.E_APPT_TZ_DAYLIGHT);
-                    if (daylight.hasRule()) {
-                        day.addAttribute(MailService.A_APPT_TZ_WEEK, daylight.getWeek());
+                    int daylightWeek = daylight.getWeek();
+                    if (daylightWeek != 0) {
+                        day.addAttribute(MailService.A_APPT_TZ_WEEK, daylightWeek);
                         day.addAttribute(MailService.A_APPT_TZ_DAYOFWEEK, daylight.getDayOfWeek());
                     } else
                         day.addAttribute(MailService.A_APPT_TZ_DAYOFMONTH, daylight.getDayOfMonth());
