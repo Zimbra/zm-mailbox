@@ -4,7 +4,6 @@ P, TH, TD, DIV, SPAN, SELECT, INPUT, TEXTAREA, BUTTON {
 }
 
 TABLE { width:100%; margin: 0; }
-TABLE TD { padding: 0; border-width: 0; border:none;}
 
 BODY {
  margin: 0px;
@@ -19,6 +18,72 @@ FORM {
 HTML>BODY INPUT {		/* clean border that works in FF */
  border:1px solid;
  border-color: black AAAAAA AAAAAA black;
+}
+
+#ZLoginPanel {
+    padding:3px; 
+    border:2px solid; 
+    border-color:#8597a7 #72828f #72828f #8597a7;
+	background-color: #abc2d6;	
+	width:500px;
+}
+
+#ZLoginAppName {
+	margin-top:5px;
+	width:100%;
+	text-align:right;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+#ZLoginBodyContainer {
+	padding:4px; border:2px solid; 
+	border-color:#5f6c77 #8597a7 #8597a7 #5f6c77;
+	background-color: #eff5fb;
+	padding-top:20px;
+}
+
+#ZLoginFormPanel {
+	position:relative;
+	left:10%;
+	width:80%;
+}
+
+/* Field label (right-aligned) */
+.zLoginLabelContainer {
+	color:black;
+    white-space:nowrap; overflow:hidden;
+	text-align:right;
+	width:80px;
+}
+
+/* Field <input> element */
+.zLoginField {
+	width:100%;
+    padding:2 4 2 4; 	
+}
+/* Field label (left-aligned) */
+.zLoginCheckboxLabelContainer {
+	color: black;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.zLoginButton {
+    padding:3px; 
+    border:2px solid; 
+    border-color:#8597a7 #72828f #72828f #8597a7;
+	background-color: #abc2d6;	
+	width: 10em;
+}
+
+#ZLoginLicenseContainer {
+	padding-top:20px;
+	padding-bottom:5px;
+	text-align:center;
+	vertical-align:bottom;
+	color: #727054;
+	font-size:9px;
 }
 
 .TabFiller {

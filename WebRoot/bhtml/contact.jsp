@@ -3,9 +3,9 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
-<zm:getContact id="${param.id}" var="contact"/>
-
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
+ <zm:getContact id="${param.id}" var="contact"/>
  <head>
   <title>Zimbra: ${fn:escapeXml(contact.displayFileAs)}</title>
   <style type="text/css">
