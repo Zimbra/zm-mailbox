@@ -32,6 +32,7 @@ import javax.mail.internet.MimePart;
 
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
@@ -123,7 +124,7 @@ public class SaveDocument extends WikiDocumentHandler {
         	attElem = docElem.getElement(MailService.E_MSG);
             String msgid = attElem.getAttribute(MailService.A_ID, null);
             String part = attElem.getAttribute(MailService.A_PART, null);
-            Mailbox mbox = Mailbox.getMailboxByAccountId(lc.getRequestedAccountId());
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(lc.getRequestedAccountId());
         	doc = getDocumentDataFromMimePart(octxt, mbox, msgid, part);
         }
 

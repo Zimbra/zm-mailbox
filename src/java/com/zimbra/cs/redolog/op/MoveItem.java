@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -106,7 +107,7 @@ public class MoveItem extends RedoableOp {
 
 	public void redo() throws Exception {
 		int mboxId = getMailboxId();
-		Mailbox mbox = Mailbox.getMailboxById(mboxId);
+		Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         TargetConstraint tcon = null;
         if (mConstraint != null)

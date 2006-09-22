@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -98,7 +99,7 @@ public class SetImapUid extends RedoableOp {
     }
 
     public void redo() throws Exception {
-        Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.resetImapUid(getOperationContext(), new ArrayList<Integer>(mImapUids.values()));
     }
 }

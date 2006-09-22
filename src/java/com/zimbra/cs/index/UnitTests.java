@@ -48,6 +48,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
@@ -253,7 +254,7 @@ public class UnitTests extends TestCase {
                              ));
         
         {
-            Mailbox mbx = Mailbox.getMailboxById(1);
+            Mailbox mbx = MailboxManager.getInstance().getMailboxById(1);
             String folderName = new String("/inbox");
             final Folder compFolder = mbx.getFolderByPath(null, folderName);
             //System.out.println("compTag is "+compTag);
@@ -333,7 +334,7 @@ public class UnitTests extends TestCase {
     // tag query
     public void notest11() throws ServiceException 
     {
-        Mailbox mbx = Mailbox.getMailboxById(1);
+        Mailbox mbx = MailboxManager.getInstance().getMailboxById(1);
         String tagName = new String("foo");
         final Tag compTag = mbx.getTagByName(tagName);
         //System.out.println("compTag is "+compTag);
@@ -467,7 +468,7 @@ public class UnitTests extends TestCase {
     		boolean conv, ResultValidator validator) throws IOException, MailServiceException, ParseException, ServiceException {
     	ArrayList<QueryResult> ret = new ArrayList<QueryResult>();
 
-    	MailboxIndex searcher = Mailbox.getMailboxById(mailboxId).getMailboxIndex();
+    	MailboxIndex searcher = MailboxManager.getInstance().getMailboxById(mailboxId).getMailboxIndex();
 
     	int groupBy = MailboxIndex.SEARCH_RETURN_MESSAGES;
     	if (conv) {
@@ -487,7 +488,7 @@ public class UnitTests extends TestCase {
     	break;
     	}
 
-    	Mailbox mbox = Mailbox.getMailboxById(mailboxId);
+    	Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
 
     	ZimbraQuery zq = new ZimbraQuery(qstr, null, null, mbox, 
     			types, SortBy.DATE_DESCENDING,

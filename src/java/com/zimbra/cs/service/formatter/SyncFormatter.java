@@ -81,6 +81,8 @@ public class SyncFormatter extends Formatter {
         addHeader(context, hdr, "X-Zimbra-Flags", item.getFlagString());
         addHeader(context, hdr, "X-Zimbra-Received", item.getDate() + "");
         addHeader(context, hdr, "X-Zimbra-Modified", item.getChangeDate() + "");
+        addHeader(context, hdr, "X-Zimbra-Change", item.getModifiedSequence() + "");
+        addHeader(context, hdr, "X-Zimbra-Revision", item.getSavedSequence() + "");
         if (item instanceof Message)
             addHeader(context, hdr, "X-Zimbra-Conv", ((Message) item).getConversationId() + "");
         byte[] inline = hdr.toString().getBytes();

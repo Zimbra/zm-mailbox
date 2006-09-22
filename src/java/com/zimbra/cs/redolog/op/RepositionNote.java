@@ -31,6 +31,7 @@ package com.zimbra.cs.redolog.op;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -84,7 +85,7 @@ public class RepositionNote extends RedoableOp {
 
     public void redo() throws Exception {
         int mboxId = getMailboxId();
-        Mailbox mailbox = Mailbox.getMailboxById(mboxId);
+        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
         mailbox.repositionNote(getOperationContext(), mId, mBounds);
     }
 }

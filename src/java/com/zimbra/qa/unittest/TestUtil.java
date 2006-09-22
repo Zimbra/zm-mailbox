@@ -48,6 +48,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
@@ -82,7 +83,7 @@ public class TestUtil {
     public static Mailbox getMailbox(String userName)
     throws ServiceException {
         Account account = getAccount(userName);
-        return Mailbox.getMailboxByAccount(account);
+        return MailboxManager.getInstance().getMailboxByAccount(account);
     }
     
     public static String getAddress(String userName)

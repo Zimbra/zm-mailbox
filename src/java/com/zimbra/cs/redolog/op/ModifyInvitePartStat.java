@@ -32,6 +32,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -82,20 +83,12 @@ public class ModifyInvitePartStat extends RedoableOp
     }
 
     public void redo() throws Exception {
-        Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
-        Appointment appt =
-            Mailbox.getMailboxById(getMailboxId()).
-            getAppointmentById(null, mApptId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
+        Appointment appt = mbox.getAppointmentById(null, mApptId);
         RecurId recurId = null;
         if (mRecurIdDt != null)
-            recurId = new RecurId(ParsedDateTime.parse(mRecurIdDt,
-                                                       appt.getTimeZoneMap()),
-                                  mRecurIdRange);
-        mbox.modifyPartStat(
-                getOperationContext(),
-                mApptId, recurId, mCnStr, mAddressStr,
-                mCUTypeStr, mRoleStr, mPartStatStr,
-                mRsvp, mSeqNo, mDtStamp); 
+            recurId = new RecurId(ParsedDateTime.parse(mRecurIdDt, appt.getTimeZoneMap()), mRecurIdRange);
+        mbox.modifyPartStat(getOperationContext(), mApptId, recurId, mCnStr, mAddressStr, mCUTypeStr, mRoleStr, mPartStatStr, mRsvp, mSeqNo, mDtStamp); 
     }
 
     protected String getPrintableData() {

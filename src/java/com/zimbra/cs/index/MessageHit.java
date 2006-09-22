@@ -36,6 +36,7 @@ import org.apache.lucene.document.Document;
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedAddress;
@@ -175,7 +176,7 @@ public class MessageHit extends ZimbraHit {
     
     public Message getMessage() throws ServiceException {
         if (mMessage == null) {
-            Mailbox mbox = Mailbox.getMailboxById(getMailbox().getId());
+            Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailbox().getId());
             int messageId = getItemId();
             try {
                 mMessage = mbox.getMessageById(null, messageId);

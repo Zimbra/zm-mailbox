@@ -34,6 +34,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
@@ -57,13 +58,13 @@ public class IMRouter implements Runnable {
     public Object getLock(IMAddr addr) throws ServiceException {
         Account acct = Provisioning.getInstance().get(AccountBy.name, addr.getAddr());
         if (acct != null) 
-            return Mailbox.getMailboxByAccount(acct);
+            return MailboxManager.getInstance().getMailboxByAccount(acct);
         else
             throw MailServiceException.NO_SUCH_MBOX(addr.getAddr());
     }
     
     void flush(OperationContext octxt, IMPersona persona) throws ServiceException {
-        Mailbox mbox = Mailbox.getMailboxByAccount(Provisioning.getInstance().get(AccountBy.name, persona.getAddr().getAddr()));
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(Provisioning.getInstance().get(AccountBy.name, persona.getAddr().getAddr()));
         assert(persona.getAddr().getAddr().equals(mbox.getAccount().getName()));
         Metadata md = persona.encodeAsMetatata();
         mbox.setConfig(octxt, "im", md);
@@ -84,7 +85,7 @@ public class IMRouter implements Runnable {
         
         // okay, we might have to create the persona
         if (toRet == null) {
-            Mailbox mbox = Mailbox.getMailboxByAccount(Provisioning.getInstance().get(AccountBy.name, addr.getAddr()));
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(Provisioning.getInstance().get(AccountBy.name, addr.getAddr()));
             Metadata md = mbox.getConfig(octxt, "im");
             if (md != null)
                 toRet = IMPersona.decodeFromMetadata(addr, md);

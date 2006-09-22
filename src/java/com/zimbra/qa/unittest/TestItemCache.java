@@ -32,6 +32,7 @@ import junit.framework.TestCase;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.ZimbraLog;
@@ -50,7 +51,7 @@ public class TestItemCache extends TestCase
         super.setUp();
 
         mAccount = TestUtil.getAccount("user1");
-        mMbox = Mailbox.getMailboxByAccount(mAccount);
+        mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
     }
 
     /**

@@ -37,18 +37,19 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.imap.ImapPartSpecifier.BinaryDecodingException;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -205,7 +206,7 @@ class ImapURL {
             }
             // if not, have to fetch by IMAP UID if we're local
             if (content == null && Provisioning.onLocalServer(acct)) {
-                Mailbox mbox = Mailbox.getMailboxByAccount(acct);
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
                 Folder folder = mbox.getFolderByPath(octxt, mFolder);
                 MailItem item = mbox.getItemByImapId(octxt, mUid, folder.getId());
                 if (item.getType() != MailItem.TYPE_MESSAGE && item.getType() != MailItem.TYPE_CONTACT)
@@ -218,7 +219,7 @@ class ImapURL {
                 AuthToken auth = new AuthToken(authacct, System.currentTimeMillis() + 60 * 1000);
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put(UserServlet.QP_IMAP_ID, Integer.toString(mUid));
-                content = UserServlet.getRemoteContent(auth, acct, mFolder, params);
+                content = UserServlet.getRemoteContent(auth.getEncoded(), acct, mFolder, params);
             }
 
             // fetch the content of the message
@@ -232,6 +233,9 @@ class ImapURL {
                 throw new ImapUrlException(tag, mURL, "no such part");
             return part;
 
+        } catch (AuthTokenException e) {
+            ZimbraLog.imap.info("auth token error", e);
+            throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
         } catch (NoSuchItemException e) {
             ZimbraLog.imap.info("no such message", e);
             throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");

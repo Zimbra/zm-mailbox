@@ -38,6 +38,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.service.ServiceException;
@@ -104,11 +105,10 @@ public class WikiDigestFixup {
         public String getDigest() { return mDigest; }
     }
 
-    private static List<WikiDigest> getWikiDigests(int mboxId)
-    throws SQLException, IOException, ServiceException {
+    private static List<WikiDigest> getWikiDigests(int mboxId) throws IOException, ServiceException {
         Mailbox mbox = null;
         try {
-            mbox = Mailbox.getMailboxById(mboxId);
+            mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         } catch (ServiceException e) {
             String code = e.getCode();
             if (AccountServiceException.NO_SUCH_ACCOUNT.equals(code) ||
@@ -136,7 +136,7 @@ public class WikiDigestFixup {
                 InputStream is = null;
                 try {
                     is = sStore.getContent(blob);
-                    byte[] data = ByteUtil.getContent(is, (int) item.getSize());
+                    byte[] data = ByteUtil.getContent(is, item.getSize());
                     String digest = ByteUtil.getDigest(data);
                     String currentDigest = item.getDigest();
                     if (!digest.equals(currentDigest)) {

@@ -185,11 +185,11 @@ public class ToXML {
                             ACL.Grant grant = (ACL.Grant) it.next();
                             NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
                             eACL.addElement(MailService.E_GRANT)
-                            .addAttribute(MailService.A_ZIMBRA_ID, grant.getGranteeId())
-                            .addAttribute(MailService.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
-                            .addAttribute(MailService.A_INHERIT, grant.isGrantInherited())
-                            .addAttribute(MailService.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
-                            .addAttribute(MailService.A_DISPLAY, nentry == null ? null : nentry.getName());
+                                .addAttribute(MailService.A_ZIMBRA_ID, grant.getGranteeId())
+                                .addAttribute(MailService.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
+                                .addAttribute(MailService.A_INHERIT, grant.isGrantInherited())
+                                .addAttribute(MailService.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
+                                .addAttribute(MailService.A_DISPLAY, nentry == null ? null : nentry.getName());
                         }
                 }
             }
@@ -237,6 +237,10 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailService.A_CHANGE_DATE, folder.getChangeDate() / 1000);
             elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, folder.getModifiedSequence());
+        }
+        if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
+            elem.addAttribute(MailService.A_DATE, folder.getDate() / 1000);
+            elem.addAttribute(MailService.A_REVISION, folder.getSavedSequence());
         }
         return elem;
     }

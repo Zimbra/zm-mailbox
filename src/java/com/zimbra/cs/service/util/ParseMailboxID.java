@@ -30,6 +30,7 @@
 package com.zimbra.cs.service.util;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -188,7 +189,7 @@ public class ParseMailboxID
             
             if (!forceRemote &&  Provisioning.onLocalServer(acct)) {
                 mIsLocal = true;
-                mMailbox = Mailbox.getMailboxByAccountId(acct.getId());
+                mMailbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
                 mMailboxId = mMailbox.getId();
             } else {
                 mHostName = acct.getAttr(Provisioning.A_zimbraMailHost);
@@ -202,7 +203,7 @@ public class ParseMailboxID
 
             if (!forceRemote && Provisioning.onLocalServer(acct)) {
                 mIsLocal = true;
-                mMailbox = Mailbox.getMailboxByAccountId(acct.getId());
+                mMailbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
                 mMailboxId = mMailbox.getId();
             } else {
                 mHostName = acct.getAttr(Provisioning.A_zimbraMailHost);
@@ -241,7 +242,7 @@ public class ParseMailboxID
                 mIsLocal = true;
                 mHostName = null;
                 if (!mAllMailboxIds) {
-                    mMailbox = Mailbox.getMailboxById(mMailboxId);
+                    mMailbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
                 }
             }
         } else {
@@ -252,7 +253,7 @@ public class ParseMailboxID
             } else {
                 mMailboxId = Integer.parseInt(idStr);
                 mIsLocal = true;
-                mMailbox = Mailbox.getMailboxById(mMailboxId);
+                mMailbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
             }
         }
     }

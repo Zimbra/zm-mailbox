@@ -32,6 +32,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -86,7 +87,7 @@ public class IndexItem extends RedoableOp {
 
 	public void redo() throws Exception {
 		int mboxId = getMailboxId();
-		Mailbox mbox = Mailbox.getMailboxById(mboxId);
+		Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 		mbox.getMailboxIndex().indexItem(mbox, mId, mType, getTimestamp(), getUnloggedReplay());
 	}
 

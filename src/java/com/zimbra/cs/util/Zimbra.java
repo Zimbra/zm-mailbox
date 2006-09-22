@@ -37,6 +37,7 @@ import com.zimbra.cs.imap.ImapServer;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.lmtpserver.LmtpServer;
 import com.zimbra.cs.localconfig.LC;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.ServiceException;
@@ -76,36 +77,37 @@ public class Zimbra {
     public static synchronized void startup() throws ServiceException {
         if (sInited)
             return;
-        
+
         PrivilegedServlet.waitForInitialization();
-        
-        ZimbraLog.misc.info(
-                            "version=" + BuildInfo.VERSION +
+
+        ZimbraLog.misc.info("version=" + BuildInfo.VERSION +
                             " release=" + BuildInfo.RELEASE +
                             " builddate=" + BuildInfo.DATE +
                             " buildhost=" + BuildInfo.HOST);
         ZimbraLog.misc.info("LANG environment is set to: " + System.getenv("LANG"));
-        
+
         checkForClasses();
-        
+
     	if (!Versions.checkVersions())
             throw new RuntimeException("Data version mismatch.  Reinitialize or upgrade the backend data store.");
-        
+
+        MailboxManager.setInstance(new MailboxManager());
+
     	ExtensionUtil.loadAll();
     	ExtensionUtil.initAll();
-    	
-    	//ZimletUtil.loadZimlets();
-    	
+
+    	// ZimletUtil.loadZimlets();
+
         MailboxIndex.startup();
-        
+
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         redoLog.startup();
-        
+
         System.setProperty("ical4j.unfolding.relaxed", "true");
-        
+
         if (!redoLog.isSlave()) {
             OzNotificationServer.startup();
-            
+
             Server server = Provisioning.getInstance().getLocalServer();
             LmtpServer.startupLmtpServer();
             if (server.getBooleanAttr(Provisioning.A_zimbraPop3ServerEnabled, false))
@@ -116,9 +118,8 @@ public class Zimbra {
                 ImapServer.startupImapServer();
             if (server.getBooleanAttr(Provisioning.A_zimbraImapSSLServerEnabled, false))
                 ImapServer.startupImapSSLServer();
-
         }
-        
+
         ZimbraPerf.initialize();
         sInited = true;
     }

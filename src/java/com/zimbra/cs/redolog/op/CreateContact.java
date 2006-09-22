@@ -35,6 +35,7 @@ import java.util.Map;
 
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -144,7 +145,7 @@ public class CreateContact extends RedoableOp {
 
     public void redo() throws Exception {
         int mboxId = getMailboxId();
-        Mailbox mailbox = Mailbox.getMailboxById(mboxId);
+        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
         try {
             mailbox.createContact(getOperationContext(), mAttrs, mFolderId, mTags);
         } catch (MailServiceException e) {

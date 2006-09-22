@@ -35,6 +35,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
@@ -73,7 +74,7 @@ public class DeleteAccount extends AdminDocumentHandler {
         if (!canAccessAccount(lc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
-        Mailbox mbox = Provisioning.onLocalServer(account) ? Mailbox.getMailboxByAccount(account) : null;
+        Mailbox mbox = Provisioning.onLocalServer(account) ? MailboxManager.getInstance().getMailboxByAccount(account) : null;
         prov.deleteAccount(id);
         if (mbox != null)
             mbox.deleteMailbox();

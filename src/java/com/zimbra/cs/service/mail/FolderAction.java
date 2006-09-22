@@ -239,7 +239,7 @@ public class FolderAction extends ItemAction {
         return acl;
     }
 
-    static byte stringToType(String typeStr) throws ServiceException {
+    public static byte stringToType(String typeStr) throws ServiceException {
         if (typeStr.equalsIgnoreCase("usr"))  return ACL.GRANTEE_USER;
         if (typeStr.equalsIgnoreCase("grp"))  return ACL.GRANTEE_GROUP;
         if (typeStr.equalsIgnoreCase("cos"))  return ACL.GRANTEE_COS;

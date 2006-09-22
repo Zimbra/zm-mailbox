@@ -264,7 +264,7 @@ public class DbTest {
 		if (id == -1)
 			System.out.println("usage: login <mailbox_id>");
 		else
-			mailbox = Mailbox.getMailboxById(id);
+			mailbox = MailboxManager.getInstance().getMailboxById(id);
 	}
 	
 	private void doCd(StringTokenizer tok) throws ServiceException {
@@ -781,7 +781,7 @@ public class DbTest {
 
     public static void main(String[] args) throws MessagingException, IOException, ParseException, ServiceException {
     	Account acct = Provisioning.getInstance().get(AccountBy.name, "user1");
-        Mailbox mbox = Mailbox.getMailboxByAccount(acct);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
         System.out.println(mbox);
         if (mbox != null) {
             Connection conn = DbPool.getConnection();

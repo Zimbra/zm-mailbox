@@ -29,6 +29,7 @@
 package com.zimbra.cs.redolog.op;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -59,7 +60,7 @@ public class PurgeOldMessages extends RedoableOp {
      * @see com.zimbra.cs.redolog.op.RedoableOp#redo()
      */
     public void redo() throws Exception {
-        Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.purgeMessages(getOperationContext());
     }
 

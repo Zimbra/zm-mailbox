@@ -36,7 +36,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.MailboxLock;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -90,7 +91,7 @@ public class DbTableMaintenance {
     throws ServiceException {
         
         int tableCount = 0;
-        int[] mailboxIds = Mailbox.getMailboxIds();
+        int[] mailboxIds = MailboxManager.getInstance().getMailboxIds();
         
         ZimbraLog.mailbox.info(
             "Starting table maintenance.  MinRows=" + getMinRows() + ", MaxRows=" + getMaxRows() +
@@ -98,7 +99,7 @@ public class DbTableMaintenance {
         
         for (int i = 0; i < mailboxIds.length; i++) {
             int id = mailboxIds[i];
-            Mailbox mbox = Mailbox.getMailboxById(id);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxById(id);
             MailboxLock lock = null;
             String dbName = DbMailbox.getDatabaseName(mbox);
             DbResults results = DbUtil.executeQuery("SHOW TABLE STATUS FROM `" + dbName + "`");
@@ -121,7 +122,7 @@ public class DbTableMaintenance {
                     // unnecessarily run table maintenance on an empty table.
                     if (numRows > 0 && numRows >= lastNumRows * getGrowthFactor()) {
                         if (lock == null) {
-                            lock = Mailbox.beginMaintenance(mbox.getAccountId(), mbox.getId());
+                            lock = MailboxManager.getInstance().beginMaintenance(mbox.getAccountId(), mbox.getId());
                         }
                         ZimbraLog.mailbox.info("Maintaining table " + tableName + summary);
                         if (maintainTable(mbox, tableName, numRows)) {
@@ -135,7 +136,7 @@ public class DbTableMaintenance {
                 if (lock != null) {
                     // Always end maintenance successfully, since table maintenance
                     // doesn't modify the data
-                    Mailbox.endMaintenance(lock, true, false);
+                    MailboxManager.getInstance().endMaintenance(lock, true, false);
                 }
             }
         }

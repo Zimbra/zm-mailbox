@@ -2719,7 +2719,7 @@ public class DbMailItem {
     }
 
     public static void main(String[] args) throws ServiceException {
-        Mailbox mbox = Mailbox.getMailboxById(1);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(1);
 
         DbSearchConstraints hasTags = new DbSearchConstraints();
         hasTags.hasTags = true;

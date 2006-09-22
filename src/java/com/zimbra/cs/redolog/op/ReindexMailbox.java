@@ -31,6 +31,7 @@ package com.zimbra.cs.redolog.op;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -62,7 +63,7 @@ public class ReindexMailbox extends RedoableOp {
 	 * @see com.zimbra.cs.redolog.op.RedoableOp#redo()
 	 */
 	public void redo() throws Exception {
-        Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.reIndex(new OperationContext(this));
 	}
 

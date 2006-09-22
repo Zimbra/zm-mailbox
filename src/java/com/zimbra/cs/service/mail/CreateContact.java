@@ -40,6 +40,7 @@ import javax.mail.internet.MimePart;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.operation.CreateContactOperation;
@@ -129,7 +130,7 @@ public class CreateContact extends MailDocumentHandler  {
                 try {
                     // fetch from local store
                     if (!mbox.getAccountId().equals(iid.getAccountId()))
-                        mbox = Mailbox.getMailboxByAccountId(iid.getAccountId());
+                        mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
                     Message msg = mbox.getMessageById(lc.getOperationContext(), iid.getId());
                     MimePart mp = Mime.getMimePart(msg.getMimeMessage(), part);
                     ContentType ctype = new ContentType(mp.getContentType());
@@ -146,7 +147,7 @@ public class CreateContact extends MailDocumentHandler  {
                     // fetch from remote store
                     Map<String, String> params = new HashMap<String, String>();
                     params.put(UserServlet.QP_PART, part);
-                    byte[] content = UserServlet.getRemoteContent(lc.getAuthToken(), iid, params);
+                    byte[] content = UserServlet.getRemoteContent(lc.getRawAuthToken(), iid, params);
                     text = new String(content, "utf-8");
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("error reading vCard", e);

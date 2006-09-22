@@ -35,6 +35,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -234,7 +235,7 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
 
     public void redo() throws Exception {
         int mboxId = getMailboxId();
-        Mailbox mbox = Mailbox.getMailboxById(mboxId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         
         mbox.setAppointment(getOperationContext(), mFolderId, mDefaultInvite, mExceptions);
     }

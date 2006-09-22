@@ -46,6 +46,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -82,7 +83,7 @@ public class RuleManager {
      */
     public void setRules(Account account, String script) throws ServiceException {
         String accountId = account.getId();
-        Mailbox mailbox =  Mailbox.getMailboxByAccount(account);
+        Mailbox mailbox =  MailboxManager.getInstance().getMailboxByAccount(account);
         if (script == null) {
             script = "";
         }
@@ -115,7 +116,7 @@ public class RuleManager {
     
     public Element getRulesAsXML(Element parent, Account account) throws ServiceException {
         try {
-            Mailbox mbox = Mailbox.getMailboxByAccount(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             Node node = null;
             synchronized (mbox) {
                 node = (Node) mScriptCache.get(account.getId());
@@ -137,7 +138,7 @@ public class RuleManager {
     }
 
     public void setXMLRules(Account account, Element eltRules) throws ServiceException {
-        RuleRewriter t = new RuleRewriter(eltRules, Mailbox.getMailboxByAccount(account));
+        RuleRewriter t = new RuleRewriter(eltRules, MailboxManager.getInstance().getMailboxByAccount(account));
         String script = t.getScript();
         setRules(account, script);
     }

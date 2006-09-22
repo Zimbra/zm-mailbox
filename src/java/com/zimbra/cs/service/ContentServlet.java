@@ -52,6 +52,7 @@ import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.Mime;
@@ -125,7 +126,7 @@ public class ContentServlet extends ZimbraServlet {
                 ZimbraLog.addToContext(ZimbraLog.C_AID, authId);
             ZimbraLog.addIpToContext(req.getRemoteAddr());
 
-            Mailbox mbox = Mailbox.getMailboxByAccountId(accountId);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
             if (mbox == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
                 return;				

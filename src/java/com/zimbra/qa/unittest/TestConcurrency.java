@@ -37,6 +37,7 @@ import com.zimbra.cs.client.soap.LmcMsgActionRequest;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.util.StringUtil;
@@ -58,7 +59,7 @@ public class TestConcurrency extends TestCase {
     public void setUp()
     throws Exception {
         mAccount = TestUtil.getAccount("user1");
-        mMbox = Mailbox.getMailboxByAccount(mAccount);
+        mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
         
         // Clean up tags, in case the last run didn't exit cleanly
         cleanUp();

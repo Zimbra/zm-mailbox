@@ -28,6 +28,7 @@ package com.zimbra.cs.redolog.op;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -156,7 +157,7 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
     }
 
     public void redo() throws Exception {
-        Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
 		ParsedMessage pm = new ParsedMessage(mData, getTimestamp(), mbox.attachmentsIndexingEnabled());
 		mbox.addInvite(getOperationContext(), mInvite, mFolderId, mForce, pm);
     }

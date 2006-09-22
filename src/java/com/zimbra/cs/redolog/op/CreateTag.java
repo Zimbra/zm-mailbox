@@ -32,6 +32,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -94,7 +95,7 @@ public class CreateTag extends RedoableOp {
 
 	public void redo() throws Exception {
 		int mboxId = getMailboxId();
-		Mailbox mbox = Mailbox.getMailboxById(mboxId);
+		Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         try {
             mbox.createTag(getOperationContext(), mName, mColor);
         } catch (MailServiceException e) {

@@ -38,6 +38,7 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
@@ -67,7 +68,7 @@ public class TestConversion extends TestCase {
     throws Exception {
         // Search for the sample message that has a TNEF attachment
         Account account = TestUtil.getAccount("user1");
-        Mailbox mbox = Mailbox.getMailboxByAccount(account);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         String query = "subject:Rich text (TNEF) test";
         ZimbraQueryResults results = mbox.search(new Mailbox.OperationContext(mbox), query,
             new byte[] { MailItem.TYPE_MESSAGE}, MailboxIndex.SortBy.SUBJ_ASCENDING, 100);

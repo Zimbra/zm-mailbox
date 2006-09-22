@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcSearchRequest;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.SoapFaultException;
 
 
@@ -63,7 +64,7 @@ extends TestCase {
         attrs.put("displayName", "Unit test temporary user");
         Account account = mProv.createAccount(address, PASSWORD, attrs);
         assertNotNull("Could not create account", account);
-        mMboxId = Mailbox.getMailboxByAccount(account).getId();
+        mMboxId = MailboxManager.getInstance().getMailboxByAccount(account).getId();
     }
     
     protected void tearDown()
@@ -142,7 +143,7 @@ extends TestCase {
         }
         
         if (mMboxId != null) {
-            Mailbox mbox = Mailbox.getMailboxById(mMboxId);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMboxId);
             mbox.deleteMailbox();
         }
     }

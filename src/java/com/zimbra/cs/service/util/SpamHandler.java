@@ -47,6 +47,7 @@ import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxBlob;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.service.ServiceException;
@@ -131,7 +132,7 @@ public class SpamHandler {
         
         SMTPMessage out = new SMTPMessage(JMSession.getSession());
         
-        Mailbox mbox = Mailbox.getMailboxById(sr.mMailboxId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(sr.mMailboxId);
         Message msg = mbox.getMessageById(null, sr.mMessageId);
         
         MimeMultipart mmp = null;

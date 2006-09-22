@@ -49,6 +49,7 @@ import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
@@ -202,7 +203,7 @@ public abstract class Wiki {
 				p.append(mUrl);
 			} else if (Provisioning.onLocalServer(acct)) {
 				// calculate absolute path based on current location
-				Mailbox mbox = Mailbox.getMailboxByAccount(acct);
+				Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 				Folder f = mbox.getFolderById(ctxt.octxt, mId);
 				p.append(f.getPath());
 				if (p.charAt(p.length() - 1) != '/')
@@ -294,7 +295,7 @@ public abstract class Wiki {
 			mFolderId = fid;
 			
 			if (Provisioning.onLocalServer(acct)) {
-				Mailbox mbox = Mailbox.getMailboxByAccount(acct);
+				Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 				if (mbox == null)
 					throw WikiServiceException.ERROR("wiki account mailbox not found");
 				mbox.addListener(WikiSession.getInstance());
@@ -320,7 +321,7 @@ public abstract class Wiki {
 			WikiPage page = (WikiPage)mWikiPages.get(wikiWord);
 			if (page != null)
 				return page;
-			Mailbox mbox = Mailbox.getMailboxByAccountId(mWikiAccount);
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mWikiAccount);
 			ZimbraQueryResults results = null;
 			try {
 				results = mbox.search(ctxt.octxt, createQueryString(wikiWord), sQueryTypes, SortBy.SUBJ_ASCENDING, 10);
@@ -354,7 +355,7 @@ public abstract class Wiki {
 			if (p != null)
 				throw MailServiceException.MODIFY_CONFLICT(
 						new Argument(MailService.A_NAME, newName, Argument.Type.STR));
-			Mailbox mbox = Mailbox.getMailboxByAccountId(mWikiAccount);
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mWikiAccount);
 			MailItem item = mbox.getItemById(ctxt.octxt, id, MailItem.TYPE_UNKNOWN);
 			if (item.getType() != MailItem.TYPE_DOCUMENT && item.getType() != MailItem.TYPE_WIKI)
 				throw WikiServiceException.NOT_WIKI_ITEM("MailItem id " +id+ " is not a wiki item or a document");
@@ -546,7 +547,7 @@ public abstract class Wiki {
 			throw new WikiServiceException.NoSuchWikiException("no such account");
 		
 		// check the folder for access
-		Mailbox mbox = Mailbox.getMailboxByAccount(acct);
+		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 		if (mbox == null)
 			throw WikiServiceException.ERROR("wiki account mailbox not found");
 		mbox.getFolderById(ctxt.octxt, folderId);
@@ -571,7 +572,7 @@ public abstract class Wiki {
 		} catch (NumberFormatException e) {
 			Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, acct);
 			if (Provisioning.onLocalServer(account)) {
-				Mailbox mbox = Mailbox.getMailboxByAccount(account);
+				Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 				if (key.equals("/"))
 					fid = Mailbox.ID_FOLDER_USER_ROOT;
 				else {
@@ -631,7 +632,7 @@ public abstract class Wiki {
 		if (!Provisioning.onLocalServer(account)) {
 			throw new WikiServiceException.NoSuchWikiException("not on local host");
 		}
-		Mailbox mbox = Mailbox.getMailboxByAccount(account);
+		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 		MailItem item = mbox.getItemById(ctxt.octxt, id, MailItem.TYPE_UNKNOWN);
 		if (item.getType() != MailItem.TYPE_DOCUMENT &&
 				item.getType() != MailItem.TYPE_WIKI)
@@ -684,7 +685,7 @@ public abstract class Wiki {
 	
 	public abstract void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException;
 	
-	public WikiTemplate getTemplate(WikiContext ctxt, String name) throws ServiceException, IOException {
+	public WikiTemplate getTemplate(WikiContext ctxt, String name) throws ServiceException {
 		// check if the request is for the chrome.
 		WikiPage page;
 		if (name.startsWith("_")) {

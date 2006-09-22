@@ -32,6 +32,7 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.soap.Element;
@@ -75,7 +76,7 @@ public class DeleteCalendarResource extends AdminDocumentHandler {
             // the mailbox can be deleted
             throw ServiceException.WRONG_HOST(resource.getAttr(Provisioning.A_zimbraMailHost), null);
         }
-        Mailbox mbox = Mailbox.getMailboxByAccount(resource);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(resource);
 
         prov.deleteCalendarResource(id);
         mbox.deleteMailbox();

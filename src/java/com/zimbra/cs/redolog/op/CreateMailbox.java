@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -89,7 +90,7 @@ public class CreateMailbox extends RedoableOp {
 		int opMboxId = getMailboxId();
 		Mailbox mbox = null;
 		try {
-			mbox = Mailbox.getMailboxByAccountId(mAccountId);
+			mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
 			int mboxId = mbox.getId();
 			if (opMboxId == mboxId) {
 				mLog.info("Mailbox " + opMboxId + " for account " + mAccountId + " already exists");
@@ -108,6 +109,6 @@ public class CreateMailbox extends RedoableOp {
 		if (account == null)
 			throw new RedoException("Account " + mAccountId + " does not exist", this);
 
-		mbox = Mailbox.createMailbox(getOperationContext(), account);
+		mbox = MailboxManager.getInstance().createMailbox(getOperationContext(), account);
 	}
 }

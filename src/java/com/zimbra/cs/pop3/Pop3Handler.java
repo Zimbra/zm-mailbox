@@ -43,6 +43,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -515,7 +516,7 @@ public class Pop3Handler extends ProtocolHandler {
             prov.authAccount(acct, password, "pop3");
             mAccountId = acct.getId();
             mAccountName = acct.getName();
-            Mailbox mailbox = Mailbox.getMailboxByAccountId(mAccountId);
+            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
             mMbx = new Pop3Mailbox(mailbox, acct, mQuery);
             mState = STATE_TRANSACTION;
             mExpire = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / (1000*60*60*24));

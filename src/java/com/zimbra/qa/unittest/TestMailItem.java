@@ -34,6 +34,7 @@ import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.util.ZimbraLog;
 
 public class TestMailItem extends TestCase {
@@ -43,7 +44,7 @@ public class TestMailItem extends TestCase {
         ZimbraLog.test.debug("testListItemIds");
         
         Account account = TestUtil.getAccount("user1");
-        Mailbox mbox = Mailbox.getMailboxByAccount(account);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         
         // Get item count per folder/type
         String sql = "SELECT folder_id, type, count(*) AS item_count " +

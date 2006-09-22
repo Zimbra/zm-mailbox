@@ -34,6 +34,7 @@ import com.zimbra.cs.client.LmcDocument;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
@@ -130,11 +131,11 @@ public abstract class WikiPage {
 		private byte[]  mData;
 		private byte    mType;
 
-		private LocalWikiPage(Document doc) throws ServiceException {
+		LocalWikiPage(Document doc) throws ServiceException {
 			addWikiItem(doc);
 		}
 		
-		private LocalWikiPage(String wikiWord, String mime, String author, byte[] data, byte type) {
+		LocalWikiPage(String wikiWord, String mime, String author, byte[] data, byte type) {
 			mWikiWord = wikiWord;
 			mCreator = author;
 			mMimeType = mime;
@@ -145,14 +146,14 @@ public abstract class WikiPage {
 		public void create(WikiContext ctxt, Wiki where) throws ServiceException {
 			if (mMimeType == null || mData == null || mType == 0)
 				throw WikiServiceException.ERROR("cannot create", null);
-			Mailbox mbox = Mailbox.getMailboxByAccountId(where.mWikiAccount);
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(where.mWikiAccount);
 			addWikiItem(mbox.createDocument(ctxt.octxt, where.getWikiFolderId(), mWikiWord, mMimeType, mCreator, mData, null, mType));
 		}
 
 		public void add(WikiContext ctxt, WikiPage p) throws ServiceException {
 			if (!(p instanceof LocalWikiPage))
 				throw WikiServiceException.ERROR("cannot add revision", null);
-			Mailbox mbox = Mailbox.getMailboxByAccountId(mAccountId);
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
 
 			LocalWikiPage newRev = (LocalWikiPage) p;
 			Document doc = getWikiItem(ctxt);
@@ -179,12 +180,12 @@ public abstract class WikiPage {
 		}
 
 		public void deleteAllRevisions(WikiContext ctxt) throws ServiceException {
-			Mailbox mbox = Mailbox.getMailboxByAccountId(mAccountId);
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
 			mbox.delete(ctxt.octxt, mId, MailItem.TYPE_UNKNOWN);
 		}
 
 		public Document getWikiItem(WikiContext ctxt) throws ServiceException {
-			Mailbox mbox = Mailbox.getMailboxByAccountId(mAccountId);
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
 			return (Document)mbox.getItemById(ctxt.octxt, mId, MailItem.TYPE_UNKNOWN);
 		}
 		
@@ -211,7 +212,7 @@ public abstract class WikiPage {
 		private String mPath;
 		private String mRestUrl;
 		
-		private RemoteWikiPage(String accountId, String path, LmcDocument wiki) throws ServiceException {
+		RemoteWikiPage(String accountId, String path, LmcDocument wiki) throws ServiceException {
 			ItemId iid = new ItemId(wiki.getID(), null);
 			ItemId fid = new ItemId(wiki.getFolder(), null);
 			mAccountId = accountId;

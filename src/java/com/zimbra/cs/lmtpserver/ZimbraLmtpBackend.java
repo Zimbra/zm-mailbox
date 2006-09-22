@@ -47,6 +47,7 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Notification;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
@@ -226,7 +227,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         rcptMap.put(recipient, new RecipientDetail(null, null, null, false, DeliveryAction.discard));
                         continue;
                     }
-                    mbox = Mailbox.getMailboxByAccount(account);
+                    mbox = MailboxManager.getInstance().getMailboxByAccount(account);
                     if (mbox == null) {
                         ZimbraLog.mailbox.warn("No mailbox found delivering mail to " + rcptEmail);
                         continue;

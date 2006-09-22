@@ -217,7 +217,7 @@ public class MailSender {
                 // figure out where to save the save-to-sent copy
                 Mailbox mboxSave = isDelegatedRequest ? null : mbox;
                 if (isDelegatedRequest && Provisioning.onLocalServer(authuser)) {
-                    mboxSave = Mailbox.getMailboxByAccount(authuser);
+                    mboxSave = MailboxManager.getInstance().getMailboxByAccount(authuser);
                     saveToFolder = getSentFolder(mboxSave);
                 }
 

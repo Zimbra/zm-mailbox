@@ -58,6 +58,7 @@ import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -358,7 +359,7 @@ public class UserServlet extends ZimbraServlet {
 
     private void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Context context)
     throws ServletException, IOException, ServiceException, UserServletException {
-        Mailbox mbox = context.targetMailbox = Mailbox.getMailboxByAccount(context.targetAccount);
+        Mailbox mbox = context.targetMailbox = MailboxManager.getInstance().getMailboxByAccount(context.targetAccount);
         if (mbox == null)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
         ZimbraLog.addMboxToContext(mbox.getId());
@@ -417,7 +418,7 @@ public class UserServlet extends ZimbraServlet {
                 ZimbraLog.addAccountNameToContext(context.authAccount.getName());
             ZimbraLog.addIpToContext(context.req.getRemoteAddr());
 
-            Mailbox mbox = context.targetMailbox = Mailbox.getMailboxByAccount(context.targetAccount);
+            Mailbox mbox = context.targetMailbox = MailboxManager.getInstance().getMailboxByAccount(context.targetAccount);
             if (mbox == null)
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
             ZimbraLog.addMboxToContext(mbox.getId());
@@ -807,22 +808,22 @@ public class UserServlet extends ZimbraServlet {
     }
 
 
-    public static byte[] getRemoteContent(AuthToken auth, ItemId iid, Map<String, String> params) throws ServiceException {
-        return getRemoteResource(auth, iid, params).getSecond();
+    public static byte[] getRemoteContent(String authToken, ItemId iid, Map<String, String> params) throws ServiceException {
+        return getRemoteResource(authToken, iid, params).getSecond();
     }
 
-    public static byte[] getRemoteContent(AuthToken auth, Account target, String folder, Map<String,String> params) throws ServiceException {
-        return getRemoteResource(auth, target, folder, params).getSecond();
+    public static byte[] getRemoteContent(String authToken, Account target, String folder, Map<String,String> params) throws ServiceException {
+        return getRemoteResource(authToken, target, folder, params).getSecond();
     }
 
-    public static Pair<Header[], byte[]> getRemoteResource(AuthToken auth, ItemId iid, Map<String, String> params) throws ServiceException {
+    public static Pair<Header[], byte[]> getRemoteResource(String authToken, ItemId iid, Map<String, String> params) throws ServiceException {
         Account target = Provisioning.getInstance().get(AccountBy.id, iid.getAccountId());
         Map<String, String> pcopy = new HashMap<String, String>(params);
         pcopy.put(QP_ID, iid.toString());
-        return getRemoteResource(auth, target, null, pcopy);
+        return getRemoteResource(authToken, target, null, pcopy);
     }
 
-    public static Pair<Header[], byte[]> getRemoteResource(AuthToken auth, Account target, String folder, Map<String,String> params) throws ServiceException {
+    public static Pair<Header[], byte[]> getRemoteResource(String authToken, Account target, String folder, Map<String,String> params) throws ServiceException {
         // fetch from remote store
         Provisioning prov = Provisioning.getInstance();
         Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
@@ -852,19 +853,14 @@ public class UserServlet extends ZimbraServlet {
             for (Map.Entry<String, String> param : params.entrySet())
                 url.append('&').append(param.getKey()).append('=').append(param.getValue());
         }
-        
-        try {
-            return getRemoteResource(auth.getEncoded(), hostname, url.toString());
-        } catch (AuthTokenException ate) {
-            throw ServiceException.PROXY_ERROR(ate, url.toString());
-        }
+
+        return getRemoteResource(authToken, hostname, url.toString());
     }
     
-    public static Pair<Header[], byte[]> getRemoteResource(String auth, String hostname, String url) throws ServiceException {
-
+    public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url) throws ServiceException {
         // create an HTTP client with the same cookies
         HttpState state = new HttpState();
-        state.addCookie(new org.apache.commons.httpclient.Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, auth, "/", null, false));
+        state.addCookie(new org.apache.commons.httpclient.Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, authToken, "/", null, false));
         HttpClient client = new HttpClient();
         client.setState(state);
         GetMethod get = new GetMethod(url);

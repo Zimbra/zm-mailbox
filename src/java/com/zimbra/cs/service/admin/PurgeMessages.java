@@ -32,6 +32,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -49,13 +50,13 @@ public class PurgeMessages extends AdminDocumentHandler {
         if (mreq != null)
             accounts = new String[] { mreq.getAttribute(AdminService.A_ACCOUNTID) };
         else
-            accounts = Mailbox.getAccountIds();
+            accounts = MailboxManager.getInstance().getAccountIds();
 
         Element response = lc.createElement(AdminService.PURGE_MESSAGES_RESPONSE);
         for (int i = 0; i < accounts.length; i++) {
             Mailbox mbox = null;
             try {
-                mbox = Mailbox.getMailboxByAccountId(accounts[i]);
+                mbox = MailboxManager.getInstance().getMailboxByAccountId(accounts[i]);
                 mbox.purgeMessages(null);
             } catch (AccountServiceException ase) {
                 // ignore NO_SUCH_ACCOUNT errors (logged by the mailbox)

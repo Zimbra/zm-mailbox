@@ -59,6 +59,7 @@ import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.ServiceException;
@@ -156,7 +157,7 @@ public abstract class WikiUtil {
         
         protected void emptyNotebooks(String where) throws ServiceException {
             Account acct = mProv.get(AccountBy.name, mUsername);
-            Mailbox mbox = Mailbox.getMailboxByAccount(acct);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
             OperationContext octxt = new OperationContext(acct);
             
             try {
@@ -170,7 +171,7 @@ public abstract class WikiUtil {
         public void startImport(String where, File what) throws ServiceException, IOException {
             emptyNotebooks(where);
             Account acct = mProv.get(AccountBy.name, mUsername);
-            Mailbox mbox = Mailbox.getMailboxByAccount(acct);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
             OperationContext octxt = new OperationContext(acct);
             
             Folder f = null;
@@ -183,7 +184,7 @@ public abstract class WikiUtil {
         }
         
         protected void setFolderPermission(Account account, String grantee, String name, String id) throws ServiceException {
-            Mailbox mbox = Mailbox.getMailboxByAccount(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             OperationContext octxt = new OperationContext(account);
             Folder template;
             try {

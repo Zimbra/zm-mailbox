@@ -29,6 +29,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -72,7 +73,7 @@ public class AddDocumentRevision extends SaveDocument {
     public void redo() throws Exception {
     	OperationContext octxt = getOperationContext();
         int mboxId = getMailboxId();
-        Mailbox mbox = Mailbox.getMailboxById(mboxId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         MailItem doc = mbox.getItemById(octxt, mDocId, MailItem.TYPE_UNKNOWN);
         if (doc.getType() != MailItem.TYPE_WIKI &&
         	doc.getType() != MailItem.TYPE_DOCUMENT) {

@@ -38,6 +38,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mime.Mime;
@@ -374,7 +375,7 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
 
     public void redo() throws Exception {
         int mboxId = getMailboxId();
-        Mailbox mbox = Mailbox.getMailboxById(mboxId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         List<Integer> mboxList = new ArrayList<Integer>(1);
         mboxList.add(new Integer(mboxId));

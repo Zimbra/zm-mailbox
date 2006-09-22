@@ -63,6 +63,7 @@ import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mime.Mime;
@@ -1424,6 +1425,7 @@ public final class MailboxIndex
 //  {
 //  Connection conn = null;
 //  conn = DbPool.getConnection();
+//        Mailbox mbx = MailboxManager.getInstance().getMailboxById(mMailboxId);
 
 //  Mailbox mbx = Mailbox.getMailboxById(mMailboxId);
 //  DbSearchConstraints c = new DbSearchConstraints();        
@@ -1536,7 +1538,7 @@ public final class MailboxIndex
                     DbMailItem.SearchResult cur = (DbMailItem.SearchResult)iter.next();
 
                     try {
-                        Mailbox mbox = Mailbox.getMailboxById(idx.mMailboxId);
+                        Mailbox mbox = MailboxManager.getInstance().getMailboxById(idx.mMailboxId);
                         idx.reIndexItem(mbox, cur.id, cur.type);
                     } catch(ServiceException e) {
                         mLog.info("Couldn't index "+compareTo.id+" caught ServiceException", e);
@@ -1702,7 +1704,7 @@ public final class MailboxIndex
 
         Connection conn = null;
         conn = DbPool.getConnection();
-        Mailbox mbox = Mailbox.getMailboxById(mMailboxId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
 
 
         ///////////////////////////////

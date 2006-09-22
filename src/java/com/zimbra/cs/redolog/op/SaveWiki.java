@@ -28,6 +28,7 @@ package com.zimbra.cs.redolog.op;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -66,13 +67,8 @@ public class SaveWiki extends SaveDocument {
 
     public void redo() throws Exception {
         int mboxId = getMailboxId();
-        Mailbox mbox = Mailbox.getMailboxById(mboxId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
-        mbox.createWiki(getOperationContext(), 
-						getFolderId(), 
-						mWikiword, 
-						getAuthor(), 
-						getMessageBody(),
-						null);
+        mbox.createWiki(getOperationContext(), getFolderId(), mWikiword, getAuthor(), getMessageBody(), null);
     }
 }

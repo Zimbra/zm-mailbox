@@ -40,6 +40,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.ServiceException;
@@ -75,7 +76,7 @@ public class TestTags extends TestCase
         super.setUp();
 
         mAccount = TestUtil.getAccount("user1");
-        mMbox = Mailbox.getMailboxByAccount(mAccount);
+        mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
         mConn = DbPool.getConnection();
         
         // Clean up, in case the last test didn't exit cleanly

@@ -43,6 +43,7 @@ import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.ServiceException;
 
@@ -185,7 +186,7 @@ class Pop3Mailbox {
      */
     Message getMessage(String msg) throws Pop3CmdException, ServiceException {
         Pop3Message p3m = getPop3Msg(msg);
-        Mailbox mbox = Mailbox.getMailboxById(mId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mId);
         return mbox.getMessageById(mOpContext, p3m.getId());
     }
     
@@ -225,7 +226,7 @@ class Pop3Mailbox {
      * @throws Pop3CmdException
      */
     public int deleteMarked(boolean hard) throws ServiceException, Pop3CmdException {
-        Mailbox mbox = Mailbox.getMailboxById(mId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mId);
         int count = 0;
         int failed = 0;
         for (int i = 0; i < mMessages.size(); i++) {

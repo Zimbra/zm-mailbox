@@ -31,6 +31,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.service.ServiceException;
@@ -97,7 +98,7 @@ public class GrantAccess extends RedoableOp {
     }
 
     public void redo() throws ServiceException {
-        Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.grantAccess(getOperationContext(), mFolderId, mGrantee, mGranteeType, mRights, mInherit, mArgs);
     }
 }

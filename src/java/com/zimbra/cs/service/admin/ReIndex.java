@@ -31,6 +31,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
@@ -67,7 +68,7 @@ public class ReIndex extends AdminDocumentHandler {
         if (!canAccessAccount(zc, account))
             throw ServiceException.PERM_DENIED("can not access account");
         
-        Mailbox mbox = Mailbox.getMailboxByAccountId(accountId, false);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId, false);
         if (mbox == null)
             throw ServiceException.FAILURE("mailbox not found for account " + accountId, null);
         

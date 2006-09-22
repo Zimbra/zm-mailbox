@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Appointment.Instance;
 import com.zimbra.cs.service.*;
 
@@ -501,7 +502,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
         System.out.println("Added: "+toAdd+l.toString());
 
         try {
-            Mailbox mbox = Mailbox.getMailboxById(1);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxById(1);
             FreeBusy fb = getFreeBusyList(mbox, 0, Long.MAX_VALUE);
             System.out.println(fb.toString());
         } catch (ServiceException e){

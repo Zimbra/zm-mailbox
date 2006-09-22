@@ -43,6 +43,7 @@ import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.util.ZimbraLog;
 
@@ -65,7 +66,7 @@ public class TestFolders extends TestCase
         super.setUp();
 
         mAccount = TestUtil.getAccount(USER_NAME);
-        mMbox = Mailbox.getMailboxByAccount(mAccount);
+        mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
         
         // Wipe out folders for this test, in case the last test didn't
         // exit cleanly

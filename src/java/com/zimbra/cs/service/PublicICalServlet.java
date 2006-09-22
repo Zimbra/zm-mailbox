@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
@@ -122,7 +123,7 @@ public class PublicICalServlet extends ZimbraServlet
                 return;
             }
             
-            Mailbox mbox = Mailbox.getMailboxByAccountId(acct.getId());
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
             if (mbox == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
                 return;             

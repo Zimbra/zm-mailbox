@@ -35,6 +35,7 @@ import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Notification;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ZimbraLog;
@@ -68,7 +69,7 @@ public class OutOfOfficeCallback implements AttributeCallback {
         Connection conn = null;
         try {
             // clear the OOF database for this account
-            Mailbox mbox = Mailbox.getMailboxByAccount(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             conn = DbPool.getConnection();
             DbOutOfOffice.clear(conn, mbox);
             conn.commit();

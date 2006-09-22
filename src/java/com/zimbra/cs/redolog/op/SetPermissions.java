@@ -28,6 +28,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -70,7 +71,7 @@ public class SetPermissions extends RedoableOp {
 
     
     public void redo() throws Exception {
-        Mailbox mbox = Mailbox.getMailboxById(getMailboxId());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         ACL acl = (mACL.equals("") ? null : new ACL(new MetadataList(mACL)));
         mbox.setPermissions(getOperationContext(), mFolderId, acl);
     }

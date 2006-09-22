@@ -41,6 +41,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
@@ -81,7 +82,7 @@ public abstract class DocumentHandler {
 
     public static Mailbox getRequestedMailbox(ZimbraSoapContext zsc) throws ServiceException {
         String id = zsc.getRequestedAccountId();
-        Mailbox mbox = Mailbox.getMailboxByAccountId(id);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(id);
         if (mbox != null)
             ZimbraLog.addMboxToContext(mbox.getId());
         return mbox; 

@@ -45,6 +45,7 @@ import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.StringUtil;
@@ -68,7 +69,7 @@ public abstract class Session {
         Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
         if (acct != null && Provisioning.onLocalServer(acct)) {
             // add this Session to the Mailbox or die trying
-            mMailbox = Mailbox.getMailboxByAccountId(accountId);
+            mMailbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
             mMailbox.addListener(this);
 
             // add this Session to the IM Persona, or die trying

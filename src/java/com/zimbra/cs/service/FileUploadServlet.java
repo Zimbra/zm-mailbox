@@ -69,7 +69,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Constants;
@@ -322,7 +322,7 @@ public class FileUploadServlet extends ZimbraServlet {
                     else if (!acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                         throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
                     // fetching the mailbox will except if it's in maintenance mode
-                    Mailbox.getMailboxByAccountId(acct.getId(), false);
+                    MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);
                 } catch (ServiceException e) {
                     throw new ServletException(e);
                 }

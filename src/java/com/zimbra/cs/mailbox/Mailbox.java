@@ -50,7 +50,6 @@ import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
-import com.zimbra.cs.db.DbMailbox.NewMboxId;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.imap.ImapMessage;
@@ -62,6 +61,7 @@ import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
+import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -131,36 +131,6 @@ public class Mailbox {
     static final int  ONE_MONTH_SECS   = 60 * 60 * 24 * 31;
     static final long ONE_MONTH_MILLIS = ONE_MONTH_SECS * 1000L;
 
-    /** Static cache for mailboxes.  Contains two separate mappings:<ul>
-     *    <li>Maps account IDs (<code>String</code>s) to mailbox IDs
-     *        (<code>Integer</code>s).  <i>Every</i> mailbox in existence
-     *        on the server appears in this mapping.
-     *    <li>Maps mailbox IDs (<code>Integer</code>s) to loaded
-     *        <code>Mailbox</code>es.  Mailboxes are faulted into memory
-     *        as needed, but are then cached for the life of the server
-     *        or until explicitly unloaded.  Only one <code>Mailbox</code>
-     *        per user is cached, and only that <code>Mailbox</code> can
-     *        process user requests.</ul>
-     *  When new mailboxes are created, they are added to both mappings.
-     *  When mailboxes are deleted, they are removed from both mappings. */
-    private static Map sMailboxCache;
-    static {
-        try {
-            loadMailboxMap();
-        } catch (ServiceException e) {
-            ZimbraLog.mailbox.fatal("when loading mailbox/account id relationship");
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static final class MailboxLock {
-        final String accountId;
-        final int    mailboxId;
-        Thread  owner;
-        Mailbox mailbox;
-
-        MailboxLock(String acct, int mbox)  { accountId = acct.toLowerCase();  mailboxId = mbox;  owner = Thread.currentThread(); }
-    }
 
     public static final class MailboxData {
         public int     id;
@@ -351,12 +321,12 @@ public class Mailbox {
     final Flag[] mFlags = new Flag[31];
 
 
-    private Mailbox(MailboxData data) throws ServiceException {
+    Mailbox(MailboxData data) throws ServiceException {
         mId   = data.id;
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
         initFlags();
-        mMailboxIndex =  new MailboxIndex(this, null);        
+        mMailboxIndex = new MailboxIndex(this, null);        
     }
 
     /** Returns the server-local numeric ID for this mailbox.  To get a
@@ -381,10 +351,9 @@ public class Mailbox {
     /** Returns the {@link Account} object for this mailbox's owner.  At
      *  present, each account can have at most one <code>Mailbox</code>.
      *  
-     *  @throws AccountServiceException if no account exists
-     *  */
+     * @throws AccountServiceException if no account exists */
     public synchronized Account getAccount() throws ServiceException {
-        Account acct = getAccount(getAccountId());
+        Account acct = Provisioning.getInstance().get(AccountBy.id, getAccountId());
         if (acct != null)
             return acct;
         ZimbraLog.mailbox.warn("no account found in directory for mailbox " + mId +
@@ -392,12 +361,17 @@ public class Mailbox {
         throw AccountServiceException.NO_SUCH_ACCOUNT(mData.accountId);
     }
 
-    /** Returns the {@link Account} object for the specified account ID.  This
-     *  is just shorthand for {@link Provisioning#get(AccountBy, String)}.
-     * 
-     * @param accountId  The <code>zimbraId</code> to look up. */
-    public static Account getAccount(String accountId) throws ServiceException {
-        return Provisioning.getInstance().get(AccountBy.id, accountId);
+    /** Returns the Mailbox's Lucene index. */
+    MailboxIndex getIndex() {
+        return mMailboxIndex;
+    }
+
+    public short getIndexVolume() {
+        return mData.indexVolumeId;
+    }
+
+    MailboxLock getMailboxLock() {
+        return mMaintenance;
     }
 
 
@@ -559,18 +533,6 @@ public class Mailbox {
         return (mCurrentChange.itemId == MailboxChange.NO_CHANGE ? mData.lastItemId : mCurrentChange.itemId);
     }
 
-    /**
-     * MUST NOT be called while a transaction is in progress 
-     * 
-     * @return
-     */
-    public int incrementChangeId() throws ServiceException {
-        assert(!mCurrentChange.isActive());
-
-        return getNextItemId(ID_AUTO_INCREMENT);
-    }
-
-
     // Don't make this method package-visible.  Keep it private.
     //   idFromRedo: specific ID value to use during redo execution, or ID_AUTO_INCREMENT
     private int getNextItemId(int idFromRedo) throws ServiceException {
@@ -584,6 +546,7 @@ public class Mailbox {
         }
         return nextId;
     }
+
 
     TargetConstraint getOperationTargetConstraint() {
         return mCurrentChange.tcon;
@@ -642,6 +605,7 @@ public class Mailbox {
     void updateSize(long delta) throws ServiceException {
         updateSize(delta, true);
     }
+
     void updateSize(long delta, boolean checkQuota) throws ServiceException {
         if (delta == 0)
             return;
@@ -749,30 +713,41 @@ public class Mailbox {
         mCurrentChange.conn = conn;
     }
 
+
     /** Puts the Mailbox into maintenance mode.  As a side effect, disconnects
      *  any {@link Session}s listening on this Mailbox.
      * 
      * @return A new MailboxLock token for use in a subsequent call to
-     *         {@link #endMaintenance(Mailbox.MailboxLock, boolean, boolean)}.
+     *         {@link MailboxManager#endMaintenance(Mailbox.MailboxLock, boolean, boolean)}.
      * @throws ServiceException MailServiceException.MAINTENANCE if the
      *         <code>Mailbox</code> is already in maintenance mode. */
-    private synchronized MailboxLock beginMaintenance() throws ServiceException {
+    synchronized MailboxLock beginMaintenance() throws ServiceException {
         if (mMaintenance != null)
             throw MailServiceException.MAINTENANCE(mId);
-        mMaintenance = new MailboxLock(mData.accountId, mId);
-        mMaintenance.mailbox = this;
+        mMaintenance = new MailboxLock(mData.accountId, mId, this);
         purgeListeners();
         return mMaintenance;
     }
 
-    private void beginTransaction(String caller, OperationContext octxt) throws ServiceException {
+    synchronized void endMaintenance(boolean success) throws ServiceException {
+        if (mMaintenance == null)
+            throw ServiceException.FAILURE("mainbox not in maintenance mode", null);
+
+        if (success)
+            mMaintenance = null;
+        else
+            mMaintenance.markUnavailable();
+    }
+
+
+    void beginTransaction(String caller, OperationContext octxt) throws ServiceException {
         beginTransaction(caller, System.currentTimeMillis(), octxt, null, null);
     }
     private void beginTransaction(String caller, OperationContext octxt, RedoableOp recorder) throws ServiceException {
         long timestamp = octxt == null ? System.currentTimeMillis() : octxt.getTimestamp();
         beginTransaction(caller, timestamp, octxt, recorder, null);
     }
-    private void beginTransaction(String caller, OperationContext octxt, RedoableOp recorder, Connection conn) throws ServiceException {
+    void beginTransaction(String caller, OperationContext octxt, RedoableOp recorder, Connection conn) throws ServiceException {
         long timestamp = octxt == null ? System.currentTimeMillis() : octxt.getTimestamp();
         beginTransaction(caller, timestamp, octxt, recorder, conn);
     }
@@ -809,7 +784,7 @@ public class Mailbox {
         mCurrentChange.itemCache = cache;
 
         // don't permit mailbox access during maintenance
-        if (mMaintenance != null && mMaintenance.owner != Thread.currentThread())
+        if (mMaintenance != null && !mMaintenance.canAccess())
             throw MailServiceException.MAINTENANCE(mId);
 
         // we can only start a redoable operation as the transaction's base change
@@ -971,415 +946,18 @@ public class Mailbox {
     void purge(byte type) {
         switch (type) {
             case MailItem.TYPE_FOLDER:
-            case MailItem.TYPE_SEARCHFOLDER:  mFolderCache = null; break;
+            case MailItem.TYPE_MOUNTPOINT:
+            case MailItem.TYPE_SEARCHFOLDER:  mFolderCache = null;  break;
             case MailItem.TYPE_FLAG:
-            case MailItem.TYPE_TAG:           mTagCache = null;    break;
-            default:                          mItemCache.clear();  break;
+            case MailItem.TYPE_TAG:           mTagCache = null;     break;
+            default:                          mItemCache.clear();   break;
+            case MailItem.TYPE_UNKNOWN:       mFolderCache = null;  mTagCache = null;  mItemCache.clear();  break;
         }
 
         if (ZimbraLog.cache.isDebugEnabled())
             ZimbraLog.cache.debug("purged " + MailItem.getNameForType(type) + " cache in mailbox " + getId());
     }
 
-
-    private static void loadMailboxMap() throws ServiceException {
-        if (sMailboxCache != null)
-            return;
-        Connection conn = null;
-        try {
-            conn = DbPool.getConnection();
-            sMailboxCache = DbMailbox.getMailboxes(conn);
-        } finally {
-            DbPool.quietClose(conn);
-        }
-    }
-
-    /** Returns the mailbox for the given account.  Creates a new mailbox
-     *  if one doesn't already exist.
-     *
-     * @param account  The account whose mailbox we want.
-     * @return The requested <code>Mailbox</code> object.
-     * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
-     *        mode and the calling thread doesn't hold the lock
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
-     *        lives on a different host</ul> */
-    public static Mailbox getMailboxByAccount(Account account) throws ServiceException {
-        if (account == null)
-            throw new IllegalArgumentException();
-        return getMailboxByAccountId(account.getId());
-    }
-
-    /** Returns the mailbox for the given account id.  Creates a new
-     *  mailbox if one doesn't already exist.
-     *
-     * @param accountId  The id of the account whose mailbox we want.
-     * @return The requested <code>Mailbox</code> object.
-     * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
-     *        mode and the calling thread doesn't hold the lock
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
-     *        lives on a different host</ul> */
-    public static Mailbox getMailboxByAccountId(String accountId) throws ServiceException {
-        return getMailboxByAccountId(accountId, true);
-    }
-
-    /** Returns the mailbox for the given account id.  Creates a new
-     *  mailbox if one doesn't already exist and <code>autocreate</code>
-     *  is <code>true</code>.
-     *
-     * @param accountId   The id of the account whose mailbox we want.
-     * @param autocreate  <code>true</code> to create the mailbox if needed,
-     *                    <code>false</code> to just return <code>null</code>
-     * @return The requested <code>Mailbox</code> object, or <code>null</code>.
-     * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
-     *        mode and the calling thread doesn't hold the lock
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
-     *        lives on a different host</ul> */
-    public static Mailbox getMailboxByAccountId(String accountId, boolean autocreate) throws ServiceException {
-        if (accountId == null)
-            throw new IllegalArgumentException();
-
-        Integer mailboxKey;
-        synchronized (sMailboxCache) {
-            mailboxKey = (Integer) sMailboxCache.get(accountId.toLowerCase());
-        }
-        if (mailboxKey != null)
-            return getMailboxById(mailboxKey.intValue());
-        else if (!autocreate)
-            return null;
-
-        // auto-create the mailbox if this is the right host...
-        Account account = getAccount(accountId);
-        if (account == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
-        if (!Provisioning.onLocalServer(account))
-            throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
-        synchronized (sMailboxCache) {
-            mailboxKey = (Integer) sMailboxCache.get(accountId.toLowerCase());
-            if (mailboxKey != null)
-                return getMailboxById(mailboxKey.intValue());
-            else
-                return createMailbox(null, account);
-        }
-    }
-
-    /** Returns the <code>Mailbox</code> with the given id.  Throws an
-     *  exception if no such <code>Mailbox</code> exists.  If the
-     *  <code>Mailbox</code> is undergoing maintenance, still returns the
-     *  <code>Mailbox</code> if the calling thread is the holder of the lock.
-     *
-     * @param mailboxId  The id of the mailbox we want.
-     * @return The requested <code>Mailbox</code> object.
-     * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.NO_SUCH_MBOX</code> - if no such mailbox exists (yet)
-     *        on this server
-     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
-     *        mode and the calling thread doesn't hold the lock
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
-     *        lives on a different host
-     *    <li><code>account.NO_SUCH_ACCOUNT</code> - if the mailbox's Account
-     *        has been deleted</ul> */
-    public static Mailbox getMailboxById(int mailboxId) throws ServiceException {
-        return getMailboxById(mailboxId, false);
-    }
-
-    /** Returns the <code>Mailbox</code> with the given id.  Throws an
-     *  exception if no such <code>Mailbox</code> exists.  If the
-     *  <code>Mailbox</code> is undergoing maintenance, still returns the
-     *  <code>Mailbox</code> if the calling thread is the holder of the lock.
-     *
-     * @param mailboxId  The id of the mailbox we want.
-     * @param skipMailHostCheck If true, don't throw WRONG_HOST exception if
-     *                          current host is not the mailbox's mail host.
-     *                          Most callers should use getMailboxById(int),
-     *                          which internally calls this method with
-     *                          skipMailHostCheck=false.  Pass true only in the
-     *                          special case of retrieving a mailbox for the
-     *                          purpose of deleting it.
-     * @return The requested <code>Mailbox</code> object.
-     * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.NO_SUCH_MBOX</code> - if no such mailbox exists (yet)
-     *        on this server
-     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
-     *        mode and the calling thread doesn't hold the lock
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
-     *        lives on a different host
-     *    <li><code>account.NO_SUCH_ACCOUNT</code> - if the mailbox's Account
-     *        has been deleted and <code>skipMailHostCheck=false</code></ul> */
-    public static Mailbox getMailboxById(int mailboxId, boolean skipMailHostCheck)
-    throws ServiceException {
-        if (mailboxId <= 0)
-            throw MailServiceException.NO_SUCH_MBOX(mailboxId);
-
-        synchronized (sMailboxCache) {
-            Object obj = sMailboxCache.get(mailboxId);
-            if (obj instanceof Mailbox) {
-                return (Mailbox) obj;
-            } else if (obj instanceof MailboxLock) {
-                MailboxLock lock = (MailboxLock) obj;
-                if (lock.owner != Thread.currentThread())
-                    throw MailServiceException.MAINTENANCE(mailboxId);
-                if (lock.mailbox != null)
-                    return lock.mailbox;
-            }
-
-            // fetch the Mailbox data from the database
-            Connection conn = null;
-            try {
-                conn = DbPool.getConnection();
-                MailboxData mdata = DbMailbox.getMailboxStats(conn, mailboxId);
-                if (mdata == null)
-                    throw MailServiceException.NO_SUCH_MBOX(mailboxId);
-                Mailbox mailbox = new Mailbox(mdata);
-                if (!skipMailHostCheck) {
-                    // The host check here makes sure that sessions that were
-                    // already connected at the time of mailbox move are not
-                    // allowed to continue working with this mailbox which is
-                    // essentially a soft-deleted copy.  The WRONG_HOST
-                    // exception forces the clients to reconnect to the new
-                    // server.
-                    Account account = mailbox.getAccount();
-                    if (!Provisioning.onLocalServer(account))
-                        throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
-                }
-                if (obj instanceof MailboxLock)
-                    ((MailboxLock) obj).mailbox = mailbox;
-                else
-                    sMailboxCache.put(mailboxId, mailbox);
-                return mailbox;
-            } finally {
-                if (conn != null)
-                    DbPool.quietClose(conn);
-            }
-        }
-    }
-
-    public static MailboxLock beginMaintenance(String accountId, int mailboxId) throws ServiceException {
-        Mailbox mbox = getMailboxByAccountId(accountId, false);
-        if (mbox == null) {
-            synchronized (sMailboxCache) {
-                if (sMailboxCache.get(accountId.toLowerCase()) == null) {
-                    MailboxLock lock = new MailboxLock(accountId, mailboxId);
-                    sMailboxCache.put(mailboxId, lock);
-                    return lock;
-                }
-            }
-            mbox = getMailboxByAccountId(accountId);
-        }
-
-        // mbox is non-null, and mbox.beginMaintenance() will throw if it's already in maintenance
-        synchronized (mbox) {
-            MailboxLock lock = mbox.beginMaintenance();
-            synchronized (sMailboxCache) {
-                sMailboxCache.put(mailboxId, lock);
-            }
-            return lock;
-        }
-    }
-
-    public static void endMaintenance(MailboxLock lock, boolean success, boolean removeFromCache) throws ServiceException {
-        if (lock == null)
-            throw ServiceException.INVALID_REQUEST("no lock provided", null);
-
-        synchronized (sMailboxCache) {
-            Integer mailboxKey = new Integer(lock.mailboxId);
-            Object obj = sMailboxCache.get(mailboxKey);
-            if (obj == null || obj != lock)
-                throw MailServiceException.MAINTENANCE(mailboxKey.intValue());
-            sMailboxCache.remove(mailboxKey);
-            if (success) {
-                sMailboxCache.put(lock.accountId, mailboxKey);
-                Mailbox mbox = lock.mailbox;
-                if (mbox != null) {
-                    assert(lock == mbox.mMaintenance);
-
-                    // Backend data may have changed while mailbox was in
-                    // maintenance mode.  Invalidate the cache.
-                    mbox.mItemCache.clear();
-
-                    if (removeFromCache) {
-                        // We're going to let the Mailbox drop out of the
-                        // cache and eventually get GC'd.  Some immediate
-                        // cleanup is necessary though.
-                        if (mbox.mMailboxIndex != null)
-                            mbox.mMailboxIndex.flush();
-                        // Note: mbox is left in maintenance mode.
-                    } else {
-                        lock.mailbox.mMaintenance = null;
-                        sMailboxCache.put(mailboxKey, lock.mailbox);
-                    }
-                }
-            } else {
-                // on failed maintenance, mark the Mailbox object as off-limits to everyone
-                if (lock.mailbox != null && lock.mailbox.mMaintenance != null)
-                    lock.mailbox.mMaintenance.owner = null;
-            }
-        }
-    }
-
-    /** Returns an array of all the mailbox IDs on this host.  Note that
-     *  <code>Mailbox</code>es are lazily created, so this is not the same
-     *  as the set of mailboxes for accounts whose <code>zimbraMailHost</code>
-     *  LDAP attribute points to this server. */
-    public static int[] getMailboxIds() {
-        int i = 0, mailboxIds[] = null;
-        synchronized (sMailboxCache) {
-            Collection col = sMailboxCache.values();
-            mailboxIds = new int[col.size()];
-            // mMailboxCache contains accountId -> mailboxId mappings as well as
-            //   mailboxId -> Mailbox mappings.  we just want to iterate over the first of these...
-            for (Object o : col)
-                if (o instanceof Integer)
-                    mailboxIds[i++] = (Integer) o;
-        }
-        int[] result = new int[i];
-        System.arraycopy(mailboxIds, 0, result, 0, i);
-        return result;
-    }
-
-    /** Returns an array of the account IDs of all the mailboxes on this host.
-     *  Note that <code>Mailbox</code>es are lazily created, so this is not
-     *  the same as the set of accounts whose <code>zimbraMailHost</code> LDAP
-     *  attribute points to this server.*/
-    public static String[] getAccountIds() {
-        int i = 0;
-        String accountIds[] = null;
-        synchronized (sMailboxCache) {
-            Set set = sMailboxCache.keySet();
-            accountIds = new String[set.size()];
-            // mMailboxCache contains accountId -> mailboxId mappings as well as
-            //   mailboxId -> Mailbox mappings.  we just want to iterate over the first of these...
-            for (Object o : set)
-                if (o instanceof String)
-                    accountIds[i++] = (String) o;
-        }
-        String[] result = new String[i];
-        System.arraycopy(accountIds, 0, result, 0, i);
-        return result;
-    }
-
-    /** Returns the zimbra IDs and approximate sizes for all mailboxes on
-     *  the system.  Note that mailboxes are created lazily, so there may be
-     *  accounts homed on this system for whom there is is not yet a mailbox
-     *  and hence are not included in the returned <code>Map</code>.  Sizes
-     *  are checkpointed frequently, but there is no guarantee that the
-     *  approximate sizes are currently accurate.
-     *  
-     * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>service.FAILURE</code> - an error occurred while accessing
-     *        the database; a SQLException is encapsulated</ul> */
-    public static Map<String, Long> getMailboxSizes() throws ServiceException {
-        Connection conn = null;
-        try {
-            conn = DbPool.getConnection();
-            return DbMailbox.getMailboxSizes(conn);
-        } finally {
-            if (conn != null)
-                DbPool.quietClose(conn);
-        }
-    }
-
-
-    /** Creates a <code>Mailbox</code> for the given {@link Account}, caches
-     *  it for the lifetime of the server, inserts the default set of system
-     *  folders, and returns it.  If the account's mailbox already exists on
-     *  this sevrer, returns that and does not update the database.
-     *
-     * @param octxt    The context for this request (e.g. redo player).
-     * @param account  The account to create a mailbox for.
-     * @return A new or existing <code>Mailbox</code> object for the account.
-     * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
-     *        mode and the calling thread doesn't hold the lock
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
-     *        lives on a different host</ul>
-     * @see #initialize() */
-    public static Mailbox createMailbox(OperationContext octxt, Account account) throws ServiceException {
-        if (account == null)
-            throw new IllegalArgumentException("createMailbox: must specify an account");
-        if (!Provisioning.onLocalServer(account))
-            throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
-
-        Mailbox mailbox = null;
-
-        synchronized (sMailboxCache) {
-            // check to make sure the mailbox doesn't already exist
-            Integer mailboxKey = (Integer) sMailboxCache.get(account.getId().toLowerCase());
-            if (mailboxKey != null)
-                return getMailboxById(mailboxKey.intValue());
-
-            // didn't have the mailbox in the database; need to create one now
-            CreateMailbox redoRecorder = new CreateMailbox(account.getId());
-
-            Connection conn = null;
-            MailboxData data = null;
-            boolean success = false;
-            try {
-                conn = DbPool.getConnection();
-                data = new MailboxData();
-                data.accountId = account.getId();
-
-                // create the mailbox row and the mailbox database
-                CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.player);
-                int id = (redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
-                NewMboxId newMboxId = DbMailbox.createMailbox(conn, id, data.accountId, account.getName());
-                data.id = newMboxId.id;
-                data.schemaGroupId = newMboxId.groupId;
-                DbMailbox.createMailboxDatabase(data.id, data.schemaGroupId);
-
-                // The above initialization of data is incomplete because it
-                // is missing the message/index volume information.  Query
-                // the database to get it.
-                DbMailbox.getMailboxVolumeInfo(conn, data);
-
-                mailbox = new Mailbox(data);
-                // the existing Connection is used for the rest of this transaction...
-                mailbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);
-                // create the default folders
-                mailbox.initialize();
-
-                // cache the accountID-to-mailboxID and mailboxID-to-Mailbox relationships
-                sMailboxCache.put(data.accountId, new Integer(data.id));
-                sMailboxCache.put(new Integer(data.id), mailbox);
-                redoRecorder.setMailboxId(mailbox.getId());
-
-                success = true;
-            } catch (ServiceException e) {
-                // Log exception here, just in case.  If badness happens during rollback
-                // the original exception will be lost.
-                ZimbraLog.mailbox.error("Error during mailbox creation", e);
-                throw e;
-            } catch (Throwable t) {
-                ZimbraLog.mailbox.error("Error during mailbox creation", t);
-                throw ServiceException.FAILURE("createMailbox", t);
-            } finally {
-                try {
-                    if (mailbox != null) {
-                        mailbox.endTransaction(success);
-                        conn = null;
-                    } else {
-                        if (conn != null)
-                            conn.rollback();
-                        if (data != null)
-                            DbMailbox.clearMailboxContent(data.id, data.schemaGroupId);
-                    }
-                } finally {
-                    if (conn != null)
-                        DbPool.quietClose(conn);
-                }
-            }
-        }
-
-        return mailbox;
-    }
 
     /** Creates the default set of immutable system folders in a new mailbox.
      *  These system folders have fixed ids (e.g. {@link #ID_FOLDER_INBOX})
@@ -1398,7 +976,7 @@ public class Mailbox {
      *  folders, tags, or messages into a new mailbox.
      * 
      * @see Folder#create(int, Mailbox, Folder, String, byte, byte, int, byte, String) */
-    private void initialize() throws ServiceException {
+    void initialize() throws ServiceException {
         // the new mailbox's caches are created and the default set of tags are
         // loaded by the earlier call to loadFoldersAndTags in beginTransaction
 
@@ -1507,12 +1085,13 @@ public class Mailbox {
     public synchronized void deleteMailbox() throws ServiceException {
         deleteMailbox(null);
     }
+
     public synchronized void deleteMailbox(OperationContext octxt) throws ServiceException {
         // first, throw the mailbox into maintenance mode
         //   (so anyone else with a cached reference to the Mailbox can't use it)
         MailboxLock lock = null;
         try {
-            lock = Mailbox.beginMaintenance(mData.accountId, mId);
+            lock = MailboxManager.getInstance().beginMaintenance(mData.accountId, mId);
         } catch (MailServiceException e) {
             // Ignore wrong mailbox exception.  It may be thrown if we're
             // redoing a DeleteMailbox that was interrupted when server
@@ -1552,10 +1131,7 @@ public class Mailbox {
             if (success) {
                 // remove all traces of the mailbox from the Mailbox cache
                 //   (so anyone asking for the Mailbox gets NO_SUCH_MBOX or creates a fresh new empty one with a different id)
-                synchronized (sMailboxCache) {
-                    sMailboxCache.remove(mData.accountId);
-                    sMailboxCache.remove(mId);
-                }
+                MailboxManager.getInstance().markMailboxDeleted(this);
 
                 // attempt to nuke the store and index
                 // FIXME: we're assuming a lot about the store and index here; should use their functions
@@ -1570,8 +1146,7 @@ public class Mailbox {
 
                 // twiddle the mailbox lock [must be the last command of this function!]
                 //   (so even *we* can't access this Mailbox going forward)
-                lock.owner   = null;
-                lock.mailbox = null;
+                lock.markUnavailable();
             }
         } finally {
             if (needRedo) {
@@ -1583,9 +1158,6 @@ public class Mailbox {
         }
     }
 
-    public short getIndexVolume() {
-        return mData.indexVolumeId;
-    }
 
     public void reIndex() throws ServiceException {
         reIndex(null);
@@ -1598,8 +1170,7 @@ public class Mailbox {
         public boolean mCancel = false;
 
         public String toString() {
-            String toRet = "Completed "+mNumProcessed+" out of " +mNumToProcess
-            + " ("+mNumFailed +" failures";
+            String toRet = "Completed "+mNumProcessed+" out of " +mNumToProcess + " ("+mNumFailed +" failures";
 
             if (mCancel) 
                 return "--CANCELLING--  "+toRet;
@@ -1890,6 +1461,8 @@ public class Mailbox {
     }
 
     MailItem[] getItemById(int[] ids, byte type) throws ServiceException {
+        if (!mCurrentChange.active)
+            throw ServiceException.FAILURE("must be in transaction", null);
         if (ids == null)
             return null;
 
@@ -2138,6 +1711,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("listItemIds", octxt);
+
             Folder folder = getFolderById(folderId);
             List<DbMailItem.SearchResult> idList = DbMailItem.listByFolder(folder, type, true);
             if (idList == null)
@@ -3127,21 +2701,19 @@ public class Mailbox {
                 Account orgAccount = inv.getOrganizerAccount();
                 // Unknown organizer
                 if (orgAccount == null) {
-                    ZimbraLog.calendar.warn(
-                            "Unknown organizer " + orgAddress + " in REPLY");
+                    ZimbraLog.calendar.warn("Unknown organizer " + orgAddress + " in REPLY");
                     continue;
                 }
                 if (Provisioning.onLocalServer(orgAccount)) {
                     // Run in the context of organizer's mailbox.
-                    Mailbox mbox = Mailbox.getMailboxByAccount(orgAccount);
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(orgAccount);
                     OperationContext orgOctxt = new OperationContext(mbox);
                     mbox.processICalReply(orgOctxt, inv);
                 } else {
                     // Organizer's mailbox is on a remote server.
                     String uri = AccountUtil.getSoapUri(orgAccount);
                     if (uri == null) {
-                        ZimbraLog.calendar.warn(
-                                "Unable to determine URI for organizer account " + orgAddress);
+                        ZimbraLog.calendar.warn("Unable to determine URI for organizer account " + orgAddress);
                         continue;
                     }
                     try {
@@ -4310,13 +3882,13 @@ public class Mailbox {
                 throw ServiceException.FAILURE("IOException", e);
             }
 
-            // update the subscription to avoid downloading items twice
-            if (subscription && sdata.lastDate > 0)
-                try {
-                    setSubscriptionData(octxt, folderId, sdata.lastDate, sdata.lastGuid);
-                } catch (Exception e) {
-                    ZimbraLog.mailbox.warn("could not update feed metadata", e);
-                }
+        // update the subscription to avoid downloading items twice
+        if (subscription && sdata.lastDate > 0)
+            try {
+                setSubscriptionData(octxt, folderId, sdata.lastDate, sdata.lastGuid);
+            } catch (Exception e) {
+                ZimbraLog.mailbox.warn("could not update feed metadata", e);
+            }
     }
 
     public synchronized void setSubscriptionData(OperationContext octxt, int folderId, long date, String guid) throws ServiceException {
@@ -4496,8 +4068,7 @@ public class Mailbox {
      * @param success
      * @throws ServiceException
      */
-    private synchronized void endTransaction(boolean success)
-    throws ServiceException {
+    synchronized void endTransaction(boolean success) throws ServiceException {
         if (!mCurrentChange.isActive()) {
             // would like to throw here, but it might cover another exception...
             ZimbraLog.mailbox.warn("cannot end a transaction when not inside a transaction", new Exception());
@@ -5263,22 +4834,5 @@ public class Mailbox {
                 }
         }
         return doc;
-    }
-
-    public static void dumpMailboxCache() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("MAILBOX CACHE DUMP\n");
-        sb.append("----------------------------------------------------------------------\n");
-        synchronized (sMailboxCache) {
-            for (Iterator iter = sMailboxCache.entrySet().iterator(); iter.hasNext(); ) {
-                Map.Entry entry = (Map.Entry) iter.next();
-                Object key = entry.getKey();
-                Object value = entry.getValue();
-                sb.append("key=" + key.toString() + " (type=" + key.getClass().getName() + ", hash=" + key.hashCode() + ")\n");
-                sb.append("  v=" + value.toString() + " (type=" + value.getClass().getName() + ", hash=" + value.hashCode() + ")\n");
-            }
-        }
-        sb.append("----------------------------------------------------------------------\n");
-        ZimbraLog.mailbox.debug(sb.toString());
     }
 }

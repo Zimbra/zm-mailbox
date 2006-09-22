@@ -31,6 +31,7 @@ import java.util.Map;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -136,7 +137,7 @@ public class ImapCopyItem extends RedoableOp {
 
     public void redo() throws Exception {
         int mboxId = getMailboxId();
-        Mailbox mbox = Mailbox.getMailboxById(mboxId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         int i = 0, itemIds[] = new int[mDestIds.size()];
         for (int id : mDestIds.keySet())

@@ -38,6 +38,7 @@ import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.localconfig.LC;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.util.ZimbraLog;
 
 import junit.framework.TestCase;
@@ -74,7 +75,7 @@ public class TestAccount extends TestCase {
         
         // Get the account and mailbox
         Account account = TestUtil.getAccount(USER_NAME);
-        Mailbox mbox = Mailbox.getMailboxByAccount(account);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         String dbName = DbMailbox.getDatabaseName(mbox);
         ZimbraLog.test.debug("Account=" + account.getId() + ", mbox=" + mbox.getId());
         

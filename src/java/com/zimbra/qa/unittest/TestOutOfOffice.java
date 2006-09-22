@@ -42,6 +42,7 @@ import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.util.Constants;
 
 /**
@@ -62,7 +63,7 @@ public class TestOutOfOffice extends TestCase
         super.setUp();
         
         Account account = TestUtil.getAccount(USER_NAME);
-        mMbox = Mailbox.getMailboxByAccount(account);
+        mMbox = MailboxManager.getInstance().getMailboxByAccount(account);
         mConn = DbPool.getConnection();
 
         DbOutOfOffice.clear(mConn, mMbox);

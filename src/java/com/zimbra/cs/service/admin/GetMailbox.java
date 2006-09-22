@@ -35,6 +35,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -67,7 +68,7 @@ public class GetMailbox extends AdminDocumentHandler {
         if (!canAccessAccount(zc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
-        Mailbox mbox = Mailbox.getMailboxByAccountId(accountId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
         Element response = zc.createElement(AdminService.GET_MAILBOX_RESPONSE);
         Element m = response.addElement(AdminService.E_MAILBOX);
         m.addAttribute(AdminService.A_MAILBOXID, mbox.getId());

@@ -27,7 +27,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -57,7 +57,7 @@ public class ModifyInviteFlag extends RedoableOp {
     }
 
     public void redo() throws Exception {
-        Mailbox.getMailboxById(getMailboxId());
+        MailboxManager.getInstance().getMailboxById(getMailboxId());
 //        mbox.modifyInviteFlag(getOperationContext(), mId, mCompNum, mFlag, mAdd);
     }
 

@@ -34,7 +34,7 @@ package com.zimbra.qa.unittest;
 import junit.framework.TestCase;
 
 import com.zimbra.cs.service.util.ParseMailboxID;
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 
@@ -57,7 +57,7 @@ public class TestParseMailboxID extends TestCase {
             assertTrue(id.isLocal());
             assertEquals(id.getServer(), null);
             assertEquals(id.getMailboxId(), 1);
-            assertEquals(id.getMailbox(), Mailbox.getMailboxById(1));
+            assertEquals(id.getMailbox(), MailboxManager.getInstance().getMailboxById(1));
             
             assertFalse(id.isAllMailboxIds());
             assertFalse(id.isAllServers());
@@ -71,7 +71,7 @@ public class TestParseMailboxID extends TestCase {
             assertTrue(id.isLocal());
             assertEquals(id.getServer(), null);
             assertEquals(id.getMailboxId(), 1);
-            assertEquals(id.getMailbox(), Mailbox.getMailboxById(1));
+            assertEquals(id.getMailbox(), MailboxManager.getInstance().getMailboxById(1));
             assertFalse(id.isAllMailboxIds());
             assertFalse(id.isAllServers());
         }   
@@ -82,7 +82,7 @@ public class TestParseMailboxID extends TestCase {
             assertTrue(id.isLocal());
             assertEquals(id.getServer(), null);
             assertEquals(id.getMailboxId(), 1);
-            assertEquals(id.getMailbox(), Mailbox.getMailboxById(1));
+            assertEquals(id.getMailbox(), MailboxManager.getInstance().getMailboxById(1));
             assertFalse(id.isAllMailboxIds());
             assertFalse(id.isAllServers());
         }
@@ -95,7 +95,7 @@ public class TestParseMailboxID extends TestCase {
             assertTrue(id.isLocal());
             assertEquals(id.getServer(), null);
             assertEquals(id.getMailboxId(), 1);
-            assertEquals(id.getMailbox(), Mailbox.getMailboxById(1));
+            assertEquals(id.getMailbox(), MailboxManager.getInstance().getMailboxById(1));
             assertFalse(id.isAllMailboxIds());
             assertFalse(id.isAllServers());
         }
