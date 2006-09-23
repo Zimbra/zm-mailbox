@@ -71,17 +71,16 @@ public class Auth extends AccountDocumentHandler {
         String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
         
         AccountBy by = AccountBy.fromString(byStr);
-        
+
         if (by == AccountBy.name) {
-            if (virtualHost != null  && value.indexOf('@') == -1) {
+            if (virtualHost != null && value.indexOf('@') == -1) {
                 Domain d = prov.get(DomainBy.virtualHostname, virtualHost);
                 if (d != null)
                     value = value + "@" + d.getName();
             }
         }
 
-        Account acct = prov.get(AccountBy.name, value);            
-
+        Account acct = prov.get(by, value);
 		if (acct == null)
 			throw AccountServiceException.AUTH_FAILED(value);
 
