@@ -77,6 +77,24 @@ HTML>BODY INPUT {		/* clean border that works in FF */
 	width: 10em;
 }
 
+
+/* Panel that shows an error or notice */
+#ZLoginErrorPanel {
+        position:relative;
+        left:10%;
+        width:80%;
+        margin-top:10px;
+        margin-bottom:10px;
+        padding:5px;
+        padding:0px;
+        border:2px solid;
+         -moz-border-left-colors:#8597a7 #c5dcf0;      -moz-border-top-colors: #8597a7 #c5dcf0;
+         -moz-border-bottom-colors: #5f6c77 #98adbe;             -moz-border-right-colors: #5f6c77 #98adbe;
+        background-color:#e3da93;
+}
+
+
+
 #ZLoginLicenseContainer {
 	padding-top:20px;
 	padding-bottom:5px;

@@ -110,7 +110,46 @@ current item of the iteration.
     
   </tag>
 
-
+ <tag>
+    <description>
+      login
+    </description>
+    <name>login</name>
+    <tag-class>com.zimbra.cs.jsp.tag.LoginTag</tag-class>
+    <body-content>empty</body-content>
+    <attribute>
+        <description>
+           Username
+        </description>
+	  <name>username</name>
+      <rtexprvalue>true</rtexprvalue>		  
+	  <required>true</required>
+    </attribute>
+    <attribute>
+        <description>
+           Password
+        </description>
+	  <name>password</name>
+      <rtexprvalue>true</rtexprvalue>	
+	  <required>true</required>
+    </attribute>
+    <attribute>
+        <description>
+           remember me
+        </description>
+	  <name>rememberme</name>
+      <rtexprvalue>true</rtexprvalue>	  
+	  <required>true</required>
+    </attribute>
+    <attribute>
+        <description>
+           URL
+        </description>
+	  <name>url</name>
+      <rtexprvalue>true</rtexprvalue>	  
+	  <required>false</required>
+    </attribute>
+  </tag>
 
  <tag>
     <description>
@@ -134,7 +173,7 @@ current item of the iteration.
     <attribute>
       <description>message id</description>
 	  <name>id</name>
-      <rtexprvalue>true</rtexprvalue>	
+      <rtexprvalue>true</rtexprvalue>
 	  <required>true</required>
     </attribute>
 
@@ -204,6 +243,34 @@ current item of the iteration.
 	  <name>sync</name>
       <rtexprvalue>true</rtexprvalue>	
 	  <required>false</required>
+    </attribute>
+  </tag>
+
+
+ <tag>
+    <description>
+      Convert an exception into a ZExceptionBean
+    </description>
+
+    <name>getException</name>
+
+    <tag-class>com.zimbra.cs.jsp.tag.GetExceptionTag</tag-class>
+
+    <body-content>empty</body-content>
+
+    <attribute>
+        <description>
+           Name of the exported scoped variable to store the ZExceptionBean in.
+        </description>
+	  <name>var</name>
+	  <required>true</required>
+    </attribute>
+
+    <attribute>
+      <description>the exception</description>
+	  <name>exception</name>
+      <rtexprvalue>true</rtexprvalue>	
+	  <required>true</required>
     </attribute>
   </tag>
 
