@@ -24,32 +24,34 @@
  */
 package com.zimbra.cs.jsp.tag;
 
-import javax.servlet.jsp.JspContext;
 import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.SimpleTagSupport;
 
-import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.jsp.ZJspSession;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.zclient.ZMailbox;
 
 public abstract class ZimbraSimpleTag extends SimpleTagSupport {
-
-    private static final String ATTR_ACCOUNT = "ZimbraSimpleTag.account";
-    private static final String ATTR_ZMAILBOX = "ZimbraSimpleTag.zmailbox";
-    private static final String ATTR_OPERATION_CONTEXT = "ZimbraSimpleTag.operationcontext";    
-    
     public ZMailbox getMailbox() throws JspException { 
         try {
-            JspContext jc = getJspContext();
-            ZMailbox mbox = (ZMailbox) jc.getAttribute(ATTR_ZMAILBOX, PageContext.SESSION_SCOPE);
-            if (mbox == null) {
-                mbox = ZMailbox.getMailbox("user1", AccountBy.name, "test123", "http://localhost:7070/service/soap/", null);
-                jc.setAttribute(ATTR_ZMAILBOX, mbox, PageContext.SESSION_SCOPE);
+            ZJspSession session = ZJspSession.getSession(getJspContext());
+            if (session == null ) {
+                // TOODO: throw better exception
+                throw new JspException("no session");
+            } else {
+                return session.getMailbox();
             }
-            return mbox;
         } catch (ServiceException e) {
             throw new JspException("getMailbox", e);
         }
+    }
+
+    /**
+     * save the mailbox in the session scope
+     * @param mbox
+     * @throws JspException
+     */
+    protected void setMailbox(String authToken, ZMailbox mbox) throws JspException { 
+        ZJspSession.setSession(getJspContext(), authToken, mbox);
     }
 }
