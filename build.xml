@@ -285,7 +285,6 @@
 			<lib file="${jarfile}" />
 			<lib dir="${jars.dir}" includes="*.jar" excludes="${war.exclude}" />
 			<classes dir="${config.dir}" includes="sieveConfig.xml" />
-		        <webinf dir="WebRoot/WEB-INF" includes="tlds/*"/>
 		</war>
 	</target>
 
@@ -302,7 +301,7 @@
 	<target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert">
 		<copy todir="${zimbra.home.dir}">
 			<fileset dir="${dist.dir}"/>
-		</copy>
+		</copy>	
 		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod><!-- ant does not preserve perms on copy -->
 	</target>
 
