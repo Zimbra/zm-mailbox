@@ -289,18 +289,6 @@
 		</war>
 	</target>
 
-	  <!-- 
-	  This target is meant only to be run after a full deploy has
-	  been done once. It does not deal with the java code used by the
-	  ZimbraWebClient webapp, so if there are any java changes, another
-	  deploy will have to be run.
-	  -->
-	<target name="dev-sync">
-	  <copy verbose="true" todir="${deploy.dir}${deploy.path}">
-	    <fileset dir="WebRoot"/>
-	  </copy>
-	</target>
-
 	<target name="service-deploy" depends="refresh-opt-zimbra,deploy-war,deploy-zimlets" description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
 	<target name="deploy-war" depends="war">
