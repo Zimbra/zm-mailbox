@@ -1,0 +1,50 @@
+<project name="ZimbraCommon" default="jar">
+	
+	<!-- Properties -->
+	
+	<property name="jar.file" value="zimbracommon.jar" />
+	<property name="src.java.dir" location="src/java" />
+	<property name="build.dir" location="build" />
+	<property name="build.classes.dir" location="${build.dir}/classes" />
+	<property name="zimbra.home.dir" location="/opt/zimbra" />
+
+	<condition property="is-windows">
+		<os family="windows" />
+	</condition>
+	<condition property="is-unix">
+		<not>
+			<os family="windows" />
+		</not>
+	</condition>
+
+	<path id="all.java.path">
+		<pathelement location="${src.java.dir}" />
+	</path>
+
+	<path id="class.path">
+		<pathelement location="${build.classes.dir}" />
+		<fileset dir="jars">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<!-- Targets -->
+	<target name="build-init">
+		<mkdir dir="${build.classes.dir}" />
+	</target>
+
+	<target name="compile" depends="build-init" description="Compiles the source code">
+		<javac destdir="${build.classes.dir}" debug="true" classpathref="class.path">
+			<src refid="all.java.path" />
+		</javac>
+	</target>
+
+	<target name="jar" depends="compile" description="Creates the jar file">
+		<jar destfile="${build.dir}/${jar.file}" basedir="${build.classes.dir}" />
+	</target>
+
+	<target name="clean" description="Removes build files and undeploys extension">
+		<delete dir="${build.dir}" />
+	</target>
+	
+</project>
