@@ -3733,10 +3733,23 @@ public class Mailbox {
 
     public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte defaultView, int flags, byte color, String url)
     throws ServiceException {
-        Folder.validateFolderName(name);
-        String path = getFolderById(octxt, parentId).getPath() + (parentId == ID_FOLDER_USER_ROOT ? "" : "/") + name;
-        return createFolder(octxt, path, (byte) 0, defaultView, flags, color, url);
+        CreateFolder redoRecorder = new CreateFolder(mId, name, parentId, defaultView, flags, color, url);
+
+        boolean success = false;
+        try {
+            beginTransaction("createFolder", octxt, redoRecorder);
+            CreateFolder redoPlayer = (CreateFolder) mCurrentChange.getRedoPlayer();
+
+            int folderId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getFolderId());
+            Folder folder = Folder.create(folderId, this, getFolderById(parentId), name, (byte) 0, defaultView, flags, color, url);
+            redoRecorder.setFolderId(folder.getId());
+            success = true;
+            return folder;
+        } finally {
+            endTransaction(success);
+        }
     }
+
     public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView) throws ServiceException {
         return createFolder(octxt, path, attrs, defaultView, 0, MailItem.DEFAULT_COLOR, null);
     }
@@ -3749,12 +3762,12 @@ public class Mailbox {
             if (path.endsWith("/") && path.length() > 1)
                 path = path.substring(0, path.length() - 1);
         }
-        CreateFolder redoRecorder = new CreateFolder(mId, path, attrs, defaultView, flags, color, url);
+        CreateFolderPath redoRecorder = new CreateFolderPath(mId, path, attrs, defaultView, flags, color, url);
 
         boolean success = false;
         try {
-            beginTransaction("createFolder", octxt, redoRecorder);
-            CreateFolder redoPlayer = (CreateFolder) mCurrentChange.getRedoPlayer();
+            beginTransaction("createFolderPath", octxt, redoRecorder);
+            CreateFolderPath redoPlayer = (CreateFolderPath) mCurrentChange.getRedoPlayer();
 
             String[] parts = path.substring(1).split("/");
             if (parts.length == 0)

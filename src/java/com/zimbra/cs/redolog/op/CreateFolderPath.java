@@ -22,6 +22,10 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
+
+/*
+ * Created on 2004. 12. 13.
+ */
 package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
@@ -32,83 +36,100 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-public class CreateFolder extends RedoableOp {
+/**
+ * @author jhahm
+ */
+public class CreateFolderPath extends RedoableOp {
 
-    private String mName;
-    private int mParentId;
+    private String mPath;
+    private byte mAttrs;
     private byte mDefaultView;
     private int mFlags;
     private byte mColor;
     private String mUrl;
-    private int mFolderId;
+    private int mFolderIds[];
 
-    public CreateFolder() { }
+    public CreateFolderPath() { }
 
-    public CreateFolder(int mailboxId, String name, int parentId, byte view, int flags, byte color, String url) {
+    public CreateFolderPath(int mailboxId, String name, byte attrs, byte view, int flags, byte color, String url) {
         setMailboxId(mailboxId);
-        mName = name == null ? "" : name;
-        mParentId = parentId;
+        mPath = name == null ? "" : name;
+        mAttrs = attrs;
         mDefaultView = view;
         mFlags = flags;
         mColor = color;
         mUrl = url == null ? "" : url;
     }
 
-    public int getFolderId() {
-        return mFolderId;
+    public int[] getFolderIds() {
+        return mFolderIds;
     }
 
-    public void setFolderId(int folderId) {
-        mFolderId = folderId;
+    public void setFolderIds(int parentIds[]) {
+        mFolderIds = parentIds;
     }
 
-    @Override
     public int getOpCode() {
-        return OP_CREATE_FOLDER;
+        return OP_CREATE_FOLDER_PATH;
     }
 
-    @Override
     protected String getPrintableData() {
-        StringBuilder sb = new StringBuilder("name=").append(mName);
-        sb.append(", parent=").append(mParentId).append(", view=").append(mDefaultView);
+        StringBuilder sb = new StringBuilder("name=").append(mPath);
+        sb.append(", attrs=").append(mAttrs).append(", view=").append(mDefaultView);
         sb.append(", flags=").append(mFlags).append(", color=").append(mColor);
-        sb.append(", url=").append(mUrl).append(", id=").append(mFolderId);
+        sb.append(", url=").append(mUrl);
+        if (mFolderIds != null) {
+            sb.append(", folderIds=[");
+            for (int i = 0; i < mFolderIds.length; i++) {
+                sb.append(mFolderIds[i]);
+                if (i < mFolderIds.length - 1)
+                    sb.append(", ");
+            }
+            sb.append("]");
+        }
         return sb.toString();
     }
 
-    @Override
     protected void serializeData(RedoLogOutput out) throws IOException {
-        out.writeUTF(mName);
-        out.writeInt(mParentId);
+        out.writeUTF(mPath);
+        out.writeByte(mAttrs);
         out.writeByte(mDefaultView);
         out.writeInt(mFlags);
         out.writeByte(mColor);
         out.writeUTF(mUrl);
-        out.writeInt(mFolderId);
+        if (mFolderIds != null) {
+            out.writeInt(mFolderIds.length);
+            for (int i = 0; i < mFolderIds.length; i++)
+                out.writeInt(mFolderIds[i]);
+        } else
+            out.writeInt(0);
     }
 
-    @Override
     protected void deserializeData(RedoLogInput in) throws IOException {
-        mName = in.readUTF();
-        mParentId = in.readInt();
+        mPath = in.readUTF();
+        mAttrs = in.readByte();
         mDefaultView = in.readByte();
         mFlags = in.readInt();
         mColor = in.readByte();
         mUrl = in.readUTF();
-        mFolderId = in.readInt();
+        int numParentIds = in.readInt();
+        if (numParentIds > 0) {
+            mFolderIds = new int[numParentIds];
+            for (int i = 0; i < numParentIds; i++)
+                mFolderIds[i] = in.readInt();
+        }
     }
 
-    @Override
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
         try {
-            mailbox.createFolder(getOperationContext(), mName, mParentId, mDefaultView, mFlags, mColor, mUrl);
+            mailbox.createFolder(getOperationContext(), mPath, mAttrs, mDefaultView, mFlags, mColor, mUrl);
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {
                 if (mLog.isInfoEnabled())
-                    mLog.info("Folder " + mName + " already exists in mailbox " + mboxId);
+                    mLog.info("Folder " + mPath + " already exists in mailbox " + mboxId);
             } else {
                 throw e;
             }
