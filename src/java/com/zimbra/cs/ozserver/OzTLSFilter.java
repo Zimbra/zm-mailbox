@@ -45,7 +45,7 @@ import javax.net.ssl.SSLEngineResult.Status;
 
 import org.apache.commons.logging.Log;
 
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.util.Zimbra;
 
 public class OzTLSFilter extends OzFilter {

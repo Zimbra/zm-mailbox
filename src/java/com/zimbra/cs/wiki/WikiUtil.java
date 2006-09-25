@@ -53,7 +53,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.client.*;
 import com.zimbra.cs.client.soap.*;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;

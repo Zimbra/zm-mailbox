@@ -63,7 +63,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.ServiceException;

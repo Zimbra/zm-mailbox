@@ -44,7 +44,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbUtil;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.util.Constants;
 import com.zimbra.cs.util.StringUtil;

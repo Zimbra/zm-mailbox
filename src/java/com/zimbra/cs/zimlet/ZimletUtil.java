@@ -66,7 +66,7 @@ import com.zimbra.cs.client.soap.LmcAuthResponse;
 import com.zimbra.cs.client.soap.LmcSoapRequest;
 import com.zimbra.cs.client.soap.LmcSoapResponse;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.admin.AdminService;

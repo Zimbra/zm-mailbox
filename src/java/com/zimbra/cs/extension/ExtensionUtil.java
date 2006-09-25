@@ -35,7 +35,7 @@ import java.util.ListIterator;
 
 import org.apache.commons.collections.map.ListOrderedMap;
 
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.util.ZimbraLog;
 

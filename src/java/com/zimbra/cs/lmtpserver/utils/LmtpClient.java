@@ -37,7 +37,7 @@ import java.util.List;
 
 import com.zimbra.cs.lmtpserver.LmtpInputStream;
 import com.zimbra.cs.lmtpserver.LmtpProtocolException;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 
 public class LmtpClient {
 

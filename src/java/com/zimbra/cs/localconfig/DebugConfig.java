@@ -31,6 +31,8 @@
  */
 package com.zimbra.cs.localconfig;
 
+import com.zimbra.common.localconfig.LC;
+
 /**
  * @author jhahm
  *

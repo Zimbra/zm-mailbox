@@ -36,6 +36,10 @@
 	<property name="generated.java.dir" location="${build.dir}/generated/src/java" />
 	<property name="warfile" location="${build.dir}/service.war" />
 	<property name="jarfile" location="${build.dir}/zimbrastore.jar" />
+	<property name="common.dir" location="../ZimbraCommon" />
+	<property name="common.classes.dir" location="${common.dir}/build/classes" />
+	<property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar" />
+	<property name="common.jars.dir" location="${common.dir}/jars" />
 	
 	<property name="jars.dir" location="jars" />
 	<property name="lib.dir" location="lib" />
@@ -96,13 +100,14 @@
 
 	<taskdef resource="net/sf/antcontrib/antlib.xml">
 		<classpath>
-			<pathelement location="jars/ant-contrib-1.0b1.jar"/>
+			<pathelement location="${common.jars.dir}/ant-contrib-1.0b1.jar"/>
 		</classpath>
 	</taskdef>
 
 	<path id="class.path">
+		<pathelement location="${common.classes.dir}" />
 		<pathelement location="${build.classes.dir}" />
-		<fileset dir="${jars.dir}">
+		<fileset dir="${common.jars.dir}">
 			<include name="**/*.jar" />
 		</fileset>
 	</path>
@@ -250,6 +255,7 @@
 	</target>
 
 	<target name="compile" depends="build-init" description="Compiles the source code">
+		<ant dir="${common.dir}" target="jar" inheritAll="false" />
 		<javac destdir="${build.classes.dir}" debug="true" classpathref="class.path">
 			<src refid="all.java.path" />
 		</javac>
@@ -282,8 +288,9 @@
 		<echo>war.exclude=${war.exclude}</echo>
 		<war warfile="${warfile}" webxml="${config.dir}/web.xml${production.suffix}">
 			<fileset dir="WebRoot"/>
+			<lib file="${common.jarfile}" />
 			<lib file="${jarfile}" />
-			<lib dir="${jars.dir}" includes="*.jar" excludes="${war.exclude}" />
+			<lib dir="${common.jars.dir}" includes="*.jar" excludes="${war.exclude}" />
 			<classes dir="${config.dir}" includes="sieveConfig.xml" />
 		</war>
 	</target>
@@ -333,7 +340,7 @@
 		<fixcrlf srcdir="${dist.dir}/conf" eol="unix" includes="**" />
 
 		<!-- lib: ignore absence of DLL for windows -->
-		<copy todir="${dist.dir}/lib/jars" overwrite="true"><fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" /></copy>
+		<copy todir="${dist.dir}/lib/jars" overwrite="true"><fileset dir="${common.jars.dir}" includes="*.jar" excludes="servlet-api.jar" /></copy>
 		<copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
 		<copy todir="${dist.dir}/lib/ext" overwrite="true" ><fileset dir="${lib.dir}/ext"/></copy> <!-- CHECK -->
 		
@@ -343,8 +350,8 @@
 		<copy tofile="${dist.dir}/tomcat/conf/context.xml" file="${config.dir}/tomcat-5.5/context.xml" overwrite="true"/>
 		<copy todir="${dist.dir}/tomcat/conf" file="${config.dir}/tomcat-5.5/tomcat-users.xml" overwrite="true"/>
 		<copy todir="${dist.dir}/tomcat/conf" file="${config.dir}/tomcat-5.5/web.xml" overwrite="true"/>
-		<copy todir="${dist.dir}/tomcat/common/lib" overwrite="true"><fileset dir="${jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar" /></copy>
-		<copy todir="${dist.dir}/tomcat/common/endorsed" file="${jars.dir}/zimbra-charset.jar" overwrite="true"/>
+		<copy todir="${dist.dir}/tomcat/common/lib" overwrite="true"><fileset dir="${common.jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar" /></copy>
+		<copy todir="${dist.dir}/tomcat/common/endorsed" file="${common.jars.dir}/zimbra-charset.jar" overwrite="true"/>
 
 		<!-- openldap -->
 		<copy tofile="${dist.dir}/${slapd.conf.dir}/slapd.conf" file="${slapd.conf.src}" overwrite="true"/> <!-- CHECK this is ok with dev build -->
@@ -495,7 +502,7 @@
 	</target>
 
 	<target name="choose-db-schema">
-		<java classname="com.zimbra.cs.localconfig.Main" fork="true" classpathref="class.path"
+		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path"
 			  outputproperty="LC.mbox.group.disabled" failonerror="true">
 			<arg line="-q -c conf/localconfig.xml -m nokey debug_disable_mailbox_group"/>
 		</java>
@@ -555,7 +562,7 @@
 		<antcall target="ldap-add"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/></antcall>
 		<antcall target="ldap-add"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_mimehandlers.ldif"/></antcall>
 		<echo>Editing localconfig zimbra_server_hostname to be ${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.cs.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-e zimbra_server_hostname=${zimbra.server.hostname}"/>
 		</java>
 		<echo>Running zmprov commands</echo>

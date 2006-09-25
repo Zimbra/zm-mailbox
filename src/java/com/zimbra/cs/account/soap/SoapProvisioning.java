@@ -52,7 +52,7 @@ import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;

@@ -28,7 +28,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 
 /**
  * Represents a stats file in CSV format.  Stats files are fact tables,

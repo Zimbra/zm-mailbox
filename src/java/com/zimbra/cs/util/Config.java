@@ -39,7 +39,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbConfig;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 
 /**

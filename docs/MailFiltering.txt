@@ -267,7 +267,7 @@ and implicit keep. The source code is located at:
 ThirdParty/jsieve/trunk
 
 Use the build.bat or build.sh to build the source. The generated jsieve-0.1.jar file
-is then checked into ZimbraServer/jars.
+is then checked into ZimbraCommon/jars.
 
 More background:
 

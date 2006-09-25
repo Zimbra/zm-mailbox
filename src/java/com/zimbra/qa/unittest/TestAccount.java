@@ -36,7 +36,7 @@ import com.zimbra.cs.client.soap.LmcDeleteAccountRequest;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.util.ZimbraLog;

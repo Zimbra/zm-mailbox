@@ -53,7 +53,7 @@ import org.dom4j.DocumentException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.GetMailQueue;
 import com.zimbra.cs.util.ByteUtil;

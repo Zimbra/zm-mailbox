@@ -52,7 +52,7 @@ import com.zimbra.cs.im.xmpp.srv.roster.RosterManager;
 import com.zimbra.cs.im.xmpp.srv.spi.*;
 import com.zimbra.cs.im.xmpp.srv.transport.TransportHandler;
 import com.zimbra.cs.im.xmpp.srv.user.UserManager;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 
 import org.xmpp.packet.JID;
 

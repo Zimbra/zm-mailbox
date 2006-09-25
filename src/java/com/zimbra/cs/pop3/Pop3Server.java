@@ -31,7 +31,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.RealtimeStatsCallback;
 import com.zimbra.cs.stats.ZimbraPerf;

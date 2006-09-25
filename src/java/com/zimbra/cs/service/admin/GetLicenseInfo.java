@@ -30,7 +30,7 @@ import java.util.Map;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 
 public class GetLicenseInfo extends AdminDocumentHandler {
 

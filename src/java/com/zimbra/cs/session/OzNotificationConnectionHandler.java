@@ -36,7 +36,7 @@ import java.util.Map;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.HttpRequest;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.ozserver.OzByteArrayMatcher;
 import com.zimbra.cs.ozserver.OzByteBufferGatherer;
 import com.zimbra.cs.ozserver.OzConnection;

@@ -66,7 +66,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.StringUtil;

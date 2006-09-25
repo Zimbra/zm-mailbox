@@ -80,7 +80,7 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Account.CalendarUserType;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.localconfig.LC;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
