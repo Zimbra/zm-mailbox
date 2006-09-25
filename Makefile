@@ -129,8 +129,8 @@ $(BUILD)/Util.h: $(CLASSES)/com/zimbra/znative/Util.class
 # dev environment.
 #
 push: all
-	p4 edit ../ZimbraServer/jars/zimbra-native.jar
-	cp $(BUILD)/zimbra-native.jar ../ZimbraServer/jars
+	p4 edit ../ZimbraCommon/jars/zimbra-native.jar
+	cp $(BUILD)/zimbra-native.jar ../ZimbraCommon/jars
 	p4 edit ../ZimbraServer/lib/libzimbra-native.$(PUSHED_EXT)
 	cp $(BUILD)/libzimbra-native.$(SHARED_EXT) ../ZimbraServer/lib/libzimbra-native.$(PUSHED_EXT)
 
