@@ -54,6 +54,7 @@ import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.FSDirectory;
 
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearchConstraints;
@@ -822,8 +823,13 @@ public final class MailboxIndex
     
     private Analyzer mAnalyzer = null;
 
-    synchronized public void initAnalyzer(Mailbox mbox) {
-        mAnalyzer = ZimbraAnalyzer.getAnalyzer("AnalyzerSample");
+    synchronized public void initAnalyzer(Mailbox mbox) throws ServiceException {
+        String analyzerName = mbox.getAccount().getAttr(Provisioning.A_zimbraTextAnalyzer, null);
+        
+        if (analyzerName != null)
+            mAnalyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
+        else
+            mAnalyzer = ZimbraAnalyzer.getDefaultAnalyzer();
     }
     
     synchronized public Analyzer getAnalyzer() {
