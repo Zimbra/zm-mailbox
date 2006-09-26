@@ -40,14 +40,14 @@ import com.zimbra.soap.DocumentService;
  */
 public class MailService implements DocumentService {
 
-	public static final String NAMESPACE_STR = "urn:zimbraMail";
-	public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
-	
+    public static final String NAMESPACE_STR = "urn:zimbraMail";
+    public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
+    
     // noop
     public static final QName NO_OP_REQUEST = QName.get("NoOpRequest", NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get("NoOpResponse", NAMESPACE);
 
-	// searching
+    // searching
     public static final QName SEARCH_REQUEST = QName.get("SearchRequest", NAMESPACE);
     public static final QName SEARCH_RESPONSE = QName.get("SearchResponse", NAMESPACE);
     public static final QName SEARCH_CONV_REQUEST = QName.get("SearchConvRequest", NAMESPACE);
@@ -59,75 +59,77 @@ public class MailService implements DocumentService {
     public static final QName ITEM_ACTION_REQUEST = QName.get("ItemActionRequest", NAMESPACE);
     public static final QName ITEM_ACTION_RESPONSE = QName.get("ItemActionResponse", NAMESPACE);
     // conversations
-	public static final QName GET_CONV_REQUEST = QName.get("GetConvRequest", NAMESPACE);
-	public static final QName GET_CONV_RESPONSE = QName.get("GetConvResponse", NAMESPACE);
-	public static final QName CONV_ACTION_REQUEST = QName.get("ConvActionRequest", NAMESPACE);
-	public static final QName CONV_ACTION_RESPONSE = QName.get("ConvActionResponse", NAMESPACE);
-	// messages
-	public static final QName GET_MSG_REQUEST = QName.get("GetMsgRequest", NAMESPACE);
-	public static final QName GET_MSG_RESPONSE = QName.get("GetMsgResponse", NAMESPACE);
-	public static final QName MSG_ACTION_REQUEST = QName.get("MsgActionRequest", NAMESPACE);
-	public static final QName MSG_ACTION_RESPONSE = QName.get("MsgActionResponse", NAMESPACE);
-	//   SendMsg/AddMsg/SendAppt
-	public static final QName SEND_MSG_REQUEST = QName.get("SendMsgRequest", NAMESPACE);
-	public static final QName SEND_MSG_RESPONSE = QName.get("SendMsgResponse", NAMESPACE);
-	public static final QName ADD_MSG_REQUEST = QName.get("AddMsgRequest", NAMESPACE);
-	public static final QName ADD_MSG_RESPONSE = QName.get("AddMsgResponse", NAMESPACE);
+    public static final QName GET_CONV_REQUEST = QName.get("GetConvRequest", NAMESPACE);
+    public static final QName GET_CONV_RESPONSE = QName.get("GetConvResponse", NAMESPACE);
+    public static final QName CONV_ACTION_REQUEST = QName.get("ConvActionRequest", NAMESPACE);
+    public static final QName CONV_ACTION_RESPONSE = QName.get("ConvActionResponse", NAMESPACE);
+    // messages
+    public static final QName GET_MSG_REQUEST = QName.get("GetMsgRequest", NAMESPACE);
+    public static final QName GET_MSG_RESPONSE = QName.get("GetMsgResponse", NAMESPACE);
+    public static final QName GET_MSG_METADATA_REQUEST = QName.get("GetMsgMetadataRequest", NAMESPACE);
+    public static final QName GET_MSG_METADATA_RESPONSE = QName.get("GetMsgMetadataResponse", NAMESPACE);
+    public static final QName MSG_ACTION_REQUEST = QName.get("MsgActionRequest", NAMESPACE);
+    public static final QName MSG_ACTION_RESPONSE = QName.get("MsgActionResponse", NAMESPACE);
+    //   SendMsg/AddMsg/SendAppt
+    public static final QName SEND_MSG_REQUEST = QName.get("SendMsgRequest", NAMESPACE);
+    public static final QName SEND_MSG_RESPONSE = QName.get("SendMsgResponse", NAMESPACE);
+    public static final QName ADD_MSG_REQUEST = QName.get("AddMsgRequest", NAMESPACE);
+    public static final QName ADD_MSG_RESPONSE = QName.get("AddMsgResponse", NAMESPACE);
     public static final QName SEND_APPT_REQUEST = QName.get("SendApptRequest", NAMESPACE);
     public static final QName SEND_APPT_RESPONSE = QName.get("SendApptResponse", NAMESPACE);
     public static final QName SAVE_DRAFT_REQUEST = QName.get("SaveDraftRequest", NAMESPACE);
     public static final QName SAVE_DRAFT_RESPONSE = QName.get("SaveDraftResponse", NAMESPACE);
-	// folders
-	public static final QName CREATE_FOLDER_REQUEST = QName.get("CreateFolderRequest", NAMESPACE);
-	public static final QName CREATE_FOLDER_RESPONSE = QName.get("CreateFolderResponse", NAMESPACE);
-	public static final QName GET_FOLDER_REQUEST = QName.get("GetFolderRequest", NAMESPACE);
-	public static final QName GET_FOLDER_RESPONSE = QName.get("GetFolderResponse", NAMESPACE);
-	public static final QName FOLDER_ACTION_REQUEST = QName.get("FolderActionRequest", NAMESPACE);
-	public static final QName FOLDER_ACTION_RESPONSE = QName.get("FolderActionResponse", NAMESPACE);
-	// tags
-	public static final QName CREATE_TAG_REQUEST = QName.get("CreateTagRequest", NAMESPACE);
-	public static final QName CREATE_TAG_RESPONSE = QName.get("CreateTagResponse", NAMESPACE);
-	public static final QName GET_TAG_REQUEST = QName.get("GetTagRequest", NAMESPACE);
-	public static final QName GET_TAG_RESPONSE = QName.get("GetTagResponse", NAMESPACE);
-	public static final QName TAG_ACTION_REQUEST = QName.get("TagActionRequest", NAMESPACE);
-	public static final QName TAG_ACTION_RESPONSE = QName.get("TagActionResponse", NAMESPACE);
-	// saved searches
-	public static final QName CREATE_SEARCH_FOLDER_REQUEST = QName.get("CreateSearchFolderRequest", NAMESPACE);
-	public static final QName CREATE_SEARCH_FOLDER_RESPONSE = QName.get("CreateSearchFolderResponse", NAMESPACE);
-	public static final QName GET_SEARCH_FOLDER_REQUEST = QName.get("GetSearchFolderRequest", NAMESPACE);
-	public static final QName GET_SEARCH_FOLDER_RESPONSE = QName.get("GetSearchFolderResponse", NAMESPACE);
-	public static final QName MODIFY_SEARCH_FOLDER_REQUEST = QName.get("ModifySearchFolderRequest", NAMESPACE);
-	public static final QName MODIFY_SEARCH_FOLDER_RESPONSE = QName.get("ModifySearchFolderResponse", NAMESPACE);
+    // folders
+    public static final QName CREATE_FOLDER_REQUEST = QName.get("CreateFolderRequest", NAMESPACE);
+    public static final QName CREATE_FOLDER_RESPONSE = QName.get("CreateFolderResponse", NAMESPACE);
+    public static final QName GET_FOLDER_REQUEST = QName.get("GetFolderRequest", NAMESPACE);
+    public static final QName GET_FOLDER_RESPONSE = QName.get("GetFolderResponse", NAMESPACE);
+    public static final QName FOLDER_ACTION_REQUEST = QName.get("FolderActionRequest", NAMESPACE);
+    public static final QName FOLDER_ACTION_RESPONSE = QName.get("FolderActionResponse", NAMESPACE);
+    // tags
+    public static final QName CREATE_TAG_REQUEST = QName.get("CreateTagRequest", NAMESPACE);
+    public static final QName CREATE_TAG_RESPONSE = QName.get("CreateTagResponse", NAMESPACE);
+    public static final QName GET_TAG_REQUEST = QName.get("GetTagRequest", NAMESPACE);
+    public static final QName GET_TAG_RESPONSE = QName.get("GetTagResponse", NAMESPACE);
+    public static final QName TAG_ACTION_REQUEST = QName.get("TagActionRequest", NAMESPACE);
+    public static final QName TAG_ACTION_RESPONSE = QName.get("TagActionResponse", NAMESPACE);
+    // saved searches
+    public static final QName CREATE_SEARCH_FOLDER_REQUEST = QName.get("CreateSearchFolderRequest", NAMESPACE);
+    public static final QName CREATE_SEARCH_FOLDER_RESPONSE = QName.get("CreateSearchFolderResponse", NAMESPACE);
+    public static final QName GET_SEARCH_FOLDER_REQUEST = QName.get("GetSearchFolderRequest", NAMESPACE);
+    public static final QName GET_SEARCH_FOLDER_RESPONSE = QName.get("GetSearchFolderResponse", NAMESPACE);
+    public static final QName MODIFY_SEARCH_FOLDER_REQUEST = QName.get("ModifySearchFolderRequest", NAMESPACE);
+    public static final QName MODIFY_SEARCH_FOLDER_RESPONSE = QName.get("ModifySearchFolderResponse", NAMESPACE);
     // mountpoints
     public static final QName CREATE_MOUNTPOINT_REQUEST = QName.get("CreateMountpointRequest", NAMESPACE);
     public static final QName CREATE_MOUNTPOINT_RESPONSE = QName.get("CreateMountpointResponse", NAMESPACE);
-	// contacts
-	public static final QName CREATE_CONTACT_REQUEST = QName.get("CreateContactRequest", NAMESPACE);
-	public static final QName CREATE_CONTACT_RESPONSE = QName.get("CreateContactResponse", NAMESPACE);
-	public static final QName MODIFY_CONTACT_REQUEST = QName.get("ModifyContactRequest", NAMESPACE);
-	public static final QName MODIFY_CONTACT_RESPONSE = QName.get("ModifyContactResponse", NAMESPACE);
-	public static final QName GET_CONTACTS_REQUEST = QName.get("GetContactsRequest", NAMESPACE);
-	public static final QName GET_CONTACTS_RESPONSE = QName.get("GetContactsResponse", NAMESPACE);
+    // contacts
+    public static final QName CREATE_CONTACT_REQUEST = QName.get("CreateContactRequest", NAMESPACE);
+    public static final QName CREATE_CONTACT_RESPONSE = QName.get("CreateContactResponse", NAMESPACE);
+    public static final QName MODIFY_CONTACT_REQUEST = QName.get("ModifyContactRequest", NAMESPACE);
+    public static final QName MODIFY_CONTACT_RESPONSE = QName.get("ModifyContactResponse", NAMESPACE);
+    public static final QName GET_CONTACTS_REQUEST = QName.get("GetContactsRequest", NAMESPACE);
+    public static final QName GET_CONTACTS_RESPONSE = QName.get("GetContactsResponse", NAMESPACE);
     public static final QName IMPORT_CONTACTS_REQUEST = QName.get("ImportContactsRequest", NAMESPACE);
     public static final QName IMPORT_CONTACTS_RESPONSE = QName.get("ImportContactsResponse", NAMESPACE);
     public static final QName EXPORT_CONTACTS_REQUEST = QName.get("ExportContactsRequest", NAMESPACE);
     public static final QName EXPORT_CONTACTS_RESPONSE = QName.get("ExportContactsResponse", NAMESPACE);
 
-	public static final QName CONTACT_ACTION_REQUEST = QName.get("ContactActionRequest", NAMESPACE);
-	public static final QName CONTACT_ACTION_RESPONSE = QName.get("ContactActionResponse", NAMESPACE);
-	// notes
-	public static final QName CREATE_NOTE_REQUEST = QName.get("CreateNoteRequest", NAMESPACE);
-	public static final QName CREATE_NOTE_RESPONSE = QName.get("CreateNoteResponse", NAMESPACE);
-	public static final QName GET_NOTE_REQUEST = QName.get("GetNoteRequest", NAMESPACE);
-	public static final QName GET_NOTE_RESPONSE = QName.get("GetNoteResponse", NAMESPACE);
-	public static final QName NOTE_ACTION_REQUEST = QName.get("NoteActionRequest", NAMESPACE);
-	public static final QName NOTE_ACTION_RESPONSE = QName.get("NoteActionResponse", NAMESPACE);
-	// sync for Outlook
-	public static final QName SYNC_REQUEST = QName.get("SyncRequest", NAMESPACE);
-	public static final QName SYNC_RESPONSE = QName.get("SyncResponse", NAMESPACE);
-	// filter rules
-	public static final QName GET_RULES_REQUEST = QName.get("GetRulesRequest", NAMESPACE);
-	public static final QName GET_RULES_RESPONSE = QName.get("GetRulesResponse", NAMESPACE);
+    public static final QName CONTACT_ACTION_REQUEST = QName.get("ContactActionRequest", NAMESPACE);
+    public static final QName CONTACT_ACTION_RESPONSE = QName.get("ContactActionResponse", NAMESPACE);
+    // notes
+    public static final QName CREATE_NOTE_REQUEST = QName.get("CreateNoteRequest", NAMESPACE);
+    public static final QName CREATE_NOTE_RESPONSE = QName.get("CreateNoteResponse", NAMESPACE);
+    public static final QName GET_NOTE_REQUEST = QName.get("GetNoteRequest", NAMESPACE);
+    public static final QName GET_NOTE_RESPONSE = QName.get("GetNoteResponse", NAMESPACE);
+    public static final QName NOTE_ACTION_REQUEST = QName.get("NoteActionRequest", NAMESPACE);
+    public static final QName NOTE_ACTION_RESPONSE = QName.get("NoteActionResponse", NAMESPACE);
+    // sync for Outlook
+    public static final QName SYNC_REQUEST = QName.get("SyncRequest", NAMESPACE);
+    public static final QName SYNC_RESPONSE = QName.get("SyncResponse", NAMESPACE);
+    // filter rules
+    public static final QName GET_RULES_REQUEST = QName.get("GetRulesRequest", NAMESPACE);
+    public static final QName GET_RULES_RESPONSE = QName.get("GetRulesResponse", NAMESPACE);
     public static final QName SAVE_RULES_REQUEST = QName.get("SaveRulesRequest", NAMESPACE);
     public static final QName SAVE_RULES_RESPONSE = QName.get("SaveRulesResponse", NAMESPACE);
     // calendaring / appointment
@@ -479,6 +481,7 @@ public class MailService implements DocumentService {
 
         // messages
         dispatcher.registerHandler(GET_MSG_REQUEST, new GetMsg());
+        dispatcher.registerHandler(GET_MSG_METADATA_REQUEST, new GetMsgMetadata());
         dispatcher.registerHandler(MSG_ACTION_REQUEST, new MsgAction());
         dispatcher.registerHandler(SEND_MSG_REQUEST, new SendMsg());
         dispatcher.registerHandler(ADD_MSG_REQUEST, new AddMsg());

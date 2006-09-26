@@ -174,7 +174,7 @@ public class ItemAction extends MailDocumentHandler {
         return successes.toString();
     }
 
-    protected void partitionItems(ZimbraSoapContext zsc, String ids, ArrayList<Integer> local, HashMap<String, StringBuffer> remote) throws ServiceException {
+    static void partitionItems(ZimbraSoapContext zsc, String ids, ArrayList<Integer> local, HashMap<String, StringBuffer> remote) throws ServiceException {
         Account acct = getRequestedAccount(zsc);
         String targets[] = ids.split(",");
         for (int i = 0; i < targets.length; i++) {

@@ -749,8 +749,8 @@ public abstract class Element {
 
         public static final ElementFactory mFactory = new XMLFactory();
 
-        private static final String E_ATTRIBUTE = "a";
-        private static final String A_ATTR_NAME = "n";
+        public static final String E_ATTRIBUTE = "a";
+        public static final String A_ATTR_NAME = "n";
         private static final String A_NAMESPACE = "xmlns";
 
         public XMLElement(String name) throws ContainerException { mName = validateName(name); }

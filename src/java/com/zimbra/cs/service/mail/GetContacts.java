@@ -91,7 +91,7 @@ public class GetContacts extends MailDocumentHandler  {
 					attrs = new ArrayList<String>();
 				attrs.add(name);
 			} else if (e.getName().equals(MailService.E_CONTACT)) {
-				String idStr =  e.getAttribute(MailService.A_ID);
+				String idStr = e.getAttribute(MailService.A_ID);
 				String targets[] = idStr.split(",");
 				for (String target : targets) { 
 					ItemId iid = new ItemId(target, zsc);
@@ -123,11 +123,10 @@ public class GetContacts extends MailDocumentHandler  {
 					throw ServiceException.INVALID_REQUEST("Cannot specify a folder with mixed-mailbox items", null);
 
 				List<Element> responses = proxyRemote(request, remote, context);
-				for (Element e : responses) {
+				for (Element e : responses)
 					response.addElement(e);
-				}
 			}
-			
+
 			if (local.size() > 0) {
 				GetContactOperation op = new GetContactOperation(session, octxt, mbox, Requester.SOAP, local);
 				op.schedule();
@@ -153,7 +152,8 @@ public class GetContacts extends MailDocumentHandler  {
 	}
 
 
-	private void partitionItems(ZimbraSoapContext lc, ArrayList<ItemId> ids, ArrayList<Integer> local, HashMap<String, StringBuffer> remote) throws ServiceException {
+	static void partitionItems(ZimbraSoapContext lc, ArrayList<ItemId> ids, ArrayList<Integer> local, HashMap<String, StringBuffer> remote)
+    throws ServiceException {
 		Account acct = getRequestedAccount(lc);
 		for (ItemId iid : ids) {
 			if (iid.belongsTo(acct))
@@ -168,25 +168,20 @@ public class GetContacts extends MailDocumentHandler  {
 		}
 	}
 
-	private List<Element> proxyRemote(Element request, Map<String, StringBuffer> remote, Map<String,Object> context)
+	static List<Element> proxyRemote(Element request, Map<String, StringBuffer> remote, Map<String,Object> context)
 	throws ServiceException {
 		List<Element> responses = new ArrayList<Element>();
 
+        // note that we removed all <cn> elements from the request during handle(), above
         Element cn = request.addElement(MailService.E_CONTACT);
         for (Map.Entry<String, StringBuffer> entry : remote.entrySet()) {
 			cn.addAttribute(MailService.A_ID, entry.getValue().toString());
 
 			Element response = proxyRequest(request, context, entry.getKey());
-			extractResponses(response, responses);
+            for (Element e : response.listElements())
+                responses.add(e.detach());
 		}
 
 		return responses;
-	}
-
-	protected void extractResponses(Element responseElt, List<Element> responses) {
-		for (Element e : responseElt.listElements(MailService.E_CONTACT)) {
-			e.detach();
-			responses.add(e);
-		}
 	}
 }

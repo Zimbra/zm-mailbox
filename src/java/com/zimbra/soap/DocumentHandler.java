@@ -65,7 +65,7 @@ public abstract class DocumentHandler {
             }
         }
 
-    public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException;
+    public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException;
 
     public static ZimbraSoapContext getZimbraSoapContext(Map<String, Object> context) {
         return (ZimbraSoapContext) context.get(SoapEngine.ZIMBRA_CONTEXT);

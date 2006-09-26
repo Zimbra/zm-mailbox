@@ -24,6 +24,9 @@
  */
 package com.zimbra.cs.operation;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -36,52 +39,58 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 
 public class GetMsgOperation extends Operation {
+    private int[] mMsgIds;
+    private ItemId mIid;
+    private boolean mRead;
+    private List<Message> mMsgs;
+    private Appointment mAppt;
 
 	private static int LOAD = 5;
-	static {
-		Operation.Config c = loadConfig(GetMsgOperation.class);
-		if (c != null)
-			LOAD = c.mLoad;
-	}
+    	static {
+    		Operation.Config c = loadConfig(GetMsgOperation.class);
+    		if (c != null)
+    			LOAD = c.mLoad;
+    	}
+
+    public GetMsgOperation(Session session, OperationContext octxt, Mailbox mbox, Requester req, ItemId iid, boolean read) {
+        super(session, octxt, mbox, req, LOAD);
+
+        mIid = iid;
+        mRead = read;
+    }
+
+    public GetMsgOperation(Session session, OperationContext octxt, Mailbox mbox, Requester req, List<Integer> ids, boolean read) {
+        super(session, octxt, mbox, req, LOAD);
+
+        int i = 0;
+        mMsgIds = new int[ids.size()];
+        for (int id : ids)
+            mMsgIds[i++] = id;
+        mRead = read;
+    }
 	
 	protected void callback() throws ServiceException {
-		if (!mIId.hasSubpart()) {
-			mMsg = mMailbox.getMessageById(mOpCtxt, mIId.getId());
-            
-			if (mRead && mMsg.isUnread() && !RedoLogProvider.getInstance().isSlave())
-				mMailbox.alterTag(mOpCtxt, mIId.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
+        if (mMsgIds != null) {
+            mMsgs = new ArrayList<Message>();
+            for (MailItem item : mMailbox.getItemById(mOpCtxt, mMsgIds, MailItem.TYPE_MESSAGE))
+                mMsgs.add((Message) item);
+        } else if (!mIid.hasSubpart()) {
+			Message msg = mMailbox.getMessageById(mOpCtxt, mIid.getId());
+			(mMsgs = new ArrayList<Message>()).add(msg);
+
+			if (mRead && msg.isUnread() && !RedoLogProvider.getInstance().isSlave())
+				mMailbox.alterTag(mOpCtxt, mIid.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
 		} else {
-			mAppt = mMailbox.getAppointmentById(mOpCtxt, mIId.getId());
+			mAppt = mMailbox.getAppointmentById(mOpCtxt, mIid.getId());
         }
 	}
-	
+
 	public String toString() {
-		String toRet = super.toString() + " IID="+mIId.toString()+" mRaw="+mRaw+" mRead="+mRead;
-		if (mPart != null) {
-			toRet = toRet + " Part="+mPart;
-		}
+		String toRet = super.toString() + " IID=" + mIid + " mRead=" + mRead;
 		return toRet;
 	}
 
-	public GetMsgOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-				ItemId iid, boolean raw, boolean read, String part) throws ServiceException {
-		super(session, oc, mbox, req, LOAD);
-		
-		mIId = iid;
-		mRaw = raw;
-		mRead = read;
-		mPart = part;
-		
-		schedule();
-	}
-	
-	public Message getMsg() { return mMsg; }
+    public Message getMsg() { return mMsgs.get(0); }
+    public List<Message> getMsgList() { return mMsgs; }
 	public Appointment getAppt() { return mAppt; }
-
-	ItemId mIId;
-	boolean mRaw;
-	boolean mRead;
-	String mPart;
-	Message mMsg;
-	Appointment mAppt;
 }

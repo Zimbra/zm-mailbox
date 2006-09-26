@@ -63,7 +63,8 @@ public class GetMsg extends MailDocumentHandler {
         boolean neuter = eMsg.getAttributeBool(MailService.A_NEUTER, true);
         String part = eMsg.getAttribute(MailService.A_PART, null);
         
-        GetMsgOperation op = new GetMsgOperation(session, octxt, mbox, Requester.SOAP, iid, raw, read, part);
+        GetMsgOperation op = new GetMsgOperation(session, octxt, mbox, Requester.SOAP, iid, read);
+        op.schedule();
         
         Element response = lc.createElement(MailService.GET_MSG_RESPONSE);
         if (raw) {

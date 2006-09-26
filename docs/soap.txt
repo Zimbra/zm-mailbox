@@ -989,6 +989,16 @@ supply a "part" and the retrieved data will be on the specified message/rfc822 s
 </GetMsgResponse>
 
 ------------
+<GetMsgMetadataRequest>
+  <m ids="{msg-id-list}"/>
+</GetMsgMetadataRequest>
+
+<GetMsgMetadataResponse>
+  (<m id="{message-id}" f="{flags}" t="{tags}" s="{size}" d="{received-date}" l="{folder}" [cid="{conv}"]
+      rev="{revision-number}" md="{date-metadata-changed}" ms="{change-sequence}"/>)*
+</GetMsgMetadataResponse>
+
+------------
 
 <GetNoteRequest>
   <note id="{note-id}"/>
