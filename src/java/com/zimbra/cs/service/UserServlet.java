@@ -57,6 +57,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -866,7 +867,9 @@ public class UserServlet extends ZimbraServlet {
         GetMethod get = new GetMethod(url);
         try {
             int statusCode = client.executeMethod(get);
-            if (statusCode != HttpStatus.SC_OK)
+            if (statusCode == HttpStatus.SC_NOT_FOUND)
+                throw MailServiceException.NO_SUCH_ITEM(-1);
+            else if (statusCode != HttpStatus.SC_OK)
                 throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), null);
 
             Header[] headers = get.getResponseHeaders();
