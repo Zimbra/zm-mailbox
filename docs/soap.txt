@@ -841,7 +841,7 @@ message result:
 contact result:
 ---------------
 <SearchResponse offset="..." more="{more-flag}">
-   <cn id="id" l="folder" sf="SORT-FIELD-VALUE" [email="Email_1 Addr"] [email2="Email_2_addr"]
+   <cn id="id" t="tags" l="folder" sf="SORT-FIELD-VALUE" [email="Email_1 Addr"] [email2="Email_2_addr"]
        email3="Email_3_addr" rev="REVISION" fileAsStr="..." md="{metadata-change-date}"/>
 
 note result:
