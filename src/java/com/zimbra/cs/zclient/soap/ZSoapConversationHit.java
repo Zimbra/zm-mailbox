@@ -85,6 +85,7 @@ class ZSoapConversationHit implements ZConversationHit {
         ZSoapSB sb = new ZSoapSB();
         sb.beginStruct();
         sb.add("id", mId);
+        sb.add("tags", mTags);
         sb.add("fragment", mFragment);
         sb.add("subject", mSubject);
         sb.addDate("date", mDate);

@@ -32,6 +32,8 @@ public interface ZContactHit extends ZSearchHit {
      */
     public String getId();
 
+    public String getTagIds();
+
     public String getFolderId();
 
     public String getRevision();

@@ -34,6 +34,7 @@ import com.zimbra.soap.Element;
 class ZSoapContactHit implements ZContactHit {
 
     private String mId;
+    private String mTags;
     private String mSortField;
     private String mFileAsStr;
     private String mEmail, mEmail2, mEmail3;
@@ -44,6 +45,7 @@ class ZSoapContactHit implements ZContactHit {
         
     ZSoapContactHit(Element e) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
+        mTags = e.getAttribute(MailService.A_TAGS, null);        
         mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);
         mScore = (float) e.getAttributeDouble(MailService.A_SCORE, 0);
         mFileAsStr = e.getAttribute(MailService.A_FILE_AS_STR, null);
@@ -59,6 +61,7 @@ class ZSoapContactHit implements ZContactHit {
         ZSoapSB sb = new ZSoapSB();
         sb.beginStruct();
         sb.add("id", mId);
+        sb.add("tags", mTags);
         sb.add("sortField", mSortField);
         sb.add("score", mScore);
         sb.add("fileAsStr", mFileAsStr);
@@ -69,6 +72,10 @@ class ZSoapContactHit implements ZContactHit {
         sb.add(Contact.A_email3, mEmail3);
         sb.endStruct();
         return sb.toString();
+    }
+
+    public String getTagIds() {
+        return mTags;
     }
 
     public String getEmail() {
