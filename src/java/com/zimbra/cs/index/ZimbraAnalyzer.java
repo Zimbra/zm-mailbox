@@ -85,12 +85,35 @@ public class ZimbraAnalyzer extends StandardAnalyzer
     // Extension analyzers must call registerAnalyzer() on startup.  
     //
     private static HashMap<String, Analyzer> sAnalyzerMap = new HashMap<String, Analyzer>();
+    
+    
+    /**
+     * @param name is a unique name identifying the Analyzer, it is referenced by Account or COS settings in LDAP.
+     * @param analyzer is a Lucene analyzer instance which can be used by accounts that are so 
+     * configured. 
+     * @throws ServiceException
+     * 
+     * A custom Lucene Analyzer is registered with this API, usually by a Zimbra Extension.  
+     * Accounts are configured to use a particular analyzer by setting the "zimbraTextAnalyzer" key
+     * in the Account or COS setting.
+     * 
+     * The custom analyzer is assumed to be a stateless single instance (although it can and probably should
+     * return a new TokenStream instance from it's APIs)
+     * 
+     */
     public static void registerAnalyzer(String name, Analyzer analyzer) throws ServiceException {
         if (sAnalyzerMap.containsKey(name)) 
             throw ServiceException.FAILURE("Cannot register analyzer: "+name+" because there is one already registered with that name.", null);
 
         sAnalyzerMap.put(name, analyzer); 
     }
+    
+    
+    /**
+     * @param name
+     * 
+     * Remove a previously-registered custom Analyzer from the system.
+     */
     public static void unregisterAnalyzer(String name) { sAnalyzerMap.remove(name); }
 
 
