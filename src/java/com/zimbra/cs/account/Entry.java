@@ -72,12 +72,8 @@ public abstract class Entry {
     {
         if (mMultiAttrSetCache != null)            
             mMultiAttrSetCache.clear();
-        if (mData != null) {
-            for (String key : mData.keySet()) {
-                if (key.charAt(0) != '_')
-                    mData.remove(key);
-            }
-        }
+        if (mData != null)
+            mData.clear();
     }
 
     /**
@@ -256,7 +252,7 @@ public abstract class Entry {
 
     /**
      * temporarily associate a key/value pair with this entry. When an entry is reloaded, any cached data is cleared via
-     * a call to resetData. Any keys that start with "_" will not be reset.
+     * a call to resetData.
      * @param key
      * @param value
      */
