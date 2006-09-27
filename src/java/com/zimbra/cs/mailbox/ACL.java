@@ -86,19 +86,19 @@ public class ACL {
 
     public static final Account ANONYMOUS_ACCT = new Account("public", GUID_PUBLIC, getAnonAttrs(), null);
 
-    private static Map<String, Object> getAnonAttrs() {
+    static Map<String, Object> getAnonAttrs() {
         Map<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_uid, "public");
         return attrs;
     }
     
     public static class GuestAccount extends Account {
+        private String mPassword;
     	public GuestAccount(String emailAddress, String password) {
             super(emailAddress, GUID_PUBLIC, getAnonAttrs(), null);
             mPassword = password;
     	}
-    	public String getPassword()              { return mPassword; }
-    	private String mPassword;
+    	public String getPassword() { return mPassword; }
     }
 
     public static class Grant {
