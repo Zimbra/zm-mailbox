@@ -1135,11 +1135,13 @@ Access: domain admin sufficient
 
 -----------------------------
 
-<DeployZimletRequest>
+<DeployZimletRequest action="deployAll|deployLocal|status">
   <content aid="{attachment-id}"/>
 <DeployZimletRequest/>
 
-<DeployZimletResponse/>
+<DeployZimletResponse>
+  [<progress server="{server-name}" status="succeeded|failed|pending"/>]+
+</DeployZimletResponse>
 
 -----------------------------
 

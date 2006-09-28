@@ -316,6 +316,7 @@ public class AdminService implements DocumentService {
     public static final String E_SOAP_URL = "soapURL";
     public static final String E_ADMIN_SOAP_URL = "adminSoapURL";    
     
+    public static final String A_ACTION = "action";
     public static final String A_APPLY_CONFIG = "applyConfig";
     public static final String A_APPLY_COS = "applyCos";
     public static final String A_ID = "id";
@@ -406,6 +407,9 @@ public class AdminService implements DocumentService {
     public static final String A_DEST = "dest";
     
     public static final String A_CONCURRENCY = "concurrency";
+    
+    public static final String A_DEPLOYALL = "deployall";
+    public static final String A_DEPLOYLOCAL = "deploylocal";
     
     public void registerHandlers(DocumentDispatcher dispatcher) {
         dispatcher.registerHandler(PING_REQUEST, new Ping());

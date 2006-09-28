@@ -24,41 +24,121 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.collections.map.LRUMap;
+
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.cs.zimlet.ZimletException;
+import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.zimlet.ZimletFile;
 import com.zimbra.cs.zimlet.ZimletUtil;
+import com.zimbra.cs.zimlet.ZimletUtil.DeployListener;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class DeployZimlet extends AdminDocumentHandler {
 
+	public static final String sPENDING = "pending";
+	public static final String sSUCCEEDED = "succeeded";
+	public static final String sFAILED = "failed";
+	
+	private LRUMap mProgressMap;
+
+	private static class Progress implements DeployListener {
+		private Map<String,String> mStatus;
+		
+		public Progress(boolean allServers) throws ServiceException {
+			mStatus = new HashMap<String,String>();
+			Provisioning prov = Provisioning.getInstance();
+			if (!allServers) {
+				mStatus.put(prov.getLocalServer().getName(), sPENDING);
+				return;
+			}
+			List<Server> servers = prov.getAllServers();
+			for (Server s : servers)
+				mStatus.put(s.getName(), sPENDING);
+		}
+		public void markFinished(Server s) {
+			mStatus.put(s.getName(), sSUCCEEDED);
+		}
+		public void markFailed(Server s) {
+			mStatus.put(s.getName(), sFAILED);
+		}
+		public void writeResponse(Element resp) {
+			Set<Map.Entry<String,String>> entries = mStatus.entrySet();
+			for (Map.Entry<String, String> entry : entries) {
+				Element progress = resp.addElement(AdminService.E_PROGRESS);
+				progress.addAttribute(AdminService.A_SERVER, entry.getKey());
+				progress.addAttribute(AdminService.A_STATUS, entry.getValue());
+			}
+		}
+	}
+	
+	private static class DeployThread implements Runnable {
+		Upload upload;
+		Progress progress;
+		String auth;
+		public DeployThread(Upload up, Progress pr, String au) {
+			upload = up;
+			progress = pr;
+			auth = au;
+		}
+		public void run() {
+			try {
+				ZimletUtil.deployZimlet(new ZimletFile(upload.getName(), upload.getInputStream()), progress, auth);
+			} catch (Exception e) {
+				ZimbraLog.zimlet.info("deploy", e);
+			} finally {
+				FileUploadServlet.deleteUpload(upload);
+			}
+		}
+	}
+	
+	public DeployZimlet() {
+		// keep past 20 zimlet deployment progresses
+		mProgressMap = new LRUMap(20);
+	}
+	
+	private void deploy(ZimbraSoapContext lc, String aid, String auth) throws ServiceException {
+        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), aid, lc.getRawAuthToken());
+        if (up == null)
+            throw MailServiceException.NO_SUCH_UPLOAD(aid);
+
+        Progress pr = new Progress((auth != null));
+        mProgressMap.put(aid, pr);
+        Runnable action = new DeployThread(up, pr, auth);
+        new Thread(action).run();
+	}
+	
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element content = request.getElement(MailService.E_CONTENT);
-        String attachment = content.getAttribute(MailService.A_ATTACHMENT_ID, null);
-        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachment, lc.getRawAuthToken());
-        if (up == null)
-            throw MailServiceException.NO_SUCH_UPLOAD(attachment);
-
-        Element response = lc.createElement(AdminService.DEPLOY_ZIMLET_RESPONSE);
-		try {
-			ZimletUtil.deployZimlet(new ZimletFile(up.getName(), up.getInputStream()));
-		} catch (IOException ioe) {
-			throw ServiceException.FAILURE("cannot deploy", ioe);
-		} catch (ZimletException ze) {
-			throw ServiceException.FAILURE("cannot deploy", ze);
-		} finally {
-			FileUploadServlet.deleteUpload(up);
+		String action = request.getAttribute(AdminService.A_ACTION).toLowerCase();
+		Element content = request.getElement(MailService.E_CONTENT);
+		String aid = content.getAttribute(MailService.A_ATTACHMENT_ID, null);
+		
+		if (action.equals(AdminService.A_STATUS)) {
+			// just print the status
+		} else if (action.equals(AdminService.A_DEPLOYALL)) {
+			deploy(lc, aid, lc.getRawAuthToken());
+		} else if (action.equals(AdminService.A_DEPLOYLOCAL)) {
+			deploy(lc, aid, null);
+		} else {
+			throw ServiceException.INVALID_REQUEST("invalid action "+action, null);
 		}
+		Element response = lc.createElement(AdminService.DEPLOY_ZIMLET_RESPONSE);
+		Progress progress = (Progress)mProgressMap.get(aid);
+		if (progress != null)
+			progress.writeResponse(response);
 		return response;
 	}
 }

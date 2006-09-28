@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
@@ -49,10 +50,9 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
-import org.dom4j.DocumentHelper;
+import org.apache.commons.httpclient.methods.multipart.PartBase;
 
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
@@ -60,11 +60,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.client.LmcSession;
-import com.zimbra.cs.client.soap.LmcAuthRequest;
-import com.zimbra.cs.client.soap.LmcAuthResponse;
-import com.zimbra.cs.client.soap.LmcSoapRequest;
-import com.zimbra.cs.client.soap.LmcSoapResponse;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
@@ -77,8 +72,9 @@ import com.zimbra.cs.util.ByteUtil;
 import com.zimbra.cs.util.Pair;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.util.ZimbraLog;
-import com.zimbra.soap.DomUtil;
 import com.zimbra.soap.Element;
+import com.zimbra.soap.SoapHttpTransport;
+import com.zimbra.soap.Element.XMLElement;
 
 /**
  * 
@@ -310,7 +306,7 @@ public class ZimletUtil {
 			return;
 		}
 		try {
-			String zimletBase = ZIMLET_BASE + "/" + zim.getName() + "/";
+			String zimletBase = ZIMLET_BASE + "/" + zim.getZimletName() + "/";
 			Element entry = elem.addElement(AccountService.E_ZIMLET);
 			Element zimletContext = entry.addElement(AccountService.E_ZIMLET_CONTEXT);
 			zimletContext.addAttribute(AccountService.A_ZIMLET_BASE_URL, zimletBase);
@@ -341,7 +337,7 @@ public class ZimletUtil {
 	        	Iterator iter = sDevZimlets.values().iterator();
 	        	while (iter.hasNext()) {
 	        		ZimletFile zim = (ZimletFile) iter.next();
-	    			String zimletBase = ZIMLET_BASE + "/" + ZIMLET_DEV_DIR + "/" + zim.getName() + "/";
+	    			String zimletBase = ZIMLET_BASE + "/" + ZIMLET_DEV_DIR + "/" + zim.getZimletName() + "/";
 	    			Element entry = elem.addElement(AccountService.E_ZIMLET);
 	    			Element zimletContext = entry.addElement(AccountService.E_ZIMLET_CONTEXT);
 	    			zimletContext.addAttribute(AccountService.A_ZIMLET_BASE_URL, zimletBase);
@@ -375,6 +371,41 @@ public class ZimletUtil {
 		return LC.zimlet_directory.value();
 	}
 
+	public static interface DeployListener {
+		public void markFinished(Server s);
+		public void markFailed(Server s);
+	}
+	
+	/**
+	 * Multinode deploy.
+	 * 
+	 * @param zf
+	 * @param listener
+	 * @param auth
+	 * @throws IOException
+	 * @throws ZimletException
+	 * @throws ServiceException
+	 */
+	public static void deployZimlet(ZimletFile zf, DeployListener listener, String auth) throws IOException, ZimletException, ServiceException {
+		Server localServer = Provisioning.getInstance().getLocalServer();
+		try {
+			deployZimlet(zf);
+			if (listener != null)
+				listener.markFinished(localServer);
+		} catch (Exception e) {
+			if (listener != null)
+				listener.markFailed(localServer);
+		}
+
+		if (auth == null)
+			return;
+		
+		// deploy on the rest of the servers
+		byte[] data = zf.toByteArray();
+		ZimletSoapUtil soapUtil = new ZimletSoapUtil(auth);
+		soapUtil.deployZimlet(zf.getName(), data, listener, true);
+	}
+	
 	enum Action { INSTALL, UPGRADE, REPAIR };
 
 	/**
@@ -782,7 +813,7 @@ public class ZimletUtil {
 				if (isExtension) {
 					extra += " (ext)";
 				}
-				System.out.println("\t"+zimlets[i].getName()+extra);
+				System.out.println("\t"+zimlets[i].getZimletName()+extra);
 			} catch (IOException ioe) {
 				ZimbraLog.zimlet.info("error reading zimlet : "+ioe.getMessage());
 			}
@@ -1026,67 +1057,79 @@ public class ZimletUtil {
 
 	}
 	
-	private static class ZimletSoapUtil extends LmcSoapRequest {
+	private static class ZimletSoapUtil {
 		private String mUsername;
 		private String mPassword;
 		private String mAttachmentId;
-		private LmcSession mSession;
+		private String mAuth;
+		private SoapHttpTransport mTransport;
 
 		public ZimletSoapUtil() {
 			mUsername = LC.zimbra_ldap_user.value();
 			mPassword = LC.zimbra_ldap_password.value();
+			mAuth = null;
 		}
 		
-		public ZimletSoapUtil(String username, String password) {
-			mUsername = username; mPassword = password;
-			//LmcSoapRequest.setDumpXML(true);
+		public ZimletSoapUtil(String auth) {
+			mAuth = auth;
 		}
 		
-		public void deployZimlet(String zimlet) throws ServiceException {
-			File zf = new File(zimlet);
+		public void deployZimlet(String zimlet, byte[] data, DeployListener listener, boolean skipLocalhost) throws ServiceException {
 			Provisioning prov = Provisioning.getInstance();
 			List<Server> allServers = prov.getAllServers();
 			for (Server server : allServers) {
+				// localhost is already taken care of.
+				if (skipLocalhost && prov.getLocalServer().equals(server))
+					continue;
 				ZimbraLog.zimlet.info("Deploying on " + server.getName());
-				deployZimletOnServer(zf, server);
+				deployZimletOnServer(zimlet, data, server, listener);
 			}
 		}
 		
-		public void deployZimletOnServer(File zimlet, Server server) {
+		public void deployZimletOnServer(String zimlet, byte[] data, Server server, DeployListener listener) throws ServiceException {
+			mTransport = null;
 			try {
-				// auth
 				String adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI);
-				AdminAuthRequest auth = new AdminAuthRequest();
-				LmcAuthResponse resp = (LmcAuthResponse) auth.invoke(adminUrl);
-				mSession = resp.getSession();
-
+				mTransport = new SoapHttpTransport(adminUrl);
+				
+				// auth if necessary
+				if (mAuth == null)
+					auth();
+				mTransport.setAuthToken(mAuth);
+				
 				// upload
 				String uploadUrl = URLUtil.getAdminURL(server, "/service/upload");
-				mAttachmentId = postAttachment(uploadUrl, zimlet, server.getName());
+				mAttachmentId = postAttachment(uploadUrl, zimlet, data, server.getName());
 				
 				// deploy
-				setSession(mSession);
-				invoke(adminUrl);
+				soapDeployZimlet();
 				ZimbraLog.zimlet.info("Deploy successful");
+				if (listener != null)
+					listener.markFinished(server);
 			} catch (Exception e) {
-				ZimbraLog.zimlet.info("Couldn't install Zimlet " + zimlet + " on " + server.getName(), e);
+				if (listener != null)
+					listener.markFailed(server);
+				else if (e instanceof ServiceException)
+					throw (ServiceException)e;
+				else 
+					throw ServiceException.FAILURE("Unable to deploy Zimlet " + zimlet + " on " + server.getName(), e);
+			} finally {
+				if (mTransport != null)
+					mTransport.shutdown();
 			}
 		}
 		
-		protected org.dom4j.Element getRequestXML() {
-			org.dom4j.Element request = DocumentHelper.createElement(AdminService.DEPLOY_ZIMLET_REQUEST);
-			DomUtil.addAttr(DomUtil.add(request, MailService.E_CONTENT, ""), 
-					MailService.A_ATTACHMENT_ID, 
-					mAttachmentId);
-			return request;
+		private void soapDeployZimlet() throws ServiceException, IOException {
+			XMLElement req = new XMLElement(AdminService.DEPLOY_ZIMLET_REQUEST);
+			req.addAttribute(AdminService.A_ACTION, AdminService.A_DEPLOYLOCAL);
+			req.addElement(MailService.E_CONTENT).addAttribute(MailService.A_ATTACHMENT_ID, mAttachmentId);
+			mTransport.invoke(req);
 		}
-		protected LmcSoapResponse parseResponseXML(org.dom4j.Element response) {
-			return null;
-		}
-	    protected String postAttachment(String uploadURL, File f, String domain) throws ZimletException {
+		
+	    private String postAttachment(String uploadURL, String name, byte[] data, String domain) throws ZimletException {
 	    	String aid = null;
 
-	    	Cookie cookie = new Cookie(domain, "ZM_ADMIN_AUTH_TOKEN", mSession.getAuthToken(), "/", -1, false);
+	    	Cookie cookie = new Cookie(domain, ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN, mAuth, "/", -1, false);
 	    	HttpState initialState = new HttpState();
 	    	initialState.addCookie(cookie);
 	    	HttpClient client = new HttpClient();
@@ -1097,19 +1140,19 @@ public class ZimletUtil {
 	    	client.getHttpConnectionManager().getParams().setConnectionTimeout(10000);
 	    	int statusCode = -1;
 	    	try {
-	    		String contentType = URLConnection.getFileNameMap().getContentTypeFor(f.getName());
-	    		Part[] parts = { new FilePart(f.getName(), f, contentType, "UTF-8") };
+	    		String contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
+	    		Part[] parts = { new ByteArrayPart(data, name, contentType) };
 	    		post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
 	    		statusCode = client.executeMethod(post);
 
 	    		if (statusCode == 200) {
 	    			String response = post.getResponseBodyAsString();
 	    			int lastQuote = response.lastIndexOf("'");
-	    			int firstQuote = response.indexOf("','") + 3;
+	    			int firstQuote = response.indexOf("','");
 	    			if (lastQuote == -1 || firstQuote == -1) {
 	    				throw ZimletException.CANNOT_DEPLOY("Attachment post failed, unexpected response: " + response, null);
 	    			}
-	    			aid = response.substring(firstQuote, lastQuote);
+	    			aid = response.substring(firstQuote+3, lastQuote);
 	    		} else {
     				throw ZimletException.CANNOT_DEPLOY("Attachment post failed, status=" + statusCode, null);
 	    		}
@@ -1121,13 +1164,34 @@ public class ZimletUtil {
 
 	    	return aid;
 	    }
-		private class AdminAuthRequest extends LmcAuthRequest {
-			protected org.dom4j.Element getRequestXML() {
-				org.dom4j.Element request = DocumentHelper.createElement(AdminService.AUTH_REQUEST);
-				DomUtil.add(request, AccountService.E_NAME, mUsername);
-				DomUtil.add(request, AccountService.E_PASSWORD, mPassword);
-				return request;
+	    
+		private void auth() throws ServiceException, IOException {
+			XMLElement req = new XMLElement(AdminService.AUTH_REQUEST);
+			req.addElement(AdminService.E_NAME).setText(mUsername);
+			req.addElement(AdminService.E_PASSWORD).setText(mPassword);
+			Element resp = mTransport.invoke(req);
+			mAuth = resp.getElement(AccountService.E_AUTH_TOKEN).getText();
+		}
+		private static class ByteArrayPart extends PartBase {
+			private byte[] mData;
+			private String mName;
+			public ByteArrayPart(byte[] data, String name, String type) throws IOException {
+				super(name, type, "UTF-8", "binary");
+				mName = name;
+				mData = data;
 			}
+			protected void sendData(OutputStream out) throws IOException {
+				out.write(mData);
+			}
+			protected long lengthOfData() throws IOException {
+				return mData.length;
+			}
+		    protected void sendDispositionHeader(OutputStream out) throws IOException {
+		    	super.sendDispositionHeader(out);
+		    	StringBuilder buf = new StringBuilder();
+		    	buf.append("; filename=\"").append(mName).append("\"");
+		    	out.write(buf.toString().getBytes());
+		    }
 		}
 	}
 	
@@ -1239,7 +1303,8 @@ public class ZimletUtil {
 			switch (cmd) {
 			case DEPLOY_ZIMLET:
 				ZimletSoapUtil soapUtil = new ZimletSoapUtil();
-				soapUtil.deployZimlet(zimlet);
+				File zf = new File(zimlet);
+				soapUtil.deployZimlet(zf.getName(), ByteUtil.getContent(zf), null, false);
 				break;
 			case INSTALL_ZIMLET:
 				installZimlet(new ZimletFile(zimlet));

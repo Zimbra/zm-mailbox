@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.zimlet;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -50,11 +51,12 @@ public class ZimletFile implements Comparable {
 
 	private File mBase;
 	private InputStream mBaseStream;
+	private byte[] mCopy;
 	
 	public int compareTo(Object obj) {
 		if (obj instanceof ZimletFile) {
 			ZimletFile f = (ZimletFile) obj;
-			return getName().compareTo(f.getName());
+			return getZimletName().compareTo(f.getZimletName());
 		}
 		return 0;
 	}
@@ -170,7 +172,8 @@ public class ZimletFile implements Comparable {
 		mEntries = new HashMap<String,ZimletEntry>();
 
 		if (mBaseStream != null) {
-			ZipInputStream zis = new ZipInputStream(mBaseStream);
+			mCopy = ByteUtil.getContent(mBaseStream, 0);
+			ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(mCopy));
 			ZipEntry entry = zis.getNextEntry();
 			while (entry != null) {
 				mEntries.put(entry.getName().toLowerCase(), new ZimletRawEntry(zis, entry.getName(), (int)entry.getSize()));
@@ -276,7 +279,7 @@ public class ZimletFile implements Comparable {
 	}
 	
 	public String getName() {
-		return getZimletName();
+		return getZimletName() + ".zip";
 	}
 	
 	public URL toURL() throws MalformedURLException {
@@ -305,5 +308,9 @@ public class ZimletFile implements Comparable {
 		}
 		
 		return zimlet;
+	}
+	
+	public byte[] toByteArray() {
+		return mCopy;
 	}
 }
