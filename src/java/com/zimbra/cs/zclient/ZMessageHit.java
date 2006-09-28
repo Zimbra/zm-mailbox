@@ -83,4 +83,9 @@ public interface ZMessageHit extends ZSearchHit {
      *  @return names (1.2.3...) of mime part(s) that matched, or empty list.
      */
     public List<String> getMimePartHits();
+
+    /**
+     * @return ZMessage object if fetch first message was requested
+     */
+    public ZMessage getMessage();
 }

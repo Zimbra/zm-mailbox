@@ -52,7 +52,8 @@ class ZSoapMessageHit implements ZMessageHit {
     private boolean mContentMatched;
     private List<String> mMimePartHits;
     private ZEmailAddress mSender;
-        
+    private ZSoapMessage mMessage;
+
     ZSoapMessageHit(Element e, Map<String,ZSoapEmailAddress> cache) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
         mFolderId = e.getAttribute(MailService.A_FOLDER);
@@ -62,7 +63,7 @@ class ZSoapMessageHit implements ZMessageHit {
         Element fr = e.getOptionalElement(MailService.E_FRAG);
         if (fr != null) mFragment = fr.getText();
         Element sub = e.getOptionalElement(MailService.E_SUBJECT);
-        mSubject =sub.getText();        
+        mSubject =sub.getText();
         mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);
         mSize = (int) e.getAttributeLong(MailService.A_SIZE);
         mConvId = e.getAttribute(MailService.A_CONV_ID);
@@ -74,6 +75,11 @@ class ZSoapMessageHit implements ZMessageHit {
         }
         Element emailEl = e.getOptionalElement(MailService.E_EMAIL);
         if (emailEl != null) mSender = ZSoapEmailAddress.getAddress(emailEl, cache);
+
+        Element mp = e.getOptionalElement(MailService.E_MIMEPART);
+        if (mp != null) {
+            mMessage = new ZSoapMessage(e, cache);
+        }
     }
 
     public String getId() {
@@ -94,10 +100,11 @@ class ZSoapMessageHit implements ZMessageHit {
         sb.add("subject", mSubject);
         sb.addDate("date", mDate);
         sb.add("size", mSize);
-        sb.addStruct("sender", mSender.toString());
+        if (mSender != null) sb.addStruct("sender", mSender.toString());
         sb.add("sortField", mSortField);
         sb.add("score", mScore);
         sb.add("mimePartHits", mMimePartHits, true, false);
+        if (mMessage != null) sb.addStruct("message", mMessage.toString());
         sb.endStruct();
         return sb.toString();
     }
@@ -132,6 +139,10 @@ class ZSoapMessageHit implements ZMessageHit {
 
     public List<String> getMimePartHits() {
         return mMimePartHits;
+    }
+
+    public ZMessage getMessage() {
+        return mMessage;
     }
 
     public float getScore() {

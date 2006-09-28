@@ -38,7 +38,7 @@ public class ZSearchParams {
     
     public static final String TYPE_APPOINTMENT = "appointment";
     
-    public static final String getCanonicalTypes(String list) throws ServiceException  {
+    public static String getCanonicalTypes(String list) throws ServiceException  {
         if (list == null || list.length() == 0) return "";
 
         StringBuilder sb = new StringBuilder();
@@ -210,10 +210,7 @@ public class ZSearchParams {
     public static class Cursor {
         
         private String mPreviousId;
-        
-        /**
-         * @see #cursorPreviousId
-         */
+
         private String mPreviousSortValue;
 
         /**
