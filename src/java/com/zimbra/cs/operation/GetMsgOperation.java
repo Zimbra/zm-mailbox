@@ -90,7 +90,7 @@ public class GetMsgOperation extends Operation {
 		return toRet;
 	}
 
-    public Message getMsg() { return mMsgs.get(0); }
+    public Message getMsg() { return (mMsgs != null && !mMsgs.isEmpty() ? mMsgs.get(0) : null); }
     public List<Message> getMsgList() { return mMsgs; }
 	public Appointment getAppt() { return mAppt; }
 }
