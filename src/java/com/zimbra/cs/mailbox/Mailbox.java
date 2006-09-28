@@ -230,7 +230,7 @@ public class Mailbox {
         }
     }
 
-    public static final class OperationContext {
+    public static class OperationContext {
         public static final boolean CHECK_CREATED = false, CHECK_MODIFIED = true;
 
         Account    authuser;
@@ -562,6 +562,10 @@ public class Mailbox {
 
     RedoableOp getRedoRecorder() {
         return mCurrentChange.recorder;
+    }
+
+    PendingModifications getPendingModifications() {
+        return mCurrentChange.mDirty;
     }
 
 
@@ -2089,6 +2093,11 @@ public class Mailbox {
     }
 
 
+    public synchronized Mountpoint getMountpointById(OperationContext octxt, int mptId) throws ServiceException {
+        return (Mountpoint) getItemById(octxt, mptId, MailItem.TYPE_MOUNTPOINT);
+    }
+
+
     public synchronized Note getNoteById(OperationContext octxt, int noteId) throws ServiceException {
         return (Note) getItemById(octxt, noteId, MailItem.TYPE_NOTE);
     }
@@ -3512,14 +3521,27 @@ public class Mailbox {
             beginTransaction("delete", octxt, redoRecorder);
             setOperationTargetConstraint(tcon);
 
-            MailItem[] items = getItemById(itemIds, type);
-            for (MailItem item : items)
+            for (int id : itemIds) {
+                if (id == ID_AUTO_INCREMENT)
+                    continue;
+
+                MailItem item;
+                try {
+                    item = getItemById(id, MailItem.TYPE_UNKNOWN);
+                } catch (NoSuchItemException nsie) {
+                    // trying to delete nonexistent things is A-OK!
+                    continue;
+                }
+
+                // however, trying to delete messages and passing in a folder ID is not OK
+                if (!MailItem.isAcceptableType(type, item.getType()))
+                    throw MailItem.noSuchItem(id, type);
                 if (!checkItemChangeID(item) && item instanceof Tag)
                     throw MailServiceException.MODIFY_CONFLICT();
 
-            for (MailItem item : items)
-                if (item != null)
-                    item.delete();
+                item.delete();
+            }
+
             success = true;
         } finally {
             endTransaction(success);
@@ -4239,7 +4261,7 @@ public class Mailbox {
         }
     }
 
-    private void snapshotCounts() throws ServiceException {
+    void snapshotCounts() throws ServiceException {
         if (mCurrentChange.size != MailboxChange.NO_CHANGE || mCurrentChange.contacts != MailboxChange.NO_CHANGE)
             DbMailbox.updateMailboxStats(this);
 
