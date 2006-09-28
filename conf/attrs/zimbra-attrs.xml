@@ -1773,5 +1773,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>The registered name of the Zimbra Analyzer Extension for this account to use</desc>
 </attr>
 
+<attr id="394" name="zimbraPrefReadingPaneEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether reading pane is shown by default</desc>
+</attr>
+
 </attrs>
-  
