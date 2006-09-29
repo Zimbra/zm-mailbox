@@ -522,6 +522,8 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefTimeZoneId = "zimbraPrefTimeZoneId";
     public static final String A_zimbraPrefUseTimeZoneListInCalendar = "zimbraPrefUseTimeZoneListInCalendar";
 
+    public static final String A_zimbraPrefUseRfc2231 = "zimbraPrefUseRfc2231";
+
     public static final String A_zimbraPrefCalendarNotifyDelegatedChanges = "zimbraPrefCalendarNotifyDelegatedChanges";
     
     public static final String A_zimbraPrefCalendarUseQuickAdd = "zimbraPrefCalendarUseQuickAdd";
