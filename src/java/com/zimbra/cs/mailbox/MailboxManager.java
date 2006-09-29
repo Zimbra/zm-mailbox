@@ -485,8 +485,6 @@ public class MailboxManager {
                     } else {
                         if (conn != null)
                             conn.rollback();
-                        if (data != null)
-                            DbMailbox.clearMailboxContent(data.id, data.schemaGroupId);
                     }
                 } finally {
                     if (conn != null)

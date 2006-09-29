@@ -270,41 +270,35 @@ public class DbMailbox {
         }
     }
 
-    private static void dropMailboxFromGroup(int mailboxId, int groupId)
+    private static void dropMailboxFromGroup(Mailbox mbox)
     throws ServiceException {
+        int mailboxId = mbox.getId();
+        int groupId = mbox.getSchemaGroupId();        
         ZimbraLog.mailbox.info("Clearing contents of mailbox " + mailboxId + ", group " + groupId);
-        Connection conn = null;
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection();
             String dbname = getDatabaseName(mailboxId, groupId);
 
             // Delete in reverse order.
             for (int i = sTables.length - 1; i >= 0; i--) {
                 String table = dbname + "." + sTables[i];
-                String sql = "DELETE FROM " + table + " WHERE mailbox_id = " + mailboxId;
-                DbUtil.executeUpdate(conn, sql);
-                conn.commit();
+                stmt = conn.prepareStatement("DELETE FROM " + table + " WHERE mailbox_id = " + mailboxId);
+                stmt.executeUpdate();
             }
-        } catch (ServiceException e) {
-            DbPool.quietRollback(conn);
+        } catch (SQLException e) {
             throw ServiceException.FAILURE("dropMailboxDatabase(" + mailboxId + ")", e);
         } finally {
-            DbPool.quietClose(conn);
+            DbPool.closeStatement(stmt);
         }
     }
 
-    public static void clearMailboxContent(int mailboxId, int groupId)
-    throws ServiceException {
-        if (!DebugConfig.disableMailboxGroup)
-            dropMailboxFromGroup(mailboxId, groupId);
-        else
-            dropMailboxDatabase(mailboxId, groupId);
-    }
     public static void clearMailboxContent(Mailbox mbox)
     throws ServiceException {
-        int id = mbox.getId();
-        int gid = mbox.getSchemaGroupId();
-        clearMailboxContent(id, gid);
+        if (!DebugConfig.disableMailboxGroup)
+            dropMailboxFromGroup(mbox);
+        else
+            dropMailboxDatabase(mbox.getId(), mbox.getSchemaGroupId());
     }
 
     public static void updateMailboxStats(Mailbox mbox) throws ServiceException {
