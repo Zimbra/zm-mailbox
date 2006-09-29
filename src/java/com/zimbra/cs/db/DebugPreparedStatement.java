@@ -110,12 +110,22 @@ class DebugPreparedStatement implements PreparedStatement {
     private void log() {
         long time = System.currentTimeMillis() - mStartTime;
         String sql = getSql();
-        ZimbraLog.sqltrace.debug(sql + " - " + time + "ms");
+        ZimbraLog.sqltrace.debug(sql + " - " + time + "ms" + getHashCodeString());
         ZimbraPerf.updateDbStats(sql, (int) time);
     }
     
     private void logException(SQLException e) {
-        ZimbraLog.sqltrace.debug(e.toString() + ": " + getSql());
+        ZimbraLog.sqltrace.debug(e.toString() + ": " + getSql() + getHashCodeString());
+    }
+
+    private String getHashCodeString() {
+        String hashCodeString = "";
+        try {
+            hashCodeString= ", conn=" + mStmt.getConnection().hashCode();
+        } catch (SQLException e) {
+            ZimbraLog.sqltrace.warn("Unable to determine connection hashcode", e);
+        }
+        return hashCodeString;
     }
     
     private void startTimer() {

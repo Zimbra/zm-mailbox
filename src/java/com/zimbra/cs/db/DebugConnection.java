@@ -69,12 +69,12 @@ class DebugConnection implements Connection {
     }
 
     public void commit() throws SQLException {
-        ZimbraLog.sqltrace.debug("commit");
+        ZimbraLog.sqltrace.debug("commit, conn=" + hashCode());
         mConn.commit();
     }
 
     public void rollback() throws SQLException {
-        ZimbraLog.sqltrace.debug("rollback");
+        ZimbraLog.sqltrace.debug("rollback, conn=" + hashCode());
         mConn.rollback();
     }
 
