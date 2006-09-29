@@ -26,7 +26,6 @@ package com.zimbra.qa.unittest;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import junit.framework.TestCase;
 
@@ -40,7 +39,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.ZimbraLog;
 
 /**
@@ -67,13 +65,11 @@ public class TestConcurrency extends TestCase {
     
     public void testRead()
     throws Exception {
-        ZimbraLog.test.debug(StringUtil.getSimpleClassName(this) + ".testRead()");
-        
         int numThreads = 5;
         Thread[] threads = new Thread[numThreads];
         
         for (int i = 0; i < numThreads; i++) {
-            threads[i] = new Thread(new ReadMessagesThread(5));
+            threads[i] = new Thread(new ReadMessagesThread(5), "ReadMessagesThread-" + i);
         }
         
         runThreads(threads);
@@ -81,14 +77,12 @@ public class TestConcurrency extends TestCase {
 
     public void testTag()
     throws Exception {
-        ZimbraLog.test.debug(StringUtil.getSimpleClassName(this) + ".testTag()");
-        
         int numThreads = 5;
         Thread[] threads = new Thread[numThreads];
         
         for (int i = 0; i < numThreads; i++) {
             Tag tag = mMbox.createTag(null, TAG_PREFIX + i + 1, (byte) 0);
-            threads[i] = new Thread(new TagMessagesThread(tag, 5));
+            threads[i] = new Thread(new TagMessagesThread(tag, 5), "TagMessagesThread-" + i);
         }
         
         runThreads(threads);
@@ -96,16 +90,14 @@ public class TestConcurrency extends TestCase {
     
     public void testReadAndTag()
     throws Exception {
-        ZimbraLog.test.debug(StringUtil.getSimpleClassName(this) + ".testReadAndTag()");
-        
         int numThreads = 6;
         Thread[] threads = new Thread[numThreads];
         int tagNum = 1;
         
         for (int i = 0; i < numThreads; i += 2) {
             Tag tag = mMbox.createTag(null, TAG_PREFIX + tagNum, (byte) 0);
-            threads[i] = new Thread(new ReadMessagesThread(5));
-            threads[i + 1] = new Thread(new TagMessagesThread(tag, 5));
+            threads[i] = new Thread(new ReadMessagesThread(5), "ReadMessagesThread-" + i);
+            threads[i + 1] = new Thread(new TagMessagesThread(tag, 5), "TagMessagesThread-" + i);
             tagNum++;
         }
         
@@ -114,8 +106,6 @@ public class TestConcurrency extends TestCase {
     
     public void testReadAndMove()
     throws Exception {
-        ZimbraLog.test.debug(StringUtil.getSimpleClassName(this) + ".testReadAndMove()");
-
         int numThreads = 5;
         Thread[] threads = new Thread[numThreads];
 
@@ -204,6 +194,8 @@ public class TestConcurrency extends TestCase {
                 // Search for messages containing "roland", so we don't run into problems
                 // with Asian character sets
                 List<Integer> ids = TestUtil.search(mMbox, "in:inbox roland", MailItem.TYPE_MESSAGE);
+                assertTrue("Search returned " + ids.size() + " messages.  Expected at least " + mNumToRead,
+                    ids.size() >= mNumToRead);
                 
                 for (Integer id : ids) {
                     LmcGetMsgRequest req = new LmcGetMsgRequest();
