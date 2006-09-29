@@ -25,6 +25,12 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.zclient.soap.ZSoapMailbox;
+import com.zimbra.soap.SoapTransport;
+
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -32,12 +38,6 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.zclient.soap.ZSoapMailbox;
-import com.zimbra.soap.SoapTransport;
 
 public abstract class ZMailbox {
 
@@ -56,17 +56,68 @@ public abstract class ZMailbox {
             }
         }
     }
-   
-    public static ZMailbox getMailbox(String key, AccountBy by, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-        return new ZSoapMailbox(key, by, password, uri, listener);
+
+    public static class Options {
+        private String mAccount;
+        private AccountBy mAccountBy = AccountBy.name;
+        private String mPassword;
+        private String mAuthToken;
+        private String mUri;
+        private SoapTransport.DebugListener mDebugListener;
+        private String mTargetAccount;
+        private AccountBy mTargetAccountBy = AccountBy.name;
+        private boolean mNoSession;
+        private boolean mNoNotify;
+
+        public Options() {
+        }
+        
+        public Options(String account, AccountBy accountBy, String password, String uri) {
+            mAccount = account;
+            mAccountBy = accountBy;
+            mPassword = password;
+            mUri = uri;
+        }
+
+        public Options(String authToken, String uri) {
+            mAuthToken = authToken;
+            mUri = uri;
+        }
+
+        public String getAccount() { return mAccount; }
+        public void setAccount(String account) { mAccount = account; }
+
+        public AccountBy getAccountBy() { return mAccountBy; }
+        public void setAccountBy(AccountBy accountBy) { mAccountBy = accountBy; }
+
+        public String getTargetAccount() { return mAccount; }
+        public void setTargetAccount(String targetAccount) { mTargetAccount = targetAccount; }
+
+        public AccountBy getTaretAccountBy() { return mTargetAccountBy; }
+        public void setTargetAccountBy(AccountBy targetAccountBy) { mTargetAccountBy = targetAccountBy; }
+
+        public String getPassword() { return mPassword; }
+        public void setPassword(String password) { mPassword = password; }
+
+        public String getAuthToken() { return mAuthToken; }
+        public void setAuthToken(String authToken) { mAuthToken = authToken; }
+
+        public String getUri() { return mUri; }
+        public void setUri(String uri) { mUri = uri; }
+
+        public SoapTransport.DebugListener getDebugListener() { return mDebugListener; }
+        public void setDebugListener(SoapTransport.DebugListener liistener) { mDebugListener = liistener; }
+
+        public boolean getNoSession() { return mNoSession; }
+        public void setNoSession(boolean noSession) { mNoSession = noSession; }
+
+        public boolean getNoNotify() { return mNoNotify; }
+        public void setNoNotify(boolean noNotify) { mNoNotify = noNotify; }
+
     }
 
-    public static ZMailbox getMailbox(String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-        return new ZSoapMailbox(authToken, uri, listener);
-    }
-
-    public static ZMailbox getMailbox(String authToken, String targetAccount, AccountBy targetBy, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-        return new ZSoapMailbox(authToken, targetAccount, targetBy, uri, listener);
+    public static ZMailbox getMailbox(Options options) throws ServiceException {
+        return new ZSoapMailbox(options);
     }
 
     /**
@@ -137,7 +188,7 @@ public abstract class ZMailbox {
      * returns the tag the specified name, or null if no such tag exists.
      * 
      * @param name
-     * @return
+     * @return tags
      */
     public abstract ZTag getTagByName(String name);
 
@@ -145,7 +196,7 @@ public abstract class ZMailbox {
      * returns the tag with the specified id, or null if no such tag exists.
      * 
      * @param id
-     * @return
+     * @return tag with given id, or null
      */
     public abstract ZTag getTagById(String id);
 
@@ -559,7 +610,7 @@ public abstract class ZMailbox {
      * @param name name of new folder
      * @param query search query (required)
      * @param types comma-sep list of types to search for. See {@link SearchParams} for more info. Use null for default value.
-     * @parm sortBy how to sort the result. Use null for default value.
+     * @param sortBy how to sort the result. Use null for default value.
      * @see {@link ZSearchParams#TYPE_MESSAGE}
      * @return newly created search folder
      * @throws ServiceException
@@ -572,7 +623,7 @@ public abstract class ZMailbox {
      * @param id id of search folder
      * @param query search query or null to leave unchanged.
      * @param types new types or null to leave unchanged.
-     * @parm sortBy new sortBy or null to leave unchanged
+     * @param sortBy new sortBy or null to leave unchanged
      * @return modified search folder
      * @throws ServiceException
      */

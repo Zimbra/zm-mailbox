@@ -97,6 +97,7 @@ import com.zimbra.cs.util.SetUtil;
 import com.zimbra.cs.util.StringUtil;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMailbox.Options;
 import com.zimbra.soap.SoapProtocol;
 
 
@@ -2755,10 +2756,13 @@ public class Mailbox {
                             if (sr != null)
                                 sr.close();
                         }
-                        ZMailbox zmbox = ZMailbox.getMailbox(
-                                new AuthToken(getAccount()).getEncoded(),
-                                orgAccount.getName(), AccountBy.name,
-                                uri, null);
+                        Options options = new Options();
+                        options.setAuthToken(new AuthToken(getAccount()).getEncoded());
+                        options.setTargetAccount(orgAccount.getName());
+                        options.setTargetAccountBy(AccountBy.name);
+                        options.setUri(uri);
+                        options.setNoSession(true);
+                        ZMailbox zmbox = ZMailbox.getMailbox(options);
                         zmbox.iCalReply(ical);
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Error while posting REPLY to organizer mailbox host", e);

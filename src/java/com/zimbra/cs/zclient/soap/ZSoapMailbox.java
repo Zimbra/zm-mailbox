@@ -25,21 +25,18 @@
 
 package com.zimbra.cs.zclient.soap;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.cs.zclient.*;
+import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZSearchParams.Cursor;
+import com.zimbra.cs.zclient.ZTag.Color;
+import com.zimbra.soap.*;
+import com.zimbra.soap.Element.XMLElement;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
@@ -53,34 +50,16 @@ import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.zclient.ZClientException;
-import com.zimbra.cs.zclient.ZContact;
-import com.zimbra.cs.zclient.ZConversation;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZGetInfoResult;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
-import com.zimbra.cs.zclient.ZMountpoint;
-import com.zimbra.cs.zclient.ZSearchFolder;
-import com.zimbra.cs.zclient.ZSearchParams;
-import com.zimbra.cs.zclient.ZSearchResult;
-import com.zimbra.cs.zclient.ZTag;
-import com.zimbra.cs.zclient.ZGrant.GranteeType;
-import com.zimbra.cs.zclient.ZSearchParams.Cursor;
-import com.zimbra.cs.zclient.ZTag.Color;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.SoapHttpTransport;
-import com.zimbra.soap.SoapTransport;
-import com.zimbra.soap.ZimbraNamespace;
-import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.Element.XMLElement;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLConnection;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ZSoapMailbox extends ZMailbox {
 
@@ -97,23 +76,16 @@ public class ZSoapMailbox extends ZMailbox {
     
     private long mSize;
 
-    public ZSoapMailbox(String key, AccountBy by, String password, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-        initPreAuth(uri, listener);
-        initAuthToken(auth(key, by, password).getAuthToken());
-    }
-
-    public ZSoapMailbox(String authToken, String uri, SoapTransport.DebugListener listener) throws ServiceException {
-        initPreAuth(uri, listener);
-        initAuthToken(authToken);
-    }
-
-    public ZSoapMailbox(String authToken, String targetAccount, AccountBy by,
-                        String uri, SoapTransport.DebugListener listener)
-    throws ServiceException {
-        initPreAuth(uri, listener);
-        initAuthToken(authToken);
-        if (targetAccount != null)
-            initTargetAccount(targetAccount, by);
+    public ZSoapMailbox(Options options) throws ServiceException {
+        initPreAuth(options.getUri(), options.getDebugListener());
+        if (options.getAuthToken() != null) {
+            initAuthToken(options.getAuthToken());
+        } else {
+            initAuthToken(auth(options.getAccount(), options.getAccountBy(), options.getPassword()).getAuthToken());
+        }
+        if (options.getTargetAccount() != null) {
+            initTargetAccount(options.getTargetAccount(), options.getTaretAccountBy());
+        }
     }
 
     public void initAuthToken(String authToken) throws ServiceException {
@@ -242,14 +214,15 @@ public class ZSoapMailbox extends ZMailbox {
         if (ids == null) return;
         for (String id : ids.split(",")) {
             ZSoapItem item = mIdToItem.get(id);
-            if (item instanceof ZSoapFolder) {
+            if (item instanceof ZSoapMountpoint) {
+                ZSoapMountpoint sl = (ZSoapMountpoint) item;
+                if (sl.getParent() != null)
+                    ((ZSoapFolder)sl.getParent()).removeChild(sl);
+            } else if (item instanceof ZSoapFolder) {
                 ZSoapFolder sf = (ZSoapFolder) item;
                 if (sf.getParent() != null) 
                     ((ZSoapFolder)sf.getParent()).removeChild(sf);
-            } else if (item instanceof ZSoapMountpoint) {
-                ZSoapMountpoint sl = (ZSoapMountpoint) item;
-                if (sl.getParent() != null) 
-                    ((ZSoapFolder)sl.getParent()).removeChild(sl);
+
             } else if (item instanceof ZSoapTag) {
                 mNameToTag.remove(((ZSoapTag) item).getName());
             }
@@ -744,7 +717,7 @@ public class ZSoapMailbox extends ZMailbox {
     public ZMessage getMessage(String id, boolean markRead, boolean wantHtml, boolean neuterImages, boolean rawContent, String part) throws ServiceException {
         XMLElement req = new XMLElement(MailService.GET_MSG_REQUEST);
         Element msgEl = req.addElement(MailService.E_MSG);
-        msgEl.addAttribute(MailService.A_ID, id);;
+        msgEl.addAttribute(MailService.A_ID, id);
         if (part != null) msgEl.addAttribute(MailService.A_PART, part);
         msgEl.addAttribute(MailService.A_MARK_READ, markRead);
         msgEl.addAttribute(MailService.A_WANT_HTML, wantHtml);
@@ -904,8 +877,7 @@ public class ZSoapMailbox extends ZMailbox {
     private URI getUploadURI()  throws ServiceException {
         try {
             URI uri = new URI(mTransport.getURI());
-            URI newUri = uri.resolve("/service/upload?fmt=raw");
-            return  newUri;
+            return  uri.resolve("/service/upload?fmt=raw");
         } catch (URISyntaxException e) {
             throw ZClientException.CLIENT_ERROR("unable to parse URI: "+mTransport.getURI(), e);
         }
@@ -968,7 +940,7 @@ public class ZSoapMailbox extends ZMailbox {
         // make the post
         PostMethod post = new PostMethod(uri.toString());
         client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
-        int statusCode = -1;
+        int statusCode;
         try {
             post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
             statusCode = client.executeMethod(post);
@@ -994,8 +966,7 @@ public class ZSoapMailbox extends ZMailbox {
     public URI getRestURI(String relativePath) throws ServiceException {
         try {
             URI uri = new URI(mTransport.getURI());
-            URI newUri = uri.resolve("/home/" + getName() + (relativePath.startsWith("/") ? "" : "/") + relativePath); 
-            return  newUri;
+            return  uri.resolve("/home/" + getName() + (relativePath.startsWith("/") ? "" : "/") + relativePath);
         } catch (URISyntaxException e) {
             throw ZClientException.CLIENT_ERROR("unable to parse URI: "+mTransport.getURI(), e);
         }
@@ -1015,7 +986,7 @@ public class ZSoapMailbox extends ZMailbox {
         GetMethod get = null;
         InputStream is = null;
         
-        int statusCode = -1;
+        int statusCode;
         try {
             URI uri = getRestURI(relativePath);
             HttpClient client = getHttpClient(uri);

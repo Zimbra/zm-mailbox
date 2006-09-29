@@ -25,23 +25,6 @@
 
 package com.zimbra.cs.mailbox;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import javax.mail.Address;
-import javax.mail.MessagingException;
-import javax.mail.SendFailedException;
-import javax.mail.Transport;
-import javax.mail.Message.RecipientType;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
@@ -51,12 +34,27 @@ import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZimbraLog;
 import com.zimbra.cs.zclient.ZMailbox;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import javax.mail.Address;
+import javax.mail.Message.RecipientType;
+import javax.mail.MessagingException;
+import javax.mail.SendFailedException;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public class MailSender {
 
@@ -139,12 +137,6 @@ public class MailSender {
      * Returns the msg-id of the copy in the first saved folder, or 0 if none
      * 
      * @param mbox
-     * @param saveToFolders[] list of folderIds to save a copy of this msg
-     *                        into.  This is a list primarily so that we can
-     *                        do special things with INVITE messages (save
-     *                        copy to calendar folder).  Messages are
-     *                        guaranteed to be inserted in the specified-order
-     *                        (this matters for calendaring!)
      * @param mm the MimeMessage to send
      * @param newContacts
      * @param uploads
@@ -233,7 +225,9 @@ public class MailSender {
                     String uri = AccountUtil.getSoapUri(authuser);
                     if (uri != null)
                         try {
-                            ZMailbox zmbox = ZMailbox.getMailbox(new AuthToken(authuser).getEncoded(), uri, null);
+                            ZMailbox.Options options = new ZMailbox.Options(new AuthToken(authuser).getEncoded(), uri);
+                            options.setNoSession(true);
+                            ZMailbox zmbox = ZMailbox.getMailbox(options);
                             String sentFolder = authuser.getAttr(Provisioning.A_zimbraPrefSentMailFolder, "" + Mailbox.ID_FOLDER_SENT);
                             ByteArrayOutputStream baos = new ByteArrayOutputStream();
                             mm.writeTo(baos);

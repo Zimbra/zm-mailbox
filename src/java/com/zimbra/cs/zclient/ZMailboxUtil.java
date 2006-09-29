@@ -423,7 +423,9 @@ public class ZMailboxUtil implements DebugListener {
         mMailboxName = targetAccount;
         SoapAccountInfo sai = prov.getAccountInfo(AccountBy.name, mMailboxName);
         DelegateAuthResponse dar = prov.delegateAuth(AccountBy.name, mMailboxName, 60*60*24);
-        mMbox = ZMailbox.getMailbox(dar.getAuthToken(), sai.getAdminSoapURL(), listener);
+        ZMailbox.Options options = new ZMailbox.Options(dar.getAuthToken(), sai.getAdminSoapURL());
+        options.setDebugListener(listener);
+        mMbox = ZMailbox.getMailbox(options);
         dumpMailboxConnect();
         mPrompt = String.format("mbox %s> ", mMbox.getName());
         mSearchParams = null;
@@ -451,7 +453,13 @@ public class ZMailboxUtil implements DebugListener {
     private void auth(String name, String password, String uri) throws ServiceException {
         mMailboxName = name;
         mPassword = password;
-        mMbox = ZMailbox.getMailbox(mMailboxName, AccountBy.name, mPassword, resolveUrl(uri), mDebug ? this : null);
+        ZMailbox.Options options = new ZMailbox.Options();
+        options.setAccount(mMailboxName);
+        options.setAccountBy(AccountBy.name);
+        options.setPassword(mPassword);
+        options.setUri(resolveUrl(uri));
+        options.setDebugListener(mDebug ? this : null);
+        mMbox = ZMailbox.getMailbox(options);
         mPrompt = String.format("mbox %s> ", mMbox.getName());
         dumpMailboxConnect();
     }
