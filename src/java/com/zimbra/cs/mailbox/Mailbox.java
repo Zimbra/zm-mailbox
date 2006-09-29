@@ -1801,7 +1801,22 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("getTombstones", null);
-            List<Integer> tombstones = DbMailItem.readTombstones(this, lastSync);
+            MailItem.TypedIdList tombstones = DbMailItem.readTombstones(this, lastSync);
+            success = true;
+            return tombstones.getAll();
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public synchronized MailItem.TypedIdList getTombstoneSet(long lastSync) throws ServiceException {
+        if (!isTrackingSync())
+            throw ServiceException.FAILURE("not tracking sync", null);
+
+        boolean success = false;
+        try {
+            beginTransaction("getTombstones", null);
+            MailItem.TypedIdList tombstones = DbMailItem.readTombstones(this, lastSync);
             success = true;
             return tombstones;
         } finally {
@@ -1870,7 +1885,7 @@ public class Mailbox {
      *             checkpoint, and
      *         <li>a List of the IDs of all items modified since the checkpoint
      *             but not currently visible to the caller</ul> */
-    public synchronized Pair<List<MailItem>,List<Integer>> getModifiedItems(OperationContext octxt, long lastSync) throws ServiceException {
+    public synchronized Pair<List<MailItem>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, long lastSync) throws ServiceException {
         return getModifiedItems(octxt, lastSync, MailItem.TYPE_UNKNOWN, null);
     }
 
@@ -1892,16 +1907,18 @@ public class Mailbox {
      *         <li>a List of the IDs of all items of the given type modified
      *             since the checkpoint but not currently visible to the
      *             caller</ul> */
-    public synchronized Pair<List<MailItem>,List<Integer>> getModifiedItems(OperationContext octxt, long lastSync, byte type) throws ServiceException {
+    public synchronized Pair<List<MailItem>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, long lastSync, byte type) throws ServiceException {
         return getModifiedItems(octxt, lastSync, type, null);
     }
 
-    public synchronized Pair<List<MailItem>,List<Integer>> getModifiedItems(OperationContext octxt, long lastSync, byte type, Set<Integer> folderIds) throws ServiceException {
+    private static final List<MailItem> EMPTY_ITEMS = Collections.emptyList();
+
+    public synchronized Pair<List<MailItem>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, long lastSync, byte type, Set<Integer> folderIds) throws ServiceException {
         if (lastSync >= getLastChangeID())
-            return new Pair(Collections.emptyList(), Collections.emptyList());
+            return new Pair<List<MailItem>,MailItem.TypedIdList>(EMPTY_ITEMS, new MailItem.TypedIdList());
 
         List<MailItem> modified = new ArrayList<MailItem>();
-        List<Integer> elsewhere = null;
+        MailItem.TypedIdList elsewhere = null;
         boolean success = false;
         try {
             beginTransaction("getModifiedItems", octxt);
@@ -1912,7 +1929,7 @@ public class Mailbox {
             else if (visible != null)
                 folderIds = SetUtil.intersect(folderIds, visible);
 
-            Pair<List<MailItem.UnderlyingData>,List<Integer>> dataList = DbMailItem.getModifiedItems(this, type, lastSync, folderIds);
+            Pair<List<MailItem.UnderlyingData>,MailItem.TypedIdList> dataList = DbMailItem.getModifiedItems(this, type, lastSync, folderIds);
             if (dataList == null)
                 return null;
             for (MailItem.UnderlyingData data : dataList.getFirst()) {
@@ -1922,7 +1939,7 @@ public class Mailbox {
             elsewhere = dataList.getSecond();
 
             success = true;
-            return new Pair<List<MailItem>,List<Integer>>(modified, elsewhere);
+            return new Pair<List<MailItem>,MailItem.TypedIdList>(modified, elsewhere);
         } finally {
             endTransaction(success);
         }
@@ -2320,8 +2337,8 @@ public class Mailbox {
      */
     public static enum SearchResultMode {
         NORMAL,        // everything
-        IMAP,           // only IMAP data
-        IDS;            // only IDs
+        IMAP,          // only IMAP data
+        IDS;           // only IDs
     }
     
     /**
@@ -3539,7 +3556,18 @@ public class Mailbox {
                 if (!checkItemChangeID(item) && item instanceof Tag)
                     throw MailServiceException.MODIFY_CONFLICT();
 
-                item.delete();
+                // delete the item, but don't write the tombstone until we're finished...
+                item.delete(false, false);
+            }
+
+            // collect all the tombstones and write once
+            if (isTrackingSync()) {
+                MailItem.TypedIdList tombstones = new MailItem.TypedIdList();
+                for (Object obj : mCurrentChange.mOtherDirtyStuff)
+                    if (obj instanceof MailItem.PendingDelete)
+                        tombstones.add(((MailItem.PendingDelete) obj).itemIds);
+                if (!tombstones.isEmpty())
+                    DbMailItem.writeTombstone(this, tombstones);
             }
 
             success = true;
@@ -4331,27 +4359,29 @@ public class Mailbox {
                     deleted = ((MailItem.PendingDelete) obj).add(deleted);
 
             // delete any index entries associated with items deleted from db
-            if (deleted != null && deleted.indexIds != null && deleted.indexIds.size() > 0)
+            if (deleted != null && deleted.indexIds != null && deleted.indexIds.size() > 0) {
                 try {
                     int[] indexIds = new int[deleted.indexIds.size()];
                     for (int i = 0; i < deleted.indexIds.size(); i++)
                         indexIds[i] = deleted.indexIds.get(i);
                     int[] deletedIds = getMailboxIndex().deleteDocuments(indexIds);
                     if (deletedIds != indexIds)
-                        ZimbraLog.mailbox.warn("could not delete all index entries for items: " + deleted.itemIds);
+                        ZimbraLog.mailbox.warn("could not delete all index entries for items: " + deleted.itemIds.getAll());
                 } catch (IOException e) {
-                    ZimbraLog.mailbox.warn("ignoring error while deleting index entries for items: " + deleted.itemIds, e);
+                    ZimbraLog.mailbox.warn("ignoring error while deleting index entries for items: " + deleted.itemIds.getAll(), e);
                 }
+            }
                 
-                // delete any blobs associated with items deleted from db/index
-                StoreManager sm = StoreManager.getInstance();
-                if (deleted != null && deleted.blobs != null)
-                    for (MailboxBlob blob : deleted.blobs)
-                        try {
-                            sm.delete(blob);
-                        } catch (IOException e) {
-                            ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during commit");
-                        }
+            // delete any blobs associated with items deleted from db/index
+            StoreManager sm = StoreManager.getInstance();
+            if (deleted != null && deleted.blobs != null) {
+                for (MailboxBlob blob : deleted.blobs)
+                    try {
+                        sm.delete(blob);
+                    } catch (IOException e) {
+                        ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during commit");
+                    }
+            }
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);
         } finally {
@@ -4362,13 +4392,14 @@ public class Mailbox {
         }
 
         // committed changes, so notify any listeners
-        if (!mListeners.isEmpty() && dirty != null && dirty.hasNotifications())
+        if (!mListeners.isEmpty() && dirty != null && dirty.hasNotifications()) {
             for (Session session : new ArrayList<Session>(mListeners))
                 try {
                     session.notifyPendingChanges(dirty);
                 } catch (RuntimeException e) {
                     ZimbraLog.mailbox.error("ignoring error during notification", e);
                 }
+        }
     }
 
     private void rollbackCache(MailboxChange change) {

@@ -37,7 +37,10 @@
 
 <SyncResponse token="500" md="1078054283">
   <-- handle deletes first -->
-  <deleted ids="..."/>
+  <deleted ids="...">
+    <m ids="..."/>
+    <cn ids="..."/>
+  </deleted>
   <-- modified/created folders (none here) -->
   <-- modified/created tags (none here) -->
   <-- other modified/created things (only id/folder/date means new or content changed) */
@@ -82,7 +85,9 @@
 
 <SyncResponse token="521" md="1078054298">
   <-- handle deletes first -->
-  <deleted ids="903"/>
+  <deleted ids="903">
+    <folder ids="903"/>
+  </deleted>
   <-- modified/created folders -->
   <folder id="663" name="new name" l="1" md="1078054291" ms="520"/>
   <-- modified/created tags (none here) -->

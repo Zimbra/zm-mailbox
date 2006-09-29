@@ -896,7 +896,6 @@ public class DbMailItem {
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
             stmt.executeUpdate();
-            stmt.close();
 
             return getPurgedConversations(mbox);
         } catch (SQLException e) {
@@ -918,6 +917,8 @@ public class DbMailItem {
      * @return the ids of any conversation that were purged as a result of this operation
      */
     public static List<Integer> markDeletionTargets(Mailbox mbox, List<Integer> ids) throws ServiceException {
+        if (ids == null)
+            return null;
         Connection conn = mbox.getOperationConnection();
         String table = getMailItemTableName(mbox);
 
@@ -941,7 +942,6 @@ public class DbMailItem {
                 if (!DebugConfig.disableMailboxGroup)
                     stmt.setInt(attr++, mbox.getId());
                 stmt.executeUpdate();
-                stmt.close();
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("marking deletions for conversations touching items " + ids, e);
             } finally {
@@ -1051,56 +1051,49 @@ public class DbMailItem {
         }
     }
 
-    public static void writeCheckpoint(Mailbox mbox) throws ServiceException {
-        writeTombstone(mbox, null);
-    }
-    public static void writeTombstone(Mailbox mbox, PendingDelete info) throws ServiceException {
+    public static void writeTombstone(Mailbox mbox, MailItem.TypedIdList tombstones) throws ServiceException {
+        if (tombstones == null || tombstones.isEmpty())
+            return;
         Connection conn = mbox.getOperationConnection();
 
         PreparedStatement stmt = null;
         try {
-            StringBuilder ids = null;
-            if (info != null) {
-                if (info.itemIds == null || info.itemIds.size() == 0)
-                    return;
-                ids = new StringBuilder();
-                for (int i = 0; i < info.itemIds.size(); i++)
-                    ids.append(i == 0 ? "" : ",").append(info.itemIds.get(i));
-            }
+            for (Map.Entry<Byte, List<Integer>> entry : tombstones) {
+                byte type = entry.getKey();
+                if (type == MailItem.TYPE_CONVERSATION || type == MailItem.TYPE_VIRTUAL_CONVERSATION)
+                    continue;
+                StringBuilder ids = new StringBuilder();
+                for (Integer id : entry.getValue())
+                    ids.append(ids.length() == 0 ? "" : ",").append(id);
 
-            stmt = conn.prepareStatement("INSERT INTO " + getTombstoneTableName(mbox) + "(" +
-                    (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") +
-                    "sequence, date, ids) VALUES (" +
-                    (!DebugConfig.disableMailboxGroup ? "?, " : "") +
-                    "?,?,?)");
-            int pos = 1;
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
-            stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
-            if (ids != null)
+                stmt = conn.prepareStatement("INSERT INTO " + getTombstoneTableName(mbox) +
+                        "(" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") + "sequence, date, type, ids)" +
+                        " VALUES (" + (!DebugConfig.disableMailboxGroup ? "?, " : "") + "?, ?, ?, ?)");
+                int pos = 1;
+                if (!DebugConfig.disableMailboxGroup)
+                    stmt.setInt(pos++, mbox.getId());
+                stmt.setInt(pos++, mbox.getOperationChangeID());
+                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                stmt.setByte(pos++, type);
                 stmt.setString(pos++, ids.toString());
-            else
-                stmt.setNull(pos++, Types.VARCHAR);
-            stmt.executeUpdate();
+                stmt.executeUpdate();
+                stmt.close();
+            }
         } catch (SQLException e) {
-            if (info == null)
-                throw ServiceException.FAILURE("writing change sequence checkpoint", e);
-            else
-                throw ServiceException.FAILURE("writing tombstones for item(s): " + info.itemIds, e);
+            throw ServiceException.FAILURE("writing tombstones for item(s): " + tombstones.getAll(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
     }
 
-    public static List<Integer> readTombstones(Mailbox mbox, long lastSync) throws ServiceException {
+    public static MailItem.TypedIdList readTombstones(Mailbox mbox, long lastSync) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
-        List<Integer> tombstones = new ArrayList<Integer>();
+        MailItem.TypedIdList tombstones = new MailItem.TypedIdList();
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT ids FROM " + getTombstoneTableName(mbox) +
+            stmt = conn.prepareStatement("SELECT type, ids FROM " + getTombstoneTableName(mbox) +
                     " WHERE " + IN_THIS_MAILBOX_AND + "sequence > ? AND ids IS NOT NULL" +
                     " ORDER BY sequence");
             int pos = 1;
@@ -1109,15 +1102,17 @@ public class DbMailItem {
             stmt.setLong(pos++, lastSync);
             rs = stmt.executeQuery();
             while (rs.next()) {
-                String row = rs.getString(1);
+                byte type = rs.getByte(1);
+                String row = rs.getString(2);
                 if (row == null || row.equals(""))
                     continue;
-                for (String entry : row.split(","))
+                for (String entry : row.split(",")) {
                     try {
-                        tombstones.add(Integer.parseInt(entry));
+                        tombstones.add(type, Integer.parseInt(entry));
                     } catch (NumberFormatException nfe) {
                         ZimbraLog.sync.warn("unparseable TOMBSTONE entry: " + entry);
                     }
+                }
             }
             return tombstones;
         } catch (SQLException e) {
@@ -1551,20 +1546,20 @@ public class DbMailItem {
     }
 
     private static final List<UnderlyingData> EMPTY_DATA = Collections.emptyList();
-    private static final List<Integer> EMPTY_INTEGER = Collections.emptyList();
+    private static final MailItem.TypedIdList EMPTY_TYPED_ID_LIST = new MailItem.TypedIdList();
 
-    public static Pair<List<UnderlyingData>,List<Integer>> getModifiedItems(Mailbox mbox, byte type, long lastSync, Set<Integer> visible)
+    public static Pair<List<UnderlyingData>,MailItem.TypedIdList> getModifiedItems(Mailbox mbox, byte type, long lastSync, Set<Integer> visible)
     throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
 
         // figure out what folders are visible and thus also if we can short-circuit this query
         if (visible != null && visible.isEmpty())
-            return new Pair<List<UnderlyingData>,List<Integer>>(EMPTY_DATA, EMPTY_INTEGER);
+            return new Pair<List<UnderlyingData>,MailItem.TypedIdList>(EMPTY_DATA, EMPTY_TYPED_ID_LIST);
 
         Connection conn = mbox.getOperationConnection();
         List<UnderlyingData> result = new ArrayList<UnderlyingData>();
-        List<Integer> missed = new ArrayList<Integer>();
+        MailItem.TypedIdList missed = new MailItem.TypedIdList();
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -1584,12 +1579,12 @@ public class DbMailItem {
                 if (visible == null || visible.contains(rs.getInt(CI_FOLDER_ID)))
                     result.add(constructItem(rs));
                 else
-                    missed.add(rs.getInt(CI_ID));
+                    missed.add(rs.getByte(CI_TYPE), rs.getInt(CI_ID));
             }
 
             if (type == MailItem.TYPE_CONVERSATION)
                 completeConversations(mbox, result);
-            return new Pair<List<UnderlyingData>,List<Integer>>(result, missed);
+            return new Pair<List<UnderlyingData>,MailItem.TypedIdList>(result, missed);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting items modified since " + lastSync, e);
         } finally {
@@ -1724,7 +1719,7 @@ public class DbMailItem {
             info.size   = 0;
             accumulateLeafNodes(info, mbox, rs);
             // make sure that the folder is in the list of deleted item ids
-            info.itemIds.add(folderId);
+            info.itemIds.add(folder.getType(), folderId);
 
             return info;
         } catch (SQLException e) {
@@ -1793,28 +1788,29 @@ public class DbMailItem {
 
             int id = rs.getInt(LEAF_CI_ID);
             int size = rs.getInt(LEAF_CI_SIZE);
+            byte type = rs.getByte(LEAF_CI_TYPE);
             Integer item = new Integer(id);
-            info.itemIds.add(item);
+            info.itemIds.add(type, item);
 
             info.size += size;
             if (rs.getBoolean(LEAF_CI_IS_UNREAD))
             	info.unreadIds.add(item);
             int isMessage = 0;
-            switch (rs.getByte(LEAF_CI_TYPE)) {
+            switch (type) {
                 case MailItem.TYPE_CONTACT:  info.contacts++;  break;
                 case MailItem.TYPE_MESSAGE:  isMessage = 1;    break;
             }
             // detect deleted virtual conversations
             if (isMessage > 0 && rs.getBoolean(LEAF_CI_IS_NOT_CHILD))
-                info.itemIds.add(-id);
+                info.itemIds.add(MailItem.TYPE_VIRTUAL_CONVERSATION, -id);
 
             if (isMessage > 0 || size > 0) {
                 if (info.messages == null)
                     info.messages = new HashMap<Integer, DbMailItem.LocationCount>();
-                Integer folderID = new Integer(rs.getInt(LEAF_CI_FOLDER_ID));
-                LocationCount count = info.messages.get(folderID);
+                Integer folderId = rs.getInt(LEAF_CI_FOLDER_ID);
+                LocationCount count = info.messages.get(folderId);
                 if (count == null)
-                    info.messages.put(folderID, new LocationCount(isMessage, size));
+                    info.messages.put(folderId, new LocationCount(isMessage, size));
                 else
                     count.increment(isMessage, size);
             }

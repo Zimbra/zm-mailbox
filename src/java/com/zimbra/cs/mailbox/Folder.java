@@ -890,7 +890,7 @@ public class Folder extends MailItem {
 
     void propagateDeletion(PendingDelete info) throws ServiceException {
         if (info.incomplete)
-            info.cascadeIds = DbMailItem.markDeletionTargets(mMailbox, info.itemIds);
+            info.cascadeIds = DbMailItem.markDeletionTargets(mMailbox, info.itemIds.getIds(TYPE_MESSAGE));
         else
             info.cascadeIds = DbMailItem.markDeletionTargets(this);
         super.propagateDeletion(info);
@@ -919,7 +919,7 @@ public class Folder extends MailItem {
         PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, beforeDate, allFolders);
         if (info.itemIds.isEmpty())
             return;
-        mbox.markItemDeleted(info.itemIds);
+        mbox.markItemDeleted(info.itemIds.getAll());
 
         // update message counts
         for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.messages.entrySet()) {
@@ -939,19 +939,19 @@ public class Folder extends MailItem {
 
         // remove the deleted item(s) from the mailbox's cache
         if (!info.itemIds.isEmpty()) {
-            info.cascadeIds = DbMailItem.markDeletionTargets(mbox, info.itemIds);
+            info.cascadeIds = DbMailItem.markDeletionTargets(mbox, info.itemIds.getIds(TYPE_MESSAGE));
             mbox.purge(TYPE_CONVERSATION);
         }
 
         // actually delete the items from the DB
-        DbMailItem.delete(mbox, info.itemIds);
+        DbMailItem.delete(mbox, info.itemIds.getAll());
         mbox.markOtherItemDirty(info);
 
         // also delete any conversations whose messages have all been removed
         if (info.cascadeIds != null && !info.cascadeIds.isEmpty()) {
             DbMailItem.delete(mbox, info.cascadeIds);
             mbox.markItemDeleted(info.cascadeIds);
-            info.itemIds.addAll(info.cascadeIds);
+            info.itemIds.add(TYPE_CONVERSATION, info.cascadeIds);
         }
 
         // deal with index sharing
@@ -959,8 +959,8 @@ public class Folder extends MailItem {
             DbMailItem.resolveSharedIndex(mbox, info);
 
         // write a deletion record for later sync
-        if (mbox.isTrackingSync() && info.itemIds.size() > 0)
-            DbMailItem.writeTombstone(mbox, info);
+        if (mbox.isTrackingSync() && !info.itemIds.isEmpty())
+            DbMailItem.writeTombstone(mbox, info.itemIds);
 
         // don't actually delete the blobs or index entries here; wait until after the commit
     }

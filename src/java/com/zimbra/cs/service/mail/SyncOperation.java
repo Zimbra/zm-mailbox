@@ -25,6 +25,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.cs.mailbox.Flag;
@@ -179,7 +180,7 @@ public class SyncOperation extends Operation {
         OperationContext octxt = zsc.getOperationContext();
 
         // first, fetch deleted items
-        List<Integer> tombstones = mbox.getTombstones(begin);
+        MailItem.TypedIdList tombstones = mbox.getTombstoneSet(begin);
         Element eDeleted = response.addElement(MailService.E_DELETED);
 
         // then, handle created/modified folders
@@ -204,7 +205,7 @@ public class SyncOperation extends Operation {
             ToXML.encodeTag(response, zsc, tag, Change.ALL_FIELDS);
 
         // finally, handle created/modified "other items"
-        Pair<List<MailItem>,List<Integer>> changed = mbox.getModifiedItems(octxt, begin);
+        Pair<List<MailItem>,MailItem.TypedIdList> changed = mbox.getModifiedItems(octxt, begin);
         for (MailItem item : changed.getFirst()) {
             //  For items in the system, if the content has changed since the user last sync'ed 
             //      (because it was edited or created), just send back the folder ID and saved date --
@@ -217,16 +218,41 @@ public class SyncOperation extends Operation {
 
         // items that have been altered in non-visible folders will be returned as "deleted" in order to handle moves
         if (changed.getSecond() != null)
-            tombstones.addAll(changed.getSecond());
+            tombstones.add(changed.getSecond());
 
         // cleanup: only return a <deleted> element if we're sending back deleted item ids
         if (tombstones == null || tombstones.isEmpty()) {
             eDeleted.detach();
         } else {
-            StringBuilder deleted = new StringBuilder();
-            for (Integer id : tombstones)
-                deleted.append(deleted.length() == 0 ? "" : ",").append(id);
+            StringBuilder deleted = new StringBuilder(), typed = new StringBuilder();
+            for (Map.Entry<Byte,List<Integer>> entry : tombstones) {
+                typed.setLength(0);
+                for (Integer id : entry.getValue()) {
+                    deleted.append(deleted.length() == 0 ? "" : ",").append(id);
+                    typed.append(typed.length() == 0 ? "" : ",").append(id);
+                }
+                String eltName = elementNameForType(entry.getKey());
+                if (eltName != null)
+                    eDeleted.addElement(eltName).addAttribute(MailService.A_IDS, typed.toString());
+            }
             eDeleted.addAttribute(MailService.A_IDS, deleted.toString());
+        }
+    }
+
+    public static String elementNameForType(byte type) {
+        switch (type) {
+            case MailItem.TYPE_FOLDER:       return MailService.E_FOLDER;
+            case MailItem.TYPE_SEARCHFOLDER: return MailService.E_SEARCH;
+            case MailItem.TYPE_MOUNTPOINT:   return MailService.E_MOUNT;
+            case MailItem.TYPE_VIRTUAL_CONVERSATION:
+            case MailItem.TYPE_CONVERSATION: return MailService.E_CONV;
+            case MailItem.TYPE_MESSAGE:      return MailService.E_MSG;
+            case MailItem.TYPE_CONTACT:      return MailService.E_CONTACT;
+            case MailItem.TYPE_APPOINTMENT:  return MailService.E_APPOINTMENT;
+            case MailItem.TYPE_NOTE:         return MailService.E_NOTE;
+            case MailItem.TYPE_WIKI:         return MailService.E_WIKIWORD;
+            case MailItem.TYPE_DOCUMENT:     return MailService.E_DOC;
+            default:                         return null;
         }
     }
 }

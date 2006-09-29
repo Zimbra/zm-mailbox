@@ -44,7 +44,7 @@ import com.zimbra.cs.util.ZimbraLog;
 /**
  * @author dkarp
  */
-public abstract class MailItem implements Comparable {
+public abstract class MailItem implements Comparable<MailItem> {
 
     /** Item is a standard {@link Folder}. */
     public static final byte TYPE_FOLDER       = 1;
@@ -191,6 +191,74 @@ public abstract class MailItem implements Comparable {
         void contentChanged(Mailbox mbox) throws ServiceException {
             metadataChanged(mbox);
             modContent = modMetadata;
+        }
+    }
+
+    public static final class TypedIdList implements Iterable<Map.Entry<Byte,List<Integer>>> {
+        private Map<Byte,List<Integer>> mIds = new HashMap<Byte,List<Integer>>();
+
+        public void add(byte type, Integer id) {
+            if (id == null)
+                return;
+            List<Integer> items = mIds.get(type);
+            if (items == null)
+                mIds.put(type, items = new ArrayList<Integer>());
+            items.add(id);
+        }
+        public void add(byte type, List<Integer> ids) {
+            if (ids == null || ids.size() == 0)
+                return;
+            List<Integer> items = mIds.get(type);
+            if (items == null)
+                mIds.put(type, items = new ArrayList<Integer>());
+            items.addAll(ids);
+        }
+        public void add(TypedIdList other) {
+            for (Map.Entry<Byte,List<Integer>> entry : other)
+                add(entry.getKey(), entry.getValue());
+        }
+        public void remove(byte type, Integer id) {
+            if (id == null)
+                return;
+            List<Integer> items = mIds.get(type);
+            if (items != null) {
+                items.remove(id);
+                if (items.isEmpty())
+                    mIds.remove(type);
+            }
+        }
+        public boolean contains(Integer id) {
+            for (List<Integer> set : mIds.values())
+                if (set.contains(id))
+                    return true;
+            return false;
+        }
+        public Set<Byte> types() {
+            return mIds.keySet();
+        }
+        public List<Integer> getIds(byte type) {
+            return mIds.get(type);
+        }
+        public List<Integer> getAll() {
+            List<Integer> marked = new ArrayList<Integer>();
+            for (List<Integer> set : mIds.values())
+                marked.addAll(set);
+            return marked;
+        }
+        public int size() {
+            int size = 0;
+            for (List<Integer> set : mIds.values())
+                size += set.size();
+            return size;
+        }
+        public Iterator<Map.Entry<Byte, List<Integer>>> iterator() {
+            return mIds.entrySet().iterator();
+        }
+        public boolean isEmpty() {
+            return mIds.isEmpty();
+        }
+        public void clear() {
+            mIds.clear();
         }
     }
 
@@ -635,10 +703,9 @@ public abstract class MailItem implements Comparable {
     }
 
 
-    public int compareTo(Object o) {
-        if (this == o)
+    public int compareTo(MailItem that) {
+        if (this == that)
             return 0;
-        MailItem that = (MailItem) o;
         long myDate = getChangeDate(), theirDate = that.getChangeDate();
         return (myDate < theirDate ? -1 : (myDate == theirDate ? 0 : 1));
     }
@@ -1471,7 +1538,7 @@ public abstract class MailItem implements Comparable {
         /** The total size of all the items being deleted. */
         public long size;
         /** The ids of all items being deleted. */
-        public List<Integer> itemIds   = new ArrayList<Integer>();
+        public TypedIdList itemIds = new TypedIdList();
         /** The ids of all unread items being deleted.  This is a subset of
          *  {@link #itemIds}. */
         public List<Integer> unreadIds = new ArrayList<Integer>();
@@ -1504,7 +1571,7 @@ public abstract class MailItem implements Comparable {
             if (other != null) {
                 size     += other.size;
                 contacts += other.contacts;
-                itemIds.addAll(other.itemIds);
+                itemIds.add(other.itemIds);
                 unreadIds.addAll(other.unreadIds);
                 blobs.addAll(other.blobs);
             }
@@ -1515,9 +1582,12 @@ public abstract class MailItem implements Comparable {
     static final boolean DELETE_ITEM = false, DELETE_CONTENTS = true;
 
     void delete() throws ServiceException {
-        delete(DELETE_ITEM);
+        delete(DELETE_ITEM, true);
     }
     void delete(boolean childrenOnly) throws ServiceException {
+        delete(childrenOnly, true);
+    }
+    final void delete(boolean childrenOnly, boolean writeTombstones) throws ServiceException {
         if (!childrenOnly && !isDeletable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
 
@@ -1526,7 +1596,7 @@ public abstract class MailItem implements Comparable {
         assert(info != null && info.itemIds != null);
         if (childrenOnly || info.incomplete) {
             // make sure to take the container's ID out of the list of deleted items
-            info.itemIds.remove(new Integer(mId));
+            info.itemIds.remove(getType(), mId);
         } else {
             // update parent item's child list
             MailItem parent = getParent();
@@ -1538,7 +1608,7 @@ public abstract class MailItem implements Comparable {
         if (info.itemIds.isEmpty())
             return;
 
-        mMailbox.markItemDeleted(info.itemIds);
+        mMailbox.markItemDeleted(info.itemIds.getAll());
         // when applicable, record the deleted MailItem (rather than just its id)
         if (!childrenOnly && !info.incomplete)
             markItemDeleted();
@@ -1552,7 +1622,7 @@ public abstract class MailItem implements Comparable {
 
         // actually delete the item from the DB
         if (info.incomplete)
-            DbMailItem.delete(mMailbox, info.itemIds);
+            DbMailItem.delete(mMailbox, info.itemIds.getAll());
         else if (childrenOnly)
             DbMailItem.deleteContents(this);
         else
@@ -1565,7 +1635,7 @@ public abstract class MailItem implements Comparable {
         if (info.cascadeIds != null && !info.cascadeIds.isEmpty()) {
             DbMailItem.delete(mMailbox, info.cascadeIds);
             mMailbox.markItemDeleted(info.cascadeIds);
-            info.itemIds.addAll(info.cascadeIds);
+            info.itemIds.add(TYPE_CONVERSATION, info.cascadeIds);
         }
 
         // deal with index sharing
@@ -1575,8 +1645,8 @@ public abstract class MailItem implements Comparable {
         mMailbox.markOtherItemDirty(info);
 
         // write a deletion record for later sync
-        if (mMailbox.isTrackingSync() && info.itemIds.size() > 0)
-            DbMailItem.writeTombstone(mMailbox, info);
+        if (writeTombstones && mMailbox.isTrackingSync() && !info.itemIds.isEmpty())
+            DbMailItem.writeTombstone(mMailbox, info.itemIds);
 
         // don't actually delete the blobs or index entries here; wait until after the commit
     }
@@ -1597,7 +1667,7 @@ public abstract class MailItem implements Comparable {
         PendingDelete info = new PendingDelete();
         info.rootId = mId;
         info.size   = mData.size;
-        info.itemIds.add(id);
+        info.itemIds.add(getType(), id);
         if (mData.unreadCount != 0 && mMailbox.mUnreadFlag.canTag(this))
             info.unreadIds.add(id);
         if (mData.indexId > 0) {

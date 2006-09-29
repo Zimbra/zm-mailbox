@@ -733,7 +733,7 @@ public class Conversation extends MailItem {
     MailItem.PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = new PendingDelete();
         info.rootId = mId;
-        info.itemIds.add(new Integer(mId));
+        info.itemIds.add(getType(), mId);
 
         if (mData.children == null || mData.children.isEmpty())
             return info;
@@ -751,10 +751,10 @@ public class Conversation extends MailItem {
             } else if (!child.checkChangeID()) {
                 excludeModify = true;  continue;
             }
-            Integer childId = new Integer(child.getId());
+            Integer childId = child.getId();
 
             info.size += child.getSize();
-            info.itemIds.add(childId);
+            info.itemIds.add(child.getType(), childId);
             if (child.isUnread())
                 info.unreadIds.add(childId);
 
@@ -779,14 +779,15 @@ public class Conversation extends MailItem {
                 count.increment(1, child.getSize());
         }
 
-        if (info.itemIds.size() == 1) {
+        int totalDeleted = info.itemIds.size();
+        if (totalDeleted == 1) {
             // if all messages have been excluded, some for "error" reasons, throw an exception
             if (excludeAccess)
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             if (excludeModify)
                 throw MailServiceException.MODIFY_CONFLICT();
         }
-        if (info.itemIds.size() != msgs.length + 1)
+        if (totalDeleted != msgs.length + 1)
             info.incomplete = MailItem.DELETE_CONTENTS;
         return info;
     }
