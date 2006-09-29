@@ -37,7 +37,7 @@ public class SetUtil {
 	 * @param rhs
 	 * @return
 	 */
-	public static <T> Set intersect(Set<T> lhs, Set<T> rhs) {
+	public static <T> Set<T> intersect(Set<T> lhs, Set<T> rhs) {
 		Set<T> out = new HashSet<T>();
 		
 		for (T o : lhs) {
@@ -55,7 +55,7 @@ public class SetUtil {
 	 * @param rhs
 	 * @return
 	 */
-	public static <T> Set intersect(Set<T> out, Set<T> lhs, Set<T> rhs) {
+	public static <T> Set<T> intersect(Set<T> out, Set<T> lhs, Set<T> rhs) {
 		for (T o : lhs) {
 			if (rhs.contains(o))
 				out.add(o);
@@ -71,7 +71,7 @@ public class SetUtil {
 	 * @param rhs
 	 * @return
 	 */
-	public static <T> Set union (Set<T> out, Set<T> lhs, Set<T> rhs) {
+	public static <T> Set<T> union (Set<T> out, Set<T> lhs, Set<T> rhs) {
 		for (T o : lhs) {
 			out.add(o);
 		}
@@ -89,7 +89,7 @@ public class SetUtil {
 	 * @param rhs
 	 * @return
 	 */
-	public static <T> Set union (Set<T> lhs, Set<T> rhs) {
+	public static <T> Set<T> union (Set<T> lhs, Set<T> rhs) {
 		for (T o : rhs) {
 			lhs.add(o);
 		}
