@@ -1778,4 +1778,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether reading pane is shown by default</desc>
 </attr>
 
+<attr id="395" name="zimbraPrefUseRfc2231" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>When composing and sending mail, whether to use RFC 2231 MIME parameter value encoding. If set to FALSE, then RFC 2047 style encoding is used.</desc>
+</attr>
+
 </attrs>
