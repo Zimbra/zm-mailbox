@@ -25,9 +25,7 @@
 
 package com.zimbra.common.localconfig;
 
-// xxx bburtin: Termporarily disabling the dependency on ZimbraLog until we move
-// logging code into ZimbraCommon
-// import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /*
  * Log4j is expensive for command line invocation
@@ -54,16 +52,15 @@ public class Logging {
         if (sQuietMode) {
             return;
         }
-        /*
         if (sUseZimbraLog) {
             ZimbraLog.misc.warn(message, e);
-        } else {*/
+        } else {
             System.err.println("Warning: " + message);
             if (e != null) {
                 System.err.println(e);
                 e.printStackTrace(System.err);
             }
-        // }
+        }
        
     }
 
@@ -75,15 +72,14 @@ public class Logging {
         if (sQuietMode) {
             return;
         }
-        /*
         if (sUseZimbraLog) {
             ZimbraLog.misc.warn(message, e);
-        } else { */
+        } else {
             System.err.println("Error: " + message);
             if (e != null) {
                 System.err.println(e);
                 e.printStackTrace(System.err);
             }
-        // }
+        }
     }
 }
