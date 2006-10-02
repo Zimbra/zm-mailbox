@@ -44,11 +44,11 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.Constants;
-import com.zimbra.cs.util.EmailUtil;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.EmailUtil;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.ZimbraLog;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.StringUtil;
 import com.sun.mail.smtp.SMTPMessage;
 
 public class Notification {

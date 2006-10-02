@@ -84,11 +84,11 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.Constants;
-import com.zimbra.cs.util.DateUtil;
-import com.zimbra.cs.util.EmailUtil;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.EmailUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
 

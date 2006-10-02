@@ -68,10 +68,10 @@ import org.dom4j.io.SAXReader;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 public class AttributeManager {
 

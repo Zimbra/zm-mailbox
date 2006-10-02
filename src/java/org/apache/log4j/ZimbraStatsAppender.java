@@ -31,7 +31,7 @@ import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
 
 import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 
 /**
  * <code>ZimbraStatsAppender</code> is based on log4j's <code>DailyRollingFileAppender</code>.

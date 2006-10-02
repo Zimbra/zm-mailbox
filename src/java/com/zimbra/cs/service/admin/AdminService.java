@@ -36,7 +36,7 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 import com.zimbra.soap.Element;

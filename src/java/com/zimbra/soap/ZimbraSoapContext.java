@@ -48,7 +48,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SessionCache;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 
 
 /**

@@ -57,12 +57,12 @@ import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.util.Constants;
-import com.zimbra.cs.util.ListUtil;
-import com.zimbra.cs.util.Pair;
-import com.zimbra.cs.util.StringUtil;
-import com.zimbra.cs.util.TimeoutMap;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ListUtil;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.TimeoutMap;
+import com.zimbra.common.util.ZimbraLog;
 
 
 /**

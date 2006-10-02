@@ -35,7 +35,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Walks a JavaMail MIME tree and calls the abstract methods for each node. 

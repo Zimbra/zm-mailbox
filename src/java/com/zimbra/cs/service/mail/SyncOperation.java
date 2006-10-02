@@ -41,7 +41,7 @@ import com.zimbra.cs.operation.Scheduler;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.util.Pair;
+import com.zimbra.common.util.Pair;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 

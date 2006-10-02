@@ -34,7 +34,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * 

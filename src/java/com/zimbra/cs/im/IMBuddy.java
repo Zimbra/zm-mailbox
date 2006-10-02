@@ -32,7 +32,7 @@ import java.util.Map;
 
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 
 public class IMBuddy {
     private IMAddr mAddress;

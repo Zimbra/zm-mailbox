@@ -44,7 +44,7 @@ import javax.crypto.SecretKey;
 import org.apache.commons.codec.binary.Hex;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.Constants;
+import com.zimbra.common.util.Constants;
 
 /**
  * @author schemers

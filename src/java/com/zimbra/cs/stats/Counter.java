@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 
 /**
  * <code>Accumulator</code> implementation that keeps track of a total

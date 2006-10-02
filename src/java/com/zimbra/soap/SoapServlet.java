@@ -48,9 +48,9 @@ import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.StatsFile;
 import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * The soap service servlet

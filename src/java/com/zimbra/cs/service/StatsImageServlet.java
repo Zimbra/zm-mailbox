@@ -48,7 +48,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.localconfig.LC;
 
 public class StatsImageServlet extends ZimbraServlet {

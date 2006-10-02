@@ -35,7 +35,7 @@ import com.zimbra.cs.ozserver.OzConnectionHandlerFactory;
 import com.zimbra.cs.ozserver.OzServer;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.NetUtil;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 public class OzNotificationServer {
     

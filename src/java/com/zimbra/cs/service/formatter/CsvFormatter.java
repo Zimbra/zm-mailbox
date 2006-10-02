@@ -47,7 +47,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.util.HttpUtil;
+import com.zimbra.common.util.HttpUtil;
 
 public class CsvFormatter extends Formatter {
 

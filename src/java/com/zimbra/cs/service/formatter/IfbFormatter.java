@@ -41,7 +41,7 @@ import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
-import com.zimbra.cs.util.Constants;
+import com.zimbra.common.util.Constants;
 
 public class IfbFormatter extends Formatter {
    

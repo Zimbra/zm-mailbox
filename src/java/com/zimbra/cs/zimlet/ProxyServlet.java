@@ -52,9 +52,9 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.NetUtil;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * 

@@ -37,7 +37,7 @@ import org.apache.commons.collections.map.ListOrderedMap;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.redolog.op.RedoableOp;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 public class ExtensionUtil {
 

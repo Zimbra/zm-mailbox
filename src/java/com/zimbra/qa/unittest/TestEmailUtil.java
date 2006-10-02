@@ -25,7 +25,7 @@
 
 package com.zimbra.qa.unittest;
 
-import com.zimbra.cs.util.EmailUtil;
+import com.zimbra.common.util.EmailUtil;
 
 import junit.framework.TestCase;
 

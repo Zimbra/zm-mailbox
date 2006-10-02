@@ -40,8 +40,8 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.cs.mime.MimeCompoundHeader.ContentDisposition;
-import com.zimbra.cs.util.FileUtil;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 public class UUEncodeConverter extends MimeVisitor {
     protected boolean visitMultipart(MimeMultipart mp, VisitPhase visitKind)  { return false; }

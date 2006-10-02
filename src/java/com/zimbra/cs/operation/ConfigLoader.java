@@ -33,7 +33,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Load scheduler configuration data from "schedconfig.xml".  This file is loaded once

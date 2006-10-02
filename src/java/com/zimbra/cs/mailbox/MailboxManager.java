@@ -40,7 +40,7 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.redolog.op.CreateMailbox;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 public class MailboxManager {
 

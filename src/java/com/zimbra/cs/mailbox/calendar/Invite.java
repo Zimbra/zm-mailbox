@@ -57,7 +57,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.common.util.ByteUtil;
 
 /**
  * Invite

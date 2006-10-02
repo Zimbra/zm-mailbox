@@ -30,10 +30,10 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import com.zimbra.cs.util.StringUtil;
-import com.zimbra.cs.util.TimeoutMap;
-import com.zimbra.cs.util.ValueCounter;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.TimeoutMap;
+import com.zimbra.common.util.ValueCounter;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author bburtin

@@ -67,13 +67,13 @@ import com.zimbra.cs.stats.StatsFile;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
-import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Config;
-import com.zimbra.cs.util.Constants;
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.Pair;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author dkarp

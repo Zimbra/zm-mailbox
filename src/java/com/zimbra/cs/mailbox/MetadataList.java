@@ -33,8 +33,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.BEncoding;
-import com.zimbra.cs.util.BEncoding.BEncodingException;
+import com.zimbra.common.util.BEncoding;
+import com.zimbra.common.util.BEncoding.BEncodingException;
 
 /**
  * @author dkarp

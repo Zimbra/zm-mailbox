@@ -44,8 +44,8 @@ import org.apache.commons.pool.PoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.zimbra.cs.lmtpserver.LmtpProtocolException;
-import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.ThreadPool;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ThreadPool;
 import com.zimbra.cs.util.Zimbra;
 
 public class LmtpInject {

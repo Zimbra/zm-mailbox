@@ -79,11 +79,11 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.DateTimeUtil;
+import com.zimbra.common.util.DateTimeUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.L10nUtil;
-import com.zimbra.cs.util.Pair;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.L10nUtil.MsgKey;
 
 import org.apache.commons.logging.Log;

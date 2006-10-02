@@ -44,7 +44,7 @@ import org.apache.commons.logging.Log;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 public class OzConnection {
 

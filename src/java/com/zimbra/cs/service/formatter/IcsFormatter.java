@@ -45,9 +45,9 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet.Context;
-import com.zimbra.cs.util.Constants;
-import com.zimbra.cs.util.HttpUtil;
-import com.zimbra.cs.util.HttpUtil.Browser;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.HttpUtil.Browser;
 
 public class IcsFormatter extends Formatter {
 

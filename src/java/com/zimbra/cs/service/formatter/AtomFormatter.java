@@ -41,8 +41,8 @@ import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
-import com.zimbra.cs.util.Constants;
-import com.zimbra.cs.util.DateUtil;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.soap.Element;
 
 public class AtomFormatter extends Formatter {

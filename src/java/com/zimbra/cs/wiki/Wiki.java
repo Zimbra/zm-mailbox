@@ -61,9 +61,9 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.session.WikiSession;
-import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.Pair;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * This class represents a Wiki notebook.  A notebook corresponds to a folder

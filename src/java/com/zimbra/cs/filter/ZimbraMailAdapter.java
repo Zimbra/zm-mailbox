@@ -53,7 +53,7 @@ import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Sieve evaluation engine adds a list of {@link org.apache.jsieve.mail.Action}s 

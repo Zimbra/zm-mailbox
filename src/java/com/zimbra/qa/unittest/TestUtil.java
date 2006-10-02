@@ -39,10 +39,14 @@ import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcAuthRequest;
 import com.zimbra.cs.client.soap.LmcAuthResponse;
 import com.zimbra.cs.client.soap.LmcSoapClientException;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbResults;
+import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -50,11 +54,12 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.StringUtil;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.SoapFaultException;
 
 /**
@@ -223,4 +228,28 @@ public class TestUtil {
         }
         return folder;
     }
+
+    public static void deleteTestData(String userName, String subjectSubstring, byte type)
+    throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(userName);
+        
+        String sql =
+            "SELECT id " +
+            "FROM " + DbMailItem.getMailItemTableName(mbox) +
+            " WHERE " +
+            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mbox.getId() + " AND " : "") +
+            "type = " + type + " AND subject LIKE '%" + subjectSubstring + "%' ";
+        DbResults results = DbUtil.executeQuery(sql);
+        while (results.next()) {
+            int id = results.getInt(1);
+            try {
+                mbox.getItemById(null, id, type);
+                mbox.delete(null, id, type);
+                ZimbraLog.test.debug("Deleted item " + id + ", type " + type);
+            } catch (NoSuchItemException e) {
+                ZimbraLog.test.debug("Unable to delete item " + id + ".  Must have been deleted by parent."); 
+            }
+        }
+    }
+    
 }

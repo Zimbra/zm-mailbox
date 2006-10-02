@@ -33,10 +33,10 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.BEncoding;
-import com.zimbra.cs.util.BlobMetaData;
-import com.zimbra.cs.util.BlobMetaDataEncodingException;
-import com.zimbra.cs.util.BEncoding.BEncodingException;
+import com.zimbra.common.util.BEncoding;
+import com.zimbra.common.util.BlobMetaData;
+import com.zimbra.common.util.BlobMetaDataEncodingException;
+import com.zimbra.common.util.BEncoding.BEncodingException;
 import com.zimbra.soap.Element;
 
 public class Metadata {

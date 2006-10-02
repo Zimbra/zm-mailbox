@@ -58,7 +58,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.wiki.WikiUtil;
 import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.cs.zclient.ZMailboxUtil;

@@ -44,8 +44,8 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ExceptionToString;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ExceptionToString;
+import com.zimbra.common.util.ZimbraLog;
 
 public class Check {
 

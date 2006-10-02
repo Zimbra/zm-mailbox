@@ -34,7 +34,7 @@ import junit.framework.TestCase;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcCheckSpellingRequest;
 import com.zimbra.cs.client.soap.LmcCheckSpellingResponse;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author bburtin

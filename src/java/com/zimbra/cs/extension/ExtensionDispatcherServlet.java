@@ -41,7 +41,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Registers {@link ExtensionHttpHandler} for extensions and dispatches HTTP requests to them.

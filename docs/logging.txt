@@ -92,7 +92,7 @@ Making logging calls in code
 All loggers will be defined as public static members on the following
 class:
 
-package com.zimbra.cs.util;
+package com.zimbra.common.util;
 
 public class ZimbraLog {
   public Log misc; // "zimbra.misc";

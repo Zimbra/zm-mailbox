@@ -76,7 +76,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
-import com.zimbra.cs.util.ExceptionToString;
+import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 

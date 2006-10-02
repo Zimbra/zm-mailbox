@@ -32,7 +32,7 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ExceptionToString;
+import com.zimbra.common.util.ExceptionToString;
 
 /**
  * @author dkarp

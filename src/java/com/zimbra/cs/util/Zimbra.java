@@ -37,6 +37,7 @@ import com.zimbra.cs.imap.ImapServer;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.lmtpserver.LmtpServer;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.redolog.RedoLogProvider;

@@ -29,15 +29,17 @@ import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestListener;
+import junit.framework.TestSuite;
 
-import com.zimbra.cs.util.StringUtil;
-import com.zimbra.cs.util.SystemUtil;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 public class ZimbraTestListener implements TestListener {
     
     long mStartTimestamp;
     StringBuffer mSummary = new StringBuffer();
+    String mCurrentSuite = "";
 
     public String getSummary() {
         return mSummary.toString();
@@ -61,19 +63,25 @@ public class ZimbraTestListener implements TestListener {
             ZimbraLog.test.info(msg);
             mSummary.append(msg + "\n");
         }
+        if (test instanceof TestSuite) {
+            mCurrentSuite = "";
+        }
     }
 
     public void startTest(Test test) {
+        if (test instanceof TestSuite) {
+            mCurrentSuite = ((TestSuite) test).getName() + ".";
+        }
         if (test instanceof TestCase) {
-            ZimbraLog.test.info("Starting test " + getTestName(test));
+            ZimbraLog.test.info("Starting test " + ((TestCase) test).getName());
             mStartTimestamp = System.currentTimeMillis();
         }
     }
 
     private String getTestName(Test test) {
         if (test instanceof TestCase) {
-            return ((TestCase) test).getName();
+            return mCurrentSuite + ((TestCase) test).getName();
         }
-        else return StringUtil.getSimpleClassName(test);
+        else return mCurrentSuite + StringUtil.getSimpleClassName(test);
     }
 }

@@ -36,7 +36,7 @@ import java.util.Set;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.DateUtil;
+import com.zimbra.common.util.DateUtil;
 
 public abstract class Entry {
 

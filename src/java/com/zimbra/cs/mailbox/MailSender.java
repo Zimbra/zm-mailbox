@@ -38,7 +38,7 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.zclient.ZMailbox;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

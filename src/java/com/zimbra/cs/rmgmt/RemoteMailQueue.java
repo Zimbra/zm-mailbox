@@ -56,9 +56,9 @@ import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.GetMailQueue;
-import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.Element;
 
 public class RemoteMailQueue {

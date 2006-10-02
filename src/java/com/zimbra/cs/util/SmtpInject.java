@@ -47,6 +47,9 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.DummySSLSocketFactory;
+
 /**
  * Simple command line SMTP client for testing purposes.
  */
@@ -110,28 +113,28 @@ public class SmtpInject {
         if (!cl.hasOption("f")) {
             usage("no file specified");
         } else {
-            file = cl.getOptionValue("f"); 
+            file = cl.getOptionValue("f");
         }
         try {
             ByteUtil.getContent(new File(file));
         } catch (IOException ioe) {
             usage(ioe.getMessage());
         }
-        
+
         String host = null;
         if (!cl.hasOption("a")) {
             usage("no smtp server specified");
         } else {
             host = cl.getOptionValue("a");
         }
-       
+
         String sender = null;
         if (!cl.hasOption("s")) {
             usage("no sender specified");
         } else {
             sender = cl.getOptionValue("s");
         }
-        
+
         String recipient = null;
         if (!cl.hasOption("r")) {
             usage("no recipient specified");
@@ -142,12 +145,12 @@ public class SmtpInject {
         boolean trace = false;
         if (cl.hasOption("T")) {
             trace = true;
-        } 
+        }
 
         boolean tls = false;
         if (cl.hasOption("t")) {
             tls = true;
-        } 
+        }
 
         boolean auth = false;
         String user = null;
@@ -165,7 +168,7 @@ public class SmtpInject {
                 password = cl.getOptionValue("p");
             }
         }
-        
+
         if (cl.hasOption("v")) {
             mLog.info("SMTP server: " + host);
             mLog.info("Sender: " + sender);
@@ -177,29 +180,30 @@ public class SmtpInject {
                 mLog.info("User: " + user);
                 char[] dummyPassword = new char[password.length()];
                 Arrays.fill(dummyPassword, '*');
-                mLog.info("Password: " + new String(dummyPassword)); 
+                mLog.info("Password: " + new String(dummyPassword));
             }
         }
-        
+
         Properties props = System.getProperties();
 
         props.put("mail.smtp.host", host);
-        
+
         if (auth) {
             props.put("mail.smtp.auth", "true");
         } else {
             props.put("mail.smtp.auth", "false");
         }
-        
+
         if (tls) {
             props.put("mail.smtp.starttls.enable", "true");
         } else {
             props.put("mail.smtp.starttls.enable", "false");
         }
-        
+
         // Disable certificate checking so we can test against
         // self-signed certificates
-        java.security.Security.setProperty("ssl.SocketFactory.provider", DummySSLSocketFactory.class.getName());
+        java.security.Security.setProperty("ssl.SocketFactory.provider",
+            DummySSLSocketFactory.class.getName());
 
         Session session = Session.getInstance(props, null);
         session.setDebug(trace);
@@ -209,12 +213,12 @@ public class SmtpInject {
             MimeMessage msg = new MimeMessage(session, new FileInputStream(file));
             InternetAddress[] address = { new InternetAddress(recipient) };
             msg.setFrom(new InternetAddress(sender));
-            
+
             // attach the file to the message
             Transport transport = session.getTransport("smtp");
             transport.connect(null, user, password);
             transport.sendMessage(msg, address);
-            
+
         } catch (MessagingException mex) {
             mex.printStackTrace();
             Exception ex = null;

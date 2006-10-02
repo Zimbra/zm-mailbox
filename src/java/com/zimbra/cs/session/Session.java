@@ -48,7 +48,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 
 public abstract class Session {
     protected final String    mAccountId;

@@ -40,8 +40,8 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
-import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.Pair;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 
 public abstract class WikiPage {

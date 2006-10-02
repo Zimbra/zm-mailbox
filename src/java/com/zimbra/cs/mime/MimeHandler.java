@@ -56,8 +56,8 @@ import com.zimbra.cs.object.MatchedObject;
 import com.zimbra.cs.object.ObjectHandler;
 import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.BlobMetaData;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.BlobMetaData;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author schemers

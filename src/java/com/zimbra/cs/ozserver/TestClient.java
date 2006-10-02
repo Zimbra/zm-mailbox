@@ -39,8 +39,8 @@ import java.util.Random;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.util.DummySSLSocketFactory;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.DummySSLSocketFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 // client action  -> server action
 //

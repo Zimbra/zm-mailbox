@@ -65,7 +65,7 @@ import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author schemers

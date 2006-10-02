@@ -34,7 +34,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.RemoteServerRequest;
 import com.zimbra.cs.session.Session;
-import com.zimbra.cs.util.ArrayUtil;
+import com.zimbra.common.util.ArrayUtil;
 
 public class CheckSpellingOperation extends Operation {
 	

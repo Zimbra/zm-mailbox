@@ -71,12 +71,12 @@ import com.zimbra.cs.ozserver.OzUtil;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.Config;
-import com.zimbra.cs.util.Constants;
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.Pair;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * NB: Copied from ImapHandler.java on October 20, 2005 - while there

@@ -37,7 +37,7 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 
 class ImapFolder implements Iterable<ImapMessage> {

@@ -42,7 +42,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.MultipartPostMethod;
 
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 
 /**
  * Sends a request over HTTP to a remote server and parses the multipart

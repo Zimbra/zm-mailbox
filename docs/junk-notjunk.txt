@@ -71,8 +71,8 @@ spam feedback messages.  When creating these accounts, we recommend:
 For example:
 
    $ domain=`zmprov gcf zimbraDefaultDomainName | sed 's/^.*: //g'`
-   $ rand_name=`zmjava com.zimbra.cs.util.RandomPassword 8 10 | sed 's/\.//g'`
-   $ rand_passwd=`zmjava com.zimbra.cs.util.RandomPassword 31 37`
+   $ rand_name=`zmjava com.zimbra.common.util.RandomPassword 8 10 | sed 's/\.//g'`
+   $ rand_passwd=`zmjava com.zimbra.common.util.RandomPassword 31 37`
    $ echo "Creating account $rand_name@$domain with passwd=$rand_passwd"
    $ zmprov ca $rand_name@$domain $rand_passwd \
            zimbraAttachmentsIndexingEnabled FALSE \

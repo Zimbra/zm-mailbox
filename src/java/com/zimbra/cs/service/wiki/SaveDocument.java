@@ -42,7 +42,7 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.cs.wiki.WikiPage;

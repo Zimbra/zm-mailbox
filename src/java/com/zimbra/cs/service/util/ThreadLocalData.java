@@ -28,7 +28,7 @@ package com.zimbra.cs.service.util;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 
 /**

@@ -12,7 +12,7 @@ import com.zimbra.cs.operation.CopyOperation;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
-import com.zimbra.cs.util.Pair;
+import com.zimbra.common.util.Pair;
 
 public class ImapCopyOperation extends Operation {
 

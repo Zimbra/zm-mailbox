@@ -38,7 +38,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 public class OzImapServer {
     private static OzServer mServer;

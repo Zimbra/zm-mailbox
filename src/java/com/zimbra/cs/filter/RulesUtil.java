@@ -40,7 +40,7 @@ import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;

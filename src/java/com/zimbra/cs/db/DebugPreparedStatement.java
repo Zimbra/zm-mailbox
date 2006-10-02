@@ -34,7 +34,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 
 class DebugPreparedStatement implements PreparedStatement {

@@ -42,8 +42,8 @@ import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.util.Constants;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author dkarp

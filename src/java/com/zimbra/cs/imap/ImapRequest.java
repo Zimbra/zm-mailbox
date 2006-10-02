@@ -43,7 +43,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.imap.ImapSession.ImapFlag;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 
 class ImapRequest {

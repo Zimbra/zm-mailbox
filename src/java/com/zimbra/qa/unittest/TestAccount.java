@@ -39,7 +39,7 @@ import com.zimbra.cs.db.DbUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 import junit.framework.TestCase;
 

@@ -58,7 +58,7 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.admin.AdminService;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;

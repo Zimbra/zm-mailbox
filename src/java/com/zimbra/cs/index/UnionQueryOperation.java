@@ -41,7 +41,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.SetUtil;
+import com.zimbra.common.util.SetUtil;
 import com.zimbra.soap.SoapProtocol;
 
 import org.apache.commons.logging.Log;

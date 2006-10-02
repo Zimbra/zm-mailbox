@@ -26,7 +26,7 @@
 package com.zimbra.cs.account;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.EmailUtil;
+import com.zimbra.common.util.EmailUtil;
 
 public class DomainAccessManager extends AccessManager {
 

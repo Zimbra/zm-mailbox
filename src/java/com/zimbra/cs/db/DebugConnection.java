@@ -34,7 +34,7 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.Map;
 
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 class DebugConnection implements Connection {
 

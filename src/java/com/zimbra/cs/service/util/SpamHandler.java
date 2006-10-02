@@ -52,7 +52,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 public class SpamHandler {
 

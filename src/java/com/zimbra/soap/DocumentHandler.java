@@ -45,9 +45,9 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
-import com.zimbra.cs.util.EmailUtil;
+import com.zimbra.common.util.EmailUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author schemers

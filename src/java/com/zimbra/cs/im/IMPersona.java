@@ -43,7 +43,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.im.IMService;
 import com.zimbra.cs.session.Session;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.Element;
 
 /**

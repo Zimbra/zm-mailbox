@@ -29,8 +29,8 @@ import java.util.*;
 
 import java.text.ParseException;
 
-import com.zimbra.cs.util.ZimbraLog;
-import com.zimbra.cs.util.ListUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.ListUtil;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Appointment.Instance;

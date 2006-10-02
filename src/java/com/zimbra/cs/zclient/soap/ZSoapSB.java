@@ -29,7 +29,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 
 class ZSoapSB {
     private StringBuilder mSb;

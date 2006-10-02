@@ -40,7 +40,7 @@ import java.util.List;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.SetUtil;
+import com.zimbra.common.util.SetUtil;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

@@ -44,8 +44,8 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.BlobMetaData;
-import com.zimbra.cs.util.BlobMetaDataEncodingException;
+import com.zimbra.common.util.BlobMetaData;
+import com.zimbra.common.util.BlobMetaDataEncodingException;
 
 /**
  * @author schemers

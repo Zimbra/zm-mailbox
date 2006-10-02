@@ -56,7 +56,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 public class ZimbraLmtpBackend implements LmtpBackend {
 	private static Log mLog = LogFactory.getLog(ZimbraLmtpBackend.class);

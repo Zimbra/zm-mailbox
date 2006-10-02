@@ -29,7 +29,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 
 class TagsetCache {
     private Set<Long> mTagsets = new HashSet<Long>();

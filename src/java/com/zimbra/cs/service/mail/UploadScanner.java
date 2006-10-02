@@ -33,7 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.zimbra.cs.service.FileUploadServlet.Upload;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 public abstract class UploadScanner {
 

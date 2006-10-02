@@ -47,10 +47,10 @@ import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.util.Config;
-import com.zimbra.cs.util.Constants;
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author dkarp

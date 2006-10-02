@@ -36,7 +36,7 @@ import junit.framework.Test;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Complete unit test suite for the Zimbra code base.
@@ -52,6 +52,7 @@ public class ZimbraSuite extends TestSuite
     public static TestSuite suite() {
         TestSuite suite = new TestSuite();
 
+        /*
         suite.addTest(new TestSuite(TestUtilCode.class));
         suite.addTest(new TestSuite(TestEmailUtil.class));
         suite.addTest(new TestSuite(TestOutOfOffice.class));
@@ -60,7 +61,9 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestUnread.class));
         suite.addTest(new TestSuite(TestTags.class));
         suite.addTest(new TestSuite(TestItemCache.class));
-        suite.addTest(new TestSuite(TestFolders.class));
+        */
+        suite.addTest(new TestSuite(TestFolders.class, "testDeleteParent"));
+        /*
         suite.addTest(new TestSuite(TestSpellCheck.class));
         suite.addTest(new TestSuite(TestAuthentication.class));
         suite.addTest(new TestSuite(TestAccount.class));
@@ -75,6 +78,7 @@ public class ZimbraSuite extends TestSuite
                 suite.addTest(additional);
             }
         }
+        */
         
         return suite;
     }
@@ -99,13 +103,7 @@ public class ZimbraSuite extends TestSuite
         TestResult result = new TestResult();
         ZimbraTestListener listener = new ZimbraTestListener();
         result.addListener(listener);
-        TestSuite suite = ZimbraSuite.suite();
-        
-        Enumeration tests = suite.tests();
-        while (tests.hasMoreElements()) {
-            Test test = (Test) tests.nextElement();
-            test.run(result);
-        }
+        ZimbraSuite.suite().run(result);
         
         double seconds = (double) (System.currentTimeMillis() - suiteStart) / 1000;
         String msg = "Unit test suite finished in " + TEST_TIME_FORMAT.format(seconds) +

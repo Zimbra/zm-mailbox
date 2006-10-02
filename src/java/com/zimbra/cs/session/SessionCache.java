@@ -37,11 +37,11 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.imap.ImapSession;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.Constants;
-import com.zimbra.cs.util.StringUtil;
-import com.zimbra.cs.util.ValueCounter;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ValueCounter;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 
 

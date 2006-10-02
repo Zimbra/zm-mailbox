@@ -37,8 +37,8 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 class ImapPartSpecifier {
     static class BinaryDecodingException extends Exception { private static final long serialVersionUID = 8158363540973909369L; }

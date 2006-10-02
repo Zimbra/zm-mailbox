@@ -32,7 +32,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * 

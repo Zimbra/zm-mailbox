@@ -35,7 +35,7 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 public class TestMailItem extends TestCase {
     

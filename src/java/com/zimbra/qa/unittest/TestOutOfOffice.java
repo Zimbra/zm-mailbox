@@ -43,7 +43,7 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.util.Constants;
+import com.zimbra.common.util.Constants;
 
 /**
  * @author bburtin

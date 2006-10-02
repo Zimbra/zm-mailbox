@@ -34,14 +34,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.HttpRequest;
+import com.zimbra.common.util.HttpRequest;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.ozserver.OzByteArrayMatcher;
 import com.zimbra.cs.ozserver.OzByteBufferGatherer;
 import com.zimbra.cs.ozserver.OzConnection;
 import com.zimbra.cs.ozserver.OzConnectionHandler;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.SoapProtocol;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;

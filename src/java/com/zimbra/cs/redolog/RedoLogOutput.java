@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 
-import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.common.util.ByteUtil;
 
 /**
  * This class is equivalent to java.io.DataOutputStream except that writeUTF()

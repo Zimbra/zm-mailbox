@@ -38,8 +38,8 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.util.HttpUtil;
-import com.zimbra.cs.util.HttpUtil.Browser;
+import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.HttpUtil.Browser;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 

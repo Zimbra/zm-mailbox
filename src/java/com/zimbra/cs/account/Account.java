@@ -27,8 +27,10 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author schemers
@@ -115,5 +117,26 @@ public class Account extends NamedEntry {
         if (mTimeZone == null)
             mTimeZone = ICalTimeZone.getUTC();
         return mTimeZone;
+    }
+
+    /**
+     * 
+     * @param id account id to lookup
+     * @param nameKey name key to add to context if account lookup is ok
+     * @param idOnlyKey id key to add to context if account lookup fails
+     */
+    public static void addAccountToLogContext(String id, String nameKey, String idOnlyKey) {
+        Account acct = null;
+        try {
+            acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, id);
+        } catch (ServiceException se) {
+            ZimbraLog.misc.warn("unable to lookup account for log, id: " + id, se);
+        }
+        if (acct == null) {
+            ZimbraLog.addToContext(idOnlyKey, id);
+        } else {
+            ZimbraLog.addToContext(nameKey, acct.getName());
+    
+        }
     }
 }

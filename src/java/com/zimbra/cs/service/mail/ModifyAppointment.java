@@ -49,7 +49,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.L10nUtil;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.L10nUtil.MsgKey;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;

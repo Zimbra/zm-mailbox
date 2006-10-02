@@ -34,7 +34,7 @@ import java.util.*;
 import org.apache.commons.codec.binary.Base64;
 
 import com.zimbra.cs.imap.ImapSession.ImapFlag;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * NB: Copied from ImapRequest.java on October 20, 2005 - while there

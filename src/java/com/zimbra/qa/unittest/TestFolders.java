@@ -25,19 +25,13 @@
 
 package com.zimbra.qa.unittest;
 
-import java.util.List;
-
 import junit.framework.TestCase;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
-import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Folder;
@@ -45,7 +39,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.util.ZimbraLog;
 
 /**
  * @author bburtin

@@ -69,11 +69,11 @@ import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.formatter.*;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.DateUtil;
-import com.zimbra.cs.util.HttpUtil;
-import com.zimbra.cs.util.Pair;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * 

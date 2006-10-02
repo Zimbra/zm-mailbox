@@ -60,9 +60,9 @@ import com.zimbra.cs.mime.MimeCompoundHeader.ContentDisposition;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.*;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.HttpUtil;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * The content servlet returns an attachment document in its original format.
@@ -121,7 +121,7 @@ public class ContentServlet extends ZimbraServlet {
 
             String authId = authToken.getAccountId();
             String accountId = iid.getAccountId() != null ? iid.getAccountId() : authId;
-            ZimbraLog.addAccountToContext(accountId, ZimbraLog.C_NAME, ZimbraLog.C_ID);
+            Account.addAccountToLogContext(accountId, ZimbraLog.C_NAME, ZimbraLog.C_ID);
             if (!accountId.equalsIgnoreCase(authId))
                 ZimbraLog.addToContext(ZimbraLog.C_AID, authId);
             ZimbraLog.addIpToContext(req.getRemoteAddr());

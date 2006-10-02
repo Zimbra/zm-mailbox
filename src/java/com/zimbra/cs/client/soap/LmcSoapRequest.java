@@ -43,7 +43,7 @@ import com.zimbra.soap.SoapParseException;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.admin.AdminService;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 
 public abstract class LmcSoapRequest {
 

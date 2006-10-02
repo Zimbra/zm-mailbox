@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 import net.fortuna.ical4j.data.CalendarParser;
 import net.fortuna.ical4j.data.CalendarParserImpl;

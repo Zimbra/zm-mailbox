@@ -37,7 +37,7 @@ import com.zimbra.cs.client.soap.LmcMaintainTablesRequest;
 import com.zimbra.cs.client.soap.LmcMaintainTablesResponse;
 import com.zimbra.cs.db.DbTableMaintenance;
 import com.zimbra.cs.db.DbUtil;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author bburtin

@@ -45,7 +45,7 @@ import java.util.TimeZone;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.util.FileUtil;
+import com.zimbra.common.util.FileUtil;
 
 /**
  * @author jhahm

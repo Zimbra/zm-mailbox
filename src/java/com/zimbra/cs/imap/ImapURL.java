@@ -51,7 +51,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 class ImapURL {
     private static class ImapUrlException extends ImapParseException {

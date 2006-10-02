@@ -24,7 +24,7 @@
  */
 package com.zimbra.cs.imap;
 
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 final class ImapLiteral {
     private int mOctets;

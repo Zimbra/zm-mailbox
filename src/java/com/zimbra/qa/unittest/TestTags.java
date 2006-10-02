@@ -45,8 +45,8 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.cs.util.StringUtil;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author bburtin

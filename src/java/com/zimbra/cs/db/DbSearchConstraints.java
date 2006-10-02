@@ -36,8 +36,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.util.ListUtil;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ListUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author tim

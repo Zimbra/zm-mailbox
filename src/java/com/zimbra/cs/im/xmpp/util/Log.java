@@ -28,7 +28,7 @@ package com.zimbra.cs.im.xmpp.util;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 // import com.zimbra.cs.im.xmpp.util.log.Hierarchy;
 // import com.zimbra.cs.im.xmpp.util.log.LogTarget;

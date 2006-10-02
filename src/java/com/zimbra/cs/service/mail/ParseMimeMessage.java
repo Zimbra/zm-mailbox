@@ -50,7 +50,7 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.ExceptionToString;
+import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 

@@ -38,7 +38,7 @@ import com.zimbra.cs.operation.Scheduler.Priority;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.Session.RecentOperation;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * An Operation is a schedulable bit of work which is submitted to the system to be executed.

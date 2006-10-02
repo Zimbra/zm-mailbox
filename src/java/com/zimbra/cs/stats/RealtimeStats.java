@@ -30,9 +30,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.util.ArrayUtil;
-import com.zimbra.cs.util.StringUtil;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * This implementation of <code>Accumulator</code> is used to retrieve

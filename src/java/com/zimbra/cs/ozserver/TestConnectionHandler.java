@@ -31,7 +31,7 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-//import com.zimbra.cs.util.ZimbraLog;
+//import com.zimbra.common.util.ZimbraLog;
 
 class TestConnectionHandler implements OzConnectionHandler {
 

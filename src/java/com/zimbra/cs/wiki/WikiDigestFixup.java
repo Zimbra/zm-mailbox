@@ -43,7 +43,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**

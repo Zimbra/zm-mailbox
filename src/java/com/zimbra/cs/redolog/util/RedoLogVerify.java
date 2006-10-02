@@ -48,7 +48,7 @@ import com.zimbra.cs.redolog.logger.FileHeader;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.op.CreateMessage;
 import com.zimbra.cs.redolog.op.RedoableOp;
-import com.zimbra.cs.util.ByteUtil;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**

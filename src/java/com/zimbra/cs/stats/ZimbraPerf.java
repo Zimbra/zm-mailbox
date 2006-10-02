@@ -46,10 +46,10 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.util.ThreadLocalData;
-import com.zimbra.cs.util.Constants;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * A collection of methods for keeping track of server performance statistics.

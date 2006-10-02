@@ -45,9 +45,9 @@ import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
-import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.HttpUtil;
-import com.zimbra.cs.util.Pair;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.Pair;
 
 public class SyncFormatter extends Formatter {
     

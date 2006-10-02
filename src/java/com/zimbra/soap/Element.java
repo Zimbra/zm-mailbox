@@ -35,7 +35,7 @@ import java.util.*;
 import org.dom4j.QName;
 
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.StringUtil;
+import com.zimbra.common.util.StringUtil;
 
 /**
  * @author dkarp
@@ -315,7 +315,7 @@ public abstract class Element {
     public static Element parseJSON(InputStream is) throws SoapParseException { return parseJSON(is, JavaScriptElement.mFactory); }
     public static Element parseJSON(InputStream is, ElementFactory factory) throws SoapParseException {
         try {
-            return parseJSON(new String(com.zimbra.cs.util.ByteUtil.getContent(is, -1), "utf-8"), factory);
+            return parseJSON(new String(com.zimbra.common.util.ByteUtil.getContent(is, -1), "utf-8"), factory);
         } catch (SoapParseException e) {
             throw e;
         } catch (Exception e) {

@@ -71,9 +71,9 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.ByteUtil;
-import com.zimbra.cs.util.Constants;
-import com.zimbra.cs.util.FileUtil;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.FileUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class FileUploadServlet extends ZimbraServlet {

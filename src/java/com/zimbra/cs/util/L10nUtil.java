@@ -38,6 +38,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
 
 public class L10nUtil {
 

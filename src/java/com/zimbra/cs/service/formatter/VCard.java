@@ -41,7 +41,7 @@ import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.util.DateUtil;
+import com.zimbra.common.util.DateUtil;
 
 public class VCard {
 
