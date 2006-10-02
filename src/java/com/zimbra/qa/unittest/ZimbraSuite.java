@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 
 import junit.framework.Test;
@@ -52,7 +51,6 @@ public class ZimbraSuite extends TestSuite
     public static TestSuite suite() {
         TestSuite suite = new TestSuite();
 
-        /*
         suite.addTest(new TestSuite(TestUtilCode.class));
         suite.addTest(new TestSuite(TestEmailUtil.class));
         suite.addTest(new TestSuite(TestOutOfOffice.class));
@@ -61,9 +59,7 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestUnread.class));
         suite.addTest(new TestSuite(TestTags.class));
         suite.addTest(new TestSuite(TestItemCache.class));
-        */
-        suite.addTest(new TestSuite(TestFolders.class, "testDeleteParent"));
-        /*
+        suite.addTest(new TestSuite(TestFolders.class));
         suite.addTest(new TestSuite(TestSpellCheck.class));
         suite.addTest(new TestSuite(TestAuthentication.class));
         suite.addTest(new TestSuite(TestAccount.class));
@@ -78,7 +74,6 @@ public class ZimbraSuite extends TestSuite
                 suite.addTest(additional);
             }
         }
-        */
         
         return suite;
     }

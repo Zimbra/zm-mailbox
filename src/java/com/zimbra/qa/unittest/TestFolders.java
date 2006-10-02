@@ -39,6 +39,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 
 /**
  * @author bburtin
@@ -66,6 +67,53 @@ public class TestFolders extends TestCase
         cleanUp();
     }
 
+    /**
+     * Confirms that deleting a parent folder also deletes the child.
+     */
+    public void testDeleteParent()
+    throws Exception {
+        Folder parent = mMbox.createFolder(null, "/" + NAME_PREFIX + " - parent", (byte) 0, MailItem.TYPE_UNKNOWN);
+        int parentId = parent.getId();
+        Folder child = mMbox.createFolder(
+            null, "NAME_PREFIX" + " - child", parent.getId(), MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        int childId = child.getId();
+        mMbox.delete(null, parent.getId(), parent.getType());
+        
+        // Look up parent by id
+        try {
+            mMbox.getFolderById(null, parentId);
+            fail("Parent folder lookup by id should have not succeeded");
+        } catch (NoSuchItemException e) {
+        }
+
+        // Look up parent by query
+        String sql =
+            "SELECT id " +
+            "FROM " + DbMailItem.getMailItemTableName(mMbox) +
+            " WHERE " +
+            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
+            "id = " + parentId;
+        DbResults results = DbUtil.executeQuery(sql);
+        assertEquals("Parent folder query returned data.  id=" + parentId, 0, results.size());
+        
+        // Look up child by id
+        try {
+            mMbox.getFolderById(null, childId);
+            fail("Child folder lookup by id should have not succeeded");
+        } catch (NoSuchItemException e) {
+        }
+
+        // Look up parent by query
+        sql =
+            "SELECT id " +
+            "FROM " + DbMailItem.getMailItemTableName(mMbox) +
+            " WHERE " +
+            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
+            "id = " + childId;
+        results = DbUtil.executeQuery(sql);
+        assertEquals("Child folder query returned data.  id=" + childId, 0, results.size());
+    }
+    
     /**
      * Creates a hierarchy twenty folders deep.
      */
