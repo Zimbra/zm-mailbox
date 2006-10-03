@@ -127,11 +127,7 @@ public class TestFolders extends TestCase
         mMbox.emptyFolder(null, parent.getId(), false);
         
         // Look up parent by id
-        try {
-            mMbox.getFolderById(null, parentId);
-        } catch (NoSuchItemException e) {
-            fail("Parent folder lookup by id should have succeeded");
-        }
+        mMbox.getFolderById(null, parentId);
 
         // Look up parent by query
         String sql =
@@ -144,11 +140,7 @@ public class TestFolders extends TestCase
         assertEquals("Parent folder query returned no data.  id=" + parentId, 1, results.size());
         
         // Look up child by id
-        try {
-            mMbox.getFolderById(null, childId);
-        } catch (NoSuchItemException e) {
-            fail("Child folder lookup by id should have succeeded");
-        }
+        mMbox.getFolderById(null, childId);
 
         // Look up child by query
         sql =
@@ -174,11 +166,7 @@ public class TestFolders extends TestCase
         mMbox.emptyFolder(null, parent.getId(), true);
         
         // Look up parent by id
-        try {
-            mMbox.getFolderById(null, parentId);
-        } catch (NoSuchItemException e) {
-            fail("Parent folder lookup by id should have succeeded");
-        }
+        mMbox.getFolderById(null, parentId);
 
         // Look up parent by query
         String sql =
@@ -261,29 +249,11 @@ public class TestFolders extends TestCase
 
     private void cleanUp()
     throws Exception {
-        deleteTestData(MailItem.TYPE_MESSAGE);
-        deleteTestData(MailItem.TYPE_FOLDER);
+        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
     }
     
     protected void tearDown() throws Exception {
         cleanUp();
         super.tearDown();
-    }
-
-    private void deleteTestData(byte type)
-    throws Exception {
-        // Delete folders bottom-up to avoid orphaned folders
-        String sql =
-            "SELECT id " +
-            "FROM " + DbMailItem.getMailItemTableName(mMbox) +
-            " WHERE " +
-            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
-            "type = " + type + " AND subject LIKE '%" + NAME_PREFIX + "%' " +
-            "ORDER BY id DESC";
-        DbResults results = DbUtil.executeQuery(sql);
-        while (results.next()) {
-            int id = results.getInt(1);
-            mMbox.delete(null, id, type);
-        }
     }
 }

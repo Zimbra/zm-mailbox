@@ -93,7 +93,7 @@ public class TestUnread extends TestCase
     /**
      * Sets up the following data set:
      * <ul>
-     *   <li>F1 contains M1</li>
+     *   <li>F1 contains F2 and M1</li>
      *   <li>F2 contains M2 and M3</li>
      *   <li>T1 is assigned to M1</li>
      *   <li>T2 is assigned to M1 and M2</li>
@@ -107,7 +107,7 @@ public class TestUnread extends TestCase
         mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
         
         // Clean up data, in case a previous test didn't exit cleanly
-        cleanUp();
+        TestUtil.deleteTestData(USER_NAME, TEST_NAME);
         
         Message msg = TestUtil.insertMessage(mMbox, 1, TEST_NAME);
         mMessage1Id = msg.getId();
@@ -419,7 +419,7 @@ public class TestUnread extends TestCase
         mMbox.delete(null, mFolder1Id, getFolder1().getType());
         
         assertEquals("getTag1().getUnreadCount()", 0, getTag1().getUnreadCount());
-        assertEquals("getTag2().getUnreadCount()", 1, getTag2().getUnreadCount());
+        assertEquals("getTag2().getUnreadCount()", 0, getTag2().getUnreadCount());
         assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
     }
 
@@ -528,18 +528,6 @@ public class TestUnread extends TestCase
 
     protected void tearDown()
     throws Exception {
-        cleanUp();
-        super.tearDown();
-    }
-
-    /**
-     * Deletes messages, folders and tags whose name or subject contains
-     * "TestUnread".
-     */
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, TEST_NAME, MailItem.TYPE_MESSAGE);
-        TestUtil.deleteTestData(USER_NAME, TEST_NAME, MailItem.TYPE_FOLDER);
-        TestUtil.deleteTestData(USER_NAME, TEST_NAME, MailItem.TYPE_TAG);
+        TestUtil.deleteTestData(USER_NAME, TEST_NAME);
     }
 }

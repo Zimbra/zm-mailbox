@@ -50,6 +50,7 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -229,7 +230,18 @@ public class TestUtil {
         return folder;
     }
 
-    public static void deleteTestData(String userName, String subjectSubstring, byte type)
+    /**
+     * Delete all messages, tags and folders in the user's mailbox
+     * whose subjects contain the given substring. 
+     */
+    public static void deleteTestData(String userName, String subjectSubstring)
+    throws Exception {
+        deleteTestData(userName, subjectSubstring, MailItem.TYPE_MESSAGE);
+        deleteTestData(userName, subjectSubstring, MailItem.TYPE_TAG);
+        deleteTestData(userName, subjectSubstring, MailItem.TYPE_FOLDER);
+    }
+    
+    private static void deleteTestData(String userName, String subjectSubstring, byte type)
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(userName);
         
