@@ -2227,7 +2227,7 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    private void externalLdapAuth(Domain d, Account acct, String password) throws ServiceException {
+    private void externalLdapAuth(Domain d, String authMech, Account acct, String password) throws ServiceException {
         String url[] = d.getMultiAttr(Provisioning.A_zimbraAuthLdapURL);
         
         if (url == null || url.length == 0) {
@@ -2247,7 +2247,7 @@ public class LdapProvisioning extends Provisioning {
             }
 
             String searchFilter = d.getAttr(Provisioning.A_zimbraAuthLdapSearchFilter);
-            if (searchFilter != null) {
+            if (searchFilter != null && !AM_AD.equals(authMech)) {
                 String searchPassword = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBindPassword);
                 String searchDn = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBindDn);
                 String searchBase = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBase);
@@ -2304,7 +2304,7 @@ public class LdapProvisioning extends Provisioning {
                 acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) ||
                 acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);                
             try {
-                externalLdapAuth(d, acct, password);
+                externalLdapAuth(d, authMech, acct, password);
                 return;
             } catch (ServiceException e) {
                 if (!allowFallback) throw e;
