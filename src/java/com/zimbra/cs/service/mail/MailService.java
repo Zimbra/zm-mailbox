@@ -298,6 +298,7 @@ public class MailService implements DocumentService {
     public static final String A_CHANGE_DATE = "md";
     public static final String A_MODIFIED_SEQUENCE = "ms";
     public static final String A_SYNC = "sync";
+    public static final String A_TYPED_DELETES = "typed";
 
     // filter rules
     public static final String A_LHS = "k0";

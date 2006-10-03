@@ -97,7 +97,7 @@ public class SyncOperation extends Operation {
                 if (!anyFolders)
                     mResponse.addElement(MailService.E_FOLDER);
             } else {
-                deltaSync(mZsc, mResponse, mbox, mBegin);
+                deltaSync(mZsc, mResponse, mbox, mBegin, mRequest.getAttributeBool(MailService.A_TYPED_DELETES, false));
             }
         }
     }
@@ -174,7 +174,8 @@ public class SyncOperation extends Operation {
                                               Change.MODIFIED_NAME   | Change.MODIFIED_CONFLICT |
                                               Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION;
 
-    private void deltaSync(ZimbraSoapContext zsc, Element response, Mailbox mbox, long begin) throws ServiceException {
+    private void deltaSync(ZimbraSoapContext zsc, Element response, Mailbox mbox, long begin, boolean typedDeletes)
+    throws ServiceException {
         if (begin >= mbox.getLastChangeID())
             return;
         OperationContext octxt = zsc.getOperationContext();
@@ -229,11 +230,15 @@ public class SyncOperation extends Operation {
                 typed.setLength(0);
                 for (Integer id : entry.getValue()) {
                     deleted.append(deleted.length() == 0 ? "" : ",").append(id);
-                    typed.append(typed.length() == 0 ? "" : ",").append(id);
+                    if (typedDeletes)
+                        typed.append(typed.length() == 0 ? "" : ",").append(id);
                 }
-                String eltName = elementNameForType(entry.getKey());
-                if (eltName != null)
-                    eDeleted.addElement(eltName).addAttribute(MailService.A_IDS, typed.toString());
+                if (typedDeletes) {
+                    // only add typed delete information if the client explicitly requested it
+                    String eltName = elementNameForType(entry.getKey());
+                    if (eltName != null)
+                        eDeleted.addElement(eltName).addAttribute(MailService.A_IDS, typed.toString());
+                }
             }
             eDeleted.addAttribute(MailService.A_IDS, deleted.toString());
         }

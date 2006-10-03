@@ -33,14 +33,11 @@
 
 <-- subsequent sync request -->
 
-<SyncRequest token="403"/>
+<SyncRequest token="403" typed="1"/>
 
 <SyncResponse token="500" md="1078054283">
   <-- handle deletes first -->
-  <deleted ids="...">
-    <m ids="..."/>
-    <cn ids="..."/>
-  </deleted>
+  <deleted ids="..."/>
   <-- modified/created folders (none here) -->
   <-- modified/created tags (none here) -->
   <-- other modified/created things (only id/folder/date means new or content changed) */
@@ -81,7 +78,9 @@
 <--   * any changes they just made -->
 <--   * any externally-caused changes since the last sync -->
 
-<SyncRequest token="500"/>
+<-- if typed="1" is specified on the SyncRequest, deletes are also broken down by item type -->
+
+<SyncRequest token="500" typed="1"/>
 
 <SyncResponse token="521" md="1078054298">
   <-- handle deletes first -->
