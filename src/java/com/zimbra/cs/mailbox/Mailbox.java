@@ -1841,7 +1841,7 @@ public class Mailbox {
                     if (subfolder.getModifiedSequence() > lastSync && subfolder.canAccess(ACL.RIGHT_READ))
                         modified.add(subfolder);
             }
-            Collections.sort(modified);
+            Collections.sort(modified, new MailItem.SortModifiedSequenceAscending());
             success = true;
             return modified;
         } finally {

@@ -227,6 +227,9 @@ public abstract class MailItem implements Comparable<MailItem> {
                     mIds.remove(type);
             }
         }
+        public void remove(byte type) {
+            mIds.remove(type);
+        }
         public boolean contains(Integer id) {
             for (List<Integer> set : mIds.values())
                 if (set.contains(id))
@@ -706,14 +709,18 @@ public abstract class MailItem implements Comparable<MailItem> {
     public int compareTo(MailItem that) {
         if (this == that)
             return 0;
-        long myDate = getChangeDate(), theirDate = that.getChangeDate();
-        return (myDate < theirDate ? -1 : (myDate == theirDate ? 0 : 1));
+        return mId - that.getId();
+    }
+
+    public static final class SortModifiedSequenceAscending implements Comparator<MailItem> {
+        public int compare(MailItem m1, MailItem m2) {
+            return m1.getModifiedSequence() - m2.getModifiedSequence();
+        }
     }
 
     public static final class SortDateAscending implements Comparator<MailItem> {
         public int compare(MailItem m1, MailItem m2) {
-            long t1 = m1.getDate();
-            long t2 = m2.getDate();
+            long t1 = m1.getDate(), t2 = m2.getDate();
 
             if (t1 < t2)        return -1;
             else if (t1 == t2)  return 0;
@@ -723,8 +730,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     public static final class SortDateDescending implements Comparator<MailItem> {
         public int compare(MailItem m1, MailItem m2) {
-            long t1 = m1.getDate();
-            long t2 = m2.getDate();
+            long t1 = m1.getDate(), t2 = m2.getDate();
 
             if (t1 < t2)        return 1;
             else if (t1 == t2)  return 0;
