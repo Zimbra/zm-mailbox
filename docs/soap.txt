@@ -1184,11 +1184,13 @@ u attribute is present iff count > 0
 ---------
 
 <TagActionRequest>
-  <action op="read|rename|color|delete" id="..." name="..." color="..."/>
+  <action op="read|rename|color|delete|update" id="..." [name="..."] [color="..."]/>
 </TagActionRequest>
 
+  - if op="update", the caller can specify "name" and/or "color"
+
 <TagActionResponse>
-  <action op="read|rename|color|delete" id="..."/> <!-- iff op was successful -->
+  <action op="read|rename|color|delete|update" id="..."/> <!-- iff op was successful -->
 </TagActionResponse>
 
 ---------

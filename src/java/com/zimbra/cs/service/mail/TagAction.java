@@ -59,7 +59,7 @@ public class TagAction extends ItemAction  {
 	public static final String OP_RENAME = "rename";
 
     private static final Set<String> TAG_OPS = new HashSet<String>(Arrays.asList(new String[] {
-        OP_RENAME
+        OP_RENAME, OP_UPDATE
     }));
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
@@ -70,7 +70,7 @@ public class TagAction extends ItemAction  {
 
         if (operation.equals(OP_TAG) || operation.equals(OP_FLAG) || operation.equals(OP_UNTAG) || operation.equals(OP_UNFLAG))
             throw ServiceException.INVALID_REQUEST("cannot tag/flag a tag", null);
-        if (operation.endsWith(OP_MOVE) || operation.endsWith(OP_UPDATE) || operation.endsWith(OP_SPAM))
+        if (operation.endsWith(OP_MOVE) || operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on tag: " + operation, null);
         String successes;
         if (TAG_OPS.contains(operation))
@@ -96,8 +96,16 @@ public class TagAction extends ItemAction  {
         if (operation.equals(OP_RENAME)) {
             String name = action.getAttribute(MailService.A_NAME);
             mbox.renameTag(octxt, iid.getId(), name);
-        } else
+        } else if (operation.equals(OP_UPDATE)) {
+            String name = action.getAttribute(MailService.A_NAME, null);
+            byte color = (byte) action.getAttributeLong(MailService.A_COLOR, -1);
+            if (name != null)
+                mbox.renameTag(octxt, iid.getId(), name);
+            if (color >= 0)
+                mbox.setColor(octxt, iid.getId(), MailItem.TYPE_TAG, color);
+        } else {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
+        }
 
         return lc.formatItemId(iid);
     }
