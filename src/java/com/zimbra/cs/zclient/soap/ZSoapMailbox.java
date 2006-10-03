@@ -698,7 +698,7 @@ public class ZSoapMailbox extends ZMailbox {
         if (defaultView != null) linkEl.addAttribute(MailService.A_DEFAULT_VIEW, defaultView.name());
         if (color != null) linkEl.addAttribute(MailService.A_COLOR, color.getValue());
         if (flags != null) linkEl.addAttribute(MailService.A_FLAGS, flags);
-        linkEl.addAttribute(ownerBy == OwnerBy.BY_ID ? MailService.A_ZIMBRA_ID : MailService.A_DISPLAY, owner);
+        linkEl.addAttribute(ownerBy == OwnerBy.BY_ID ? MailService.A_ZIMBRA_ID : MailService.A_OWNER_NAME, owner);
         linkEl.addAttribute(itemBy == SharedItemBy.BY_ID ? MailService.A_REMOTE_ID: MailService.A_PATH, sharedItem);
         String id = invoke(req).getElement(MailService.E_MOUNT).getAttribute(MailService.A_ID);
         return getMountpointById(id);

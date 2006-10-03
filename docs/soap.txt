@@ -688,7 +688,7 @@ Folders:
 
 Mountpoints:
 
-  <link id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] d="{owner's-display-name}" zid="{owner's-zimbra-id}" rid="{id-of-shared-item}" [color="{color}"] [view="{default-type}"]/>
+  <link id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] owner="{owner's-display-name}" zid="{owner's-zimbra-id}" rid="{id-of-shared-item}" [color="{color}"] [view="{default-type}"]/>
 
   {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
                    cannot contain ':', '"', '/', or any character below 0x20
@@ -1227,10 +1227,10 @@ u attribute is present iff count > 0
 
 <CreateMountpointRequest>
   <link l="{folder}" name="{mountpoint-name}" [view="..."] [color="{color}"] [f="{flags}"] [fie="1"]
-         [zid="{owner's-zimbra-id}" | d="{owner's-email-address}"] [rid="{id-of-shared-item}" | path="{path-to-shared-item}"]/>
+         [zid="{owner's-zimbra-id}" | owner="{owner's-email-address}"] [rid="{id-of-shared-item}" | path="{path-to-shared-item}"]/>
 </CreateMountpointRequest>
 
-  - caller must specify one of (zid | d) and one of (rid | path)
+  - caller must specify one of (zid | owner) and one of (rid | path)
 
 <CreateMountpointResponse>
   <link id="{created-link-item-id}" l="{folder}" name="..." [view="..."]/>

@@ -73,7 +73,7 @@ public class CreateMountpoint extends MailDocumentHandler {
         Account target = null;
         String ownerId = t.getAttribute(MailService.A_ZIMBRA_ID, null);
         if (ownerId == null) {
-            String ownerName = t.getAttribute(MailService.A_DISPLAY);
+            String ownerName = t.getAttribute(MailService.A_OWNER_NAME);
             target = Provisioning.getInstance().get(AccountBy.name, ownerName);
             if (target == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(ownerName);

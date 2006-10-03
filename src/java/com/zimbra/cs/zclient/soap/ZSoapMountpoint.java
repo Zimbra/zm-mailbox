@@ -39,13 +39,13 @@ class ZSoapMountpoint extends ZSoapFolder implements ZMountpoint, ZSoapItem {
     
     ZSoapMountpoint(Element e, ZSoapFolder parent, ZSoapMailbox mailbox) throws ServiceException {
         super(e, parent, mailbox);
-        mOwnerDisplayName = e.getAttribute(MailService.A_DISPLAY);
+        mOwnerDisplayName = e.getAttribute(MailService.A_OWNER_NAME);
         mRemoteId = e.getAttribute(MailService.A_REMOTE_ID);
         mOwnerId = e.getAttribute(MailService.A_ZIMBRA_ID);
     }
 
     void modifyNotification(Element e, ZMailbox mbox) throws ServiceException {
-        mOwnerDisplayName = e.getAttribute(MailService.A_DISPLAY, mOwnerDisplayName);
+        mOwnerDisplayName = e.getAttribute(MailService.A_OWNER_NAME, mOwnerDisplayName);
         mRemoteId = e.getAttribute(MailService.A_REMOTE_ID, mRemoteId);
         mOwnerId = e.getAttribute(MailService.A_ZIMBRA_ID, mOwnerId);
         super.modifyNotification(e, mbox);

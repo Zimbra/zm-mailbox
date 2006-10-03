@@ -269,7 +269,7 @@ public class ToXML {
             elem.addAttribute(MailService.A_ZIMBRA_ID, mpt.getOwnerId());
             elem.addAttribute(MailService.A_REMOTE_ID, mpt.getRemoteId());
             NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(mpt.getOwnerId(), ACL.GRANTEE_USER);
-            elem.addAttribute(MailService.A_DISPLAY, nentry == null ? null : nentry.getName());
+            elem.addAttribute(MailService.A_OWNER_NAME, nentry == null ? null : nentry.getName());
             if (mpt.getDefaultView() != MailItem.TYPE_UNKNOWN)
                 elem.addAttribute(MailService.A_DEFAULT_VIEW, MailItem.getNameForType(mpt.getDefaultView()));
         }

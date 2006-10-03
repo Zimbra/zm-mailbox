@@ -218,7 +218,6 @@ public class MailService implements DocumentService {
     public static final String A_RIGHTS = "perm";
     public static final String A_INHERIT = "inh";
     public static final String A_GRANT_TYPE = "gt";
-    public static final String A_REMOTE_ID = "rid";
     public static final String A_PATH = "path";
     public static final String A_NAME = "name";
     public static final String A_DATE = "d";
@@ -271,7 +270,11 @@ public class MailService implements DocumentService {
     public static final String A_EXCLUDE_FREEBUSY = "excludeFreeBusy";
     public static final String A_SORT_FIELD = "sf";    
     public static final String A_FILE_AS_STR = "fileAsStr";
-    
+
+    // mountpoints
+    public static final String A_REMOTE_ID = "rid";
+    public static final String A_OWNER_NAME = "owner";
+
     // object actions
     public static final String A_OBJECT = "obj";
     public static final String A_OBJECT_TYPE = "ot";
