@@ -327,7 +327,7 @@ public class Mailbox {
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
         initFlags();
-        mMailboxIndex = new MailboxIndex(this, null);        
+        mMailboxIndex = new MailboxIndex(this, null);
     }
 
     /** Returns the server-local numeric ID for this mailbox.  To get a
@@ -3561,7 +3561,7 @@ public class Mailbox {
                     throw MailServiceException.MODIFY_CONFLICT();
 
                 // delete the item, but don't write the tombstone until we're finished...
-                item.delete(false, false);
+                item.delete(MailItem.DELETE_ITEM, false);
             }
 
             // collect all the tombstones and write once

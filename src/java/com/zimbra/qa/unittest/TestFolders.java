@@ -103,7 +103,101 @@ public class TestFolders extends TestCase
         } catch (NoSuchItemException e) {
         }
 
+        // Look up child by query
+        sql =
+            "SELECT id " +
+            "FROM " + DbMailItem.getMailItemTableName(mMbox) +
+            " WHERE " +
+            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
+            "id = " + childId;
+        results = DbUtil.executeQuery(sql);
+        assertEquals("Child folder query returned data.  id=" + childId, 0, results.size());
+    }
+
+    /**
+     * Confirms that emptying a folder removes subfolders only when requested.
+     */
+    public void testEmptyFolderNonrecursive()
+    throws Exception {
+        Folder parent = mMbox.createFolder(null, "/" + NAME_PREFIX + " - parent", (byte) 0, MailItem.TYPE_UNKNOWN);
+        int parentId = parent.getId();
+        Folder child = mMbox.createFolder(
+            null, "NAME_PREFIX" + " - child", parent.getId(), MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        int childId = child.getId();
+        mMbox.emptyFolder(null, parent.getId(), false);
+        
+        // Look up parent by id
+        try {
+            mMbox.getFolderById(null, parentId);
+        } catch (NoSuchItemException e) {
+            fail("Parent folder lookup by id should have succeeded");
+        }
+
         // Look up parent by query
+        String sql =
+            "SELECT id " +
+            "FROM " + DbMailItem.getMailItemTableName(mMbox) +
+            " WHERE " +
+            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
+            "id = " + parentId;
+        DbResults results = DbUtil.executeQuery(sql);
+        assertEquals("Parent folder query returned no data.  id=" + parentId, 1, results.size());
+        
+        // Look up child by id
+        try {
+            mMbox.getFolderById(null, childId);
+        } catch (NoSuchItemException e) {
+            fail("Child folder lookup by id should have succeeded");
+        }
+
+        // Look up child by query
+        sql =
+            "SELECT id " +
+            "FROM " + DbMailItem.getMailItemTableName(mMbox) +
+            " WHERE " +
+            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
+            "id = " + childId;
+        results = DbUtil.executeQuery(sql);
+        assertEquals("Child folder query returned no data.  id=" + childId, 1, results.size());
+    }
+
+    /**
+     * Confirms that emptying a folder removes subfolders only when requested.
+     */
+    public void testEmptyFolderRecursive()
+    throws Exception {
+        Folder parent = mMbox.createFolder(null, "/" + NAME_PREFIX + " - parent", (byte) 0, MailItem.TYPE_UNKNOWN);
+        int parentId = parent.getId();
+        Folder child = mMbox.createFolder(
+            null, "NAME_PREFIX" + " - child", parent.getId(), MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        int childId = child.getId();
+        mMbox.emptyFolder(null, parent.getId(), true);
+        
+        // Look up parent by id
+        try {
+            mMbox.getFolderById(null, parentId);
+        } catch (NoSuchItemException e) {
+            fail("Parent folder lookup by id should have succeeded");
+        }
+
+        // Look up parent by query
+        String sql =
+            "SELECT id " +
+            "FROM " + DbMailItem.getMailItemTableName(mMbox) +
+            " WHERE " +
+            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mMbox.getId() + " AND " : "") +
+            "id = " + parentId;
+        DbResults results = DbUtil.executeQuery(sql);
+        assertEquals("Parent folder query returned no data.  id=" + parentId, 1, results.size());
+        
+        // Look up child by id
+        try {
+            mMbox.getFolderById(null, childId);
+            fail("Child folder lookup by id should have not succeeded");
+        } catch (NoSuchItemException e) {
+        }
+
+        // Look up child by query
         sql =
             "SELECT id " +
             "FROM " + DbMailItem.getMailItemTableName(mMbox) +

@@ -838,11 +838,15 @@ public class Folder extends MailItem {
     }
 
     /** Deletes this folder and all its subfolders. */
-    void delete() throws ServiceException {
-        List<Folder> subfolders = getSubfolderHierarchy();
-        for (int i = subfolders.size() - 1; i >= 0; i--) {
-            Folder subfolder = subfolders.get(i);
-            subfolder.deleteSingleFolder();
+    void delete(boolean childrenOnly, boolean writeTombstones) throws ServiceException {
+        if (childrenOnly) {
+            deleteSingleFolder(writeTombstones);
+        } else {
+            List<Folder> subfolders = getSubfolderHierarchy();
+            for (int i = subfolders.size() - 1; i >= 0; i--) {
+                Folder subfolder = subfolders.get(i);
+                subfolder.deleteSingleFolder(writeTombstones);
+            }
         }
     }
 
@@ -853,17 +857,17 @@ public class Folder extends MailItem {
             // we DO NOT include *this* folder, the first in the list...
             for (int i = subfolders.size() - 1; i >= 1; i--) {
                 Folder subfolder = subfolders.get(i);
-                subfolder.deleteSingleFolder();
+                subfolder.deleteSingleFolder(true);
             }
         }
 
         // now we can empty *this* folder
-        delete(DELETE_CONTENTS);
+        super.delete(DELETE_CONTENTS, true);
     }
 
     /** Deletes just this folder without affecting its subfolders. */
-    void deleteSingleFolder() throws ServiceException {
-        super.delete(hasSubfolders() ? DELETE_CONTENTS : DELETE_ITEM);
+    void deleteSingleFolder(boolean writeTombstones) throws ServiceException {
+        super.delete(hasSubfolders() ? DELETE_CONTENTS : DELETE_ITEM, writeTombstones);
     }
 
     /** Determines the set of items to be deleted.  Assembles a new

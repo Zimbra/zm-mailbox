@@ -142,25 +142,30 @@ public class Mountpoint extends Folder {
         return mpt;
     }
 
-    void delete() throws ServiceException {
+    @Override
+    void delete(boolean childrenOnly, boolean writeTombstones) throws ServiceException {
         if (!getFolder().canAccess(ACL.RIGHT_DELETE))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
-    	super.deleteSingleFolder();
+    	deleteSingleFolder(writeTombstones);
     }
 
 
+    @Override
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
         mOwnerId = meta.get(Metadata.FN_ACCOUNT_ID);
         mRemoteId = (int) meta.getLong(Metadata.FN_REMOTE_ID);
     }
 
+    @Override
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mOwnerId, mRemoteId);
     }
+
     private static String encodeMetadata(byte color, byte view, String owner, int remoteId) {
         return encodeMetadata(new Metadata(), color, (byte) 0, view, owner, remoteId).toString();
     }
+
     static Metadata encodeMetadata(Metadata meta, byte color, byte attrs, byte view, String owner, int remoteId) {
         meta.put(Metadata.FN_ACCOUNT_ID, owner);
         meta.put(Metadata.FN_REMOTE_ID, remoteId);

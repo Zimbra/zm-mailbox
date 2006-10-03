@@ -1584,10 +1584,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     void delete() throws ServiceException {
         delete(DELETE_ITEM, true);
     }
-    void delete(boolean childrenOnly) throws ServiceException {
-        delete(childrenOnly, true);
-    }
-    final void delete(boolean childrenOnly, boolean writeTombstones) throws ServiceException {
+    void delete(boolean childrenOnly, boolean writeTombstones) throws ServiceException {
         if (!childrenOnly && !isDeletable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
 
