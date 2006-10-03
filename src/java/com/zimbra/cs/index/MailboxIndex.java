@@ -823,13 +823,19 @@ public final class MailboxIndex
     
     private Analyzer mAnalyzer = null;
 
-    synchronized public void initAnalyzer(Mailbox mbox) throws ServiceException {
-        String analyzerName = mbox.getAccount().getAttr(Provisioning.A_zimbraTextAnalyzer, null);
-        
-        if (analyzerName != null)
-            mAnalyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
-        else
-            mAnalyzer = ZimbraAnalyzer.getDefaultAnalyzer();
+    public void initAnalyzer(Mailbox mbox) throws ServiceException {
+        // per bug 11052, must always lock the Mailbox before the MailboxIndex, and since
+        // mbox.getAccount() is synchronized, we must lock here.
+        synchronized (mbox) {
+            synchronized (this) {
+                String analyzerName = mbox.getAccount().getAttr(Provisioning.A_zimbraTextAnalyzer, null);
+                
+                if (analyzerName != null)
+                    mAnalyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
+                else
+                    mAnalyzer = ZimbraAnalyzer.getDefaultAnalyzer();
+            }
+        }
     }
     
     synchronized public Analyzer getAnalyzer() {

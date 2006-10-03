@@ -65,8 +65,7 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestAccount.class));
         suite.addTest(new TestSuite(TestConversion.class));
         suite.addTest(new TestSuite(TestMailItem.class));
-        // xxx bburtin: Disabling TestConcurrency until bug 11052 is fixed
-        // suite.addTest(new TestSuite(TestConcurrency.class));
+        suite.addTest(new TestSuite(TestConcurrency.class));
         suite.addTest(new TestSuite(TestFolderFilterRules.class));
         
         synchronized (sAdditionalTests) {
