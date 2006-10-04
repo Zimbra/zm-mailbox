@@ -270,12 +270,13 @@ public class DbMailbox {
         }
     }
 
-    private static void dropMailboxFromGroup(Mailbox mbox)
+    private static void dropMailboxFromGroup(Connection conn, Mailbox mbox)
     throws ServiceException {
         int mailboxId = mbox.getId();
         int groupId = mbox.getSchemaGroupId();        
         ZimbraLog.mailbox.info("Clearing contents of mailbox " + mailboxId + ", group " + groupId);
-        Connection conn = mbox.getOperationConnection();
+        if (conn == null)
+            conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
             String dbname = getDatabaseName(mailboxId, groupId);
@@ -295,8 +296,13 @@ public class DbMailbox {
 
     public static void clearMailboxContent(Mailbox mbox)
     throws ServiceException {
+        clearMailboxContent(null, mbox);
+    }
+
+    public static void clearMailboxContent(Connection conn, Mailbox mbox)
+    throws ServiceException {
         if (!DebugConfig.disableMailboxGroup)
-            dropMailboxFromGroup(mbox);
+            dropMailboxFromGroup(conn, mbox);
         else
             dropMailboxDatabase(mbox.getId(), mbox.getSchemaGroupId());
     }
