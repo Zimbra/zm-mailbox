@@ -113,6 +113,19 @@ public class ZSearchParams {
     
     private Cursor mCursor;
 
+    public ZSearchParams(ZSearchParams that) {
+        this.mCursor = that.mCursor;
+        this.mFetchFirstMessage = that.mFetchFirstMessage;
+        this.mLimit = that.mLimit;
+        this.mMarkAsRead = that.mMarkAsRead;
+        this.mOffset = that.mOffset;
+        this.mPreferHtml = that.mPreferHtml;
+        this.mQuery = that.mQuery;
+        this.mRecipientMode = that.mRecipientMode;
+        this.mSortBy = that.mSortBy;
+        this.mTypes = that.mTypes;
+    }
+
     public ZSearchParams(String query) {
         mQuery = query;
     }
