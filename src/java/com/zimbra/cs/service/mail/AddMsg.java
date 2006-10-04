@@ -29,6 +29,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.mail.internet.MimeMessage;
 
@@ -47,17 +48,14 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
-
-/**
- *
- */
 public class AddMsg extends MailDocumentHandler {
     private static Log mLog = LogFactory.getLog(AddMsg.class);
+    private static Pattern sNumeric = Pattern.compile("\\d+");
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailService.E_MSG, MailService.A_FOLDER };
     protected String[] getProxiedIdPath(Element request) {
         String folder = getXPath(request, TARGET_FOLDER_PATH);
-        return folder != null && folder.indexOf(':') > 0 ? TARGET_FOLDER_PATH : null;
+        return folder != null && (folder.indexOf(':') > 0 || sNumeric.matcher(folder).matches()) ? TARGET_FOLDER_PATH : null;
     }
     protected boolean checkMountpointProxy(Element request)  { return true; }
 
