@@ -288,7 +288,7 @@ public class DbMailbox {
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("dropMailboxDatabase(" + mailboxId + ")", e);
+            throw ServiceException.FAILURE("dropMailboxFromGroup(" + mailboxId + ")", e);
         } finally {
             DbPool.closeStatement(stmt);
         }
