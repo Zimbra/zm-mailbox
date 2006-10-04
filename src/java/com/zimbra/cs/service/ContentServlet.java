@@ -269,7 +269,7 @@ public class ContentServlet extends ZimbraServlet {
             }
 
             String filename = up.getName();
-            ContentDisposition cd = new ContentDisposition(Part.INLINE, true).setParameter("filename", filename == null ? "unknown" : filename);
+            ContentDisposition cd = new ContentDisposition(Part.INLINE).setParameter("filename", filename == null ? "unknown" : filename);
             resp.addHeader("Content-Disposition", cd.toString());
             sendbackOriginalDoc(up.getInputStream(), up.getContentType(), resp);
 

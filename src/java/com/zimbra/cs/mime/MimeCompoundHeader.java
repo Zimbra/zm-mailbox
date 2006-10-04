@@ -100,11 +100,11 @@ public class MimeCompoundHeader {
 
     private String mValue;
     private Map<String, String> mParams = new LinkedHashMap<String, String>();
-    private boolean force2047Encoding;
+    private boolean use2231Encoding;
 
     public MimeCompoundHeader(String header) { this(header, false); }
-    public MimeCompoundHeader(String header, boolean force2047) {
-        force2047Encoding = force2047;
+    public MimeCompoundHeader(String header, boolean use2231) {
+        use2231Encoding = use2231;
         if (header == null) {
             normalizeValue();  return;
         }
@@ -227,7 +227,6 @@ public class MimeCompoundHeader {
 
     public Iterator<Map.Entry<String, String>> getParameterIterator()  { return mParams.entrySet().iterator(); }
 
-    private static final boolean USE_2231_ENCODING = false;
     private static final int LINE_WRAP_LENGTH = 76;
     private static final boolean[] TSPECIALS = new boolean[128];
         static {
@@ -283,7 +282,7 @@ public class MimeCompoundHeader {
                 } else {
                     sb.append(param.getKey()).append('=').append(value);
                 }
-            } else if (USE_2231_ENCODING && !force2047Encoding) {
+            } else if (use2231Encoding) {
                 try {
                     sb.append(param.getKey()).append("*=utf-8''").append(new URLEncoder().encode(value));
                 } catch (EncoderException e) { }
@@ -307,8 +306,8 @@ public class MimeCompoundHeader {
     public static class ContentType extends MimeCompoundHeader {
         private String mPrimaryType, mSubType;
 
-        public ContentType(String header)                     { super(header); }
-        public ContentType(String header, boolean force2047)  { super(header, force2047); }
+        public ContentType(String header)                   { super(header); }
+        public ContentType(String header, boolean use2231)  { super(header, use2231); }
 
         public ContentType setValue(String value)                   { super.setValue(value);  return this; }
         public ContentType setParameter(String name, String value)  { super.setParameter(name, value);  return this; }
@@ -345,8 +344,8 @@ public class MimeCompoundHeader {
 
 
     public static class ContentDisposition extends MimeCompoundHeader {
-        public ContentDisposition(String header)                     { super(header); }
-        public ContentDisposition(String header, boolean force2047)  { super(header, force2047); }
+        public ContentDisposition(String header)                   { super(header); }
+        public ContentDisposition(String header, boolean use2231)  { super(header, use2231); }
 
         public ContentDisposition setValue(String value)                   { super.setValue(value);  return this; }
         public ContentDisposition setParameter(String name, String value)  { super.setParameter(name, value);  return this; }
