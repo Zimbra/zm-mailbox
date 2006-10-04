@@ -1769,11 +1769,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>minimum number of numeric characters required in a password</desc>
 </attr>
 
-<attr id="393" name="zimbraTextAnalyzer" type="string" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+<attr id="393" name="zimbraTextAnalyzer" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <desc>The registered name of the Zimbra Analyzer Extension for this account to use</desc>
 </attr>
 
-<attr id="394" name="zimbraPrefReadingPaneEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="394" name="zimbraPrefReadingPaneEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether reading pane is shown by default</desc>
 </attr>
@@ -1781,6 +1781,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="395" name="zimbraPrefUseRfc2231" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>When composing and sending mail, whether to use RFC 2231 MIME parameter value encoding. If set to FALSE, then RFC 2047 style encoding is used.</desc>
+</attr>
+
+<attr id="396" name="zimbraPrefShortcuts" type="string" max="2048" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <desc>keyboard shortcuts</desc>
 </attr>
 
 </attrs>
