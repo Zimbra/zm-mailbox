@@ -44,7 +44,6 @@ import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.Sync;
 
 import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.logger.FileLogWriter;
 import com.zimbra.cs.redolog.logger.LogWriter;
 import com.zimbra.cs.redolog.op.AbortTxn;
@@ -640,19 +639,10 @@ public class RedoLogManager {
      * @throws IOException
      */
     public File[] getArchivedLogsAfterSequence(long sequenceAtPrevFullBackup) throws IOException {
-        File[] archivedLogs = RolloverManager.getArchiveLogs(mArchiveDir);
-        
-        ArrayList<File> toRet = new ArrayList<File>();
-        
-        for (int i = 0; i < archivedLogs.length; i++) {
-            // if the file sequence comes after our previous backup, then it should be included
-            FileLogReader r = new FileLogReader(archivedLogs[i]);
-            if (r.getHeader().getSequence() >= sequenceAtPrevFullBackup)
-            {
-                toRet.add(archivedLogs[i]);
-            }
-        }
-        File[] retArray = new File[0];
-        return (File[]) (toRet.toArray(retArray));
+        return RolloverManager.getArchiveLogs(mArchiveDir, sequenceAtPrevFullBackup);
+    }
+
+    public File[] getArchivedLogs() throws IOException {
+        return getArchivedLogsAfterSequence(Long.MIN_VALUE);
     }
 }

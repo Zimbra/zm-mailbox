@@ -122,18 +122,36 @@ public class RolloverManager {
 
 	/**
 	 * Returns the archive log files in the specified directory, sorted
-	 * by the timestamp encoded into the filenames.
+	 * by the sequence number encoded in the filename.
 	 * @param archiveDir
 	 * @return
 	 */
 	public static File[] getArchiveLogs(File archiveDir) {
-        File logs[] = archiveDir.listFiles(new ArchiveLogFilenameFilter());
-        if (logs != null && logs.length > 0)
-	        RolloverManager.sortArchiveLogFiles(logs);
-        return logs;
+        return getArchiveLogs(archiveDir, Long.MIN_VALUE, Long.MAX_VALUE);
 	}
 
-	/**
+    public static File[] getArchiveLogs(File archiveDir, long from) {
+        return getArchiveLogs(archiveDir, from, Long.MAX_VALUE);
+    }
+
+    public static File[] getArchiveLogs(File archiveDir, final long from, final long to) {
+        File logs[] = archiveDir.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                if (name.indexOf(ARCH_FILENAME_PREFIX) == 0 &&
+                    name.lastIndexOf(FILENAME_SUFFIX) == name.length() - FILENAME_SUFFIX.length()) {
+                    long seq = getSeqForFile(new File(dir, name));
+                    if (from <= seq && seq <= to)
+                        return true;
+                }
+                return false;
+            }
+        });
+        if (logs != null && logs.length > 0)
+            RolloverManager.sortArchiveLogFiles(logs);
+        return logs;
+    }
+
+    /**
 	 * Sorts an array of archive log files by the timestamp encoded into
 	 * the filenames.
 	 * @param files
@@ -170,6 +188,8 @@ public class RolloverManager {
 	}
 
 	public static long getSeqForFile(File f) {
+        //FileLogReader logReader = new FileLogReader(f);
+        //return logReader.getHeader().getSequence();
 		String fname = f.getName();
 		int start = fname.lastIndexOf(SEQUENCE_PREFIX);
 		if (start == -1) return -1;
@@ -214,16 +234,6 @@ public class RolloverManager {
 	private static final String SEQUENCE_PREFIX = "-seq";
 	private static final String FILENAME_SUFFIX = ".log";
 	private static final String TIMESTAMP_FORMAT = "yyyyMMdd.HHmmss.SSS";
-
-	public static class ArchiveLogFilenameFilter implements FilenameFilter {
-		public boolean accept(File dir, String name) {
-			if (name.indexOf(ARCH_FILENAME_PREFIX) == 0 &&
-				name.lastIndexOf(FILENAME_SUFFIX) == name.length() - FILENAME_SUFFIX.length())
-				return true;
-			else
-				return false;
-		}
-	}
 
 	private static class TempLogFilenameFilter implements FilenameFilter {
 		public boolean accept(File dir, String name) {
