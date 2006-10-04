@@ -38,11 +38,10 @@ public class SetUtil {
 	 * @param rhs
 	 * @return
 	 */
-	static public HashSet intersect(Set<? extends Object> lhs, Set<? extends Object> rhs) 
-	{
-		HashSet out = new HashSet();
+	public static <T> Set<T> intersect(Set<T> lhs, Set<T> rhs) {
+		HashSet<T> out = new HashSet<T>();
 		
-		for (Object o : lhs) {
+		for (T o : lhs) {
 			if (rhs.contains(o))
 				out.add(o);
 		}
@@ -57,9 +56,9 @@ public class SetUtil {
 	 * @param rhs
 	 * @return
 	 */
-	static public Set intersect(Set out, Set<? extends Object> lhs, Set<? extends Object> rhs) {
+	public static <T> Set<T> intersect(Set<T> out, Set<T> lhs, Set<T> rhs) {
 		
-		for (Object o : lhs) {
+		for (T o : lhs) {
 			if (rhs.contains(o))
 				out.add(o);
 		}
@@ -74,12 +73,12 @@ public class SetUtil {
 	 * @param rhs
 	 * @return
 	 */
-	static public Set union (Set out, Set<? extends Object> lhs, Set<? extends Object> rhs) {
+	public static <T> Set<T> union (Set<T> out, Set<T> lhs, Set<T> rhs) {
 		
-		for (Object o : lhs) {
+		for (T o : lhs) {
 			out.add(o);
 		}
-		for (Object o : rhs) {
+		for (T o : rhs) {
 			out.add(o);
 		}
 		return out;
@@ -93,9 +92,8 @@ public class SetUtil {
 	 * @param rhs
 	 * @return
 	 */
-	static public Set union (Set lhs, Set<? extends Object> rhs) 
-	{
-		for (Object o : rhs) {
+	public static <T> Set<T> union (Set<T> lhs, Set<T> rhs) {
+		for (T o : rhs) {
 			lhs.add(o);
 		}
 		return lhs;
