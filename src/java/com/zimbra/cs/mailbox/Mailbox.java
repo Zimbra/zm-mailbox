@@ -1946,7 +1946,7 @@ public class Mailbox {
         }
     }
 
-    public Set<Folder> getVisibleFolders(OperationContext octxt) throws ServiceException {
+    public synchronized Set<Folder> getVisibleFolders(OperationContext octxt) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getVisibleFolders", octxt);
@@ -4665,7 +4665,7 @@ public class Mailbox {
         }
     }
 
-    public Document addDocumentRevision(OperationContext octxt, Document doc, byte[] rawData, String author) throws ServiceException {
+    public synchronized Document addDocumentRevision(OperationContext octxt, Document doc, byte[] rawData, String author) throws ServiceException {
         String digest = ByteUtil.getDigest(rawData);
         StoreManager sm = StoreManager.getInstance();
         Blob blob = null;
