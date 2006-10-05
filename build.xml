@@ -127,7 +127,7 @@
 		<include name="**/*.java" />
 	</fileset>
 
-	<target name="make-dirs" description="Create an install directory tree under specified ${base.dir}">
+	<target name="make-dirs">
 		<!-- take advantage of the fact that mkdir uses File.mkdirs() and creates inbetween dirs -->
 		<echo>Creating dirs under ${base.dir}</echo>
 		<mkdir dir="${base.dir}/${slapd.conf.dir}"/>
@@ -254,7 +254,7 @@
 		<copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/amavisd.schema"/>
 	</target>
 
-	<target name="compile" depends="build-init" description="Compiles the source code">
+	<target name="compile" depends="build-init">
 		<ant dir="${common.dir}" target="jar" inheritAll="false" />
 		<javac destdir="${build.classes.dir}" debug="true" classpathref="class.path">
 			<src refid="all.java.path" />
@@ -265,7 +265,7 @@
 		</java>
 	</target>
 
-	<target name="jar" depends="compile" description="Creates the jar file">
+	<target name="jar" depends="compile">
 		<echo>Hostname: ${zimbra.server.hostname}</echo>
 		<jar destfile="${jarfile}" basedir="${build.classes.dir}" />
 		<antcall target="generate-ldap-config"/>
@@ -322,7 +322,7 @@
 		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod>
 	</target>
 
-	<target name="dev-dist" depends="war,dev-dist-unix,choose-db-schema" description="Copies files into an install tree at specified ${dist.dir}">
+	<target name="dev-dist" depends="war,dev-dist-unix,choose-db-schema">
 		<!-- bin, libexec -->
 		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production"/></copy>
 		<copy todir="${dist.dir}/libexec" overwrite="true"><fileset dir="${src.dir}/libexec" excludes="*.production"/></copy>
@@ -388,7 +388,7 @@
 
 	<target name="init" depends="stop-servers,db-init,dir-init,init-opt-zimbra,start-ldap,ldap-load" />
 
-	<target name="inject" depends="compile" description="Insert messages into the system">
+	<target name="inject" depends="compile">
 		<echo>Inserting default contacts: user1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-f data/soap/samplecontacts.xml" />
@@ -412,21 +412,21 @@
 		</java>
 	</target>
 
-	<target name="inject-npscontacts" depends="compile" description="Insert large addr book in user4">
+	<target name="inject-npscontacts" depends="compile">
 		<echo>Inserting NPS contacts: user4@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-f data/soap/nps-contacts-orig.xml" />
 		</java>
 	</target>
 
-	<target name="import-wiki-templates" description="Import Wiki templates to the wiki account">
+	<target name="import-wiki-templates">
 		<echo>Importing Wiki templates from ${data.wiki.dir}/Template</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-l impn wiki@${zimbra.server.hostname} test123 data/wiki/Template Template" />
 		</java>
 	</target>
 
-	<target name="init-wiki" description="Initialize the default Wiki account">
+	<target name="init-wiki">
 		<echo>Initializing wiki@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="in ${wiki.user.default}@${zimbra.server.hostname} test123 data/wiki/Template Template" />
@@ -446,7 +446,7 @@
 		</java>
 	</target>
 
-	<target name="localhost-ssl-cert" description="make a cert for ssl access">
+	<target name="localhost-ssl-cert">
 		<delete failonerror="no">
 			<fileset dir="${tomcat.home.dir}/conf" includes="keystore" />
 		</delete>
@@ -516,7 +516,7 @@
 		<echo>Using database schema in ${db.schema.dir}</echo>
 	</target>
 
-	<target name="db-init" depends="choose-db-schema" description="Recreate the database tables">
+	<target name="db-init" depends="choose-db-schema" >
 		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
 			 classpathref="class.path" onerror="continue" keepformat="true" src="src/db/dropdb.sql" />
 		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
@@ -531,8 +531,8 @@
 			<arg line="gdpak ${zimbra.server.hostname}" />
 		</java>
 	</target>
-
-	<target name="refresh-ldap" description="run this target if you have updated the schema files in /opt/zimbra, and you have generated new ldifs">
+    <!-- description="run this target if you have updated the schema files in /opt/zimbra, and you have generated new ldifs" -->
+	<target name="refresh-ldap" >
 		<antcall target="stop-tomcat"/>
 		<antcall target="stop-ldap"/>
 		<sleep seconds="2"/> <!-- sometimes start occurs too fast... -->
@@ -795,7 +795,7 @@
 	</target>
 
 	<!-- Tomcat service control -->
-	<target name="restart-tomcat" depends="stop-tomcat,start-tomcat"/>
+	<target name="restart-tomcat" depends="stop-tomcat,start-tomcat" description="Restart Tomcat"/>
 
 	<target name="stop-tomcat" depends="stop-tomcat-windows,stop-tomcat-unix"/>
 
@@ -833,7 +833,6 @@
 			<arg value="start" />
 		</exec>
 	</target>
-
-	<target name="empty" description="Dummy Target used by project_builder to force eclipse to refresh" />
-
+  <!-- description="Dummy Target used by project_builder to force eclipse to refresh"  -->
+	<target name="empty" />
 </project>
