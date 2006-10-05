@@ -47,32 +47,8 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class PrivacyListProvider {
 
-    private static final String LOAD_LIST_NAMES =
-            "SELECT name, isDefault FROM jivePrivacyList WHERE username=?";
-    private static final String LOAD_PRIVACY_LIST =
-            "SELECT isDefault, list FROM jivePrivacyList WHERE username=? AND name=?";
-    private static final String LOAD_DEFAULT_PRIVACY_LIST =
-            "SELECT name, list FROM jivePrivacyList WHERE username=? AND isDefault=1";
-    private static final String DELETE_PRIVACY_LIST =
-            "DELETE FROM jivePrivacyList WHERE username=? AND name=?";
-    private static final String DELETE_PRIVACY_LISTS =
-            "DELETE FROM jivePrivacyList WHERE username=?";
-    private static final String UPDATE_PRIVACY_LIST =
-            "UPDATE jivePrivacyList SET isDefault=?, list=? WHERE username=? AND name=?";
-    private static final String INSERT_PRIVACY_LIST =
-            "INSERT INTO jivePrivacyList (username, name, isDefault, list) VALUES (?, ?, ?, ?)";
-
-    /**
-     * Pool of SAX Readers. SAXReader is not thread safe so we need to have a pool of readers.
-     */
-    private BlockingQueue<SAXReader> xmlReaders = new LinkedBlockingQueue<SAXReader>();
-
     public PrivacyListProvider() {
         super();
-        // Initialize the pool of sax readers
-        for (int i=0; i<50; i++) {
-            xmlReaders.add(new SAXReader());
-        }
     }
 
     /**
@@ -84,26 +60,6 @@ public class PrivacyListProvider {
      */
     public Map<String, Boolean> getPrivacyLists(String username) {
         Map<String, Boolean> names = new HashMap<String, Boolean>();
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(LOAD_LIST_NAMES);
-            pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                names.put(rs.getString(1), rs.getInt(2) == 1);
-            }
-        }
-        catch (Exception e) {
-            Log.error("Error loading names of privacy lists for username: " + username, e);
-        }
-        finally {
-            try { if (pstmt != null) { pstmt.close(); } }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) { con.close(); } }
-            catch (Exception e) { Log.error(e); }
-        }
         return names;
     }
 
@@ -118,37 +74,6 @@ public class PrivacyListProvider {
      */
     public PrivacyList loadPrivacyList(String username, String listName) {
         PrivacyList privacyList = null;
-        java.sql.Connection con = null;
-        PreparedStatement pstmt = null;
-        SAXReader xmlReader = null;
-        try {
-            // Get a sax reader from the pool
-            xmlReader = xmlReaders.take();
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(LOAD_PRIVACY_LIST);
-            pstmt.setString(1, username);
-            pstmt.setString(2, listName);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                boolean isDefault = rs.getInt(1) == 1;
-                Element listElement =
-                        xmlReader.read(new StringReader(rs.getString(2))).getRootElement();
-                privacyList = new PrivacyList(username, listName, isDefault, listElement);
-            }
-        }
-        catch (Exception e) {
-            Log.error("Error loading privacy list: " + listName + " of username: " + username, e);
-        }
-        finally {
-            // Return the sax reader to the pool
-            if (xmlReader != null) {
-                xmlReaders.add(xmlReader);
-            }
-            try { if (pstmt != null) { pstmt.close(); } }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) { con.close(); } }
-            catch (Exception e) { Log.error(e); }
-        }
         return privacyList;
     }
 
@@ -161,36 +86,6 @@ public class PrivacyListProvider {
      */
     public PrivacyList loadDefaultPrivacyList(String username) {
         PrivacyList privacyList = null;
-        java.sql.Connection con = null;
-        PreparedStatement pstmt = null;
-        SAXReader xmlReader = null;
-        try {
-            // Get a sax reader from the pool
-            xmlReader = xmlReaders.take();
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(LOAD_DEFAULT_PRIVACY_LIST);
-            pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                String listName= rs.getString(1);
-                Element listElement =
-                        xmlReader.read(new StringReader(rs.getString(2))).getRootElement();
-                privacyList = new PrivacyList(username, listName, true, listElement);
-            }
-        }
-        catch (Exception e) {
-            Log.error("Error loading default privacy list of username: " + username, e);
-        }
-        finally {
-            // Return the sax reader to the pool
-            if (xmlReader != null) {
-                xmlReaders.add(xmlReader);
-            }
-            try { if (pstmt != null) { pstmt.close(); } }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) { con.close(); } }
-            catch (Exception e) { Log.error(e); }
-        }
         return privacyList;
     }
 
@@ -201,27 +96,6 @@ public class PrivacyListProvider {
      * @param list the PrivacyList to save.
      */
     public void createPrivacyList(String username, PrivacyList list) {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(INSERT_PRIVACY_LIST);
-            pstmt.setString(1, username);
-            pstmt.setString(2, list.getName());
-            pstmt.setInt(3, (list.isDefault() ? 1 : 0));
-            pstmt.setString(4, list.asElement().asXML());
-            pstmt.executeUpdate();
-        }
-        catch (Exception e) {
-            Log.error("Error adding privacy list: " + list.getName() + " of username: " + username,
-                    e);
-        }
-        finally {
-            try { if (pstmt != null) { pstmt.close(); } }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) { con.close(); } }
-            catch (Exception e) { Log.error(e); }
-        }
     }
 
     /**
@@ -231,28 +105,6 @@ public class PrivacyListProvider {
      * @param list the PrivacyList to update in the database.
      */
     public void updatePrivacyList(String username, PrivacyList list) {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(UPDATE_PRIVACY_LIST);
-            pstmt.setInt(1, (list.isDefault() ? 1 : 0));
-            pstmt.setString(2, list.asElement().asXML());
-            pstmt.setString(3, username);
-            pstmt.setString(4, list.getName());
-            pstmt.executeUpdate();
-        }
-        catch (Exception e) {
-            Log.error(
-                    "Error updating privacy list: " + list.getName() + " of username: " + username,
-                    e);
-        }
-        finally {
-            try { if (pstmt != null) { pstmt.close(); } }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) { con.close(); } }
-            catch (Exception e) { Log.error(e); }
-        }
     }
 
     /**
@@ -262,24 +114,6 @@ public class PrivacyListProvider {
      * @param listName the name of the PrivacyList to delete.
      */
     public void deletePrivacyList(String username, String listName) {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(DELETE_PRIVACY_LIST);
-            pstmt.setString(1, username);
-            pstmt.setString(2, listName);
-            pstmt.executeUpdate();
-        }
-        catch (Exception e) {
-            Log.error("Error deleting privacy list: " + listName + " of username: " + username, e);
-        }
-        finally {
-            try { if (pstmt != null) { pstmt.close(); } }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) { con.close(); } }
-            catch (Exception e) { Log.error(e); }
-        }
     }
 
     /**
@@ -288,22 +122,5 @@ public class PrivacyListProvider {
      * @param username the username of the user whose privacy lists are going to be deleted.
      */
     public void deletePrivacyLists(String username) {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(DELETE_PRIVACY_LISTS);
-            pstmt.setString(1, username);
-            pstmt.executeUpdate();
-        }
-        catch (Exception e) {
-            Log.error("Error deleting privacy lists of username: " + username, e);
-        }
-        finally {
-            try { if (pstmt != null) { pstmt.close(); } }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) { con.close(); } }
-            catch (Exception e) { Log.error(e); }
-        }
     }
 }

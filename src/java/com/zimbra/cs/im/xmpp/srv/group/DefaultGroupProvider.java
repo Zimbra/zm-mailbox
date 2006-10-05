@@ -80,6 +80,10 @@ public class DefaultGroupProvider implements GroupProvider {
     private static final String ALL_GROUPS = "SELECT groupName FROM jiveGroup ORDER BY groupName";
 
     private XMPPServer server = XMPPServer.getInstance();
+    
+    public DefaultGroupProvider() {
+        System.out.println("hello");
+    }
 
     public Group createGroup(String name) throws GroupAlreadyExistsException {
         Connection con = null;

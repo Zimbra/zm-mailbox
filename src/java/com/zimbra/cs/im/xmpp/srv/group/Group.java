@@ -25,7 +25,6 @@
 
 package com.zimbra.cs.im.xmpp.srv.group;
 
-import com.zimbra.cs.im.xmpp.database.DbConnectionManager;
 import com.zimbra.cs.im.xmpp.util.CacheSizes;
 import com.zimbra.cs.im.xmpp.util.Cacheable;
 import com.zimbra.cs.im.xmpp.util.Log;
@@ -54,18 +53,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Group implements Cacheable {
 
-    private static final String LOAD_PROPERTIES =
-        "SELECT name, propValue FROM jiveGroupProp WHERE groupName=?";
-    private static final String DELETE_PROPERTY =
-        "DELETE FROM jiveGroupProp WHERE groupName=? AND name=?";
-    private static final String UPDATE_PROPERTY =
-        "UPDATE jiveGroupProp SET propValue=? WHERE name=? AND groupName=?";
-    private static final String INSERT_PROPERTY =
-        "INSERT INTO jiveGroupProp (groupName, name, propValue) VALUES (?, ?, ?)";
-    private static final String LOAD_SHARED_GROUPS =
-        "SELECT groupName FROM jiveGroupProp WHERE name='sharedRoster.showInRoster' " +
-        "AND propValue IS NOT NULL AND propValue <> 'nobody'";
-
     private transient GroupProvider provider;
     private transient GroupManager groupManager;
 
@@ -82,26 +69,6 @@ public class Group implements Cacheable {
      */
     static Set<String> getSharedGroupsNames() {
         Set<String> groupNames = new HashSet<String>();
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(LOAD_SHARED_GROUPS);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                groupNames.add(rs.getString(1));
-            }
-            rs.close();
-        }
-        catch (SQLException sqle) {
-            Log.error(sqle);
-        }
-        finally {
-            try { if (pstmt != null) pstmt.close(); }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) con.close(); }
-            catch (Exception e) { Log.error(e); }
-        }
         return groupNames;
     }
 
@@ -529,102 +496,14 @@ public class Group implements Cacheable {
     }
 
     private void loadProperties() {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(LOAD_PROPERTIES);
-            pstmt.setString(1, name);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                String key = rs.getString(1);
-                String value = rs.getString(2);
-                if (key != null) {
-                    if (value == null) {
-                        value = "";
-                        Log.warn("There is a group property whose value is null of Group: " + name);
-                    }
-                    properties.put(key, value);
-                }
-                else {
-                    Log.warn("There is a group property whose key is null of Group: " + name);
-                }
-            }
-            rs.close();
-        }
-        catch (SQLException sqle) {
-            Log.error(sqle);
-        }
-        finally {
-            try { if (pstmt != null) pstmt.close(); }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) con.close(); }
-            catch (Exception e) { Log.error(e); }
-        }
     }
 
     private void insertProperty(String propName, String propValue) {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(INSERT_PROPERTY);
-            pstmt.setString(1, name);
-            pstmt.setString(2, propName);
-            pstmt.setString(3, propValue);
-            pstmt.executeUpdate();
-        }
-        catch (SQLException e) {
-            Log.error(e);
-        }
-        finally {
-            try { if (pstmt != null) pstmt.close(); }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) con.close(); }
-            catch (Exception e) { Log.error(e); }
-        }
     }
 
     private void updateProperty(String propName, String propValue) {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(UPDATE_PROPERTY);
-            pstmt.setString(1, propValue);
-            pstmt.setString(2, propName);
-            pstmt.setString(3, name);
-            pstmt.executeUpdate();
-        }
-        catch (SQLException e) {
-            Log.error(e);
-        }
-        finally {
-            try { if (pstmt != null) pstmt.close(); }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) con.close(); }
-            catch (Exception e) { Log.error(e); }
-        }
     }
 
     private void deleteProperty(String propName) {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(DELETE_PROPERTY);
-            pstmt.setString(1, name);
-            pstmt.setString(2, propName);
-            pstmt.executeUpdate();
-        }
-        catch (SQLException e) {
-            Log.error(e);
-        }
-        finally {
-            try { if (pstmt != null) pstmt.close(); }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) con.close(); }
-            catch (Exception e) { Log.error(e); }
-        }
     }
 }

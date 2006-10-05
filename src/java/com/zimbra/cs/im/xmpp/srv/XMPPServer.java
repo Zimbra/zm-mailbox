@@ -686,7 +686,7 @@ public class XMPPServer {
      * @throws FileNotFoundException If jiveHome could not be located
      */
     private void locateWildfire() throws FileNotFoundException, IOException {
-    	String wildfireHomeStr = LC.zimbra_home.value() + File.separator + "im";
+    	String wildfireHomeStr = LC.zimbra_home.value();
     	String jiveConfigName = "conf" + File.separator + "wildfire.xml";
     	
     	File wildfireHome = verifyHome(wildfireHomeStr, jiveConfigName);

@@ -35,7 +35,7 @@ import java.util.Set;
  *
  * @author Matt Tucker
  */
-interface UserProvider {
+public interface UserProvider {
 
     /**
      * Loads the specified user by username.
@@ -48,7 +48,7 @@ interface UserProvider {
 
     /**
      * Creates a new user. This method should throw an
-     * UnsupportedOperationException if this operation is not
+     * UnsupportedOperationException if0 this operation is not
      * supporte by the backend user store.
      *
      * @param username the username.
@@ -70,12 +70,12 @@ interface UserProvider {
      */
     public void deleteUser(String username);
 
-//    /**
-//     * Returns the number of users in the system.
-//     *
-//     * @return the total number of users.
-//     */
-//    public int getUserCount();
+    /**
+     * Returns the number of users in the system.
+     *
+     * @return the total number of users.
+     */
+    public int getUserCount();
 
     /**
      * Returns an unmodifiable Collections of all users in the system. The
@@ -252,25 +252,4 @@ interface UserProvider {
      *         backend user store.
      */
     public boolean supportsPasswordRetrieval();
-
-    public Map<String, String> loadProperties(String username);
-    
-    public void insertProperty(String username, String propName, String propValue);
-    
-    public void updateProperty(String username, String propName, String propValue);
-    
-    public void deleteProperty(String username, String propName);
-    
-    /**
-     * Returns the value of the specified property for the given username. This method is
-     * an optimization to avoid loading a user to get a specific property.
-     *
-     * @param username the username of the user to get a specific property value.
-     * @param propertyName the name of the property to return its value.
-     * @return the value of the specified property for the given username.
-     */
-    public String getPropertyValue(String username, String propertyName);
-    
-    
-    
 }

@@ -993,6 +993,8 @@ public abstract class Provisioning {
      * Extension Text Analyzer
      */
     public static final String A_zimbraTextAnalyzer = "zimbraTextAnalyzer";
+    
+    public static final String A_zimbraXMPPEnabled = "zimbraXMPPEnabled";
 
     /**
      * If zimbraPublicServiceHostname is set for a mail domain, the name is used

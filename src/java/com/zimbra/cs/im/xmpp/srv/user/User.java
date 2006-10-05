@@ -25,7 +25,6 @@
 
 package com.zimbra.cs.im.xmpp.srv.user;
 
-import com.zimbra.cs.im.xmpp.database.DbConnectionManager;
 import com.zimbra.cs.im.xmpp.util.CacheSizes;
 import com.zimbra.cs.im.xmpp.util.Cacheable;
 import com.zimbra.cs.im.xmpp.util.Log;
@@ -52,17 +51,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class User implements Cacheable {
 
-    private static final String LOAD_PROPERTIES =
-        "SELECT name, propValue FROM jiveUserProp WHERE username=?";
-    private static final String LOAD_PROPERTY =
-        "SELECT propValue FROM jiveUserProp WHERE username=? AND name=?";
-    private static final String DELETE_PROPERTY =
-        "DELETE FROM jiveUserProp WHERE username=? AND name=?";
-    private static final String UPDATE_PROPERTY =
-        "UPDATE jiveUserProp SET propValue=? WHERE name=? AND username=?";
-    private static final String INSERT_PROPERTY =
-        "INSERT INTO jiveUserProp (username, name, propValue) VALUES (?, ?, ?)";
-
     private String username;
     private String name;
     private String email;
@@ -81,28 +69,6 @@ public class User implements Cacheable {
      */
     public static String getPropertyValue(String username, String propertyName) {
         String propertyValue = null;
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(LOAD_PROPERTY);
-            pstmt.setString(1, username);
-            pstmt.setString(2, propertyName);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                propertyValue = rs.getString(1);
-            }
-            rs.close();
-        }
-        catch (SQLException sqle) {
-            Log.error(sqle);
-        }
-        finally {
-            try { if (pstmt != null) pstmt.close(); }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) con.close(); }
-            catch (Exception e) { Log.error(e); }
-        }
         return propertyValue;
     }
 
@@ -400,6 +366,7 @@ public class User implements Cacheable {
                         throw new IllegalStateException();
                     }
                     String key = (String)current.getKey();
+                    
                     deleteProperty(key);
                     iter.remove();
                     // Fire event.
@@ -414,91 +381,14 @@ public class User implements Cacheable {
     }
 
     private void loadProperties() {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(LOAD_PROPERTIES);
-            pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                properties.put(rs.getString(1), rs.getString(2));
-            }
-            rs.close();
-        }
-        catch (SQLException sqle) {
-            Log.error(sqle);
-        }
-        finally {
-            try { if (pstmt != null) pstmt.close(); }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) con.close(); }
-            catch (Exception e) { Log.error(e); }
-        }
     }
 
     private void insertProperty(String propName, String propValue) {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(INSERT_PROPERTY);
-            pstmt.setString(1, username);
-            pstmt.setString(2, propName);
-            pstmt.setString(3, propValue);
-            pstmt.executeUpdate();
-        }
-        catch (SQLException e) {
-            Log.error(e);
-        }
-        finally {
-            try { if (pstmt != null) pstmt.close(); }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) con.close(); }
-            catch (Exception e) { Log.error(e); }
-        }
     }
 
     private void updateProperty(String propName, String propValue) {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(UPDATE_PROPERTY);
-            pstmt.setString(1, propValue);
-            pstmt.setString(2, propName);
-            pstmt.setString(3, username);
-            pstmt.executeUpdate();
-        }
-        catch (SQLException e) {
-            Log.error(e);
-        }
-        finally {
-            try { if (pstmt != null) pstmt.close(); }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) con.close(); }
-            catch (Exception e) { Log.error(e); }
-        }
     }
 
     private void deleteProperty(String propName) {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(DELETE_PROPERTY);
-            pstmt.setString(1, username);
-            pstmt.setString(2, propName);
-            pstmt.executeUpdate();
-        }
-        catch (SQLException e) {
-            Log.error(e);
-        }
-        finally {
-            try { if (pstmt != null) pstmt.close(); }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) con.close(); }
-            catch (Exception e) { Log.error(e); }
-        }
     }
 }

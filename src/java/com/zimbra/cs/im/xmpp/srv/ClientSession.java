@@ -533,6 +533,7 @@ public class ClientSession extends Session {
         setStatus(Session.STATUS_AUTHENTICATED);
 
         // Set default privacy list for this session
+        
         setDefaultList(PrivacyListManager.getInstance().getDefaultPrivacyList(user.getUsername()));
     }
 

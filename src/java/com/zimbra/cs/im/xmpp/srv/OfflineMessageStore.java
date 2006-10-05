@@ -57,25 +57,6 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class OfflineMessageStore extends BasicModule implements UserEventListener {
 
-    private static final String INSERT_OFFLINE =
-        "INSERT INTO jiveOffline (username, messageID, creationDate, messageSize, message) " +
-        "VALUES (?, ?, ?, ?, ?)";
-    private static final String LOAD_OFFLINE =
-        "SELECT message, creationDate FROM jiveOffline WHERE username=?";
-    private static final String LOAD_OFFLINE_MESSAGE =
-        "SELECT message FROM jiveOffline WHERE username=? AND creationDate=?";
-    private static final String SELECT_SIZE_OFFLINE =
-        "SELECT SUM(messageSize) FROM jiveOffline WHERE username=?";
-    private static final String SELECT_SIZE_ALL_OFFLINE =
-        "SELECT SUM(messageSize) FROM jiveOffline";
-    private static final String DELETE_OFFLINE =
-        "DELETE FROM jiveOffline WHERE username=?";
-    private static final String DELETE_OFFLINE_MESSAGE =
-        "DELETE FROM jiveOffline WHERE username=? AND creationDate=?";
-
-    private Cache<String, Integer> sizeCache;
-    private FastDateFormat dateFormat;
-
     /**
      * Returns the instance of <tt>OfflineMessageStore</tt> being used by the XMPPServer.
      *
@@ -95,9 +76,6 @@ public class OfflineMessageStore extends BasicModule implements UserEventListene
      */
     public OfflineMessageStore() {
         super("Offline Message Store");
-        dateFormat = FastDateFormat.getInstance("yyyyMMdd'T'HH:mm:ss", TimeZone.getTimeZone("UTC"));
-        sizeCache = CacheManager.initializeCache("Offline Message Size", "offlinemessage",
-                1024 * 100, JiveConstants.HOUR * 12);
     }
 
     /**
@@ -107,55 +85,6 @@ public class OfflineMessageStore extends BasicModule implements UserEventListene
      * @param message the message to store.
      */
     public void addMessage(Message message) {
-        if (message == null) {
-            return;
-        }
-        JID recipient = message.getTo();
-        String username = recipient.getNode();
-        // If the username is null (such as when an anonymous user), don't store.
-        if (username == null || !UserManager.getInstance().isRegisteredUser(recipient)) {
-            return;
-        }
-        else
-        if (!XMPPServer.getInstance().getServerInfo().getName().equals(recipient.getDomain())) {
-            // Do not store messages sent to users of remote servers
-            return;
-        }
-
-        long messageID = SequenceManager.nextID(JiveConstants.OFFLINE);
-
-        // Get the message in XML format.
-        String msgXML = message.getElement().asXML();
-
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(INSERT_OFFLINE);
-            pstmt.setString(1, username);
-            pstmt.setLong(2, messageID);
-            pstmt.setString(3, StringUtils.dateToMillis(new java.util.Date()));
-            pstmt.setInt(4, msgXML.length());
-            pstmt.setString(5, msgXML);
-            pstmt.executeUpdate();
-        }
-
-        catch (Exception e) {
-            Log.error(LocaleUtils.getLocalizedString("admin.error"), e);
-        }
-        finally {
-            try { if (pstmt != null) { pstmt.close(); } }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) { con.close(); } }
-            catch (Exception e) { Log.error(e); }
-        }
-
-        // Update the cached size if it exists.
-        if (sizeCache.containsKey(username)) {
-            int size = sizeCache.get(username);
-            size += msgXML.length();
-            sizeCache.put(username, size);
-        }
     }
 
     /**
@@ -169,50 +98,6 @@ public class OfflineMessageStore extends BasicModule implements UserEventListene
      */
     public Collection<OfflineMessage> getMessages(String username, boolean delete) {
         List<OfflineMessage> messages = new ArrayList<OfflineMessage>();
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        SAXReader xmlReader = null;
-        try {
-            // Get a sax reader from the pool
-            xmlReader = xmlReaders.take();
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(LOAD_OFFLINE);
-            pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                String msgXML = rs.getString(1);
-                Date creationDate = new Date(Long.parseLong(rs.getString(2).trim()));
-                OfflineMessage message = new OfflineMessage(creationDate,
-                        xmlReader.read(new StringReader(msgXML)).getRootElement());
-                // Add a delayed delivery (JEP-0091) element to the message.
-                Element delay = message.addChildElement("x", "jabber:x:delay");
-                delay.addAttribute("from", XMPPServer.getInstance().getServerInfo().getName());
-                delay.addAttribute("stamp", dateFormat.format(creationDate));
-                messages.add(message);
-            }
-            rs.close();
-            // Check if the offline messages loaded should be deleted
-            if (delete) {
-                pstmt.close();
-
-                pstmt = con.prepareStatement(DELETE_OFFLINE);
-                pstmt.setString(1, username);
-                pstmt.executeUpdate();
-                
-                removeUsernameFromSizeCache(username);
-            }
-        }
-        catch (Exception e) {
-            Log.error("Error retrieving offline messages of username: " + username, e);
-        }
-        finally {
-            // Return the sax reader to the pool
-            if (xmlReader != null) xmlReaders.add(xmlReader);
-            try { if (pstmt != null) { pstmt.close(); } }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) { con.close(); } }
-            catch (Exception e) { Log.error(e); }
-        }
         return messages;
     }
 
@@ -226,41 +111,6 @@ public class OfflineMessageStore extends BasicModule implements UserEventListene
      */
     public OfflineMessage getMessage(String username, Date creationDate) {
         OfflineMessage message = null;
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        SAXReader xmlReader = null;
-        try {
-            // Get a sax reader from the pool
-            xmlReader = xmlReaders.take();
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(LOAD_OFFLINE_MESSAGE);
-            pstmt.setString(1, username);
-            pstmt.setString(2, StringUtils.dateToMillis(creationDate));
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                String msgXML = rs.getString(1);
-                message =
-                        new OfflineMessage(creationDate,
-                                xmlReader.read(new StringReader(msgXML)).getRootElement());
-                // Add a delayed delivery (JEP-0091) element to the message.
-                Element delay = message.addChildElement("x", "jabber:x:delay");
-                delay.addAttribute("from", XMPPServer.getInstance().getServerInfo().getName());
-                delay.addAttribute("stamp", dateFormat.format(creationDate));
-            }
-            rs.close();
-        }
-        catch (Exception e) {
-            Log.error("Error retrieving offline messages of username: " + username +
-                    " creationDate: " + creationDate, e);
-        }
-        finally {
-            // Return the sax reader to the pool
-            if (xmlReader != null) xmlReaders.add(xmlReader);
-            try { if (pstmt != null) { pstmt.close(); } }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) { con.close(); } }
-            catch (Exception e) { Log.error(e); }
-        }
         return message;
     }
 
@@ -270,32 +120,9 @@ public class OfflineMessageStore extends BasicModule implements UserEventListene
      * @param username the username of the user who's messages are going to be deleted.
      */
     public void deleteMessages(String username) {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(DELETE_OFFLINE);
-            pstmt.setString(1, username);
-            pstmt.executeUpdate();
-            
-            removeUsernameFromSizeCache(username);
-        }
-        catch (Exception e) {
-            Log.error("Error deleting offline messages of username: " + username, e);
-        }
-        finally {
-            try { if (pstmt != null) { pstmt.close(); } }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) { con.close(); } }
-            catch (Exception e) { Log.error(e); }
-        }
     }
 
     private void removeUsernameFromSizeCache(String username) {
-        // Update the cached size if it exists.
-        if (sizeCache.containsKey(username)) {
-            sizeCache.remove(username);
-        }
     }
 
     /**
@@ -306,30 +133,6 @@ public class OfflineMessageStore extends BasicModule implements UserEventListene
      * @param creationDate the date when the offline message was stored in the database.
      */
     public void deleteMessage(String username, Date creationDate) {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(DELETE_OFFLINE_MESSAGE);
-            pstmt.setString(1, username);
-            pstmt.setString(2, StringUtils.dateToMillis(creationDate));
-            pstmt.executeUpdate();
-            
-            //force a refresh for next call to getSize(username)
-            //its easier than loading the msg to be deleted just
-            //to update the cache.
-            removeUsernameFromSizeCache(username);
-        }
-        catch (Exception e) {
-            Log.error("Error deleting offline messages of username: " + username +
-                    " creationDate: " + creationDate, e);
-        }
-        finally {
-            try { if (pstmt != null) { pstmt.close(); } }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) { con.close(); } }
-            catch (Exception e) { Log.error(e); }
-        }
     }
 
     /**
@@ -340,34 +143,7 @@ public class OfflineMessageStore extends BasicModule implements UserEventListene
      * @return the approximate size of stored messages (in bytes).
      */
     public int getSize(String username) {
-        // See if the size is cached.
-        if (sizeCache.containsKey(username)) {
-            return sizeCache.get(username);
-        }
         int size = 0;
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(SELECT_SIZE_OFFLINE);
-            pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                size = rs.getInt(1);
-            }
-            rs.close();
-            // Add the value to cache.
-            sizeCache.put(username, size);
-        }
-        catch (Exception e) {
-            Log.error(LocaleUtils.getLocalizedString("admin.error"), e);
-        }
-        finally {
-            try { if (pstmt != null) { pstmt.close(); } }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) { con.close(); } }
-            catch (Exception e) { Log.error(e); }
-        }
         return size;
     }
 
@@ -379,26 +155,6 @@ public class OfflineMessageStore extends BasicModule implements UserEventListene
      */
     public int getSize() {
         int size = 0;
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = DbConnectionManager.getConnection();
-            pstmt = con.prepareStatement(SELECT_SIZE_ALL_OFFLINE);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                size = rs.getInt(1);
-            }
-            rs.close();
-        }
-        catch (Exception e) {
-            Log.error(LocaleUtils.getLocalizedString("admin.error"), e);
-        }
-        finally {
-            try { if (pstmt != null) { pstmt.close(); } }
-            catch (Exception e) { Log.error(e); }
-            try { if (con != null) { con.close(); } }
-            catch (Exception e) { Log.error(e); }
-        }
         return size;
     }
 

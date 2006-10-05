@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.util;
 
+import java.io.StringWriter;
 import java.util.Timer;
 
 import com.zimbra.cs.account.Provisioning;
@@ -33,6 +34,7 @@ import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.im.IMRouter;
+import com.zimbra.cs.im.xmpp.srv.XMPPServer;
 import com.zimbra.cs.imap.ImapServer;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.lmtpserver.LmtpServer;
@@ -57,6 +59,8 @@ import com.zimbra.cs.store.StoreManager;
  */
 public class Zimbra {
     private static boolean sInited = false;
+    
+    private static XMPPServer mXmppServer; 
 
     private static void checkForClass(String clzName, String jarName) {
         try {
@@ -78,7 +82,7 @@ public class Zimbra {
     public static synchronized void startup() throws ServiceException {
         if (sInited)
             return;
-
+        
         PrivilegedServlet.waitForInitialization();
 
         ZimbraLog.misc.info("version=" + BuildInfo.VERSION +
@@ -110,6 +114,17 @@ public class Zimbra {
             OzNotificationServer.startup();
 
             Server server = Provisioning.getInstance().getLocalServer();
+            
+            if (server.getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
+                try {
+                    XMPPServer srv = new XMPPServer();
+                    srv.start();
+                } catch (Exception e) { 
+                    ZimbraLog.system.warn("Could not start XMPP server: " + e.toString());
+                    e.printStackTrace();
+                }
+            }
+            
             LmtpServer.startupLmtpServer();
             if (server.getBooleanAttr(Provisioning.A_zimbraPop3ServerEnabled, false))
                 Pop3Server.startupPop3Server();
@@ -120,7 +135,7 @@ public class Zimbra {
             if (server.getBooleanAttr(Provisioning.A_zimbraImapSSLServerEnabled, false))
                 ImapServer.startupImapSSLServer();
         }
-
+        
         ZimbraPerf.initialize();
         sInited = true;
     }

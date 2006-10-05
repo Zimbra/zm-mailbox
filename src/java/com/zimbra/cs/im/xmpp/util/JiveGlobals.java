@@ -115,7 +115,7 @@ public class JiveGlobals {
     			loadSetupProperties();  
     		}
     		for (Map.Entry<String, String> e : xmlProperties.MapIter()) {
-//    			System.out.println(e.toString());
+    			System.out.println(e.toString());
     			properties.put(e.getKey(), e.getValue());
     		}
     	}

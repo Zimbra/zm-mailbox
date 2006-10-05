@@ -1787,4 +1787,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>keyboard shortcuts</desc>
 </attr>
 
+<attr id="397" name="zimbraXMPPEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Enable XMPP support for IM</desc>
+</attr>
+
+
 </attrs>
