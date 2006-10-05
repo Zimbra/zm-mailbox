@@ -30,11 +30,13 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.mail.Address;
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.Transport;
 import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.jsieve.SieveException;
@@ -268,10 +270,10 @@ public class ZimbraMailAdapter implements MailAdapter
                     ZimbraLog.filter.info("redirecting to " + addr);
                     MimeMessage mm = mParsedMessage.getMimeMessage();
                     try {
-                        mm.setRecipients(javax.mail.Message.RecipientType.TO, addr);
-                        // Received header will be automatically added by JavaMail
-                        // No Resent-* headers are added
-                        Transport.send(mm);
+                        InternetAddress iaddr = new InternetAddress(addr);
+                        Address[] raddr = new Address[1];
+                        raddr[0] = iaddr;
+                        Transport.send(mm, raddr);
                     } catch (AddressException e) {
                         throw MailServiceException.PARSE_ERROR("wrongly formatted address: " + addr, e);
                     } catch (SendFailedException e) {
