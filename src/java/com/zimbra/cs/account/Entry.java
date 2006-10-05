@@ -82,7 +82,7 @@ public abstract class Entry {
      * @param name
      * @return
      */
-    private Object getObject(String name) {
+    private Object getObject(String name, boolean applyDefaults) {
         Object v = mAttrs.get(name);
         if (v != null) return v;
         
@@ -91,7 +91,7 @@ public abstract class Entry {
                 return mAttrs.get(key);
         }
         
-        if (mDefaults == null) return null;
+        if (mDefaults == null || !applyDefaults) return null;
         
         v = mDefaults.get(name);
         if (v != null) return v;
@@ -104,7 +104,11 @@ public abstract class Entry {
     }
     
     public String getAttr(String name) {
-        Object v = getObject(name);
+        return getAttr(name, true);
+    }
+
+    public String getAttr(String name, boolean applyDefaults) {
+        Object v = getObject(name, applyDefaults);
         if (v instanceof String) {
             return (String) v;
         } else if (v instanceof String[]) {
@@ -215,10 +219,14 @@ public abstract class Entry {
     }
 
     public String[] getMultiAttr(String name) {
-        Object v = getObject(name);
-        if (v instanceof String) return new String[] {(String) v};
+        return getMultiAttr(name, true);
+    }
+
+    public String[] getMultiAttr(String name, boolean applyDefaults) {
+        Object v = getObject(name, applyDefaults);
+        if (v instanceof String) return new String[]{(String) v};
         else if (v instanceof String[]) {
-            return (String[])v;
+            return (String[]) v;
         } else {
             return sEmptyMulti;
         }
@@ -276,7 +284,7 @@ public abstract class Entry {
         defaults.clear();
         Set<String> attrs = AttributeManager.getInstance().getAttrsWithFlag(flag);
         for (String a : attrs) {
-            Object obj = getObject(a);
+            Object obj = getObject(a, true);
             if (obj != null) defaults.put(a, obj);
         }
         //return Collections.unmodifiableMap(defaults);

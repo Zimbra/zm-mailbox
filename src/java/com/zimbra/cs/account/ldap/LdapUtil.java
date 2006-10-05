@@ -439,7 +439,7 @@ public class LdapUtil {
         int mod_op = (value == null || value.equals("")) ? DirContext.REMOVE_ATTRIBUTE : DirContext.REPLACE_ATTRIBUTE;
         if (mod_op == DirContext.REMOVE_ATTRIBUTE) {
             // make sure it exists
-            if (entry.getAttr(name, null) == null)
+            if (entry.getAttr(name, false) == null)
                 return;
         }
         BasicAttribute ba = new BasicAttribute(name);
@@ -452,7 +452,7 @@ public class LdapUtil {
      * remove the attr with the specified value
      */
     private static void removeAttr(ArrayList<ModificationItem> modList, String name, String value, com.zimbra.cs.account.Entry entry) {
-        if (!contains(entry.getMultiAttr(name), value)) return;
+        if (!contains(entry.getMultiAttr(name, false), value)) return;
         
         BasicAttribute ba = new BasicAttribute(name);
         ba.add(value);
@@ -471,7 +471,7 @@ public class LdapUtil {
      * remove the attr with the specified value
      */
     private static void removeAttr(ArrayList<ModificationItem> modList, String name, String value[], com.zimbra.cs.account.Entry entry) {
-        String[] currentValues = entry.getMultiAttr(name);
+        String[] currentValues = entry.getMultiAttr(name, false);
         if (currentValues == null || currentValues.length == 0) return;
 
         BasicAttribute ba = null;
@@ -488,7 +488,7 @@ public class LdapUtil {
      * add an additional attr with the specified value
      */
     private static void addAttr(ArrayList<ModificationItem> modList, String name, String value, com.zimbra.cs.account.Entry entry) {
-        if (contains(entry.getMultiAttr(name), value)) return;        
+        if (contains(entry.getMultiAttr(name, false), value)) return;        
         
         BasicAttribute ba = new BasicAttribute(name);
         ba.add(value);
@@ -500,7 +500,7 @@ public class LdapUtil {
      * add an additional attr with the specified value
      */
     private static void addAttr(ArrayList<ModificationItem> modList, String name, String value[], com.zimbra.cs.account.Entry entry) {
-        String[] currentValues = entry.getMultiAttr(name);
+        String[] currentValues = entry.getMultiAttr(name, false);
         
         BasicAttribute ba = null;
         for (int i=0; i < value.length; i++) {
@@ -550,7 +550,7 @@ public class LdapUtil {
                 Collection c = (Collection) v;
                 if (c.size() == 0) {
                     // make sure it exists
-                    if (entry.getAttr(key, null) != null) {
+                    if (entry.getAttr(key, false) != null) {
                         BasicAttribute ba = new BasicAttribute(key);
                         modlist.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));
                     }
@@ -589,7 +589,6 @@ public class LdapUtil {
     /**
      * take a map (key = String, value = String | String[]) and populate Attributes.
      * 
-     * @param map
      * @param attrs
      */
     public static void mapToAttrs(Map mapAttrs, Attributes attrs) {
@@ -629,7 +628,6 @@ public class LdapUtil {
 
     /**
      * Given an email like blah@foo.com, return the domain dn: dc=foo,dc=com
-     * @param domain
      * @return the dn
      * @throws ServiceException 
      */
@@ -709,7 +707,6 @@ public class LdapUtil {
      *    [0] = dc=foo,dc=com
      *    [1] = dc=com
      * 
-     * @param domain
      * @return the array of DNs
      */
     public static String[] domainToDNs(String[] parts) {
