@@ -363,10 +363,6 @@ public class Mailbox {
     }
 
     /** Returns the Mailbox's Lucene index. */
-    MailboxIndex getIndex() {
-        return mMailboxIndex;
-    }
-
     public MailboxIndex getMailboxIndex() {
         return mMailboxIndex;
     }

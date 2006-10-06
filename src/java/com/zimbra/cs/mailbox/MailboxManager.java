@@ -102,6 +102,8 @@ public class MailboxManager {
         sInstance = mmgr;
     }
 
+    public void shutdown() { }
+
 
     /** Returns the mailbox for the given account.  Creates a new mailbox
      *  if one doesn't already exist.
@@ -331,8 +333,8 @@ public class MailboxManager {
                         // We're going to let the Mailbox drop out of the
                         // cache and eventually get GC'd.  Some immediate
                         // cleanup is necessary though.
-                        if (mbox.getIndex() != null)
-                            mbox.getIndex().flush();
+                        if (mbox.getMailboxIndex() != null)
+                            mbox.getMailboxIndex().flush();
                         // Note: mbox is left in maintenance mode.
                     } else {
                         mbox.endMaintenance(success);
