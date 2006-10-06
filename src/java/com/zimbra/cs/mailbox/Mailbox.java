@@ -348,7 +348,7 @@ public class Mailbox {
     public int getSchemaGroupId() {
         return mData.schemaGroupId;
     }
-    
+
     /** Returns the {@link Account} object for this mailbox's owner.  At
      *  present, each account can have at most one <code>Mailbox</code>.
      *  
@@ -367,12 +367,22 @@ public class Mailbox {
         return mMailboxIndex;
     }
 
+    public MailboxIndex getMailboxIndex() {
+        return mMailboxIndex;
+    }
+
     public short getIndexVolume() {
         return mData.indexVolumeId;
     }
 
     MailboxLock getMailboxLock() {
         return mMaintenance;
+    }
+
+    /** Returns a {@link MailSender} object that can be used to send mail,
+     *  save a copy to the Sent folder, etc. */
+    public MailSender getMailSender() {
+        return new MailSender();
     }
 
 
@@ -981,7 +991,7 @@ public class Mailbox {
      *  folders, tags, or messages into a new mailbox.
      * 
      * @see Folder#create(int, Mailbox, Folder, String, byte, byte, int, byte, String) */
-    void initialize() throws ServiceException {
+    synchronized void initialize() throws ServiceException {
         // the new mailbox's caches are created and the default set of tags are
         // loaded by the earlier call to loadFoldersAndTags in beginTransaction
 
@@ -1001,8 +1011,12 @@ public class Mailbox {
         Folder.create(ID_FOLDER_NOTEBOOK, this, userRoot, "Notebook", system, MailItem.TYPE_WIKI,    0, MailItem.DEFAULT_COLOR, null);
         Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR, null);
         Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR, null);
-        mCurrentChange.itemId = FIRST_USER_ID;
+
+        mCurrentChange.itemId = getInitialItemId();
+        DbMailbox.updateMailboxStats(this);
     }
+
+    int getInitialItemId() { return FIRST_USER_ID; }
 
     private void initFlags() throws ServiceException {
         // flags will be added to mFlags array via call to cache() in MailItem constructor
@@ -2467,10 +2481,6 @@ public class Mailbox {
         } finally {
             endTransaction(success);
         }
-    }
-
-    public MailboxIndex getMailboxIndex() {
-        return mMailboxIndex;
     }
 
     public static class SetAppointmentData {

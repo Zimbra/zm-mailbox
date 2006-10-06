@@ -29,7 +29,6 @@ import java.util.List;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
@@ -70,9 +69,9 @@ public class SendMsgOperation extends Operation {
     }
 
     protected void callback() throws ServiceException {
-        mMsgId = MailSender.sendMimeMessage(getOpCtxt(), getMailbox(), mSaveToSent, mMm,
-                    mNewContacts, mUploads,
-                    mOrigMsgId, mReplyType, mIgnoreFailedAddresses, false);
+        Mailbox mbox = getMailbox();
+        mMsgId = mbox.getMailSender().sendMimeMessage(getOpCtxt(), mbox, mSaveToSent, mMm, mNewContacts, mUploads,
+                                                      mOrigMsgId, mReplyType, mIgnoreFailedAddresses, false);
     }
 
     public int getMsgId() { return mMsgId; }

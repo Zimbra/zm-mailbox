@@ -317,10 +317,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 //                    }
 //                } catch (MessagingException e) { }
 //            } else {
-            msgId = MailSender.sendMimeMessage(
-                    octxt, mbox, saveFolderId, csd.mMm,
-                    csd.newContacts, csd.uploads, csd.mOrigId,
-                    csd.mReplyType, ignoreFailedAddresses, true);
+            msgId = mbox.getMailSender().sendMimeMessage(octxt, mbox, saveFolderId, csd.mMm, csd.newContacts, csd.uploads,
+                                                         csd.mOrigId, csd.mReplyType, ignoreFailedAddresses, true);
 //            }
 
             if (updateOwnAppointment) {

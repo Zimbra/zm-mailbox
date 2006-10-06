@@ -61,7 +61,9 @@ public class MailSender {
     public static final String MSGTYPE_REPLY = Flag.getAbbreviation(Flag.ID_FLAG_REPLIED) + "";
     public static final String MSGTYPE_FORWARD = Flag.getAbbreviation(Flag.ID_FLAG_FORWARDED) + "";
 
-    static Log mLog = LogFactory.getLog(MailSender.class);
+    static Log sLog = LogFactory.getLog(MailSender.class);
+
+    MailSender()  { }
 
     public static int getSentFolder(Mailbox mbox) throws ServiceException {
         int folderId = Mailbox.ID_FOLDER_SENT;
@@ -102,7 +104,7 @@ public class MailSender {
         FORWARD    // Forwarding another message
     }
 
-    public static int sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
+    public int sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
                                       List<InternetAddress> newContacts, List<Upload> uploads,
                                       int origMsgId, String replyType, boolean ignoreFailedAddresses,
                                       boolean replyToSender)
@@ -127,7 +129,7 @@ public class MailSender {
                 else
                     zmbox.deleteMessage("" + msgId);
             } catch (ServiceException e) {
-                mLog.warn("ignoring error while deleting saved sent message: " + msgId, e);
+                sLog.warn("ignoring error while deleting saved sent message: " + msgId, e);
             }
         }
     }
@@ -152,10 +154,10 @@ public class MailSender {
      * @return
      * @throws ServiceException
      */
-    public static int sendMimeMessage(OperationContext octxt, Mailbox mbox, int saveToFolder, MimeMessage mm,
-                                      List<InternetAddress> newContacts, List<Upload> uploads,
-                                      int origMsgId, String replyType, boolean ignoreFailedAddresses,
-                                      boolean replyToSender)
+    public int sendMimeMessage(OperationContext octxt, Mailbox mbox, int saveToFolder, MimeMessage mm,
+                               List<InternetAddress> newContacts, List<Upload> uploads,
+                               int origMsgId, String replyType, boolean ignoreFailedAddresses,
+                               boolean replyToSender)
     throws ServiceException {
         try {
             // slot the message in the parent's conversation if subjects match
@@ -240,42 +242,7 @@ public class MailSender {
                 }
             }
 
-            // send the message via SMTP
-            try {
-                boolean retry = ignoreFailedAddresses;
-                if (mm.getAllRecipients() != null) {
-                    do {
-                        try {
-                            Transport.send(mm);
-                            retry = false;
-                        } catch (SendFailedException sfe) {
-                            Address[] invalidAddrs = sfe.getInvalidAddresses();
-                            if (!retry)
-                                throw sfe;
-
-                            Address[] to = removeInvalidAddresses(mm.getRecipients(RecipientType.TO), invalidAddrs);
-                            Address[] cc = removeInvalidAddresses(mm.getRecipients(RecipientType.CC), invalidAddrs);
-                            Address[] bcc = removeInvalidAddresses(mm.getRecipients(RecipientType.BCC), invalidAddrs);
-
-                            // if there are NO valid addrs, then give up!
-                            if ((to == null || to.length == 0) &&
-                                    (cc == null || cc.length == 0) &&
-                                    (bcc == null || bcc.length == 0))
-                                retry = false;
-
-                            mm.setRecipients(RecipientType.TO, to);
-                            mm.setRecipients(RecipientType.CC, cc);
-                            mm.setRecipients(RecipientType.BCC, bcc);
-                        }
-                    } while(retry);
-                }
-            } catch (MessagingException e) {
-                if (rdata != null)  rdata.rollback();
-                throw e;
-            } catch (RuntimeException e) {
-                if (rdata != null)  rdata.rollback();
-                throw e;
-            } 
+            sendMessage(mm, ignoreFailedAddresses, rdata);
 
             // check if this is a reply, and if so flag the msg appropriately
             if (origMsgId > 0) {
@@ -302,7 +269,7 @@ public class MailSender {
                     try {
                         mbox.createContact(octxt, addr.getAttributes(), Mailbox.ID_FOLDER_AUTO_CONTACTS, null);
                     } catch (ServiceException e) {
-                        mLog.warn("ignoring error while auto-adding contact", e);
+                        sLog.warn("ignoring error while auto-adding contact", e);
                     }
                 }
             }
@@ -310,7 +277,7 @@ public class MailSender {
             return (!isDelegatedRequest && rdata != null ? rdata.msgId : 0);
 
         } catch (SendFailedException sfe) {
-            mLog.warn("exception ocurred during SendMsg", sfe);
+            sLog.warn("exception ocurred during SendMsg", sfe);
             Address[] invalidAddrs = sfe.getInvalidAddresses();
             Address[] validUnsentAddrs = sfe.getValidUnsentAddresses();
             if (invalidAddrs != null && invalidAddrs.length > 0) { 
@@ -330,11 +297,50 @@ public class MailSender {
                 throw MailServiceException.SEND_FAILURE("SMTP server reported: " + sfe.getMessage().trim(), sfe, invalidAddrs, validUnsentAddrs);
             }
         } catch (IOException ioe) {
-            mLog.warn("exception occured during send msg", ioe);
+            sLog.warn("exception occured during send msg", ioe);
             throw ServiceException.FAILURE("IOException", ioe);
         } catch (MessagingException me) {
-            mLog.warn("exception occurred during SendMsg", me);
+            sLog.warn("exception occurred during SendMsg", me);
             throw ServiceException.FAILURE("MessagingException", me);
         }
+    }
+
+    private void sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData rdata) throws MessagingException {
+        // send the message via SMTP
+        try {
+            boolean retry = ignoreFailedAddresses;
+            if (mm.getAllRecipients() != null) {
+                do {
+                    try {
+                        Transport.send(mm);
+                        retry = false;
+                    } catch (SendFailedException sfe) {
+                        Address[] invalidAddrs = sfe.getInvalidAddresses();
+                        if (!retry)
+                            throw sfe;
+
+                        Address[] to = removeInvalidAddresses(mm.getRecipients(RecipientType.TO), invalidAddrs);
+                        Address[] cc = removeInvalidAddresses(mm.getRecipients(RecipientType.CC), invalidAddrs);
+                        Address[] bcc = removeInvalidAddresses(mm.getRecipients(RecipientType.BCC), invalidAddrs);
+
+                        // if there are NO valid addrs, then give up!
+                        if ((to == null || to.length == 0) &&
+                                (cc == null || cc.length == 0) &&
+                                (bcc == null || bcc.length == 0))
+                            retry = false;
+
+                        mm.setRecipients(RecipientType.TO, to);
+                        mm.setRecipients(RecipientType.CC, cc);
+                        mm.setRecipients(RecipientType.BCC, bcc);
+                    }
+                } while(retry);
+            }
+        } catch (MessagingException e) {
+            if (rdata != null)  rdata.rollback();
+            throw e;
+        } catch (RuntimeException e) {
+            if (rdata != null)  rdata.rollback();
+            throw e;
+        } 
     }
 }

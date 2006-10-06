@@ -504,14 +504,11 @@ public class CalendarMailSender {
         Invite replyInv = replyToInvite(acct, authAcct, onBehalfOf, inv, verb, replySubject, null);
 
         ZVCalendar iCal = replyInv.newToICalendar();
-        MimeMessage mm = createDefaultReply(
-                acct, authAcct, onBehalfOf, appt, inv, mmInv, replySubject,
-                verb, additionalMsgBody, iCal);
+        MimeMessage mm = createDefaultReply(acct, authAcct, onBehalfOf, appt, inv, mmInv,
+                                            replySubject, verb, additionalMsgBody, iCal);
 
-        int replyMsgId = MailSender.sendMimeMessage(
-                octxt, mbox, saveToSent, mm,
-                null, null, inv.getMailItemId(),
-                replyType, false, true);
+        int replyMsgId = mbox.getMailSender().sendMimeMessage(octxt, mbox, saveToSent, mm, null, null,
+                                                              inv.getMailItemId(), replyType, false, true);
         return replyMsgId;
     }
 
