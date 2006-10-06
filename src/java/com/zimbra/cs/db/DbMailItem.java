@@ -1917,7 +1917,8 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + POP3_FIELDS +
                     " FROM " + getMailItemTableName(folder.getMailbox(), " mi") +
-                    " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + POP3_TYPES);
+                    " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + POP3_TYPES +
+                        " AND NOT (flags & " + Flag.BITMASK_DELETED + ")");
             int pos = 1;
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());

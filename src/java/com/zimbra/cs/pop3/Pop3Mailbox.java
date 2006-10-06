@@ -80,15 +80,17 @@ class Pop3Mailbox {
             ZimbraQueryResults results = null;
             mMessages = new ArrayList<Pop3Message>(500);            
             try {
+                // don't display IMAP \Deleted messages via POP
+                query = "(" + query + ") -tag:\\Deleted";
                 results = mbox.search(mOpContext, query, POP3_TYPES, MailboxIndex.SortBy.DATE_DESCENDING, 500);
 
                 while (results.hasNext()) {
                     ZimbraHit hit = results.getNext();
                     if (hit instanceof MessageHit) {
                         MessageHit mh = (MessageHit) hit;
-                        Message m = mh.getMessage();
-                        mTotalSize += m.getSize();
-                        mMessages.add(new Pop3Message(m));
+                        Message msg = mh.getMessage();
+                        mTotalSize += msg.getSize();
+                        mMessages.add(new Pop3Message(msg));
                     }
                 }
             } catch (IOException e) {
