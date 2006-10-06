@@ -152,7 +152,7 @@ public class Folder extends MailItem {
      *  visible; all others are hidden.
      * 
      * @see Mailbox#initialize() */
-    public boolean isHidden() throws ServiceException {
+    public boolean isHidden() {
         switch (mId) {
             case Mailbox.ID_FOLDER_USER_ROOT:  return false;
             case Mailbox.ID_FOLDER_ROOT:       return true;
