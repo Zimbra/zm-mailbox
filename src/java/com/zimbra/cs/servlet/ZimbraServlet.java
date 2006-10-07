@@ -140,6 +140,18 @@ public class ZimbraServlet extends HttpServlet {
         }
     }
 
+    protected boolean isRequestOnAllowedPort(HttpServletRequest request) {
+        if (mAllowedPorts != null && mAllowedPorts.length > 0) {
+            int incoming = request.getLocalPort();
+            for (int i = 0; i < mAllowedPorts.length; i++) {
+                if (mAllowedPorts[i] == incoming) {
+                	return true;
+                }
+            }
+            return false;
+        }
+        return true;
+    }
     /**
      * Filter the request based on incoming port.  If the allowed.ports
      * parameter is specified for the servlet, the incoming port must
@@ -147,28 +159,19 @@ public class ZimbraServlet extends HttpServlet {
      */
     protected void service(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
-        if (mAllowedPorts != null && mAllowedPorts.length > 0) {
-            int incoming = request.getLocalPort();
-            boolean allowed = false;
-            for (int i = 0; i < mAllowedPorts.length; i++) {
-                if (mAllowedPorts[i] == incoming) {
-                    allowed = true;
-                    break;
-                }
-            }
-            if (!allowed) {
-                SoapProtocol soapProto = SoapProtocol.Soap12;
-                Element fault = SoapProtocol.Soap12.soapFault(
-                        ServiceException.FAILURE("Request not allowed on port " + incoming, null));
-                Element envelope = SoapProtocol.Soap12.soapEnvelope(fault);
-                byte[] soapBytes = envelope.toUTF8();
-                response.setContentType(soapProto.getContentType());
-                response.setBufferSize(soapBytes.length + 2048);
-                response.setContentLength(soapBytes.length);
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                response.getOutputStream().write(soapBytes);
-                return;
-            }
+        boolean allowed = isRequestOnAllowedPort(request);
+        if (!allowed) {
+        	SoapProtocol soapProto = SoapProtocol.Soap12;
+        	Element fault = SoapProtocol.Soap12.soapFault(
+        			ServiceException.FAILURE("Request not allowed on port " + request.getLocalPort(), null));
+        	Element envelope = SoapProtocol.Soap12.soapEnvelope(fault);
+        	byte[] soapBytes = envelope.toUTF8();
+        	response.setContentType(soapProto.getContentType());
+        	response.setBufferSize(soapBytes.length + 2048);
+        	response.setContentLength(soapBytes.length);
+        	response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        	response.getOutputStream().write(soapBytes);
+        	return;
         }
         super.service(request, response);
     }
