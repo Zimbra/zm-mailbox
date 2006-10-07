@@ -225,6 +225,11 @@ public class ZimbraLog {
      */
     public static final org.apache.commons.logging.Log op = LogFactory.getLog("zimbra.op");
     
+    /**
+     * the "zimbra.dav" logger. Logs dav operations
+     */
+    public static final org.apache.commons.logging.Log dav = LogFactory.getLog("zimbra.dav");
+    
     
     public static String getContext() {
         return NDC.peek();
