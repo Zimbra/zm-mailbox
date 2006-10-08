@@ -218,6 +218,7 @@ public class ZSoapMailbox extends ZMailbox {
                 ZSoapMountpoint sl = (ZSoapMountpoint) item;
                 if (sl.getParent() != null)
                     ((ZSoapFolder)sl.getParent()).removeChild(sl);
+                mIdToItem.remove(sl.getCanonicalRemoteId());
             } else if (item instanceof ZSoapFolder) {
                 ZSoapFolder sf = (ZSoapFolder) item;
                 if (sf.getParent() != null) 
@@ -256,7 +257,13 @@ public class ZSoapMailbox extends ZMailbox {
         refreshFolders(folder);
     }
 
-    void addItemIdMapping(ZSoapItem item) {   mIdToItem.put(item.getId(), item); }
+    void addItemIdMapping(ZSoapItem item) {
+        mIdToItem.put(item.getId(), item);
+    }
+
+    void addRemoteItemIdMapping(String remoteId, ZSoapItem item) {
+        mIdToItem.put(remoteId, item);
+    }
 
     private void refreshFolders(Element folderEl) throws ServiceException {
         mUserRoot = new ZSoapFolder(folderEl, null, this);

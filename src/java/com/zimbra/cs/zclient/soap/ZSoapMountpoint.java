@@ -42,6 +42,7 @@ class ZSoapMountpoint extends ZSoapFolder implements ZMountpoint, ZSoapItem {
         mOwnerDisplayName = e.getAttribute(MailService.A_OWNER_NAME, null); // TODO: change back to required when DF is on main
         mRemoteId = e.getAttribute(MailService.A_REMOTE_ID);
         mOwnerId = e.getAttribute(MailService.A_ZIMBRA_ID);
+        mailbox.addRemoteItemIdMapping(getCanonicalRemoteId(), this);
     }
 
     void modifyNotification(Element e, ZMailbox mbox) throws ServiceException {
@@ -72,5 +73,9 @@ class ZSoapMountpoint extends ZSoapFolder implements ZMountpoint, ZSoapItem {
 
     public String getOwnerId() {
         return mOwnerId;
+    }
+
+    public String getCanonicalRemoteId() {
+        return mOwnerId+":"+mRemoteId;
     }
 }

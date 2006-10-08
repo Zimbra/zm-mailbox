@@ -42,4 +42,10 @@ public interface ZMountpoint extends ZFolder {
      */
     public String getRemoteId();
 
+    /**
+     *
+     * @return the canonical remote id: {owner-id}:{remote-id}
+     */
+    public String getCanonicalRemoteId();
+
 }
