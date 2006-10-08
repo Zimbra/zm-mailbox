@@ -149,7 +149,7 @@ public class DefangFilter extends DefaultFilter {
         //acceptElement("base", "href,target");
         acceptElement("bdo", CORE_LANG);
         acceptElement("blockquote", CORE_LANG+"cite");
-        acceptElement("body", CORE_LANG+"alink,background,bgcolor,link,text,vlink");
+        acceptElement("body", CORE_LANG); //+"alink,background,bgcolor,link,text,vlink");
         acceptElement("br", CORE+"clear");
         acceptElement("center", CORE_LANG);
         acceptElement("del", CORE_LANG+"cite,datetime");
