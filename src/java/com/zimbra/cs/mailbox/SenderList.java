@@ -37,10 +37,12 @@ import com.zimbra.cs.service.mail.EmailElementCache.CacheNode;
 
 public class SenderList {
     public static class ParseException extends Exception {
+        private static final long serialVersionUID = 1586328066379818640L;
         public ParseException(String message) { super(message); }
         public ParseException(Exception e)    { super(e); }
     }
     public static class RefreshException extends Exception {
+        private static final long serialVersionUID = -4449595346959878548L;
         public RefreshException(String message) { super(message); }
     }
 
@@ -174,9 +176,9 @@ public class SenderList {
 
     SenderCache mCache = new SenderCache();
 
-    SenderList()              { }
-    SenderList(Message msg)   { add(msg); }
-    SenderList(int id, int date, String sender)  { add(new ListEntry(id, date, sender)); }
+    public SenderList()              { }
+    public SenderList(Message msg)   { add(msg); }
+    public SenderList(int id, int date, String sender)  { add(new ListEntry(id, date, sender)); }
 
     SenderList(String senders) throws ParseException, RefreshException {
         if (senders == null || senders.equals(""))
@@ -246,7 +248,7 @@ public class SenderList {
         return new ListEntry(Integer.parseInt(msgId), Integer.parseInt(date), (CacheNode) nodes.get(nid));
     }
 
-    void add(Message msg) {
+    public void add(Message msg) {
         if (msg == null)
             return;
         add(new ListEntry(msg));

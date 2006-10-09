@@ -457,18 +457,29 @@ public class ToXML {
 
         boolean addRecips  = msgHit != null && msgHit.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
         boolean addSenders = output == OutputParticipants.PUT_BOTH || !addRecips;
+
         if (addRecips) {
             try {
                 InternetAddress[] addrs = InternetAddress.parseHeader(msgHit.getRecipients(), false);
                 addEmails(c, eecache, addrs, EmailElementCache.EMAIL_TYPE_TO);
             } catch (AddressException e1) { }
         }
+
         if (addSenders && needToOutput(fields, Change.MODIFIED_SENDERS)) {
             if (eecache == null)
                 eecache = new EmailElementCache();
+            Mailbox mbox = conv.getMailbox();
             SenderList sl;
             try {
-                sl = conv.getMailbox().getConversationSenderList(conv.getId());
+                if (conv.isTagged(mbox.mDeletedFlag)) {
+                    sl = new SenderList();
+                    for (Message msg : mbox.getMessagesByConversation(lc.getOperationContext(), conv.getId())) {
+                        if (!msg.isTagged(mbox.mDeletedFlag))
+                            sl.add(msg);
+                    }
+                } else {
+                    sl = mbox.getConversationSenderList(conv.getId());
+                }
             } catch (ServiceException e) {
                 return c;
             }
