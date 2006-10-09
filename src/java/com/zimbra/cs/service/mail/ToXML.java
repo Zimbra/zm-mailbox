@@ -409,11 +409,14 @@ public class ToXML {
 
     public static Element encodeConversation(Element parent, ZimbraSoapContext lc, Conversation conv) throws ServiceException {
         int fields = NOTIFY_FIELDS;
-        Element c = encodeConversationCommon(parent, lc, conv, fields);
+        Mailbox mbox = conv.getMailbox();
         EmailElementCache eecache = new EmailElementCache();
-        Message[] messages = conv.getMailbox().getMessagesByConversation(lc.getOperationContext(), conv.getId());
-        for (int i = 0; i < messages.length; i++) {
-            Message msg = messages[i];
+        Element c = encodeConversationCommon(parent, lc, conv, fields);
+
+        List<Message> messages = mbox.getMessagesByConversation(lc.getOperationContext(), conv.getId());
+        for (Message msg : messages) {
+            if (msg.isTagged(mbox.mDeletedFlag))
+                continue;
             Element m = c.addElement(MailService.E_MSG);
             m.addAttribute(MailService.A_ID, lc.formatItemId(msg));
             m.addAttribute(MailService.A_DATE, msg.getDate());
@@ -454,46 +457,51 @@ public class ToXML {
 
         boolean addRecips  = msgHit != null && msgHit.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
         boolean addSenders = output == OutputParticipants.PUT_BOTH || !addRecips;
-        if (addRecips)
+        if (addRecips) {
             try {
                 InternetAddress[] addrs = InternetAddress.parseHeader(msgHit.getRecipients(), false);
                 addEmails(c, eecache, addrs, EmailElementCache.EMAIL_TYPE_TO);
             } catch (AddressException e1) { }
-            if (addSenders && needToOutput(fields, Change.MODIFIED_SENDERS)) {
-                if (eecache == null)
-                    eecache = new EmailElementCache();
-                SenderList sl;
-                try {
-                    sl = conv.getMailbox().getConversationSenderList(conv.getId());
-                } catch (ServiceException e) {
-                    return c;
-                }
-                CacheNode fa = sl.getFirstAddress();
-                if (fa != null) {
-                    eecache.makeEmail(c, fa, EmailElementCache.EMAIL_TYPE_FROM, null);
-                    // "<e/>" indicates that some senders may be omitted...
-                    if (sl.isElided())
-                        c.addElement(MailService.E_EMAIL);
-                }
-                CacheNode[] la = sl.getLastAddresses();
-                for (int i = 0; i < la.length; i++) {
-                    if (la[i] != null)
-                        eecache.makeEmail(c, la[i], EmailElementCache.EMAIL_TYPE_FROM, null);
-                }
+        }
+        if (addSenders && needToOutput(fields, Change.MODIFIED_SENDERS)) {
+            if (eecache == null)
+                eecache = new EmailElementCache();
+            SenderList sl;
+            try {
+                sl = conv.getMailbox().getConversationSenderList(conv.getId());
+            } catch (ServiceException e) {
+                return c;
             }
+            CacheNode fa = sl.getFirstAddress();
+            if (fa != null) {
+                eecache.makeEmail(c, fa, EmailElementCache.EMAIL_TYPE_FROM, null);
+                // "<e/>" indicates that some senders may be omitted...
+                if (sl.isElided())
+                    c.addElement(MailService.E_EMAIL);
+            }
+            CacheNode[] la = sl.getLastAddresses();
+            for (int i = 0; i < la.length; i++) {
+                if (la[i] != null)
+                    eecache.makeEmail(c, la[i], EmailElementCache.EMAIL_TYPE_FROM, null);
+            }
+        }
 
-            if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
-                c.addAttribute(MailService.A_CHANGE_DATE, conv.getChangeDate() / 1000);
-                c.addAttribute(MailService.A_MODIFIED_SEQUENCE, conv.getModifiedSequence());
-            }
-            return c;
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
+            c.addAttribute(MailService.A_CHANGE_DATE, conv.getChangeDate() / 1000);
+            c.addAttribute(MailService.A_MODIFIED_SEQUENCE, conv.getModifiedSequence());
+        }
+        return c;
     }
 
     private static Element encodeConversationCommon(Element parent, ZimbraSoapContext lc, Conversation conv, int fields) {
         Element c = parent.addElement(MailService.E_CONV);
         c.addAttribute(MailService.A_ID, lc.formatItemId(conv));
-        if (needToOutput(fields, Change.MODIFIED_CHILDREN))
-            c.addAttribute(MailService.A_NUM, conv.getMessageCount());
+        if (needToOutput(fields, Change.MODIFIED_CHILDREN | Change.MODIFIED_SIZE)) {
+            int count = conv.getMessageCount(), nondeleted = conv.getNondeletedCount();
+            c.addAttribute(MailService.A_NUM, nondeleted);
+            if (count != nondeleted)
+                c.addAttribute(MailService.A_TOTAL_SIZE, count);
+        }
         recordItemTags(c, conv, fields);
         if (fields == NOTIFY_FIELDS)
             c.addAttribute(MailService.E_SUBJECT, conv.getSubject(), Element.DISP_CONTENT);

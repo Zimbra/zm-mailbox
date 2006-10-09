@@ -455,10 +455,10 @@ public class DbTest {
 		int conversationId = fetchItemId(tok, "usage: show <conversation_id>");
 		if (conversationId == -1)
 			return;
-		Message[] messages = mailbox.getMessagesByConversation(null, conversationId);
+		List<Message> messages = mailbox.getMessagesByConversation(null, conversationId);
 		if (messages != null)
-			for (int i = 0; i < messages.length; i++)
-				displayMessageSummary(messages[i]);
+            for (Message msg : messages)
+				displayMessageSummary(msg);
 	}
 	
 	private void listTags() throws ServiceException {

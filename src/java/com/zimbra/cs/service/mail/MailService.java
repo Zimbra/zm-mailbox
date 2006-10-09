@@ -248,6 +248,7 @@ public class MailService implements DocumentService {
     public static final String A_NEUTER = "neuter";
     public static final String A_URL = "url";
     public static final String A_NUM = "n";
+    public static final String A_TOTAL_SIZE = "total";
     public static final String A_PART = "part";
     public static final String A_BODY = "body";
     public static final String A_CONTENT_TYPE = "ct";

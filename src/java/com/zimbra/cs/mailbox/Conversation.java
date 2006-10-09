@@ -171,19 +171,34 @@ public class Conversation extends MailItem {
         return (mRawSubject == null ? "" : mRawSubject);
     }
 
+    /** Returns the number of messages in the conversation, as calculated from
+     *  its list of children as fetched from the database.  This <u>should</u>
+     *  always be equal to {@link MailItem#getSize()}; if it isn't, an error
+     *  has occurred and been persisted to the database. */
     public int getMessageCount() {
         return (mData.children == null ? 0 : mData.children.size());
+    }
+
+    /** Returns the total number of messages in the conversation not tagged
+     *  with the IMAP \Deleted flag.  This will almost always equal the value
+     *  returned from {@link #getMessageCount()}. */
+    public int getNondeletedCount() {
+        if (mInheritedTagSet == null)
+            return getMessageCount();
+        return Math.max(0, getMessageCount() - mInheritedTagSet.count(Flag.ID_FLAG_DELETED));
     }
 
     public int getInternalFlagBitmask() {
         return 0;
     }
 
+
     // do *not* make this public, as it'd skirt Mailbox-level synchronization and caching
     SenderList getSenderList() throws ServiceException {
         getSenderList(false);
         return mSenderList;
     }
+
     private boolean getSenderList(boolean noGaps) throws ServiceException {
         if (mSenderList != null && !(noGaps && mSenderList.isElided()))
             return false;
@@ -208,13 +223,13 @@ public class Conversation extends MailItem {
 
         // failed to parse or too few senders are listed -- have to recalculate
         //   (go through the Mailbox because we need to be in a transaction)
-        Message msgs[] = getMessages(DbMailItem.DEFAULT_SORT_ORDER);
+        List<Message> msgs = getMessages(DbMailItem.DEFAULT_SORT_ORDER);
         recalculateMetadata(msgs, forceWrite);
         return true;
     }
 
-    SenderList recalculateMetadata(Message[] msgs, boolean forceWrite) throws ServiceException {
-        Arrays.sort(msgs, new Message.SortDateAscending());
+    SenderList recalculateMetadata(List<Message> msgs, boolean forceWrite) throws ServiceException {
+        Collections.sort(msgs, new Message.SortDateAscending());
         String oldRaw = mRawSubject;
         long oldSize = mData.size;
 
@@ -222,9 +237,9 @@ public class Conversation extends MailItem {
         mEncodedSenders = null;
         mInheritedTagSet = null;
         mData.children = null;
-        recalculateSubject(msgs.length > 0 ? msgs[0] : null);
+        recalculateSubject(msgs.size() > 0 ? msgs.get(0) : null);
 
-        mData.size = msgs.length;
+        mData.size = msgs.size();
         mData.unreadCount = 0;
 
         markItemModified(mData.size != oldSize ? Change.MODIFIED_SIZE : Change.INTERNAL_ONLY);
@@ -232,11 +247,11 @@ public class Conversation extends MailItem {
         	markItemModified(Change.MODIFIED_SUBJECT);
 
         // reconstruct the list of senders from scratch
-        for (int i = 0; i < msgs.length; i++) {
-            super.addChild(msgs[i]);
-            mSenderList.add(msgs[i]);
+        for (Message msg : msgs) {
+            super.addChild(msg);
+            mSenderList.add(msg);
         }
-        assert(mSenderList.size() == msgs.length);
+        assert(mSenderList.size() == msgs.size());
 
         if (mData.size == oldSize && !forceWrite && !mRawSubject.equals(oldRaw))
             return mSenderList;
@@ -268,41 +283,44 @@ public class Conversation extends MailItem {
      * 
      * @param sort  The sort order for the messages, specified by one of the
      *              <code>SORT_XXX</code> constants from {@link DbMailItem}. */
-    Message[] getMessages(byte sort) throws ServiceException {
+    List<Message> getMessages(byte sort) throws ServiceException {
+        List<Message> msgs = new ArrayList<Message>(mData.children.size());
         if (mData.children != null && (sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_BY_ID) {
             // try to get all our info from the cache to avoid a database trip
             Collections.sort(mData.children);
             if ((sort & DbMailItem.SORT_DIRECTION_MASK) == DbMailItem.SORT_DESCENDING)
                 Collections.reverse(mData.children);
-            Message[] msgs = new Message[mData.children.size()];
-            int found;
-            for (found = 0; found < mData.children.size(); found++) {
-                msgs[found] = (Message) mMailbox.getCachedItem(mData.children.get(found));
-                if (msgs[found] == null)
+            int found = 0;
+            for (int childId : mData.children) {
+                Message msg = mMailbox.getCachedMessage(childId);
+                if (msg == null)
                     break;
+                msgs.add(msg);
+                found++;
             }
+
             if (found == mData.children.size())
                 return msgs;
+            msgs.clear();
         }
 
         List<UnderlyingData> listData = DbMailItem.getByParent(this, sort);
-        Message[] msgs = new Message[listData.size()];
-        int i = 0;
         for (UnderlyingData data : listData)
-            msgs[i++] = mMailbox.getMessage(data);
+            msgs.add(mMailbox.getMessage(data));
         return msgs;
     }
+
     /** Returns all the unread {@link Message}s in this conversation.
      *  The messages are fetched from the database; they are not returned
      *  in any particular order. */
-    Message[] getUnreadMessages() throws ServiceException {
+    List<Message> getUnreadMessages() throws ServiceException {
         List<UnderlyingData> unreadData = DbMailItem.getUnreadMessages(this);
         if (unreadData == null)
             return null;
-        Message[] msgs = new Message[unreadData.size()];
-        int i = 0;
+
+        List<Message> msgs = new ArrayList<Message>(unreadData.size());
         for (UnderlyingData data : unreadData)
-            msgs[i] = mMailbox.getMessage(data);
+            msgs.add(mMailbox.getMessage(data));
         return msgs;
     }
 
@@ -505,7 +523,7 @@ public class Conversation extends MailItem {
             throw MailServiceException.CANNOT_CONTAIN();
         markItemModified(Change.UNMODIFIED);
 
-        Message[] msgs = getMessages(SORT_ID_ASCENDING);
+        List<Message> msgs = getMessages(SORT_ID_ASCENDING);
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         boolean toTrash = target.inTrash();
         int oldUnread = 0;
@@ -737,12 +755,11 @@ public class Conversation extends MailItem {
 
         if (mData.children == null || mData.children.isEmpty())
             return info;
-        Message[] msgs = getMessages(SORT_ID_ASCENDING);
+        List<Message> msgs = getMessages(SORT_ID_ASCENDING);
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
 
         boolean excludeModify = false, excludeAccess = false;
-        for (int i = 0; i < msgs.length; i++) {
-            Message child = msgs[i];
+        for (Message child : msgs) {
             // silently skip explicitly excluded messages, PERMISSION_DENIED messages, and MODIFY_CONFLICT messages
             if (!TargetConstraint.checkItem(tcon, child)) {
                 continue;
@@ -787,7 +804,7 @@ public class Conversation extends MailItem {
             if (excludeModify)
                 throw MailServiceException.MODIFY_CONFLICT();
         }
-        if (totalDeleted != msgs.length + 1)
+        if (totalDeleted != msgs.size() + 1)
             info.incomplete = MailItem.DELETE_CONTENTS;
         return info;
     }
@@ -796,10 +813,10 @@ public class Conversation extends MailItem {
         if (info.incomplete) {
             // *some* of the messages remain; recalculate the data based on this
             int remaining = mData.children.size() - info.itemIds.size();
-            Message[] msgs = new Message[remaining];
-            for (int i = 0, loc = 0; i < mData.children.size(); i++)
+            List<Message> msgs = new ArrayList<Message>(remaining);
+            for (int i = 0; i < mData.children.size(); i++)
                 if (!info.itemIds.contains(mData.children.get(i)))
-                    msgs[loc++] = mMailbox.getMessageById(mData.children.get(i));
+                    msgs.add(mMailbox.getMessageById(mData.children.get(i)));
             recalculateMetadata(msgs, true);
         }
 
@@ -823,9 +840,9 @@ public class Conversation extends MailItem {
         }
 
         if (recalculate) {
-            Message[] msgs = getMessages(SORT_ID_ASCENDING);
+            List<Message> msgs = getMessages(SORT_ID_ASCENDING);
             recalculateMetadata(msgs, true);
-            recalculateSubject(msgs[0]);
+            recalculateSubject(msgs.isEmpty() ? null : msgs.get(0));
             getSenderList();
             return;
         }

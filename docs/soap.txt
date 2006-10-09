@@ -634,7 +634,7 @@ Messages:
 
 Conversations:
  
-  <c id="{conv-id}" t="{tags}" n="{num-msgs}" d="{date}" f="{flags}" l="{folder-id}">
+  <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags}" l="{folder-id}">
     <e ...>*
     <su>{subject}</su>
     <fr>{fragment}</fr>
@@ -647,6 +647,8 @@ Conversations:
   {subject}   = subject of conversation
   {fragment}  = fragment of most recent msg in converstation
   {folder-id} = location of converstation (numeric folder id)
+  {num-msgs}  = number of messages in conversation without IMAP \Deleted flag set
+  {all-msgs}  = total number of messages in conversation
   
   <e ...>*     = zero or more participants in the converstations
   <m>...</m>+  = one or more messages in the conversation. When doing search, the <m> elements returned
@@ -817,7 +819,7 @@ conversation result:
 --------------------
 
 <SearchResponse sortBy="sort-by" offset="..." more="{more-flag}">
-  <c id="{conv-id}" t="{tags}" n="{num-msgs}" d="{date}" f="{flags} [mbx="UID"] sf="SORT-FIELD-VALUE">
+  <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags} [mbx="UID"] sf="SORT-FIELD-VALUE">
     <e ...>*
     <su>{subject}</su>
     <fr>{fragment}</fr>
@@ -946,7 +948,7 @@ GetConvRequest gets information about the 1 conversation named by id's value.
 It will return exactly 1 conversation element.
 
 <GetConvResponse>
-  <c id="{conv-id}" [t="{tags}"] n="{num-msgs}" [f="{flags}"]>
+  <c id="{conv-id}" [t="{tags}"] n="{num-msgs}" [total="{all-msgs}"] [f="{flags}"]>
     <su>{subject}</su>
     <m id="{message-id}" [f="{flags}"] s="{size}" d="{date}" [t="{tags}"]>
       <e .../>

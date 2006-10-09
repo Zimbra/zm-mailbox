@@ -29,6 +29,8 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.service.ServiceException;
@@ -51,15 +53,20 @@ public class VirtualConversation extends Conversation {
         return (mSenderList = new SenderList(getMessage()));
     }
 
-    private static final Message[] NO_MESSAGES = new Message[0];
+
+    private static final List<Message> NO_MESSAGES = Collections.unmodifiableList(new ArrayList<Message>());
 
     Message getMessage() throws ServiceException {
         return mMailbox.getMessageById(getMessageId());
     }
-    Message[] getMessages(byte sort) throws ServiceException {
-        return new Message[] { getMessage() };
+
+    List<Message> getMessages(byte sort) throws ServiceException {
+        List<Message> msgs = new ArrayList<Message>(1);
+        msgs.add(getMessage());
+        return msgs;
     }
-    Message[] getUnreadMessages() throws ServiceException {
+
+    List<Message> getUnreadMessages() throws ServiceException {
         return isUnread() ? getMessages(SORT_ID_ASCENDING) : NO_MESSAGES;
     }
 

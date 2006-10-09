@@ -28,6 +28,8 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -39,6 +41,7 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
+import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.operation.SearchOperation;
@@ -96,7 +99,17 @@ public class SearchConv extends Search {
             SortBy sb = results.getSortBy();
             response.addAttribute(MailService.A_SORTBY, sb.toString());
 
-            Message[] msgs = mbox.getMessagesByConversation(octxt, cid, sb.getDbMailItemSortByte());
+            List<Message> msgs = mbox.getMessagesByConversation(octxt, cid, sb.getDbMailItemSortByte());
+
+            // filter out IMAP \Deleted messages from the message lists
+            Conversation conv = mbox.getConversationById(octxt, cid);
+            if (conv.isTagged(mbox.mDeletedFlag)) {
+                List<Message> raw = msgs;
+                msgs = new ArrayList<Message>();
+                for (Message msg : raw)
+                    if (!msg.isTagged(mbox.mDeletedFlag))
+                        msgs.add(msg);
+            }
 
             Element retVal = putHits(zc, response, msgs, results, params);
 
@@ -117,7 +130,7 @@ public class SearchConv extends Search {
      * @return
      * @throws ServiceException
      */
-    Element putHits(ZimbraSoapContext zc, Element response, Message[] msgs, ZimbraQueryResults results, SearchParams params)
+    Element putHits(ZimbraSoapContext zc, Element response, List<Message> msgs, ZimbraQueryResults results, SearchParams params)
     throws ServiceException {
         int offset = params.getOffset();
         int limit  = params.getLimit();
@@ -130,11 +143,11 @@ public class SearchConv extends Search {
         int iterLen = limit;
 //      boolean hasMoreHits = false;
 
-        if (msgs.length > iterLen+offset) {
+        if (msgs.size() > iterLen + offset) {
 //          hasMoreHits = true;
         } else {
             // iterLen+offset <= msgs.length
-            iterLen = msgs.length - offset;
+            iterLen = msgs.size() - offset;
         }
 
         if (iterLen > 0) {
@@ -158,7 +171,7 @@ public class SearchConv extends Search {
                     // we only bother checking the messages between offset and offset+iterLen, since only they
                     // are getting returned.
                     for (int i = offset; i < offset+iterLen; i++) {
-                        if (curHit.getItemId() == msgs[i].getId()) {
+                        if (curHit.getItemId() == msgs.get(i).getId()) {
                             matched[i-offset] = curHit;
                             continue HitIter; 
                         }
@@ -175,12 +188,12 @@ public class SearchConv extends Search {
                     addMessageHit(zc, response, (MessageHit) matched[i-offset], eecache, inline, params);
                     inline = false;
                 } else {
-                    addMessageHit(zc, response, msgs[i], eecache, params);
+                    addMessageHit(zc, response, msgs.get(i), eecache, params);
                 }
             }
         }
 
-        response.addAttribute(MailService.A_QUERY_MORE, (offset+iterLen)<msgs.length);
+        response.addAttribute(MailService.A_QUERY_MORE, offset + iterLen < msgs.size());
 
         return response;
     }

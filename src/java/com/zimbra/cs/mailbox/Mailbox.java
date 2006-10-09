@@ -2167,14 +2167,14 @@ public class Mailbox {
         return (Message) getCachedItem(id, MailItem.TYPE_MESSAGE);
     }
 
-    public synchronized Message[] getMessagesByConversation(OperationContext octxt, int convId) throws ServiceException {
+    public synchronized List<Message> getMessagesByConversation(OperationContext octxt, int convId) throws ServiceException {
         return getMessagesByConversation(octxt, convId, Conversation.SORT_ID_ASCENDING);
     }
-    public synchronized Message[] getMessagesByConversation(OperationContext octxt, int convId, byte sort) throws ServiceException {
+    public synchronized List<Message> getMessagesByConversation(OperationContext octxt, int convId, byte sort) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getMessagesByConversation", octxt);
-            Message[] msgs = getConversationById(convId).getMessages(sort);
+            List<Message> msgs = getConversationById(convId).getMessages(sort);
             success = true;
             return msgs;
         } finally {

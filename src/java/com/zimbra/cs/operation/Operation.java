@@ -325,11 +325,11 @@ public abstract class Operation implements IOperation
         return mPriority;
     }
 
-    public Requester getReq() {
+    public Requester getRequester() {
         return mReq;
     }
 
-    public Scheduler getSched() {
+    public Scheduler getScheduler() {
         return mSched;
     }
 

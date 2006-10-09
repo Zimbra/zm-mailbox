@@ -191,7 +191,7 @@ public class SpamHandler {
     
     List<SpamReport> mSpamReportQueue = new ArrayList<SpamReport>(mSpamReportQueueSize);
 
-    private void reportLoop() {
+    void reportLoop() {
         while (true) {
             List<SpamReport> workQueue = null; 
             synchronized (mSpamReportQueueLock) {
@@ -221,10 +221,10 @@ public class SpamHandler {
         }
     }
 
-    private void enqueue(String accountName, Mailbox mbox, Message[] msgs, boolean isSpam) {
+    private void enqueue(String accountName, Mailbox mbox, List<Message> msgs, boolean isSpam) {
         synchronized (mSpamReportQueueLock) {
-            for (int i = 0; i < msgs.length; i++) {
-                SpamReport sr = new SpamReport(accountName, mbox.getId(), msgs[i].getId(), isSpam);
+            for (Message msg : msgs) {
+                SpamReport sr = new SpamReport(accountName, mbox.getId(), msg.getId(), isSpam);
                 if (mSpamReportQueue.size() > mSpamReportQueueSize) {
                     ZimbraLog.misc.warn("SpamHandler queue size " + mSpamReportQueue.size() + " too large, ignored " + sr);
                     continue;
@@ -249,16 +249,14 @@ public class SpamHandler {
         String accountName = null;
         accountName = mbox.getAccount().getName();
         
-        Message[] msgs = null;
+        List<Message> msgs = null;
         if (type == MailItem.TYPE_MESSAGE) {
-            msgs = new Message[] { mbox.getMessageById(null, id) };
+            (msgs = new ArrayList<Message>()).add(mbox.getMessageById(null, id));
         } else if (type == MailItem.TYPE_CONVERSATION) {
             msgs = mbox.getMessagesByConversation(null, id);
         } else {
-            if (type != MailItem.TYPE_MESSAGE && type != MailItem.TYPE_CONVERSATION) {
-                ZimbraLog.misc.warn("SpamHandler called on unhandled item type=" + MailItem.getNameForType(type) + " account=" + accountName +  " id=" + id);
-                return;
-            }
+            ZimbraLog.misc.warn("SpamHandler called on unhandled item type=" + MailItem.getNameForType(type) + " account=" + accountName +  " id=" + id);
+            return;
         }
 
         enqueue(accountName, mbox, msgs, isSpam);
