@@ -490,8 +490,8 @@ public class Message extends MailItem {
 
     void delete(boolean childrenOnly, boolean writeTombstones) throws ServiceException {
         MailItem parent = getParent();
-        if (parent instanceof Conversation && parent.mData.children.size() == 1)
-            parent.delete(true, writeTombstones);
+        if (parent instanceof Conversation && ((Conversation) parent).getMessageCount() == 1)
+            parent.delete(DELETE_ITEM, writeTombstones);
         else
             super.delete(childrenOnly, writeTombstones);
     }
