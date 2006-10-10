@@ -1526,9 +1526,10 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (mData.children == null || !mData.children.contains(child.getId()))
             throw MailServiceException.IS_NOT_CHILD();
         mData.children.remove((Integer) child.getId());
-        
-        // remove parent reference from the child 
-        child.mData.parentId = -1;
+
+        // remove parent reference from the child
+        if (child.mData.parentId == mId)
+            child.mData.parentId = -1;
 
         // update unread counts
         updateUnread(-child.mData.unreadCount);
