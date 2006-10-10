@@ -117,7 +117,7 @@ public class SyncOperation extends Operation {
 
         // write this folder's data to the response
         boolean initial = phase == SyncPhase.INITIAL;
-        Element f = ToXML.encodeFolder(response, zsc, folder, initial ? ToXML.NOTIFY_FIELDS : Change.ALL_FIELDS);
+        Element f = ToXML.encodeFolder(response, zsc, folder, Change.ALL_FIELDS);
         if (initial && isVisible) {
             // we're in the middle of an initial sync, so serialize the item ids
             boolean isSearch = folder instanceof SearchFolder;
@@ -155,7 +155,7 @@ public class SyncOperation extends Operation {
     private void initialTagSync(ZimbraSoapContext zsc, Element response, Mailbox mbox) throws ServiceException {
         for (Tag tag : mbox.getTagList(zsc.getOperationContext())) {
             if (tag != null && !(tag instanceof Flag))
-                ToXML.encodeTag(response, zsc, tag);
+                ToXML.encodeTag(response, zsc, tag, Change.ALL_FIELDS);
         }
     }
 
@@ -172,7 +172,8 @@ public class SyncOperation extends Operation {
     private static final int MUTABLE_FIELDS = Change.MODIFIED_FLAGS  | Change.MODIFIED_TAGS |
                                               Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT |
                                               Change.MODIFIED_NAME   | Change.MODIFIED_CONFLICT |
-                                              Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION;
+                                              Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION |
+                                              Change.MODIFIED_DATE;
 
     private void deltaSync(ZimbraSoapContext zsc, Element response, Mailbox mbox, long begin, boolean typedDeletes)
     throws ServiceException {
@@ -259,5 +260,19 @@ public class SyncOperation extends Operation {
             case MailItem.TYPE_DOCUMENT:     return MailService.E_DOC;
             default:                         return null;
         }
+    }
+
+    public static byte typeForElementName(String name) {
+        if (name.equals(MailService.E_FOLDER))            return MailItem.TYPE_FOLDER;
+        else if (name.equals(MailService.E_SEARCH))       return MailItem.TYPE_SEARCHFOLDER;
+        else if (name.equals(MailService.E_MOUNT))        return MailItem.TYPE_MOUNTPOINT;
+        else if (name.equals(MailService.E_CONV))         return MailItem.TYPE_CONVERSATION;
+        else if (name.equals(MailService.E_MSG))          return MailItem.TYPE_MESSAGE;
+        else if (name.equals(MailService.E_CONTACT))      return MailItem.TYPE_CONTACT;
+        else if (name.equals(MailService.E_APPOINTMENT))  return MailItem.TYPE_APPOINTMENT;
+        else if (name.equals(MailService.E_NOTE))         return MailItem.TYPE_NOTE;
+        else if (name.equals(MailService.E_WIKIWORD))     return MailItem.TYPE_WIKI;
+        else if (name.equals(MailService.E_DOC))          return MailItem.TYPE_DOCUMENT;
+        else                                              return MailItem.TYPE_UNKNOWN;
     }
 }
