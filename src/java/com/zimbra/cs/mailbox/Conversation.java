@@ -284,7 +284,7 @@ public class Conversation extends MailItem {
      * @param sort  The sort order for the messages, specified by one of the
      *              <code>SORT_XXX</code> constants from {@link DbMailItem}. */
     List<Message> getMessages(byte sort) throws ServiceException {
-        List<Message> msgs = new ArrayList<Message>(mData.children.size());
+        List<Message> msgs = new ArrayList<Message>(getMessageCount());
         if (mData.children != null && (sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_BY_ID) {
             // try to get all our info from the cache to avoid a database trip
             Collections.sort(mData.children);
@@ -619,7 +619,7 @@ public class Conversation extends MailItem {
     void removeChild(MailItem child) throws ServiceException {
         super.removeChild(child);
         // remove the last message and the conversation goes away
-        if (mData.children.isEmpty()) {
+        if (getMessageCount() == 0) {
             delete();
             return;
         }
@@ -812,11 +812,13 @@ public class Conversation extends MailItem {
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
         if (info.incomplete) {
             // *some* of the messages remain; recalculate the data based on this
-            int remaining = mData.children.size() - info.itemIds.size();
+            int oldSize = getMessageCount(), remaining = oldSize - info.itemIds.size();
             List<Message> msgs = new ArrayList<Message>(remaining);
-            for (int i = 0; i < mData.children.size(); i++)
-                if (!info.itemIds.contains(mData.children.get(i)))
-                    msgs.add(mMailbox.getMessageById(mData.children.get(i)));
+            for (int i = 0; i < oldSize; i++) {
+                int childId = mData.children.get(i);
+                if (!info.itemIds.contains(childId))
+                    msgs.add(mMailbox.getMessageById(childId));
+            }
             recalculateMetadata(msgs, true);
         }
 
