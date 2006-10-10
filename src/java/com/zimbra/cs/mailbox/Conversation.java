@@ -485,7 +485,7 @@ public class Conversation extends MailItem {
             DbMailItem.alterTag(tag, targets, add);
     }
 
-    protected void inheritedTagChanged(Tag tag, boolean add, boolean onChild) {
+    protected void inheritedTagChanged(Tag tag, boolean add) {
         if (tag == null)
             return;
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);

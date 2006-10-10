@@ -748,19 +748,7 @@ public class Folder extends MailItem {
         DbMailItem.alterTag(tag, ids, add);
     }
 
-    protected void updateUnread(int delta) throws ServiceException {
-        if (delta == 0 || !trackUnread())
-            return;
-        markItemModified(Change.MODIFIED_UNREAD);
-
-        // update our unread count (should we check that we don't have too many unread?)
-        mData.unreadCount += delta;
-        if (mData.unreadCount < 0)
-            throw ServiceException.FAILURE("inconsistent state: unread < 0 for item " + mId, null);
-    }
-
-    /**
-     * Moves this folder so that it is a subfolder of <code>folder</code>.
+    /** Moves this folder so that it is a subfolder of <code>folder</code>.
      * 
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_DELETE} on the source folder */

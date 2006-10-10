@@ -169,6 +169,7 @@ public class Message extends MailItem {
 
     /** Returns the raw subject of the message.  This is taken directly from
      *  the <code>Subject:</code> header with no processing. */
+    @Override
     public String getSubject() {
         return (mRawSubject == null ? "" : mRawSubject);
     }
@@ -351,53 +352,80 @@ public class Message extends MailItem {
         return msg;
     }
 
-   /**
-    * This has to be done as a separate step, after the MailItem has been added, because of foreign key 
-    * constraints on the Appointments table
-    * @param invites
-    */
-   private void processInvitesAfterCreate(String method, int folderId, short volumeId, boolean createAppt,
-                                          ParsedMessage pm, List<Invite> invites) 
-   throws ServiceException {
-       // since this is the first time we've seen this Invite Message, we need to process it
-       // and see if it updates an existing Appointment in the Appointments table, or whatever...
-       boolean updatedMetadata = false;
+    /** This has to be done as a separate step, after the MailItem has been
+     *  added, because of foreign key constraints on the Appointments table
+     * @param invites */
+    private void processInvitesAfterCreate(String method, int folderId, short volumeId, boolean createAppt, ParsedMessage pm, List<Invite> invites) 
+    throws ServiceException {
+        // since this is the first time we've seen this Invite Message, we need to process it
+        // and see if it updates an existing Appointment in the Appointments table, or whatever...
+        boolean updatedMetadata = false;
 
-       for (Invite cur : invites) {
-           Appointment appt = mMailbox.getAppointmentByUid(cur.getUid());
-           if (createAppt) {
-               if (appt == null) { 
-                   // ONLY create an appointment if this is a REQUEST method...otherwise don't.
-                   if (method.equals(ICalTok.REQUEST.toString())) {
-                       appt = mMailbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur);
-                   } else {
-                       sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no Appointment could be found");
-                       return; // for now, just ignore this Invitation
-                   }
-               } else {
-                   // When updating an existing appointment, ignore the
-                   // passed-in folderId which will usually be Inbox.  Leave
-                   // the appointment in the folder it's currently in.
-                   appt.processNewInvite(pm, cur, false, appt.getFolderId(), volumeId);
-               }
-           }
+        for (Invite cur : invites) {
+            Appointment appt = mMailbox.getAppointmentByUid(cur.getUid());
+            if (createAppt) {
+                if (appt == null) { 
+                    // ONLY create an appointment if this is a REQUEST method...otherwise don't.
+                    if (method.equals(ICalTok.REQUEST.toString())) {
+                        appt = mMailbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur);
+                    } else {
+                        sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no Appointment could be found");
+                        return; // for now, just ignore this Invitation
+                    }
+                } else {
+                    // When updating an existing appointment, ignore the
+                    // passed-in folderId which will usually be Inbox.  Leave
+                    // the appointment in the folder it's currently in.
+                    appt.processNewInvite(pm, cur, false, appt.getFolderId(), volumeId);
+                }
+            }
 
-           if (appt != null) {
-               ApptInfo info = new ApptInfo(appt.getId(), cur.getComponentNum());
-               if (mApptInfos == null) {
-                   mApptInfos = new ArrayList<ApptInfo>();
-               }
-               mApptInfos.add(info);
-               updatedMetadata = true;
-           }
-       }
-       
-       if (updatedMetadata)
-           saveMetadata();
-   }
+            if (appt != null) {
+                ApptInfo info = new ApptInfo(appt.getId(), cur.getComponentNum());
+                if (mApptInfos == null) {
+                    mApptInfos = new ArrayList<ApptInfo>();
+                }
+                mApptInfos.add(info);
+                updatedMetadata = true;
+            }
+        }
+        
+        if (updatedMetadata)
+            saveMetadata();
+    }
 
-   /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
-    *         {@link ACL#RIGHT_READ} on the original item */
+    /** Updates the in-memory unread counts for the item.  Also updates the
+     *  item's folder, its tag, and its parent.  Note that the parent is not
+     *  fetched from the database, so notifications may be off in the case of
+     *  uncached {@link Conversation}s when a {@link Message} changes state.
+     * 
+     * @param delta  The change in unread count for this item. */
+    @Override
+    protected void updateUnread(int delta) throws ServiceException {
+        if (delta == 0 || !trackUnread())
+            return;
+        markItemModified(Change.MODIFIED_UNREAD);
+
+        // update our unread count (should we check that we don't have too many unread?)
+        mData.unreadCount += delta;
+        if (mData.unreadCount < 0)
+            throw ServiceException.FAILURE("inconsistent state: unread < 0 for " + getClass().getName() + " " + mId, null);
+
+        // update the folder's unread count
+        getFolder().updateUnread(delta);
+
+        // update the parent's unread count
+        MailItem parent = getCachedParent();
+        if (parent != null)
+            parent.updateUnread(delta);
+
+        // tell the tags about the new unread item
+        updateTagUnread(delta);
+    }
+
+    /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
+     *         {@link ACL#RIGHT_READ} on the original item */
+    @Override
     MailItem copy(Folder folder, int id, short destVolumeId) throws IOException, ServiceException {
         Message copy = (Message) super.copy(folder, id, destVolumeId);
 
@@ -410,6 +438,7 @@ public class Message extends MailItem {
         return copy;
     }
 
+    @Override
     public void reindex(IndexItem redo, Object indexData) throws ServiceException {
         ParsedMessage pm = (ParsedMessage) indexData;
         if (pm == null)
@@ -420,10 +449,13 @@ public class Message extends MailItem {
             mMailbox.getMailboxIndex().indexMessage(mMailbox, redo, mId, pm);
     }
 
+
     public void reanalyze() throws ServiceException {
         ParsedMessage pm = new ParsedMessage(getMimeMessage(), getDate(), getMailbox().attachmentsIndexingEnabled());
         reanalyze(pm);
     }
+
+    @Override
     void reanalyze(Object data) throws ServiceException {
         if (!(data instanceof ParsedMessage))
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedMessage object", null);
@@ -471,6 +503,7 @@ public class Message extends MailItem {
 //            mMailbox.recalculateSenderList(parent.getId(), true);
     }
 
+    @Override
     void detach() throws ServiceException {
         MailItem parent = getParent();
         if (!(parent instanceof Conversation))
@@ -488,6 +521,8 @@ public class Message extends MailItem {
         }
     }
 
+
+    @Override
     void delete(boolean childrenOnly, boolean writeTombstones) throws ServiceException {
         MailItem parent = getParent();
         if (parent instanceof Conversation && ((Conversation) parent).getMessageCount() == 1)
@@ -497,6 +532,7 @@ public class Message extends MailItem {
     }
 
 
+    @Override
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
 

@@ -1099,7 +1099,10 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     /** Tags or untags an item.  Persists the change to the database and
      *  cache.  If the item is unread and its tagged state is changing,
-     *  updates the {@link Tag}'s unread count appropriately.<p>
+     *  updates the {@link Tag}'s unread count appropriately.  Note that the
+     *  parent is not fetched from the database, so notifications may be off
+     *  in the case of uncached {@link Conversation}s when a {@link Message}
+     *  changes state.<p>
      * 
      *  You must use {@link #alterUnread} to change an item's unread state.
      * 
@@ -1140,7 +1143,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         // tell our parent about the tag change (note: must precede DbMailItem.alterTags)
         MailItem parent = getCachedParent();
         if (parent != null)
-            parent.inheritedTagChanged(tag, add, true);
+            parent.inheritedTagChanged(tag, add);
 
         // since we're adding/removing a tag, the tag's unread count may change
         if (tag.trackUnread() && mData.unreadCount > 0)
@@ -1169,12 +1172,11 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
     }
 
-    protected void inheritedTagChanged(Tag tag, boolean add, boolean onChild) { }
+    protected void inheritedTagChanged(Tag tag, boolean add)  { }
 
-    /** Updates the in-memory unread counts for the item.  Also updates the
-     *  item's folder, its tag, and its parent.  Note that the parent is not
-     *  fetched from the database, so notifications may be off in the case of
-     *  uncached {@link Conversation}s when a {@link Message} changes state.
+    /** Updates the in-memory unread count for the item.  The base-class
+     *  implementation does not cascade the change to the item's parent,
+     *  folder, and tags, as {@link Message#updateUnread(int)} does.
      * 
      * @param delta  The change in unread count for this item. */
     protected void updateUnread(int delta) throws ServiceException {
@@ -1185,18 +1187,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         // update our unread count (should we check that we don't have too many unread?)
         mData.unreadCount += delta;
         if (mData.unreadCount < 0)
-            throw ServiceException.FAILURE("inconsistent state: unread < 0 for " + getClass().getName() + " " + mId, null);
-
-        // update the folder's unread count
-        getFolder().updateUnread(delta);
-
-        // update the parent's unread count
-        MailItem parent = getCachedParent();
-        if (parent != null)
-            parent.updateUnread(delta);
-
-        // tell the tags about the new unread item
-        updateTagUnread(delta);
+            throw ServiceException.FAILURE("inconsistent state: unread < 0 for item " + mId, null);
     }
 
     /** Adds <code>delta</code> to the unread count of each {@link Tag}
