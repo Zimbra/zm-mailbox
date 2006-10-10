@@ -708,6 +708,17 @@ public class Mailbox {
         mCurrentChange.mOtherDirtyStuff.add(obj);
     }
 
+    /** Adds the MailItem to the current change's list of things that need
+     *  to be added to the Lucene index once the current transaction has
+     *  committed.
+     * 
+     * @param item  The MailItem to be indexed.
+     * @param data  The extra data to be used for the indexing step.
+     * @see #commitCache(Mailbox.MailboxChange) */
+    void queueForIndexing(MailItem item, Object data) {
+        mCurrentChange.addIndexedItem(item, data);
+    }
+
 
     public synchronized Connection getOperationConnection() throws ServiceException {
         if (!mCurrentChange.isActive())
@@ -2840,8 +2851,7 @@ public class Mailbox {
             }
         }
 
-        Message msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId,
-                    rcptEmail, null, sharedDeliveryCtxt);
+        Message msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId, rcptEmail, null, sharedDeliveryCtxt);
         ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         return msg;
     }
@@ -3091,7 +3101,7 @@ public class Mailbox {
             }
             markOtherItemDirty(mboxBlob);
 
-            mCurrentChange.addIndexedItem(msg, pm);
+            queueForIndexing(msg, pm);
             success = true;
         } finally {
             if (storeRedoRecorder != null) {
@@ -3154,8 +3164,7 @@ public class Mailbox {
         return conv;
     }
 
-    public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, int origId, String replyType)
-    throws IOException, ServiceException {
+    public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, int origId, String replyType) throws IOException, ServiceException {
         // make sure the message has been analzyed before taking the Mailbox lock
         pm.analyze();
         try {
@@ -3169,13 +3178,13 @@ public class Mailbox {
             if (replyType != null && origId > 0)
                 dinfo = new Message.DraftInfo(replyType, origId);
             return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME, null,
-                        ID_AUTO_INCREMENT, ":API:", dinfo, new SharedDeliveryContext());
-        } else
+                                      ID_AUTO_INCREMENT, ":API:", dinfo, new SharedDeliveryContext());
+        } else {
             return saveDraftInternal(octxt, pm, id);
+        }
     }
 
-    private synchronized Message saveDraftInternal(OperationContext octxt, ParsedMessage pm, int id)
-    throws IOException, ServiceException {
+    private synchronized Message saveDraftInternal(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
         byte[] data;
         String digest;
         int size;
@@ -3201,15 +3210,14 @@ public class Mailbox {
             int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
             redoRecorder.setImapId(imapID);
 
-            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
-                        : redoPlayer.getVolumeId();
+            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
 
             // update the content and increment the revision number
             Blob blob = msg.setContent(data, digest, volumeId, pm);
             redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
 
             // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
-            mCurrentChange.addIndexedItem(msg, pm);
+            queueForIndexing(msg, pm);
             success = true;
             return msg;
         } finally {
@@ -3431,7 +3439,7 @@ public class Mailbox {
 
             // if we're not sharing the index entry, we need to index the new item
             if (copy.getIndexId() == copy.getId())
-                mCurrentChange.addIndexedItem(copy, null);
+                queueForIndexing(copy, null);
 
             success = true;
             return copy;
@@ -3491,7 +3499,7 @@ public class Mailbox {
     
                 // if we're not sharing the index entry, we need to index the new item
                 if (copy.getIndexId() == copy.getId())
-                    mCurrentChange.addIndexedItem(copy, null);
+                    queueForIndexing(copy, null);
 
                 result.add(new Pair<MailItem,MailItem>(item, copy));
             }
@@ -3672,7 +3680,7 @@ public class Mailbox {
 
             redoRecorder.setNoteId(note.getId());
             redoRecorder.setVolumeId(note.getVolumeId());
-            mCurrentChange.addIndexedItem(note, null);
+            queueForIndexing(note, null);
             success = true;
             return note;
         } finally {
@@ -3695,7 +3703,7 @@ public class Mailbox {
             checkItemChangeID(note);
 
             note.setContent(content);
-            mCurrentChange.addIndexedItem(note, null);
+            queueForIndexing(note, null);
             success = true;
         } finally {
             endTransaction(success);
@@ -3763,7 +3771,7 @@ public class Mailbox {
 
             redoRecorder.setContactId(con.getId());
             redoRecorder.setVolumeId(con.getVolumeId());
-            mCurrentChange.addIndexedItem(con, null);
+            queueForIndexing(con, null);
             success = true;
             return con;
         } finally {
@@ -3784,7 +3792,7 @@ public class Mailbox {
                 throw MailServiceException.MODIFY_CONFLICT();
             con.modify(attrs, replace);
 
-            mCurrentChange.addIndexedItem(con, null);
+            queueForIndexing(con, null);
             success = true;
         } finally {
             endTransaction(success);
@@ -4689,7 +4697,7 @@ public class Mailbox {
 
             ParsedDocument pd = new ParsedDocument(rawData, digest, doc.getFilename(), doc.getContentType(), getOperationTimestampMillis());
             doc.addRevision(author, pd);
-            mCurrentChange.addIndexedItem(doc, pd);
+            queueForIndexing(doc, pd);
 
             sm.link(blob, this, doc.getId(), doc.getLastRevision().getRevId(), volumeId);
             doc.purgeOldRevisions(1);  // purge all but 1 revisions.
@@ -4894,7 +4902,7 @@ public class Mailbox {
                 throw MailServiceException.INVALID_TYPE(type);
 
             redoRecorder.setMessageId(doc.getId());
-            mCurrentChange.addIndexedItem(doc, pd);
+            queueForIndexing(doc, pd);
             sm.link(blob, this, itemId, doc.getLastRevision().getRevId(), volumeId);
             success = true;
 
