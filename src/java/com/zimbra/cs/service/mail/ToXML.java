@@ -151,7 +151,7 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_URL)) {
             String url = folder.getUrl();
             if (!url.equals("") || fields != NOTIFY_FIELDS) {
-                if (url.indexOf('@') != -1)
+                if (url.indexOf('@') != -1) {
                     try {
                         HttpURL httpurl = new HttpURL(url);
                         if (httpurl.getPassword() != null) {
@@ -160,6 +160,7 @@ public class ToXML {
                         }
                     } catch (org.apache.commons.httpclient.URIException urie) { }
                     elem.addAttribute(MailService.A_URL, url);
+                }
             }
         }
         boolean remote = lc.isDelegatedRequest(), canAdminister = !remote;
@@ -180,7 +181,7 @@ public class ToXML {
                 ACL acl = folder.getPermissions();
                 if (acl != null || fields != NOTIFY_FIELDS) {
                     Element eACL = elem.addUniqueElement(MailService.E_ACL);
-                    if (acl != null)
+                    if (acl != null) {
                         for (Iterator it = acl.grantIterator(); it.hasNext(); ) {
                             ACL.Grant grant = (ACL.Grant) it.next();
                             NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
@@ -191,6 +192,7 @@ public class ToXML {
                                 .addAttribute(MailService.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
                                 .addAttribute(MailService.A_DISPLAY, nentry == null ? null : nentry.getName());
                         }
+                    }
                 }
             }
         }
@@ -206,13 +208,17 @@ public class ToXML {
                 String name = folder.getName();
                 if (name != null && name.length() > 0)
                     elem.addAttribute(MailService.A_NAME, name);
-                if (folder.getDefaultView() == MailItem.TYPE_WIKI ||
-                		folder.getDefaultView() == MailItem.TYPE_APPOINTMENT ||
-                		folder.getDefaultView() == MailItem.TYPE_CONTACT)
-                	encodeRestUrl(elem, folder);
             }
             if (needToOutput(fields, Change.MODIFIED_FOLDER))
                 elem.addAttribute(MailService.A_FOLDER, lc.formatItemId(folder.getFolderId()));
+
+            // rest URL if either the parent or name has changed
+            if (needToOutput(fields, Change.MODIFIED_FOLDER | Change.MODIFIED_NAME) && !folder.isHidden()) {
+                if (folder.getDefaultView() == MailItem.TYPE_WIKI ||
+                        folder.getDefaultView() == MailItem.TYPE_APPOINTMENT ||
+                        folder.getDefaultView() == MailItem.TYPE_CONTACT)
+                    encodeRestUrl(elem, folder);
+            }
         }
         if (needToOutput(fields, Change.MODIFIED_FLAGS)) {
             String flags = folder.getFlagString();
@@ -237,10 +243,6 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailService.A_CHANGE_DATE, folder.getChangeDate() / 1000);
             elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, folder.getModifiedSequence());
-        }
-        if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
-            elem.addAttribute(MailService.A_DATE, folder.getDate() / 1000);
-            elem.addAttribute(MailService.A_REVISION, folder.getSavedSequence());
         }
         return elem;
     }
@@ -276,6 +278,27 @@ public class ToXML {
         return elem;
     }
 
+    public static Element encodeRestUrl(Element elt, MailItem item) {
+        try {
+            Account account = item.getMailbox().getAccount();
+            String url = UserServlet.getRestUrl(account);
+            String path = url + item.getPath();
+            if (item instanceof Folder)
+                path = path + "/";
+            if (url.startsWith("https"))
+                url = new HttpsURL(path).toString();
+            else
+                url = new HttpURL(path).toString();
+            return elt.addAttribute(MailService.A_REST_URL, url);
+        } catch (ServiceException se) {
+            mLog.error("cannot generate REST url", se);
+            return elt;
+        } catch (IOException ioe) {
+            mLog.error("cannot generate REST url", ioe);
+            return elt;
+        }
+    }
+
     public static void recordItemTags(Element elem, MailItem item, int fields) {
         if (needToOutput(fields, Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) {
             String flags = item.getFlagString();
@@ -304,8 +327,10 @@ public class ToXML {
             elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
             elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
         }
-        if (needToOutput(fields, Change.MODIFIED_CONTENT))
+        if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
+            elem.addAttribute(MailService.A_DATE, contact.getDate());
             elem.addAttribute(MailService.A_REVISION, contact.getSavedSequence());
+        }
 
         if (summary || !needToOutput(fields, Change.MODIFIED_CONTENT)) {
             try {
@@ -400,6 +425,8 @@ public class ToXML {
                 elem.addAttribute(MailService.A_UNREAD, unreadCount);
         }
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
+            elem.addAttribute(MailService.A_DATE, tag.getDate());
+            elem.addAttribute(MailService.A_REVISION, tag.getSavedSequence());
             elem.addAttribute(MailService.A_CHANGE_DATE, tag.getChangeDate() / 1000);
             elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, tag.getModifiedSequence());
         }
@@ -897,7 +924,7 @@ public class ToXML {
 
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailService.A_REVISION, item.getSavedSequence());
-            elem.addAttribute(MailService.A_CHANGE_DATE, item.getChangeDate());
+            elem.addAttribute(MailService.A_CHANGE_DATE, item.getChangeDate() / 1000);
             elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, item.getModifiedSequence());
         } else if (needToOutput(fields, Change.MODIFIED_CONTENT) && item.getSavedSequence() != 0) {
             elem.addAttribute(MailService.A_REVISION, item.getSavedSequence());
@@ -1336,6 +1363,7 @@ public class ToXML {
             eecache.makeEmail(m, recipients[i], emailType, unique);
     }
 
+
     public static Element encodeWiki(Element parent, ZimbraSoapContext lc, WikiItem wiki, int rev) {
         return encodeWiki(parent, lc, wiki, NOTIFY_FIELDS, rev);
     }
@@ -1407,24 +1435,4 @@ public class ToXML {
             m.addAttribute(MailService.E_FRAG, frag, Element.DISP_CONTENT);
         return m;
     }
-	public static Element encodeRestUrl(Element m, MailItem item) {
-		try {
-			Account account = item.getMailbox().getAccount();
-			String url = UserServlet.getRestUrl(account);
-			String path = url + item.getPath();
-			if (item instanceof Folder)
-				path = path + "/";
-			if (url.startsWith("https"))
-				url = new HttpsURL(path).toString();
-			else
-				url = new HttpURL(path).toString();
-			return m.addAttribute(MailService.A_REST_URL, url);
-		} catch (ServiceException se) {
-			mLog.error("cannot generate REST url", se);
-			return m;
-		} catch (IOException ioe) {
-			mLog.error("cannot generate REST url", ioe);
-			return m;
-		}
-	}
 }
