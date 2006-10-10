@@ -107,6 +107,7 @@ URL
               (default is "co,ba", i.e. check both)
 
           fmt="sync" -- requests that the server return additional metadata in response as X-Zimbra-* HTTP headers
+              (query param "nohdr=1" puts the headers only in HTTP; otherwise, they're also inlined in the response body)
 
 ------------------------------------------------------------
 EXAMPLES

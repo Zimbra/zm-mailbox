@@ -58,6 +58,8 @@ public class SyncFormatter extends Formatter {
     int getFormatLoad() { return  sFormatLoad; }
     int getSaveLoad() { return sSaveLoad; }
 
+    public static final String QP_NOHDR = "nohdr";
+
     public String getType() {
         return "sync";
     }
@@ -68,13 +70,14 @@ public class SyncFormatter extends Formatter {
     }
 
     /**
-     * add to http headers as well as content for now... 
+     * add to content as well as http headers for now (unless told not to)... 
      */
     private static void addHeader(Context context, StringBuffer sb, String name, String value) {
-        sb.append(name).append(": ").append(value).append("\r\n");
+        if (context.params.get(QP_NOHDR) == null)
+            sb.append(name).append(": ").append(value).append("\r\n");
         context.resp.addHeader(name, value);
     }
-    
+
     private static void addXZimbraHeaders(Context context, MailItem item, long size) throws IOException {
         StringBuffer hdr = new StringBuffer();
         addHeader(context, hdr, "X-Zimbra-Tags", item.getTagString());
@@ -92,7 +95,8 @@ public class SyncFormatter extends Formatter {
             context.resp.setContentLength(inline.length + (int) size);
 
         // inline X-Zimbra headers with response body
-        context.resp.getOutputStream().write(inline);
+        if (inline.length > 0)
+            context.resp.getOutputStream().write(inline);
     }
 
     public void formatCallback(Context context, MailItem item) throws IOException, ServiceException, UserServletException {
