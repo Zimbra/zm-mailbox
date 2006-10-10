@@ -52,6 +52,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -155,9 +156,8 @@ public class MailSender {
      * @throws ServiceException
      */
     public int sendMimeMessage(OperationContext octxt, Mailbox mbox, int saveToFolder, MimeMessage mm,
-                               List<InternetAddress> newContacts, List<Upload> uploads,
-                               int origMsgId, String replyType, boolean ignoreFailedAddresses,
-                               boolean replyToSender)
+                               List<InternetAddress> newContacts, List<Upload> uploads, int origMsgId,
+                               String replyType, boolean ignoreFailedAddresses, boolean replyToSender)
     throws ServiceException {
         try {
             // slot the message in the parent's conversation if subjects match
@@ -171,32 +171,10 @@ public class MailSender {
                 authuser = acct;
             boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
 
-            boolean overrideFromHeader = true;
-            try {
-                String fromHdr = mm.getHeader("From", null);
-                if (fromHdr != null && !fromHdr.equals("")) {
-                    InternetAddress from = new InternetAddress(fromHdr);
-                    if (AccountUtil.addressMatchesAccount(acct, from.getAddress()))
-                        overrideFromHeader = false;
-                }
-            } catch (Exception e) { }
-            InternetAddress sender = isDelegatedRequest ? AccountUtil.getFriendlyEmailAddress(authuser) : null;
+            // set the From, Sender, Date, Reply-To, etc. headers
+            updateHeaders(mm, acct, authuser, replyToSender);
 
-            // set various headers on the outgoing message
-            if (overrideFromHeader)
-                mm.setFrom(AccountUtil.getFriendlyEmailAddress(acct));
-            mm.setSentDate(new Date());
-            if (sender == null) {
-                String replyTo = acct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
-                if (replyTo != null && !replyTo.trim().equals(""))
-                    mm.setHeader("Reply-To", replyTo);
-            } else {
-                mm.setSender(sender);
-                if (replyToSender)
-                    mm.setReplyTo(new Address[]{sender});
-            }
-            mm.saveChanges();
-
+            // run any pre-send/pre-save MIME mutators
             try {
                 for (Class vclass : MimeVisitor.getMutators())
                     ((MimeVisitor) vclass.newInstance()).accept(mm);
@@ -225,7 +203,7 @@ public class MailSender {
                 } else {
                     // delegated request, not local
                     String uri = AccountUtil.getSoapUri(authuser);
-                    if (uri != null)
+                    if (uri != null) {
                         try {
                             ZMailbox.Options options = new ZMailbox.Options(new AuthToken(authuser).getEncoded(), uri);
                             options.setNoSession(true);
@@ -239,9 +217,11 @@ public class MailSender {
                         } catch (Exception e) {
                             ZimbraLog.misc.warn("could not save to remote sent folder (perm denied); continuing", e);
                         }
+                    }
                 }
             }
 
+            // actually send the message via SMTP
             sendMessage(mm, ignoreFailedAddresses, rdata);
 
             // check if this is a reply, and if so flag the msg appropriately
@@ -303,6 +283,36 @@ public class MailSender {
             sLog.warn("exception occurred during SendMsg", me);
             throw ServiceException.FAILURE("MessagingException", me);
         }
+    }
+
+    void updateHeaders(MimeMessage mm, Account acct, Account authuser, boolean replyToSender) throws UnsupportedEncodingException, MessagingException {
+        boolean overrideFromHeader = true;
+        try {
+            String fromHdr = mm.getHeader("From", null);
+            if (fromHdr != null && !fromHdr.equals("")) {
+                InternetAddress from = new InternetAddress(fromHdr);
+                if (AccountUtil.addressMatchesAccount(acct, from.getAddress()))
+                    overrideFromHeader = false;
+            }
+        } catch (Exception e) { }
+
+        boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
+        InternetAddress sender = isDelegatedRequest ? AccountUtil.getFriendlyEmailAddress(authuser) : null;
+
+        // set various headers on the outgoing message
+        if (overrideFromHeader)
+            mm.setFrom(AccountUtil.getFriendlyEmailAddress(acct));
+        mm.setSentDate(new Date());
+        if (sender == null) {
+            String replyTo = acct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
+            if (replyTo != null && !replyTo.trim().equals(""))
+                mm.setHeader("Reply-To", replyTo);
+        } else {
+            mm.setSender(sender);
+            if (replyToSender)
+                mm.setReplyTo(new Address[] {sender});
+        }
+        mm.saveChanges();
     }
 
     private void sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData rdata) throws MessagingException {
