@@ -84,9 +84,10 @@ public class PropFind extends DavMethod {
 				}
 			}
 		}
+		DavResource resource = UrlNamespace.getResource(ctxt);
+		addComplianceHeader(ctxt, resource);
 		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
 		Element resp = new XMLElement(DavElements.E_MULTISTATUS);
-		DavResource resource = UrlNamespace.getResource(ctxt);
 		addResourceToResponse(ctxt, resource, resp, nameOnly, requestedProps, false);
 
 		if (ctxt.getDepth() != Depth.ZERO) {

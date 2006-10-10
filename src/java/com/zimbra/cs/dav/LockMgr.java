@@ -1,0 +1,112 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ * 
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ * 
+ * The Original Code is: Zimbra Collaboration Suite Server.
+ * 
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
+ * All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.cs.dav;
+
+import org.apache.commons.collections.map.LRUMap;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import com.zimbra.cs.dav.resource.DavResource;
+
+public class LockMgr {
+	private static LockMgr sInstance;
+	public static LockMgr getInstance() {
+		if (sInstance == null) {
+			synchronized(LockMgr.class) {
+				if (sInstance == null) {
+					sInstance = new LockMgr();
+				}
+			}
+		}
+		return sInstance;
+	}
+	
+	private LRUMap mLocks;
+	
+	private LockMgr() {
+		mLocks = new LRUMap(100);
+	}
+	
+	public enum LockType {
+		write
+	}
+	public enum LockScope {
+		exclusive, shared
+	}
+
+	private static final int sDEFAULTTIMEOUT = 60 * 60 * 1000;
+	private static final String sTIMEOUTINFINITE = "Infinite";
+	private static final String sTIMEOUTSEC = "Second-";
+	
+	public static class Lock {
+		public Lock(LockType t, LockScope s, int d, String o) {
+			type = t; scope = s; depth = d; owner = o;
+			expiration = System.currentTimeMillis() + sDEFAULTTIMEOUT;
+		}
+		public LockType type;
+		public LockScope scope;
+		public int depth;
+		public String owner;
+		public long expiration;
+		public List<String> locktokens;
+		public boolean isExpired() {
+			return expiration < System.currentTimeMillis();
+		}
+		public String getTimeoutStr() {
+			long timeoutInSec = expiration - System.currentTimeMillis();
+			if (timeoutInSec < 0)
+				return sTIMEOUTINFINITE;
+			return sTIMEOUTSEC + timeoutInSec;
+		}
+	}
+	
+	public List<Lock> getLocks(DavResource rs) {
+		@SuppressWarnings("unchecked")
+		List<Lock> locks = (List<Lock>)mLocks.get(rs);
+		if (locks != null) {
+			for (Lock l : locks)
+				if (l.isExpired())
+					locks.remove(l);
+			return locks;
+		}
+		return Collections.emptyList();
+	}
+	
+	public Lock createLock(DavContext ctxt, DavResource rs, LockType type, LockScope scope, int depth) {
+		Lock l = new Lock(type, scope, depth, ctxt.getAuthAccount().getName());
+		l.locktokens = null;
+		
+		@SuppressWarnings("unchecked")
+		List<Lock> locks = (List<Lock>)mLocks.get(rs);
+		if (locks == null) {
+			locks = new ArrayList<Lock>();
+			mLocks.put(rs, locks);
+		}
+		locks.add(l);
+		return l;
+	}
+}

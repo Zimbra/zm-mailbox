@@ -38,6 +38,6 @@ public class Unlock extends DavMethod {
 		return UNLOCK;
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException {
-		throw new DavException("not implemented", HttpServletResponse.SC_FORBIDDEN, null);
+		ctxt.getResponse().setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}
 }

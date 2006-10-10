@@ -26,14 +26,17 @@ package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.soap.Element;
 
 /**
@@ -47,11 +50,31 @@ public abstract class DavResource {
 	protected String mUri;
 	protected String mOwner;
 	protected Map<String, String> mProps;
+	protected List<Compliance> mDavCompliance;
 	
 	public DavResource(String uri, String owner) {
 		mProps = new HashMap<String,String>();
 		mUri = uri;
 		mOwner = owner;
+		mDavCompliance = new ArrayList<Compliance>();
+		mDavCompliance.add(Compliance.one);
+		mDavCompliance.add(Compliance.two);
+		//mDavCompliance.add(Compliance.three);
+		//mDavCompliance.add(Compliance.access_control);
+		//mDavCompliance.add(Compliance.update);
+		//mDavCompliance.add(Compliance.binding);
+	}
+	
+	public boolean equals(Object another) {
+		if (another instanceof DavResource) {
+			DavResource that = (DavResource) another;
+			return this.mUri.equals(that.mUri) && this.mOwner.equals(that.mOwner);
+		}
+		return false;
+	}
+	
+	public List<Compliance> getCompliance() {
+		return mDavCompliance;
 	}
 	
 	public String getProperty(String propName) {

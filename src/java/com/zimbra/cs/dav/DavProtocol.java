@@ -24,11 +24,42 @@
  */
 package com.zimbra.cs.dav;
 
+import java.util.HashMap;
+import java.util.List;
+
 // HTTP protocol extensions and headers for WebDAV
 public class DavProtocol {
+	public enum Compliance {
+		one, two, three, update, binding, access_control, calendar_access
+	}
+	
+	private static HashMap<Compliance,String> sComplianceStrMap;
+
+	static {
+		sComplianceStrMap = new HashMap<Compliance,String>();
+		sComplianceStrMap.put(Compliance.one, "1");
+		sComplianceStrMap.put(Compliance.two, "2");
+		sComplianceStrMap.put(Compliance.three, "3");
+		sComplianceStrMap.put(Compliance.update, "update");
+		sComplianceStrMap.put(Compliance.binding, "binding");
+		sComplianceStrMap.put(Compliance.access_control, "access-control");
+		sComplianceStrMap.put(Compliance.calendar_access, "calendar-access");
+	}
+	
+	public static String getComplianceString(List<Compliance> comp) {
+		if (comp == null)
+			return null;
+		StringBuilder buf = new StringBuilder();
+		for (Compliance c : comp) {
+			if (buf.length() > 0)
+				buf.append(", ");
+			buf.append(sComplianceStrMap.get(c));
+		}
+		return buf.toString();
+	}
+	
 	public static final String DAV_CONTENT_TYPE = "text/xml; charset=\"UTF-8\"";
 	public static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
-	public static final String DAV_COMPLIANCE = "1";
 	
 	public static final String HEADER_CONTENT_TYPE = "Content-Type";
 	public static final String HEADER_CONTENT_LENGTH = "Content-Length";

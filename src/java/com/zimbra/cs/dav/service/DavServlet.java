@@ -108,7 +108,6 @@ public class DavServlet extends ZimbraServlet {
 		}
 		
 		try {
-			resp.setHeader(DavProtocol.HEADER_DAV, DavProtocol.DAV_COMPLIANCE);
 			method.handle(ctxt);
 		} catch (DavException e) {
 			if (e.getCause() instanceof MailServiceException.NoSuchItemException)

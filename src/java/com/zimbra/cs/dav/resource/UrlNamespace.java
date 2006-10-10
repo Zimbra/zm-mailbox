@@ -150,6 +150,25 @@ public class UrlNamespace {
 		return resource;
 	}
 	
+	public static void deleteResource(DavContext ctxt) throws DavException {
+		ResourceRef ref = parseResourcePath(ctxt);
+		if (ref == null)
+			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
+		try {
+			String user = ctxt.getUser();
+			Provisioning prov = Provisioning.getInstance();
+			Account account = prov.get(AccountBy.name, user);
+			if (account == null)
+				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), ref.target, 0, false);
+			mbox.delete(ctxt.getOperationContext(), item.getId(), item.getType());
+		} catch (ServiceException e) {
+			throw new DavException("cannot get item", HttpServletResponse.SC_NOT_FOUND, e);
+		}
+	}
+	
 	public static List<DavResource> getChildren(DavContext ctxt, DavResource parent) throws DavException {
 		ArrayList<DavResource> children = new ArrayList<DavResource>();
 		if (parent.isCollection()) {

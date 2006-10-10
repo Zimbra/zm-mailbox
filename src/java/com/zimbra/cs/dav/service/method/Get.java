@@ -42,11 +42,11 @@ public class Get extends DavMethod {
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException {
 		DavResource resource = UrlNamespace.getResource(ctxt);
-		if (!resource.hasContent())
-			throw new DavException("empty content", HttpServletResponse.SC_NO_CONTENT, null);
 		HttpServletResponse resp = ctxt.getResponse();
 		resp.setContentType(resource.getContentType());
 		resp.setContentLength(resource.getContentLength());
+		if (!resource.hasContent())
+			return;
 		ByteUtil.copy(resource.getContent(), true, ctxt.getResponse().getOutputStream(), false);
 	}
 }
