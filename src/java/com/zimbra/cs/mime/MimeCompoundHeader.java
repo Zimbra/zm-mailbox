@@ -87,6 +87,10 @@ public class MimeCompoundHeader {
                 } catch (UnsupportedEncodingException uee) { 
                     System.out.println(uee);
                 }
+            } else if (pvalue.lastIndexOf("=?") > 0 || pvalue.indexOf("?=") < pvalue.length() - 2) {
+                try {
+                    pvalue = MimeUtility.decodeText(pvalue);
+                } catch (Exception e) { }
             } else if (pvalue.startsWith("=?") && pvalue.endsWith("?=")) {
                 try {
                     pvalue = MimeUtility.decodeWord(pvalue);
@@ -122,6 +126,15 @@ public class MimeCompoundHeader {
                     escaped = false;  rfc2231.comment++;
                     rfc2231.setState(RFC2231State.COMMENT);
                 }
+            } else if (rfc2231.state == RFC2231State.QVALUE) {
+                if (!escaped && c == '\\') {
+                    escaped = true;
+                } else if (escaped || c != '"') {
+                    rfc2231.addValueChar(c);  escaped = false;
+                } else if (c != '\n' && c != '\r') {
+                    rfc2231.saveParameter(mParams);
+                    rfc2231.setState(RFC2231State.SLOP);
+                }
             } else if (c == '\r' || c == '\n') {
                 if (!mParams.isEmpty() || rfc2231.value.length() > 0) {
                     rfc2231.saveParameter(mParams);
@@ -148,15 +161,6 @@ public class MimeCompoundHeader {
                 } else {
                     rfc2231.saveParameter(mParams);
                     rfc2231.setState(c == ';' ? RFC2231State.PARAM : RFC2231State.SLOP);
-                }
-            } else if (rfc2231.state == RFC2231State.QVALUE) {
-                if (!escaped && c == '\\') {
-                    escaped = true;
-                } else if (escaped || c != '"') {
-                    rfc2231.addValueChar(c);  escaped = false;
-                } else {
-                    rfc2231.saveParameter(mParams);
-                    rfc2231.setState(RFC2231State.SLOP);
                 }
             } else if (rfc2231.state == RFC2231State.EQUALS) {
                 if (c == ';') {
@@ -241,6 +245,9 @@ public class MimeCompoundHeader {
             static { WWW_URL.clear(' '); }
         public byte[] encode(byte[] bytes)  { return encodeUrl(WWW_URL, bytes); }
     }
+    private static class QEncoder extends QCodec {
+        private QEncoder()  { super();  setEncodeBlanks(true); }
+    }
 
     public String toString()                   { return toString(null, 0); }
     public String toString(String hdrName)     { return toString(hdrName, 0); }
@@ -288,7 +295,7 @@ public class MimeCompoundHeader {
                 } catch (EncoderException e) { }
             } else {
                 try {
-                    sb.append(param.getKey()).append("=\"").append(new QCodec().encode(value, "utf-8")).append('"');
+                    sb.append(param.getKey()).append("=\"").append(new QEncoder().encode(value, "utf-8")).append('"');
                 } catch (EncoderException e) { }
             }
 
@@ -394,5 +401,10 @@ public class MimeCompoundHeader {
         System.out.println(mch.toString("Content-Type"));
         mch = new ContentType(null);
         System.out.println(mch.toString("Content-Type"));
+
+        mch = new ContentDisposition("attachment; filename*0*=ISO-8859-1''BASE%20INICIAL%20CAMPANHA%20PROVIS%C3O%20ABAIXO; filename*1*=%20DE%20ZERO%2009_10_06%20SUCHY.xls");
+        System.out.println(mch.toString("Content-Disposition"));
+        mch = new ContentDisposition("attachment;\n filename=\"=?iso-8859-1?Q?BASE_INICIAL_CAMPANHA_PROVIS=C3O_ABAIXO_DE_ZERO_09=5F10=5F?=\n =?iso-8859-1?Q?06_SUCHY=2Exls?=\"");
+        System.out.println(mch.toString("Content-Disposition"));
     }
 }
