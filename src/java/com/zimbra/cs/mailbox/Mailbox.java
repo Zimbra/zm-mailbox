@@ -675,6 +675,13 @@ public class Mailbox {
         mCurrentChange.mDirty.recordDeleted(item);
     }
 
+    /** Adds the item id to the current change's list of items deleted during
+     *  the transaction.
+     * @param itemId  The deleted item's id. */
+    void markItemDeleted(int itemId) {
+        mCurrentChange.mDirty.recordDeleted(itemId);
+    }
+
     /** Adds the item ids to the current change's list of items deleted during
      *  the transaction.
      * @param itemIds  The list of deleted items' ids. */
@@ -1846,23 +1853,22 @@ public class Mailbox {
         }
     }
 
-    public synchronized List<Folder> getModifiedFolders(OperationContext octxt, final long lastSync) throws ServiceException {
-        return getModifiedFolders(octxt, lastSync, MailItem.TYPE_UNKNOWN);
+    public synchronized List<Folder> getModifiedFolders(final long lastSync) throws ServiceException {
+        return getModifiedFolders(lastSync, MailItem.TYPE_UNKNOWN);
     }
-    public synchronized List<Folder> getModifiedFolders(OperationContext octxt, final long lastSync, final byte type) throws ServiceException {
+    public synchronized List<Folder> getModifiedFolders(final long lastSync, final byte type) throws ServiceException {
         if (lastSync >= getLastChangeID())
             return Collections.emptyList();
 
         List<Folder> modified = new ArrayList<Folder>();
         boolean success = false;
         try {
-            beginTransaction("getModifiedFolders", octxt);
-            for (Folder subfolder : mFolderCache.values()) {
+            beginTransaction("getModifiedFolders", null);
+            for (Folder subfolder : getFolderById(ID_FOLDER_ROOT).getSubfolderHierarchy()) {
                 if (type == MailItem.TYPE_UNKNOWN || subfolder.getType() == type)
-                    if (subfolder.getModifiedSequence() > lastSync && subfolder.canAccess(ACL.RIGHT_READ))
+                    if (subfolder.getModifiedSequence() > lastSync)
                         modified.add(subfolder);
             }
-            Collections.sort(modified, new MailItem.SortModifiedSequenceAscending());
             success = true;
             return modified;
         } finally {
@@ -1895,7 +1901,7 @@ public class Mailbox {
 
     /** Returns all MailItems modified since a given change number.  Will not
      *  return modified folders or tags; for these you need to call
-     *  {@link #getModifiedFolders(OperationContext, long, byte)} or
+     *  {@link #getModifiedFolders(long, byte)} or
      *  {@link #getModifiedTags(OperationContext, long)}.  Modified items not
      *  visible to the caller (i.e. the caller lacks {@link ACL#RIGHT_READ})
      *  are returned in a separate Integer List in the returned Pair.
@@ -1913,7 +1919,7 @@ public class Mailbox {
 
     /** Returns the MailItems of the given type modified since a given change
      *  number.  Will not return modified folders or tags; for these you need 
-     *  to call {@link #getModifiedFolders(OperationContext, long, byte)} or
+     *  to call {@link #getModifiedFolders(long, byte)} or
      *  {@link #getModifiedTags(OperationContext, long)}.  Modified items not
      *  visible to the caller (i.e. the caller lacks {@link ACL#RIGHT_READ})
      *  are returned in a separate Integer List in the returned Pair.  When

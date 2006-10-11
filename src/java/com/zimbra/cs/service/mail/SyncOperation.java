@@ -188,8 +188,7 @@ public class SyncOperation extends Operation {
         // then, handle created/modified folders
         if (zsc.isDelegatedRequest()) {
             //  first, make sure that something changed...
-            OperationContext octxtOwner = new OperationContext(mbox.getAccount());
-            if (!mbox.getModifiedFolders(octxtOwner, begin).isEmpty()) {
+            if (!mbox.getModifiedFolders(begin).isEmpty()) {
                 // special-case the folder hierarchy for delegated delta sync
                 Set<Folder> visible = mbox.getVisibleFolders(octxt);
                 boolean anyFolders = folderSync(zsc, response, mbox, mbox.getFolderById(null, DEFAULT_FOLDER_ID), visible, SyncPhase.DELTA);
@@ -198,7 +197,7 @@ public class SyncOperation extends Operation {
                     response.addElement(MailService.E_FOLDER);
             }
         } else {
-            for (Folder folder : mbox.getModifiedFolders(octxt, begin))
+            for (Folder folder : mbox.getModifiedFolders(begin))
                 ToXML.encodeFolder(response, zsc, folder, Change.ALL_FIELDS);
         }
 
