@@ -30,9 +30,15 @@ import org.dom4j.QName;
 public class DavElements {
 	public static final String WEBDAV_NS_STRING = "DAV:";
 	public static final String CALDAV_NS_STRING = "urn:ietf:params:xml:ns:caldav";
+	public static final String XML_NS_STRING = "xml:";
 	
 	public static final Namespace WEBDAV_NS = Namespace.get(WEBDAV_NS_STRING);
 	public static final Namespace CALDAV_NS = Namespace.get(CALDAV_NS_STRING);
+	public static final Namespace XML_NS = Namespace.get(XML_NS_STRING);
+
+	// general
+	public static final String P_LANG = "lang";
+	public static final QName  E_LANG = QName.get(P_LANG, XML_NS);
 	
 	// properties
 	public static final String P_CREATIONDATE = "creationdate";
@@ -130,7 +136,12 @@ public class DavElements {
 	public static final String P_CALENDAR_DESCRIPTION = "calendar-description";
 	public static final String P_CALENDAR_TIMEZONE = "calendar-timezone";
 	public static final String P_SUPPORTED_CALENDAR_COMPONENT_SET = "supported-calendar-component-set";
+	public static final String P_COMP = "comp";
+	public static final String P_NAME = "name";
 	public static final String P_SUPPORTED_CALENDAR_DATA = "supported-calendar-data";
+	public static final String P_CALENDAR_DATA = "calendar-data";
+	public static final String P_CONTENT_TYPE= "content-type";
+	public static final String P_VERSION= "version";
 	public static final String P_MAX_RESOURCE_SIZE = "max-resource-size";
 	public static final String P_MIN_DATE_TIME = "min-date-time";
 	public static final String P_MAX_DATE_TIME = "max-date-time";
@@ -179,4 +190,14 @@ public class DavElements {
 	public static final QName E_PRIVILEGE = QName.get(P_PRIVILEGE, WEBDAV_NS);
 	public static final QName E_WRITE = QName.get(P_WRITE, WEBDAV_NS);
 	public static final QName E_OWNER = QName.get(P_OWNER, WEBDAV_NS);
+	
+	// caldav
+	public static final QName E_CALENDAR = QName.get(P_CALENDAR, CALDAV_NS);
+	public static final QName E_CALENDAR_DESCRIPTION = QName.get(P_CALENDAR_DESCRIPTION, CALDAV_NS);
+	public static final QName E_CALENDAR_TIMEZONE = QName.get(P_CALENDAR_TIMEZONE, CALDAV_NS);
+	public static final QName E_SUPPORTED_CALENDAR_COMPONENT_SET = QName.get(P_SUPPORTED_CALENDAR_COMPONENT_SET, CALDAV_NS);
+	public static final QName E_COMP = QName.get(P_COMP, CALDAV_NS);
+	public static final QName E_SUPPORTED_CALENDAR_DATA = QName.get(P_SUPPORTED_CALENDAR_DATA, CALDAV_NS);
+	public static final QName E_CALENDAR_DATA = QName.get(P_CALENDAR_DATA, CALDAV_NS);
+
 }

@@ -64,6 +64,7 @@ public class DavServlet extends ZimbraServlet {
 		addMethod(new PropFind());
 		addMethod(new PropPatch());
 		addMethod(new Unlock());
+		addMethod(new MkCalendar());
 	}
 
 	private void addMethod(DavMethod method) {

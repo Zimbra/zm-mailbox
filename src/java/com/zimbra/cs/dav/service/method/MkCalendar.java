@@ -26,23 +26,33 @@ package com.zimbra.cs.dav.service.method;
 
 import java.io.IOException;
 
-import javax.servlet.http.HttpServletResponse;
-
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
-import com.zimbra.cs.dav.LockMgr;
 import com.zimbra.cs.dav.service.DavMethod;
 
-public class Unlock extends DavMethod {
-	public static final String UNLOCK  = "UNLOCK";
+public class MkCalendar extends DavMethod {
+	public static final String MKCALENDAR = "MKCALENDAR";
 	public String getName() {
-		return UNLOCK;
+		return MKCALENDAR;
 	}
+
+	// valid return codes:
+	// 201 Created, 207 Multi-Status (403, 409, 423, 424, 507),
+	// 403 Forbidden, 409 Conflict, 415 Unsupported Media Type,
+	// 507 Insufficient Storage
 	public void handle(DavContext ctxt) throws DavException, IOException {
-		String token = ctxt.getRequest().getHeader(DavProtocol.HEADER_LOCK_TOKEN);
-		if (token != null)
-			LockMgr.getInstance().deleteLock(token);
-		ctxt.getResponse().setStatus(HttpServletResponse.SC_NO_CONTENT);
+		ctxt.getResponse().addHeader(DavProtocol.HEADER_CACHE_CONTROL, DavProtocol.NO_CACHE);
+	}
+	
+	public void checkPrecondition(DavContext ctxt) throws DavException {
+		// DAV:resource-must-be-null
+		// CALDAV:calendar-collection-location-ok
+		// CALDAV:valid-calendar-data
+		// DAV:need-privilege
+	}
+	
+	public void checkPostcondition(DavContext ctxt) throws DavException {
+		// DAV:initialize-calendar-collection
 	}
 }

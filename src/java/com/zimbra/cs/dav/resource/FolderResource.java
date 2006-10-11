@@ -27,14 +27,16 @@ package com.zimbra.cs.dav.resource;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.service.ServiceException;
 
 public class FolderResource extends DavResource {
 
-	public FolderResource(Folder f, String owner) {
-		super(getFolderPath(f.getPath()), owner);
+	public FolderResource(Folder f, Account acct) throws ServiceException {
+		super(getFolderPath(f.getPath()), acct);
 		setCreationDate(f.getDate());
 		setLastModifiedDate(f.getChangeDate());
 		setProperty(DavElements.P_DISPLAYNAME, f.getSubject());

@@ -29,13 +29,14 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.dom4j.Document;
 import org.dom4j.DocumentException;
+import org.dom4j.io.SAXReader;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.soap.Element;
 
 public class DavContext {
 	private HttpServletRequest  mReq;
@@ -126,18 +127,17 @@ public class DavContext {
 		return (hdr != null && Integer.parseInt(hdr) > 0);
 	}
 	
-	public Element getRequestMessage() throws DavException {
+	public Document getRequestMessage() throws DavException {
 		try {
 			if (hasRequestMessage()) {
-				Element ret = Element.parseXML(mReq.getInputStream());
-				//ZimbraLog.dav.debug(mReq.getMethod() + " " + mUri + "\n" + ret.toString());
-				return ret;
+				Document doc = new SAXReader().read(mReq.getInputStream());
+				return doc;
 			}
 		} catch (DocumentException e) {
 			throw new DavException("unable to parse request message", HttpServletResponse.SC_BAD_REQUEST, e);
 		} catch (IOException e) {
 			throw new DavException("unable to read input", HttpServletResponse.SC_BAD_REQUEST, e);
 		}
-		return null;
+		throw new DavException("no request msg", HttpServletResponse.SC_BAD_REQUEST, null);
 	}
 }

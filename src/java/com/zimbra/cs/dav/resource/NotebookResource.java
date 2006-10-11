@@ -27,6 +27,7 @@ package com.zimbra.cs.dav.resource;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.mailbox.Document;
@@ -36,8 +37,8 @@ public class NotebookResource extends DavResource {
 
 	private InputStream mContent;
 
-	public NotebookResource(Document doc, String owner) throws ServiceException {
-		super(doc.getPath(), owner);
+	public NotebookResource(Document doc, Account acct) throws ServiceException {
+		super(doc.getPath(), acct);
 		setCreationDate(doc.getDate());
 		setLastModifiedDate(doc.getChangeDate());
 		setProperty(DavElements.P_DISPLAYNAME, doc.getSubject());

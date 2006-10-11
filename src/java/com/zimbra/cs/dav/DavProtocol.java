@@ -64,6 +64,9 @@ public class DavProtocol {
 	public static final String HEADER_CONTENT_TYPE = "Content-Type";
 	public static final String HEADER_CONTENT_LENGTH = "Content-Length";
 	public static final String HEADER_ALLOW = "Allow";
+	public static final String HEADER_CACHE_CONTROL = "Cache-Control";
+	
+	public static final String NO_CACHE = "no-cache";
 	
 	// dav extensions
 	public static final String HEADER_DAV = "DAV";

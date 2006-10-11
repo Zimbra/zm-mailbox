@@ -48,6 +48,7 @@ import net.fortuna.ical4j.data.UnfoldingReader;
 public class ZCalendar {
     
     public static final String sZimbraProdID = "Zimbra-Calendar-Provider";
+    public static final String sIcalVersion = "2.0";
     
     public static enum ICalTok {
         ACTION, ALTREP, ATTACH, ATTENDEE, BINARY, BOOLEAN,
@@ -124,7 +125,7 @@ public class ZCalendar {
         
         public ZVCalendar() { 
             addProperty(new ZProperty(ICalTok.PRODID, sZimbraProdID));
-            addProperty(new ZProperty(ICalTok.VERSION, "2.0"));
+            addProperty(new ZProperty(ICalTok.VERSION, sIcalVersion));
         }
         
         public void addProperty(ZProperty prop) { mProperties.add(prop); }

@@ -34,7 +34,6 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
@@ -209,20 +208,14 @@ public class UrlNamespace {
 		
 		try {
 			Account acct = item.getAccount();
-			String owner = acct.getName();
-			Provisioning prov = Provisioning.getInstance();
-	        Config config = prov.getConfig();
-	        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
-	        if (defaultDomain != null && defaultDomain.equalsIgnoreCase(acct.getDomainName()))
-	        	owner = owner.substring(0, owner.indexOf('@'));
 			switch (itemType) {
 			case (MailItem.TYPE_FOLDER) :
 			case (MailItem.TYPE_MOUNTPOINT) :
-				resource = new FolderResource((Folder)item, owner);
+				resource = new FolderResource((Folder)item, acct);
 			break;
 			case (MailItem.TYPE_WIKI) :
 			case (MailItem.TYPE_DOCUMENT) :
-				resource = new NotebookResource((Document)item, owner);
+				resource = new NotebookResource((Document)item, acct);
 			break;
 			}
 		} catch (ServiceException e) {

@@ -27,8 +27,9 @@ package com.zimbra.cs.dav;
 import org.apache.commons.collections.map.LRUMap;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import com.zimbra.cs.dav.resource.DavResource;
 
@@ -45,9 +46,14 @@ public class LockMgr {
 		return sInstance;
 	}
 	
+	// map of resource to list of tokens
+	private HashMap<DavResource,List<String>> mLockedResources;
+	
+	// map of token to lock
 	private LRUMap mLocks;
 	
 	private LockMgr() {
+		mLockedResources = new HashMap<DavResource,List<String>>();
 		mLocks = new LRUMap(100);
 	}
 	
@@ -72,7 +78,7 @@ public class LockMgr {
 		public int depth;
 		public String owner;
 		public long expiration;
-		public List<String> locktokens;
+		public String token;
 		public boolean isExpired() {
 			return expiration < System.currentTimeMillis();
 		}
@@ -84,29 +90,40 @@ public class LockMgr {
 		}
 	}
 	
-	public List<Lock> getLocks(DavResource rs) {
-		@SuppressWarnings("unchecked")
-		List<Lock> locks = (List<Lock>)mLocks.get(rs);
-		if (locks != null) {
-			for (Lock l : locks)
+	public synchronized List<Lock> getLocks(DavResource rs) {
+		List<Lock> locks = new ArrayList<Lock>();
+		List<String> lockTokens = mLockedResources.get(rs);
+		if (lockTokens != null) {
+			for (String token : lockTokens) {
+				@SuppressWarnings("unchecked")
+				Lock l = (Lock)mLocks.get(token);
+				if (l == null)
+					continue;
 				if (l.isExpired())
 					locks.remove(l);
-			return locks;
+				else
+					locks.add(l);
+			}
 		}
-		return Collections.emptyList();
+		return locks;
 	}
 	
-	public Lock createLock(DavContext ctxt, DavResource rs, LockType type, LockScope scope, int depth) {
+	public synchronized Lock createLock(DavContext ctxt, DavResource rs, LockType type, LockScope scope, int depth) {
 		Lock l = new Lock(type, scope, depth, ctxt.getAuthAccount().getName());
-		l.locktokens = null;
+		l.token = UUID.randomUUID().toString();
 		
-		@SuppressWarnings("unchecked")
-		List<Lock> locks = (List<Lock>)mLocks.get(rs);
+		List<String> locks = mLockedResources.get(rs);
 		if (locks == null) {
-			locks = new ArrayList<Lock>();
-			mLocks.put(rs, locks);
+			locks = new ArrayList<String>();
+			mLockedResources.put(rs, locks);
 		}
-		locks.add(l);
+		locks.add(l.token);
+		mLocks.put(l.token, l);
 		return l;
+	}
+	
+	public synchronized void deleteLock(String token) {
+		if (mLocks.containsKey(token))
+			mLocks.remove(token);
 	}
 }

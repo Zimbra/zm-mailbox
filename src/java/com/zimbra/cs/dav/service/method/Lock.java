@@ -29,6 +29,9 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.dom4j.Document;
+import org.dom4j.Element;
+
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -38,9 +41,6 @@ import com.zimbra.cs.dav.LockMgr.LockType;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.Element.XMLElement;
 
 public class Lock extends DavMethod {
 	public static final String LOCK  = "LOCK";
@@ -55,38 +55,39 @@ public class Lock extends DavMethod {
 		LockMgr.LockScope scope = LockScope.shared;
 		LockMgr.LockType type = LockType.write;
 		
-		Element req = ctxt.getRequestMessage();
-		if (!req.getName().equals(DavElements.P_LOCKINFO))
-			throw new DavException("msg "+req.getName()+" not allowed in LOCK", HttpServletResponse.SC_BAD_REQUEST, null);
-		try {
-			Element e = req.getElement(DavElements.E_LOCKSCOPE);
-			List<Element> val = e.listElements();
-			for (Element v : val) {
-				if (v.getQName().equals(DavElements.E_EXCLUSIVE))
-					scope = LockScope.exclusive;
-				else if (v.getQName().equals(DavElements.E_SHARED))
-					scope = LockScope.shared;
-				else
-					throw new DavException("unrecognized scope element "+v.toString(), HttpServletResponse.SC_BAD_REQUEST, null);
-			}
-			e = req.getElement(DavElements.E_LOCKTYPE);
-			val = e.listElements();
-			for (Element v : val) {
-				if (v.getQName().equals(DavElements.E_WRITE))
-					type = LockType.write;
-				else
-					throw new DavException("unrecognized type element "+v.toString(), HttpServletResponse.SC_BAD_REQUEST, null);
-			}
-		} catch (ServiceException e) {
-			throw new DavException("missing element in request", HttpServletResponse.SC_BAD_REQUEST, e);
+		Document req = ctxt.getRequestMessage();
+		Element top = req.getRootElement();
+		if (!top.getName().equals(DavElements.P_LOCKINFO))
+			throw new DavException("msg "+top.getName()+" not allowed in LOCK", HttpServletResponse.SC_BAD_REQUEST, null);
+
+		Element e = top.element(DavElements.E_LOCKSCOPE);
+		@SuppressWarnings("unchecked")
+		List<Element> ls = e.elements();
+		for (Element v : ls) {
+			if (v.getQName().equals(DavElements.E_EXCLUSIVE))
+				scope = LockScope.exclusive;
+			else if (v.getQName().equals(DavElements.E_SHARED))
+				scope = LockScope.shared;
+			else
+				throw new DavException("unrecognized scope element "+v.toString(), HttpServletResponse.SC_BAD_REQUEST, null);
+		}
+		e = top.element(DavElements.E_LOCKTYPE);
+		@SuppressWarnings("unchecked")
+		List<Element> lt = e.elements();
+		for (Element v : lt) {
+			if (v.getQName().equals(DavElements.E_WRITE))
+				type = LockType.write;
+			else
+				throw new DavException("unrecognized type element "+v.toString(), HttpServletResponse.SC_BAD_REQUEST, null);
 		}
 		
 		DavResource rs = UrlNamespace.getResource(ctxt);
 		LockMgr lockmgr = LockMgr.getInstance();
 		LockMgr.Lock lock = lockmgr.createLock(ctxt, rs, type, scope, 0);
-		Element top = new XMLElement(DavElements.E_PROP);
+		Document document = org.dom4j.DocumentHelper.createDocument();
+		top = document.addElement(DavElements.E_PROP);
 		Element ld = top.addElement(DavElements.E_LOCKDISCOVERY);
 		addActiveLockElement(ld, lock);
-		sendResponse(ctxt, top);
+		sendResponse(ctxt, document);
 	}
 }

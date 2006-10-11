@@ -30,18 +30,28 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
+
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.LockMgr;
 import com.zimbra.cs.dav.resource.DavResource;
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.Element;
 
 public abstract class DavMethod {
 	public abstract String getName();
 	public abstract void handle(DavContext ctxt) throws DavException, IOException;
+	
+	// needs to throw either 403 Forbidden, or 409 Conflict in case of an error.
+	public void checkPrecondition(DavContext ctxt) throws DavException {
+	}
+	
+	public void checkPostcondition(DavContext ctxt) throws DavException {
+	}
 	
 	protected static Map<Integer, String> sStatusTextMap;
 	
@@ -108,15 +118,6 @@ public abstract class DavMethod {
 		resp.addElement(DavElements.E_STATUS).setText(sStatusTextMap.get(code));
 	}
 	
-	private static byte[] sPROLOG;
-	static {
-		try {
-			sPROLOG = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n".getBytes("UTF-8");
-		} catch (Exception e) {
-			// halt?
-		}
-	}
-	
 	protected void addComplianceHeader(DavContext ctxt, DavResource rs) throws IOException {
 		HttpServletResponse resp = ctxt.getResponse();
 		String comp = DavProtocol.getComplianceString(rs.getCompliance());
@@ -125,12 +126,9 @@ public abstract class DavMethod {
 	}
 	
 	protected void addActiveLockElement(Element top, LockMgr.Lock l) throws IOException {
-		Element lockDiscovery = null;
-		try {
-			lockDiscovery = top.getElement(DavElements.E_LOCKDISCOVERY);
-		} catch (ServiceException e) {
+		Element lockDiscovery = top.element(DavElements.E_LOCKDISCOVERY);
+		if (lockDiscovery == null)
 			lockDiscovery = top.addElement(DavElements.E_LOCKDISCOVERY);
-		}
 		
 		Element lock = lockDiscovery.addElement(DavElements.E_ACTIVELOCK);
 		Element el = lock.addElement(DavElements.E_LOCKTYPE);
@@ -155,16 +153,14 @@ public abstract class DavMethod {
 			lock.addElement(DavElements.E_OWNER).setText(l.owner);
 	}
 	
-	protected void sendResponse(DavContext ctxt, Element outMsg) throws IOException {
+	protected void sendResponse(DavContext ctxt, Document outMsg) throws IOException {
 		HttpServletResponse resp = ctxt.getResponse();
 		resp.setStatus(ctxt.getStatus());
 		if (outMsg != null) {
-			com.zimbra.common.util.ZimbraLog.dav.debug(outMsg.prettyPrint());
 			resp.setContentType(DavProtocol.DAV_CONTENT_TYPE);
-			byte[] outMsgByte = outMsg.prettyPrint().getBytes("UTF-8");//outMsg.toUTF8();
-			resp.setContentLength(outMsgByte.length + sPROLOG.length);
-			resp.getOutputStream().write(sPROLOG);
-			resp.getOutputStream().write(outMsgByte);
+			OutputFormat format = OutputFormat.createPrettyPrint();
+			XMLWriter writer = new XMLWriter(resp.getOutputStream(), format);
+			writer.write(outMsg);
 		}
 	}
 }

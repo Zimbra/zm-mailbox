@@ -29,10 +29,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.dom4j.Document;
+import org.dom4j.Element;
 import org.dom4j.QName;
 
 import com.zimbra.common.util.ZimbraLog;
@@ -44,8 +45,6 @@ import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.Element.XMLElement;
 
 public class PropFind extends DavMethod {
 	
@@ -60,11 +59,13 @@ public class PropFind extends DavMethod {
 		Map<String,QName> requestedProps = null;
 		
 		if (ctxt.hasRequestMessage()) {
-			Element req = ctxt.getRequestMessage();
-			if (!req.getName().equals(DavElements.P_PROPFIND))
-				throw new DavException("msg "+req.getName()+" not allowed in PROPFIND", HttpServletResponse.SC_BAD_REQUEST, null);
+			Document req = ctxt.getRequestMessage();
+			Element top = req.getRootElement();
+			if (!top.getName().equals(DavElements.P_PROPFIND))
+				throw new DavException("msg "+top.getName()+" not allowed in PROPFIND", HttpServletResponse.SC_BAD_REQUEST, null);
 
-			List<Element> elems = req.listElements();
+			@SuppressWarnings("unchecked")
+			List<Element> elems = top.elements();
 			if (elems.size() != 1)
 				throw new DavException("msg propfind should contain one element", HttpServletResponse.SC_BAD_REQUEST, null);
 			
@@ -78,7 +79,8 @@ public class PropFind extends DavMethod {
 					throw new DavException("invalid element "+e.getName(), HttpServletResponse.SC_BAD_REQUEST, null);
 				else {
 					requestedProps = new java.util.HashMap<String,QName>();
-					List<Element> props = e.listElements();
+					@SuppressWarnings("unchecked")
+					List<Element> props = e.elements();
 					for (Element prop : props)
 						requestedProps.put(prop.getName(), prop.getQName());
 				}
@@ -87,7 +89,9 @@ public class PropFind extends DavMethod {
 		DavResource resource = UrlNamespace.getResource(ctxt);
 		addComplianceHeader(ctxt, resource);
 		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
-		Element resp = new XMLElement(DavElements.E_MULTISTATUS);
+		
+		Document document = org.dom4j.DocumentHelper.createDocument();
+		Element resp = document.addElement(DavElements.E_MULTISTATUS);
 		addResourceToResponse(ctxt, resource, resp, nameOnly, requestedProps, false);
 
 		if (ctxt.getDepth() != Depth.ZERO) {
@@ -97,44 +101,34 @@ public class PropFind extends DavMethod {
 			for (DavResource child : children)
 				addResourceToResponse(ctxt, child, resp, nameOnly, requestedProps, ctxt.getDepth() == Depth.INFINITY);
 		}
-		sendResponse(ctxt, resp);
+		sendResponse(ctxt, document);
 	}
 	
 	private void addResourceToResponse(DavContext ctxt, DavResource rs, Element top, boolean nameOnly, Map<String,QName> requestedProps, boolean includeChildren) throws DavException {
 		Element resp = top.addElement(DavElements.E_RESPONSE);
 		resp.addElement(DavElements.E_HREF).setText(UrlNamespace.getResourceUrl(rs));
 		Map<Integer,Element> propstatMap = new HashMap<Integer,Element>();
-		Set<String> allPropNames = rs.getAllPropertyNames();
 		Set<String> propNames;
 		if (requestedProps == null)
-			propNames = allPropNames;
+			propNames = rs.getAllPropertyNames();
 		else
 			propNames = requestedProps.keySet();
 		if (requestedProps == null || requestedProps.containsKey(DavElements.P_RESOURCETYPE))
-			addProperty(propstatMap, STATUS_OK, rs.getResourceTypeElement());
+			rs.addResourceTypeElement(findPropstat(resp, propstatMap, STATUS_OK), nameOnly);
 		for (String name : propNames) {
 			if (name.equals(DavElements.P_RESOURCETYPE))
 				continue;
-			if (!allPropNames.contains(name)) {
-				Element error;
+			Element propstat = findPropstat(resp, propstatMap, HttpServletResponse.SC_OK);
+			Element e = rs.addPropertyElement(propstat, name, nameOnly);
+			if (e == null) {
+				Element error = findPropstat(resp, propstatMap, HttpServletResponse.SC_NOT_FOUND);
 				if (requestedProps == null)
-					error = new XMLElement(name);
+					error.addElement(name);
 				else
-					error = new XMLElement(requestedProps.get(name));
-				addProperty(propstatMap, HttpServletResponse.SC_NOT_FOUND, error);
+					error.addElement(requestedProps.get(name));
 				continue;
 			}
-			Element e;
-			if (requestedProps == null)
-				e = new XMLElement(name);
-			else
-				e = new XMLElement(requestedProps.get(name));
-			if (!nameOnly)
-				e.setText(rs.getProperty(name));
-			addProperty(propstatMap, STATUS_OK, e);
 		}
-		for (Entry<Integer, Element> entry : propstatMap.entrySet())
-			resp.addElement(entry.getValue());
 		if (includeChildren) {
 			List<DavResource> children = UrlNamespace.getChildren(ctxt, rs);
 			for (DavResource child : children)
@@ -142,17 +136,13 @@ public class PropFind extends DavMethod {
 		}
 	}
 	
-	private void addProperty(Map<Integer,Element> propstatMap, int status, Element property) {
-		Element props = propstatMap.get(status);
-		if (props == null) {
-			props = new Element.XMLElement(DavElements.E_PROPSTAT);
-			props.addElement(DavElements.E_PROP);
-			addStatusElement(props, status);
-			propstatMap.put(status, props);
+	private Element findPropstat(Element top, Map<Integer,Element> propstatMap, int status) {
+		Element prop = propstatMap.get(status);
+		if (prop == null) {
+			prop = top.addElement(DavElements.E_PROPSTAT).addElement(DavElements.E_PROP);
+			addStatusElement(prop, status);
+			propstatMap.put(status, prop);
 		}
-		Element prop = props.getOptionalElement(DavElements.E_PROP);
-		if (prop == null)
-			return;
-		prop.addElement(property);
+		return prop;
 	}
 }
