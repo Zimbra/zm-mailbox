@@ -78,8 +78,8 @@ public class IMPersona {
     IMPersona(IMAddr addr) {
         assert(addr != null);
         mAddr = addr;
-        mXMPPSession = new FakeClientSession("timsmac.local", mAddr.getAddr(), this);
-        mXMPPSession.addRoutes();
+//        mXMPPSession = new FakeClientSession("timsmac.local", mAddr.getAddr(), this);
+//        mXMPPSession.addRoutes();
     }
     
     public IMAddr getAddr() { return mAddr; }
@@ -295,7 +295,7 @@ public class IMPersona {
         IMPresenceUpdateEvent event = new IMPresenceUpdateEvent(mAddr, presence, targets);
         postIMNotification(event);
         
-        updateXMPPPresence();
+//        updateXMPPPresence();
         
     }
     
@@ -416,7 +416,7 @@ public class IMPersona {
             
             xmppMsg.setThread(chat.getThreadId());
 
-            XMPPServer.getInstance().getMessageRouter().route(xmppMsg);
+//            XMPPServer.getInstance().getMessageRouter().route(xmppMsg);
         }
     }
     
