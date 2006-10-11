@@ -70,7 +70,7 @@ public class IMMessage {
         return "MESSAGE("+mDate+"): "+mSubject+" "+mBody;
     }
     
-    void setFrom(IMAddr from) { mFrom = from; } 
+    public void setFrom(IMAddr from) { mFrom = from; } 
     
     
     public IMMessage(TextPart subject, TextPart body) {

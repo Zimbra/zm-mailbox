@@ -24,6 +24,8 @@
  */
 package com.zimbra.cs.im;
 
+import org.xmpp.packet.JID;
+
 public class IMAddr {
     private String mAddr;
     
@@ -34,6 +36,18 @@ public class IMAddr {
     public String getAddr() { return mAddr; }
     
     public String toString() { return mAddr; }
+    
+    public JID makeJID() {
+        int domainSplit = mAddr.indexOf('@');
+        
+        if (domainSplit > 0) {
+            String namePart = mAddr.substring(0, domainSplit);
+            String domainPart = mAddr.substring(domainSplit+1);
+            return new JID(namePart, domainPart, "");
+        } else {
+            return new JID(mAddr);
+        }            
+    }
     
     public boolean equals(Object other) {
         return (((IMAddr)other).mAddr).equals(mAddr);

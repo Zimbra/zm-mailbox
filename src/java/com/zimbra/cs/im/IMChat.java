@@ -86,7 +86,11 @@ public class IMChat {
     
     public String getThreadId() { return mThreadId; }
     
-    private Participant findParticipant(IMAddr addrFrom,String resourceFrom, String nameFrom)
+    Participant lookupParticipant(IMAddr addrFrom) {
+        return mParticipants.get(addrFrom);
+    }
+    
+    private Participant findAddParticipant(IMAddr addrFrom,String resourceFrom, String nameFrom)
     {
         Participant part = mParticipants.get(addrFrom);
         if (part == null) {
@@ -115,7 +119,7 @@ public class IMChat {
     int addMessage(IMAddr addrFrom, String resourceFrom, String nameFrom, IMMessage msg)
     {
         // will trigger the add
-        findParticipant(addrFrom, resourceFrom, nameFrom);
+        findAddParticipant(addrFrom, resourceFrom, nameFrom);
         
         mMessages.add(msg);
         

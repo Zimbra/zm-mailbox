@@ -133,7 +133,7 @@ public class IMRouter implements Runnable {
      * 
      * @param event
      */
-    synchronized void postEvent(IMEvent event) {
+    public synchronized void postEvent(IMEvent event) {
         assert(!mShutdown);
         mQueue.add(event);
     }

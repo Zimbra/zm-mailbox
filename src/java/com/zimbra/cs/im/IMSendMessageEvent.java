@@ -37,7 +37,7 @@ public class IMSendMessageEvent extends IMEvent {
     String mThreadId;
     IMMessage mMessage;
     
-    IMSendMessageEvent(IMAddr fromAddr, String threadId, List<IMAddr> targets, IMMessage message) {
+    public IMSendMessageEvent(IMAddr fromAddr, String threadId, List<IMAddr> targets, IMMessage message) {
         super(targets);
         mFromAddr = fromAddr;
         mThreadId = threadId;

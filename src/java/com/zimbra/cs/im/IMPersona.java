@@ -33,11 +33,17 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
+import org.xmpp.packet.Presence;
+
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.im.IMBuddy.SubType;
 import com.zimbra.cs.im.IMChat.Participant;
+import com.zimbra.cs.im.IMMessage.Lang;
 import com.zimbra.cs.im.IMPresence.Show;
 import com.zimbra.cs.im.IMSubscriptionEvent.Op;
+import com.zimbra.cs.im.xmpp.srv.XMPPServer;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
@@ -54,12 +60,14 @@ import com.zimbra.soap.Element;
 public class IMPersona {
 
     private IMAddr mAddr;
-    private Map<IMAddr, IMBuddy> mBuddyList = new HashMap();
-    private Map<String, IMGroup> mGroups = new HashMap();
-    private Map<String, IMChat> mChats = new HashMap();
+    private Map<IMAddr, IMBuddy> mBuddyList = new HashMap<IMAddr, IMBuddy>();
+    private Map<String, IMGroup> mGroups = new HashMap<String, IMGroup>();
+    private Map<String, IMChat> mChats = new HashMap<String, IMChat>();
     private boolean mSubsLoaded = false;
     
-    private Set<Session> mListeners = new HashSet();
+    private Set<Session> mListeners = new HashSet<Session>();
+    
+    private FakeClientSession mXMPPSession;
     
     
     public String toString() {
@@ -69,7 +77,9 @@ public class IMPersona {
     
     IMPersona(IMAddr addr) {
         assert(addr != null);
-        mAddr = addr; 
+        mAddr = addr;
+        mXMPPSession = new FakeClientSession("timsmac.local", mAddr.getAddr(), this);
+        mXMPPSession.addRoutes();
     }
     
     public IMAddr getAddr() { return mAddr; }
@@ -91,7 +101,6 @@ public class IMPersona {
     private IMPresence mMyPresence = new IMPresence(Show.ONLINE, (byte)1, null);
     private boolean mIsOnline = false;
     
-
     /**
      * Finds an existing group OR CREATES ONE
      * @param name
@@ -274,21 +283,36 @@ public class IMPersona {
     {
         IMPresence presence = getEffectivePresence();
         
-        ArrayList<IMAddr> targets = new ArrayList();
+        ArrayList<IMAddr> targets = new ArrayList<IMAddr>();
         
         for (IMBuddy buddy : buddies()) {
             if (buddy.getSubType().isIncoming()) 
                 targets.add(buddy.getAddress());
         }
-        
-        IMPresenceUpdateEvent event = new IMPresenceUpdateEvent(mAddr, presence, targets);
-        IMRouter.getInstance().postEvent(event);
+        //IMRouter.getInstance().postEvent(event);
         
         // need to send it to myself in case there I have other sessions listening...
+        IMPresenceUpdateEvent event = new IMPresenceUpdateEvent(mAddr, presence, targets);
         postIMNotification(event);
+        
+        updateXMPPPresence();
         
     }
     
+    private void updateXMPPPresence() {
+        IMPresence pres = getEffectivePresence();
+        
+        Presence xmppPresence;
+        
+        if (pres.getShow() == Show.OFFLINE) {
+            xmppPresence = new Presence(Presence.Type.unavailable);
+        } else {
+            xmppPresence = new Presence();
+        }
+        xmppPresence.setFrom(mXMPPSession.getAddress());
+        
+        XMPPServer.getInstance().getPacketRouter().route(xmppPresence);
+    }
     
     public synchronized void setMyPresence(OperationContext octxt, IMPresence presence) throws ServiceException
     {
@@ -340,12 +364,19 @@ public class IMPersona {
      * @param address
      * @param message
      */
-    public synchronized void sendMessage(OperationContext octxt, String threadId, IMMessage message) throws ServiceException 
+    public synchronized void sendMessage(OperationContext octxt, IMAddr toAddr, String threadId, IMMessage message) throws ServiceException 
     {
         IMChat chat = mChats.get(threadId);
         if (chat == null) {
-            // FIXME
-            throw ServiceException.FAILURE("No such chat: "+threadId, null);
+            for (IMChat cur : mChats.values()) {
+                // find an existing point-to-point chat with that user in it
+                if ((cur.participants().size() ==  2) && (cur.lookupParticipant(message.getFrom()) != null)) {
+                    sendMessage(octxt, cur, message);
+                    return;
+                }
+            }
+            threadId = newChat(octxt, toAddr, message);
+            return;
         }            
         sendMessage(octxt, chat, message);
     }
@@ -356,7 +387,7 @@ public class IMPersona {
         
         int seqNo = chat.addMessage(message);
         
-        ArrayList toList = new ArrayList();
+        ArrayList<IMAddr> toList = new ArrayList<IMAddr>();
         for (Participant part : chat.participants()) {
             if (!part.getAddress().equals(mAddr))
                 toList.add(part.getAddress());
@@ -368,7 +399,25 @@ public class IMPersona {
 
         postIMNotification(event.getNotificationEvent(seqNo));
         
-        IMRouter.getInstance().postEvent(event);
+        
+// Don't need to do this anymore: XMPP router does this!        
+//        IMRouter.getInstance().postEvent(event);
+        
+        for (IMAddr cur : toList) {
+            Message xmppMsg = new Message();
+            xmppMsg.setFrom(mAddr.makeJID());
+            xmppMsg.setTo(cur.makeJID());
+            
+            if (message.getBody(Lang.DEFAULT) != null)
+                xmppMsg.setBody(message.getBody(Lang.DEFAULT).getPlainText());
+            
+            if (message.getSubject(Lang.DEFAULT) != null)
+                xmppMsg.setSubject(message.getSubject(Lang.DEFAULT).getPlainText());
+            
+            xmppMsg.setThread(chat.getThreadId());
+
+            XMPPServer.getInstance().getMessageRouter().route(xmppMsg);
+        }
     }
     
     public synchronized void closeChat(OperationContext octxt, IMChat chat) throws ServiceException {
@@ -544,7 +593,20 @@ public class IMPersona {
      * @param message
      * @return sequence number of message in chat
      */
-    int handleMessage(IMAddr from, String threadId, IMMessage message) {
+    synchronized int handleMessage(IMAddr from, String threadId, IMMessage message) {
+        if (threadId == null || threadId.length() == 0) {
+            for (IMChat cur : mChats.values()) {
+                // find an existing point-to-point chat with that user in it
+                if ((cur.participants().size() ==  2) && (cur.lookupParticipant(message.getFrom()) != null)) {
+                    threadId = cur.getThreadId();
+                    break;
+                }
+            }
+            if (threadId == null || threadId.length() == 0) {
+                threadId = LdapUtil.generateUUID();
+            }
+        }
+        
         IMChat chat = getOrCreateChat(threadId, from);
         return chat.addMessage(from, null, null, message);
     }

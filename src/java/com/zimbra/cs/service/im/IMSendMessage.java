@@ -76,7 +76,7 @@ public class IMSendMessage extends IMDocumentHandler {
             IMPersona persona = super.getRequestedPersona(lc, lock);
             
             if (threadId != null) {
-                persona.sendMessage(oc, threadId, msg);
+                persona.sendMessage(oc, new IMAddr(addr), threadId, msg);
             } else {
                 threadId = persona.newChat(oc, new IMAddr(addr), msg);
             }
