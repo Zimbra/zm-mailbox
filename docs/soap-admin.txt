@@ -1223,8 +1223,8 @@ Access: domain admin sufficient
 </GetAllZimletsResponse>
 
 Notes:
-	{exclude} can be "none|admin|mail"
-	when exclude="admin" is specified the response returns only mail Zimlets
+	{exclude} can be "none|extension|mail"
+	when exclude="extension" is specified the response returns only mail Zimlets
 	when exclude="mail" is specified the response returns only admin extensions
 	when exclude = "none" both mail and admin zimlets are returned
 	
