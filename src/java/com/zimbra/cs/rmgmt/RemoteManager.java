@@ -45,7 +45,9 @@ import com.zimbra.cs.util.ZimbraLog;
 public class RemoteManager {
 
     private static final int DEFAULT_REMOTE_MANAGEMENT_PORT = 22;
-
+    private static final String DEFAULT_REMOTE_MANAGEMENT_USER = "zimbra";
+    private static final String DEFAULT_REMOTE_MANAGEMENT_COMMAND = "/opt/zimbra/libexec/zmrcd";
+    
 	private File mPrivateKey;
 	
 	private final String mUser;
@@ -61,10 +63,10 @@ public class RemoteManager {
 	    mPort = remote.getIntAttr(Provisioning.A_zimbraRemoteManagementPort, DEFAULT_REMOTE_MANAGEMENT_PORT);
 	    if (mPort < 0) throw ServiceException.FAILURE("server " + remote.getName() + " has invalid " + Provisioning.A_zimbraRemoteManagementPort, null);
 	    
-	    mUser = remote.getAttr(Provisioning.A_zimbraRemoteManagementUser, null);
+	    mUser = remote.getAttr(Provisioning.A_zimbraRemoteManagementUser, DEFAULT_REMOTE_MANAGEMENT_USER);
 	    if (mUser == null) throw ServiceException.FAILURE("server " + remote.getName() + " has no " + Provisioning.A_zimbraRemoteManagementUser, null);
 
-	    mShimCommand = remote.getAttr(Provisioning.A_zimbraRemoteManagementCommand, null);
+	    mShimCommand = remote.getAttr(Provisioning.A_zimbraRemoteManagementCommand, DEFAULT_REMOTE_MANAGEMENT_COMMAND);
 	    if (mShimCommand == null) throw ServiceException.FAILURE("server " + remote.getName() + " has no " + Provisioning.A_zimbraRemoteManagementCommand, null);
 		
 	    Server local = Provisioning.getInstance().getLocalServer();
