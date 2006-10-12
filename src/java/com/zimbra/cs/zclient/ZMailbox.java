@@ -246,7 +246,7 @@ public abstract class ZMailbox {
      * @throws ServiceException on error
      * @return action result
      */
-    public abstract ZActionResult renaZActionResultmeTag(String id, String name) throws ServiceException;
+    public abstract ZActionResult renameTag(String id, String name) throws ServiceException;
     
     // ------------------------
 
@@ -893,13 +893,73 @@ public abstract class ZMailbox {
      */
     public abstract void iCalReply(String ical) throws ServiceException;
 
-    /*
+
     public static class SendMessageResponse {
 
+        private String mId;
+
+        public SendMessageResponse(String id) {
+            mId = id;
+        }
+
+        public String getId() {
+            return mId;
+        }
+
+        public void setId(String id) {
+            mId = id;
+        }
     }
 
-    public abstract SendMessageResponse SendMessage();
-    */
+    public static class SendMessagePart {
+        private String mMessageId;
+        private String mPartName;
 
+        public SendMessagePart(String messageId) {
+            mMessageId = messageId;
+        }
+
+        public String getMessageId() {
+            return mMessageId;
+        }
+
+        public void setMessageId(String messageId) {
+            mMessageId = messageId;
+        }
+
+        public String getPartName() {
+            return mPartName;
+        }
+
+        public void setPartName(String partName) {
+            mPartName = partName;
+        }
+    }
+
+    /**
+     * send a message.
+     * 
+     * @param addrs list of addresses message is to be sent to
+     * @param subject subject of message
+     * @param origMessageIdHeader Message-ID header for message being replied to
+     * @param contentType content type of message body (normally text/plain)
+     * @param content content of message body
+     * @param attachmentUploadId the id of attachments uploaded previously
+     * @param messageIdsToAttach list of additional messages to attach to this message, or null.
+     * @param messagePartsToAttach list of additional attachments (id/part) to attach to this message, or null.
+     * @param contactIdsToAttach list of contact ids to attach to this message, or null.
+     * @return SendMessageResponse. id is set in response only if message was saved to a sent folder.
+     */
+    public abstract SendMessageResponse SendMessage(
+            List<ZEmailAddress> addrs,
+            String subject,
+            String origMessageIdHeader,
+            String contentType,
+            String content,
+            String attachmentUploadId,
+            List<String> messageIdsToAttach,
+            List<SendMessagePart> messagePartsToAttach,
+            List<String> contactIdsToAttach
+    );
 
 }

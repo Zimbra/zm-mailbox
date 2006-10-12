@@ -546,6 +546,10 @@ public class ZSoapMailbox extends ZMailbox {
         return doAction(tagAction("delete", id));
     }
 
+    public ZActionResult renaZActionResultmeTag(String id, String name) throws ServiceException {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
     @Override
     public ZActionResult markTagRead(String id) throws ServiceException {
         return doAction(tagAction("read", id));
@@ -1062,68 +1066,71 @@ public class ZSoapMailbox extends ZMailbox {
         invoke(req);
     }
 
+    public SendMessageResponse SendMessage(List<ZEmailAddress> addrs, String subject, String origMessageIdHeader, String contentType, String content, String attachmentUploadId, List<String> messageIdsToAttach, List<SendMessagePart> messagePartsToAttach, List<String> contactIdsToAttach) {
+        return null;  //TODO: imlpement
+    }
 
     /*
- 
- <AuthRequest xmlns="urn:zimbraAccount">
- <ChangePasswordRequest>
- <GetPrefsRequest>
- *<GetInfoRequest> TODO - zimlets
- <GetAccountInfoRequest>
- <GetAvailableSkinsRequest/>
- <SearchGalRequest [type="{type}"]>
- <AutoCompleteGalRequest [type="{type}"] limit="limit-returned">
- <SyncGalRequest token="[{previous-token}]"/>
- <SearchCalendarResourcesRequest
- <ModifyPrefsRequest>
- 
- *<SearchRequest>
- *<SearchConvRequest>
- 
- <BrowseRequest browseBy="{browse-by}"/>
- <GetFolderRequest>
- *<GetConvRequest>
- *<GetMsgRequest>
 
- *<CreateFolderRequest>
+<AuthRequest xmlns="urn:zimbraAccount">
+<ChangePasswordRequest>
+<GetPrefsRequest>
+*<GetInfoRequest> TODO - zimlets
+<GetAccountInfoRequest>
+<GetAvailableSkinsRequest/>
+<SearchGalRequest [type="{type}"]>
+<AutoCompleteGalRequest [type="{type}"] limit="limit-returned">
+<SyncGalRequest token="[{previous-token}]"/>
+<SearchCalendarResourcesRequest
+<ModifyPrefsRequest>
 
- *<ItemActionRequest>
- *<MsgActionRequest>
- *<ConvActionRequest>
+*<SearchRequest>
+*<SearchConvRequest>
 
- *<FolderActionRequest>
+<BrowseRequest browseBy="{browse-by}"/>
+<GetFolderRequest>
+*<GetConvRequest>
+*<GetMsgRequest>
 
- *<GetTagRequest/> (NOT NEEDED?)
- *<CreateTagRequest>
- *<TagActionRequest>
+*<CreateFolderRequest>
 
- *<GetSearchFolderRequest> (NOT NEEDED?)
- *<CreateSearchFolderRequest>
- *<ModifySearchFolderRequest>
- *<CreateMountpointRequest>
+*<ItemActionRequest>
+*<MsgActionRequest>
+*<ConvActionRequest>
 
- <SendMsgRequest>
- <SaveDraftRequest>
- *<AddMsgRequest>
+*<FolderActionRequest>
 
- *<CreateContactRequest>
- *<ModifyContactRequest replace="{replace-mode}">
- *<GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"]>
- *<ContactActionRequest>
- <ImportContactsRequest ct="{content-type}" [l="{folder-id}"]>
- <ExportContactsRequest ct="{content-type}" [l="{folder-id}"]/>
+*<GetTagRequest/> (NOT NEEDED?)
+*<CreateTagRequest>
+*<TagActionRequest>
 
- *<NoOpRequest/>
+*<GetSearchFolderRequest> (NOT NEEDED?)
+*<CreateSearchFolderRequest>
+*<ModifySearchFolderRequest>
+*<CreateMountpointRequest>
 
- <GetRulesRequest>
- <GetRulesResponse>
- <SaveRulesRequest>
- <SaveRulesResponse>
+<SendMsgRequest>
+<SaveDraftRequest>
+*<AddMsgRequest>
 
- <CheckSpellingRequest>
- <GetAllLocalesRequest/>
+*<CreateContactRequest>
+*<ModifyContactRequest replace="{replace-mode}">
+*<GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"]>
+*<ContactActionRequest>
+<ImportContactsRequest ct="{content-type}" [l="{folder-id}"]>
+<ExportContactsRequest ct="{content-type}" [l="{folder-id}"]/>
 
- <ICalReplyRequest>
-   
-     */
+*<NoOpRequest/>
+
+<GetRulesRequest>
+<GetRulesResponse>
+<SaveRulesRequest>
+<SaveRulesResponse>
+
+<CheckSpellingRequest>
+<GetAllLocalesRequest/>
+
+<ICalReplyRequest>
+
+    */
 }
