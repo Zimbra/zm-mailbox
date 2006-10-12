@@ -893,11 +893,13 @@ public abstract class ZMailbox {
      */
     public abstract void iCalReply(String ical) throws ServiceException;
 
+    /*
     public static class SendMessageResponse {
 
     }
 
     public abstract SendMessageResponse SendMessage();
+    */
 
 
 }
