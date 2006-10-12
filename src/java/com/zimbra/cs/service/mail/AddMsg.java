@@ -38,6 +38,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.AddMsgOperation;
 import com.zimbra.cs.operation.Operation.Requester;
@@ -63,9 +64,9 @@ public class AddMsg extends MailDocumentHandler {
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        OperationContext octxt = lc.getOperationContext();
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = zsc.getOperationContext();
         Session session = getSession(context);
         
         Element msgElem = request.getElement(MailService.E_MSG);
@@ -102,7 +103,7 @@ public class AddMsg extends MailDocumentHandler {
         int folderId = -1;
         Folder folder = null;
         try {
-            folderId = new ItemId(folderStr, lc).getId();
+            folderId = new ItemId(folderStr, zsc).getId();
         } catch (ServiceException e) { }
         if (folderId > 0) {
             folder = mbox.getFolderById(octxt, folderId);
@@ -119,21 +120,21 @@ public class AddMsg extends MailDocumentHandler {
         ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
         MimeMessage mm;
         if (attachment != null)
-            mm = SendMsg.parseUploadedMessage(lc, attachment, mimeData);
+            mm = SendMsg.parseUploadedMessage(zsc, attachment, mimeData);
         else
             mm = ParseMimeMessage.importMsgSoap(msgElem);
         
         AddMsgOperation op = new AddMsgOperation(session, octxt, mbox, Requester.SOAP, date, tagsStr, folderId, flagsStr, noICal, mm);
         op.schedule();
-        int messageId = op.getMessageId();
+        Message msg = op.getMessage();
         
         // we can now purge the uploaded attachments
         if (mimeData.uploads != null)
             FileUploadServlet.deleteUploads(mimeData.uploads);
         
-        Element response = lc.createElement(MailService.ADD_MSG_RESPONSE);
-        if (messageId >= 0)
-            response.addElement(MailService.E_MSG).addAttribute(MailService.A_ID, messageId);
+        Element response = zsc.createElement(MailService.ADD_MSG_RESPONSE);
+        if (msg != null)
+            ToXML.encodeMessageSummary(response, zsc, msg, null, GetMsgMetadata.SUMMARY_FIELDS);
         
         return response;
     }

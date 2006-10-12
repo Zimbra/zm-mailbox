@@ -40,13 +40,15 @@ public class AddMsgOperation extends Operation {
 
 	private static int LOAD = setLoad(AddMsgOperation.class, 10);
 	
-	long mDate;
-	String mTagsStr;
-	int mFolderId;
-	String mFlagsStr;
-	boolean mNoICal;
-	MimeMessage mMm;
-	int mMessageId = 0;
+	private long mDate;
+    private String mTagsStr;
+    private int mFolderId;
+    private String mFlagsStr;
+    private boolean mNoICal;
+    private MimeMessage mMm;
+
+    private int mMessageId = 0;
+    private Message mMessage;
 	
 
 	public AddMsgOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
@@ -65,15 +67,16 @@ public class AddMsgOperation extends Operation {
 	protected void callback() throws ServiceException {
 		try {
 			ParsedMessage pm = new ParsedMessage(mMm, mDate, getMailbox().attachmentsIndexingEnabled());
-			Message msg = getMailbox().addMessage(getOpCtxt(), pm, mFolderId, mNoICal, Flag.flagsToBitmask(mFlagsStr), mTagsStr);
-			if (msg != null)
-				mMessageId = msg.getId();
+			mMessage = getMailbox().addMessage(getOpCtxt(), pm, mFolderId, mNoICal, Flag.flagsToBitmask(mFlagsStr), mTagsStr);
+			if (mMessage != null)
+				mMessageId = mMessage.getId();
 		} catch(IOException ioe) {
 			throw ServiceException.FAILURE("Error While Delivering Message", ioe);
 		}
 	}
-	
-	public int getMessageId() { return mMessageId; }
+
+    public Message getMessage() { return mMessage; }
+    public int getMessageId() { return mMessageId; }
 	
 	public String toString() {
 		StringBuffer toRet = new StringBuffer("<AddMsg ");

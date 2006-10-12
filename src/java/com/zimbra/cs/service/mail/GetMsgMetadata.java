@@ -17,9 +17,9 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetMsgMetadata extends MailDocumentHandler {
 
-    private static final int SUMMARY_FIELDS = Change.MODIFIED_SIZE | Change.MODIFIED_PARENT | Change.MODIFIED_FOLDER |
-                                              Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS  | Change.MODIFIED_UNREAD |
-                                              Change.MODIFIED_DATE | Change.MODIFIED_CONFLICT;
+    static final int SUMMARY_FIELDS = Change.MODIFIED_SIZE | Change.MODIFIED_PARENT | Change.MODIFIED_FOLDER |
+                                      Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS  | Change.MODIFIED_UNREAD |
+                                      Change.MODIFIED_DATE | Change.MODIFIED_CONFLICT;
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
