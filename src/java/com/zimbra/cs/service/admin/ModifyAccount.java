@@ -72,10 +72,17 @@ public class ModifyAccount extends AdminDocumentHandler {
 
         if (isDomainAdminOnly(zsc)) {
             for (String attrName : attrs.keySet()) {
+                if (attrName.charAt(0) == '+' || attrName.charAt(0) == '-')
+                    attrName = attrName.substring(1);
+
                 if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName))
                     throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
             }
         }
+
+        // check to see if quota is being changed
+        checkQuota(zsc, account, attrs);
+
 
         // pass in true to checkImmutable
         prov.modifyAttrs(account, attrs, true);
@@ -87,4 +94,32 @@ public class ModifyAccount extends AdminDocumentHandler {
         ToXML.encodeAccount(response, account);
 	    return response;
 	}
+
+    private void checkQuota(ZimbraSoapContext zsc, Account account, Map<String, Object> attrs) throws ServiceException {
+        Object object = attrs.get(Provisioning.A_zimbraMailQuota);
+        if (object == null) object = attrs.get("+" + Provisioning.A_zimbraMailQuota);
+        if (object == null) object = attrs.get("-" + Provisioning.A_zimbraMailQuota);
+        if (object == null) return;
+
+        if (!(object instanceof String))
+            throw ServiceException.PERM_DENIED("can not modify mail quota (single valued attribute)");
+
+        String quotaAttr = (String) object;
+
+        long quota;
+
+        if (quotaAttr.equals("")) {
+            // they are unsetting it, so check the COS
+            quota = Provisioning.getInstance().getCOS(account).getIntAttr(Provisioning.A_zimbraMailQuota, 0);
+        } else {
+            try {
+                quota = Long.parseLong(quotaAttr);
+            } catch (NumberFormatException e) {
+                throw ServiceException.PERM_DENIED("can not modify mail quota (invalid format): "+object);
+            }
+        }
+        
+        if (!canModifyMailQuota(zsc,  account, quota))
+            throw ServiceException.PERM_DENIED("can not modify mail quota");
+    }
 }

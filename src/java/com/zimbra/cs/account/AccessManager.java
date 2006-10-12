@@ -48,7 +48,7 @@ public abstract class AccessManager {
 
     public abstract boolean canAccessAccount(AuthToken at, Account target) throws ServiceException;
 
-    /** Returns whether the specified account's credentials are sufficient
+    /** @return Returns whether the specified account's credentials are sufficient
      *  to perform operations on the target account.  <i>Note: This method
      *  checks only for admin access, and passing the same account for
      *  <code>credentials</code> and <code>target</code> will not succeed
@@ -62,4 +62,6 @@ public abstract class AccessManager {
     public abstract boolean canAccessDomain(AuthToken at, Domain domain) throws ServiceException;
 
     public abstract boolean canAccessEmail(AuthToken at, String email) throws ServiceException;
+
+    public abstract boolean canModifyMailQuota(AuthToken at, Account targetAccount, long mailQuota) throws ServiceException;
 }

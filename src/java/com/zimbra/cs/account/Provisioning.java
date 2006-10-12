@@ -489,6 +489,11 @@ public abstract class Provisioning {
      * the quota (in bytes) of a mailbox.
      */
     public static final String A_zimbraMailQuota = "zimbraMailQuota";
+
+    /**
+     * maximum quota a domain admin can assign
+     */
+    public static final String A_zimbraDomainAdminMaxMailQuota = "zimbraDomainAdminMaxMailQuota";    
     
     /**
      * the auto-generated sieve script

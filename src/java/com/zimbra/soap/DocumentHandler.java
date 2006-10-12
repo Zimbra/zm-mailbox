@@ -88,12 +88,12 @@ public abstract class DocumentHandler {
         return mbox; 
     }
 
-    /** Returns whether the command's caller must be authenticated. */
+    /** @return Returns whether the command's caller must be authenticated. */
     public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
 
-    /** Returns whether this is an administrative command (and thus requires
+    /** @return Returns whether this is an administrative command (and thus requires
      *  a valid admin auth token). */
     public boolean needsAdminAuth(Map<String, Object> context) {
         return false;
@@ -119,6 +119,10 @@ public abstract class DocumentHandler {
         return canAccessDomain(zsc, domain.getName());
     }
 
+    public boolean canModifyMailQuota(ZimbraSoapContext zsc, Account target, long mailQuota) throws ServiceException {
+        return AccessManager.getInstance().canModifyMailQuota(zsc.getAuthToken(), target, mailQuota);
+    }
+
     public boolean canAccessEmail(ZimbraSoapContext zsc, String email) throws ServiceException {
         String parts[] = EmailUtil.getLocalPartAndDomain(email);
         if (parts == null)
@@ -127,25 +131,25 @@ public abstract class DocumentHandler {
     }
 
     /**
-     * returns true if domain admin auth is sufficient to run this command. This should be overriden only on admin
+     * @return returns true if domain admin auth is sufficient to run this command. This should be overriden only on admin
      * commands that can be run in a restricted "domain admin" mode.
      */
     public boolean domainAuthSufficient(Map<String, Object> context) {
         return false; 
     }
 
-    /** Returns whether the command is in the administration command set. */
+    /** @return Returns whether the command is in the administration command set. */
     public boolean isAdminCommand() {
         return false;
     }
 
-    /** Returns <code>true</code> if the operation is read-only, or
+    /** @return Returns <code>true</code> if the operation is read-only, or
      *  <code>false</code> if the operation causes backend state change. */
     public boolean isReadOnly() {
         return true;
     }
 
-    /** Returns whether the client making the SOAP request is localhost. */
+    /** @return Returns whether the client making the SOAP request is localhost. */
     protected boolean clientIsLocal(Map<String, Object> context) {
         HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         if (req == null) return true;
