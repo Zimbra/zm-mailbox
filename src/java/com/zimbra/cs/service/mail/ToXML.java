@@ -47,6 +47,8 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.html.HtmlDefang;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Appointment.Instance;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -434,24 +436,31 @@ public class ToXML {
     }
 
 
-    public static Element encodeConversation(Element parent, ZimbraSoapContext lc, Conversation conv) throws ServiceException {
+    public static Element encodeConversation(Element parent, ZimbraSoapContext lc, Conversation conv, SearchParams params) throws ServiceException {
         int fields = NOTIFY_FIELDS;
         Mailbox mbox = conv.getMailbox();
         EmailElementCache eecache = new EmailElementCache();
         Element c = encodeConversationCommon(parent, lc, conv, fields);
 
+        ExpandResults expand = params.getFetchFirst();
         List<Message> messages = mbox.getMessagesByConversation(lc.getOperationContext(), conv.getId());
         for (Message msg : messages) {
             if (msg.isTagged(mbox.mDeletedFlag))
                 continue;
-            Element m = c.addElement(MailService.E_MSG);
-            m.addAttribute(MailService.A_ID, lc.formatItemId(msg));
-            m.addAttribute(MailService.A_DATE, msg.getDate());
-            m.addAttribute(MailService.A_SIZE, msg.getSize());
-            m.addAttribute(MailService.A_FOLDER, lc.formatItemId(msg.getFolderId()));
-            recordItemTags(m, msg, fields);
-            m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
-            eecache.makeEmail(m, msg.getSender(), EmailElementCache.EMAIL_TYPE_FROM, null);
+            if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL) {
+                encodeMessageAsMP(c, lc, msg, null, params.getWantHtml(), false);
+                if (expand == ExpandResults.FIRST)
+                    expand = ExpandResults.NONE;
+            } else {
+                Element m = c.addElement(MailService.E_MSG);
+                m.addAttribute(MailService.A_ID, lc.formatItemId(msg));
+                m.addAttribute(MailService.A_DATE, msg.getDate());
+                m.addAttribute(MailService.A_SIZE, msg.getSize());
+                m.addAttribute(MailService.A_FOLDER, lc.formatItemId(msg.getFolderId()));
+                recordItemTags(m, msg, fields);
+                m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
+                eecache.makeEmail(m, msg.getSender(), EmailElementCache.EMAIL_TYPE_FROM, null);
+            }
         }
         return c;
     }

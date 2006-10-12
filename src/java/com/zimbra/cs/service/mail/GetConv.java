@@ -30,6 +30,8 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -46,21 +48,28 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetConv extends MailDocumentHandler  {
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(lc);
-        Mailbox.OperationContext octxt = lc.getOperationContext();
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        Mailbox.OperationContext octxt = zsc.getOperationContext();
         Session session = getSession(context);
         
         Element econv = request.getElement(MailService.E_CONV);
         int id = (int) econv.getAttributeLong(MailService.A_ID);
 
+        SearchParams params = new SearchParams();
+        params.setFetchFirst(ExpandResults.get(econv.getAttribute(MailService.A_FETCH, null)));
+        if (params.getFetchFirst() != ExpandResults.NONE) {
+            params.setWantHtml(econv.getAttributeBool(MailService.A_WANT_HTML, false));
+//            params.setMarkRead(econv.getAttributeBool(MailService.A_MARK_READ, false));
+        }
+
         GetConversationByIdOperation op = new GetConversationByIdOperation(session, octxt, mbox, Requester.SOAP, id);
         op.schedule();
         Conversation conv = op.getResult();
 
-        Element response = lc.createElement(MailService.GET_CONV_RESPONSE);
+        Element response = zsc.createElement(MailService.GET_CONV_RESPONSE);
         if (conv != null)
-        	ToXML.encodeConversation(response, lc, conv);
+        	ToXML.encodeConversation(response, zsc, conv, params);
         else
             throw MailServiceException.NO_SUCH_CONV(id);
         return response;

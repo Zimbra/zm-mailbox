@@ -38,6 +38,7 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -182,11 +183,14 @@ public class SearchConv extends Search {
             // Okay, we've built the matched[] array.  Now iterate through all the messages, and put the message
             // or the MATCHED entry into the result
             //
-            boolean inline = params.getFetchFirst();
-            for (int i = offset; i < offset+iterLen; i++) {
+            ExpandResults expand = params.getFetchFirst();
+            if (expand == ExpandResults.ALL)
+                expand = ExpandResults.NONE;      // "all" is not a valid value for SearchConv...
+            for (int i = offset; i < offset + iterLen; i++) {
                 if (matched[i-offset] != null) {
-                    addMessageHit(zc, response, (MessageHit) matched[i-offset], eecache, inline, params);
-                    inline = false;
+                    addMessageHit(zc, response, (MessageHit) matched[i-offset], eecache, expand != ExpandResults.NONE, params);
+                    if (expand == ExpandResults.FIRST)
+                        expand = ExpandResults.NONE;
                 } else {
                     addMessageHit(zc, response, msgs.get(i), eecache, params);
                 }

@@ -53,8 +53,25 @@ import com.zimbra.cs.service.util.ItemId;
  *   -- sortByStr (sets sortBy value)
  *
  */
-public final class SearchParams 
-{
+public final class SearchParams {
+
+    public enum ExpandResults {
+        NONE, FIRST, HITS, ALL;
+
+        public static ExpandResults get(String value) {
+            if (value == null)
+                return NONE;
+            value = value.toUpperCase();
+            try {
+                return valueOf(value);
+            } catch (IllegalArgumentException iae) {
+                if (value.equals("1") || value.equals("TRUE"))
+                    return FIRST;
+                return NONE;
+            }
+        }
+    };
+
     public int getLimit() { return mLimit; }
     public int getOffset() { return mOffset; }
     public String getQueryStr() { return mQueryStr; }
@@ -62,7 +79,7 @@ public final class SearchParams
     public byte[] getTypes() { return types; }
     public String getSortByStr() { return mSortByStr; }
     public MailboxIndex.SortBy getSortBy() { return mSortBy; }
-    public boolean getFetchFirst() { return mFetchFirst; }
+    public ExpandResults getFetchFirst() { return mFetchFirst; }
     public boolean getMarkRead() { return mMarkRead; }
     public boolean getWantHtml() { return mWantHtml; }
     public OutputParticipants getWantRecipients() { return mRecipients ? OutputParticipants.PUT_RECIPIENTS : OutputParticipants.PUT_SENDERS; }
@@ -99,7 +116,7 @@ public final class SearchParams
         mSortBy = sortBy;
         mSortByStr = mSortBy.toString(); 
     }
-    public void setSortByStr(String sortByStr) throws ServiceException { 
+    public void setSortByStr(String sortByStr) { 
         mSortByStr = sortByStr;
         mSortBy = MailboxIndex.SortBy.lookup(sortByStr);
         if (mSortBy == null) {
@@ -107,7 +124,7 @@ public final class SearchParams
             mSortByStr = mSortBy.toString();
         }
     }
-    public void setFetchFirst(boolean fetch) { mFetchFirst = fetch; }
+    public void setFetchFirst(ExpandResults fetch) { mFetchFirst = fetch; }
     public void setMarkRead(boolean read) { mMarkRead = read; }
     public void setWantHtml(boolean html) { mWantHtml = html; }
     public void setWantRecipients(boolean recips) { mRecipients = recips; }
@@ -136,7 +153,7 @@ public final class SearchParams
     private String mQueryStr;
     private int mOffset;
     private int mLimit;
-    private boolean mFetchFirst;
+    private ExpandResults mFetchFirst;
     private boolean mMarkRead;
     private boolean mWantHtml;
     private boolean mRecipients;
