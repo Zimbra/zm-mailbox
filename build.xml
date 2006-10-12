@@ -36,33 +36,17 @@
 	<property name="generated.java.dir" location="${build.dir}/generated/src/java" />
 	<property name="warfile" location="${build.dir}/service.war" />
 	<property name="jarfile" location="${build.dir}/zimbrastore.jar" />
-	<property name="common.dir" location="../ZimbraCommon" />
-	<property name="common.classes.dir" location="${common.dir}/build/classes" />
-	<property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar" />
-	<property name="common.jars.dir" location="${common.dir}/jars" />
 	
 	<property name="jars.dir" location="jars" />
 	<property name="lib.dir" location="lib" />
 	<property name="src.dir" location="src" />
 	<property name="src.java.dir" location="${src.dir}/java" />
 	<property name="config.dir" location="conf" />
-	<property name="zimlet.dir" location="../Zimlet/build/dist" />
-	<property file="${zimlet.dir}/build.properties" />
 
 	<property name="deploy.war" value="${warfile}" />
 	<property name="deploy.host" value="localhost" />
 	<property name="deploy.port" value="7070" />
 
-	<condition property="deploy.dir" value="${env.DEPLOY_DIR}">
-	    <isset property="env.DEPLOY_DIR" />
-	</condition>	
-
-	<condition property="deploy.dir" value="/opt/zimbra/tomcat/webapps">
-	  <not><isset property="env.DEPLOY_DIR"/></not>
-	</condition>	
-	
-	<property name="deploy.path" value="/service" />
-		
 	<property name="lmtp.host" value="localhost" />
 	<property name="lmtp.port" value="7025" />
 	<property name="lmtpinject.numthreads" value="2" />
@@ -71,6 +55,8 @@
 	<property name="tomcat.home.dir" location="${zimbra.home.dir}/tomcat" />
 
 	<property name="ical4j.jar" value="ical4j-0.9.16-patched.jar" />
+
+	<property name="zimlets" value="com_zimbra_phone,com_zimbra_url,com_zimbra_email,com_zimbra_date"/>
 
 	<property name="wiki.user.default" value="wiki" /><!-- global wiki account -->
 
@@ -100,14 +86,13 @@
 
 	<taskdef resource="net/sf/antcontrib/antlib.xml">
 		<classpath>
-			<pathelement location="${common.jars.dir}/ant-contrib-1.0b1.jar"/>
+			<pathelement location="jars/ant-contrib-1.0b1.jar"/>
 		</classpath>
 	</taskdef>
 
 	<path id="class.path">
-		<pathelement location="${common.classes.dir}" />
 		<pathelement location="${build.classes.dir}" />
-		<fileset dir="${common.jars.dir}">
+		<fileset dir="${jars.dir}">
 			<include name="**/*.jar" />
 		</fileset>
 	</path>
@@ -127,7 +112,7 @@
 		<include name="**/*.java" />
 	</fileset>
 
-	<target name="make-dirs">
+	<target name="make-dirs" description="Create an install directory tree under specified ${base.dir}">
 		<!-- take advantage of the fact that mkdir uses File.mkdirs() and creates inbetween dirs -->
 		<echo>Creating dirs under ${base.dir}</echo>
 		<mkdir dir="${base.dir}/${slapd.conf.dir}"/>
@@ -143,12 +128,14 @@
 		<mkdir dir="${base.dir}/tomcat/conf"/>
 		<mkdir dir="${base.dir}/tomcat/webapps"/>
 		<mkdir dir="${base.dir}/wiki"/>
+		<mkdir dir="${base.dir}/zimlets"/>
 	</target>
 
 	<target name="build-init">
 		<mkdir dir="${build.classes.dir}"/>
 		<mkdir dir="${generated.java.dir}"/>
 		<mkdir dir="${build.dir}/wiki"/>
+		<mkdir dir="${build.dir}/zimlets"/>
 		<mkdir dir="${build.dir}/data"/>
 		<antcall target="make-dirs"><param name="base.dir" value="${dist.dir}"/></antcall>
 	</target>
@@ -254,8 +241,7 @@
 		<copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/amavisd.schema"/>
 	</target>
 
-	<target name="compile" depends="build-init">
-		<ant dir="${common.dir}" target="jar" inheritAll="false" />
+	<target name="compile" depends="build-init" description="Compiles the source code">
 		<javac destdir="${build.classes.dir}" debug="true" classpathref="class.path">
 			<src refid="all.java.path" />
 		</javac>
@@ -265,7 +251,7 @@
 		</java>
 	</target>
 
-	<target name="jar" depends="compile">
+	<target name="jar" depends="compile" description="Creates the jar file">
 		<echo>Hostname: ${zimbra.server.hostname}</echo>
 		<jar destfile="${jarfile}" basedir="${build.classes.dir}" />
 		<antcall target="generate-ldap-config"/>
@@ -282,15 +268,14 @@
 	     which can be redeployed. Please copy
 	     {mail,activation,zimbra-native}.jar to
 	     $TOMCAT\common\lib -->
-	<property name="war.exclude" value="${ical4j.jar},servlet-api.jar,jsp-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar"/>
+	<property name="war.exclude" value="${ical4j.jar},servlet-api.jar,mail.jar,activation.jar,zimbra-native.jar,KeyView.jar"/>
 
 	<target name="war" depends="jar">
 		<echo>war.exclude=${war.exclude}</echo>
 		<war warfile="${warfile}" webxml="${config.dir}/web.xml${production.suffix}">
 			<fileset dir="WebRoot"/>
-			<lib file="${common.jarfile}" />
 			<lib file="${jarfile}" />
-			<lib dir="${common.jars.dir}" includes="*.jar" excludes="${war.exclude}" />
+			<lib dir="${jars.dir}" includes="*.jar" excludes="${war.exclude}" />
 			<classes dir="${config.dir}" includes="sieveConfig.xml" />
 		</war>
 	</target>
@@ -308,7 +293,7 @@
 	<target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert">
 		<copy todir="${zimbra.home.dir}">
 			<fileset dir="${dist.dir}"/>
-		</copy>	
+		</copy>
 		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod><!-- ant does not preserve perms on copy -->
 	</target>
 
@@ -322,7 +307,7 @@
 		<chmod perm="a+rx"><fileset dir="${zimbra.home.dir}/bin"/><fileset dir="${zimbra.home.dir}/libexec"/></chmod>
 	</target>
 
-	<target name="dev-dist" depends="war,dev-dist-unix,choose-db-schema">
+	<target name="dev-dist" depends="war,package-zimlets,dev-dist-unix" description="Copies files into an install tree at specified ${dist.dir}">
 		<!-- bin, libexec -->
 		<copy todir="${dist.dir}/bin" overwrite="true"><fileset dir="${src.dir}/bin" excludes="*.production"/></copy>
 		<copy todir="${dist.dir}/libexec" overwrite="true"><fileset dir="${src.dir}/libexec" excludes="*.production"/></copy>
@@ -340,8 +325,7 @@
 		<fixcrlf srcdir="${dist.dir}/conf" eol="unix" includes="**" />
 
 		<!-- lib: ignore absence of DLL for windows -->
-		<copy todir="${dist.dir}/lib/jars" overwrite="true"><fileset dir="${common.jars.dir}" includes="*.jar" excludes="servlet-api.jar" /></copy>
-		<copy todir="${dist.dir}/lib/jars" file="${common.jarfile}" overwrite="true"/>
+		<copy todir="${dist.dir}/lib/jars" overwrite="true"><fileset dir="${jars.dir}" includes="*.jar" excludes="servlet-api.jar" /></copy>
 		<copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
 		<copy todir="${dist.dir}/lib/ext" overwrite="true" ><fileset dir="${lib.dir}/ext"/></copy> <!-- CHECK -->
 		
@@ -351,8 +335,8 @@
 		<copy tofile="${dist.dir}/tomcat/conf/context.xml" file="${config.dir}/tomcat-5.5/context.xml" overwrite="true"/>
 		<copy todir="${dist.dir}/tomcat/conf" file="${config.dir}/tomcat-5.5/tomcat-users.xml" overwrite="true"/>
 		<copy todir="${dist.dir}/tomcat/conf" file="${config.dir}/tomcat-5.5/web.xml" overwrite="true"/>
-		<copy todir="${dist.dir}/tomcat/common/lib" overwrite="true"><fileset dir="${common.jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar" /></copy>
-		<copy todir="${dist.dir}/tomcat/common/endorsed" file="${common.jars.dir}/zimbra-charset.jar" overwrite="true"/>
+		<copy todir="${dist.dir}/tomcat/common/lib" overwrite="true"><fileset dir="${jars.dir}" includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar" /></copy>
+		<copy todir="${dist.dir}/tomcat/common/endorsed" file="${jars.dir}/zimbra-charset.jar" overwrite="true"/>
 
 		<!-- openldap -->
 		<copy tofile="${dist.dir}/${slapd.conf.dir}/slapd.conf" file="${slapd.conf.src}" overwrite="true"/> <!-- CHECK this is ok with dev build -->
@@ -360,12 +344,12 @@
 		<copy todir="${dist.dir}/${slapd.etc.dir}/schema" overwrite="true"><fileset dir="${build.dir}/ldap-config" includes="*.schema"/></copy>
 
 		<!-- db schema -->
-		<copy todir="${dist.dir}/db" overwrite="true"><fileset dir="${src.dir}/db" includes="*.sql" excludes="db.sql,create_database.sql"/></copy>
-		<copy todir="${dist.dir}/db" overwrite="true"><fileset dir="${db.schema.dir}" includes="db.sql,create_database.sql"/></copy>
+		<copy todir="${dist.dir}/db" overwrite="true"><fileset dir="${src.dir}/db" includes="*.sql"/></copy>
 		<copy todir="${dist.dir}/db" file="${build.dir}/versions-init.sql" overwrite="true"/>
 
-		<!-- wikis -->
+		<!-- wikis, zimlets -->
 		<copy todir="${dist.dir}/wiki" overwrite="true"><fileset dir="data/wiki" includes="**"/></copy>
+		<copy todir="${dist.dir}/zimlets" overwrite="true"><fileset dir="${build.dir}/zimlets"/></copy>
 	</target>
 
 	<target name="dev-dist-unix" if="is-unix">
@@ -388,7 +372,7 @@
 
 	<target name="init" depends="stop-servers,db-init,dir-init,init-opt-zimbra,start-ldap,ldap-load" />
 
-	<target name="inject" depends="compile">
+	<target name="inject" depends="compile" description="Insert messages into the system">
 		<echo>Inserting default contacts: user1@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-f data/soap/samplecontacts.xml" />
@@ -412,21 +396,14 @@
 		</java>
 	</target>
 
-	<target name="inject-npscontacts" depends="compile">
-		<echo>Inserting NPS contacts: user4@${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.soap.SoapTestHarness" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-f data/soap/nps-contacts-orig.xml" />
-		</java>
-	</target>
-
-	<target name="import-wiki-templates">
+	<target name="import-wiki-templates" description="Import Wiki templates to the wiki account">
 		<echo>Importing Wiki templates from ${data.wiki.dir}/Template</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-l impn wiki@${zimbra.server.hostname} test123 data/wiki/Template Template" />
 		</java>
 	</target>
 
-	<target name="init-wiki">
+	<target name="init-wiki" description="Initialize the default Wiki account">
 		<echo>Initializing wiki@${zimbra.server.hostname}</echo>
 		<java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="in ${wiki.user.default}@${zimbra.server.hostname} test123 data/wiki/Template Template" />
@@ -446,7 +423,7 @@
 		</java>
 	</target>
 
-	<target name="localhost-ssl-cert">
+	<target name="localhost-ssl-cert" description="make a cert for ssl access">
 		<delete failonerror="no">
 			<fileset dir="${tomcat.home.dir}/conf" includes="keystore" />
 		</delete>
@@ -472,13 +449,14 @@
 		<echo message="If the following deletes fail, wait for your tomcat" />
 		<echo message="to stop (or stop your tomcat as the case may be)" />
 		<echo message="and try again later." />
-		<delete failonerror="no">
+		<delete>
 			<fileset dir="${zimbra.home.dir}/db" excludes="data/**"/>
 		</delete>
 		
 		<delete dir="${zimbra.home.dir}/store" />
 		<delete dir="${zimbra.home.dir}/index" />
 		<delete dir="${zimbra.home.dir}/redolog" />
+		<delete dir="${zimbra.home.dir}/repl" />
 		<delete dir="${zimbra.home.dir}/backup" />
 		<delete dir="${zimbra.home.dir}/lib/ext" />
 		<delete dir="${zimbra.home.dir}/conf/msgs" />
@@ -498,30 +476,18 @@
 		<mkdir dir="${zimbra.home.dir}/index" />
 		<mkdir dir="${zimbra.home.dir}/redolog" />
 		<mkdir dir="${zimbra.home.dir}/redolog/archive" />
+		<mkdir dir="${zimbra.home.dir}/repl" />
 		<mkdir dir="${zimbra.home.dir}/backup" />
 		<antcall target="make-dirs"><param name="base.dir" value="${zimbra.home.dir}"/></antcall>
 	</target>
 
-	<target name="choose-db-schema">
-		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path"
-			  outputproperty="LC.mbox.group.disabled" failonerror="true">
-			<arg line="-q -c conf/localconfig.xml -m nokey debug_disable_mailbox_group"/>
-		</java>
-		<condition property="db.schema.dir" value="src/db/old_schema">
-			<equals arg1="${LC.mbox.group.disabled}" arg2="true" casesensitive="false" trim="true"/>
-		</condition>
-		<condition property="db.schema.dir" value="src/db">
-			<not><isset property="db.schema.dir"/></not>
-		</condition>
-		<echo>Using database schema in ${db.schema.dir}</echo>
-	</target>
+	<target name="db-init" description="Recreate the database tables">
+		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra" classpathref="class.path" onerror="continue" keepformat="true" src="src/db/dropdb.sql" />
 
-	<target name="db-init" depends="choose-db-schema" >
-		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
-			 classpathref="class.path" onerror="continue" keepformat="true" src="src/db/dropdb.sql" />
-		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
-			 classpathref="class.path" onerror="abort" keepformat="true" src="${db.schema.dir}/db.sql" />
-		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
+		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
+			 classpathref="class.path" onerror="abort" keepformat="true" src="src/db/db.sql" />
+
+		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
 			 classpathref="class.path" onerror="abort" keepformat="false" src="${build.dir}/versions-init.sql" />
 	</target>
 
@@ -531,8 +497,8 @@
 			<arg line="gdpak ${zimbra.server.hostname}" />
 		</java>
 	</target>
-    <!-- description="run this target if you have updated the schema files in /opt/zimbra, and you have generated new ldifs" -->
-	<target name="refresh-ldap" >
+
+	<target name="refresh-ldap" description="run this target if you have updated the schema files in /opt/zimbra, and you have generated new ldifs">
 		<antcall target="stop-tomcat"/>
 		<antcall target="stop-ldap"/>
 		<sleep seconds="2"/> <!-- sometimes start occurs too fast... -->
@@ -563,7 +529,7 @@
 		<antcall target="ldap-add"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/></antcall>
 		<antcall target="ldap-add"><param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_mimehandlers.ldif"/></antcall>
 		<echo>Editing localconfig zimbra_server_hostname to be ${zimbra.server.hostname}</echo>
-		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+		<java classname="com.zimbra.cs.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-e zimbra_server_hostname=${zimbra.server.hostname}"/>
 		</java>
 		<echo>Running zmprov commands</echo>
@@ -743,11 +709,34 @@
 		</echo>
 	</target>
 
-	<target name="deploy-zimlets" if="dist.zimlet.dir">
-		<foreach target="install-zimlet" param="zimlet">
-			<path>
-				<fileset dir="${zimlet.dir}/zimlets" includes="**/*.zip"/>
-			</path>
+	<target name="reload-zimlets" depends="deploy-zimlets,restart-tomcat"/>
+
+	<target name="package-zimlets" depends="build-init,package-zimlets-core"/>
+
+	<target name="package-zimlets-core">
+		<foreach list="${zimlets}" target="package-zimlet" param="zimlet"/>
+		<!-- todo:  remove these classes from service.jar -->
+		<!-- todo2:  just use RegexHandler instead of creating custom classes -->
+		<zip destfile="${build.dir}/zimlets/com_zimbra_phone.zip" update="true">
+			<fileset dir="${build.classes.dir}" includes="**/NANPHandler.class"/>
+		</zip>
+		<zip destfile="${build.dir}/zimlets/com_zimbra_tracking.zip" update="true">
+			<fileset dir="${build.classes.dir}" includes="**/TrackingHandler.class"/>
+		</zip>
+		<zip destfile="${build.dir}/zimlets/com_zimbra_url.zip" update="true" >
+			<fileset dir="${build.classes.dir}" includes="**/URLHandler.class"/>
+		</zip>
+	</target>
+
+	<target name="package-zimlet">
+		<echo>${zimlet}</echo>
+		<zip destfile="${build.dir}/zimlets/${zimlet}.zip" update="true" >
+			<fileset dir="${config.dir}/zimlets/${zimlet}" />
+		</zip>
+	</target>
+
+	<target name="deploy-zimlets" depends="package-zimlets">
+		<foreach list="${zimlets}" target="install-zimlet" param="zimlet">
 			<param name="action" value="deploy"/>
 		</foreach>
 	</target>
@@ -757,7 +746,7 @@
 		<java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
 			<arg line="-q" />
 			<arg line="${action}" />
-			<arg file="${zimlet}" />
+			<arg file="${build.dir}/zimlets/${zimlet}.zip" />
 		</java>
 	</target>
 	
@@ -795,7 +784,7 @@
 	</target>
 
 	<!-- Tomcat service control -->
-	<target name="restart-tomcat" depends="stop-tomcat,start-tomcat" description="Restart Tomcat"/>
+	<target name="restart-tomcat" depends="stop-tomcat,start-tomcat"/>
 
 	<target name="stop-tomcat" depends="stop-tomcat-windows,stop-tomcat-unix"/>
 
@@ -833,6 +822,7 @@
 			<arg value="start" />
 		</exec>
 	</target>
-  <!-- description="Dummy Target used by project_builder to force eclipse to refresh"  -->
-	<target name="empty" />
+
+	<target name="empty" description="Dummy Target used by project_builder to force eclipse to refresh" />
+
 </project>
