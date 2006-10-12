@@ -107,15 +107,19 @@ public class IcalXmlStrMap {
     public final static String TRANSP_OPAQUE = "O";
     public final static String TRANSP_TRANSPARENT = "T";
 
-    // event/todo/journal status
+    // Even status can be TENTATIVE, CONFIRMED or CANCELLED.
+    // Todo status can be NEEDS-ACTION, COMPLETED, IN-PROCESS or CANCELLED.
+    // Journal status (not yet supported) can be DRAFT, FINAL or CANCELLED.
     public final static String STATUS_TENTATIVE = "TENT";
     public final static String STATUS_CONFIRMED = "CONF";
     public final static String STATUS_CANCELLED = "CANC";
-    // there are more values for todo and journal...
+    public final static String STATUS_NEEDS_ACTION = "NEED";
+    public final static String STATUS_COMPLETED = "COMP";
+    public final static String STATUS_IN_PROCESS = "INPR";
 
     // attendee participation status =
     //   NEeds-action, TEntative, ACcept, DEclined,
-    //   DG (delegated), COmpleted (todo), IN-process (todo)
+    //   DG (delegated), COmpleted (for todo), IN-process (for todo)
     public final static String PARTSTAT_TENTATIVE = "TE";
     public final static String PARTSTAT_NEEDS_ACTION = "NE";
     public final static String PARTSTAT_DELEGATED = "DG";
@@ -123,7 +127,7 @@ public class IcalXmlStrMap {
     public final static String PARTSTAT_COMPLETED = "CO";
     public final static String PARTSTAT_ACCEPTED = "AC";
     public final static String PARTSTAT_IN_PROCESS = "IN";
-    
+
     // attendee role
     public final static String ROLE_NON_PARTICIPANT = "NON";
     public final static String ROLE_OPT_PARTICIPANT = "OPT";
@@ -159,6 +163,9 @@ public class IcalXmlStrMap {
         sStatusMap.add(ICalTok.TENTATIVE.toString(), STATUS_TENTATIVE);
         sStatusMap.add(ICalTok.CONFIRMED.toString(), STATUS_CONFIRMED);
         sStatusMap.add(ICalTok.CANCELLED.toString(), STATUS_CANCELLED);
+        sStatusMap.add(ICalTok.CANCELLED.toString(), STATUS_NEEDS_ACTION);
+        sStatusMap.add(ICalTok.NEEDS_ACTION.toString(), STATUS_COMPLETED);
+        sStatusMap.add(ICalTok.IN_PROCESS.toString(), STATUS_IN_PROCESS);
 
         sPartStatMap.add(ICalTok.ACCEPTED.toString(), PARTSTAT_ACCEPTED);
         sPartStatMap.add(ICalTok.COMPLETED.toString(), PARTSTAT_COMPLETED);
