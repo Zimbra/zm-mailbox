@@ -960,6 +960,6 @@ public abstract class ZMailbox {
             List<String> messageIdsToAttach,
             List<SendMessagePart> messagePartsToAttach,
             List<String> contactIdsToAttach
-    );
+    ) throws ServiceException;
 
 }

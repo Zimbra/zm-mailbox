@@ -1066,8 +1066,40 @@ public class ZSoapMailbox extends ZMailbox {
         invoke(req);
     }
 
-    public SendMessageResponse SendMessage(List<ZEmailAddress> addrs, String subject, String origMessageIdHeader, String contentType, String content, String attachmentUploadId, List<String> messageIdsToAttach, List<SendMessagePart> messagePartsToAttach, List<String> contactIdsToAttach) {
-        return null;  //TODO: imlpement
+    public SendMessageResponse SendMessage(List<ZEmailAddress> addrs, String subject, String origMessageIdHeader, 
+            String contentType, String content, String attachmentUploadId, 
+            List<String> messageIdsToAttach, List<SendMessagePart> messagePartsToAttach, List<String> contactIdsToAttach) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.SEND_MSG_REQUEST);
+        for (ZEmailAddress addr : addrs) {
+            Element e = req.addElement(MailService.E_EMAIL);
+            e.addAttribute(MailService.A_TYPE, addr.getType());
+            e.addAttribute(MailService.A_ADDRESS, addr.getAddress());
+            e.addAttribute(MailService.A_PERSONAL, addr.getPersonal());
+        }
+        if (subject != null) req.addElement(MailService.E_SUBJECT).setText(subject);
+        if (origMessageIdHeader != null) req.addElement(MailService.E_IN_REPLY_TO).setText(origMessageIdHeader);
+        Element mp = req.addElement(MailService.E_MIMEPART);
+        mp.addAttribute(MailService.A_CONTENT_TYPE, contentType);
+        mp.addElement(MailService.E_CONTENT).setText(content);
+        if (attachmentUploadId != null || messageIdsToAttach != null || messagePartsToAttach != null || contactIdsToAttach != null) {
+            Element attach = req.addElement(MailService.E_ATTACH);
+            if (attachmentUploadId != null) attach.addAttribute(MailService.A_ATTACHMENT_ID, attachmentUploadId);
+            if (messageIdsToAttach != null) {
+                for (String mid: messageIdsToAttach) {
+                    attach.addElement(MailService.E_MSG).addAttribute(MailService.A_ID, mid);
+                }
+            }
+            if (messagePartsToAttach != null) {
+                for (SendMessagePart part: messagePartsToAttach) {
+                    attach.addElement(MailService.E_MIMEPART).addAttribute(MailService.A_ID, part.getMessageId()).addAttribute(MailService.A_PART, part.getPartName());    
+                }
+            }
+        }
+        Element  resp = invoke(req);
+        
+        //String id = invoke(req).getElement(MailService.E_MSG).getAttribute(MailService.A_ID);
+        //SendMessageResponse smr = new SendMessageResponse();
+        return null;
     }
 
     /*
