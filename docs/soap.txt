@@ -877,7 +877,7 @@ message-part result:
 
 -----------
 
-<SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"] [fetch="1|hits"] [html="1"] [read="1"]>
+<SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"] [fetch="1|hits|all"] [html="1"] [read="1"]>
   <query>{query-string}</query>
 </SearchConvRequest>
 
@@ -885,6 +885,7 @@ message-part result:
 
 if fetch="1" (or fetch="first"), the first matching message is expanded inline
 if fetch="hits", all matching messages are expanded inline
+if fetch="all", all messages are expanded inline
 
    SEE SearchRequest for more info
 

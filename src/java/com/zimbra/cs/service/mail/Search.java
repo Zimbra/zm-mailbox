@@ -48,7 +48,6 @@ import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Conversation;
-import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
@@ -239,7 +238,7 @@ public class Search extends MailDocumentHandler  {
         int totalNumHits = 0;
         ExpandResults expand = params.getFetchFirst();
         if (expand == ExpandResults.HITS)
-            expand = ExpandResults.NONE;      // "hits" is not a valid value for SearchConv...
+            expand = ExpandResults.NONE;      // "hits" is not a valid value for Search...
         for (ZimbraHit hit : pager.getHits()) {
 //          for (ZimbraHit hit = results.skipToHit(offset); hit != null; hit = results.getNext()) {
             if (++totalNumHits > limit) {
@@ -349,7 +348,7 @@ public class Search extends MailDocumentHandler  {
             try {
                 ArrayList<Integer> ids = new ArrayList<Integer>(1);
                 ids.add(msg.getId());
-                ItemActionOperation.TAG(zsc, null, zsc.getOperationContext(), msg.getMailbox(), Requester.SOAP, ids, MailItem.TYPE_MESSAGE, false, null, Flag.ID_FLAG_UNREAD);
+                ItemActionOperation.READ(zsc, null, zsc.getOperationContext(), msg.getMailbox(), Requester.SOAP, ids, MailItem.TYPE_MESSAGE, true, null);
             } catch (ServiceException e) {
                 mLog.warn("problem marking message as read (ignored): " + msg.getId(), e);
             }
@@ -360,8 +359,9 @@ public class Search extends MailDocumentHandler  {
             m = ToXML.encodeMessageAsMP(response, zsc, msg, null, params.getWantHtml(), true);
             if (!msg.getFragment().equals(""))
                 m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
-        } else
+        } else {
             m = ToXML.encodeMessageSummary(response, zsc, msg, params.getWantRecipients());
+        }
         if (mh.getScore() != 0)
             m.addAttribute(MailService.A_SCORE, mh.getScore());
 
@@ -382,8 +382,28 @@ public class Search extends MailDocumentHandler  {
         return m;
     }
 
-    protected Element addMessageHit(ZimbraSoapContext zsc, Element response, Message msg, EmailElementCache eecache, SearchParams params) {
-        Element m = ToXML.encodeMessageSummary(response, zsc, msg, params.getWantRecipients());
+    protected Element addMessageMiss(ZimbraSoapContext zsc, Element response, Message msg, EmailElementCache eecache, boolean inline, SearchParams params)
+    throws ServiceException {
+        // for bug 7568, mark-as-read must happen before the response is encoded.
+        if (inline && msg.isUnread() && params.getMarkRead()) {
+            // Mark the message as READ          
+            try {
+                ArrayList<Integer> ids = new ArrayList<Integer>(1);
+                ids.add(msg.getId());
+                ItemActionOperation.READ(zsc, null, zsc.getOperationContext(), msg.getMailbox(), Requester.SOAP, ids, MailItem.TYPE_MESSAGE, true, null);
+            } catch (ServiceException e) {
+                mLog.warn("problem marking message as read (ignored): " + msg.getId(), e);
+            }
+        }
+
+        Element m;
+        if (inline) {
+            m = ToXML.encodeMessageAsMP(response, zsc, msg, null, params.getWantHtml(), true);
+            if (!msg.getFragment().equals(""))
+                m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
+        } else {
+            m = ToXML.encodeMessageSummary(response, zsc, msg, params.getWantRecipients());
+        }
         return m;
     }
 

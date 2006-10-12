@@ -67,13 +67,9 @@ public class SearchConv extends Search {
         Mailbox.OperationContext octxt = zc.getOperationContext();
         Session session = getSession(context);
 
+        // FIXME: should proxy if conversation is a qualified ID in another mailbox
+        int cid = (int) request.getAttributeLong(MailService.A_CONV_ID);
         SearchParams params = parseCommonParameters(request, zc);
-
-        String cidStr = request.getAttribute(MailService.A_CONV_ID);
-        int cid = 0;
-        try {
-            cid = Integer.parseInt(cidStr);
-        } catch(NumberFormatException e) {}
 
         //
         // append (conv:(convid)) onto the beginning of the queryStr
@@ -107,9 +103,10 @@ public class SearchConv extends Search {
             if (conv.isTagged(mbox.mDeletedFlag)) {
                 List<Message> raw = msgs;
                 msgs = new ArrayList<Message>();
-                for (Message msg : raw)
+                for (Message msg : raw) {
                     if (!msg.isTagged(mbox.mDeletedFlag))
                         msgs.add(msg);
+                }
             }
 
             Element retVal = putHits(zc, response, msgs, results, params);
@@ -152,7 +149,6 @@ public class SearchConv extends Search {
         }
 
         if (iterLen > 0) {
-
             //
             // Array of ZimbraHit ptrs for matches, 1 entry for every message we might return from conv.
             // NULL means no ZimbraHit presumably b/c the message didn't match the search
@@ -160,9 +156,6 @@ public class SearchConv extends Search {
             // ***Note that the match for msgs[i] is matched[i-offset]!!!!
             //
             ZimbraHit matched[] = new ZimbraHit[iterLen];
-            for (int i = 0; i < matched.length; i++) {
-                matched[i] = null;
-            }
 
             //
             // Foreach hit, see if the hit message is in msgs[] (list of msgs in this conv), and if so 
@@ -171,7 +164,7 @@ public class SearchConv extends Search {
                 for (ZimbraHit curHit = results.getFirstHit(); curHit != null; curHit = results.getNext()) {
                     // we only bother checking the messages between offset and offset+iterLen, since only they
                     // are getting returned.
-                    for (int i = offset; i < offset+iterLen; i++) {
+                    for (int i = offset; i < offset + iterLen; i++) {
                         if (curHit.getItemId() == msgs.get(i).getId()) {
                             matched[i-offset] = curHit;
                             continue HitIter; 
@@ -184,15 +177,13 @@ public class SearchConv extends Search {
             // or the MATCHED entry into the result
             //
             ExpandResults expand = params.getFetchFirst();
-            if (expand == ExpandResults.ALL)
-                expand = ExpandResults.NONE;      // "all" is not a valid value for SearchConv...
             for (int i = offset; i < offset + iterLen; i++) {
                 if (matched[i-offset] != null) {
                     addMessageHit(zc, response, (MessageHit) matched[i-offset], eecache, expand != ExpandResults.NONE, params);
                     if (expand == ExpandResults.FIRST)
                         expand = ExpandResults.NONE;
                 } else {
-                    addMessageHit(zc, response, msgs.get(i), eecache, params);
+                    addMessageMiss(zc, response, msgs.get(i), eecache, expand == ExpandResults.ALL, params);
                 }
             }
         }
@@ -201,5 +192,4 @@ public class SearchConv extends Search {
 
         return response;
     }
-
 }
