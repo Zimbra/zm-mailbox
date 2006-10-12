@@ -361,6 +361,7 @@ public abstract class Element {
 
 
     public static class ContainerException extends RuntimeException {
+        private static final long serialVersionUID = -5884422477180821199L;
         public ContainerException(String message)  { super(message); }
     }
 
@@ -708,7 +709,7 @@ public abstract class Element {
                 for (Iterator it = mAttributes.entrySet().iterator(); it.hasNext(); index++) {
                     indent(sb, indent, true);
                     Map.Entry attr = (Map.Entry) it.next();
-                    sb.append(StringUtil.jsEncodeKey((String) attr.getKey())).append(indent >= 0 ? ": " : ":");
+                    sb.append('"').append(attr.getKey()).append(indent >= 0 ? "\": " : "\":");
 
                     Object value = attr.getValue();
                     if (value instanceof String)                  sb.append('"').append(StringUtil.jsEncode(value)).append('"');
