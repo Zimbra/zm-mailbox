@@ -90,7 +90,7 @@ public abstract class ZMailbox {
         public AccountBy getAccountBy() { return mAccountBy; }
         public void setAccountBy(AccountBy accountBy) { mAccountBy = accountBy; }
 
-        public String getTargetAccount() { return mAccount; }
+        public String getTargetAccount() { return mTargetAccount; }
         public void setTargetAccount(String targetAccount) { mTargetAccount = targetAccount; }
 
         public AccountBy getTaretAccountBy() { return mTargetAccountBy; }
@@ -892,4 +892,12 @@ public abstract class ZMailbox {
      * @throws ServiceException on error
      */
     public abstract void iCalReply(String ical) throws ServiceException;
+
+    public static class SendMessageResponse {
+
+    }
+
+    public abstract SendMessageResponse SendMessage();
+
+
 }
