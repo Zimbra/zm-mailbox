@@ -34,9 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -403,17 +401,6 @@ public class StringUtil {
         }
         return false;
     }
-    
-    private static final String A_NAMESPACE = "_jsns";
-    
-    private static final HashSet<String> RESERVED_KEYWORDS = new HashSet<String>(Arrays.asList(new String[] {
-            A_NAMESPACE, "abstract", "boolean", "break", "byte", "case", "catch", "char", "class", "continue",
-            "const", "debugger", "default", "delete", "do", "double", "else", "extends", "enum", "export", 
-            "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in",
-            "instanceOf", "int", "interface", "label", "long", "native", "new", "null", "package", "private",
-            "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this",
-            "throw", "throws", "transient", "true", "try", "typeof", "var", "void", "volatile", "while", "with"
-    }));
 
     private static final String[] JS_CHAR_ENCODINGS = {
         "\\u0000", "\\u0001", "\\u0002", "\\u0003", "\\u0004", "\\u0005", "\\u0006", "\\u0007",
@@ -446,30 +433,7 @@ public class StringUtil {
         return (sb == null ? str : sb.append(str.substring(last, i)).toString());
     }
 
-    public static String jsEncodeKey(String pname) {
-        if (RESERVED_KEYWORDS.contains(pname))
-            return '"' + pname + '"';
-        for (int i = 0; i < pname.length(); i++) {
-            char c = pname.charAt(i);
-            if (c == '$' || c == '_' || (c >= 'a' && c <= 'z') || c >= 'A' && c <= 'Z')
-                continue;
-            switch (Character.getType(c)) {
-                // note: not allowing unquoted escape sequences for now...
-                case Character.UPPERCASE_LETTER:
-                case Character.LOWERCASE_LETTER:
-                case Character.TITLECASE_LETTER:
-                case Character.MODIFIER_LETTER:
-                case Character.OTHER_LETTER:
-                case Character.LETTER_NUMBER:
-                    continue;
-                case Character.NON_SPACING_MARK:
-                case Character.COMBINING_SPACING_MARK:
-                case Character.DECIMAL_DIGIT_NUMBER:
-                case Character.CONNECTOR_PUNCTUATION:
-                    if (i > 0)  continue;
-            }
-            return '"' + pname + '"';
-        }
-        return pname;
+    public static String jsEncodeKey(String key) {
+        return '"' + key + '"';
     }
 }
