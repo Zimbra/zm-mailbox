@@ -368,6 +368,9 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
      ...
    </zimlets>
    <mailURL>{mail-url}</mailURL>+
+   <identities>
+     <identity {identity attributes} />*
+   </identities>
    [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
  
@@ -387,7 +390,14 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
 
   license attribute is pertinent to the Network edition only.  this attribute is 
   present only when the installed license is NOT ok.
-  
+
+  {identity attributes} : 
+  		name, id, isDefault, sendFromDisplay sendFromAddress,
+  		setReplyTo, setReplyToDisplay, setReplyToAddress, useSignature, signature,
+  		useWhenSentTo, whenSentToAddresses, useWhenInFolders, whenInFolderIds,
+  		useDefaultSettings, sendBccTo, saveCopyIn, applyTag, replyFormat,
+  		whenReplying, whenForwarding, placeSignature, prefixWidth
+    
 ----------------------------
 
 <GetAccountInfoRequest>
@@ -1651,3 +1661,21 @@ interface is available or not.
 
 Returns all locales defined in the system.  This is the same list returned by
 java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
+
+---------
+
+<IdentityActionRequest>
+  <action op="create|delete|update" [id="{itemid}"]>
+  	[<identity {identity attributes} />]
+  </action>
+</IdentityActionRequest>
+
+  - id attribute is required for delete and update, but not required for create.
+  
+  - if op="create|update", the caller can specify the identity attributes
+  	in the enclosed identity element.
+
+<IdentityActionResponse>
+  <action op="create|delete|update" id="..."/> <!-- iff op was successful -->
+</IdentityActionResponse>
+

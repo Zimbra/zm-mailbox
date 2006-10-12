@@ -111,6 +111,8 @@ public class AccountService implements DocumentService {
     public static final String E_VIRTUAL_HOST = "virtualHost";
     public static final String E_SKIN = "skin";
     public static final String E_LICENSE = "license";
+    public static final String E_IDENTITIES = "identities";
+    public static final String E_IDENTITY = "identity";
 
     public static final String A_N = "n";
     public static final String A_NAME = "name";

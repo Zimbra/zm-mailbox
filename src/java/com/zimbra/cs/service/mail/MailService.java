@@ -172,6 +172,10 @@ public class MailService implements DocumentService {
     public static final QName WIKI_ACTION_REQUEST = QName.get("WikiActionRequest", NAMESPACE);
     public static final QName WIKI_ACTION_RESPONSE = QName.get("WikiActionResponse", NAMESPACE);
 
+    // identities
+    public static final QName IDENTITY_ACTION_REQUEST = QName.get("IdentityActionRequest", NAMESPACE);
+    public static final QName IDENTITY_ACTION_RESPONSE = QName.get("IdentityActionResponse", NAMESPACE);
+    
     public static final String E_MAILBOX = "mbx";
     public static final String E_CONV = "c";
     public static final String E_CURSOR = "cursor";
@@ -214,6 +218,8 @@ public class MailService implements DocumentService {
     public static final String E_CONDITION = "c";
     public static final String E_FILTER_ARG = "arg";
 
+    public static final String E_IDENTITY = "identity";
+    
     public static final String A_ZIMBRA_ID = "zid";
     public static final String A_RIGHTS = "perm";
     public static final String A_INHERIT = "inh";
@@ -554,5 +560,8 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(SAVE_WIKI_REQUEST, new com.zimbra.cs.service.wiki.SaveWiki());
         dispatcher.registerHandler(GET_WIKI_REQUEST, new com.zimbra.cs.service.wiki.GetWiki());
         dispatcher.registerHandler(WIKI_ACTION_REQUEST, new com.zimbra.cs.service.wiki.WikiAction());
+        
+        // identity
+        dispatcher.registerHandler(IDENTITY_ACTION_REQUEST, new IdentityAction());
 	}
 }

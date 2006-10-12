@@ -79,6 +79,9 @@ public class MetadataList {
     public MetadataList add(Metadata value)     { if (value != null) mList.add(value.mMap);   return this; }
     public MetadataList add(MetadataList value) { if (value != null) mList.add(value.mList);  return this; }
 
+    public void remove(int index)    { if (index < mList.size()) mList.remove(index); }
+    public void remove(Object value) { mList.remove(value); }
+    
     public String get(int index) throws ServiceException        { Object obj = mList.get(index);  return checkNull(index, obj).toString(); }
     public long getLong(int index) throws ServiceException      { return parseLong(index, get(index)); }
     public double getDouble(int index) throws ServiceException  { return parseDouble(index, get(index)); }

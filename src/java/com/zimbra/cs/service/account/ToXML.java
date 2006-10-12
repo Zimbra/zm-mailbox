@@ -26,6 +26,7 @@
 package com.zimbra.cs.service.account;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
@@ -38,6 +39,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
+import com.zimbra.cs.mailbox.Identity;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 
@@ -158,5 +160,28 @@ public class ToXML {
         e.addAttribute(AccountService.A_NAME, locale.getDisplayName(Locale.US));
         e.addAttribute(AccountService.A_ID, locale.toString());
         return e;
+    }
+    
+    public static Element encodeIdentity(Element parent, Identity identity) {
+    	Element e = parent.addElement(AccountService.E_IDENTITY);
+
+    	for (Object o : identity.getAttributeNames()) {
+    		String key = (String) o;
+    		Identity.AttributeType type = identity.getAttributeType(key);
+    		switch (type) {
+    		case string:
+    			e.addAttribute(key, identity.get(key));
+    			break;
+    		case list:
+    			List l = identity.getList(key);
+    			for (Object attr : l)
+    				e.addElement(key).setText((String)attr);
+    			break;
+    		case map:
+    			// we don't use this case yet.
+    			break;
+    		}
+    	}
+    	return e;
     }
 }

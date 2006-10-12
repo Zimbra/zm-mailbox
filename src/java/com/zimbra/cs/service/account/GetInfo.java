@@ -40,6 +40,7 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.mailbox.Identity;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.zimlet.ZimletUtil;
@@ -77,6 +78,8 @@ public class GetInfo extends AccountDocumentHandler  {
         doZimlets(zimlets, acct);
         Element props = response.addUniqueElement(AccountService.E_PROPERTIES);
         doProperties(props, acct);
+        Element ids = response.addUniqueElement(AccountService.E_IDENTITIES);
+        doIdentities(ids, acct, lc);
         GetAccountInfo.addUrls(response, acct);
         
         return response;
@@ -161,6 +164,17 @@ public class GetInfo extends AccountDocumentHandler  {
     		elem.addAttribute(AccountService.A_ZIMLET, prop.getZimletName());
     		elem.addAttribute(AccountService.A_NAME, prop.getKey());
     		elem.setText(prop.getValue());
+    	}
+    }
+    
+    private static void doIdentities(Element response, Account acct, ZimbraSoapContext lc) {
+    	try {
+    		List<Identity> identities = Identity.get(acct, lc.getOperationContext());
+    		for (Identity i : identities) {
+    			ToXML.encodeIdentity(response, i);
+    		}
+    	} catch (ServiceException se) {
+    		ZimbraLog.account.error("can't get identities", se);
     	}
     }
 }
