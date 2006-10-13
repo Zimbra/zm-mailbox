@@ -38,7 +38,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 
-public class CalendarResource extends DavResource {
+public class Calendar extends DavResource {
 
 	private static final String[] sSUPPORTED_COMPONENTS = {
 		"VEVENT", "VTODO", "VTIMEZONE", "VFREEBUSY"
@@ -46,7 +46,7 @@ public class CalendarResource extends DavResource {
 
 	private String mDisplayName;
 	
-	public CalendarResource(String path, Account acct) throws ServiceException {
+	public Calendar(String path, Account acct) throws ServiceException {
 		super(path, acct);
 		mDavCompliance.add(Compliance.one);
 		mDavCompliance.add(Compliance.two);

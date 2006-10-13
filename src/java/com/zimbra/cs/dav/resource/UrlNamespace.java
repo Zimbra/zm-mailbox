@@ -27,7 +27,7 @@ package com.zimbra.cs.dav.resource;
 import java.io.IOException;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -50,11 +50,11 @@ import com.zimbra.cs.service.ServiceException;
 
 public class UrlNamespace {
 	public static final String DAV_PATH = "/service/dav";
-	public static final String DEFAULT_APP_PATH = "/pub";
+	
+	public static final String ATTACHMENTS_PREFIX = "/attachments";
 	
 	private static class ResourceRef {
 		public String user;
-		public String app;
 		public String target;
 	}
 	
@@ -69,16 +69,8 @@ public class UrlNamespace {
 		
 		ResourceRef ref = new ResourceRef();
 		ref.user = uri.substring(1, index);
+		ref.target = uri.substring(index);
 		
-		int begin = index + 1;
-		index = uri.indexOf('/', begin);
-		if (index == -1) {
-			ref.app = uri.substring(begin);
-			ref.target = "/";
-		} else {
-			ref.app = uri.substring(begin, index);
-			ref.target = uri.substring(index);
-		}
 		ctxt.setUser(ref.user);
 		return ref;
 	}
@@ -140,11 +132,18 @@ public class UrlNamespace {
 		ResourceRef ref = parseResourcePath(ctxt);
 		if (ref == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
-		MailItem item = getMailItem(ctxt, ref.target);
-		DavResource resource = getResourceFromMailItem(ref.target, item);
+		
+		DavResource resource = null;
+		
+		if (ref.target.startsWith(ATTACHMENTS_PREFIX)) {
+			resource = getPhantomResource(ctxt, ref);
+		} else {
+			MailItem item = getMailItem(ctxt, ref.target);
+			resource = getResourceFromMailItem(ref.target, item);
+		}
 		
 		if (resource == null)
-			throw new DavException("no DAV resource for "+MailItem.getNameForType(item.getType()), HttpServletResponse.SC_NOT_FOUND, null);
+			throw new DavException("no DAV resource for "+ref.target, HttpServletResponse.SC_NOT_FOUND, null);
 		
 		return resource;
 	}
@@ -168,28 +167,9 @@ public class UrlNamespace {
 		}
 	}
 	
-	public static List<DavResource> getChildren(DavContext ctxt, DavResource parent) throws DavException {
-		ArrayList<DavResource> children = new ArrayList<DavResource>();
-		if (parent.isCollection()) {
-			MailItem parentItem = getMailItem(ctxt, parent.getUri());
-			byte itemType = parentItem.getType();
-			if (itemType != MailItem.TYPE_FOLDER && itemType != MailItem.TYPE_MOUNTPOINT)
-				return children;
-			
-			List<MailItem> items = getMailItemsInFolder(ctxt, parentItem.getId());
-			for (MailItem item : items) {
-				DavResource rs = getResourceFromMailItem(null, item);
-				if (rs != null)
-					children.add(rs);
-			}
-		}
-		return children;
-	}
-	
 	private static String getHomeUrl(String user) throws DavException {
 		StringBuilder buf = new StringBuilder();
-		buf.append(DAV_PATH).append("/");
-		buf.append(user).append(DEFAULT_APP_PATH);
+		buf.append(DAV_PATH).append("/").append(user);
 		try {
 			Provisioning prov = Provisioning.getInstance();
 			return URLUtil.getMailURL(prov.getLocalServer(), buf.toString(), true);
@@ -202,7 +182,7 @@ public class UrlNamespace {
 		return getHomeUrl(rs.getOwner()) + rs.getUri();
 	}
 	
-	private static DavResource getResourceFromMailItem(String target, MailItem item) throws DavException {
+	public static DavResource getResourceFromMailItem(String target, MailItem item) throws DavException {
 		DavResource resource = null;
 		byte itemType = item.getType();
 		
@@ -211,17 +191,67 @@ public class UrlNamespace {
 			switch (itemType) {
 			case (MailItem.TYPE_FOLDER) :
 			case (MailItem.TYPE_MOUNTPOINT) :
-				resource = new FolderResource((Folder)item, acct);
+				resource = new Collection((Folder)item, acct);
 			break;
 			case (MailItem.TYPE_WIKI) :
 			case (MailItem.TYPE_DOCUMENT) :
-				resource = new NotebookResource((Document)item, acct);
+				resource = new Notebook((Document)item, acct);
 			break;
 			}
 		} catch (ServiceException e) {
 			resource = null;
 			ZimbraLog.dav.info("cannot create DavResource", e);
 		}
+		return resource;
+	}
+	
+	private static DavResource getPhantomResource(DavContext ctxt, ResourceRef ref) throws DavException {
+		DavResource resource;
+		
+		ArrayList<String> tokens = new ArrayList<String>();
+		StringTokenizer tok = new StringTokenizer(ref.target, "/");
+		int numTokens = tok.countTokens();
+		while (tok.hasMoreTokens()) {
+			tokens.add(tok.nextToken());
+		}
+		
+		//
+		// return BrowseResource
+		//
+		// /attachments/
+		// /attachments/by-date/
+		// /attachments/by-type/
+		// /attachments/by-sender/
+
+		//
+		// return SearchResource
+		//
+		// /attachments/by-date/today/
+		// /attachments/by-type/image%2Fgif/
+		// /attachments/by-sender/zimbra.com/
+		
+		//
+		// return AttachmentResource
+		//
+		// /attachments/by-date/today/image.gif
+		// /attachments/by-type/image%2Fgif/image.gif
+		// /attachments/by-sender/zimbra.com/image.gif
+
+		switch (numTokens) {
+		case 1:
+		case 2:
+			resource = new BrowseWrapper(ref.target, ref.user, tokens);
+			break;
+		case 3:
+			resource = new SearchWrapper(ref.target, ref.user, tokens);
+			break;
+		case 4:
+			resource = new Attachment(ref.target, ref.user, tokens, ctxt);
+			break;
+		default:
+			resource = null;
+		}
+		
 		return resource;
 	}
 	
@@ -238,28 +268,6 @@ public class UrlNamespace {
 			return mbox.getItemByPath(ctxt.getOperationContext(), path, 0, false);
 		} catch (ServiceException e) {
 			throw new DavException("cannot get item", HttpServletResponse.SC_NOT_FOUND, e);
-		}
-	}
-	
-	private static List<MailItem> getMailItemsInFolder(DavContext ctxt, int fid) throws DavException {
-		try {
-			String user = ctxt.getUser();
-			Provisioning prov = Provisioning.getInstance();
-			Account account = prov.get(AccountBy.name, user);
-			if (account == null)
-				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
-
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			
-			// XXX aggregate into single call
-			List<MailItem> ret = new ArrayList<MailItem>();
-			ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_FOLDER, fid));
-			ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_MOUNTPOINT, fid));
-			ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_DOCUMENT, fid));
-			ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_WIKI, fid));
-			return ret;
-		} catch (ServiceException e) {
-			throw new DavException("cannot get items", HttpServletResponse.SC_NOT_FOUND, e);
 		}
 	}
 }

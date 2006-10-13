@@ -27,6 +27,7 @@ package com.zimbra.cs.dav.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +40,7 @@ import com.zimbra.common.util.DateUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol.Compliance;
@@ -58,7 +60,11 @@ public abstract class DavResource {
 	protected List<Compliance> mDavCompliance;
 	
 	public DavResource(String uri, Account acct) throws ServiceException {
-		setOwner(acct);
+		this(uri, getOwner(acct));
+	}
+	
+	public DavResource(String uri, String owner) {
+		mOwner = owner;
 		mProps = new HashMap<String,String>();
 		mUri = uri;
 		mDavCompliance = new ArrayList<Compliance>();
@@ -70,13 +76,14 @@ public abstract class DavResource {
 		//mDavCompliance.add(Compliance.binding);
 	}
 	
-	protected void setOwner(Account acct) throws ServiceException {
-		mOwner = acct.getName();
+	protected static String getOwner(Account acct) throws ServiceException {
+		String owner = acct.getName();
 		Provisioning prov = Provisioning.getInstance();
         Config config = prov.getConfig();
         String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
         if (defaultDomain != null && defaultDomain.equalsIgnoreCase(acct.getDomainName()))
-        	mOwner = mOwner.substring(0, mOwner.indexOf('@'));
+        	owner = owner.substring(0, owner.indexOf('@'));
+        return owner;
 	}
 	
 	public boolean equals(Object another) {
@@ -87,7 +94,7 @@ public abstract class DavResource {
 		return false;
 	}
 	
-	public List<Compliance> getCompliance() {
+	public List<Compliance> getComplianceList() {
 		return mDavCompliance;
 	}
 	
@@ -162,4 +169,8 @@ public abstract class DavResource {
 	public abstract InputStream getContent() throws IOException, DavException;
 	
 	public abstract boolean isCollection();
+	
+	public List<DavResource> getChildren(DavContext ctxt) throws DavException {
+		return Collections.emptyList();
+	}
 }

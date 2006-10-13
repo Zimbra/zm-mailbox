@@ -120,7 +120,7 @@ public abstract class DavMethod {
 	
 	protected void addComplianceHeader(DavContext ctxt, DavResource rs) throws IOException {
 		HttpServletResponse resp = ctxt.getResponse();
-		String comp = DavProtocol.getComplianceString(rs.getCompliance());
+		String comp = DavProtocol.getComplianceString(rs.getComplianceList());
 		if (comp != null)
 			resp.setHeader(DavProtocol.HEADER_DAV, comp);
 	}

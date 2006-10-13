@@ -1,0 +1,129 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ * 
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ * 
+ * The Original Code is: Zimbra Collaboration Suite Server.
+ * 
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
+ * All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.cs.dav.resource;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+import javax.mail.internet.MimeMessage;
+
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavElements;
+import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.MessageHit;
+import com.zimbra.cs.index.ZimbraHit;
+import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.MPartInfo;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.ServiceException;
+
+public class Attachment extends PhantomResource {
+
+	private byte[] mContent;
+	
+	public Attachment(String uri, String owner, long date, int contentLength) {
+		this(uri, owner, parseUri(uri));
+		setCreationDate(date);
+		setLastModifiedDate(date);
+		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(contentLength));
+	}
+	
+	public Attachment(String uri, String owner, List<String> tokens, DavContext ctxt) {
+		this(uri, owner, tokens);
+		String user = ctxt.getUser();
+		Provisioning prov = Provisioning.getInstance();
+		
+		String name = tokens.get(tokens.size()-1);
+		StringBuilder query = new StringBuilder();
+		boolean needQuotes = (name.indexOf(' ') > 0);
+		
+		// XXX filename: query won't match the attachments in winmail.dat
+		query.append("filename:");
+		if (needQuotes)
+			query.append("'");
+		query.append(name);
+		if (needQuotes)
+			query.append("'");
+		ZimbraQueryResults zqr = null;
+		try {
+			Account account = prov.get(AccountBy.name, user);
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+			// if more than one attachments with the same name, take the first one.
+			zqr = mbox.search(ctxt.getOperationContext(), query.toString(), SEARCH_TYPES, MailboxIndex.SortBy.NAME_ASCENDING, 10);
+			if (zqr.hasNext()) {
+				ZimbraHit hit = zqr.getNext();
+				if (hit instanceof MessageHit) {
+					Message message = ((MessageHit)hit).getMessage();
+					setCreationDate(message.getDate());
+					setLastModifiedDate(message.getChangeDate());
+					MimeMessage msg = message.getMimeMessage();
+					List<MPartInfo> parts = Mime.getParts(msg);
+					for (MPartInfo p : parts) {
+						String fname = p.getFilename();
+						if (name.equals(fname)) {
+							String partName = p.getPartName();
+							mContent = ByteUtil.getContent(Mime.getMimePart(msg, partName).getInputStream(), 0);
+							setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(mContent.length));
+							break;
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			ZimbraLog.dav.error("can't search for: attachment="+name, e);
+		} finally {
+			if (zqr != null)
+				try {
+					zqr.doneWithSearchResults();
+				} catch (ServiceException e) {}
+		}
+	}
+
+	public Attachment(String uri, String owner, List<String> tokens) {
+		super(uri, owner, tokens);
+	}
+	
+	@Override
+	public InputStream getContent() throws IOException, DavException {
+		return new ByteArrayInputStream(mContent);
+	}
+
+	@Override
+	public boolean isCollection() {
+		return false;
+	}
+
+}

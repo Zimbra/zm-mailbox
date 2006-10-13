@@ -30,32 +30,35 @@ import java.io.InputStream;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.service.ServiceException;
 
-public class FolderResource extends DavResource {
+public class Notebook extends DavResource {
 
-	public FolderResource(Folder f, Account acct) throws ServiceException {
-		super(getFolderPath(f.getPath()), acct);
-		setCreationDate(f.getDate());
-		setLastModifiedDate(f.getChangeDate());
-		setProperty(DavElements.P_DISPLAYNAME, f.getSubject());
-		setProperty(DavElements.P_GETCONTENTLENGTH, "0");
+	private InputStream mContent;
+
+	public Notebook(Document doc, Account acct) throws ServiceException {
+		super(doc.getPath(), acct);
+		setCreationDate(doc.getDate());
+		setLastModifiedDate(doc.getChangeDate());
+		setProperty(DavElements.P_DISPLAYNAME, doc.getSubject());
+		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(doc.getSize()));
+		setProperty(DavElements.P_GETCONTENTTYPE, doc.getContentType());
+		try {
+			mContent = doc.getRawDocument();
+		} catch (Exception e) {
+			mContent = null;
+			setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(0));
+		}
 	}
-	
-	private static String getFolderPath(String path) {
-		if (path.endsWith("/"))
-			return path;
-		return path + "/";
-	}
-	
+
 	@Override
 	public InputStream getContent() throws IOException, DavException {
-		return null;
+		return mContent;
 	}
 
 	@Override
 	public boolean isCollection() {
-		return true;
+		return false;
 	}
 }

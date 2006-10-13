@@ -36,7 +36,6 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -94,10 +93,10 @@ public class PropFind extends DavMethod {
 		Element resp = document.addElement(DavElements.E_MULTISTATUS);
 		addResourceToResponse(ctxt, resource, resp, nameOnly, requestedProps, false);
 
-		if (ctxt.getDepth() != Depth.ZERO) {
-			ZimbraLog.dav.debug("depth: "+ctxt.getDepth().name());
+		if (resource.isCollection() && ctxt.getDepth() != Depth.ZERO) {
+			//ZimbraLog.dav.debug("depth: "+ctxt.getDepth().name());
 
-			List<DavResource> children = UrlNamespace.getChildren(ctxt, resource);
+			List<DavResource> children = resource.getChildren(ctxt);
 			for (DavResource child : children)
 				addResourceToResponse(ctxt, child, resp, nameOnly, requestedProps, ctxt.getDepth() == Depth.INFINITY);
 		}
@@ -129,8 +128,8 @@ public class PropFind extends DavMethod {
 				continue;
 			}
 		}
-		if (includeChildren) {
-			List<DavResource> children = UrlNamespace.getChildren(ctxt, rs);
+		if (rs.isCollection() && includeChildren) {
+			List<DavResource> children = rs.getChildren(ctxt);
 			for (DavResource child : children)
 				addResourceToResponse(ctxt, child, top, nameOnly, requestedProps, includeChildren);
 		}

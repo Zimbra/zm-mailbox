@@ -111,7 +111,8 @@ public class DavServlet extends ZimbraServlet {
 		try {
 			method.handle(ctxt);
 		} catch (DavException e) {
-			if (e.getCause() instanceof MailServiceException.NoSuchItemException)
+			if (e.getCause() instanceof MailServiceException.NoSuchItemException ||
+					e.getStatus() == HttpServletResponse.SC_NOT_FOUND)
 				ZimbraLog.dav.debug(ctxt.getUri()+" not found");
 			else
 				ZimbraLog.dav.debug("error handling method "+method.getName(), e);
