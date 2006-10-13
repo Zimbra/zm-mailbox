@@ -39,6 +39,14 @@ class ZSoapEmailAddress implements ZEmailAddress {
     private String mPersonal;
     private String mType;
 
+    public ZSoapEmailAddress(String address, String display, String personal, String type) {
+        mAddress = address;
+        mDisplay = display;
+        mPersonal = personal;
+        mType = type;
+    }
+
+
     static ZSoapEmailAddress getAddress(Element e, Map<String, ZSoapEmailAddress> cache) throws ServiceException {
         ZSoapEmailAddress addr;
 
@@ -47,11 +55,11 @@ class ZSoapEmailAddress implements ZEmailAddress {
         if (ref != null && cache != null) {
             return cache.get(ref);
         }
-        addr = new ZSoapEmailAddress();
-        addr.mAddress = e.getAttribute(MailService.A_ADDRESS, null);
-        addr.mDisplay = e.getAttribute(MailService.A_DISPLAY, null);
-        addr.mPersonal = e.getAttribute(MailService.A_PERSONAL, null);
-        addr.mType = e.getAttribute(MailService.A_TYPE, "");
+        addr = new ZSoapEmailAddress(
+                e.getAttribute(MailService.A_ADDRESS, null),
+                e.getAttribute(MailService.A_DISPLAY, null),
+                e.getAttribute(MailService.A_PERSONAL, null),
+                e.getAttribute(MailService.A_TYPE, ""));
         
         if (cache != null && id != null) {
             cache.put(id, addr);

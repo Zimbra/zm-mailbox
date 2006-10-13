@@ -894,11 +894,11 @@ public abstract class ZMailbox {
     public abstract void iCalReply(String ical) throws ServiceException;
 
 
-    public static class SendMessageResponse {
+    public static class ZSendMessageResponse {
 
         private String mId;
 
-        public SendMessageResponse(String id) {
+        public ZSendMessageResponse(String id) {
             mId = id;
         }
 
@@ -911,11 +911,11 @@ public abstract class ZMailbox {
         }
     }
 
-    public static class SendMessagePart {
+    public static class ZSendMessagePart {
         private String mMessageId;
         private String mPartName;
 
-        public SendMessagePart(String messageId) {
+        public ZSendMessagePart(String messageId) {
             mMessageId = messageId;
         }
 
@@ -950,7 +950,7 @@ public abstract class ZMailbox {
      * @param contactIdsToAttach list of contact ids to attach to this message, or null.
      * @return SendMessageResponse. id is set in response only if message was saved to a sent folder.
      */
-    public abstract SendMessageResponse SendMessage(
+    public abstract ZSendMessageResponse sendMessage(
             List<ZEmailAddress> addrs,
             String subject,
             String origMessageIdHeader,
@@ -958,8 +958,17 @@ public abstract class ZMailbox {
             String content,
             String attachmentUploadId,
             List<String> messageIdsToAttach,
-            List<SendMessagePart> messagePartsToAttach,
+            List<ZSendMessagePart> messagePartsToAttach,
             List<String> contactIdsToAttach
     ) throws ServiceException;
 
+    /**
+     *
+     * @param addrs list of addresses to parse
+     * @param type type of addresses to create in the returned list.
+     * @see com.zimbra.cs.zclient.ZEmailAddress EMAIL_TYPE_TO, etc.
+     * @return list of ZEMailAddress obejcts.
+     * @throws ServiceException
+     */
+    public abstract List<ZEmailAddress> parseAddresses(String addrs, String type) throws ServiceException;
 }

@@ -25,18 +25,36 @@
 
 package com.zimbra.cs.zclient.soap;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.zclient.*;
+import com.zimbra.cs.zclient.ZClientException;
+import com.zimbra.cs.zclient.ZContact;
+import com.zimbra.cs.zclient.ZConversation;
+import com.zimbra.cs.zclient.ZEmailAddress;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZGetInfoResult;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.cs.zclient.ZMountpoint;
+import com.zimbra.cs.zclient.ZSearchFolder;
+import com.zimbra.cs.zclient.ZSearchParams;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
+import com.zimbra.cs.zclient.ZSearchResult;
+import com.zimbra.cs.zclient.ZTag;
 import com.zimbra.cs.zclient.ZTag.Color;
-import com.zimbra.soap.*;
+import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
+import com.zimbra.soap.SoapFaultException;
+import com.zimbra.soap.SoapHttpTransport;
+import com.zimbra.soap.SoapTransport;
+import com.zimbra.soap.ZimbraNamespace;
+import com.zimbra.soap.ZimbraSoapContext;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
@@ -50,6 +68,8 @@ import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,7 +77,11 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,7 +92,6 @@ public class ZSoapMailbox extends ZMailbox {
 
     private Map<String, ZSoapTag> mNameToTag;
     private Map<String, ZSoapItem> mIdToItem;
-    private String mName;
     private boolean mProcessedRefresh;
     private ZGetInfoResult mGetInfoResult;
     private ZSoapFolder mUserRoot;
@@ -238,8 +261,8 @@ public class ZSoapMailbox extends ZMailbox {
 
     /**
      * handle a &lt;refresh&gt; block
-     * @param refresh
-     * @throws ServiceException
+     * @param refresh refresh block element
+     * @throws ServiceException on error
      */
     private void refreshHandler(Element refresh) throws ServiceException {
         mProcessedRefresh = true;
@@ -992,6 +1015,7 @@ public class ZSoapMailbox extends ZMailbox {
         return mGetInfoResult;
     }
 
+    @SuppressWarnings({"EmptyCatchBlock"})
     @Override
     public void getRESTResource(String relativePath, OutputStream os, boolean closeOs, int msecTimeout) throws ServiceException {
         GetMethod get = null;
@@ -1019,14 +1043,15 @@ public class ZSoapMailbox extends ZMailbox {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
         } finally {
             if (is != null)
-                try { is.close(); } catch (IOException e) {}
+                try { is.close(); } catch (IOException e) { }
             if (closeOs && os != null)
-                try { os.close(); } catch (IOException e) {}            
+                try { os.close(); } catch (IOException e) { }
             if (get != null)
                 get.releaseConnection();
         }
     }
 
+    @SuppressWarnings({"EmptyCatchBlock"})
     @Override
     public void postRESTResource(String relativePath, InputStream is, boolean closeIs, long length, String contentType, int msecTimeout) throws ServiceException {
         PostMethod post = null;
@@ -1066,40 +1091,54 @@ public class ZSoapMailbox extends ZMailbox {
         invoke(req);
     }
 
-    public SendMessageResponse SendMessage(List<ZEmailAddress> addrs, String subject, String origMessageIdHeader, 
+    public ZSendMessageResponse sendMessage(List<ZEmailAddress> addrs, String subject, String origMessageIdHeader, 
             String contentType, String content, String attachmentUploadId, 
-            List<String> messageIdsToAttach, List<SendMessagePart> messagePartsToAttach, List<String> contactIdsToAttach) throws ServiceException {
+            List<String> messageIdsToAttach, List<ZSendMessagePart> messagePartsToAttach, List<String> contactIdsToAttach) throws ServiceException {
         XMLElement req = new XMLElement(MailService.SEND_MSG_REQUEST);
+        Element m = req.addElement(MailService.E_MSG);
         for (ZEmailAddress addr : addrs) {
-            Element e = req.addElement(MailService.E_EMAIL);
+            Element e = m.addElement(MailService.E_EMAIL);
             e.addAttribute(MailService.A_TYPE, addr.getType());
             e.addAttribute(MailService.A_ADDRESS, addr.getAddress());
             e.addAttribute(MailService.A_PERSONAL, addr.getPersonal());
         }
-        if (subject != null) req.addElement(MailService.E_SUBJECT).setText(subject);
-        if (origMessageIdHeader != null) req.addElement(MailService.E_IN_REPLY_TO).setText(origMessageIdHeader);
-        Element mp = req.addElement(MailService.E_MIMEPART);
+        if (subject != null) m.addElement(MailService.E_SUBJECT).setText(subject);
+        if (origMessageIdHeader != null) m.addElement(MailService.E_IN_REPLY_TO).setText(origMessageIdHeader);
+        Element mp = m.addElement(MailService.E_MIMEPART);
         mp.addAttribute(MailService.A_CONTENT_TYPE, contentType);
         mp.addElement(MailService.E_CONTENT).setText(content);
         if (attachmentUploadId != null || messageIdsToAttach != null || messagePartsToAttach != null || contactIdsToAttach != null) {
-            Element attach = req.addElement(MailService.E_ATTACH);
-            if (attachmentUploadId != null) attach.addAttribute(MailService.A_ATTACHMENT_ID, attachmentUploadId);
+            Element attach = m.addElement(MailService.E_ATTACH);
+            if (attachmentUploadId != null)
+                attach.addAttribute(MailService.A_ATTACHMENT_ID, attachmentUploadId);
             if (messageIdsToAttach != null) {
                 for (String mid: messageIdsToAttach) {
                     attach.addElement(MailService.E_MSG).addAttribute(MailService.A_ID, mid);
                 }
             }
             if (messagePartsToAttach != null) {
-                for (SendMessagePart part: messagePartsToAttach) {
+                for (ZSendMessagePart part: messagePartsToAttach) {
                     attach.addElement(MailService.E_MIMEPART).addAttribute(MailService.A_ID, part.getMessageId()).addAttribute(MailService.A_PART, part.getPartName());    
                 }
             }
         }
-        Element  resp = invoke(req);
-        
-        //String id = invoke(req).getElement(MailService.E_MSG).getAttribute(MailService.A_ID);
-        //SendMessageResponse smr = new SendMessageResponse();
-        return null;
+        Element resp = invoke(req);
+        Element msg = resp.getOptionalElement(MailService.E_MSG);
+        String id = msg == null ? null : msg.getAttribute(MailService.A_ID, null);
+        return new ZSendMessageResponse(id);
+    }
+
+    public List<ZEmailAddress> parseAddresses(String line, String type) throws ServiceException {
+        try {
+            InternetAddress[] inetAddrs = InternetAddress.parseHeader(line, false);
+            List<ZEmailAddress> result = new ArrayList<ZEmailAddress>(inetAddrs.length);
+            for (InternetAddress ia : inetAddrs) {
+                result.add(new ZSoapEmailAddress(ia.getAddress(), null, ia.getPersonal(), type));
+            }
+            return result;
+        } catch (AddressException e) {
+            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+        }
     }
 
     /*
