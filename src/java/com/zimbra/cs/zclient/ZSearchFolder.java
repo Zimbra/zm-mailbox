@@ -25,14 +25,61 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
+import com.zimbra.soap.Element;
 
-public interface ZSearchFolder extends ZFolder {
+public class ZSearchFolder extends ZFolder {
 
-    public String getQuery();
 
-    public String getTypes();
+    private String mQuery;
+    private String mTypes;
+    private SearchSortBy mSortBy;
+    
+    public ZSearchFolder(Element e, ZFolder parent, ZMailbox mailbox) throws ServiceException {
+        super(e, parent, mailbox);
+        mQuery = e.getAttribute(MailService.A_QUERY);
+        mTypes = e.getAttribute(MailService.A_SEARCH_TYPES, null);
+        try {
+            mSortBy = SearchSortBy.fromString(e.getAttribute(MailService.A_SORTBY, SearchSortBy.dateDesc.name()));
+        } catch (ServiceException se) {
+            mSortBy = SearchSortBy.dateDesc;
+        }
+    }
 
-    public SearchSortBy getSortBy();
+    public void modifyNotification(Element e, ZMailbox mbox) throws ServiceException {
+        mQuery = e.getAttribute(MailService.A_QUERY, mQuery);
+        mTypes = e.getAttribute(MailService.A_SEARCH_TYPES, mTypes);
+        try {
+            mSortBy = SearchSortBy.fromString(e.getAttribute(MailService.A_SORTBY, mSortBy.name()));
+        } catch (ServiceException se) {
+            mSortBy = SearchSortBy.dateDesc;   
+        }
+        super.modifyNotification(e, mbox);
+    }
+
+    public String toString() {
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct();
+        sb.add("query", mQuery);
+        sb.add("types", mTypes);
+        sb.add("sortBy", mSortBy.name());
+        toStringCommon(sb);
+        sb.endStruct();
+        return sb.toString();
+    }
+
+    public String getQuery() {
+        return mQuery;
+    }
+
+    public SearchSortBy getSortBy() {
+        return mSortBy;
+    }
+
+    public String getTypes() {
+        return mTypes;
+    }
     
 }

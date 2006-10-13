@@ -26,12 +26,23 @@
 package com.zimbra.cs.zclient;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.soap.Element;
 
-public interface ZContact  {
-    
+public class ZContact  {
+  
+    private String mId;
+    private String mFlags;
+    private String mFolderId;
+    private String mTagIds;
+    private String mRevision;
+    private long mMetaDataChangedDate;
+    private Map<String, String> mAttrs;
+
     public enum Attr {
 
         assistantPhone,
@@ -122,34 +133,85 @@ public interface ZContact  {
         }
         
         Flag(char flagChar) {
-            mFlagChar = flagChar;
-            
+            mFlagChar = flagChar;            
         }
     }
 
-    public String getId();
-    
-    public String getTagIds();
-    
-    public String getFlags();
-    
-    public boolean hasFlags();
-    
-    public boolean hasTags();
-    
-    public boolean isFlagged();
-    
-    public boolean hasAttachment();
-    
-    public String getFolderId();
+    public ZContact(Element e) throws ServiceException {
+        mId = e.getAttribute(MailService.A_ID);
+        mFolderId = e.getAttribute(MailService.A_FOLDER);
+        mFlags = e.getAttribute(MailService.A_FLAGS, null);
+        mTagIds = e.getAttribute(MailService.A_TAGS, null);
+        mRevision = e.getAttribute(MailService.A_REVISION, null);
+        mMetaDataChangedDate = e.getAttributeLong(MailService.A_MODIFIED_DATE, 0) * 1000;
+        mAttrs = new HashMap<String, String>();
+        for (Element a : e.listElements(MailService.E_ATTRIBUTE)) {
+            mAttrs.put(a.getAttribute(MailService.A_ATTRIBUTE_NAME), a.getText());
+        }
+    }
 
-    public String getRevision();
+    public String getFolderId() {
+        return mFolderId;
+    }
 
-    /**
-     * @return time in msecs
-     */
-    public long getMetaDataChangedDate();
-    
-    public Map<String, String> getAttrs();
+    public String getId() {
+        return mId;
+    }
+
+    public String toString() {
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct();
+        sb.add("id", mId);
+        sb.add("folder", mFolderId);
+        sb.add("flags", mFlags);
+        sb.add("tags", mTagIds);
+        sb.addDate("metaDataChangedDate", mMetaDataChangedDate);
+        sb.add("revision", mRevision);
+        sb.beginStruct("attrs");
+        for (Map.Entry<String, String> entry : mAttrs.entrySet()) {
+            sb.add(entry.getKey(), entry.getValue());
+        }
+        sb.endStruct();
+        sb.endStruct();
+        return sb.toString();
+    }
+
+    public String getFlags() {
+        return mFlags;
+    }
+
+    public Map<String, String> getAttrs() {
+        return mAttrs;
+    }
+
+    public long getMetaDataChangedDate() {
+        return mMetaDataChangedDate;
+    }
+
+    public String getRevision() {
+        return mRevision;
+    }
+
+    public String getTagIds() {
+        return mTagIds;
+    }
+
+    public boolean hasFlags() {
+        return mFlags != null && mFlags.length() > 0;        
+    }
+
+    public boolean hasTags() {
+        return mTagIds != null && mTagIds.length() > 0;
+    }
+
+    public boolean hasAttachment() {
+        return hasFlags() && mFlags.indexOf(Flag.attachment.getFlagChar()) != -1;
+    }
+
+    public boolean isFlagged() {
+        return hasFlags() && mFlags.indexOf(Flag.flagged.getFlagChar()) != -1;
+    }
+
+
 
 }

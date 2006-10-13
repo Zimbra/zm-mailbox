@@ -25,27 +25,70 @@
 
 package com.zimbra.cs.zclient;
 
-public interface ZMountpoint extends ZFolder {
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.soap.Element;
+
+public class ZMountpoint extends ZFolder {
+
+    private String mOwnerId;
+    private String mOwnerDisplayName;
+    private String mRemoteId;
     
+    public ZMountpoint(Element e, ZFolder parent, ZMailbox mailbox) throws ServiceException {
+        super(e, parent, mailbox);
+        mOwnerDisplayName = e.getAttribute(MailService.A_OWNER_NAME, null); // TODO: change back to required when DF is on main
+        mRemoteId = e.getAttribute(MailService.A_REMOTE_ID);
+        mOwnerId = e.getAttribute(MailService.A_ZIMBRA_ID);
+        mailbox.addRemoteItemIdMapping(getCanonicalRemoteId(), this);
+    }
+
+    public void modifyNotification(Element e, ZMailbox mbox) throws ServiceException {
+        mOwnerDisplayName = e.getAttribute(MailService.A_OWNER_NAME, mOwnerDisplayName);
+        mRemoteId = e.getAttribute(MailService.A_REMOTE_ID, mRemoteId);
+        mOwnerId = e.getAttribute(MailService.A_ZIMBRA_ID, mOwnerId);
+        super.modifyNotification(e, mbox);
+    }
+
+    public String toString() {
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct();
+        sb.add("ownerId", mOwnerId);
+        sb.add("ownerDisplayName", mOwnerDisplayName);
+        sb.add("remoteId", mRemoteId);
+        toStringCommon(sb);
+        sb.endStruct();
+        return sb.toString();
+    }
+
+
     /**
      * @return primary email address of the owner of the mounted resource
      */
-    public String getOwnerDisplayName();
+    public String getOwnerDisplayName() {
+        return mOwnerDisplayName;
+    }
 
     /**
      * @return zimbra id of the owner of the mounted resource
      */
-    public String getOwnerId();
+    public String getOwnerId() {
+        return mOwnerId;
+    }
 
     /**
      * @return remote folder id of the mounted folder
      */
-    public String getRemoteId();
+    public String getRemoteId() {
+        return mRemoteId;
+    }
 
     /**
      *
      * @return the canonical remote id: {owner-id}:{remote-id}
      */
-    public String getCanonicalRemoteId();
+    public String getCanonicalRemoteId() {
+        return mOwnerId+":"+mRemoteId;       
+    }
 
 }

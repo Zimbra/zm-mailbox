@@ -25,7 +25,19 @@
 
 package com.zimbra.cs.zclient;
 
-public interface ZEmailAddress {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.soap.Element;
+
+public class ZEmailAddress {
     
     public static final String EMAIL_TYPE_BCC = "b";
     public static final String EMAIL_TYPE_CC = "c";
@@ -34,28 +46,103 @@ public interface ZEmailAddress {
     public static final String EMAIL_TYPE_TO = "t";
     public static final String EMAIL_TYPE_REPLY_TO = "r";
     
+
+    private String mAddress;
+    private String mDisplay;
+    private String mPersonal;
+    private String mType;
+
+    public ZEmailAddress(String address, String display, String personal, String type) {
+        mAddress = address;
+        mDisplay = display;
+        mPersonal = personal;
+        mType = type;
+    }
+
+    static ZEmailAddress getAddress(Element e, Map<String, ZEmailAddress> cache) throws ServiceException {
+        ZEmailAddress addr;
+
+        String id = e.getAttribute(MailService.A_ID, null);
+        String ref = e.getAttribute(MailService.A_REF, null);
+        if (ref != null && cache != null) {
+            return cache.get(ref);
+        }
+        addr = new ZEmailAddress(
+                e.getAttribute(MailService.A_ADDRESS, null),
+                e.getAttribute(MailService.A_DISPLAY, null),
+                e.getAttribute(MailService.A_PERSONAL, null),
+                e.getAttribute(MailService.A_TYPE, ""));
+        
+        if (cache != null && id != null) {
+            cache.put(id, addr);
+        }
+        return addr;
+    }
+
     /**
      * (f)rom, t(o), c(c), (s)ender, (r)eply-to, b(cc). Type is only sent when an individual message message is returned. In the
      * list of conversations, all the email addresseses returned for a conversation are a subset
      * of the participants. In the list of messages in a converstation, the email addressses are
      * the senders. 
      */
-    public String getType();
+    public String getType() {
+        return mType;
+    }
 
     /**
      * the comment/name part of an address
      */
-    public String getPersonal();
+    public String getPersonal() {
+        return mPersonal;
+    }
     
     /**
      * the user@domain part of an address
      */
-    public String getAddress();
+    public String getAddress() {
+        return mAddress;
+    }
     
     /**
      * if we have personal, first word in "word1 word2" format, or last word in "word1, word2" format.
      * if no personal, take string before "@" in email-address.
      */
-    public String getDisplay();
+    public String getDisplay() {
+        return mDisplay;
+    }
     
+    ZSoapSB toString(ZSoapSB sb) {
+        sb.beginStruct();
+        sb.add("address", mAddress);
+        sb.add("display", mDisplay);
+        sb.add("personal", mPersonal);
+        sb.add("type", mType);
+        sb.endStruct();
+        return sb;
+    }
+    
+    /**
+    *
+    * @param addrs list of addresses to parse
+    * @param type type of addresses to create in the returned list.
+    * @see com.zimbra.cs.zclient.ZEmailAddress EMAIL_TYPE_TO, etc.
+    * @return list of ZEMailAddress obejcts.
+    * @throws ServiceException
+    */
+    public static List<ZEmailAddress> parseAddresses(String line, String type) throws ServiceException {
+        try {
+            InternetAddress[] inetAddrs = InternetAddress.parseHeader(line, false);
+            List<ZEmailAddress> result = new ArrayList<ZEmailAddress>(inetAddrs.length);
+            for (InternetAddress ia : inetAddrs) {
+                result.add(new ZEmailAddress(ia.getAddress(), null, ia.getPersonal(), type));
+            }
+            return result;
+        } catch (AddressException e) {
+            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+        }
+    }
+    
+    public String toString() {
+        return toString(new ZSoapSB()).toString();
+    }
 }

@@ -23,7 +23,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.zclient.soap;
+package com.zimbra.cs.zclient;
 
 import java.util.Date;
 import java.util.List;
@@ -31,29 +31,29 @@ import java.util.Map;
 
 import com.zimbra.common.util.StringUtil;
 
-class ZSoapSB {
+public class ZSoapSB {
     private StringBuilder mSb;
     private boolean mFirst;
     private boolean mInArray;
     
-    ZSoapSB() {
+    public ZSoapSB() {
         mSb = new StringBuilder();
     }
     
-    ZSoapSB beginStruct() {
+    public ZSoapSB beginStruct() {
         mSb.append("{\n");        
         mFirst = true;
         return this;
     }
     
-    ZSoapSB beginStruct(String name) {
+    public ZSoapSB beginStruct(String name) {
         checkFirst();
         mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": {\n");        
         mFirst = true;
         return this;
     }
 
-    ZSoapSB endStruct() {
+    public ZSoapSB endStruct() {
         mSb.append("\n}");
         mFirst = false;
         return this;
@@ -87,7 +87,7 @@ class ZSoapSB {
         return '"' + StringUtil.jsEncode(value) + '"';
     }
     
-    ZSoapSB add(String name, List<? extends Object> list, boolean encode, boolean showEmpty) {
+    public ZSoapSB add(String name, List<? extends Object> list, boolean encode, boolean showEmpty) {
         if (!showEmpty && (list == null || list.size() == 0)) 
             return this;
         
@@ -99,7 +99,7 @@ class ZSoapSB {
         return this;
     }
 
-    ZSoapSB add(String name, String value) {
+    public ZSoapSB add(String name, String value) {
         checkFirst();
         mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": ").append(quote(value));
         return this;
@@ -111,37 +111,37 @@ class ZSoapSB {
         return this;
     }
     
-    ZSoapSB addStruct(String name, String value) {
+    public ZSoapSB addStruct(String name, String value) {
         checkFirst();
         mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": ").append(value);        
         return this;
     }
 
-    ZSoapSB add(String name, boolean value) {
+    public ZSoapSB add(String name, boolean value) {
         checkFirst();
         mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": ").append(value);
         return this;
     }
 
-    ZSoapSB add(String name, long value) {
+    public ZSoapSB add(String name, long value) {
         checkFirst();
         mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": ").append(value);
         return this;        
     }
 
-    ZSoapSB add(String name, int value) {
+    public ZSoapSB add(String name, int value) {
         checkFirst();
         mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": ").append(value);
         return this;        
     }
 
-    ZSoapSB add(String name, float value) {
+    public ZSoapSB add(String name, float value) {
         checkFirst();
         mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": ").append(value);
         return this;        
     }
 
-    ZSoapSB addDate(String name, long value) {
+    public ZSoapSB addDate(String name, long value) {
         checkFirst();
         mSb.append(" ").append(StringUtil.jsEncode(name)).append(": ").append(value + " /* " + new Date(value) + " */");
         return this;        

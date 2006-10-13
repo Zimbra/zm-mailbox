@@ -25,9 +25,15 @@
 
 package com.zimbra.cs.zclient;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-public interface ZConversation  {
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.soap.Element;
+
+public class ZConversation implements ZItem {
 
     public enum Flag {
         unread('u'),
@@ -64,57 +70,160 @@ public interface ZConversation  {
         }
     }
 
-    /**
-     * @return conversation's id
-     */
-    public String getId();
-    
-    /**
-     * @return comma-separated list of tag ids
-     */
-    public String getTagIds();
-    
-    public String getFlags();
-    
-    public boolean hasFlags();
-    
-    public boolean isUnread();
 
-    public boolean isFlagged();
-
-    public boolean isRepliedTo();
-
-    public boolean isSentByMe();
-
-    public boolean isForwarded();
-
-    public boolean hasAttachment();
-
-    public boolean hasTags();
-
-    public String getSubject();
-    
-    public int getMessageCount();
-    
-    public List<ZMessageSummary> getMessageSummaries();    
-
-    public interface ZMessageSummary {
-
-        public String getId();
-
-        public String getFlags();
-
-        public long getSize();
-
-        public ZEmailAddress getSender();
-
-        public String getFragment();
-
-        public long getDate();
+    private String mId;
+    private String mFlags;
+    private String mSubject;
+    private String mTags;
+    private int mMessageCount;
+    private List<ZMessageSummary> mMessageSummaries;
         
-        /**
-         * @return comma-separated list of tag ids
-         */
-        public String getTagIds();
+    public ZConversation(Element e, Map<String,ZEmailAddress> cache) throws ServiceException {
+        mId = e.getAttribute(MailService.A_ID);
+        mFlags = e.getAttribute(MailService.A_FLAGS, null);
+        mTags = e.getAttribute(MailService.A_TAGS, null);
+        Element sub = e.getOptionalElement(MailService.E_SUBJECT);
+        if (sub != null) mSubject = sub.getText();        
+        mMessageCount = (int) e.getAttributeLong(MailService.A_NUM);
+        
+        mMessageSummaries = new ArrayList<ZMessageSummary>();
+        for (Element msgEl: e.listElements(MailService.E_MSG)) {
+            mMessageSummaries.add(new ZMessageSummary(msgEl, cache));
+        }        
     }
+
+    public String getId() {
+        return mId;
+    }
+
+    public String toString() {
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct();
+        sb.add("id", mId);
+        sb.add("tags", mTags);
+        sb.add("flags", mFlags);
+        sb.add("subject", mSubject);
+        sb.add("messageCount", mMessageCount);
+        sb.add("messages", mMessageSummaries, false, true);
+        sb.endStruct();
+        return sb.toString();
+    }
+
+    public String getFlags() {
+        return mFlags;
+    }
+
+    public String getSubject() {
+        return mSubject;
+    }
+
+    public String getTagIds() {
+        return mTags;
+    }
+
+    public int getMessageCount() {
+        return mMessageCount;
+    }
+
+    public List<ZMessageSummary> getMessageSummaries() {
+        return mMessageSummaries;
+    }
+    
+    public class ZMessageSummary {
+
+        private long mDate;
+        private String mFlags;
+        private String mTags;        
+        private String mFragment;
+        private String mId;
+        private ZEmailAddress mSender;
+        private long mSize;
+        
+        public ZMessageSummary(Element e, Map<String,ZEmailAddress> cache) throws ServiceException {
+            mId = e.getAttribute(MailService.A_ID);
+            mFlags = e.getAttribute(MailService.A_FLAGS, null);
+            mDate = e.getAttributeLong(MailService.A_DATE);
+            mTags = e.getAttribute(MailService.A_TAGS, null);
+            Element fr = e.getOptionalElement(MailService.E_FRAG);
+            if (fr != null) mFragment = fr.getText();        
+            mSize = e.getAttributeLong(MailService.A_SIZE);
+            Element emailEl = e.getOptionalElement(MailService.E_EMAIL);
+            if (emailEl != null) mSender = ZEmailAddress.getAddress(emailEl, cache); 
+        }
+        
+
+        public String toString() {
+            ZSoapSB sb = new ZSoapSB();
+            sb.beginStruct();
+            sb.add("id", mId);
+            sb.add("flags", mFlags);
+            sb.add("fragment", mFragment);
+            sb.add("tags", mTags);
+            sb.add("size", mSize);
+            sb.addStruct("sender", mSender.toString());
+            sb.addDate("date", mDate);
+            sb.endStruct();
+            return sb.toString();
+        }
+
+        public long getDate() {
+            return mDate;
+        }
+
+        public String getFlags() {
+            return mFlags;
+        }
+
+        public String getFragment() {
+            return mFragment;
+        }
+
+        public String getId() {
+            return mId;
+        }
+
+        public ZEmailAddress getSender() {
+            return mSender;
+        }
+
+        public long getSize() {
+            return mSize;
+        }
+
+        public String getTagIds() {
+            return mTags;
+        }              
+    }
+    
+    public boolean hasFlags() {
+        return mFlags != null && mFlags.length() > 0;
+    }
+
+    public boolean hasTags() {
+        return mTags != null && mTags.length() > 0;        
+    }
+
+    public boolean hasAttachment() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.attachment.getFlagChar()) != -1;
+    }
+
+    public boolean isFlagged() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.flagged.getFlagChar()) != -1;
+    }
+
+    public boolean isSentByMe() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.sentByMe.getFlagChar()) != -1;
+    }
+
+    public boolean isUnread() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.unread.getFlagChar()) != -1;
+    }
+
+    public boolean isForwarded() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.forwarded.getFlagChar()) != -1;
+    }
+
+    public boolean isRepliedTo() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.replied.getFlagChar()) != -1;
+    }    
 }

@@ -23,10 +23,10 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.zclient.soap;
+package com.zimbra.cs.zclient;
 
-interface ZSoapItem  {
+public interface ZItem {
 
     public String getId();
-
+    
 }

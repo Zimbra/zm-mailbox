@@ -23,19 +23,19 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.zclient.soap;
+package com.zimbra.cs.zclient;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.soap.Element;
 
-class ZSoapAuthResult {
+public class ZAuthResult {
     private String mAuthToken;
     private long mExpires;
     private long mLifetime;
     private String mRefer;
 
-    ZSoapAuthResult(Element e) throws ServiceException {
+    public ZAuthResult(Element e) throws ServiceException {
         mAuthToken = e.getElement(AccountService.E_AUTH_TOKEN).getText();
         mLifetime = e.getAttributeLong(AccountService.E_LIFETIME);
         mExpires = System.currentTimeMillis() + mLifetime;

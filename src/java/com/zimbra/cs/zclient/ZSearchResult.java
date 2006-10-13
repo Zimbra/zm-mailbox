@@ -25,28 +25,76 @@
 
 package com.zimbra.cs.zclient;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public interface ZSearchResult {
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.soap.Element;
+
+public class ZSearchResult {
+
+    private List<ZSearchHit> mHits;
+    private boolean mHasMore;
+    private String mSortBy;
+    private int mOffset;
+
+    public ZSearchResult(Element e) throws ServiceException {
+        mSortBy = e.getAttribute(MailService.A_SORTBY);
+        mHasMore = e.getAttributeBool(MailService.A_QUERY_MORE);
+        mOffset = (int) e.getAttributeLong(MailService.A_QUERY_OFFSET);
+        mHits = new ArrayList<ZSearchHit>();
+        Map<String,ZEmailAddress> cache = new HashMap<String, ZEmailAddress>();
+        for (Element h: e.listElements()) {
+            if (h.getName().equals(MailService.E_CONV)) {
+                mHits.add(new ZConversationHit(h, cache));
+            } else if (h.getName().equals(MailService.E_MSG)) {
+                mHits.add(new ZMessageHit(h, cache));
+            } else if (h.getName().equals(MailService.E_CONTACT)) {
+                mHits.add(new ZContactHit(h));
+            }
+        }
+    }
 
     /**
      * @return ZSearchHit objects from search
      */
-    public List<ZSearchHit> getHits();
+    public List<ZSearchHit> getHits() {
+        return mHits;
+    }
 
     /**
      * @return true if there are more search results on the server
      */
-    public boolean hasMore();
+    public boolean hasMore() {
+        return mHasMore;
+    }
     
     /**
      * @return the sort by value
      */
-    public String getSortBy();
+    public String getSortBy() {
+        return mSortBy;
+    }
 
     /**
      * @return offset of the search
      */
-    public int getOffset();
+    public int getOffset() {
+        return mOffset;
+    }
+
+    public String toString() {
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct();
+        sb.add("more", mHasMore);
+        sb.add("sortBy", mSortBy);
+        sb.add("offset", mOffset);
+        sb.add("hits", mHits, false, true);
+        sb.endStruct();
+        return sb.toString();
+    }
 
 }

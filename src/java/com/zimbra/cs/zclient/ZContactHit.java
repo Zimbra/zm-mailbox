@@ -25,29 +25,95 @@
 
 package com.zimbra.cs.zclient;
 
-public interface ZContactHit extends ZSearchHit {
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.soap.Element;
 
-    /**
-     * @return message's id
-     */
-    public String getId();
+public class ZContactHit implements ZSearchHit {
 
-    public String getTagIds();
+    private String mId;
+    private String mTags;
+    private String mSortField;
+    private String mFileAsStr;
+    private String mEmail, mEmail2, mEmail3;
+    private String mRevision;
+    private String mFolderId;
+    private float mScore;
+    private long mMetaDataDate;
+        
+    public ZContactHit(Element e) throws ServiceException {
+        mId = e.getAttribute(MailService.A_ID);
+        mTags = e.getAttribute(MailService.A_TAGS, null);        
+        mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);
+        mScore = (float) e.getAttributeDouble(MailService.A_SCORE, 0);
+        mFileAsStr = e.getAttribute(MailService.A_FILE_AS_STR, null);
+        mRevision = e.getAttribute(MailService.A_REVISION, null);
+        mFolderId = e.getAttribute(MailService.A_FOLDER);
+        mEmail = e.getAttribute(Contact.A_email, null);
+        mEmail2 = e.getAttribute(Contact.A_email2, null);
+        mEmail3 = e.getAttribute(Contact.A_email3, null);
+        mMetaDataDate = e.getAttributeLong(MailService.A_MODIFIED_DATE, 0) * 1000;
+    }
 
-    public String getFolderId();
+    public String toString() {
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct();
+        sb.add("id", mId);
+        sb.add("tags", mTags);
+        sb.add("sortField", mSortField);
+        sb.add("score", mScore);
+        sb.add("fileAsStr", mFileAsStr);
+        sb.add("revision", mRevision);
+        sb.add("folderId", mFolderId);
+        sb.add(Contact.A_email, mEmail);
+        sb.add(Contact.A_email2, mEmail2);
+        sb.add(Contact.A_email3, mEmail3);
+        sb.endStruct();
+        return sb.toString();
+    }
 
-    public String getRevision();
-    
-    public String getFileAsStr();
+    public String getTagIds() {
+        return mTags;
+    }
 
-    public String getEmail();
+    public String getEmail() {
+        return mEmail;
+    }
 
-    public String getEmail2();
+    public String getEmail2() {
+        return mEmail2;
+    }
 
-    public String getEmail3();
-    
-    /**
-     * @return time in msecs
-     */
-    public long getMetaDataChangedDate();
+    public String getEmail3() {
+        return mEmail3;
+    }
+
+    public String getFileAsStr() {
+        return mFileAsStr;
+    }
+
+    public String getFolderId() {
+        return mFolderId;
+    }
+
+    public String getId() {
+        return mId;
+    }
+
+    public String getRevision() {
+        return mRevision;
+    }
+
+    public float getScore() {
+        return mScore;
+    }
+
+    public String getSortFied() {
+        return mSortField;
+    }
+
+    public long getMetaDataChangedDate() {
+        return mMetaDataDate;
+    }
 }

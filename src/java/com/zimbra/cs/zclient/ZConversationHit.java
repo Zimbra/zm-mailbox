@@ -25,45 +25,134 @@
 
 package com.zimbra.cs.zclient;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.soap.Element;
 
 
-public interface ZConversationHit extends ZSearchHit {
+public class ZConversationHit implements ZSearchHit {
 
-    /**
-     * @return conversation's id
-     */
-    public String getId();
-    
-    /**
-     * @return comma-separated list of tag ids
-     */
-    public String getTagIds();
-    
-    public long getDate();
-    
-    public String getFlags();
-    
-    public boolean hasFlags();
-    
-    public boolean hasTags();
-    
-    public boolean isUnread();
+    private String mId;
+    private String mFlags;
+    private String mFragment;
+    private String mSubject;
+    private String mSortField;
+    private String mTags;
+    private float mScore;
+    private int mMessageCount;
+    private long mDate;
+    private List<String> mMessageIds;
+    private List<ZEmailAddress> mRecipients;
+        
+    public ZConversationHit(Element e, Map<String,ZEmailAddress> cache) throws ServiceException {
+        mId = e.getAttribute(MailService.A_ID);
+        mFlags = e.getAttribute(MailService.A_FLAGS, null);
+        mDate = e.getAttributeLong(MailService.A_DATE);
+        mTags = e.getAttribute(MailService.A_TAGS, null);
+        Element fr = e.getOptionalElement(MailService.E_FRAG);
+        if (fr != null) mFragment = fr.getText();
+        Element su = e.getOptionalElement(MailService.E_SUBJECT);
+        if (su != null) mSubject = su.getText();
+        mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);
+        mMessageCount = (int) e.getAttributeLong(MailService.A_NUM);
+        mScore = (float) e.getAttributeDouble(MailService.A_SCORE, 0);
+        mMessageIds = new ArrayList<String>();
+        for (Element m: e.listElements(MailService.E_MSG)) {
+            mMessageIds.add(m.getAttribute(MailService.A_ID));
+        }
+        
+        mRecipients = new ArrayList<ZEmailAddress>();
+        for (Element emailEl: e.listElements(MailService.E_EMAIL)) {
+            mRecipients.add(ZEmailAddress.getAddress(emailEl, cache));
+        }        
+    }
 
-    public boolean isFlagged();
-
-    public boolean isSentByMe();
-
-    public boolean hasAttachment();
-
-    public String getSubject();
+    public String getId() {
+        return mId;
+    }
     
-    public String getFragment();
-    
-    public int getMessageCount();
-    
-    public List<String> getMatchedMessageIds();
-    
-    public List<ZEmailAddress> getRecipients();    
+    public float getScore() {
+        return mScore;
+    }
 
+    public String toString() {
+        ZSoapSB sb = new ZSoapSB();
+        sb.beginStruct();
+        sb.add("id", mId);
+        sb.add("tags", mTags);
+        sb.add("fragment", mFragment);
+        sb.add("subject", mSubject);
+        sb.addDate("date", mDate);
+        sb.add("sortField", mSortField);
+        sb.add("messageCount", mMessageCount);
+        sb.add("messageIds", mMessageIds, true, true);
+        sb.add("recipients", mRecipients, false, true);
+        sb.endStruct();
+        return sb.toString();
+    }
+
+    public String getFlags() {
+        return mFlags;
+    }
+
+    public long getDate() {
+        return mDate;
+    }
+
+    public String getFragment() {
+        return mFragment;
+    }
+
+    public String getSortFied() {
+        return mSortField;
+    }
+
+    public String getSubject() {
+        return mSubject;
+    }
+
+    public String getTagIds() {
+        return mTags;
+    }
+    
+    public int getMessageCount() {
+        return mMessageCount;
+    }
+
+    public List<String> getMatchedMessageIds() {
+        return mMessageIds;
+    }
+
+    public List<ZEmailAddress> getRecipients() {
+        return mRecipients;
+    }
+
+    public boolean hasFlags() {
+        return mFlags != null && mFlags.length() > 0;
+    }
+
+    public boolean hasTags() {
+        return mTags != null && mTags.length() > 0;        
+    }
+
+    public boolean hasAttachment() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.attachment.getFlagChar()) != -1;
+    }
+
+    public boolean isFlagged() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.flagged.getFlagChar()) != -1;
+    }
+
+    public boolean isSentByMe() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.sentByMe.getFlagChar()) != -1;
+    }
+
+    public boolean isUnread() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.unread.getFlagChar()) != -1;
+    }
+ 
 }
