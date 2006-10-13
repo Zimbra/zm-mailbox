@@ -43,6 +43,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.LockMgr;
 import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.service.ServiceException;
 
@@ -115,6 +116,11 @@ public abstract class DavResource {
 				e.setText(mProps.get(propName));
 		}
 		
+		// protected properties
+		if (propName.equals(DavElements.P_LOCKDISCOVERY))
+			for (LockMgr.Lock lock : LockMgr.getInstance().getLocks(this))
+				e = addActiveLockElement(parent, lock);
+		
 		return e;
 	}
 	
@@ -164,6 +170,35 @@ public abstract class DavResource {
 		if (isCollection())
 			rs.addElement(DavElements.E_COLLECTION);
 		return rs;
+	}
+	
+	public Element addActiveLockElement(Element top, LockMgr.Lock l) {
+		Element lockDiscovery = top.element(DavElements.E_LOCKDISCOVERY);
+		if (lockDiscovery == null)
+			lockDiscovery = top.addElement(DavElements.E_LOCKDISCOVERY);
+		
+		Element lock = lockDiscovery.addElement(DavElements.E_ACTIVELOCK);
+		Element el = lock.addElement(DavElements.E_LOCKTYPE);
+		switch (l.type) {
+		case write:
+			el.addElement(DavElements.E_WRITE);
+		}
+		
+		el = lock.addElement(DavElements.E_LOCKSCOPE);
+		switch (l.scope) {
+		case shared:
+			el.addElement(DavElements.E_SHARED);
+			break;
+		case exclusive:
+			el.addElement(DavElements.E_EXCLUSIVE);
+			break;
+		}
+		
+		lock.addElement(DavElements.E_DEPTH).setText(Integer.toString(l.depth));
+		lock.addElement(DavElements.E_TIMEOUT).setText(l.getTimeoutStr());
+		if (l.owner != null)
+			lock.addElement(DavElements.E_OWNER).setText(l.owner);
+		return lockDiscovery;
 	}
 	
 	public abstract InputStream getContent() throws IOException, DavException;

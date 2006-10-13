@@ -36,6 +36,7 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.LockMgr;
+import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.LockMgr.LockScope;
 import com.zimbra.cs.dav.LockMgr.LockType;
 import com.zimbra.cs.dav.resource.DavResource;
@@ -51,6 +52,11 @@ public class Lock extends DavMethod {
 		if (!ctxt.hasRequestMessage()) {
 			throw new DavException("no request body", HttpServletResponse.SC_BAD_REQUEST, null);
 		}
+		
+		DavContext.Depth depth = ctxt.getDepth();
+		if (depth == Depth.ONE)
+			throw new DavException("invalid depth", HttpServletResponse.SC_BAD_REQUEST, null);
+		int d = (depth == Depth.ZERO) ? 0 : 1;
 		
 		LockMgr.LockScope scope = LockScope.shared;
 		LockMgr.LockType type = LockType.write;
@@ -83,11 +89,11 @@ public class Lock extends DavMethod {
 		
 		DavResource rs = UrlNamespace.getResource(ctxt);
 		LockMgr lockmgr = LockMgr.getInstance();
-		LockMgr.Lock lock = lockmgr.createLock(ctxt, rs, type, scope, 0);
+		LockMgr.Lock lock = lockmgr.createLock(ctxt, rs, type, scope, d);
 		Document document = org.dom4j.DocumentHelper.createDocument();
 		top = document.addElement(DavElements.E_PROP);
 		Element ld = top.addElement(DavElements.E_LOCKDISCOVERY);
-		addActiveLockElement(ld, lock);
+		rs.addActiveLockElement(ld, lock);
 		sendResponse(ctxt, document);
 	}
 }

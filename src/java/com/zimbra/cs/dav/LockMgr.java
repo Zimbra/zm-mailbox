@@ -64,7 +64,7 @@ public class LockMgr {
 		exclusive, shared
 	}
 
-	private static final int sDEFAULTTIMEOUT = 60 * 60 * 1000;
+	private static final int sDEFAULTTIMEOUT = 10 * 60 * 1000;
 	private static final String sTIMEOUTINFINITE = "Infinite";
 	private static final String sTIMEOUTSEC = "Second-";
 	
@@ -75,7 +75,7 @@ public class LockMgr {
 		}
 		public LockType type;
 		public LockScope scope;
-		public int depth;
+		public int depth;    // 0 -> 0, 1 -> infinity
 		public String owner;
 		public long expiration;
 		public String token;
@@ -108,9 +108,11 @@ public class LockMgr {
 		return locks;
 	}
 	
+	private static final String sTOKEN_PREFIX = "urn:uuid:";
+	
 	public synchronized Lock createLock(DavContext ctxt, DavResource rs, LockType type, LockScope scope, int depth) {
 		Lock l = new Lock(type, scope, depth, ctxt.getAuthAccount().getName());
-		l.token = UUID.randomUUID().toString();
+		l.token = sTOKEN_PREFIX + UUID.randomUUID().toString();
 		
 		List<String> locks = mLockedResources.get(rs);
 		if (locks == null) {
@@ -122,8 +124,11 @@ public class LockMgr {
 		return l;
 	}
 	
-	public synchronized void deleteLock(String token) {
-		if (mLocks.containsKey(token))
-			mLocks.remove(token);
+	public synchronized void deleteLock(DavContext ctxt, String token) {
+		if (mLocks.containsKey(token)) {
+			Lock l = (Lock)mLocks.get(token);
+			if (l.owner.equals(ctxt.getAuthAccount().getName()))
+				mLocks.remove(token);
+		}
 	}
 }
