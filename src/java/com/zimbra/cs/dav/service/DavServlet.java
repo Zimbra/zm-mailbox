@@ -123,7 +123,9 @@ public class DavServlet extends ZimbraServlet {
 				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		} catch (Exception e) {
 			ZimbraLog.dav.debug("error handling method "+method.getName(), e);
-			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			try {
+				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			} catch (Exception ex) {}
 		}
 	}
 }

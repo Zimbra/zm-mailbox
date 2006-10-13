@@ -43,6 +43,7 @@ public class MPartInfo {
     String mDisposition = "";
     String mFilename = "";
 	int mPartNum;
+	int mSize;
 	Object mContent; // content set to MimeMultipart or MimeMessage if it was a multipart and/or message
     boolean mIsFAInit = false;
     boolean mIsFA;
@@ -54,6 +55,7 @@ public class MPartInfo {
         sb.append("MPartInfo: {");
         sb.append("partName: ").append(mPartName).append(", ");
         sb.append("contentType: ").append(mContentType).append(", ");
+        sb.append("size: ").append(mSize).append(", ");
         sb.append("disposition: ").append(mDisposition).append(", ");
         sb.append("filename: ").append(mFilename).append(", ");
         sb.append("partNum: ").append(mPartNum).append(", ");
@@ -104,6 +106,10 @@ public class MPartInfo {
 
     public String getContentType() {
         return mContentType;
+    }
+    
+    public int getSize() {
+    	return mSize;
     }
 
     public String getContentTypeParameter(String name) {

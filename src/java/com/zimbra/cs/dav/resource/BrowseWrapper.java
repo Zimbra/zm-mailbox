@@ -154,8 +154,12 @@ public class BrowseWrapper extends PhantomResource {
 			if (obj instanceof String) {
 				String ctype = (String) obj;
 				int index = ctype.indexOf('/');
-				if (index != -1)
-					ctype = ctype.substring(0,index) + "%2F" + ctype.substring(index+1);
+				if (index != -1) {
+					continue;
+					// the client still gets confused about having a slash in the
+					// path even after encoding
+					//ctype = ctype.substring(0,index) + "%2F" + ctype.substring(index+1);
+				}
 				res.add(new SearchWrapper(generateUri(ctype), getOwner()));
 			}
 		}

@@ -132,10 +132,8 @@ public class SearchWrapper extends PhantomResource {
 				String ct = p.getContentType();
 				if (mContentType != null && ct != null && !ct.startsWith(mContentType))
 					continue;
-				// XXX get the size of the attachment so we can set content-length header,
-				// otherwise zero length might confuse webdav client.
 				if (name != null && name.length() > 0)
-					children.add(new Attachment(getUri()+name, getOwner(), msg.getDate(), 0));
+					children.add(new Attachment(getUri()+name, getOwner(), msg.getDate(), p.getSize()));
 			}
 		} catch (Exception e) {
 			ZimbraLog.dav.error("can't get attachments from msg: itemid:"+hit.getItemId(), e);

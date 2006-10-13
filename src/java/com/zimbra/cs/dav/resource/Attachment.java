@@ -97,6 +97,7 @@ public class Attachment extends PhantomResource {
 							String partName = p.getPartName();
 							mContent = ByteUtil.getContent(Mime.getMimePart(msg, partName).getInputStream(), 0);
 							setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(mContent.length));
+							setProperty(DavElements.P_GETCONTENTTYPE, p.getContentType());
 							break;
 						}
 					}

@@ -162,6 +162,10 @@ public class Mime {
             disp = mp.getDisposition();
             filename = getFilename(mp);
         } catch (ParseException pe) { }
+        int size = 0;
+        try {
+        	size = mp.getSize();
+        } catch (MessagingException me) { }
 
         // the top-level part of a non-multipart message is numbered "1"
         if (!isMultipart && mp instanceof MimeMessage)
@@ -173,6 +177,7 @@ public class Mime {
 		mpart.mContentType = cts;
 		mpart.mPartName = prefix;
 		mpart.mPartNum = partNum;
+		mpart.mSize = size;
 		mpart.mChildren = null;
         mpart.mDisposition = (disp == null ? "" : disp.toLowerCase());
         mpart.mFilename = (filename == null ? "" : filename.toLowerCase());
