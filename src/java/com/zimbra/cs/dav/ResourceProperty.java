@@ -97,4 +97,8 @@ public class ResourceProperty {
 	public List<Element> getChildren() {
 		return mChildren;
 	}
+	
+	public void setProtected(boolean pr) {
+		mProtected = pr;
+	}
 }

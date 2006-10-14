@@ -45,18 +45,21 @@ public class Calendar extends DavResource {
 		"VEVENT", "VTODO", "VTIMEZONE", "VFREEBUSY"
 	};
 
-	private String mDisplayName;
-	
-	public Calendar(String path, Account acct) throws ServiceException {
+	public Calendar(String path, Account acct) throws DavException, ServiceException {
 		super(path, acct);
 		mDavCompliance.add(Compliance.one);
 		mDavCompliance.add(Compliance.two);
 		mDavCompliance.add(Compliance.access_control);
 		mDavCompliance.add(Compliance.calendar_access);
 
-		mDisplayName = acct.getAttr(Provisioning.A_displayName)+"'s calendar";
-		
+		setProperty(DavElements.E_DISPLAYNAME, acct.getAttr(Provisioning.A_displayName)+"'s calendar");
+		setProperty(DavElements.E_PRINCIPAL_URL, UrlNamespace.getResourceUrl(this), true);
+		setProperty(DavElements.E_ALTERNATE_URI_SET, null, true);
+		setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);
+		setProperty(DavElements.E_GROUP_MEMBERSHIP, null, true);
 
+		setProperty(DavElements.E_OWNER, UrlNamespace.getAclUrl(getOwner(), UrlNamespace.ACL_USER), true);
+	
 		// XXX add calendar-timezone, max-resource-size,
 		// min-date-time, max-date-time, max-instances, max-attendees-per-instance,
 		//
@@ -88,7 +91,7 @@ public class Calendar extends DavResource {
 	}
 	
 	private String getCalendarDescription() {
-		return mDisplayName;
+		return getProperty(DavElements.E_DISPLAYNAME).getStringValue();
 	}
 	
 	private Element addCalendarDescription(Element parent, boolean nameOnly) {
@@ -96,7 +99,7 @@ public class Calendar extends DavResource {
 		if (nameOnly)
 			return desc;
 		// XXX need to provide the correct language
-		desc.addAttribute(DavElements.E_LANG.getQualifiedName(), "en-us");
+		desc.addAttribute(DavElements.E_LANG.getQualifiedName(), DavElements.LANG_EN_US);
 		desc.setText(getCalendarDescription());
 		return desc;
 	}

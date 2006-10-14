@@ -167,7 +167,7 @@ public class UrlNamespace {
 		}
 	}
 	
-	private static String getHomeUrl(String user) throws DavException {
+	public static String getHomeUrl(String user) throws DavException {
 		StringBuilder buf = new StringBuilder();
 		buf.append(DAV_PATH).append("/").append(user);
 		try {
@@ -175,6 +175,22 @@ public class UrlNamespace {
 			return URLUtil.getMailURL(prov.getLocalServer(), buf.toString(), true);
 		} catch (ServiceException e) {
 			throw new DavException("cannot create URL for user "+user, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
+		}
+	}
+	
+	public static final String ACL_USER   = "/acl/user";
+	public static final String ACL_GROUP  = "/acl/group";
+	public static final String ACL_COS    = "/acl/cos";
+	public static final String ACL_DOMAIN = "/acl/domain";
+	
+	public static String getAclUrl(String principal, String type) throws DavException {
+		StringBuilder buf = new StringBuilder();
+		buf.append(type).append("/").append(principal);
+		try {
+			Provisioning prov = Provisioning.getInstance();
+			return URLUtil.getMailURL(prov.getLocalServer(), buf.toString(), true);
+		} catch (ServiceException e) {
+			throw new DavException("cannot create ACL URL for principal "+principal, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		}
 	}
 	

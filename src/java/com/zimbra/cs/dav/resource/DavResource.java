@@ -178,11 +178,16 @@ public abstract class DavResource {
 	}
 	
 	protected void setProperty(QName key, String val) {
+		setProperty(key, val, false);
+	}
+	
+	protected void setProperty(QName key, String val, boolean isProtected) {
 		ResourceProperty prop = mProps.get(key);
 		if (prop == null) {
 			prop = new ResourceProperty(key);
 			mProps.put(key, prop);
 		}
+		prop.setProtected(isProtected);
 		prop.setStringValue(val);
 	}
 	
@@ -222,6 +227,65 @@ public abstract class DavResource {
 		if (l.owner != null)
 			lock.addElement(DavElements.E_OWNER).setText(l.owner);
 		return lockDiscovery;
+	}
+	
+	/*
+	 * DAV:supported-privilege-set
+	 * RFC3744 section 5.3
+	 */
+	public Element addSupportedPrivilegeSet(Element prop) {
+		Element ps = prop.addElement(DavElements.E_SUPPORTED_PRIVILEGE_SET);
+
+		Element all = ps.addElement(DavElements.E_ALL);
+		all.addElement(DavElements.E_ABSTRACT);
+		Element desc = all.addElement(DavElements.E_DESCRIPTION);
+		desc.addAttribute(DavElements.E_LANG, DavElements.LANG_EN_US);
+		desc.setText("any operation");
+		
+		Element priv = all.addElement(DavElements.E_SUPPORTED_PRIVILEGE);
+		priv.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ);
+		desc = priv.addElement(DavElements.E_DESCRIPTION);
+		desc.addAttribute(DavElements.E_LANG, DavElements.LANG_EN_US);
+		desc.setText("read calendar, attachment, notebook");
+		
+		priv = all.addElement(DavElements.E_SUPPORTED_PRIVILEGE);
+		priv.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_WRITE);
+		desc = priv.addElement(DavElements.E_DESCRIPTION);
+		desc.addAttribute(DavElements.E_LANG, DavElements.LANG_EN_US);
+		desc.setText("add calendar appointment, upload attachment");
+		
+		priv = all.addElement(DavElements.E_SUPPORTED_PRIVILEGE);
+		priv.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_UNLOCK);
+		desc = priv.addElement(DavElements.E_DESCRIPTION);
+		desc.addAttribute(DavElements.E_LANG, DavElements.LANG_EN_US);
+		desc.setText("unlock your own resources locked by someone else");
+		
+		return ps;
+	}
+	
+	/*
+	 * DAV:current-user-privilege-set
+	 * RFC3744 section 5.4
+	 * 
+	 * to be overriden by resources supporting ACL.
+	 */
+	public Element addCurrentUserPrivilegeSet(DavContext ctxt, Element prop) {
+		Element ps = prop.addElement(DavElements.E_CURRENT_USER_PRIVILEGE_SET);
+		ps.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ);
+		
+		return ps;
+	}
+	
+	/*
+	 * DAV:ACL
+	 * RFC3744 section 5.5
+	 * 
+	 * to be overriden by resources supporting ACL.
+	 */
+	public Element addAcl(DavContext ctxt, Element prop) {
+		Element acl = prop.addElement(DavElements.E_ACL);
+		
+		return acl;
 	}
 	
 	public abstract InputStream getContent() throws IOException, DavException;

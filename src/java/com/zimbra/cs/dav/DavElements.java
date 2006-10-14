@@ -30,13 +30,16 @@ import org.dom4j.QName;
 public class DavElements {
 	public static final String WEBDAV_NS_STRING = "DAV:";
 	public static final String CALDAV_NS_STRING = "urn:ietf:params:xml:ns:caldav";
+	public static final String ZIMBRA_NS_STRING = "urn:ietf:params:xml:ns:zimbra";
 	public static final String XML_NS_STRING = "xml:";
 	
 	public static final Namespace WEBDAV_NS = Namespace.get(WEBDAV_NS_STRING);
 	public static final Namespace CALDAV_NS = Namespace.get(CALDAV_NS_STRING);
+	public static final Namespace ZIMBRA_NS = Namespace.get(ZIMBRA_NS_STRING);
 	public static final Namespace XML_NS = Namespace.get(XML_NS_STRING);
 
 	// general
+	public static final String LANG_EN_US = "en-us";
 	public static final String P_LANG = "lang";
 	public static final QName  E_LANG = QName.get(P_LANG, XML_NS);
 	
@@ -102,9 +105,11 @@ public class DavElements {
 	public static final String P_OWNER = "owner";
 	public static final String P_GROUP = "group";
 	public static final String P_SUPPORTED_PRIVILEGE_SET = "supported-privilege-set";
+	public static final String P_SUPPORTED_PRIVILEGE = "supported-privilege";
 	public static final String P_CURRENT_USER_PRIVILEGE_SET = "current-user-privilege-set";
 	public static final String P_ABSTRACT = "abstract";
 	public static final String P_PRIVILEGE = "privilege";
+	public static final String P_DESCRIPTION = "description";
 	public static final String P_ACL = "acl";
 	public static final String P_ACE = "ace";
 	public static final String P_AUTHENTICATED = "authenticated";
@@ -128,7 +133,7 @@ public class DavElements {
 	public static final String P_ERROR = "error";
 	public static final String P_NEED_PRIVILEGES = "need-privileges";
 	public static final String P_RESOURCE = "resource";
-
+	
 	// caldav
 	public static final String P_CALENDAR = "calendar";
 	
@@ -188,9 +193,26 @@ public class DavElements {
 	public static final QName E_NEED_PRIVILEGES = QName.get(P_NEED_PRIVILEGES, WEBDAV_NS);
 	public static final QName E_RESOURCE = QName.get(P_RESOURCE, WEBDAV_NS);
 	public static final QName E_PRIVILEGE = QName.get(P_PRIVILEGE, WEBDAV_NS);
-	public static final QName E_WRITE = QName.get(P_WRITE, WEBDAV_NS);
 	public static final QName E_OWNER = QName.get(P_OWNER, WEBDAV_NS);
 	public static final QName E_PRINCIPAL = QName.get(P_PRINCIPAL, WEBDAV_NS);
+	public static final QName E_ALTERNATE_URI_SET = QName.get(P_ALTERNATE_URI_SET, WEBDAV_NS);
+	public static final QName E_PRINCIPAL_URL = QName.get(P_PRINCIPAL_URL, WEBDAV_NS);
+	public static final QName E_GROUP_MEMBER_SET = QName.get(P_GROUP_MEMBER_SET, WEBDAV_NS);
+	public static final QName E_GROUP_MEMBERSHIP = QName.get(P_GROUP_MEMBERSHIP, WEBDAV_NS);
+	public static final QName E_SUPPORTED_PRIVILEGE_SET = QName.get(P_SUPPORTED_PRIVILEGE_SET, WEBDAV_NS);
+	public static final QName E_SUPPORTED_PRIVILEGE = QName.get(P_SUPPORTED_PRIVILEGE, WEBDAV_NS);
+	public static final QName E_ABSTRACT = QName.get(P_ABSTRACT, WEBDAV_NS);
+	public static final QName E_DESCRIPTION = QName.get(P_DESCRIPTION, WEBDAV_NS);
+	public static final QName E_ALL    = QName.get(P_ALL, WEBDAV_NS);
+	public static final QName E_READ   = QName.get(P_READ, WEBDAV_NS);
+	public static final QName E_WRITE  = QName.get(P_WRITE, WEBDAV_NS);
+	public static final QName E_UNLOCK = QName.get(P_UNLOCK, WEBDAV_NS);
+	public static final QName E_CURRENT_USER_PRIVILEGE_SET = QName.get(P_CURRENT_USER_PRIVILEGE_SET, WEBDAV_NS);
+	public static final QName E_ACL = QName.get(P_ACL, WEBDAV_NS);
+	public static final QName E_ACE = QName.get(P_ACE, WEBDAV_NS);
+	public static final QName E_AUTHENTICATED = QName.get(P_AUTHENTICATED, WEBDAV_NS);
+	public static final QName E_UNAUTHENTICATED = QName.get(P_UNAUTHENTICATED, WEBDAV_NS);
+	public static final QName E_GRANT = QName.get(P_GRANT, WEBDAV_NS);
 	
 	// caldav
 	public static final QName E_CALENDAR = QName.get(P_CALENDAR, CALDAV_NS);
