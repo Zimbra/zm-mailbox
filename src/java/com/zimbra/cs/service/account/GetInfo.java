@@ -107,27 +107,31 @@ public class GetInfo extends AccountDocumentHandler  {
         }
     }
 
-    private static void doAttrs(Element response, Map attrsMap) throws ServiceException {
+    static void doAttrs(Element response, Map attrsMap) throws ServiceException {
         Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInfo);
         for (String key : attrList) {
             Object value = attrsMap.get(key);
-            if (value instanceof String[]) {
-                String sa[] = (String[]) value;
-                for (int i = 0; i < sa.length; i++)
-                    if (sa[i] != null && !sa[i].equals("")) {
-                        // FIXME: change to "a"/"n" rather than "attr"/"name"
-                        Element pref = response.addElement(AccountService.E_ATTR);
-                        pref.addAttribute(AccountService.A_NAME, key);
-                        pref.setText(sa[i]);
-                    }
-            } else {
-                if (value != null && !value.equals("")) {
+            doAttr(response, key, value);
+        }
+    }
+    
+    static void doAttr(Element response, String key, Object value) {
+        if (value instanceof String[]) {
+            String sa[] = (String[]) value;
+            for (int i = 0; i < sa.length; i++)
+                if (sa[i] != null && !sa[i].equals("")) {
+                    // FIXME: change to "a"/"n" rather than "attr"/"name"
                     Element pref = response.addElement(AccountService.E_ATTR);
                     pref.addAttribute(AccountService.A_NAME, key);
-                    pref.setText((String) value);
+                    pref.setText(sa[i]);
                 }
+        } else {
+            if (value != null && !value.equals("")) {
+                Element pref = response.addElement(AccountService.E_ATTR);
+                pref.addAttribute(AccountService.A_NAME, key);
+                pref.setText((String) value);
             }
-        }
+        }        
     }
     
     private static void doZimlets(Element response, Account acct) {

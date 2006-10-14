@@ -28,7 +28,10 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -123,6 +126,20 @@ public class Auth extends AccountDocumentHandler {
 			Element prefsResponse = response.addElement(AccountService.E_PREFS);
 			GetPrefs.handle( prefsRequest, prefsResponse, acct);
 		}
+
+        Element attrsRequest = request.getOptionalElement(AccountService.E_ATTRS);
+        if (attrsRequest != null) {
+            Element attrsResponse = response.addElement(AccountService.E_ATTRS);
+            Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInfo);
+            for (Iterator it = attrsRequest.elementIterator(AccountService.E_ATTR); it.hasNext(); ) {
+                Element e = (Element) it.next();
+                String name = e.getAttribute(AccountService.A_NAME);
+                if (name != null && attrList.contains(name)) {
+                    Object v = acct.getMultiAttr(name);
+                    if (v != null) GetInfo.doAttr(attrsResponse,name, v);
+                }
+            }
+        }
 		return response;
 	}
 

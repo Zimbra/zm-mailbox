@@ -286,7 +286,8 @@ global soap/system errors used with zimbra:Error/Code:
    [<password>...</password>]
    [<preauth timestamp="{timestamp}" expires="{expires}">{computed-preauth-value}</preauth>]
    [<virtualHost>{virtual-host}</virtualHost>]
-  [<prefs>[<pref name="..."/>...]</prefs>]
+   [<prefs>[<pref name="..."/>...]</prefs>]
+   [<attrs>[<attr name="..."/>...]</attrs>]  
  </AuthRequest>
  
  <AuthResponse>
@@ -295,6 +296,7 @@ global soap/system errors used with zimbra:Error/Code:
    <sessionId .../>
    <refer>{mail-host}</refer>  
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
+   [<attrs><attr name="{name}">{value}</a>...</attrs>]
  </AuthResponse>
 
 Note:
@@ -308,6 +310,8 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
                    and an auth request comes in for "joe" with a virtualHost of "mail.foo.com", then the request will be equivalent to
                    logging in with "joe@foo.com".
 
+  only attrs that are allowed to be returned by GetInfo will be returned by this call
+  
 ---------
 
  <ChangePasswordRequest>
