@@ -61,6 +61,10 @@ URL
           start={date-specifier}
           end={date-specifier}
           auth={auth-types}
+          disp=i|a
+
+          {disp} = i - means "inline" and the browser will open up the attachment inline
+                   a - means "attachment" and the browser will put up a download window
 
           {types}   = comma-separated list.  Legal values are:
                       conversation|message|contact|appointment|note

@@ -49,6 +49,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
@@ -171,7 +172,9 @@ public class NativeFormatter extends Formatter {
     throws IOException {
         if (filename == null)
             filename = "unknown";
-        String cd = Part.INLINE + "; filename=" + HttpUtil.encodeFilename(req, filename);
+        String disp = req.getParameter(UserServlet.QP_DISP);
+        disp = (disp == null || disp.startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
+        String cd = disp + "; filename=" + HttpUtil.encodeFilename(req, filename);
         resp.addHeader("Content-Disposition", cd);
         if (desc != null)
             resp.addHeader("Content-Description", desc);

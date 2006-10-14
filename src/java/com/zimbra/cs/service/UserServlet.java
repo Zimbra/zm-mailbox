@@ -132,6 +132,8 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String QP_AUTH = "auth"; // auth types
 
+    public static final String QP_DISP = "disp"; // disposition (a = attachment, i = inline)
+
     public static final String AUTH_COOKIE = "co"; // auth by cookie
 
     public static final String AUTH_BASIC = "ba"; // basic auth
