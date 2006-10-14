@@ -80,6 +80,7 @@ public class ZMessage implements ZItem {
     private String mTags;
     private String mFolderId;
     private String mConversationId;
+    private String mPartName;
     private long mReceivedDate;
     private long mSentDate;
     private String mMessageIdHeader;
@@ -99,9 +100,10 @@ public class ZMessage implements ZItem {
         if (mid != null) mMessageIdHeader = mid.getText();
         mReceivedDate = e.getAttributeLong(MailService.A_DATE, 0);
         mSentDate = e.getAttributeLong(MailService.A_SENT_DATE, 0);
-        mFolderId = e.getAttribute(MailService.A_FOLDER);
+        mFolderId = e.getAttribute(MailService.A_FOLDER, null);
         mConversationId = e.getAttribute(MailService.A_CONV_ID, null);
-        mSize = e.getAttributeLong(MailService.A_SIZE);        
+        mPartName = e.getAttribute(MailService.A_PART, null);
+        mSize = e.getAttributeLong(MailService.A_SIZE);
         Element content = e.getOptionalElement(MailService.E_CONTENT);
         if (content != null) {
             mContent = content.getText();
@@ -139,6 +141,7 @@ public class ZMessage implements ZItem {
         sb.add("flags", mFlags);
         sb.add("tags", mTags);
         sb.add("subject", mSubject);
+        sb.add("partName", mPartName);        
         sb.add("messageIdHeader", mMessageIdHeader);
         sb.addDate("receivedDate", mReceivedDate);
         sb.addDate("sentDate", mSentDate);
@@ -153,6 +156,14 @@ public class ZMessage implements ZItem {
         return sb;
     }
 
+    /**
+     *
+     * @return the part name if this message is actually a part of another message
+     */
+    public String getPartName() {
+        return mPartName;
+    }
+    
     public String toString() {
         return toString(new ZSoapSB()).toString();
     }
