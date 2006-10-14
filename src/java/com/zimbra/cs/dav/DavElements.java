@@ -156,7 +156,7 @@ public class DavElements {
 	public static final QName E_CREATIONDATE = QName.get(P_CREATIONDATE, WEBDAV_NS);
 	public static final QName E_DISPLAYNAME = QName.get(P_DISPLAYNAME, WEBDAV_NS);
 	public static final QName E_GETCONTENTLANGUAGE = QName.get(P_GETCONTENTLANGUAGE, WEBDAV_NS);
-	public static final QName E_GETCONTENTLLENGTH = QName.get(P_GETCONTENTLENGTH, WEBDAV_NS);
+	public static final QName E_GETCONTENTLENGTH = QName.get(P_GETCONTENTLENGTH, WEBDAV_NS);
 	public static final QName E_GETCONTENTTYPE = QName.get(P_GETCONTENTTYPE, WEBDAV_NS);
 	public static final QName E_GETETAG = QName.get(P_GETETAG, WEBDAV_NS);
 	public static final QName E_GETLASTMODIFIED = QName.get(P_GETLASTMODIFIED, WEBDAV_NS);
@@ -190,6 +190,7 @@ public class DavElements {
 	public static final QName E_PRIVILEGE = QName.get(P_PRIVILEGE, WEBDAV_NS);
 	public static final QName E_WRITE = QName.get(P_WRITE, WEBDAV_NS);
 	public static final QName E_OWNER = QName.get(P_OWNER, WEBDAV_NS);
+	public static final QName E_PRINCIPAL = QName.get(P_PRINCIPAL, WEBDAV_NS);
 	
 	// caldav
 	public static final QName E_CALENDAR = QName.get(P_CALENDAR, CALDAV_NS);

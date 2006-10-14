@@ -26,6 +26,7 @@ package com.zimbra.cs.dav.service.method;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,7 +56,7 @@ public class PropFind extends DavMethod {
 	
 	public void handle(DavContext ctxt) throws DavException, IOException {
 		boolean nameOnly = false;
-		Map<String,QName> requestedProps = null;
+		Set<QName> requestedProps = null;
 		
 		if (ctxt.hasRequestMessage()) {
 			Document req = ctxt.getRequestMessage();
@@ -77,11 +78,11 @@ public class PropFind extends DavMethod {
 				else if (!name.equals(DavElements.P_PROP))
 					throw new DavException("invalid element "+e.getName(), HttpServletResponse.SC_BAD_REQUEST, null);
 				else {
-					requestedProps = new java.util.HashMap<String,QName>();
+					requestedProps = new HashSet<QName>();
 					@SuppressWarnings("unchecked")
 					List<Element> props = e.elements();
 					for (Element prop : props)
-						requestedProps.put(prop.getName(), prop.getQName());
+						requestedProps.add(prop.getQName());
 				}
 			}
 		}
@@ -103,28 +104,25 @@ public class PropFind extends DavMethod {
 		sendResponse(ctxt, document);
 	}
 	
-	private void addResourceToResponse(DavContext ctxt, DavResource rs, Element top, boolean nameOnly, Map<String,QName> requestedProps, boolean includeChildren) throws DavException {
+	private void addResourceToResponse(DavContext ctxt, DavResource rs, Element top, boolean nameOnly, Set<QName> requestedProps, boolean includeChildren) throws DavException {
 		Element resp = top.addElement(DavElements.E_RESPONSE);
 		resp.addElement(DavElements.E_HREF).setText(UrlNamespace.getResourceUrl(rs));
 		Map<Integer,Element> propstatMap = new HashMap<Integer,Element>();
-		Set<String> propNames;
+		Set<QName> propNames;
 		if (requestedProps == null)
 			propNames = rs.getAllPropertyNames();
 		else
-			propNames = requestedProps.keySet();
-		if (requestedProps == null || requestedProps.containsKey(DavElements.P_RESOURCETYPE))
+			propNames = requestedProps;
+		if (requestedProps == null || requestedProps.contains(DavElements.E_RESOURCETYPE))
 			rs.addResourceTypeElement(findPropstat(resp, propstatMap, STATUS_OK), nameOnly);
-		for (String name : propNames) {
-			if (name.equals(DavElements.P_RESOURCETYPE))
+		for (QName name : propNames) {
+			if (name.equals(DavElements.E_RESOURCETYPE))
 				continue;
 			Element propstat = findPropstat(resp, propstatMap, HttpServletResponse.SC_OK);
 			Element e = rs.addPropertyElement(propstat, name, nameOnly);
 			if (e == null) {
 				Element error = findPropstat(resp, propstatMap, HttpServletResponse.SC_NOT_FOUND);
-				if (requestedProps == null)
-					error.addElement(name);
-				else
-					error.addElement(requestedProps.get(name));
+				error.addElement(name);
 				continue;
 			}
 		}

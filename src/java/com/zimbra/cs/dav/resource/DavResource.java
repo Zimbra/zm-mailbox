@@ -30,11 +30,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.dom4j.Element;
+import org.dom4j.QName;
 
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.cs.account.Account;
@@ -44,6 +46,7 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.LockMgr;
+import com.zimbra.cs.dav.ResourceProperty;
 import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.service.ServiceException;
 
@@ -57,7 +60,7 @@ import com.zimbra.cs.service.ServiceException;
 public abstract class DavResource {
 	protected String mUri;
 	protected String mOwner;
-	protected Map<String,String> mProps;
+	protected Map<QName,ResourceProperty> mProps;
 	protected List<Compliance> mDavCompliance;
 	
 	public DavResource(String uri, Account acct) throws ServiceException {
@@ -66,7 +69,7 @@ public abstract class DavResource {
 	
 	public DavResource(String uri, String owner) {
 		mOwner = owner;
-		mProps = new HashMap<String,String>();
+		mProps = new HashMap<QName,ResourceProperty>();
 		mUri = uri;
 		mDavCompliance = new ArrayList<Compliance>();
 		mDavCompliance.add(Compliance.one);
@@ -99,24 +102,32 @@ public abstract class DavResource {
 		return mDavCompliance;
 	}
 	
-	public String getProperty(String propName) {
-		return mProps.get(propName);
+	public ResourceProperty getProperty(String propName) {
+		return getProperty(QName.get(propName, DavElements.WEBDAV_NS));
+	}
+	
+	public ResourceProperty getProperty(QName prop) {
+		return mProps.get(prop);
 	}
 
-	public Set<String> getAllPropertyNames() {
-		return mProps.keySet();
+	public Set<QName> getAllPropertyNames() {
+		HashSet<QName> ret = new HashSet<QName>();
+		for (QName key : mProps.keySet())
+			if (!mProps.get(key).isProtected())
+				ret.add(key);
+		
+		return ret;
 	}
 
-	public Element addPropertyElement(Element parent, String propName, boolean nameOnly) {
+	public Element addPropertyElement(Element parent, QName propName, boolean nameOnly) {
 		Element e = null;
 		
-		if (mProps.containsKey(propName)) {
-			e = parent.addElement(propName);
-			if (!nameOnly)
-				e.setText(mProps.get(propName));
+		ResourceProperty prop = mProps.get(propName);
+		if (prop != null) {
+			e = prop.addToElement(parent, nameOnly);
+			return e;
 		}
 		
-		// protected properties
 		if (propName.equals(DavElements.P_LOCKDISCOVERY))
 			for (LockMgr.Lock lock : LockMgr.getInstance().getLocks(this))
 				e = addActiveLockElement(parent, lock);
@@ -141,14 +152,17 @@ public abstract class DavResource {
 	}
 	
 	public String getContentType() {
-		return getProperty(DavElements.P_GETCONTENTTYPE);
+		ResourceProperty prop = getProperty(DavElements.E_GETCONTENTTYPE);
+		if (prop != null)
+			return prop.getStringValue();
+		return null;
 	}
 	
 	public int getContentLength() {
-		String cl = getProperty(DavElements.P_GETCONTENTLENGTH);
-		if (cl == null)
-			return 0;
-		return Integer.parseInt(cl);
+		ResourceProperty prop = getProperty(DavElements.E_GETCONTENTLENGTH);
+		if (prop != null)
+			return Integer.parseInt(prop.getStringValue());
+		return 0;
 	}
 	
 	protected void setCreationDate(long ts) {
@@ -160,7 +174,16 @@ public abstract class DavResource {
 	}
 	
 	protected void setProperty(String key, String val) {
-		mProps.put(key, val);
+		setProperty(QName.get(key, DavElements.WEBDAV_NS), val);
+	}
+	
+	protected void setProperty(QName key, String val) {
+		ResourceProperty prop = mProps.get(key);
+		if (prop == null) {
+			prop = new ResourceProperty(key);
+			mProps.put(key, prop);
+		}
+		prop.setStringValue(val);
 	}
 	
 	public Element addResourceTypeElement(Element parent, boolean nameOnly) {

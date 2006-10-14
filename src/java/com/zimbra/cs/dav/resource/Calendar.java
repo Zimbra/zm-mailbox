@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.dom4j.Element;
+import org.dom4j.QName;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -71,15 +72,7 @@ public class Calendar extends DavResource {
 		return true;
 	}
 
-	public String getProperty(String propName) {
-		String val = super.getProperty(propName);
-		if (val != null)
-			return val;
-		
-		return val;
-	}
-
-	public Element addPropertyElement(Element parent, String propName, boolean putValue) {
+	public Element addPropertyElement(Element parent, QName propName, boolean putValue) {
 		Element e = super.addPropertyElement(parent, propName, putValue);
 
 		if (e != null)
@@ -136,6 +129,7 @@ public class Calendar extends DavResource {
 		if (nameOnly)
 			return el;
 		el.addElement(DavElements.E_CALENDAR);
+		el.addElement(DavElements.E_PRINCIPAL);
 		return el;
 	}
 }
