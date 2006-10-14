@@ -4780,6 +4780,8 @@ public class Mailbox {
                 		if (wikiPos >= 0)
                 			wikiItem = wikis.get(wikiPos);
                 	} catch (ServiceException se) {
+                        if (se.getCode() == ServiceException.PERM_DENIED)
+                        	throw se;
                 		wikiItem = null;
                 	}
                 }
