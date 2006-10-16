@@ -1406,6 +1406,7 @@ public class ZMailbox {
         private String mIds;
         
         public ZActionResult(String ids) {
+            if (ids == null) ids = "";
             mIds = ids;
         }
         
