@@ -35,12 +35,24 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 import com.zimbra.soap.Element;
+import com.zimbra.soap.Element.XMLElement;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapTransport;
 import com.zimbra.soap.ZimbraNamespace;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.Element.XMLElement;
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
+import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,19 +69,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
-import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
 
 public class ZMailbox {
 
@@ -277,7 +276,7 @@ public class ZMailbox {
                     }
                 }
             } else if (e.getName().equals(MailService.E_SEARCH) || e.getName().equals(MailService.E_FOLDER) || e.getName().equals(MailService.E_MOUNT)) {
-                ZFolder f = (ZFolder) getFolderById(e.getAttribute(MailService.A_ID));
+                ZFolder f = getFolderById(e.getAttribute(MailService.A_ID));
                 if (f != null)
                     f.modifyNotification(e, this);
             } else if (e.getName().equals(MailService.E_MAILBOX)) {
@@ -291,15 +290,15 @@ public class ZMailbox {
         for (Element e : created.listElements()) {
             if (e.getName().equals(MailService.E_FOLDER)) {
                 String parentId = e.getAttribute(MailService.A_FOLDER);
-                ZFolder parent = (ZFolder) getFolderById(parentId);
+                ZFolder parent = getFolderById(parentId);
                 new ZFolder(e, parent, this);
             } else if (e.getName().equals(MailService.E_MOUNT)) {
                 String parentId = e.getAttribute(MailService.A_FOLDER);
-                ZFolder parent = (ZFolder) getFolderById(parentId);
+                ZFolder parent = getFolderById(parentId);
                 new ZMountpoint(e, parent, this);
             } else if (e.getName().equals(MailService.E_SEARCH)) {
                 String parentId = e.getAttribute(MailService.A_FOLDER);
-                ZFolder parent = (ZFolder) getFolderById(parentId);
+                ZFolder parent = getFolderById(parentId);
                 new ZSearchFolder(e, parent, this);
             } else if (e.getName().equals(MailService.E_TAG)) {
                 addTag(new ZTag(e));
@@ -316,12 +315,12 @@ public class ZMailbox {
             if (item instanceof ZMountpoint) {
                 ZMountpoint sl = (ZMountpoint) item;
                 if (sl.getParent() != null)
-                    ((ZFolder)sl.getParent()).removeChild(sl);
+                    sl.getParent().removeChild(sl);
                 mIdToItem.remove(sl.getCanonicalRemoteId());
             } else if (item instanceof ZFolder) {
                 ZFolder sf = (ZFolder) item;
                 if (sf.getParent() != null) 
-                    ((ZFolder)sf.getParent()).removeChild(sf);
+                    sf.getParent().removeChild(sf);
 
             } else if (item instanceof ZTag) {
                 mNameToTag.remove(((ZTag) item).getName());
@@ -601,7 +600,7 @@ public class ZMailbox {
         return result;
     }
     
-    public ZContact createContact(String folderId, String tags, Map<String, String> attrs) throws ServiceException {
+    public String createContact(String folderId, String tags, Map<String, String> attrs) throws ServiceException {
         XMLElement req = new XMLElement(MailService.CREATE_CONTACT_REQUEST);
         Element cn = req.addElement(MailService.E_CONTACT);
         if (folderId != null) 
@@ -613,7 +612,7 @@ public class ZMailbox {
             a.addAttribute(MailService.A_ATTRIBUTE_NAME, entry.getKey());
             a.setText(entry.getValue());
         }
-        return new ZContact(invoke(req).getElement(MailService.E_CONTACT));
+        return invoke(req).getElement(MailService.E_CONTACT).getAttribute(MailService.A_ID);
     }
  
     /**
@@ -624,7 +623,7 @@ public class ZMailbox {
      * @return updated contact
      * @throws ServiceException on error
      */
-    public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs) throws ServiceException {
+    public String modifyContact(String id, boolean replace, Map<String, String> attrs) throws ServiceException {
         XMLElement req = new XMLElement(MailService.MODIFY_CONTACT_REQUEST);
         if (replace) 
             req.addAttribute(MailService.A_REPLACE, replace);
@@ -635,7 +634,7 @@ public class ZMailbox {
             a.addAttribute(MailService.A_ATTRIBUTE_NAME, entry.getKey());
             a.setText(entry.getValue());
         }
-        return new ZContact(invoke(req).getElement(MailService.E_CONTACT));
+        return invoke(req).getElement(MailService.E_CONTACT).getAttribute(MailService.A_ID);
     }  
     
     /**
@@ -710,10 +709,10 @@ public class ZMailbox {
 
     /**
      * 
-     * @param id
+     * @param id conversation id 
      * @param fetch Whether or not fetch none/first/all messages in conv.
-     * @return
-     * @throws ServiceException
+     * @return conversation
+     * @throws ServiceException on error
      */
     public ZConversation getConversation(String id, Fetch fetch) throws ServiceException {
         XMLElement req = new XMLElement(MailService.GET_CONV_REQUEST);
@@ -1208,7 +1207,6 @@ public class ZMailbox {
      * find the folder with the pecified path, starting from the user root.
      * @param path path of folder. Must start with {@link #PATH_SEPARATOR}.
      * @return ZFolder if found, null otherwise.
-     * @throws ServiceException on error
      */
     public ZFolder getFolderByPath(String path) {
         if (!path.startsWith(ZMailbox.PATH_SEPARATOR)) 
@@ -1455,7 +1453,7 @@ public class ZMailbox {
     
     /** sets or unsets the folder's checked state in the UI
      * @param ids ids of folder to check
-     * @param checkedState checked/unchecked
+     * @param checked checked/unchecked
      * @throws ServiceException on error
      * @return action result
      */
@@ -1511,7 +1509,7 @@ public class ZMailbox {
     }
     
     /** move the folder to be a child of {target-folder}
-     * @param folderId folder id to move
+     * @param id folder id to move
      * @param targetFolderId id of target folder
      * @return action result
      * @throws ServiceException on error
@@ -1521,7 +1519,7 @@ public class ZMailbox {
     }
     
     /** change the folder's name; if new name  begins with '/', the folder is moved to the new path and any missing path elements are created
-     * @param folderId id of folder to rename
+     * @param id id of folder to rename
      * @param name new name
      * @return action result
      * @throws ServiceException on error
@@ -1531,7 +1529,7 @@ public class ZMailbox {
     }
 
     /** sets or unsets the folder's exclude from free busy state
-     * @param folderId folder id
+     * @param ids folder id
      * @param state exclude/not-exclude
      * @throws ServiceException on error
      * @return action result
@@ -1543,7 +1541,7 @@ public class ZMailbox {
     /**
      * 
      * @param folderId to modify
-     * @param grantreeType type of grantee
+     * @param granteeType type of grantee
      * @param grantreeId id of grantree
      * @param perms permission mask ("rwid")
      * @param args extra args
@@ -1581,7 +1579,7 @@ public class ZMailbox {
     /** 
      * set the synchronization url on the folder to {target-url}, empty the folder, and 
      * synchronize the folder's contents to the remote feed, also sets {exclude-free-busy-boolean}
-     * @param folderId id of folder
+     * @param id id of folder
      * @param url new URL
      * @return action result
      * @throws ServiceException on error
@@ -1591,7 +1589,7 @@ public class ZMailbox {
     }
     /**
      * sync the folder's contents to the remote feed specified by the folders URL
-     * @param folderId folder id
+     * @param ids folder id
      * @throws ServiceException on error
      * @return action result
      */
@@ -1764,6 +1762,7 @@ public class ZMailbox {
      * @param messagePartsToAttach list of additional attachments (id/part) to attach to this message, or null.
      * @param contactIdsToAttach list of contact ids to attach to this message, or null.
      * @return SendMessageResponse. id is set in response only if message was saved to a sent folder.
+     * @throws com.zimbra.cs.service.ServiceException on error
      */
     public ZSendMessageResponse sendMessage(List<ZEmailAddress> addrs, String subject, String origMessageIdHeader, 
             String contentType, String content, String attachmentUploadId, 

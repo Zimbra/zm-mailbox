@@ -25,6 +25,43 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.soap.SoapAccountInfo;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
+import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZMailbox.Fetch;
+import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
+import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
+import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
+import com.zimbra.cs.zclient.ZMessage.ZMimePart;
+import com.zimbra.cs.zclient.ZSearchParams.Cursor;
+import com.zimbra.cs.zclient.ZTag.Color;
+import com.zimbra.soap.Element;
+import com.zimbra.soap.SoapFaultException;
+import com.zimbra.soap.SoapTransport;
+import com.zimbra.soap.SoapTransport.DebugListener;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -47,44 +84,6 @@ import java.util.Stack;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.soap.SoapAccountInfo;
-import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
-import com.zimbra.cs.zclient.ZGrant.GranteeType;
-import com.zimbra.cs.zclient.ZMailbox.Fetch;
-import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
-import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
-import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
-import com.zimbra.cs.zclient.ZMessage.ZMimePart;
-import com.zimbra.cs.zclient.ZSearchParams.Cursor;
-import com.zimbra.cs.zclient.ZTag.Color;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.SoapTransport;
-import com.zimbra.soap.SoapTransport.DebugListener;
 
 /**
  * @author schemers
@@ -731,8 +730,8 @@ public class ZMailboxUtil implements DebugListener {
             doAdminAuth(args);
             break;
         case CREATE_CONTACT:
-            ZContact cc = mMbox.createContact(lookupFolderId(folderOpt()),tagsOpt(), getContactMap(args, 0, !ignoreOpt()));
-            System.out.println(cc.getId());
+            String ccId = mMbox.createContact(lookupFolderId(folderOpt()),tagsOpt(), getContactMap(args, 0, !ignoreOpt()));
+            System.out.println(ccId);
             break;
         case CREATE_FOLDER:
             doCreateFolder(args);
@@ -1573,8 +1572,8 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doModifyContact(String[] args) throws ServiceException {
-        ZContact mc = mMbox.modifyContact(id(args[0]),  mCommandLine.hasOption('r'), getContactMap(args, 1, !ignoreOpt()));
-        System.out.println(mc.getId());
+        String id = mMbox.modifyContact(id(args[0]),  mCommandLine.hasOption('r'), getContactMap(args, 1, !ignoreOpt()));
+        System.out.println(id);
     }
 
     private void dumpContact(ZContact contact) throws ServiceException {
