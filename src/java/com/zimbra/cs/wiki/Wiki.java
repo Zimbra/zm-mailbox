@@ -34,6 +34,7 @@ import org.apache.commons.collections.map.LRUMap;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -498,7 +499,8 @@ public abstract class Wiki {
 		WikiPage page;
 		Provisioning prov = Provisioning.getInstance();
 		Account acct = prov.get(Provisioning.AccountBy.id, accountId);
-		String domainWiki = prov.getDomain(acct).getAttr(Provisioning.A_zimbraNotebookAccount, null);
+        Domain domain = prov.getDomain(acct);
+		String domainWiki = domain == null ? null : domain.getAttr(Provisioning.A_zimbraNotebookAccount, null);
 		
 		if (domainWiki != null) {
 			acct = prov.get(Provisioning.AccountBy.name, domainWiki);

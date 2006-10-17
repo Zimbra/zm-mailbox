@@ -159,8 +159,8 @@ public class UserServlet extends ZimbraServlet {
     public static String getRestUrl(Account acct) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Server server = prov.getServer(acct);
-        Domain domain = prov.get(DomainBy.name, acct.getDomainName());
-        String hostname = domain.getAttr(Provisioning.A_zimbraPublicServiceHostname, null);
+        Domain domain = prov.getDomain(acct);
+        String hostname = domain == null ? null : domain.getAttr(Provisioning.A_zimbraPublicServiceHostname, null);
         if (hostname == null)
             hostname = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
         if (hostname == null)
