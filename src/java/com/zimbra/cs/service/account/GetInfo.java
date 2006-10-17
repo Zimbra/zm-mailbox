@@ -37,7 +37,6 @@ import java.util.Set;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.mailbox.Identity;
@@ -133,19 +132,10 @@ public class GetInfo extends AccountDocumentHandler  {
             }
         }        
     }
-    
+
     private static void doZimlets(Element response, Account acct) {
-    	Cos cos;
-    	String[] attrList;
-    	List<Zimlet> zimletList;
-    	try {
-        	cos = Provisioning.getInstance().getCOS(acct);
-        	attrList = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
-        	zimletList = ZimletUtil.orderZimletsByPriority(attrList);
-    	} catch (ServiceException se) {
-			ZimbraLog.zimlet.info("Error getting Zimlet list "+se.getMessage());
-    		return;
-    	}
+    	String[] attrList = acct.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+    	List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(attrList);
     	int priority = 0;
     	for (Zimlet z : zimletList) {
 			if (z.isEnabled() && !z.isExtension()) {
@@ -153,11 +143,11 @@ public class GetInfo extends AccountDocumentHandler  {
 			}
     		priority++;
     	}
-    	
+
     	// load the zimlets in the dev directory and list them
     	ZimletUtil.listDevZimlets(response);
     }
-    
+
     private static void doProperties(Element response, Account acct) {
     	ZimletUserProperties zp = ZimletUserProperties.getProperties(acct);
     	Set props = zp.getAllProperties();
