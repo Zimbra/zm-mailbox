@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.zclient;
 
+
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 
@@ -85,7 +86,7 @@ public class ZSearchParams {
     /**
      * fetch the first part (messages only at this point) in the result
      */
-    private boolean mFetchFirstMessage;
+    private ZMailbox.Fetch mFetch;
     
     /**
      * if fetchFirstMessage is true, grab the HTML part if available
@@ -115,7 +116,7 @@ public class ZSearchParams {
 
     public ZSearchParams(ZSearchParams that) {
         this.mCursor = that.mCursor;
-        this.mFetchFirstMessage = that.mFetchFirstMessage;
+        this.mFetch = that.mFetch;
         this.mLimit = that.mLimit;
         this.mMarkAsRead = that.mMarkAsRead;
         this.mOffset = that.mOffset;
@@ -148,12 +149,12 @@ public class ZSearchParams {
         mCursor = cursor;
     }
     
-    public boolean isFetchFirstMessage() {
-        return mFetchFirstMessage;
+    public ZMailbox.Fetch getFetch() {
+        return mFetch;
     }
 
-    public void setFetchFirstMessage(boolean fetchFirstMessage) {
-        mFetchFirstMessage = fetchFirstMessage;
+    public void setFetch(ZMailbox.Fetch fetch) {
+        mFetch = fetch;
     }
 
     public int getLimit() {

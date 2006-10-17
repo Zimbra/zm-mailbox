@@ -88,6 +88,18 @@ public class ZMailbox {
             }
         }
     } 
+
+    public enum Fetch {
+        none, first, hits, all;
+
+        public static Fetch fromString(String s) throws ServiceException {
+            try {
+                return Fetch.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid fetch: "+s+", valid values: "+Arrays.asList(Fetch.values()), e); 
+            }
+        }
+    }
     
     public static class Options {
         private String mAccount;
@@ -695,13 +707,23 @@ public class ZMailbox {
         return doAction(actionEl);        
     }
    
-    
-    //  ------------------------
 
-    public ZConversation getConversation(String id) throws ServiceException {
+    /**
+     * 
+     * @param id
+     * @param fetch Whether or not fetch none/first/all messages in conv.
+     * @return
+     * @throws ServiceException
+     */
+    public ZConversation getConversation(String id, Fetch fetch) throws ServiceException {
         XMLElement req = new XMLElement(MailService.GET_CONV_REQUEST);
         Element convEl = req.addElement(MailService.E_CONV);
         convEl.addAttribute(MailService.A_ID, id);
+        if (fetch != null && fetch != Fetch.none && fetch != Fetch.hits) {
+            // use "1" for "first" for backward compat until DF is updated
+            convEl.addAttribute(MailService.A_FETCH, fetch == Fetch.first ? "1" : fetch.name());
+        }        
+        
         Map<String,ZEmailAddress> cache = new HashMap<String, ZEmailAddress>();
         return new ZConversation(invoke(req).getElement(MailService.E_CONV), cache);
     }
@@ -1587,7 +1609,10 @@ public class ZMailbox {
         if (params.getOffset() != 0) req.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
         if (params.getSortBy() != null) req.addAttribute(MailService.A_SORTBY, params.getSortBy().name());
         if (params.getTypes() != null) req.addAttribute(MailService.A_SEARCH_TYPES, params.getTypes());
-        if (params.isFetchFirstMessage()) req.addAttribute(MailService.A_FETCH, params.isFetchFirstMessage());
+        if (params.getFetch() != null && params.getFetch() != Fetch.none) {
+            // use "1" for "first" for backward compat until DF is updated
+            req.addAttribute(MailService.A_FETCH, params.getFetch() == Fetch.first ? "1" : params.getFetch().name());
+        }
         if (params.isPreferHtml()) req.addAttribute(MailService.A_WANT_HTML, params.isPreferHtml());
         if (params.isMarkAsRead()) req.addAttribute(MailService.A_MARK_READ, params.isMarkAsRead());
         if (params.isRecipientMode()) req.addAttribute(MailService.A_RECIPIENTS, params.isRecipientMode());
@@ -1779,3 +1804,4 @@ public class ZMailbox {
 
 
 }
+

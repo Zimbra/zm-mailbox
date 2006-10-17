@@ -74,6 +74,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZMailbox.Fetch;
 import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
@@ -1479,7 +1480,7 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doGetConversation(String[] args) throws ServiceException {
-        ZConversation conv = mMbox.getConversation(id(args[0]));
+        ZConversation conv = mMbox.getConversation(id(args[0]), Fetch.none);
         if (verboseOpt()) {
             System.out.println(conv);
         } else {
