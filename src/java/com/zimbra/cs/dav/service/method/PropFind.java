@@ -94,12 +94,12 @@ public class PropFind extends DavMethod {
 		Element resp = document.addElement(DavElements.E_MULTISTATUS);
 		addResourceToResponse(ctxt, resource, resp, nameOnly, requestedProps, false);
 
-		if (resource.isCollection() && ctxt.getDepth() != Depth.ZERO) {
+		if (resource.isCollection() && ctxt.getDepth() != Depth.zero) {
 			//ZimbraLog.dav.debug("depth: "+ctxt.getDepth().name());
 
 			List<DavResource> children = resource.getChildren(ctxt);
 			for (DavResource child : children)
-				addResourceToResponse(ctxt, child, resp, nameOnly, requestedProps, ctxt.getDepth() == Depth.INFINITY);
+				addResourceToResponse(ctxt, child, resp, nameOnly, requestedProps, ctxt.getDepth() == Depth.infinity);
 		}
 		sendResponse(ctxt, document);
 	}
@@ -113,13 +113,9 @@ public class PropFind extends DavMethod {
 			propNames = rs.getAllPropertyNames();
 		else
 			propNames = requestedProps;
-		if (requestedProps == null || requestedProps.contains(DavElements.E_RESOURCETYPE))
-			rs.addResourceTypeElement(findPropstat(resp, propstatMap, STATUS_OK), nameOnly);
 		for (QName name : propNames) {
-			if (name.equals(DavElements.E_RESOURCETYPE))
-				continue;
 			Element propstat = findPropstat(resp, propstatMap, HttpServletResponse.SC_OK);
-			Element e = rs.addPropertyElement(propstat, name, nameOnly);
+			Element e = rs.addPropertyElement(ctxt, propstat, name, nameOnly);
 			if (e == null) {
 				Element error = findPropstat(resp, propstatMap, HttpServletResponse.SC_NOT_FOUND);
 				error.addElement(name);

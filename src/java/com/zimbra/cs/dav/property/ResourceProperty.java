@@ -22,13 +22,17 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.dav;
+package com.zimbra.cs.dav.property;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
+import org.dom4j.tree.DefaultElement;
+
+import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavElements;
 
 
 public class ResourceProperty {
@@ -69,7 +73,7 @@ public class ResourceProperty {
 		return mLive;
 	}
 	
-	public Element addToElement(Element parent, boolean nameOnly) {
+	public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
 		Element elem = parent.addElement(mName);
 		if (nameOnly)
 			return elem;
@@ -92,6 +96,10 @@ public class ResourceProperty {
 
 	public void addChild(Element e) {
 		mChildren.add(e);
+	}
+	
+	public void addChild(QName e) {
+		mChildren.add(new DefaultElement(e));
 	}
 	
 	public List<Element> getChildren() {

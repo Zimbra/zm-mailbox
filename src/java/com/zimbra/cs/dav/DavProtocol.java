@@ -30,7 +30,9 @@ import java.util.List;
 // HTTP protocol extensions and headers for WebDAV
 public class DavProtocol {
 	public enum Compliance {
-		one, two, three, update, bind, access_control, calendar_access
+		one, two, three, 
+		update, bind, access_control, calendar_access,
+		version_control
 	}
 	
 	private static HashMap<Compliance,String> sComplianceStrMap;
@@ -42,11 +44,12 @@ public class DavProtocol {
 	// class 2* : RFC 2518 - locking
 	// class 3 : draft-ietf-webdav-rfc2518bis
 	// calendar-access* : draft-dusseault-caldav
-	// version-control, checkout-in-place, version-history, 
+	// version-control* : RFC 3253 - section 3.6 (partial requirement from access-control and caldav)
+	// checkout-in-place, version-history, 
 	//   workspace, update, label, working-resource,
 	//   merge, baseline, activity, version-controlled-collection : RFC 3253
 	// ordered-collections : RFC 3648
-	// access-control : RFC 3744
+	// access-control* : RFC 3744
 	// redirectrefs : RFC 4437
 	// bind : draft-ietf-webdav-bind
 	
@@ -59,6 +62,7 @@ public class DavProtocol {
 		sComplianceStrMap.put(Compliance.bind, "bind");
 		sComplianceStrMap.put(Compliance.access_control, "access-control");
 		sComplianceStrMap.put(Compliance.calendar_access, "calendar-access");
+		sComplianceStrMap.put(Compliance.version_control, "version-control");
 	}
 	
 	public static String getComplianceString(List<Compliance> comp) {

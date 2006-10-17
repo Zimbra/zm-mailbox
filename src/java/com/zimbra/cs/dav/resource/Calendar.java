@@ -32,9 +32,12 @@ import org.dom4j.QName;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol.Compliance;
+import com.zimbra.cs.dav.property.Acl;
+import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
@@ -52,13 +55,17 @@ public class Calendar extends DavResource {
 		mDavCompliance.add(Compliance.access_control);
 		mDavCompliance.add(Compliance.calendar_access);
 
+		ResourceProperty rtype = this.getProperty(DavElements.E_RESOURCETYPE);
+		rtype.addChild(DavElements.E_CALENDAR);
+		rtype.addChild(DavElements.E_PRINCIPAL);
+		
 		setProperty(DavElements.E_DISPLAYNAME, acct.getAttr(Provisioning.A_displayName)+"'s calendar");
 		setProperty(DavElements.E_PRINCIPAL_URL, UrlNamespace.getResourceUrl(this), true);
 		setProperty(DavElements.E_ALTERNATE_URI_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBERSHIP, null, true);
 
-		setProperty(DavElements.E_OWNER, UrlNamespace.getAclUrl(getOwner(), UrlNamespace.ACL_USER), true);
+		addProperties(Acl.getAclProperties(this, null));
 	
 		// XXX add calendar-timezone, max-resource-size,
 		// min-date-time, max-date-time, max-instances, max-attendees-per-instance,
@@ -75,8 +82,8 @@ public class Calendar extends DavResource {
 		return true;
 	}
 
-	public Element addPropertyElement(Element parent, QName propName, boolean putValue) {
-		Element e = super.addPropertyElement(parent, propName, putValue);
+	public Element addPropertyElement(DavContext ctxt, Element parent, QName propName, boolean putValue) {
+		Element e = super.addPropertyElement(ctxt, parent, propName, putValue);
 
 		if (e != null)
 			return e;
@@ -125,14 +132,5 @@ public class Calendar extends DavResource {
 	
 	public String getCalendar(ZCalendar cal) {
 		return cal.toString();
-	}
-	
-	public Element addResourceTypeElement(Element parent, boolean nameOnly) {
-		Element el = super.addResourceTypeElement(parent, nameOnly);
-		if (nameOnly)
-			return el;
-		el.addElement(DavElements.E_CALENDAR);
-		el.addElement(DavElements.E_PRINCIPAL);
-		return el;
 	}
 }

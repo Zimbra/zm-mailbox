@@ -109,7 +109,11 @@ public class DavServlet extends ZimbraServlet {
 		}
 		
 		try {
+			long t0 = System.currentTimeMillis();
+			//ZimbraLog.dav.info("DavServlet dispatch: "+method);
 			method.handle(ctxt);
+			long t1 = System.currentTimeMillis();
+			ZimbraLog.dav.info("DavServlet operation "+method.getName()+" finished in "+(t1-t0)+"ms");
 		} catch (DavException e) {
 			if (e.getCause() instanceof MailServiceException.NoSuchItemException ||
 					e.getStatus() == HttpServletResponse.SC_NOT_FOUND)

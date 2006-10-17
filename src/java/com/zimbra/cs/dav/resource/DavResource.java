@@ -45,9 +45,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.LockMgr;
-import com.zimbra.cs.dav.ResourceProperty;
 import com.zimbra.cs.dav.DavProtocol.Compliance;
+import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -78,6 +77,11 @@ public abstract class DavResource {
 		//mDavCompliance.add(Compliance.access_control);
 		//mDavCompliance.add(Compliance.update);
 		//mDavCompliance.add(Compliance.binding);
+		
+		ResourceProperty rs = new ResourceProperty(DavElements.E_RESOURCETYPE);
+		if (isCollection())
+			rs.addChild(DavElements.E_COLLECTION);
+		addProperty(rs);
 	}
 	
 	protected static String getOwner(Account acct) throws ServiceException {
@@ -119,19 +123,16 @@ public abstract class DavResource {
 		return ret;
 	}
 
-	public Element addPropertyElement(Element parent, QName propName, boolean nameOnly) {
+	public Element addPropertyElement(DavContext ctxt, Element parent, QName propName, boolean nameOnly) {
 		Element e = null;
 		
 		ResourceProperty prop = mProps.get(propName);
 		if (prop != null) {
-			e = prop.addToElement(parent, nameOnly);
+			e = prop.toElement(ctxt, parent, nameOnly);
 			return e;
 		}
 		
-		if (propName.equals(DavElements.P_LOCKDISCOVERY))
-			for (LockMgr.Lock lock : LockMgr.getInstance().getLocks(this))
-				e = addActiveLockElement(parent, lock);
-		
+		// check ACL and add LockDiscovery
 		return e;
 	}
 	
@@ -173,6 +174,15 @@ public abstract class DavResource {
 		setProperty(DavElements.P_GETLASTMODIFIED, DateUtil.toRFC822Date(new Date(ts)));
 	}
 	
+	protected void addProperty(ResourceProperty prop) {
+		mProps.put(prop.getName(), prop);
+	}
+	
+	protected void addProperties(Set<ResourceProperty> props) {
+		for (ResourceProperty p : props)
+			mProps.put(p.getName(), p);
+	}
+	
 	protected void setProperty(String key, String val) {
 		setProperty(QName.get(key, DavElements.WEBDAV_NS), val);
 	}
@@ -200,92 +210,11 @@ public abstract class DavResource {
 		return rs;
 	}
 	
-	public Element addActiveLockElement(Element top, LockMgr.Lock l) {
-		Element lockDiscovery = top.element(DavElements.E_LOCKDISCOVERY);
-		if (lockDiscovery == null)
-			lockDiscovery = top.addElement(DavElements.E_LOCKDISCOVERY);
-		
-		Element lock = lockDiscovery.addElement(DavElements.E_ACTIVELOCK);
-		Element el = lock.addElement(DavElements.E_LOCKTYPE);
-		switch (l.type) {
-		case write:
-			el.addElement(DavElements.E_WRITE);
-		}
-		
-		el = lock.addElement(DavElements.E_LOCKSCOPE);
-		switch (l.scope) {
-		case shared:
-			el.addElement(DavElements.E_SHARED);
-			break;
-		case exclusive:
-			el.addElement(DavElements.E_EXCLUSIVE);
-			break;
-		}
-		
-		lock.addElement(DavElements.E_DEPTH).setText(Integer.toString(l.depth));
-		lock.addElement(DavElements.E_TIMEOUT).setText(l.getTimeoutStr());
-		if (l.owner != null)
-			lock.addElement(DavElements.E_OWNER).setText(l.owner);
-		return lockDiscovery;
-	}
-	
 	/*
-	 * DAV:supported-privilege-set
-	 * RFC3744 section 5.3
+	 * whether the resource is access controlled as in RFC3744.
 	 */
-	public Element addSupportedPrivilegeSet(Element prop) {
-		Element ps = prop.addElement(DavElements.E_SUPPORTED_PRIVILEGE_SET);
-
-		Element all = ps.addElement(DavElements.E_ALL);
-		all.addElement(DavElements.E_ABSTRACT);
-		Element desc = all.addElement(DavElements.E_DESCRIPTION);
-		desc.addAttribute(DavElements.E_LANG, DavElements.LANG_EN_US);
-		desc.setText("any operation");
-		
-		Element priv = all.addElement(DavElements.E_SUPPORTED_PRIVILEGE);
-		priv.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ);
-		desc = priv.addElement(DavElements.E_DESCRIPTION);
-		desc.addAttribute(DavElements.E_LANG, DavElements.LANG_EN_US);
-		desc.setText("read calendar, attachment, notebook");
-		
-		priv = all.addElement(DavElements.E_SUPPORTED_PRIVILEGE);
-		priv.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_WRITE);
-		desc = priv.addElement(DavElements.E_DESCRIPTION);
-		desc.addAttribute(DavElements.E_LANG, DavElements.LANG_EN_US);
-		desc.setText("add calendar appointment, upload attachment");
-		
-		priv = all.addElement(DavElements.E_SUPPORTED_PRIVILEGE);
-		priv.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_UNLOCK);
-		desc = priv.addElement(DavElements.E_DESCRIPTION);
-		desc.addAttribute(DavElements.E_LANG, DavElements.LANG_EN_US);
-		desc.setText("unlock your own resources locked by someone else");
-		
-		return ps;
-	}
-	
-	/*
-	 * DAV:current-user-privilege-set
-	 * RFC3744 section 5.4
-	 * 
-	 * to be overriden by resources supporting ACL.
-	 */
-	public Element addCurrentUserPrivilegeSet(DavContext ctxt, Element prop) {
-		Element ps = prop.addElement(DavElements.E_CURRENT_USER_PRIVILEGE_SET);
-		ps.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ);
-		
-		return ps;
-	}
-	
-	/*
-	 * DAV:ACL
-	 * RFC3744 section 5.5
-	 * 
-	 * to be overriden by resources supporting ACL.
-	 */
-	public Element addAcl(DavContext ctxt, Element prop) {
-		Element acl = prop.addElement(DavElements.E_ACL);
-		
-		return acl;
+	public boolean isAccessControlled() {
+		return true;
 	}
 	
 	public abstract InputStream getContent() throws IOException, DavException;

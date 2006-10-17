@@ -27,10 +27,7 @@ package com.zimbra.cs.dav.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-
-import org.dom4j.Element;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -39,36 +36,37 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.service.ServiceException;
 
 public class Collection extends DavResource {
 
 	private int mId;
-	private ACL mAcl;
 	
-	public Collection(Folder f, Account acct) throws ServiceException {
+	public Collection(Folder f, Account acct) throws DavException, ServiceException {
 		super(getFolderPath(f.getPath()), acct);
 		setCreationDate(f.getDate());
 		setLastModifiedDate(f.getChangeDate());
 		setProperty(DavElements.P_DISPLAYNAME, f.getSubject());
 		setProperty(DavElements.P_GETCONTENTLENGTH, "0");
 		mId = f.getId();
-		mAcl = f.getPermissions();
+		ACL acl = f.getPermissions();
+		addProperties(Acl.getAclProperties(this, acl));
 	}
 	
-	private Collection(String name, String acct) {
+	private Collection(String name, String acct) throws DavException {
 		super(name, acct);
 		long now = System.currentTimeMillis();
 		setCreationDate(now);
 		setLastModifiedDate(now);
 		setProperty(DavElements.P_DISPLAYNAME, name.substring(1));
 		setProperty(DavElements.P_GETCONTENTLENGTH, "0");
+		addProperties(Acl.getAclProperties(this, null));
 	}
 	
 	private static String getFolderPath(String path) {
@@ -101,6 +99,7 @@ public class Collection extends DavResource {
 		} catch (ServiceException e) {
 			ZimbraLog.dav.error("can't get children from folder: id="+mId, e);
 		}
+		// this is where we add the phantom folder for attachment browser.
 		if (mId == Mailbox.ID_FOLDER_USER_ROOT) {
 			children.add(new Collection(UrlNamespace.ATTACHMENTS_PREFIX, getOwner()));
 		}
@@ -128,84 +127,5 @@ public class Collection extends DavResource {
 		ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_DOCUMENT, mId));
 		ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_WIKI, mId));
 		return ret;
-	}
-
-	private Element addPrivileges(Element prop, Grant g) {
-		short rights = g.getGrantedRights();
-		if ((rights & ACL.RIGHT_READ) > 0)
-			prop.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ);
-		if ((rights & ACL.RIGHT_WRITE) > 0)
-			prop.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_WRITE);
-		if ((rights & ACL.RIGHT_ADMIN) > 0)
-			prop.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_UNLOCK);
-		return prop;
-	}
-	
-	public Element addCurrentUserPrivilegeSet(DavContext ctxt, Element prop) {
-		Element ps = super.addCurrentUserPrivilegeSet(ctxt, prop);
-		
-		Iterator<ACL.Grant> iter = mAcl.grantIterator();
-		while (iter.hasNext()) {
-			Grant g = iter.next();
-			try {
-				if (g.getGrantedRights(ctxt.getAuthAccount()) > 0) {
-					addPrivileges(ps, g);
-					break;
-				}
-			} catch (ServiceException e) {
-				ZimbraLog.dav.error("can't add principal: grantee="+g.getGranteeId(), e);
-			}
-		}
-		return ps;
-	}
-	
-	public Element addAcl(DavContext ctxt, Element prop) {
-		Element acl = super.addAcl(ctxt, prop);
-		
-		Iterator<ACL.Grant> iter = mAcl.grantIterator();
-		while (iter.hasNext()) {
-			Grant g = iter.next();
-			try {
-				if (g.getGrantedRights(ctxt.getAuthAccount()) == 0)
-					continue;
-				Element ace = acl.addElement(DavElements.E_ACE);
-				Element principal = ace.addElement(DavElements.E_PRINCIPAL);
-				Element e;
-				switch (g.getGranteeType()) {
-				case ACL.GRANTEE_USER:
-				case ACL.GRANTEE_GUEST:
-					// maybe use different href for guest and internal users.
-					e = principal.addElement(DavElements.E_HREF);
-					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_USER));
-					break;
-				case ACL.GRANTEE_AUTHUSER:
-					principal.addElement(DavElements.E_AUTHENTICATED);
-					break;
-				case ACL.GRANTEE_COS:
-					e = principal.addElement(DavElements.E_HREF);
-					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_COS));
-					break;
-				case ACL.GRANTEE_DOMAIN:
-					e = principal.addElement(DavElements.E_HREF);
-					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_DOMAIN));
-					break;
-				case ACL.GRANTEE_GROUP:
-					e = principal.addElement(DavElements.E_HREF);
-					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_GROUP));
-					break;
-				case ACL.GRANTEE_PUBLIC:
-					principal.addElement(DavElements.E_UNAUTHENTICATED);
-					break;
-				}
-				
-				Element grant = ace.addElement(DavElements.E_GRANT);
-				addPrivileges(grant, g);
-			} catch (DavException e) {
-				ZimbraLog.dav.error("can't add principal: grantee="+g.getGranteeId(), e);
-			} catch (ServiceException e) {
-				ZimbraLog.dav.error("can't add principal: grantee="+g.getGranteeId(), e);
-			}
-		}
-		return acl;
 	}
 }

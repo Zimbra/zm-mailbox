@@ -51,15 +51,6 @@ public class DavContext {
 		mReq = req;  mResp = resp;
 		mUri = req.getPathInfo().toLowerCase();
 		mStatus = HttpServletResponse.SC_OK;
-		/*
-		java.util.Enumeration headers = req.getHeaderNames();
-		while (headers.hasMoreElements()) {
-			String hdr = (String)headers.nextElement();
-			java.util.Enumeration val = req.getHeaders(hdr);
-			while (val.hasMoreElements())
-				ZimbraLog.dav.debug(hdr+": "+(String)val.nextElement());
-		}
-		*/
 	}
 	
 	public HttpServletRequest getRequest() {
@@ -104,22 +95,22 @@ public class DavContext {
 	}
 	
 	public enum Depth {
-		ZERO, ONE, INFINITY
+		zero, one, infinity
 	}
 	
 	public Depth getDepth() {
 		String hdr = mReq.getHeader(DavProtocol.HEADER_DEPTH);
 		if (hdr == null)
-			return Depth.ZERO;
+			return Depth.zero;
 		if (hdr.equals("0"))
-			return Depth.ZERO;
+			return Depth.zero;
 		if (hdr.equals("1"))
-			return Depth.ONE;
+			return Depth.one;
 		if (hdr.equalsIgnoreCase("infinity"))
-			return Depth.INFINITY;
+			return Depth.infinity;
 		
 		ZimbraLog.dav.info("invalid depth: "+hdr);
-		return Depth.ZERO;
+		return Depth.zero;
 	}
 	
 	public boolean hasRequestMessage() {

@@ -111,6 +111,10 @@ public abstract class DavMethod {
 		sStatusTextMap.put(DavProtocol.STATUS_INSUFFICIENT_STORAGE, "HTTP/1.1 507 Insufficient Storage");
 	}
 	
+	public String toString() {
+		return "DAV method " + getName();
+	}
+	
 	protected static final int STATUS_OK = HttpServletResponse.SC_OK;
 	
 	protected void addStatusElement(Element resp, int code) {

@@ -134,7 +134,7 @@ public class DavElements {
 	public static final String P_NEED_PRIVILEGES = "need-privileges";
 	public static final String P_RESOURCE = "resource";
 	
-	// caldav
+	// caldav resource type
 	public static final String P_CALENDAR = "calendar";
 	
 	// caldav properties
@@ -156,6 +156,11 @@ public class DavElements {
 	// caldav precondition
 	public static final String P_VALID_CALENDAR_DATA = "valid-calendar-data";
 
+	// caldav privilege
+	public static final String P_READ_FREE_BUSY = "read-free-busy";
+	
+	// caldav principal properties
+	public static final String P_CALENDAR_HOME_SET = "calendar-home-set";
 
 	// QName
 	public static final QName E_CREATIONDATE = QName.get(P_CREATIONDATE, WEBDAV_NS);
@@ -194,6 +199,7 @@ public class DavElements {
 	public static final QName E_RESOURCE = QName.get(P_RESOURCE, WEBDAV_NS);
 	public static final QName E_PRIVILEGE = QName.get(P_PRIVILEGE, WEBDAV_NS);
 	public static final QName E_OWNER = QName.get(P_OWNER, WEBDAV_NS);
+	public static final QName E_GROUP = QName.get(P_GROUP, WEBDAV_NS);
 	public static final QName E_PRINCIPAL = QName.get(P_PRINCIPAL, WEBDAV_NS);
 	public static final QName E_ALTERNATE_URI_SET = QName.get(P_ALTERNATE_URI_SET, WEBDAV_NS);
 	public static final QName E_PRINCIPAL_URL = QName.get(P_PRINCIPAL_URL, WEBDAV_NS);
@@ -213,6 +219,14 @@ public class DavElements {
 	public static final QName E_AUTHENTICATED = QName.get(P_AUTHENTICATED, WEBDAV_NS);
 	public static final QName E_UNAUTHENTICATED = QName.get(P_UNAUTHENTICATED, WEBDAV_NS);
 	public static final QName E_GRANT = QName.get(P_GRANT, WEBDAV_NS);
+	public static final QName E_DENY = QName.get(P_DENY, WEBDAV_NS);
+	public static final QName E_ACL_RESTRICTIONS = QName.get(P_ACL_RESTRICTIONS, WEBDAV_NS);
+	public static final QName E_GRANT_ONLY = QName.get(P_GRANT_ONLY, WEBDAV_NS);
+	public static final QName E_NO_INVERT = QName.get(P_NO_INVERT, WEBDAV_NS);
+	public static final QName E_DENY_BEFORE_GRANT = QName.get(P_DENY_BEFORE_GRANT, WEBDAV_NS);
+	public static final QName E_REQUIRED_PRINCIPAL = QName.get(P_REQUIRED_PRINCIPAL, WEBDAV_NS);
+	public static final QName E_INHERITED_ACL_SET = QName.get(P_INHERITED_ACL_SET, WEBDAV_NS);
+	public static final QName E_PRINCIPAL_COLLECTION_SET = QName.get(P_PRINCIPAL_COLLECTION_SET, WEBDAV_NS);
 	
 	// caldav
 	public static final QName E_CALENDAR = QName.get(P_CALENDAR, CALDAV_NS);
