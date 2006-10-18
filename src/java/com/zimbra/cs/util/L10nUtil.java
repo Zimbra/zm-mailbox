@@ -76,6 +76,10 @@ public class L10nUtil {
         calendarResourceDeclineReasonConflict,
         calendarResourceConflictScheduledBy,
 
+        // caldav messages
+        caldavCalendarDescription,
+        
+        
         // add other messages in the future...
     }
 

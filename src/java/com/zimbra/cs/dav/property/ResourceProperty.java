@@ -26,6 +26,7 @@ package com.zimbra.cs.dav.property;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
@@ -39,6 +40,7 @@ public class ResourceProperty {
 	private boolean mProtected;
 	private boolean mLive;
 	private QName mName;
+	private Locale mLocale;
 	private String mValue;
 	private ArrayList<Element> mChildren;
 
@@ -78,12 +80,18 @@ public class ResourceProperty {
 		if (nameOnly)
 			return elem;
 		
-		if (mValue != null)
+		if (mValue != null) {
+			if (mLocale != null)
+				elem.addAttribute(DavElements.E_LANG, mLocale.toString());
 			elem.setText(mValue);
-		else
+		} else
 			for (Element child : mChildren)
 				elem.add(child.createCopy());
 		return elem;
+	}
+	
+	public void setMessageLocale(Locale locale) {
+		mLocale = locale;
 	}
 	
 	public void setStringValue(String value) {

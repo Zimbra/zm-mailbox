@@ -38,7 +38,7 @@ public class DavProtocol {
 	private static HashMap<Compliance,String> sComplianceStrMap;
 
 	// WEBDAV compliances:
-	// Each DAV resources declares the ones they are compliant to.
+	// Each DAV resources must declare the ones they are compliant to.
 	//
 	// class 1* : RFC 2518 - all "must" features
 	// class 2* : RFC 2518 - locking
