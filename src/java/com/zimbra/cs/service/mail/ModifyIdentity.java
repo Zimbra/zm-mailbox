@@ -28,36 +28,21 @@ import java.util.Map;
 
 import com.zimbra.cs.mailbox.Identity;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class IdentityAction extends ItemAction {
-	public static final String OP_CREATE  = "create";
+public class ModifyIdentity extends DocumentHandler {
 	
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
-        Element action = request.getElement(MailService.E_ACTION);
-        String operation = action.getAttribute(MailService.A_OPERATION).toLowerCase();
-
-        String successes = null;
-        if (operation.equals(OP_CREATE)) {
-        	Element identity = action.getElement(MailService.E_IDENTITY);
-        	successes = Identity.create(getRequestedAccount(zsc), zsc.getOperationContext(), identity).getId();
-        } else if (operation.equals(OP_UPDATE)) {
-        	String id = action.getAttribute(MailService.A_ID);
-        	Element identity = action.getElement(MailService.E_IDENTITY);
-        	successes = Identity.update(id, getRequestedAccount(zsc), zsc.getOperationContext(), identity, false).getId();
-        } else if (operation.equals(OP_HARD_DELETE)) {
-        	String id = action.getAttribute(MailService.A_ID);
-        	successes = Identity.update(id, getRequestedAccount(zsc), zsc.getOperationContext(), null, true).getId();
-        }
+        Element identity = request.getElement(MailService.E_IDENTITY);
+        String name = identity.getAttribute(MailService.A_NAME);
+        Identity.modify(name, getRequestedAccount(zsc), zsc.getOperationContext(), identity, name);
         
-        Element response = zsc.createElement(MailService.IDENTITY_ACTION_RESPONSE);
-        Element act = response.addUniqueElement(MailService.E_ACTION);
-        act.addAttribute(MailService.A_ID, successes);
-        act.addAttribute(MailService.A_OPERATION, operation);
+        Element response = zsc.createElement(MailService.MODIFY_IDENTITY_RESPONSE);
         return response;
     }
 }

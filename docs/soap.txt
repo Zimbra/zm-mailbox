@@ -373,7 +373,12 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
    </zimlets>
    <mailURL>{mail-url}</mailURL>+
    <identities>
-     <identity {identity attributes} />*
+     <identity name={identity-name}>
+       <a n="{name}">{value}</a>
+       ...
+       <a n="{name}">{value}</a>
+       <signature n="{name}">{value}</signature>*
+     </identity>*
    </identities>
    [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
@@ -395,9 +400,9 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
   license attribute is pertinent to the Network edition only.  this attribute is 
   present only when the installed license is NOT ok.
 
-  {identity attributes} : 
+  identity attributes : 
   		name, id, isDefault, sendFromDisplay sendFromAddress,
-  		setReplyTo, setReplyToDisplay, setReplyToAddress, useSignature, signature,
+  		setReplyTo, setReplyToDisplay, setReplyToAddress, useSignature,
   		useWhenSentTo, whenSentToAddresses, useWhenInFolders, whenInFolderIds,
   		useDefaultSettings, sendBccTo, saveCopyIn, applyTag, replyFormat,
   		whenReplying, whenForwarding, placeSignature, prefixWidth
@@ -1679,18 +1684,38 @@ java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
 
 ---------
 
-<IdentityActionRequest>
-  <action op="create|delete|update" [id="{itemid}"]>
-  	[<identity {identity attributes} />]
-  </action>
-</IdentityActionRequest>
+<CreateIdentityRequest>
+  <identity name="{identity-name}">
+    <a n="{name}">{value}</a>
+    ...
+    <a n="{name}">{value}</a>
+    <signature n="{name}">{value}</signature>*
+  </identity>
+</CreateIdentityRequest>
 
-  - id attribute is required for delete and update, but not required for create.
-  
-  - if op="create|update", the caller can specify the identity attributes
-  	in the enclosed identity element.
+<CreateIdentityResponse/>
 
-<IdentityActionResponse>
-  <action op="create|delete|update" id="..."/> <!-- iff op was successful -->
-</IdentityActionResponse>
+GetInfo returns the Identities for the user.  See GetInfo section for the list 
+of Identity attributes.
+
+---------
+
+<ModifyIdentityRequest>
+  <identity name="{identity-name}">
+    <a n="{name}">{value}</a>
+    ...
+    <a n="{name}">{value}</a>
+    <signature n="{name}">{value}</signature>*
+  </identity>
+</ModifyIdentityRequest>
+
+<ModifyIdentityResponse/>
+
+---------
+
+<DeleteIdentityRequest>
+  <identity name="{identity-name}"/>
+</DeleteIdentityRequest>
+
+<DeleteIdentityResponse/>
 

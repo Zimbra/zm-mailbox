@@ -173,8 +173,12 @@ public class MailService implements DocumentService {
     public static final QName WIKI_ACTION_RESPONSE = QName.get("WikiActionResponse", NAMESPACE);
 
     // identities
-    public static final QName IDENTITY_ACTION_REQUEST = QName.get("IdentityActionRequest", NAMESPACE);
-    public static final QName IDENTITY_ACTION_RESPONSE = QName.get("IdentityActionResponse", NAMESPACE);
+    public static final QName CREATE_IDENTITY_REQUEST = QName.get("CreateIdentityRequest", NAMESPACE);
+    public static final QName CREATE_IDENTITY_RESPONSE = QName.get("CreateIdentityResponse", NAMESPACE);
+    public static final QName MODIFY_IDENTITY_REQUEST = QName.get("ModifyIdentityRequest", NAMESPACE);
+    public static final QName MODIFY_IDENTITY_RESPONSE = QName.get("ModifyIdentityResponse", NAMESPACE);
+    public static final QName DELETE_IDENTITY_REQUEST = QName.get("DeleteIdentityRequest", NAMESPACE);
+    public static final QName DELETE_IDENTITY_RESPONSE = QName.get("DeleteIdentityResponse", NAMESPACE);
     
     public static final String E_MAILBOX = "mbx";
     public static final String E_CONV = "c";
@@ -208,6 +212,7 @@ public class MailService implements DocumentService {
     public static final String E_LOCATION = "loc";    
     public static final String E_DESCRIPTION = "desc";    
     public static final String E_VCARD = "vcard";    
+    public static final String E_SIGNATURE = "signature";
 
     public static final String E_DELETED = "deleted";    
     
@@ -562,6 +567,8 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(WIKI_ACTION_REQUEST, new com.zimbra.cs.service.wiki.WikiAction());
         
         // identity
-        dispatcher.registerHandler(IDENTITY_ACTION_REQUEST, new IdentityAction());
+        dispatcher.registerHandler(CREATE_IDENTITY_REQUEST, new CreateIdentity());
+        dispatcher.registerHandler(MODIFY_IDENTITY_REQUEST, new ModifyIdentity());
+        dispatcher.registerHandler(DELETE_IDENTITY_REQUEST, new DeleteIdentity());
 	}
 }

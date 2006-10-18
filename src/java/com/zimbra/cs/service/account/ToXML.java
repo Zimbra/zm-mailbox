@@ -26,12 +26,12 @@
 package com.zimbra.cs.service.account;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
 import java.util.Map.Entry;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.EntrySearchFilter;
@@ -164,24 +164,18 @@ public class ToXML {
     
     public static Element encodeIdentity(Element parent, Identity identity) {
     	Element e = parent.addElement(AccountService.E_IDENTITY);
-
-    	for (Object o : identity.getAttributeNames()) {
-    		String key = (String) o;
-    		Identity.AttributeType type = identity.getAttributeType(key);
-    		switch (type) {
-    		case string:
-    			e.addAttribute(key, identity.get(key));
-    			break;
-    		case list:
-    			List l = identity.getList(key);
-    			for (Object attr : l)
-    				e.addElement(key).setText((String)attr);
-    			break;
-    		case map:
-    			// we don't use this case yet.
-    			break;
+    	e.addAttribute(AccountService.E_NAME, identity.getName());
+    	try {
+    		Map<String,String> sigs = identity.getSignatures();
+    		for (Map.Entry<String,String> sig : sigs.entrySet()) {
+    			Element s = e.addElement(AccountService.E_SIGNATURE);
+    			s.addAttribute(AccountService.A_NAME, sig.getKey());
+    			s.setText(sig.getValue());
     		}
+    	} catch (ServiceException se) {
+    		ZimbraLog.account.info("cannot get identity signatures", se);
     	}
+    	addAccountAttrs(e, identity.getAttrs());
     	return e;
     }
 }

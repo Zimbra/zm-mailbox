@@ -25,23 +25,24 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.Element.Attribute;
 
 public class Identity {
 	public static final String sSECTION_IDENTITIES = "identities";
+	public static final String sSIGNATURES = "signatures";
 	
 	public static final String sKEY_NAME = "name";
-	public static final String sKEY_ID = "id";
-	public static final String sKEY_LAST_ID = "lastid";
 	
 	public static List<Identity> get(Account acct, OperationContext octxt) throws ServiceException {
 		ArrayList<Identity> identities = new ArrayList<Identity>();
@@ -53,150 +54,124 @@ public class Identity {
 		Metadata md = mbox.getConfig(octxt, sSECTION_IDENTITIES);
 		if (md == null)
 			return identities;
-		List mdlist = md.getList(sSECTION_IDENTITIES).asList();
-		for (Object obj : mdlist)
-			if (obj instanceof Metadata)
-				identities.add(new Identity((Metadata)obj));
+		
+		for (Object key : md.asMap().keySet())
+			if (key instanceof String) {
+				String k = (String)key;
+				identities.add(new Identity(k, md.getMap(k)));
+			}
+				
 		return identities;
 	}
 
-	public synchronized static Identity create(Account acct, OperationContext octxt, Element req) throws ServiceException {
+	public synchronized static void create(Account acct, OperationContext octxt, Element req, String name) throws ServiceException {
 		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
 		Metadata md = mbox.getConfig(octxt, sSECTION_IDENTITIES);
-		long lastId;
 		
-		if (md == null) {
+		if (md == null)
 			md = new Metadata();
-		}
 
-		try {
-			lastId = md.getLong(sKEY_LAST_ID);
-		} catch (ServiceException e) {
-			lastId = 0;
-		}
-		
-		MetadataList ls;
-		try {
-			ls = md.getList(sSECTION_IDENTITIES);
-		} catch (ServiceException e) {
-			ls = new MetadataList();
-			md.put(sSECTION_IDENTITIES, ls);
-		}
+		if (md.getMap(name, true) != null)
+			throw ServiceException.INVALID_REQUEST("identity "+name+" already exists", null);
 		
 		Metadata newOne = new Metadata();
 		populate(req, newOne);
+		md.put(name, newOne);
 		
-		newOne.put(sKEY_ID, Long.toString(++lastId));
-		ls.add(newOne);
-		md.put(sKEY_LAST_ID, lastId);
-		md.put(sSECTION_IDENTITIES, ls);
 		mbox.setConfig(octxt, sSECTION_IDENTITIES, md);
-		return new Identity(newOne);
 	}
 	
-	public synchronized static Identity update(String id, Account acct, OperationContext octxt, Element req, boolean delete) throws ServiceException {
+	public synchronized static void modify(String id, Account acct, OperationContext octxt, Element req, String name) throws ServiceException {
 		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
 		Metadata md = mbox.getConfig(octxt, sSECTION_IDENTITIES);
-		MetadataList ls;
 		
 		if (md == null)
 			throw ServiceException.INVALID_REQUEST("identity not found", null);
-		else
-			ls = md.getList(sSECTION_IDENTITIES);
 
-		Metadata identity = null;
-		for (int index = 0; index < ls.size(); index++) {
-			identity = ls.getMap(index);
-			if (id.equals(identity.get(sKEY_ID))) {
-				ls.remove(index);
-				break;
-			}
-			identity = null;
-		}
-		
+		Metadata identity = md.getMap(name, true);
 		if (identity == null)
 			throw ServiceException.INVALID_REQUEST("identity not found", null);
 
-		if (!delete) {
-			populate(req, identity);
-			ls.add(identity);
-		}
+		populate(req, identity);
+		md.put(name, identity);
 		
-		md.put(sSECTION_IDENTITIES, ls);
 		mbox.setConfig(octxt, sSECTION_IDENTITIES, md);
-		return new Identity(identity);
+	}
+	
+	public synchronized static void delete(String id, Account acct, OperationContext octxt, Element req, String name) throws ServiceException {
+		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
+		Metadata md = mbox.getConfig(octxt, sSECTION_IDENTITIES);
+		
+		if (md == null)
+			throw ServiceException.INVALID_REQUEST("identity not found", null);
+
+		Metadata identity = md.getMap(name, true);
+		if (identity == null)
+			throw ServiceException.INVALID_REQUEST("identity not found", null);
+
+		md.remove(name);
+		
+		mbox.setConfig(octxt, sSECTION_IDENTITIES, md);
 	}
 	
 	private static void populate(Element elem, Metadata md) throws ServiceException {
-		for (Attribute a : elem.listAttributes())
-			md.put(a.getKey(), a.getValue());
-		
-		TreeSet<String> multiValueAttrs = new TreeSet<String>();
-		for (Element e : elem.listElements(null)) {
-			String key = e.getName();
-			if (multiValueAttrs.contains(key))
-				continue;
-			multiValueAttrs.add(key);
-			MetadataList ls = new MetadataList();
-			for (Element attr : elem.listElements(key))
-				ls.add(attr.getText());
-			md.put(key, ls);
+		HashMap<String,Object> attrs = new HashMap<String,Object>();
+		Metadata sigmap = md.getMap(sSIGNATURES, true);
+		if (sigmap == null)
+			sigmap = new Metadata();
+		for (Element a : elem.listElements()) {
+			String name = a.getName();
+			String v = a.getText();
+			if (name.equals(MailService.E_ATTRIBUTE)) {
+				StringUtil.addToMultiMap(attrs, a.getAttribute(MailService.E_NAME), v);
+			} else if (name.equals(MailService.E_SIGNATURE)) {
+				sigmap.put(a.getAttribute(MailService.E_NAME), v);
+			}
 		}
-	}
-	
-	private Map mData;
 
-	private Identity(Metadata md) throws ServiceException {
-		mData = md.asMap();
+		for (Map.Entry<String,Object> entry : attrs.entrySet()) {
+			String k = entry.getKey();
+			Object v = entry.getValue();
+			if (v instanceof String)
+				md.put(k, (String)v);
+			else if (v instanceof String[])
+				md.put(k, new MetadataList(Arrays.asList((String[])v)));
+		}
+		md.put(sSIGNATURES, sigmap);
+	}
+
+	private String mName;
+	private Metadata mData;
+
+	private Identity(String name, Metadata md) throws ServiceException {
+		mName = name;
+		mData = md;
 	}
 
 	public String getName() {
-		return get(sKEY_NAME);
+		return mName;
 	}
 	
-	public String getId() {
-		return get(sKEY_ID);
-	}
-
-	public enum AttributeType {
-		string, map, list, unknown
-	}
-	
-	public Set getAttributeNames() {
-		return mData.keySet();
-	}
-	
-	public AttributeType getAttributeType(String key) {
-		Object val = mData.get(key);
-		if (val instanceof String)
-			return AttributeType.string;
-		else if (val instanceof Metadata)
-			return AttributeType.map;
-		else if (val instanceof MetadataList)
-			return AttributeType.list;
-		
-		// then what?
-		return AttributeType.unknown;
+	public Map getAttrs() {
+		HashMap<String,Object> attrs = new HashMap<String,Object>();
+		Map md = mData.asMap();
+		for (Object k : md.keySet()) {
+			String key = (String) k;
+			Object val = md.get(key);
+			if (val instanceof String)
+				attrs.put(key, val);
+			else if (val instanceof MetadataList)
+				attrs.put(key, ((MetadataList)val).asList().toArray(new String[0]));
+		}
+		return attrs;
 	}
 	
-	public String get(String key) {
-		Object val = mData.get(key);
-		if (val instanceof String)
-			return (String)val;
-		return null;
-	}
-	
-	public List getList(String key) {
-		Object val = mData.get(key);
-		if (val instanceof MetadataList)
-			return ((MetadataList)val).asList();
-		return null;
-	}
-	
-	public Map getMap(String key) {
-		Object val = mData.get(key);
-		if (val instanceof Metadata)
-			return ((Metadata)val).asMap();
-		return null;
+	public Map<String,String> getSignatures() throws ServiceException {
+		Metadata sigmap = mData.getMap(sSIGNATURES, true);
+		if (sigmap == null)
+			return Collections.emptyMap();
+		@SuppressWarnings("unchecked")
+		Map<String,String> m = sigmap.asMap();
+		return m;
 	}
 }
