@@ -87,6 +87,8 @@ public class DomainAccessManager extends AccessManager {
         if (!canAccessAccount(at,  targetAccount))
             return false;
 
+        if (at.isAdmin()) return true;
+        
         Account adminAccount = Provisioning.getInstance().get(Provisioning.AccountBy.id,  at.getAccountId());
         if (adminAccount == null) return false;
 
