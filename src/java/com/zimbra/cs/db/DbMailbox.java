@@ -277,20 +277,30 @@ public class DbMailbox {
         ZimbraLog.mailbox.info("Clearing contents of mailbox " + mailboxId + ", group " + groupId);
         if (conn == null)
             conn = mbox.getOperationConnection();
-        PreparedStatement stmt = null;
+        conn.disableForeignKeyConstraints();
         try {
             String dbname = getDatabaseName(mailboxId, groupId);
 
             // Delete in reverse order.
             for (int i = sTables.length - 1; i >= 0; i--) {
                 String table = dbname + "." + sTables[i];
-                stmt = conn.prepareStatement("DELETE FROM " + table + " WHERE mailbox_id = " + mailboxId);
-                stmt.executeUpdate();
+                PreparedStatement stmt = null;
+                try {
+                    stmt = conn.prepareStatement("DELETE FROM " + table + " WHERE mailbox_id = " + mailboxId);
+                    stmt.executeUpdate();
+                } finally {
+                    DbPool.closeStatement(stmt);
+                }
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("dropMailboxFromGroup(" + mailboxId + ")", e);
         } finally {
-            DbPool.closeStatement(stmt);
+            try {
+                conn.enableForeignKeyConstraints();
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.error("Error enabling foreign key constraints during mailbox deletion", e);
+                // Don't rethrow to avoid masking any exception from DELETE statements.
+            }
         }
     }
 
