@@ -39,6 +39,7 @@ public class ZContactHit implements ZSearchHit {
     private String mEmail, mEmail2, mEmail3;
     private String mRevision;
     private String mFolderId;
+    private boolean mIsGroup;
     private float mScore;
     private long mMetaDataDate;
         
@@ -54,6 +55,7 @@ public class ZContactHit implements ZSearchHit {
         mEmail2 = e.getAttribute(Contact.A_email2, null);
         mEmail3 = e.getAttribute(Contact.A_email3, null);
         mMetaDataDate = e.getAttributeLong(MailService.A_MODIFIED_DATE, 0) * 1000;
+        mIsGroup = e.getAttributeBool(Contact.A_dlist, false);
     }
 
     public String toString() {
@@ -69,10 +71,15 @@ public class ZContactHit implements ZSearchHit {
         sb.add(Contact.A_email, mEmail);
         sb.add(Contact.A_email2, mEmail2);
         sb.add(Contact.A_email3, mEmail3);
+        sb.add(Contact.A_dlist, mIsGroup);
         sb.endStruct();
         return sb.toString();
     }
 
+    public boolean isgGroup() {
+        return mIsGroup;
+    }
+    
     public String getTagIds() {
         return mTags;
     }

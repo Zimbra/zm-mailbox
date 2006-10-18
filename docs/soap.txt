@@ -859,7 +859,9 @@ contact result:
 ---------------
 <SearchResponse offset="..." more="{more-flag}">
    <cn id="id" t="tags" l="folder" sf="SORT-FIELD-VALUE" [email="Email_1 Addr"] [email2="Email_2_addr"]
-       email3="Email_3_addr" rev="REVISION" fileAsStr="..." md="{metadata-change-date}"/>
+       email3="Email_3_addr" [dlist="1"] rev="REVISION" fileAsStr="..." md="{metadata-change-date}"/>
+
+dlist=1 is present if the contact is a personal distribution list.
 
 note result:
 ------------

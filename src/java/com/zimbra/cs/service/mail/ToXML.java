@@ -28,30 +28,32 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.*;
-
-import org.apache.commons.httpclient.HttpsURL;
-import org.apache.commons.httpclient.HttpURL;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
-import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Appointment.Instance;
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.Note;
+import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mailbox.SenderList;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
@@ -59,7 +61,6 @@ import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.handler.TextEnrichedHandler;
@@ -68,11 +69,28 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.mail.EmailElementCache.CacheNode;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
+import org.apache.commons.httpclient.HttpURL;
+import org.apache.commons.httpclient.HttpsURL;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.ContentDisposition;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimePart;
+import javax.mail.internet.MimeUtility;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -349,6 +367,10 @@ public class ToXML {
                 email = contact.get(Contact.A_email3);
                 if (email != null)
                     elem.addAttribute(Contact.A_email3, email);
+
+                String dlist = contact.get(Contact.A_dlist);
+                if (dlist != null)
+                    elem.addAttribute(Contact.A_dlist,  "1");
 
                 // send back date with summary via search results
                 elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);

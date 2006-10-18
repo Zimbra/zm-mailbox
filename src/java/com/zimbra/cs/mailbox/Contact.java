@@ -74,7 +74,8 @@ public class Contact extends MailItem {
     public static final String A_carPhone = "carPhone";
     public static final String A_company = "company";
     public static final String A_companyPhone = "companyPhone";
-    public static final String A_department = "department"; 
+    public static final String A_department = "department";
+    public static final String A_dlist = "dlist";
     public static final String A_email = "email";
     public static final String A_email2 = "email2";
     public static final String A_email3 = "email3";

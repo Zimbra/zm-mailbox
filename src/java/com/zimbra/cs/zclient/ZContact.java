@@ -25,16 +25,33 @@
 
 package com.zimbra.cs.zclient;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 public class ZContact  {
-  
+
+    /** "File as" setting: &nbsp;<code>Last, First</code> */
+    public static final String FA_LAST_C_FIRST = "1";
+    /** "File as" setting: &nbsp;<code>First Last</code> */
+    public static final String FA_FIRST_LAST = "2";
+    /** "File as" setting: &nbsp;<code>Company</code> */
+    public static final String FA_COMPANY = "3";
+    /** "File as" setting: &nbsp;<code>Last, First (Company)</code> */
+    public static final String FA_LAST_C_FIRST_COMPANY = "4";
+    /** "File as" setting: &nbsp;<code>First Last (Company)</code> */
+    public static final String FA_FIRST_LAST_COMPANY = "5";
+    /** "File as" setting: &nbsp;<code>Company (Last, First)</code> */
+    public static final String FA_COMPANY_LAST_C_FIRST = "6";
+    /** "File as" setting: &nbsp;<code>Company (First Last)</code> */
+    public static final String FA_COMPANY_FIRST_LAST = "7";
+    /** "File as" setting: <i>[explicitly specified "file as" string]</i> */
+    public static final String FA_EXPLICIT = "8";
+
     private String mId;
     private String mFlags;
     private String mFolderId;
@@ -53,6 +70,7 @@ public class ZContact  {
         companyPhone,
         description,
         department,
+        dlist,
         email,
         email2,
         email3,
