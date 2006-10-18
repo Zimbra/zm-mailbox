@@ -863,19 +863,19 @@ public class CalendarUtils {
 
     }
 
-    static Invite buildCancelInviteCalendar(
+    public static Invite buildCancelInviteCalendar(
             Account acct, String senderAddr, boolean onBehalfOf, Invite inv,
             String comment, List<ZAttendee> forAttendees) throws ServiceException {
         return cancelInvite(acct, senderAddr, onBehalfOf, inv, comment, forAttendees, null);
     }
 
-    static Invite buildCancelInviteCalendar(
+    public static Invite buildCancelInviteCalendar(
             Account acct, String senderAddr, boolean onBehalfOf, Invite inv,
             String comment) throws ServiceException {
         return cancelInvite(acct, senderAddr, onBehalfOf, inv, comment, null, null);
     }
 
-    static Invite buildCancelInstanceCalendar(
+    public static Invite buildCancelInstanceCalendar(
             Account acct, String senderAddr, boolean onBehalfOf, Invite inv,
             String comment, RecurId recurId) throws ServiceException {
         return cancelInvite(acct, senderAddr, onBehalfOf, inv, comment, null, recurId);
