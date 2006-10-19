@@ -1751,12 +1751,12 @@ public class Invite {
                             break;
                         }
                     }
-                    
+
                     ParsedDuration duration = newInv.getDuration();
                     
                     if (duration == null) {
                         ParsedDateTime end = newInv.getEndTime();
-                        if (end != null) {
+                        if (end != null && newInv.getStartTime() != null) {
                             duration = end.difference(newInv.getStartTime());
                         }
                     }
@@ -1871,7 +1871,9 @@ public class Invite {
             event.addProperty(new ZProperty(ICalTok.COMMENT, comment));
         
         // DTSTART
-        event.addProperty(getStartTime().toProperty(ICalTok.DTSTART, useOutlookCompatMode));
+        ParsedDateTime dtstart = getStartTime();
+        if (dtstart != null)
+            event.addProperty(dtstart.toProperty(ICalTok.DTSTART, useOutlookCompatMode));
         
         // DTEND or DUE
         ParsedDateTime dtend = getEndTime();

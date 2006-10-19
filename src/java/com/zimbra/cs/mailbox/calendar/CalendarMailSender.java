@@ -267,7 +267,7 @@ public class CalendarMailSender {
         String sbj = getCancelSubject(defaultInv, locale);
         StringBuilder sb = new StringBuilder(text);
         sb.append("\r\n\r\n");
-        if (cancelInstanceInv != null) {
+        if (cancelInstanceInv != null && cancelInstanceInv.getStartTime() != null) {
             sb.append(L10nUtil.getMessage(MsgKey.calendarCancelAppointmentInstanceWhich, locale));
             sb.append(" ");
             ParsedDateTime start = cancelInstanceInv.getStartTime();

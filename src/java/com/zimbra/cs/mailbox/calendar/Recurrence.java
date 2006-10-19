@@ -328,7 +328,7 @@ public class Recurrence
             for (Iterator iter = mRules.iterator(); iter.hasNext();) {
                 IRecurrence cur = (IRecurrence)iter.next();
                 ParsedDateTime start = cur.getStartTime();
-                if (earliestStart == null || (start.compareTo(earliestStart) < 0)) {
+                if (earliestStart == null || (start != null && start.compareTo(earliestStart) < 0)) {
                     earliestStart = start;
                 }
             }
@@ -340,7 +340,7 @@ public class Recurrence
             for (Iterator iter = mRules.iterator(); iter.hasNext();) {
                 IRecurrence cur = (IRecurrence)iter.next();
                 ParsedDateTime end = cur.getEndTime();
-                if (latestEnd == null || (end.compareTo(latestEnd)>0)) {
+                if (latestEnd == null || (end != null && end.compareTo(latestEnd)>0)) {
                     latestEnd = end;
                 }
             }
@@ -361,7 +361,7 @@ public class Recurrence
         
         private ParsedDateTime getEnd()
         {
-            if (mDtEnd == null) {
+            if (mDtEnd == null && mDtStart != null && mDuration != null) {
                 return mDtStart.add(mDuration);
             }
             return mDtEnd;
@@ -385,12 +385,12 @@ public class Recurrence
         }
 
         public String toString() {
-            StringBuffer toRet = new StringBuffer("[DtStart=").append(mDtStart.toString());
+            StringBuilder toRet = new StringBuilder("[DtStart=").append(mDtStart != null ? mDtStart.toString() : "<none>");
             if (mDuration != null) {
-                toRet.append(" Dur=").append(mDuration.toString());
+                toRet.append(" Dur=").append(mDuration != null ? mDuration.toString() : "<none>");
             }
             if (mDtEnd != null) {
-                toRet.append(" DtEnd=").append(mDtEnd.toString());
+                toRet.append(" DtEnd=").append(mDtEnd != null ? mDtEnd.toString() : "<none>");
             }
             toRet.append(" InvId=").append(mInvId.toString()).append("]");
             
@@ -400,7 +400,10 @@ public class Recurrence
         public List<Instance> expandInstances(Appointment appt, long start, long end) {
             List<Instance> toRet = new ArrayList<Instance>();
             ParsedDateTime dtEnd = getEnd();
-            toRet.add(new Instance(appt, mInvId, mDtStart.getUtcTime(), dtEnd.getUtcTime(), false));
+            toRet.add(new Instance(appt, mInvId,
+                                   mDtStart != null ? mDtStart.getUtcTime() : 0,
+                                   dtEnd != null ? dtEnd.getUtcTime() : 0,
+                                   false));
             return toRet;
         }
         
@@ -420,7 +423,7 @@ public class Recurrence
         
         SingleInstanceRule(Metadata meta, TimeZoneMap tzmap) 
         throws ServiceException, ParseException {
-            mDtStart = ParsedDateTime.parse(meta.get(FN_DTSTART), tzmap);
+            mDtStart = ParsedDateTime.parse(meta.get(FN_DTSTART, null), tzmap);
             mDuration = ParsedDuration.parse(meta.get(FN_DURATION, null));
             mDtEnd = ParsedDateTime.parse(meta.get(FN_DTEND, null), tzmap);
             mInvId = InviteInfo.fromMetadata(meta.getMap(FN_INVID), tzmap);
@@ -451,7 +454,7 @@ public class Recurrence
         
         public Element toXml(Element parent) {
             Element elt = parent.addElement(MailService.E_APPT_DATE);
-            elt.addAttribute(MailService.A_APPT_START_TIME, mDtStart.toString());
+            elt.addAttribute(MailService.A_APPT_START_TIME, mDtStart != null ? mDtStart.toString() : "");
             return elt;
         }
         
@@ -473,7 +476,8 @@ public class Recurrence
         public Iterator<ParsedDateTime> datesIterator() {
             // HACK: until this class is fixed, create a temp array
             List<ParsedDateTime> toRet = new ArrayList<ParsedDateTime>();
-            toRet.add(mDtStart);
+            if (mDtStart != null)
+                toRet.add(mDtStart);
             return toRet.iterator();
         }
         
@@ -637,8 +641,12 @@ public class Recurrence
         
         public List<Instance> expandInstances(Appointment appt, long start, long end) 
         {
+            if (mDtStart == null) {
+                ZimbraLog.calendar.warn("Unable to expand a recurrence with no DTSTART");
+                return new ArrayList<Instance>();
+            }
+
             List<Instance> toRet = null;
-        
             try {
 //                net.fortuna.ical4j.model.DateTime dateStart = new net.fortuna.ical4j.model.DateTime(start);
 //                net.fortuna.ical4j.model.DateTime endDate = new net.fortuna.ical4j.model.DateTime(end);
@@ -693,7 +701,7 @@ public class Recurrence
 //            }
             if (mRecur != null) {
                 ParsedDateTime until = mRecur.getUntil();
-                if (until != null) {
+                if (until != null && mDtStart != null) {
                     assert(mDuration != null);
                     ParsedDateTime endPdt = mDtStart.add(mDuration);
                     ParsedDateTime end = endPdt.cloneWithNewDate(until);
@@ -735,8 +743,8 @@ public class Recurrence
         
         
         public String toString() {
-            StringBuffer toRet = new StringBuffer();
-            toRet.append("RULE(FIRST=").append(mDtStart.getDate());
+            StringBuilder toRet = new StringBuilder();
+            toRet.append("RULE(FIRST=").append(mDtStart != null ? mDtStart.getDate() : "<none>");
             toRet.append(",DUR=").append(mDuration);
             toRet.append(",RECUR=").append(mRecur.toString());
             return toRet.toString(); 
@@ -767,8 +775,8 @@ public class Recurrence
 //          mDtStart = meta.getAttributeLong(FN_DTSTART);
 //          mDuration = meta.getAttributeLong(FN_DURATION);
             try {
-                mDtStart = ParsedDateTime.parse(meta.get(FN_DTSTART), tzmap);
-                mDuration = ParsedDuration.parse(meta.get(FN_DURATION));
+                mDtStart = ParsedDateTime.parse(meta.get(FN_DTSTART, null), tzmap);
+                mDuration = ParsedDuration.parse(meta.get(FN_DURATION, null));
             } catch (ParseException e) {
                 throw ServiceException.FAILURE("ParseException ", e);
             }
@@ -845,6 +853,10 @@ public class Recurrence
         
         public List<Instance> expandInstances(Appointment appt, long start, long end) 
         {
+            if (mDtStart == null) {
+                ZimbraLog.calendar.warn("Unable to expand a recurrence with no DTSTART");
+                return new ArrayList<Instance>();
+            }
             if (mAddRules == null) {
                 // trivial, just DtStart!
                 List<Instance> toRet = new ArrayList<Instance>(1);
@@ -917,8 +929,10 @@ public class Recurrence
         public ParsedDateTime getEndTime() {
             if (mAddRules != null) {
                 return mAddRules.getEndTime(); // FIXME should take into account EXCEPTIONS?
-            } else {
+            } else if (mDtStart != null) {
                 return mDtStart.add(mDuration);
+            } else {
+                return null;
             }
         }
         
@@ -943,9 +957,9 @@ public class Recurrence
         
         protected CompoundRuleBase(Metadata meta, TimeZoneMap tzmap) 
         throws ServiceException, ParseException {
-            String str = meta.get(FN_DTSTART);
+            String str = meta.get(FN_DTSTART, null);
             mDtStart = ParsedDateTime.parse(str, tzmap);
-            mDuration = ParsedDuration.parse(meta.get(FN_DURATION));
+            mDuration = ParsedDuration.parse(meta.get(FN_DURATION, null));
 
             Metadata metaRules = meta.getMap(FN_ADDRULES, true);
             if (metaRules != null) {
@@ -972,7 +986,7 @@ public class Recurrence
         
         public String toString() {
             StringBuffer toRet = new StringBuffer();
-            toRet.append("FIRST=").append(mDtStart.getDate());
+            toRet.append("FIRST=").append(mDtStart != null ? mDtStart.getDate() : "<none>");
             toRet.append(",DUR=").append(mDuration);
             if (mAddRules != null) {
                 toRet.append("\n\t\tADD[").append(mAddRules.toString()).append("]");

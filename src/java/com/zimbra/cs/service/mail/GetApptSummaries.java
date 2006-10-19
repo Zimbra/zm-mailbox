@@ -102,14 +102,11 @@ public class GetApptSummaries extends MailDocumentHandler {
                     mLog.info("Could not load defaultinfo for appointment with id="+appointment.getId()+" SKIPPING");
                     continue; // 
                 }
-                
+
                 ParsedDuration defDuration = defaultInvite.getEffectiveDuration();
-                if (defDuration == null) {
-                    mLog.info("Could not load effective default duration for appointment id="+appointment.getId()+" SKIPPING");
-                    continue;
-                }
-                
-                long defDurationMsecs = defDuration.getDurationAsMsecs(defaultInvite.getStartTime().getDate());
+                long defDurationMsecs = 0;
+                if (defDuration != null && defaultInvite.getStartTime() != null)
+                    defDurationMsecs = defDuration.getDurationAsMsecs(defaultInvite.getStartTime().getDate());
                 
                 boolean defIsOrg = defaultInvite.thisAcctIsOrganizer(acct);
                 
@@ -141,10 +138,12 @@ public class GetApptSummaries extends MailDocumentHandler {
                         Element instElt = apptElt.addElement(MailService.E_INSTANCE);
                         
                         instElt.addAttribute(MailService.A_APPT_START_TIME, instStart);
-                        ICalTimeZone instTz = inv.getStartTime().getTimeZone();
-                        if (inv.isAllDayEvent()) {
-                            long offset = instTz.getOffset(instStart);
-                            instElt.addAttribute(MailService.A_APPT_TZ_OFFSET, offset);
+                        if (inv.getStartTime() != null) {
+                            ICalTimeZone instTz = inv.getStartTime().getTimeZone();
+                            if (inv.isAllDayEvent()) {
+                                long offset = instTz.getOffset(instStart);
+                                instElt.addAttribute(MailService.A_APPT_TZ_OFFSET, offset);
+                            }
                         }
                         
                         String instFba = appointment.getEffectiveFreeBusyActual(inv, inst);

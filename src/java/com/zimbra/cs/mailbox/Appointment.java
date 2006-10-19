@@ -171,10 +171,13 @@ public class Appointment extends MailItem {
         Recurrence.IRecurrence recur = firstInvite.getRecurrence();
         long startTime, endTime;
         if (recur != null) {
-            startTime = recur.getStartTime().getUtcTime();
-            endTime = recur.getEndTime().getUtcTime();
+            ParsedDateTime dtStart = recur.getStartTime();
+            startTime = dtStart != null ? dtStart.getUtcTime() : 0;
+            ParsedDateTime dtEnd = recur.getEndTime();
+            endTime = dtEnd != null ? dtEnd.getUtcTime() : 0;
         } else {
-            startTime = firstInvite.getStartTime().getUtcTime();
+            ParsedDateTime dtStart = firstInvite.getStartTime();
+            startTime = dtStart != null ? dtStart.getUtcTime() : 0;
             if (firstInvite.getEndTime() != null)
                 endTime = firstInvite.getEndTime().getUtcTime();
             else if (firstInvite.getDuration() != null)
@@ -232,7 +235,7 @@ public class Appointment extends MailItem {
                     if (cur.getMethod().equals(ICalTok.REQUEST.toString()) || (cur.getMethod().equals(ICalTok.PUBLISH.toString()))) {
                         assert (cur.hasRecurId());
                         
-                        if (cur.hasRecurId()) {
+                        if (cur.hasRecurId() && cur.getStartTime() != null) {
                             Recurrence.ExceptionRule exceptRule = (Recurrence.ExceptionRule) cur.getRecurrence();
                             if (exceptRule == null) {
                                 // create a false ExceptionRule wrapper around the
@@ -267,15 +270,15 @@ public class Appointment extends MailItem {
             ParsedDateTime dtStartTime = mRecurrence.getStartTime();
             ParsedDateTime dtEndTime = mRecurrence.getEndTime();
             
-            startTime = dtStartTime.getUtcTime();
-            endTime = dtEndTime.getUtcTime();
+            startTime = dtStartTime != null ? dtStartTime.getUtcTime() : 0;
+            endTime = dtEndTime != null ? dtEndTime.getUtcTime() : 0;
         } else {
             mRecurrence = null;
             ParsedDateTime dtStart = firstInv.getStartTime();
             ParsedDateTime dtEnd = firstInv.getEffectiveEndTime();
             
-            startTime = dtStart.getUtcTime();
-            endTime = dtEnd.getUtcTime();
+            startTime = dtStart != null ? dtStart.getUtcTime() : 0;
+            endTime = dtEnd != null ? dtEnd.getUtcTime() : 0;
         }
         
         if (mStartTime != startTime || mEndTime != endTime) {
@@ -373,9 +376,10 @@ public class Appointment extends MailItem {
             if (mInvites != null) {
                 for (Iterator iter = mInvites.iterator(); iter.hasNext(); ) {
                     Invite inv = (Invite) iter.next();
-                    assert(inv.getStartTime() != null);
-                    long invStart = inv.getStartTime().getUtcTime();
-                    long invEnd = inv.getEffectiveEndTime().getUtcTime();
+                    ParsedDateTime dtStart = inv.getStartTime();
+                    long invStart = dtStart != null ? dtStart.getUtcTime() : 0;
+                    ParsedDateTime dtEnd = inv.getEffectiveEndTime();
+                    long invEnd = dtEnd != null ? dtEnd.getUtcTime() : 0;
                     if (invStart < end && invEnd > start) {
                         Instance inst = new Instance(this, new InviteInfo(inv),
                                                      invStart, invEnd,
@@ -407,11 +411,11 @@ public class Appointment extends MailItem {
          * @return
          */
         public static Instance fromInvite(Appointment appt, Invite inv) {
-            return new Instance(appt,
-                                new InviteInfo(inv),
-                                inv.getStartTime().getUtcTime(),
-                                inv.getEffectiveEndTime().getUtcTime(),
-                                inv.hasRecurId());
+            ParsedDateTime dtStart = inv.getStartTime();
+            long start = dtStart != null ? dtStart.getUtcTime() : 0;
+            ParsedDateTime dtEnd = inv.getEffectiveEndTime();
+            long end = dtEnd != null ? dtEnd.getUtcTime() : 0;
+            return new Instance(appt, new InviteInfo(inv), start, end, inv.hasRecurId());
         }
 
         public Instance(Appointment appt, InviteInfo invInfo, long _start, long _end,
@@ -626,9 +630,9 @@ public class Appointment extends MailItem {
             if (defInv != null) {
                 oldDtStart = defInv.getStartTime();
                 ParsedDateTime newDtStart = newInvite.getStartTime();
-                if (!newDtStart.sameTime(oldDtStart)) {
+                if (newDtStart != null && oldDtStart != null && !newDtStart.sameTime(oldDtStart)) {
                     needRecurrenceIdUpdate = true;
-                    dtStartMovedBy = newInvite.getStartTime().difference(oldDtStart);
+                    dtStartMovedBy = newDtStart.difference(oldDtStart);
                 }
             }
         }
@@ -1760,7 +1764,8 @@ public class Appointment extends MailItem {
         boolean needResourceAutoReply =
             redoProvider.isMaster() &&
             (player == null || redoProvider.getRedoLogManager().getInCrashRecovery()) &&
-            !ICalTok.CANCEL.toString().equals(invite.getMethod());
+            !ICalTok.CANCEL.toString().equals(invite.getMethod()) &&
+            !invite.isTodo();
 
         if (invite.thisAcctIsOrganizer(account)) {
             // Organizer always accepts.

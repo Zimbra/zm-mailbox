@@ -328,7 +328,7 @@ public class CalendarUtils {
     throws ServiceException {
         
         ParsedDuration dur = inv.getDuration();
-        if (dur == null) {
+        if (dur == null && inv.getStartTime() != null && inv.getEndTime() != null) {
             dur = inv.getEndTime().difference(inv.getStartTime());
         }
         
@@ -691,22 +691,28 @@ public class CalendarUtils {
 
         // DTSTART
         {
-            Element s = element.getElement(MailService.E_APPT_START_TIME);
-            ParsedDateTime dt = parseDtElement(s, tzMap, newInv);
-            if (dt.hasTime()) {
-                if (allDay) {
-                    throw ServiceException.INVALID_REQUEST(
-                                    "AllDay event must have DATE, not DATETIME for start time",
-                                    null);
+            Element s;
+            if (newInv.isTodo())
+                s = element.getOptionalElement(MailService.E_APPT_START_TIME);
+            else
+                s = element.getElement(MailService.E_APPT_START_TIME);
+            if (s != null) {
+                ParsedDateTime dt = parseDtElement(s, tzMap, newInv);
+                if (dt.hasTime()) {
+                    if (allDay) {
+                        throw ServiceException.INVALID_REQUEST(
+                                        "AllDay event must have DATE, not DATETIME for start time",
+                                        null);
+                    }
+                } else {
+                    if (!allDay) {
+                        throw ServiceException.INVALID_REQUEST(
+                                        "Request must have allDay=\"1\" if using a DATE start time instead of DATETIME",
+                                        null);
+                    }
                 }
-            } else {
-                if (!allDay) {
-                    throw ServiceException.INVALID_REQUEST(
-                                    "Request must have allDay=\"1\" if using a DATE start time instead of DATETIME",
-                                    null);
-                }
+                newInv.setDtStart(dt);
             }
-            newInv.setDtStart(dt);
         }
 
         // DTEND (for VEVENT) or DUE (for VTODO)
