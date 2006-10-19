@@ -31,6 +31,8 @@ package com.zimbra.cs.db;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -96,18 +98,21 @@ public class DbTableMaintenance {
         ZimbraLog.mailbox.info(
             "Starting table maintenance.  MinRows=" + getMinRows() + ", MaxRows=" + getMaxRows() +
             ", GrowthFactor=" + getGrowthFactor());
-        
+
+        Set<String> dbsProcessed = new HashSet<String>();
         for (int i = 0; i < mailboxIds.length; i++) {
             int id = mailboxIds[i];
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(id);
             MailboxLock lock = null;
             String dbName = DbMailbox.getDatabaseName(mbox);
+            if (dbsProcessed.contains(dbName)) continue;
+            dbsProcessed.add(dbName);
+
             DbResults results = DbUtil.executeQuery("SHOW TABLE STATUS FROM `" + dbName + "`");
-            
             try {
                 for (int row = 1; row <= results.size(); row++) {
-                    String tableName = results.getString(row, "Name");
-                    int numRows = results.getInt(row, "Rows");
+                    String tableName = results.getString(row, "TABLE_NAME");
+                    int numRows = results.getInt(row, "TABLE_ROWS");
                     if (numRows < getMinRows() || numRows > getMaxRows()) {
                         // Skip tables that are too small or too big
                         ZimbraLog.mailbox.debug(
