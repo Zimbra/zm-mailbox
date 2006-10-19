@@ -54,6 +54,7 @@ import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.PartBase;
 
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.NamedEntry;
@@ -140,7 +141,9 @@ public class ZimletUtil {
 		List<Zimlet> zlist = new ArrayList<Zimlet>();
 		for (int i = 0; i < zimlets.length; i++) {
 			try {
-				zlist.add(prov.getZimlet(zimlets[i]));
+				Zimlet z = prov.getZimlet(zimlets[i]);
+				if (z != null)
+					zlist.add(z);
 			} catch (ServiceException se) {
 				// ignore error and continue on
 			}
@@ -158,7 +161,8 @@ public class ZimletUtil {
     public static void updateZimletConfig(String zimlet, String config) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Zimlet zim = prov.getZimlet(zimlet);
-        if (zim == null) throw ServiceException.INVALID_REQUEST("no such zimlet:" + zimlet, null);
+		if (zim == null)
+            throw AccountServiceException.NO_SUCH_ZIMLET(zimlet);
         Map<String, String> map = new HashMap<String, String>();
         map.put(Provisioning.A_zimbraZimletHandlerConfig, config);
         prov.modifyAttrs(zim, map);
@@ -168,6 +172,8 @@ public class ZimletUtil {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			Zimlet z = prov.getZimlet(zimlet);
+			if (z == null)
+	            throw AccountServiceException.NO_SUCH_ZIMLET(zimlet);
 			String cf = z.getAttr(Provisioning.A_zimbraZimletHandlerConfig);
 			if (cf == null)
 				return null;
@@ -429,10 +435,13 @@ public class ZimletUtil {
 		Zimlet z;
 		Action action = Action.INSTALL;
 		
-		try {
-			// check if the zimlet already exists in LDAP.
-			z = prov.getZimlet(zimletName);
-			
+		// check if the zimlet already exists in LDAP.
+		z = prov.getZimlet(zimletName);
+		
+		if (z == null) {
+			// zimlet was not found in LDAP.
+			z = ldapDeploy(zf);
+		} else {
 			// see if this zimlet needs an upgrade.
 			if (!z.isEnabled()) {
 				// leave it alone.
@@ -449,9 +458,6 @@ public class ZimletUtil {
 			} else {
 				action = Action.UPGRADE;
 			}
-		} catch (ServiceException se) {
-			// zimlet was not found in LDAP.
-			z = ldapDeploy(zf);
 		}
 		
 		String priority = null;
@@ -707,6 +713,8 @@ public class ZimletUtil {
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			Zimlet z = prov.getZimlet(zimlet);
+			if (z == null)
+	            throw AccountServiceException.NO_SUCH_ZIMLET(zimlet);
             Map<String,String> attr = new HashMap<String,String>();
             attr.put(Provisioning.A_zimbraZimletEnabled, enabled ? Provisioning.TRUE : Provisioning.FALSE);
             prov.modifyAttrs(z, attr);
@@ -970,6 +978,8 @@ public class ZimletUtil {
 		Provisioning prov = Provisioning.getInstance();
 
 		Zimlet z = prov.getZimlet(zimlet);
+		if (z == null)
+            throw AccountServiceException.NO_SUCH_ZIMLET(zimlet);
 		setPriority(z, priority, plist);
 	}
 

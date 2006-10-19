@@ -2750,6 +2750,8 @@ public class LdapProvisioning extends Provisioning {
         			ZimletUtil.reloadZimlet(name);
         			sZimletCache.put(zimlet);  // put LdapZimlet into the cache after successful ZimletUtil.reloadZimlet()
         		}
+        	} catch (NameNotFoundException nnfe) {
+        		return null;
         	} catch (NamingException ne) {
         		throw ServiceException.FAILURE("unable to get zimlet: "+name, ne);
         	} catch (ZimletException ze) {

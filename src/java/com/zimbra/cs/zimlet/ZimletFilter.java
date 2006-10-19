@@ -53,6 +53,7 @@ import com.zimbra.common.util.ZimbraLog;
  * @author jylee
  *
  */
+@SuppressWarnings("serial")
 public class ZimletFilter extends ZimbraServlet implements Filter {
 
 	private static final String ZIMLET_URL = "^/service/zimlet/([^/\\?]+)[/\\?]?.*$";
@@ -124,6 +125,11 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
             	Provisioning prov = Provisioning.getInstance();
             	Account account = prov.get(AccountBy.id, authToken.getAccountId());
             	Zimlet z = prov.getZimlet(zimletName);
+            	if (z == null) {
+        	    	ZimbraLog.zimlet.info("no such zimlet");
+                	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            		return;
+            	}
             	boolean isAdmin = (authToken.isAdmin() || authToken.isDomainAdmin());
             	if (z.isExtension()) {
             		// admin zimlets are accessible only by admins through admin app.

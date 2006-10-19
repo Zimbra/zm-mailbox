@@ -68,6 +68,8 @@ public class GetZimletStatus extends AdminDocumentHandler {
     }
 
 	private void doZimlet(Zimlet z, Element elem, int priority) {
+		if (z == null)
+			return;
         Element zim = elem.addElement(AccountService.E_ZIMLET);
 		zim.addAttribute(AdminService.A_NAME, z.getName());
 		zim.addAttribute(AdminService.A_STATUS, (z.isEnabled() ? "enabled" : "disabled"));
