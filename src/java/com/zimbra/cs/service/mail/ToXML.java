@@ -43,6 +43,7 @@ import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItemDataSource;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -1464,6 +1465,17 @@ public class ToXML {
         String frag = page.getFragment();
         if (frag != null && !frag.equals(""))
             m.addAttribute(MailService.E_FRAG, frag, Element.DISP_CONTENT);
+        return m;
+    }
+    public static Element encodeDataSource(Element parent, MailItemDataSource ds) {
+        Element m = parent.addElement(MailService.E_DS_POP3);
+        m.addAttribute(MailService.A_ID, ds.getName());
+        m.addAttribute(MailService.A_NAME, ds.getName());
+        m.addAttribute(MailService.A_FOLDER, ds.getFolderId());
+        m.addAttribute(MailService.A_DS_IS_ENABLED, ds.isEnabled());
+        m.addAttribute(MailService.A_DS_HOST, ds.getHost());
+        m.addAttribute(MailService.A_DS_PORT, ds.getPort());
+        m.addAttribute(MailService.A_DS_USERNAME, ds.getUsername());
         return m;
     }
 }

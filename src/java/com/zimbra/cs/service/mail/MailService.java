@@ -180,6 +180,18 @@ public class MailService implements DocumentService {
     public static final QName DELETE_IDENTITY_REQUEST = QName.get("DeleteIdentityRequest", NAMESPACE);
     public static final QName DELETE_IDENTITY_RESPONSE = QName.get("DeleteIdentityResponse", NAMESPACE);
     
+    // data sources
+    public static final QName CREATE_DATA_SOURCE_REQUEST = QName.get("CreateDataSourceRequest", NAMESPACE);
+    public static final QName CREATE_DATA_SOURCE_RESPONSE = QName.get("CreateDataSourceResponse", NAMESPACE);
+    public static final QName GET_DATA_SOURCES_REQUEST = QName.get("GetDataSourcesRequest", NAMESPACE);
+    public static final QName GET_DATA_SOURCES_RESPONSE = QName.get("GetDataSourcesResponse", NAMESPACE);
+    public static final QName MODIFY_DATA_SOURCE_REQUEST = QName.get("ModifyDataSourceRequest", NAMESPACE);
+    public static final QName MODIFY_DATA_SOURCE_RESPONSE = QName.get("ModifyDataSourceResponse", NAMESPACE);
+    public static final QName DELETE_DATA_SOURCE_REQUEST = QName.get("DeleteDataSourceRequest", NAMESPACE);
+    public static final QName DELETE_DATA_SOURCE_RESPONSE = QName.get("DeleteDataSourceResponse", NAMESPACE);
+    public static final QName IMPORT_DATA_REQUEST = QName.get("ImportDataRequest", NAMESPACE);
+    public static final QName IMPORT_DATA_RESPONSE = QName.get("ImportDataResponse", NAMESPACE);
+
     public static final String E_MAILBOX = "mbx";
     public static final String E_CONV = "c";
     public static final String E_CURSOR = "cursor";
@@ -460,6 +472,14 @@ public class MailService implements DocumentService {
     public static final String A_WORD = "word";
     public static final String A_SUGGESTIONS = "suggestions";
 
+    // data sources
+    public static final String E_DS_POP3 = "pop3";
+    public static final String A_DS_IS_ENABLED = "isEnabled";
+    public static final String A_DS_HOST = "host";
+    public static final String A_DS_PORT = "port";
+    public static final String A_DS_USERNAME = "username";
+    public static final String A_DS_PASSWORD = "password";
+    
     
     // TODO: move to a different service.
     // wiki
@@ -570,5 +590,12 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(CREATE_IDENTITY_REQUEST, new CreateIdentity());
         dispatcher.registerHandler(MODIFY_IDENTITY_REQUEST, new ModifyIdentity());
         dispatcher.registerHandler(DELETE_IDENTITY_REQUEST, new DeleteIdentity());
-	}
+        
+        // data source
+        dispatcher.registerHandler(GET_DATA_SOURCES_REQUEST, new GetDataSources());
+        dispatcher.registerHandler(CREATE_DATA_SOURCE_REQUEST, new CreateDataSource());
+        dispatcher.registerHandler(MODIFY_DATA_SOURCE_REQUEST, new ModifyDataSource());
+        dispatcher.registerHandler(DELETE_DATA_SOURCE_REQUEST, new DeleteDataSource());
+        dispatcher.registerHandler(IMPORT_DATA_REQUEST, new ImportData());
+    }
 }

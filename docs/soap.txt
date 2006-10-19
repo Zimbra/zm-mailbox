@@ -1719,3 +1719,66 @@ of Identity attributes.
 
 <DeleteIdentityResponse/>
 
+---------------------------
+
+<CreateDataSourceRequest/>
+  <pop3 name="My POP3 Account" isEnabled="true|false" host="pop.myisp.com" port="110"
+    username="mylogin" password="mypassword" l="{folder-id}"/>
+</CreateDataSourceRequest>
+
+<CreateDataSourceResponse>
+  <pop3 id="{id}"/>
+</CreateDataSourceResponse>
+
+Creates a data source that imports mail items into the specified folder.  Currently
+the only protocol supported is POP3.
+
+---------------------------
+
+<GetDataSourcesRequest/>
+
+<GetDataSourcesResponse>
+  <pop3 id="{id}" name="My POP3 Account" isEnabled="true|false" host="pop3.myisp.com" port="110"
+    username="mylogin" l="{folder-id}"/>
+  <pop3 .../>
+</GetDataSourcesResponse>
+
+Returns all data sources defined for the given mailbox.  For each data source,
+every attribute value is returned except password.
+
+---------------------------
+
+<ModifyDataSourceRequest>
+  <pop3 id="{id}" [name="My POP3 Account"] [isEnabled="true|false"] [host="pop3.myisp.com"]
+    [port="110"] [username="mylogin"] [password="mypassword"] [l="{folder-id}"]/>
+</ModifyDataSourceRequest>
+
+<ModifyDataSourceResponse/>
+
+Changes attributes of the given data source.  Only the attributes specified in the request
+are modified.
+
+---------------------------
+
+<DeleteDataSourceRequest>
+  <pop3 id="{id}"/>
+</DeleteDataSourceRequest>
+
+<DeleteDataSourceResponse/>
+
+Changes attributes of the given data source.  Only the attributes specified in the request
+are modified.
+
+---------------------------
+
+<ImportDataRequest>
+  <pop3 id="{id}"/>
+  <pop3 .../>
+</ImportDataRequest>
+
+<ImportDataResponse/>
+
+Triggers the specified data sources to kick off their import processes.  Data import runs
+asynchronously, so the response immediately returns.  Any errors are returned
+via the <notify> header.
+
