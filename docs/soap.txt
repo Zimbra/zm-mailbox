@@ -1726,19 +1726,18 @@ of Identity attributes.
     username="mylogin" password="mypassword" l="{folder-id}"/>
 </CreateDataSourceRequest>
 
-<CreateDataSourceResponse>
-  <pop3 id="{id}"/>
-</CreateDataSourceResponse>
+<CreateDataSourceResponse/>
 
 Creates a data source that imports mail items into the specified folder.  Currently
-the only protocol supported is POP3.
+the only protocol supported is POP3.  'name' is a unique attribute that's used
+as the identifier among the data sources.
 
 ---------------------------
 
 <GetDataSourcesRequest/>
 
 <GetDataSourcesResponse>
-  <pop3 id="{id}" name="My POP3 Account" isEnabled="true|false" host="pop3.myisp.com" port="110"
+  <pop3 name="My POP3 Account" isEnabled="true|false" host="pop3.myisp.com" port="110"
     username="mylogin" l="{folder-id}"/>
   <pop3 .../>
 </GetDataSourcesResponse>
@@ -1749,7 +1748,7 @@ every attribute value is returned except password.
 ---------------------------
 
 <ModifyDataSourceRequest>
-  <pop3 id="{id}" [name="My POP3 Account"] [isEnabled="true|false"] [host="pop3.myisp.com"]
+  <pop3 name="My POP3 Account" [isEnabled="true|false"] [host="pop3.myisp.com"]
     [port="110"] [username="mylogin"] [password="mypassword"] [l="{folder-id}"]/>
 </ModifyDataSourceRequest>
 
@@ -1761,7 +1760,7 @@ are modified.
 ---------------------------
 
 <DeleteDataSourceRequest>
-  <pop3 id="{id}"/>
+  <pop3 name="My POP3 Account"/>
 </DeleteDataSourceRequest>
 
 <DeleteDataSourceResponse/>
@@ -1772,7 +1771,7 @@ are modified.
 ---------------------------
 
 <ImportDataRequest>
-  <pop3 id="{id}"/>
+  <pop3 name="My POP3 Account"/>
   <pop3 .../>
 </ImportDataRequest>
 

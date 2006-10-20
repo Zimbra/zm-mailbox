@@ -1469,7 +1469,6 @@ public class ToXML {
     }
     public static Element encodeDataSource(Element parent, MailItemDataSource ds) {
         Element m = parent.addElement(MailService.E_DS_POP3);
-        m.addAttribute(MailService.A_ID, ds.getName());
         m.addAttribute(MailService.A_NAME, ds.getName());
         m.addAttribute(MailService.A_FOLDER, ds.getFolderId());
         m.addAttribute(MailService.A_DS_IS_ENABLED, ds.isEnabled());

@@ -55,11 +55,7 @@ public class CreateDataSource extends MailDocumentHandler {
         ds.setPassword(ePop3.getAttribute(MailService.A_DS_PASSWORD));
         MailItemDataSource.create(mbox, zsc.getOperationContext(), ds);
         
-        // Assemble the response
         Element response = zsc.createElement(MailService.CREATE_DATA_SOURCE_RESPONSE);
-        Element result = response.addUniqueElement(MailService.E_DS_POP3);
-        result.addAttribute(MailService.A_ID, ds.getName());  // we are using name instead of id
-
         return response;
     }
 }
