@@ -32,10 +32,6 @@ package com.zimbra.cs.html;
  * refer to the LICENSE file for specific details.
  */
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.regex.Pattern;
-
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
@@ -45,6 +41,10 @@ import org.apache.xerces.xni.XMLResourceIdentifier;
 import org.apache.xerces.xni.XMLString;
 import org.apache.xerces.xni.XNIException;
 import org.cyberneko.html.filters.DefaultFilter;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.regex.Pattern;
 
 /**
  * @author schemers@example.zimbra.com
@@ -124,6 +124,8 @@ public class DefangFilter extends DefaultFilter {
 
     // state
 
+    private String mBaseHref = null;
+
     /** Strip images */
     boolean mNeuterImages;
     
@@ -146,7 +148,7 @@ public class DefangFilter extends DefaultFilter {
         // set which elements to accept
         acceptElement("a", CORE+KBD+",charset,coords,href,hreflang,name,rel,rev,shape,target,type");
         acceptElement("address", CORE_LANG);
-        //acceptElement("base", "href,target");
+        //acceptElement("base", "href"); //,target");
         acceptElement("bdo", CORE_LANG);
         acceptElement("blockquote", CORE_LANG+"cite");
         acceptElement("body", CORE_LANG); //+"alink,background,bgcolor,link,text,vlink");
@@ -502,6 +504,14 @@ public class DefangFilter extends DefaultFilter {
 
     /** Handles an open tag. */
     protected boolean handleOpenTag(QName element, XMLAttributes attributes) {
+        if (element.rawname.toLowerCase().equals("base")) {
+            int index = attributes.getIndex("href");
+            if (index != -1) {
+                mBaseHref = attributes.getValue(index);
+                if (mBaseHref != null && !mBaseHref.endsWith("/"))
+                    mBaseHref += "/";
+            }
+        }
         if (elementAccepted(element.rawname)) {
             String eName = element.rawname.toLowerCase();
             Object value = mAcceptedElements.get(eName);
@@ -521,6 +531,13 @@ public class DefangFilter extends DefaultFilter {
             else {
                 attributes.removeAllAttributes();
             }
+
+            if (eName.equals("img")) {
+                fixUrlBase(attributes, "src");
+            } else if (eName.equals("a")) {
+                fixUrlBase(attributes, "href");                
+            }
+
             if (eName.equals("img") && mNeuterImages) {
                 neuterImageTag(attributes);
             } else if (eName.equals("a")) {
@@ -533,6 +550,16 @@ public class DefangFilter extends DefaultFilter {
         }
         return false;
     } // handleOpenTag(QName,XMLAttributes):boolean
+
+    private void fixUrlBase(XMLAttributes attributes, String attrName) {
+        int index = attributes.getIndex(attrName);
+        if (index != -1) {
+            String value = attributes.getValue(index);
+            if (mBaseHref != null && value != null && value.indexOf("://") == -1) {
+                attributes.setValue(index, mBaseHref+value);
+            }
+        }
+    }
 
     /**
      * @param name
