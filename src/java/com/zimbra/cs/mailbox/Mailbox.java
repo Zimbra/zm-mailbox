@@ -1603,6 +1603,7 @@ public class Mailbox {
                 if (mTagCache != null)
                     item = mTagCache.get(key);
                 break;
+            case MailItem.TYPE_MOUNTPOINT:
             case MailItem.TYPE_SEARCHFOLDER:
             case MailItem.TYPE_FOLDER:
                 if (mFolderCache != null)
