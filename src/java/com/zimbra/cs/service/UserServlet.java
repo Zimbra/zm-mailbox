@@ -53,7 +53,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -222,8 +221,9 @@ public class UserServlet extends ZimbraServlet {
     }
 
     private void getAccount(Context context) throws IOException, ServletException {
-        boolean isAdminRequest = (context.req.getLocalPort() == ADMIN_PORT);
         try {
+            int adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
+            boolean isAdminRequest = (context.req.getLocalPort() == adminPort);
             // check cookie first
             if (context.cookieAuthAllowed()) {
                 context.authAccount = cookieAuthRequest(context.req, context.resp, true);

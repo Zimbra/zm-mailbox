@@ -298,7 +298,13 @@ public class FileUploadServlet extends ZimbraServlet {
         String reqId = null;
         do {
             // file upload requires authentication
-            boolean isAdminRequest = (req.getLocalPort() == ADMIN_PORT);
+            int adminPort = -1;
+            try {
+                adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
+            } catch (ServiceException e) {
+                throw new ServletException(e);
+            }
+            boolean isAdminRequest = (req.getLocalPort() == adminPort);
     		AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
             if (at == null) {
                 status = HttpServletResponse.SC_UNAUTHORIZED;
