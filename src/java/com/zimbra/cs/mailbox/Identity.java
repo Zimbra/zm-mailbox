@@ -93,6 +93,12 @@ public class Identity {
 			throw ServiceException.INVALID_REQUEST("identity not found", null);
 
 		populate(req, identity);
+		// rename
+		if (identity.containsKey(MailService.A_NAME)) {
+			md.remove(name);
+			name = identity.get(MailService.A_NAME);
+			identity.remove(MailService.A_NAME);
+		}
 		md.put(name, identity);
 		
 		mbox.setConfig(octxt, sSECTION_IDENTITIES, md);
