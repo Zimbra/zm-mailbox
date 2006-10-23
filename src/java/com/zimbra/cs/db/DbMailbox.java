@@ -564,6 +564,8 @@ public class DbMailbox {
 
     public static int getMailboxGroupId(int mailboxId) {
         int groups = DebugConfig.numMailboxGroups;
+        // -1 / +1 operations are done so that the group
+        // id is never 0.
         return (mailboxId - 1) % groups + 1;
     }
 
