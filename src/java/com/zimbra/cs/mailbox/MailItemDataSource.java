@@ -259,6 +259,6 @@ public class MailItemDataSource {
     }
 
     public String toString() {
-        return String.format("%s: { mailboxId=%d, name=%s }", CLASS_NAME, mMailboxId, mName);
+        return String.format("%s: { mailboxId=%d, id=%d, name=%s }", CLASS_NAME, mMailboxId, mId, mName);
     }
 }
