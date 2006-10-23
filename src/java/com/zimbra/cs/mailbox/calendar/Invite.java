@@ -432,8 +432,10 @@ public class Invite {
             dtEnd = ParsedDateTime.parse(meta.get(FN_END, null), tzMap);
             if ((flags & APPT_FLAG_ALLDAY)!=0) {
                 // Fixup historic data with incorrect all-day start/end format.
-                dtStart.forceDateOnly();
-                dtEnd.forceDateOnly();
+                if (dtStart != null)
+                    dtStart.forceDateOnly();
+                if (dtEnd != null)
+                    dtEnd.forceDateOnly();
             }
             // Duration
             duration = ParsedDuration.parse(meta.get(FN_DURATION, null));
