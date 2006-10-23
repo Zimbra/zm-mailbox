@@ -4743,7 +4743,7 @@ public class Mailbox {
         MailItem ret = null;
         if (path == null)
             throw MailServiceException.INVALID_NAME(path);
-        boolean preferFolder = path.endsWith("/");
+        boolean preferFolder = getFolder || path.endsWith("/");
         try {
             beginTransaction("getItemByPath", octxt);
             if (path.startsWith("/")) {
