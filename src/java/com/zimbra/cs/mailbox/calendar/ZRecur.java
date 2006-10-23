@@ -554,8 +554,7 @@ public class ZRecur {
         expansionsLeft--;
         
         while (expansionsLeft > 0 &&
-        	   toRet.size() < MAXIMUM_INSTANCES_RETURNED &&
-               !cur.getTime().after(rangeEndDate))
+        	   toRet.size() < MAXIMUM_INSTANCES_RETURNED)
         {
             List<Calendar> addList = new LinkedList<Calendar>();
             
@@ -750,7 +749,8 @@ public class ZRecur {
             }
             
             addList = handleSetPos(addList);
-            
+
+            boolean gonePastEndDate = false;
             // add all the ones that match!
             for (Calendar addCal : addList) {
                 Date toAdd = addCal.getTime();
@@ -763,16 +763,22 @@ public class ZRecur {
                 // we still have expanded this instance, even if it isn't in our 
                 // current date window
                 expansionsLeft--;
-                
-                if (!toAdd.before(earliestDate) &&
-                    !toAdd.after(rangeEndDate))
-                    toRet.add(toAdd);
+
+                if (!toAdd.after(rangeEndDate)) {
+                    if (!toAdd.before(earliestDate))
+                        toRet.add(toAdd);
+                } else {
+                    gonePastEndDate = true;
+                    break;
+                }
 
                 // quick dropout if we know we're done
                 if (expansionsLeft <= 0 ||
                     toRet.size() >= MAXIMUM_INSTANCES_RETURNED)
                 	break;;
             }
+            if (gonePastEndDate)
+                break;
         }
 
         return toRet;
