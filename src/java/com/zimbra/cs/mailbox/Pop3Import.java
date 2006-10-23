@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -43,6 +44,7 @@ import com.sun.mail.pop3.POP3Folder;
 import com.sun.mail.pop3.POP3Message;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 
@@ -75,8 +77,7 @@ implements MailItemImport {
     
     private void fetchMessages(MailItemDataSource ds)
     throws MessagingException, IOException, ServiceException {
-        sLog.debug(String.format("Fetching messages for ds=%s, host=%s, user=%s",
-            ds.getName(), ds.getHost(), ds.getUsername()));
+        ZimbraLog.mailbox.info("Importing POP3 messages from " + ds);
         
         // Connect (USER, PASS, STAT)
         Store store = sSession.getStore("pop3");
@@ -112,25 +113,20 @@ implements MailItemImport {
                 }
                 
                 InputStream is = msg.getRawInputStream();
-                byte[] data = ByteUtil.getContent(is, 2048);
-                os.write(data);
+                ByteUtil.copy(is, true, os, true);
                 ParsedMessage pm = new ParsedMessage(os.toByteArray(), mbox.attachmentsIndexingEnabled());
                 mbox.addMessage(null, pm, ds.getFolderId(), false, Flag.BITMASK_UNREAD, null);
             }
 
-            /*
-            if (!ds.leaveMailOnServer()) {
-                // Mark all messages for deletion (DELE)
-                for (Message msg : msgs) {
-                    msg.setFlag(Flags.Flag.DELETED, true);
-                }
+            // Mark all messages for deletion (DELE)
+            for (Message msg : msgs) {
+                msg.setFlag(Flags.Flag.DELETED, true);
             }
-            */
         }
         
         // Expunge if necessary and disconnect (QUIT)
         // folder.close(!ds.leaveMailOnServer());
-        folder.close(false);
+        folder.close(true);
         store.close();
     }
     

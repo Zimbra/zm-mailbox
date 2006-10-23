@@ -46,8 +46,8 @@ public class ImportData extends MailDocumentHandler {
         for (Element elem : request.listElements()) {
         	if (elem.getName().equals(MailService.E_DS_POP3)) {
         		try {
-        			String name = elem.getAttribute(MailService.A_NAME);
-        			MailItemDataSource ds = MailItemDataSource.get(mbox, zsc.getOperationContext(), name);
+        			int id = (int) elem.getAttributeLong(MailService.A_ID);
+        			MailItemDataSource ds = MailItemDataSource.get(mbox, zsc.getOperationContext(), id);
         			new Thread(new Pop3Client(ds)).start();
         		} catch (Exception e) {
         			ZimbraLog.account.error("error handling ImportData", e);

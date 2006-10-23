@@ -43,8 +43,8 @@ public class DeleteDataSource extends MailDocumentHandler {
         Mailbox mbox = getRequestedMailbox(zsc);
         
         Element ePop3 = request.getElement(MailService.E_DS_POP3);
-        String name = ePop3.getAttribute(MailService.A_NAME);
-        MailItemDataSource.delete(mbox, zsc.getOperationContext(), name);
+        int id = (int) ePop3.getAttributeLong(MailService.A_ID);
+        MailItemDataSource.delete(mbox, zsc.getOperationContext(), id);
         
         Element response = zsc.createElement(MailService.DELETE_DATA_SOURCE_RESPONSE);
         return response;

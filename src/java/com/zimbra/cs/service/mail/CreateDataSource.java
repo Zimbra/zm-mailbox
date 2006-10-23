@@ -46,16 +46,20 @@ public class CreateDataSource extends MailDocumentHandler {
         Element ePop3 = request.getElement(MailService.E_DS_POP3);
         String name = ePop3.getAttribute(MailService.A_NAME);
         int folderId = (int) ePop3.getAttributeLong(MailService.A_FOLDER);
-        MailItemDataSource ds =
-            new MailItemDataSource(mbox.getId(), MailItemDataSource.TYPE_POP3, name, folderId);
-        ds.setEnabled(ePop3.getAttributeBool(MailService.A_DS_IS_ENABLED));
-        ds.setHost(ePop3.getAttribute(MailService.A_DS_HOST));
-        ds.setPort((int) ePop3.getAttributeLong(MailService.A_DS_PORT));
-        ds.setUsername(ePop3.getAttribute(MailService.A_DS_USERNAME));
-        ds.setPassword(ePop3.getAttribute(MailService.A_DS_PASSWORD));
-        MailItemDataSource.create(mbox, zsc.getOperationContext(), ds);
+        boolean isEnabled = ePop3.getAttributeBool(MailService.A_DS_IS_ENABLED);
+        String host = ePop3.getAttribute(MailService.A_DS_HOST);
+        int port = (int) ePop3.getAttributeLong(MailService.A_DS_PORT);
+        String username = ePop3.getAttribute(MailService.A_DS_USERNAME);
+        String password = ePop3.getAttribute(MailService.A_DS_PASSWORD);
+        MailItemDataSource ds = MailItemDataSource.create(mbox, zsc.getOperationContext(),
+            MailItemDataSource.TYPE_POP3, name, isEnabled, host, port,
+            username, password, folderId);
         
+        // Assemble response
         Element response = zsc.createElement(MailService.CREATE_DATA_SOURCE_RESPONSE);
+        ePop3 = response.addElement(MailService.E_DS_POP3);
+        ePop3.addAttribute(MailService.A_ID, ds.getId());
+        
         return response;
     }
 }

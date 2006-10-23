@@ -31,13 +31,16 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
 
 
 public class MailItemDataSource {
 
-    private static final String CLASS_NAME = StringUtil.getSimpleClassName(MailItemDataSource.class);
+    private static final String SIMPLE_CLASS_NAME = 
+        StringUtil.getSimpleClassName(MailItemDataSource.class.getName());
     public static final String TYPE_POP3 = "pop3";
     public static final String CONFIG_SECTION_DATASOURCE = "ds";
 
@@ -45,121 +48,17 @@ public class MailItemDataSource {
         Collections.synchronizedMap(new HashMap<String, MailItemImport>());
     
     static {
-        registerImport("pop3", new Pop3Import());
+        registerImport(TYPE_POP3, new Pop3Import());
     }
 
-    private static final String NAME = "name";
-    private static final String ENABLED = "enabled";
-    private static final String HOST= "host";
-    private static final String PORT = "port";
-    private static final String USER = "user";
-    private static final String PASS = "pass";
-    private static final String FID = "fid";
-    private static final String URL = "url";
-    private static final String TYPE = "type";
-    
-    public static synchronized void create(Mailbox mbox, OperationContext octxt, MailItemDataSource ds) throws ServiceException {
-		String name = ds.getName();
-		
-    	Metadata config = mbox.getConfig(octxt, CONFIG_SECTION_DATASOURCE);
-    	if (config == null) {
-    		config = new Metadata();
-    	}
-    	
-    	// md is a hash of name : datasource
-    	Metadata md = config.getMap(name, true);
-    	if (md != null) {
-    		throw ServiceException.INVALID_REQUEST("pop3 account "+name+" already exists", null);
-    	}
-    	
-    	md = new Metadata();
-    	populate(md, ds);
-    	config.put(name, md);
-    	mbox.setConfig(octxt, CONFIG_SECTION_DATASOURCE, config);
-    }
-    
-    public static synchronized void modify(Mailbox mbox, OperationContext octxt, MailItemDataSource ds) throws ServiceException {
-		String name = ds.getName();
-		
-    	Metadata config = mbox.getConfig(octxt, CONFIG_SECTION_DATASOURCE);
-    	if (config == null) {
-    		throw ServiceException.INVALID_REQUEST("pop3 account "+name+" doesn't exist", null);
-    	}
-    	if (!config.containsKey(name)) {
-    		throw ServiceException.INVALID_REQUEST("pop3 account "+name+" doesn't exist", null);
-    	}
-    	
-    	Metadata md = new Metadata();
-    	populate(md, ds);
-    	config.put(name, md);
-    	mbox.setConfig(octxt, CONFIG_SECTION_DATASOURCE, config);
-    }
-    
-    public static MailItemDataSource get(Mailbox mbox, OperationContext octxt, String name) throws ServiceException {
-    	Metadata config = mbox.getConfig(octxt, CONFIG_SECTION_DATASOURCE);
-    	if (config == null) {
-    		throw ServiceException.INVALID_REQUEST("pop3 account "+name+" doesn't exist", null);
-    	}
-    	Metadata md = config.getMap(name, true);
-    	if (md == null) {
-    		throw ServiceException.INVALID_REQUEST("pop3 account "+name+" doesn't exist", null);
-    	}
-
-    	return get(md, name, mbox.getId());
-    }
-    
-    public static Set<MailItemDataSource> getAll(Mailbox mbox, OperationContext octxt) throws ServiceException {
-    	HashSet<MailItemDataSource> ds = new HashSet<MailItemDataSource>();
-    	Metadata config = mbox.getConfig(octxt, CONFIG_SECTION_DATASOURCE);
-    	if (config == null)
-    		return ds;
-    	
-    	int mboxid = mbox.getId();
-    	for (Object k: config.asMap().keySet()) {
-    		String key = (String) k;
-    		ds.add(get(config.getMap(key), key, mboxid));
-    	}
-    	
-    	return ds;
-    }
-    
-    public static synchronized void delete(Mailbox mbox, OperationContext octxt, String name) throws ServiceException {
-    	Metadata config = mbox.getConfig(octxt, CONFIG_SECTION_DATASOURCE);
-    	if (config == null) {
-    		throw ServiceException.INVALID_REQUEST("pop3 account "+name+" doesn't exist", null);
-    	}
-    	if (!config.containsKey(name)) {
-    		throw ServiceException.INVALID_REQUEST("pop3 account "+name+" doesn't exist", null);
-    	}
-    	
-    	config.remove(name);
-    	mbox.setConfig(octxt, CONFIG_SECTION_DATASOURCE, config);
-    }
-    
-    private static MailItemDataSource get(Metadata md, String name, int id) throws ServiceException {
-    	MailItemDataSource ds = new MailItemDataSource(id, md.get(TYPE), name, (int)md.getLong(FID));
-    	ds.setEnabled(md.getBool(ENABLED));
-    	ds.setHost(md.get(HOST));
-    	ds.setPort((int)md.getLong(PORT));
-    	ds.setUsername(md.get(USER));
-    	ds.setPassword(md.get(PASS));
-    	ds.setFolderId((int)md.getLong(FID));
-    	ds.setUrl(md.get(URL, null));  // optional
-    	
-    	return ds;
-    }
-    
-    private static void populate(Metadata md, MailItemDataSource ds) {
-    	md.put(NAME, ds.getName());
-    	md.put(ENABLED, ds.isEnabled());
-    	md.put(HOST, ds.getHost());
-    	md.put(PORT, ds.getPort());
-    	md.put(USER, ds.getUsername());
-    	md.put(PASS, ds.getPassword());
-    	md.put(FID, ds.getFolderId());
-    	md.put(URL, ds.getUrl());
-    	md.put(TYPE, ds.getType());
-    }
+    private static final String NAME = MailService.A_NAME;
+    private static final String IS_ENABLED = MailService.A_DS_IS_ENABLED;
+    private static final String HOST = MailService.A_DS_HOST;
+    private static final String PORT = MailService.A_DS_PORT;
+    private static final String USERNAME = MailService.A_DS_USERNAME;
+    private static final String PASSWORD = MailService.A_DS_PASSWORD;
+    private static final String FOLDER_ID = MailService.A_FOLDER;
+    private static final String TYPE = MailService.A_DS_TYPE;
     
     private int mId;
     private int mMailboxId;
@@ -174,28 +73,22 @@ public class MailItemDataSource {
     private String mType;
     private MailItemImport mImport;
     
-    public MailItemDataSource(int mailboxId, String type, String name, int folderId)
+    private MailItemDataSource(int mailboxId, int id, String type, int folderId)
     throws ServiceException {
+        if (id <= 0) {
+            throw ServiceException.FAILURE("Invalid id " + id, null);
+        }
+        
         // Validate arguments and set member variables
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
         mMailboxId = mailboxId;
-        
+        mId = id;
         mType = type;
         getImport();
-        
-        if (name == null) {
-            throw new IllegalArgumentException("name cannot be null");
-        }
-        setName(name);
-        
         mbox.getFolderById(folderId);
         setFolderId(folderId);
     }
 
-    public MailItemDataSource(String name) {
-    	setName(name);
-    }
-    
     public int getId() { return mId; }
     public int getMailboxId() { return mMailboxId; }
     public String getName() { return mName; }
@@ -227,7 +120,6 @@ public class MailItemDataSource {
         mName = name;
     }
 
-    public void setId(int id) { mId = id; }
     public void setEnabled(boolean isEnabled) { mIsEnabled = isEnabled; }
     public void setHost(String host) { mHost = host; }
     public void setPort(Integer port) { mPort = port; }
@@ -236,6 +128,147 @@ public class MailItemDataSource {
     public void setFolderId(int folderId) { mFolderId = folderId; }
     public void setUrl(String url) { mUrl = url; }
     
+    public static MailItemDataSource create(Mailbox mbox, OperationContext octxt, String type, String name,
+                                            boolean isEnabled, String host, int port, String username,
+                                            String password, int folderId)
+    throws ServiceException {
+        synchronized (mbox) {
+            ZimbraLog.mailbox.info(
+                String.format("Creating data source: type=%s, name=%s", type, name));
+            
+            // Calculate current max id
+            Set<MailItemDataSource> dataSources = getAll(mbox, octxt);
+            int maxId = 0;
+            for (MailItemDataSource temp : dataSources) {
+                if (temp.getId() > maxId) {
+                    maxId = temp.getId();
+                }
+            }
+            
+            MailItemDataSource ds = new MailItemDataSource(mbox.getId(), maxId + 1, type, folderId);
+            ds.setName(name);
+            ds.setEnabled(isEnabled);
+            ds.setHost(host);
+            ds.setPort(port);
+            ds.setUsername(username);
+            ds.setPassword(password);
+            
+            // Validate import type
+            ds.getImport();
+            
+            save(mbox, octxt, ds);
+            return ds;
+        }
+    }
+    
+    public static void modify(Mailbox mbox, OperationContext octxt, MailItemDataSource ds)
+    throws ServiceException {
+        synchronized (mbox) {
+            ZimbraLog.mailbox.info("Modifying " + ds);
+            save(mbox, octxt, ds);
+        }
+    }
+    
+    public static MailItemDataSource get(Mailbox mbox, OperationContext octxt, int id)
+    throws ServiceException {
+        synchronized (mbox) {
+            Metadata config = mbox.getConfig(octxt, CONFIG_SECTION_DATASOURCE);
+            if (config == null) {
+                throw ServiceException.INVALID_REQUEST("Data source "+ id +" doesn't exist", null);
+            }
+            Metadata md = config.getMap(Integer.toString(id), true);
+            if (md == null) {
+                throw ServiceException.INVALID_REQUEST("Data source "+ id +" doesn't exist", null);
+            }
+
+            return get(md, mbox, id);
+        }
+    }
+    
+    /**
+     * Returns all <code>MailItemDataSource</code>s for the given
+     * <code>Mailbox</code> or an empty <code>Set</code> if none
+     * exist.
+     */
+    public static Set<MailItemDataSource> getAll(Mailbox mbox, OperationContext octxt)
+    throws ServiceException {
+        synchronized (mbox) {
+            HashSet<MailItemDataSource> ds = new HashSet<MailItemDataSource>();
+            Metadata config = mbox.getConfig(octxt, CONFIG_SECTION_DATASOURCE);
+            if (config == null)
+                return ds;
+
+            for (Object k: config.asMap().keySet()) {
+                String key = (String) k;
+                int id = 0;
+                try {
+                    id = Integer.parseInt(key);
+                } catch (NumberFormatException e) {
+                    ZimbraLog.mailbox.warn("Invalid data source key: " + key);
+                    continue;
+                }
+                ds.add(get(config.getMap(key), mbox, id));
+            }
+
+            return ds;
+        }
+    }
+    
+    public static void delete(Mailbox mbox, OperationContext octxt, int id)
+    throws ServiceException {
+        synchronized (mbox) {
+            ZimbraLog.mailbox.info("Deleting data source " + id);
+            String key = Integer.toString(id);
+            Metadata config = mbox.getConfig(octxt, CONFIG_SECTION_DATASOURCE);
+            if (config == null) {
+                throw ServiceException.INVALID_REQUEST("Data source " + id + " doesn't exist", null);
+            }
+            if (!config.containsKey(key)) {
+                throw ServiceException.INVALID_REQUEST("Data source " + id + " doesn't exist", null);
+            }
+
+            config.remove(key);
+            mbox.setConfig(octxt, CONFIG_SECTION_DATASOURCE, config);
+        }
+    }
+    
+    private static MailItemDataSource get(Metadata md, Mailbox mbox, int id)
+    throws ServiceException {
+    	MailItemDataSource ds = new MailItemDataSource(mbox.getId(), id, md.get(TYPE), (int)md.getLong(FOLDER_ID));
+        ds.setName(md.get(NAME));
+    	ds.setEnabled(md.getBool(IS_ENABLED));
+    	ds.setHost(md.get(HOST));
+    	ds.setPort((int)md.getLong(PORT));
+    	ds.setUsername(md.get(USERNAME));
+    	ds.setPassword(md.get(PASSWORD));
+    	ds.setFolderId((int)md.getLong(FOLDER_ID));
+    	
+    	return ds;
+    }
+    
+    private static void save(Mailbox mbox, OperationContext octxt, MailItemDataSource ds)
+    throws ServiceException {
+        synchronized (mbox) {
+            Metadata config = mbox.getConfig(octxt, CONFIG_SECTION_DATASOURCE);
+            if (config == null) {
+                config = new Metadata();
+            }
+            
+            Metadata md = new Metadata();
+            md.put(NAME, ds.getName());
+            md.put(IS_ENABLED, ds.isEnabled());
+            md.put(HOST, ds.getHost());
+            md.put(PORT, ds.getPort());
+            md.put(USERNAME, ds.getUsername());
+            md.put(PASSWORD, ds.getPassword());
+            md.put(FOLDER_ID, ds.getFolderId());
+            md.put(TYPE, ds.getType());
+            
+            config.put(Integer.toString(ds.getId()), md);
+            mbox.setConfig(octxt, CONFIG_SECTION_DATASOURCE, config);
+        }
+    }
+
     /**
      * Associate the specified type with the <code>MailItemImport</code>
      * implementation that will perform import of data of that type.
@@ -259,6 +292,7 @@ public class MailItemDataSource {
     }
 
     public String toString() {
-        return String.format("%s: { mailboxId=%d, id=%d, name=%s }", CLASS_NAME, mMailboxId, mId, mName);
+        return String.format("%s: { mailboxId=%d, id=%d, type=%s, name=%s }",
+            SIMPLE_CLASS_NAME, mMailboxId, mId, mType, mName);
     }
 }

@@ -479,7 +479,7 @@ public class MailService implements DocumentService {
     public static final String A_DS_PORT = "port";
     public static final String A_DS_USERNAME = "username";
     public static final String A_DS_PASSWORD = "password";
-    
+    public static final String A_DS_TYPE = "type";
     
     // TODO: move to a different service.
     // wiki
