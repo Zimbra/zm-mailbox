@@ -24,9 +24,11 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -72,21 +74,11 @@ public class MailItemDataSource {
     private String mUrl;
     private String mType;
     private MailItemImport mImport;
-    
-    private MailItemDataSource(int mailboxId, int id, String type, int folderId)
+
+    private MailItemDataSource(String type)
     throws ServiceException {
-        if (id <= 0) {
-            throw ServiceException.FAILURE("Invalid id " + id, null);
-        }
-        
-        // Validate arguments and set member variables
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-        mMailboxId = mailboxId;
-        mId = id;
         mType = type;
-        getImport();
-        mbox.getFolderById(folderId);
-        setFolderId(folderId);
+        getImport(); // Validate type
     }
 
     public int getId() { return mId; }
@@ -112,22 +104,74 @@ public class MailItemDataSource {
         }
         return mImport;
     }
+
+    private void setMailboxId(int mailboxId)
+    throws ServiceException {
+        MailboxManager.getInstance().getMailboxById(mailboxId); // Validate
+        mMailboxId = mailboxId;
+    }
     
-    public void setName(String name) {
+    public void setName(String name)
+    throws ServiceException {
         if (name == null) {
-            throw new IllegalArgumentException("name cannot be null");
+            throw ServiceException.INVALID_REQUEST("name cannot be null", null);
         }
         mName = name;
     }
 
+    private void setId(int id)
+    throws ServiceException {
+        if (id <= 0) {
+            throw ServiceException.INVALID_REQUEST("Invalid id " + id, null);
+        }
+        mId = id;
+    }
+
+    public void setFolderId(int folderId)
+    throws ServiceException {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
+        mbox.getFolderById(folderId);
+        mFolderId = folderId;
+    }
+    
     public void setEnabled(boolean isEnabled) { mIsEnabled = isEnabled; }
     public void setHost(String host) { mHost = host; }
     public void setPort(Integer port) { mPort = port; }
     public void setUsername(String username) { mUsername = username; }
     public void setPassword(String password) { mPassword = password; }
-    public void setFolderId(int folderId) { mFolderId = folderId; }
     public void setUrl(String url) { mUrl = url; }
-    
+
+    /**
+     * Test connecting to a data source.  Do not actually create the
+     * data source.
+     * 
+     * @return <code>null</code> if the test succeeded, or the error message
+     * if it didn't.
+     */
+    public static String test(String type, String host, int port,
+                              String username, String password)
+    throws ServiceException {
+        MailItemDataSource ds = new MailItemDataSource(type);
+        ds.setHost(host);
+        ds.setPort(port);
+        ds.setUsername(username);
+        ds.setPassword(password);
+        
+        ZimbraLog.mailbox.info("Testing connection to " + ds);
+        
+        String error = ds.getImport().test(ds);
+        if (error == null) {
+            ZimbraLog.mailbox.info("Test of " + ds + " succeeded");
+        } else {
+            ZimbraLog.mailbox.info("Test of " + ds + " failed: " + error);
+        }
+        
+        return error;
+    }
+
+    /**
+     * Create a data source with the specified properties.
+     */
     public static MailItemDataSource create(Mailbox mbox, OperationContext octxt, String type, String name,
                                             boolean isEnabled, String host, int port, String username,
                                             String password, int folderId)
@@ -145,7 +189,10 @@ public class MailItemDataSource {
                 }
             }
             
-            MailItemDataSource ds = new MailItemDataSource(mbox.getId(), maxId + 1, type, folderId);
+            MailItemDataSource ds = new MailItemDataSource(type);
+            ds.setMailboxId(mbox.getId());
+            ds.setId(maxId + 1);
+            ds.setFolderId(folderId);
             ds.setName(name);
             ds.setEnabled(isEnabled);
             ds.setHost(host);
@@ -157,10 +204,16 @@ public class MailItemDataSource {
             ds.getImport();
             
             save(mbox, octxt, ds);
+            
+            ZimbraLog.mailbox.info("Created " + ds);
             return ds;
         }
     }
     
+    /**
+     * Update the persisted version of the given data source with the latest
+     * values stored in the object.
+     */
     public static void modify(Mailbox mbox, OperationContext octxt, MailItemDataSource ds)
     throws ServiceException {
         synchronized (mbox) {
@@ -168,7 +221,10 @@ public class MailItemDataSource {
             save(mbox, octxt, ds);
         }
     }
-    
+
+    /**
+     * Get the data source with the given id.
+     */
     public static MailItemDataSource get(Mailbox mbox, OperationContext octxt, int id)
     throws ServiceException {
         synchronized (mbox) {
@@ -186,7 +242,7 @@ public class MailItemDataSource {
     }
     
     /**
-     * Returns all <code>MailItemDataSource</code>s for the given
+     * Return all <code>MailItemDataSource</code>s for the given
      * <code>Mailbox</code> or an empty <code>Set</code> if none
      * exist.
      */
@@ -214,6 +270,9 @@ public class MailItemDataSource {
         }
     }
     
+    /**
+     * Delete the data source with the given id.
+     */
     public static void delete(Mailbox mbox, OperationContext octxt, int id)
     throws ServiceException {
         synchronized (mbox) {
@@ -234,7 +293,10 @@ public class MailItemDataSource {
     
     private static MailItemDataSource get(Metadata md, Mailbox mbox, int id)
     throws ServiceException {
-    	MailItemDataSource ds = new MailItemDataSource(mbox.getId(), id, md.get(TYPE), (int)md.getLong(FOLDER_ID));
+    	MailItemDataSource ds = new MailItemDataSource(md.get(TYPE));
+        ds.setMailboxId(mbox.getId());
+        ds.setId(id);
+        ds.setFolderId((int) md.getLong(FOLDER_ID));
         ds.setName(md.get(NAME));
     	ds.setEnabled(md.getBool(IS_ENABLED));
     	ds.setHost(md.get(HOST));
@@ -248,6 +310,18 @@ public class MailItemDataSource {
     
     private static void save(Mailbox mbox, OperationContext octxt, MailItemDataSource ds)
     throws ServiceException {
+        if (mbox.getId() != ds.getMailboxId()) {
+            throw ServiceException.FAILURE(
+                ds + ": cannot save in a different mailbox (" + mbox.getId() + ")", null);
+        }
+        if (ds.getId() == 0) {
+            throw ServiceException.FAILURE(ds + ": id has not been assigned", null);
+        }
+        if (ds.getFolderId() == 0) {
+            throw ServiceException.FAILURE(ds + ": folder id has not been assigned", null);
+        }
+        ds.mMailboxId = mbox.getId();
+        
         synchronized (mbox) {
             Metadata config = mbox.getConfig(octxt, CONFIG_SECTION_DATASOURCE);
             if (config == null) {
@@ -281,18 +355,28 @@ public class MailItemDataSource {
         sImports.put(type, mii);
     }
 
-    public void test()
-    throws ServiceException {
-        getImport().test(this);
-    }
-    
+    /**
+     * Execute this data source's <code>MailItemImport</code> implementation
+     * to import data. 
+     */
     public void importData()
     throws ServiceException {
         getImport().importData(this);
     }
 
     public String toString() {
-        return String.format("%s: { mailboxId=%d, id=%d, type=%s, name=%s }",
-            SIMPLE_CLASS_NAME, mMailboxId, mId, mType, mName);
+        List<String> parts = new ArrayList<String>();
+        if (getMailboxId() != 0) {
+            parts.add("mailboxId=" + getMailboxId());
+        }
+        if (getId() != 0) {
+            parts.add("id=" + getId());
+        }
+        parts.add("type=" + getType());
+        if (getName() != null) {
+            parts.add("name=" + getName());
+        }
+        return String.format("%s: { %s }",
+            SIMPLE_CLASS_NAME, StringUtil.join(", ", parts));
     }
 }

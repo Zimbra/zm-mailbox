@@ -29,6 +29,10 @@ import com.zimbra.cs.service.ServiceException;
 
 public interface MailItemImport {
 
-    public void test(MailItemDataSource dataSource) throws ServiceException;
+    /**
+     * Test connecting to the specified data source.
+     * @return
+     */
+    public String test(MailItemDataSource dataSource);
     public void importData(MailItemDataSource dataSource) throws ServiceException;
 }

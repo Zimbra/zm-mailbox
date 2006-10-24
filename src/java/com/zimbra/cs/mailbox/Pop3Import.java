@@ -43,7 +43,6 @@ import org.apache.commons.logging.LogFactory;
 import com.sun.mail.pop3.POP3Folder;
 import com.sun.mail.pop3.POP3Message;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
@@ -60,8 +59,18 @@ implements MailItemImport {
         sSession = Session.getDefaultInstance(props);
     }
 
-    public void test(MailItemDataSource dataSource) {
-        // TODO: Implement later
+    public String test(MailItemDataSource ds) {
+        String error = null;
+        
+        try {
+            Store store = sSession.getStore("pop3");
+            store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getPassword());
+            store.close();
+        } catch (MessagingException e) {
+            sLog.debug("Testing " + ds, e);
+            error = e.getMessage();
+        }
+        return error;
     }
     
     public void importData(MailItemDataSource dataSource)
@@ -69,9 +78,9 @@ implements MailItemImport {
         try {
             fetchMessages(dataSource);
         } catch (MessagingException e) {
-            throw ServiceException.FAILURE(getContext(dataSource), e);
+            throw ServiceException.FAILURE("Importing data from " + dataSource, e);
         } catch (IOException e) {
-            throw ServiceException.FAILURE(getContext(dataSource), e);
+            throw ServiceException.FAILURE("Importing data from " + dataSource, e);
         }
     }
     
@@ -128,10 +137,5 @@ implements MailItemImport {
         // folder.close(!ds.leaveMailOnServer());
         folder.close(true);
         store.close();
-    }
-    
-    private String getContext(MailItemDataSource ds) {
-        return String.format("%s %s",
-            StringUtil.getSimpleClassName(this), ds.getName());
     }
 }

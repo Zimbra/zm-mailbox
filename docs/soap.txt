@@ -380,6 +380,11 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
        <signature n="{name}">{value}</signature>*
      </identity>*
    </identities>
+   <dataSources>
+     <pop3 id="{id}" name="My POP3 Account" isEnabled="0|1" host="pop3.myisp.com" port="110"
+        username="mylogin" l="{folder-id}"/>
+     ...
+   </dataSources>*
    [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
  
@@ -1662,7 +1667,7 @@ Synchronization:
     [text to spell check]
 </CheckSpellingRequest>
 
-<CheckSpellingResponse available="true">
+<CheckSpellingResponse available="0|1">
   <misspelled word="chickun" suggestions="chicken,chocking,chucking,Chicky,checking"/>
 </CheckSpellingResponse>
 
@@ -1718,6 +1723,16 @@ of Identity attributes.
 </DeleteIdentityRequest>
 
 <DeleteIdentityResponse/>
+
+---------------------------
+
+<TestDataSourceRequest>
+  <pop3 host="pop.myisp.com" port="110" username="mylogin" password="mypassword"/>
+</TestDataSourceRequest>
+
+<TestDataSourceResponse success="0|1" [error="Error message"]/>
+
+Tests the connection to the specified data source.  Does not import data.
 
 ---------------------------
 

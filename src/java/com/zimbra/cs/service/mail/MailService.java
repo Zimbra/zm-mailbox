@@ -187,6 +187,8 @@ public class MailService implements DocumentService {
     public static final QName GET_DATA_SOURCES_RESPONSE = QName.get("GetDataSourcesResponse", NAMESPACE);
     public static final QName MODIFY_DATA_SOURCE_REQUEST = QName.get("ModifyDataSourceRequest", NAMESPACE);
     public static final QName MODIFY_DATA_SOURCE_RESPONSE = QName.get("ModifyDataSourceResponse", NAMESPACE);
+    public static final QName TEST_DATA_SOURCE_REQUEST = QName.get("TestDataSourceRequest", NAMESPACE);
+    public static final QName TEST_DATA_SOURCE_RESPONSE = QName.get("TestDataSourceResponse", NAMESPACE);
     public static final QName DELETE_DATA_SOURCE_REQUEST = QName.get("DeleteDataSourceRequest", NAMESPACE);
     public static final QName DELETE_DATA_SOURCE_RESPONSE = QName.get("DeleteDataSourceResponse", NAMESPACE);
     public static final QName IMPORT_DATA_REQUEST = QName.get("ImportDataRequest", NAMESPACE);
@@ -480,6 +482,8 @@ public class MailService implements DocumentService {
     public static final String A_DS_USERNAME = "username";
     public static final String A_DS_PASSWORD = "password";
     public static final String A_DS_TYPE = "type";
+    public static final String A_DS_SUCCESS = "success";
+    public static final String A_DS_ERROR = "error";
     
     // TODO: move to a different service.
     // wiki
@@ -595,6 +599,7 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(GET_DATA_SOURCES_REQUEST, new GetDataSources());
         dispatcher.registerHandler(CREATE_DATA_SOURCE_REQUEST, new CreateDataSource());
         dispatcher.registerHandler(MODIFY_DATA_SOURCE_REQUEST, new ModifyDataSource());
+        dispatcher.registerHandler(TEST_DATA_SOURCE_REQUEST, new TestDataSource());
         dispatcher.registerHandler(DELETE_DATA_SOURCE_REQUEST, new DeleteDataSource());
         dispatcher.registerHandler(IMPORT_DATA_REQUEST, new ImportData());
     }
