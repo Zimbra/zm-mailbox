@@ -46,7 +46,7 @@ public class ModifyDataSource extends MailDocumentHandler {
         int id = (int) ePop3.getAttributeLong(MailService.A_ID);
         MailItemDataSource ds = MailItemDataSource.get(mbox, zsc.getOperationContext(), id);
 
-        String attr = ePop3.getAttribute(MailService.A_NAME);
+        String attr = ePop3.getAttribute(MailService.A_NAME, null);
         if (attr != null)
             ds.setName(attr);
         attr = ePop3.getAttribute(MailService.A_DS_IS_ENABLED, null);
