@@ -32,7 +32,9 @@ import java.util.Map;
 
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.common.util.ZimbraLog;
@@ -65,20 +67,32 @@ public class Auth extends AdminDocumentHandler {
 		Account acct = null;
         boolean isDomainAdmin = false;
         
+        Element virtualHostEl = request.getOptionalElement(AccountService.E_VIRTUAL_HOST);
+        String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
+ 
         try {
             
             if (name.indexOf("@") == -1) {
+
                 acct = prov.get(AccountBy.adminName, name);
-            } else {
-                acct = prov.get(AccountBy.name, name);
+                
+                if (acct == null) {
+                    if (virtualHost != null) {
+                        Domain d = prov.get(DomainBy.virtualHostname, virtualHost);
+                        if (d != null)
+                            name = name + "@" + d.getName();
+                    }                    
+                } 
             }
+
+            if (acct == null)
+                acct = prov.get(AccountBy.name, name);
 
             if (acct == null)
                 throw AccountServiceException.AUTH_FAILED(name);
         
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "AdminAuth","account", name})); 
-
         
             prov.authAccount(acct, password, "soap");
             
