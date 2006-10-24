@@ -554,8 +554,8 @@ public class ZRecur {
         expansionsLeft--;
         
         while (expansionsLeft > 0 &&
-        	   toRet.size() < MAXIMUM_INSTANCES_RETURNED)
-        {
+        	   toRet.size() < MAXIMUM_INSTANCES_RETURNED) {
+            boolean curIsAfterEndDate = cur.getTime().after(rangeEndDate);
             List<Calendar> addList = new LinkedList<Calendar>();
             
             switch (mFreq) {
@@ -750,7 +750,8 @@ public class ZRecur {
             
             addList = handleSetPos(addList);
 
-            boolean gonePastEndDate = false;
+            boolean noInstanceFound = true;
+            boolean foundInstancePastEndDate = false;
             // add all the ones that match!
             for (Calendar addCal : addList) {
                 Date toAdd = addCal.getTime();
@@ -765,10 +766,12 @@ public class ZRecur {
                 expansionsLeft--;
 
                 if (!toAdd.after(rangeEndDate)) {
-                    if (!toAdd.before(earliestDate))
+                    if (!toAdd.before(earliestDate)) {
                         toRet.add(toAdd);
+                        noInstanceFound = false;
+                    }
                 } else {
-                    gonePastEndDate = true;
+                    foundInstancePastEndDate = true;
                     break;
                 }
 
@@ -777,7 +780,7 @@ public class ZRecur {
                     toRet.size() >= MAXIMUM_INSTANCES_RETURNED)
                 	break;;
             }
-            if (gonePastEndDate)
+            if (foundInstancePastEndDate || (noInstanceFound && curIsAfterEndDate))
                 break;
         }
 
