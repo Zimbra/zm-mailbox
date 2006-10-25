@@ -39,10 +39,17 @@ public class ModifyZimlet extends AdminDocumentHandler {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         
 		Element z = request.getElement(AdminService.E_ZIMLET);
-
-		doAcl(z);
-		doStatus(z);
-		doPriority(z);
+		Element a = z.getOptionalElement(AdminService.E_ACL);
+		if (a != null)
+			doAcl(z);
+		
+		Element s = z.getOptionalElement(AdminService.E_STATUS);
+		if (s != null)
+			doStatus(z);
+		
+		Element p = z.getOptionalElement(AdminService.E_PRIORITY);
+		if (p != null)
+			doPriority(z);
 
 	    Element response = lc.createElement(AdminService.MODIFY_ZIMLET_RESPONSE);
 		return response;

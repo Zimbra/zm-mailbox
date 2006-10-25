@@ -1186,9 +1186,9 @@ Access: domain admin sufficient
 
 <ModifyZimletRequest>
   <zimlet name="{zimlet-name}">
-    <status [value="enabled/disabled"]/>
-    <acl [cos="{cos-name}" acl="grant/deny"]/>
-    <priority [value="integer"]/>
+    [<status [value="enabled/disabled"]/>]
+    [<acl [cos="{cos-name}" acl="grant/deny"]/>]
+    [<priority [value="integer"]/>]
   </zimlet>
 </ModifyZimletRequest>
 
