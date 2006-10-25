@@ -2646,7 +2646,7 @@ public class LdapProvisioning extends Provisioning {
                     if (Character.isUpperCase(ch)) upper++;
                     else if (Character.isLowerCase(ch)) lower++;
                     else if (Character.isDigit(ch)) numeric++;
-                    else if (isAsciiPunc(ch)) numeric++;
+                    else if (isAsciiPunc(ch)) punctuation++;
                 }
                 
                 if (upper < minUpperCase) throw AccountServiceException.INVALID_PASSWORD("not enough upper case characters");
