@@ -196,6 +196,8 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           }
           case TO:
           case FROM:
+          case ENVTO:
+          case ENVFROM:
           case CC:
             if (tok == null || tok.length() < 1) {
                 throw new ParseException("Missing required text after a TO/FROM/CC");
@@ -562,6 +564,9 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     case CONTENT:
     case SUBJECT:
     case FROM:
+    case MSGID:
+    case ENVTO:
+    case ENVFROM:
     case TO:
     case CC:
     case IN:
@@ -600,9 +605,21 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     case QUOTED_TOK:
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case FROM:
+      case MSGID:
+      case ENVTO:
+      case ENVFROM:
       case TO:
       case CC:
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case MSGID:
+          t = jj_consume_token(MSGID);
+          break;
+        case ENVFROM:
+          t = jj_consume_token(ENVFROM);
+          break;
+        case ENVTO:
+          t = jj_consume_token(ENVTO);
+          break;
         case FROM:
           t = jj_consume_token(FROM);
           break;
@@ -863,6 +880,9 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
       case CONTENT:
       case SUBJECT:
       case FROM:
+      case MSGID:
+      case ENVTO:
+      case ENVFROM:
       case TO:
       case CC:
       case IN:
@@ -926,10 +946,10 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     clauses = Query();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 0:
-    case 62:
+    case 65:
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 62:
-        jj_consume_token(62);
+      case 65:
+        jj_consume_token(65);
         break;
       case 0:
         jj_consume_token(0);
@@ -956,15 +976,20 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
   final private int[] jj_la1 = new int[27];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
+  static private int[] jj_la1_2;
   static {
       jj_la1_0();
       jj_la1_1();
+      jj_la1_2();
    }
    private static void jj_la1_0() {
-      jj_la1_0 = new int[] {0x60,0x80,0x80,0x1e0,0x0,0x100,0x1e0,0x0,0x100,0x1e0,0x0,0x0,0x0,0x100,0x7000,0x1f8c00,0x200000,0x1fc00000,0x60000000,0x0,0x7ffffc00,0x7ffffd00,0x0,0x0,0x7ffffde0,0x1,0x1,};
+      jj_la1_0 = new int[] {0x60,0x80,0x80,0x1e0,0x0,0x100,0x1e0,0x0,0x100,0x1e0,0x0,0x0,0x0,0x100,0x3f000,0xfc0c00,0x1000000,0xfe000000,0x0,0x0,0xfffffc00,0xfffffd00,0x0,0x0,0xfffffde0,0x1,0x1,};
    }
    private static void jj_la1_1() {
-      jj_la1_1 = new int[] {0x0,0x180000,0x0,0x20380000,0x20200000,0x20200000,0x24380000,0x24200000,0x24200000,0x20380000,0x180000,0x20200000,0x20200000,0x20380000,0x0,0xf808,0x1f4,0x600,0x2,0x20200000,0x2021fffe,0x2021fffe,0x60000,0x60000,0x2039fffe,0x40000000,0x40000000,};
+      jj_la1_1 = new int[] {0x0,0xc00000,0x0,0x1c00000,0x1000000,0x1000000,0x21c00000,0x21000000,0x21000000,0x1c00000,0xc00000,0x1000000,0x1000000,0x1c00000,0x0,0x7c040,0xfa0,0x3000,0x13,0x1000000,0x10ffff3,0x10ffff3,0x300000,0x300000,0x1cffff3,0x0,0x0,};
+   }
+   private static void jj_la1_2() {
+      jj_la1_2 = new int[] {0x0,0x0,0x0,0x1,0x1,0x1,0x1,0x1,0x1,0x1,0x0,0x1,0x1,0x1,0x0,0x0,0x0,0x0,0x0,0x1,0x1,0x1,0x0,0x0,0x1,0x2,0x2,};
    }
 
   public ZimbraQueryParser(java.io.InputStream stream) {
@@ -1063,8 +1088,8 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 
   public ParseException generateParseException() {
     jj_expentries.removeAllElements();
-    boolean[] la1tokens = new boolean[63];
-    for (int i = 0; i < 63; i++) {
+    boolean[] la1tokens = new boolean[66];
+    for (int i = 0; i < 66; i++) {
       la1tokens[i] = false;
     }
     if (jj_kind >= 0) {
@@ -1080,10 +1105,13 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           if ((jj_la1_1[i] & (1<<j)) != 0) {
             la1tokens[32+j] = true;
           }
+          if ((jj_la1_2[i] & (1<<j)) != 0) {
+            la1tokens[64+j] = true;
+          }
         }
       }
     }
-    for (int i = 0; i < 63; i++) {
+    for (int i = 0; i < 66; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

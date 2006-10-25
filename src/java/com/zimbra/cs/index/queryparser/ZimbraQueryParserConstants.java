@@ -12,53 +12,56 @@ public interface ZimbraQueryParserConstants {
   int CONTENT = 10;
   int SUBJECT = 11;
   int FROM = 12;
-  int TO = 13;
-  int CC = 14;
-  int IN = 15;
-  int INID = 16;
-  int HAS = 17;
-  int FILENAME = 18;
-  int TYPE = 19;
-  int ATTACHMENT = 20;
-  int IS = 21;
-  int DATE = 22;
-  int DAY = 23;
-  int WEEK = 24;
-  int MONTH = 25;
-  int YEAR = 26;
-  int AFTER = 27;
-  int BEFORE = 28;
-  int SIZE = 29;
-  int BIGGER = 30;
-  int BIGGER_STR = 31;
-  int LARGER = 32;
-  int SMALLER = 33;
-  int TAG = 34;
-  int MESSAGE = 35;
-  int MY = 36;
-  int CONV = 37;
-  int CONV_COUNT = 38;
-  int CONV_MINM = 39;
-  int CONV_MAXM = 40;
-  int CONV_START = 41;
-  int CONV_END = 42;
-  int AUTHOR = 43;
-  int TITLE = 44;
-  int KEYWORDS = 45;
-  int COMPANY = 46;
-  int METADATA = 47;
-  int ITEM = 48;
-  int SORTBY = 49;
-  int SORT = 50;
-  int PLUS = 51;
-  int MINUS = 52;
-  int TEXT_TOK = 53;
-  int INITIAL_TERM_CHAR = 54;
-  int SUBSEQUENT_TERM_CHAR = 55;
-  int ERROR_BRACES_WITH_NEWLINE = 57;
-  int BRACES_TOK = 58;
-  int ERROR_QUOTE_WITH_NEWLINE = 60;
-  int QUOTED_TOK = 61;
+  int MSGID = 13;
+  int ENVTO = 14;
+  int ENVFROM = 15;
+  int TO = 16;
+  int CC = 17;
+  int IN = 18;
+  int INID = 19;
+  int HAS = 20;
+  int FILENAME = 21;
+  int TYPE = 22;
+  int ATTACHMENT = 23;
+  int IS = 24;
+  int DATE = 25;
+  int DAY = 26;
+  int WEEK = 27;
+  int MONTH = 28;
+  int YEAR = 29;
+  int AFTER = 30;
+  int BEFORE = 31;
+  int SIZE = 32;
+  int BIGGER = 33;
+  int BIGGER_STR = 34;
+  int LARGER = 35;
+  int SMALLER = 36;
+  int TAG = 37;
+  int MESSAGE = 38;
+  int MY = 39;
+  int CONV = 40;
+  int CONV_COUNT = 41;
+  int CONV_MINM = 42;
+  int CONV_MAXM = 43;
+  int CONV_START = 44;
+  int CONV_END = 45;
+  int AUTHOR = 46;
+  int TITLE = 47;
+  int KEYWORDS = 48;
+  int COMPANY = 49;
+  int METADATA = 50;
+  int ITEM = 51;
+  int SORTBY = 52;
+  int SORT = 53;
+  int PLUS = 54;
+  int MINUS = 55;
+  int TEXT_TOK = 56;
+  int INITIAL_TERM_CHAR = 57;
+  int SUBSEQUENT_TERM_CHAR = 58;
+  int ERROR_BRACES_WITH_NEWLINE = 60;
+  int BRACES_TOK = 61;
+  int ERROR_QUOTE_WITH_NEWLINE = 63;
+  int QUOTED_TOK = 64;
 
   int DEFAULT = 0;
   int BRACES_STATE = 1;
@@ -78,6 +81,9 @@ public interface ZimbraQueryParserConstants {
     "\"content:\"",
     "\"subject:\"",
     "\"from:\"",
+    "\"msgid:\"",
+    "\"envto:\"",
+    "\"envfrom:\"",
     "\"to:\"",
     "\"cc:\"",
     "\"in:\"",

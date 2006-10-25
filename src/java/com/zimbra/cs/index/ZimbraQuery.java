@@ -1278,9 +1278,19 @@ public final class ZimbraQuery {
                     mWildcardTerm = wcToken;
                     MailboxIndex mbidx = mbox.getMailboxIndex();
                     List<String> expandedTokens = mbidx.expandWildcardToken(QueryTypeString(qType), wcToken, MAX_WILDCARD_TERMS);
-
-                    for (String token : expandedTokens) {
-                        mOredTokens.add(token);
+                    
+                    // 
+                    // By design, we interpret *zero* tokens to mean "ignore this search term"
+                    // therefore if the wildcard expands to no terms, we need to stick something
+                    // in right here, just so we don't get confused when we go to execute the 
+                    // query later
+                    //
+                    if (expandedTokens.size() == 0) { 
+                        mTokens.add(wcToken);
+                    } else {
+                        for (String token : expandedTokens) {
+                            mOredTokens.add(token);
+                        }
                     }
                 }
             }
@@ -1295,6 +1305,8 @@ public final class ZimbraQuery {
             if (mTokens.size() <= 0 && mOredTokens.size()<=0 && mWildcardPrefix==null) {
                 // if we have no tokens, that is usually because the analyzer removed them
                 // -- the user probably queried for a stop word like "a" or "an" or "the"
+                //
+                // By design: interpret *zero* tokens to mean "ignore this search term"
                 // 
                 // we can't simply ignore this query, however -- we have to put a null
                 // query into the query list, otherwise conjunctions will get confused...so
@@ -1387,6 +1399,9 @@ public final class ZimbraQuery {
     private static String QueryTypeString(int qType) {
         switch (qType) {
             case ZimbraQueryParser.CONTENT:    return LuceneFields.L_CONTENT;
+            case ZimbraQueryParser.MSGID:       return LuceneFields.L_H_MESSAGE_ID;
+            case ZimbraQueryParser.ENVFROM:       return LuceneFields.L_H_X_ENV_FROM;
+            case ZimbraQueryParser.ENVTO:         return LuceneFields.L_H_X_ENV_TO;
             case ZimbraQueryParser.FROM:       return LuceneFields.L_H_FROM;
             case ZimbraQueryParser.TO:         return LuceneFields.L_H_TO;
             case ZimbraQueryParser.CC:         return LuceneFields.L_H_CC;

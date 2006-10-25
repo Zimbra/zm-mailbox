@@ -88,7 +88,14 @@ public class LuceneFields {
     public static final String L_H_CC = "cc";
     /** "Subject" RFC2822 header */
     public static final String L_H_SUBJECT = "subject";
-
+    
+    /** x-envelope-from / to, see bug 8703 */
+    public static final String L_H_X_ENV_FROM = "env_from";
+    public static final String L_H_X_ENV_TO = "env_to";
+    
+    /** Message-Id: */
+    public static final String L_H_MESSAGE_ID = "msg_id";
+    
     /** Subject for sorting purposes (untokenized)  */
     public static final String L_SORT_SUBJECT = "subjSort";
     /** name for sorting purposes */

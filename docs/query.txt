@@ -4,6 +4,8 @@ Tim's short-short summary of the query grammar as of now (updated)
    from:{TEXT|EMAIL_ADDR|DOMAIN} 
    to:{TEXT|EMAIL_ADDR|DOMAIN}
    cc:{TEXT|EMAIL|DOMAIN}
+   envto:{TEXT|EMAIL_ADDR|DOMAIN} // x-envelope-to mime header
+   envfrom:{TEXT|EMAIL|DOMAIN}    // x-envelope-from mime-header 
    subject:{TEXT}
    in:{FOLDER_LABEL}   // or whatever we call folders nowadays
    has:{"attachment"|OBJECT_TYPE}
@@ -35,6 +37,7 @@ Tim's short-short summary of the query grammar as of now (updated)
    keywords: {TEXT}
    company: {TEXT}
    metadata: {TEXT}
+   msgid: {TEXT}   // Message-Id: field from mime header 
    
    sort:(score|dateasc|datedesc|subjasc|subjdesc|nameasc|namedesc)
       -- overrides the sort field specified in the <SearchRequest> 

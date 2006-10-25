@@ -79,6 +79,10 @@ public class ParsedMessage {
     private List<MPartInfo> mMessageParts;
     private String mRecipients;
     private String mSender;
+    
+    private String mEnvFrom; // x-env-from
+    private String mEnvTo; // x-env-to
+    
     private ParsedAddress mParsedSender;
 	private boolean mHasAttachments = false;
 	private String mFragment = "";

@@ -42,6 +42,7 @@ import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.TokenFilter;
+import org.apache.lucene.analysis.WhitespaceTokenizer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
 import com.zimbra.cs.service.ServiceException;
@@ -152,8 +153,19 @@ public class ZimbraAnalyzer extends StandardAnalyzer
     protected ZimbraAnalyzer() {
         super();
     }
+    
+    /**
+     * "Tokenizer" which returns the entire input as a single token.  Used for KEYWORD fields.
+     */
+    protected static class DontTokenizer extends CharTokenizer {
+        DontTokenizer(Reader input) { super(input); }
+        protected boolean isTokenChar(char c) { return true; }
+    }
 
     public TokenStream tokenStream(String fieldName, Reader reader) {
+        if (fieldName.equals(LuceneFields.L_H_MESSAGE_ID))
+            return new DontTokenizer(reader);
+        
         if (fieldName.equals(LuceneFields.L_ATTACHMENTS) ||
                     fieldName.equals(LuceneFields.L_MIMETYPE)) 
         {
@@ -162,7 +174,10 @@ public class ZimbraAnalyzer extends StandardAnalyzer
             return new SizeTokenFilter(new NumberTokenStream(reader));
         } else if (fieldName.equals(LuceneFields.L_H_FROM) 
                     || fieldName.equals(LuceneFields.L_H_TO) 
-                    || fieldName.equals(LuceneFields.L_H_CC)) 
+                    || fieldName.equals(LuceneFields.L_H_CC)
+                    || fieldName.equals(LuceneFields.L_H_X_ENV_FROM)
+                    || fieldName.equals(LuceneFields.L_H_X_ENV_TO)
+                    ) 
         {
             return new AddressTokenFilter(new AddrCharTokenizer(reader));
         } else if (fieldName.equals(LuceneFields.L_FILENAME)) {

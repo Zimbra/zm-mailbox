@@ -233,6 +233,8 @@ public final class ZimbraQueryParser {
           }
           case TO:
           case FROM:
+          case ENVTO:
+          case ENVFROM:
           case CC:
             if (tok == null || tok.length() < 1) {
                 throw new ParseException("Missing required text after a TO/FROM/CC");
@@ -326,6 +328,9 @@ PARSER_END(ZimbraQueryParser)
    <CONTENT:   "content:"> 
 |  <SUBJECT:    "subject:">
 |  <FROM:       "from:">
+|  <MSGID:      "msgid:">
+|  <ENVTO:      "envto:">                            
+|  <ENVFROM:    "envfrom:">         
 |  <TO:         "to:">         
 |  <CC:         "cc:">         
 |  <IN:         "in:">  
@@ -530,7 +535,7 @@ ZimbraQuery.BaseQuery Clause() throws ServiceException :
 {
     <LPAREN> subExp=Query() <RPAREN> { return new ZimbraQuery.SubQuery(mAnalyzer, 0, subExp); }
     | (
-        (t=<FROM>|t=<TO>|t=<CC>) q=Rhs_Text(t.kind) 
+        (t=<MSGID>|t=<ENVFROM>|t=<ENVTO>|t=<FROM>|t=<TO>|t=<CC>) q=Rhs_Text(t.kind) 
         | (t=<ITEM>) q=Rhs_Item(t.kind)
       | (t=<CONTENT>|t=<MESSAGE>|t=<SUBJECT>|t=<IN>|t=<INID>|t=<TYPE>|t=<ATTACHMENT>|t=<HAS>|t=<FILENAME>|t=<AUTHOR>|t=<TITLE>|t=<KEYWORDS>|t=<COMPANY>|t=<METADATA>) q=Rhs_Text(t.kind) 
       | (t=<MY>|t=<IS>|t=<TAG>|t=<CONV>|t=<CONV_COUNT>|t=<CONV_MINM>|t=<CONV_MAXM>) q=Rhs_Text(t.kind) 

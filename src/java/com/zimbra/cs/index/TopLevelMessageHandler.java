@@ -67,7 +67,7 @@ public final class TopLevelMessageHandler {
     private static final int DONT_INDEX = 40;
 
     private static final int TOKENIZE = 50;
-//    private static final int DONT_TOKENIZE = 60;
+    private static final int DONT_TOKENIZE = 60;
     
     private List<MPartInfo> mMessageParts;
     private Document     mDocument;
@@ -120,11 +120,14 @@ public final class TopLevelMessageHandler {
         
         String toValue = setHeaderAsField("to", pm, LuceneFields.L_H_TO, DONT_STORE, INDEX, TOKENIZE);
         String ccValue = setHeaderAsField("cc", pm, LuceneFields.L_H_CC, DONT_STORE, INDEX, TOKENIZE);
-//      String subject = setHeaderAsField("subject", pm, LuceneFields.L_H_SUBJECT, DONT_STORE, INDEX, TOKENIZE);
+        String envFrom = setHeaderAsField("x-envelope-from", pm, LuceneFields.L_H_X_ENV_FROM, DONT_STORE, INDEX, TOKENIZE);
+        String envTo = setHeaderAsField("x-envelope-to", pm, LuceneFields.L_H_X_ENV_TO, DONT_STORE, INDEX, TOKENIZE);
+        String msgId = setHeaderAsField("message-id", pm, LuceneFields.L_H_MESSAGE_ID, DONT_STORE, INDEX, DONT_TOKENIZE);
         
         String subject = pm.getNormalizedSubject();
         String sortFrom = pm.getParsedSender().getSortString();
         String from = pm.getSender();
+        
         //                                                                          store, index, tokenize
         mDocument.add(new Field(LuceneFields.L_H_FROM, from,                        false, true, true));
         mDocument.add(new Field(LuceneFields.L_H_SUBJECT, subject,                  false, true, true));
