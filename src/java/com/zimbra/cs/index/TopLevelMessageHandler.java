@@ -120,9 +120,26 @@ public final class TopLevelMessageHandler {
         
         String toValue = setHeaderAsField("to", pm, LuceneFields.L_H_TO, DONT_STORE, INDEX, TOKENIZE);
         String ccValue = setHeaderAsField("cc", pm, LuceneFields.L_H_CC, DONT_STORE, INDEX, TOKENIZE);
-        String envFrom = setHeaderAsField("x-envelope-from", pm, LuceneFields.L_H_X_ENV_FROM, DONT_STORE, INDEX, TOKENIZE);
-        String envTo = setHeaderAsField("x-envelope-to", pm, LuceneFields.L_H_X_ENV_TO, DONT_STORE, INDEX, TOKENIZE);
-        String msgId = setHeaderAsField("message-id", pm, LuceneFields.L_H_MESSAGE_ID, DONT_STORE, INDEX, DONT_TOKENIZE);
+        
+        setHeaderAsField("x-envelope-from", pm, LuceneFields.L_H_X_ENV_FROM, DONT_STORE, INDEX, TOKENIZE);
+        setHeaderAsField("x-envelope-to", pm, LuceneFields.L_H_X_ENV_TO, DONT_STORE, INDEX, TOKENIZE);
+        
+//        String msgId = setHeaderAsField("message-id", pm, LuceneFields.L_H_MESSAGE_ID, DONT_STORE, INDEX, DONT_TOKENIZE);
+        
+        String msgId = pm.getHeader("message-id");
+        if (msgId.length() > 0) {
+            
+            if (msgId.charAt(0) == '<')
+                msgId = msgId.substring(1);
+            
+            if (msgId.charAt(msgId.length()-1) == '>')
+                msgId = msgId.substring(0, msgId.length()-1);
+            
+            if (msgId.length() > 0) {
+                //                                                         store, index, tokenize
+                mDocument.add(new Field(LuceneFields.L_H_MESSAGE_ID, msgId, false, true, false));
+            }
+        }
         
         String subject = pm.getNormalizedSubject();
         String sortFrom = pm.getParsedSender().getSortString();

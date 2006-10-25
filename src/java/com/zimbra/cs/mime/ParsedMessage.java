@@ -80,9 +80,6 @@ public class ParsedMessage {
     private String mRecipients;
     private String mSender;
     
-    private String mEnvFrom; // x-env-from
-    private String mEnvTo; // x-env-to
-    
     private ParsedAddress mParsedSender;
 	private boolean mHasAttachments = false;
 	private String mFragment = "";
@@ -349,6 +346,21 @@ public class ParsedMessage {
             return ("".equals(msgid) ? null : msgid);
         } catch (MessagingException me) {
             return null;
+        }
+    }
+    
+    public String getHeader(String headerName) {
+        try {
+            String value = getMimeMessage().getHeader(headerName, null);
+            if (value == null || value.length() == 0)
+                return "";
+            try {
+                value = MimeUtility.decodeText(value);
+            } catch (UnsupportedEncodingException e) { }
+            
+            return value;
+        } catch (MessagingException e) {
+            return "";
         }
     }
 
