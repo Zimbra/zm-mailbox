@@ -2703,7 +2703,7 @@ public class DbMailItem {
         // the flagset cache for a single mailbox outside the
         // synchronized block.
         if (flagsets == null) {
-            ZimbraLog.cache.info("Loading flagsetx cache");
+            ZimbraLog.cache.info("Loading flagset cache");
             flagsets = new TagsetCache("Mailbox " + mailboxId + " flags");
             flagsets.addTagsets(DbMailbox.getDistinctFlagsets(conn, mbox));
 
