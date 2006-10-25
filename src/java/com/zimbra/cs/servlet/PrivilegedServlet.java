@@ -25,12 +25,17 @@
 
 package com.zimbra.cs.servlet;
 
+import java.util.Date;
+
+import javax.naming.directory.DirContext;
 import javax.servlet.http.HttpServlet;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.znative.Process;
@@ -42,6 +47,27 @@ import com.zimbra.znative.Util;
 public class PrivilegedServlet extends HttpServlet {
 
     private static final long serialVersionUID = -1660545976482412029L;
+
+    private static final int CHECK_LDAP_SLEEP_MILLIS = 10000;
+
+    private static void checkLDAP() {
+        while (true) {
+            DirContext ctxt = null;
+            try {
+                ctxt = LdapUtil.getDirContext();
+                return;
+            } catch (ServiceException e) {
+                System.err.println(new Date() + ": error communicating with LDAP (will retry)");
+                e.printStackTrace();
+                try {
+                    Thread.sleep(CHECK_LDAP_SLEEP_MILLIS);
+                } catch (InterruptedException ie) {
+                }
+            } finally {
+                LdapUtil.closeContext(ctxt);
+            }
+        }
+    }
 
     public void init() {
         Server server;
@@ -55,6 +81,8 @@ public class PrivilegedServlet extends HttpServlet {
             System.setProperty("javax.net.ssl.keyStorePassword", "zimbra");
             System.setProperty("javax.net.ssl.trustStorePassword", "changeit");
 
+            checkLDAP();
+            
             server = Provisioning.getInstance().getLocalServer();
 
             if (server.getBooleanAttr(Provisioning.A_zimbraPop3ServerEnabled, false)) {

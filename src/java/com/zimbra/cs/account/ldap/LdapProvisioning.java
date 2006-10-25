@@ -231,34 +231,6 @@ public class LdapProvisioning extends Provisioning {
     	}
     }
 
-
-    public LdapProvisioning() {
-        // make sure LDAP is running and accessible
-        checkLDAP();
-    }
-
-    private static final int CHECK_LDAP_SLEEP_MILLIS = 10000;
-
-    private static void checkLDAP() {
-        while (true) {
-            DirContext ctxt = null;
-            try {
-                ctxt = LdapUtil.getDirContext();
-                return;
-            } catch (ServiceException e) {
-                System.err.println(new Date() + ": error communicating with LDAP (will retry)");
-                e.printStackTrace();
-                try {
-                    Thread.sleep(CHECK_LDAP_SLEEP_MILLIS);
-                } catch (InterruptedException ie) {
-                }
-            } finally {
-                LdapUtil.closeContext(ctxt);
-            }
-        }
-    }
-
-
     public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable)
             throws ServiceException {
         modifyAttrs(e, attrs, checkImmutable, true);
