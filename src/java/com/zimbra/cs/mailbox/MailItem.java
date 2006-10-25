@@ -217,15 +217,16 @@ public abstract class MailItem implements Comparable<MailItem> {
             for (Map.Entry<Byte,List<Integer>> entry : other)
                 add(entry.getKey(), entry.getValue());
         }
-        public void remove(byte type, Integer id) {
+        public boolean remove(byte type, Integer id) {
             if (id == null)
-                return;
+                return false;
             List<Integer> items = mIds.get(type);
-            if (items != null) {
-                items.remove(id);
+            if (items != null && items.remove(id)) {
                 if (items.isEmpty())
                     mIds.remove(type);
+                return true;
             }
+            return false;
         }
         public void remove(byte type) {
             mIds.remove(type);
