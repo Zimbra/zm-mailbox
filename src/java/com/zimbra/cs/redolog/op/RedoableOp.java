@@ -105,7 +105,7 @@ public abstract class RedoableOp {
     public static final int OP_COPY_ITEM                = 22;
 
     public static final int OP_CREATE_FOLDER_PATH       = 23;
-    public static final int OP_RENAME_FOLDER            = 24;
+    public static final int OP_RENAME_FOLDER_PATH       = 24;
     public static final int OP_EMPTY_FOLDER             = 25;
     public static final int OP_STORE_INCOMING_BLOB      = 26;
     public static final int OP_CREATE_MESSAGE           = 27;
@@ -147,8 +147,9 @@ public abstract class RedoableOp {
     public static final int OP_ICAL_REPLY               = 57;
 
     public static final int OP_CREATE_FOLDER            = 58;
+    public static final int OP_RENAME_FOLDER            = 59;
 
-    public static final int OP_LAST				        = 59;
+    public static final int OP_LAST				        = 60;
 
 	// Element index is same as Redoable.OP_* constants.
 	// The strings must match the class names.
@@ -177,7 +178,7 @@ public abstract class RedoableOp {
         "DeleteItem",
         "CopyItem",
         "CreateFolderPath",
-        "RenameFolder",
+        "RenameFolderPath",
         "EmptyFolder",
         "StoreIncomingBlob",
         "CreateMessage",
@@ -211,7 +212,8 @@ public abstract class RedoableOp {
         "TrackImap",
         "ImapCopyItem",
         "ICalReply",
-        "CreateFolder"
+        "CreateFolder",
+        "RenameFolder"
 	};
 
 	public static String getOpClassName(int opcode) {

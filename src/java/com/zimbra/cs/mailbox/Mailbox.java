@@ -3992,47 +3992,74 @@ public class Mailbox {
         }
     }
 
-    public synchronized void renameFolder(OperationContext octxt, int folderId, String name) throws ServiceException {
-        RenameFolder redoRecorder = new RenameFolder(mId, folderId, name);
+    public synchronized void renameFolder(OperationContext octxt, int folderId, int parentId, String name) throws ServiceException {
+        if (name.startsWith("/")) {
+            renameFolder(octxt, folderId, name);
+            return;
+        }
+
+        RenameFolder redoRecorder = new RenameFolder(mId, folderId, parentId, name);
 
         boolean success = false;
         try {
             beginTransaction("renameFolder", octxt, redoRecorder);
-            RenameFolder redoPlayer = (RenameFolder) mCurrentChange.getRedoPlayer();
+
+            Folder folder = getFolderById(folderId);
+            if (parentId == ID_AUTO_INCREMENT)
+                parentId = folder.getParentId();
+            Folder parent = getFolderById(parentId);
+
+            folder.rename(name, parent);
+
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public synchronized void renameFolder(OperationContext octxt, int folderId, String name) throws ServiceException {
+        if (!name.startsWith("/")) {
+            renameFolder(octxt, folderId, ID_AUTO_INCREMENT, name);
+            return;
+        }
+
+        RenameFolderPath redoRecorder = new RenameFolderPath(mId, folderId, name);
+
+        boolean success = false;
+        try {
+            beginTransaction("renameFolderPath", octxt, redoRecorder);
+            RenameFolderPath redoPlayer = (RenameFolderPath) mCurrentChange.getRedoPlayer();
 
             Folder folder = getFolderById(folderId), parent;
             checkItemChangeID(folder);
 
-            if (name.startsWith("/")) {
-                String[] parts = name.substring(1).split("/");
-                if (parts.length == 0)
-                    throw MailServiceException.ALREADY_EXISTS(name);
-                int[] recorderParentIds = new int[parts.length - 1];
-                int[] playerParentIds = redoPlayer == null ? null : redoPlayer.getParentIds();
-                if (playerParentIds != null && playerParentIds.length != recorderParentIds.length)
-                    throw ServiceException.FAILURE("incorrect number of path segments in redo player", null);
+            String[] parts = name.substring(1).split("/");
+            if (parts.length == 0)
+                throw MailServiceException.ALREADY_EXISTS(name);
+            int[] recorderParentIds = new int[parts.length - 1];
+            int[] playerParentIds = redoPlayer == null ? null : redoPlayer.getParentIds();
+            if (playerParentIds != null && playerParentIds.length != recorderParentIds.length)
+                throw ServiceException.FAILURE("incorrect number of path segments in redo player", null);
 
-                parent = getFolderById(ID_FOLDER_USER_ROOT);
-                for (int i = 0; i < parts.length - 1; i++) {
-                    Folder.validateFolderName(parts[i]);
-                    int subfolderId = playerParentIds == null ? ID_AUTO_INCREMENT : playerParentIds[i];
-                    Folder subfolder = parent.findSubfolder(parts[i]);
-                    if (subfolder == null)
-                        subfolder = Folder.create(getNextItemId(subfolderId), this, parent, parts[i]);
-                    else if (subfolderId != ID_AUTO_INCREMENT && subfolderId != subfolder.getId())
-                        throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
-                    else if (!subfolder.getName().equals(parts[i]) && subfolder.isMutable())
-                        subfolder.rename(parts[i], parent);
-                    recorderParentIds[i] = subfolder.getId();
-                    parent = subfolder;
-                }
-                name = parts[parts.length - 1];
-                redoRecorder.setParentIds(recorderParentIds);
-            } else
-                parent = folder.getFolder();
-            
+            parent = getFolderById(ID_FOLDER_USER_ROOT);
+            for (int i = 0; i < parts.length - 1; i++) {
+                Folder.validateFolderName(parts[i]);
+                int subfolderId = playerParentIds == null ? ID_AUTO_INCREMENT : playerParentIds[i];
+                Folder subfolder = parent.findSubfolder(parts[i]);
+                if (subfolder == null)
+                    subfolder = Folder.create(getNextItemId(subfolderId), this, parent, parts[i]);
+                else if (subfolderId != ID_AUTO_INCREMENT && subfolderId != subfolder.getId())
+                    throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
+                else if (!subfolder.getName().equals(parts[i]) && subfolder.isMutable())
+                    subfolder.rename(parts[i], parent);
+                recorderParentIds[i] = subfolder.getId();
+                parent = subfolder;
+            }
+            name = parts[parts.length - 1];
+            redoRecorder.setParentIds(recorderParentIds);
+
             folder.rename(name, parent);
-            
+
             success = true;
         } finally {
             endTransaction(success);
