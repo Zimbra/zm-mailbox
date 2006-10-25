@@ -380,8 +380,9 @@ public class Appointment extends MailItem {
                     long invStart = dtStart != null ? dtStart.getUtcTime() : 0;
                     ParsedDateTime dtEnd = inv.getEffectiveEndTime();
                     long invEnd = dtEnd != null ? dtEnd.getUtcTime() : 0;
-                    if (invStart < end && invEnd > start) {
+                    if ((invStart < end && invEnd > start) || (dtStart == null)) {
                         Instance inst = new Instance(this, new InviteInfo(inv),
+                                                     dtStart == null,
                                                      invStart, invEnd,
                                                      inv.hasRecurId());
                         instances.add(inst);
@@ -393,12 +394,12 @@ public class Appointment extends MailItem {
     }
 
     public static class Instance implements Comparable {
-        private long mStart; // calculated start time of this instance
-
-        private long mEnd; // calculated end time of this instance
+        private boolean mTimeless;  // if true, this instance has no start/end time (e.g. VTODO with no DTSTART)
+        private long mStart;        // calculated start time of this instance
+        private long mEnd;          // calculated end time of this instance
 
         private boolean mIsException; // TRUE if this instance is an exception
-                                        // to a recurrence
+                                      // to a recurrence
 
         private InviteInfo mInvId;
         
@@ -415,16 +416,23 @@ public class Appointment extends MailItem {
             long start = dtStart != null ? dtStart.getUtcTime() : 0;
             ParsedDateTime dtEnd = inv.getEffectiveEndTime();
             long end = dtEnd != null ? dtEnd.getUtcTime() : 0;
-            return new Instance(appt, new InviteInfo(inv), start, end, inv.hasRecurId());
+            return new Instance(appt, new InviteInfo(inv), dtStart == null, start, end, inv.hasRecurId());
         }
 
-        public Instance(Appointment appt, InviteInfo invInfo, long _start, long _end,
+        public Instance(Appointment appt, InviteInfo invInfo,
+                boolean timeless,
+                long _start, long _end,
                 boolean _exception) 
         {
             mInvId = invInfo;
             mAppt = appt;
-            mStart = _start;
-            mEnd = _end;
+            mTimeless = timeless;
+            if (mTimeless) {
+                mStart = mEnd = 0;
+            } else {
+                mStart = _start;
+                mEnd = _end;
+            }
             mIsException = _exception;
         }
 
@@ -433,12 +441,19 @@ public class Appointment extends MailItem {
 
             long toRet = mAppt.getId() - other.mAppt.getId();
             if (toRet == 0) {
-                toRet = mStart - other.mStart;
-                if (toRet == 0) {
-                    toRet = mEnd - other.mEnd;
+                if (mTimeless == other.mTimeless) {
+                    toRet = mStart - other.mStart;
                     if (toRet == 0) {
-                        toRet = mInvId.compareTo(other.mInvId);
+                        toRet = mEnd - other.mEnd;
+                        if (toRet == 0) {
+                            toRet = mInvId.compareTo(other.mInvId);
+                        }
                     }
+                } else {
+                    if (mTimeless)
+                        toRet = 1;
+                    else
+                        toRet = -1;
                 }
             }
             if (toRet > 0) {
@@ -455,7 +470,7 @@ public class Appointment extends MailItem {
             }
 
             Instance other = (Instance) o;
-            return (mStart == other.mStart) && (mEnd == other.mEnd)
+            return (mTimeless == other.mTimeless) && (mStart == other.mStart) && (mEnd == other.mEnd)
                     && (mInvId.equals(other.mInvId));
         }
 
@@ -463,6 +478,7 @@ public class Appointment extends MailItem {
             StringBuilder toRet = new StringBuilder("INST(");
             Date dstart = new Date(mStart);
             Date dend = new Date(mEnd);
+            toRet.append(mTimeless).append(",");
             toRet.append(dstart).append(",").append(dend).append(",").append(
                     mIsException);
             toRet.append(",ID=").append(mInvId.getMsgId()).append("-").append(
@@ -476,6 +492,7 @@ public class Appointment extends MailItem {
         public int getComponentNum() { return mInvId.getComponentId(); }
         public long getStart() { return mStart; }
         public long getEnd() { return mEnd; }
+        public boolean isTimeless() { return mTimeless; }
         public boolean isException() { return mIsException; }
         public void setIsException(boolean isException) { mIsException = isException; } 
         public InviteInfo getInviteInfo() { return mInvId; } 

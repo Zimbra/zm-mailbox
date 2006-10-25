@@ -408,7 +408,9 @@ OR
   -- folder-id: optional folder to constrain requests to; otherwise, searches all folders but trash and spam
 
 <GetApptSummariesResponse>
- ( <appt id="appointment_mail_item_id" type="event|todo" fba="F|B|T|U" transp="O|T"
+ ( <appt id="appointment_mail_item_id" type="event|todo"
+      [fba="F|B|T|U"]
+      [transp="O|T"]
       status="TENT|CONF|CANC"
       ptst="NE|TE|AC|DE|DG"
       [allDay="1"]             // if set, this is an "all day" appointment
@@ -419,13 +421,13 @@ OR
       isOrg="default_am_i_organizer_flag"
       [priority="num"]
       [percentComplete="num"]
+      [d="duration"]  // default duration
    >
-   <dur DURATION/> // default duration
    <fr>FRAGMENT</fr>
       
       ( <inst
-          s="START_SECS_GMT"
-          tzo="ms"  // offset from GMT in milliseconds for start time in the
+          [s="START_SECS_GMT"]
+          [tzo="ms"]  // offset from GMT in milliseconds for start time in the
                     // time zone of the instance; this is useful because the
                     // instance time zone may not be the same as the time zone
                     // of the requesting client; when rendering an all-day

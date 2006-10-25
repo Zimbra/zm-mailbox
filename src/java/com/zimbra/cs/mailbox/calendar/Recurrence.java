@@ -401,6 +401,7 @@ public class Recurrence
             List<Instance> toRet = new ArrayList<Instance>();
             ParsedDateTime dtEnd = getEnd();
             toRet.add(new Instance(appt, mInvId,
+                                   mDtStart == null,
                                    mDtStart != null ? mDtStart.getUtcTime() : 0,
                                    dtEnd != null ? dtEnd.getUtcTime() : 0,
                                    false));
@@ -666,7 +667,7 @@ public class Recurrence
                     else
                         instEnd = instStart;
                     if (instStart < end && instEnd > start) {
-                        toRet.add(num++, new Instance(appt, mInvId, instStart, instEnd, false));
+                        toRet.add(num++, new Instance(appt, mInvId, false, instStart, instEnd, false));
                     }
                 }
             } catch (ServiceException se) {
@@ -863,7 +864,7 @@ public class Recurrence
                 long instStart = mDtStart.getUtcTime();
                 long instEnd = mDtStart.add(mDuration).getUtcTime();
                 if (instStart < end && instEnd > start) {
-                    toRet.add(new Instance(appt, mInvId, instStart, instEnd, false));
+                    toRet.add(new Instance(appt, mInvId, false, instStart, instEnd, false));
                 }
                 return toRet;
             }
@@ -892,7 +893,7 @@ public class Recurrence
                     first = (Appointment.Instance)toRet.get(0);
                 }
                 
-                Appointment.Instance dtstartInst = new Appointment.Instance(appt, mInvId, mDtStart.getUtcTime(), mDtStart.add(mDuration).getUtcTime(), false); 
+                Appointment.Instance dtstartInst = new Appointment.Instance(appt, mInvId, false, mDtStart.getUtcTime(), mDtStart.add(mDuration).getUtcTime(), false); 
                 if (first == null || first.compareTo(dtstartInst) != 0) {
                     assert(first == null || first.compareTo(dtstartInst) > 0); // first MUST be after dtstart!
                     toRet.add(0,dtstartInst);

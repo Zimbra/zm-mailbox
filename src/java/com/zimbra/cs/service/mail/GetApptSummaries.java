@@ -126,9 +126,10 @@ public class GetApptSummaries extends MailDocumentHandler {
                         ParsedDuration invDuration = inv.getEffectiveDuration();
                         long instStart = inst.getStart();
                         
-                        if (instStart < rangeEnd &&
-                            invDuration != null &&
-                            (invDuration.addToTime(instStart))>rangeStart) {
+                        if (inst.isTimeless() ||
+                            (instStart < rangeEnd &&
+                             invDuration != null &&
+                             (invDuration.addToTime(instStart)) > rangeStart)) {
                             someInRange = true;
                         } else {
                             continue;
@@ -136,16 +137,18 @@ public class GetApptSummaries extends MailDocumentHandler {
                         
                         
                         Element instElt = apptElt.addElement(MailService.E_INSTANCE);
-                        
-                        instElt.addAttribute(MailService.A_APPT_START_TIME, instStart);
-                        if (inv.getStartTime() != null) {
-                            ICalTimeZone instTz = inv.getStartTime().getTimeZone();
-                            if (inv.isAllDayEvent()) {
-                                long offset = instTz.getOffset(instStart);
-                                instElt.addAttribute(MailService.A_APPT_TZ_OFFSET, offset);
+
+                        if (!inst.isTimeless()) {
+                            instElt.addAttribute(MailService.A_APPT_START_TIME, instStart);
+                            if (inv.getStartTime() != null) {
+                                ICalTimeZone instTz = inv.getStartTime().getTimeZone();
+                                if (inv.isAllDayEvent()) {
+                                    long offset = instTz.getOffset(instStart);
+                                    instElt.addAttribute(MailService.A_APPT_TZ_OFFSET, offset);
+                                }
                             }
                         }
-                        
+
                         String instFba = appointment.getEffectiveFreeBusyActual(inv, inst);
                         String instPtSt = appointment.getEffectivePartStat(inv, inst);
                         if (inv.isEvent() && !defaultFba.equals(instFba)) {
@@ -178,7 +181,7 @@ public class GetApptSummaries extends MailDocumentHandler {
                             }
                             
                             
-                            if (defDurationMsecs != inst.getEnd()-inst.getStart()) {
+                            if (!inst.isTimeless() && defDurationMsecs != inst.getEnd()-inst.getStart()) {
                                 instElt.addAttribute(MailService.A_APPT_DURATION, inst.getEnd()-inst.getStart());
                             }
                             
@@ -253,8 +256,9 @@ public class GetApptSummaries extends MailDocumentHandler {
                             apptElt.addAttribute(MailService.A_APPT_PERCENT_COMPLETE, pctComplete);
                     }
                     apptElt.addAttribute(MailService.A_APPT_ISORG, defIsOrg);
-                    
-                    apptElt.addAttribute(MailService.A_APPT_DURATION, defDurationMsecs);
+
+                    if (defaultInvite.getStartTime() != null)
+                        apptElt.addAttribute(MailService.A_APPT_DURATION, defDurationMsecs);
                     apptElt.addAttribute(MailService.A_NAME, defaultInvite.getName());
                     apptElt.addAttribute(MailService.A_APPT_LOCATION, defaultInvite.getLocation());
                     
