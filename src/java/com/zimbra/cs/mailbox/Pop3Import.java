@@ -52,7 +52,8 @@ public class Pop3Import
 implements MailItemImport {
 
     private static Session sSession;
-    private static Log sLog = LogFactory.getLog(Pop3Import.class); 
+    private static Log sLog = LogFactory.getLog(Pop3Import.class);
+    private static final byte[] CRLF = { '\r', '\n' };
     
     static {
         Properties props = new Properties();
@@ -113,14 +114,19 @@ implements MailItemImport {
             for (int i = 0; i < msgs.length; i++) {
                 POP3Message msg = (POP3Message) msgs[i];
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
+                
+                // Headers
                 Enumeration e = msg.getAllHeaderLines();
                 while (e.hasMoreElements()) {
                     String line = (String) e.nextElement();
                     os.write(line.getBytes());
-                    os.write('\r');
-                    os.write('\n');
+                    os.write(CRLF);
                 }
                 
+                // Line break between headers and content
+                os.write(CRLF);
+                
+                // Content
                 InputStream is = msg.getRawInputStream();
                 ByteUtil.copy(is, true, os, true);
                 ParsedMessage pm = new ParsedMessage(os.toByteArray(), mbox.attachmentsIndexingEnabled());
