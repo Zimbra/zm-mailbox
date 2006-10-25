@@ -61,7 +61,7 @@ public class Folder extends MailItem {
         public boolean alreadySeen(String guid, long date)  { return lastDate >= date; }
     }
 
-    public static final byte FOLDER_IS_IMMUTABLE    = 0x01;
+    public static final byte FOLDER_IS_IMMUTABLE      = 0x01;
     public static final byte FOLDER_DONT_TRACK_COUNTS = 0x02;
 
     protected byte    mAttributes;
@@ -650,7 +650,7 @@ public class Folder extends MailItem {
     private static final String INVALID_CHARACTERS = ".*[:/\"\t\r\n].*";
     /** The maximum length for a folder name.  This is not the maximum length
      *  of a <u>path</u>, just the maximum length of a single folder's name. */
-    private static final int MAX_FOLDER_LENGTH  = 128;
+    public static final int MAX_FOLDER_LENGTH = 128;
 
     /** Returns whether a proposed folder name is valid.  Folder names must
      *  be less than {@link #MAX_FOLDER_LENGTH} characters long, must contain
