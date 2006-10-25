@@ -40,7 +40,11 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.mailbox.Identity;
+import com.zimbra.cs.mailbox.MailItemDataSource;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.cs.zimlet.ZimletProperty;
@@ -79,6 +83,8 @@ public class GetInfo extends AccountDocumentHandler  {
         doProperties(props, acct);
         Element ids = response.addUniqueElement(AccountService.E_IDENTITIES);
         doIdentities(ids, acct, lc);
+        Element ds = response.addUniqueElement(AccountService.E_DATA_SOURCES);
+        doDataSources(ds, acct, lc);
         GetAccountInfo.addUrls(response, acct);
         
         return response;
@@ -170,5 +176,18 @@ public class GetInfo extends AccountDocumentHandler  {
     	} catch (ServiceException se) {
     		ZimbraLog.account.error("can't get identities", se);
     	}
+    }
+    
+    private static void doDataSources(Element response, Account acct, ZimbraSoapContext zsc) {
+        try {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+            Set<MailItemDataSource> dataSources =
+                MailItemDataSource.getAll(mbox, zsc.getOperationContext());
+            for (MailItemDataSource ds : dataSources) {
+                com.zimbra.cs.service.mail.ToXML.encodeDataSource(response, ds);
+            }
+        } catch (ServiceException se) {
+            ZimbraLog.mailbox.error("Unable to get data sources", se);
+        }
     }
 }

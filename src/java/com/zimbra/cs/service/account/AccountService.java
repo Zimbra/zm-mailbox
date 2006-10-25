@@ -114,6 +114,7 @@ public class AccountService implements DocumentService {
     public static final String E_IDENTITIES = "identities";
     public static final String E_IDENTITY = "identity";
     public static final String E_SIGNATURE = "signature";
+    public static final String E_DATA_SOURCES = "dataSources";
 
     public static final String A_N = "n";
     public static final String A_NAME = "name";
