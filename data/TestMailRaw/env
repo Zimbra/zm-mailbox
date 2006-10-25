@@ -1,0 +1,30 @@
+X-Gmail-Received: 40d100ce9c7baffaed5a24554c0e867753260150
+Received: by 10.35.100.3 with SMTP id c3cs440955pym;
+        Wed, 25 Oct 2006 15:32:18 -0700 (PDT)
+Received: by 10.78.166.7 with SMTP id o7mr1666201hue;
+        Wed, 25 Oct 2006 15:32:17 -0700 (PDT)
+Return-Path: <>
+Received: from bolton.liquidsys.com (dsl092-025-194.sfo1.dsl.speakeasy.net [66.92.25.194])
+        by mx.google.com with ESMTP id 15si1126234hui.2006.10.25.15.32.14;
+        Wed, 25 Oct 2006 15:32:17 -0700 (PDT)
+Received-SPF: neutral (google.com: 66.92.25.194 is neither permitted nor denied by best guess record for domain of bolton.liquidsys.com)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by bolton.liquidsys.com (Postfix) with ESMTP id 2C25382C674;
+	Wed, 25 Oct 2006 15:33:42 -0700 (PDT)
+X-Envelope-From: <u1@bolton.liquidsys.com>
+X-Envelope-To: <admin@bolton.liquidsys.com>, <u2@bolton.liquidsys.com>
+X-Quarantine-ID: <jCHm29IuuoQ6>
+Received: from bolton.liquidsys.com ([127.0.0.1])
+	by localhost (bolton.liquidsys.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id jCHm29IuuoQ6; Wed, 25 Oct 2006 15:33:41 -0700 (PDT)
+Received: from foo.com (tape.liquidsys.com [10.10.131.68])
+	by bolton.liquidsys.com (Postfix) with SMTP id 5DA6582C661;
+	Wed, 25 Oct 2006 15:32:34 -0700 (PDT)
+Subject: envelope testing
+From: lie1@example.com
+To: lie2@example.com, lie3@example.com
+Cc: lie4@example.com
+Message-Id: <20061025223242.5DA6582C661@bolton.liquidsys.com>
+Date: Wed, 25 Oct 2006 15:32:34 -0700 (PDT)
+
+testing
