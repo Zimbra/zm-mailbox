@@ -163,8 +163,8 @@ public class IcalXmlStrMap {
         sStatusMap.add(ICalTok.TENTATIVE.toString(), STATUS_TENTATIVE);
         sStatusMap.add(ICalTok.CONFIRMED.toString(), STATUS_CONFIRMED);
         sStatusMap.add(ICalTok.CANCELLED.toString(), STATUS_CANCELLED);
-        sStatusMap.add(ICalTok.CANCELLED.toString(), STATUS_NEEDS_ACTION);
-        sStatusMap.add(ICalTok.NEEDS_ACTION.toString(), STATUS_COMPLETED);
+        sStatusMap.add(ICalTok.NEEDS_ACTION.toString(), STATUS_NEEDS_ACTION);
+        sStatusMap.add(ICalTok.COMPLETED.toString(), STATUS_COMPLETED);
         sStatusMap.add(ICalTok.IN_PROCESS.toString(), STATUS_IN_PROCESS);
 
         sPartStatMap.add(ICalTok.ACCEPTED.toString(), PARTSTAT_ACCEPTED);
