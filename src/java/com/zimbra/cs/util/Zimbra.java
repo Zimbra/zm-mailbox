@@ -96,8 +96,6 @@ public class Zimbra {
     	if (!Versions.checkVersions())
             throw new RuntimeException("Data version mismatch.  Reinitialize or upgrade the backend data store.");
 
-        MailboxManager.setInstance(new MailboxManager());
-
     	ExtensionUtil.loadAll();
     	ExtensionUtil.initAll();
 
