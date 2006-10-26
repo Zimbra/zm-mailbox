@@ -28,6 +28,7 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -181,8 +182,8 @@ public class GetInfo extends AccountDocumentHandler  {
     private static void doDataSources(Element response, Account acct, ZimbraSoapContext zsc) {
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-            Set<MailItemDataSource> dataSources =
-                MailItemDataSource.getAll(mbox, zsc.getOperationContext());
+            Collection<MailItemDataSource> dataSources =
+                mbox.getDataSources(zsc.getOperationContext());
             for (MailItemDataSource ds : dataSources) {
                 com.zimbra.cs.service.mail.ToXML.encodeDataSource(response, ds);
             }

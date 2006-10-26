@@ -1755,7 +1755,7 @@ the only protocol supported is POP3.
 <GetDataSourcesResponse>
   <pop3 id="{id}" name="My POP3 Account" isEnabled="0|1" host="pop3.myisp.com" port="110"
     username="mylogin" l="{folder-id}"/>
-  <pop3 .../>
+  ...
 </GetDataSourcesResponse>
 
 Returns all data sources defined for the given mailbox.  For each data source,
@@ -1788,12 +1788,31 @@ are modified.
 
 <ImportDataRequest>
   <pop3 id="{id}"/>
-  <pop3 .../>
+  ...
 </ImportDataRequest>
 
 <ImportDataResponse/>
 
 Triggers the specified data sources to kick off their import processes.  Data import runs
-asynchronously, so the response immediately returns.  Any errors are returned
-via the <notify> header.
+asynchronously, so the response immediately returns.  Status of an import can be queried
+via the <GetImportStatusRequest> message.  If the server receives an
+<ImportDataRequest> while an import is already running for a given data source,
+the second request is ignored.
 
+---------------------------
+
+<GetImportStatusRequest/>
+
+<GetImportStatusResponse>
+  <pop3 id="{id}" isRunning="0|1" [success="0|1"] [error="Error message"]/>
+  ...
+</GetImportStatusResponse>
+
+Returns current status for all data sources.  Status values for a data source are
+reinitialized when either (a) another import process is started or (b) when the
+server is restarted.  If import has not run yet, the success and error attributes
+are not specified.
+
+isRunning: Whether data is currently being imported from this data source.
+success:   Whether the last import completed successfully.
+error:     If the last import failed, the error message that was returned.

@@ -44,7 +44,7 @@ public class ModifyDataSource extends MailDocumentHandler {
         
         Element ePop3 = request.getElement(MailService.E_DS_POP3);
         int id = (int) ePop3.getAttributeLong(MailService.A_ID);
-        MailItemDataSource ds = MailItemDataSource.get(mbox, zsc.getOperationContext(), id);
+        MailItemDataSource ds = mbox.getDataSource(zsc.getOperationContext(), id);
 
         String attr = ePop3.getAttribute(MailService.A_NAME, null);
         if (attr != null)
@@ -67,7 +67,7 @@ public class ModifyDataSource extends MailDocumentHandler {
         attr = ePop3.getAttribute(MailService.A_DS_PASSWORD, null);
         if (attr != null)
         	ds.setPassword(attr);
-        MailItemDataSource.modify(mbox, zsc.getOperationContext(), ds);
+        mbox.modifyDataSource(zsc.getOperationContext(), ds);
         
         Element response = zsc.createElement(MailService.MODIFY_DATA_SOURCE_RESPONSE);
 

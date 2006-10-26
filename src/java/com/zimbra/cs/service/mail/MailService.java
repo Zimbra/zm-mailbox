@@ -193,6 +193,8 @@ public class MailService implements DocumentService {
     public static final QName DELETE_DATA_SOURCE_RESPONSE = QName.get("DeleteDataSourceResponse", NAMESPACE);
     public static final QName IMPORT_DATA_REQUEST = QName.get("ImportDataRequest", NAMESPACE);
     public static final QName IMPORT_DATA_RESPONSE = QName.get("ImportDataResponse", NAMESPACE);
+    public static final QName GET_IMPORT_STATUS_REQUEST = QName.get("GetImportStatusRequest", NAMESPACE);
+    public static final QName GET_IMPORT_STATUS_RESPONSE = QName.get("GetImportStatusResponse", NAMESPACE);
 
     public static final String E_MAILBOX = "mbx";
     public static final String E_CONV = "c";
@@ -489,6 +491,7 @@ public class MailService implements DocumentService {
     public static final String A_DS_TYPE = "type";
     public static final String A_DS_SUCCESS = "success";
     public static final String A_DS_ERROR = "error";
+    public static final String A_DS_IS_RUNNING = "isRunning";
     
     // TODO: move to a different service.
     // wiki
@@ -607,5 +610,6 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(TEST_DATA_SOURCE_REQUEST, new TestDataSource());
         dispatcher.registerHandler(DELETE_DATA_SOURCE_REQUEST, new DeleteDataSource());
         dispatcher.registerHandler(IMPORT_DATA_REQUEST, new ImportData());
+        dispatcher.registerHandler(GET_IMPORT_STATUS_REQUEST, new GetImportStatus());
     }
 }

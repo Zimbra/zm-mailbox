@@ -25,9 +25,9 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.Map;
+import java.util.Set;
 
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.MailItemDataSource;
+import com.zimbra.cs.mailbox.ImportStatus;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
@@ -35,40 +35,28 @@ import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
-public class ImportData extends MailDocumentHandler {
+public class GetImportStatus extends MailDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
+        Set<ImportStatus> statusSet = mbox.getImportStatus(zsc.getOperationContext());
+        Element response = zsc.createElement(MailService.GET_IMPORT_STATUS_RESPONSE);
 
-        for (Element elem : request.listElements()) {
-        	if (elem.getName().equals(MailService.E_DS_POP3)) {
-        		try {
-        			int id = (int) elem.getAttributeLong(MailService.A_ID);
-        			MailItemDataSource ds = mbox.getDataSource(zsc.getOperationContext(), id);
-        			new Thread(new Pop3Client(ds)).start();
-        		} catch (Exception e) {
-        			ZimbraLog.account.error("error handling ImportData", e);
-        			// then continue onto the next pop3 element.
-        			// we may need to propogate the error back to the client
-        			// for reporting.
-        		}
-        	}
+        for (ImportStatus status : statusSet) {
+            Element ePop3 = response.addElement(MailService.E_DS_POP3);
+            ePop3.addAttribute(MailService.A_ID, status.getDataSourceId());
+            ePop3.addAttribute(MailService.A_DS_IS_RUNNING, status.isRunning());
+            
+            if (status.hasRun() && !status.isRunning()) { // Has finished at least one run
+                ePop3.addAttribute(MailService.A_DS_SUCCESS, status.getSuccess());
+                if (!status.getSuccess() && status.getError() != null) { // Failed, error available
+                    ePop3.addAttribute(MailService.A_DS_ERROR, status.getError());
+                }
+            }
         }
-        
-        Element response = zsc.createElement(MailService.IMPORT_DATA_RESPONSE);
         return response;
-    }
-    
-    private static class Pop3Client implements Runnable {
-    	MailItemDataSource ds;
-    	public Pop3Client(MailItemDataSource ds) {
-    		this.ds = ds;
-    	}
-    	public void run() {
-    	    ds.importData();
-    	}
     }
 }

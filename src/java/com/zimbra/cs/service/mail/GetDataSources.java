@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,7 +43,7 @@ public class GetDataSources extends MailDocumentHandler {
     throws ServiceException, SoapFaultException {
     	ZimbraSoapContext zsc = getZimbraSoapContext(context);
     	Mailbox mbox = getRequestedMailbox(zsc);
-    	Set<MailItemDataSource> dsSet = MailItemDataSource.getAll(mbox, zsc.getOperationContext());
+    	Collection<MailItemDataSource> dsSet = mbox.getDataSources(zsc.getOperationContext());
     	Element response = zsc.createElement(MailService.GET_DATA_SOURCES_RESPONSE);
 
     	for (MailItemDataSource ds : dsSet) {

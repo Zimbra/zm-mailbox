@@ -38,6 +38,11 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.collections.map.LRUMap;
 
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.SetUtil;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -61,10 +66,10 @@ import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
-import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -91,11 +96,6 @@ import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.SetUtil;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.Options;
 import com.zimbra.soap.SoapProtocol;
@@ -131,7 +131,6 @@ public class Mailbox {
 
     static final int  ONE_MONTH_SECS   = 60 * 60 * 24 * 31;
     static final long ONE_MONTH_MILLIS = ONE_MONTH_SECS * 1000L;
-
 
     public static final class MailboxData {
         public int     id;
@@ -287,6 +286,7 @@ public class Mailbox {
     private LRUMap       mConvHashes     = new LRUMap(MAX_MSGID_CACHE);
     private LRUMap       mSentMessageIDs = new LRUMap(MAX_MSGID_CACHE);
     private Set<Session> mListeners      = new HashSet<Session>();
+    private Map<Integer, MailItemDataSource> mDataSources;
 
     private MailboxLock  mMaintenance = null;
     private MailboxIndex mMailboxIndex = null;
@@ -741,7 +741,6 @@ public class Mailbox {
             throw ServiceException.FAILURE("cannot set Connection for in-progress transaction", new Exception());
         mCurrentChange.conn = conn;
     }
-
 
     /** Puts the Mailbox into maintenance mode.  As a side effect, disconnects
      *  any {@link Session}s listening on this Mailbox.
@@ -4954,5 +4953,105 @@ public class Mailbox {
                 }
         }
         return doc;
+    }
+
+    ////////// Data sources //////////
+    
+    private Map<Integer, MailItemDataSource> getDataSourcesInternal(OperationContext octxt)
+    throws ServiceException {
+        if (mDataSources == null) {
+            Map<Integer, MailItemDataSource> dataSources =
+                MailItemDataSource.extractFromMetadata(this, octxt);
+            mDataSources = Collections.synchronizedMap(dataSources);
+        }
+        return mDataSources;
+    }
+    
+    /**
+     * Returns all data sources for this mailbox.
+     */
+    public synchronized Collection<MailItemDataSource> getDataSources(OperationContext octxt)
+    throws ServiceException {
+        return getDataSourcesInternal(octxt).values();
+    }
+
+    /**
+     * Returns the specified data source.
+     */
+    public synchronized MailItemDataSource getDataSource(OperationContext octxt, int dataSourceId)
+    throws ServiceException {
+        MailItemDataSource ds = getDataSourcesInternal(octxt).get(dataSourceId);
+        if (ds == null) {
+            throw ServiceException.INVALID_REQUEST("Invalid data source id: " + dataSourceId, null);
+        }
+        return ds;
+    }
+    
+    /**
+     * Creates a new data source.
+     */
+    public synchronized MailItemDataSource createDataSource(OperationContext octxt, String type, String name,
+                                                            boolean isEnabled, String host, int port, String username,
+                                                            String password, int folderId)
+    throws ServiceException {
+        ZimbraLog.mailbox.info(String.format(
+            "Creating data source: type=%s, name=%s, isEnabled=%b, host=%s, port=%d, username=%s, folderId=%d",
+            type, name, isEnabled, host, port, username, folderId));
+        Map<Integer, MailItemDataSource> dataSources = getDataSourcesInternal(octxt);
+        
+        // Calculate new id
+        int maxId = 0;
+        for (MailItemDataSource ds : dataSources.values()) {
+            if (ds.getId() > maxId) {
+                maxId = ds.getId();
+            }
+        }
+        MailItemDataSource ds = new MailItemDataSource(this, maxId + 1, type, name, isEnabled, host,
+            port, username, password, folderId);
+        MailItemDataSource.saveToMetadata(this, octxt, ds);
+        dataSources.put(ds.getId(), ds);
+        return ds;
+    }
+    
+    /**
+     * Deletes the data source with the given id.
+     */
+    public synchronized void deleteDataSource(OperationContext octxt, int dataSourceId)
+    throws ServiceException {
+        ZimbraLog.mailbox.info("Deleting data source " + dataSourceId);
+        
+        // Confirm that the data source exists and delete from metadata
+        getDataSource(octxt, dataSourceId);
+        MailItemDataSource.deleteFromMetadata(this, octxt, dataSourceId);
+        getDataSourcesInternal(octxt).remove(dataSourceId);
+    }
+    
+    /**
+     * Updates the persisted version of the given data source with the latest
+     * values stored in the object.
+     */
+    public synchronized void modifyDataSource(OperationContext octxt, MailItemDataSource dataSource)
+    throws ServiceException {
+        ZimbraLog.mailbox.info("Modifying data source.  New values: " + dataSource);
+        
+        // No need to update map, since data source objects are singletons
+        MailItemDataSource.saveToMetadata(this, octxt, dataSource);
+    }
+    
+    /**
+     * Returns status for all data sources.
+     */
+    public synchronized Set<ImportStatus> getImportStatus(OperationContext octxt)
+    throws ServiceException {
+        Set<ImportStatus> status = new HashSet<ImportStatus>();
+
+        for (MailItemDataSource dataSource : getDataSourcesInternal(octxt).values()) {
+            // Copy import status, so we get a snapshot at this point in time
+            synchronized (dataSource.getImportStatus()) {
+                ImportStatus copy = new ImportStatus(dataSource.getImportStatus());
+                status.add(copy);
+            }
+        }
+        return status;
     }
 }
