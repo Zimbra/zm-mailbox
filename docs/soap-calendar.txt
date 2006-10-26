@@ -93,7 +93,11 @@
            // in <inv> are defined in LDAP
        [
        <comp type="event|todo"
-            [status="TENT|CONF|CANC"]  // TENTative, CONFirmed (default), CANCelled -- TIM: remove this!
+            [status="TENT|CONF|CANC|NEED|COMP|INPR|WAITING|DEFERRED"]
+                            // TENTative, CONFirmed, CANCelled, COMPleted,
+                            // INPRocess, WAITING, DEFERRED
+                            // Waiting and Deferred are custom values not found
+                            // in iCalendar spec.
             [fb="F|B|T|O"]  // free-busy status:
                                Free, Busy (default), busy-Tentative, OutOfOffice (busy-unavailable)
             fba="F|B|T|O" // the "actual" free-busy status of this invite (ie what the client should display) -- this is synthesized taking into account our Attendee's PartStat, the Opacity of the appointment, its Status, etc...
@@ -148,8 +152,9 @@
                [delFrom="delegated from"]   // DELEGATED-TO
            />*
              // role = CHAir, REQuired, OPTional, NON-participant (ie informational)
-             // ptst (ParTSTat - participation status) = NEeds-action, TEntative, ACcept, DEclined,
-             // DG (delegated), COmpleted (todo), IN-process (todo)
+             // ptst (ParTSTat - participation status) = "NE"eds-action, "TE"ntative, "AC"cept, "DE"clined,
+             // "DG" (delegated), "CO"mpleted (todo), "IN"-process (todo),
+             // "WA"iting (custom value only for todo), "DF" (deferred; custom value only for todo)
              // cutype (calendar user type) = INDividual, GROup, RESource, ROOm, UNKnown
              // sentBy, member, delTo and delFrom values are email addresses
 

@@ -51,6 +51,7 @@ import com.zimbra.cs.mailbox.Appointment.Instance;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
@@ -1715,8 +1716,19 @@ public class Invite {
                             break;
                         case STATUS:
                             String status = IcalXmlStrMap.sStatusMap.toXml(prop.getValue());
-                            if (status != null)
-                                newInv.setStatus(status);
+                            if (status != null) {
+                                if (IcalXmlStrMap.STATUS_IN_PROCESS.equals(status)) {
+                                    String zstatus = prop.getParameterVal(ICalTok.X_ZIMBRA_STATUS, null);
+                                    if (ICalTok.X_ZIMBRA_STATUS_WAITING.toString().equals(zstatus) ||
+                                        ICalTok.X_ZIMBRA_STATUS_DEFERRED.toString().equals(zstatus)) {
+                                        newInv.setStatus(IcalXmlStrMap.sStatusMap.toXml(zstatus));
+                                    } else {
+                                        newInv.setStatus(status);
+                                    }
+                                } else {
+                                    newInv.setStatus(status);
+                                }
+                            }
                             break;
                         case TRANSP:
                             if (isEvent) {
@@ -1897,7 +1909,17 @@ public class Invite {
             event.addProperty(new ZProperty(ICalTok.LOCATION, location.toString()));
         
         // STATUS
-        event.addProperty(new ZProperty(ICalTok.STATUS, IcalXmlStrMap.sStatusMap.toIcal(getStatus())));
+        String status = getStatus();
+        String statusIcal = IcalXmlStrMap.sStatusMap.toIcal(status);
+        if (IcalXmlStrMap.STATUS_ZCO_WAITING.equals(status) ||
+            IcalXmlStrMap.STATUS_ZCO_DEFERRED.equals(status)) {
+            ZParameter param = new ZParameter(ICalTok.X_ZIMBRA_STATUS, statusIcal);
+            ZProperty prop = new ZProperty(ICalTok.STATUS, ICalTok.IN_PROCESS.toString());
+            prop.addParameter(param);
+            event.addProperty(prop);
+        } else {
+            event.addProperty(new ZProperty(ICalTok.STATUS, statusIcal));
+        }
 
         if (isEvent()) {
             // allDay

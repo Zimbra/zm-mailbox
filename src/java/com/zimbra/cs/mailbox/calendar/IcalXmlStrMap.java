@@ -116,6 +116,8 @@ public class IcalXmlStrMap {
     public final static String STATUS_NEEDS_ACTION = "NEED";
     public final static String STATUS_COMPLETED = "COMP";
     public final static String STATUS_IN_PROCESS = "INPR";
+    public final static String STATUS_ZCO_WAITING = "WAITING";
+    public final static String STATUS_ZCO_DEFERRED = "DEFERRED";
 
     // attendee participation status =
     //   NEeds-action, TEntative, ACcept, DEclined,
@@ -127,6 +129,8 @@ public class IcalXmlStrMap {
     public final static String PARTSTAT_COMPLETED = "CO";
     public final static String PARTSTAT_ACCEPTED = "AC";
     public final static String PARTSTAT_IN_PROCESS = "IN";
+    public final static String PARTSTAT_ZCO_WAITING = "WA";
+    public final static String PARTSTAT_ZCO_DEFERRED = "DF";
 
     // attendee role
     public final static String ROLE_NON_PARTICIPANT = "NON";
@@ -166,6 +170,8 @@ public class IcalXmlStrMap {
         sStatusMap.add(ICalTok.NEEDS_ACTION.toString(), STATUS_NEEDS_ACTION);
         sStatusMap.add(ICalTok.COMPLETED.toString(), STATUS_COMPLETED);
         sStatusMap.add(ICalTok.IN_PROCESS.toString(), STATUS_IN_PROCESS);
+        sStatusMap.add(ICalTok.X_ZIMBRA_STATUS_WAITING.toString(), STATUS_ZCO_WAITING);
+        sStatusMap.add(ICalTok.X_ZIMBRA_STATUS_DEFERRED.toString(), STATUS_ZCO_DEFERRED);
 
         sPartStatMap.add(ICalTok.ACCEPTED.toString(), PARTSTAT_ACCEPTED);
         sPartStatMap.add(ICalTok.COMPLETED.toString(), PARTSTAT_COMPLETED);
@@ -174,6 +180,8 @@ public class IcalXmlStrMap {
         sPartStatMap.add(ICalTok.IN_PROCESS.toString(), PARTSTAT_IN_PROCESS);
         sPartStatMap.add(ICalTok.NEEDS_ACTION.toString(), PARTSTAT_NEEDS_ACTION);
         sPartStatMap.add(ICalTok.TENTATIVE.toString(), PARTSTAT_TENTATIVE);
+        sPartStatMap.add(ICalTok.X_ZIMBRA_PARTSTAT_WAITING.toString(), PARTSTAT_ZCO_WAITING);
+        sPartStatMap.add(ICalTok.X_ZIMBRA_PARTSTAT_DEFERRED.toString(), PARTSTAT_ZCO_DEFERRED);
 
         sFreeBusyMap.add(FreeBusy.FBTYPE_FREE, FBTYPE_FREE);
         sFreeBusyMap.add(FreeBusy.FBTYPE_BUSY, FBTYPE_BUSY);

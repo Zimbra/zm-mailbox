@@ -92,8 +92,12 @@ public class ZCalendar {
         // RECURRENCE-ID
         RANGE, THISANDFUTURE, THISANDPRIOR,
         
-        X_MICROSOFT_CDO_ALLDAYEVENT, X_MICROSOFT_CDO_BUSYSTATUS, X_MICROSOFT_CDO_INTENDEDSTATUS;        
-        
+        X_MICROSOFT_CDO_ALLDAYEVENT, X_MICROSOFT_CDO_BUSYSTATUS, X_MICROSOFT_CDO_INTENDEDSTATUS,
+
+        // ZCO Custom values
+        X_ZIMBRA_STATUS, X_ZIMBRA_STATUS_WAITING, X_ZIMBRA_STATUS_DEFERRED,
+        X_ZIMBRA_PARTSTAT_WAITING, X_ZIMBRA_PARTSTAT_DEFERRED;        
+
         public static ICalTok lookup(String str) 
         {
             try {
@@ -504,17 +508,17 @@ public class ZCalendar {
      */
     public static class ZParameter
     {
-        ZParameter(String name, String value) {
+        public ZParameter(String name, String value) {
             setName(name);
             setValue(value);
             mTok = ICalTok.lookup(mName);
         }
-        ZParameter(ICalTok tok, String value) {
+        public ZParameter(ICalTok tok, String value) {
             mTok = tok;
             mName = tok.toString();
             setValue(value);
         }
-        ZParameter(ICalTok tok, boolean value) {
+        public ZParameter(ICalTok tok, boolean value) {
             mTok = tok;
             mName = tok.toString();
             maValue = value ? "TRUE" : "FALSE";
