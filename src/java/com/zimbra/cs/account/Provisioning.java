@@ -34,6 +34,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -1007,15 +1008,24 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraPublicServiceHostname = "zimbraPublicServiceHostname";
     
-    private static Provisioning mProvisioning;
+    private static Provisioning sProvisioning;
 
     public static Provisioning getInstance() {
-        // TODO: config/property to allow for MySQL, etc.
-        synchronized(Provisioning.class) {
-            if (mProvisioning == null)
-                mProvisioning = new LdapProvisioning();
-            return mProvisioning;
+        if (sProvisioning == null) {
+            synchronized (Provisioning.class) {
+                if (sProvisioning == null) {
+                    sProvisioning = new LdapProvisioning();
+                    ZimbraLog.account.warn("fetched Provisioning instance before it was set (defaulting to LDAP)");
+                }
+            }
         }
+        return sProvisioning;
+    }
+
+    public static void setInstance(Provisioning prov) {
+        if (sProvisioning != null)
+            ZimbraLog.account.warn("set Provisioning instance after it was already set");
+        sProvisioning = prov;
     }
 
     /**
