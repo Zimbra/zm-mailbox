@@ -1245,7 +1245,11 @@ public abstract class Provisioning {
     public static final int SA_CALENDAR_RESOURCE_FLAG = 0x8;
     
     /** return domains from searchAccounts. only valid with Provisioning.searchAccounts. */
-    public static final int SA_DOMAIN_FLAG = 0x10;    
+    public static final int SA_DOMAIN_FLAG = 0x10;
+
+    public static final String A_amavisBypassSpamChecks = "amavisBypassSpamChecks";
+
+    public static final String A_amavisBypassVirusChecks = "amavisBypassVirusChecks";    
 
     /**
      * Takes a string repsrenting the objects to search for and returns a bit mask of SA_* flags for the given string.

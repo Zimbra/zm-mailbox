@@ -47,7 +47,7 @@ and the requesting admin's id will be stored in the auth token for auditing purp
 <CreateAccountRequest>
   <name>...</name>
   <password>...</password>*
-  <a n="attr-name>...</a>+
+  <a n="attr-name">...</a>+
 </CreateAccountRequest>
 
 <CreateAccountResponse>
