@@ -1119,6 +1119,9 @@ public class ToXML {
                 String pct = invite.getPercentComplete();
                 if (pct != null)
                     e.addAttribute(MailService.A_APPT_PERCENT_COMPLETE, pct);
+                long completed = invite.getCompleted();
+                if (completed != 0)
+                    e.addAttribute(MailService.A_APPT_COMPLETED, completed);
             }
 
             // Organizer

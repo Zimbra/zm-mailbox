@@ -91,6 +91,7 @@ public class Invite {
             String status,
             String priority,
             String pctComplete,
+            long completed,
             String freebusy,
             String transp,
             ParsedDateTime start,
@@ -122,6 +123,7 @@ public class Invite {
         mStatus = status;
         mPriority = priority;
         mPercentComplete = pctComplete;
+        mCompleted = completed;
         mFreeBusy = freebusy;
         mTransparency = transp;
         mStart = start;
@@ -190,6 +192,7 @@ public class Invite {
             String status,
             String priority,
             String pctComplete,
+            long completed,
             String freeBusy,
             String transparency,
             boolean allDayEvent,
@@ -219,6 +222,7 @@ public class Invite {
                 status,
                 priority,
                 pctComplete,
+                completed,
                 freeBusy,
                 transparency,
                 dtStart,
@@ -263,6 +267,7 @@ public class Invite {
     private static final String FN_APPT_FLAGS      = "af";
     private static final String FN_ATTENDEE        = "at";
     private static final String FN_SENTBYME        = "byme";
+    private static final String FN_COMPLETED       = "completed";
     private static final String FN_COMPNUM         = "comp";
     private static final String FN_ICAL_COMMENT    = "cmt";
     private static final String FN_FRAGMENT        = "frag";
@@ -310,6 +315,8 @@ public class Invite {
         meta.put(FN_TRANSP, inv.getTransparency());
         meta.put(FN_START, inv.mStart);
         meta.put(FN_END, inv.mEnd);
+        if (inv.mCompleted != 0)
+            meta.put(FN_COMPLETED, inv.mCompleted);
         meta.put(FN_DURATION, inv.mDuration);
         meta.put(FN_METHOD, inv.mMethod.toString());
         meta.put(FN_FRAGMENT, inv.mFragment);
@@ -408,6 +415,7 @@ public class Invite {
         boolean sentByMe = meta.getBool(FN_SENTBYME);
         String fragment = meta.get(FN_FRAGMENT, "");
         String comment = meta.get(FN_ICAL_COMMENT, "");
+        long completed = meta.getLong(FN_COMPLETED, 0);
         
         ParsedDateTime dtStart = null;
         ParsedDateTime dtEnd = null;
@@ -489,7 +497,7 @@ public class Invite {
         String pctComplete = meta.get(FN_PCT_COMPLETE, null);
 
         return new Invite(type, methodStr, tzMap, appt, uid, status,
-                priority, pctComplete, freebusy, transp,
+                priority, pctComplete, completed, freebusy, transp,
                 dtStart, dtEnd, duration, recurrence, org, attendees,
                 name, comment, loc, flags, partStat, rsvp,
                 recurrenceId, dtstamp, seqno,
@@ -673,7 +681,9 @@ public class Invite {
     public void setRecurId(RecurId rid) { mRecurrenceId = rid; }
     public boolean hasRecurId() { return mRecurrenceId != null; }
     public long getDTStamp() { return mDTStamp; }
+    public long getCompleted() { return mCompleted; }
     public void setDtStamp(long stamp) { mDTStamp = stamp; }
+    public void setCompleted(long completed) { mCompleted = completed; }
     public int getSeqNo() { return mSeqNo; }
     public void setSeqNo(int seqNo) { mSeqNo = seqNo; } 
     public ParsedDateTime getStartTime() { return mStart; }
@@ -861,6 +871,7 @@ public class Invite {
     protected ParsedDateTime mStart = null;
     protected ParsedDateTime mEnd = null;
     protected ParsedDuration mDuration = null;
+    protected long mCompleted = 0;  // COMPLETED DATE-TIME of VTODO
     
     protected String mName; /* name of the invite, aka "subject" */
     protected String mComment;  /* RFC2445 'comment' */ 
@@ -1763,6 +1774,12 @@ public class Invite {
                                     newInv.setPercentComplete(pctComplete);
                             }
                             break;
+                        case COMPLETED:
+                            if (isTodo) {
+                                ParsedDateTime completed = ParsedDateTime.parseUtcOnly(prop.getValue());
+                                newInv.setCompleted(completed.getUtcTime());
+                            }
+                            break;
                         }
                     }
 
@@ -1960,6 +1977,12 @@ public class Invite {
         // PERCENT-COMPLETE
         if (isTodo() && mPercentComplete != null)
             event.addProperty(new ZProperty(ICalTok.PERCENT_COMPLETE, mPercentComplete));
+
+        // COMPLETED
+        if (isTodo() && mCompleted != 0) {
+            ParsedDateTime completed = ParsedDateTime.fromUTCTime(mCompleted);
+            event.addProperty(completed.toProperty(ICalTok.COMPLETED, false));
+        }
 
         return event;
     }

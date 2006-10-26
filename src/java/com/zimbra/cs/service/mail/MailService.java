@@ -434,6 +434,7 @@ public class MailService implements DocumentService {
     public static final String A_APPT_ATTENDEE = "at";
     public static final String A_APPT_PRIORITY = "priority";
     public static final String A_APPT_PERCENT_COMPLETE = "percentComplete";
+    public static final String A_APPT_COMPLETED = "completed";
 
     public static final String A_APPT_RULE_FREQ = "freq";
     public static final String A_APPT_RULE_COUNT_NUM = "num";

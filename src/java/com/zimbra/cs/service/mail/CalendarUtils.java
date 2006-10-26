@@ -801,6 +801,11 @@ public class CalendarUtils {
             // PERCENT-COMPLETE
             String pctComplete = element.getAttribute(MailService.A_APPT_PERCENT_COMPLETE, null);
             newInv.setPercentComplete(pctComplete);
+
+            // COMPLETED
+            long completed = element.getAttributeLong(MailService.A_APPT_COMPLETED, 0);
+            if (completed != 0)
+                newInv.setCompleted(completed);
         }
 
         // ATTENDEEs
