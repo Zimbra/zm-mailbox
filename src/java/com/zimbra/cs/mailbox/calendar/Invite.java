@@ -280,6 +280,7 @@ public class Invite {
     private static final String FN_METHOD          = "mthd";
     private static final String FN_NAME            = "n";
     private static final String FN_NUM_ATTENDEES   = "numAt";
+    private static final String FN_NUM_XPROPS_OR_XPARAMS = "numX";
     private static final String FN_ORGANIZER       = "org";
     private static final String FN_PARTSTAT        = "ptst";
     private static final String FN_RSVP            = "rsvp";
@@ -293,6 +294,8 @@ public class Invite {
     private static final String FN_UID             = "u";
     private static final String FN_PRIORITY        = "prio";
     private static final String FN_PCT_COMPLETE    = "pctcompl";
+    private static final String FN_VALUE           = "v";
+    private static final String FN_XPROP_OR_XPARAM = "x";
 
     
     /**
@@ -355,8 +358,48 @@ public class Invite {
 
         meta.put(FN_PRIORITY, inv.getPriority());
         meta.put(FN_PCT_COMPLETE, inv.getPercentComplete());
+
+        if (inv.mXProps.size() > 0)
+            encodeXPropsAsMetadata(meta, inv.xpropsIterator());
         
         return meta;
+    }
+
+    private static void encodeXPropsAsMetadata(Metadata meta,
+                                               Iterator<ZProperty> xpropsIter) {
+        int xpropCount = 0;
+        for (; xpropsIter.hasNext(); ) {
+            ZProperty xprop = xpropsIter.next();
+            String propName = xprop.getName();
+            if (propName == null) continue;
+            Metadata propMeta = new Metadata();
+            propMeta.put(FN_NAME, propName);
+            String propValue = xprop.getValue();
+            if (propValue != null)
+                propMeta.put(FN_VALUE, propValue);
+
+            int xparamCount = 0;
+            for (Iterator<ZParameter> paramIter = xprop.parameterIterator();
+                 paramIter.hasNext(); ) {
+                ZParameter xparam = paramIter.next();
+                String paramName = xparam.getName();
+                if (paramName == null) continue;
+                Metadata paramMeta = new Metadata();
+                paramMeta.put(FN_NAME, paramName);
+                String paramValue = xparam.getValue();
+                if (paramValue != null)
+                    paramMeta.put(FN_VALUE, paramValue);
+                propMeta.put(FN_XPROP_OR_XPARAM + xparamCount, paramMeta);
+                xparamCount++;
+            }
+            if (xparamCount > 0)
+                propMeta.put(FN_NUM_XPROPS_OR_XPARAMS, xparamCount);
+
+            meta.put(FN_XPROP_OR_XPARAM + xpropCount, propMeta);
+            xpropCount++;
+        }
+        if (xpropCount > 0)
+            meta.put(FN_NUM_XPROPS_OR_XPARAMS, xpropCount);
     }
 
     //    public static final Map METHOD_MAP = new HashMap();
@@ -496,12 +539,54 @@ public class Invite {
         String priority = meta.get(FN_PRIORITY, null);
         String pctComplete = meta.get(FN_PCT_COMPLETE, null);
 
-        return new Invite(type, methodStr, tzMap, appt, uid, status,
+        Invite invite = new Invite(type, methodStr, tzMap, appt, uid, status,
                 priority, pctComplete, completed, freebusy, transp,
                 dtStart, dtEnd, duration, recurrence, org, attendees,
                 name, comment, loc, flags, partStat, rsvp,
                 recurrenceId, dtstamp, seqno,
                 mailboxId, mailItemId, componentNum, sentByMe, fragment);
+
+        List<ZProperty> xprops = decodeXPropsFromMetadata(meta);
+        if (xprops != null) {
+            for (ZProperty xprop : xprops) {
+                invite.addXProp(xprop);
+            }
+        }
+
+        return invite;
+    }
+
+    private static List<ZProperty> decodeXPropsFromMetadata(Metadata meta)
+    throws ServiceException {
+        int xpropCount = (int) meta.getLong(FN_NUM_XPROPS_OR_XPARAMS, 0);
+        if (xpropCount > 0) {
+            List<ZProperty> list = new ArrayList<ZProperty>(xpropCount);
+            for (int propNum = 0; propNum < xpropCount; propNum++) {
+                Metadata propMeta = meta.getMap(FN_XPROP_OR_XPARAM + propNum, true);
+                if (propMeta == null) continue;
+                String propName = propMeta.get(FN_NAME, null);
+                if (propName == null) continue;
+                ZProperty xprop = new ZProperty(propName);
+                String propValue = propMeta.get(FN_VALUE, null);
+                if (propValue != null)
+                    xprop.setValue(propValue);
+                int xparamCount = (int) propMeta.getLong(FN_NUM_XPROPS_OR_XPARAMS, 0);
+                if (xparamCount > 0) {
+                    for (int paramNum = 0; paramNum < xparamCount; paramNum++) {
+                        Metadata paramMeta = propMeta.getMap(FN_XPROP_OR_XPARAM + paramNum, true);
+                        if (paramMeta == null) continue;
+                        String paramName = paramMeta.get(FN_NAME, null);
+                        if (paramName == null) continue;
+                        String paramValue = paramMeta.get(FN_VALUE, null);
+                        ZParameter xparam = new ZParameter(paramName, paramValue);
+                        xprop.addParameter(xparam);
+                    }
+                }
+                list.add(xprop);
+            }
+            return list;
+        } else
+            return null;
     }
 
 
@@ -844,6 +929,10 @@ public class Invite {
         sb.append(", recurId: ").append(getRecurId());
         sb.append(", DTStamp: ").append(mDTStamp);
         sb.append(", mSeqNo ").append(mSeqNo);
+
+        for (ZProperty xprop : mXProps) {
+            sb.append(", ").append(xprop.toString());
+        }
         
         sb.append("}");
         return sb.toString();
@@ -906,6 +995,8 @@ public class Invite {
     private String mCompType;  // event, todo, or journal
 
     private ICalTok mMethod;
+
+    private List<ZProperty> mXProps = new ArrayList<ZProperty>();
 
     public Invite(String method, TimeZoneMap tzMap) {
         setCompType(IcalXmlStrMap.COMPTYPE_EVENT);
@@ -1652,9 +1743,14 @@ public class Invite {
                     compNum++;
 
                     for (ZProperty prop : comp.mProperties) {
-                        if (prop.mTok == null) 
+                        if (prop.mTok == null) {
+                            String name = prop.getName();
+                            if (name.startsWith("X-")) {
+                                newInv.addXProp(prop);
+                            }
                             continue;
-                        
+                        }
+
                         switch (prop.mTok) {
                         case ORGANIZER:
                             newInv.setOrganizer(new ZOrganizer(prop));
@@ -1844,9 +1940,9 @@ public class Invite {
     
     public ZComponent newToVComponent(boolean useOutlookCompatMode)
     throws ServiceException {
-        ZComponent event = new ZComponent(IcalXmlStrMap.sCompTypeMap.toIcal(mCompType));
+        ZComponent component = new ZComponent(IcalXmlStrMap.sCompTypeMap.toIcal(mCompType));
 
-        event.addProperty(new ZProperty(ICalTok.UID, getUid()));
+        component.addProperty(new ZProperty(ICalTok.UID, getUid()));
         
         IRecurrence recur = getRecurrence();
         if (recur != null) {
@@ -1860,7 +1956,7 @@ public class Invite {
                     break;
                 case Recurrence.TYPE_REPEATING:
                     Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
-                    event.addProperty(new ZProperty(ICalTok.RRULE, srr.getRecur().toString()));
+                    component.addProperty(new ZProperty(ICalTok.RRULE, srr.getRecur().toString()));
                     break;
                 }
                 
@@ -1875,7 +1971,7 @@ public class Invite {
                     break;
                 case Recurrence.TYPE_REPEATING:
                     Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
-                    event.addProperty(new ZProperty(ICalTok.EXRULE, srr.getRecur().toString()));
+                    component.addProperty(new ZProperty(ICalTok.EXRULE, srr.getRecur().toString()));
                     break;
                 }
             }
@@ -1884,27 +1980,27 @@ public class Invite {
         
         // ORGANIZER
         if (hasOrganizer())
-            event.addProperty(getOrganizer().toProperty());
+            component.addProperty(getOrganizer().toProperty());
         
         // SUMMARY (aka Name or Subject)
         String name = getName();
         if (name != null && name.length()>0)
-            event.addProperty(new ZProperty(ICalTok.SUMMARY, name));
+            component.addProperty(new ZProperty(ICalTok.SUMMARY, name));
         
         // DESCRIPTION
         String fragment = getFragment();
         if (fragment != null && fragment.length()>0)
-            event.addProperty(new ZProperty(ICalTok.DESCRIPTION, fragment));
+            component.addProperty(new ZProperty(ICalTok.DESCRIPTION, fragment));
         
         // COMMENT
         String comment = getComment();
         if (comment != null && comment.length()>0) 
-            event.addProperty(new ZProperty(ICalTok.COMMENT, comment));
+            component.addProperty(new ZProperty(ICalTok.COMMENT, comment));
         
         // DTSTART
         ParsedDateTime dtstart = getStartTime();
         if (dtstart != null)
-            event.addProperty(dtstart.toProperty(ICalTok.DTSTART, useOutlookCompatMode));
+            component.addProperty(dtstart.toProperty(ICalTok.DTSTART, useOutlookCompatMode));
         
         // DTEND or DUE
         ParsedDateTime dtend = getEndTime();
@@ -1912,18 +2008,18 @@ public class Invite {
             ICalTok prop = ICalTok.DTEND;
             if (isTodo())
                 prop = ICalTok.DUE;
-            event.addProperty(dtend.toProperty(prop, useOutlookCompatMode));
+            component.addProperty(dtend.toProperty(prop, useOutlookCompatMode));
         }
         
         // DURATION
         ParsedDuration dur = getDuration();
         if (dur != null)
-            event.addProperty(new ZProperty(ICalTok.DURATION, dur.toString()));
+            component.addProperty(new ZProperty(ICalTok.DURATION, dur.toString()));
         
         // LOCATION
         String location = getLocation();
         if (location != null)
-            event.addProperty(new ZProperty(ICalTok.LOCATION, location.toString()));
+            component.addProperty(new ZProperty(ICalTok.LOCATION, location.toString()));
         
         // STATUS
         String status = getStatus();
@@ -1933,57 +2029,67 @@ public class Invite {
             ZParameter param = new ZParameter(ICalTok.X_ZIMBRA_STATUS, statusIcal);
             ZProperty prop = new ZProperty(ICalTok.STATUS, ICalTok.IN_PROCESS.toString());
             prop.addParameter(param);
-            event.addProperty(prop);
+            component.addProperty(prop);
         } else {
-            event.addProperty(new ZProperty(ICalTok.STATUS, statusIcal));
+            component.addProperty(new ZProperty(ICalTok.STATUS, statusIcal));
         }
 
         if (isEvent()) {
             // allDay
             if (isAllDayEvent())
-                event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_ALLDAYEVENT, true));
+                component.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_ALLDAYEVENT, true));
             
             // Microsoft Outlook compatibility for free-busy status
             {
                 String outlookFreeBusy = IcalXmlStrMap.sOutlookFreeBusyMap.toIcal(getFreeBusy());
-                event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_BUSYSTATUS, outlookFreeBusy));
-                event.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_INTENDEDSTATUS, outlookFreeBusy));
+                component.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_BUSYSTATUS, outlookFreeBusy));
+                component.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_INTENDEDSTATUS, outlookFreeBusy));
             }
 
             // TRANSPARENCY
-            event.addProperty(new ZProperty(ICalTok.TRANSP, IcalXmlStrMap.sTranspMap.toIcal(getTransparency())));
+            component.addProperty(new ZProperty(ICalTok.TRANSP, IcalXmlStrMap.sTranspMap.toIcal(getTransparency())));
         }
         
         // ATTENDEES
         for (ZAttendee at : (List<ZAttendee>)getAttendees()) 
-            event.addProperty(at.toProperty());
+            component.addProperty(at.toProperty());
         
         // RECURRENCE-ID
         RecurId recurId = getRecurId();
         if (recurId != null) 
-            event.addProperty(recurId.toProperty(useOutlookCompatMode));
+            component.addProperty(recurId.toProperty(useOutlookCompatMode));
         
         // DTSTAMP
         ParsedDateTime dtStamp = ParsedDateTime.fromUTCTime(getDTStamp());
-        event.addProperty(dtStamp.toProperty(ICalTok.DTSTAMP, useOutlookCompatMode));
+        component.addProperty(dtStamp.toProperty(ICalTok.DTSTAMP, useOutlookCompatMode));
         
         // SEQUENCE
-        event.addProperty(new ZProperty(ICalTok.SEQUENCE, getSeqNo()));
+        component.addProperty(new ZProperty(ICalTok.SEQUENCE, getSeqNo()));
 
         // PRIORITY
         if (mPriority != null)
-            event.addProperty(new ZProperty(ICalTok.PRIORITY, mPriority));
+            component.addProperty(new ZProperty(ICalTok.PRIORITY, mPriority));
 
         // PERCENT-COMPLETE
         if (isTodo() && mPercentComplete != null)
-            event.addProperty(new ZProperty(ICalTok.PERCENT_COMPLETE, mPercentComplete));
+            component.addProperty(new ZProperty(ICalTok.PERCENT_COMPLETE, mPercentComplete));
 
         // COMPLETED
         if (isTodo() && mCompleted != 0) {
             ParsedDateTime completed = ParsedDateTime.fromUTCTime(mCompleted);
-            event.addProperty(completed.toProperty(ICalTok.COMPLETED, false));
+            component.addProperty(completed.toProperty(ICalTok.COMPLETED, false));
         }
 
-        return event;
+        // x-prop
+        for (ZProperty xprop : mXProps) {
+            component.addProperty(xprop);
+        }
+
+        return component;
+    }
+
+    public Iterator<ZProperty> xpropsIterator() { return mXProps.iterator(); }
+    public void addXProp(ZProperty prop) {
+        mXProps.add(prop);
     }
 }

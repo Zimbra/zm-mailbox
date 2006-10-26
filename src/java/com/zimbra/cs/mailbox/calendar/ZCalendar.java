@@ -427,6 +427,8 @@ public class ZCalendar {
         public void addParameter(ZParameter param) { mParameters.add(param); }
         
         ZParameter getParameter(ICalTok tok) { return findParameter(mParameters, tok); }
+        public Iterator<ZParameter> parameterIterator() { return mParameters.iterator(); }
+        public int getNumParameters() { return mParameters.size(); }
         
         String getParameterVal(ICalTok tok, String defaultValue) { 
             ZParameter param = findParameter(mParameters, tok); 
@@ -470,11 +472,13 @@ public class ZCalendar {
                 param.toICalendar(sw);
 
             sw.write(':');
-            if (mName.equals(ICalTok.RRULE.toString()) ||
-                mName.equals(ICalTok.EXRULE.toString()))
-            	sw.write(mValue);
-            else
-	            sw.write(escape(mValue));
+            if (mValue != null) {
+                if (mName.equals(ICalTok.RRULE.toString()) ||
+                    mName.equals(ICalTok.EXRULE.toString()))
+                	sw.write(mValue);
+                else
+    	            sw.write(escape(mValue));
+            }
 
             // Write with folding.
             String rawval = sw.toString();
@@ -490,8 +494,9 @@ public class ZCalendar {
             }
             w.write(LINE_BREAK);
         }
-        
-        String getValue() { return mValue; }
+
+        public String getName() { return mName; }
+        public String getValue() { return mValue; }
         long getLongValue() { return Long.parseLong(mValue); };
         int getIntValue() { return Integer.parseInt(mValue); };
         boolean getBoolValue() { return mValue.equalsIgnoreCase("TRUE"); }
@@ -562,7 +567,8 @@ public class ZCalendar {
             }
         }
         
-        String getValue() { return maValue; }
+        public String getName() { return mName; }
+        public String getValue() { return maValue; }
         long getLongValue() { return Long.parseLong(maValue); };
         int getIntValue() { return Integer.parseInt(maValue); };
         

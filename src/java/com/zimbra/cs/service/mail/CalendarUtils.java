@@ -53,6 +53,8 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.soap.Element;
@@ -863,6 +865,33 @@ public class CalendarUtils {
                     newInv);
             newInv.setRecurrence(recurrence);
         }
+
+        List<ZProperty> xprops = parseXProps(element);
+        for (ZProperty prop : xprops)
+            newInv.addXProp(prop);
+    }
+
+    private static List<ZProperty> parseXProps(Element element)
+    throws ServiceException {
+        List<ZProperty> props = new ArrayList<ZProperty>();
+        for (Iterator<Element> propIter = element.elementIterator(MailService.E_APPT_XPROP);
+             propIter.hasNext(); ) {
+            Element propElem = propIter.next();
+            String propName = propElem.getAttribute(MailService.A_NAME);
+            String propValue = propElem.getAttribute(MailService.A_VALUE, null);
+            ZProperty xprop = new ZProperty(propName);
+            xprop.setValue(propValue);
+            for (Iterator<Element> paramIter = propElem.elementIterator(MailService.E_APPT_XPARAM);
+                 paramIter.hasNext(); ) {
+                Element paramElem = paramIter.next();
+                String paramName = paramElem.getAttribute(MailService.A_NAME);
+                String paramValue = paramElem.getAttribute(MailService.A_VALUE, null);
+                ZParameter xparam = new ZParameter(paramName, paramValue);
+                xprop.addParameter(xparam);
+            }
+            props.add(xprop);
+        }
+        return props;
     }
 
     private static void validateAttr(IcalXmlStrMap map, String attrName,

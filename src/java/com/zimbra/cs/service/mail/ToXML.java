@@ -55,6 +55,8 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
@@ -1180,9 +1182,36 @@ public class ToXML {
                 if (at.hasDelegatedFrom())
                     atElt.addAttribute(MailService.A_APPT_DELEGATED_FROM, at.getDelegatedFrom());
             }
+
+            // x-prop
+            encodeXProps(e, invite.xpropsIterator());
         }
 
         return e;
+    }
+
+    private static void encodeXProps(Element parent, Iterator<ZProperty> xpropsIterator)
+    throws ServiceException {
+        for (; xpropsIterator.hasNext(); ) {
+            ZProperty xprop = xpropsIterator.next();
+            String propName = xprop.getName();
+            if (propName == null) continue;
+            String propValue = xprop.getValue();
+            Element propElem = parent.addElement(MailService.E_APPT_XPROP);
+            propElem.addAttribute(MailService.A_NAME, propName);
+            if (propValue != null)
+                propElem.addAttribute(MailService.A_VALUE, propValue);
+            for (Iterator<ZParameter> paramIter = xprop.parameterIterator(); paramIter.hasNext(); ) {
+                ZParameter xparam = paramIter.next();
+                String paramName = xparam.getName();
+                if (paramName == null) continue;
+                Element paramElem = propElem.addElement(MailService.E_APPT_XPARAM);
+                paramElem.addAttribute(MailService.A_NAME, paramName);
+                String paramValue = xparam.getValue();
+                if (paramValue != null)
+                    paramElem.addAttribute(MailService.A_VALUE, paramValue);
+            }
+        }
     }
 
     private static Element encodeInvitesForMessage(Element parent, ZimbraSoapContext lc, Message msg, int fields)

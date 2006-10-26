@@ -222,7 +222,7 @@ public class MailService implements DocumentService {
     public static final String E_BROWSE_DATA = "bd";
     public static final String E_ACTION = "action";
     public static final String E_ATTRIBUTE = "a";
-    public static final String E_NAME = "name";    
+    public static final String E_NAME = "name";
     public static final String E_LOCATION = "loc";    
     public static final String E_DESCRIPTION = "desc";    
     public static final String E_VCARD = "vcard";    
@@ -245,6 +245,7 @@ public class MailService implements DocumentService {
     public static final String A_GRANT_TYPE = "gt";
     public static final String A_PATH = "path";
     public static final String A_NAME = "name";
+    public static final String A_VALUE ="value";
     public static final String A_DATE = "d";
     public static final String A_SENT_DATE = "sd";
     public static final String A_ADDRESS = "a";
@@ -388,6 +389,9 @@ public class MailService implements DocumentService {
     public static final String E_APPT_TZ = "tz";
     public static final String E_APPT_TZ_STANDARD = "standard";
     public static final String E_APPT_TZ_DAYLIGHT = "daylight";
+
+    public static final String E_APPT_XPROP = "xprop";
+    public static final String E_APPT_XPARAM = "xparam";
 
     public static final String A_UID = "uid";
     public static final String A_DEFAULT = "default";

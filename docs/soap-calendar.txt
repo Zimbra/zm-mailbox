@@ -235,6 +235,22 @@
                 ]*
              </recur>
            ]
+           [
+             // non-standard properties (see RFC2445 section 4.8.8.1)
+             // e.g.
+             // iCalendar:
+             //
+             //   X-FOO-HELLO;X-FOO-WORLD=world:hello
+             //
+             // SOAP:
+             //
+             //   <xprop name="X-FOO-HELLO" value="hello">
+             //     <xparam name="X-FOO-WORLD" value="world"/>
+             //   </xprop>
+             <xprop name="x-name" [value="text"]>
+               [<xparam name="x-name" [value="text"]/>]*
+             </xprop>
+           ]*
         </comp>
         ]+     
      </inv>
