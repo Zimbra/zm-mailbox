@@ -180,8 +180,8 @@ public class ToXML {
                             url = httpurl.toString();
                         }
                     } catch (org.apache.commons.httpclient.URIException urie) { }
-                    elem.addAttribute(MailService.A_URL, url);
                 }
+                elem.addAttribute(MailService.A_URL, url);
             }
         }
         boolean remote = lc.isDelegatedRequest(), canAdminister = !remote;
