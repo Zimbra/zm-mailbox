@@ -1010,21 +1010,16 @@ public abstract class Provisioning {
     
     private static Provisioning sProvisioning;
 
-    public static Provisioning getInstance() {
+    public synchronized static Provisioning getInstance() {
         if (sProvisioning == null) {
-            synchronized (Provisioning.class) {
-                if (sProvisioning == null) {
-                    sProvisioning = new LdapProvisioning();
-                    ZimbraLog.account.warn("fetched Provisioning instance before it was set (defaulting to LDAP)");
-                }
-            }
+            sProvisioning = new LdapProvisioning();
         }
         return sProvisioning;
     }
 
-    public static void setInstance(Provisioning prov) {
+    public synchronized static void setInstance(Provisioning prov) {
         if (sProvisioning != null)
-            ZimbraLog.account.warn("set Provisioning instance after it was already set");
+            ZimbraLog.account.warn("duplicate call to Provisioning.setInstance()");
         sProvisioning = prov;
     }
 
