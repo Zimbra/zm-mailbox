@@ -310,8 +310,14 @@ public abstract class Wiki {
 			StringBuilder buf = new StringBuilder();
 			buf.append("inid:");
 			buf.append(mFolderId);
-			buf.append(" subject:");
-			buf.append(wikiWord);
+			buf.append(" subject:'");
+			StringTokenizer tok = new StringTokenizer(wikiWord, " ");
+			while (tok.hasMoreTokens()) {
+				String str = tok.nextToken();
+				if (!str.equals("-"))
+					buf.append(str).append(" ");
+			}
+			buf.append("'");
 			return buf.toString();
 		}
 		
@@ -397,8 +403,15 @@ public abstract class Wiki {
 			StringBuilder buf = new StringBuilder();
 			buf.append("in:");
 			buf.append(mPath);
-			buf.append(" subject:");
+			buf.append(" subject:'");
+			StringTokenizer tok = new StringTokenizer(wikiWord, " ");
+			while (tok.hasMoreTokens()) {
+				String str = tok.nextToken();
+				if (!str.equals("-"))
+					buf.append(str).append(" ");
+			}
 			buf.append(wikiWord);
+			buf.append("'");
 			return buf.toString();
 		}
 		
