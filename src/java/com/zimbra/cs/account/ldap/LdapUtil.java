@@ -25,20 +25,15 @@
 
 package com.zimbra.cs.account.ldap;
 
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.Map.Entry;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.stats.ZimbraPerf;
+import org.apache.commons.codec.binary.Base64;
 
 import javax.naming.AuthenticationException;
 import javax.naming.Context;
@@ -55,17 +50,20 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
-
-import org.apache.commons.codec.binary.Base64;
-
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.GalContact;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.common.util.ZimbraLog;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
 
 /**
  * @author schemers
@@ -817,7 +815,7 @@ public class LdapUtil {
                 query = query.replaceAll("\\*\\*", "*");
             else  {
                 String arg = LdapUtil.escapeSearchFilterArg(token);                
-                query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+")(whenModified>="+arg+")(whenCreated>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";                
+                query = "(&(|(modifyTimeStamp>"+arg+")(createTimeStamp>"+arg+")(whenModified>"+arg+")(whenCreated>"+arg+"))"+query.replaceAll("\\*\\*", "*")+")";                
             }                
         }
         ZimbraLog.misc.debug("searchLdapGal query:"+query);

@@ -3370,7 +3370,7 @@ public class LdapProvisioning extends Provisioning {
                 else {
                     String arg = LdapUtil.escapeSearchFilterArg(token);
                     //query = "(&(modifyTimeStamp>="+arg+")"+query.replaceAll("\\*\\*", "*")+")";
-                    query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";
+                    query = "(&(|(modifyTimeStamp>"+arg+")(createTimeStamp>"+arg+"))"+query.replaceAll("\\*\\*", "*")+")";
                 }
             }
         }
