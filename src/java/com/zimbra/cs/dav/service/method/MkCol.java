@@ -30,6 +30,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.resource.Collection;
+import com.zimbra.cs.dav.resource.DavResource;
+import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
 
 public class MkCol extends DavMethod {
@@ -38,6 +41,24 @@ public class MkCol extends DavMethod {
 		return MKCOL;
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException {
-		throw new DavException("not implemented", HttpServletResponse.SC_FORBIDDEN, null);
+		String path = ctxt.getPath();
+		if (path.endsWith("/"))
+			path = path.substring(0, path.length()-1);
+		int pos = path.lastIndexOf('/');
+		if (pos == -1)
+			throw new DavException("invalid path", HttpServletResponse.SC_CONFLICT, null);
+		String col = path.substring(0, pos);
+		String item = path.substring(pos+1);
+		DavResource rsc;
+		try {
+			rsc = UrlNamespace.getResourceAt(ctxt, col);
+		} catch (DavException de) {
+			throw new DavException("no collection at "+col, HttpServletResponse.SC_CONFLICT, de);
+		}
+		if (!rsc.isCollection())
+			throw new DavException(col+" is not a collection", HttpServletResponse.SC_CONFLICT, null);
+		Collection collection = (Collection) rsc;
+		collection.mkCol(ctxt, item);
+		ctxt.setStatus(HttpServletResponse.SC_CREATED);
 	}
 }

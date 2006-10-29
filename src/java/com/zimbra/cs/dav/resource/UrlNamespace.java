@@ -40,9 +40,11 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -53,34 +55,13 @@ public class UrlNamespace {
 	
 	public static final String ATTACHMENTS_PREFIX = "/attachments";
 	
-	private static class ResourceRef {
-		public String user;
-		public String target;
-	}
-	
-	private static ResourceRef parseResourcePath(DavContext ctxt) {
-		String uri = ctxt.getUri();
-		if (uri.length() <= 1)
-			return null;
-		
-		int index = uri.indexOf('/', 1);
-		if (index == -1)
-			return null;
-		
-		ResourceRef ref = new ResourceRef();
-		ref.user = uri.substring(1, index);
-		ref.target = uri.substring(index);
-		
-		ctxt.setUser(ref.user);
-		return ref;
-	}
-	
 	public static void createResource(DavContext ctxt) throws DavException, IOException {
-		ResourceRef ref = parseResourcePath(ctxt);
-		if (ref == null)
+		String user = ctxt.getUser();
+		String target = ctxt.getPath();
+		
+		if (user == null || target == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_ACCEPTABLE, null);
 		
-		String user = ref.user;
 		Provisioning prov = Provisioning.getInstance();
 		Mailbox mbox = null;
 		try {
@@ -98,12 +79,12 @@ public class UrlNamespace {
 		int clen = ctxt.getRequest().getContentLength();
 		byte[] data = ByteUtil.getContent(ctxt.getRequest().getInputStream(), clen);
 		if (ctype == null)
-			ctype = URLConnection.getFileNameMap().getContentTypeFor(ref.target);
+			ctype = URLConnection.getFileNameMap().getContentTypeFor(target);
 		if (ctype == null)
 			ctype = DavProtocol.DEFAULT_CONTENT_TYPE;
 		try {
 			// add a revision if the resource already exists
-			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), ref.target, 0, false);
+			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), target, 0, false);
 			if (item.getType() != MailItem.TYPE_DOCUMENT && item.getType() != MailItem.TYPE_WIKI)
 				throw new DavException("no DAV resource for "+MailItem.getNameForType(item.getType()), HttpServletResponse.SC_NOT_ACCEPTABLE, null);
 			mbox.addDocumentRevision(ctxt.getOperationContext(), (Document)item, data, author);
@@ -113,12 +94,12 @@ public class UrlNamespace {
 				throw new DavException("cannot get item ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
 			
 			// create
-			int index = ref.target.lastIndexOf("/");
+			int index = target.lastIndexOf("/");
 			if (index == -1)
 				throw new DavException("invalid uri", HttpServletResponse.SC_NOT_ACCEPTABLE, null);
-			String name= ref.target.substring(index+1);
+			String name= target.substring(index+1);
 			try {
-				String path = ref.target.substring(0, index);
+				String path = target.substring(0, index);
 				MailItem folder = mbox.getItemByPath(ctxt.getOperationContext(), path, 0, false);
 				mbox.createDocument(ctxt.getOperationContext(), folder.getId(), name, ctype, author, data, null);
 				ctxt.setStatus(HttpServletResponse.SC_CREATED);
@@ -129,38 +110,41 @@ public class UrlNamespace {
 	}
 	
 	public static DavResource getResource(DavContext ctxt) throws DavException {
-		ResourceRef ref = parseResourcePath(ctxt);
-		if (ref == null)
+		return getResourceAt(ctxt, ctxt.getPath());
+	}
+	
+	public static DavResource getResourceAt(DavContext ctxt, String path) throws DavException {
+		String target = path;
+		if (target == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
 		
 		DavResource resource = null;
 		
-		if (ref.target.startsWith(ATTACHMENTS_PREFIX)) {
-			resource = getPhantomResource(ctxt, ref);
+		if (target.startsWith(ATTACHMENTS_PREFIX)) {
+			resource = getPhantomResource(ctxt);
 		} else {
-			MailItem item = getMailItem(ctxt, ref.target);
-			resource = getResourceFromMailItem(ref.target, item);
+			MailItem item = getMailItem(ctxt, target);
+			resource = getResourceFromMailItem(item);
 		}
 		
 		if (resource == null)
-			throw new DavException("no DAV resource for "+ref.target, HttpServletResponse.SC_NOT_FOUND, null);
+			throw new DavException("no DAV resource for "+target, HttpServletResponse.SC_NOT_FOUND, null);
 		
 		return resource;
 	}
 	
 	public static void deleteResource(DavContext ctxt) throws DavException {
-		ResourceRef ref = parseResourcePath(ctxt);
-		if (ref == null)
+		String user = ctxt.getUser();
+		if (user == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
 		try {
-			String user = ctxt.getUser();
 			Provisioning prov = Provisioning.getInstance();
 			Account account = prov.get(AccountBy.name, user);
 			if (account == null)
 				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), ref.target, 0, false);
+			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), ctxt.getPath(), 0, false);
 			mbox.delete(ctxt.getOperationContext(), item.getId(), item.getType());
 		} catch (ServiceException e) {
 			throw new DavException("cannot get item", HttpServletResponse.SC_NOT_FOUND, e);
@@ -198,21 +182,27 @@ public class UrlNamespace {
 		return getHomeUrl(rs.getOwner()) + rs.getUri();
 	}
 	
-	public static DavResource getResourceFromMailItem(String target, MailItem item) throws DavException {
+	public static DavResource getResourceFromMailItem(MailItem item) throws DavException {
 		DavResource resource = null;
 		byte itemType = item.getType();
 		
 		try {
-			Account acct = item.getAccount();
 			switch (itemType) {
-			case (MailItem.TYPE_FOLDER) :
-			case (MailItem.TYPE_MOUNTPOINT) :
-				resource = new Collection((Folder)item, acct);
-			break;
-			case (MailItem.TYPE_WIKI) :
-			case (MailItem.TYPE_DOCUMENT) :
-				resource = new Notebook((Document)item, acct);
-			break;
+			case MailItem.TYPE_FOLDER :
+			case MailItem.TYPE_MOUNTPOINT :
+				Folder f = (Folder) item;
+				if (f.getDefaultView() == MailItem.TYPE_APPOINTMENT)
+					resource = new CalendarCollection((Folder)item);
+				else
+					resource = new Collection((Folder)item);
+				break;
+			case MailItem.TYPE_WIKI :
+			case MailItem.TYPE_DOCUMENT :
+				resource = new Notebook((Document)item);
+				break;
+			case MailItem.TYPE_APPOINTMENT :
+				resource = new CalendarObject((Appointment)item);
+				break;
 			}
 		} catch (ServiceException e) {
 			resource = null;
@@ -221,11 +211,13 @@ public class UrlNamespace {
 		return resource;
 	}
 	
-	private static DavResource getPhantomResource(DavContext ctxt, ResourceRef ref) throws DavException {
+	private static DavResource getPhantomResource(DavContext ctxt) throws DavException {
 		DavResource resource;
+		String user = ctxt.getUser();
+		String target = ctxt.getPath();
 		
 		ArrayList<String> tokens = new ArrayList<String>();
-		StringTokenizer tok = new StringTokenizer(ref.target, "/");
+		StringTokenizer tok = new StringTokenizer(target, "/");
 		int numTokens = tok.countTokens();
 		while (tok.hasMoreTokens()) {
 			tokens.add(tok.nextToken());
@@ -256,13 +248,13 @@ public class UrlNamespace {
 		switch (numTokens) {
 		case 1:
 		case 2:
-			resource = new BrowseWrapper(ref.target, ref.user, tokens);
+			resource = new BrowseWrapper(target, user, tokens);
 			break;
 		case 3:
-			resource = new SearchWrapper(ref.target, ref.user, tokens);
+			resource = new SearchWrapper(target, user, tokens);
 			break;
 		case 4:
-			resource = new Attachment(ref.target, ref.user, tokens, ctxt);
+			resource = new Attachment(target, user, tokens, ctxt);
 			break;
 		default:
 			resource = null;
@@ -280,8 +272,23 @@ public class UrlNamespace {
 				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			
-			return mbox.getItemByPath(ctxt.getOperationContext(), path, 0, false);
+
+			Mailbox.OperationContext octxt = ctxt.getOperationContext();
+			int index = path.lastIndexOf('/');
+			Folder f = null;
+			if (index != -1) {
+				try {
+					f = mbox.getFolderByPath(octxt, path.substring(0, index));
+				} catch (MailServiceException.NoSuchItemException e) {
+				}
+			}
+			if (f != null && 
+					f.getDefaultView() == MailItem.TYPE_APPOINTMENT && 
+					path.endsWith(CalendarObject.CAL_EXTENSION)) {
+				String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
+				return mbox.getAppointmentByUid(octxt, uid);
+			}
+			return mbox.getItemByPath(octxt, path, 0, false);
 		} catch (ServiceException e) {
 			throw new DavException("cannot get item", HttpServletResponse.SC_NOT_FOUND, e);
 		}

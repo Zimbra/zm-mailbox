@@ -81,6 +81,7 @@ public class DavElements {
 	public static final String P_ERROR = "error";
 	public static final String P_EXCLUSIVE = "exclusive";
 	public static final String P_EXPAND = "expand";
+	public static final String P_EXPAND_PROPERTY = "expand-property";
 	
 	public static final String P_FILTER = "filter";
 	public static final String P_FREE_BUSY_QUERY = "free-busy-query";
@@ -153,6 +154,8 @@ public class DavElements {
 	public static final String P_SOURCE = "source";
 	public static final String P_SUPPORTED_CALENDAR_COMPONENT_SET = "supported-calendar-component-set";
 	public static final String P_SUPPORTED_CALENDAR_DATA = "supported-calendar-data";
+	public static final String P_SUPPORTED_COLLATION = "supported-collation";
+	public static final String P_SUPPORTED_COLLATION_SET = "supported-collation-set";
 	public static final String P_SUPPORTED_PRIVILEGE = "supported-privilege";
 	public static final String P_SUPPORTED_PRIVILEGE_SET = "supported-privilege-set";
 	public static final String P_SUPPORTED_REPORT = "supported-report";
@@ -200,6 +203,7 @@ public class DavElements {
 	public static final QName E_CALENDAR_TIMEZONE = QName.get(P_CALENDAR_TIMEZONE, CALDAV_NS);
 	public static final QName E_COLLECTION = QName.get(P_COLLECTION, WEBDAV_NS);
 	public static final QName E_COMP = QName.get(P_COMP, CALDAV_NS);
+	public static final QName E_COMP_FILTER = QName.get(P_COMP_FILTER, CALDAV_NS);
 	public static final QName E_CREATIONDATE = QName.get(P_CREATIONDATE, WEBDAV_NS);
 	public static final QName E_CURRENT_USER_PRIVILEGE_SET = QName.get(P_CURRENT_USER_PRIVILEGE_SET, WEBDAV_NS);
 	
@@ -211,7 +215,9 @@ public class DavElements {
 	
 	public static final QName E_ERROR = QName.get(P_ERROR, WEBDAV_NS);
 	public static final QName E_EXCLUSIVE = QName.get(P_EXCLUSIVE, WEBDAV_NS);
+	public static final QName E_EXPAND_PROPERTY = QName.get(P_EXPAND_PROPERTY, WEBDAV_NS);
 	
+	public static final QName E_FILTER = QName.get(P_FILTER, CALDAV_NS);
 	public static final QName E_FREE_BUSY_QUERY = QName.get(P_FREE_BUSY_QUERY, CALDAV_NS);
 	
 	public static final QName E_GETCONTENTLANGUAGE = QName.get(P_GETCONTENTLANGUAGE, WEBDAV_NS);
@@ -228,6 +234,7 @@ public class DavElements {
 	public static final QName E_HREF = QName.get(P_HREF, WEBDAV_NS);
 	
 	public static final QName E_INHERITED_ACL_SET = QName.get(P_INHERITED_ACL_SET, WEBDAV_NS);
+	public static final QName E_IS_NOT_DEFINED = QName.get(P_IS_NOT_DEFINED, CALDAV_NS);
 	
 	public static final QName E_LOCKDISCOVERY = QName.get(P_LOCKDISCOVERY, WEBDAV_NS);
 	public static final QName E_LOCKSCOPE = QName.get(P_LOCKSCOPE, WEBDAV_NS);
@@ -240,12 +247,15 @@ public class DavElements {
 	
 	public static final QName E_OWNER = QName.get(P_OWNER, WEBDAV_NS);
 	
+	public static final QName E_PARAM_FILTER = QName.get(P_PARAM_FILTER, CALDAV_NS);
 	public static final QName E_PRINCIPAL = QName.get(P_PRINCIPAL, WEBDAV_NS);
 	public static final QName E_PRINCIPAL_COLLECTION_SET = QName.get(P_PRINCIPAL_COLLECTION_SET, WEBDAV_NS);
 	public static final QName E_PRINCIPAL_URL = QName.get(P_PRINCIPAL_URL, WEBDAV_NS);
 	public static final QName E_PRIVILEGE = QName.get(P_PRIVILEGE, WEBDAV_NS);
 	public static final QName E_PROP = QName.get(P_PROP, WEBDAV_NS);
+	public static final QName E_PROPNAME = QName.get(P_PROPNAME, WEBDAV_NS);
 	public static final QName E_PROP_CALDAV = QName.get(P_PROP, CALDAV_NS);
+	public static final QName E_PROP_FILTER = QName.get(P_PROP_FILTER, CALDAV_NS);
 	public static final QName E_PROPSTAT = QName.get(P_PROPSTAT, WEBDAV_NS);
 	
 	public static final QName E_READ   = QName.get(P_READ, WEBDAV_NS);
@@ -260,13 +270,18 @@ public class DavElements {
 	public static final QName E_STATUS = QName.get(P_STATUS, WEBDAV_NS);
 	public static final QName E_SUPPORTED_CALENDAR_COMPONENT_SET = QName.get(P_SUPPORTED_CALENDAR_COMPONENT_SET, CALDAV_NS);
 	public static final QName E_SUPPORTED_CALENDAR_DATA = QName.get(P_SUPPORTED_CALENDAR_DATA, CALDAV_NS);
+	public static final QName E_SUPPORTED_COLLATION = QName.get(P_SUPPORTED_COLLATION, CALDAV_NS);
+	public static final QName E_SUPPORTED_COLLATION_SET = QName.get(P_SUPPORTED_COLLATION_SET, CALDAV_NS);
 	public static final QName E_SUPPORTED_PRIVILEGE = QName.get(P_SUPPORTED_PRIVILEGE, WEBDAV_NS);
 	public static final QName E_SUPPORTED_PRIVILEGE_SET = QName.get(P_SUPPORTED_PRIVILEGE_SET, WEBDAV_NS);
 	public static final QName E_SUPPORTED_REPORT = QName.get(P_SUPPORTED_REPORT, WEBDAV_NS);
 	public static final QName E_SUPPORTED_REPORT_SET = QName.get(P_SUPPORTED_REPORT_SET, WEBDAV_NS);
 	public static final QName E_SUPPORTEDLOCK = QName.get(P_SUPPORTEDLOCK, WEBDAV_NS);
 	
+	public static final QName E_TEXT_MATCH = QName.get(P_TEXT_MATCH, CALDAV_NS);
+	public static final QName E_TIME_RANGE = QName.get(P_TIME_RANGE, CALDAV_NS);
 	public static final QName E_TIMEOUT = QName.get(P_TIMEOUT, WEBDAV_NS);
+	public static final QName E_TIMEZONE = QName.get(P_TIMEZONE, CALDAV_NS);
 	
 	public static final QName E_UNAUTHENTICATED = QName.get(P_UNAUTHENTICATED, WEBDAV_NS);
 	public static final QName E_UNLOCK = QName.get(P_UNLOCK, WEBDAV_NS);

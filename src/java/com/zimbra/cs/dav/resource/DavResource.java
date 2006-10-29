@@ -27,6 +27,7 @@ package com.zimbra.cs.dav.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -209,7 +210,14 @@ public abstract class DavResource {
 			rs.addElement(DavElements.E_COLLECTION);
 		return rs;
 	}
-	
+
+	public Element addHref(Element parent, boolean nameOnly) throws DavException {
+		Element href = parent.addElement(DavElements.E_HREF);
+		if (nameOnly)
+			return href;
+		href.setText(UrlNamespace.getResourceUrl(this));
+		return href;
+	}
 	/*
 	 * whether the resource is access controlled as in RFC3744.
 	 */
@@ -221,7 +229,7 @@ public abstract class DavResource {
 	
 	public abstract boolean isCollection();
 	
-	public List<DavResource> getChildren(DavContext ctxt) throws DavException {
+	public Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		return Collections.emptyList();
 	}
 }

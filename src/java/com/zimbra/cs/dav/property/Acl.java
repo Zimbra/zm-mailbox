@@ -9,12 +9,14 @@ import org.dom4j.QName;
 import org.dom4j.tree.DefaultElement;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.service.ServiceException;
 
@@ -31,11 +33,14 @@ import com.zimbra.cs.service.ServiceException;
  * DAV:principal-collection-set - RFC3744 section 5.8
  */
 public class Acl extends ResourceProperty {
-	public static Set<ResourceProperty> getAclProperties(DavResource rs, ACL acl) throws DavException {
+	public static Set<ResourceProperty> getAclProperties(DavResource rs, Folder folder) throws ServiceException, DavException {
 		HashSet<ResourceProperty> props = new HashSet<ResourceProperty>();
+		if (folder == null)
+			return props;
 		
+		ACL acl = folder.getPermissions();
 		props.add(getSupportedPrivilegeSet());
-		props.add(getCurrentUserPrivilegeSet(acl));
+		props.add(getCurrentUserPrivilegeSet(acl, folder.getAccount()));
 		props.add(getAcl(acl));
 		props.add(getAclRestrictions());
 		
@@ -60,8 +65,8 @@ public class Acl extends ResourceProperty {
 		return new SupportedPrivilegeSet();
 	}
 	
-	public static ResourceProperty getCurrentUserPrivilegeSet(ACL acl) {
-		return new CurrentUserPrivilegeSet(acl);
+	public static ResourceProperty getCurrentUserPrivilegeSet(ACL acl, Account owner) {
+		return new CurrentUserPrivilegeSet(acl, owner);
 	}
 	
 	public static ResourceProperty getAclRestrictions() {
@@ -134,12 +139,11 @@ public class Acl extends ResourceProperty {
 
 	protected Element addGrantDeny(Element ace, Grant g, boolean isGrant) {
 		Element grant = isGrant ? ace.addElement(DavElements.E_GRANT) : ace.addElement(DavElements.E_DENY);
-		addPrivileges(grant, g);
+		addPrivileges(grant, g.getGrantedRights());
 		return grant;
 	}
 	
-	protected Element addPrivileges(Element grant, Grant g) {
-		short rights = g.getGrantedRights();
+	protected Element addPrivileges(Element grant, short rights) {
 		if ((rights & ACL.RIGHT_READ) > 0)
 			grant.addElement(DavElements.E_PRIVILEGE).addElement(DavElements.E_READ);
 		if ((rights & ACL.RIGHT_WRITE) > 0)
@@ -170,6 +174,9 @@ public class Acl extends ResourceProperty {
 			if (nameOnly)
 				return sps;
 
+			if (mAcl == null)
+				return sps;
+			
 			Element all = addPrivilege(sps, DavElements.E_ALL, "any operation");
 			addPrivilege(all, DavElements.E_READ, "read calendar, attachment, notebook");
 			addPrivilege(all, DavElements.E_WRITE, "add calendar appointment, upload attachment");
@@ -180,8 +187,10 @@ public class Acl extends ResourceProperty {
 	}
 	
 	private static class CurrentUserPrivilegeSet extends Acl {
-		public CurrentUserPrivilegeSet(ACL acl) {
+		private String mOwner;
+		public CurrentUserPrivilegeSet(ACL acl, Account owner) {
 			super(DavElements.E_CURRENT_USER_PRIVILEGE_SET, acl);
+			mOwner = owner.getId();
 		}
 
 		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
@@ -189,12 +198,20 @@ public class Acl extends ResourceProperty {
 			if (nameOnly)
 				return cups;
 
+			if (mAcl == null) {
+				// the requestor still has full permission if owner.
+				if (ctxt.getAuthAccount().getId().equals(mOwner))
+					addPrivileges(cups, (short)(ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_DELETE | ACL.RIGHT_INSERT));
+				return cups;
+			}
+			
 			Iterator<ACL.Grant> iter = mAcl.grantIterator();
 			while (iter.hasNext()) {
 				Grant g = iter.next();
 				try {
-					if (g.getGrantedRights(ctxt.getAuthAccount()) > 0) {
-						addPrivileges(cups, g);
+					short rights = g.getGrantedRights(ctxt.getAuthAccount());
+					if (rights > 0) {
+						addPrivileges(cups, rights);
 						break;
 					}
 				} catch (ServiceException e) {

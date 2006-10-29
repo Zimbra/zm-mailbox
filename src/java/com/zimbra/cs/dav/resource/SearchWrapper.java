@@ -27,6 +27,7 @@ package com.zimbra.cs.dav.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import com.zimbra.common.util.ZimbraLog;
@@ -98,7 +99,7 @@ public class SearchWrapper extends PhantomResource {
 	}
 	
 	@Override
-	public List<DavResource> getChildren(DavContext ctxt) throws DavException {
+	public Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		ArrayList<DavResource> children = new ArrayList<DavResource>();
 		String user = ctxt.getUser();
 		Provisioning prov = Provisioning.getInstance();

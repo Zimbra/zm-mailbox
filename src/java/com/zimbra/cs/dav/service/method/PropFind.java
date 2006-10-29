@@ -90,15 +90,14 @@ public class PropFind extends DavMethod {
 		addComplianceHeader(ctxt, resource);
 		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
 		
-		Document document = org.dom4j.DocumentHelper.createDocument();
+		Document document = ctxt.getResponseMessage();
 		Element resp = document.addElement(DavElements.E_MULTISTATUS);
 		addResourceToResponse(ctxt, resource, resp, nameOnly, requestedProps, false);
 
 		if (resource.isCollection() && ctxt.getDepth() != Depth.zero) {
 			//ZimbraLog.dav.debug("depth: "+ctxt.getDepth().name());
 
-			List<DavResource> children = resource.getChildren(ctxt);
-			for (DavResource child : children)
+			for (DavResource child : resource.getChildren(ctxt))
 				addResourceToResponse(ctxt, child, resp, nameOnly, requestedProps, ctxt.getDepth() == Depth.infinity);
 		}
 		sendResponse(ctxt, document);
@@ -106,7 +105,7 @@ public class PropFind extends DavMethod {
 	
 	private void addResourceToResponse(DavContext ctxt, DavResource rs, Element top, boolean nameOnly, Set<QName> requestedProps, boolean includeChildren) throws DavException {
 		Element resp = top.addElement(DavElements.E_RESPONSE);
-		resp.addElement(DavElements.E_HREF).setText(UrlNamespace.getResourceUrl(rs));
+		rs.addHref(resp, nameOnly);
 		Map<Integer,Element> propstatMap = new HashMap<Integer,Element>();
 		Set<QName> propNames;
 		if (requestedProps == null)
@@ -122,11 +121,9 @@ public class PropFind extends DavMethod {
 				continue;
 			}
 		}
-		if (rs.isCollection() && includeChildren) {
-			List<DavResource> children = rs.getChildren(ctxt);
-			for (DavResource child : children)
+		if (rs.isCollection() && includeChildren)
+			for (DavResource child : rs.getChildren(ctxt))
 				addResourceToResponse(ctxt, child, top, nameOnly, requestedProps, includeChildren);
-		}
 	}
 	
 	private Element findPropstat(Element top, Map<Integer,Element> propstatMap, int status) {

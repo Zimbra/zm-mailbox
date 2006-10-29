@@ -29,6 +29,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletResponse;
+
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -37,7 +39,6 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.property.Acl;
-import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -46,17 +47,20 @@ import com.zimbra.cs.service.ServiceException;
 
 public class Collection extends DavResource {
 
-	private int mId;
+	protected int mId;
+	protected int mMboxId;
+	protected byte mView;
 	
-	public Collection(Folder f, Account acct) throws DavException, ServiceException {
-		super(getFolderPath(f.getPath()), acct);
+	public Collection(Folder f) throws DavException, ServiceException {
+		super(getFolderPath(f.getPath()), f.getAccount());
 		setCreationDate(f.getDate());
 		setLastModifiedDate(f.getChangeDate());
 		setProperty(DavElements.P_DISPLAYNAME, f.getSubject());
 		setProperty(DavElements.P_GETCONTENTLENGTH, "0");
 		mId = f.getId();
-		ACL acl = f.getPermissions();
-		addProperties(Acl.getAclProperties(this, acl));
+		mMboxId = f.getMailboxId();
+		mView = f.getDefaultView();
+		addProperties(Acl.getAclProperties(this, f));
 	}
 	
 	private Collection(String name, String acct) throws DavException {
@@ -66,7 +70,10 @@ public class Collection extends DavResource {
 		setLastModifiedDate(now);
 		setProperty(DavElements.P_DISPLAYNAME, name.substring(1));
 		setProperty(DavElements.P_GETCONTENTLENGTH, "0");
-		addProperties(Acl.getAclProperties(this, null));
+		try {
+			addProperties(Acl.getAclProperties(this, null));
+		} catch (ServiceException se) {
+		}
 	}
 	
 	private static String getFolderPath(String path) {
@@ -86,13 +93,13 @@ public class Collection extends DavResource {
 	}
 	
 	@Override
-	public List<DavResource> getChildren(DavContext ctxt) throws DavException {
+	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		ArrayList<DavResource> children = new ArrayList<DavResource>();
 
 		try {
 			List<MailItem> items = getChildrenMailItem(ctxt);
 			for (MailItem item : items) {
-				DavResource rs = UrlNamespace.getResourceFromMailItem(null, item);
+				DavResource rs = UrlNamespace.getResourceFromMailItem(item);
 				if (rs != null)
 					children.add(rs);
 			}
@@ -107,13 +114,7 @@ public class Collection extends DavResource {
 	}
 	
 	private List<MailItem> getChildrenMailItem(DavContext ctxt) throws ServiceException {
-		String user = ctxt.getUser();
-		Provisioning prov = Provisioning.getInstance();
-		Account account = prov.get(AccountBy.name, user);
-		//if (account == null)
-		//throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
-
-		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+		Mailbox mbox = getMailbox();
 
 		List<MailItem> ret = new ArrayList<MailItem>();
 		
@@ -127,5 +128,23 @@ public class Collection extends DavResource {
 		ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_DOCUMENT, mId));
 		ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_WIKI, mId));
 		return ret;
+	}
+	
+	protected Mailbox getMailbox() throws ServiceException {
+		return MailboxManager.getInstance().getMailboxById(mMboxId);
+	}
+	
+	public void mkCol(DavContext ctxt, String name) throws DavException {
+		try {
+			Provisioning prov = Provisioning.getInstance();
+			Account account = prov.get(AccountBy.name, ctxt.getUser());
+			if (account == null)
+				throw new DavException("no such account "+ctxt.getUser(), HttpServletResponse.SC_NOT_FOUND, null);
+
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+			mbox.createFolder(ctxt.getOperationContext(), name, mId, mView, 0, (byte)0, null);
+		} catch (ServiceException e) {
+			throw new DavException("item already exists", HttpServletResponse.SC_CONFLICT, e);
+		}
 	}
 }

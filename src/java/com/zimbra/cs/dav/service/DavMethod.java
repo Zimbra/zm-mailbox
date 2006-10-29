@@ -137,5 +137,6 @@ public abstract class DavMethod {
 			XMLWriter writer = new XMLWriter(resp.getOutputStream(), format);
 			writer.write(outMsg);
 		}
+		ctxt.responseSent();
 	}
 }

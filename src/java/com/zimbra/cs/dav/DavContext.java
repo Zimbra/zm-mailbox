@@ -45,11 +45,19 @@ public class DavContext {
 	private Account mAuthAccount;
 	private String mUri;
 	private String mUser;
+	private String mPath;
 	private int mStatus;
+	private Document mResponse;
+	private boolean mResponseSent;
 	
 	public DavContext(HttpServletRequest req, HttpServletResponse resp) {
 		mReq = req;  mResp = resp;
 		mUri = req.getPathInfo().toLowerCase();
+		int index = mUri.indexOf('/', 1);
+		if (index != -1) {
+			mUser = mUri.substring(1, index);
+			mPath = mUri.substring(index);
+		}
 		mStatus = HttpServletResponse.SC_OK;
 	}
 	
@@ -78,12 +86,12 @@ public class DavContext {
 		return mUri;
 	}
 
-	public void setUser(String user) {
-		mUser = user;
-	}
-	
 	public String getUser() {
 		return mUser;
+	}
+	
+	public String getPath() {
+		return mPath;
 	}
 
 	public int getStatus() {
@@ -92,6 +100,14 @@ public class DavContext {
 	
 	public void setStatus(int s) {
 		mStatus = s;
+	}
+	
+	public void responseSent() {
+		mResponseSent = true;
+	}
+	
+	public boolean isResponseSent() {
+		return mResponseSent;
 	}
 	
 	public enum Depth {
@@ -130,5 +146,11 @@ public class DavContext {
 			throw new DavException("unable to read input", HttpServletResponse.SC_BAD_REQUEST, e);
 		}
 		throw new DavException("no request msg", HttpServletResponse.SC_BAD_REQUEST, null);
+	}
+	
+	public Document getResponseMessage() {
+		if (mResponse == null)
+			mResponse = org.dom4j.DocumentHelper.createDocument();
+		return mResponse;
 	}
 }

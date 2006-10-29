@@ -65,6 +65,7 @@ public class DavServlet extends ZimbraServlet {
 		addMethod(new PropPatch());
 		addMethod(new Unlock());
 		addMethod(new MkCalendar());
+		addMethod(new Report());
 	}
 
 	private void addMethod(DavMethod method) {
@@ -112,6 +113,8 @@ public class DavServlet extends ZimbraServlet {
 			long t0 = System.currentTimeMillis();
 			//ZimbraLog.dav.info("DavServlet dispatch: "+method);
 			method.handle(ctxt);
+			if (!ctxt.isResponseSent())
+				resp.setStatus(ctxt.getStatus());
 			long t1 = System.currentTimeMillis();
 			ZimbraLog.dav.info("DavServlet operation "+method.getName()+" finished in "+(t1-t0)+"ms");
 		} catch (DavException e) {
