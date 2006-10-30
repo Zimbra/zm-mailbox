@@ -25,14 +25,14 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.soap.Element;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.soap.Element;
 
 public class ZGetInfoResult {
 
@@ -44,6 +44,7 @@ public class ZGetInfoResult {
     private long mMailboxQuotaUsed;
     private Map<String, List<String>> mAttrs;
     private Map<String, List<String>> mPrefs;
+    private List<ZIdentity> mIdentities;
     private List<String> mMailURLs;
     
     private static Map<String, List<String>> getMap(Element e, String root, String child) throws ServiceException {
@@ -75,6 +76,17 @@ public class ZGetInfoResult {
         for (Element urlEl: e.listElements(AccountService.E_SOAP_URL)) {
             mMailURLs.add(urlEl.getText());
         }
+        mIdentities = new ArrayList<ZIdentity>();
+        Element identities = e.getOptionalElement(AccountService.E_IDENTITIES);
+        if (identities != null) {
+            for (Element identity: identities.listElements(AccountService.E_IDENTITY)) {
+                mIdentities.add(new ZIdentity(identity));
+            }
+        }
+    }
+
+    public List<ZIdentity> getIdentities() {
+        return mIdentities;
     }
 
     public Map<String, List<String>> getAttrs() {

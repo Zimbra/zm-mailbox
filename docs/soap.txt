@@ -1548,13 +1548,13 @@ EXAMPLE:
      <fr>(650) 123-4567</fr>
    </c>
  </SearchResponse>
- 
+
  EXAMPLE:
 
 <GetConvRequest>
  <c id="12345">
    <m id=""9845"/>
- </c> 
+ </c>
 </GetConvRequest>
 
 <GetConvResponse>
@@ -1577,9 +1577,9 @@ message. blah blah blah</content>
          <mp part="2.1" ct="multipart/mixed">
            <mp part="2.1.1" ct="text/plain" name="README.txt" cd="attachment" filename="README.txt"/>
            <mp part="2.1.2" ct="image/jpeg" name="shot1.jpg" cd="inline" filename="shot1.jpg"/>
-         </mp>   
+         </mp>
        </mp>
-     </mp>  
+     </mp>
    </m>
   </c>
 </GetConvResponse>
@@ -1607,7 +1607,7 @@ message. blah blah blah</content>
            <mp part="2.1.2" ct="text/plain" name="README.txt" cd="attachment" filename="README.txt"/>
            <mp part="2.1.3" ct="image/jpeg" name="shot1.jpg" cd="inline" filename="shot1.jpg"/>
          </mp>
-       </mp>     
+       </mp>
      </mp>
    </m>
 </GetMsgResponse>
@@ -1633,7 +1633,7 @@ EXAMPLE:
 -----------------------
 
  <NoOpRequest/>
- 
+
  <NoOpResponse/>
 
 A request that does nothing and always returns nothing. Used to keep a session alive, and return
