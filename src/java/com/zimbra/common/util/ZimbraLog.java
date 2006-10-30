@@ -42,7 +42,7 @@ import org.apache.log4j.PropertyConfigurator;
 public class ZimbraLog {
     
     /**
-     * "ip" key for context. IP of requset
+     * "ip" key for context. IP of request
      */
     public static final String C_IP = "ip";
     
