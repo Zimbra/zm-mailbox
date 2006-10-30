@@ -3370,7 +3370,7 @@ public class LdapProvisioning extends Provisioning {
                 else {
                     String arg = LdapUtil.escapeSearchFilterArg(token);
                     //query = "(&(modifyTimeStamp>="+arg+")"+query.replaceAll("\\*\\*", "*")+")";
-                    query = "(&(|(modifyTimeStamp>"+arg+")(createTimeStamp>"+arg+"))"+query.replaceAll("\\*\\*", "*")+")";
+                    query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";
                 }
             }
         }
@@ -3422,7 +3422,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (SizeLimitExceededException sle) {
             result.hadMore = true;
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to search GAL", e);
+            throw ServiceException.FAILURE("unable to search GAL: "+query, e);
         } finally {
             LdapUtil.closeEnumContext(ne);
             LdapUtil.closeContext(ctxt);

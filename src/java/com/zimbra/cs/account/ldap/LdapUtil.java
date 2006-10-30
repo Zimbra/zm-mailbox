@@ -815,7 +815,7 @@ public class LdapUtil {
                 query = query.replaceAll("\\*\\*", "*");
             else  {
                 String arg = LdapUtil.escapeSearchFilterArg(token);                
-                query = "(&(|(modifyTimeStamp>"+arg+")(createTimeStamp>"+arg+")(whenModified>"+arg+")(whenCreated>"+arg+"))"+query.replaceAll("\\*\\*", "*")+")";                
+                query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+")(whenModified>="+arg+")(whenCreated>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";                
             }                
         }
         ZimbraLog.misc.debug("searchLdapGal query:"+query);
