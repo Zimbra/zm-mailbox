@@ -405,13 +405,6 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
   license attribute is pertinent to the Network edition only.  this attribute is 
   present only when the installed license is NOT ok.
 
-  identity attributes : 
-  		name, id, isDefault, sendFromDisplay sendFromAddress,
-  		setReplyTo, setReplyToDisplay, setReplyToAddress, useSignature,
-  		useWhenSentTo, whenSentToAddresses, useWhenInFolders, whenInFolderIds,
-  		useDefaultSettings, sendBccTo, saveCopyIn, applyTag, replyFormat,
-  		whenReplying, whenForwarding, placeSignature, prefixWidth
-    
 ----------------------------
 
 <GetAccountInfoRequest>
@@ -1700,8 +1693,30 @@ java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
 
 <CreateIdentityResponse/>
 
-GetInfo returns the Identities for the user.  See GetInfo section for the list 
-of Identity attributes.
+
+Allowed attributes:
+
+	isDefault           - boolean
+	sendFromDisplay     - display name for From: field
+	sendFromAddress     - email address for From: field
+	setReplyTo          - boolean
+	setReplyToDisplay   - display name for Reply-To: field
+	setReplyToAddress   - email address for Reply-To: field
+	useSignature        - boolean
+	signature           - signature string
+	useWhenSentTo       - boolean
+	whenSentToAddresses - comma separated list of email addresses
+	useWhenInFolders    - boolean
+	whenInFolderIds     - comma separated list of folder IDs
+	useDefaultSettings  - boolean
+	sendBccTo           - email address
+	saveCopyIn          - folder ID
+	applyTag            - tag ID
+	replyFormat         - enum
+	whenReplying        - enum
+	whenForwarding      - enum
+	placeSignature      - enum
+	prefixWith          - enum
 
 ---------
 
