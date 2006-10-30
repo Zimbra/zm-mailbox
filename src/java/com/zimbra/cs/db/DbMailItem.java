@@ -2427,7 +2427,7 @@ public class DbMailItem {
 
             String excludeFolderPart = "";
             if (excludeFolderIds != null) 
-                excludeFolderPart = "AND folder_id NOT IN" + DbUtil.suitableNumberOfVariables(excludeFolderIds);
+                excludeFolderPart = " AND folder_id NOT IN" + DbUtil.suitableNumberOfVariables(excludeFolderIds);
             
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                      " FROM " + getAppointmentTableName(mbox, "appt") + ", " +
