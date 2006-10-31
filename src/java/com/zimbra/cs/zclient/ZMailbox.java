@@ -1819,5 +1819,97 @@ public class ZMailbox {
         invoke(req);
     }
 
+    public String CreateDataSourceRequest(ZDataSource source) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.CREATE_DATA_SOURCE_REQUEST);
+        source.toElement(req);
+        return invoke(req).listElements().get(0).getAttribute(MailService.A_ID);
+    }
+
+    /**
+     *
+     * @param host pop server hostname
+     * @param port pop server port
+     * @param username pop server username
+     * @param password pop server password
+     * @return null on success, or an error string on failure.
+     * @throws ServiceException on error
+     */
+    public String TestPop3DataSource(String host, int port, String username, String password) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.TEST_DATA_SOURCE_REQUEST);
+        Element pop3 = req.addElement(MailService.E_DS_POP3);
+        pop3.addAttribute(MailService.A_DS_HOST, host);
+        pop3.addAttribute(MailService.A_DS_PORT, port);
+        pop3.addAttribute(MailService.A_DS_USERNAME, username);
+        pop3.addAttribute(MailService.A_DS_PASSWORD, password);
+        Element resp = invoke(req);
+        boolean success = resp.getAttributeBool(MailService.A_DS_SUCCESS, false);
+        if (!success) {
+            return resp.getAttribute(MailService.A_DS_ERROR, "error");
+        } else {
+            return null;
+        }
+    }
+
+    public List<ZDataSource> getAllDataSources() throws ServiceException {
+        XMLElement req = new XMLElement(MailService.GET_DATA_SOURCES_REQUEST);
+        Element response = invoke(req);
+        List<ZDataSource> result = new ArrayList<ZDataSource>();
+        for (Element ds : response.listElements()) {
+            if (ds.getName().equals(MailService.E_DS_POP3)) {
+                result.add(new ZPop3DataSource(ds));
+            }
+        }
+        return result;
+    }
+
+    public void ModifyDataSource(ZDataSource source) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.MODIFY_DATA_SOURCE_REQUEST);
+        source.toElement(req);
+        invoke(req);
+    }
+
+    public void DeleteDataSource(ZDataSource source) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.DELETE_DATA_SOURCE_REQUEST);
+        source.toIdElement(req);
+        invoke(req);
+    }
+
+    public void ImportData(List<ZDataSource> sources) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.IMPORT_DATA_REQUEST);
+        for (ZDataSource src : sources) {
+            src.toIdElement(req);
+        }
+        invoke(req);
+    }
+
+    public static class ZImportStatus {
+        private String mType;
+        private boolean mIsRunning;
+        private boolean mSuccess;
+        private String mError;
+
+        ZImportStatus(Element e) throws ServiceException {
+            mType = e.getName();
+            mIsRunning = e.getAttributeBool(MailService.A_DS_IS_RUNNING, false);
+            mSuccess = e.getAttributeBool(MailService.A_DS_SUCCESS, true);
+            mError = e.getAttribute(MailService.A_DS_ERROR, null);
+        }
+
+        public String getType() { return mType; }
+        public boolean isRunning() { return mIsRunning; }
+        public boolean getSuccess() { return mSuccess; }
+        public String getError() { return mError; }
+    }
+
+    public List<ZImportStatus> getImportStatus() throws ServiceException {
+        XMLElement req = new XMLElement(MailService.GET_IMPORT_STATUS_REQUEST);
+        Element response = invoke(req);
+        List<ZImportStatus> result = new ArrayList<ZImportStatus>();
+        for (Element status : response.listElements()) {
+            result.add(new ZImportStatus(status));
+        }
+        return result;
+    }
+
 }
 

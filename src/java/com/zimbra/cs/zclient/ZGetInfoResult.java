@@ -26,6 +26,7 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.soap.Element;
 
@@ -45,6 +46,7 @@ public class ZGetInfoResult {
     private Map<String, List<String>> mAttrs;
     private Map<String, List<String>> mPrefs;
     private List<ZIdentity> mIdentities;
+    private List<ZDataSource> mDataSources;
     private List<String> mMailURLs;
     
     private static Map<String, List<String>> getMap(Element e, String root, String child) throws ServiceException {
@@ -83,10 +85,22 @@ public class ZGetInfoResult {
                 mIdentities.add(new ZIdentity(identity));
             }
         }
+        mDataSources = new ArrayList<ZDataSource>();
+        Element sources = e.getOptionalElement(AccountService.E_DATA_SOURCES);
+        if (sources != null) {
+            for (Element source: sources.listElements()) {
+                if (source.getName().equals(MailService.E_DS_POP3))
+                    mDataSources.add(new ZPop3DataSource(source));
+            }
+        }
     }
 
     public List<ZIdentity> getIdentities() {
         return mIdentities;
+    }
+
+    public List<ZDataSource> getDAtaSources() {
+        return mDataSources;
     }
 
     public Map<String, List<String>> getAttrs() {
