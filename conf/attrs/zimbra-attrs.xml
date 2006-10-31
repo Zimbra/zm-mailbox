@@ -1798,6 +1798,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="399" name="zimbraVersion" type="integer" cardinality="single" optionalIn="account">
   <desc>account version information</desc>
+
+<attr id="400" name="zimbraDomainMaxAccounts" type="integer" min="0" cardinality="single" optionalIn="domain">
+  <desc>maximum number of accounts allowed in a domain</desc>
 </attr>
 
 </attrs>

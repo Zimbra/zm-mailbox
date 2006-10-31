@@ -1013,6 +1013,8 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraPublicServiceHostname = "zimbraPublicServiceHostname";
     
+    public static final String A_zimbraDomainMaxAccounts = "zimbraDomainMaxAccounts";
+    
     private static Provisioning sProvisioning;
 
     public synchronized static Provisioning getInstance() {

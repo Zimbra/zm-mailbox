@@ -216,18 +216,25 @@ public class LdapProvisioning extends Provisioning {
     }
 
     public static interface ProvisioningValidator {
-    	public void validate(String action) throws ServiceException;
+    	public void validate(String action, Object arg) throws ServiceException;
     }
     
-    private static List<ProvisioningValidator> sValidators = new ArrayList<ProvisioningValidator>();
+    private static List<ProvisioningValidator> sValidators;
+    
+    static {
+    	sValidators = new ArrayList<ProvisioningValidator>();
+    	Validators.init();
+    }
     
     public static void register(ProvisioningValidator validator) {
-    	sValidators.add(validator);
+    	synchronized (sValidators) {
+    		sValidators.add(validator);
+    	}
     }
     
-    private void validate(String action) throws ServiceException {
+    private void validate(String action, Object arg) throws ServiceException {
     	for (ProvisioningValidator v : sValidators) {
-    		v.validate(action);
+    		v.validate(action, arg);
     	}
     }
 
@@ -573,7 +580,7 @@ public class LdapProvisioning extends Provisioning {
                                   Map<String, Object> acctAttrs,
                                   String[] additionalObjectClasses)
     throws ServiceException {
-    	validate("createAccount");
+    	validate("createAccount", emailAddress);
         emailAddress = emailAddress.toLowerCase().trim();
 
         HashMap attrManagerContext = new HashMap();
