@@ -221,8 +221,13 @@ public class ProxyServlet extends ZimbraServlet {
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 				return;
 			}
-			
-			resp.setContentType(method.getResponseHeader(CONTENT_TYPE).getValue());
+
+			try {
+				resp.setContentType(method.getResponseHeader(CONTENT_TYPE).getValue());
+			} catch (Exception ex) {
+				// workaround for Alexa Thumbnails paid web service, which doesn't bother to return a content-type line.
+				resp.setContentType("text/xml");
+			}
 			ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
 		} finally {
 			if (method != null)
