@@ -620,6 +620,9 @@ public class LdapProvisioning extends Provisioning {
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
 
+            // TODO: uncomment when ready
+            //attrs.put(A_zimbraVersion, AccountVersion.CURRENT_VERSION+"");
+            
             // default account status is active
             if (attrs.get(Provisioning.A_zimbraAccountStatus) == null)
                 attrs.put(A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);

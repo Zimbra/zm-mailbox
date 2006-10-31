@@ -1003,6 +1003,11 @@ public abstract class Provisioning {
     public static final String A_zimbraXMPPEnabled = "zimbraXMPPEnabled";
 
     /**
+     * object version (int)
+     */
+    public static final String A_zimbraVersion = "zimbraVersion";
+
+    /**
      * If zimbraPublicServiceHostname is set for a mail domain, the name is used
      * when generating public accessible URLs such as REST URL.
      */
