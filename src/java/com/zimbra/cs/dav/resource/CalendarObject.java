@@ -65,7 +65,9 @@ public class CalendarObject extends DavResource {
 		} catch (IOException e) {
 			ZimbraLog.dav.error("cannot convert to ICalendar", e);
 		}
-		setProperty(DavElements.P_DISPLAYNAME, appt.getDefaultInvite().getName());
+        Invite defInv = appt.getDefaultInviteOrNull();
+        if (defInv != null)
+    		setProperty(DavElements.P_DISPLAYNAME, defInv.getName());
 		setProperty(DavElements.P_GETETAG, Long.toString(appt.getDate()));
 		setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
 		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(mVcalendar.length()));

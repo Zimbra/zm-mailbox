@@ -96,7 +96,7 @@ public class GetApptSummaries extends MailDocumentHandler {
                 Element apptElt = lc.createElement(MailService.E_APPOINTMENT);
                 apptElt.addAttribute("x_uid", appointment.getUid());
                 
-                Invite defaultInvite = appointment.getDefaultInvite();
+                Invite defaultInvite = appointment.getDefaultInviteOrNull();
                 
                 if (defaultInvite == null) {
                     mLog.info("Could not load defaultinfo for appointment with id="+appointment.getId()+" SKIPPING");
