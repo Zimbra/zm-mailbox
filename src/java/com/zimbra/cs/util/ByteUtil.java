@@ -400,9 +400,15 @@ public class ByteUtil {
     private static final int MAX_STRING_LEN = 32 * 1024 * 1024;     // 32MB
 
     public static void writeUTF8(DataOutput out, String str) throws IOException {
+        // Special case: Null string is serialized as length of -1.
+        if (str == null) {
+            out.writeInt(-1);
+            return;
+        }
+
         int len = str.length();
         if (len > MAX_STRING_LEN)
-            throw new IOException("String too long in RedoableOp.writeUTF8(); max=" + MAX_STRING_LEN);
+            throw new IOException("String length " + len + " is too long in ByteUtil.writeUTF8(); max=" + MAX_STRING_LEN);
         if (len > 0) {
             byte[] buf = str.getBytes("UTF-8");
             out.writeInt(buf.length);
@@ -414,13 +420,17 @@ public class ByteUtil {
     public static String readUTF8(DataInput in) throws IOException {
         int len = in.readInt();
         if (len > MAX_STRING_LEN)
-            throw new IOException("String too long in RedoableOp.readUTF8(); max=" + MAX_STRING_LEN);
+            throw new IOException("String length " + len + " is too long in ByteUtil.writeUTF8(); max=" + MAX_STRING_LEN);
         if (len > 0) {
             byte[] buf = new byte[len];
             in.readFully(buf, 0, len);
             return new String(buf, "UTF-8");
-        } else
+        } else if (len == 0)
             return "";
+        else if (len == -1)
+            return null;
+        else
+            throw new IOException("Invalid length " + len + " in ByteUtil.readUTF8()");
     }
 
     public static class TeeOutputStream extends OutputStream {
