@@ -30,41 +30,29 @@ import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class ZIdentity  {
 
     private String mName;
-    private List<Signature> mSignatures;
     private Map<String, String> mAttrs;
 
     public ZIdentity(Element e) throws ServiceException {
         mName = e.getAttribute(MailService.A_NAME);
-        mSignatures = new ArrayList<Signature>();
-        for (Element s : e.listElements(MailService.E_SIGNATURE)) {
-            mSignatures.add(new Signature(s));
-        }
         mAttrs = new HashMap<String, String>();
         for (Element a : e.listElements(MailService.E_ATTRIBUTE)) {
             mAttrs.put(a.getAttribute(MailService.A_ATTRIBUTE_NAME), a.getText());
         }
     }
 
-    public ZIdentity(String name, Map<String, String> attrs, List<Signature> signatures) {
-         mName = name;
+    public ZIdentity(String name, Map<String, String> attrs) {
+        mName = name;
         mAttrs = attrs;
-        mSignatures = signatures;
     }
 
     public String getName() {
         return mName;
-    }
-
-    public List<Signature> getSignatures() {
-        return mSignatures;
     }
 
     public Element toElement(Element parent) {
@@ -75,9 +63,6 @@ public class ZIdentity  {
             a.addAttribute(MailService.A_ATTRIBUTE_NAME, entry.getKey());
             a.setText(entry.getValue());
         }
-        for (Signature s : mSignatures) {
-            s.toElement(identity);
-        }
         return identity;
     }
     
@@ -85,7 +70,6 @@ public class ZIdentity  {
         ZSoapSB sb = new ZSoapSB();
         sb.beginStruct();
         sb.add("name", mName);
-        sb.add("signatures", mSignatures, false, true);
         sb.beginStruct("attrs");
         for (Map.Entry<String, String> entry : mAttrs.entrySet()) {
             sb.add(entry.getKey(), entry.getValue());
@@ -94,44 +78,5 @@ public class ZIdentity  {
         sb.endStruct();
         return sb.toString();
     }
-
-
-    public static class Signature {
-        private String mName;
-        private String mValue;
-
-        public Signature(Element e) throws ServiceException {
-            mName = e.getAttribute(AccountService.A_NAME);
-            mValue = e.getText();
-        }
-
-        public Signature(String name, String value) {
-            mName = name;
-            mValue = value;
-        }
-
-        public Element toElement(Element parent) {
-            Element signature = parent.addElement(AccountService.E_SIGNATURE);
-            signature.addAttribute(AccountService.A_NAME, mName);
-            signature.setText(mValue);
-            return signature;
-        }
-        
-        public String getName() { return mName; }
-        public String getValue() { return mValue; }
-
-        public String toString() {
-            return toString(new ZSoapSB()).toString();
-        }
-
-        ZSoapSB toString(ZSoapSB sb) {
-            sb.beginStruct();
-            sb.add("name", mName);
-            sb.add("value", mValue);
-            sb.endStruct();
-            return sb;
-        }
-    }
-
 
 }
