@@ -2012,7 +2012,7 @@ public final class MailboxIndex
                 try {
                     com.zimbra.cs.mailbox.Document document = (com.zimbra.cs.mailbox.Document)item;
                     ParsedDocument pd = new ParsedDocument(document.getBlob().getBlob().getFile(),
-                                document.getFilename(), 
+                                document.getName(), 
                                 document.getContentType(),
                                 timestamp);
                     indexDocument(mbox, redo, itemId, pd);
@@ -2241,7 +2241,7 @@ public final class MailboxIndex
             	com.zimbra.cs.mailbox.Document doc = (com.zimbra.cs.mailbox.Document) item;
             	try {
                 	byte[] buf = ByteUtil.getContent(doc.getRawDocument(), 0);
-            		ParsedDocument pd = new ParsedDocument(buf, doc.getDigest(), doc.getFilename(), doc.getContentType(), doc.getChangeDate());
+            		ParsedDocument pd = new ParsedDocument(buf, doc.getDigest(), doc.getName(), doc.getContentType(), doc.getChangeDate());
                 	item.reindex(null, pd);
             	} catch (IOException ioe) {
             		throw ServiceException.FAILURE("reIndexItem caught IOException", ioe);

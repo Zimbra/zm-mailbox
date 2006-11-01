@@ -432,6 +432,14 @@ public abstract class MailItem implements Comparable<MailItem> {
         return mColor;
     }
 
+    /** Returns the item's name.  If the item doesn't have a name (e.g.
+     *  messages, contacts, appointments), returns <code>""</code>.
+     *  If not <code>""</code>, this name should be unique across all item
+     *  types within the parent folder. */
+    public String getName() {
+        return "";
+    }
+
     /** Returns the ID of the item's parent.  Not all items have parents;
      *  some that do include {@link Message} (parent is {@link Conversation})
      *  and {@link Folder} (parent is Folder). */

@@ -503,7 +503,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
             	if (doc instanceof WikiItem)
             		name = ((WikiItem)doc).getWikiWord();
             	else
-            		name = doc.getFilename();
+            		name = doc.getName();
             	buf.append(createLink(name));
         		buf.append("</");
         		buf.append(sTAGS[sINNER][style]);
@@ -658,7 +658,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 		public String apply(Context ctxt) {
 			if (ctxt.item instanceof Document)
-				return ((Document)ctxt.item).getFilename();
+				return ((Document)ctxt.item).getName();
 			else if (ctxt.item instanceof Folder)
 				return ((Folder)ctxt.item).getName();
 			else

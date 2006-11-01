@@ -145,7 +145,7 @@ public class RssFormatter extends Formatter {
 
     private void addDocument(Document doc, Element channel, Context context) throws ServiceException {
         Element item = channel.addElement("item");
-        item.addElement("title").setText(doc.getFilename() + " ver " + doc.getVersion());
+        item.addElement("title").setText(doc.getName() + " ver " + doc.getVersion());
         item.addElement("description").setText(doc.getFragment());
         item.addElement("author").setText(doc.getLastRevision().getCreator());
         item.addElement("pubDate").setText(mDateFormat.format(new Date(doc.getLastRevision().getRevDate())));

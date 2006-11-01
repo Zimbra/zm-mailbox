@@ -80,7 +80,7 @@ public class Document extends MailItem {
 	    	return mRev.get(Metadata.FN_FRAGMENT);
 		}
 	}
-	
+
     protected String mContentType;
     protected String mFragment;
     protected String mName;
@@ -95,11 +95,12 @@ public class Document extends MailItem {
 	public String getFragment() {
     	return mFragment;
 	}
-	
-	public String getFilename() {
+
+    @Override
+	public String getName() {
 		return mName;
 	}
-	
+
     public String getContentType() {
     	return mContentType;
     }
@@ -107,7 +108,7 @@ public class Document extends MailItem {
 	public String getCreator() throws ServiceException {
 		return getLastRevision().getCreator();
 	}
-	
+
     public InputStream getRawDocument() throws IOException, ServiceException {
     	StoreManager sm = StoreManager.getInstance();
     	int revId = getLastRevision().getRevId();
@@ -189,8 +190,8 @@ public class Document extends MailItem {
         mData.contentChanged(mMailbox);
         mMailbox.updateSize(mData.size);
         DbMailItem.saveMetadata(this, encodeMetadata(new Metadata()).toString());
-        if (!mData.subject.equals(getFilename())) {
-        	mData.subject = getFilename();
+        if (!mData.subject.equals(getName())) {
+        	mData.subject = getName();
         	DbMailItem.saveSubject(this);
         }
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_DATE | Change.MODIFIED_CONTENT);
@@ -206,7 +207,7 @@ public class Document extends MailItem {
     		last--;
     		Metadata rev = mRevisionList.getMap(last);
     		if (rev == null) {
-    			ZimbraLog.wiki.error("cannot find revision " + last + " in metadata " + getFilename());
+    			ZimbraLog.wiki.error("cannot find revision " + last + " in metadata " + getName());
     			continue;
     		}
     		int revid = (int)rev.getLong(Metadata.FN_REV_ID);
@@ -316,7 +317,7 @@ public class Document extends MailItem {
         StringBuffer sb = new StringBuffer();
         try {
             sb.append("document: {");
-            sb.append(CN_FILE_NAME).append(": ").append(getFilename()).append(", ");
+            sb.append(CN_FILE_NAME).append(": ").append(getName()).append(", ");
             sb.append(CN_EDITOR).append(": ").append(getCreator()).append(", ");
             sb.append(CN_VERSION).append(": ").append(getVersion()).append(", ");
             sb.append(CN_MIME_TYPE).append(": ").append(mContentType).append(", ");

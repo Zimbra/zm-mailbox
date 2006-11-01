@@ -4728,7 +4728,7 @@ public class Mailbox {
             redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
             markOtherItemDirty(blob);
 
-            ParsedDocument pd = new ParsedDocument(rawData, digest, doc.getFilename(), doc.getContentType(), getOperationTimestampMillis());
+            ParsedDocument pd = new ParsedDocument(rawData, digest, doc.getName(), doc.getContentType(), getOperationTimestampMillis());
             doc.addRevision(author, pd);
             queueForIndexing(doc, pd);
 

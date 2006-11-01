@@ -46,7 +46,7 @@ public class WikiItem extends Document {
 	}
 	
 	public String getWikiWord() {
-		return getFilename();
+		return getName();
 	}
 	
 	public long getCreatedTime() {

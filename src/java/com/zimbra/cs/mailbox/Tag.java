@@ -49,7 +49,7 @@ public class Tag extends MailItem {
             throw new IllegalArgumentException();
     }
 
-
+    @Override
     public String getName() {
         return getSubject();
     }
@@ -129,12 +129,12 @@ public class Tag extends MailItem {
     }
 
 
-    boolean isTaggable()      { return false; }
-    boolean isCopyable()      { return false; }
-    boolean isMovable()       { return false; }
-    boolean isMutable()       { return true; }
-    boolean isIndexed()       { return false; }
-    boolean canHaveChildren() { return false; }
+    @Override boolean isTaggable()      { return false; }
+    @Override boolean isCopyable()      { return false; }
+    @Override boolean isMovable()       { return false; }
+    @Override boolean isMutable()       { return true; }
+    @Override boolean isIndexed()       { return false; }
+    @Override boolean canHaveChildren() { return false; }
 
 
     static Tag create(Mailbox mbox, int id, String name, byte color)
@@ -207,6 +207,7 @@ public class Tag extends MailItem {
      * 
      * @perms {@link ACL#RIGHT_READ} on the folder,
      *        {@link ACL#RIGHT_WRITE} on all affected messages. */
+    @Override
     void alterUnread(boolean unread) throws ServiceException {
         if (unread)
             throw ServiceException.INVALID_REQUEST("tags can only be marked read", null);
@@ -237,6 +238,7 @@ public class Tag extends MailItem {
             DbMailItem.alterUnread(mMailbox, targets, unread);
     }
 
+    @Override
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
         // remove the tag from all items in the database
         DbMailItem.clearTag(this);
@@ -252,21 +254,26 @@ public class Tag extends MailItem {
     }
 
 
+    @Override
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
     }
 
+    @Override
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mColor);
     }
+
     private static String encodeMetadata(byte color) {
         return encodeMetadata(new Metadata(), color).toString();
     }
+
     static Metadata encodeMetadata(Metadata meta, byte color) {
         return MailItem.encodeMetadata(meta, color);
     }
 
-    
+
+    @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("tag: {");

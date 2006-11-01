@@ -56,7 +56,7 @@ public class AddDocumentRevision extends SaveDocument {
     
     public void setDocument(Document doc) {
     	mDocId = doc.getId();
-    	setFilename(doc.getFilename());
+    	setFilename(doc.getName());
     	setMimeType(doc.getContentType());
     }
     

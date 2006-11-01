@@ -84,6 +84,7 @@ public class Folder extends MailItem {
      *  (e.g. <code>"/baz/bar/foo"</code>).
      * 
      * @see #getPath() */
+    @Override
     public String getName() {
         return (mData.subject == null ? "" : mData.subject);
     }
@@ -136,6 +137,7 @@ public class Folder extends MailItem {
 
     /** Returns whether the folder is the Trash folder or any of its
      *  subfolders. */
+    @Override
     public boolean inTrash() {
         if (mId <= Mailbox.HIGHEST_SYSTEM_ID)
             return (mId == Mailbox.ID_FOLDER_TRASH);
@@ -143,6 +145,7 @@ public class Folder extends MailItem {
     }
 
     /** Returns whether the folder is the Junk folder. */
+    @Override
     public boolean inSpam() {
         return (mId == Mailbox.ID_FOLDER_SPAM);
     }
@@ -191,6 +194,7 @@ public class Folder extends MailItem {
      *                      and {@link ACL#RIGHT_DELETE}).
      * @param authuser      The user whose rights we need to query.
      * @see ACL */
+    @Override
     short checkRights(short rightsNeeded, Account authuser) throws ServiceException {
         return checkRights(rightsNeeded, authuser, false);
     }
@@ -356,18 +360,18 @@ public class Folder extends MailItem {
             mImapUIDNEXT = mMailbox.getLastItemId() + 1;
     }
 
-    boolean isTaggable()       { return false; }
-    boolean isCopyable()       { return false; }
-    boolean isMovable()        { return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0); }
-    boolean isMutable()        { return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0); }
-    boolean isIndexed()        { return false; }
-    boolean canHaveChildren()  { return true; }
-    public boolean isDeletable()  { return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0); }
-    boolean isLeafNode()       { return false; }
-    boolean trackUnread()      { return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0); }
-    boolean trackSize()        { return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0); }
+    @Override boolean isTaggable()       { return false; }
+    @Override boolean isCopyable()       { return false; }
+    @Override boolean isMovable()        { return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0); }
+    @Override boolean isMutable()        { return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0); }
+    @Override boolean isIndexed()        { return false; }
+    @Override boolean canHaveChildren()  { return true; }
+    @Override public boolean isDeletable()  { return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0); }
+    @Override boolean isLeafNode()       { return false; }
+    @Override boolean trackUnread()      { return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0); }
+    boolean trackSize()                  { return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0); }
 
-    boolean canParent(MailItem child)  { return (child instanceof Folder); }
+    @Override boolean canParent(MailItem child)  { return (child instanceof Folder); }
 
     /** Returns whether the folder can contain the given item.  We make
      *  the same checks as in {@link #canContain(byte)}, and we also make
@@ -568,6 +572,7 @@ public class Folder extends MailItem {
     void rename(String name) throws ServiceException {
         rename(name, mParent);
     }
+
     /** Renames the folder and optionally moves it.  Altering a folder's
      *  case (e.g. from <code>foo</code> to <code>FOO</code>) is allowed.
      *  If you don't want the folder to be moved, you must pass 
@@ -685,6 +690,7 @@ public class Folder extends MailItem {
      * 
      * @perms {@link ACL#RIGHT_READ} on the folder,
      *        {@link ACL#RIGHT_WRITE} on all affected messages. */
+    @Override
     void alterUnread(boolean unread) throws ServiceException {
         if (unread)
             throw ServiceException.INVALID_REQUEST("folders can only be marked read", null);
@@ -727,6 +733,7 @@ public class Folder extends MailItem {
      *  You must use {@link #alterUnread} to change a folder's unread state.
      * 
      * @perms {@link ACL#RIGHT_WRITE} on the folder */
+    @Override
     void alterTag(Tag tag, boolean add) throws ServiceException {
         // folder flags are applied to the folder, not the contents
         if (!(tag instanceof Flag) || !((Flag) tag).isFolderOnly()) {
@@ -752,6 +759,7 @@ public class Folder extends MailItem {
      * 
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_DELETE} on the source folder */
+    @Override
     protected void move(Folder folder) throws ServiceException {
         markItemModified(Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT);
         if (mData.folderId == folder.getId())
@@ -782,6 +790,7 @@ public class Folder extends MailItem {
         updateRules(originalPath);
     }
 
+    @Override
     void addChild(MailItem child) throws ServiceException {
         if (child == null || !canParent(child)) {
             throw MailServiceException.CANNOT_CONTAIN();
@@ -807,6 +816,7 @@ public class Folder extends MailItem {
         }
     }
 
+    @Override
     void removeChild(MailItem child) throws ServiceException {
         if (child == null) {
             throw MailServiceException.CANNOT_CONTAIN();
@@ -826,6 +836,7 @@ public class Folder extends MailItem {
     }
 
     /** Deletes this folder and all its subfolders. */
+    @Override
     void delete(boolean childrenOnly, boolean writeTombstones) throws ServiceException {
         if (childrenOnly) {
             deleteSingleFolder(writeTombstones);
@@ -874,12 +885,14 @@ public class Folder extends MailItem {
      *    <li><code>service.FAILURE</code> - if there's a database failure
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul> */
+    @Override
     MailItem.PendingDelete getDeletionInfo() throws ServiceException {
         if (!canAccess(ACL.RIGHT_DELETE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
         return DbMailItem.getLeafNodes(this);
     }
 
+    @Override
     void propagateDeletion(PendingDelete info) throws ServiceException {
         if (info.incomplete)
             info.cascadeIds = DbMailItem.markDeletionTargets(mMailbox, info.itemIds.getIds(TYPE_MESSAGE));
@@ -888,12 +901,14 @@ public class Folder extends MailItem {
         super.propagateDeletion(info);
     }
 
+    @Override
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
         // when deleting a folder, need to purge conv cache!
         mMailbox.purge(TYPE_CONVERSATION);
         super.purgeCache(info, purgeItem);
     }
 
+    @Override
     void uncacheChildren() throws ServiceException {
         if (mSubfolders != null)
             for (Folder subfolder : mSubfolders)
@@ -969,6 +984,7 @@ public class Folder extends MailItem {
     }
 
 
+    @Override
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
 
@@ -996,12 +1012,15 @@ public class Folder extends MailItem {
                 mRights = null;
     }
 
+    @Override
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mColor, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT);
     }
+
     private static String encodeMetadata(byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext) {
         return encodeMetadata(new Metadata(), color, attributes, hint, rights, fsd, uidnext).toString();
     }
+
     static Metadata encodeMetadata(Metadata meta, byte color, byte attributes, byte hint, ACL rights, SyncData fsd, int uidnext) {
         if (hint != TYPE_UNKNOWN)
             meta.put(Metadata.FN_VIEW, hint);
@@ -1023,6 +1042,7 @@ public class Folder extends MailItem {
 
     private static final String CN_ATTRIBUTES = "attributes";
 
+    @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("folder: {");
