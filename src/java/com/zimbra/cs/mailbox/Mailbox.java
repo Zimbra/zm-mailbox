@@ -4175,6 +4175,471 @@ public class Mailbox {
         }
     }
 
+    public synchronized Document addDocumentRevision(OperationContext octxt, Document doc, byte[] rawData, String author) throws ServiceException {
+        String digest = ByteUtil.getDigest(rawData);
+        StoreManager sm = StoreManager.getInstance();
+        Blob blob = null;
+        boolean success = false;
+        try {
+            AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, digest, rawData.length, 0);
+
+            beginTransaction("addDocumentRevision", octxt, redoRecorder);
+            redoRecorder.setAuthor(author);
+            redoRecorder.setDocument(doc);
+            short volumeId = Volume.getCurrentMessageVolume().getId();
+            blob = sm.storeIncoming(rawData, digest, null, volumeId);
+            redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
+            markOtherItemDirty(blob);
+
+            ParsedDocument pd = new ParsedDocument(rawData, digest, doc.getName(), doc.getContentType(), getOperationTimestampMillis());
+            doc.addRevision(author, pd);
+            queueForIndexing(doc, pd);
+
+            sm.link(blob, this, doc.getId(), doc.getLastRevision().getRevId(), volumeId);
+            doc.purgeOldRevisions(1);  // purge all but 1 revisions.
+            success = true;
+        } catch (IOException ioe) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+        } finally {
+            endTransaction(success);
+            if (blob != null)
+                try {
+                    sm.delete(blob);
+                } catch (IOException ioe) {
+//                  no harm done
+                }
+        }
+        return doc;
+    }
+
+    /**
+     * if path == /foo/bar, returns Mailitem bar in folder foo.
+     * if path == foo/bar, locates the folder identified by fid, looks for subfolder foo, then
+     *    returns MailItem in folder foo.
+     * 
+     * if getFolder is set to true, returns the innermost Folder containing
+     *    the MailItem identified by the path.
+     *    
+     * @param octxt
+     * @param path
+     * @param fid
+     * @param getFolder
+     * @return Folder or Document identified by path
+     * @throws ServiceException
+     */
+    public MailItem getItemByPath(OperationContext octxt, String path, int fid, boolean getFolder) throws ServiceException {
+        boolean success = true;
+        MailItem ret = null;
+        if (path == null)
+            throw MailServiceException.INVALID_NAME(path);
+        boolean preferFolder = getFolder || path.endsWith("/");
+        try {
+            beginTransaction("getItemByPath", octxt);
+            if (path.startsWith("/")) {
+                path = path.substring(1);
+                fid = ID_FOLDER_USER_ROOT;
+            }
+            Folder folder = getFolderById(fid);
+            if (path.equals("")) {
+            	ret = folder;
+            } else {
+                StringTokenizer tok = new StringTokenizer(path, "/");
+                String lastToken = null;
+                Folder lastFolder = null;
+
+                // tokenize the path, traverse the folders until
+                // we can't find the subfolder, or run out of tokens.
+                while (folder != null && tok.hasMoreTokens()) {
+                    lastToken = tok.nextToken();
+                    lastFolder = folder;
+                    folder = lastFolder.findSubfolder(lastToken);
+                }
+
+                boolean matchedAllButLastToken = lastFolder != null && lastToken != null && !tok.hasMoreTokens();
+
+                // if the caller prefers a folder, and a folder is found, then
+                // we are golden.  if the caller does not prefer a folder,
+                // or if there is no folder by that path, then search the
+                // last matched folder for a document or wiki item that matches
+                // the last token in the path.
+                MailItem wikiItem = null;
+                if ((!preferFolder || folder == null) && matchedAllButLastToken) {
+                	try {
+                		List<Document> wikis = getWikiList(octxt, lastFolder.getId(), (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING));
+                		int wikiPos = Document.binarySearch(wikis, lastToken);
+                		if (wikiPos >= 0)
+                			wikiItem = wikis.get(wikiPos);
+                	} catch (ServiceException se) {
+                        if (folder == null && se.getCode() == ServiceException.PERM_DENIED)
+                        	throw se;
+                		wikiItem = null;
+                	}
+                }
+
+                // either the caller prefers a document, or folder is not found.
+                ret = (wikiItem == null) ? folder : wikiItem;
+            }
+            if (ret == null)
+                throw MailServiceException.NO_SUCH_ITEM(path);
+            success = (checkAccess(ret) != null);
+            return ret;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public WikiItem getWikiById(OperationContext octxt, int id) throws ServiceException {
+        return (WikiItem) getItemById(octxt, id, MailItem.TYPE_WIKI);
+    }
+
+    public synchronized List<Document> getWikiList(OperationContext octxt, int folderId) throws ServiceException {
+        return getWikiList(octxt, folderId, DbMailItem.SORT_NONE);
+    }
+    public synchronized List<Document> getWikiList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
+    	List<MailItem> docs = getItemList(octxt, MailItem.TYPE_DOCUMENT, folderId, sort);
+    	List<MailItem> wikis = getItemList(octxt, MailItem.TYPE_WIKI, folderId, sort);
+    	List<Document> ret = new ArrayList<Document>();
+    	
+    	boolean doSort = (sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_BY_SUBJECT;
+    	
+    	// merge sort
+    	int docIndex = 0, wikiIndex = 0;
+    	while (docIndex < docs.size() || wikiIndex < wikis.size()) {
+    		MailItem doc = null;
+    		MailItem wiki = null;
+    		if (docIndex < docs.size())
+    			doc = docs.get(docIndex);
+    		if (wikiIndex < wikis.size())
+    			wiki = wikis.get(wikiIndex);
+
+    		if (doc == null) {
+    			wikiIndex++;
+    			if (wiki instanceof Document)
+    				ret.add((Document)wiki);
+    		} else if (wiki == null) {
+    			docIndex++;
+    			if (doc instanceof Document)
+    				ret.add((Document)doc);
+    		} else if (!doSort || doc.getSubject().compareToIgnoreCase(wiki.getSubject()) < 0) {
+    			docIndex++;
+    			if (doc instanceof Document)
+    				ret.add((Document)doc);
+    		} else {
+    			wikiIndex++;
+    			if (wiki instanceof Document)
+    				ret.add((Document)wiki);
+    		}
+    	}
+    	return ret;
+    }
+
+    public synchronized WikiItem createWiki(OperationContext octxt, 
+                int folderId, 
+                String wikiword, 
+                String author, 
+                byte[] rawData,
+                MailItem parent) throws ServiceException {
+        return (WikiItem)createDocument(octxt, folderId, wikiword, WikiItem.WIKI_CONTENT_TYPE, 
+                    author, rawData, parent, MailItem.TYPE_WIKI);
+    }
+
+    public synchronized Document createDocument(OperationContext octxt, 
+                int folderId, 
+                String filename, 
+                String mimeType, 
+                String author,
+                byte[] rawData,
+                MailItem parent) throws ServiceException {
+        return createDocument(octxt, folderId, filename, mimeType, author, rawData, parent, MailItem.TYPE_DOCUMENT);
+    }
+
+    public synchronized Document createDocument(OperationContext octxt, 
+                int folderId, 
+                String filename, 
+                String mimeType, 
+                String author,
+                byte[] rawData,
+                MailItem parent,
+                byte type) throws ServiceException {
+        String digest = ByteUtil.getDigest(rawData);
+        Document doc;
+        boolean success = false;
+        StoreManager sm = StoreManager.getInstance();
+        Blob blob = null;
+        try {
+            SaveDocument redoRecorder =
+                new SaveDocument(mId, digest, rawData.length, folderId);
+
+            beginTransaction("createDoc", octxt, redoRecorder);
+            redoRecorder.setFilename(filename);
+            redoRecorder.setMimeType(mimeType);
+            redoRecorder.setAuthor(author);
+            redoRecorder.setItemType(type);
+            
+            SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.player);
+            int itemId  = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
+            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
+
+            blob = sm.storeIncoming(rawData, digest, null, volumeId);
+            redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
+            markOtherItemDirty(blob);
+
+            ParsedDocument pd = new ParsedDocument(rawData, digest, filename, mimeType, getOperationTimestampMillis());
+
+            if (type == MailItem.TYPE_DOCUMENT)
+                doc = Document.create(
+                        itemId, getFolderById(folderId),
+                        volumeId, filename,
+                        author, mimeType, pd, parent);
+            else if (type == MailItem.TYPE_WIKI)
+                doc = WikiItem.create(
+                        itemId, getFolderById(folderId),
+                        volumeId, filename,
+                        author, pd, parent);
+            else
+                throw MailServiceException.INVALID_TYPE(type);
+
+            redoRecorder.setMessageId(doc.getId());
+            queueForIndexing(doc, pd);
+            sm.link(blob, this, itemId, doc.getLastRevision().getRevId(), volumeId);
+            success = true;
+
+        } catch (IOException ioe) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+        } finally {
+            endTransaction(success);
+            if (blob != null)
+                try {
+                    sm.delete(blob);
+                } catch (IOException ioe) {
+                    // no harm done
+                }
+        }
+        return doc;
+    }
+
+    ////////// Data sources //////////
+    
+    private Map<Integer, MailItemDataSource> getDataSourcesInternal(OperationContext octxt)
+    throws ServiceException {
+        if (mDataSources == null) {
+            Map<Integer, MailItemDataSource> dataSources =
+                MailItemDataSource.extractFromMetadata(this, octxt);
+            mDataSources = Collections.synchronizedMap(dataSources);
+        }
+        return mDataSources;
+    }
+    
+    /**
+     * Returns all data sources for this mailbox.
+     */
+    public synchronized Collection<MailItemDataSource> getDataSources(OperationContext octxt)
+    throws ServiceException {
+        return getDataSourcesInternal(octxt).values();
+    }
+
+    /**
+     * Returns the specified data source.
+     */
+    public synchronized MailItemDataSource getDataSource(OperationContext octxt, int dataSourceId)
+    throws ServiceException {
+        MailItemDataSource ds = getDataSourcesInternal(octxt).get(dataSourceId);
+        if (ds == null) {
+            throw ServiceException.INVALID_REQUEST("Invalid data source id: " + dataSourceId, null);
+        }
+        return ds;
+    }
+    
+    /**
+     * Creates a new data source.
+     */
+    public synchronized MailItemDataSource createDataSource(OperationContext octxt, String type, String name,
+                                                            boolean isEnabled, String host, int port, String username,
+                                                            String password, int folderId)
+    throws ServiceException {
+        ZimbraLog.mailbox.info(String.format(
+            "Creating data source: type=%s, name=%s, isEnabled=%b, host=%s, port=%d, username=%s, folderId=%d",
+            type, name, isEnabled, host, port, username, folderId));
+        Map<Integer, MailItemDataSource> dataSources = getDataSourcesInternal(octxt);
+        
+        // Calculate new id
+        int maxId = 0;
+        for (MailItemDataSource ds : dataSources.values()) {
+            if (ds.getId() > maxId) {
+                maxId = ds.getId();
+            }
+        }
+        MailItemDataSource ds = new MailItemDataSource(this, maxId + 1, type, name, isEnabled, host,
+            port, username, password, folderId);
+        MailItemDataSource.saveToMetadata(this, octxt, ds);
+        dataSources.put(ds.getId(), ds);
+        return ds;
+    }
+    
+    /**
+     * Deletes the data source with the given id.
+     */
+    public synchronized void deleteDataSource(OperationContext octxt, int dataSourceId)
+    throws ServiceException {
+        ZimbraLog.mailbox.info("Deleting data source " + dataSourceId);
+        
+        // Confirm that the data source exists and delete from metadata
+        getDataSource(octxt, dataSourceId);
+        MailItemDataSource.deleteFromMetadata(this, octxt, dataSourceId);
+        getDataSourcesInternal(octxt).remove(dataSourceId);
+    }
+    
+    /**
+     * Updates the persisted version of the given data source with the latest
+     * values stored in the object.
+     */
+    public synchronized void modifyDataSource(OperationContext octxt, MailItemDataSource dataSource)
+    throws ServiceException {
+        ZimbraLog.mailbox.info("Modifying data source.  New values: " + dataSource);
+        
+        // No need to update map, since data source objects are singletons
+        MailItemDataSource.saveToMetadata(this, octxt, dataSource);
+    }
+    
+    /**
+     * Returns status for all data sources.
+     */
+    public synchronized Set<ImportStatus> getImportStatus(OperationContext octxt)
+    throws ServiceException {
+        Set<ImportStatus> status = new HashSet<ImportStatus>();
+
+        for (MailItemDataSource dataSource : getDataSourcesInternal(octxt).values()) {
+            // Copy import status, so we get a snapshot at this point in time
+            synchronized (dataSource.getImportStatus()) {
+                ImportStatus copy = new ImportStatus(dataSource.getImportStatus());
+                status.add(copy);
+            }
+        }
+        return status;
+    }
+
+
+
+    // Coordinate other conflicting operations (such as backup) and shared delivery, delivery of a message to
+    // multiple recipients.  Such operation on a mailbox and shared delivery
+    // are mutually exclusive.  More precisely, the op may not begin
+    // when there is a shared delivery in progress for the mailbox.
+    // Delivery of a shared message to the mailbox must be denied and
+    // deferred when the mailbox is being operated on or has a request
+    // for such op pending.
+    private static class SharedDeliveryCoordinator {
+        public int mNumDelivs;
+        public boolean mSharedDeliveryAllowed;
+        public SharedDeliveryCoordinator() {
+            mNumDelivs = 0;
+            mSharedDeliveryAllowed = true;
+        }
+    }
+
+    private SharedDeliveryCoordinator mSharedDelivCoord =
+        new SharedDeliveryCoordinator();
+
+    /**
+     * Puts mailbox in shared delivery mode.  A shared delivery is delivery of
+     * a message to multiple recipients.  Conflicting op on mailbox is disallowed
+     * while mailbox is in shared delivery mode.  (See bug 2187)
+     * Conversely, a shared delivery may not start on a mailbox that is
+     * currently being operated on or when there is a pending op request.
+     * For example, thread A puts mailbox in shared delivery mode.  Thread B
+     * then tries to backup the mailbox.  Backup cannot start until thread A is
+     * done, but mailbox is immediately put into backup-pending mode.
+     * Thread C then tries to do another shared delivery on the mailbox, but
+     * is not allowed to do so because of thread B's pending backup request.
+     * A thread that calls this method must call endSharedDelivery() after
+     * delivering the message.
+     * @return true if shared delivery may begin; false if shared delivery may
+     *         not begin because of a pending backup request
+     */
+    public boolean beginSharedDelivery() {
+        synchronized (mSharedDelivCoord) {
+            assert(mSharedDelivCoord.mNumDelivs >= 0);
+            if (mSharedDelivCoord.mSharedDeliveryAllowed) {
+                mSharedDelivCoord.mNumDelivs++;
+                if (ZimbraLog.mailbox.isDebugEnabled()) {
+                    ZimbraLog.mailbox.debug("# of shared deliv incr to " + mSharedDelivCoord.mNumDelivs +
+                                " for mailbox " + getId());
+                }
+                return true;
+            } else {
+                // If request for other ops is pending on this mailbox, don't allow
+                // any more shared deliveries from starting.
+                return false;
+            }
+        }
+    }
+
+    /**
+     * @see com.zimbra.cs.mailbox.Mailbox#beginSharedDelivery()
+     */
+    public void endSharedDelivery() {
+        synchronized (mSharedDelivCoord) {
+            mSharedDelivCoord.mNumDelivs--;
+            if (ZimbraLog.mailbox.isDebugEnabled()) {
+                ZimbraLog.mailbox.debug("# of shared deliv decr to " + mSharedDelivCoord.mNumDelivs +
+                            " for mailbox " + getId());
+            }
+            assert(mSharedDelivCoord.mNumDelivs >= 0);
+            if (mSharedDelivCoord.mNumDelivs == 0) {
+                // Wake up any waiting backup thread.
+                mSharedDelivCoord.notifyAll();
+            }
+        }
+    }
+
+    /**
+     * Turns shared delivery on/off.  If turning off, waits until the op can begin,
+     * i.e. until all currently ongoing shared deliveries finish.  A thread
+     * turning shared delivery off must turn it on at the end of the operation, otherwise
+     * no further shared deliveries are possible to the mailbox.
+     * @param onoff
+     */
+    public void setSharedDeliveryAllowed(boolean onoff) {
+        synchronized (mSharedDelivCoord) {
+            if (onoff) {
+                // allow shared delivery
+                mSharedDelivCoord.mSharedDeliveryAllowed = true;
+            } else {
+                // disallow shared delivery
+                mSharedDelivCoord.mSharedDeliveryAllowed = false;
+            }
+            mSharedDelivCoord.notifyAll();
+        }
+    }
+
+    /**
+     * Wait until shared delivery is completed on this mailbox.  Other conflicting ops may begin when
+     * there is no shared delivery in progress.  Call setSharedDeliveryAllowed(false)
+     * before calling this method.
+     *
+     */
+    public void waitUntilSharedDeliveryCompletes() {
+        synchronized (mSharedDelivCoord) {
+            while (mSharedDelivCoord.mNumDelivs > 0) {
+                try {
+                    mSharedDelivCoord.wait(3000);
+                    ZimbraLog.misc.info("wake up from wait for completion of shared delivery; mailbox=" + getId() + 
+                                " # of shared deliv=" + mSharedDelivCoord.mNumDelivs);
+                } catch (InterruptedException e) {}
+            }
+        }
+    }
+
+    /**
+     * Tests whether shared delivery is completed on this mailbox.  Other conflicting ops may begin when
+     * there is no shared delivery in progress.
+     */
+    public boolean isSharedDeliveryComplete() {
+        synchronized (mSharedDelivCoord) {
+            return mSharedDelivCoord.mNumDelivs < 1;
+        }
+    }
+
+
     /**
      * Be very careful when changing code in this method.  The order of almost
      * every line of code is important to ensure correct redo logging and crash
@@ -4590,468 +5055,5 @@ public class Mailbox {
         sb.append(CN_SIZE).append(": ").append(mData.size);
         sb.append("}");
         return sb.toString();
-    }
-
-
-    // Coordinate other conflicting operations (such as backup) and shared delivery, delivery of a message to
-    // multiple recipients.  Such operation on a mailbox and shared delivery
-    // are mutually exclusive.  More precisely, the op may not begin
-    // when there is a shared delivery in progress for the mailbox.
-    // Delivery of a shared message to the mailbox must be denied and
-    // deferred when the mailbox is being operated on or has a request
-    // for such op pending.
-    private static class SharedDeliveryCoordinator {
-        public int mNumDelivs;
-        public boolean mSharedDeliveryAllowed;
-        public SharedDeliveryCoordinator() {
-            mNumDelivs = 0;
-            mSharedDeliveryAllowed = true;
-        }
-    }
-
-    private SharedDeliveryCoordinator mSharedDelivCoord =
-        new SharedDeliveryCoordinator();
-
-    /**
-     * Puts mailbox in shared delivery mode.  A shared delivery is delivery of
-     * a message to multiple recipients.  Conflicting op on mailbox is disallowed
-     * while mailbox is in shared delivery mode.  (See bug 2187)
-     * Conversely, a shared delivery may not start on a mailbox that is
-     * currently being operated on or when there is a pending op request.
-     * For example, thread A puts mailbox in shared delivery mode.  Thread B
-     * then tries to backup the mailbox.  Backup cannot start until thread A is
-     * done, but mailbox is immediately put into backup-pending mode.
-     * Thread C then tries to do another shared delivery on the mailbox, but
-     * is not allowed to do so because of thread B's pending backup request.
-     * A thread that calls this method must call endSharedDelivery() after
-     * delivering the message.
-     * @return true if shared delivery may begin; false if shared delivery may
-     *         not begin because of a pending backup request
-     */
-    public boolean beginSharedDelivery() {
-        synchronized (mSharedDelivCoord) {
-            assert(mSharedDelivCoord.mNumDelivs >= 0);
-            if (mSharedDelivCoord.mSharedDeliveryAllowed) {
-                mSharedDelivCoord.mNumDelivs++;
-                if (ZimbraLog.mailbox.isDebugEnabled()) {
-                    ZimbraLog.mailbox.debug("# of shared deliv incr to " + mSharedDelivCoord.mNumDelivs +
-                                " for mailbox " + getId());
-                }
-                return true;
-            } else {
-                // If request for other ops is pending on this mailbox, don't allow
-                // any more shared deliveries from starting.
-                return false;
-            }
-        }
-    }
-
-    /**
-     * @see com.zimbra.cs.mailbox.Mailbox#beginSharedDelivery()
-     */
-    public void endSharedDelivery() {
-        synchronized (mSharedDelivCoord) {
-            mSharedDelivCoord.mNumDelivs--;
-            if (ZimbraLog.mailbox.isDebugEnabled()) {
-                ZimbraLog.mailbox.debug("# of shared deliv decr to " + mSharedDelivCoord.mNumDelivs +
-                            " for mailbox " + getId());
-            }
-            assert(mSharedDelivCoord.mNumDelivs >= 0);
-            if (mSharedDelivCoord.mNumDelivs == 0) {
-                // Wake up any waiting backup thread.
-                mSharedDelivCoord.notifyAll();
-            }
-        }
-    }
-
-    /**
-     * Turns shared delivery on/off.  If turning off, waits until the op can begin,
-     * i.e. until all currently ongoing shared deliveries finish.  A thread
-     * turning shared delivery off must turn it on at the end of the operation, otherwise
-     * no further shared deliveries are possible to the mailbox.
-     * @param onoff
-     */
-    public void setSharedDeliveryAllowed(boolean onoff) {
-        synchronized (mSharedDelivCoord) {
-            if (onoff) {
-                // allow shared delivery
-                mSharedDelivCoord.mSharedDeliveryAllowed = true;
-            } else {
-                // disallow shared delivery
-                mSharedDelivCoord.mSharedDeliveryAllowed = false;
-            }
-            mSharedDelivCoord.notifyAll();
-        }
-    }
-
-    /**
-     * Wait until shared delivery is completed on this mailbox.  Other conflicting ops may begin when
-     * there is no shared delivery in progress.  Call setSharedDeliveryAllowed(false)
-     * before calling this method.
-     *
-     */
-    public void waitUntilSharedDeliveryCompletes() {
-        synchronized (mSharedDelivCoord) {
-            while (mSharedDelivCoord.mNumDelivs > 0) {
-                try {
-                    mSharedDelivCoord.wait(3000);
-                    ZimbraLog.misc.info("wake up from wait for completion of shared delivery; mailbox=" + getId() + 
-                                " # of shared deliv=" + mSharedDelivCoord.mNumDelivs);
-                } catch (InterruptedException e) {}
-            }
-        }
-    }
-
-    /**
-     * Tests whether shared delivery is completed on this mailbox.  Other conflicting ops may begin when
-     * there is no shared delivery in progress.
-     */
-    public boolean isSharedDeliveryComplete() {
-        synchronized (mSharedDelivCoord) {
-            return mSharedDelivCoord.mNumDelivs < 1;
-        }
-    }
-
-    public synchronized Document addDocumentRevision(OperationContext octxt, Document doc, byte[] rawData, String author) throws ServiceException {
-        String digest = ByteUtil.getDigest(rawData);
-        StoreManager sm = StoreManager.getInstance();
-        Blob blob = null;
-        boolean success = false;
-        try {
-            AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, digest, rawData.length, 0);
-
-            beginTransaction("addDocumentRevision", octxt, redoRecorder);
-            redoRecorder.setAuthor(author);
-            redoRecorder.setDocument(doc);
-            short volumeId = Volume.getCurrentMessageVolume().getId();
-            blob = sm.storeIncoming(rawData, digest, null, volumeId);
-            redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
-            markOtherItemDirty(blob);
-
-            ParsedDocument pd = new ParsedDocument(rawData, digest, doc.getName(), doc.getContentType(), getOperationTimestampMillis());
-            doc.addRevision(author, pd);
-            queueForIndexing(doc, pd);
-
-            sm.link(blob, this, doc.getId(), doc.getLastRevision().getRevId(), volumeId);
-            doc.purgeOldRevisions(1);  // purge all but 1 revisions.
-            success = true;
-        } catch (IOException ioe) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
-        } finally {
-            endTransaction(success);
-            if (blob != null)
-                try {
-                    sm.delete(blob);
-                } catch (IOException ioe) {
-//                  no harm done
-                }
-        }
-        return doc;
-    }
-
-    /**
-     * if path == /foo/bar, returns Mailitem bar in folder foo.
-     * if path == foo/bar, locates the folder identified by fid, looks for subfolder foo, then
-     *    returns MailItem in folder foo.
-     * 
-     * if getFolder is set to true, returns the innermost Folder containing
-     *    the MailItem identified by the path.
-     *    
-     * @param octxt
-     * @param path
-     * @param fid
-     * @param getFolder
-     * @return Folder or Document identified by path
-     * @throws ServiceException
-     */
-    public MailItem getItemByPath(OperationContext octxt, String path, int fid, boolean getFolder) throws ServiceException {
-        boolean success = true;
-        MailItem ret = null;
-        if (path == null)
-            throw MailServiceException.INVALID_NAME(path);
-        boolean preferFolder = getFolder || path.endsWith("/");
-        try {
-            beginTransaction("getItemByPath", octxt);
-            if (path.startsWith("/")) {
-                path = path.substring(1);
-                fid = ID_FOLDER_USER_ROOT;
-            }
-            Folder folder = getFolderById(fid);
-            if (path.equals("")) {
-            	ret = folder;
-            } else {
-                StringTokenizer tok = new StringTokenizer(path, "/");
-                String lastToken = null;
-                Folder lastFolder = null;
-
-                // tokenize the path, traverse the folders until
-                // we can't find the subfolder, or run out of tokens.
-                while (folder != null && tok.hasMoreTokens()) {
-                    lastToken = tok.nextToken();
-                    lastFolder = folder;
-                    folder = lastFolder.findSubfolder(lastToken);
-                }
-
-                boolean matchedAllButLastToken = lastFolder != null && lastToken != null && !tok.hasMoreTokens();
-
-                // if the caller prefers a folder, and a folder is found, then
-                // we are golden.  if the caller does not prefer a folder,
-                // or if there is no folder by that path, then search the
-                // last matched folder for a document or wiki item that matches
-                // the last token in the path.
-                MailItem wikiItem = null;
-                if ((!preferFolder || folder == null) && matchedAllButLastToken) {
-                	try {
-                		List<Document> wikis = getWikiList(octxt, lastFolder.getId(), (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING));
-                		int wikiPos = Document.binarySearch(wikis, lastToken);
-                		if (wikiPos >= 0)
-                			wikiItem = wikis.get(wikiPos);
-                	} catch (ServiceException se) {
-                        if (folder == null && se.getCode() == ServiceException.PERM_DENIED)
-                        	throw se;
-                		wikiItem = null;
-                	}
-                }
-
-                // either the caller prefers a document, or folder is not found.
-                ret = (wikiItem == null) ? folder : wikiItem;
-            }
-            if (ret == null)
-                throw MailServiceException.NO_SUCH_ITEM(path);
-            success = (checkAccess(ret) != null);
-            return ret;
-        } finally {
-            endTransaction(success);
-        }
-    }
-
-    public WikiItem getWikiById(OperationContext octxt, int id) throws ServiceException {
-        return (WikiItem) getItemById(octxt, id, MailItem.TYPE_WIKI);
-    }
-
-    public synchronized List<Document> getWikiList(OperationContext octxt, int folderId) throws ServiceException {
-        return getWikiList(octxt, folderId, DbMailItem.SORT_NONE);
-    }
-    public synchronized List<Document> getWikiList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
-    	List<MailItem> docs = getItemList(octxt, MailItem.TYPE_DOCUMENT, folderId, sort);
-    	List<MailItem> wikis = getItemList(octxt, MailItem.TYPE_WIKI, folderId, sort);
-    	List<Document> ret = new ArrayList<Document>();
-    	
-    	boolean doSort = (sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_BY_SUBJECT;
-    	
-    	// merge sort
-    	int docIndex = 0, wikiIndex = 0;
-    	while (docIndex < docs.size() || wikiIndex < wikis.size()) {
-    		MailItem doc = null;
-    		MailItem wiki = null;
-    		if (docIndex < docs.size())
-    			doc = docs.get(docIndex);
-    		if (wikiIndex < wikis.size())
-    			wiki = wikis.get(wikiIndex);
-
-    		if (doc == null) {
-    			wikiIndex++;
-    			if (wiki instanceof Document)
-    				ret.add((Document)wiki);
-    		} else if (wiki == null) {
-    			docIndex++;
-    			if (doc instanceof Document)
-    				ret.add((Document)doc);
-    		} else if (!doSort || doc.getSubject().compareToIgnoreCase(wiki.getSubject()) < 0) {
-    			docIndex++;
-    			if (doc instanceof Document)
-    				ret.add((Document)doc);
-    		} else {
-    			wikiIndex++;
-    			if (wiki instanceof Document)
-    				ret.add((Document)wiki);
-    		}
-    	}
-    	return ret;
-    }
-
-    public synchronized WikiItem createWiki(OperationContext octxt, 
-                int folderId, 
-                String wikiword, 
-                String author, 
-                byte[] rawData,
-                MailItem parent) throws ServiceException {
-        return (WikiItem)createDocument(octxt, folderId, wikiword, WikiItem.WIKI_CONTENT_TYPE, 
-                    author, rawData, parent, MailItem.TYPE_WIKI);
-    }
-
-    public synchronized Document createDocument(OperationContext octxt, 
-                int folderId, 
-                String filename, 
-                String mimeType, 
-                String author,
-                byte[] rawData,
-                MailItem parent) throws ServiceException {
-        return createDocument(octxt, folderId, filename, mimeType, author, rawData, parent, MailItem.TYPE_DOCUMENT);
-    }
-
-    public synchronized Document createDocument(OperationContext octxt, 
-                int folderId, 
-                String filename, 
-                String mimeType, 
-                String author,
-                byte[] rawData,
-                MailItem parent,
-                byte type) throws ServiceException {
-        String digest = ByteUtil.getDigest(rawData);
-        Document doc;
-        boolean success = false;
-        StoreManager sm = StoreManager.getInstance();
-        Blob blob = null;
-        try {
-            SaveDocument redoRecorder =
-                new SaveDocument(mId, digest, rawData.length, folderId);
-
-            beginTransaction("createDoc", octxt, redoRecorder);
-            redoRecorder.setFilename(filename);
-            redoRecorder.setMimeType(mimeType);
-            redoRecorder.setAuthor(author);
-            redoRecorder.setItemType(type);
-            
-            SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.player);
-            int itemId  = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
-            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
-
-            blob = sm.storeIncoming(rawData, digest, null, volumeId);
-            redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
-            markOtherItemDirty(blob);
-
-            ParsedDocument pd = new ParsedDocument(rawData, digest, filename, mimeType, getOperationTimestampMillis());
-
-            if (type == MailItem.TYPE_DOCUMENT)
-                doc = Document.create(
-                        itemId, getFolderById(folderId),
-                        volumeId, filename,
-                        author, mimeType, pd, parent);
-            else if (type == MailItem.TYPE_WIKI)
-                doc = WikiItem.create(
-                        itemId, getFolderById(folderId),
-                        volumeId, filename,
-                        author, pd, parent);
-            else
-                throw MailServiceException.INVALID_TYPE(type);
-
-            redoRecorder.setMessageId(doc.getId());
-            queueForIndexing(doc, pd);
-            sm.link(blob, this, itemId, doc.getLastRevision().getRevId(), volumeId);
-            success = true;
-
-        } catch (IOException ioe) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
-        } finally {
-            endTransaction(success);
-            if (blob != null)
-                try {
-                    sm.delete(blob);
-                } catch (IOException ioe) {
-                    // no harm done
-                }
-        }
-        return doc;
-    }
-
-    ////////// Data sources //////////
-    
-    private Map<Integer, MailItemDataSource> getDataSourcesInternal(OperationContext octxt)
-    throws ServiceException {
-        if (mDataSources == null) {
-            Map<Integer, MailItemDataSource> dataSources =
-                MailItemDataSource.extractFromMetadata(this, octxt);
-            mDataSources = Collections.synchronizedMap(dataSources);
-        }
-        return mDataSources;
-    }
-    
-    /**
-     * Returns all data sources for this mailbox.
-     */
-    public synchronized Collection<MailItemDataSource> getDataSources(OperationContext octxt)
-    throws ServiceException {
-        return getDataSourcesInternal(octxt).values();
-    }
-
-    /**
-     * Returns the specified data source.
-     */
-    public synchronized MailItemDataSource getDataSource(OperationContext octxt, int dataSourceId)
-    throws ServiceException {
-        MailItemDataSource ds = getDataSourcesInternal(octxt).get(dataSourceId);
-        if (ds == null) {
-            throw ServiceException.INVALID_REQUEST("Invalid data source id: " + dataSourceId, null);
-        }
-        return ds;
-    }
-    
-    /**
-     * Creates a new data source.
-     */
-    public synchronized MailItemDataSource createDataSource(OperationContext octxt, String type, String name,
-                                                            boolean isEnabled, String host, int port, String username,
-                                                            String password, int folderId)
-    throws ServiceException {
-        ZimbraLog.mailbox.info(String.format(
-            "Creating data source: type=%s, name=%s, isEnabled=%b, host=%s, port=%d, username=%s, folderId=%d",
-            type, name, isEnabled, host, port, username, folderId));
-        Map<Integer, MailItemDataSource> dataSources = getDataSourcesInternal(octxt);
-        
-        // Calculate new id
-        int maxId = 0;
-        for (MailItemDataSource ds : dataSources.values()) {
-            if (ds.getId() > maxId) {
-                maxId = ds.getId();
-            }
-        }
-        MailItemDataSource ds = new MailItemDataSource(this, maxId + 1, type, name, isEnabled, host,
-            port, username, password, folderId);
-        MailItemDataSource.saveToMetadata(this, octxt, ds);
-        dataSources.put(ds.getId(), ds);
-        return ds;
-    }
-    
-    /**
-     * Deletes the data source with the given id.
-     */
-    public synchronized void deleteDataSource(OperationContext octxt, int dataSourceId)
-    throws ServiceException {
-        ZimbraLog.mailbox.info("Deleting data source " + dataSourceId);
-        
-        // Confirm that the data source exists and delete from metadata
-        getDataSource(octxt, dataSourceId);
-        MailItemDataSource.deleteFromMetadata(this, octxt, dataSourceId);
-        getDataSourcesInternal(octxt).remove(dataSourceId);
-    }
-    
-    /**
-     * Updates the persisted version of the given data source with the latest
-     * values stored in the object.
-     */
-    public synchronized void modifyDataSource(OperationContext octxt, MailItemDataSource dataSource)
-    throws ServiceException {
-        ZimbraLog.mailbox.info("Modifying data source.  New values: " + dataSource);
-        
-        // No need to update map, since data source objects are singletons
-        MailItemDataSource.saveToMetadata(this, octxt, dataSource);
-    }
-    
-    /**
-     * Returns status for all data sources.
-     */
-    public synchronized Set<ImportStatus> getImportStatus(OperationContext octxt)
-    throws ServiceException {
-        Set<ImportStatus> status = new HashSet<ImportStatus>();
-
-        for (MailItemDataSource dataSource : getDataSourcesInternal(octxt).values()) {
-            // Copy import status, so we get a snapshot at this point in time
-            synchronized (dataSource.getImportStatus()) {
-                ImportStatus copy = new ImportStatus(dataSource.getImportStatus());
-                status.add(copy);
-            }
-        }
-        return status;
     }
 }
