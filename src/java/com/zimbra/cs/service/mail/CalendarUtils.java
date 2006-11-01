@@ -805,9 +805,15 @@ public class CalendarUtils {
             newInv.setPercentComplete(pctComplete);
 
             // COMPLETED
-            long completed = element.getAttributeLong(MailService.A_APPT_COMPLETED, 0);
-            if (completed != 0)
-                newInv.setCompleted(completed);
+            String completed = element.getAttribute(MailService.A_APPT_COMPLETED, null);
+            if (completed != null) {
+                try {
+                    ParsedDateTime c = ParsedDateTime.parseUtcOnly(completed);
+                    newInv.setCompleted(c.getUtcTime());
+                } catch (ParseException e) {
+                    throw ServiceException.INVALID_REQUEST("Invalid COMPLETED value: " + completed, e);
+                }
+            }
         }
 
         // ATTENDEEs

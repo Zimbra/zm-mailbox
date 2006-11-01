@@ -1122,8 +1122,10 @@ public class ToXML {
                 if (pct != null)
                     e.addAttribute(MailService.A_APPT_PERCENT_COMPLETE, pct);
                 long completed = invite.getCompleted();
-                if (completed != 0)
-                    e.addAttribute(MailService.A_APPT_COMPLETED, completed);
+                if (completed != 0) {
+                    ParsedDateTime c = ParsedDateTime.fromUTCTime(completed);
+                    e.addAttribute(MailService.A_APPT_COMPLETED, c.getDateTimePartString());
+                }
             }
 
             // Organizer

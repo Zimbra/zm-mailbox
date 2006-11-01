@@ -109,7 +109,7 @@
             [seq="num"]         // sequence number (default = 0)
             [priority="num"]    // priority (0 - 9; default = 0)
             [percentComplete="num (integer)"]  // percent complete for VTODO (0 - 100; default = 0)
-            [completed="MSECS_GMT"]  // VTODO COMPLETED DATE-TIME
+            [completed="yyyyMMddThhmmssZ"]  // VTODO COMPLETED DATE-TIME
         >
 
            [<replies>
