@@ -1624,7 +1624,7 @@ public class Mailbox {
                     // running transaction, and we don't want endTransaction to log it
                     // again, resulting in two entries for the same operation in redolog.
                     beginTransaction("reIndex", octxt, null);
-                    redoRecorder.start(getOperationTimestamp());
+                    redoRecorder.start(getOperationTimestampMillis());
                     redoRecorder.log();
                     redoInitted = true;
 
@@ -3259,7 +3259,7 @@ public class Mailbox {
                     // Log entry in redolog for blob save.  Blob bytes are
                     // logged in StoreToIncoming entry.
                     storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, sharedDeliveryCtxt.getMailboxIdList());
-                    storeRedoRecorder.start(getOperationTimestamp());
+                    storeRedoRecorder.start(getOperationTimestampMillis());
                     storeRedoRecorder.setBlobBodyInfo(data, blobPath, blobVolumeId);
                     storeRedoRecorder.log();
 
