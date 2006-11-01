@@ -24,28 +24,23 @@
  */
 package com.zimbra.cs.dav.resource;
 
-import java.io.IOException;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
@@ -55,58 +50,17 @@ public class UrlNamespace {
 	
 	public static final String ATTACHMENTS_PREFIX = "/attachments";
 	
-	public static void createResource(DavContext ctxt) throws DavException, IOException {
-		String user = ctxt.getUser();
-		String target = ctxt.getPath();
-		
-		if (user == null || target == null)
-			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_ACCEPTABLE, null);
-		
-		Provisioning prov = Provisioning.getInstance();
-		Mailbox mbox = null;
-		try {
-			Account account = prov.get(AccountBy.name, user);
-			if (account == null)
-				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
-
-			mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-		} catch (ServiceException e) {
-			throw new DavException("cannot get mailbox", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
-		}
-
-		String author = ctxt.getAuthAccount().getName();
-		String ctype = ctxt.getRequest().getContentType();
-		int clen = ctxt.getRequest().getContentLength();
-		byte[] data = ByteUtil.getContent(ctxt.getRequest().getInputStream(), clen);
-		if (ctype == null)
-			ctype = URLConnection.getFileNameMap().getContentTypeFor(target);
-		if (ctype == null)
-			ctype = DavProtocol.DEFAULT_CONTENT_TYPE;
-		try {
-			// add a revision if the resource already exists
-			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), target, 0, false);
-			if (item.getType() != MailItem.TYPE_DOCUMENT && item.getType() != MailItem.TYPE_WIKI)
-				throw new DavException("no DAV resource for "+MailItem.getNameForType(item.getType()), HttpServletResponse.SC_NOT_ACCEPTABLE, null);
-			mbox.addDocumentRevision(ctxt.getOperationContext(), (Document)item, data, author);
-			ctxt.setStatus(HttpServletResponse.SC_OK);
-		} catch (ServiceException e) {
-			if (!(e instanceof NoSuchItemException))
-				throw new DavException("cannot get item ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
-			
-			// create
-			int index = target.lastIndexOf("/");
-			if (index == -1)
-				throw new DavException("invalid uri", HttpServletResponse.SC_NOT_ACCEPTABLE, null);
-			String name= target.substring(index+1);
-			try {
-				String path = target.substring(0, index);
-				MailItem folder = mbox.getItemByPath(ctxt.getOperationContext(), path, 0, false);
-				mbox.createDocument(ctxt.getOperationContext(), folder.getId(), name, ctype, author, data, null);
-				ctxt.setStatus(HttpServletResponse.SC_CREATED);
-			} catch (ServiceException se) {
-				throw new DavException("cannot create ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
-			}
-		}
+	public static Collection getCollectionAtUrl(DavContext ctxt) throws DavException {
+		String path = ctxt.getPath();
+		int index = path.lastIndexOf('/');
+		if (index == -1)
+			path = "/";
+		else
+			path = path.substring(0, index);
+		DavResource rsc = getResourceAt(ctxt, path);
+		if (rsc instanceof Collection)
+			return (Collection)rsc;
+		throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
 	}
 	
 	public static DavResource getResource(DavContext ctxt) throws DavException {

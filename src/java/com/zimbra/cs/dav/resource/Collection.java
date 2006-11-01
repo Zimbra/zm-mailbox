@@ -26,11 +26,13 @@ package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -38,11 +40,14 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.Acl;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.service.ServiceException;
 
 public class Collection extends DavResource {
@@ -145,6 +150,49 @@ public class Collection extends DavResource {
 			mbox.createFolder(ctxt.getOperationContext(), name, mId, mView, 0, (byte)0, null);
 		} catch (ServiceException e) {
 			throw new DavException("item already exists", HttpServletResponse.SC_CONFLICT, e);
+		}
+	}
+	
+	// create Document at the URI
+	public void createItem(DavContext ctxt, String user, String name) throws DavException, IOException {
+		Provisioning prov = Provisioning.getInstance();
+		Mailbox mbox = null;
+		try {
+			Account account = prov.get(AccountBy.name, user);
+			if (account == null)
+				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+
+			mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+		} catch (ServiceException e) {
+			throw new DavException("cannot get mailbox", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
+		}
+
+		String author = ctxt.getAuthAccount().getName();
+		String ctype = ctxt.getRequest().getContentType();
+		int clen = ctxt.getRequest().getContentLength();
+		byte[] data = ByteUtil.getContent(ctxt.getRequest().getInputStream(), clen);
+		if (ctype == null)
+			ctype = URLConnection.getFileNameMap().getContentTypeFor(name);
+		if (ctype == null)
+			ctype = DavProtocol.DEFAULT_CONTENT_TYPE;
+		try {
+			// add a revision if the resource already exists
+			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), ctxt.getPath(), 0, false);
+			if (item.getType() != MailItem.TYPE_DOCUMENT && item.getType() != MailItem.TYPE_WIKI)
+				throw new DavException("no DAV resource for "+MailItem.getNameForType(item.getType()), HttpServletResponse.SC_NOT_ACCEPTABLE, null);
+			mbox.addDocumentRevision(ctxt.getOperationContext(), (Document)item, data, author);
+			ctxt.setStatus(HttpServletResponse.SC_OK);
+		} catch (ServiceException e) {
+			if (!(e instanceof NoSuchItemException))
+				throw new DavException("cannot get item ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
+		}
+		
+		// create
+		try {
+			mbox.createDocument(ctxt.getOperationContext(), mId, name, ctype, author, data, null);
+			ctxt.setStatus(HttpServletResponse.SC_CREATED);
+		} catch (ServiceException se) {
+			throw new DavException("cannot create ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
 		}
 	}
 }
