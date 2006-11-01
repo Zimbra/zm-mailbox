@@ -1257,7 +1257,7 @@ public class Mailbox {
                     // again, resulting in two entries for the same operation in redolog.
                     beginTransaction("reIndex", octxt, null);
                     if (needRedo) {
-                        redoRecorder.start(getOperationTimestamp());
+                        redoRecorder.start(getOperationTimestampMillis());
                         redoRecorder.log();
                         redoInitted = true;
                     }
@@ -3058,7 +3058,7 @@ public class Mailbox {
                     // logged in StoreToIncoming entry.
                     if (needRedo) {
                         storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, sharedDeliveryCtxt.getMailboxIdList());
-                        storeRedoRecorder.start(getOperationTimestamp());
+                        storeRedoRecorder.start(getOperationTimestampMillis());
                         storeRedoRecorder.setBlobBodyInfo(data, blobPath, blobVolumeId);
                         storeRedoRecorder.log();
                     }
