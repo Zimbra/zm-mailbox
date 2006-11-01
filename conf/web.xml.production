@@ -167,6 +167,16 @@
     <load-on-startup>8</load-on-startup>
   </servlet>
 
+  <servlet>
+    <servlet-name>DavServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.dav.service.DavServlet</servlet-class>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070</param-value>
+    </init-param>
+    <load-on-startup>9</load-on-startup>
+  </servlet>
+
   <servlet-mapping>
     <servlet-name>ExtensionDispatcherServlet</servlet-name>
     <url-pattern>/extension/*</url-pattern>
@@ -225,5 +235,10 @@
   <servlet-mapping>
     <servlet-name>ProxyServlet</servlet-name>
     <url-pattern>/proxy/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>DavServlet</servlet-name>
+    <url-pattern>/dav/*</url-pattern>
   </servlet-mapping>
 </web-app>
