@@ -406,7 +406,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="61" name="zimbraPrefUseKeyboardShortcuts" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>FALSE</defaultCOSValue>
+  <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether or not keyboard shortcuts are enabled</desc>
 </attr>
 
