@@ -178,8 +178,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Minimum age of mail items whose filesystem data will be moved to secondary storage (nnnnn[hmsd]).</desc>
 </attr>
 
-
-<attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,calendarResource,identity" flags="accountInfo">
+<attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,calendarResource" flags="accountInfo">
   <desc>Zimbra Systems Unique ID</desc>
 </attr>
 
@@ -1029,7 +1028,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not to compose in html or text.</desc>
 </attr>
 
-<attr id="218" name="zimbraPrefForwardReplyInOriginalFormat" type="boolean" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
+<attr id="218" name="zimbraPrefForwardReplyInOriginalFormat" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether or not to use same format (text or html) of message we are replying to</desc>
 </attr>
@@ -1850,6 +1849,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="412" name="zimbraPrefIdentityName" type="string" max="128" cardinality="single" requiredIn="identity" flags="domainAdminModifiable">
   <desc>name of the identity</desc>
+</attr>
+
+<attr id="413" name="zimbraPrefForwardReplyFormat" type="enum" value="text,html,same" cardinality="single" optionalIn="identity" flags="domainAdminModifiable">
+  <desc>what format we reply/forward messages in.</desc>
 </attr>
 
 </attrs>
