@@ -82,7 +82,8 @@ public class DbMailItem {
     private static final Map<Integer, TagsetCache> sFlagsetCache =
         new TimeoutMap<Integer, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
 
-    private static final int MAX_TEXT_LENGTH = 65534;
+    public static final int MAX_SENDER_LENGTH = 128;
+    public static final int MAX_TEXT_LENGTH   = 65534;
 
     static final String IN_THIS_MAILBOX_AND = (!DebugConfig.disableMailboxGroup ? "mailbox_id = ? AND " : "");
 
@@ -132,7 +133,7 @@ public class DbMailItem {
                 stmt.setNull(pos++, java.sql.Types.BOOLEAN);
             stmt.setInt(pos++, data.flags);
             stmt.setLong(pos++, data.tags);
-            stmt.setString(pos++, data.sender);
+            stmt.setString(pos++, checkSenderLength(data.sender));
             stmt.setString(pos++, data.subject);
             stmt.setString(pos++, checkTextLength(data.metadata));
             stmt.setInt(pos++, data.modMetadata);
@@ -556,7 +557,7 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getSize());
             stmt.setString(pos++, item.getDigest(true));
             stmt.setInt(pos++, item.getInternalFlagBitmask());
-            stmt.setString(pos++, sender);
+            stmt.setString(pos++, checkSenderLength(sender));
             stmt.setString(pos++, subject);
             stmt.setString(pos++, checkTextLength(metadata));
             stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -2552,6 +2553,18 @@ public class DbMailItem {
         }
     }
 
+
+    /** Makes sure that the argument won't overflow the maximum length of a
+     *  MySQL VARCHAR(128) column (128 characters) by truncating the string
+     *  if necessary.
+     * 
+     * @param sender  The string to check (can be null).
+     * @return The passed-in String, truncated to 128 chars. */
+    static String checkSenderLength(String sender) {
+        if (sender == null || sender.length() <= MAX_SENDER_LENGTH)
+            return sender;
+        return sender.substring(0, MAX_SENDER_LENGTH);
+    }
 
     /** Makes sure that the argument won't overflow the maximum length of a
      *  MySQL TEXT column (65536 bytes) after conversion to UTF-8.
