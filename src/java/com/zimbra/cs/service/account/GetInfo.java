@@ -45,7 +45,6 @@ import com.zimbra.cs.mailbox.MailItemDataSource;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.cs.zimlet.ZimletProperty;

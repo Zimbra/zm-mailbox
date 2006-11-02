@@ -54,7 +54,7 @@ public class ToXML {
         acctElem.addAttribute(AccountService.A_NAME, account.getName());
         acctElem.addAttribute(AccountService.A_ID, account.getId());        
         Map attrs = account.getAttrs(applyCos);
-        addAccountAttrs(acctElem, attrs);
+        addAccountAttrs(acctElem, attrs, AccountService.A_N);
         return acctElem;
     }
 
@@ -74,7 +74,7 @@ public class ToXML {
         resElem.addAttribute(AccountService.A_NAME, resource.getName());
         resElem.addAttribute(AccountService.A_ID, resource.getId());        
         Map attrs = resource.getAttrs(applyCos);
-        addAccountAttrs(resElem, attrs);
+        addAccountAttrs(resElem, attrs, AccountService.A_N);
         return resElem;
     }
 
@@ -85,7 +85,7 @@ public class ToXML {
         return encodeCalendarResource(parent, resource, false);
     }
 
-    private static void addAccountAttrs(Element e, Map attrs) {
+    private static void addAccountAttrs(Element e, Map attrs, String key) {
         for (Iterator iter = attrs.entrySet().iterator(); iter.hasNext(); ) {
             Map.Entry entry = (Entry) iter.next();
             String name = (String) entry.getKey();
@@ -99,12 +99,12 @@ public class ToXML {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++) {
                     Element pref = e.addElement(AccountService.E_A);
-                    pref.addAttribute(AccountService.A_N, name);
+                    pref.addAttribute(key, name);
                     pref.setText(sv[i]);
                 }
             } else if (value instanceof String) {
                 Element pref = e.addElement(AccountService.E_A);
-                pref.addAttribute(AccountService.A_N, name);
+                pref.addAttribute(key, name);
                 pref.setText((String) value);
             }
         }       
@@ -175,7 +175,7 @@ public class ToXML {
     	} catch (ServiceException se) {
     		ZimbraLog.account.info("cannot get identity signatures", se);
     	}
-    	addAccountAttrs(e, identity.getAttrs());
+    	addAccountAttrs(e, identity.getAttrs(), AccountService.A_NAME);
     	return e;
     }
 }
