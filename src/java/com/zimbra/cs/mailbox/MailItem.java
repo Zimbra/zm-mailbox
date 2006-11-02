@@ -453,16 +453,14 @@ public abstract class MailItem implements Comparable<MailItem> {
         return mData.folderId;
     }
 
-    /** Returns the path to the MailItem.
-     */
+    /** Returns the path to the MailItem.  If the item is in a hidden folder
+     *  or is of a type that does not have a name (e.g. {@link Message}s,
+     *  {@link Contact}s, etc.), this method returns <code>null</code>. */
     public String getPath() throws ServiceException {
-        Folder f = getMailbox().getFolderById(getFolderId());
-        StringBuilder path = new StringBuilder();
-        path.append(f.getPath());
-        if (path.charAt(path.length() - 1) != '/')
-            path.append('/');
-        path.append(getSubject());
-        return path.toString();
+        String path = getFolder().getPath(), name = getName();
+        if (name == null || path == null)
+            return null;
+        return path + (path.endsWith("/") ? "" : "/") + name;
     }
     
     /** Returns the ID the item is referenced by in the index.  Returns -1
@@ -1028,7 +1026,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (getSavedSequence() != mMailbox.getOperationChangeID()) {
             // mark the old blob as ready for deletion
             PendingDelete info = getDeletionInfo();
-            info.itemIds.clear();  info.unreadIds.clear();
+            info.itemIds.clear();  info.unreadIds.clear();  info.indexIds.clear();
             mMailbox.markOtherItemDirty(info);
         }
 
