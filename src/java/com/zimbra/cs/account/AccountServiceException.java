@@ -51,6 +51,7 @@ public class AccountServiceException extends ServiceException {
     public static final String NO_SUCH_ALIAS      = "account.NO_SUCH_ALIAS";
     public static final String NO_SUCH_DOMAIN     = "account.NO_SUCH_DOMAIN";    
     public static final String NO_SUCH_COS        = "account.NO_SUCH_COS";        
+    public static final String NO_SUCH_IDENTITY   = "account.NO_SUCH_IDENTITY";            
     public static final String NO_SUCH_SERVER     = "account.NO_SUCH_SERVER";        
     public static final String NO_SUCH_ZIMLET     = "account.NO_SUCH_ZIMLET";        
     public static final String NO_SUCH_DISTRIBUTION_LIST = "account.NO_SUCH_DISTRIBUTION_LIST";
@@ -65,6 +66,7 @@ public class AccountServiceException extends ServiceException {
     public static final String DISTRIBUTION_LIST_EXISTS = "account.DISTRIBUTION_LIST_EXISTS";
     public static final String MAINTENANCE_MODE   = "account.MAINTENANCE_MODE";
     public static final String ACCOUNT_INACTIVE   = "account.ACCOUNT_INACTIVE";
+    public static final String IDENTITY_EXISTS = "account.IDENTITY_EXISTS";    
 
     private AccountServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -134,6 +136,10 @@ public class AccountServiceException extends ServiceException {
         return new AccountServiceException("no such server: "+name, NO_SUCH_SERVER, SENDERS_FAULT, null);
     }    
 
+    public static AccountServiceException NO_SUCH_IDENTITY(String name) {
+        return new AccountServiceException("no such identity: "+name, NO_SUCH_IDENTITY, SENDERS_FAULT, null);
+    }    
+    
     public static AccountServiceException NO_SUCH_ZIMLET(String name) {
         return new AccountServiceException("no such zimlet: "+name, NO_SUCH_ZIMLET, SENDERS_FAULT, null);
     }    
@@ -171,7 +177,11 @@ public class AccountServiceException extends ServiceException {
     public static AccountServiceException DISTRIBUTION_LIST_EXISTS(String name) {
         return new AccountServiceException("distribution list already exists: " + name, DISTRIBUTION_LIST_EXISTS, SENDERS_FAULT, null);
     }
-
+    
+    public static AccountServiceException IDENTITY_EXISTS(String name) {
+        return new AccountServiceException("identity already exists: " + name, IDENTITY_EXISTS, SENDERS_FAULT, null);
+    }
+    
     public static AccountServiceException MAINTENANCE_MODE() {
         return new AccountServiceException("account is in maintenance mode", MAINTENANCE_MODE, RECEIVERS_FAULT, null);
     }

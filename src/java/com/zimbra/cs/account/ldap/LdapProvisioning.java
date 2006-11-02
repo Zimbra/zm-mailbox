@@ -81,6 +81,7 @@ import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Account.CalendarUserType;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
@@ -1551,7 +1552,7 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#deleteAccountById(java.lang.String)
      */
     public void deleteAccount(String zimbraId) throws ServiceException {
-        Account acc = getAccountById(zimbraId);
+        LdapAccount acc = (LdapAccount) getAccountById(zimbraId);
         if (acc == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
 
@@ -1565,8 +1566,10 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
-            ctxt.unbind(((LdapEntry)acc).getDN());
-            sAccountCache.remove(acc);
+            
+            LdapUtil.deleteChildren(ctxt, acc.getDN());
+            ctxt.unbind(acc.getDN());
+            sAccountCache.remove(acc.getName(), acc.getId());
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge account: "+zimbraId, e);
         } finally {
@@ -1584,10 +1587,11 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext(true);
             
-            Account acc = getAccountById(zimbraId, ctxt);
+            LdapAccount acc = (LdapAccount) getAccountById(zimbraId, ctxt);
             if (acc == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
 
+            String oldDn = acc.getDN();
             String oldEmail = acc.getName();
             
             newName = newName.toLowerCase().trim();
@@ -1602,33 +1606,37 @@ public class LdapProvisioning extends Provisioning {
                 throw AccountServiceException.NO_SUCH_DOMAIN(newDomain);
             
             String newDn = emailToDN(newLocal,domain.getName());
-            ctxt.rename(((LdapEntry)acc).getDN(), newDn);
 
-            renameAddressInAllDistributionLists(oldEmail, newName); // doesn't throw exceptions, just logs
+            Map<String,Object> newAttrs = acc.getAttrs(false);
             
-            // remove old account from cache
-            sAccountCache.remove(acc);
-            acc = getAccountById(zimbraId,ctxt);
-            HashMap<String, Object> amap = new HashMap<String, Object>();
-            amap.put(Provisioning.A_zimbraMailDeliveryAddress, newName);
+            newAttrs.put(Provisioning.A_uid, newLocal);
+            newAttrs.put(Provisioning.A_zimbraMailDeliveryAddress, newName);
             String mail[] = acc.getMultiAttr(Provisioning.A_mail);
             if (mail.length == 0) {
-                amap.put(Provisioning.A_mail, newName);
+                newAttrs.put(Provisioning.A_mail, newName);
             } else {
                 // not the most efficient, but renames dont' happen often
                 mail = LdapUtil.removeMultiValue(mail, oldEmail);
                 mail = addMultiValue(mail, newName);
-                amap.put(Provisioning.A_mail, mail);
+                newAttrs.put(Provisioning.A_mail, mail);
             }
-            // this is non-atomic. i.e., rename could succeed and updating zimbraMailDeliveryAddress
-            // could fail. So catch service exception here and log error            
-            try {
-                modifyAttrsInternal(acc, ctxt, amap);
-            } catch (ServiceException e) {
-                ZimbraLog.account.error("account renamed to "+newName+
-                        " but failed to update zimbraMailDeliveryAddress", e);
-                throw ServiceException.FAILURE("unable to rename account: "+zimbraId, e);
-            }
+            
+            Attributes attributes = new BasicAttributes(true);
+            LdapUtil.mapToAttrs(newAttrs, attributes);
+
+            createSubcontext(ctxt, newDn, attributes, "createAccount");         
+
+            // MOVE OVER ALL identities/sources/etc. doesn't throw an exception, just logs
+            LdapUtil.moveChildren(ctxt, oldDn, newDn);
+            
+            renameAddressInAllDistributionLists(oldEmail, newName); // doesn't throw exceptions, just logs
+            
+            // unbind old dn
+            ctxt.unbind(oldDn);
+
+            // prune cache
+            sAccountCache.remove(oldEmail, acc.getId());
+            
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(newName);            
         } catch (NamingException e) {
@@ -1637,7 +1645,7 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.closeContext(ctxt);
         }
     }
-        
+         
     public void deleteDomain(String zimbraId) throws ServiceException {
         // TODO: should only allow a domain delete to succeed if there are no people
         // if there aren't, we need to delete the people trees first, then delete the domain.
@@ -3472,4 +3480,115 @@ public class LdapProvisioning extends Provisioning {
         ldl.removeMembers(members, this);        
     }
 
+    private List<Identity> getIdentitiesByQuery(LdapAccount account, String query, DirContext initCtxt) throws ServiceException {
+        DirContext ctxt = initCtxt;
+        List<Identity> result = new ArrayList<Identity>();
+        try {
+            if (ctxt == null)
+                ctxt = LdapUtil.getDirContext();
+            String base = account.getDN();
+            NamingEnumeration ne = ctxt.search(base, query, sSubtreeSC);
+            while(ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                result.add(new LdapIdentity(sr.getNameInNamespace(), sr.getAttributes(), null));
+            }
+            ne.close();            
+        } catch (NameNotFoundException e) {
+            return null;
+        } catch (InvalidNameException e) {
+            return null;                        
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to lookup identity via query: "+query+ " message: "+e.getMessage(), e);
+        } finally {
+            if (initCtxt == null)
+                LdapUtil.closeContext(ctxt);
+        }
+        return result;
+    }
+
+    private Identity getIdentityByName(LdapAccount acct, String name,  DirContext ctxt) throws ServiceException {
+        //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+        List<Identity> result = getIdentitiesByQuery(acct, "(&(zimbraPrefIdentityName="+name+")(objectclass=zimbraIdentity))", ctxt); 
+        return result.isEmpty() ? null : result.get(0);
+    }
+
+    private String getIdentityDn(LdapAccount acct, String name) {
+        return A_zimbraPrefIdentityName + "=" + name + "," + acct.getDN();    
+    }
+
+    @Override
+    public Identity createIdentity(Account account, String identityName, Map<String, Object> identityAttrs) throws ServiceException {
+
+        LdapAccount ldapAccount = (LdapAccount) (account instanceof LdapAccount ? account : getAccountById(account.getId()));
+        
+        if (ldapAccount == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+        
+        HashMap attrManagerContext = new HashMap();
+        AttributeManager.getInstance().preModify(identityAttrs, null, attrManagerContext, true, true);
+
+        DirContext ctxt = null;
+        try {
+            ctxt = LdapUtil.getDirContext(true);
+
+            String dn = getIdentityDn(ldapAccount, identityName);
+            
+            Attributes attrs = new BasicAttributes(true);
+            LdapUtil.mapToAttrs(identityAttrs, attrs);
+            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "zimbraIdentity");
+
+            createSubcontext(ctxt, dn, attrs, "createIdentity");
+
+            Identity identity = getIdentityByName(ldapAccount, identityName, ctxt);
+            AttributeManager.getInstance().postModify(identityAttrs, identity, attrManagerContext, true);
+            return identity;
+        } catch (NameAlreadyBoundException nabe) {
+            throw AccountServiceException.IDENTITY_EXISTS(identityName);
+        } finally {
+            LdapUtil.closeContext(ctxt);
+        }
+    }
+
+    @Override
+    public void modifyIdentity(Account account, String identityName, Map<String, Object> identityAttrs) throws ServiceException {
+        LdapAccount ldapAccount = (LdapAccount) (account instanceof LdapAccount ? account : getAccountById(account.getId()));
+        if (ldapAccount == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+
+        Identity identity = getIdentityByName(ldapAccount, identityName, null);
+        if (identity == null)
+                throw AccountServiceException.NO_SUCH_IDENTITY(identityName);   
+        
+        modifyAttrs(identity, identityAttrs, true);
+    }
+    
+    @Override
+    public void deleteIdentity(Account account, String identityName) throws ServiceException {
+        LdapAccount ldapAccount = (LdapAccount) (account instanceof LdapAccount ? account : getAccountById(account.getId()));
+        if (ldapAccount == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+       
+        
+        DirContext ctxt = null;
+        try {
+            ctxt = LdapUtil.getDirContext(true);
+            Identity identity = getIdentityByName(ldapAccount, identityName, ctxt);
+            if (identity == null)
+                throw AccountServiceException.NO_SUCH_IDENTITY(identityName);
+            String dn = getIdentityDn(ldapAccount, identityName);            
+            ctxt.unbind(dn);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to delete identity: "+identityName, e);
+        } finally {
+            LdapUtil.closeContext(ctxt);
+        }
+    }
+
+    @Override
+    public List<Identity> getAllIdentities(Account account) throws ServiceException {
+        LdapAccount ldapAccount = (LdapAccount) (account instanceof LdapAccount ? account : getAccountById(account.getId()));
+        if (ldapAccount == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+        return getIdentitiesByQuery(ldapAccount, "(objectclass=zimbraIdentity)", null);
+    }
 }

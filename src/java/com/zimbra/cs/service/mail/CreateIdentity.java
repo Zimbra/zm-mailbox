@@ -26,8 +26,12 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.Identity;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -37,12 +41,15 @@ public class CreateIdentity extends DocumentHandler {
 	
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-
-        Element identity = request.getElement(MailService.E_IDENTITY);
-        String name = identity.getAttribute(MailService.A_NAME);
-        Identity.create(getRequestedAccount(zsc), zsc.getOperationContext(), identity, name);
+        Account account = getRequestedAccount(zsc);
+        
+        Element identityEl = request.getElement(MailService.E_IDENTITY);
+        String name = identityEl.getAttribute(MailService.A_NAME);
+        Map<String,Object> attrs = AccountService.getAttrs(identityEl, MailService.A_NAME);
+        Identity identity = Provisioning.getInstance().createIdentity(account, name, attrs);
         
         Element response = zsc.createElement(MailService.CREATE_IDENTITY_RESPONSE);
+        ToXML.encodeIdentity(response, identity);
         return response;
     }
 }

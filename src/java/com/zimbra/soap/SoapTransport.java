@@ -95,6 +95,11 @@ public abstract class SoapTransport {
         mTargetAcctId = acctId;
     }
     
+    
+    public String getTargetAcctId() {
+        return mTargetAcctId;
+    }
+    
     public void setTargetAcctName(String acctName) {
         mTargetAcctName = acctName;
     }

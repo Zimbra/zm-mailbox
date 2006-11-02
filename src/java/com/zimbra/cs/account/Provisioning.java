@@ -755,6 +755,8 @@ public abstract class Provisioning {
      * where to save it
      */
     public static final String A_zimbraPrefSentMailFolder = "zimbraPrefSentMailFolder";
+
+    public static final String A_zimbraPrefIdentityName = "zimbraPrefIdentityName";
     
     /**
      * delete appointment invite (from our inbox) when we've replied to it?
@@ -1638,4 +1640,12 @@ public abstract class Provisioning {
     
     public abstract void removeMembers(DistributionList list, String[] member) throws ServiceException;
 
+    public abstract Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
+    
+    public abstract void modifyIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
+    
+    public abstract void deleteIdentity(Account account, String identityName) throws ServiceException;
+    
+    public abstract List<Identity> getAllIdentities(Account account) throws ServiceException;
+    
 }

@@ -45,6 +45,7 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -58,6 +59,7 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.soap.Element;
@@ -159,6 +161,20 @@ public class SoapProvisioning extends Provisioning {
         }
     }
 
+    synchronized Element invokeOnTargetAccount(Element request, String targetId) throws ServiceException {
+        String oldTarget = mTransport.getTargetAcctId();
+        try {
+            mTransport.setTargetAcctId(targetId);
+            return mTransport.invoke(request);
+        } catch (SoapFaultException e) {
+            throw e; // for now, later, try to map to more specific exception
+        } catch (IOException e) {
+            throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName(), e);
+        } finally {
+            mTransport.setTargetAcctId(oldTarget);
+        }
+    }
+    
     synchronized Element invoke(Element request, String serverName) throws ServiceException {
         String oldUri = soapGetURI();
         String newUri = URLUtil.getAdminURL(serverName);
@@ -1049,5 +1065,56 @@ public class SoapProvisioning extends Provisioning {
         }
         invoke(req);
         reload(list);
+    }
+
+    static void addAttrElementsMailService(Element req, Map<String, ? extends Object> attrs) throws ServiceException {
+        if (attrs == null) return;
+        
+        for (Entry entry : attrs.entrySet()) {
+            String key = (String) entry.getKey();
+            Object value = entry.getValue();
+            if (value instanceof String) {
+                Element  a = req.addElement(MailService.E_ATTRIBUTE);
+                a.addAttribute(MailService.A_NAME, key);
+                a.setText((String)value);
+            } else if (value instanceof String[]) {
+                String[] values = (String[]) value;
+                for (String v: values) {
+                    Element  a = req.addElement(MailService.E_ATTRIBUTE);
+                    a.addAttribute(MailService.A_NAME, key);
+                    a.setText((String)v);                    
+                }
+            } else {
+                throw ZClientException.CLIENT_ERROR("invalid attr type: "+key+" "+value.getClass().getName(), null);
+            }
+        }        
+    }
+
+    @Override
+    public Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.CREATE_IDENTITY_REQUEST);
+        Element identity = req.addElement(MailService.E_IDENTITY);
+        identity.addAttribute(MailService.A_NAME, identityName);
+        addAttrElementsMailService(identity, attrs);
+        invokeOnTargetAccount(req, account.getId());
+        return new Identity(identityName, attrs, null);
+    }
+
+    @Override
+    public void deleteIdentity(Account account, String identityName) throws ServiceException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public List<Identity> getAllIdentities(Account account) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void modifyIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException {
+        // TODO Auto-generated method stub
+        
     }
 }

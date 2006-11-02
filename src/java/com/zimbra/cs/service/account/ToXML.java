@@ -31,15 +31,14 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.Map.Entry;
 
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.EntrySearchFilter;
+import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
-import com.zimbra.cs.mailbox.Identity;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 
@@ -165,16 +164,6 @@ public class ToXML {
     public static Element encodeIdentity(Element parent, Identity identity) {
     	Element e = parent.addElement(AccountService.E_IDENTITY);
     	e.addAttribute(AccountService.E_NAME, identity.getName());
-    	try {
-    		Map<String,String> sigs = identity.getSignatures();
-    		for (Map.Entry<String,String> sig : sigs.entrySet()) {
-    			Element s = e.addElement(AccountService.E_SIGNATURE);
-    			s.addAttribute(AccountService.A_NAME, sig.getKey());
-    			s.setText(sig.getValue());
-    		}
-    	} catch (ServiceException se) {
-    		ZimbraLog.account.info("cannot get identity signatures", se);
-    	}
     	addAccountAttrs(e, identity.getAttrs(), AccountService.A_NAME);
     	return e;
     }

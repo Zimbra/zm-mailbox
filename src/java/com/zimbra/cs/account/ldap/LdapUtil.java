@@ -37,6 +37,8 @@ import org.apache.commons.codec.binary.Base64;
 
 import javax.naming.AuthenticationException;
 import javax.naming.Context;
+import javax.naming.Name;
+import javax.naming.NameParser;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.SizeLimitExceededException;
@@ -938,4 +940,44 @@ public class LdapUtil {
         */
     }
 
+    public static void moveChildren(DirContext ctxt, String oldDn, String newDn) throws ServiceException {
+        NamingEnumeration ne = null;        
+        try {
+            // find children under old DN and move them
+            SearchControls sc = new SearchControls(SearchControls.ONELEVEL_SCOPE, 0, 0, null, false, false);
+            String query = "(objectclass=*)";
+            ne = ctxt.search(oldDn, query, sc);
+            NameParser ldapParser = ctxt.getNameParser("");            
+            while (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                String oldChildDn = sr.getNameInNamespace();
+                Name oldChildName = ldapParser.parse(oldChildDn);
+                Name newChildName = ldapParser.parse(newDn).add(oldChildName.get(oldChildName.size()-1));
+                ctxt.rename(oldChildName, newChildName);
+            }
+        } catch (NamingException e) {
+            ZimbraLog.account.warn("unable to move children", e);            
+        } finally {
+            closeEnumContext(ne);            
+        }
+    }
+
+    public static void deleteChildren(DirContext ctxt, String dn) throws ServiceException {
+        NamingEnumeration ne = null;        
+        try {
+            // find children under old DN and remove them
+            SearchControls sc = new SearchControls(SearchControls.ONELEVEL_SCOPE, 0, 0, null, false, false);
+            String query = "(objectclass=*)";
+            ne = ctxt.search(dn, query, sc);
+            NameParser ldapParser = ctxt.getNameParser("");            
+            while (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                ctxt.unbind(sr.getNameInNamespace());
+            }
+        } catch (NamingException e) {
+            ZimbraLog.account.warn("unable to remove children", e);            
+        } finally {
+            closeEnumContext(ne);            
+        }
+    }
 }

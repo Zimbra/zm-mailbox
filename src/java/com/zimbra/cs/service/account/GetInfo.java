@@ -38,9 +38,9 @@ import java.util.Set;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.mailbox.Identity;
 import com.zimbra.cs.mailbox.MailItemDataSource;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -82,7 +82,7 @@ public class GetInfo extends AccountDocumentHandler  {
         Element props = response.addUniqueElement(AccountService.E_PROPERTIES);
         doProperties(props, acct);
         Element ids = response.addUniqueElement(AccountService.E_IDENTITIES);
-        doIdentities(ids, acct, lc);
+        doIdentities(ids, acct);
         Element ds = response.addUniqueElement(AccountService.E_DATA_SOURCES);
         doDataSources(ds, acct, lc);
         GetAccountInfo.addUrls(response, acct);
@@ -167,9 +167,9 @@ public class GetInfo extends AccountDocumentHandler  {
     	}
     }
     
-    private static void doIdentities(Element response, Account acct, ZimbraSoapContext lc) {
+    private static void doIdentities(Element response, Account acct) {
     	try {
-    		List<Identity> identities = Identity.get(acct, lc.getOperationContext());
+    		List<Identity> identities = Provisioning.getInstance().getAllIdentities(acct);
     		for (Identity i : identities) {
     			ToXML.encodeIdentity(response, i);
     		}

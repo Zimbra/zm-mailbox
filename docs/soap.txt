@@ -377,7 +377,6 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
        <a name="{name}">{value}</a>
        ...
        <a name="{name}">{value}</a>
-       <signature n="{name}">{value}</signature>*
      </identity>*
    </identities>
    <dataSources>
@@ -1687,36 +1686,48 @@ java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
     <a name="{name}">{value}</a>
     ...
     <a name="{name}">{value}</a>
-    <signature name="{name}">{value}</signature>*
   </identity>
 </CreateIdentityRequest>
 
 <CreateIdentityResponse/>
 
 
-Allowed attributes:
+Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 
-	isDefault           - boolean { true, false }
-	sendFromDisplay     - display name for From: field
-	sendFromAddress     - email address for From: field
-	setReplyTo          - boolean { true, false }
-	setReplyToDisplay   - display name for Reply-To: field
-	setReplyToAddress   - email address for Reply-To: field
-	useSignature        - boolean { true, false }
-	signature           - signature string
-	useWhenSentTo       - boolean { true, false }
-	whenSentToAddresses - comma separated list of email addresses
-	useWhenInFolders    - boolean { true, false }
-	whenInFolderIds     - comma separated list of folder IDs
-	useDefaultSettings  - boolean { true, false }
-	sendBccTo           - email address
-	saveCopyIn          - folder ID
-	applyTag            - tag ID
-	replyFormat         - enum { html, text, same } 
-	whenReplying        - enum { includeAsAttachment, includeNone, includeBodyWithPrefix, includeBody, includeSmart }
-	whenForwarding      - enum { includeBodyWithPrefix, includeBody }
-	placeSignature      - enum { aboveQuotedText, atBottomOfMessage }
-	prefixWith          - enum { >, | }
+	zimbraPrefBccAddress
+    zimbraPrefDefaultIdentity
+    zimbraPrefForwardIncludeOriginalText
+    zimbraPrefForwardReplyFormat
+    zimbraPrefForwardReplyPrefixChar
+    zimbraPrefFromAddress
+    zimbraPrefFromDisplay
+    zimbraPrefMailSignature
+    zimbraPrefMailSignatureEnabled
+    zimbraPrefMailSignatureStyle
+    zimbraPrefReplyIncludeOriginalText
+    zimbraPrefReplyToAddress
+    zimbraPrefReplyToDisplay
+    zimbraPrefReplyToEnabled
+    zimbraPrefSaveToSent
+    zimbraPrefSentMailFolder
+    zimbraPrefUseDefaultIdentitySettings
+    zimbraPrefWhenInFolderIds
+    zimbraPrefWhenInFoldersEnabeld
+    zimbraPrefWhenSentToAddresses
+    zimbraPrefWhenSentToEnabled
+
+
+---------
+
+<GetAllIdentitiesRequest/>
+
+<GetAllIdentitiesResponse>
+  <identity name="{identity-name}">
+    <a name="{name}">{value}</a>
+    ...
+    <a name="{name}">{value}</a>
+  </identity>+
+</GetAllIdentitiesResponse>
 
 ---------
 
@@ -1725,7 +1736,6 @@ Allowed attributes:
     <a name="{name}">{value}</a>
     ...
     <a name="{name}">{value}</a>
-    <signature n="{name}">{value}</signature>*
   </identity>
 </ModifyIdentityRequest>
 

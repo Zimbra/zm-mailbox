@@ -160,7 +160,7 @@ public class ProvUtil implements DebugListener {
         ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
-        CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
+        CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
         CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk"),  //("  CreateBulkAccounts(cabulk) {domain} {namemask} {number of accounts to create} ");
         CREATE_CALENDAR_RESOURCE("createCalendarResource",  "ccr", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 2, Integer.MAX_VALUE),
         CREATE_COS("createCos", "cc", "{name} [attr1 value1 [attr2 value2...]]", Category.COS, 1, Integer.MAX_VALUE),
@@ -168,16 +168,19 @@ public class ProvUtil implements DebugListener {
         CREATE_DISTRIBUTION_LISTS_BULK("createDistributionListsBulk", "cdlbulk"),
         CREATE_DOMAIN("createDomain", "cd", "{domain} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         CREATE_SERVER("createServer", "cs", "{name} [attr1 value1 [attr2 value2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
+        CREATE_IDENTITY("createIdentity", "ci", "{name@domain} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
         DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}", Category.ACCOUNT, 1, 1),
         DELETE_CALENDAR_RESOURCE("deleteCalendarResource",  "dcr", "{name@domain|id}", Category.CALENDAR, 1, 1),
         DELETE_COS("deleteCos", "dc", "{name|id}", Category.COS, 1, 1),
         DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id}", Category.LIST, 1, 1),
         DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}", Category.DOMAIN, 1, 1),
+        DELETE_IDENTITY("deleteIdentity", "di", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),                
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 5),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "{domain|id}", Category.MISC, 1, 1),
         GET_ACCOUNT("getAccount", "ga", "{name@domain|id}", Category.ACCOUNT, 1, 1),
+        GET_ACCOUNT_IDENTITIES("getAccountIdentities", "gai", "{name@domain|id}", Category.ACCOUNT, 1, 1),        
         GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT, 1, 2),
         GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [{domain}]", Category.ACCOUNT, 0, 2),
         GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v]", Category.ACCOUNT, 0, 1),
@@ -207,6 +210,7 @@ public class ProvUtil implements DebugListener {
         MODIFY_COS("modifyCos", "mc", "{name|id} [attr1 value1 [attr2 value2...]]", Category.COS, 3, Integer.MAX_VALUE),
         MODIFY_DISTRIBUTION_LIST("modifyDistributionList", "mdl", "{list@domain|id} attr1 value1 [attr2 value2...]", Category.LIST, 3, Integer.MAX_VALUE),
         MODIFY_DOMAIN("modifyDomain", "md", "{domain|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 3, Integer.MAX_VALUE),
+        MODIFY_IDENTITY("modifyIdentity", "mi", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),        
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
         REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
@@ -352,6 +356,9 @@ public class ProvUtil implements DebugListener {
         case CREATE_DOMAIN:
             System.out.println(mProv.createDomain(args[1], getMap(args, 2)).getId());
             break;
+        case CREATE_IDENTITY:
+            mProv.createIdentity(lookupAccount(args[1]), args[2], getMap(args, 3));
+            break;                                    
         case CREATE_SERVER:
             System.out.println(mProv.createServer(args[1], getMap(args, 2)).getId());
             break;            
@@ -370,6 +377,9 @@ public class ProvUtil implements DebugListener {
         case GET_ACCOUNT_MEMBERSHIP:
             doGetAccountMembership(args);
             break;
+        case GET_ACCOUNT_IDENTITIES:
+            doGetAccountIdentities(args);
+            break;            
         case GET_ALL_ACCOUNTS:
             doGetAllAccounts(args); 
             break;            
@@ -409,6 +419,9 @@ public class ProvUtil implements DebugListener {
         case MODIFY_ACCOUNT:
             mProv.modifyAttrs(lookupAccount(args[1]), getMap(args,2), true);
             break;            
+        case MODIFY_IDENTITY:
+            mProv.modifyIdentity(lookupAccount(args[1]), args[2], getMap(args,3));
+            break;                        
         case MODIFY_COS:
             mProv.modifyAttrs(lookupCos(args[1]), getMap(args, 2), true);            
             break;            
@@ -429,13 +442,16 @@ public class ProvUtil implements DebugListener {
             break;            
         case DELETE_DOMAIN:
             mProv.deleteDomain(lookupDomain(args[1]).getId());            
-            break;            
+            break;
+        case DELETE_IDENTITY:
+            mProv.deleteIdentity(lookupAccount(args[1]), args[2]);
+            break;                        
         case DELETE_SERVER:
             mProv.deleteServer(lookupServer(args[1]).getId());
             break;
         case REMOVE_ACCOUNT_ALIAS:
             mProv.removeAlias(lookupAccount(args[1]), args[2]);
-            break;            
+            break;
         case RENAME_ACCOUNT:
             mProv.renameAccount(lookupAccount(args[1]).getId(), args[2]);            
             break;                        
@@ -632,7 +648,14 @@ public class ProvUtil implements DebugListener {
             }
         }
     }
-
+    
+    private void doGetAccountIdentities(String[] args) throws ServiceException {
+        Account account = lookupAccount(args[1]);
+        for (Identity identity : mProv.getAllIdentities(account)) {
+            dumpIdentity(identity);
+        }    
+    }
+    
     private void doGetDistributionListMembership(String[] args) throws ServiceException {
         String key = args[1];
         DistributionList dist = lookupDistributionList(key);
@@ -981,7 +1004,14 @@ public class ProvUtil implements DebugListener {
         dumpAttrs(attrs);
         System.out.println();
     }
-    
+ 
+    private void dumpIdentity(Identity identity) throws ServiceException {
+        System.out.println("# name "+identity.getName());
+        Map<String, Object> attrs = identity.getAttrs();
+        dumpAttrs(attrs);
+        System.out.println();
+    }
+
     private void dumpAttrs(Map<String, Object> attrsIn) {
         TreeMap<String, Object> attrs = new TreeMap<String, Object>(attrsIn);
 

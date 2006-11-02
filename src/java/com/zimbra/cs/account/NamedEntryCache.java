@@ -73,6 +73,11 @@ public class NamedEntryCache<E extends NamedEntry> {
         mIdCache.clear();
     }
 
+    public synchronized void remove(String name, String id) {
+        mNameCache.remove(name);
+        mIdCache.remove(id);
+    }
+    
     public synchronized void remove(E entry) {
         if (entry != null) {
             mNameCache.remove(entry.getName());

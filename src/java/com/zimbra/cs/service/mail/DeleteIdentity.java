@@ -26,7 +26,8 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.Identity;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
@@ -37,11 +38,12 @@ public class DeleteIdentity extends DocumentHandler {
 	
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-
-        Element identity = request.getElement(MailService.E_IDENTITY);
-        String name = identity.getAttribute(MailService.A_NAME);
-        Identity.delete(name, getRequestedAccount(zsc), zsc.getOperationContext(), identity, name);
+        Account account = getRequestedAccount(zsc);
         
+        Element identityEl = request.getElement(MailService.E_IDENTITY);
+        String name = identityEl.getAttribute(MailService.A_NAME);
+        Provisioning.getInstance().deleteIdentity(account, name);
+
         Element response = zsc.createElement(MailService.DELETE_IDENTITY_RESPONSE);
         return response;
     }

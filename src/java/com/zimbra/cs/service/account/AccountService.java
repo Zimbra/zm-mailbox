@@ -28,11 +28,18 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
+import com.zimbra.soap.Element;
 
 /**
  * @author schemers
@@ -165,4 +172,28 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(GET_AVAILABLE_SKINS_REQUEST, new GetAvailableSkins());
 	}
 
+    /**
+     * @param request
+     * @return
+     * @throws ServiceException
+     */
+    public static Map<String, Object> getAttrs(Element request, String nameAttr) throws ServiceException {
+        return getAttrs(request, false, nameAttr);
+    }
+    
+    /**
+     * @param request
+     * @return
+     * @throws ServiceException
+     */
+    public static Map<String, Object> getAttrs(Element request, boolean ignoreEmptyValues, String nameAttr) throws ServiceException {
+        Map<String, Object> result = new HashMap<String, Object>();
+        for (Element a : request.listElements(AdminService.E_A)) {
+            String name = a.getAttribute(nameAttr);
+            String value = a.getText();
+            if (!ignoreEmptyValues || (value != null && value.length() > 0))
+                StringUtil.addToMultiMap(result, name, value);
+        }
+        return result;
+    } 
 }
