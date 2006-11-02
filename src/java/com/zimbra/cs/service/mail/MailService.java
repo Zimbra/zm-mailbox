@@ -171,15 +171,7 @@ public class MailService implements DocumentService {
     public static final QName GET_WIKI_RESPONSE = QName.get("GetWikiResponse", NAMESPACE);
     public static final QName WIKI_ACTION_REQUEST = QName.get("WikiActionRequest", NAMESPACE);
     public static final QName WIKI_ACTION_RESPONSE = QName.get("WikiActionResponse", NAMESPACE);
-
-    // identities
-    public static final QName CREATE_IDENTITY_REQUEST = QName.get("CreateIdentityRequest", NAMESPACE);
-    public static final QName CREATE_IDENTITY_RESPONSE = QName.get("CreateIdentityResponse", NAMESPACE);
-    public static final QName MODIFY_IDENTITY_REQUEST = QName.get("ModifyIdentityRequest", NAMESPACE);
-    public static final QName MODIFY_IDENTITY_RESPONSE = QName.get("ModifyIdentityResponse", NAMESPACE);
-    public static final QName DELETE_IDENTITY_REQUEST = QName.get("DeleteIdentityRequest", NAMESPACE);
-    public static final QName DELETE_IDENTITY_RESPONSE = QName.get("DeleteIdentityResponse", NAMESPACE);
-    
+  
     // data sources
     public static final QName CREATE_DATA_SOURCE_REQUEST = QName.get("CreateDataSourceRequest", NAMESPACE);
     public static final QName CREATE_DATA_SOURCE_RESPONSE = QName.get("CreateDataSourceResponse", NAMESPACE);
@@ -597,12 +589,7 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(SAVE_WIKI_REQUEST, new com.zimbra.cs.service.wiki.SaveWiki());
         dispatcher.registerHandler(GET_WIKI_REQUEST, new com.zimbra.cs.service.wiki.GetWiki());
         dispatcher.registerHandler(WIKI_ACTION_REQUEST, new com.zimbra.cs.service.wiki.WikiAction());
-        
-        // identity
-        dispatcher.registerHandler(CREATE_IDENTITY_REQUEST, new CreateIdentity());
-        dispatcher.registerHandler(MODIFY_IDENTITY_REQUEST, new ModifyIdentity());
-        dispatcher.registerHandler(DELETE_IDENTITY_REQUEST, new DeleteIdentity());
-        
+               
         // data source
         dispatcher.registerHandler(GET_DATA_SOURCES_REQUEST, new GetDataSources());
         dispatcher.registerHandler(CREATE_DATA_SOURCE_REQUEST, new CreateDataSource());

@@ -1802,19 +1802,19 @@ public class ZMailbox {
     }
 
     public void CreateIdentityRequest(ZIdentity identity) throws ServiceException {
-        XMLElement req = new XMLElement(MailService.CREATE_IDENTITY_REQUEST);
+        XMLElement req = new XMLElement(AccountService.CREATE_IDENTITY_REQUEST);
         identity.toElement(req);
         invoke(req);
     }
 
     public void DeleteIdentityRequest(String name) throws ServiceException {
-        XMLElement req = new XMLElement(MailService.DELETE_IDENTITY_REQUEST);
+        XMLElement req = new XMLElement(AccountService.DELETE_IDENTITY_REQUEST);
         req.addElement(AccountService.E_IDENTITY).addAttribute(AccountService.A_NAME, name);
         invoke(req);
     }
 
     public void ModifyIdentityRequest(ZIdentity identity) throws ServiceException {
-        XMLElement req = new XMLElement(MailService.MODIFY_IDENTITY_REQUEST);
+        XMLElement req = new XMLElement(AccountService.MODIFY_IDENTITY_REQUEST);
         identity.toElement(req);
         invoke(req);
     }

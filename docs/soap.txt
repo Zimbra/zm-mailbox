@@ -549,6 +549,76 @@ global config.
 
 ---------
 
+<CreateIdentityRequest>
+  <identity name="{identity-name}">
+    <a name="{name}">{value}</a>
+    ...
+    <a name="{name}">{value}</a>
+  </identity>
+</CreateIdentityRequest>
+
+<CreateIdentityResponse/>
+
+
+Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
+
+	zimbraPrefBccAddress
+    zimbraPrefDefaultIdentity
+    zimbraPrefForwardIncludeOriginalText
+    zimbraPrefForwardReplyFormat
+    zimbraPrefForwardReplyPrefixChar
+    zimbraPrefFromAddress
+    zimbraPrefFromDisplay
+    zimbraPrefMailSignature
+    zimbraPrefMailSignatureEnabled
+    zimbraPrefMailSignatureStyle
+    zimbraPrefReplyIncludeOriginalText
+    zimbraPrefReplyToAddress
+    zimbraPrefReplyToDisplay
+    zimbraPrefReplyToEnabled
+    zimbraPrefSaveToSent
+    zimbraPrefSentMailFolder
+    zimbraPrefUseDefaultIdentitySettings
+    zimbraPrefWhenInFolderIds
+    zimbraPrefWhenInFoldersEnabeld
+    zimbraPrefWhenSentToAddresses
+    zimbraPrefWhenSentToEnabled
+
+
+---------
+
+<GetAllIdentitiesRequest/>
+
+<GetAllIdentitiesResponse>
+  <identity name="{identity-name}">
+    <a name="{name}">{value}</a>
+    ...
+    <a name="{name}">{value}</a>
+  </identity>+
+</GetAllIdentitiesResponse>
+
+---------
+
+<ModifyIdentityRequest>
+  <identity name="{identity-name}">
+    <a name="{name}">{value}</a>
+    ...
+    <a name="{name}">{value}</a>
+  </identity>
+</ModifyIdentityRequest>
+
+<ModifyIdentityResponse/>
+
+---------
+
+<DeleteIdentityRequest>
+  <identity name="{identity-name}"/>
+</DeleteIdentityRequest>
+
+<DeleteIdentityResponse/>
+
+---------
+
 urn:zimbraMail
 
  mail error/codes: (includes service.*):
@@ -1678,76 +1748,6 @@ interface is available or not.
 
 Returns all locales defined in the system.  This is the same list returned by
 java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
-
----------
-
-<CreateIdentityRequest>
-  <identity name="{identity-name}">
-    <a name="{name}">{value}</a>
-    ...
-    <a name="{name}">{value}</a>
-  </identity>
-</CreateIdentityRequest>
-
-<CreateIdentityResponse/>
-
-
-Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
-
-	zimbraPrefBccAddress
-    zimbraPrefDefaultIdentity
-    zimbraPrefForwardIncludeOriginalText
-    zimbraPrefForwardReplyFormat
-    zimbraPrefForwardReplyPrefixChar
-    zimbraPrefFromAddress
-    zimbraPrefFromDisplay
-    zimbraPrefMailSignature
-    zimbraPrefMailSignatureEnabled
-    zimbraPrefMailSignatureStyle
-    zimbraPrefReplyIncludeOriginalText
-    zimbraPrefReplyToAddress
-    zimbraPrefReplyToDisplay
-    zimbraPrefReplyToEnabled
-    zimbraPrefSaveToSent
-    zimbraPrefSentMailFolder
-    zimbraPrefUseDefaultIdentitySettings
-    zimbraPrefWhenInFolderIds
-    zimbraPrefWhenInFoldersEnabeld
-    zimbraPrefWhenSentToAddresses
-    zimbraPrefWhenSentToEnabled
-
-
----------
-
-<GetAllIdentitiesRequest/>
-
-<GetAllIdentitiesResponse>
-  <identity name="{identity-name}">
-    <a name="{name}">{value}</a>
-    ...
-    <a name="{name}">{value}</a>
-  </identity>+
-</GetAllIdentitiesResponse>
-
----------
-
-<ModifyIdentityRequest>
-  <identity name="{identity-name}">
-    <a name="{name}">{value}</a>
-    ...
-    <a name="{name}">{value}</a>
-  </identity>
-</ModifyIdentityRequest>
-
-<ModifyIdentityResponse/>
-
----------
-
-<DeleteIdentityRequest>
-  <identity name="{identity-name}"/>
-</DeleteIdentityRequest>
-
-<DeleteIdentityResponse/>
 
 ---------------------------
 

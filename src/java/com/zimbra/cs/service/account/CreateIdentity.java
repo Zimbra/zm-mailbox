@@ -22,7 +22,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
@@ -30,8 +30,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.service.account.ToXML;
+import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -48,7 +47,7 @@ public class CreateIdentity extends DocumentHandler {
         Map<String,Object> attrs = AccountService.getAttrs(identityEl, MailService.A_NAME);
         Identity identity = Provisioning.getInstance().createIdentity(account, name, attrs);
         
-        Element response = zsc.createElement(MailService.CREATE_IDENTITY_RESPONSE);
+        Element response = zsc.createElement(AccountService.CREATE_IDENTITY_RESPONSE);
         ToXML.encodeIdentity(response, identity);
         return response;
     }

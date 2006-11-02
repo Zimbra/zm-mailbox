@@ -22,19 +22,23 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.service.account;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
+
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class DeleteIdentity extends DocumentHandler {
+public class ModifyIdentity extends DocumentHandler {
 	
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -42,9 +46,20 @@ public class DeleteIdentity extends DocumentHandler {
         
         Element identityEl = request.getElement(MailService.E_IDENTITY);
         String name = identityEl.getAttribute(MailService.A_NAME);
-        Provisioning.getInstance().deleteIdentity(account, name);
+        Map<String,Object> attrs = AccountService.getAttrs(identityEl, MailService.A_NAME);
 
-        Element response = zsc.createElement(MailService.DELETE_IDENTITY_RESPONSE);
+        // remove anything that doesn't start with zimbraPref. ldap will also do additional checks
+        List<String> toRemove = new ArrayList<String>();
+        for (String key: attrs.keySet())
+            if (!key.startsWith("zimbraPref")) // if this changes, make sure we don't let them ever change objectclass
+                toRemove.add(key);
+        
+        for (String key : toRemove)
+            attrs.remove(key);
+        
+        Provisioning.getInstance().modifyIdentity(account, name, attrs);
+        
+        Element response = zsc.createElement(AccountService.MODIFY_IDENTITY_RESPONSE);
         return response;
     }
 }

@@ -1092,7 +1092,7 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException {
-        XMLElement req = new XMLElement(MailService.CREATE_IDENTITY_REQUEST);
+        XMLElement req = new XMLElement(AccountService.CREATE_IDENTITY_REQUEST);
         Element identity = req.addElement(MailService.E_IDENTITY);
         identity.addAttribute(MailService.A_NAME, identityName);
         addAttrElementsMailService(identity, attrs);

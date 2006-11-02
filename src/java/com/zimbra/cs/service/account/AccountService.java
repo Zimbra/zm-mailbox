@@ -87,6 +87,14 @@ public class AccountService implements DocumentService {
     public static final QName GET_AVAILABLE_SKINS_REQUEST = QName.get("GetAvailableSkinsRequest", NAMESPACE);
     public static final QName GET_AVAILABLE_SKINS_RESPONSE = QName.get("GetAvailableSkinsResponse", NAMESPACE);
 
+    // identities
+    public static final QName CREATE_IDENTITY_REQUEST = QName.get("CreateIdentityRequest", NAMESPACE);
+    public static final QName CREATE_IDENTITY_RESPONSE = QName.get("CreateIdentityResponse", NAMESPACE);
+    public static final QName MODIFY_IDENTITY_REQUEST = QName.get("ModifyIdentityRequest", NAMESPACE);
+    public static final QName MODIFY_IDENTITY_RESPONSE = QName.get("ModifyIdentityResponse", NAMESPACE);
+    public static final QName DELETE_IDENTITY_REQUEST = QName.get("DeleteIdentityRequest", NAMESPACE);
+    public static final QName DELETE_IDENTITY_RESPONSE = QName.get("DeleteIdentityResponse", NAMESPACE);
+  
     public static final String E_ACTION = "action";
     public static final String E_AUTH_TOKEN = "authToken";
     public static final String E_REFERRAL = "refer";
@@ -170,6 +178,12 @@ public class AccountService implements DocumentService {
 
         dispatcher.registerHandler(GET_ALL_LOCALES_REQUEST, new GetAllLocales());
         dispatcher.registerHandler(GET_AVAILABLE_SKINS_REQUEST, new GetAvailableSkins());
+        
+        // identity
+        dispatcher.registerHandler(CREATE_IDENTITY_REQUEST, new CreateIdentity());
+        dispatcher.registerHandler(MODIFY_IDENTITY_REQUEST, new ModifyIdentity());
+        dispatcher.registerHandler(DELETE_IDENTITY_REQUEST, new DeleteIdentity());
+
 	}
 
     /**
