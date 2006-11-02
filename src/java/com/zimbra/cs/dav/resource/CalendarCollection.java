@@ -153,7 +153,7 @@ public class CalendarCollection extends Collection {
 		String boundary = "--caldav-"+System.currentTimeMillis();
 		StringBuilder msgBuf = new StringBuilder();
 		msgBuf.append("Subject: calendar item from caldav\r\n");
-		msgBuf.append("ContentType: multipart/mixed");
+		msgBuf.append("Content-Type: multipart/mixed");
 		msgBuf.append("; boundary=\"").append(boundary).append("\"\r\n");
 		msgBuf.append("\r\n");
 		msgBuf.append("this is a msg in multipart format\r\n");
