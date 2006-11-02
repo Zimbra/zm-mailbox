@@ -180,7 +180,7 @@ public class ProvUtil implements DebugListener {
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 5),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "{domain|id}", Category.MISC, 1, 1),
         GET_ACCOUNT("getAccount", "ga", "{name@domain|id}", Category.ACCOUNT, 1, 1),
-        GET_ACCOUNT_IDENTITIES("getAccountIdentities", "gai", "{name@domain|id}", Category.ACCOUNT, 1, 1),        
+        GET_IDENTITIES("getIdentities", "gi", "{name@domain|id}", Category.ACCOUNT, 1, 1),        
         GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT, 1, 2),
         GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [{domain}]", Category.ACCOUNT, 0, 2),
         GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v]", Category.ACCOUNT, 0, 1),
@@ -377,7 +377,7 @@ public class ProvUtil implements DebugListener {
         case GET_ACCOUNT_MEMBERSHIP:
             doGetAccountMembership(args);
             break;
-        case GET_ACCOUNT_IDENTITIES:
+        case GET_IDENTITIES:
             doGetAccountIdentities(args);
             break;            
         case GET_ALL_ACCOUNTS:

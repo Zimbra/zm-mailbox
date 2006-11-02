@@ -3555,11 +3555,30 @@ public class LdapProvisioning extends Provisioning {
         if (ldapAccount == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
 
-        Identity identity = getIdentityByName(ldapAccount, identityName, null);
+        LdapIdentity identity = (LdapIdentity) getIdentityByName(ldapAccount, identityName, null);
         if (identity == null)
                 throw AccountServiceException.NO_SUCH_IDENTITY(identityName);   
         
+        String name = (String) identityAttrs.get(A_zimbraPrefIdentityName);
+        boolean newName = (name != null && !name.equals(identityName));
+        if (newName) identityAttrs.remove(A_zimbraPrefIdentityName);
+        
         modifyAttrs(identity, identityAttrs, true);
+        if (newName) renameIdentity(ldapAccount, identity, name);
+    }
+    
+    
+    private void renameIdentity(LdapAccount account, LdapIdentity identity, String newIdentityName) throws ServiceException {
+        DirContext ctxt = null;
+        try {
+            ctxt = LdapUtil.getDirContext(true);
+            String newDn = getIdentityDn(account, newIdentityName);            
+            ctxt.rename(identity.getDN(), newDn);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to rename identity: "+newIdentityName, e);
+        } finally {
+            LdapUtil.closeContext(ctxt);
+        }
     }
     
     @Override
