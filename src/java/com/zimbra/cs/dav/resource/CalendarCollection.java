@@ -46,9 +46,11 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.caldav.TimeRange;
@@ -192,6 +194,21 @@ public class CalendarCollection extends Collection {
 		if (!req.getContentType().equalsIgnoreCase(Mime.CT_TEXT_CALENDAR))
 			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
 			
+		String etag = req.getHeader(DavProtocol.HEADER_IF_MATCH);
+
+		/*
+		 * chandler doesn't send the If-None-Match or If-Match headers yet.
+		String noneMatch = req.getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
+		if (etag != null && noneMatch != null ||
+				etag == null && noneMatch == null ||
+				name == null)
+			throw new DavException("bad request", HttpServletResponse.SC_BAD_REQUEST, null);
+			*/
+		
+		boolean isUpdate = (etag != null);
+		if (name.endsWith(CalendarObject.CAL_EXTENSION))
+			name = name.substring(0, name.length()-CalendarObject.CAL_EXTENSION.length());
+		
 		Provisioning prov = Provisioning.getInstance();
 		try {
 			byte[] item = ByteUtil.getContent(req.getInputStream(), req.getContentLength());
@@ -206,12 +223,33 @@ public class CalendarCollection extends Collection {
 				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+			Appointment appt = mbox.getAppointmentByUid(ctxt.getOperationContext(), name);
+			if (appt == null && isUpdate)
+				throw new DavException("event not found", HttpServletResponse.SC_NOT_FOUND, null);
+			/*
+			 * chandler doesn't use If-Match
+			if (appt != null && !isUpdate)
+				throw new DavException("event already exists", HttpServletResponse.SC_CONFLICT, null);
+			if (isUpdate) {
+				CalendarObject calObj = new CalendarObject(appt);
+				ResourceProperty etagProp = calObj.getProperty(DavElements.P_GETETAG);
+				if (!etagProp.getStringValue().equals(etag))
+					throw new DavException("event not found", HttpServletResponse.SC_BAD_REQUEST, null);
+			}
+			 */
+			for (Invite i : invites) {
+	            if (i.getUid() == null)
+	                i.setUid(LdapUtil.generateUUID());
+				mbox.addInvite(ctxt.getOperationContext(), i, mId, false, null);
+			}
+			/*
 			Mailbox.SetAppointmentData data = new SetAppointmentData();
 			data.mPm = createParsedMessage(item);
 			data.mInv = invites.get(0);
 			mbox.setAppointment(ctxt.getOperationContext(), this.mId, data, null);
+			*/
 		} catch (ServiceException e) {
-			throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
+			throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		}
 		
 	}

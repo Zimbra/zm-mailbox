@@ -84,6 +84,7 @@ public class DavProtocol {
 	public static final String HEADER_CONTENT_LENGTH = "Content-Length";
 	public static final String HEADER_ALLOW = "Allow";
 	public static final String HEADER_CACHE_CONTROL = "Cache-Control";
+	public static final String HEADER_ETAG = "ETag";
 	
 	public static final String NO_CACHE = "no-cache";
 	
@@ -96,6 +97,10 @@ public class DavProtocol {
 	public static final String HEADER_OVERWRITE = "Overwrite";
 	public static final String HEADER_STATUS_URI = "Status-URI";
 	public static final String HEADER_TIMEOUT = "Timeout";
+	
+	// caldav extensions
+	public static final String HEADER_IF_MATCH = "If-Match";
+	public static final String HEADER_IF_NONE_MATCH = "If-None-Match";
 	
 	public static final int STATUS_PROCESSING = 102;
 	public static final int STATUS_MULTI_STATUS = 207;
