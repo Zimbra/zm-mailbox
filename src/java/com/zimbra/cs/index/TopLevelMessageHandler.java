@@ -41,6 +41,7 @@ import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
+import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
@@ -143,6 +144,8 @@ public final class TopLevelMessageHandler {
         
         String subject = pm.getNormalizedSubject();
         String sortFrom = pm.getParsedSender().getSortString();
+        if (sortFrom != null && sortFrom.length() > DbMailItem.MAX_SENDER_LENGTH)
+            sortFrom = sortFrom.substring(0, DbMailItem.MAX_SENDER_LENGTH);
         String from = pm.getSender();
         
         //                                                                          store, index, tokenize
@@ -251,7 +254,10 @@ public final class TopLevelMessageHandler {
         
         String subject = pm.getNormalizedSubject();
         String sortFrom = pm.getParsedSender().getSortString();
+        if (sortFrom != null && sortFrom.length() > DbMailItem.MAX_SENDER_LENGTH)
+            sortFrom = sortFrom.substring(0, DbMailItem.MAX_SENDER_LENGTH);
         String from = pm.getSender();
+
         if (from != null)
             d.add(new Field(LuceneFields.L_H_FROM, from, false, true, true));
         if (subject != null) {

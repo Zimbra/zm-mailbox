@@ -2106,13 +2106,13 @@ public final class MailboxIndex
             // so we don't try to do this when a contact is known to be new -- such as when re-indexing.
             try {
                 deleteDocuments(new int[] { mailItemId });
-            } catch(IOException e) {
+            } catch (IOException e1) {
                 mLog.debug("indexContact ignored IOException deleting documents (index does not exist yet)");
             }
 
             Document doc = new Document();
             String subj = contact.getFileAsString().toLowerCase();
-            String name = subj;
+            String name = (subj.length() > DbMailItem.MAX_SENDER_LENGTH ? subj.substring(0, DbMailItem.MAX_SENDER_LENGTH) : subj);
 
             StringBuffer emailStrBuf = new StringBuffer();
             List emailList = contact.getEmailAddresses();
@@ -2138,8 +2138,8 @@ public final class MailboxIndex
 
             addDocument(redo, doc, mailItemId, contact.getDate(), false);
 
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("indexContact caught IOException", e);
+        } catch (IOException ioe) {
+            throw ServiceException.FAILURE("indexContact caught IOException", ioe);
         }
     }    
 
@@ -2173,7 +2173,7 @@ public final class MailboxIndex
             doc.add(Field.UnStored(LuceneFields.L_CONTENT, toIndex));
 
             String subj = toIndex.toLowerCase();
-            String name = subj;
+            String name = (subj != null && subj.length() > DbMailItem.MAX_SENDER_LENGTH ? subj.substring(0, DbMailItem.MAX_SENDER_LENGTH) : subj);
 
             doc.add(Field.UnStored(LuceneFields.L_H_SUBJECT, subj));
             doc.add(Field.Keyword(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(mailItemId)));
