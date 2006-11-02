@@ -374,9 +374,9 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
    <mailURL>{mail-url}</mailURL>+
    <identities>
      <identity name={identity-name}>
-       <a n="{name}">{value}</a>
+       <a name="{name}">{value}</a>
        ...
-       <a n="{name}">{value}</a>
+       <a name="{name}">{value}</a>
        <signature n="{name}">{value}</signature>*
      </identity>*
    </identities>
@@ -1684,10 +1684,10 @@ java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
 
 <CreateIdentityRequest>
   <identity name="{identity-name}">
-    <a n="{name}">{value}</a>
+    <a name="{name}">{value}</a>
     ...
-    <a n="{name}">{value}</a>
-    <signature n="{name}">{value}</signature>*
+    <a name="{name}">{value}</a>
+    <signature name="{name}">{value}</signature>*
   </identity>
 </CreateIdentityRequest>
 
@@ -1722,9 +1722,9 @@ Allowed attributes:
 
 <ModifyIdentityRequest>
   <identity name="{identity-name}">
-    <a n="{name}">{value}</a>
+    <a name="{name}">{value}</a>
     ...
-    <a n="{name}">{value}</a>
+    <a name="{name}">{value}</a>
     <signature n="{name}">{value}</signature>*
   </identity>
 </ModifyIdentityRequest>
