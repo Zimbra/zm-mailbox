@@ -1745,9 +1745,18 @@ Allowed attributes:
   <pop3 host="pop.myisp.com" port="110" username="mylogin" password="mypassword"/>
 </TestDataSourceRequest>
 
+or
+
+<TestDataSourceRequest>
+  <pop3 id="{id}" [host="pop.myisp.com"] [port="110"] [username="mylogin"] [password="mypassword"]/>
+</TestDataSourceRequest>
+
 <TestDataSourceResponse success="0|1" [error="Error message"]/>
 
-Tests the connection to the specified data source.  Does not import data.
+Tests the connection to the specified data source.  Does not modify
+the data source or import data.  If the id is specified, uses an existing
+data source.  Any values specified in the request are used in the test
+instead of the saved values.
 
 ---------------------------
 

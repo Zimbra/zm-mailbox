@@ -27,6 +27,8 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.MailItemDataSource;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -40,13 +42,47 @@ public class TestDataSource extends MailDocumentHandler {
     throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
+        String host;
+        int port;
+        String username;
+        String password;
+        
         // Parse request
         Element ePop3 = request.getElement(MailService.E_DS_POP3);
-        String host = ePop3.getAttribute(MailService.A_DS_HOST);
-        int port = (int) ePop3.getAttributeLong(MailService.A_DS_PORT);
-        String username = ePop3.getAttribute(MailService.A_DS_USERNAME);
-        String password = ePop3.getAttribute(MailService.A_DS_PASSWORD);
-
+        if (attrExists(ePop3, MailService.A_ID)) {
+            // Testing existing data source
+            Mailbox mbox = getRequestedMailbox(zsc);
+            OperationContext octxt = mbox.getOperationContext();
+            int id = (int) ePop3.getAttributeLong(MailService.A_ID);
+            
+            // Read current values
+            MailItemDataSource ds = mbox.getDataSource(octxt, id);
+            host = ds.getHost();
+            port = ds.getPort();
+            username = ds.getUsername();
+            password = ds.getPassword();
+            
+            // Override with values in SOAP request
+            if (attrExists(ePop3, MailService.A_DS_HOST)) {
+                host = ePop3.getAttribute(MailService.A_DS_HOST);
+            }
+            if (attrExists(ePop3, MailService.A_DS_PORT)) {
+                port = (int) ePop3.getAttributeLong(MailService.A_DS_PORT);
+            }
+            if (attrExists(ePop3, MailService.A_DS_USERNAME)) {
+                username = ePop3.getAttribute(MailService.A_DS_USERNAME);
+            }
+            if (attrExists(ePop3, MailService.A_DS_PASSWORD)) {
+                password = ePop3.getAttribute(MailService.A_DS_PASSWORD);
+            }
+        } else {
+            // All attrs must be specified in SOAP request
+            host = ePop3.getAttribute(MailService.A_DS_HOST);
+            port = (int) ePop3.getAttributeLong(MailService.A_DS_PORT);
+            username = ePop3.getAttribute(MailService.A_DS_USERNAME);
+            password = ePop3.getAttribute(MailService.A_DS_PASSWORD);
+        }
+        
         // Perform test and assemble response
         Element response = zsc.createElement(MailService.TEST_DATA_SOURCE_RESPONSE);
         ePop3 = response.addElement(MailService.E_DS_POP3);
@@ -60,5 +96,9 @@ public class TestDataSource extends MailDocumentHandler {
         }
         
         return response;
+    }
+    
+    private boolean attrExists(Element e, String attrName) {
+        return (e.getAttribute(attrName, null) != null);
     }
 }
