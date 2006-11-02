@@ -1264,46 +1264,74 @@ public class ZRecur {
                         mInterval = Integer.parseInt(rhs);
                         break;
                     case BYSECOND:
-                        parseIntList(rhs, mBySecondList, 0, 59);
+                        parseIntList(rhs, mBySecondList, 0, 59, false);
                         break;
                     case BYMINUTE:
-                        parseIntList(rhs, mByMinuteList, 0, 59);
+                        parseIntList(rhs, mByMinuteList, 0, 59, false);
                         break;
                     case BYHOUR:
-                        parseIntList(rhs, mByHourList, 0, 23);
+                        parseIntList(rhs, mByHourList, 0, 23, false);
                         break;
                     case BYDAY:
                         parseByDayList(rhs, mByDayList);
                         break;
                     case BYMONTHDAY:
-                        parseIntList(rhs, mByMonthDayList, -31, 31);
+                        parseIntList(rhs, mByMonthDayList, -31, 31, true);
                         break;
                     case BYYEARDAY:
-                        parseIntList(rhs, mByYearDayList, -366, 366);
+                        parseIntList(rhs, mByYearDayList, -366, 366, true);
                         break;
                     case BYWEEKNO:
-                        parseIntList(rhs, mByWeekNoList, -53, 53);
+                        parseIntList(rhs, mByWeekNoList, -53, 53, true);
                         break;
                     case BYMONTH:
-                        parseIntList(rhs, mByMonthList, 1, 12);
+                        parseIntList(rhs, mByMonthList, 1, 12, false);
                         break;
                     case BYSETPOS:
-                        parseIntList(rhs, mBySetPosList, Integer.MIN_VALUE, Integer.MAX_VALUE);
+                        parseIntList(rhs, mBySetPosList, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
                         break;
                     case WKST:
                         mWkSt = ZWeekDay.valueOf(rhs);
                         break;
                     }
                 } catch(IllegalArgumentException e) {
-                    ZimbraLog.calendar.debug(new Formatter().format("Skipping unknown RECUR token: \"%s\" in Recur \"%s\"", s[0], str));
+                    ZimbraLog.calendar.warn(new Formatter().format("Skipping RECUR token: \"%s\" in Recur \"%s\" due to parse error", s[0], str), e);
                 }
             }
         } catch (ParseException e) {
-            throw ServiceException.FAILURE("Parse error for recur \""+str+"\"", null);
+            throw ServiceException.FAILURE("Parse error for recur \""+str+"\"", e);
         }
     }
-    
-    
+
+    private static int parseSignedInt(String str) {
+        if (str == null)
+            throw new NumberFormatException("null is not a number");
+        int len = str.length();
+        if (len == 0)
+            throw new NumberFormatException("empty string is not a number");
+        int num = 0;
+        if (str.charAt(0) == '+') {
+            if (len == 1)
+                throw new NumberFormatException("+ is not a number");
+            num = Integer.parseInt(str.substring(1));
+        } else {
+            num = Integer.parseInt(str);
+        }
+        return num;
+    }
+
+    private static int parseUnsignedInt(String str) {
+        if (str == null)
+            throw new NumberFormatException("null is not a number");
+        int len = str.length();
+        if (len == 0)
+            throw new NumberFormatException("empty string is not a number");
+        char sign = str.charAt(0);
+        if (sign == '+' || sign == '-')
+            throw new NumberFormatException("sign not allowed: " + str);
+        return Integer.parseInt(str);
+    }
+
     private void parseByDayList(String str, List<ZWeekDayNum> list) {
         for (String s : str.split(",")) {
             ZWeekDayNum wdn = new ZWeekDayNum();
@@ -1313,30 +1341,31 @@ public class ZRecur {
             if (s.length() > 2) {
                 String numStr = s.substring(0,s.length()-2);
                 dayStr = dayStr.substring(s.length()-2);
-                wdn.mOrdinal = Integer.parseInt(numStr);
+                wdn.mOrdinal = parseSignedInt(numStr);
             }
             wdn.mDay = ZWeekDay.valueOf(dayStr);
             
             list.add(wdn);
         }
-        
+
         // sort by DAY-OF-WEEK (necessary for the byDay checks to work)
         Collections.sort(list, new ZWeekDayNum.DayOnlyComparator());
     }
-    
-    
-    private void parseIntList(String str, List<Integer> list, int min, int max) {
+
+    private void parseIntList(String str, List<Integer> list, int min, int max, boolean signed) {
         for (String s : str.split(","))
             try {
-                int readInt = Integer.parseInt(s);
+                int readInt;
+                if (signed)
+                    readInt = parseSignedInt(s);
+                else
+                    readInt = parseUnsignedInt(s);
                 if (readInt >= min && readInt <= max) {
                     list.add(readInt);
                 }
             } catch (Exception e) {
                 ZimbraLog.calendar.debug(new Formatter().format("Skipping unparsable Recur int list entry: \"%s\" in parameter list: \"%s\"", s, str));
             }
-        
         Collections.sort(list);
     }
-    
 }
