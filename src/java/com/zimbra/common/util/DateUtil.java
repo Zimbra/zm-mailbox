@@ -29,6 +29,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,25 +58,22 @@ public class DateUtil {
      * from LDAP generalized time string
      */
     public static Date parseGeneralizedTime(String time) {
-        try {
-            SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMddHHmmss'Z'");
-            Date localDate = fmt.parse(time);
-            if (time.endsWith("Z")) {
-                Date date = new Date();
-                if (fmt.getCalendar().getTimeZone().inDaylightTime(date))
-                    localDate =
-                        new Date(localDate.getTime() +
-                                fmt.getCalendar().getTimeZone().getRawOffset() +
-                                fmt.getCalendar().getTimeZone().getDSTSavings());
-                else
-                    localDate =
-                        new Date(localDate.getTime() +
-                                fmt.getCalendar().getTimeZone().getRawOffset());
-            }
-            return localDate;
-        } catch(ParseException pe) {
-            return null;
-        }            
+    	if (time.length() < 14 || time.length() > 15)
+    		return null;
+    	TimeZone tz;
+    	if (time.endsWith("Z"))
+    		tz = TimeZone.getTimeZone("GMT");
+    	else
+    		tz = TimeZone.getDefault();
+    	int year = Integer.parseInt(time.substring(0, 4));
+    	int month = Integer.parseInt(time.substring(4, 6))-1;  // months are 0 base
+    	int date = Integer.parseInt(time.substring(6, 8));
+    	int hour = Integer.parseInt(time.substring(8, 10));
+    	int min = Integer.parseInt(time.substring(10, 12));
+    	int sec = Integer.parseInt(time.substring(12, 14));
+    	Calendar calendar = new GregorianCalendar(tz);
+    	calendar.set(year, month, date, hour, min, sec);
+    	return calendar.getTime();
     }
 
     /**
