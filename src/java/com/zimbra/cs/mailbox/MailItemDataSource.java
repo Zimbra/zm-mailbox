@@ -230,9 +230,10 @@ public class MailItemDataSource {
                 ZimbraLog.mailbox.warn("Invalid data source key: " + key);
                 continue;
             }
+            Metadata dsMeta = config.getMap(key);
             
-            MailItemDataSource ds = new MailItemDataSource(mbox, id, config.get(TYPE), config.get(NAME), config.getBool(IS_ENABLED), config.get(HOST),
-                (int) config.getLong(PORT), config.get(USERNAME), config.get(PASSWORD), (int) config.getLong(FOLDER_ID));
+            MailItemDataSource ds = new MailItemDataSource(mbox, id, dsMeta.get(TYPE), dsMeta.get(NAME), dsMeta.getBool(IS_ENABLED), dsMeta.get(HOST),
+                (int) dsMeta.getLong(PORT), dsMeta.get(USERNAME), dsMeta.get(PASSWORD), (int) dsMeta.getLong(FOLDER_ID));
 
             dataSources.put(id, ds);
         }

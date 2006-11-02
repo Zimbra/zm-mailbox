@@ -4426,6 +4426,7 @@ public class Mailbox {
             Map<Integer, MailItemDataSource> dataSources =
                 MailItemDataSource.extractFromMetadata(this, octxt);
             mDataSources = Collections.synchronizedMap(dataSources);
+            ZimbraLog.mailbox.debug("Loaded " + dataSources.size() + " data sources");
         }
         return mDataSources;
     }
