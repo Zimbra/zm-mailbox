@@ -413,18 +413,20 @@ public class StringUtil {
         if (obj == null)
             return "";
         String replacement, str = obj.toString();
-        StringBuffer sb = null;
+        StringBuilder sb = null;
         int i, last, length = str.length();
         for (i = 0, last = -1; i < length; i++) {
             char c = str.charAt(i);
             switch (c) {
-                case '\\':  replacement = "\\\\";                break;
-                case '"':   replacement = "\\\"";                break;
-                default:    if (c >= ' ')                        continue;
-                            replacement = JS_CHAR_ENCODINGS[c];  break;
+                case '\\':      replacement = "\\\\";                break;
+                case '"':       replacement = "\\\"";                break;
+                case '\u2028':  replacement = "\\u2028";             break;
+                case '\u2029':  replacement = "\\u2029";             break;
+                default:        if (c >= ' ')                        continue;
+                                replacement = JS_CHAR_ENCODINGS[c];  break;
             }
             if (sb == null)
-                sb = new StringBuffer(str.substring(0, i));
+                sb = new StringBuilder(str.substring(0, i));
             else
                 sb.append(str.substring(last, i));
             sb.append(replacement);
