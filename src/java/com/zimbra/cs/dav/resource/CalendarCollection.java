@@ -24,18 +24,28 @@
  */
 package com.zimbra.cs.dav.resource;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
+
+import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -46,6 +56,15 @@ import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Mailbox.SetAppointmentData;
+import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.ZCalendar;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.L10nUtil;
 import com.zimbra.cs.util.L10nUtil.MsgKey;
@@ -127,5 +146,73 @@ public class CalendarCollection extends Collection {
 	public java.util.Collection<Appointment> get(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
 		Mailbox mbox = getMailbox();
 		return mbox.getAppointmentsForRange(ctxt.getOperationContext(), range.getStart(), range.getEnd(), mId, null);
+	}
+	
+	public ParsedMessage createParsedMessage(byte[] item) throws DavException, IOException {
+		String method = "REQUEST";
+		String boundary = "--caldav-"+System.currentTimeMillis();
+		StringBuilder msgBuf = new StringBuilder();
+		msgBuf.append("Subject: calendar item from caldav\r\n");
+		msgBuf.append("ContentType: multipart/mixed");
+		msgBuf.append("; boundary=\"").append(boundary).append("\"\r\n");
+		msgBuf.append("\r\n");
+		msgBuf.append("this is a msg in multipart format\r\n");
+		msgBuf.append("\r\n");
+		msgBuf.append("--").append(boundary).append("\r\n");
+		msgBuf.append("Content-Type: ").append(Mime.CT_TEXT_CALENDAR);
+		msgBuf.append("; method=").append(method);
+		msgBuf.append("; name=meeting.ics").append("\r\n");
+		msgBuf.append("Content-Transfer-Encoding: 8bit\r\n");
+		msgBuf.append("\r\n");
+		msgBuf.append(new String(item, "UTF-8"));
+		msgBuf.append("\r\n");
+		msgBuf.append("--").append(boundary).append("--").append("\r\n");
+		try {
+			return new ParsedMessage(msgBuf.toString().getBytes(), false);
+		} catch (MessagingException e) {
+			throw new DavException("cannot create ParsedMessage", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
+		}
+	}
+	
+	private String findSummary(ZVCalendar cal) {
+		Iterator<ZComponent> iter = cal.getComponentIterator();
+		while (iter.hasNext()) {
+			ZComponent comp = iter.next();
+			String summary = comp.getPropVal(ICalTok.SUMMARY, null);
+			if (summary != null)
+				return summary;
+		}
+		return "calendar event";
+	}
+	
+	public void createItem(DavContext ctxt, String user, String name) throws DavException, IOException {
+		HttpServletRequest req = ctxt.getRequest();
+		if (req.getContentLength() <= 0)
+			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
+		if (!req.getContentType().equalsIgnoreCase(Mime.CT_TEXT_CALENDAR))
+			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
+			
+		Provisioning prov = Provisioning.getInstance();
+		try {
+			byte[] item = ByteUtil.getContent(req.getInputStream(), req.getContentLength());
+			ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(new ByteArrayInputStream(item)));
+			List<Invite> invites = Invite.createFromCalendar(ctxt.getAuthAccount(), 
+					findSummary(vcalendar), 
+					vcalendar, 
+					true);
+			
+			Account account = prov.get(AccountBy.name, user);
+			if (account == null)
+				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+			Mailbox.SetAppointmentData data = new SetAppointmentData();
+			data.mPm = createParsedMessage(item);
+			data.mInv = invites.get(0);
+			mbox.setAppointment(ctxt.getOperationContext(), this.mId, data, null);
+		} catch (ServiceException e) {
+			throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
+		}
+		
 	}
 }

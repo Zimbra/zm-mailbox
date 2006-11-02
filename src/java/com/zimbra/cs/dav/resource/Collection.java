@@ -182,6 +182,7 @@ public class Collection extends DavResource {
 				throw new DavException("no DAV resource for "+MailItem.getNameForType(item.getType()), HttpServletResponse.SC_NOT_ACCEPTABLE, null);
 			mbox.addDocumentRevision(ctxt.getOperationContext(), (Document)item, data, author);
 			ctxt.setStatus(HttpServletResponse.SC_OK);
+			return;
 		} catch (ServiceException e) {
 			if (!(e instanceof NoSuchItemException))
 				throw new DavException("cannot get item ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);

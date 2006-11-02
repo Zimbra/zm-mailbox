@@ -68,7 +68,7 @@ public class UrlNamespace {
 	}
 	
 	public static DavResource getResourceAt(DavContext ctxt, String path) throws DavException {
-		String target = path;
+		String target = path.toLowerCase();
 		if (target == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
 		
@@ -89,7 +89,8 @@ public class UrlNamespace {
 	
 	public static void deleteResource(DavContext ctxt) throws DavException {
 		String user = ctxt.getUser();
-		if (user == null)
+		String path = ctxt.getPath();
+		if (user == null || path == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
 		try {
 			Provisioning prov = Provisioning.getInstance();
@@ -98,7 +99,7 @@ public class UrlNamespace {
 				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), ctxt.getPath(), 0, false);
+			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), path.toLowerCase(), 0, false);
 			mbox.delete(ctxt.getOperationContext(), item.getId(), item.getType());
 		} catch (ServiceException e) {
 			throw new DavException("cannot get item", HttpServletResponse.SC_NOT_FOUND, e);

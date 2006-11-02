@@ -52,7 +52,7 @@ public class DavContext {
 	
 	public DavContext(HttpServletRequest req, HttpServletResponse resp) {
 		mReq = req;  mResp = resp;
-		mUri = req.getPathInfo().toLowerCase();
+		mUri = req.getPathInfo();
 		int index = mUri.indexOf('/', 1);
 		if (index != -1) {
 			mUser = mUri.substring(1, index);
