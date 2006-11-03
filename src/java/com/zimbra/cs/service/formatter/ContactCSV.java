@@ -122,6 +122,7 @@ public class ContactCSV {
     public static final String CSV_Mobile = "Mobile";
     public static final String CSV_Mobile_Phone = "Mobile Phone";
     public static final String CSV_Name = "Name";    
+    public static final String CSV_Nickname = "Nickname";
     public static final String CSV_Notes = "Notes";
     public static final String CSV_Office_Location = "Office Location";
     public static final String CSV_Organizational_ID_Number = "Organizational ID Number";
@@ -305,6 +306,7 @@ public class ContactCSV {
         addMapping(CSV_Mobile, Contact.A_mobilePhone, OP_MAP, false);
 
         addMapping(CSV_Name, null, OP_NAME, false);
+        addMapping(CSV_Nickname, Contact.A_nickname, OP_NAME);
         
         addMapping(CSV_Notes, Contact.A_notes, OP_MAP);
         //CSV_Office_Location
