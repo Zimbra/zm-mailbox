@@ -1856,4 +1856,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>what format we reply/forward messages in.</desc>
 </attr>
 
+<attr id="414" name="zimbraIdentityMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>20</defaultCOSValue>
+  <desc>maximum number of profiles allowed on an account</desc>
+</attr>
+
 </attrs>

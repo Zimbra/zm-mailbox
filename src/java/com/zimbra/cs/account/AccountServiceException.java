@@ -67,6 +67,7 @@ public class AccountServiceException extends ServiceException {
     public static final String MAINTENANCE_MODE   = "account.MAINTENANCE_MODE";
     public static final String ACCOUNT_INACTIVE   = "account.ACCOUNT_INACTIVE";
     public static final String IDENTITY_EXISTS = "account.IDENTITY_EXISTS";    
+    public static final String TOO_MANY_IDENTITIES = "account.TOO_MANY_IDENTITIES";
 
     private AccountServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -181,6 +182,10 @@ public class AccountServiceException extends ServiceException {
     public static AccountServiceException IDENTITY_EXISTS(String name) {
         return new AccountServiceException("identity already exists: " + name, IDENTITY_EXISTS, SENDERS_FAULT, null);
     }
+    
+    public static AccountServiceException TOO_MANY_IDENTITIES() {
+        return new AccountServiceException("too many identities. can't create any more", TOO_MANY_IDENTITIES, SENDERS_FAULT, null);
+    }    
     
     public static AccountServiceException MAINTENANCE_MODE() {
         return new AccountServiceException("account is in maintenance mode", MAINTENANCE_MODE, RECEIVERS_FAULT, null);

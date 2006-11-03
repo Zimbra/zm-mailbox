@@ -853,6 +853,7 @@ public abstract class Provisioning {
     public static final String A_zimbraMailSpamLifetime = "zimbraMailSpamLifetime";
     public static final String A_zimbraMailMessageLifetime = "zimbraMailMessageLifetime";
     public static final String A_zimbraContactMaxNumEntries = "zimbraContactMaxNumEntries";
+    public static final String A_zimbraIdentityMaxNumEntries = "zimbraIdentityMaxNumEntries";    
     public static final String A_zimbraAuthTokenLifetime = "zimbraAuthTokenLifetime";
     public static final String A_zimbraAdminAuthTokenLifetime = "zimbraAdminAuthTokenLifetime";
     public static final String A_zimbraMailMinPollingInterval =  "zimbraMailMinPollingInterval";

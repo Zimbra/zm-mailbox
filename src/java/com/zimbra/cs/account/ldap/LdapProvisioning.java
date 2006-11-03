@@ -3528,6 +3528,11 @@ public class LdapProvisioning extends Provisioning {
         if (identityName.equalsIgnoreCase(DEFAULT_IDENTITY_NAME))
                 throw AccountServiceException.IDENTITY_EXISTS(identityName);
         
+        List<Identity> existing = getAllIdentities(ldapAccount);
+        if (existing.size() >= ldapAccount.getLongAttr(A_zimbraIdentityMaxNumEntries, 20))
+            throw AccountServiceException.TOO_MANY_IDENTITIES();
+        
+        
         HashMap attrManagerContext = new HashMap();
         AttributeManager.getInstance().preModify(identityAttrs, null, attrManagerContext, true, true);
 
