@@ -580,7 +580,7 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
     zimbraPrefSentMailFolder
     zimbraPrefUseDefaultIdentitySettings
     zimbraPrefWhenInFolderIds
-    zimbraPrefWhenInFoldersEnabeld
+    zimbraPrefWhenInFoldersEnabled
     zimbraPrefWhenSentToAddresses
     zimbraPrefWhenSentToEnabled
 

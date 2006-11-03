@@ -1807,51 +1807,52 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>TRUE if this is the default identity</desc>
 </attr>
 
-<attr id="402" name="zimbraPrefFromDisplay" type="string" max="256" cardinality="single" optionalIn="identity" flags="domainAdminModifiable">
+<attr id="402" name="zimbraPrefFromDisplay" type="string" max="256" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
   <desc>personal part of email address put in from header</desc>
 </attr>
 
-<attr id="403" name="zimbraPrefFromAddress" type="string" max="256" cardinality="single" optionalIn="identity" flags="domainAdminModifiable">
+<attr id="403" name="zimbraPrefFromAddress" type="string" max="256" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
   <desc>email address to put in from header</desc>
 </attr>
 
-<attr id="404" name="zimbraPrefReplyToDisplay" type="string" max="256" cardinality="single" optionalIn="identity" flags="domainAdminModifiable">
+<attr id="404" name="zimbraPrefReplyToDisplay" type="string" max="256" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
   <desc>personal part of email address put in reply-to header</desc>
 </attr>
 
-<attr id="405" name="zimbraPrefReplyToEnabled" type="boolean" cardinality="single" optionalIn="identity" flags="domainAdminModifiable">
+<attr id="405" name="zimbraPrefReplyToEnabled" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
   <desc>TRUE if we should set a reply-to header</desc>
 </attr>
 
-<attr id="406" name="zimbraPrefWhenSentToEnabled" type="boolean" cardinality="single" optionalIn="identity" flags="domainAdminModifiable">
+<attr id="406" name="zimbraPrefWhenSentToEnabled" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
   <desc>TRUE if we should look at zimbraPrefWhenSentToAddresses</desc>
 </attr>
 
-<attr id="407" name="zimbraPrefWhenSentToAddresses" type="string" max="2048" cardinality="single" optionalIn="identity" flags="domainAdminModifiable">
+<attr id="407" name="zimbraPrefWhenSentToAddresses" type="string" max="2048" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
   <desc>addresses that we will look at to see if we should use an identity</desc>
 </attr>
 
-<attr id="408" name="zimbraPrefWhenInFoldersEnabeld" type="boolean" cardinality="single" optionalIn="identity" flags="domainAdminModifiable">
+<attr id="408" name="zimbraPrefWhenInFoldersEnabled" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
   <desc>TRUE if we should look at zimbraPrefWhenInFolderIds</desc>
 </attr>
 
-<attr id="409" name="zimbraPrefWhenInFolderIds" type="string" max="512" cardinality="single" optionalIn="identity" flags="domainAdminModifiable">
+<attr id="409" name="zimbraPrefWhenInFolderIds" type="string" max="512" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
   <desc>if replying/forwarding a message in this folder, use this identity</desc>
 </attr>
 
-<attr id="410" name="zimbraPrefUseDefaultIdentitySettings" type="boolean" cardinality="single" optionalIn="identity" flags="domainAdminModifiable">
+<attr id="410" name="zimbraPrefUseDefaultIdentitySettings" type="boolean" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
   <desc>TRUE if we this identity should get settings from the default identity</desc>
 </attr>
 
-<attr id="411" name="zimbraPrefBccAddress" type="string" max="2048" cardinality="single" optionalIn="identity" flags="domainAdminModifiable">
+<attr id="411" name="zimbraPrefBccAddress" type="string" max="2048" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
   <desc>address that we will bcc when using sending mail with this identity</desc>
 </attr>
 
-<attr id="412" name="zimbraPrefIdentityName" type="string" max="128" cardinality="single" requiredIn="identity" flags="domainAdminModifiable">
+<attr id="412" name="zimbraPrefIdentityName" type="string" max="128" cardinality="single" requiredIn="identity" optionalIn="account" flags="domainAdminModifiable">
   <desc>name of the identity</desc>
 </attr>
 
-<attr id="413" name="zimbraPrefForwardReplyFormat" type="enum" value="text,html,same" cardinality="single" optionalIn="identity" flags="domainAdminModifiable">
+<attr id="413" name="zimbraPrefForwardReplyFormat" type="enum" value="text,html,same" cardinality="single" optionalIn="cos,account,identity" flags="domainAdminModifiable">
+  <defaultCOSValue>text</defaultCOSValue>
   <desc>what format we reply/forward messages in.</desc>
 </attr>
 
