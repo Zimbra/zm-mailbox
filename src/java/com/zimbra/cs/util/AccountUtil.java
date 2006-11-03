@@ -132,6 +132,8 @@ public class AccountUtil {
      * True if this address matches some address for this account (aliases, domain re-writes, etc)
      */
     public static boolean addressMatchesAccount(Account acct, String givenAddress) throws ServiceException {
+        if (givenAddress == null)
+            return false;
         String accountAddress = acct.getName();
         String canonicalAddress = getCanonicalAddress(acct);
         String[] accountAliases = acct.getAliases();
@@ -139,6 +141,8 @@ public class AccountUtil {
     }
     
     private static boolean addressMatchesAccount(String accountAddress, String canonicalAddress, String[] accountAliases, String givenAddress) {
+        if (givenAddress == null)
+            return false;
         if (givenAddress.equalsIgnoreCase(accountAddress)) {
             return true;
         }
