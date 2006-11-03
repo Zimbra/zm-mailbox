@@ -1803,10 +1803,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>maximum number of accounts allowed in a domain</desc>
 </attr>
 
-<attr id="401" name="zimbraPrefDefaultIdentity" type="boolean" cardinality="single" optionalIn="identity" flags="domainAdminModifiable">
-  <desc>TRUE if this is the default identity</desc>
-</attr>
-
 <attr id="402" name="zimbraPrefFromDisplay" type="string" max="256" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
   <desc>personal part of email address put in from header</desc>
 </attr>

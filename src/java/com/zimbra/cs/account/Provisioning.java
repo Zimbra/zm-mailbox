@@ -757,7 +757,6 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefSentMailFolder = "zimbraPrefSentMailFolder";
 
     public static final String A_zimbraPrefBccAddress = "zimbraPrefBccAddress";
-    public static final String A_zimbraPrefDefaultIdentity = "zimbraPrefDefaultIdentity";
     public static final String A_zimbraPrefForwardIncludeOriginalText = "zimbraPrefForwardIncludeOriginalText";
     public static final String A_zimbraPrefForwardReplyFormat = "zimbraPrefForwardReplyFormat";
     public static final String A_zimbraPrefForwardReplyPrefixChar = "zimbraPrefForwardReplyPrefixChar";

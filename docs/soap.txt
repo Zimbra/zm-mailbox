@@ -563,7 +563,6 @@ global config.
 Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 
 	zimbraPrefBccAddress
-    zimbraPrefDefaultIdentity
     zimbraPrefForwardIncludeOriginalText
     zimbraPrefForwardReplyFormat
     zimbraPrefForwardReplyPrefixChar

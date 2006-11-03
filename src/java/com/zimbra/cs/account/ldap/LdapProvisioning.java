@@ -3651,8 +3651,6 @@ public class LdapProvisioning extends Provisioning {
         }
         if (attrs.get(A_zimbraPrefIdentityName) == null)
             attrs.put(A_zimbraPrefIdentityName, DEFAULT_IDENTITY_NAME);
-        if (attrs.get(A_zimbraPrefDefaultIdentity) == null)        
-            attrs.put(A_zimbraPrefDefaultIdentity, result.isEmpty() ? TRUE : FALSE);
 
         String fromAddress = (String) attrs.get(A_zimbraPrefFromAddress);
         String fromDisplay = (String) attrs.get(A_zimbraPrefFromDisplay);
