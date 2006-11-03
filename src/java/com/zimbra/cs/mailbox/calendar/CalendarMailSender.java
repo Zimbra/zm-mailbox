@@ -256,7 +256,7 @@ public class CalendarMailSender {
                                                   ZVCalendar iCal)
     throws ServiceException {
         Locale locale = fromAccount.getLocale();
-        String sbj = getCancelSubject(defaultInv, locale);
+        String sbj = defaultInv != null ? getCancelSubject(defaultInv, locale) : "";
         StringBuilder sb = new StringBuilder(text);
         sb.append("\r\n\r\n");
         if (cancelInstanceInv != null) {
@@ -269,7 +269,7 @@ public class CalendarMailSender {
             sb.append("\r\n\r\n");
         }
 
-        MimeMessage mmInv = defaultInv.getMimeMessage();
+        MimeMessage mmInv = defaultInv != null ? defaultInv.getMimeMessage() : null;
         if (mmInv != null)
             attachInviteSummary(sb, mmInv, locale);
         
@@ -281,7 +281,8 @@ public class CalendarMailSender {
         }
 
         return createDefaultCalendarMessage(
-                sender, toAddrs, sbj, sb.toString(), defaultInv.getUid(), iCal);
+                sender, toAddrs, sbj, sb.toString(),
+                defaultInv != null ? defaultInv.getUid() : "unknown", iCal);
     }
 
     private static MimeMessage createDefaultCalendarMessage(

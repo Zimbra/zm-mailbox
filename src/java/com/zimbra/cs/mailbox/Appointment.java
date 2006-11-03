@@ -216,7 +216,7 @@ public class Appointment extends MailItem {
         long startTime, endTime;
 
         // update our recurrence rule, start with the initial rule
-        Invite firstInv = getDefaultInvite();
+        Invite firstInv = getDefaultInviteOrNull();
         if (firstInv == null) {
             return false;
         }
@@ -529,7 +529,7 @@ public class Appointment extends MailItem {
         return mInvites.get(num);
     }
     
-    public Invite getDefaultInvite() {
+    public Invite getDefaultInviteOrNull() {
         Invite first = null;
         for (Iterator iter = mInvites.iterator(); iter.hasNext();) {
             Invite cur = (Invite) iter.next();
@@ -566,7 +566,10 @@ public class Appointment extends MailItem {
                           boolean force, int folderId, short volumeId,
                           boolean replaceExistingInvites)
     throws ServiceException {
-        ZOrganizer originalOrganizer = getDefaultInvite().getOrganizer();
+        ZOrganizer originalOrganizer = null;
+        Invite defInv = getDefaultInviteOrNull();
+        if (defInv != null)
+            originalOrganizer = defInv.getOrganizer();
         if (replaceExistingInvites) {
             mInvites.clear();
             //saveMetadata();
@@ -622,7 +625,7 @@ public class Appointment extends MailItem {
         ParsedDuration dtStartMovedBy = null;
         ArrayList<Invite> toUpdate = new ArrayList<Invite>();
         if (!isCancel && newInvite.isRecurrence()) {
-            Invite defInv = getDefaultInvite();
+            Invite defInv = getDefaultInviteOrNull();
             if (defInv != null) {
                 oldDtStart = defInv.getStartTime();
                 ParsedDateTime newDtStart = newInvite.getStartTime();
@@ -1668,8 +1671,8 @@ public class Appointment extends MailItem {
                         sb.append("\r\n   - ").append(end);
                     }
 
-                    Invite defInv = instance.getAppointment().getDefaultInvite();
-                    if (defInv.hasOrganizer()) {
+                    Invite defInv = instance.getAppointment().getDefaultInviteOrNull();
+                    if (defInv != null && defInv.hasOrganizer()) {
                         ZOrganizer organizer = defInv.getOrganizer();
                         String orgDispName;
                         if (organizer.hasCn())
@@ -1805,9 +1808,8 @@ public class Appointment extends MailItem {
 
         invite.updateMyPartStat(account, partStat);
         if (forCreate) {
-            Invite defaultInvite = getDefaultInvite();
-            assert(defaultInvite != null);
-            if (!defaultInvite.equals(invite) &&
+            Invite defaultInvite = getDefaultInviteOrNull();
+            if (defaultInvite != null && !defaultInvite.equals(invite) &&
                 !partStat.equals(defaultInvite.getPartStat())) {
                 defaultInvite.updateMyPartStat(account, partStat);
                 saveMetadata();

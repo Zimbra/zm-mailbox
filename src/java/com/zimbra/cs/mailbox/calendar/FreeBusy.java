@@ -413,7 +413,9 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 
             // Move start time of expansion up by default instance's duration
             // to catch instances whose tail end overlap the F/B time window.
-            Invite defInv = cur.getDefaultInvite();
+            Invite defInv = cur.getDefaultInviteOrNull();
+            if (defInv == null)
+                continue;
             long defInvStart = defInv.getStartTime().getDate().getTime();
             long defInvEnd = defInv.getEffectiveEndTime().getDate().getTime();
             long startAdjusted = start - (defInvEnd - defInvStart) + 1;
