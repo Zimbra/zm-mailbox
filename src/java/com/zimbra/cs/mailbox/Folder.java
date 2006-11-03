@@ -967,7 +967,7 @@ public class Folder extends MailItem {
 
         // write a deletion record for later sync
         if (mbox.isTrackingSync() && !info.itemIds.isEmpty())
-            DbMailItem.writeTombstone(mbox, info.itemIds);
+            DbMailItem.writeTombstones(mbox, info.itemIds);
 
         // don't actually delete the blobs or index entries here; wait until after the commit
     }

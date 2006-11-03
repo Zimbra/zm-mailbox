@@ -1052,36 +1052,50 @@ public class DbMailItem {
         }
     }
 
-    public static void writeTombstone(Mailbox mbox, MailItem.TypedIdList tombstones) throws ServiceException {
+    public static void writeTombstones(Mailbox mbox, MailItem.TypedIdList tombstones) throws ServiceException {
         if (tombstones == null || tombstones.isEmpty())
+            return;
+
+        for (Map.Entry<Byte, List<Integer>> entry : tombstones) {
+            byte type = entry.getKey();
+            if (type == MailItem.TYPE_CONVERSATION || type == MailItem.TYPE_VIRTUAL_CONVERSATION)
+                continue;
+            StringBuilder ids = new StringBuilder();
+            for (Integer id : entry.getValue()) {
+                ids.append(ids.length() == 0 ? "" : ",").append(id);
+
+                // catch overflows of TEXT values; since all chars are ASCII, no need to convert to UTF-8 for length check beforehand
+                if (ids.length() > MAX_TEXT_LENGTH - 50) {
+                    writeTombstone(mbox, type, ids.toString());
+                    ids.setLength(0);
+                }
+            }
+
+            writeTombstone(mbox, type, ids.toString());
+        }
+    }
+
+    private static void writeTombstone(Mailbox mbox, byte type, String ids) throws ServiceException {
+        if (ids == null || ids.equals(""))
             return;
         Connection conn = mbox.getOperationConnection();
 
         PreparedStatement stmt = null;
         try {
-            for (Map.Entry<Byte, List<Integer>> entry : tombstones) {
-                byte type = entry.getKey();
-                if (type == MailItem.TYPE_CONVERSATION || type == MailItem.TYPE_VIRTUAL_CONVERSATION)
-                    continue;
-                StringBuilder ids = new StringBuilder();
-                for (Integer id : entry.getValue())
-                    ids.append(ids.length() == 0 ? "" : ",").append(id);
-
-                stmt = conn.prepareStatement("INSERT INTO " + getTombstoneTableName(mbox) +
-                        "(" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") + "sequence, date, type, ids)" +
-                        " VALUES (" + (!DebugConfig.disableMailboxGroup ? "?, " : "") + "?, ?, ?, ?)");
-                int pos = 1;
-                if (!DebugConfig.disableMailboxGroup)
-                    stmt.setInt(pos++, mbox.getId());
-                stmt.setInt(pos++, mbox.getOperationChangeID());
-                stmt.setInt(pos++, mbox.getOperationTimestamp());
-                stmt.setByte(pos++, type);
-                stmt.setString(pos++, ids.toString());
-                stmt.executeUpdate();
-                stmt.close();
-            }
+            stmt = conn.prepareStatement("INSERT INTO " + getTombstoneTableName(mbox) +
+                    "(" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") + "sequence, date, type, ids)" +
+                    " VALUES (" + (!DebugConfig.disableMailboxGroup ? "?, " : "") + "?, ?, ?, ?)");
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroup)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getOperationChangeID());
+            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setByte(pos++, type);
+            stmt.setString(pos++, ids);
+            stmt.executeUpdate();
+            stmt.close();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("writing tombstones for item(s): " + tombstones.getAll(), e);
+            throw ServiceException.FAILURE("writing tombstones for " + MailItem.getNameForType(type) + "(s): " + ids, e);
         } finally {
             DbPool.closeStatement(stmt);
         }

@@ -1592,6 +1592,7 @@ public class Mailbox {
         logCacheActivity(key, type, item);
         return item;
     }
+
     MailItem getCachedItem(Integer key, byte type) throws ServiceException {
         MailItem item = null;
         switch (type) {
@@ -1670,13 +1671,62 @@ public class Mailbox {
         }
     }
 
+    /** Fetches an item by name relative to its parent.  This can return
+     *  anything with a name; at present, this is limited to {@link Folder}s,
+     *  {@link Tag}s, and {@link Document}s.
+     * 
+     *  @see #getItemByPath(OperationContext, String, int, boolean) */
+    public synchronized MailItem getItemByName(OperationContext octxt, int folderId, String name) throws ServiceException {
+        if (name == null || name.equals(""))
+            throw MailServiceException.INVALID_NAME(name);
+
+        boolean success = false;
+        try {
+            // tag/folder caches are populated in beginTransaction...
+            beginTransaction("getItemByName", octxt);
+
+            MailItem item = null;
+            if (folderId == ID_FOLDER_TAGS) {
+                item = getTagByName(name);
+            } else {
+                Folder parent;
+                if (name.startsWith("/")) {
+                    // resolve absolute path if necessary
+                    int slash = name.lastIndexOf('/');
+                    parent = getFolderByPath(octxt, name.substring(0, slash-1));
+                    folderId = parent.getId();
+                    name = name.substring(slash + 1);
+                } else {
+                    parent = getFolderById(folderId);
+                }
+                // check for the specified item -- folder first, then document
+                item = parent.findSubfolder(name);
+                if (item == null) {
+                    List<Document> wikis = getWikiList(octxt, folderId, (byte) (DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING));
+                    int wikiPos = Document.binarySearch(wikis, name);
+                    if (wikiPos >= 0)
+                        item = wikis.get(wikiPos);
+                }
+            }
+            // make sure the item is visible to the requester
+            if (checkAccess(item) == null)
+                throw MailServiceException.NO_SUCH_ITEM(name);
+            success = true;
+            return item;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     /** Returns all the MailItems of a given type, optionally in a specified folder */
     public synchronized List<MailItem> getItemList(OperationContext octxt, byte type) throws ServiceException {
         return getItemList(octxt, type, -1);
     }
+
     public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId) throws ServiceException {
         return getItemList(octxt, type, folderId, DbMailItem.SORT_NONE);
     }
+
     public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId, byte sort) throws ServiceException {
         if (type == MailItem.TYPE_UNKNOWN)
             return Collections.emptyList();
@@ -2029,15 +2079,18 @@ public class Mailbox {
     public synchronized Tag getTagById(OperationContext octxt, int id) throws ServiceException {
         return (Tag) getItemById(octxt, id, MailItem.TYPE_TAG);
     }
+
     Tag getTagById(int id) throws ServiceException {
         return (Tag) getItemById(id, MailItem.TYPE_TAG);
     }
+
     public synchronized List<Tag> getTagList(OperationContext octxt) throws ServiceException {
         List<Tag> tags = new ArrayList<Tag>();
         for (MailItem item : getItemList(octxt, MailItem.TYPE_TAG))
             tags.add((Tag) item);
         return tags;
     }
+
     public synchronized Tag getTagByName(String name) throws ServiceException {
         boolean success = false;
         try {
@@ -3591,7 +3644,7 @@ public class Mailbox {
                     if (obj instanceof MailItem.PendingDelete)
                         tombstones.add(((MailItem.PendingDelete) obj).itemIds);
                 if (!tombstones.isEmpty())
-                    DbMailItem.writeTombstone(this, tombstones);
+                    DbMailItem.writeTombstones(this, tombstones);
             }
 
             success = true;

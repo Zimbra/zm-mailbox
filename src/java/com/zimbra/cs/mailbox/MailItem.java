@@ -1648,7 +1648,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         // write a deletion record for later sync
         if (writeTombstones && mMailbox.isTrackingSync() && !info.itemIds.isEmpty())
-            DbMailItem.writeTombstone(mMailbox, info.itemIds);
+            DbMailItem.writeTombstones(mMailbox, info.itemIds);
 
         // don't actually delete the blobs or index entries here; wait until after the commit
     }
