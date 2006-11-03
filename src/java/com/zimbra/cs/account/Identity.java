@@ -34,8 +34,8 @@ public class Identity extends Entry implements Comparable {
 
     private String mName;
 
-    public Identity(String name, Map<String, Object> attrs, Map<String, Object> defaults) {
-        super(attrs, defaults);
+    public Identity(String name, Map<String, Object> attrs) {
+        super(attrs, null);
         mName = name;
     }
 

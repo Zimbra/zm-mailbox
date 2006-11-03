@@ -30,7 +30,6 @@ import com.zimbra.cs.account.Provisioning;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
-import java.util.Map;
 
 /**
  * @author schemers
@@ -39,9 +38,9 @@ import java.util.Map;
 
     private String mDn;
 
-    LdapIdentity(String dn, Attributes attrs, Map<String, Object> defaults) throws NamingException {
+    LdapIdentity(String dn, Attributes attrs) throws NamingException {
         super(LdapUtil.getAttrString(attrs, Provisioning.A_zimbraPrefIdentityName),
-                LdapUtil.getAttrs(attrs), defaults);
+                LdapUtil.getAttrs(attrs));
         mDn = dn;
     }
 

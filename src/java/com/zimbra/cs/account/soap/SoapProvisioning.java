@@ -1102,7 +1102,7 @@ public class SoapProvisioning extends Provisioning {
         identity.addAttribute(AccountService.A_NAME, identityName);
         addAttrElementsMailService(identity, attrs);
         invokeOnTargetAccount(req, account.getId());
-        return new Identity(identityName, attrs, null);
+        return new Identity(identityName, attrs);
     }
 
     @Override

@@ -121,6 +121,7 @@ public class AttributeManager {
 
     private AttributeManager(String dir) throws ServiceException {
     	initFlagsToAttrsMap();
+        initClassToAttrsMap();        
     	File fdir = new File(dir);
     	if (!fdir.exists()) {
     		throw ServiceException.FAILURE("attrs directory does not exists: " + dir, null);
@@ -354,6 +355,15 @@ public class AttributeManager {
             		mFlagToAttrsMap.get(flag).add(name);
             	}
             }
+            
+            if (requiredIn != null || optionalIn != null) {
+                if (requiredIn != null)
+                    for (AttributeClass klass : requiredIn)
+                        mClassToAttrsMap.get(klass).add(name);
+                if (optionalIn != null)
+                    for (AttributeClass klass : optionalIn)
+                        mClassToAttrsMap.get(klass).add(name);                
+            }
         }
     }
 
@@ -402,15 +412,27 @@ public class AttributeManager {
     }
 
     /*
+     * Support for lookup by class
+     */
+    
+    private Map<AttributeClass, Set<String>> mClassToAttrsMap = new HashMap<AttributeClass, Set<String>>();
+
+    private void initClassToAttrsMap() {
+       for (AttributeClass klass : AttributeClass.values()) {
+           mClassToAttrsMap.put(klass, new HashSet<String>());
+       }
+     }
+    
+    /*
      * Support for lookup by flag
      */
     private Map<AttributeFlag, Set<String>> mFlagToAttrsMap = new HashMap<AttributeFlag, Set<String>>();
     
     private void initFlagsToAttrsMap() {
- 	   for (AttributeFlag flag : AttributeFlag.values()) {
- 		   mFlagToAttrsMap.put(flag, new HashSet<String>());
- 	   }
-    }
+       for (AttributeFlag flag : AttributeFlag.values()) {
+           mFlagToAttrsMap.put(flag, new HashSet<String>());
+       }
+     }
     
     public boolean isAccountInherited(String attr) {
  	   return mFlagToAttrsMap.get(AttributeFlag.accountInherited).contains(attr);
@@ -431,6 +453,10 @@ public class AttributeManager {
     public Set<String> getAttrsWithFlag(AttributeFlag flag) {
  	   return mFlagToAttrsMap.get(flag);
     }
+    
+    public Set<String> getAttrsInClass(AttributeClass klass) {
+        return mClassToAttrsMap.get(klass);
+     }
 
     /**
      * @param type

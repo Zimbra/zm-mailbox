@@ -756,7 +756,27 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraPrefSentMailFolder = "zimbraPrefSentMailFolder";
 
+    public static final String A_zimbraPrefBccAddress = "zimbraPrefBccAddress";
+    public static final String A_zimbraPrefDefaultIdentity = "zimbraPrefDefaultIdentity";
+    public static final String A_zimbraPrefForwardIncludeOriginalText = "zimbraPrefForwardIncludeOriginalText";
+    public static final String A_zimbraPrefForwardReplyFormat = "zimbraPrefForwardReplyFormat";
+    public static final String A_zimbraPrefForwardReplyPrefixChar = "zimbraPrefForwardReplyPrefixChar";
+    public static final String A_zimbraPrefFromAddress = "zimbraPrefFromAddress";
+    public static final String A_zimbraPrefFromDisplay = "zimbraPrefFromDisplay";
+    public static final String A_zimbraPrefMailSignatureStyle = "zimbraPrefMailSignatureStyle";
+    public static final String A_zimbraPrefReplyIncludeOriginalText = "zimbraPrefReplyIncludeOriginalText";
+    public static final String A_zimbraPrefReplyToDisplay = "zimbraPrefReplyToDisplay";
+    public static final String A_zimbraPrefReplyToEnabled = "zimbraPrefReplyToEnabled";
+    public static final String A_zimbraPrefUseDefaultIdentitySettings = "zimbraPrefUseDefaultIdentitySettings";
+    public static final String A_zimbraPrefWhenInFolderIds = "zimbraPrefWhenInFolderIds";
+    public static final String A_zimbraPrefWhenInFoldersEnabled = "zimbraPrefWhenInFoldersEnabled";
+    public static final String A_zimbraPrefWhenSentToAddresses = "zimbraPrefWhenSentToAddresses";
+    public static final String A_zimbraPrefWhenSentToEnabled = "zimbraPrefWhenSentToEnabled";
+    
+    
     public static final String A_zimbraPrefIdentityName = "zimbraPrefIdentityName";
+    
+    public static final String DEFAULT_IDENTITY_NAME = "DEFAULT";
     
     /**
      * delete appointment invite (from our inbox) when we've replied to it?

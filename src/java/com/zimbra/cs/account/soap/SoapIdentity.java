@@ -36,11 +36,11 @@ import com.zimbra.soap.Element.XMLElement;
 class SoapIdentity extends Identity implements SoapEntry {
     
     SoapIdentity(String name, Map<String, Object> attrs) {
-        super(name, attrs, null);
+        super(name, attrs);
     }
 
     SoapIdentity(Element e) throws ServiceException {
-        super(e.getAttribute(AccountService.A_NAME), SoapProvisioning.getAttrs(e, AccountService.A_NAME), null);
+        super(e.getAttribute(AccountService.A_NAME), SoapProvisioning.getAttrs(e, AccountService.A_NAME));
     }
     
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {

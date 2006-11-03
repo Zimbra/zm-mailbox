@@ -3489,7 +3489,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = ctxt.search(base, query, sSubtreeSC);
             while(ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                result.add(new LdapIdentity(sr.getNameInNamespace(), sr.getAttributes(), null));
+                result.add(new LdapIdentity(sr.getNameInNamespace(), sr.getAttributes()));
             }
             ne.close();            
         } catch (NameNotFoundException e) {
@@ -3517,11 +3517,14 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public Identity createIdentity(Account account, String identityName, Map<String, Object> identityAttrs) throws ServiceException {
-
+        
         LdapAccount ldapAccount = (LdapAccount) (account instanceof LdapAccount ? account : getAccountById(account.getId()));
         
         if (ldapAccount == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+        
+        if (identityName.equalsIgnoreCase(DEFAULT_IDENTITY_NAME))
+                throw AccountServiceException.IDENTITY_EXISTS(identityName);
         
         HashMap attrManagerContext = new HashMap();
         AttributeManager.getInstance().preModify(identityAttrs, null, attrManagerContext, true, true);
@@ -3554,20 +3557,37 @@ public class LdapProvisioning extends Provisioning {
         if (ldapAccount == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
 
-        LdapIdentity identity = (LdapIdentity) getIdentityByName(ldapAccount, identityName, null);
-        if (identity == null)
-                throw AccountServiceException.NO_SUCH_IDENTITY(identityName);   
+        if (identityName.equalsIgnoreCase(DEFAULT_IDENTITY_NAME)) {
+            // make sure they are all valid identity attrs, since we are setting them on account we don't
+            // want someone to sneak in some other account attrs
+            Set<String> validAttrs = AttributeManager.getInstance().getAttrsInClass(AttributeClass.identity);
+            for (String key : identityAttrs.keySet()) {
+                if (!validAttrs.contains(key))
+                    throw ServiceException.INVALID_REQUEST("unable to modify attr: "+key, null);
+            }
+            modifyAttrs(ldapAccount, identityAttrs);
+        } else {
         
-        String name = (String) identityAttrs.get(A_zimbraPrefIdentityName);
-        boolean newName = (name != null && !name.equals(identityName));
-        if (newName) identityAttrs.remove(A_zimbraPrefIdentityName);
+            LdapIdentity identity = (LdapIdentity) getIdentityByName(ldapAccount, identityName, null);
+            if (identity == null)
+                    throw AccountServiceException.NO_SUCH_IDENTITY(identityName);   
         
-        modifyAttrs(identity, identityAttrs, true);
-        if (newName) renameIdentity(ldapAccount, identity, name);
+            String name = (String) identityAttrs.get(A_zimbraPrefIdentityName);
+            boolean newName = (name != null && !name.equals(identityName));
+            if (newName) identityAttrs.remove(A_zimbraPrefIdentityName);
+            
+            modifyAttrs(identity, identityAttrs, true);
+            if (newName) renameIdentity(ldapAccount, identity, name);
+            
+        }
     }
     
     
     private void renameIdentity(LdapAccount account, LdapIdentity identity, String newIdentityName) throws ServiceException {
+        
+        if (identity.getName().equalsIgnoreCase(DEFAULT_IDENTITY_NAME))
+            throw ServiceException.INVALID_REQUEST("can't rename default identity", null);
+        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
@@ -3585,7 +3605,9 @@ public class LdapProvisioning extends Provisioning {
         LdapAccount ldapAccount = (LdapAccount) (account instanceof LdapAccount ? account : getAccountById(account.getId()));
         if (ldapAccount == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
-       
+
+        if (identityName.equalsIgnoreCase(DEFAULT_IDENTITY_NAME))
+            throw ServiceException.INVALID_REQUEST("can't delete default identity", null);
         
         DirContext ctxt = null;
         try {
@@ -3607,6 +3629,24 @@ public class LdapProvisioning extends Provisioning {
         LdapAccount ldapAccount = (LdapAccount) (account instanceof LdapAccount ? account : getAccountById(account.getId()));
         if (ldapAccount == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
-        return getIdentitiesByQuery(ldapAccount, "(objectclass=zimbraIdentity)", null);
+        List<Identity> result = getIdentitiesByQuery(ldapAccount, "(objectclass=zimbraIdentity)", null);
+        addDefaultIdentity(result, account);
+        return result;
     }
+
+    private void addDefaultIdentity(List<Identity> result, Account account) throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        Set<String> identityAttrs = AttributeManager.getInstance().getAttrsInClass(AttributeClass.identity);
+        
+        for (String name : identityAttrs) {
+            String value = account.getAttr(name, null);
+            if (value != null) attrs.put(name, value);            
+        }
+        if (attrs.get(A_zimbraPrefIdentityName) == null)
+            attrs.put(A_zimbraPrefIdentityName, DEFAULT_IDENTITY_NAME);
+        if (attrs.get(A_zimbraPrefDefaultIdentity) == null)        
+            attrs.put(A_zimbraPrefDefaultIdentity, result.isEmpty() ? TRUE : FALSE);
+        result.add(new Identity(DEFAULT_IDENTITY_NAME, attrs));
+    }
+
 }
