@@ -87,25 +87,6 @@ public class UrlNamespace {
 		return resource;
 	}
 	
-	public static void deleteResource(DavContext ctxt) throws DavException {
-		String user = ctxt.getUser();
-		String path = ctxt.getPath();
-		if (user == null || path == null)
-			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
-		try {
-			Provisioning prov = Provisioning.getInstance();
-			Account account = prov.get(AccountBy.name, user);
-			if (account == null)
-				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
-
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), path.toLowerCase(), 0, false);
-			mbox.delete(ctxt.getOperationContext(), item.getId(), item.getType());
-		} catch (ServiceException e) {
-			throw new DavException("cannot get item", HttpServletResponse.SC_NOT_FOUND, e);
-		}
-	}
-	
 	public static String getHomeUrl(String user) throws DavException {
 		StringBuilder buf = new StringBuilder();
 		buf.append(DAV_PATH).append("/").append(user);

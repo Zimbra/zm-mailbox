@@ -32,12 +32,12 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.service.ServiceException;
 
-public class Notebook extends DavResource {
+public class Notebook extends MailItemResource {
 
 	private InputStream mContent;
 
 	public Notebook(Document doc) throws ServiceException {
-		super(doc.getPath(), doc.getAccount());
+		super(doc);
 		setCreationDate(doc.getDate());
 		setLastModifiedDate(doc.getChangeDate());
 		setProperty(DavElements.P_DISPLAYNAME, doc.getSubject());

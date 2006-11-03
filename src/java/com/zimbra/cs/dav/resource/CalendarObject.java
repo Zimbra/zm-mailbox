@@ -30,8 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 
-import org.dom4j.Element;
-
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -43,20 +41,12 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.ServiceException;
 
-public class CalendarObject extends DavResource {
+public class CalendarObject extends MailItemResource {
 
 	public static final String CAL_EXTENSION = ".ics";
 	
 	public CalendarObject(Appointment appt) throws ServiceException {
-		this(appt.getPath(), appt);
-	}
-
-	public CalendarObject(CalendarCollection cal, Appointment appt) throws ServiceException {
-		this(cal.mUri, appt);
-	}
-	
-	public CalendarObject(String uri, Appointment appt) throws ServiceException {
-		super(uri, appt.getAccount());
+		super(getCalendarPath(appt), appt);
 		mUid = appt.getUid();
 		mInvites = appt.getInvites();
 		mTzmap = appt.getTimeZoneMap();
@@ -73,20 +63,14 @@ public class CalendarObject extends DavResource {
 		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(mVcalendar.length()));
 	}
 	
-	public Element addHref(Element parent, boolean nameOnly) throws DavException {
-		Element href = super.addHref(parent, true);
-		href.setText(generateHref());
-		return href;
-	}
-	
 	private String mUid;
 	private Invite[] mInvites;
 	private TimeZoneMap mTzmap;
 	private String mVcalendar;
 	
-	private String generateHref() {
-		// escape
-		return mUid + CAL_EXTENSION;
+	private static String getCalendarPath(Appointment appt) throws ServiceException {
+		// escape uid
+		return appt.getPath() + "/" + appt.getUid() + CAL_EXTENSION;
 	}
 
 	private String getVcalendar() throws IOException {
@@ -128,5 +112,8 @@ public class CalendarObject extends DavResource {
 	public boolean isCollection() {
 		return false;
 	}
-
+	
+	public String getUid() {
+		return mUid;
+	}
 }

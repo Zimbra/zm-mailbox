@@ -50,14 +50,15 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.service.ServiceException;
 
-public class Collection extends DavResource {
+public class Collection extends MailItemResource {
 
 	protected int mId;
 	protected int mMboxId;
 	protected byte mView;
+	protected byte mType;
 	
 	public Collection(Folder f) throws DavException, ServiceException {
-		super(getFolderPath(f.getPath()), f.getAccount());
+		super(f);
 		setCreationDate(f.getDate());
 		setLastModifiedDate(f.getChangeDate());
 		setProperty(DavElements.P_DISPLAYNAME, f.getSubject());
@@ -65,6 +66,7 @@ public class Collection extends DavResource {
 		mId = f.getId();
 		mMboxId = f.getMailboxId();
 		mView = f.getDefaultView();
+		mType = f.getType();
 		addProperties(Acl.getAclProperties(this, f));
 	}
 	
@@ -79,12 +81,6 @@ public class Collection extends DavResource {
 			addProperties(Acl.getAclProperties(this, null));
 		} catch (ServiceException se) {
 		}
-	}
-	
-	private static String getFolderPath(String path) {
-		if (path.endsWith("/"))
-			return path;
-		return path + "/";
 	}
 	
 	@Override
@@ -194,6 +190,24 @@ public class Collection extends DavResource {
 			ctxt.setStatus(HttpServletResponse.SC_CREATED);
 		} catch (ServiceException se) {
 			throw new DavException("cannot create ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
+		}
+	}
+	
+	public void delete(DavContext ctxt) throws DavException {
+		String user = ctxt.getUser();
+		String path = ctxt.getPath();
+		if (user == null || path == null)
+			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
+		try {
+			Provisioning prov = Provisioning.getInstance();
+			Account account = prov.get(AccountBy.name, user);
+			if (account == null)
+				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+			mbox.delete(ctxt.getOperationContext(), mId, mType);
+		} catch (ServiceException e) {
+			throw new DavException("cannot get item", HttpServletResponse.SC_NOT_FOUND, e);
 		}
 	}
 }

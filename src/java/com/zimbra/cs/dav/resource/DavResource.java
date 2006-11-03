@@ -229,6 +229,8 @@ public abstract class DavResource {
 	
 	public abstract boolean isCollection();
 	
+	public abstract void delete(DavContext ctxt) throws DavException;
+	
 	public Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		return Collections.emptyList();
 	}

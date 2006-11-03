@@ -59,7 +59,6 @@ import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Mailbox.SetAppointmentData;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
@@ -78,6 +77,7 @@ public class CalendarCollection extends Collection {
 		Account acct = f.getAccount();
 		mDavCompliance.add(Compliance.one);
 		mDavCompliance.add(Compliance.two);
+		mDavCompliance.add(Compliance.three);
 		mDavCompliance.add(Compliance.access_control);
 		mDavCompliance.add(Compliance.calendar_access);
 
@@ -128,7 +128,7 @@ public class CalendarCollection extends Collection {
 			java.util.Collection<Appointment> appts = get(ctxt, sAllAppts);
 			ArrayList<DavResource> children = new ArrayList<DavResource>();
 			for (Appointment appt : appts)
-				children.add(new CalendarObject(this, appt));
+				children.add(new CalendarObject(appt));
 			return children;
 		} catch (ServiceException se) {
 			ZimbraLog.dav.error("can't get appointments", se);

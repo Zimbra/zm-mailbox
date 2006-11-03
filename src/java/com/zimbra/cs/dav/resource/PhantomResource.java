@@ -4,7 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import javax.servlet.http.HttpServletResponse;
+
+import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
+import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.mailbox.MailItem;
 
 public abstract class PhantomResource extends DavResource {
@@ -39,5 +43,9 @@ public abstract class PhantomResource extends DavResource {
 		while (tok.hasMoreTokens())
 			l.add(tok.nextToken());
 		return l;
+	}
+	
+	public void delete(DavContext ctxt) throws DavException {
+		throw new DavException("cannot delete this resource", HttpServletResponse.SC_FORBIDDEN, null);
 	}
 }
