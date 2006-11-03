@@ -90,6 +90,8 @@ public class AccountService implements DocumentService {
     // identities
     public static final QName CREATE_IDENTITY_REQUEST = QName.get("CreateIdentityRequest", NAMESPACE);
     public static final QName CREATE_IDENTITY_RESPONSE = QName.get("CreateIdentityResponse", NAMESPACE);
+    public static final QName GET_IDENTITIES_REQUEST = QName.get("GetIdentitiesRequest", NAMESPACE);
+    public static final QName GET_IDENTITIES_RESPONSE = QName.get("GetIdentitiesResponse", NAMESPACE);    
     public static final QName MODIFY_IDENTITY_REQUEST = QName.get("ModifyIdentityRequest", NAMESPACE);
     public static final QName MODIFY_IDENTITY_RESPONSE = QName.get("ModifyIdentityResponse", NAMESPACE);
     public static final QName DELETE_IDENTITY_REQUEST = QName.get("DeleteIdentityRequest", NAMESPACE);
@@ -183,6 +185,7 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(CREATE_IDENTITY_REQUEST, new CreateIdentity());
         dispatcher.registerHandler(MODIFY_IDENTITY_REQUEST, new ModifyIdentity());
         dispatcher.registerHandler(DELETE_IDENTITY_REQUEST, new DeleteIdentity());
+        dispatcher.registerHandler(GET_IDENTITIES_REQUEST, new GetIdentities());        
 
 	}
 

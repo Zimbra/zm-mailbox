@@ -587,15 +587,15 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 
 ---------
 
-<GetAllIdentitiesRequest/>
+<GetIdentitiesRequest/>
 
-<GetAllIdentitiesResponse>
+<GetIdentitiesResponse>
   <identity name="{identity-name}">
     <a name="{name}">{value}</a>
     ...
     <a name="{name}">{value}</a>
   </identity>+
-</GetAllIdentitiesResponse>
+</GetIdentitiesResponse>
 
 ---------
 

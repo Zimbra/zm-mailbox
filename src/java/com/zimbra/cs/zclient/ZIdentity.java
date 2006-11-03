@@ -27,7 +27,6 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
 
 import java.util.HashMap;
@@ -39,10 +38,10 @@ public class ZIdentity  {
     private Map<String, String> mAttrs;
 
     public ZIdentity(Element e) throws ServiceException {
-        mName = e.getAttribute(MailService.A_NAME);
+        mName = e.getAttribute(AccountService.A_NAME);
         mAttrs = new HashMap<String, String>();
-        for (Element a : e.listElements(MailService.E_ATTRIBUTE)) {
-            mAttrs.put(a.getAttribute(MailService.A_ATTRIBUTE_NAME), a.getText());
+        for (Element a : e.listElements(AccountService.E_A)) {
+            mAttrs.put(a.getAttribute(AccountService.A_NAME), a.getText());
         }
     }
 
@@ -57,10 +56,10 @@ public class ZIdentity  {
 
     public Element toElement(Element parent) {
         Element identity = parent.addElement(AccountService.E_IDENTITY);
-        identity.addAttribute(MailService.A_NAME, mName);
+        identity.addAttribute(AccountService.A_NAME, mName);
         for (Map.Entry<String,String> entry : mAttrs.entrySet()) {
-            Element a = identity.addElement(MailService.E_ATTRIBUTE);
-            a.addAttribute(MailService.A_ATTRIBUTE_NAME, entry.getKey());
+            Element a = identity.addElement(AccountService.E_A);
+            a.addAttribute(AccountService.A_NAME, entry.getKey());
             a.setText(entry.getValue());
         }
         return identity;

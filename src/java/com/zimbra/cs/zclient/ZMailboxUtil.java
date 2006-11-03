@@ -186,7 +186,8 @@ public class ZMailboxUtil implements DebugListener {
 
     public static enum Category {
 
-        ADMIN("help on admin-related commands"),        
+        ADMIN("help on admin-related commands"),
+        ACCOUNT("help on account-related commands"),
         COMMANDS("help on all commands"),
         CONTACT("help on contact-related commands"),
         CONVERSATION("help on conversation-related commands"),
@@ -234,16 +235,18 @@ public class ZMailboxUtil implements DebugListener {
         AUTHENTICATE("authenticate", "a", "{name} {password}", "authenticate as account and open mailbox", Category.MISC, 2, 2, O_URL),        
         ADD_MESSAGE("addMessage", "am", "{dest-folder-path} {filename-or-dir} [{filename-or-dir} ...]", "add a message to a folder", Category.MESSAGE, 2, Integer.MAX_VALUE, O_TAGS, O_DATE),
         ADMIN_AUTHENTICATE("adminAuthenticate", "aa", "{admin-name} {admin-password}", "authenticate as an admin. can only be used by an admin", Category.ADMIN, 2, 2, O_URL),        
-        CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER, O_IGNORE, O_TAGS),        
-        CREATE_FOLDER("createFolder", "cf", "{folder-name}", "create folder", Category.FOLDER, 1, 1, O_VIEW, O_COLOR, O_FLAGS),
+        CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER, O_IGNORE, O_TAGS),
+        CREATE_FOLDER("createFolder", "cf", "{folder-name}", "create folder", Category.FOLDER, 1, 1, O_VIEW, O_COLOR, O_FLAGS),        
+        CREATE_IDENTITY("createIdentity", "cid", "{identity-name} [attr1 value1 [attr2 value2...]]", "create identity", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         CREATE_MOUNTPOINT("createMountpoint", "cm", "{folder-name} {owner-id-or-name} {remote-item-id-or-path}", "create mountpoint", Category.FOLDER, 3, 3, O_VIEW, O_COLOR, O_FLAGS),
         CREATE_SEARCH_FOLDER("createSearchFolder", "csf", "{folder-name} {query}", "create search folder", Category.FOLDER, 2, 2, O_SORT, O_TYPES, O_COLOR),        
         CREATE_TAG("createTag", "ct", "{tag-name}", "create tag", Category.TAG, 1, 1, O_COLOR),
         DELETE_CONTACT("deleteContact", "dct", "{contact-ids}", "hard delete contact(s)", Category.CONTACT, 1, 1),        
         DELETE_CONVERSATION("deleteConversation", "dc", "{conv-ids}", "hard delete conversastion(s)", Category.CONVERSATION, 1, 1),
         DELETE_ITEM("deleteItem", "di", "{item-ids}", "hard delete item(s)", Category.ITEM, 1, 1),        
+        DELETE_IDENTITY("deleteIdentity", "did", "{identity-name}", "delete an identity", Category.ACCOUNT, 1, 1),        
         DELETE_FOLDER("deleteFolder", "df", "{folder-path}", "hard delete a folder (and subfolders)", Category.FOLDER, 1, 1),
-        DELETE_MESSAGE("deleteMessage", "dm", "{msg-ids}", "hard delete message(s)", Category.MESSAGE, 1, 1),
+        DELETE_MESSAGE("deleteMessage", "dm", "{msg-ids}", "hard delete message(s)", Category.MESSAGE, 1, 1),        
         DELETE_TAG("deleteTag", "dt", "{tag-name}", "delete a tag", Category.TAG, 1, 1),
         EMPTY_FOLDER("emptyFolder", "ef", "{folder-path}", "empty all the items in a folder (including subfolders)", Category.FOLDER, 1, 1),        
         EXIT("exit", "quit", "", "exit program", Category.MISC, 0, 0),
@@ -256,6 +259,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_ALL_TAGS("getAllTags", "gat", "", "get all tags", Category.TAG, 0, 0, O_VERBOSE),
         GET_CONTACTS("getContacts", "gct", "{contact-ids} [attr1 [attr2...]]", "get contact(s)", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),                
         GET_CONVERSATION("getConversation", "gc", "{conv-id}", "get a converation", Category.CONVERSATION, 1, 1, O_VERBOSE),
+        GET_IDENTITIES("getIdentities", "gid", "", "get all identites", Category.CONTACT, 0, 0, O_VERBOSE),
         GET_FOLDER("getFolder", "gf", "{folder-path}", "get folder", Category.FOLDER, 1, 1, O_VERBOSE),        
         GET_FOLDER_GRANT("getFolderGrant", "gfg", "{folder-path}", "get folder grants", Category.FOLDER, 1, 1, O_VERBOSE),                
         GET_MESSAGE("getMessage", "gm", "{msg-id}", "get a message", Category.MESSAGE, 1, 1, O_VERBOSE),
@@ -276,6 +280,7 @@ public class ZMailboxUtil implements DebugListener {
         MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", "change whether folder is excluded from free-busy", Category.FOLDER, 1, 2),        
         MODIFY_FOLDER_GRANT("modifyFolderGrant", "mfg", "{folder-path} {account {name}|group {name}|domain {name}|all|public|guest {email} {password}] {permissions|none}}", "add/remove a grant to a folder", Category.FOLDER, 3, 5, O_INHERIT),                
         MODIFY_FOLDER_URL("modifyFolderURL", "mfu", "{folder-path} {url}", "modify a folder's URL", Category.FOLDER, 2, 2),
+        MODIFY_IDENTITY("modifyIdentity", "mid", "{identity-name} [attr1 value1 [attr2 value2...]]", "modify an identity", Category.ACCOUNT, 1, Integer.MAX_VALUE),        
         MODIFY_TAG_COLOR("modifyTagColor", "mtc", "{tag-name} {tag-color}", "modify a tag's color", Category.TAG, 2, 2),
         MOVE_CONTACT("moveContact", "mct", "{contact-ids} {dest-folder-path}", "move contact(s) to a new folder", Category.CONTACT, 2, 2),
         MOVE_CONVERSATION("moveConversation", "mc", "{conv-ids} {dest-folder-path}", "move conversation(s) to a new folder", Category.CONVERSATION, 2, 2),
@@ -733,6 +738,9 @@ public class ZMailboxUtil implements DebugListener {
             String ccId = mMbox.createContact(lookupFolderId(folderOpt()),tagsOpt(), getContactMap(args, 0, !ignoreOpt()));
             System.out.println(ccId);
             break;
+        case CREATE_IDENTITY:
+            mMbox.createIdentity(new ZIdentity(args[0], getMap(args, 1)));
+            break;            
         case CREATE_FOLDER:
             doCreateFolder(args);
             break;
@@ -755,6 +763,9 @@ public class ZMailboxUtil implements DebugListener {
         case DELETE_FOLDER:
             mMbox.deleteFolder(lookupFolderId(args[0]));
             break; 
+        case DELETE_IDENTITY:
+            mMbox.deleteIdentity(args[0]);
+            break;             
         case DELETE_ITEM:
             mMbox.deleteItem(id(args[0]), param(args, 1));
             break;            
@@ -788,6 +799,9 @@ public class ZMailboxUtil implements DebugListener {
         case GET_CONTACTS:
             doGetContacts(args); 
             break;            
+        case GET_IDENTITIES:
+            doGetIdentities(args); 
+            break;                        
         case GET_ALL_FOLDERS:
             doGetAllFolders(args); 
             break;            
@@ -858,6 +872,9 @@ public class ZMailboxUtil implements DebugListener {
         case MODIFY_FOLDER_URL:
             mMbox.modifyFolderURL(lookupFolderId(args[0]), args[1]);
             break;
+        case MODIFY_IDENTITY:
+            mMbox.modifyIdentity(new ZIdentity(args[0], getMap(args, 1)));
+            break;                        
         case MODIFY_TAG_COLOR:
             mMbox.modifyTagColor(lookupTag(args[0]).getId(), Color.fromString(args[1]));            
             break;
@@ -1423,6 +1440,21 @@ public class ZMailboxUtil implements DebugListener {
                         cn.getId(), Contact.getFileAsString(cn.getAttrs()));
             }
         }
+    }
+    
+    private void dumpIdentities(List<ZIdentity> identities) throws ServiceException {
+        if (verboseOpt()) {
+            System.out.println(identities);
+        } else {
+            if (identities.size() == 0) return;            
+            for (ZIdentity identity: identities) {
+                System.out.println(identity.getName());
+            }
+        }
+    }
+    
+    private void doGetIdentities(String[] args) throws ServiceException {
+        dumpIdentities(mMbox.getIdentities());
     }
     
     private void dumpContacts(List<ZContact> contacts) throws ServiceException {

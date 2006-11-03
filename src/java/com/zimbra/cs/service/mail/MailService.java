@@ -231,8 +231,6 @@ public class MailService implements DocumentService {
     public static final String E_CONDITION = "c";
     public static final String E_FILTER_ARG = "arg";
 
-    public static final String E_IDENTITY = "identity";
-    
     public static final String A_ZIMBRA_ID = "zid";
     public static final String A_RIGHTS = "perm";
     public static final String A_INHERIT = "inh";

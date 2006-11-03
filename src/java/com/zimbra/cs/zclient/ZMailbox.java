@@ -1801,25 +1801,35 @@ public class ZMailbox {
         return new ZSendMessageResponse(id);
     }
 
-    public void CreateIdentityRequest(ZIdentity identity) throws ServiceException {
+    public void createIdentity(ZIdentity identity) throws ServiceException {
         XMLElement req = new XMLElement(AccountService.CREATE_IDENTITY_REQUEST);
         identity.toElement(req);
         invoke(req);
     }
 
-    public void DeleteIdentityRequest(String name) throws ServiceException {
+    public List<ZIdentity> getIdentities() throws ServiceException {
+        XMLElement req = new XMLElement(AccountService.GET_IDENTITIES_REQUEST);
+        Element resp = invoke(req);
+        List<ZIdentity> result = new ArrayList<ZIdentity>();
+        for (Element identity : resp.listElements(AccountService.E_IDENTITY)) {
+            result.add(new ZIdentity(identity));
+        }
+        return result;
+    }
+
+    public void deleteIdentity(String name) throws ServiceException {
         XMLElement req = new XMLElement(AccountService.DELETE_IDENTITY_REQUEST);
         req.addElement(AccountService.E_IDENTITY).addAttribute(AccountService.A_NAME, name);
         invoke(req);
     }
 
-    public void ModifyIdentityRequest(ZIdentity identity) throws ServiceException {
+    public void modifyIdentity(ZIdentity identity) throws ServiceException {
         XMLElement req = new XMLElement(AccountService.MODIFY_IDENTITY_REQUEST);
         identity.toElement(req);
         invoke(req);
     }
 
-    public String CreateDataSourceRequest(ZDataSource source) throws ServiceException {
+    public String createDataSource(ZDataSource source) throws ServiceException {
         XMLElement req = new XMLElement(MailService.CREATE_DATA_SOURCE_REQUEST);
         source.toElement(req);
         return invoke(req).listElements().get(0).getAttribute(MailService.A_ID);
@@ -1834,7 +1844,7 @@ public class ZMailbox {
      * @return null on success, or an error string on failure.
      * @throws ServiceException on error
      */
-    public String TestPop3DataSource(String host, int port, String username, String password) throws ServiceException {
+    public String testPop3DataSource(String host, int port, String username, String password) throws ServiceException {
         XMLElement req = new XMLElement(MailService.TEST_DATA_SOURCE_REQUEST);
         Element pop3 = req.addElement(MailService.E_DS_POP3);
         pop3.addAttribute(MailService.A_DS_HOST, host);
@@ -1862,19 +1872,19 @@ public class ZMailbox {
         return result;
     }
 
-    public void ModifyDataSource(ZDataSource source) throws ServiceException {
+    public void modifyDataSource(ZDataSource source) throws ServiceException {
         XMLElement req = new XMLElement(MailService.MODIFY_DATA_SOURCE_REQUEST);
         source.toElement(req);
         invoke(req);
     }
 
-    public void DeleteDataSource(ZDataSource source) throws ServiceException {
+    public void deleteDataSource(ZDataSource source) throws ServiceException {
         XMLElement req = new XMLElement(MailService.DELETE_DATA_SOURCE_REQUEST);
         source.toIdElement(req);
         invoke(req);
     }
 
-    public void ImportData(List<ZDataSource> sources) throws ServiceException {
+    public void importData(List<ZDataSource> sources) throws ServiceException {
         XMLElement req = new XMLElement(MailService.IMPORT_DATA_REQUEST);
         for (ZDataSource src : sources) {
             src.toIdElement(req);

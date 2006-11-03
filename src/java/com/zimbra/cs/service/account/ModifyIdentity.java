@@ -32,7 +32,6 @@ import com.zimbra.cs.account.Account;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -44,9 +43,9 @@ public class ModifyIdentity extends DocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
         
-        Element identityEl = request.getElement(MailService.E_IDENTITY);
-        String name = identityEl.getAttribute(MailService.A_NAME);
-        Map<String,Object> attrs = AccountService.getAttrs(identityEl, MailService.A_NAME);
+        Element identityEl = request.getElement(AccountService.E_IDENTITY);
+        String name = identityEl.getAttribute(AccountService.A_NAME);
+        Map<String,Object> attrs = AccountService.getAttrs(identityEl, AccountService.A_NAME);
 
         // remove anything that doesn't start with zimbraPref. ldap will also do additional checks
         List<String> toRemove = new ArrayList<String>();

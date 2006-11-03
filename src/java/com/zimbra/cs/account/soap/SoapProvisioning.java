@@ -53,6 +53,7 @@ import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.im.xmpp.util.EmailService;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -192,9 +193,13 @@ public class SoapProvisioning extends Provisioning {
     }
 
     static Map<String, Object> getAttrs(Element e) throws ServiceException {
+        return getAttrs(e, AdminService.A_N);
+    }
+    
+    static Map<String, Object> getAttrs(Element e, String nameAttr) throws ServiceException {
         Map<String, Object> result = new HashMap<String,Object>();
         for (Element a : e.listElements(AdminService.E_A)) {
-            StringUtil.addToMultiMap(result, a.getAttribute(AdminService.A_N), a.getText());
+            StringUtil.addToMultiMap(result, a.getAttribute(nameAttr), a.getText());
         }
         return result;
     }
@@ -1093,8 +1098,8 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException {
         XMLElement req = new XMLElement(AccountService.CREATE_IDENTITY_REQUEST);
-        Element identity = req.addElement(MailService.E_IDENTITY);
-        identity.addAttribute(MailService.A_NAME, identityName);
+        Element identity = req.addElement(AccountService.E_IDENTITY);
+        identity.addAttribute(AccountService.A_NAME, identityName);
         addAttrElementsMailService(identity, attrs);
         invokeOnTargetAccount(req, account.getId());
         return new Identity(identityName, attrs, null);
@@ -1102,19 +1107,29 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void deleteIdentity(Account account, String identityName) throws ServiceException {
-        // TODO Auto-generated method stub
-        
+        XMLElement req = new XMLElement(AccountService.DELETE_IDENTITY_REQUEST);
+        Element identity = req.addElement(AccountService.E_IDENTITY);
+        identity.addAttribute(AccountService.A_NAME, identityName);
+        invokeOnTargetAccount(req, account.getId());
     }
 
     @Override
     public List<Identity> getAllIdentities(Account account) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        List<Identity> result = new ArrayList<Identity>();
+        XMLElement req = new XMLElement(AccountService.GET_IDENTITIES_REQUEST);
+        Element resp = invokeOnTargetAccount(req, account.getId());
+        for (Element identity: resp.listElements(AccountService.E_IDENTITY)) {
+            result.add(new SoapIdentity(identity));
+        }
+        return result;
     }
 
     @Override
     public void modifyIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException {
-        // TODO Auto-generated method stub
-        
+        XMLElement req = new XMLElement(AccountService.MODIFY_IDENTITY_REQUEST);
+        Element identity = req.addElement(AccountService.E_IDENTITY);
+        identity.addAttribute(AccountService.A_NAME, identityName);
+        addAttrElementsMailService(identity, attrs);
+        invokeOnTargetAccount(req, account.getId());
     }
 }

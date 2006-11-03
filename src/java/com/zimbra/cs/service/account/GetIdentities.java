@@ -22,32 +22,38 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
+
+/*
+ * Created on May 26, 2004
+ */
 package com.zimbra.cs.service.account;
 
+
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class CreateIdentity extends DocumentHandler {
-	
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
-        ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account account = getRequestedAccount(zsc);
-        
-        Element identityEl = request.getElement(AccountService.E_IDENTITY);
-        String name = identityEl.getAttribute(AccountService.A_NAME);
-        Map<String,Object> attrs = AccountService.getAttrs(identityEl, AccountService.A_NAME);
-        Identity identity = Provisioning.getInstance().createIdentity(account, name, attrs);
-        
-        Element response = zsc.createElement(AccountService.CREATE_IDENTITY_RESPONSE);
-        ToXML.encodeIdentity(response, identity);
+/**
+ * @author schemers
+ */
+public class GetIdentities extends AccountDocumentHandler  {
+
+	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+		ZimbraSoapContext lc = getZimbraSoapContext(context);
+        Account acct = getRequestedAccount(lc);
+
+        Element response = lc.createElement(AccountService.GET_IDENTITIES_RESPONSE);
+        List<Identity> identities = Provisioning.getInstance().getAllIdentities(acct);
+        for (Identity i : identities) {
+            ToXML.encodeIdentity(response, i);
+        }
         return response;
     }
 }
+
