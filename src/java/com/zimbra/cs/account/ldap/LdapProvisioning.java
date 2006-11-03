@@ -3646,6 +3646,10 @@ public class LdapProvisioning extends Provisioning {
             attrs.put(A_zimbraPrefIdentityName, DEFAULT_IDENTITY_NAME);
         if (attrs.get(A_zimbraPrefDefaultIdentity) == null)        
             attrs.put(A_zimbraPrefDefaultIdentity, result.isEmpty() ? TRUE : FALSE);
+        
+        if (attrs.get(A_zimbraPrefFromAddress) == null)
+            attrs.put(A_zimbraPrefFromAddress, account.getName());
+        
         result.add(new Identity(DEFAULT_IDENTITY_NAME, attrs));
     }
 
