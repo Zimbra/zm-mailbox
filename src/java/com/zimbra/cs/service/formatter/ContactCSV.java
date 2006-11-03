@@ -68,6 +68,7 @@ public class ContactCSV {
     public static final String CSV_Comments = "Comments";
     public static final String CSV_Company = "Company";
     public static final String CSV_Company_Main_Phone = "Company Main Phone";
+    public static final String CSV_Dlist = "dlist";
     public static final String CSV_Department = "Department";
     public static final String CSV_Directory_Server = "Directory Server";
     public static final String CSV_E_mail_2_Address = "E-mail 2 Address";
@@ -83,6 +84,7 @@ public class ContactCSV {
     public static final String CSV_E_mail_Display_Name = "E-mail Display Name";
     public static final String CSV_E_mail_Type = "E-mail Type";
     public static final String CSV_Fax = "Fax";
+    public static final String CSV_FileAs = "fileAs";        
     public static final String CSV_First = "First";    
     public static final String CSV_First_Name = "First Name";
     public static final String CSV_Gender = "Gender";
@@ -254,6 +256,8 @@ public class ContactCSV {
         addMapping(CSV_Department, Contact.A_department, OP_MAP);
         //CSV_Directory_Server
 
+        addMapping(CSV_Dlist, Contact.A_dlist, OP_MAP);
+        
         addMapping(CSV_Email, Contact.A_email, OP_MAP, false);        
         addMapping(CSV_E_mail, Contact.A_email, OP_MAP, false);        
         addMapping(CSV_E_mail_2, Contact.A_email2, OP_MAP, false);
@@ -264,6 +268,8 @@ public class ContactCSV {
         
         addMapping(CSV_Fax, Contact.A_workFax, OP_MAP, false);
 
+        addMapping(CSV_FileAs, Contact.A_fileAs, OP_MAP);
+        
         addMapping(CSV_First, Contact.A_firstName, OP_MAP, false);        
         addMapping(CSV_First_Name, Contact.A_firstName, OP_MAP);
         //CSV_Gender
