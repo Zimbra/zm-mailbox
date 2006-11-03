@@ -31,6 +31,7 @@
 package com.zimbra.cs.account.ldap;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -87,6 +88,7 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.EmailUtil;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.zimlet.ZimletException;
@@ -3646,11 +3648,21 @@ public class LdapProvisioning extends Provisioning {
             attrs.put(A_zimbraPrefIdentityName, DEFAULT_IDENTITY_NAME);
         if (attrs.get(A_zimbraPrefDefaultIdentity) == null)        
             attrs.put(A_zimbraPrefDefaultIdentity, result.isEmpty() ? TRUE : FALSE);
+
+        String fromAddress = (String) attrs.get(A_zimbraPrefFromAddress);
+        String fromDisplay = (String) attrs.get(A_zimbraPrefFromDisplay);
         
-        if (attrs.get(A_zimbraPrefFromAddress) == null)
-            attrs.put(A_zimbraPrefFromAddress, account.getName());
-        
-        result.add(new Identity(DEFAULT_IDENTITY_NAME, attrs));
+        if (fromAddress == null || fromDisplay == null) { 
+            try {
+                InternetAddress ia = AccountUtil.getFriendlyEmailAddress(account);
+                if (fromAddress == null) attrs.put(A_zimbraPrefFromAddress, ia.getAddress());
+                if (fromDisplay == null) attrs.put(A_zimbraPrefFromDisplay, ia.getPersonal());
+            } catch (UnsupportedEncodingException e) {
+                if (fromAddress == null) attrs.put(A_zimbraPrefFromAddress, account.getName());
+                if (fromDisplay == null) attrs.put(A_zimbraPrefFromDisplay, account.getUid());
+            }
+            result.add(new Identity(DEFAULT_IDENTITY_NAME, attrs));
+        }
     }
 
 }
