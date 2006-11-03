@@ -46,7 +46,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.service.account.Auth;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -180,6 +179,8 @@ public class PreAuthServlet extends ZimbraServlet {
         resp.sendRedirect(sb.toString());
     }
 
+    private static final String DEFAULT_MAIL_URL = "/zimbra";
+
     private void setCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, String authToken) throws IOException, ServiceException {
         Cookie c = new Cookie(COOKIE_ZM_AUTH_TOKEN, authToken);
         c.setPath("/");
@@ -191,15 +192,15 @@ public class PreAuthServlet extends ZimbraServlet {
         } else {
             StringBuilder sb = new StringBuilder();
             addNonPreAuthParams(req, sb, true);
-	    Provisioning prov = Provisioning.getInstance();
-	    Server server = prov.getLocalServer();
-	    String redirectUrl = server.getAttr(Provisioning.A_zimbraMailURL);
-	    // NB: do we really have to add the mail app to the end?
-	    if (redirectUrl.charAt(redirectUrl.length() - 1) == '/') {
-		redirectUrl += "mail";
-	    } else {
-		redirectUrl += "/mail";
-	    }
+            Provisioning prov = Provisioning.getInstance();
+            Server server = prov.getLocalServer();
+            String redirectUrl = server.getAttr(Provisioning.A_zimbraMailURL, DEFAULT_MAIL_URL);
+            // NB: do we really have to add the mail app to the end?
+            if (redirectUrl.charAt(redirectUrl.length() - 1) == '/') {
+                redirectUrl += "mail";
+            } else {
+                redirectUrl += "/mail";
+            }
             if (sb.length() > 0) {
                 resp.sendRedirect(redirectUrl + "?" + sb.toString());
             } else {
