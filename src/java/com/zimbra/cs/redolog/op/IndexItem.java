@@ -88,7 +88,9 @@ public class IndexItem extends RedoableOp {
 	public void redo() throws Exception {
 		int mboxId = getMailboxId();
 		Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-		mbox.getMailboxIndex().indexItem(mbox, mId, mType, getTimestamp(), getUnloggedReplay());
+        synchronized (mbox) { // temp fix for bug 11890
+            mbox.getMailboxIndex().indexItem(mbox, mId, mType, getTimestamp(), getUnloggedReplay());
+        }
 	}
 
     /**
