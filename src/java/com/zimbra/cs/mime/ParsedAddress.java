@@ -39,7 +39,7 @@ import javax.mail.internet.InternetAddress;
 import com.zimbra.cs.mailbox.Contact;
 
 
-public class ParsedAddress {
+public class ParsedAddress implements Comparable<ParsedAddress> {
 
     private static String  HONORIFIC = "([^,\\.\\s]{2,}\\.\\s+)?";
     private static String  INITIAL = "(?:[^,\\s]\\.\\s*)";
@@ -153,7 +153,34 @@ public class ParsedAddress {
         parsed = true;
         return this;
     }
-    
+
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        else if (obj == null || !(obj instanceof ParsedAddress))
+            return false;
+        else
+            return compareTo((ParsedAddress) obj) == 0;
+    }
+
+    public int compareTo(ParsedAddress pa) {
+        if (emailPart != null && pa.emailPart != null)
+            return emailPart.compareToIgnoreCase(pa.emailPart);
+        else if (emailPart != null && pa.emailPart == null)
+            return 1;
+        else if (emailPart == null && pa.emailPart != null)
+            return -1;
+        else if (personalPart != null && pa.personalPart != null)
+            return personalPart.compareToIgnoreCase(pa.personalPart);
+        else if (personalPart != null && pa.personalPart == null)
+            return 1;
+        else if (personalPart == null && pa.personalPart != null)
+            return -1;
+        else
+            return 0;
+    }
+
+    @Override
     public String toString() {
         if (emailPart == null)
             return personalPart;

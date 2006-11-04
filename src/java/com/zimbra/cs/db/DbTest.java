@@ -122,17 +122,17 @@ public class DbTest {
 		System.out.print(' ');
 			SenderList senders = mailbox.getConversationSenderList(conv.getId());
 			StringBuffer sbSenders = new StringBuffer();
-			ParsedAddress others[] = senders.getLastAddresses();
-			boolean realShort = (others.length != 0);
+			List<ParsedAddress> others = senders.getLastAddresses();
+			boolean realShort = (!others.isEmpty());
 			sbSenders.append(shortenAddress(senders.getFirstAddress(), realShort));
-			if (others.length > 2)
+			if (others.size() > 2)
 				sbSenders.append(" ? ");
-			else if (others.length != 0)
+			else if (!others.isEmpty())
 				sbSenders.append(", ");
-			if (others.length > 1)
-				sbSenders.append(shortenAddress(others[others.length-2], realShort)).append(", ");
-			if (others.length > 0)
-				sbSenders.append(shortenAddress(others[others.length-1], realShort));
+			if (others.size() > 1)
+				sbSenders.append(shortenAddress(others.get(others.size()-2), realShort)).append(", ");
+			if (!others.isEmpty())
+				sbSenders.append(shortenAddress(others.get(others.size()-1), realShort));
 		System.out.print(padRight(sbSenders.toString(), 20, true));
 		System.out.print(' ');
 		System.out.print(padLeft("(" + conv.getMessageCount() + ")", 4));

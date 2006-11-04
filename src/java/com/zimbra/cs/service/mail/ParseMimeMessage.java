@@ -48,6 +48,7 @@ import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.formatter.VCard;
+import com.zimbra.cs.service.mail.EmailElementCache.EmailType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.util.ExceptionToString;
@@ -609,7 +610,7 @@ public class ParseMimeMessage {
                 newContacts.add(addr);
 
             Object content = addrs.get(addressType);
-            if (content == null || addressType.equals(EmailElementCache.TYPE_FROM)) {
+            if (content == null || addressType.equals(EmailType.FROM.toString())) {
                 addrs.put(addressType, addr);
             } else if (content instanceof List) {
                 ((List<InternetAddress>) content).add(addr);
@@ -643,25 +644,25 @@ public class ParseMimeMessage {
 
     private static void addRecipients(MimeMessage mm, MessageAddresses maddrs)
     throws MessagingException {
-        InternetAddress[] addrs = maddrs.get(EmailElementCache.TYPE_TO);
+        InternetAddress[] addrs = maddrs.get(EmailType.TO.toString());
         if (addrs != null) {
             mm.addRecipients(Message.RecipientType.TO, addrs);
             mLog.debug("\t\tTO: " + addrs);
         }
 
-        addrs = maddrs.get(EmailElementCache.TYPE_CC);
+        addrs = maddrs.get(EmailType.CC.toString());
         if (addrs != null) {
             mm.addRecipients(Message.RecipientType.CC, addrs);
             mLog.debug("\t\tCC: " + addrs);
         }
 
-        addrs = maddrs.get(EmailElementCache.TYPE_BCC);
+        addrs = maddrs.get(EmailType.BCC.toString());
         if (addrs != null) {
             mm.addRecipients(Message.RecipientType.BCC, addrs);
             mLog.debug("\t\tBCC: " + addrs);
         }
 
-        addrs = maddrs.get(EmailElementCache.TYPE_FROM);
+        addrs = maddrs.get(EmailType.FROM.toString());
         if (addrs != null && addrs.length == 1) {
             mm.setFrom(addrs[0]);
             mLog.debug("\t\tFrom: " + addrs[0]);

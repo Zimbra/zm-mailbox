@@ -42,13 +42,14 @@ import com.zimbra.soap.Element;
  */
 public class EmailElementCache {
 
-	public static final int EMAIL_TYPE_NONE = 0;
-    public static final int EMAIL_TYPE_FROM = 1;
-    public static final int EMAIL_TYPE_TO = 2;
-    public static final int EMAIL_TYPE_CC = 3;
-    public static final int EMAIL_TYPE_BCC = 4;
-    public static final int EMAIL_TYPE_REPLY_TO = 5;
-    public static final int EMAIL_TYPE_SENDER = 6;
+    public enum EmailType {
+        NONE(null), FROM("f"), TO("t"), CC("c"), BCC("b"), REPLY_TO("r"), SENDER("s");
+
+        private final String mRep;
+        private EmailType(String c)  { mRep = c; }
+
+        public String toString()     { return mRep; }
+    }
 
 	public int mId;
 	public HashMap<String, CacheNode> mCache;
@@ -145,19 +146,19 @@ public class EmailElementCache {
         return node;
     }
 
-    public Element makeEmail(Element parent, String address, int type, Set<String> unique) {
+    public Element makeEmail(Element parent, String address, EmailType type, Set<String> unique) {
         CacheNode node = add(address, unique, false);
         if (node == null)
             return null;
         return encode(parent, node, type);
     }
-    public Element makeEmail(Element parent, InternetAddress ia, int type, Set<String> unique) {
+    public Element makeEmail(Element parent, InternetAddress ia, EmailType type, Set<String> unique) {
         CacheNode node = add(ia, unique, false);
         if (node == null)
             return null;
         return encode(parent, node, type);
     }
-    public Element makeEmail(Element parent, CacheNode externalNode, int type, Set<String> unique) {
+    public Element makeEmail(Element parent, CacheNode externalNode, EmailType type, Set<String> unique) {
         CacheNode node = add(externalNode, unique, false);
         if (node == null)
             return null;
@@ -165,40 +166,29 @@ public class EmailElementCache {
     }
 
 
-    public static final String TYPE_FROM     = "f";
-    public static final String TYPE_SENDER   = "s";
-    public static final String TYPE_TO       = "t";
-    public static final String TYPE_REPLY_TO = "r";
-    public static final String TYPE_CC       = "c";
-    public static final String TYPE_BCC      = "b";
-
-    private Element encode(Element parent, CacheNode node, int type) {
+    private Element encode(Element parent, CacheNode node, EmailType type) {
         Element elem = parent.addElement(MailService.E_EMAIL);
         if (node.first) {
             node.parse();
             node.first = false;
             elem.addAttribute(MailService.A_ID, node.id);
-            if (node.emailPart != null)
-                elem.addAttribute(MailService.A_ADDRESS, node.emailPart);
-            if (node.firstName != null)
-                elem.addAttribute(MailService.A_DISPLAY, node.firstName);
-            if (node.personalPart != null)
-                elem.addAttribute(MailService.A_PERSONAL, node.personalPart);
+            elem.addAttribute(MailService.A_ADDRESS, node.emailPart);
+            elem.addAttribute(MailService.A_DISPLAY, node.firstName);
+            elem.addAttribute(MailService.A_PERSONAL, node.personalPart);
         } else {
             elem.addAttribute(MailService.A_REF, node.id);
         }
+        elem.addAttribute(MailService.A_ADDRESS_TYPE, type.toString());
+        return elem;
+    }
 
-        String t = null;
-        switch (type) {
-            case EMAIL_TYPE_FROM:      t = TYPE_FROM;      break;
-            case EMAIL_TYPE_SENDER:    t = TYPE_SENDER;    break;
-            case EMAIL_TYPE_TO:        t = TYPE_TO;        break;
-            case EMAIL_TYPE_REPLY_TO:  t = TYPE_REPLY_TO;  break;
-            case EMAIL_TYPE_CC:        t = TYPE_CC;        break;
-            case EMAIL_TYPE_BCC:       t = TYPE_BCC;       break;
-        }
-        if (t != null)
-            elem.addAttribute(MailService.A_ADDRESS_TYPE, t);
+    public Element encode(Element parent, ParsedAddress pa, EmailType type) {
+        Element elem = parent.addElement(MailService.E_EMAIL);
+        elem.addAttribute(MailService.A_ADDRESS, pa.emailPart);
+        elem.addAttribute(MailService.A_DISPLAY, pa.firstName);
+        elem.addAttribute(MailService.A_PERSONAL, pa.personalPart);
+        elem.addAttribute(MailService.A_ADDRESS_TYPE, type.toString());
+        elem.addAttribute(MailService.A_ID, ++mId);
         return elem;
     }
 }

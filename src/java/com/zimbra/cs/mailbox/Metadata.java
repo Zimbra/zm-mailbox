@@ -44,7 +44,7 @@ public class Metadata {
     /** Current Metadata version number.  Note that all MailItems have NOT
      *  been updated to check the version number, so make sure to look at
      *  the code if you depend on this. */
-    static final int CURRENT_METADATA_VERSION = 9;
+    static final int CURRENT_METADATA_VERSION = 10;
     
     // MetaData attributes used in toplevel metadata for MailItems.
     
@@ -77,6 +77,7 @@ public class Metadata {
     static final String FN_NUM_COMPONENTS  = "nc";
     static final String FN_NODES           = "no";
     static final String FN_PREFIX          = "p";
+    static final String FN_PARTICIPANTS    = "prt";
     static final String FN_QUERY           = "q";
     static final String FN_RAW_SUBJ        = "r";
     static final String FN_REV_DATE        = "rd";
@@ -89,7 +90,7 @@ public class Metadata {
     static final String FN_SORT            = "s";
     static final String FN_SYNC_DATE       = "sd";
     static final String FN_SYNC_GUID       = "sg";
-    static final String FN_SENDER_LIST     = "sl";
+//    static final String FN_SENDER_LIST     = "sl";
     static final String FN_RECIPIENTS      = "t";
     static final String FN_TYPES           = "t";
     static final String FN_TZMAP           = "tzm"; // calendaring: timezone map

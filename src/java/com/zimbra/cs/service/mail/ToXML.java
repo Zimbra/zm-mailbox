@@ -30,29 +30,14 @@ package com.zimbra.cs.service.mail;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
-import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Appointment.Instance;
-import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.Conversation;
-import com.zimbra.cs.mailbox.Document;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailItemDataSource;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.mailbox.Note;
-import com.zimbra.cs.mailbox.SearchFolder;
-import com.zimbra.cs.mailbox.SenderList;
-import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
@@ -66,10 +51,11 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.handler.TextEnrichedHandler;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.service.mail.EmailElementCache.CacheNode;
+import com.zimbra.cs.service.mail.EmailElementCache.EmailType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.wiki.WikiPage;
@@ -484,7 +470,7 @@ public class ToXML {
                 m.addAttribute(MailService.A_FOLDER, lc.formatItemId(msg.getFolderId()));
                 recordItemTags(m, msg, fields);
                 m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
-                eecache.makeEmail(m, msg.getSender(), EmailElementCache.EMAIL_TYPE_FROM, null);
+                eecache.makeEmail(m, msg.getSender(), EmailType.FROM, null);
             }
         }
         return c;
@@ -522,7 +508,7 @@ public class ToXML {
         if (addRecips) {
             try {
                 InternetAddress[] addrs = InternetAddress.parseHeader(msgHit.getRecipients(), false);
-                addEmails(c, eecache, addrs, EmailElementCache.EMAIL_TYPE_TO);
+                addEmails(c, eecache, addrs, EmailType.TO);
             } catch (AddressException e1) { }
         }
 
@@ -530,32 +516,34 @@ public class ToXML {
             if (eecache == null)
                 eecache = new EmailElementCache();
             Mailbox mbox = conv.getMailbox();
+
             SenderList sl;
             try {
                 if (conv.isTagged(mbox.mDeletedFlag)) {
                     sl = new SenderList();
-                    for (Message msg : mbox.getMessagesByConversation(lc.getOperationContext(), conv.getId())) {
+                    for (Message msg : mbox.getMessagesByConversation(lc.getOperationContext(), conv.getId(), Conversation.SORT_DATE_ASCENDING)) {
                         if (!msg.isTagged(mbox.mDeletedFlag))
                             sl.add(msg);
                     }
                 } else {
                     sl = mbox.getConversationSenderList(conv.getId());
                 }
+            } catch (SenderList.RefreshException slre) {
+                ZimbraLog.soap.warn("out-of-order messages returned for conversation " + conv.getId());
+                return c;
             } catch (ServiceException e) {
                 return c;
             }
-            CacheNode fa = sl.getFirstAddress();
+
+            ParsedAddress fa = sl.getFirstAddress();
             if (fa != null) {
-                eecache.makeEmail(c, fa, EmailElementCache.EMAIL_TYPE_FROM, null);
+                eecache.encode(c, fa, EmailType.FROM);
                 // "<e/>" indicates that some senders may be omitted...
                 if (sl.isElided())
                     c.addElement(MailService.E_EMAIL);
             }
-            CacheNode[] la = sl.getLastAddresses();
-            for (int i = 0; i < la.length; i++) {
-                if (la[i] != null)
-                    eecache.makeEmail(c, la[i], EmailElementCache.EMAIL_TYPE_FROM, null);
-            }
+            for (ParsedAddress pa : sl.getLastAddresses())
+                eecache.encode(c, pa, EmailType.FROM);
         }
 
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
@@ -621,11 +609,11 @@ public class ToXML {
                 part = "";
 
             EmailElementCache eecache = new EmailElementCache();
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "From"), EmailElementCache.EMAIL_TYPE_FROM);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Reply-To"), EmailElementCache.EMAIL_TYPE_REPLY_TO);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "To"), EmailElementCache.EMAIL_TYPE_TO);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Cc"), EmailElementCache.EMAIL_TYPE_CC);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Bcc"), EmailElementCache.EMAIL_TYPE_BCC);
+            addEmails(m, eecache, Mime.parseAddressHeader(mm, "From"), EmailType.FROM);
+            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Reply-To"), EmailType.REPLY_TO);
+            addEmails(m, eecache, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
+            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
+            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
 
             String subject = mm.getSubject();
             if (subject != null)
@@ -802,11 +790,11 @@ public class ToXML {
                 part = "";
 
             EmailElementCache eecache = new EmailElementCache();
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "From"), EmailElementCache.EMAIL_TYPE_FROM);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Reply-To"), EmailElementCache.EMAIL_TYPE_REPLY_TO);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "To"), EmailElementCache.EMAIL_TYPE_TO);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Cc"), EmailElementCache.EMAIL_TYPE_CC);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Bcc"), EmailElementCache.EMAIL_TYPE_BCC);
+            addEmails(m, eecache, Mime.parseAddressHeader(mm, "From"), EmailType.FROM);
+            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Reply-To"), EmailType.REPLY_TO);
+            addEmails(m, eecache, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
+            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
+            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
 
             String subject = mm.getSubject();
             if (subject != null)
@@ -915,12 +903,12 @@ public class ToXML {
         boolean addSenders = output == OutputParticipants.PUT_BOTH || !addRecips;
         if (addRecips) {
             try {
-                addEmails(e, eecache, InternetAddress.parseHeader(msg.getRecipients(), false), EmailElementCache.EMAIL_TYPE_TO);
+                addEmails(e, eecache, InternetAddress.parseHeader(msg.getRecipients(), false), EmailType.TO);
             } catch (AddressException e1) { }
         }
 
         if (addSenders)
-            eecache.makeEmail(e, msg.getSender(), EmailElementCache.EMAIL_TYPE_FROM, null);
+            eecache.makeEmail(e, msg.getSender(), EmailType.FROM, null);
 
         e.addAttribute(MailService.E_SUBJECT, StringUtil.stripControlCharacters(msg.getSubject()), Element.DISP_CONTENT);
 
@@ -1192,8 +1180,7 @@ public class ToXML {
         return e;
     }
 
-    private static void encodeXProps(Element parent, Iterator<ZProperty> xpropsIterator)
-    throws ServiceException {
+    private static void encodeXProps(Element parent, Iterator<ZProperty> xpropsIterator) {
         for (; xpropsIterator.hasNext(); ) {
             ZProperty xprop = xpropsIterator.next();
             String propName = xprop.getName();
@@ -1418,11 +1405,11 @@ public class ToXML {
      * @param email_type_to
      */
     private static void addEmails(Element m, EmailElementCache eecache,
-                InternetAddress[] recipients, int emailType) {
+                InternetAddress[] recipients, EmailType emailType) {
         addEmails(m, eecache, recipients, emailType, null);
     }
     private static void addEmails(Element m, EmailElementCache eecache,
-                InternetAddress[] recipients, int emailType, HashSet<String> unique) {
+                InternetAddress[] recipients, EmailType emailType, HashSet<String> unique) {
         if (recipients == null || recipients.length == 0)
             return;
         for (int i = 0; i < recipients.length; i++)
