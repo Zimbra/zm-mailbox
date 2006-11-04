@@ -125,7 +125,7 @@ public class BrowseWrapper extends PhantomResource {
 		res.add(new SearchWrapper(generateUri(WEEK), getOwner()));
 		res.add(new SearchWrapper(generateUri(MONTH), getOwner()));
 		res.add(new SearchWrapper(generateUri(YEAR), getOwner()));
-		res.add(new SearchWrapper(generateUri(ALL), getOwner()));
+		//res.add(new SearchWrapper(generateUri(ALL), getOwner()));
 		return res;
 	}
 	
