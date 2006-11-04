@@ -1588,11 +1588,12 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext(true);
             
-            LdapAccount acc = (LdapAccount) getAccountById(zimbraId, ctxt);
+            Account acc = getAccountById(zimbraId, ctxt);
+            LdapEntry entry = (LdapEntry) acc;
             if (acc == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
 
-            String oldDn = acc.getDN();
+            String oldDn = entry.getDN();
             String oldEmail = acc.getName();
             
             newName = newName.toLowerCase().trim();
