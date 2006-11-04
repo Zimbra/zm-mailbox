@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 import com.zimbra.common.util.ZimbraLog;
@@ -90,9 +91,21 @@ public class SearchWrapper extends PhantomResource {
 		}
 	}
 	
+	private static HashMap<String,String> sCTMap;
+	
+	static {
+		sCTMap = new HashMap<String,String>();
+		sCTMap.put("ppt",   "application/vnd.ms-powerpoint");
+		sCTMap.put("excel", "application/vnd.ms-excel");
+		sCTMap.put("word",  "application/msword");
+		sCTMap.put("pdf",   "application/pdf");
+	}
+	
 	private static String getActualContentType(String str) {
-		if (str.equals("ppt"))
-			return "application/vnd.ms-powerpoint";
+		String v = sCTMap.get(str);
+		if (v != null)
+			return v;
+		
 		return str;
 	}
 	
@@ -139,8 +152,7 @@ public class SearchWrapper extends PhantomResource {
 			for (MPartInfo p : parts) {
 				String name = p.getFilename();
 				String ct = p.getContentType();
-				if (mContentType != null && ct != null && 
-						!ct.startsWith(mContentType) && !ct.endsWith(mContentType))
+				if (mContentType != null && ct != null && !ct.startsWith(mContentType))
 					continue;
 				if (name != null && name.length() > 0)
 					children.add(new Attachment(getUri()+name, getOwner(), msg.getDate(), p.getSize()));
