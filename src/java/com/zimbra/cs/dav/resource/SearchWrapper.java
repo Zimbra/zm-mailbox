@@ -54,7 +54,7 @@ public class SearchWrapper extends PhantomResource {
 	protected static final long MONTH_IN_MS = 4 * WEEK_IN_MS;
 	
 	private String mContentType;
-	private String mQuery;
+	private StringBuilder mQuery;
 	
 	public SearchWrapper(String uri, String owner) {
 		this(uri, owner, parseUri(uri));
@@ -63,29 +63,37 @@ public class SearchWrapper extends PhantomResource {
 	public SearchWrapper(String uri, String owner, List<String> tokens) {
 		super(uri, owner, tokens);
 		mContentType = null;
-		mQuery = "has:attachment";
-		int size = tokens.size();
-		String category = tokens.get(size-2);
-		String item = tokens.get(size-1);
-		createQuery(category, item);
+		mQuery = new StringBuilder();
+		mQuery.append("has:attachment ");
+		String prevToken = null;
+		for (String token : tokens) {
+			buildQuery(prevToken, token);
+			prevToken = token;
+		}
 	}
 
-	private void createQuery(String category, String item) {
-		if (category.equals(BrowseWrapper.BY_DATE)) {
-			if (item.equals(TODAY))
-				mQuery = "has:attachment after:\"-1day\"";
-			else if (item.equals(WEEK))
-				mQuery = "has:attachment after:\"-1week\"";
-			else if (item.equals(MONTH))
-				mQuery = "has:attachment after:\"-1month\"";
-			
-		} else if (category.equals(BrowseWrapper.BY_SENDER)) {
-			mQuery = "has:attachment from:(@"+item+")";
-		} else if (category.equals(BrowseWrapper.BY_TYPE)) {
-			mQuery = "attachment:\""+item+"\"";
-			if (!item.equals("any"))
-				mContentType = item;
+	private void buildQuery(String prevTerm, String term) {
+		if (term.equals(TODAY))
+			mQuery.append("after:\"-1day\" ");
+		else if (term.equals(WEEK))
+			mQuery.append("after:\"-1week\" ");
+		else if (term.equals(MONTH))
+			mQuery.append("after:\"-1month\" ");
+		else if (term.equals(YEAR))
+			mQuery.append("after:\"-1year\" ");
+		else if (BrowseWrapper.BY_SENDER.equals(prevTerm))
+			mQuery.append("from:(@"+term+") ");
+		else if (BrowseWrapper.BY_TYPE.equals(prevTerm)) {
+			mQuery.append("attachment:\""+term+"\" ");
+			if (!term.equals("any"))
+				mContentType = getActualContentType(term);
 		}
+	}
+	
+	private static String getActualContentType(String str) {
+		if (str.equals("ppt"))
+			return "application/vnd.ms-powerpoint";
+		return str;
 	}
 	
 	@Override
@@ -107,7 +115,7 @@ public class SearchWrapper extends PhantomResource {
 		try {
 			Account account = prov.get(AccountBy.name, user);
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			zqr = mbox.search(ctxt.getOperationContext(), mQuery, SEARCH_TYPES, MailboxIndex.SortBy.NAME_ASCENDING, 1000);
+			zqr = mbox.search(ctxt.getOperationContext(), mQuery.toString(), SEARCH_TYPES, MailboxIndex.SortBy.NAME_ASCENDING, 100);
 			while (zqr.hasNext()) {
                 ZimbraHit hit = zqr.getNext();
                 if (hit instanceof MessageHit)
@@ -131,7 +139,8 @@ public class SearchWrapper extends PhantomResource {
 			for (MPartInfo p : parts) {
 				String name = p.getFilename();
 				String ct = p.getContentType();
-				if (mContentType != null && ct != null && !ct.startsWith(mContentType))
+				if (mContentType != null && ct != null && 
+						!ct.startsWith(mContentType) && !ct.endsWith(mContentType))
 					continue;
 				if (name != null && name.length() > 0)
 					children.add(new Attachment(getUri()+name, getOwner(), msg.getDate(), p.getSize()));

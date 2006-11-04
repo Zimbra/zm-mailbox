@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import javax.mail.internet.MimeMessage;
+import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -61,7 +62,7 @@ public class Attachment extends PhantomResource {
 		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(contentLength));
 	}
 	
-	public Attachment(String uri, String owner, List<String> tokens, DavContext ctxt) {
+	public Attachment(String uri, String owner, List<String> tokens, DavContext ctxt) throws DavException {
 		this(uri, owner, tokens);
 		String user = ctxt.getUser();
 		Provisioning prov = Provisioning.getInstance();
@@ -78,6 +79,7 @@ public class Attachment extends PhantomResource {
 		if (needQuotes)
 			query.append("'");
 		ZimbraQueryResults zqr = null;
+		boolean found = false;
 		try {
 			Account account = prov.get(AccountBy.name, user);
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -98,6 +100,7 @@ public class Attachment extends PhantomResource {
 							mContent = ByteUtil.getContent(Mime.getMimePart(msg, partName).getInputStream(), 0);
 							setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(mContent.length));
 							setProperty(DavElements.P_GETCONTENTTYPE, p.getContentType());
+							found = true;
 							break;
 						}
 					}
@@ -111,6 +114,8 @@ public class Attachment extends PhantomResource {
 					zqr.doneWithSearchResults();
 				} catch (ServiceException e) {}
 		}
+		if (!found) 
+			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
 	}
 
 	public Attachment(String uri, String owner, List<String> tokens) {

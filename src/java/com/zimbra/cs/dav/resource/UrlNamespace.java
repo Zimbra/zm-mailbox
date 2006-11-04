@@ -160,26 +160,28 @@ public class UrlNamespace {
 		}
 		
 		//
-		// return BrowseResource
+		// return BrowseWrapper
 		//
 		// /attachments/
 		// /attachments/by-date/
 		// /attachments/by-type/
+		// /attachments/by-type/image/
 		// /attachments/by-sender/
+		// /attachments/by-sender/zimbra.com/
 
 		//
-		// return SearchResource
+		// return SearchWrapper
 		//
 		// /attachments/by-date/today/
-		// /attachments/by-type/image%2Fgif/
-		// /attachments/by-sender/zimbra.com/
+		// /attachments/by-type/image/last-month/
+		// /attachments/by-sender/zimbra.com/last-week/
 		
 		//
-		// return AttachmentResource
+		// return AttachmentWrapper
 		//
 		// /attachments/by-date/today/image.gif
-		// /attachments/by-type/image%2Fgif/image.gif
-		// /attachments/by-sender/zimbra.com/image.gif
+		// /attachments/by-type/image/last-month/image.gif
+		// /attachments/by-sender/zimbra.com/last-week/image.gif
 
 		switch (numTokens) {
 		case 1:
@@ -187,9 +189,18 @@ public class UrlNamespace {
 			resource = new BrowseWrapper(target, user, tokens);
 			break;
 		case 3:
-			resource = new SearchWrapper(target, user, tokens);
+			if (tokens.get(1).equals(PhantomResource.BY_DATE))
+				resource = new SearchWrapper(target, user, tokens);
+			else
+				resource = new BrowseWrapper(target, user, tokens);
 			break;
 		case 4:
+			if (tokens.get(1).equals(PhantomResource.BY_DATE))
+				resource = new Attachment(target, user, tokens, ctxt);
+			else
+				resource = new SearchWrapper(target, user, tokens);
+			break;
+		case 5:
 			resource = new Attachment(target, user, tokens, ctxt);
 			break;
 		default:

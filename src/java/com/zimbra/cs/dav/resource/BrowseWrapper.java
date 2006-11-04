@@ -58,14 +58,16 @@ public class BrowseWrapper extends PhantomResource {
 		super(uri, owner, tokens);
 
 		String name = mTokens.get(mTokens.size()-1);
-		if (name.equals(BY_DATE)) {
+		if (tokens.size() == 1) {
+			mAction = BrowseBy.menu;
+		} else if (name.equals(BY_DATE)) {
 			mAction = BrowseBy.date;
 		} else if (name.equals(BY_TYPE)) {
 			mAction = BrowseBy.type;
 		} else if (name.equals(BY_SENDER)) {
 			mAction = BrowseBy.sender;
 		} else {
-			mAction = BrowseBy.menu;
+			mAction = BrowseBy.date;
 		}
 	}
 	
@@ -122,6 +124,7 @@ public class BrowseWrapper extends PhantomResource {
 		res.add(new SearchWrapper(generateUri(TODAY), getOwner()));
 		res.add(new SearchWrapper(generateUri(WEEK), getOwner()));
 		res.add(new SearchWrapper(generateUri(MONTH), getOwner()));
+		res.add(new SearchWrapper(generateUri(YEAR), getOwner()));
 		res.add(new SearchWrapper(generateUri(ALL), getOwner()));
 		return res;
 	}
@@ -137,7 +140,7 @@ public class BrowseWrapper extends PhantomResource {
 			if (obj instanceof DomainItem) {
 				DomainItem di = (DomainItem) obj;
 				if (di.isFrom())
-					res.add(new SearchWrapper(generateUri(di.getDomain()), getOwner()));
+					res.add(new BrowseWrapper(generateUri(di.getDomain()), getOwner()));
 			}
 		}
 		return res;
@@ -154,15 +157,19 @@ public class BrowseWrapper extends PhantomResource {
 			if (obj instanceof String) {
 				String ctype = (String) obj;
 				int index = ctype.indexOf('/');
-				if (index != -1) {
+				if (index != -1 || ctype.equals("message") || ctype.equals("none")) {
 					continue;
 					// the client still gets confused about having a slash in the
 					// path even after encoding
 					//ctype = ctype.substring(0,index) + "%2F" + ctype.substring(index+1);
 				}
-				res.add(new SearchWrapper(generateUri(ctype), getOwner()));
+				res.add(new BrowseWrapper(generateUri(ctype), getOwner()));
 			}
 		}
+		res.add(new BrowseWrapper(generateUri("word"), getOwner()));
+		res.add(new BrowseWrapper(generateUri("excel"), getOwner()));
+		res.add(new BrowseWrapper(generateUri("ppt"), getOwner()));
+		res.add(new BrowseWrapper(generateUri("pdf"), getOwner()));
 		return res;
 	}
 }

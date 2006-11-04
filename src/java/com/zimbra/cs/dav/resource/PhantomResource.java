@@ -20,6 +20,7 @@ public abstract class PhantomResource extends DavResource {
 	protected static final String TODAY = "today";
 	protected static final String WEEK  = "last-week";
 	protected static final String MONTH = "last-month";
+	protected static final String YEAR  = "last-year";
 	protected static final String ALL   = "all";
 
 	protected List<String> mTokens;
