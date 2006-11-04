@@ -25,45 +25,44 @@
 
 package com.zimbra.cs.account;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
+import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
+import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.wiki.WikiUtil;
+import com.zimbra.cs.zclient.ZClientException;
+import com.zimbra.cs.zclient.ZMailboxUtil;
+import com.zimbra.soap.Element;
+import com.zimbra.soap.SoapTransport.DebugListener;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
-import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
-import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.wiki.WikiUtil;
-import com.zimbra.cs.zclient.ZClientException;
-import com.zimbra.cs.zclient.ZMailboxUtil;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapTransport.DebugListener;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * @author schemers
@@ -164,6 +163,7 @@ public class ProvUtil implements DebugListener {
         CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk"),  //("  CreateBulkAccounts(cabulk) {domain} {namemask} {number of accounts to create} ");
         CREATE_CALENDAR_RESOURCE("createCalendarResource",  "ccr", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 2, Integer.MAX_VALUE),
         CREATE_COS("createCos", "cc", "{name} [attr1 value1 [attr2 value2...]]", Category.COS, 1, Integer.MAX_VALUE),
+        CREATE_DATA_SOURCE("createDataSource", "cds", "{name@domain} {ds-type} {ds-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),                
         CREATE_DISTRIBUTION_LIST("createDistributionList", "cdl", "{list@domain}", Category.LIST, 1, Integer.MAX_VALUE),
         CREATE_DISTRIBUTION_LISTS_BULK("createDistributionListsBulk", "cdlbulk"),
         CREATE_DOMAIN("createDomain", "cd", "{domain} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
@@ -172,6 +172,7 @@ public class ProvUtil implements DebugListener {
         DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}", Category.ACCOUNT, 1, 1),
         DELETE_CALENDAR_RESOURCE("deleteCalendarResource",  "dcr", "{name@domain|id}", Category.CALENDAR, 1, 1),
         DELETE_COS("deleteCos", "dc", "{name|id}", Category.COS, 1, 1),
+        DELETE_DATA_SOURCE("deleteDataSource", "dds", "{name@domain|id} {ds-id}", Category.ACCOUNT, 2, 2),                        
         DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id}", Category.LIST, 1, 1),
         DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}", Category.DOMAIN, 1, 1),
         DELETE_IDENTITY("deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),                
@@ -180,6 +181,7 @@ public class ProvUtil implements DebugListener {
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 5),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "{domain|id}", Category.MISC, 1, 1),
         GET_ACCOUNT("getAccount", "ga", "{name@domain|id}", Category.ACCOUNT, 1, 1),
+        GET_DATA_SOURCES("getDataSources", "gds", "{name@domain|id}", Category.ACCOUNT, 1, 1),                
         GET_IDENTITIES("getIdentities", "gid", "{name@domain|id}", Category.ACCOUNT, 1, 1),        
         GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT, 1, 2),
         GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [{domain}]", Category.ACCOUNT, 0, 2),
@@ -208,6 +210,7 @@ public class ProvUtil implements DebugListener {
         MODIFY_CALENDAR_RESOURCE("modifyCalendarResource",  "mcr", "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 3, Integer.MAX_VALUE),
         MODIFY_CONFIG("modifyConfig", "mcf", "attr1 value1 [attr2 value2...]", Category.CONFIG, 2, Integer.MAX_VALUE),
         MODIFY_COS("modifyCos", "mc", "{name|id} [attr1 value1 [attr2 value2...]]", Category.COS, 3, Integer.MAX_VALUE),
+        MODIFY_DATA_SOURCE("modifyDataSource", "mds", "{name@domain|id} {ds-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),                
         MODIFY_DISTRIBUTION_LIST("modifyDistributionList", "mdl", "{list@domain|id} attr1 value1 [attr2 value2...]", Category.LIST, 3, Integer.MAX_VALUE),
         MODIFY_DOMAIN("modifyDomain", "md", "{domain|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 3, Integer.MAX_VALUE),
         MODIFY_IDENTITY("modifyIdentity", "mid", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),        
@@ -359,6 +362,9 @@ public class ProvUtil implements DebugListener {
         case CREATE_IDENTITY:
             mProv.createIdentity(lookupAccount(args[1]), args[2], getMap(args, 3));
             break;                                    
+        case CREATE_DATA_SOURCE:
+            System.out.println(mProv.createDataSource(lookupAccount(args[1]), DataSource.Type.fromString(args[2]), args[3], getMap(args, 4)).getId());
+            break;                                                
         case CREATE_SERVER:
             System.out.println(mProv.createServer(args[1], getMap(args, 2)).getId());
             break;            
@@ -380,6 +386,9 @@ public class ProvUtil implements DebugListener {
         case GET_IDENTITIES:
             doGetAccountIdentities(args);
             break;            
+        case GET_DATA_SOURCES:
+            doGetAccountDataSources(args);
+            break;                        
         case GET_ALL_ACCOUNTS:
             doGetAllAccounts(args); 
             break;            
@@ -419,6 +428,9 @@ public class ProvUtil implements DebugListener {
         case MODIFY_ACCOUNT:
             mProv.modifyAttrs(lookupAccount(args[1]), getMap(args,2), true);
             break;            
+        case MODIFY_DATA_SOURCE:
+            mProv.modifyDataSource(lookupAccount(args[1]), args[2], getMap(args,3));
+            break;
         case MODIFY_IDENTITY:
             mProv.modifyIdentity(lookupAccount(args[1]), args[2], getMap(args,3));
             break;                        
@@ -445,6 +457,9 @@ public class ProvUtil implements DebugListener {
             break;
         case DELETE_IDENTITY:
             mProv.deleteIdentity(lookupAccount(args[1]), args[2]);
+            break;                        
+        case DELETE_DATA_SOURCE:
+            mProv.deleteDataSource(lookupAccount(args[1]), args[2]);
             break;                        
         case DELETE_SERVER:
             mProv.deleteServer(lookupServer(args[1]).getId());
@@ -653,6 +668,21 @@ public class ProvUtil implements DebugListener {
         Account account = lookupAccount(args[1]);
         for (Identity identity : mProv.getAllIdentities(account)) {
             dumpIdentity(identity);
+        }    
+    }
+    
+    private void dumpDataSource(DataSource dataSource) throws ServiceException {
+        System.out.println("# name "+dataSource.getName());
+        System.out.println("# type "+dataSource.getType());
+        Map<String, Object> attrs = dataSource.getAttrs();
+        dumpAttrs(attrs);
+        System.out.println();
+    }
+    
+    private void doGetAccountDataSources(String[] args) throws ServiceException {
+        Account account = lookupAccount(args[1]);
+        for (DataSource dataSource : mProv.getAllDataSources(account)) {
+            dumpDataSource(dataSource);
         }    
     }
     

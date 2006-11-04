@@ -25,6 +25,33 @@
 
 package com.zimbra.cs.account;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.Zimbra;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.dom4j.Attribute;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
+
+import javax.naming.NameClassPair;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -43,35 +70,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.naming.NameClassPair;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.DirContext;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.dom4j.Attribute;
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
-
-import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.util.ZimbraLog;
 
 public class AttributeManager {
 
@@ -357,12 +355,18 @@ public class AttributeManager {
             }
             
             if (requiredIn != null || optionalIn != null) {
-                if (requiredIn != null)
-                    for (AttributeClass klass : requiredIn)
+                if (requiredIn != null) {
+                    for (AttributeClass klass : requiredIn) {
                         mClassToAttrsMap.get(klass).add(name);
-                if (optionalIn != null)
-                    for (AttributeClass klass : optionalIn)
-                        mClassToAttrsMap.get(klass).add(name);                
+                        mClassToLowerCaseAttrsMap.get(klass).add(name.toLowerCase());                        
+                    }
+                }
+                if (optionalIn != null) {
+                    for (AttributeClass klass : optionalIn) {
+                        mClassToAttrsMap.get(klass).add(name);
+                        mClassToLowerCaseAttrsMap.get(klass).add(name.toLowerCase());                        
+                    }
+                }
             }
         }
     }
@@ -416,10 +420,12 @@ public class AttributeManager {
      */
     
     private Map<AttributeClass, Set<String>> mClassToAttrsMap = new HashMap<AttributeClass, Set<String>>();
+    private Map<AttributeClass, Set<String>> mClassToLowerCaseAttrsMap = new HashMap<AttributeClass, Set<String>>();
 
     private void initClassToAttrsMap() {
        for (AttributeClass klass : AttributeClass.values()) {
            mClassToAttrsMap.put(klass, new HashSet<String>());
+           mClassToLowerCaseAttrsMap.put(klass, new HashSet<String>());
        }
      }
     
@@ -456,6 +462,10 @@ public class AttributeManager {
     
     public Set<String> getAttrsInClass(AttributeClass klass) {
         return mClassToAttrsMap.get(klass);
+     }
+    
+    public Set<String> getLowerCaseAttrsInClass(AttributeClass klass) {
+        return mClassToLowerCaseAttrsMap.get(klass);
      }
 
     /**

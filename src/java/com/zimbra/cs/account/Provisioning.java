@@ -29,17 +29,17 @@
  */
 package com.zimbra.cs.account;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.L10nUtil;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author schemers
@@ -1018,6 +1018,22 @@ public abstract class Provisioning {
     public static final String A_zimbraIsSystemResource        = "zimbraIsSystemResource";
     
     /*
+     * data sources
+     */
+    
+
+    public static final String A_zimbraDataSourceId = "zimbraDataSourceId";
+    public static final String A_zimbraDataSourceName = "zimbraDataSourceName";
+    public static final String A_zimbraDataSourceEnabled = "zimbraDataSourceEnabled";
+    public static final String A_zimbraDataSourceHost = "zimbraDataSourceHost";
+    public static final String A_zimbraDataSourcePort = "zimbraDataSourcePort";
+    public static final String A_zimbraDataSourceUsername = "zimbraDataSourceUsername";
+    public static final String A_zimbraDataSourcePassword = "zimbraDataSourcePassword";
+    public static final String A_zimbraDataSourceFolderId = "zimbraDataSourceFolderId";
+    public static final String A_zimbraDataSourceConnectionType = "zimbraDataSourceConnectionType";    
+    public static final String A_zimbraDataSourceMaxNumEntries = "zimbraDataSourceMaxNumEntries";    
+    
+    /*
      * Extension Text Analyzer
      */
     public static final String A_zimbraTextAnalyzer = "zimbraTextAnalyzer";
@@ -1660,6 +1676,7 @@ public abstract class Provisioning {
     
     public abstract void removeMembers(DistributionList list, String[] member) throws ServiceException;
 
+    // identities 
     public abstract Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
     
     public abstract void modifyIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
@@ -1667,5 +1684,14 @@ public abstract class Provisioning {
     public abstract void deleteIdentity(Account account, String identityName) throws ServiceException;
     
     public abstract List<Identity> getAllIdentities(Account account) throws ServiceException;
+    
+    // data sources
+    public abstract DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs) throws ServiceException;
+    
+    public abstract void modifyDataSource(Account account, String dataSourceId, Map<String, Object> attrs) throws ServiceException;
+    
+    public abstract void deleteDataSource(Account account, String dataSourceId) throws ServiceException;
+    
+    public abstract List<DataSource> getAllDataSources(Account account) throws ServiceException;
     
 }

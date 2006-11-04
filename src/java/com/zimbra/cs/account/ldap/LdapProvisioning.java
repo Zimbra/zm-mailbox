@@ -30,22 +30,44 @@
  */
 package com.zimbra.cs.account.ldap;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.Stack;
-import java.util.regex.Pattern;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Account.CalendarUserType;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeClass;
+import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DomainCache;
+import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.EntrySearchFilter;
+import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.NamedEntryCache;
+import com.zimbra.cs.account.PreAuthKey;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.WellKnownTimeZone;
+import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.zimlet.ZimletException;
+import com.zimbra.cs.zimlet.ZimletUtil;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -74,25 +96,22 @@ import javax.naming.ldap.Control;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import com.zimbra.cs.account.*;
-import com.zimbra.cs.account.Account.CalendarUserType;
-import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
-import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.EmailUtil;
-import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.zimlet.ZimletException;
-import com.zimbra.cs.zimlet.ZimletUtil;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.Stack;
+import java.util.regex.Pattern;
 
 /**
  * @author schemers
@@ -3510,7 +3529,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private Identity getIdentityByName(LdapEntry entry, String name,  DirContext ctxt) throws ServiceException {
-        //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+        name = LdapUtil.escapeSearchFilterArg(name);
         List<Identity> result = getIdentitiesByQuery(entry, "(&(zimbraPrefIdentityName="+name+")(objectclass=zimbraIdentity))", ctxt); 
         return result.isEmpty() ? null : result.get(0);
     }
@@ -3519,9 +3538,20 @@ public class LdapProvisioning extends Provisioning {
         return A_zimbraPrefIdentityName + "=" + name + "," + entry.getDN();    
     }
 
+    private void validateIdentityAttrs(Map<String, Object> attrs) throws ServiceException {
+        Set<String> validAttrs = AttributeManager.getInstance().getLowerCaseAttrsInClass(AttributeClass.identity);
+        for (String key : attrs.keySet()) {
+            if (!validAttrs.contains(key.toLowerCase())) {
+                throw ServiceException.INVALID_REQUEST("unable to modify attr: "+key, null);
+            }
+        }        
+    }
+    
     @Override
     public Identity createIdentity(Account account, String identityName, Map<String, Object> identityAttrs) throws ServiceException {
-        
+        removeAttrIgnoreCase("objectclass", identityAttrs);        
+        validateIdentityAttrs(identityAttrs);
+
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         
         if (ldapEntry == null) 
@@ -3560,29 +3590,15 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    private boolean checkLowerCaseAttr(String name, Set<String> validAttrs) {
-        for (String attr : validAttrs) {
-            if (attr.equalsIgnoreCase(name)) 
-                return true;
-        }
-        return false;
-    }
-    
     @Override
     public void modifyIdentity(Account account, String identityName, Map<String, Object> identityAttrs) throws ServiceException {
+        removeAttrIgnoreCase("objectclass", identityAttrs);
+        validateIdentityAttrs(identityAttrs);
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
 
         if (identityName.equalsIgnoreCase(DEFAULT_IDENTITY_NAME)) {
-            // make sure they are all valid identity attrs, since we are setting them on account we don't
-            // want someone to sneak in some other account attrs
-            Set<String> validAttrs = AttributeManager.getInstance().getAttrsInClass(AttributeClass.identity);
-            for (String key : identityAttrs.keySet()) {
-                if (!validAttrs.contains(key) && !checkLowerCaseAttr(key, validAttrs)) {
-                    throw ServiceException.INVALID_REQUEST("unable to modify attr: "+key, null);
-                }
-            }
             modifyAttrs(account, identityAttrs);
         } else {
         
@@ -3677,6 +3693,153 @@ public class LdapProvisioning extends Provisioning {
             }
         }
         result.add(new Identity(DEFAULT_IDENTITY_NAME, attrs));        
+    }
+
+    private List<DataSource> getDataSourcesByQuery(LdapEntry entry, String query, DirContext initCtxt) throws ServiceException {
+        DirContext ctxt = initCtxt;
+        List<DataSource> result = new ArrayList<DataSource>();
+        try {
+            if (ctxt == null)
+                ctxt = LdapUtil.getDirContext();
+            String base = entry.getDN();
+            NamingEnumeration ne = ctxt.search(base, query, sSubtreeSC);
+            while(ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                result.add(new LdapDataSource(sr.getNameInNamespace(), sr.getAttributes()));
+            }
+            ne.close();            
+        } catch (NameNotFoundException e) {
+            return null;
+        } catch (InvalidNameException e) {
+            return null;                        
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to lookup data source via query: "+query+ " message: "+e.getMessage(), e);
+        } finally {
+            if (initCtxt == null)
+                LdapUtil.closeContext(ctxt);
+        }
+        return result;
+    }
+
+    private DataSource getDataSourceById(LdapEntry entry, String id,  DirContext ctxt) throws ServiceException {
+        id= LdapUtil.escapeSearchFilterArg(id);
+        List<DataSource> result = getDataSourcesByQuery(entry, "(&(zimbraDataSourceId="+id+")(objectclass=zimbraDataSource))", ctxt); 
+        return result.isEmpty() ? null : result.get(0);
+    }
+
+    private String getDataSourceDn(LdapEntry entry, String name) {
+        return A_zimbraDataSourceName + "=" + name + "," + entry.getDN();    
+    }
+    
+    @Override
+    public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> dataSourceAttrs) throws ServiceException {
+        removeAttrIgnoreCase("objectclass", dataSourceAttrs);    
+        LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
+        
+        if (ldapEntry == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+        
+        List<DataSource> existing = getAllDataSources(account);
+        if (existing.size() >= account.getLongAttr(A_zimbraDataSourceMaxNumEntries, 20))
+            throw AccountServiceException.TOO_MANY_DATA_SOURCES();
+        
+        dataSourceAttrs.put(A_zimbraDataSourceName, dsName); // must be the same
+        
+        HashMap attrManagerContext = new HashMap();
+        AttributeManager.getInstance().preModify(dataSourceAttrs, null, attrManagerContext, true, true);
+
+        DirContext ctxt = null;
+        try {
+            ctxt = LdapUtil.getDirContext(true);
+
+            String dn = getDataSourceDn(ldapEntry, dsName);
+            
+            Attributes attrs = new BasicAttributes(true);
+            LdapUtil.mapToAttrs(dataSourceAttrs, attrs);
+            Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "zimbraDataSource");
+            oc.add(LdapDataSource.getObjectClass(dsType));
+
+            String dsId = LdapUtil.generateUUID();
+            attrs.put(A_zimbraDataSourceId, dsId);
+                        
+            createSubcontext(ctxt, dn, attrs, "createDataSource");
+
+            DataSource ds = getDataSourceById(ldapEntry, dsId, ctxt);
+            AttributeManager.getInstance().postModify(dataSourceAttrs, ds, attrManagerContext, true);
+            return ds;
+        } catch (NameAlreadyBoundException nabe) {
+            throw AccountServiceException.DATA_SOURCE_EXISTS(dsName);
+        } finally {
+            LdapUtil.closeContext(ctxt);
+        }
+    }
+
+    @Override
+    public void deleteDataSource(Account account, String dataSourceId) throws ServiceException {
+        LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
+        if (ldapEntry == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+
+        DirContext ctxt = null;
+        try {
+            ctxt = LdapUtil.getDirContext(true);
+            DataSource dataSource = getDataSourceById(ldapEntry, dataSourceId, ctxt);
+            if (dataSource == null)
+                throw AccountServiceException.NO_SUCH_DATA_SOURCE(dataSourceId);
+            String dn = getDataSourceDn(ldapEntry, dataSource.getName());
+            ctxt.unbind(dn);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to delete data source: "+dataSourceId, e);
+        } finally {
+            LdapUtil.closeContext(ctxt);
+        }        
+    }
+
+    @Override
+    public List<DataSource> getAllDataSources(Account account) throws ServiceException {
+        LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
+        if (ldapEntry == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+        return getDataSourcesByQuery(ldapEntry, "(objectclass=zimbraDataSource)", null);
+    }
+
+    public void removeAttrIgnoreCase(String attr, Map<String, Object> attrs) {
+        for (String key : attrs.keySet()) {
+            if (key.equalsIgnoreCase(attr)) {
+                attrs.remove(key);
+                return;
+            }
+        }
+    }
+    
+    @Override
+    public void modifyDataSource(Account account, String dataSourceId, Map<String, Object> attrs) throws ServiceException {
+        removeAttrIgnoreCase("objectclass", attrs);
+        LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
+        if (ldapEntry == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+
+        LdapDataSource ds = (LdapDataSource) getDataSourceById(ldapEntry, dataSourceId, null);
+        if (ds == null)
+            throw AccountServiceException.NO_SUCH_DATA_SOURCE(dataSourceId);
+        
+        String name = (String) attrs.get(A_zimbraDataSourceName);
+        boolean newName = (name != null && !name.equals(ds.getName()));
+        if (newName) attrs.remove(A_zimbraDataSourceName);
+            
+        modifyAttrs(ds, attrs, true);
+        if (newName) {
+            DirContext ctxt = null;
+            try {
+                ctxt = LdapUtil.getDirContext(true);
+                String newDn = getDataSourceDn(ldapEntry, name);            
+                ctxt.rename(ds.getDN(), newDn);
+            } catch (NamingException e) {
+                throw ServiceException.FAILURE("unable to rename datasource: "+newName, e);
+            } finally {
+                LdapUtil.closeContext(ctxt);
+            }
+        }
     }
 
 }

@@ -25,6 +25,38 @@
 
 package com.zimbra.cs.account.soap;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.EntrySearchFilter;
+import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.WellKnownTimeZone;
+import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.ZClientException;
+import com.zimbra.soap.Element;
+import com.zimbra.soap.Element.XMLElement;
+import com.zimbra.soap.SoapFaultException;
+import com.zimbra.soap.SoapHttpTransport;
+import com.zimbra.soap.SoapTransport.DebugListener;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -34,40 +66,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
-
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Cos;
-import com.zimbra.cs.account.DistributionList;
-import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.EntrySearchFilter;
-import com.zimbra.cs.account.GalContact;
-import com.zimbra.cs.account.Identity;
-import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.WellKnownTimeZone;
-import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.im.xmpp.util.EmailService;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
-import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.service.admin.AdminService;
-import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.zclient.ZClientException;
-import com.zimbra.soap.Element;
-import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.SoapHttpTransport;
-import com.zimbra.soap.Element.XMLElement;
-import com.zimbra.soap.SoapTransport.DebugListener;
+import java.util.Set;
 
 public class SoapProvisioning extends Provisioning {
 
@@ -1131,5 +1131,29 @@ public class SoapProvisioning extends Provisioning {
         identity.addAttribute(AccountService.A_NAME, identityName);
         addAttrElementsMailService(identity, attrs);
         invokeOnTargetAccount(req, account.getId());
+    }
+
+    @Override
+    public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> attrs) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void deleteDataSource(Account account, String dataSourceId) throws ServiceException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public List<DataSource> getAllDataSources(Account account) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void modifyDataSource(Account account, String dataSourceId, Map<String, Object> attrs) throws ServiceException {
+        // TODO Auto-generated method stub
+        
     }
 }
