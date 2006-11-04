@@ -125,7 +125,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
     private DateFormat mTimeFormat   = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
     private DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
-    private DateFormat mZimbraFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+    private DateFormat mZimbraFormat = DateFormat.getDateInstance(DateFormat.SHORT);
 
     private String        mRemoteAddress;
     private ImapServer    mServer;
