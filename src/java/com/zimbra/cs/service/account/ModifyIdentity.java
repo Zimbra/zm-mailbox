@@ -50,7 +50,7 @@ public class ModifyIdentity extends DocumentHandler {
         // remove anything that doesn't start with zimbraPref. ldap will also do additional checks
         List<String> toRemove = new ArrayList<String>();
         for (String key: attrs.keySet())
-            if (!key.startsWith("zimbraPref")) // if this changes, make sure we don't let them ever change objectclass
+            if (!key.toLowerCase().startsWith("zimbrapref")) // if this changes, make sure we don't let them ever change objectclass
                 toRemove.add(key);
         
         for (String key : toRemove)
