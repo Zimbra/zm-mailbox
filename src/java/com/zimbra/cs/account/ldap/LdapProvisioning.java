@@ -1553,7 +1553,8 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#deleteAccountById(java.lang.String)
      */
     public void deleteAccount(String zimbraId) throws ServiceException {
-        LdapAccount acc = (LdapAccount) getAccountById(zimbraId);
+        Account acc = getAccountById(zimbraId);
+        LdapEntry entry = (LdapEntry) getAccountById(zimbraId);
         if (acc == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
 
@@ -1568,8 +1569,8 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext(true);
             
-            LdapUtil.deleteChildren(ctxt, acc.getDN());
-            ctxt.unbind(acc.getDN());
+            LdapUtil.deleteChildren(ctxt, entry.getDN());
+            ctxt.unbind(entry.getDN());
             sAccountCache.remove(acc.getName(), acc.getId());
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge account: "+zimbraId, e);
