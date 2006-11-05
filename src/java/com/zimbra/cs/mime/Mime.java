@@ -197,7 +197,7 @@ public class Mime {
                 mpart.mPartName = newPrefix + "TEXT";
 			mpart.mContent = getMultipartContent(mp, cts);
 			if (mpart.mContent instanceof MimeMultipart)
-				handleMultiPart((MimeMultipart) mpart.mContent, newPrefix, partList, mpart);
+				handleMultipart((MimeMultipart) mpart.mContent, newPrefix, partList, mpart);
 		} else if (isMessage) {
 			mpart.mContent = getMessageContent(mp);
 			if (mpart.mContent instanceof MimeMessage)
@@ -207,14 +207,34 @@ public class Mime {
 		}
 	}
 
-    private static void handleMultiPart(MimeMultipart mmp, String prefix, List<MPartInfo> partList, MPartInfo parent)
+    private static void handleMultipart(MimeMultipart multi, String prefix, List<MPartInfo> partList, MPartInfo parent)
     throws IOException, MessagingException {
-        for (int i = 0; i < mmp.getCount(); i++) {
-            BodyPart bp = mmp.getBodyPart(i);
+        for (int i = 0; i < multi.getCount(); i++) {
+            BodyPart bp = multi.getBodyPart(i);
             if (!(bp instanceof MimePart))
                 continue;
             handlePart((MimePart) bp, prefix + (i + 1), partList, parent, i+1);
         }
+    }
+
+    private static MimeMultipart validateMultipart(MimeMultipart multi, MimePart mp) throws MessagingException {
+        try {
+             multi.getCount();
+        } catch (ParseException pe) {
+            FixedMultipartDataSource ds = new FixedMultipartDataSource(mp.getDataHandler().getDataSource());
+            multi = new MimeMultipart(ds);
+        }
+        return multi;
+    }
+
+    private static class FixedMultipartDataSource implements DataSource {
+        private DataSource mDataSource;
+        FixedMultipartDataSource(DataSource ds) { mDataSource = ds; }
+
+        public String getContentType()                          { return new MimeCompoundHeader.ContentType(mDataSource.getContentType()).toString(); }
+        public String getName()                                 { return mDataSource.getName(); }
+        public InputStream getInputStream() throws IOException  { return mDataSource.getInputStream(); }
+        public OutputStream getOutputStream()                   { throw new UnsupportedOperationException(); }
     }
 
     /** Returns the MimeMessage object encapsulating a MIME part with
@@ -237,11 +257,14 @@ public class Mime {
      *  proper MIME format and failure to support RFC 2184. */
     public static Object getMultipartContent(MimePart multipartPart, String contentType) throws IOException, MessagingException {
         Object content = multipartPart.getContent();
-        if (content instanceof InputStream)
+        if (content instanceof InputStream) {
             try {
                 // handle unparsed content due to miscapitalization of content-type value
                 content = new MimeMultipart(new InputStreamDataSource((InputStream) content, contentType));
             } catch (Exception e) {}
+        }
+        if (content instanceof MimeMultipart)
+            content = validateMultipart((MimeMultipart) content, multipartPart);
         return content;
     }
 
