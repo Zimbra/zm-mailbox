@@ -1868,7 +1868,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="417" name="zimbraDataSourceId" type="id" immutable="1" cardinality="single" requiredIn="dataSource">
-  <desc>Uniqeue ID for a data source</desc>
+  <desc>Unique ID for a data source</desc>
 </attr>
 
 <attr id="418" name="zimbraDataSourceName" type="string" max="128" cardinality="single" requiredIn="dataSource" flags="domainAdminModifiable">

@@ -3753,15 +3753,19 @@ public class LdapProvisioning extends Provisioning {
             ctxt = LdapUtil.getDirContext(true);
 
             String dn = getDataSourceDn(ldapEntry, dsName);
-            
+
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(dataSourceAttrs, attrs);
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "zimbraDataSource");
             oc.add(LdapDataSource.getObjectClass(dsType));
-
             String dsId = LdapUtil.generateUUID();
             attrs.put(A_zimbraDataSourceId, dsId);
-                        
+            
+            String password = LdapUtil.getAttrString(attrs, A_zimbraDataSourcePassword);
+            if (password != null) {
+                attrs.put(A_zimbraDataSourcePassword, DataSource.encryptData(dsId, password));
+            }
+
             createSubcontext(ctxt, dn, attrs, "createDataSource");
 
             DataSource ds = getDataSourceById(ldapEntry, dsId, ctxt);
@@ -3769,6 +3773,8 @@ public class LdapProvisioning extends Provisioning {
             return ds;
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.DATA_SOURCE_EXISTS(dsName);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to create data source", e);
         } finally {
             LdapUtil.closeContext(ctxt);
         }
@@ -3823,6 +3829,7 @@ public class LdapProvisioning extends Provisioning {
         if (ds == null)
             throw AccountServiceException.NO_SUCH_DATA_SOURCE(dataSourceId);
         
+        attrs.remove(A_zimbraDataSourceId);
         String name = (String) attrs.get(A_zimbraDataSourceName);
         boolean newName = (name != null && !name.equals(ds.getName()));
         if (newName) attrs.remove(A_zimbraDataSourceName);

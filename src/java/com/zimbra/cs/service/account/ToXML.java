@@ -91,7 +91,7 @@ public class ToXML {
             String name = (String) entry.getKey();
             Object value = entry.getValue();
 
-            //Never return data source passwords.
+            //Never return data source passwords
             if (name.equalsIgnoreCase(Provisioning.A_zimbraDataSourcePassword)) {
                 continue;
             }
