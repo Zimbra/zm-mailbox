@@ -78,7 +78,7 @@ public class UrlNamespace {
 			resource = getPhantomResource(ctxt);
 		} else {
 			MailItem item = getMailItem(ctxt, target);
-			resource = getResourceFromMailItem(item);
+			resource = getResourceFromMailItem(ctxt, item);
 		}
 		
 		if (resource == null)
@@ -118,7 +118,7 @@ public class UrlNamespace {
 		return getHomeUrl(rs.getOwner()) + rs.getUri();
 	}
 	
-	public static DavResource getResourceFromMailItem(MailItem item) throws DavException {
+	public static DavResource getResourceFromMailItem(DavContext ctxt, MailItem item) throws DavException {
 		DavResource resource = null;
 		byte itemType = item.getType();
 		
@@ -134,7 +134,7 @@ public class UrlNamespace {
 				break;
 			case MailItem.TYPE_WIKI :
 			case MailItem.TYPE_DOCUMENT :
-				resource = new Notebook((Document)item);
+				resource = new Notebook(ctxt, (Document)item);
 				break;
 			case MailItem.TYPE_APPOINTMENT :
 				resource = new CalendarObject((Appointment)item);

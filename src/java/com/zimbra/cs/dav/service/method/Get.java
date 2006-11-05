@@ -44,7 +44,15 @@ public class Get extends DavMethod {
 		DavResource resource = UrlNamespace.getResource(ctxt);
 		HttpServletResponse resp = ctxt.getResponse();
 		resp.setContentType(resource.getContentType());
-		resp.setContentLength(resource.getContentLength());
+		
+		// in some cases getContentLength() returns an estimate, and the exact 
+		// content length is not known until DavResource.getContent() is called.
+		// the estimate is good enough for PROPFIND, but not when returning 
+		// the contents.  just leave off setting content length explicitly, 
+		// and have the servlet deal with it by doing chunking or 
+		// setting content-length header on its own.
+		
+		//resp.setContentLength(resource.getContentLength());
 		if (!resource.hasContent())
 			return;
 		ByteUtil.copy(resource.getContent(), true, ctxt.getResponse().getOutputStream(), false);

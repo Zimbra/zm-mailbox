@@ -24,36 +24,50 @@
  */
 package com.zimbra.cs.dav.resource;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.servlet.http.HttpServletResponse;
+
+import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.wiki.Wiki;
+import com.zimbra.cs.wiki.Wiki.WikiContext;
 
 public class Notebook extends MailItemResource {
 
-	private InputStream mContent;
+	private Document mDoc;
+	private WikiContext mWctxt;
 
-	public Notebook(Document doc) throws ServiceException {
+	public Notebook(DavContext ctxt, Document doc) throws ServiceException {
 		super(doc);
+		mDoc = doc;
+		mWctxt = new WikiContext(ctxt.getOperationContext(), null);
 		setCreationDate(doc.getDate());
 		setLastModifiedDate(doc.getChangeDate());
 		setProperty(DavElements.P_DISPLAYNAME, doc.getSubject());
+		// content length is just an estimate.  the actual content will be larger
+		// after chrome composition.
 		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(doc.getSize()));
 		setProperty(DavElements.P_GETCONTENTTYPE, doc.getContentType());
-		try {
-			mContent = doc.getRawDocument();
-		} catch (Exception e) {
-			mContent = null;
-			setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(0));
-		}
 	}
 
 	@Override
 	public InputStream getContent() throws IOException, DavException {
-		return mContent;
+		try {
+			if (mDoc.getType() == MailItem.TYPE_DOCUMENT)
+				return mDoc.getRawDocument();
+			Wiki wiki = Wiki.getInstance(mWctxt, mDoc.getAccount().getId(), mDoc.getFolderId());
+			String val = wiki.getTemplate(mWctxt, mDoc.getName()).getComposedPage(mWctxt, mDoc, "_Template");
+			return new ByteArrayInputStream(val.getBytes());
+		} catch (ServiceException se) {
+			throw new DavException("cannot get contents", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
+		}
 	}
 
 	@Override

@@ -100,7 +100,7 @@ public class Collection extends MailItemResource {
 		try {
 			List<MailItem> items = getChildrenMailItem(ctxt);
 			for (MailItem item : items) {
-				DavResource rs = UrlNamespace.getResourceFromMailItem(item);
+				DavResource rs = UrlNamespace.getResourceFromMailItem(ctxt, item);
 				if (rs != null)
 					children.add(rs);
 			}
