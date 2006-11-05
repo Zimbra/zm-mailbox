@@ -27,33 +27,28 @@ package com.zimbra.cs.account.soap;
 
 import java.util.Map;
 
-import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.soap.Element;
 
-class SoapIdentity extends Identity implements SoapEntry {
-    
-    SoapIdentity(String name, Map<String, Object> attrs) {
-        super(name, attrs);
+class SoapDataSource extends DataSource implements SoapEntry {
+        
+    SoapDataSource(DataSource.Type type, String name, String id, Map<String, Object> attrs) {
+        super(type, name, id, attrs);
     }
 
-    SoapIdentity(Element e) throws ServiceException {
-        super(e.getAttribute(AccountService.A_NAME), SoapProvisioning.getAttrs(e, AccountService.A_NAME));
+    SoapDataSource(Element e) throws ServiceException {
+        super(DataSource.Type.fromString(e.getAttribute(AccountService.A_TYPE)),
+                e.getAttribute(AccountService.A_NAME), e.getAttribute(AccountService.A_ID), SoapProvisioning.getAttrs(e,AccountService.A_NAME));
     }
-    
+
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
-        /*
-        XMLElement req = new XMLElement(AccountService.MODIFY_IDENTITY_REQUEST);
-        Element identity = req.addElement(AccountService.E_IDENTITY);
-        identity.addAttribute(AccountService.A_NAME, getName());
-        SoapProvisioning.addAttrElements(identity, attrs);
-        setAttrs(SoapProvisioning.getAttrs(prov.invoke(req)));
-        */
+        // not needed?        
     }
 
     public void reload(SoapProvisioning prov) throws ServiceException {
-        //XMLElement req = new XMLElement(AdminService.GET_ALL_CONFIG_REQUEST);
-        //setAttrs(SoapProvisioning.getAttrs(prov.invoke(req)));
+        // not needed?
     }
+
 }

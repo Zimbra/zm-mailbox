@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
@@ -90,8 +91,12 @@ public class ToXML {
             String name = (String) entry.getKey();
             Object value = entry.getValue();
 
+            //Never return data source passwords.
+            if (name.equalsIgnoreCase(Provisioning.A_zimbraDataSourcePassword)) {
+                continue;
+            }
             // Never return password.
-            if (name.equals(Provisioning.A_userPassword))
+            if (name.equalsIgnoreCase(Provisioning.A_userPassword))
                 value = "VALUE-BLOCKED";
 
             if (value instanceof String[]) {
@@ -162,9 +167,19 @@ public class ToXML {
     }
     
     public static Element encodeIdentity(Element parent, Identity identity) {
-    	Element e = parent.addElement(AccountService.E_IDENTITY);
-    	e.addAttribute(AccountService.E_NAME, identity.getName());
-    	addAccountAttrs(e, identity.getAttrs(), AccountService.A_NAME);
-    	return e;
+        Element e = parent.addElement(AccountService.E_IDENTITY);
+        e.addAttribute(AccountService.A_NAME, identity.getName());
+        addAccountAttrs(e, identity.getAttrs(), AccountService.A_NAME);
+        return e;
     }
+    
+    public static Element encodeDataSource(Element parent, DataSource ds) {
+        Element e = parent.addElement(AccountService.E_DATA_SOURCE);
+        e.addAttribute(AccountService.A_NAME, ds.getName());
+        e.addAttribute(AccountService.A_ID, ds.getId());
+        e.addAttribute(AccountService.A_TYPE, ds.getType().name());
+        addAccountAttrs(e, ds.getAttrs(), AccountService.A_NAME);
+        return e;
+    }
+
 }

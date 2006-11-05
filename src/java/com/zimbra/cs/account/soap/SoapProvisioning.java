@@ -1135,25 +1135,40 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> attrs) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        XMLElement req = new XMLElement(AccountService.CREATE_DATA_SOURCE_REQUEST);
+        Element ds = req.addElement(AccountService.E_DATA_SOURCE);
+        ds.addAttribute(AccountService.A_NAME, dsName);
+        ds.addAttribute(AccountService.A_TYPE, dsType.name());
+        addAttrElementsMailService(ds, attrs);
+        Element response = invokeOnTargetAccount(req, account.getId()).getElement(AccountService.E_DATA_SOURCE);
+        return new SoapDataSource(response);
     }
 
     @Override
     public void deleteDataSource(Account account, String dataSourceId) throws ServiceException {
-        // TODO Auto-generated method stub
-        
+        XMLElement req = new XMLElement(AccountService.DELETE_DATA_SOURCE_REQUEST);
+        Element ds = req.addElement(AccountService.E_DATA_SOURCE);
+        ds.addAttribute(AccountService.A_ID, dataSourceId);
+        invokeOnTargetAccount(req, account.getId());        
     }
 
     @Override
     public List<DataSource> getAllDataSources(Account account) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        List<DataSource> result = new ArrayList<DataSource>();
+        XMLElement req = new XMLElement(AccountService.GET_DATA_SOURCES_REQUEST);
+        Element resp = invokeOnTargetAccount(req, account.getId());
+        for (Element dataSource: resp.listElements(AccountService.E_DATA_SOURCE)) {
+            result.add(new SoapDataSource(dataSource));
+        }
+        return result;        
     }
 
     @Override
     public void modifyDataSource(Account account, String dataSourceId, Map<String, Object> attrs) throws ServiceException {
-        // TODO Auto-generated method stub
-        
+        XMLElement req = new XMLElement(AccountService.MODIFY_DATA_SOURCE_REQUEST);
+        Element ds = req.addElement(AccountService.E_DATA_SOURCE);
+        ds.addAttribute(AccountService.A_ID, dataSourceId);
+        addAttrElementsMailService(ds, attrs);
+        invokeOnTargetAccount(req, account.getId());
     }
 }
