@@ -280,11 +280,14 @@ public class Mime {
      * @throws MessagingException 
      * @throws IOException */
     public static String getStringContent(MimePart textPart) throws IOException, MessagingException {
-        String cte = textPart.getHeader("Content-Transfer-Encoding", null);
-        if (cte != null && !TRANSFER_ENCODINGS.contains(cte.toLowerCase()))
-            textPart.removeHeader("Content-Transfer-Encoding");
-
+        repairTransferEncoding(textPart);
         return decodeText(textPart.getInputStream(), textPart.getContentType());
+    }
+
+    public static void repairTransferEncoding(MimePart mp) throws MessagingException {
+        String cte = mp.getHeader("Content-Transfer-Encoding", null);
+        if (cte != null && !TRANSFER_ENCODINGS.contains(cte.toLowerCase()))
+            mp.removeHeader("Content-Transfer-Encoding");
     }
 
     private static final class InputStreamDataSource implements DataSource {

@@ -1,4 +1,3 @@
-//depot/main/ZimbraServer/src/java/com/zimbra/cs/mime/ParsedMessage.java#34 - edit change 25120 (ktext)
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1
@@ -577,6 +576,8 @@ public class ParsedMessage {
 
         MimeHandler handler = MimeHandler.getMimeHandler(ctype);
         assert(handler != null);
+
+        Mime.repairTransferEncoding(mpi.getMimePart());
 
         if (handler.isIndexingEnabled()) {
             handler.init(mpi.getMimePart().getDataHandler().getDataSource());
