@@ -47,6 +47,7 @@ public class DataSource extends NamedEntry implements Comparable {
 
     private static final int SALT_SIZE_BYTES = 16;
     private static final int AES_PAD_SIZE = 16;
+    private static final byte[] VERSION = { 1 };
     
     public enum Type {
         pop3;
@@ -96,9 +97,10 @@ public class DataSource extends NamedEntry implements Comparable {
             byte[] salt = randomSalt();
             Cipher cipher = getCipher(dataSourceId, salt, true);
             byte[] dataBytes = cipher.doFinal(data.getBytes("utf-8"));
-            byte[] toEncode = new byte[salt.length + dataBytes.length];
-            System.arraycopy(salt, 0, toEncode, 0, salt.length);
-            System.arraycopy(dataBytes, 0, toEncode, salt.length, dataBytes.length); 
+            byte[] toEncode = new byte[VERSION.length + salt.length + dataBytes.length];
+            System.arraycopy(VERSION, 0, toEncode, 0, VERSION.length);            
+            System.arraycopy(salt, 0, toEncode, VERSION.length, salt.length);
+            System.arraycopy(dataBytes, 0, toEncode, VERSION.length+salt.length, dataBytes.length); 
             return new String(Base64.encodeBase64(toEncode));
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.FAILURE("caught unsupport encoding exception", e);
@@ -110,12 +112,16 @@ public class DataSource extends NamedEntry implements Comparable {
     public static String decryptData(String dataSourceId, String data) throws ServiceException {
         try {
             byte[] encoded = Base64.decodeBase64(data.getBytes());
-            if (encoded.length < SALT_SIZE_BYTES + AES_PAD_SIZE)
+            if (encoded.length < VERSION.length + SALT_SIZE_BYTES + AES_PAD_SIZE)
                 throw ServiceException.FAILURE("invalid encoded size: "+encoded.length, null);
+            byte[] version = new byte[VERSION.length];
             byte[] salt = new byte[SALT_SIZE_BYTES];
-            System.arraycopy(encoded, 0, salt, 0, SALT_SIZE_BYTES);
+            System.arraycopy(encoded, 0, version, 0, VERSION.length);
+            if (!Arrays.equals(version, VERSION))
+                throw ServiceException.FAILURE("unsupported version", null);            
+            System.arraycopy(encoded, VERSION.length, salt, 0, SALT_SIZE_BYTES);
             Cipher cipher = getCipher(dataSourceId, salt, false);
-            return new String(cipher.doFinal(encoded, SALT_SIZE_BYTES, encoded.length - SALT_SIZE_BYTES), "utf-8");
+            return new String(cipher.doFinal(encoded, VERSION.length + SALT_SIZE_BYTES, encoded.length - SALT_SIZE_BYTES - VERSION.length), "utf-8");
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.FAILURE("caught unsupport encoding exception", e);
         } catch (GeneralSecurityException e) {
