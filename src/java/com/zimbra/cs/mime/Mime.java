@@ -122,6 +122,10 @@ public class Mime {
 
     private static final int MAX_DECODE_BUFFER = 2048;
 
+    private static final Set<String> TRANSFER_ENCODINGS = new HashSet<String>(Arrays.asList(new String[] {
+            ET_7BIT, ET_8BIT, ET_BINARY, ET_QUOTED_PRINTABLE, ET_BASE64
+    }));
+
     public static class FixedMimeMessage extends MimeMessage {
         public FixedMimeMessage(Session s)  { super(s); }
         public FixedMimeMessage(Session s, InputStream is) throws MessagingException  { super(s, is); }
@@ -276,6 +280,10 @@ public class Mime {
      * @throws MessagingException 
      * @throws IOException */
     public static String getStringContent(MimePart textPart) throws IOException, MessagingException {
+        String cte = textPart.getHeader("Content-Transfer-Encoding", null);
+        if (cte != null && !TRANSFER_ENCODINGS.contains(cte.toLowerCase()))
+            textPart.removeHeader("Content-Transfer-Encoding");
+
         return decodeText(textPart.getInputStream(), textPart.getContentType());
     }
 
