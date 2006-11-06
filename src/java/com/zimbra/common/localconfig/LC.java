@@ -213,6 +213,8 @@ public class LC {
 
     public static final KnownKey zimbra_mailbox_groups;
 
+    public static final KnownKey data_source_trust_self_signed_certs;
+    
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  Changing this setting does not immediately reflect in MySQL server.  You will have to, with abundant precaution, re-generate my.cnf and restart MySQL server for the change to take effect.";
         final String FS = File.separator;
@@ -354,7 +356,7 @@ public class LC {
         localized_msgs_directory = new KnownKey("localized_msgs_directory");
         localized_msgs_directory.setDefault("${zimbra_home}" + FS + "conf" + FS + "msgs");
         localized_msgs_directory.setDoc
-            ("Directory for localized message files");
+            ("Directory for localized message files.");
 
         zimbra_store_sweeper_max_age = new KnownKey("zimbra_store_sweeper_max_age");
         zimbra_store_sweeper_max_age.setDefault("480");  // 480 mins = 8 hours
@@ -382,7 +384,7 @@ public class LC {
         zimbra_spam_report_queue_size.setDefault("100");
         zimbra_spam_report_queue_size.setDoc
             ("For Junk/Not Junk Msg/ConvActionRequests this queue size limits the" +
-             " the server workqueue for processing the forwards");
+             " the server workqueue for processing the forwards.");
         
         zimbra_throttle_op_concurrency = new KnownKey("zimbra_throttle_op_concurrency");
         zimbra_throttle_op_concurrency.setDefault("1000,1000,1000,1000,1000");
@@ -464,37 +466,37 @@ public class LC {
              " from the pool.");
         
         ldap_cache_account_maxsize = 
-            new KnownKey("ldap_cache_account_maxsize", "5000", "Maximum number of account objects to cache");
+            new KnownKey("ldap_cache_account_maxsize", "5000", "Maximum number of account objects to cache.");
         
         ldap_cache_account_maxage =
-            new KnownKey("ldap_cache_account_maxage", "15", "maximum age (in minutes) of account object in cache");
+            new KnownKey("ldap_cache_account_maxage", "15", "Maximum age (in minutes) of account objects in cache.");
 
         ldap_cache_cos_maxsize = 
-            new KnownKey("ldap_cache_cos_maxsize", "100", "Maximum number of cos objects to cache");
+            new KnownKey("ldap_cache_cos_maxsize", "100", "Maximum number of cos objects to cache.");
         
         ldap_cache_cos_maxage = 
-            new KnownKey("ldap_cache_cos_maxage", "15", "maximum age (in minutes) of cos object in cache");        
+            new KnownKey("ldap_cache_cos_maxage", "15", "Maximum age (in minutes) of cos objects in cache.");        
 
         ldap_cache_domain_maxsize = 
             new KnownKey("ldap_cache_domain_maxsize", "100", "Maximum number of domain objects to cache");
         
         ldap_cache_domain_maxage = 
-            new KnownKey("ldap_cache_domain_maxage", "15", "maximum age (in minutes) of domain object in cache");        
+            new KnownKey("ldap_cache_domain_maxage", "15", "Maximum age (in minutes) of domain objects in cache.");        
 
         ldap_cache_server_maxsize = 
             new KnownKey("ldap_cache_server_maxsize", "100", "Maximum number of server objects to cache");
 
         ldap_cache_server_maxage =
-            new KnownKey("ldap_cache_server_maxage", "15", "maximum age (in minutes) of group object in cache");        
+            new KnownKey("ldap_cache_server_maxage", "15", "Maximum age (in minutes) of group objects in cache.");        
 
         ldap_cache_timezone_maxsize =
-            new KnownKey("ldap_cache_timezone_maxsize", "100", "Maximum number of timezone objects to cache");
+            new KnownKey("ldap_cache_timezone_maxsize", "100", "Maximum number of timezone objects to cache.");
         
         ldap_cache_zimlet_maxsize =
-            new KnownKey("ldap_cache_zimlet_maxsize", "100", "Maximum number of zimlet objects to cache");
+            new KnownKey("ldap_cache_zimlet_maxsize", "100", "Maximum number of zimlet objects to cache.");
         
         ldap_cache_zimlet_maxage = 
-            new KnownKey("ldap_cache_zimlet_maxage", "15", "maximum age (in minutes) of zimlet object in cache");        
+            new KnownKey("ldap_cache_zimlet_maxage", "15", "Maximum age (in minutes) of zimlet objects in cache.");        
 
         mysql_directory = new KnownKey("mysql_directory");
         mysql_directory.setDefault("${zimbra_home}" + FS + "mysql");
@@ -552,25 +554,25 @@ public class LC {
         mysql_innodb_log_buffer_size = new KnownKey("mysql_innodb_log_buffer_size");
         mysql_innodb_log_buffer_size.setDefault("8388608");
         mysql_innodb_log_buffer_size.setDoc
-            ("Consult MySQL documentation for innodb_log_buffer_size. " +
+            ("Consult MySQL documentation for innodb_log_buffer_size." +
              ZM_MYCNF_CAVEAT);
 
         mysql_innodb_log_file_size = new KnownKey("mysql_innodb_log_file_size");
         mysql_innodb_log_file_size.setDefault("104857600");
         mysql_innodb_log_file_size.setDoc
-            ("Consult MySQL documentation for innodb_log_file_size. " +
+            ("Consult MySQL documentation for innodb_log_file_size." +
              ZM_MYCNF_CAVEAT);
 
         mysql_sort_buffer_size = new KnownKey("mysql_sort_buffer_size");
         mysql_sort_buffer_size.setDefault("1048576");
         mysql_sort_buffer_size.setDoc
-            ("Consult MySQL documentation for sort_buffer_size. " +
+            ("Consult MySQL documentation for sort_buffer_size." +
              ZM_MYCNF_CAVEAT);
         
         mysql_read_buffer_size = new KnownKey("mysql_read_buffer_size");
         mysql_read_buffer_size.setDefault("1048576");
         mysql_read_buffer_size.setDoc
-            ("Consult MySQL documentation for read_buffer_size. " +
+            ("Consult MySQL documentation for read_buffer_size." +
              ZM_MYCNF_CAVEAT);
         
         mysql_table_cache = new KnownKey("mysql_table_cache");
@@ -814,30 +816,34 @@ public class LC {
 		zimbra_mtareport_max_recipients = new KnownKey("zimbra_mtareport_max_recipients");
 		zimbra_mtareport_max_recipients.setDefault("50");
 		zimbra_mtareport_max_recipients.setDoc
-			("Number of recipients to list in daily mta reports");
+			("Number of recipients to list in daily mta reports.");
 
 		zimbra_mtareport_max_senders = new KnownKey("zimbra_mtareport_max_senders");
 		zimbra_mtareport_max_senders.setDefault("50");
 		zimbra_mtareport_max_senders.setDoc
-			("Number of senders to list in daily mta reports");
+			("Number of senders to list in daily mta reports.");
         
         zimbra_auth_always_send_refer = new KnownKey("zimbra_auth_always_send_refer");
         zimbra_auth_always_send_refer.setDefault("false");
-        zimbra_auth_always_send_refer.setDoc("always send back a <refer> tag in an auth response to force a client redirect");
+        zimbra_auth_always_send_refer.setDoc("Always send back a <refer> tag in an auth response to force a client redirect.");
         
         zimbra_admin_service_port = 
-            new KnownKey("zimbra_admin_service_port", "7071", "Default/bootstrap admin port");
+            new KnownKey("zimbra_admin_service_port", "7071", "Default/bootstrap admin port.");
 
         zimbra_zmprov_default_to_ldap =
-            new KnownKey("zimbra_zmprov_default_to_ldap", "false", "whether zmprov defaults to LDAP or SOAP");            
+            new KnownKey("zimbra_zmprov_default_to_ldap", "false", "Whether zmprov defaults to LDAP or SOAP.");            
             
         zimbra_zmprov_default_soap_server =
-            new KnownKey("zimbra_zmprov_default_soap_server", "localhost", "default soap server for zmprov to connect to");
+            new KnownKey("zimbra_zmprov_default_soap_server", "localhost", "Default soap server for zmprov to connect to");
 
         zimbra_mailbox_groups = new KnownKey("zimbra_mailbox_groups");
         zimbra_mailbox_groups.setDefault("100");
         zimbra_mailbox_groups.setDoc
-            ("Number of mailbox groups to distribute new mailboxes to");
+            ("Number of mailbox groups to distribute new mailboxes to.");
+        
+        data_source_trust_self_signed_certs =
+            new KnownKey("data_source_trust_self_signed_certs", "false",
+                "Allow self-signed certificates when connecting to a data source over SSL.");
     }
 
 }
