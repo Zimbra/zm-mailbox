@@ -190,6 +190,7 @@ public class Search extends MailDocumentHandler  {
         if (params.getFetchFirst() != ExpandResults.NONE) {
             params.setWantHtml(request.getAttributeBool(MailService.A_WANT_HTML, false));
             params.setMarkRead(request.getAttributeBool(MailService.A_MARK_READ, false));
+            params.setNeuterImages(request.getAttributeBool(MailService.A_NEUTER, true));
         }
         params.setWantRecipients(request.getAttributeBool(MailService.A_RECIPIENTS, false));
 
@@ -357,7 +358,7 @@ public class Search extends MailDocumentHandler  {
         
         Element m;
         if (inline) {
-            m = ToXML.encodeMessageAsMP(response, zsc, msg, null, params.getWantHtml(), true);
+            m = ToXML.encodeMessageAsMP(response, zsc, msg, null, params.getWantHtml(), params.getNeuterImages());
             if (!msg.getFragment().equals(""))
                 m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
         } else {
@@ -399,7 +400,7 @@ public class Search extends MailDocumentHandler  {
 
         Element m;
         if (inline) {
-            m = ToXML.encodeMessageAsMP(response, zsc, msg, null, params.getWantHtml(), true);
+            m = ToXML.encodeMessageAsMP(response, zsc, msg, null, params.getWantHtml(), params.getNeuterImages());
             if (!msg.getFragment().equals(""))
                 m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
         } else {

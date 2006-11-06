@@ -459,7 +459,7 @@ public class ToXML {
             if (msg.isTagged(mbox.mDeletedFlag))
                 continue;
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL) {
-                encodeMessageAsMP(c, lc, msg, null, params.getWantHtml(), false);
+                encodeMessageAsMP(c, lc, msg, null, params.getWantHtml(), params.getNeuterImages());
                 if (expand == ExpandResults.FIRST)
                     expand = ExpandResults.NONE;
             } else {

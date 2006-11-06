@@ -82,6 +82,7 @@ public final class SearchParams {
     public ExpandResults getFetchFirst() { return mFetchFirst; }
     public boolean getMarkRead() { return mMarkRead; }
     public boolean getWantHtml() { return mWantHtml; }
+    public boolean getNeuterImages() { return mNeuterImages; }
     public OutputParticipants getWantRecipients() { return mRecipients ? OutputParticipants.PUT_RECIPIENTS : OutputParticipants.PUT_SENDERS; }
 
     public void setQueryStr(String queryStr) { mQueryStr = queryStr; }
@@ -127,6 +128,7 @@ public final class SearchParams {
     public void setFetchFirst(ExpandResults fetch) { mFetchFirst = fetch; }
     public void setMarkRead(boolean read) { mMarkRead = read; }
     public void setWantHtml(boolean html) { mWantHtml = html; }
+    public void setNeuterImages(boolean neuter) { mNeuterImages = neuter; }
     public void setWantRecipients(boolean recips) { mRecipients = recips; }
     public void setTimeZone(TimeZone tz) { mTimeZone = tz; }
     public void setLocale(Locale loc) { mLocale = loc; }
@@ -156,6 +158,7 @@ public final class SearchParams {
     private ExpandResults mFetchFirst;
     private boolean mMarkRead;
     private boolean mWantHtml;
+    private boolean mNeuterImages;
     private boolean mRecipients;
     
     private TimeZone mTimeZone; // timezone that the query should be parsed in (for date/time queries)

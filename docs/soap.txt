@@ -800,7 +800,8 @@ Tags:
  
 ----------
 
-<SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"] [types="{types}"] [fetch="1|all"] [html="*0|1"] [read="*0|1"] [recip="*0|1"]>
+<SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"] [types="{types}"] [recip="*0|1"]
+			   [fetch="1|all"] [html="*0|1"] [read="*0|1"] [neuter="0|*1"]>
   [<cursor id="prevId" sortVal="prevSortValue" />]
   
   [   // OPTIONAL: client timezone identification (necessary to time-correct a user-specified date/time query)
@@ -870,6 +871,7 @@ if fetch="1" (or fetch="first") is specified, the first hit will be expanded inl
 if fetch="all", all hits are expanded inline
     + if html="1" is also specified, the inlined first hit will return HTML parts if available
     + if read="1" is also specified, the inlined first hit will be marked as read
+    + if neuter="0" is also specified, images in inlined HTML parts will not be "neutered"
 
 if recip="1" is specified
     + returned sent messages will contain the set of "To:" recipients instead of the sender
@@ -954,7 +956,8 @@ message-part result:
 
 -----------
 
-<SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"] [fetch="1|hits|all"] [html="1"] [read="1"]>
+<SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"]
+				   [fetch="1|hits|all"] [html="1"] [read="1"] [neuter="0"]>
   <query>{query-string}</query>
 </SearchConvRequest>
 
