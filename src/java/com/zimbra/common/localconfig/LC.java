@@ -213,6 +213,9 @@ public class LC {
 
     public static final KnownKey zimbra_mailbox_groups;
 
+    public static final KnownKey zimbra_class_provisioning;
+    public static final KnownKey zimbra_class_mboxmanager;
+
     public static final KnownKey data_source_trust_self_signed_certs;
     
     static {
@@ -840,10 +843,14 @@ public class LC {
         zimbra_mailbox_groups.setDefault("100");
         zimbra_mailbox_groups.setDoc
             ("Number of mailbox groups to distribute new mailboxes to.");
+
+        zimbra_class_provisioning =
+            new KnownKey("zimbra_class_provisioning", "com.zimbra.cs.account.ldap.LdapProvisioning", "Provisioning interface class");
+        zimbra_class_mboxmanager =
+            new KnownKey("zimbra_class_mboxmanager", "com.zimbra.cs.mailbox.MailboxManager", "Mailbox manager interface class");
         
         data_source_trust_self_signed_certs =
             new KnownKey("data_source_trust_self_signed_certs", "false",
                 "Allow self-signed certificates when connecting to a data source over SSL.");
     }
-
 }
