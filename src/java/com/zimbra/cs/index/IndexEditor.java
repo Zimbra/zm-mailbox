@@ -77,6 +77,7 @@ import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.common.util.ExceptionToString;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 
@@ -99,21 +100,28 @@ public class IndexEditor {
 		    admin = mbox.getMailboxIndex().getAdminInterface();
 		    admin.deleteIndex();
 		} finally {
-			if (admin!=null) {
+			if (admin != null) {
 				admin.close();
 			}
 		}
 	}
     
     public void reIndexAll() {
-        int ids[] = MailboxManager.getInstance().getMailboxIds();
+        MailboxManager mmgr;
+        try {
+            mmgr = MailboxManager.getInstance();
+        } catch (ServiceException e) {
+            ZimbraLog.index.error("could not retrieve mailbox manager; aborting reindex", e);
+            return;
+        }
+        int ids[] = mmgr.getMailboxIds();
         for (int i = 0; i < ids.length; i++) {
             mLog.info("Mailbox "+ids[i]+"\n");
             try {
-                Mailbox mbx = MailboxManager.getInstance().getMailboxById(ids[i]);
+                Mailbox mbx = mmgr.getMailboxById(ids[i]);
                 mbx.reIndex();
-            } catch(ServiceException e) {
-                mLog.info("Exception ReIndexing "+ids[i], e);
+            } catch (ServiceException e) {
+                mLog.info("Exception ReIndexing " + ids[i], e);
             }
         }
     }

@@ -40,6 +40,7 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.redolog.op.CreateMailbox;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 
 public class MailboxManager {
@@ -94,7 +95,19 @@ public class MailboxManager {
         }
     }
 
-    public static MailboxManager getInstance() {
+    public synchronized static MailboxManager getInstance() throws ServiceException {
+        if (sInstance == null) {
+            String className = LC.zimbra_class_mboxmanager.value();
+            if (className != null && !className.equals("")) {
+                try {
+                    sInstance = (MailboxManager) Class.forName(className).newInstance();
+                } catch (Exception e) {
+                    ZimbraLog.account.error("could not instantiate MailboxManager interface of class '" + className + "'; defaulting to MailboxManager", e);
+                }
+            }
+            if (sInstance == null)
+                sInstance = new MailboxManager();
+        }
         return sInstance;
     }
 

@@ -29,6 +29,7 @@
  */
 package com.zimbra.cs.account;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -1057,7 +1058,16 @@ public abstract class Provisioning {
 
     public synchronized static Provisioning getInstance() {
         if (sProvisioning == null) {
-            sProvisioning = new LdapProvisioning();
+            String className = LC.zimbra_class_provisioning.value();
+            if (className != null && !className.equals("")) {
+                try {
+                    sProvisioning = (Provisioning) Class.forName(className).newInstance();
+                } catch (Exception e) {
+                    ZimbraLog.account.error("could not instantiate Provisioning interface of class '" + className + "'; defaulting to LdapProvisioning", e);
+                }
+            }
+            if (sProvisioning == null)
+                sProvisioning = new LdapProvisioning();
         }
         return sProvisioning;
     }

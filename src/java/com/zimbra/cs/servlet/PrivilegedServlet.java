@@ -35,7 +35,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Config;
@@ -70,53 +69,12 @@ public class PrivilegedServlet extends HttpServlet {
             }
         }
     }
-
-    private void setupProviders() {
-        // Setup provisioning provider
-        Provisioning prov = null;
-        String provClassName = getInitParameter("provisioning.provider");
-        if (provClassName != null) {
-            try {
-                Class provClass = Class.forName(provClassName);
-                prov = (Provisioning)provClass.newInstance();
-            } catch (Exception e) {
-                Util.halt("error instantiating provisioning provider " + provClassName + " " + e);
-            }
-        } else {
-            prov = new LdapProvisioning();
-        }
-        Provisioning.setInstance(prov);
-        System.out.println("INFO: using provisioning provider of type: " + prov.getClass().getName());
-
-        // Setup mailbox provider
-        MailboxManager mbxmgr = null;
-        String mbxmgrClassName = getInitParameter("mailbox.provider");
-        if (mbxmgrClassName != null) {
-             try {
-                 Class mbxmgrClass = Class.forName(mbxmgrClassName);
-                 mbxmgr = (MailboxManager)mbxmgrClass.newInstance();
-             } catch (Exception e) {
-                 Util.halt("error instantiating mailbox provider " + mbxmgrClassName + " " + e);
-             }
-        } else {
-            try {
-                mbxmgr = new MailboxManager();
-            } catch (ServiceException e) {
-                Util.halt("error instantiating default mailbox manager: " + e);
-                e.printStackTrace();
-            } 
-        }
-        MailboxManager.setInstance(mbxmgr);
-        System.out.println("INFO: using mailbox provider of type: " + mbxmgr.getClass().getName());
-    }
     
     public void init() {
         Server server;
         int port;
         String address;
         try {
-            setupProviders();
-            
             if (LC.ssl_allow_untrusted_certs.booleanValue())
                 EasySSLProtocolSocketFactory.init();
 
