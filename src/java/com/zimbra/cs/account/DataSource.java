@@ -72,6 +72,18 @@ public class DataSource extends NamedEntry implements Comparable {
     public Type getType() {
         return mType;
     }
+    
+    public boolean isEnabled() { return getBooleanAttr(Provisioning.A_zimbraDataSourceEnabled, false); }
+
+    public String getConnectionType() { return getAttr(Provisioning.A_zimbraDataSourceConnectionType); }
+    
+    public String getFolderId() { return getAttr(Provisioning.A_zimbraDataSourceFolderId); }
+    
+    public String getHost() { return getAttr(Provisioning.A_zimbraDataSourceHost); }
+    
+    public String getUsername() { return getAttr(Provisioning.A_zimbraDataSourceUsername); }
+    
+    public int getPort() { return getIntAttr(Provisioning.A_zimbraDataSourcePort, -1); }
 
     private static byte[] randomSalt() {
         SecureRandom random = new SecureRandom();
