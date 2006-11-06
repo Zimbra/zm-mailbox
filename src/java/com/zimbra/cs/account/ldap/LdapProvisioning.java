@@ -3829,11 +3829,17 @@ public class LdapProvisioning extends Provisioning {
         if (ds == null)
             throw AccountServiceException.NO_SUCH_DATA_SOURCE(dataSourceId);
         
-        attrs.remove(A_zimbraDataSourceId);
+        attrs.remove(A_zimbraDataSourceId);                
+        
         String name = (String) attrs.get(A_zimbraDataSourceName);
         boolean newName = (name != null && !name.equals(ds.getName()));
         if (newName) attrs.remove(A_zimbraDataSourceName);
-            
+
+        String password = (String) attrs.get(A_zimbraDataSourcePassword);
+        if (password != null) {
+            attrs.put(A_zimbraDataSourcePassword, DataSource.encryptData(ds.getId(), password));
+        }
+        
         modifyAttrs(ds, attrs, true);
         if (newName) {
             DirContext ctxt = null;

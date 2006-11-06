@@ -84,6 +84,11 @@ public class DataSource extends NamedEntry implements Comparable {
     public String getUsername() { return getAttr(Provisioning.A_zimbraDataSourceUsername); }
     
     public int getPort() { return getIntAttr(Provisioning.A_zimbraDataSourcePort, -1); }
+    
+    public String getDecryptedPassword() throws ServiceException {
+        String data = getAttr(Provisioning.A_zimbraDataSourcePassword);
+        return data == null ? null : decryptData(getId(), data); 
+    }
 
     private static byte[] randomSalt() {
         SecureRandom random = new SecureRandom();
