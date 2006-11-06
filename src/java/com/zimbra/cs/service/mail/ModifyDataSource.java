@@ -61,6 +61,9 @@ public class ModifyDataSource extends MailDocumentHandler {
         attr = ePop3.getAttribute(MailService.A_DS_PORT, null);
         if (attr != null)
         	ds.setPort((int)Element.parseLong(MailService.A_DS_PORT, attr));
+        attr = ePop3.getAttribute(MailService.A_DS_CONNECTION_TYPE, null);
+        if (attr != null)
+            ds.setConnectionType(attr);
         attr = ePop3.getAttribute(MailService.A_DS_USERNAME, null);
         if (attr != null)
         	ds.setUsername(attr);

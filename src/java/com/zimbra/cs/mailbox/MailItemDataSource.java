@@ -50,6 +50,10 @@ public class MailItemDataSource {
     public static final String TYPE_POP3 = "pop3";
     public static final String CONFIG_SECTION_DATASOURCE = "ds";
 
+    public enum ConnectionType { CLEARTEXT, SSL };
+    public static final String CT_CLEARTEXT = "cleartext";
+    public static final String CT_SSL = "ssl";
+
     private static Map<String, MailItemImport> sImports =
         Collections.synchronizedMap(new HashMap<String, MailItemImport>());
     
@@ -65,6 +69,7 @@ public class MailItemDataSource {
     private static final String PASSWORD = MailService.A_DS_PASSWORD;
     private static final String FOLDER_ID = MailService.A_FOLDER;
     private static final String TYPE = MailService.A_DS_TYPE;
+    private static final String CONNECTION_TYPE = MailService.A_DS_CONNECTION_TYPE;
     
     private int mId;
     private int mMailboxId;
@@ -72,6 +77,7 @@ public class MailItemDataSource {
     private boolean mIsEnabled = true;
     private String mHost;
     private Integer mPort;
+    private ConnectionType mConnectionType;
     private String mUsername;
     private String mPassword;
     private int mFolderId;
@@ -89,9 +95,7 @@ public class MailItemDataSource {
     /**
      * Creates a new data source object with the specified properties.
      */
-    MailItemDataSource(Mailbox mbox, int id, String type, String name,
-                       boolean isEnabled, String host, int port, String username,
-                       String password, int folderId)
+    MailItemDataSource(Mailbox mbox, int id, String type, String name, boolean isEnabled, int folderId)
     throws ServiceException {
         this(type);
         setMailboxId(mbox.getId());
@@ -99,10 +103,6 @@ public class MailItemDataSource {
         setFolderId(folderId);
         setName(name);
         setEnabled(isEnabled);
-        setHost(host);
-        setPort(port);
-        setUsername(username);
-        setPassword(password);
     }
     
     public int getId() { return mId; }
@@ -111,6 +111,7 @@ public class MailItemDataSource {
     public boolean isEnabled() { return mIsEnabled; }
     public String getHost() { return mHost; }
     public Integer getPort() { return mPort; }
+    public ConnectionType getConnectionType() { return mConnectionType; }
     public String getUsername() { return mUsername; }
     public String getPassword() { return mPassword; }
     public int getFolderId() { return mFolderId; }
@@ -130,6 +131,27 @@ public class MailItemDataSource {
         return mImport;
     }
 
+    public String getConnectionTypeString() {
+        if (mConnectionType == null) {
+            return null;
+        } else if (mConnectionType == ConnectionType.SSL) {
+            return CT_SSL;
+        }
+        return CT_CLEARTEXT;
+    }
+
+    public static ConnectionType getConnectionType(String connectionTypeString)
+    throws ServiceException {
+        if (connectionTypeString == null) {
+            return null;
+        } else if (connectionTypeString.equalsIgnoreCase(CT_CLEARTEXT)) {
+            return ConnectionType.CLEARTEXT;
+        } else if (connectionTypeString.equalsIgnoreCase(CT_SSL)) {
+            return ConnectionType.SSL;
+        }
+        throw ServiceException.FAILURE("Invalid connection type string: " + connectionTypeString, null);
+    }
+    
     void setMailboxId(int mailboxId)
     throws ServiceException {
         MailboxManager.getInstance().getMailboxById(mailboxId); // Validate
@@ -158,10 +180,24 @@ public class MailItemDataSource {
         mbox.getFolderById(folderId);
         mFolderId = folderId;
     }
+
+    public void setConnectionType(String connectionType)
+    throws ServiceException {
+        if (connectionType == null) {
+            mConnectionType = null;
+        } else if (connectionType.equalsIgnoreCase(CT_CLEARTEXT)) {
+            mConnectionType = ConnectionType.CLEARTEXT;
+        } else if (connectionType.equalsIgnoreCase(CT_SSL)) {
+            mConnectionType = ConnectionType.SSL;
+        } else {
+            throw ServiceException.FAILURE(this + ": invalid connectionType: " + connectionType, null);
+        }
+    }
     
     public void setEnabled(boolean isEnabled) { mIsEnabled = isEnabled; }
     public void setHost(String host) { mHost = host; }
     public void setPort(Integer port) { mPort = port; }
+    public void setConnectionType(ConnectionType ct) { mConnectionType = ct; }
     public void setUsername(String username) { mUsername = username; }
     public void setPassword(String password) { mPassword = password; }
     public void setUrl(String url) { mUrl = url; }
@@ -173,12 +209,13 @@ public class MailItemDataSource {
      * @return <code>null</code> if the test succeeded, or the error message
      * if it didn't.
      */
-    public static String test(String type, String host, int port,
+    public static String test(String type, String host, int port, ConnectionType connectionType,
                               String username, String password)
     throws ServiceException {
         MailItemDataSource ds = new MailItemDataSource(type);
         ds.setHost(host);
         ds.setPort(port);
+        ds.setConnectionType(connectionType);
         ds.setUsername(username);
         ds.setPassword(password);
         
@@ -231,10 +268,30 @@ public class MailItemDataSource {
                 continue;
             }
             Metadata dsMeta = config.getMap(key);
-            
-            MailItemDataSource ds = new MailItemDataSource(mbox, id, dsMeta.get(TYPE), dsMeta.get(NAME), dsMeta.getBool(IS_ENABLED), dsMeta.get(HOST),
-                (int) dsMeta.getLong(PORT), dsMeta.get(USERNAME), dsMeta.get(PASSWORD), (int) dsMeta.getLong(FOLDER_ID));
 
+            String type = dsMeta.get(TYPE);
+            String name = dsMeta.get(NAME);
+            boolean isEnabled = dsMeta.getBool(IS_ENABLED);
+            String host = dsMeta.get(HOST, null);
+            Integer port = (dsMeta.containsKey(PORT) ? (int) dsMeta.getLong(PORT) : null);
+            String connectionType = dsMeta.get(CONNECTION_TYPE, null);
+            String username = dsMeta.get(USERNAME, null);
+            String password = dsMeta.get(PASSWORD, null);
+            int folderId = (int) dsMeta.getLong(FOLDER_ID);
+
+            MailItemDataSource ds = new MailItemDataSource(mbox, id, type, name, isEnabled, folderId);
+            ds.setHost(host);
+            ds.setPort(port);
+            ds.setConnectionType(connectionType);
+            ds.setUsername(username);
+            ds.setPassword(password);
+
+            // connectionType migration
+            if (type.equals(TYPE_POP3) && connectionType == null) {
+                ds.setConnectionType(CT_CLEARTEXT);
+                saveToMetadata(mbox, octxt, ds);
+            }
+            
             dataSources.put(id, ds);
         }
         
@@ -261,14 +318,38 @@ public class MailItemDataSource {
         }
 
         Metadata md = new Metadata();
+        // Required
         md.put(NAME, ds.getName());
-        md.put(IS_ENABLED, ds.isEnabled());
-        md.put(HOST, ds.getHost());
-        md.put(PORT, ds.getPort());
-        md.put(USERNAME, ds.getUsername());
-        md.put(PASSWORD, ds.getPassword());
-        md.put(FOLDER_ID, ds.getFolderId());
         md.put(TYPE, ds.getType());
+        md.put(IS_ENABLED, ds.isEnabled());
+        md.put(FOLDER_ID, ds.getFolderId());
+
+        // Optional
+        if (ds.getHost() != null) {
+            md.put(HOST, ds.getHost());
+        } else {
+            md.remove(HOST);
+        }
+        if (ds.getPort() != null) {
+            md.put(PORT, ds.getPort());
+        } else {
+            md.remove(PORT);
+        }
+        if (ds.getConnectionType() != null) {
+            md.put(CONNECTION_TYPE, ds.getConnectionType());
+        } else {
+            md.remove(CONNECTION_TYPE);
+        }
+        if (ds.getUsername() != null) {
+            md.put(USERNAME, ds.getUsername());
+        } else {
+            md.remove(USERNAME);
+        }
+        if (ds.getPassword() != null) {
+            md.put(PASSWORD, ds.getPassword());
+        } else {
+            md.remove(PASSWORD);
+        }
 
         config.put(Integer.toString(ds.getId()), md);
         mbox.setConfig(octxt, CONFIG_SECTION_DATASOURCE, config);
@@ -330,9 +411,23 @@ public class MailItemDataSource {
             parts.add("id=" + getId());
         }
         parts.add("type=" + getType());
+        parts.add("isEnabled=" + isEnabled());
         if (getName() != null) {
             parts.add("name=" + getName());
         }
+        if (getHost() != null) {
+            parts.add("host=" + getHost());
+        }
+        if (getPort() != null) {
+            parts.add("port=" + getPort());
+        }
+        if (getConnectionType() != null) {
+            parts.add("connectionType=" + getConnectionTypeString());
+        }
+        if (getUsername() != null) {
+            parts.add("username=" + getUsername());
+        }
+        parts.add("folderId=" + getFolderId());
         return String.format("%s: { %s }",
             SIMPLE_CLASS_NAME, StringUtil.join(", ", parts));
     }

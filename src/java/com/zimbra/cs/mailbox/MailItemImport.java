@@ -33,6 +33,6 @@ public interface MailItemImport {
      * Test connecting to the specified data source.
      * @return
      */
-    public String test(MailItemDataSource dataSource);
+    public String test(MailItemDataSource dataSource) throws ServiceException;
     public void importData(MailItemDataSource dataSource) throws ServiceException;
 }

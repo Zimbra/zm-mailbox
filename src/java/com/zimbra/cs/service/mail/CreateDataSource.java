@@ -49,10 +49,11 @@ public class CreateDataSource extends MailDocumentHandler {
         boolean isEnabled = ePop3.getAttributeBool(MailService.A_DS_IS_ENABLED);
         String host = ePop3.getAttribute(MailService.A_DS_HOST);
         int port = (int) ePop3.getAttributeLong(MailService.A_DS_PORT);
+        String connectionType = ePop3.getAttribute(MailService.A_DS_CONNECTION_TYPE);
         String username = ePop3.getAttribute(MailService.A_DS_USERNAME);
         String password = ePop3.getAttribute(MailService.A_DS_PASSWORD);
         MailItemDataSource ds = mbox.createDataSource(zsc.getOperationContext(),
-            MailItemDataSource.TYPE_POP3, name, isEnabled, host, port,
+            MailItemDataSource.TYPE_POP3, name, isEnabled, host, port, connectionType,
             username, password, folderId);
         
         // Assemble response

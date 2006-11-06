@@ -46,6 +46,7 @@ public class TestDataSource extends MailDocumentHandler {
         int port;
         String username;
         String password;
+        String connectionTypeString;
         
         // Parse request
         Element ePop3 = request.getElement(MailService.E_DS_POP3);
@@ -61,6 +62,7 @@ public class TestDataSource extends MailDocumentHandler {
             port = ds.getPort();
             username = ds.getUsername();
             password = ds.getPassword();
+            connectionTypeString = ds.getConnectionTypeString();
             
             // Override with values in SOAP request
             if (attrExists(ePop3, MailService.A_DS_HOST)) {
@@ -68,6 +70,9 @@ public class TestDataSource extends MailDocumentHandler {
             }
             if (attrExists(ePop3, MailService.A_DS_PORT)) {
                 port = (int) ePop3.getAttributeLong(MailService.A_DS_PORT);
+            }
+            if (attrExists(ePop3, MailService.A_DS_CONNECTION_TYPE)) {
+                connectionTypeString = ePop3.getAttribute(MailService.A_DS_CONNECTION_TYPE);
             }
             if (attrExists(ePop3, MailService.A_DS_USERNAME)) {
                 username = ePop3.getAttribute(MailService.A_DS_USERNAME);
@@ -79,6 +84,7 @@ public class TestDataSource extends MailDocumentHandler {
             // All attrs must be specified in SOAP request
             host = ePop3.getAttribute(MailService.A_DS_HOST);
             port = (int) ePop3.getAttributeLong(MailService.A_DS_PORT);
+            connectionTypeString = ePop3.getAttribute(MailService.A_DS_CONNECTION_TYPE);
             username = ePop3.getAttribute(MailService.A_DS_USERNAME);
             password = ePop3.getAttribute(MailService.A_DS_PASSWORD);
         }
@@ -86,8 +92,11 @@ public class TestDataSource extends MailDocumentHandler {
         // Perform test and assemble response
         Element response = zsc.createElement(MailService.TEST_DATA_SOURCE_RESPONSE);
         ePop3 = response.addElement(MailService.E_DS_POP3);
+        MailItemDataSource.ConnectionType connectionType =
+            MailItemDataSource.getConnectionType(connectionTypeString);
         
-        String error = MailItemDataSource.test(MailItemDataSource.TYPE_POP3, host, port, username, password);
+        String error = MailItemDataSource.test(
+            MailItemDataSource.TYPE_POP3, host, port, connectionType, username, password);
         if (error == null) {
             ePop3.addAttribute(MailService.A_DS_SUCCESS, true);
         } else {

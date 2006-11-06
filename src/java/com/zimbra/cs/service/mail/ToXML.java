@@ -1489,14 +1489,24 @@ public class ToXML {
         return m;
     }
     public static Element encodeDataSource(Element parent, MailItemDataSource ds) {
-        Element m = parent.addElement(MailService.E_DS_POP3);
+        Element m = parent.addElement(ds.getType());
         m.addAttribute(MailService.A_ID, ds.getId());
         m.addAttribute(MailService.A_NAME, ds.getName());
         m.addAttribute(MailService.A_FOLDER, ds.getFolderId());
         m.addAttribute(MailService.A_DS_IS_ENABLED, ds.isEnabled());
-        m.addAttribute(MailService.A_DS_HOST, ds.getHost());
-        m.addAttribute(MailService.A_DS_PORT, ds.getPort());
-        m.addAttribute(MailService.A_DS_USERNAME, ds.getUsername());
+        
+        if (ds.getHost() != null) { 
+            m.addAttribute(MailService.A_DS_HOST, ds.getHost());
+        }
+        if (ds.getPort() != null) {
+            m.addAttribute(MailService.A_DS_PORT, ds.getPort());
+        }
+        if (ds.getConnectionType() != null) {
+            m.addAttribute(MailService.A_DS_CONNECTION_TYPE, ds.getConnectionTypeString());
+        }
+        if (ds.getUsername() != null) {
+            m.addAttribute(MailService.A_DS_USERNAME, ds.getUsername());
+        }
         return m;
     }
 }

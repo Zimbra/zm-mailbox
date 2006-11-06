@@ -186,16 +186,21 @@ public abstract class Element {
     }
     public static long parseLong(String key, String value) throws ServiceException {
         try { return Long.parseLong(value); }
-        catch (NumberFormatException nfe) { throw ServiceException.INVALID_REQUEST("invalid value for attribute: " + key, nfe); }
+        catch (NumberFormatException nfe) {
+            throw ServiceException.INVALID_REQUEST("invalid long value '" + value + "' for attribute: " + key, nfe);
+        }
     }
     public static double parseDouble(String key, String value) throws ServiceException {
         try { return Double.parseDouble(value); }
-        catch (NumberFormatException nfe) { throw ServiceException.INVALID_REQUEST("invalid value for attribute: " + key, nfe); }
+        catch (NumberFormatException nfe) {
+            throw ServiceException.INVALID_REQUEST("invalid double value '" + value + "' for attribute: " + key, nfe);
+        }
     }
     public static boolean parseBool(String key, String value) throws ServiceException {
         if (value.equals("1") || value.equalsIgnoreCase("true"))        return true;
         else if (value.equals("0") || value.equalsIgnoreCase("false"))  return false;
-        throw ServiceException.INVALID_REQUEST("invalid boolean value for attribute: " + key, null);
+        throw ServiceException.INVALID_REQUEST(
+            "invalid boolean value '" + value + "' for attribute: " + key, null);
     }
 
     protected boolean namespaceDeclarationNeeded(String prefix, String uri) {

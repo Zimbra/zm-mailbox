@@ -4508,8 +4508,8 @@ public class Mailbox {
      * Creates a new data source.
      */
     public synchronized MailItemDataSource createDataSource(OperationContext octxt, String type, String name,
-                                                            boolean isEnabled, String host, int port, String username,
-                                                            String password, int folderId)
+                                                            boolean isEnabled, String host, Integer port, String connectionType,
+                                                            String username, String password, int folderId)
     throws ServiceException {
         ZimbraLog.mailbox.info(String.format(
             "Creating data source: type=%s, name=%s, isEnabled=%b, host=%s, port=%d, username=%s, folderId=%d",
@@ -4523,8 +4523,12 @@ public class Mailbox {
                 maxId = ds.getId();
             }
         }
-        MailItemDataSource ds = new MailItemDataSource(this, maxId + 1, type, name, isEnabled, host,
-            port, username, password, folderId);
+        MailItemDataSource ds = new MailItemDataSource(this, maxId + 1, type, name, isEnabled, folderId);
+        ds.setHost(host);
+        ds.setPort(port);
+        ds.setConnectionType(connectionType);
+        ds.setUsername(username);
+        ds.setPassword(password);
         MailItemDataSource.saveToMetadata(this, octxt, ds);
         dataSources.put(ds.getId(), ds);
         return ds;

@@ -34,6 +34,7 @@ import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.NoSuchProviderException;
 import javax.mail.Session;
 import javax.mail.Store;
 
@@ -42,7 +43,9 @@ import org.apache.commons.logging.LogFactory;
 
 import com.sun.mail.pop3.POP3Folder;
 import com.sun.mail.pop3.POP3Message;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
@@ -51,24 +54,33 @@ import com.zimbra.cs.service.ServiceException;
 public class Pop3Import
 implements MailItemImport {
 
+    private static final int TIMEOUT = 10 * (int) Constants.MILLIS_PER_SECOND;
     private static Session sSession;
+    private static Session sSelfSignedCertSession;
     private static Log sLog = LogFactory.getLog(Pop3Import.class);
     private static final byte[] CRLF = { '\r', '\n' };
     
     static {
         Properties props = new Properties();
-        sSession = Session.getDefaultInstance(props);
+        props.put("mail.pop3.connectiontimeout", TIMEOUT);
+        sSession = Session.getInstance(props);
+        
+        props.put("mail.pop3.socketFactory.class", "com.zimbra.common.util.DummySSLSocketFactory");
+        sSelfSignedCertSession = Session.getInstance(props);
     }
 
-    public String test(MailItemDataSource ds) {
+    public String test(MailItemDataSource ds)
+    throws ServiceException {
         String error = null;
+
+        validateDataSource(ds);
         
         try {
-            Store store = sSession.getStore("pop3");
+            Store store = getStore(ds);
             store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getPassword());
             store.close();
         } catch (MessagingException e) {
-            sLog.debug("Testing " + ds, e);
+            sLog.info("Testing " + ds, e);
             error = e.getMessage();
         }
         return error;
@@ -84,16 +96,52 @@ implements MailItemImport {
             throw ServiceException.FAILURE("Importing data from " + dataSource, e);
         }
     }
+
+    private void validateDataSource(MailItemDataSource ds)
+    throws ServiceException {
+        if (ds.getHost() == null) {
+            throw ServiceException.FAILURE(ds + ": host not set", null);
+        }
+        if (ds.getPort() == null) {
+            throw ServiceException.FAILURE(ds + ": port not set", null);
+        }
+        if (ds.getConnectionType() == null) {
+            throw ServiceException.FAILURE(ds + ": connectionType not set", null);
+        }
+        if (ds.getUsername() == null) {
+            throw ServiceException.FAILURE(ds + ": username not set", null);
+        }
+    }
+    
+    private Store getStore(MailItemDataSource ds)
+    throws NoSuchProviderException, ServiceException {
+        if (ds.getConnectionType() == MailItemDataSource.ConnectionType.CLEARTEXT) {
+            return sSession.getStore("pop3");
+        } else if (ds.getConnectionType() == MailItemDataSource.ConnectionType.SSL) {
+            if (LC.data_source_trust_self_signed_certs.booleanValue()) {
+                return sSelfSignedCertSession.getStore("pop3s");
+            } else {
+                return sSession.getStore("pop3s");
+            }
+        } else {
+            throw ServiceException.FAILURE(ds + ": connectionType=" + ds.getConnectionType(), null);
+        }
+    }
     
     private void fetchMessages(MailItemDataSource ds)
     throws MessagingException, IOException, ServiceException {
         ZimbraLog.mailbox.info("Importing POP3 messages from " + ds);
         
+        validateDataSource(ds);
+        
         // Connect (USER, PASS, STAT)
-        Store store = sSession.getStore("pop3");
+        Store store = getStore(ds);
         store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getPassword());
         POP3Folder folder = (POP3Folder) store.getFolder("INBOX");
         folder.open(Folder.READ_WRITE);
+        
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(ds.getMailboxId());
+        
         Message msgs[] = folder.getMessages();
         
         sLog.debug("Retrieving " + msgs.length + " messages");
@@ -109,8 +157,6 @@ implements MailItemImport {
             */
             
             // Fetch message bodies (RETR)
-            Mailbox mbox = MailboxManager.getInstance().getMailboxById(ds.getMailboxId());
-            
             for (int i = 0; i < msgs.length; i++) {
                 POP3Message msg = (POP3Message) msgs[i];
                 ByteArrayOutputStream os = new ByteArrayOutputStream();

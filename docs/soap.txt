@@ -1754,13 +1754,15 @@ java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
 ---------------------------
 
 <TestDataSourceRequest>
-  <pop3 host="pop.myisp.com" port="110" username="mylogin" password="mypassword"/>
+  <pop3 host="pop.myisp.com" port="110" connectionType="cleartext|ssl"
+    username="mylogin" password="mypassword"/>
 </TestDataSourceRequest>
 
 or
 
 <TestDataSourceRequest>
-  <pop3 id="{id}" [host="pop.myisp.com"] [port="110"] [username="mylogin"] [password="mypassword"]/>
+  <pop3 id="{id}" [host="pop.myisp.com"] [port="110"] [connectionType="cleartext|ssl"]
+    [username="mylogin"] [password="mypassword"]/>
 </TestDataSourceRequest>
 
 <TestDataSourceResponse success="0|1" [error="Error message"]/>
@@ -1774,7 +1776,7 @@ instead of the saved values.
 
 <CreateDataSourceRequest/>
   <pop3 name="My POP3 Account" isEnabled="0|1" host="pop.myisp.com" port="110"
-    username="mylogin" password="mypassword" l="{folder-id}"/>
+    connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"/>
 </CreateDataSourceRequest>
 
 <CreateDataSourceResponse>
@@ -1801,7 +1803,8 @@ every attribute value is returned except password.
 
 <ModifyDataSourceRequest>
   <pop3 id="{id}" [name="My POP3 Account"] [isEnabled="0|1"] [host="pop3.myisp.com"]
-    [port="110"] [username="mylogin"] [password="mypassword"] [l="{folder-id}"]/>
+    [port="110"] [connectionType="cleartext|ssl"] [username="mylogin"]
+    [password="mypassword"] [l="{folder-id}"]/>
 </ModifyDataSourceRequest>
 
 <ModifyDataSourceResponse/>

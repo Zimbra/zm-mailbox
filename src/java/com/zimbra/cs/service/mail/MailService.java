@@ -476,6 +476,7 @@ public class MailService implements DocumentService {
     public static final String A_DS_IS_ENABLED = "isEnabled";
     public static final String A_DS_HOST = "host";
     public static final String A_DS_PORT = "port";
+    public static final String A_DS_CONNECTION_TYPE = "connectionType";
     public static final String A_DS_USERNAME = "username";
     public static final String A_DS_PASSWORD = "password";
     public static final String A_DS_TYPE = "type";
