@@ -1549,9 +1549,11 @@ public abstract class Provisioning {
 
     private static Locale getEntryLocale(Entry entry) {
         Locale lc = null;
-        String lcName = entry.getAttr(A_zimbraLocale);
-        if (lcName != null)
-            lc = L10nUtil.lookupLocale(lcName);
+        if (entry != null) {
+            String lcName = entry.getAttr(A_zimbraLocale);
+            if (lcName != null)
+                lc = L10nUtil.lookupLocale(lcName);
+        }
         return lc;
     }
 
