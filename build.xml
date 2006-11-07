@@ -256,7 +256,7 @@
 
 	<target name="compile" depends="build-init">
 		<ant dir="${common.dir}" target="jar" inheritAll="false" />
-		<javac destdir="${build.classes.dir}" debug="true" classpathref="class.path">
+		<javac fork="true" memorymaximumsize="256m" destdir="${build.classes.dir}" debug="true" classpathref="class.path">
 			<src refid="all.java.path" />
 		</javac>
 		<antcall target="generate-buildinfo"/>
