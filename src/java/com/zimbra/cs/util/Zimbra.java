@@ -25,7 +25,6 @@
 
 package com.zimbra.cs.util;
 
-import java.io.StringWriter;
 import java.util.Timer;
 
 import com.zimbra.cs.account.Provisioning;
@@ -60,7 +59,7 @@ import com.zimbra.cs.store.StoreManager;
 public class Zimbra {
     private static boolean sInited = false;
     
-    private static XMPPServer mXmppServer; 
+//    private static XMPPServer mXmppServer; 
 
     private static void checkForClass(String clzName, String jarName) {
         try {
@@ -95,6 +94,8 @@ public class Zimbra {
 
     	if (!Versions.checkVersions())
             throw new RuntimeException("Data version mismatch.  Reinitialize or upgrade the backend data store.");
+
+        MailboxManager.getInstance();
 
     	ExtensionUtil.loadAll();
     	ExtensionUtil.initAll();
@@ -162,7 +163,9 @@ public class Zimbra {
         StoreManager.getInstance().shutdown();
 
         ExtensionUtil.destroyAll();
-        
+
+        MailboxManager.getInstance().shutdown();
+
         sTimer.cancel();
     }
 
