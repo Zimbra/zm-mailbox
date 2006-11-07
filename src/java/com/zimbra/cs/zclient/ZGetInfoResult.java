@@ -99,7 +99,7 @@ public class ZGetInfoResult {
         return mIdentities;
     }
 
-    public List<ZDataSource> getDAtaSources() {
+    public List<ZDataSource> getDataSources() {
         return mDataSources;
     }
 

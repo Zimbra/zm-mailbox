@@ -25,12 +25,17 @@
 
 package com.zimbra.cs.zclient;
 
+import java.util.Map;
+
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.soap.Element;
 
 public interface ZDataSource  {
 
     public Element toElement(Element parent);
-
     public Element toIdElement(Element parent);
 
+    public DataSource.Type getType();
+    public String getName();
+    public Map<String,Object> getAttrs();
 }

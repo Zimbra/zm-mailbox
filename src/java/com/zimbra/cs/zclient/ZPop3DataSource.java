@@ -25,6 +25,11 @@
 
 package com.zimbra.cs.zclient;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
@@ -79,10 +84,11 @@ public class ZPop3DataSource implements ZDataSource {
         return src;
     }
 
+    public DataSource.Type getType() { return DataSource.Type.pop3; }
+
     public String getId() { return mId; }
 
     public String getName() { return mName; }
-
     public void setName(String name) { mName = name; }
 
     public boolean isEnabled() { return mEnabled; }
@@ -100,6 +106,20 @@ public class ZPop3DataSource implements ZDataSource {
     public String getFolderId() { return mFolderId; }
     public void setFolderId(String folderid) { mFolderId = folderid; }
 
+    public Map<String, Object> getAttrs() {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceId, mId);
+        attrs.put(Provisioning.A_zimbraDataSourceName, mName);
+        attrs.put(Provisioning.A_zimbraDataSourceEnabled, mEnabled ? "TRUE" : "FALSE");
+        attrs.put(Provisioning.A_zimbraDataSourceUsername, mUsername);
+        attrs.put(Provisioning.A_zimbraDataSourceHost, mHost);
+        if (mPort > 0)
+            attrs.put(Provisioning.A_zimbraDataSourcePort, "" + mPort);
+        if (mFolderId != null)
+            attrs.put(Provisioning.A_zimbraDataSourceFolderId, mFolderId);
+        return attrs;
+    }
+
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
         sb.beginStruct();
@@ -113,5 +133,4 @@ public class ZPop3DataSource implements ZDataSource {
         sb.endStruct();
         return sb.toString();
     }
-
 }
