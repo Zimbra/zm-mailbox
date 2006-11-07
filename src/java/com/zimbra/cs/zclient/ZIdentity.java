@@ -54,6 +54,10 @@ public class ZIdentity  {
         return mName;
     }
 
+    public Map<String, Object> getAttrs() {
+        return new HashMap<String, Object>(mAttrs);
+    }
+
     public Element toElement(Element parent) {
         Element identity = parent.addElement(AccountService.E_IDENTITY);
         identity.addAttribute(AccountService.A_NAME, mName);
