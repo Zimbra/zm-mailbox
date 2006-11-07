@@ -273,7 +273,7 @@ public class MailItemDataSource {
             String name = dsMeta.get(NAME);
             boolean isEnabled = dsMeta.getBool(IS_ENABLED);
             String host = dsMeta.get(HOST, null);
-            Integer port = (dsMeta.containsKey(PORT) ? (int) dsMeta.getLong(PORT) : null);
+            Integer port = (dsMeta.containsKey(PORT) ? (Integer) (int) dsMeta.getLong(PORT) : null);
             String connectionType = dsMeta.get(CONNECTION_TYPE, null);
             String username = dsMeta.get(USERNAME, null);
             String password = dsMeta.get(PASSWORD, null);
