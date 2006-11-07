@@ -44,6 +44,7 @@ public class ZPop3DataSource implements ZDataSource {
     private String mUsername;
     private String mPassword;
     private String mFolderId;
+    private String mConnectionType;
     
     public ZPop3DataSource(Element e) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
@@ -53,9 +54,10 @@ public class ZPop3DataSource implements ZDataSource {
         mPort = (int) e.getAttributeLong(MailService.A_DS_PORT, 110);
         mUsername = e.getAttribute(MailService.A_DS_USERNAME);
         mFolderId = e.getAttribute(MailService.A_FOLDER);
+        mConnectionType = e.getAttribute(MailService.A_DS_CONNECTION_TYPE);
     }
 
-    public ZPop3DataSource(String name, boolean enabled, String host, int port, String username, String password, String folderid) {
+    public ZPop3DataSource(String name, boolean enabled, String host, int port, String username, String password, String folderid, String connectionType) {
         mName = name;
         mEnabled = enabled;
         mHost = host;
@@ -63,6 +65,7 @@ public class ZPop3DataSource implements ZDataSource {
         mUsername = username;
         mPassword = password;
         mFolderId = folderid;
+        mConnectionType = connectionType;
     }
 
     public Element toElement(Element parent) {
@@ -75,6 +78,7 @@ public class ZPop3DataSource implements ZDataSource {
         src.addAttribute(MailService.A_DS_USERNAME, mUsername);
         if (mPassword != null) src.addAttribute(MailService.A_DS_PASSWORD, mPassword);
         src.addAttribute(MailService.A_FOLDER, mFolderId);
+        src.addAttribute(MailService.A_DS_CONNECTION_TYPE, mConnectionType);
         return src;
     }
 
@@ -106,6 +110,9 @@ public class ZPop3DataSource implements ZDataSource {
     public String getFolderId() { return mFolderId; }
     public void setFolderId(String folderid) { mFolderId = folderid; }
 
+    public String getConnectionType() { return mConnectionType; }
+    public void setConnectionType(String connectionType) { mConnectionType = connectionType; }
+    
     public Map<String, Object> getAttrs() {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDataSourceId, mId);
@@ -113,6 +120,7 @@ public class ZPop3DataSource implements ZDataSource {
         attrs.put(Provisioning.A_zimbraDataSourceEnabled, mEnabled ? "TRUE" : "FALSE");
         attrs.put(Provisioning.A_zimbraDataSourceUsername, mUsername);
         attrs.put(Provisioning.A_zimbraDataSourceHost, mHost);
+        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, mConnectionType);
         if (mPort > 0)
             attrs.put(Provisioning.A_zimbraDataSourcePort, "" + mPort);
         if (mFolderId != null)
@@ -130,6 +138,7 @@ public class ZPop3DataSource implements ZDataSource {
         sb.add("port", mPort);
         sb.add("username", mUsername);
         sb.add("folderId", mFolderId);
+        sb.add("connectionType", mConnectionType);
         sb.endStruct();
         return sb.toString();
     }
