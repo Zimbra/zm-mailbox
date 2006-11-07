@@ -3664,35 +3664,8 @@ public class LdapProvisioning extends Provisioning {
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
         List<Identity> result = getIdentitiesByQuery(ldapEntry, "(objectclass=zimbraIdentity)", null);
-        addDefaultIdentity(result, account);
+        result.add(getDefaultIdentity(account));
         return result;
-    }
-
-    private void addDefaultIdentity(List<Identity> result, Account account) throws ServiceException {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        Set<String> identityAttrs = AttributeManager.getInstance().getAttrsInClass(AttributeClass.identity);
-        
-        for (String name : identityAttrs) {
-            String value = account.getAttr(name, null);
-            if (value != null) attrs.put(name, value);            
-        }
-        if (attrs.get(A_zimbraPrefIdentityName) == null)
-            attrs.put(A_zimbraPrefIdentityName, DEFAULT_IDENTITY_NAME);
-
-        String fromAddress = (String) attrs.get(A_zimbraPrefFromAddress);
-        String fromDisplay = (String) attrs.get(A_zimbraPrefFromDisplay);
-        
-        if (fromAddress == null || fromDisplay == null) { 
-            try {
-                InternetAddress ia = AccountUtil.getFriendlyEmailAddress(account);
-                if (fromAddress == null) attrs.put(A_zimbraPrefFromAddress, ia.getAddress());
-                if (fromDisplay == null) attrs.put(A_zimbraPrefFromDisplay, ia.getPersonal());
-            } catch (UnsupportedEncodingException e) {
-                if (fromAddress == null) attrs.put(A_zimbraPrefFromAddress, account.getName());
-                if (fromDisplay == null) attrs.put(A_zimbraPrefFromDisplay, account.getUid());
-            }
-        }
-        result.add(new Identity(DEFAULT_IDENTITY_NAME, attrs));        
     }
 
     private List<DataSource> getDataSourcesByQuery(LdapEntry entry, String query, DirContext initCtxt) throws ServiceException {

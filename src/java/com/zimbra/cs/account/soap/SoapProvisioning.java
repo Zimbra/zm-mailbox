@@ -1174,7 +1174,21 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public DataSource get(Account account, DataSourceBy keyType, String key) throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        // TOOD: more efficient version and/or caching on account?
+        switch (keyType) {
+        case name:
+            for (DataSource source : getAllDataSources(account))
+                if (source.getName().equalsIgnoreCase(key)) 
+                    return source;
+            return null;
+        case id:
+            for (DataSource source : getAllDataSources(account))
+                if (source.getId().equalsIgnoreCase(key)) 
+                    return source;
+            return null;            
+        default: 
+            return null;
+            
+        }
     }
 }

@@ -35,12 +35,17 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.L10nUtil;
 
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import javax.mail.internet.InternetAddress;
 
 /**
  * @author schemers
@@ -1687,8 +1692,35 @@ public abstract class Provisioning {
     public abstract void addMembers(DistributionList list, String[] members) throws ServiceException;
     
     public abstract void removeMembers(DistributionList list, String[] member) throws ServiceException;
+ 
+    // identities
+    public Identity getDefaultIdentity(Account account) throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        Set<String> identityAttrs = AttributeManager.getInstance().getAttrsInClass(AttributeClass.identity);
+        
+        for (String name : identityAttrs) {
+            String value = account.getAttr(name, null);
+            if (value != null) attrs.put(name, value);            
+        }
+        if (attrs.get(A_zimbraPrefIdentityName) == null)
+            attrs.put(A_zimbraPrefIdentityName, DEFAULT_IDENTITY_NAME);
 
-    // identities 
+        String fromAddress = (String) attrs.get(A_zimbraPrefFromAddress);
+        String fromDisplay = (String) attrs.get(A_zimbraPrefFromDisplay);
+        
+        if (fromAddress == null || fromDisplay == null) { 
+            try {
+                InternetAddress ia = AccountUtil.getFriendlyEmailAddress(account);
+                if (fromAddress == null) attrs.put(A_zimbraPrefFromAddress, ia.getAddress());
+                if (fromDisplay == null) attrs.put(A_zimbraPrefFromDisplay, ia.getPersonal());
+            } catch (UnsupportedEncodingException e) {
+                if (fromAddress == null) attrs.put(A_zimbraPrefFromAddress, account.getName());
+                if (fromDisplay == null) attrs.put(A_zimbraPrefFromDisplay, account.getUid());
+            }
+        }
+        return new Identity(DEFAULT_IDENTITY_NAME, attrs);        
+    }
+    
     public abstract Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
     
     public abstract void modifyIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
