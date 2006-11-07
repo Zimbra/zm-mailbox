@@ -1698,6 +1698,19 @@ public abstract class Provisioning {
     public abstract List<Identity> getAllIdentities(Account account) throws ServiceException;
     
     // data sources
+    public static enum DataSourceBy {
+        
+        id, name;
+        
+        public static DataSourceBy fromString(String s) throws ServiceException {
+            try {
+                return DataSourceBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
+    
     public abstract DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs) throws ServiceException;
     
     public abstract void modifyDataSource(Account account, String dataSourceId, Map<String, Object> attrs) throws ServiceException;
@@ -1705,5 +1718,14 @@ public abstract class Provisioning {
     public abstract void deleteDataSource(Account account, String dataSourceId) throws ServiceException;
     
     public abstract List<DataSource> getAllDataSources(Account account) throws ServiceException;
+    
+    /**
+     * Looks up an identity by the specified key.
+     * 
+     * @return the <code>DataSource</code>, or <code>null</code> if no <code>DataSource</code>
+     * with the given key exists.
+     * @throws ServiceException if the key is malformed
+     */
+    public abstract DataSource get(Account account, DataSourceBy keyType, String key) throws ServiceException;
     
 }

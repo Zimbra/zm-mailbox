@@ -3727,10 +3727,16 @@ public class LdapProvisioning extends Provisioning {
         return result.isEmpty() ? null : result.get(0);
     }
 
+    private DataSource getDataSourceByName(LdapEntry entry, String name,  DirContext ctxt) throws ServiceException {
+        name = LdapUtil.escapeSearchFilterArg(name);
+        List<DataSource> result = getDataSourcesByQuery(entry, "(&(zimbraDataSourceName="+name+")(objectclass=zimbraDataSource))", ctxt); 
+        return result.isEmpty() ? null : result.get(0);
+    }    
+
     private String getDataSourceDn(LdapEntry entry, String name) {
         return A_zimbraDataSourceName + "=" + name + "," + entry.getDN();    
     }
-    
+
     @Override
     public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> dataSourceAttrs) throws ServiceException {
         removeAttrIgnoreCase("objectclass", dataSourceAttrs);    
@@ -3852,6 +3858,22 @@ public class LdapProvisioning extends Provisioning {
             } finally {
                 LdapUtil.closeContext(ctxt);
             }
+        }
+    }
+
+    @Override
+    public DataSource get(Account account, DataSourceBy keyType, String key) throws ServiceException {
+        LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
+        if (ldapEntry == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+        
+        switch(keyType) {
+            case id: 
+                return getDataSourceById(ldapEntry, key, null);
+            case name: 
+                return getDataSourceByName(ldapEntry, key, null);
+            default:
+                return null;
         }
     }
 

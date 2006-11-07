@@ -1171,4 +1171,10 @@ public class SoapProvisioning extends Provisioning {
         addAttrElementsMailService(ds, attrs);
         invokeOnTargetAccount(req, account.getId());
     }
+
+    @Override
+    public DataSource get(Account account, DataSourceBy keyType, String key) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
