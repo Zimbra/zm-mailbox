@@ -24,12 +24,16 @@
  */
 package com.zimbra.cs.dav.property;
 
+import java.io.IOException;
+
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.property.ResourceProperty;
+import com.zimbra.cs.dav.resource.CalendarObject;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.Mime;
 
@@ -45,6 +49,10 @@ public class CalDavProperty extends ResourceProperty {
 	
 	public static ResourceProperty getSupportedCollationSet() {
 		return new SupportedCollationSet();
+	}
+
+	public static ResourceProperty getCalendarData(CalendarObject obj) {
+		return new CalendarData(obj);
 	}
 	
 	protected CalDavProperty(QName name) {
@@ -82,6 +90,8 @@ public class CalDavProperty extends ResourceProperty {
 		
 		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
 			Element calData = super.toElement(ctxt, parent, true);
+			if (nameOnly)
+				return calData;
 			Element e = calData.addElement(DavElements.E_CALENDAR_DATA);
 			e.addAttribute(DavElements.P_CONTENT_TYPE, Mime.CT_TEXT_CALENDAR);
 			e.addAttribute(DavElements.P_VERSION, ZCalendar.sIcalVersion);
@@ -100,9 +110,31 @@ public class CalDavProperty extends ResourceProperty {
 		
 		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
 			Element collation = super.toElement(ctxt, parent, true);
+			if (nameOnly)
+				return collation;
 			collation.addElement(DavElements.E_SUPPORTED_COLLATION).setText(ASCII);
 			collation.addElement(DavElements.E_SUPPORTED_COLLATION).setText(OCTET);
 			return collation;
+		}
+	}
+	
+	private static class CalendarData extends CalDavProperty {
+		CalendarObject calobj;
+		public CalendarData(CalendarObject c) {
+			super(DavElements.E_CALENDAR_DATA);
+			calobj = c;
+		}
+		
+		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
+			Element caldata = super.toElement(ctxt, parent, true);
+			if (nameOnly)
+				return caldata;
+			try {
+				caldata.setText(calobj.getVcalendar());
+			} catch (IOException e) {
+				ZimbraLog.dav.warn("can't get appt data", e);
+			}
+			return caldata;
 		}
 	}
 }

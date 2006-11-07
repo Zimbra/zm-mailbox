@@ -92,10 +92,7 @@ public class Lock extends DavMethod {
 		LockMgr lockmgr = LockMgr.getInstance();
 		LockMgr.Lock lock = lockmgr.createLock(ctxt, rs, type, scope, d);
 		
-		Document document = org.dom4j.DocumentHelper.createDocument();
-		top = document.addElement(DavElements.E_PROP);
-		LockDiscovery ld = new LockDiscovery(lock);
-		ld.toElement(ctxt, top, false);
-		sendResponse(ctxt, document);
+		ctxt.getDavResponse().addProperty(ctxt, new LockDiscovery(lock));
+		sendResponse(ctxt);
 	}
 }

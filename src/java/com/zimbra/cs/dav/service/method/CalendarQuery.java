@@ -22,32 +22,29 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.dav.report;
+package com.zimbra.cs.dav.service.method;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.caldav.Filter.CompFilter;
-import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.resource.CalendarCollection;
 import com.zimbra.cs.dav.resource.CalendarObject;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
+import com.zimbra.cs.dav.service.DavResponse;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.service.ServiceException;
 
@@ -59,9 +56,10 @@ import com.zimbra.cs.service.ServiceException;
  *                                DAV:prop)?, filter, timezone?)>
  *                                
  */
-public class CalendarQuery extends ReportRequest {
+public class CalendarQuery extends Report {
 
-	public Element handle(DavContext ctxt, Element query, Document document) throws ServiceException, DavException {
+	public void handle(DavContext ctxt) throws DavException {
+		Element query = ctxt.getRequestMessage().getRootElement();
 		if (!query.getQName().equals(DavElements.E_CALENDAR_QUERY))
 			throw new DavException("msg "+query.getName()+" is not calendar-query", HttpServletResponse.SC_BAD_REQUEST, null);
 		
@@ -75,36 +73,21 @@ public class CalendarQuery extends ReportRequest {
 			throw new DavException("not a calendar resource", HttpServletResponse.SC_BAD_REQUEST, null);
 		
 		CalendarCollection cal = (CalendarCollection) rsc;
-		Element resp = document.addElement(DavElements.E_MULTISTATUS);
 		TimeRange tr = qctxt.componentFilter.getTimeRange();
-		
-		for (Appointment appt : cal.get(ctxt, tr))
-			handleAppt(qctxt, appt, resp);
 
-		return resp;
+		try {
+			for (Appointment appt : cal.get(ctxt, tr))
+				handleAppt(qctxt, appt);
+		} catch (ServiceException se) {
+			throw new DavException("error getting calendar appointments", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
+		}
 	}
 	
-	private void handleAppt(QueryContext ctxt, Appointment appt, Element response) throws DavException {
-		Element r = response.addElement(DavElements.E_RESPONSE);
+	private void handleAppt(QueryContext ctxt, Appointment appt) throws DavException {
 		try {
 			CalendarObject calobj = new CalendarObject(appt);
-			calobj.addHref(r, false);
-			Element prop = r.addElement(DavElements.E_PROPSTAT).addElement(DavElements.E_PROP);
-			if (ctxt.allProp) {
-				
-			} else
-				for (QName requestedProp : ctxt.props) {
-					ResourceProperty rp = calobj.getProperty(requestedProp);
-					// TODO error checking
-					if (rp != null)
-						rp.toElement(ctxt.davCtxt, prop, false);
-				}
-			String apptData = new String(ByteUtil.getContent(calobj.getContent(), 
-															   calobj.getContentLength()), 
-										  "UTF-8");
-			prop.addElement(DavElements.E_CALENDAR_DATA).setText(apptData);
-		} catch (IOException ioe) {
-			ZimbraLog.dav.error("can't get appointment data", ioe);
+			DavResponse resp = ctxt.davCtxt.getDavResponse();
+			resp.addResource(ctxt.davCtxt, calobj, ctxt.props, false, false);
 		} catch (ServiceException se) {
 			ZimbraLog.dav.error("can't get appointment data", se);
 		}
@@ -117,13 +100,14 @@ public class CalendarQuery extends ReportRequest {
 		
 		boolean allProp;
 		boolean propName;
-		List<QName> props;
+		Collection<QName> props;
 		
 		QueryContext(DavContext ctxt, Element query) throws DavException {
 			davCtxt = ctxt;
 			allProp = false;
 			propName = false;
 			props = new ArrayList<QName>();
+			props.add(DavElements.E_CALENDAR_DATA);
 			
 			boolean prop = false;
 			for (Object o : query.elements()) {

@@ -36,10 +36,7 @@ import org.dom4j.QName;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.report.CalendarQuery;
-import com.zimbra.cs.dav.report.ReportRequest;
 import com.zimbra.cs.dav.service.DavMethod;
-import com.zimbra.cs.service.ServiceException;
 
 public class Report extends DavMethod {
 	public static final String REPORT = "REPORT";
@@ -47,10 +44,10 @@ public class Report extends DavMethod {
 		return REPORT;
 	}
 
-	private static HashMap<QName,ReportRequest> sReports;
+	private static HashMap<QName,DavMethod> sReports;
 	
 	static {
-		sReports = new HashMap<QName,ReportRequest>();
+		sReports = new HashMap<QName,DavMethod>();
 		sReports.put(DavElements.E_CALENDAR_QUERY, new CalendarQuery());
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException {
@@ -60,16 +57,11 @@ public class Report extends DavMethod {
 		Document req = ctxt.getRequestMessage();
 		Element top = req.getRootElement();
 		QName topName = top.getQName();
-		ReportRequest report = sReports.get(topName);
+		DavMethod report = sReports.get(topName);
 		if (report == null)
 			throw new DavException("msg "+top.getName()+" not implemented in REPORT", HttpServletResponse.SC_BAD_REQUEST, null);
 		
-		try {
-			Document document = ctxt.getResponseMessage();
-			report.handle(ctxt, top, document);
-			sendResponse(ctxt, document);
-		} catch (ServiceException se) {
-			throw new DavException("error handling "+topName, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
-		}
+		report.handle(ctxt);
+		sendResponse(ctxt);
 	}
 }

@@ -33,6 +33,7 @@ import java.util.Iterator;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -61,6 +62,7 @@ public class CalendarObject extends MailItemResource {
 		setProperty(DavElements.P_GETETAG, Long.toString(appt.getDate()));
 		setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
 		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(mVcalendar.length()));
+		addProperty(CalDavProperty.getCalendarData(this));
 	}
 	
 	private String mUid;
@@ -73,7 +75,7 @@ public class CalendarObject extends MailItemResource {
 		return appt.getPath() + "/" + appt.getUid() + CAL_EXTENSION;
 	}
 
-	private String getVcalendar() throws IOException {
+	public String getVcalendar() throws IOException {
 		StringBuilder buf = new StringBuilder();
 		
 		buf.append("BEGIN:VCALENDAR\r\n");

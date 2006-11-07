@@ -133,7 +133,6 @@ public abstract class DavResource {
 			return e;
 		}
 		
-		// check ACL and add LockDiscovery
 		return e;
 	}
 	
@@ -202,15 +201,6 @@ public abstract class DavResource {
 		prop.setStringValue(val);
 	}
 	
-	public Element addResourceTypeElement(Element parent, boolean nameOnly) {
-		Element rs = parent.addElement(DavElements.E_RESOURCETYPE);
-		if (nameOnly)
-			return rs;
-		if (isCollection())
-			rs.addElement(DavElements.E_COLLECTION);
-		return rs;
-	}
-
 	public Element addHref(Element parent, boolean nameOnly) throws DavException {
 		Element href = parent.addElement(DavElements.E_HREF);
 		if (nameOnly)

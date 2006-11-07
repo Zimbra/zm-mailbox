@@ -25,10 +25,8 @@
 package com.zimbra.cs.dav.service.method;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
@@ -40,11 +38,11 @@ import org.dom4j.QName;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
+import com.zimbra.cs.dav.service.DavResponse;
 
 public class PropFind extends DavMethod {
 	
@@ -88,51 +86,16 @@ public class PropFind extends DavMethod {
 		}
 		DavResource resource = UrlNamespace.getResource(ctxt);
 		addComplianceHeader(ctxt, resource);
-		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
+		DavResponse resp = ctxt.getDavResponse();
 		
-		Document document = ctxt.getResponseMessage();
-		Element resp = document.addElement(DavElements.E_MULTISTATUS);
-		addResourceToResponse(ctxt, resource, resp, nameOnly, requestedProps, false);
+		resp.addResource(ctxt, resource, requestedProps, nameOnly, false);
 
 		if (resource.isCollection() && ctxt.getDepth() != Depth.zero) {
 			//ZimbraLog.dav.debug("depth: "+ctxt.getDepth().name());
 
 			for (DavResource child : resource.getChildren(ctxt))
-				addResourceToResponse(ctxt, child, resp, nameOnly, requestedProps, ctxt.getDepth() == Depth.infinity);
+				resp.addResource(ctxt, child, requestedProps, nameOnly, ctxt.getDepth() == Depth.infinity);
 		}
-		sendResponse(ctxt, document);
-	}
-	
-	private void addResourceToResponse(DavContext ctxt, DavResource rs, Element top, boolean nameOnly, Set<QName> requestedProps, boolean includeChildren) throws DavException {
-		Element resp = top.addElement(DavElements.E_RESPONSE);
-		rs.addHref(resp, nameOnly);
-		Map<Integer,Element> propstatMap = new HashMap<Integer,Element>();
-		Set<QName> propNames;
-		if (requestedProps == null)
-			propNames = rs.getAllPropertyNames();
-		else
-			propNames = requestedProps;
-		for (QName name : propNames) {
-			Element propstat = findPropstat(resp, propstatMap, HttpServletResponse.SC_OK);
-			Element e = rs.addPropertyElement(ctxt, propstat, name, nameOnly);
-			if (e == null) {
-				Element error = findPropstat(resp, propstatMap, HttpServletResponse.SC_NOT_FOUND);
-				error.addElement(name);
-				continue;
-			}
-		}
-		if (rs.isCollection() && includeChildren)
-			for (DavResource child : rs.getChildren(ctxt))
-				addResourceToResponse(ctxt, child, top, nameOnly, requestedProps, includeChildren);
-	}
-	
-	private Element findPropstat(Element top, Map<Integer,Element> propstatMap, int status) {
-		Element prop = propstatMap.get(status);
-		if (prop == null) {
-			prop = top.addElement(DavElements.E_PROPSTAT).addElement(DavElements.E_PROP);
-			addStatusElement(prop, status);
-			propstatMap.put(status, prop);
-		}
-		return prop;
+		sendResponse(ctxt);
 	}
 }

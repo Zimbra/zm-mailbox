@@ -102,12 +102,10 @@ public class ResourceProperty {
 		return mValue;
 	}
 
-	public void addChild(Element e) {
-		mChildren.add(e);
-	}
-	
-	public void addChild(QName e) {
-		mChildren.add(new DefaultElement(e));
+	public Element addChild(QName e) {
+		Element child = new DefaultElement(e);
+		mChildren.add(child);
+		return child;
 	}
 	
 	public List<Element> getChildren() {

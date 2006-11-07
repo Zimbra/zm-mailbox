@@ -1,3 +1,27 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ * 
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ * 
+ * The Original Code is: Zimbra Collaboration Suite Server.
+ * 
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
+ * All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.dav.property;
 
 import java.util.HashSet;
@@ -6,7 +30,6 @@ import java.util.Set;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
-import org.dom4j.tree.DefaultElement;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -44,11 +67,10 @@ public class Acl extends ResourceProperty {
 		props.add(getAcl(acl));
 		props.add(getAclRestrictions());
 		
-		Element child = new DefaultElement(DavElements.E_HREF);
-		child.setText(UrlNamespace.getAclUrl(rs.getOwner(), UrlNamespace.ACL_USER));
 		ResourceProperty p = new ResourceProperty(DavElements.E_OWNER);
 		p.setProtected(true);
-		p.addChild(child);
+		Element href = p.addChild(DavElements.E_HREF);
+		href.setText(UrlNamespace.getAclUrl(rs.getOwner(), UrlNamespace.ACL_USER));
 		props.add(p);
 		
 		// empty properties

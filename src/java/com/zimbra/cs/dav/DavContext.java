@@ -34,6 +34,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.io.SAXReader;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.dav.service.DavResponse;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -47,7 +48,7 @@ public class DavContext {
 	private String mUser;
 	private String mPath;
 	private int mStatus;
-	private Document mResponse;
+	private DavResponse mResponse;
 	private boolean mResponseSent;
 	
 	public DavContext(HttpServletRequest req, HttpServletResponse resp) {
@@ -165,9 +166,13 @@ public class DavContext {
 		throw new DavException("no request msg", HttpServletResponse.SC_BAD_REQUEST, null);
 	}
 	
-	public Document getResponseMessage() {
+	public boolean hasResponseMessage() {
+		return mResponse != null;
+	}
+	
+	public DavResponse getDavResponse() {
 		if (mResponse == null)
-			mResponse = org.dom4j.DocumentHelper.createDocument();
+			mResponse = new DavResponse();
 		return mResponse;
 	}
 }
