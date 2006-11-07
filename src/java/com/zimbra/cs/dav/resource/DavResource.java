@@ -36,10 +36,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.dom4j.Element;
 import org.dom4j.QName;
 
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
@@ -83,6 +83,14 @@ public abstract class DavResource {
 		if (isCollection())
 			rs.addChild(DavElements.E_COLLECTION);
 		addProperty(rs);
+		ResourceProperty href = new ResourceProperty(DavElements.E_HREF);
+		href.setProtected(true);
+		try {
+			href.setStringValue(UrlNamespace.getResourceUrl(this));
+		} catch (DavException e) {
+			ZimbraLog.dav.error("can't generate href", e);
+		}
+		addProperty(href);
 	}
 	
 	protected static String getOwner(Account acct) throws ServiceException {
@@ -124,18 +132,6 @@ public abstract class DavResource {
 		return ret;
 	}
 
-	public Element addPropertyElement(DavContext ctxt, Element parent, QName propName, boolean nameOnly) {
-		Element e = null;
-		
-		ResourceProperty prop = mProps.get(propName);
-		if (prop != null) {
-			e = prop.toElement(ctxt, parent, nameOnly);
-			return e;
-		}
-		
-		return e;
-	}
-	
 	public String getUri() {
 		return mUri;
 	}
@@ -201,13 +197,6 @@ public abstract class DavResource {
 		prop.setStringValue(val);
 	}
 	
-	public Element addHref(Element parent, boolean nameOnly) throws DavException {
-		Element href = parent.addElement(DavElements.E_HREF);
-		if (nameOnly)
-			return href;
-		href.setText(UrlNamespace.getResourceUrl(this));
-		return href;
-	}
 	/*
 	 * whether the resource is access controlled as in RFC3744.
 	 */

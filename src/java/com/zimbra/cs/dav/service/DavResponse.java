@@ -123,22 +123,24 @@ public class DavResponse {
 		if (top == null)
 			top = mResponse.addElement(DavElements.E_MULTISTATUS);
 		Element resp = top.addElement(DavElements.E_RESPONSE);
-		rs.addHref(resp, nameOnly);
+		rs.getProperty(DavElements.E_HREF).toElement(ctxt, resp, nameOnly);
+		
 		Map<Integer,Element> propstatMap = new HashMap<Integer,Element>();
 		Collection<QName> propNames;
+		
 		if (requestedProps == null)
 			propNames = rs.getAllPropertyNames();
 		else
 			propNames = requestedProps;
+		
 		for (QName name : propNames) {
-			Element propstat = findPropstat(resp, propstatMap, HttpServletResponse.SC_OK);
-			Element e = rs.addPropertyElement(ctxt, propstat, name, nameOnly);
-			if (e == null) {
-				Element error = findPropstat(resp, propstatMap, HttpServletResponse.SC_NOT_FOUND);
-				error.addElement(name);
-				continue;
-			}
+			ResourceProperty prop = rs.getProperty(name);
+			if (prop != null)
+				prop.toElement(ctxt, findPropstat(resp, propstatMap, HttpServletResponse.SC_OK), nameOnly);
+			else
+				findPropstat(resp, propstatMap, HttpServletResponse.SC_NOT_FOUND).addElement(name);
 		}
+		
 		if (rs.isCollection() && includeChildren)
 			for (DavResource child : rs.getChildren(ctxt))
 				addResource(ctxt, child, requestedProps, nameOnly, includeChildren);

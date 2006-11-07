@@ -38,9 +38,6 @@ import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.dom4j.Element;
-import org.dom4j.QName;
-
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -134,15 +131,6 @@ public class CalendarCollection extends Collection {
 			ZimbraLog.dav.error("can't get appointments", se);
 		}
 		return Collections.emptyList();
-	}
-	
-	public Element addPropertyElement(DavContext ctxt, Element parent, QName propName, boolean putValue) {
-		Element e = super.addPropertyElement(ctxt, parent, propName, putValue);
-
-		if (e != null)
-			return e;
-		
-		return null;
 	}
 	
 	public java.util.Collection<Appointment> get(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
