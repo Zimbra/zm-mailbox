@@ -1342,7 +1342,7 @@ u attribute is present iff count > 0
 # TODO: indicate whether to save in SentMail (or some other folder)
 
 +  add="1" on recipient email address means to add to caller's address book (no duplicate checking!)
-+  supports (f)rom, (t)o, (b)cc, (c)c "type" on <e> elements
++  supports (f)rom, (t)o, (b)cc, (c)c, (r)eply-to "type" on <e> elements
 +  only allowed one top-level <mp> but can nest <mp>s within if multipart/*
 +  on reply/forward, set origid on <m> element and set rt to "r" or "w", respectively
 

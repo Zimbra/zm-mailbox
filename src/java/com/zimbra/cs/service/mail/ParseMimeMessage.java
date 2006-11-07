@@ -348,7 +348,7 @@ public class ParseMimeMessage {
 
             // can have no addresses specified if it's a draft...
             if (!maddrs.isEmpty())
-                addRecipients(mm, maddrs);
+                addAddressHeaders(mm, maddrs);
 
 			if (!hasContent && !isMultipart)
 				mm.setText("", Mime.P_CHARSET_DEFAULT);
@@ -642,7 +642,7 @@ public class ParseMimeMessage {
         }
     }
 
-    private static void addRecipients(MimeMessage mm, MessageAddresses maddrs)
+    private static void addAddressHeaders(MimeMessage mm, MessageAddresses maddrs)
     throws MessagingException {
         InternetAddress[] addrs = maddrs.get(EmailType.TO.toString());
         if (addrs != null) {
@@ -666,6 +666,12 @@ public class ParseMimeMessage {
         if (addrs != null && addrs.length == 1) {
             mm.setFrom(addrs[0]);
             mLog.debug("\t\tFrom: " + addrs[0]);
+        }
+        
+        addrs = maddrs.get(EmailType.REPLY_TO.toString());
+        if (addrs != null && addrs.length > 0) {
+            mm.setReplyTo(addrs);
+            mLog.debug("\t\tReply-To: " + addrs[0]);
         }
     }
 

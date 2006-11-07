@@ -304,9 +304,12 @@ public class MailSender {
             mm.setFrom(AccountUtil.getFriendlyEmailAddress(acct));
         mm.setSentDate(new Date());
         if (sender == null) {
-            String replyTo = acct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
-            if (replyTo != null && !replyTo.trim().equals(""))
-                mm.setHeader("Reply-To", replyTo);
+            Address[] existingReplyTos = mm.getReplyTo();
+            if (existingReplyTos == null || existingReplyTos.length == 0) {
+                String replyTo = acct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
+                if (replyTo != null && !replyTo.trim().equals(""))
+                    mm.setHeader("Reply-To", replyTo);
+            }
         } else {
             mm.setSender(sender);
             if (replyToSender)
