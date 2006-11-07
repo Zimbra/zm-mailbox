@@ -106,7 +106,6 @@ public class SaveDraft extends MailDocumentHandler {
 
         long date = System.currentTimeMillis();
         try {
-            mm.setFrom(AccountUtil.getFriendlyEmailAddress(acct));
             Date d = new Date();
             mm.setSentDate(d);
             date = d.getTime();
