@@ -53,12 +53,17 @@ public class TestDataSource extends MailDocumentHandler {
         // Parse request
         Element ePop3 = request.getElement(MailService.E_DS_POP3);
         String id = ePop3.getAttribute(MailService.A_ID, null);
+        String password = null;
         if (id != null) {
             // Testing existing data source
             DataSource dsOrig = prov.get(account, DataSourceBy.id, id);
             Map<String, Object> origAttrs = dsOrig.getAttrs();
             for (String key : origAttrs.keySet()) {
-                testAttrs.put(key, dsOrig.getAttr(key));
+                if (key.equals(Provisioning.A_zimbraDataSourcePassword)) {
+                    password = dsOrig.getDecryptedPassword();
+                } else {
+                    testAttrs.put(key, dsOrig.getAttr(key));
+                }
             }
         }
 
@@ -82,11 +87,20 @@ public class TestDataSource extends MailDocumentHandler {
         }
         value = ePop3.getAttribute(MailService.A_DS_PASSWORD, null);
         if (value != null) {
-            testAttrs.put(Provisioning.A_zimbraDataSourcePassword, DataSource.encryptData(testId, value));
+            password = value;
         }
         
+        if (password == null) {
+            throw ServiceException.INVALID_REQUEST("Password not specified", null);
+        }
+        
+        // Password has to be encrypted explicitly since this is a temporary object.
+        // The current implementation of LdapDataSource doesn't perform encryption until
+        // the DataSource is saved.
+        testAttrs.put(Provisioning.A_zimbraDataSourcePassword, DataSource.encryptData(testId, password));
+        
         // Perform test and assemble response
-        DataSource ds = new DataSource(DataSource.Type.pop3, "Test", "TestId", testAttrs);
+        DataSource ds = new DataSource(DataSource.Type.pop3, "Test", testId, testAttrs);
         Element response = zsc.createElement(MailService.TEST_DATA_SOURCE_RESPONSE);
         ePop3 = response.addElement(MailService.E_DS_POP3);
         
