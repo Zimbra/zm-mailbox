@@ -589,6 +589,10 @@ public abstract class Provisioning {
 
     public static final String A_zimbraFeatureMobileSyncEnabled = "zimbraFeatureMobileSyncEnabled";
 
+    public static final String A_zimbraAllowAnyFromAddress = "zimbraAllowAnyFromAddress";
+
+    public static final String A_zimbraAllowFromAddress = "zimbraAllowFromAddress";
+
     /**
      * administrative notes for an entry.
      */

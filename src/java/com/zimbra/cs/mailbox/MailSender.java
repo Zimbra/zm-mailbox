@@ -291,7 +291,7 @@ public class MailSender {
             String fromHdr = mm.getHeader("From", null);
             if (fromHdr != null && !fromHdr.equals("")) {
                 InternetAddress from = new InternetAddress(fromHdr);
-                if (AccountUtil.addressMatchesAccount(acct, from.getAddress()))
+                if (AccountUtil.allowFromAddress(acct, from.getAddress()))
                     overrideFromHeader = false;
             }
         } catch (Exception e) { }

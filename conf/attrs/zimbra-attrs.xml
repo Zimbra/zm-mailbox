@@ -1908,4 +1908,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>maximum number of data sources allowed on an account</desc>
 </attr>
 
+<attr id="427" name="zimbraAllowAnyFromAddress" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether this account can use any from address.  Not changeable by domain admin to allow arbitrary addresses</desc>
+</attr>
+
+<attr id="428" name="zimbraAllowFromAddress" type="email" max="256" cardinality="multi" optionalIn="account" flags="accountInfo,domainAdminModifiable">
+  <desc>Addresses that this account can as from address if arbitrary-addresses-allowed setting is not set</desc>
+</attr>
+
 </attrs>

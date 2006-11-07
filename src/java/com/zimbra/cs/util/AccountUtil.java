@@ -127,7 +127,35 @@ public class AccountUtil {
         
         return ca;
     }
-    
+
+    /**
+     * Check if given account is allowed to set given from header.
+     */
+    public static boolean allowFromAddress(Account acct, String fromAddr) throws ServiceException {
+        if (fromAddr == null) {
+            return false;
+        }
+
+        if (acct.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false)) {
+            return true;
+        }
+
+        if (addressMatchesAccount(acct, fromAddr)) {
+            return true;
+        }
+
+        String[] allowedAddrs = acct.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
+        if (allowedAddrs == null) {
+            return false;
+        }
+        for (String addr : allowedAddrs) {
+            if (fromAddr.equalsIgnoreCase(addr)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * True if this address matches some address for this account (aliases, domain re-writes, etc)
      */
@@ -155,6 +183,8 @@ public class AccountUtil {
         }
         return false;
     }
+
+
     
     public static String getSoapUri(Account account) {
         try {
