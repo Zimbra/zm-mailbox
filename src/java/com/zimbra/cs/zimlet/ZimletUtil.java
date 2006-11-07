@@ -606,21 +606,31 @@ public class ZimletUtil {
 	 * @param zimlet
 	 * @throws ZimletException
 	 */
-	public static void uninstallZimlet(String zimlet) throws ZimletException {
+	public static void uninstallZimlet(String zimlet, String auth) throws ServiceException, ZimletException {
 		ZimbraLog.zimlet.info("Uninstalling Zimlet " + zimlet + " from LDAP.");
 		Provisioning prov = Provisioning.getInstance();
-		try {
-			@SuppressWarnings({"unchecked"})
-			List<Cos> cos = prov.getAllCos();
-			for (Cos c : cos) {
-				try {
-					deactivateZimlet(zimlet, c.getName());
-				} catch (Exception e) {}
+
+		@SuppressWarnings({"unchecked"})
+		List<Cos> cos = prov.getAllCos();
+		for (Cos c : cos) {
+			try {
+				deactivateZimlet(zimlet, c.getName());
+			} catch (Exception e) {
+				ZimbraLog.zimlet.warn("Error deactiving Zimlet " + zimlet + " in LDAP.", e);
 			}
+		}
+		try {
 			prov.deleteZimlet(zimlet);
 		} catch (ServiceException se) {
-			throw ZimletException.CANNOT_DELETE(zimlet, se);
+			ZimbraLog.zimlet.warn("Error deleting Zimlet " + zimlet + " in LDAP.", se);
 		}
+		
+		if (auth == null)
+			return;
+		
+		// deploy on the rest of the servers
+		ZimletSoapUtil soapUtil = new ZimletSoapUtil(auth);
+		soapUtil.undeployZimlet(zimlet, true);
 	}
 	
 	/**
@@ -1096,6 +1106,17 @@ public class ZimletUtil {
 			}
 		}
 		
+		public void undeployZimlet(String zimlet, boolean skipLocalhost) throws ServiceException {
+			Provisioning prov = Provisioning.getInstance();
+			List<Server> allServers = prov.getAllServers();
+			for (Server server : allServers) {
+				if (skipLocalhost && prov.getLocalServer().equals(server))
+					continue;
+				ZimbraLog.zimlet.info("Undeploying on " + server.getName());
+				undeployZimletOnServer(zimlet, server);
+			}
+		}
+		
 		public void deployZimletOnServer(String zimlet, byte[] data, Server server, DeployListener listener) throws ServiceException {
 			mTransport = null;
 			try {
@@ -1133,6 +1154,38 @@ public class ZimletUtil {
 			XMLElement req = new XMLElement(AdminService.DEPLOY_ZIMLET_REQUEST);
 			req.addAttribute(AdminService.A_ACTION, AdminService.A_DEPLOYLOCAL);
 			req.addElement(MailService.E_CONTENT).addAttribute(MailService.A_ATTACHMENT_ID, mAttachmentId);
+			mTransport.invoke(req);
+		}
+		
+		public void undeployZimletOnServer(String zimlet, Server server) throws ServiceException {
+			mTransport = null;
+			try {
+				String adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI);
+				mTransport = new SoapHttpTransport(adminUrl);
+				
+				// auth if necessary
+				if (mAuth == null)
+					auth();
+				mTransport.setAuthToken(mAuth);
+				
+				// undeploy
+				soapUndeployZimlet(zimlet);
+				ZimbraLog.zimlet.info("Undeploy successful");
+			} catch (Exception e) {
+				if (e instanceof ServiceException)
+					throw (ServiceException)e;
+				else 
+					throw ServiceException.FAILURE("Unable to undeploy Zimlet " + zimlet + " on " + server.getName(), e);
+			} finally {
+				if (mTransport != null)
+					mTransport.shutdown();
+			}
+		}
+		
+		private void soapUndeployZimlet(String name) throws ServiceException, IOException {
+			XMLElement req = new XMLElement(AdminService.UNDEPLOY_ZIMLET_REQUEST);
+			req.addAttribute(AdminService.A_ACTION, AdminService.A_DEPLOYLOCAL);
+			req.addAttribute(AdminService.A_NAME, name);
 			mTransport.invoke(req);
 		}
 		
@@ -1320,7 +1373,8 @@ public class ZimletUtil {
 				installZimlet(new ZimletFile(zimlet));
 				break;
 			case UNINSTALL_ZIMLET:
-				uninstallZimlet(zimlet);
+				ZimletSoapUtil su = new ZimletSoapUtil();
+				su.undeployZimlet(zimlet, false);
 				break;
 			case LDAP_DEPLOY:
 				ldapDeploy(zimlet);

@@ -116,7 +116,7 @@ public class DeployZimlet extends AdminDocumentHandler {
         Progress pr = new Progress((auth != null));
         mProgressMap.put(aid, pr);
         Runnable action = new DeployThread(up, pr, auth);
-        new Thread(action).run();
+        new Thread(action).start();
 	}
 	
 	@Override

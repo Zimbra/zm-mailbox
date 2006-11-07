@@ -26,25 +26,41 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class UndeployZimlet extends AdminDocumentHandler {
 
+	private static class UndeployThread implements Runnable {
+		String name;
+		String auth;
+		public UndeployThread(String na, String au) {
+			name = na;
+			auth = au;
+		}
+		public void run() {
+			try {
+				ZimletUtil.uninstallZimlet(name, auth);
+			} catch (Exception e) {
+				ZimbraLog.zimlet.info("undeploy", e);
+			}
+		}
+	}
+	
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    String name = request.getAttribute(AdminService.A_NAME);
-
+		String action = request.getAttribute(AdminService.A_ACTION, null);
+		String auth = null;
+		
+		if (action == null)
+			auth = lc.getRawAuthToken();
 	    Element response = lc.createElement(AdminService.UNDEPLOY_ZIMLET_RESPONSE);
-		try {
-			ZimletUtil.uninstallZimlet(name);
-		} catch (ZimletException ze) {
-			throw ServiceException.FAILURE("cannot undeploy", ze);
-		}
+	    new Thread(new UndeployThread(name, auth)).start();
 		return response;
 	}
 }

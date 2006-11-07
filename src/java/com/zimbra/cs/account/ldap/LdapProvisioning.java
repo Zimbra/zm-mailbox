@@ -2859,9 +2859,11 @@ public class LdapProvisioning extends Provisioning {
     	DirContext ctxt = null;
     	try {
     		ctxt = LdapUtil.getDirContext();
-    		LdapZimlet zimlet = (LdapZimlet)lookupZimlet(name, ctxt);
-    		ctxt.unbind(zimlet.getDN());
-    		sZimletCache.remove(zimlet);
+    		LdapZimlet zimlet = (LdapZimlet)getZimlet(name, ctxt, true);
+    		if (zimlet != null) {
+    			sZimletCache.remove(zimlet);
+    			ctxt.unbind(zimlet.getDN());
+    		}
     	} catch (NamingException e) {
     		throw ServiceException.FAILURE("unable to delete zimlet: "+name, e);
     	} finally {
