@@ -24,12 +24,12 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.zimbra.cs.mailbox.MailItemDataSource;
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -41,12 +41,14 @@ public class GetDataSources extends MailDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException, SoapFaultException {
-    	ZimbraSoapContext zsc = getZimbraSoapContext(context);
-    	Mailbox mbox = getRequestedMailbox(zsc);
-    	Collection<MailItemDataSource> dsSet = mbox.getDataSources(zsc.getOperationContext());
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Provisioning prov = Provisioning.getInstance();
+        Account account = getRequestedAccount(zsc);
+        
+        List<DataSource> dataSources = prov.getAllDataSources(account);
     	Element response = zsc.createElement(MailService.GET_DATA_SOURCES_RESPONSE);
 
-    	for (MailItemDataSource ds : dsSet) {
+    	for (DataSource ds : dataSources) {
     		ToXML.encodeDataSource(response, ds);
     	}
     	return response;

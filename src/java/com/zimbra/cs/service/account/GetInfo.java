@@ -28,27 +28,24 @@
  */
 package com.zimbra.cs.service.account;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Map.Entry;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.mailbox.MailItemDataSource;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.cs.zimlet.ZimletProperty;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
+import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -180,10 +177,8 @@ public class GetInfo extends AccountDocumentHandler  {
     
     private static void doDataSources(Element response, Account acct, ZimbraSoapContext zsc) {
         try {
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-            Collection<MailItemDataSource> dataSources =
-                mbox.getDataSources(zsc.getOperationContext());
-            for (MailItemDataSource ds : dataSources) {
+            List<DataSource> dataSources = Provisioning.getInstance().getAllDataSources(acct);
+            for (DataSource ds : dataSources) {
                 com.zimbra.cs.service.mail.ToXML.encodeDataSource(response, ds);
             }
         } catch (ServiceException se) {

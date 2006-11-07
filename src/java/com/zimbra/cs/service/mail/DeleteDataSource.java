@@ -26,8 +26,8 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.MailItemDataSource;
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -40,11 +40,12 @@ public class DeleteDataSource extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(zsc);
+        Provisioning prov = Provisioning.getInstance();
+        Account account = getRequestedAccount(zsc);
         
         Element ePop3 = request.getElement(MailService.E_DS_POP3);
-        int id = (int) ePop3.getAttributeLong(MailService.A_ID);
-        mbox.deleteDataSource(zsc.getOperationContext(), id);
+        String id = ePop3.getAttribute(MailService.A_ID);
+        prov.deleteDataSource(account, id);
         
         Element response = zsc.createElement(MailService.DELETE_DATA_SOURCE_RESPONSE);
         return response;

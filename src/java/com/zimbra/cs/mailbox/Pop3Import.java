@@ -30,7 +30,6 @@ import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.Properties;
 
-import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -47,6 +46,8 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 
@@ -69,27 +70,27 @@ implements MailItemImport {
         sSelfSignedCertSession = Session.getInstance(props);
     }
 
-    public String test(MailItemDataSource ds)
+    public String test(DataSource ds)
     throws ServiceException {
         String error = null;
-
-        validateDataSource(ds);
         
+        validateDataSource(ds);
+
         try {
-            Store store = getStore(ds);
-            store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getPassword());
+            Store store = getStore(ds.getConnectionType());
+            store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
             store.close();
         } catch (MessagingException e) {
-            sLog.info("Testing " + ds, e);
+            sLog.info("Testing connection to data source", e);
             error = e.getMessage();
         }
         return error;
     }
     
-    public void importData(MailItemDataSource dataSource)
+    public void importData(Account account, DataSource dataSource)
     throws ServiceException {
         try {
-            fetchMessages(dataSource);
+            fetchMessages(account, dataSource);
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("Importing data from " + dataSource, e);
         } catch (IOException e) {
@@ -97,7 +98,7 @@ implements MailItemImport {
         }
     }
 
-    private void validateDataSource(MailItemDataSource ds)
+    private void validateDataSource(DataSource ds)
     throws ServiceException {
         if (ds.getHost() == null) {
             throw ServiceException.FAILURE(ds + ": host not set", null);
@@ -113,34 +114,34 @@ implements MailItemImport {
         }
     }
     
-    private Store getStore(MailItemDataSource ds)
+    private Store getStore(String connectionType)
     throws NoSuchProviderException, ServiceException {
-        if (ds.getConnectionType() == MailItemDataSource.ConnectionType.CLEARTEXT) {
+        if (connectionType.equals(DataSource.CT_CLEARTEXT)) {
             return sSession.getStore("pop3");
-        } else if (ds.getConnectionType() == MailItemDataSource.ConnectionType.SSL) {
+        } else if (connectionType.equals(DataSource.CT_SSL)) {
             if (LC.data_source_trust_self_signed_certs.booleanValue()) {
                 return sSelfSignedCertSession.getStore("pop3s");
             } else {
                 return sSession.getStore("pop3s");
             }
         } else {
-            throw ServiceException.FAILURE(ds + ": connectionType=" + ds.getConnectionType(), null);
+            throw ServiceException.FAILURE("Invalid connectionType: " + connectionType, null);
         }
     }
     
-    private void fetchMessages(MailItemDataSource ds)
+    private void fetchMessages(Account account, DataSource ds)
     throws MessagingException, IOException, ServiceException {
         ZimbraLog.mailbox.info("Importing POP3 messages from " + ds);
         
         validateDataSource(ds);
         
         // Connect (USER, PASS, STAT)
-        Store store = getStore(ds);
-        store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getPassword());
+        Store store = getStore(ds.getConnectionType());
+        store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
         POP3Folder folder = (POP3Folder) store.getFolder("INBOX");
         folder.open(Folder.READ_WRITE);
-        
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(ds.getMailboxId());
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         
         Message msgs[] = folder.getMessages();
         
@@ -179,15 +180,17 @@ implements MailItemImport {
                 mbox.addMessage(null, pm, ds.getFolderId(), false, Flag.BITMASK_UNREAD, null);
             }
 
+            /*
             // Mark all messages for deletion (DELE)
             for (Message msg : msgs) {
                 msg.setFlag(Flags.Flag.DELETED, true);
             }
+            */
         }
         
         // Expunge if necessary and disconnect (QUIT)
         // folder.close(!ds.leaveMailOnServer());
-        folder.close(true);
+        folder.close(false);
         store.close();
     }
 }

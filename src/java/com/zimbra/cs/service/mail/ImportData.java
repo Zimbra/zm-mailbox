@@ -27,7 +27,11 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.MailItemDataSource;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.cs.mailbox.DataSourceManager;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
@@ -41,14 +45,15 @@ public class ImportData extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(zsc);
+        Provisioning prov = Provisioning.getInstance();
+        Account account = getRequestedAccount(zsc);
 
         for (Element elem : request.listElements()) {
         	if (elem.getName().equals(MailService.E_DS_POP3)) {
         		try {
-        			int id = (int) elem.getAttributeLong(MailService.A_ID);
-        			MailItemDataSource ds = mbox.getDataSource(zsc.getOperationContext(), id);
-        			new Thread(new Pop3Client(ds)).start();
+        			String id = elem.getAttribute(MailService.A_ID);
+                    DataSource ds = prov.get(account, DataSourceBy.id, id);
+        			new Thread(new Pop3Client(account, ds)).start();
         		} catch (Exception e) {
         			ZimbraLog.account.error("error handling ImportData", e);
         			// then continue onto the next pop3 element.
@@ -63,12 +68,15 @@ public class ImportData extends MailDocumentHandler {
     }
     
     private static class Pop3Client implements Runnable {
-    	MailItemDataSource ds;
-    	public Pop3Client(MailItemDataSource ds) {
-    		this.ds = ds;
+        Account mAccount;
+    	DataSource mDataSource;
+        
+    	public Pop3Client(Account account, DataSource ds) {
+            mAccount = account;
+    		mDataSource = ds;
     	}
     	public void run() {
-    	    ds.importData();
+    	    DataSourceManager.importData(mAccount, mDataSource);
     	}
     }
 }

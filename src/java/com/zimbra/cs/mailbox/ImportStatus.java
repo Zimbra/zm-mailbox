@@ -27,31 +27,33 @@
  */
 package com.zimbra.cs.mailbox;
 
+import com.zimbra.cs.account.DataSource;
+
 /**
- * Keeps track of the status of an import from a {@link MailItemDataSource}.
+ * Keeps track of the status of an import from a {@link DataSource}.
  * 
  * @author bburtin
  */
 public class ImportStatus {
-    private MailItemDataSource mDataSource;
-    boolean mIsRunning;
-    boolean mSuccess;
-    String mError;
-    boolean mHasRun;
+    private String mDataSourceId;
+    boolean mIsRunning = false;
+    boolean mSuccess = false;
+    String mError = null;
+    boolean mHasRun = false;
 
-    ImportStatus(MailItemDataSource dataSource) {
-        mDataSource = dataSource;
+    ImportStatus(String dataSourceId) {
+        mDataSourceId = dataSourceId;
     }
     
     ImportStatus(ImportStatus status) {
-        mDataSource = status.mDataSource;
+        mDataSourceId = status.mDataSourceId;
         mIsRunning = status.isRunning();
         mSuccess = status.getSuccess();
         mError = status.getError();
         mHasRun = status.hasRun();
     }
     
-    public int getDataSourceId() { return mDataSource.getId(); }
+    public String getDataSourceId() { return mDataSourceId; }
     public boolean isRunning() { return mIsRunning; }
     public boolean getSuccess() { return mSuccess; }
     public String getError() { return mError; }
@@ -64,7 +66,7 @@ public class ImportStatus {
     @Override
     public String toString() {
         return String.format(
-            "ImportStatus %d: { dataSourceId=%d, isRunning=%b, success=%b, error=%s, hasRun=%b }",
-            mDataSource.hashCode(), mDataSource.getId(), mIsRunning, mSuccess, mError, mHasRun);
+            "ImportStatus: { dataSourceId=%d, isRunning=%b, success=%b, error=%s, hasRun=%b }",
+            mDataSourceId, mIsRunning, mSuccess, mError, mHasRun);
     }
 }

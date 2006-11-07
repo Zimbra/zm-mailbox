@@ -32,6 +32,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.SearchParams;
@@ -1488,8 +1489,8 @@ public class ToXML {
             m.addAttribute(MailService.E_FRAG, frag, Element.DISP_CONTENT);
         return m;
     }
-    public static Element encodeDataSource(Element parent, MailItemDataSource ds) {
-        Element m = parent.addElement(ds.getType());
+    public static Element encodeDataSource(Element parent, DataSource ds) {
+        Element m = parent.addElement(MailService.E_DS_POP3);
         m.addAttribute(MailService.A_ID, ds.getId());
         m.addAttribute(MailService.A_NAME, ds.getName());
         m.addAttribute(MailService.A_FOLDER, ds.getFolderId());
@@ -1502,7 +1503,7 @@ public class ToXML {
             m.addAttribute(MailService.A_DS_PORT, ds.getPort());
         }
         if (ds.getConnectionType() != null) {
-            m.addAttribute(MailService.A_DS_CONNECTION_TYPE, ds.getConnectionTypeString());
+            m.addAttribute(MailService.A_DS_CONNECTION_TYPE, ds.getConnectionType());
         }
         if (ds.getUsername() != null) {
             m.addAttribute(MailService.A_DS_USERNAME, ds.getUsername());

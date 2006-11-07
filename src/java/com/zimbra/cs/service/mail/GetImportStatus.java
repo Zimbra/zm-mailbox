@@ -24,11 +24,12 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.DataSourceManager;
 import com.zimbra.cs.mailbox.ImportStatus;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -41,11 +42,12 @@ public class GetImportStatus extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(zsc);
-        Set<ImportStatus> statusSet = mbox.getImportStatus(zsc.getOperationContext());
+        Account account = getRequestedAccount(zsc);
+        
+        List<ImportStatus> statusList = DataSourceManager.getImportStatus(account);
         Element response = zsc.createElement(MailService.GET_IMPORT_STATUS_RESPONSE);
 
-        for (ImportStatus status : statusSet) {
+        for (ImportStatus status : statusList) {
             Element ePop3 = response.addElement(MailService.E_DS_POP3);
             ePop3.addAttribute(MailService.A_ID, status.getDataSourceId());
             ePop3.addAttribute(MailService.A_DS_IS_RUNNING, status.isRunning());

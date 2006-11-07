@@ -24,15 +24,22 @@
  */
 package com.zimbra.cs.mailbox;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.service.ServiceException;
 
 
 public interface MailItemImport {
 
     /**
-     * Test connecting to the specified data source.
-     * @return
+     * Tests connecting to the specified data source.
+     * 
+     * @return <code>null</code> or an error message if the test failed. 
      */
-    public String test(MailItemDataSource dataSource) throws ServiceException;
-    public void importData(MailItemDataSource dataSource) throws ServiceException;
+    public String test(DataSource ds) throws ServiceException;
+    
+    /**
+     * Imports data from the specified data source.
+     */
+    public void importData(Account account, DataSource dataSource) throws ServiceException;
 }

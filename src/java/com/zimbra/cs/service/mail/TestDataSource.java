@@ -24,11 +24,14 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.HashMap;
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.MailItemDataSource;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.cs.mailbox.DataSourceManager;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -41,62 +44,53 @@ public class TestDataSource extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Provisioning prov = Provisioning.getInstance();
+        Account account = getRequestedAccount(zsc);
 
-        String host;
-        int port;
-        String username;
-        String password;
-        String connectionTypeString;
+        Map<String, Object> testAttrs = new HashMap<String, Object>();
+        String testId = "TestId";
         
         // Parse request
         Element ePop3 = request.getElement(MailService.E_DS_POP3);
-        if (attrExists(ePop3, MailService.A_ID)) {
+        String id = ePop3.getAttribute(MailService.A_ID, null);
+        if (id != null) {
             // Testing existing data source
-            Mailbox mbox = getRequestedMailbox(zsc);
-            OperationContext octxt = mbox.getOperationContext();
-            int id = (int) ePop3.getAttributeLong(MailService.A_ID);
-            
-            // Read current values
-            MailItemDataSource ds = mbox.getDataSource(octxt, id);
-            host = ds.getHost();
-            port = ds.getPort();
-            username = ds.getUsername();
-            password = ds.getPassword();
-            connectionTypeString = ds.getConnectionTypeString();
-            
-            // Override with values in SOAP request
-            if (attrExists(ePop3, MailService.A_DS_HOST)) {
-                host = ePop3.getAttribute(MailService.A_DS_HOST);
+            DataSource dsOrig = prov.get(account, DataSourceBy.id, id);
+            Map<String, Object> origAttrs = dsOrig.getAttrs();
+            for (String key : origAttrs.keySet()) {
+                testAttrs.put(key, dsOrig.getAttr(key));
             }
-            if (attrExists(ePop3, MailService.A_DS_PORT)) {
-                port = (int) ePop3.getAttributeLong(MailService.A_DS_PORT);
-            }
-            if (attrExists(ePop3, MailService.A_DS_CONNECTION_TYPE)) {
-                connectionTypeString = ePop3.getAttribute(MailService.A_DS_CONNECTION_TYPE);
-            }
-            if (attrExists(ePop3, MailService.A_DS_USERNAME)) {
-                username = ePop3.getAttribute(MailService.A_DS_USERNAME);
-            }
-            if (attrExists(ePop3, MailService.A_DS_PASSWORD)) {
-                password = ePop3.getAttribute(MailService.A_DS_PASSWORD);
-            }
-        } else {
-            // All attrs must be specified in SOAP request
-            host = ePop3.getAttribute(MailService.A_DS_HOST);
-            port = (int) ePop3.getAttributeLong(MailService.A_DS_PORT);
-            connectionTypeString = ePop3.getAttribute(MailService.A_DS_CONNECTION_TYPE);
-            username = ePop3.getAttribute(MailService.A_DS_USERNAME);
-            password = ePop3.getAttribute(MailService.A_DS_PASSWORD);
+        }
+
+        // Get values from SOAP request.  If testing an existing data source,
+        // values in the request override the persisted values.
+        String value = ePop3.getAttribute(MailService.A_DS_HOST, null);
+        if (value != null) {
+            testAttrs.put(Provisioning.A_zimbraDataSourceHost, value);
+        }
+        value = ePop3.getAttribute(MailService.A_DS_PORT, null);
+        if (value != null) {
+            testAttrs.put(Provisioning.A_zimbraDataSourcePort, value);
+        }
+        value = ePop3.getAttribute(MailService.A_DS_CONNECTION_TYPE, null);
+        if (value != null) {
+            testAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, value);
+        }
+        value = ePop3.getAttribute(MailService.A_DS_USERNAME, null);
+        if (value != null) {
+            testAttrs.put(Provisioning.A_zimbraDataSourceUsername, value);
+        }
+        value = ePop3.getAttribute(MailService.A_DS_PASSWORD, null);
+        if (value != null) {
+            testAttrs.put(Provisioning.A_zimbraDataSourcePassword, DataSource.encryptData(testId, value));
         }
         
         // Perform test and assemble response
+        DataSource ds = new DataSource(DataSource.Type.pop3, "Test", "TestId", testAttrs);
         Element response = zsc.createElement(MailService.TEST_DATA_SOURCE_RESPONSE);
         ePop3 = response.addElement(MailService.E_DS_POP3);
-        MailItemDataSource.ConnectionType connectionType =
-            MailItemDataSource.getConnectionType(connectionTypeString);
         
-        String error = MailItemDataSource.test(
-            MailItemDataSource.TYPE_POP3, host, port, connectionType, username, password);
+        String error = DataSourceManager.test(ds);
         if (error == null) {
             ePop3.addAttribute(MailService.A_DS_SUCCESS, true);
         } else {
@@ -105,9 +99,5 @@ public class TestDataSource extends MailDocumentHandler {
         }
         
         return response;
-    }
-    
-    private boolean attrExists(Element e, String attrName) {
-        return (e.getAttribute(attrName, null) != null);
     }
 }

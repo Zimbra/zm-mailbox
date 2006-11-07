@@ -29,7 +29,9 @@ import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -38,6 +40,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -48,6 +51,8 @@ public class DataSource extends NamedEntry implements Comparable {
     private static final int SALT_SIZE_BYTES = 16;
     private static final int AES_PAD_SIZE = 16;
     private static final byte[] VERSION = { 1 };
+    private static final String SIMPLE_CLASS_NAME =
+        StringUtil.getSimpleClassName(DataSource.class.getName());
     
     public enum Type {
         pop3;
@@ -61,7 +66,9 @@ public class DataSource extends NamedEntry implements Comparable {
         }
     };
     
-    private String mName;
+    public static final String CT_CLEARTEXT = "cleartext";
+    public static final String CT_SSL = "ssl";
+    
     private Type mType;
 
     public DataSource(Type type, String name, String id, Map<String, Object> attrs) {
@@ -77,13 +84,18 @@ public class DataSource extends NamedEntry implements Comparable {
 
     public String getConnectionType() { return getAttr(Provisioning.A_zimbraDataSourceConnectionType); }
     
-    public String getFolderId() { return getAttr(Provisioning.A_zimbraDataSourceFolderId); }
+    public int getFolderId() { return getIntAttr(Provisioning.A_zimbraDataSourceFolderId, -1); }
     
     public String getHost() { return getAttr(Provisioning.A_zimbraDataSourceHost); }
     
     public String getUsername() { return getAttr(Provisioning.A_zimbraDataSourceUsername); }
     
-    public int getPort() { return getIntAttr(Provisioning.A_zimbraDataSourcePort, -1); }
+    public Integer getPort() {
+        if (getAttr(Provisioning.A_zimbraDataSourcePort) == null) {
+            return null;
+        }
+        return getIntAttr(Provisioning.A_zimbraDataSourcePort, -1);
+    }
     
     public String getDecryptedPassword() throws ServiceException {
         String data = getAttr(Provisioning.A_zimbraDataSourcePassword);
@@ -146,6 +158,32 @@ public class DataSource extends NamedEntry implements Comparable {
         }
     }
 
+
+    public String toString() {
+        List<String> parts = new ArrayList<String>();
+        parts.add("id=" + getId());
+        parts.add("type=" + getType());
+        parts.add("isEnabled=" + isEnabled());
+        if (getName() != null) {
+            parts.add("name=" + getName());
+        }
+        if (getHost() != null) {
+            parts.add("host=" + getHost());
+        }
+        if (getPort() != null) {
+            parts.add("port=" + getPort());
+        }
+        if (getConnectionType() != null) {
+            parts.add("connectionType=" + getConnectionType());
+        }
+        if (getUsername() != null) {
+            parts.add("username=" + getUsername());
+        }
+        parts.add("folderId=" + getFolderId());
+        return String.format("%s: { %s }",
+            SIMPLE_CLASS_NAME, StringUtil.join(", ", parts));
+    }
+    
     public static void main(String args[]) throws ServiceException {
         String dataSourceId = UUID.randomUUID().toString();
         String enc = encryptData(dataSourceId, "helloworld");

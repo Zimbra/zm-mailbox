@@ -24,10 +24,12 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.HashMap;
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.MailItemDataSource;
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -40,37 +42,39 @@ public class ModifyDataSource extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Mailbox mbox = getRequestedMailbox(zsc);
+        Provisioning prov = Provisioning.getInstance();
+        Account account = getRequestedAccount(zsc);
         
         Element ePop3 = request.getElement(MailService.E_DS_POP3);
-        int id = (int) ePop3.getAttributeLong(MailService.A_ID);
-        MailItemDataSource ds = mbox.getDataSource(zsc.getOperationContext(), id);
+        String id = ePop3.getAttribute(MailService.A_ID);
 
-        String attr = ePop3.getAttribute(MailService.A_NAME, null);
-        if (attr != null)
-            ds.setName(attr);
-        attr = ePop3.getAttribute(MailService.A_DS_IS_ENABLED, null);
-        if (attr != null)
-        	ds.setEnabled(Element.parseBool(MailService.A_DS_IS_ENABLED, attr));
-        attr = ePop3.getAttribute(MailService.A_FOLDER, null);
-        if (attr != null)
-        	ds.setFolderId((int)Element.parseLong(MailService.A_FOLDER, attr));
-        attr = ePop3.getAttribute(MailService.A_DS_HOST, null);
-        if (attr != null)
-        	ds.setHost(attr);
-        attr = ePop3.getAttribute(MailService.A_DS_PORT, null);
-        if (attr != null)
-        	ds.setPort((int)Element.parseLong(MailService.A_DS_PORT, attr));
-        attr = ePop3.getAttribute(MailService.A_DS_CONNECTION_TYPE, null);
-        if (attr != null)
-            ds.setConnectionType(attr);
-        attr = ePop3.getAttribute(MailService.A_DS_USERNAME, null);
-        if (attr != null)
-        	ds.setUsername(attr);
-        attr = ePop3.getAttribute(MailService.A_DS_PASSWORD, null);
-        if (attr != null)
-        	ds.setPassword(attr);
-        mbox.modifyDataSource(zsc.getOperationContext(), ds);
+        Map<String, Object> dsAttrs = new HashMap<String, Object>();
+        String value = ePop3.getAttribute(MailService.A_NAME, null);
+        if (value != null)
+            dsAttrs.put(Provisioning.A_zimbraDataSourceName, value);
+        value = ePop3.getAttribute(MailService.A_DS_IS_ENABLED, null); 
+        if (value != null)
+            dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled,
+                LdapUtil.getBooleanString(ePop3.getAttributeBool(MailService.A_DS_IS_ENABLED)));
+        value = ePop3.getAttribute(MailService.A_FOLDER, null);
+        if (value != null)
+        	dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, value);
+        value = ePop3.getAttribute(MailService.A_DS_HOST, null);
+        if (value != null)
+        	dsAttrs.put(Provisioning.A_zimbraDataSourceHost, value);
+        value = ePop3.getAttribute(MailService.A_DS_PORT, null);
+        if (value != null)
+        	dsAttrs.put(Provisioning.A_zimbraDataSourcePort, value);
+        value = ePop3.getAttribute(MailService.A_DS_CONNECTION_TYPE, null);
+        if (value != null)
+            dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, value);
+        value = ePop3.getAttribute(MailService.A_DS_USERNAME, null);
+        if (value != null)
+        	dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, value);
+        value = ePop3.getAttribute(MailService.A_DS_PASSWORD, null);
+        if (value != null)
+        	dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, value);
+        prov.modifyDataSource(account, id, dsAttrs);
         
         Element response = zsc.createElement(MailService.MODIFY_DATA_SOURCE_RESPONSE);
 
