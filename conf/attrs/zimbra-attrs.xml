@@ -1321,7 +1321,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>URL of extra scripts used by the Zimlet</desc>
 </attr>
 
-<attr id="291" name="zimbraZimletAvailableZimlets" type="string" max="256" cardinality="multi" optionalIn="account,cos" flags="domainAdminModifiable,accountInherited">
+<attr id="291" name="zimbraZimletAvailableZimlets" type="string" max="256" cardinality="multi" optionalIn="account,cos" flags="accountInfo,domainAdminModifiable,accountInherited">
   <desc>List of Zimlets available to this COS</desc>
 </attr>
 
