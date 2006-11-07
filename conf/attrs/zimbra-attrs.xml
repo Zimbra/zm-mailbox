@@ -1863,7 +1863,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="416" name="zimbraFeaturePop3DataSourceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
-  <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether user is allowed to retrieve mail from an external POP3 data source</desc>
 </attr>
 
