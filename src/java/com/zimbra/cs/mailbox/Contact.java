@@ -389,7 +389,8 @@ public class Contact extends MailItem {
         }
         if (fields.isEmpty())
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
-
+        addNicknameIfPDL(fields);
+        
         Mailbox mbox = folder.getMailbox();
         mbox.updateContactCount(1);
 
@@ -465,12 +466,30 @@ public class Contact extends MailItem {
         }
         if (mFields.isEmpty())
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
-
+        addNicknameIfPDL(mFields);
+        
     	// XXX: should update mData.size and Mailbox.size and folder.size
         mData.date = mMailbox.getOperationTimestamp();
         mData.contentChanged(mMailbox);
         saveData(getFileAsString());
 	}
+
+    /** This is a workaround for bug 11900 that must go away before Frank GA */
+    private static void addNicknameIfPDL(Map<String, String> fields) throws ServiceException {
+        if (!fields.containsKey(Contact.A_dlist)) {
+            return;
+        }
+        String fileAs = fields.get(Contact.A_fileAs);
+        if (fileAs == null) {
+            throw ServiceException.INVALID_REQUEST("PDL: no " + Contact.A_fileAs + " present", null);
+        }
+        String fileAsPrefix = Contact.FA_EXPLICIT + ":";
+        if (!fileAs.startsWith(fileAsPrefix) || fileAs.length() <= fileAsPrefix.length()) {
+            throw ServiceException.INVALID_REQUEST("PDL: invalid" + Contact.A_fileAs + ": " + fileAs, null);
+        }
+        String nickname = fileAs.substring(fileAsPrefix.length());
+        fields.put(Contact.A_nickname, nickname);
+    }
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
