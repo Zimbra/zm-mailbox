@@ -45,6 +45,7 @@ import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -136,6 +137,10 @@ public class Collection extends MailItemResource {
 	}
 	
 	public void mkCol(DavContext ctxt, String name) throws DavException {
+		mkCol(ctxt, name, mView);
+	}
+	
+	public void mkCol(DavContext ctxt, String name, byte view) throws DavException {
 		try {
 			Provisioning prov = Provisioning.getInstance();
 			Account account = prov.get(AccountBy.name, ctxt.getUser());
@@ -143,9 +148,14 @@ public class Collection extends MailItemResource {
 				throw new DavException("no such account "+ctxt.getUser(), HttpServletResponse.SC_NOT_FOUND, null);
 
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			mbox.createFolder(ctxt.getOperationContext(), name, mId, mView, 0, (byte)0, null);
+			mbox.createFolder(ctxt.getOperationContext(), name, mId, view, 0, (byte)0, null);
 		} catch (ServiceException e) {
-			throw new DavException("item already exists", HttpServletResponse.SC_CONFLICT, e);
+			if (e.getCode().equals(MailServiceException.ALREADY_EXISTS))
+				throw new DavException("item already exists", HttpServletResponse.SC_CONFLICT, e);
+			else if (e.getCode().equals(MailServiceException.PERM_DENIED))
+				throw new DavException("permission denied", HttpServletResponse.SC_FORBIDDEN, e);
+			else
+				throw new DavException("can't create", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		}
 	}
 	

@@ -112,7 +112,9 @@ public class DavServlet extends ZimbraServlet {
 		try {
 			long t0 = System.currentTimeMillis();
 			//ZimbraLog.dav.info("DavServlet dispatch: "+method);
+			method.checkPrecondition(ctxt);
 			method.handle(ctxt);
+			method.checkPostcondition(ctxt);
 			if (!ctxt.isResponseSent())
 				resp.setStatus(ctxt.getStatus());
 			long t1 = System.currentTimeMillis();

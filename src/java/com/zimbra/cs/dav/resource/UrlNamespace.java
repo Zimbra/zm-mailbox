@@ -24,10 +24,14 @@
  */
 package com.zimbra.cs.dav.resource;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.httpclient.HttpURL;
+import org.apache.commons.httpclient.HttpsURL;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -92,7 +96,14 @@ public class UrlNamespace {
 		buf.append(DAV_PATH).append("/").append(user);
 		try {
 			Provisioning prov = Provisioning.getInstance();
-			return URLUtil.getMailURL(prov.getLocalServer(), buf.toString(), true);
+			String url = URLUtil.getMailURL(prov.getLocalServer(), buf.toString(), true);
+            if (url.startsWith("https"))
+                url = new HttpsURL(url).toString();
+            else
+                url = new HttpURL(url).toString();
+            return url;
+		} catch (IOException e) {
+			throw new DavException("cannot create URL for user "+user, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		} catch (ServiceException e) {
 			throw new DavException("cannot create URL for user "+user, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		}

@@ -26,10 +26,16 @@ package com.zimbra.cs.dav.service.method;
 
 import java.io.IOException;
 
+import javax.servlet.http.HttpServletResponse;
+
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.resource.CalendarCollection;
+import com.zimbra.cs.dav.resource.Collection;
+import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
+import com.zimbra.cs.mailbox.MailItem;
 
 public class MkCalendar extends DavMethod {
 	public static final String MKCALENDAR = "MKCALENDAR";
@@ -42,6 +48,18 @@ public class MkCalendar extends DavMethod {
 	// 403 Forbidden, 409 Conflict, 415 Unsupported Media Type,
 	// 507 Insufficient Storage
 	public void handle(DavContext ctxt) throws DavException, IOException {
+		String user = ctxt.getUser();
+		String name = ctxt.getItem();
+		
+		if (user == null || name == null)
+			throw new DavException("invalid uri", HttpServletResponse.SC_FORBIDDEN, null);
+		
+		Collection col = UrlNamespace.getCollectionAtUrl(ctxt);
+		if (col instanceof CalendarCollection)
+			throw new DavException("can't create calendar under another calendar", HttpServletResponse.SC_FORBIDDEN, null);
+		
+		col.mkCol(ctxt, name, MailItem.TYPE_APPOINTMENT);
+		ctxt.setStatus(HttpServletResponse.SC_CREATED);
 		ctxt.getResponse().addHeader(DavProtocol.HEADER_CACHE_CONTROL, DavProtocol.NO_CACHE);
 	}
 	
