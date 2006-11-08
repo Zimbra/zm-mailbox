@@ -28,7 +28,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 
 import javax.activation.DataSource;
-import javax.mail.internet.ContentType;
 import javax.mail.internet.ParseException;
 
 import org.apache.lucene.document.Document;
@@ -41,6 +40,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
 import com.zimbra.cs.mime.MimeHandlerException;
+import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.common.util.ZimbraLog;
 
 public class TextCalendarHandler extends MimeHandler {
@@ -66,40 +66,36 @@ public class TextCalendarHandler extends MimeHandler {
         return mContent;
     }
 
+    private static final ICalTok COMPONENT_TYPES[] = { ICalTok.VEVENT, ICalTok.VTODO };
+
     private void analyze() throws MimeHandlerException {
         if (mContent != null)
             return;
         try {
             DataSource source = getDataSource();
-            String charset = Mime.P_CHARSET_DEFAULT;
-            String ctStr = source.getContentType();
-            if (ctStr != null) {
-                try {
-                    ContentType ct = new ContentType(ctStr);
-                    String p = ct.getParameter(Mime.P_CHARSET);
-                    if (p != null) charset = p;
-                } catch (ParseException e) {}            
-            }
-            Reader reader =
-                new InputStreamReader(source.getInputStream(), charset);
+
+            ContentType ctype = new ContentType(source.getContentType());
+            String charset = ctype.getParameter(Mime.P_CHARSET);
+            if (charset == null)
+                charset = Mime.P_CHARSET_DEFAULT;
+            Reader reader = new InputStreamReader(source.getInputStream(), charset);
             miCalendar = ZCalendarBuilder.build(reader);
-            ICalTok types[] = { ICalTok.VEVENT, ICalTok.VTODO };
+
             mContent = "";
-            for (ICalTok type : types) {
+            for (ICalTok type : COMPONENT_TYPES) {
                 ZComponent comp = miCalendar.getComponent(type);
-                if (comp != null) {
-                    String content = comp.getPropVal(ICalTok.DESCRIPTION, "");
-                    content = content.trim();
-                    if (content.equals("")) {
-                        content = comp.getPropVal(ICalTok.SUMMARY, null);
-                        content = content.trim();
-                    }
-                    if (!content.equals("")) {
-                        if (!mContent.equals(""))
-                            mContent += " ";
-                        mContent += content;
-                    }
-                }
+                if (comp == null)
+                    continue;
+
+                String content = comp.getPropVal(ICalTok.DESCRIPTION, "").trim();
+                if (content.equals(""))
+                    content = comp.getPropVal(ICalTok.SUMMARY, "").trim();
+                if (content.equals(""))
+                    continue;
+
+                if (!mContent.equals(""))
+                    mContent += " ";
+                mContent += content;
             }
         } catch (Exception e) {
             mContent = "";
