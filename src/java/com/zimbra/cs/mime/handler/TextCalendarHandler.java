@@ -28,7 +28,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 
 import javax.activation.DataSource;
-import javax.mail.internet.ParseException;
 
 import org.apache.lucene.document.Document;
 
