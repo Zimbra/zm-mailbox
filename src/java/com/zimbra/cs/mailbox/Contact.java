@@ -119,7 +119,10 @@ public class Contact extends MailItem {
     public static final String A_workState = "workState";
     public static final String A_workStreet = "workStreet";
     public static final String A_workURL = "workURL";
-
+    public static final String A_type = "type";
+    
+    public static final String TYPE_GROUP = "group";
+    
     /** Relates contact fields (<code>"firstName"</code>) to this contact's
      *  values (<code>"John"</code>). */
     private Map<String, String> mFields;
@@ -389,7 +392,7 @@ public class Contact extends MailItem {
         }
         if (fields.isEmpty())
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
-        addNicknameIfPDL(fields);
+        addNicknameAndTypeIfPDL(fields);
         
         Mailbox mbox = folder.getMailbox();
         mbox.updateContactCount(1);
@@ -466,7 +469,7 @@ public class Contact extends MailItem {
         }
         if (mFields.isEmpty())
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
-        addNicknameIfPDL(mFields);
+        addNicknameAndTypeIfPDL(mFields);
         
     	// XXX: should update mData.size and Mailbox.size and folder.size
         mData.date = mMailbox.getOperationTimestamp();
@@ -475,7 +478,7 @@ public class Contact extends MailItem {
 	}
 
     /** This is a workaround for bug 11900 that must go away before Frank GA */
-    private static void addNicknameIfPDL(Map<String, String> fields) throws ServiceException {
+    private static void addNicknameAndTypeIfPDL(Map<String, String> fields) throws ServiceException {
         if (!fields.containsKey(Contact.A_dlist)) {
             return;
         }
@@ -489,6 +492,7 @@ public class Contact extends MailItem {
         }
         String nickname = fileAs.substring(fileAsPrefix.length());
         fields.put(Contact.A_nickname, nickname);
+        fields.put(Contact.A_type, TYPE_GROUP);
     }
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
