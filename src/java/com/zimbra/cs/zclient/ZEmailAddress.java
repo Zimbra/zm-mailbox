@@ -25,17 +25,17 @@
 
 package com.zimbra.cs.zclient;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
+
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class ZEmailAddress {
     
@@ -110,6 +110,21 @@ public class ZEmailAddress {
     public String getDisplay() {
         return mDisplay;
     }
+
+    public String getFullAddress() {
+        try {
+            return new InternetAddress(mAddress, mPersonal == null ? "" : mPersonal).toString();
+        } catch (UnsupportedEncodingException e) {
+            if (mPersonal == null)
+                return mAddress;
+            else {
+                String p = mPersonal;
+                if (p.indexOf("\"") != -1)
+                    p = p.replaceAll("\"", "\\\"");
+                return p + " "+getAddress();
+            }
+        }
+    }
     
     ZSoapSB toString(ZSoapSB sb) {
         sb.beginStruct();
@@ -123,7 +138,6 @@ public class ZEmailAddress {
     
     /**
     *
-    * @param addrs list of addresses to parse
     * @param type type of addresses to create in the returned list.
     * @see com.zimbra.cs.zclient.ZEmailAddress EMAIL_TYPE_TO, etc.
     * @return list of ZEMailAddress obejcts.
