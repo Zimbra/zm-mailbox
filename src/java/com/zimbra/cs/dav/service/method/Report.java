@@ -49,6 +49,8 @@ public class Report extends DavMethod {
 	static {
 		sReports = new HashMap<QName,DavMethod>();
 		sReports.put(DavElements.E_CALENDAR_QUERY, new CalendarQuery());
+		sReports.put(DavElements.E_CALENDAR_MULTIGET, new CalendarMultiget());
+		sReports.put(DavElements.E_FREE_BUSY_QUERY, new FreeBusyQuery());
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException {
 		if (!ctxt.hasRequestMessage())
@@ -56,6 +58,8 @@ public class Report extends DavMethod {
 		
 		Document req = ctxt.getRequestMessage();
 		Element top = req.getRootElement();
+		if (top == null)
+			throw new DavException("empty request body", HttpServletResponse.SC_BAD_REQUEST, null);
 		QName topName = top.getQName();
 		DavMethod report = sReports.get(topName);
 		if (report == null)

@@ -56,7 +56,10 @@ import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.calendar.FreeBusy;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
@@ -241,6 +244,51 @@ public class CalendarCollection extends Collection {
 		} catch (ServiceException e) {
 			throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		}
+	}
+	
+	public String getFreeBusyReport(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
+		Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMboxId);
+		FreeBusy fb = mbox.getFreeBusy(range.getStart(), range.getEnd());
+		ParsedDateTime now = ParsedDateTime.fromUTCTime(System.currentTimeMillis());
+		ParsedDateTime startTime = ParsedDateTime.fromUTCTime(range.getStart());
+		ParsedDateTime endTime = ParsedDateTime.fromUTCTime(range.getEnd());
 		
+		StringBuilder buf = new StringBuilder();
+		buf.append("BEGIN:VCALENDAR\r\n");
+		buf.append("VERSION:").append(ZCalendar.sIcalVersion).append("\r\n");
+		buf.append("PRODID:").append(ZCalendar.sZimbraProdID).append("\r\n");
+		buf.append("BEGIN:VFREEBUSY\r\n");
+		buf.append("ORGANIZER:").append(ctxt.getAuthAccount().getName()).append("\r\n");
+		buf.append("ATENDEE:").append(mbox.getAccount().getName()).append("\r\n");
+		buf.append("DTSTART:").append(startTime.toString()).append("\r\n");
+		buf.append("DTEND:").append(endTime.toString()).append("\r\n");
+		buf.append("DTSTAMP:").append(now.toString()).append("\r\n");
+
+		Iterator iter = fb.iterator();
+		while (iter.hasNext()) {
+			FreeBusy.Interval cur = (FreeBusy.Interval)iter.next();
+			String status = cur.getStatus();
+
+			if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
+				continue;
+			} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY)) {
+				buf.append("FREEBUSY:");
+			} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {
+				buf.append("FREEBUSY;FBTYPE=BUSY-TENTATIVE:");
+			} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
+				buf.append("FREEBUSY;FBTYPE=BUSY-UNAVAILABLE:");
+			} else {
+				continue;
+			}
+
+			ParsedDateTime curStart = ParsedDateTime.fromUTCTime(cur.getStart());
+			ParsedDateTime curEnd = ParsedDateTime.fromUTCTime(cur.getEnd());
+
+			buf.append(curStart.toString()).append('/').append(curEnd.toString()).append("\r\n");
+		}
+        
+		buf.append("END:VFREEBUSY\r\n");
+		buf.append("END:VCALENDAR\r\n");
+		return buf.toString();
 	}
 }

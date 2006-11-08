@@ -66,6 +66,8 @@ public abstract class DavMethod {
 	}
 	
 	protected void sendResponse(DavContext ctxt) throws IOException {
+		if (ctxt.isResponseSent())
+			return;
 		HttpServletResponse resp = ctxt.getResponse();
 		resp.setStatus(ctxt.getStatus());
 		if (ctxt.hasResponseMessage()) {
