@@ -25,6 +25,8 @@
 
 package com.zimbra.cs.service.formatter;
 
+import com.zimbra.cs.mailbox.Contact;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -34,8 +36,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import com.zimbra.cs.mailbox.Contact;
 
 public class ContactCSV {
 
@@ -153,6 +153,7 @@ public class ContactCSV {
     public static final String CSV_TTY_TDD_Phone = "TTY/TDD Phone";
     public static final String CSV_Telex = "Telex";
     public static final String CSV_Title = "Title";
+    public static final String CSV_Type = "Type";
     public static final String CSV_User_1 = "User 1";
     public static final String CSV_User_2 = "User 2";
     public static final String CSV_User_3 = "User 3";
@@ -338,6 +339,7 @@ public class ContactCSV {
         //CSV_TTY_TDD_Phone
         //CSV_Telex
         //addMapping(CSV_Title, Contact.A_Title, OP_MAP); // need name title in our contacts
+        addMapping(CSV_Type, Contact.A_type, OP_MAP);        
         //CSV_User_1
         //CSV_User_2
         //CSV_User_3
