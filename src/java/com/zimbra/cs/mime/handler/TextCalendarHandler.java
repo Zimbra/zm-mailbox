@@ -86,7 +86,7 @@ public class TextCalendarHandler extends MimeHandler {
             ICalTok types[] = { ICalTok.VEVENT, ICalTok.VTODO };
             mContent = "";
             for (ICalTok type : types) {
-                ZComponent comp = miCalendar.getComponent(ICalTok.VEVENT);
+                ZComponent comp = miCalendar.getComponent(type);
                 if (comp != null) {
                     String content = comp.getPropVal(ICalTok.DESCRIPTION, "");
                     content = content.trim();
