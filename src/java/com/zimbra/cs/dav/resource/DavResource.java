@@ -26,13 +26,11 @@ package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -61,7 +59,7 @@ public abstract class DavResource {
 	protected String mUri;
 	protected String mOwner;
 	protected Map<QName,ResourceProperty> mProps;
-	protected List<Compliance> mDavCompliance;
+	protected Collection<Compliance> mDavCompliance;
 	
 	public DavResource(String uri, Account acct) throws ServiceException {
 		this(uri, getOwner(acct));
@@ -71,7 +69,7 @@ public abstract class DavResource {
 		mOwner = owner;
 		mProps = new HashMap<QName,ResourceProperty>();
 		mUri = uri;
-		mDavCompliance = new ArrayList<Compliance>();
+		mDavCompliance = new HashSet<Compliance>();
 		mDavCompliance.add(Compliance.one);
 		mDavCompliance.add(Compliance.two);
 		//mDavCompliance.add(Compliance.three);
@@ -111,7 +109,7 @@ public abstract class DavResource {
 		return false;
 	}
 	
-	public List<Compliance> getComplianceList() {
+	public Collection<Compliance> getComplianceList() {
 		return mDavCompliance;
 	}
 	

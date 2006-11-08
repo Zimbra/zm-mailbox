@@ -117,33 +117,33 @@ public class DavResponse {
 		prop.toElement(ctxt, top, false);
 	}
 	
-	public void addResource(DavContext ctxt, DavResource rs, Collection<QName> requestedProps, boolean nameOnly, boolean includeChildren) throws DavException {
+	public void addResource(DavContext ctxt, DavResource rs, DavMethod.RequestProp props, boolean includeChildren) throws DavException {
 		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
 		Element top = mResponse.getRootElement();
 		if (top == null)
 			top = mResponse.addElement(DavElements.E_MULTISTATUS);
 		Element resp = top.addElement(DavElements.E_RESPONSE);
-		rs.getProperty(DavElements.E_HREF).toElement(ctxt, resp, nameOnly);
+		rs.getProperty(DavElements.E_HREF).toElement(ctxt, resp, props.nameOnly);
 		
 		Map<Integer,Element> propstatMap = new HashMap<Integer,Element>();
 		Collection<QName> propNames;
 		
-		if (requestedProps == null)
+		if (props.allProp)
 			propNames = rs.getAllPropertyNames();
 		else
-			propNames = requestedProps;
+			propNames = props.props;
 		
 		for (QName name : propNames) {
 			ResourceProperty prop = rs.getProperty(name);
 			if (prop != null)
-				prop.toElement(ctxt, findPropstat(resp, propstatMap, HttpServletResponse.SC_OK), nameOnly);
+				prop.toElement(ctxt, findPropstat(resp, propstatMap, HttpServletResponse.SC_OK), props.nameOnly);
 			else
 				findPropstat(resp, propstatMap, HttpServletResponse.SC_NOT_FOUND).addElement(name);
 		}
 		
 		if (rs.isCollection() && includeChildren)
 			for (DavResource child : rs.getChildren(ctxt))
-				addResource(ctxt, child, requestedProps, nameOnly, includeChildren);
+				addResource(ctxt, child, props, includeChildren);
 	}
 	
 	private Element findPropstat(Element top, Map<Integer,Element> propstatMap, int status) {

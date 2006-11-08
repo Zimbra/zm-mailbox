@@ -48,5 +48,6 @@ public class Put extends DavMethod {
 		
 		Collection col = UrlNamespace.getCollectionAtUrl(ctxt);
 		col.createItem(ctxt, user, name);
+		ctxt.setStatus(HttpServletResponse.SC_CREATED);
 	}
 }

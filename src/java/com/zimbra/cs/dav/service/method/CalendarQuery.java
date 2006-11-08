@@ -24,8 +24,6 @@
  */
 package com.zimbra.cs.dav.service.method;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -63,7 +61,8 @@ public class CalendarQuery extends Report {
 		if (!query.getQName().equals(DavElements.E_CALENDAR_QUERY))
 			throw new DavException("msg "+query.getName()+" is not calendar-query", HttpServletResponse.SC_BAD_REQUEST, null);
 		
-		QueryContext qctxt = new QueryContext(ctxt, query);
+		RequestProp reqProp = getRequestProp(ctxt);
+		QueryContext qctxt = new QueryContext(ctxt, query, reqProp);
 		
 		if (qctxt.componentFilter == null)
 			throw new DavException("missing filter element in the request", HttpServletResponse.SC_BAD_REQUEST, null);
@@ -87,7 +86,7 @@ public class CalendarQuery extends Report {
 		try {
 			CalendarObject calobj = new CalendarObject(appt);
 			DavResponse resp = ctxt.davCtxt.getDavResponse();
-			resp.addResource(ctxt.davCtxt, calobj, ctxt.props, false, false);
+			resp.addResource(ctxt.davCtxt, calobj, ctxt.props, false);
 		} catch (ServiceException se) {
 			ZimbraLog.dav.error("can't get appointment data", se);
 		}
@@ -97,19 +96,12 @@ public class CalendarQuery extends Report {
 		RequestedComponent requestedComponent;
 		CompFilter         componentFilter;
 		DavContext         davCtxt;
+		RequestProp        props;
 		
-		boolean allProp;
-		boolean propName;
-		Collection<QName> props;
-		
-		QueryContext(DavContext ctxt, Element query) throws DavException {
+		QueryContext(DavContext ctxt, Element query, RequestProp rp) throws DavException {
 			davCtxt = ctxt;
-			allProp = false;
-			propName = false;
-			props = new ArrayList<QName>();
-			props.add(DavElements.E_CALENDAR_DATA);
+			props = rp;
 			
-			boolean prop = false;
 			for (Object o : query.elements()) {
 				if (o instanceof Element) {
 					Element elem = (Element) o;
@@ -117,35 +109,15 @@ public class CalendarQuery extends Report {
 					if (name.equals(DavElements.E_FILTER)) {
 						parseFilter(elem);
 					} else if (name.equals(DavElements.E_TIMEZONE)) {
-					} else {
-						
-						if (prop)
-							throw new DavException("malformed calendar-query", HttpServletResponse.SC_BAD_REQUEST, null);
-
-						if (name.equals(DavElements.E_ALLPROP)) {
-							allProp = true;
-						} else if (name.equals(DavElements.E_PROPNAME)) {
-							propName = true;
-						} else if (name.equals(DavElements.E_PROP)) {
-							parseProp(elem);
-						} else {
-							throw new DavException("element "+name.getName()+" not recognized", HttpServletResponse.SC_BAD_REQUEST, null);
-						}
-						prop = true;
+					} else if (name.equals(DavElements.E_PROP)) {
+						for (Object obj : elem.elements())
+							if (obj instanceof Element) {
+								elem = (Element) obj;
+								if (elem.getQName().equals(DavElements.E_CALENDAR_DATA))
+									parseCalendarData(elem);
+							}
 					}
 				}
-			}
-		}
-		
-		private void parseProp(Element prop) {
-			for (Object o : prop.elements()) {
-				// get requested properties
-				Element elem = (Element) o;
-				QName name = elem.getQName();
-				if (name.equals(DavElements.E_CALENDAR_DATA))
-					parseCalendarData(elem);
-				else 
-					props.add(name);
 			}
 		}
 		
@@ -155,14 +127,14 @@ public class CalendarQuery extends Report {
 		 *                                     limit-freebusy-set?) |
 		 *                            #PCDATA)?>
 		 */
-		private void parseCalendarData(Element gcd) {
+		private void parseCalendarData(Element cd) {
 			// TODO
 			// expand
 			// limit-recurrence-set
 			// limit-freebusy-set
 			
 			// comp
-			Element comp = gcd.element(DavElements.E_COMP);
+			Element comp = cd.element(DavElements.E_COMP);
 			if (comp != null)
 				requestedComponent = new RequestedComponent(comp);
 		}

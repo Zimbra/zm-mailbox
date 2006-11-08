@@ -67,11 +67,28 @@ public class UrlNamespace {
 		throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
 	}
 	
+	public static DavResource getResourceAtUrl(DavContext ctxt, String url) throws DavException {
+		int index = url.indexOf(DAV_PATH);
+		if (index == -1 || url.endsWith(DAV_PATH))
+			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
+		index += DAV_PATH.length() + 1;
+		int delim = url.indexOf("/", index);
+		if (delim == -1)
+			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
+		String user = url.substring(index, delim);
+		String path = url.substring(delim);
+		return getResourceAt(ctxt, user, path);
+	}
+	
 	public static DavResource getResource(DavContext ctxt) throws DavException {
 		return getResourceAt(ctxt, ctxt.getPath());
 	}
 	
 	public static DavResource getResourceAt(DavContext ctxt, String path) throws DavException {
+		return getResourceAt(ctxt, ctxt.getUser(), path);
+	}
+	
+	public static DavResource getResourceAt(DavContext ctxt, String user, String path) throws DavException {
 		String target = path.toLowerCase();
 		if (target == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
@@ -79,9 +96,9 @@ public class UrlNamespace {
 		DavResource resource = null;
 		
 		if (target.startsWith(ATTACHMENTS_PREFIX)) {
-			resource = getPhantomResource(ctxt);
+			resource = getPhantomResource(ctxt, user);
 		} else {
-			MailItem item = getMailItem(ctxt, target);
+			MailItem item = getMailItem(ctxt, user, target);
 			resource = getResourceFromMailItem(ctxt, item);
 		}
 		
@@ -158,9 +175,8 @@ public class UrlNamespace {
 		return resource;
 	}
 	
-	private static DavResource getPhantomResource(DavContext ctxt) throws DavException {
+	private static DavResource getPhantomResource(DavContext ctxt, String user) throws DavException {
 		DavResource resource;
-		String user = ctxt.getUser();
 		String target = ctxt.getPath();
 		
 		ArrayList<String> tokens = new ArrayList<String>();
@@ -221,14 +237,13 @@ public class UrlNamespace {
 		return resource;
 	}
 	
-	private static MailItem getMailItem(DavContext ctxt, String path) throws DavException {
+	private static MailItem getMailItem(DavContext ctxt, String user, String path) throws DavException {
 		try {
-			String user = ctxt.getUser();
 			Provisioning prov = Provisioning.getInstance();
 			Account account = prov.get(AccountBy.name, user);
 			if (account == null)
-				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
-
+				throw new DavException("no such accout "+user, HttpServletResponse.SC_NOT_FOUND, null);
+			
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
 			Mailbox.OperationContext octxt = ctxt.getOperationContext();

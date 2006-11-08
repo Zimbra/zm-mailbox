@@ -24,8 +24,8 @@
  */
 package com.zimbra.cs.dav;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 
 // HTTP protocol extensions and headers for WebDAV
 public class DavProtocol {
@@ -65,7 +65,7 @@ public class DavProtocol {
 		sComplianceStrMap.put(Compliance.version_control, "version-control");
 	}
 	
-	public static String getComplianceString(List<Compliance> comp) {
+	public static String getComplianceString(Collection<Compliance> comp) {
 		if (comp == null)
 			return null;
 		StringBuilder buf = new StringBuilder();

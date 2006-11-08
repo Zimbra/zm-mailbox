@@ -24,53 +24,39 @@
  */
 package com.zimbra.cs.dav.service.method;
 
-import java.io.IOException;
-
 import javax.servlet.http.HttpServletResponse;
 
-import org.dom4j.Document;
 import org.dom4j.Element;
 
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
-import com.zimbra.cs.dav.service.DavMethod;
 import com.zimbra.cs.dav.service.DavResponse;
 
-public class PropFind extends DavMethod {
-	
-	public static final String PROPFIND  = "PROPFIND";
-	
-	public String getName() {
-		return PROPFIND;
-	}
-	
-	public void handle(DavContext ctxt) throws DavException, IOException {
-		
-		if (ctxt.hasRequestMessage()) {
-			Document req = ctxt.getRequestMessage();
-			Element top = req.getRootElement();
-			if (!top.getName().equals(DavElements.P_PROPFIND))
-				throw new DavException("msg "+top.getName()+" not allowed in PROPFIND", HttpServletResponse.SC_BAD_REQUEST, null);
+/*
+ * draft-dusseault-caldav section 9.10
+ * 
+ *     <!ELEMENT calendar-multiget ((DAV:allprop |
+ *                                   DAV:propname |
+ *                                   DAV:prop)?, DAV:href+)>
+ *                                
+ */
+public class CalendarMultiget extends Report {
+	public void handle(DavContext ctxt) throws DavException {
+		Element query = ctxt.getRequestMessage().getRootElement();
+		if (!query.getQName().equals(DavElements.E_CALENDAR_MULTIGET))
+			throw new DavException("msg "+query.getName()+" is not calendar-multiget", HttpServletResponse.SC_BAD_REQUEST, null);
 
-		}
-		
-		RequestProp reqProp = getRequestProp(ctxt);
-		DavResource resource = UrlNamespace.getResource(ctxt);
-		addComplianceHeader(ctxt, resource);
 		DavResponse resp = ctxt.getDavResponse();
-		
-		resp.addResource(ctxt, resource, reqProp, false);
-
-		if (resource.isCollection() && ctxt.getDepth() != Depth.zero) {
-			//ZimbraLog.dav.debug("depth: "+ctxt.getDepth().name());
-
-			for (DavResource child : resource.getChildren(ctxt))
-				resp.addResource(ctxt, child, reqProp, ctxt.getDepth() == Depth.infinity);
+		RequestProp reqProp = getRequestProp(ctxt);
+		for (Object obj : query.elements(DavElements.E_HREF)) {
+			if (obj instanceof Element) {
+				Element href = (Element) obj;
+				DavResource rs = UrlNamespace.getResourceAtUrl(ctxt, href.getText());
+				resp.addResource(ctxt, rs, reqProp, false);
+			}
 		}
-		sendResponse(ctxt);
 	}
 }

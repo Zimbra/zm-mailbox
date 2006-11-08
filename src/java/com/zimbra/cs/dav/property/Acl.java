@@ -74,9 +74,15 @@ public class Acl extends ResourceProperty {
 		props.add(p);
 		
 		// empty properties
-		props.add(new ResourceProperty(DavElements.E_GROUP));
-		props.add(new ResourceProperty(DavElements.E_INHERITED_ACL_SET));
-		props.add(new ResourceProperty(DavElements.E_PRINCIPAL_COLLECTION_SET));
+		p = new ResourceProperty(DavElements.E_GROUP);
+		p.setProtected(true);
+		props.add(p);
+		p = new ResourceProperty(DavElements.E_INHERITED_ACL_SET);
+		p.setProtected(true);
+		props.add(p);
+		p = new ResourceProperty(DavElements.E_PRINCIPAL_COLLECTION_SET);
+		p.setProtected(true);
+		props.add(p);
 		return props;
 	}
 	

@@ -48,6 +48,7 @@ public class DavContext {
 	private String mUser;
 	private String mPath;
 	private int mStatus;
+	private Document mRequestMsg;
 	private DavResponse mResponse;
 	private boolean mResponseSent;
 	
@@ -97,6 +98,8 @@ public class DavContext {
 
 	public String getItem() {
 		if (mPath != null) {
+			if (mPath.equals("/"))
+				return mPath;
 			int index;
 			if (mPath.endsWith("/")) {
 				int length = mPath.length();
@@ -149,14 +152,17 @@ public class DavContext {
 	
 	public boolean hasRequestMessage() {
 		String hdr = mReq.getHeader(DavProtocol.HEADER_CONTENT_LENGTH);
-		return (hdr != null && Integer.parseInt(hdr) > 0);
+		return (mRequestMsg != null || 
+				hdr != null && Integer.parseInt(hdr) > 0);
 	}
 	
 	public Document getRequestMessage() throws DavException {
+		if (mRequestMsg != null)
+			return mRequestMsg;
 		try {
 			if (hasRequestMessage()) {
-				Document doc = new SAXReader().read(mReq.getInputStream());
-				return doc;
+				mRequestMsg = new SAXReader().read(mReq.getInputStream());
+				return mRequestMsg;
 			}
 		} catch (DocumentException e) {
 			throw new DavException("unable to parse request message", HttpServletResponse.SC_BAD_REQUEST, e);

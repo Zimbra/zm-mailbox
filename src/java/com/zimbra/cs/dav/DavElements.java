@@ -40,8 +40,10 @@ public class DavElements {
 
 	// general
 	public static final String LANG_EN_US = "en-us";
-	public static final String P_LANG = "lang";
-	public static final QName  E_LANG = QName.get(P_LANG, XML_NS);
+	public static final String P_LANG = "xml:lang";
+	//public static final String P_LANG = "lang";
+	public static final QName  E_LANG = QName.get(P_LANG);
+	//public static final QName  E_LANG = QName.get(P_LANG, XML_NS);
 
 	// properties strings in alphabetical order
 	public static final String P_ABSTRACT = "abstract";

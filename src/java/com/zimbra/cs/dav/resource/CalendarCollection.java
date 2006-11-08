@@ -82,16 +82,18 @@ public class CalendarCollection extends Collection {
 		rtype.addChild(DavElements.E_CALENDAR);
 		rtype.addChild(DavElements.E_PRINCIPAL);
 		
+		String displayName = acct.getAttr(Provisioning.A_displayName);
 		ResourceProperty desc = new ResourceProperty(DavElements.E_CALENDAR_DESCRIPTION);
 		Locale lc = acct.getLocale();
 		desc.setMessageLocale(lc);
-		desc.setStringValue(L10nUtil.getMessage(MsgKey.caldavCalendarDescription, lc));
+		desc.setStringValue(L10nUtil.getMessage(MsgKey.caldavCalendarDescription, lc, displayName));
+		desc.setProtected(true);
 		addProperty(desc);
 		addProperty(CalDavProperty.getSupportedCalendarComponentSet());
 		addProperty(CalDavProperty.getSupportedCalendarData());
 		addProperty(CalDavProperty.getSupportedCollationSet());
 		
-		setProperty(DavElements.E_DISPLAYNAME, acct.getAttr(Provisioning.A_displayName));
+		setProperty(DavElements.E_DISPLAYNAME, displayName);
 		setProperty(DavElements.E_PRINCIPAL_URL, UrlNamespace.getResourceUrl(this), true);
 		setProperty(DavElements.E_ALTERNATE_URI_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);
