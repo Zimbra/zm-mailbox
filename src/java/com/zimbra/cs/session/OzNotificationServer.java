@@ -59,7 +59,7 @@ public class OzNotificationServer {
 //        int port = server.getIntAttr(Provisioning.A_zimbraImapBindPort, 7035); // fixme 
         int port = 7035;
 
-        ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false);
+        ServerSocket serverSocket = NetUtil.getOzServerSocket(address, port);
         
         try {
             

@@ -108,9 +108,8 @@ implements RealtimeStatsCallback {
         String address = server.getAttr(Provisioning.A_zimbraImapBindAddress, null);
         int port = server.getIntAttr(Provisioning.A_zimbraImapBindPort, Config.D_IMAP_BIND_PORT);
 
-        ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false);
-
         if (LC.nio_imap_enable.booleanValue()) {
+            ServerSocket serverSocket = NetUtil.getOzServerSocket(address, port);
             OzConnectionHandlerFactory imapHandlerFactory = new OzConnectionHandlerFactory() {
                 public OzConnectionHandler newConnectionHandler(OzConnection conn) {
                     conn.setAlarm(IMAP_UNAUTHED_CONNECTION_MAX_IDLE_MILLISECONDS);
@@ -129,6 +128,7 @@ implements RealtimeStatsCallback {
                 Zimbra.halt("failed to create OzServer for IMAP", ioe);
             }
         } else {
+            ServerSocket serverSocket = NetUtil.getTcpServerSocket(address, port);
             ImapServer imapServer = new ImapServer(threads, serverSocket, loginOK, false);
             imapServer.setSSL(false);
             sImapServer = imapServer;
@@ -148,7 +148,7 @@ implements RealtimeStatsCallback {
         int port = server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, Config.D_IMAP_SSL_BIND_PORT);
         
         if (LC.nio_imap_enable.booleanValue()) {
-            ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false);
+            ServerSocket serverSocket = NetUtil.getOzServerSocket(address, port);
             
             final boolean debugLogging = LC.nio_imap_debug_logging.booleanValue();
             
@@ -169,7 +169,7 @@ implements RealtimeStatsCallback {
                 Zimbra.halt("failed to create OzServer for IMAPS", ioe);
             }
         } else {
-            ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, true);
+            ServerSocket serverSocket = NetUtil.getSslTcpServerSocket(address, port);
             
             ImapServer imapsServer = new ImapServer(threads, serverSocket, true, true);
             imapsServer.setSSL(true);

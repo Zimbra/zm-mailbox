@@ -192,7 +192,7 @@ public class LmtpServer extends TcpServer {
         Config gconfig = Provisioning.getInstance().getConfig();
         String delimiter = gconfig.getAttr(Provisioning.A_zimbraMtaRecipientDelimiter, null);
 
-        ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false);
+        ServerSocket serverSocket = NetUtil.getTcpServerSocket(address, port);
 
         theInstance = new LmtpServer(numThreads, serverSocket);
         theInstance.setConfigRecipientDelimiter(delimiter);

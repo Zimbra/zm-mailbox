@@ -52,7 +52,7 @@ class TestServer {
                 return new TestConnectionHandler(connection);
             }
         };
-        ServerSocket serverSocket = NetUtil.getBoundServerSocket(null, port, false);
+        ServerSocket serverSocket = NetUtil.getOzServerSocket(null, port);
     	mServer = new OzServer("Test", 64, serverSocket, testHandlerFactory, debugLogging, mLog);
         mServer.start();
     }

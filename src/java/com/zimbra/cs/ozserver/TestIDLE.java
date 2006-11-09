@@ -112,7 +112,7 @@ class TestIDLE {
                 return new ConnHandler(connection);
             }
         };
-        ServerSocket serverSocket = NetUtil.getBoundServerSocket(null, port, false);
+        ServerSocket serverSocket = NetUtil.getOzServerSocket(null, port);
         mServer = new OzServer("IDLE", 64, serverSocket, testHandlerFactory, debugLogging, mLog);
         mServer.start();
     }

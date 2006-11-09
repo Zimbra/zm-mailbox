@@ -65,7 +65,7 @@ public class OzImapServer {
         String address = server.getAttr(Provisioning.A_zimbraImapBindAddress, null);
         int port = server.getIntAttr(Provisioning.A_zimbraImapBindPort, Config.D_IMAP_BIND_PORT);
 
-        ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false);
+        ServerSocket serverSocket = NetUtil.getOzServerSocket(address, port);
 
         boolean debugLogging = LC.nio_imap_debug_logging.booleanValue();
         mServer = new OzServer("IMAP", IMAP_READ_BUFFER_SIZE, serverSocket, imapHandlerFactory, debugLogging, ZimbraLog.imap);

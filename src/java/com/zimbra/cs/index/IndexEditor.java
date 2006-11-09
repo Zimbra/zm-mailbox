@@ -1013,7 +1013,7 @@ public class IndexEditor {
     
     public static void StartTcpEditor() throws ServiceException
     {
-        ServerSocket serverSocket = NetUtil.getBoundServerSocket(null, sPortNo, false);
+        ServerSocket serverSocket = NetUtil.getTcpServerSocket(null, sPortNo);
         sTcpServer = new IndexEditorTcpServer("IndexEditorTcpServer", 3, Thread.NORM_PRIORITY, serverSocket);
         sIndexEditorProtocolHandler = new IndexEditorProtocolhandler(sTcpServer);
         sTcpServer.addActiveHandler(sIndexEditorProtocolHandler);

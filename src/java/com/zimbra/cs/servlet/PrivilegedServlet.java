@@ -91,7 +91,7 @@ public class PrivilegedServlet extends HttpServlet {
             	port = server.getIntAttr(Provisioning.A_zimbraPop3BindPort, Config.D_POP3_BIND_PORT);
             	address = server.getAttr(Provisioning.A_zimbraPop3BindAddress, null);
             	if (server.getBooleanAttr(Provisioning.A_zimbraPop3BindOnStartup, port < 1024)) {
-            		NetUtil.reserveServerSocket(address, port, false);
+            		NetUtil.bindTcpServerSocket(address, port);
             	}
             }
 
@@ -99,15 +99,21 @@ public class PrivilegedServlet extends HttpServlet {
             	port = server.getIntAttr(Provisioning.A_zimbraPop3SSLBindPort, Config.D_POP3_SSL_BIND_PORT);
             	address = server.getAttr(Provisioning.A_zimbraPop3SSLBindAddress, null);
             	if (server.getBooleanAttr(Provisioning.A_zimbraPop3SSLBindOnStartup, port < 1024)) {
-            		NetUtil.reserveServerSocket(address, port, true);
+            		NetUtil.bindSslTcpServerSocket(address, port);
             	}
             }
+
+            boolean ozImap = LC.get("nio_imap_enable").equalsIgnoreCase("true");
 
             if (server.getBooleanAttr(Provisioning.A_zimbraImapServerEnabled, false)) {
             	port = server.getIntAttr(Provisioning.A_zimbraImapBindPort, Config.D_IMAP_BIND_PORT);
             	address = server.getAttr(Provisioning.A_zimbraImapBindAddress, null);
             	if (server.getBooleanAttr(Provisioning.A_zimbraImapBindOnStartup, port < 1024)) {
-            		NetUtil.reserveServerSocket(address, port, false);
+                    if (ozImap) {
+                        NetUtil.bindOzServerSocket(address, port);
+                    } else {
+                        NetUtil.bindTcpServerSocket(address, port);
+                    }
             	}
             }
 
@@ -115,16 +121,18 @@ public class PrivilegedServlet extends HttpServlet {
             	port = server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, Config.D_IMAP_SSL_BIND_PORT);
             	address = server.getAttr(Provisioning.A_zimbraImapSSLBindAddress, null);
             	if (server.getBooleanAttr(Provisioning.A_zimbraImapSSLBindOnStartup, port < 1024)) {
-                    boolean nioImap = LC.get("nio_imap_enable").equalsIgnoreCase("true");
-                    /* In the case of NIO IMAPS, make sure to keep the socket clear! */
-            		NetUtil.reserveServerSocket(address, port, nioImap ? false : true);
+                    if (ozImap) {
+                        NetUtil.bindOzServerSocket(address, port);
+                    } else {
+                        NetUtil.bindSslTcpServerSocket(address, port);
+                    }
             	}
             }
 
             port = server.getIntAttr(Provisioning.A_zimbraLmtpBindPort, Config.D_LMTP_BIND_PORT);
             address = server.getAttr(Provisioning.A_zimbraLmtpBindAddress, null);
             if (server.getBooleanAttr(Provisioning.A_zimbraLmtpBindOnStartup, port < 1024)) {
-                NetUtil.reserveServerSocket(address, port, false);
+                NetUtil.bindTcpServerSocket(address, port);
             }
             
             if (Process.geteuid() == 0) {

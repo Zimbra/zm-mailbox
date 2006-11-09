@@ -140,7 +140,7 @@ implements RealtimeStatsCallback {
         int port = server.getIntAttr(Provisioning.A_zimbraPop3BindPort, Config.D_POP3_BIND_PORT);
         int numThreads = server.getIntAttr(Provisioning.A_zimbraPop3NumThreads, D_POP3_THREADS);
 
-        ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false); 
+        ServerSocket serverSocket = NetUtil.getTcpServerSocket(address, port); 
 
         sPopServer = new Pop3Server(numThreads, serverSocket, loginOK, false);
 
@@ -165,7 +165,7 @@ implements RealtimeStatsCallback {
         int port = server.getIntAttr(Provisioning.A_zimbraPop3SSLBindPort, Config.D_POP3_SSL_BIND_PORT);
         int numThreads = server.getIntAttr(Provisioning.A_zimbraPop3NumThreads, D_POP3_THREADS);
 
-        ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, true);
+        ServerSocket serverSocket = NetUtil.getSslTcpServerSocket(address, port);
 
         sPopSSLServer = new Pop3Server(numThreads, serverSocket, true, true);
 

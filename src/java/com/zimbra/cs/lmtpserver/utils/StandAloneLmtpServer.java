@@ -127,7 +127,7 @@ public class StandAloneLmtpServer {
 			usage("maildir map file not specified");
 		}
 
-        ServerSocket serverSocket = NetUtil.getBoundServerSocket(address, port, false); 
+        ServerSocket serverSocket = NetUtil.getTcpServerSocket(address, port); 
 		LmtpServer lmtpServer = new LmtpServer(threads, serverSocket);
 		lmtpServer.setConfigNameFromHostname();
 		
