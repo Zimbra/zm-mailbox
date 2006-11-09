@@ -78,33 +78,34 @@ public class Mime {
     public static final String CT_TEXT_ENRICHED = "text/enriched";
     public static final String CT_TEXT_CALENDAR = "text/calendar";
     public static final String CT_TEXT_VCARD = "text/x-vcard";
-	public static final String CT_MESSAGE_RFC822 = "message/rfc822";
-	public static final String CT_APPLICATION_OCTET_STREAM = "application/octet-stream";
-	public static final String CT_APPLICATION_MSWORD = "application/msword";
-	public static final String CT_APPLICATION_PDF = "application/pdf";
+    public static final String CT_MESSAGE_RFC822 = "message/rfc822";
+    public static final String CT_APPLICATION_OCTET_STREAM = "application/octet-stream";
+    public static final String CT_APPLICATION_MSWORD = "application/msword";
+    public static final String CT_APPLICATION_PDF = "application/pdf";
     public static final String CT_MULTIPART_ALTERNATIVE = "multipart/alternative";
-	public static final String CT_MULTIPART_MIXED = "multipart/mixed";
-	public static final String CT_XML_ZIMBRA_SHARE = "xml/x-zimbra-share";
+    public static final String CT_MULTIPART_MIXED = "multipart/mixed";
+    public static final String CT_MULTIPART_REPORT = "multipart/report";
+    public static final String CT_XML_ZIMBRA_SHARE = "xml/x-zimbra-share";
 
     public static final String CT_MULTIPART_PREFIX = "multipart/";
 
-	public static final String CT_APPPLICATION_WILD = "application/.*";
-   	public static final String CT_IMAGE_WILD = "image/.*";
-   	public static final String CT_AUDIO_WILD = "audio/.*";
-   	public static final String CT_VIDEO_WILD = "video/.*";
-   	public static final String CT_MULTIPART_WILD = "multipart/.*";
-   	public static final String CT_TEXT_WILD = "text/.*";
-   	public static final String CT_XML_WILD = "xml/.*";
-	
-	public static final String CT_DEFAULT = CT_TEXT_PLAIN;
+    public static final String CT_APPPLICATION_WILD = "application/.*";
+    public static final String CT_IMAGE_WILD = "image/.*";
+    public static final String CT_AUDIO_WILD = "audio/.*";
+    public static final String CT_VIDEO_WILD = "video/.*";
+    public static final String CT_MULTIPART_WILD = "multipart/.*";
+    public static final String CT_TEXT_WILD = "text/.*";
+    public static final String CT_XML_WILD = "xml/.*";
+    
+    public static final String CT_DEFAULT = CT_TEXT_PLAIN;
 	
 	// encodings
-	public static final String ET_7BIT = "7bit";
-	public static final String ET_8BIT = "8bit";
-	public static final String ET_BINARY = "binary";
-	public static final String ET_QUOTED_PRINTABLE = "quoted-printable";
-	public static final String ET_BASE64 = "base64";
-	public static final String ET_DEFAULT = ET_7BIT;
+    public static final String ET_7BIT = "7bit";
+    public static final String ET_8BIT = "8bit";
+    public static final String ET_BINARY = "binary";
+    public static final String ET_QUOTED_PRINTABLE = "quoted-printable";
+    public static final String ET_BASE64 = "base64";
+    public static final String ET_DEFAULT = ET_7BIT;
 
     // attachment metadata fields
     public static final String MF_TITLE = "title";

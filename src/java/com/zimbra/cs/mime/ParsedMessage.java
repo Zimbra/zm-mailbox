@@ -517,10 +517,17 @@ public class ParsedMessage {
 
         int numParseErrors = 0;
         ServiceException conversionError = null;
+        String reportRoot = null;
 
         for (MPartInfo mpi : mMessageParts) {
+            // text/calendar parts under a multipart/report aren't considered real calendar invites
+            if (reportRoot == null && mpi.getContentType().equals(Mime.CT_MULTIPART_REPORT))
+                reportRoot = mpi.mPartName.equals("TEXT") ? "" : mpi.mPartName.substring(0, mpi.mPartName.length() - 4);
+            else if (reportRoot != null && !mpi.mPartName.startsWith(reportRoot))
+                reportRoot = null;
+
             try {
-                analyzePart(mpi, mpiBody, allTextHandler);
+                analyzePart(mpi, mpiBody, allTextHandler, reportRoot != null);
             } catch (MimeHandlerException e) {
                 numParseErrors++;
                 String pn = mpi.getPartName();
@@ -567,7 +574,7 @@ public class ParsedMessage {
         }
 	}
 
-    private void analyzePart(MPartInfo mpi, MPartInfo mpiBody, TopLevelMessageHandler allTextHandler)
+    private void analyzePart(MPartInfo mpi, MPartInfo mpiBody, TopLevelMessageHandler allTextHandler, boolean ignoreCalendar)
     throws MimeHandlerException, ObjectHandlerException, MessagingException, ServiceException {
         String ctype = mpi.getContentType();
         // ignore multipart "container" parts
@@ -592,7 +599,7 @@ public class ParsedMessage {
             }
 
             // remember the first iCalendar attachment
-            if (miCalendar == null)
+            if (!ignoreCalendar && miCalendar == null)
                 miCalendar = handler.getICalendar();
 
             if (mpi == mpiBody ||
@@ -621,7 +628,7 @@ public class ParsedMessage {
         }
 
         // make sure we've got the text/calendar handler installed
-        if (miCalendar == null && ctype.equals(Mime.CT_TEXT_CALENDAR)) {
+        if (!ignoreCalendar && miCalendar == null && ctype.equals(Mime.CT_TEXT_CALENDAR)) {
             if (handler.isIndexingEnabled())
                 ZimbraLog.index.warn("TextCalendarHandler not correctly installed");
             try {
