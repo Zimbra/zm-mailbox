@@ -24,6 +24,8 @@
  */
 package com.zimbra.cs.dav.resource;
 
+import java.io.IOException;
+
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.account.Account;
@@ -32,12 +34,14 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
 
 public abstract class MailItemResource extends DavResource {
+	protected int  mFolderId;
 	protected int  mId;
 	protected byte mType;
 	
@@ -47,6 +51,7 @@ public abstract class MailItemResource extends DavResource {
 	
 	public MailItemResource(String path, MailItem item) throws ServiceException {
 		super(path, item.getAccount());
+		mFolderId = item.getFolderId();
 		mId = item.getId();
 		mType = item.getType();
 		setProperty(DavElements.E_GETETAG, Long.toString(item.getChangeDate()), true);
@@ -62,24 +67,71 @@ public abstract class MailItemResource extends DavResource {
 			return path + "/";
 		return path;
 	}
+
+	protected Mailbox getMailbox(DavContext ctxt) throws ServiceException, DavException {
+		String user = ctxt.getUser();
+		if (user == null)
+			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
+		Provisioning prov = Provisioning.getInstance();
+		Account account = prov.get(AccountBy.name, user);
+		if (account == null)
+			throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
+		return MailboxManager.getInstance().getMailboxByAccount(account);
+	}
 	
 	public void delete(DavContext ctxt) throws DavException {
 		if (mId == 0) 
 			throw new DavException("cannot delete resource", HttpServletResponse.SC_FORBIDDEN, null);
-		String user = ctxt.getUser();
-		String path = ctxt.getPath();
-		if (user == null || path == null)
-			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
 		try {
-			Provisioning prov = Provisioning.getInstance();
-			Account account = prov.get(AccountBy.name, user);
-			if (account == null)
-				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
-
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+			Mailbox mbox = getMailbox(ctxt);
 			mbox.delete(ctxt.getOperationContext(), mId, mType);
-		} catch (ServiceException e) {
-			throw new DavException("cannot get item", HttpServletResponse.SC_NOT_FOUND, e);
+		} catch (ServiceException se) {
+			throw new DavException("cannot delete item", HttpServletResponse.SC_FORBIDDEN, se);
 		}
+	}
+	
+	public void move(DavContext ctxt, Collection dest) throws DavException {
+		if (mFolderId == dest.getId())
+			return;
+		try {
+			Mailbox mbox = getMailbox(ctxt);
+			mbox.move(ctxt.getOperationContext(), mId, mType, dest.getId());
+		} catch (ServiceException se) {
+			throw new DavException("cannot move item", HttpServletResponse.SC_FORBIDDEN, se);
+		}
+	}
+	
+	public MailItemResource copy(DavContext ctxt, Collection dest) throws DavException {
+		try {
+			Mailbox mbox = getMailbox(ctxt);
+			MailItem item = mbox.copy(ctxt.getOperationContext(), mId, mType, dest.getId());
+			return UrlNamespace.getResourceFromMailItem(ctxt, item);
+		} catch (IOException e) {
+			throw new DavException("cannot copy item", HttpServletResponse.SC_FORBIDDEN, e);
+		} catch (ServiceException se) {
+			throw new DavException("cannot copy item", HttpServletResponse.SC_FORBIDDEN, se);
+		}
+	}
+	
+	public void rename(DavContext ctxt, String newName) throws DavException {
+		try {
+			if (isCollection()) {
+				Mailbox mbox = getMailbox(ctxt);
+				mbox.renameFolder(ctxt.getOperationContext(), mId, newName);
+			} else {
+				Mailbox mbox = getMailbox(ctxt);
+				MailItem item = mbox.getItemById(ctxt.getOperationContext(), mId, mType);
+				if (item instanceof Document) {
+					Document doc = (Document) item;
+					doc.rename(newName);
+				}
+			}
+		} catch (ServiceException se) {
+			throw new DavException("cannot copy item", HttpServletResponse.SC_FORBIDDEN, se);
+		}
+	}
+	
+	int getId() {
+		return mId;
 	}
 }

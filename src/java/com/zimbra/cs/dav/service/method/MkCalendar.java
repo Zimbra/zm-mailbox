@@ -54,7 +54,7 @@ public class MkCalendar extends DavMethod {
 		if (user == null || name == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_FORBIDDEN, null);
 		
-		Collection col = UrlNamespace.getCollectionAtUrl(ctxt);
+		Collection col = UrlNamespace.getCollectionAtUrl(ctxt, ctxt.getPath());
 		if (col instanceof CalendarCollection)
 			throw new DavException("can't create calendar under another calendar", HttpServletResponse.SC_FORBIDDEN, null);
 		

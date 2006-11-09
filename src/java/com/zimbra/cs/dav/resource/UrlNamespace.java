@@ -54,9 +54,25 @@ public class UrlNamespace {
 	
 	public static final String ATTACHMENTS_PREFIX = "/attachments";
 	
-	public static Collection getCollectionAtUrl(DavContext ctxt) throws DavException {
-		String path = ctxt.getPath();
-		int index = path.lastIndexOf('/');
+	public static Collection getCollectionAtUrl(DavContext ctxt, String url) throws DavException {
+		if (url.startsWith("http")) {
+			int index = url.indexOf(DAV_PATH);
+			if (index == -1 || url.endsWith(DAV_PATH))
+				throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
+			index += DAV_PATH.length() + 1;
+			url = url.substring(index);
+			
+			// skip user.
+			index = url.indexOf('/');
+			if (index == -1)
+				throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
+			url = url.substring(index);
+		}
+		String path = url;
+		int lastPos = path.length() - 1;
+		if (path.endsWith("/"))
+			lastPos--;
+		int index = path.lastIndexOf('/', lastPos);
 		if (index == -1)
 			path = "/";
 		else
@@ -146,8 +162,8 @@ public class UrlNamespace {
 		return getHomeUrl(rs.getOwner()) + rs.getUri();
 	}
 	
-	public static DavResource getResourceFromMailItem(DavContext ctxt, MailItem item) throws DavException {
-		DavResource resource = null;
+	public static MailItemResource getResourceFromMailItem(DavContext ctxt, MailItem item) throws DavException {
+		MailItemResource resource = null;
 		byte itemType = item.getType();
 		
 		try {

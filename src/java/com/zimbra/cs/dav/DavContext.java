@@ -103,7 +103,7 @@ public class DavContext {
 			int index;
 			if (mPath.endsWith("/")) {
 				int length = mPath.length();
-				index = mPath.lastIndexOf('/', length-1);
+				index = mPath.lastIndexOf('/', length-2);
 				if (index != -1)
 					return mPath.substring(index+1, length-1);
 			} else {

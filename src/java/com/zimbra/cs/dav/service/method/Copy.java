@@ -30,14 +30,30 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.service.DavMethod;
+import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.resource.Collection;
+import com.zimbra.cs.dav.resource.DavResource;
+import com.zimbra.cs.dav.resource.MailItemResource;
+import com.zimbra.cs.dav.resource.UrlNamespace;
 
-public class Copy extends DavMethod {
+public class Copy extends Move {
 	public static final String COPY  = "COPY";
 	public String getName() {
 		return COPY;
 	}
+	
 	public void handle(DavContext ctxt) throws DavException, IOException {
-		throw new DavException("not implemented", HttpServletResponse.SC_FORBIDDEN, null);
+		String destination = ctxt.getRequest().getHeader(DavProtocol.HEADER_DESTINATION);
+		if (destination == null)
+			throw new DavException("no destination specified", HttpServletResponse.SC_BAD_REQUEST, null);
+		DavResource rs = UrlNamespace.getResource(ctxt);
+		Collection col = UrlNamespace.getCollectionAtUrl(ctxt, destination);
+		if (!(col instanceof MailItemResource))
+			throw new DavException("cannot copy", HttpServletResponse.SC_BAD_REQUEST, null);
+		MailItemResource mir = (MailItemResource) rs;
+		MailItemResource copy = mir.copy(ctxt, col);
+
+		renameIfNecessary(ctxt, copy, destination);
+		ctxt.setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}
 }
