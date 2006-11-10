@@ -1319,7 +1319,7 @@ public class ZimletUtil {
 	}
 	
 	private static void usage() {
-		System.out.println("zmzimletctl: [command] [ zimlet.zip | config.xml | zimlet ]");
+		System.out.println("zmzimletctl: [-l] [command] [ zimlet.zip | config.xml | zimlet ]");
 		System.out.println("\tdeploy {zimlet.zip} - install, ldapDeploy, grant ACL on default COS, then enable Zimlet");
 		System.out.println("\tundeploy {zimlet} - remove the Zimlet from the system");
 		System.out.println("\tinstall {zimlet.zip} - installs the Zimlet files on this host");
@@ -1345,6 +1345,11 @@ public class ZimletUtil {
 	}
 	
 	private static void dispatch(String[] args) {
+		boolean localInstall = false;
+		if (args[argPos].equals("-l")) {
+			localInstall = true;
+			argPos++;
+		}
 		int cmd = lookupCmd(args[argPos++]);
 		try {
 			switch (cmd) {
@@ -1369,9 +1374,13 @@ public class ZimletUtil {
 			String zimlet = args[argPos++];
 			switch (cmd) {
 			case DEPLOY_ZIMLET:
-				ZimletSoapUtil soapUtil = new ZimletSoapUtil();
-				File zf = new File(zimlet);
-				soapUtil.deployZimlet(zf.getName(), ByteUtil.getContent(zf), null, false);
+				if (localInstall) {
+					deployZimlet(new ZimletFile(zimlet));
+				} else {
+					ZimletSoapUtil soapUtil = new ZimletSoapUtil();
+					File zf = new File(zimlet);
+					soapUtil.deployZimlet(zf.getName(), ByteUtil.getContent(zf), null, false);
+				}
 				break;
 			case INSTALL_ZIMLET:
 				installZimlet(new ZimletFile(zimlet));
