@@ -40,6 +40,11 @@
 	<property name="common.classes.dir" location="${common.dir}/build/classes" />
 	<property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar" />
 	<property name="common.jars.dir" location="${common.dir}/jars" />
+
+	<property name="im.dir" location="../ZimbraIM" />
+	<property name="im.classes.dir" location="${im.dir}/build/classes" />
+	<property name="im.jarfile" location="${im.dir}/build/zimbraim.jar" />
+	<property name="im.jars.dir" location="${im.dir}/jars" />
 	
 	<property name="jars.dir" location="jars" />
 	<property name="lib.dir" location="lib" />
@@ -106,8 +111,12 @@
 
 	<path id="class.path">
 		<pathelement location="${common.classes.dir}" />
+		<pathelement location="${im.classes.dir}" />
 		<pathelement location="${build.classes.dir}" />
 		<fileset dir="${common.jars.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${im.jars.dir}">
 			<include name="**/*.jar" />
 		</fileset>
 	</path>
@@ -256,6 +265,7 @@
 
 	<target name="compile" depends="build-init">
 		<ant dir="${common.dir}" target="jar" inheritAll="false" />
+		<ant dir="${im.dir}" target="jar" inheritAll="false" />
 		<javac fork="true" memorymaximumsize="256m" destdir="${build.classes.dir}" debug="true" classpathref="class.path">
 			<src refid="all.java.path" />
 		</javac>
@@ -289,8 +299,10 @@
 		<war warfile="${warfile}" webxml="${config.dir}/web.xml${production.suffix}">
 			<fileset dir="WebRoot"/>
 			<lib file="${common.jarfile}" />
+			<lib file="${im.jarfile}" />
 			<lib file="${jarfile}" />
 			<lib dir="${common.jars.dir}" includes="*.jar" excludes="${war.exclude}" />
+			<lib dir="${im.jars.dir}" includes="*.jar" excludes="${war.exclude}" />
 			<classes dir="${config.dir}" includes="sieveConfig.xml" />
 		</war>
 	</target>
@@ -341,7 +353,9 @@
 
 		<!-- lib: ignore absence of DLL for windows -->
 		<copy todir="${dist.dir}/lib/jars" overwrite="true"><fileset dir="${common.jars.dir}" includes="*.jar" excludes="servlet-api.jar" /></copy>
+		<copy todir="${dist.dir}/lib/jars" overwrite="true"><fileset dir="${im.jars.dir}" includes="*.jar" /></copy>
 		<copy todir="${dist.dir}/lib/jars" file="${common.jarfile}" overwrite="true"/>
+		<copy todir="${dist.dir}/lib/jars" file="${im.jarfile}" overwrite="true"/>
 		<copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
 		<copy todir="${dist.dir}/lib/ext" overwrite="true" ><fileset dir="${lib.dir}/ext"/></copy> <!-- CHECK -->
 		
