@@ -521,10 +521,11 @@ public class ParsedMessage {
 
         for (MPartInfo mpi : mMessageParts) {
             // text/calendar parts under a multipart/report aren't considered real calendar invites
-            if (reportRoot == null && mpi.getContentType().equals(Mime.CT_MULTIPART_REPORT))
-                reportRoot = mpi.mPartName.equals("TEXT") ? "" : mpi.mPartName.substring(0, mpi.mPartName.length() - 4);
-            else if (reportRoot != null && !mpi.mPartName.startsWith(reportRoot))
+            String partName = mpi.mPartName;
+            if (reportRoot != null && !partName.startsWith(reportRoot))
                 reportRoot = null;
+            if (reportRoot == null && mpi.getContentType().equals(Mime.CT_MULTIPART_REPORT))
+                reportRoot = partName.endsWith("TEXT") ? partName.substring(0, partName.length() - 4) : partName + ".";
 
             try {
                 analyzePart(mpi, mpiBody, allTextHandler, reportRoot != null);
