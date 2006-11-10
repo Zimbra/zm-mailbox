@@ -1099,7 +1099,9 @@ public class ZimletUtil {
 			List<Server> allServers = prov.getAllServers();
 			for (Server server : allServers) {
 				// localhost is already taken care of.
-				if (skipLocalhost && prov.getLocalServer().equals(server))
+		        boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
+				if (skipLocalhost && prov.getLocalServer().equals(server) ||
+					!hasMailboxService)
 					continue;
 				ZimbraLog.zimlet.info("Deploying on " + server.getName());
 				deployZimletOnServer(zimlet, data, server, listener);
@@ -1110,7 +1112,9 @@ public class ZimletUtil {
 			Provisioning prov = Provisioning.getInstance();
 			List<Server> allServers = prov.getAllServers();
 			for (Server server : allServers) {
-				if (skipLocalhost && prov.getLocalServer().equals(server))
+		        boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
+				if (skipLocalhost && prov.getLocalServer().equals(server) ||
+					!hasMailboxService)
 					continue;
 				ZimbraLog.zimlet.info("Undeploying on " + server.getName());
 				undeployZimletOnServer(zimlet, server);
