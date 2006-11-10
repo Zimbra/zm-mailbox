@@ -3739,8 +3739,12 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.mapToAttrs(dataSourceAttrs, attrs);
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "zimbraDataSource");
             oc.add(LdapDataSource.getObjectClass(dsType));
-            String dsId = LdapUtil.generateUUID();
-            attrs.put(A_zimbraDataSourceId, dsId);
+            
+            String dsId = LdapUtil.getAttrString(attrs, A_zimbraDataSourceId);
+            if (dsId == null) {
+                dsId = LdapUtil.generateUUID();
+                attrs.put(A_zimbraDataSourceId, dsId);
+            }
             
             String password = LdapUtil.getAttrString(attrs, A_zimbraDataSourcePassword);
             if (password != null) {
@@ -3810,7 +3814,7 @@ public class LdapProvisioning extends Provisioning {
         if (ds == null)
             throw AccountServiceException.NO_SUCH_DATA_SOURCE(dataSourceId);
         
-        attrs.remove(A_zimbraDataSourceId);                
+        attrs.remove(A_zimbraDataSourceId);
         
         String name = (String) attrs.get(A_zimbraDataSourceName);
         boolean newName = (name != null && !name.equals(ds.getName()));
