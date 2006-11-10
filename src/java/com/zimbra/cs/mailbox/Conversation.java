@@ -101,7 +101,7 @@ public class Conversation extends MailItem {
             return true;
         }
 
-        void updateFlags(int flags, boolean add) {
+        TagSet updateFlags(int flags, boolean add) {
             for (int j = 0; flags != 0 && j < MAX_FLAG_COUNT; j++) {
                 int mask = 1 << j; 
                 if ((flags & mask) != 0) {
@@ -111,8 +111,9 @@ public class Conversation extends MailItem {
                 }
             }
             recalculate();
+            return this;
         }
-        void updateTags(long tags, boolean add) {
+        TagSet updateTags(long tags, boolean add) {
             for (int j = 0; tags != 0 && j < MAX_TAG_COUNT; j++) {
                 long mask = 1L << j; 
                 if ((tags & mask) != 0) {
@@ -123,9 +124,10 @@ public class Conversation extends MailItem {
                 }
             }
             recalculate();
+            return this;
         }
 
-        void recalculate() {
+        private void recalculate() {
             mData.flags = 0;
             mData.tags  = 0;
             for (int value : mTags) {
@@ -148,16 +150,15 @@ public class Conversation extends MailItem {
         super(mbox, data);
         if (mData.type != TYPE_CONVERSATION && mData.type != TYPE_VIRTUAL_CONVERSATION)
             throw new IllegalArgumentException();
-        if (mData.inheritedTags != null && !mData.inheritedTags.equals(""))
-            mInheritedTagSet = new TagSet(mData.inheritedTags);
+        mInheritedTagSet = new TagSet(mData.inheritedTags);
         mData.inheritedTags = null;
     }
 
 
     /** Returns the normalized subject of the conversation.  This is done by
-     *  taking the <code>Subject:</code> header of the first message and
-     *  removing prefixes (e.g. <code>"Re:"</code>) and suffixes (e.g. 
-     *  <code>"(fwd)"</code>) and the like.
+     *  taking the <tt>Subject:</tt> header of the first message and removing
+     *  prefixes (e.g. <tt>"Re:"</tt>) and suffixes (e.g. <tt>"(fwd)"</tt>)
+     *  and the like.
      * 
      * @see ParsedMessage#normalizeSubject */
     public String getNormalizedSubject() {
@@ -184,8 +185,6 @@ public class Conversation extends MailItem {
      *  with the IMAP \Deleted flag.  This will almost always equal the value
      *  returned from {@link #getMessageCount()}. */
     public int getNondeletedCount() {
-        if (mInheritedTagSet == null)
-            return getMessageCount();
         return Math.max(0, getMessageCount() - mInheritedTagSet.count(Flag.ID_FLAG_DELETED));
     }
 
@@ -197,16 +196,23 @@ public class Conversation extends MailItem {
 
     // do *not* make this public, as it'd skirt Mailbox-level synchronization and caching
     SenderList getSenderList() throws ServiceException {
-        getSenderList(false);
+        loadSenderList();
         return mSenderList;
     }
 
-    private boolean getSenderList(boolean noGaps) throws ServiceException {
-        if (mSenderList != null && !(noGaps && mSenderList.isElided()))
+    /** Makes certain the Conversation's {@link SenderList} is loaded and
+     *  valid.  If it's not, first tries to instantiate it from the loaded
+     *  metadata.  If that's either missing or invalid, recalculates the
+     *  Conversation's metadata from its constituent messages and rewrites
+     *  the database row.
+     *  
+     * @return <tt>true</tt> if the metadata was recalculated, <tt>false</tt>
+     *         if the SenderList was generated from existing data */
+    private boolean loadSenderList() throws ServiceException {
+        if (mSenderList != null && mSenderList.size() == mData.size)
             return false;
 
         mSenderList = null;
-        boolean forceWrite = true;
         // first, attempt to decode the existing sender list (if there is one)
         if (mEncodedSenders != null)
             try {
@@ -215,45 +221,41 @@ public class Conversation extends MailItem {
                 // if the first message has been removed, this should throw
                 //   an exception and force mRawSubject to be recalculated
                 mSenderList = SenderList.parse(encoded);
-                if (mSenderList.size() == mData.size) {
-                    if (!(noGaps && mSenderList.isElided()))
-                        return false;
-                    else
-                        forceWrite = false;
-                }
+                if (mSenderList.size() == mData.size)
+                    return false;
             } catch (Exception e) { }
 
         // failed to parse or too few senders are listed -- have to recalculate
         //   (go through the Mailbox because we need to be in a transaction)
         List<Message> msgs = getMessages(DbMailItem.DEFAULT_SORT_ORDER);
-        recalculateMetadata(msgs, forceWrite);
+        recalculateMetadata(msgs);
         return true;
     }
 
-    SenderList recalculateMetadata(List<Message> msgs, boolean forceWrite) throws ServiceException {
+    private SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
         Collections.sort(msgs, new Message.SortDateAscending());
-        String oldRaw = mRawSubject;
+        String oldSubject = mRawSubject;
         long oldSize = mData.size;
 
-        mSenderList = new SenderList(msgs);
         mEncodedSenders = null;
-        mInheritedTagSet = null;
-        mData.children = null;
+        mSenderList = new SenderList(msgs);
         recalculateSubject(msgs.size() > 0 ? msgs.get(0) : null);
 
         mData.size = msgs.size();
         mData.unreadCount = 0;
 
         markItemModified(mData.size != oldSize ? Change.MODIFIED_SIZE : Change.INTERNAL_ONLY);
-        if (!mRawSubject.equals(oldRaw))
+        if (!mRawSubject.equals(oldSubject))
         	markItemModified(Change.MODIFIED_SUBJECT);
 
-        for (Message msg : msgs)
+        mData.children = new ArrayList<Integer>(msgs.size());
+        mInheritedTagSet = new TagSet();
+        for (Message msg : msgs) {
             super.addChild(msg);
+            mInheritedTagSet.updateFlags(msg.getFlagBitmask(), true).updateTags(msg.getTagBitmask(), true);
+        }
 
-        if (mData.size == oldSize && !forceWrite && !mRawSubject.equals(oldRaw))
-            return mSenderList;
-        // we're out of sync and need to rewrite the overview metadata
+        // need to rewrite the overview metadata
         ZimbraLog.mailbox.debug("resetting metadata: cid=" + mId + ", size was=" + mData.size + " is=" + mSenderList.size());
         saveData(null);
         return mSenderList;
@@ -305,20 +307,6 @@ public class Conversation extends MailItem {
 
         List<UnderlyingData> listData = DbMailItem.getByParent(this, sort);
         for (UnderlyingData data : listData)
-            msgs.add(mMailbox.getMessage(data));
-        return msgs;
-    }
-
-    /** Returns all the unread {@link Message}s in this conversation.
-     *  The messages are fetched from the database; they are not returned
-     *  in any particular order. */
-    List<Message> getUnreadMessages() throws ServiceException {
-        List<UnderlyingData> unreadData = DbMailItem.getUnreadMessages(this);
-        if (unreadData == null)
-            return null;
-
-        List<Message> msgs = new ArrayList<Message>(unreadData.size());
-        for (UnderlyingData data : unreadData)
             msgs.add(mMailbox.getMessage(data));
         return msgs;
     }
@@ -491,11 +479,7 @@ public class Conversation extends MailItem {
         if (tag == null)
             return;
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
-
-        if (mInheritedTagSet != null)
-            mInheritedTagSet.update(tag, add);
-        else if (add)
-            mInheritedTagSet = new TagSet(tag);
+        mInheritedTagSet.update(tag, add);
     }
 
     /** Moves all the conversation's {@link Message}s to a different
@@ -589,8 +573,6 @@ public class Conversation extends MailItem {
             int oldFlags = mData.flags;
             long oldTags = mData.tags;
 
-            if (mInheritedTagSet == null)
-                mInheritedTagSet = new TagSet();
             if (child.mData.tags != 0)
                 mInheritedTagSet.updateTags(child.mData.tags, true);
             if (child.mData.flags != 0)
@@ -606,7 +588,7 @@ public class Conversation extends MailItem {
         //   recalc the metadata, it uses the already-updated DB message state to do it...
         mData.date = mMailbox.getOperationTimestamp();
         mData.contentChanged(mMailbox);
-        boolean recalculated = getSenderList(false);
+        boolean recalculated = loadSenderList();
 
         if (!recalculated) {
             Message msg = (Message) child;
@@ -615,7 +597,7 @@ public class Conversation extends MailItem {
                 mSenderList.add(msg);
                 saveMetadata();
             } catch (SenderList.RefreshException slre) {
-                recalculateMetadata(getMessages(SORT_ID_ASCENDING), true);
+                recalculateMetadata(getMessages(SORT_ID_ASCENDING));
             }
         }
     }
@@ -630,7 +612,7 @@ public class Conversation extends MailItem {
         }
 
         // update inherited tags, if applicable
-        if (mInheritedTagSet != null && (child.mData.tags != 0 || child.mData.flags != 0)) {
+        if (child.mData.tags != 0 || child.mData.flags != 0) {
             int oldFlags = mData.flags;
             long oldTags = mData.tags;
 
@@ -647,7 +629,7 @@ public class Conversation extends MailItem {
 
         List<Message> msgs = getMessages(SORT_ID_ASCENDING);
         msgs.remove(child);
-        recalculateMetadata(msgs, true);
+        recalculateMetadata(msgs);
     }
 
     /*
@@ -787,7 +769,7 @@ public class Conversation extends MailItem {
                 if (!info.itemIds.contains(childId))
                     msgs.add(mMailbox.getMessageById(childId));
             }
-            recalculateMetadata(msgs, true);
+            recalculateMetadata(msgs);
         }
 
         super.purgeCache(info, purgeItem);
@@ -812,7 +794,7 @@ public class Conversation extends MailItem {
 
         if (recalculate) {
             List<Message> msgs = getMessages(SORT_ID_ASCENDING);
-            recalculateMetadata(msgs, true);
+            recalculateMetadata(msgs);
             getSenderList();
             return;
         }
@@ -879,8 +861,7 @@ public class Conversation extends MailItem {
         StringBuffer sb = new StringBuffer();
         sb.append("conversation: {");
         appendCommonMembers(sb);
-        if (mInheritedTagSet != null)
-            sb.append(CN_INHERITED_TAGS).append(": [").append(mInheritedTagSet.toString()).append("], ");
+        sb.append(CN_INHERITED_TAGS).append(": [").append(mInheritedTagSet.toString()).append("], ");
         sb.append("}");
         return sb.toString();
     }
