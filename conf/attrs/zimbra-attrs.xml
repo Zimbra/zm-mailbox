@@ -1715,7 +1715,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="381" name="zimbraPasswordLockoutFailureLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>0</defaultCOSValue>
+  <defaultCOSValue>1h</defaultCOSValue>
   <desc>the duration after which old consecutive failed login attempts are purged from the list, even though no  successful  authentication  has occurred</desc>
 </attr>
 
