@@ -60,17 +60,17 @@ class LuceneQueryOperation extends QueryOperation
     private Sort mSort = null;
     private boolean mHaveRunSearch = false;
     private String mQueryString = "";
-    
+
     /**
      * because we don't store the real mail-item-id of documents, we ALWAYS need a DBOp 
      * in order to properly get our results.
      */
     private DBQueryOperation mDBOp = null;
-    
+
     void setDBOperation(DBQueryOperation op) {
         mDBOp = op;
     }
-    
+
     QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException
     {
         // wrap ourselves in a DBQueryOperation, since we're eventually going to need to go to the DB
@@ -80,11 +80,11 @@ class LuceneQueryOperation extends QueryOperation
     }
 
     private boolean mHasSpamTrashSetting = false;
-    
+
     int getOpType() {
         return OP_TYPE_LUCENE;
     }
-    
+
     boolean hasSpamTrashSetting() {
         return mHasSpamTrashSetting;
     }
@@ -97,27 +97,27 @@ class LuceneQueryOperation extends QueryOperation
     void forceHasSpamTrashSetting() {
         mHasSpamTrashSetting = true;
     }
-    
+
     QueryTargetSet getQueryTargets() {
-    	QueryTargetSet toRet = new QueryTargetSet(1);
-    	toRet.add(QueryTarget.UNSPECIFIED);
-    	return toRet;
+        QueryTargetSet toRet = new QueryTargetSet(1);
+        toRet.add(QueryTarget.UNSPECIFIED);
+        return toRet;
     }
-    
+
     public void doneWithSearchResults() throws ServiceException {
-    	mSort = null;
+        mSort = null;
         if (mSearcher != null) {
             mSearcher.release();
         }
     };
-    
+
     /**
      * Called by our DBOp to reset our iterator...
      */
     protected void resetDocNum() {
         mCurHitNo = 0;
     }
-    
+
     /**
      * @author tim
      *
@@ -126,57 +126,57 @@ class LuceneQueryOperation extends QueryOperation
      * 
      */
     protected static class LuceneResultsChunk {
-    	
-    	static class ScoredLuceneHit {
-    		ScoredLuceneHit(float score) { mScore= score; }
-    		public List<Document> mDocs = new ArrayList<Document>();
-    		public float mScore; // highest score in list
-    	}
-    	
+
+        static class ScoredLuceneHit {
+            ScoredLuceneHit(float score) { mScore= score; }
+            public List<Document> mDocs = new ArrayList<Document>();
+            public float mScore; // highest score in list
+        }
+
         Set<Integer> getIndexIds() { 
-        	Set<Integer>toRet = new LinkedHashSet<Integer>(mHits.keySet().size());
+            Set<Integer>toRet = new LinkedHashSet<Integer>(mHits.keySet().size());
             for (Iterator iter = mHits.keySet().iterator(); iter.hasNext();) {
                 Integer curInt = (Integer)iter.next();
                 toRet.add(curInt);
             }
             return toRet;
         }
-        
+
         private int size() { return mHits.size(); }
 
         private void addHit(int indexId, Document doc, float score) {
             addHit(new Integer(indexId), doc, score);
         }
-        
+
         private void addHit(Integer indexId, Document doc, float score) {
-        	ScoredLuceneHit sh = mHits.get(indexId);
-        	if (sh == null) {
-        		sh = new ScoredLuceneHit(score);
+            ScoredLuceneHit sh = mHits.get(indexId);
+            if (sh == null) {
+                sh = new ScoredLuceneHit(score);
                 mHits.put(indexId, sh);
-        	}
-        	
-        	sh.mDocs.add(doc);
+            }
+
+            sh.mDocs.add(doc);
         }
-        
+
         ScoredLuceneHit getScoredHit(Integer indexId) { 
-        	return mHits.get(indexId);
+            return mHits.get(indexId);
         }
-        
+
         private HashMap <Integer /*indexId*/, ScoredLuceneHit> mHits = new LinkedHashMap<Integer, ScoredLuceneHit>();
     }
-    
+
     protected LuceneResultsChunk getNextResultsChunk(int maxChunkSize) throws ServiceException {
         try {
-        	if (!mHaveRunSearch)
-        		runSearch();
-        	
-        	LuceneResultsChunk toRet = new LuceneResultsChunk();
+            if (!mHaveRunSearch)
+                runSearch();
+
+            LuceneResultsChunk toRet = new LuceneResultsChunk();
             int luceneLen = mLuceneHits != null ? mLuceneHits.length() : 0;
-            
+
             while ((toRet.size() < maxChunkSize) && (mCurHitNo < luceneLen)) {
-            	float score = mLuceneHits.score(mCurHitNo);
+                float score = mLuceneHits.score(mCurHitNo);
                 Document d = mLuceneHits.doc(mCurHitNo++);
-                
+
                 String mbid = d.get(LuceneFields.L_MAILBOX_BLOB_ID);
                 try {
                     if (mbid != null) {
@@ -186,27 +186,27 @@ class LuceneQueryOperation extends QueryOperation
                     e.printStackTrace();
                 }
             }
-            
+
             return toRet;
-            
+
         } catch (IOException e) {
-        	throw ServiceException.FAILURE("Caught IOException getting lucene results", e);
+            throw ServiceException.FAILURE("Caught IOException getting lucene results", e);
         }
     }
-    
+
     public void resetIterator() throws ServiceException {
         if (mDBOp != null) {
             mDBOp.resetIterator();
         }
     }
-    
+
     public ZimbraHit getNext() throws ServiceException {
         if (mDBOp != null) {
             return mDBOp.getNext();
         }
         return null;
     }
-    
+
     public ZimbraHit peekNext() throws ServiceException
     {
         if (mDBOp != null) {
@@ -214,23 +214,23 @@ class LuceneQueryOperation extends QueryOperation
         }
         return null;
     }
-    
+
     private BooleanQuery mQuery;
-    
+
     static LuceneQueryOperation Create() {
         LuceneQueryOperation toRet = new LuceneQueryOperation();
         toRet.mQuery = new BooleanQuery();
         return toRet;
     }
-    
+
     // used only by the AllQueryOperation subclass....
     protected LuceneQueryOperation()
     {
     }
-    
+
     protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException
     {
-    	assert(!mHaveRunSearch);
+        assert(!mHaveRunSearch);
         if (mDBOp == null) {
             // wrap ourselves in a DBQueryOperation, since we're eventually going to need to go to the DB
             mDBOp = DBQueryOperation.Create();
@@ -238,11 +238,11 @@ class LuceneQueryOperation extends QueryOperation
             mDBOp.prepare(mbx, res, mbidx, chunkSize); // will call back into this function again!
         } else {
             this.setupResults(mbx, res);
-            
+
             try {
-            	mSearcher = mbidx.getCountedIndexSearcher();
-            	mSort = mbidx.getSort(res.getSortBy());
-//            	runSearch();
+                mSearcher = mbidx.getCountedIndexSearcher();
+                mSort = mbidx.getSort(res.getSortBy());
+//              runSearch();
             } catch (IOException e) {
                 e.printStackTrace();
                 if (mSearcher != null) {
@@ -254,22 +254,22 @@ class LuceneQueryOperation extends QueryOperation
             }
         }
     }
-    
+
     private void runSearch() {
-    	assert(!mHaveRunSearch);
-		mHaveRunSearch = true;
-    	
+        assert(!mHaveRunSearch);
+        mHaveRunSearch = true;
+
         try {
-        	if (mQuery != null) {
-        	    if (mSearcher != null) { // this can happen if the Searcher couldn't be opened, e.g. index does not exist
-        	        BooleanQuery outerQuery = new BooleanQuery();
-        	        outerQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), true, false));
-        	        outerQuery.add(new BooleanClause(mQuery, true, false));
-        	        mLuceneHits = mSearcher.getSearcher().search(outerQuery, mSort);
-        	    } else {
-        	        mLuceneHits = null; 
-        	    }
-        	} else {
+            if (mQuery != null) {
+                if (mSearcher != null) { // this can happen if the Searcher couldn't be opened, e.g. index does not exist
+                    BooleanQuery outerQuery = new BooleanQuery();
+                    outerQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), true, false));
+                    outerQuery.add(new BooleanClause(mQuery, true, false));
+                    mLuceneHits = mSearcher.getSearcher().search(outerQuery, mSort);
+                } else {
+                    mLuceneHits = null; 
+                }
+            } else {
                 assert(false);
             }
         } catch (IOException e) {
@@ -281,59 +281,59 @@ class LuceneQueryOperation extends QueryOperation
             mLuceneHits = null;
         }
     }
-    
+
     QueryOperation optimize(Mailbox mbox) throws ServiceException {
         return this;
     }
-    
+
     String toQueryString() {
-    	StringBuilder ret = new StringBuilder("(");
-    	
-    	ret.append(this.mQueryString);
-    	
-    	return ret.append(")").toString();
+        StringBuilder ret = new StringBuilder("(");
+
+        ret.append(this.mQueryString);
+
+        return ret.append(")").toString();
     }
-    
+
     public String toString()
     {
         return "LUCENE(" + mQuery.toString() + ")";
     }
-    
+
     private LuceneQueryOperation cloneInternal() throws CloneNotSupportedException {
-    	LuceneQueryOperation toRet = (LuceneQueryOperation)super.clone();
-    	
-    	assert(mSearcher == null);
-    	assert(mSort == null);
-    	assert(!mHaveRunSearch);
-    	
-    	mQuery = (BooleanQuery)mQuery.clone();
-    	
-    	return toRet;
+        LuceneQueryOperation toRet = (LuceneQueryOperation)super.clone();
+
+        assert(mSearcher == null);
+        assert(mSort == null);
+        assert(!mHaveRunSearch);
+
+        mQuery = (BooleanQuery)mQuery.clone();
+
+        return toRet;
     }
-    
+
     public Object clone() {
-    	try {
-    		LuceneQueryOperation toRet = cloneInternal();
-    		if (mDBOp != null)
-    			toRet.mDBOp = (DBQueryOperation)mDBOp.clone(this);
-    		return toRet;
-    	} catch (CloneNotSupportedException e) {
-    		assert(false);
-    		return null;
-    	}
+        try {
+            LuceneQueryOperation toRet = cloneInternal();
+            if (mDBOp != null)
+                toRet.mDBOp = (DBQueryOperation)mDBOp.clone(this);
+            return toRet;
+        } catch (CloneNotSupportedException e) {
+            assert(false);
+            return null;
+        }
     }
-    
+
     public Object clone(DBQueryOperation caller) throws CloneNotSupportedException {
-    	LuceneQueryOperation toRet = cloneInternal();
-    	
-    	toRet.mDBOp = caller;
-    	
-    	return toRet;
+        LuceneQueryOperation toRet = cloneInternal();
+
+        toRet.mDBOp = caller;
+
+        return toRet;
     }
-    
+
     protected QueryOperation combineOps(QueryOperation other, boolean union) {
-    	assert(!mHaveRunSearch);
-        
+        assert(!mHaveRunSearch);
+
         if (union) {
             if (other.hasNoResults()) {
                 // a query for (other OR nothing) == other
@@ -348,16 +348,16 @@ class LuceneQueryOperation extends QueryOperation
                 return this;
             }
         }
-        
+
         if (other instanceof LuceneQueryOperation) {
-        	LuceneQueryOperation otherLuc = (LuceneQueryOperation)other;
-        	if (union) {
-        		mQueryString = '('+mQueryString+") OR ("+otherLuc.mQueryString+')';
-        	} else {
-        		mQueryString = '('+mQueryString+") AND ("+otherLuc.mQueryString+')';
-        	}
-        	
-        	BooleanQuery top = new BooleanQuery();
+            LuceneQueryOperation otherLuc = (LuceneQueryOperation)other;
+            if (union) {
+                mQueryString = '('+mQueryString+") OR ("+otherLuc.mQueryString+')';
+            } else {
+                mQueryString = '('+mQueryString+") AND ("+otherLuc.mQueryString+')';
+            }
+
+            BooleanQuery top = new BooleanQuery();
             BooleanClause lhs = new BooleanClause(mQuery, !union, false);
             BooleanClause rhs = new BooleanClause(otherLuc.mQuery, !union, false);
             top.add(lhs);
@@ -367,17 +367,17 @@ class LuceneQueryOperation extends QueryOperation
         }
         return null;
     }
-    
+
     protected int inheritedGetExecutionCost()
     {
         return 20;
     }
-    
+
     void addAndedClause(Query q, boolean truth) {
-    	mQueryString = "UNKNOWN"; // not supported yet for this case
-    	
-    	assert(!mHaveRunSearch);
-    	
+        mQueryString = "UNKNOWN"; // not supported yet for this case
+
+        assert(!mHaveRunSearch);
+
         BooleanQuery top = new BooleanQuery();
         BooleanClause lhs = new BooleanClause(mQuery, true, false);
         BooleanClause rhs = new BooleanClause(q, truth, !truth);
@@ -392,12 +392,12 @@ class LuceneQueryOperation extends QueryOperation
      * @param truth
      */
     void addClause(String queryStr, Query q, boolean truth) {
-    	mQueryString = mQueryString+" "+queryStr;
-    	assert(!mHaveRunSearch);
-    	
-    	if (truth) {
-    		mQuery.add(new BooleanClause(q, true, false));
-    	} else {
+        mQueryString = mQueryString+" "+queryStr;
+        assert(!mHaveRunSearch);
+
+        if (truth) {
+            mQuery.add(new BooleanClause(q, true, false));
+        } else {
             // Why do we add this here?  Because lucene won't allow naked "NOT" queries.
             // Why do we check against Partname=TOP instead of against "All"?  Well, it is a simple case
             // of "do mostly what the user wants" --->
@@ -414,7 +414,7 @@ class LuceneQueryOperation extends QueryOperation
             // TOPLEVEL of the message....98% of the time that's going to be good enough.
             //
             mQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)),true,false));
-//            mQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), true, false));
+//          mQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), true, false));
             mQuery.add(new BooleanClause(q, false, true));
         }
     }
