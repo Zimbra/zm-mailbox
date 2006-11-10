@@ -88,7 +88,7 @@ public class WikiFormatter extends Formatter {
     		template = wt.getComposedPage(ctxt, wiki, CHROME);
     		sCache.addPage(key, template);
     	}
-		printWikiPage(context, template);
+		printWikiPage(context, template, wiki.getName());
 	}
 
     private static final String TOC = "_Index";
@@ -127,7 +127,7 @@ public class WikiFormatter extends Formatter {
         	template = wt.getComposedPage(ctxt, folder, CHROME);
     		sCache.addPage(key, template);
     	}
-		printWikiPage(context, template);
+		printWikiPage(context, template, folder.getName());
     }
 
 	/**
@@ -135,12 +135,15 @@ public class WikiFormatter extends Formatter {
 	 * This will be revisited when the client relies on the REST
 	 * output for display/browsing functionality.
 	 */
-	private static void printWikiPage(Context context, String s)
+	private static void printWikiPage(Context context, String s, String title)
 	throws IOException {
 		context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
 		javax.servlet.ServletOutputStream out = context.resp.getOutputStream();
 		out.println("<HTML>");
 		out.println("<HEAD>");
+		out.println("<TITLE>");
+		out.println(title);
+		out.println("</TITLE>");
 		/***
 		// NOTE: This doesn't work because this servlet is at a different
 		//       context path than the wiki.css file.
