@@ -72,12 +72,7 @@ public class TextCalendarHandler extends MimeHandler {
             return;
         try {
             DataSource source = getDataSource();
-
-            ContentType ctype = new ContentType(source.getContentType());
-            String charset = ctype.getParameter(Mime.P_CHARSET);
-            if (charset == null)
-                charset = Mime.P_CHARSET_DEFAULT;
-            Reader reader = new InputStreamReader(source.getInputStream(), charset);
+            Reader reader = Mime.getTextReader(source.getInputStream(), source.getContentType());
             miCalendar = ZCalendarBuilder.build(reader);
 
             mContent = "";
