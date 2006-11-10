@@ -1981,7 +1981,7 @@ public final class MailboxIndex
     }
 
 
-    synchronized public void indexItem(Mailbox mbox, int itemId, byte itemType, long timestamp, boolean noRedo)
+    public void indexItem(Mailbox mbox, int itemId, byte itemType, long timestamp, boolean noRedo)
     throws IOException, ServiceException {
         MailItem item;
         try {

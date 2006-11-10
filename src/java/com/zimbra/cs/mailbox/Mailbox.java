@@ -125,8 +125,9 @@ public class Mailbox {
     public static final int ID_FOLDER_ROOT      = 11;
     public static final int ID_FOLDER_NOTEBOOK  = 12;
     public static final int ID_FOLDER_AUTO_CONTACTS = 13;
+    public static final int ID_FOLDER_IM_LOGS = 14;
 
-    public static final int HIGHEST_SYSTEM_ID = 13;
+    public static final int HIGHEST_SYSTEM_ID = 14;
     public static final int FIRST_USER_ID     = 256;
 
     static final int  ONE_MONTH_SECS   = 60 * 60 * 24 * 31;
@@ -1023,6 +1024,8 @@ public class Mailbox {
         Folder.create(ID_FOLDER_NOTEBOOK, this, userRoot, "Notebook", system, MailItem.TYPE_WIKI,    0, MailItem.DEFAULT_COLOR, null);
         Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR, null);
         Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_IM_LOGS,   this, userRoot, "IMs",   system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null);
+        
 
         mCurrentChange.itemId = getInitialItemId();
         DbMailbox.updateMailboxStats(this);
@@ -2489,6 +2492,7 @@ public class Mailbox {
             zq.doneWithQuery();
             throw ServiceException.FAILURE("Caught "+t.getMessage(), t);
         }
+
     }
 
     public synchronized FreeBusy getFreeBusy(long start, long end) throws ServiceException {
@@ -3221,6 +3225,32 @@ public class Mailbox {
         }
         return conv;
     }
+    
+    public Message saveIM(OperationContext octxt, ParsedMessage pm, int id, int origId, String replyType) throws IOException, ServiceException {
+        // make sure the message has been analzyed before taking the Mailbox lock
+        pm.analyze();
+        try {
+            pm.getRawData();
+        } catch (MessagingException me) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
+        }
+        // special-case saving a new draft
+        if (id == ID_AUTO_INCREMENT) {
+            Message.DraftInfo dinfo = null;
+            if (replyType != null && origId > 0)
+                dinfo = new Message.DraftInfo(replyType, origId);
+            return addMessageInternal(octxt, pm, ID_FOLDER_IM_LOGS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME, null,
+                                      ID_AUTO_INCREMENT, ":API:", dinfo, new SharedDeliveryContext());
+        } else {
+            Message toRet = saveDraftInternal(octxt, pm, id);
+            
+            toRet.reindex(null, pm);
+            
+            return toRet;
+            
+        }
+    }
+    
 
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, int origId, String replyType) throws IOException, ServiceException {
         // make sure the message has been analzyed before taking the Mailbox lock

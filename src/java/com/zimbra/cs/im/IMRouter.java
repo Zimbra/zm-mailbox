@@ -45,8 +45,8 @@ public class IMRouter implements Runnable {
     private static final IMRouter sRouter = new IMRouter();
     public static IMRouter getInstance() { return sRouter; }
     
-    private Map<IMAddr, IMPersona> mBuddyListMap = new HashMap();
-    private LinkedBlockingQueue<IMEvent> mQueue = new LinkedBlockingQueue();
+    private Map<IMAddr, IMPersona> mBuddyListMap = new HashMap<IMAddr, IMPersona>();
+    private LinkedBlockingQueue<IMEvent> mQueue = new LinkedBlockingQueue<IMEvent>();
     private boolean mShutdown = false;
     private Timer mTimer;
     
@@ -61,13 +61,6 @@ public class IMRouter implements Runnable {
             return MailboxManager.getInstance().getMailboxByAccount(acct);
         else
             throw MailServiceException.NO_SUCH_MBOX(addr.getAddr());
-    }
-    
-    void flush(OperationContext octxt, IMPersona persona) throws ServiceException {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(Provisioning.getInstance().get(AccountBy.name, persona.getAddr().getAddr()));
-        assert(persona.getAddr().getAddr().equals(mbox.getAccount().getName()));
-        Metadata md = persona.encodeAsMetatata();
-        mbox.setConfig(octxt, "im", md);
     }
     
     public synchronized IMPersona findPersona(OperationContext octxt, IMAddr addr, boolean loadSubs) throws ServiceException 
@@ -89,9 +82,10 @@ public class IMRouter implements Runnable {
             Metadata md = mbox.getConfig(octxt, "im");
             if (md != null)
                 toRet = IMPersona.decodeFromMetadata(addr, md);
-                    
-            if (toRet == null)
+            else
                 toRet = new IMPersona(addr);
+            
+            toRet.init();
             
             mBuddyListMap.put(addr, toRet);
         }
@@ -110,9 +104,10 @@ public class IMRouter implements Runnable {
             Metadata md = mbox.getConfig(octxt, "im");
             if (md != null)
                 toRet = IMPersona.decodeFromMetadata(addr, md);
-                    
-            if (toRet == null)
+            else 
                 toRet = new IMPersona(addr);
+
+            toRet.init();
             
             mBuddyListMap.put(addr, toRet);
         }

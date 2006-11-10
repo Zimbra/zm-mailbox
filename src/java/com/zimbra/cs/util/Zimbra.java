@@ -27,19 +27,23 @@ package com.zimbra.cs.util;
 
 import java.util.Timer;
 
+import org.jivesoftware.util.JiveGlobals;
+import org.jivesoftware.wildfire.XMPPServer;
+import org.jivesoftware.wildfire.interceptor.InterceptorManager;
+
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.im.IMRouter;
-import com.zimbra.cs.im.xmpp.srv.XMPPServer;
+import com.zimbra.cs.im.PacketInterceptor;
 import com.zimbra.cs.imap.ImapServer;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.lmtpserver.LmtpServer;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.ServiceException;
@@ -59,8 +63,6 @@ import com.zimbra.cs.store.StoreManager;
 public class Zimbra {
     private static boolean sInited = false;
     
-//    private static XMPPServer mXmppServer; 
-
     private static void checkForClass(String clzName, String jarName) {
         try {
             String s = Class.forName(clzName).getName();
@@ -116,8 +118,6 @@ public class Zimbra {
             
             if (server.getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
                 try {
-                    XMPPServer srv = new XMPPServer();
-                    srv.start();
                 } catch (Exception e) { 
                     ZimbraLog.system.warn("Could not start XMPP server: " + e.toString());
                     e.printStackTrace();
@@ -163,7 +163,7 @@ public class Zimbra {
         StoreManager.getInstance().shutdown();
 
         ExtensionUtil.destroyAll();
-
+        
         MailboxManager.getInstance().shutdown();
 
         sTimer.cancel();

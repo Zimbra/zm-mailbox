@@ -128,7 +128,7 @@ public class IMBuddy {
     }
     
     public String toString() {
-        return "BUDDY: "+mAddress+"("+mName+")";
+        return "BUDDY: "+mAddress+"("+mName+") ["+mPresence == null ? "null" : mPresence.toString() + "]";
     }
     
     void setName(String name) { mName = name; }
@@ -178,53 +178,4 @@ public class IMBuddy {
     }
     
     public SubType getSubType() { return mSubType; }
-    
-    private static final String FN_ADDRESS     = "a"; 
-    private static final String FN_GROUP       = "g";
-    private static final String FN_NAME        = "n";
-    private static final String FN_NUM_GROUPS  = "ng"; 
-    private static final String FN_SUBTYPE    = "s"; 
-    
-    Metadata encodeAsMetadata()
-    {
-        Metadata meta = new Metadata();
-
-        meta.put(FN_ADDRESS, mAddress);
-        
-        if (!StringUtil.isNullOrEmpty(mName)) {
-            meta.put(FN_NAME, mName);
-        }
-        meta.put(FN_SUBTYPE, mSubType.toString());
-        meta.put(FN_NUM_GROUPS, mGroups.size());
-        int offset = 0;
-        for (IMGroup group : mGroups) {
-            meta.put(FN_GROUP+offset, group.getName());
-            offset++;
-        }
-        
-        return meta;
-    }
-    
-    static IMBuddy decodeFromMetadata(Metadata meta, IMPersona persona) throws ServiceException
-    {
-        String address = meta.get(FN_ADDRESS);
-        String name = meta.get(FN_NAME, null);
-        
-        IMBuddy toRet = new IMBuddy(new IMAddr(address), name);
-        
-        try {
-            toRet.setSubType(SubType.valueOf(meta.get(FN_SUBTYPE)));
-        } catch (IllegalArgumentException e) {
-            toRet.setSubType(SubType.NONE);
-        }
-        
-        int numGroups = (int)meta.getLong(FN_NUM_GROUPS);
-
-        for (int i = 0; i < numGroups; i++) {
-            IMGroup group = persona.getOrCreateGroup(meta.get(FN_GROUP+i));
-            toRet.addGroup(group);
-        }
-        
-        return toRet;
-    }
 }

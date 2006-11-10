@@ -56,20 +56,21 @@ public class IMModifyChat extends IMDocumentHandler
             
             IMChat chat = persona.lookupChatOrNull(threadId);
             
-            if (chat == null)
-            throw ServiceException.FAILURE("Unknown thread: "+threadId, null);
-            
-            String opStr = request.getAttribute(IMService.A_OPERATION);
-            Op op = Op.valueOf(opStr.toUpperCase());
-            
-            switch(op) {
-            case CLOSE:
-                persona.closeChat(lc.getOperationContext(), chat);
-                break;
-            case ADDUSER:
-                String newUser = request.getAttribute(IMService.A_ADDRESS);
-                persona.addUserToChat(chat, new IMAddr(newUser));
-                break;
+            if (chat == null) {
+                throw ServiceException.FAILURE("Unknown thread: "+threadId, null);
+            } else {
+                String opStr = request.getAttribute(IMService.A_OPERATION);
+                Op op = Op.valueOf(opStr.toUpperCase());
+                
+                switch(op) {
+                    case CLOSE:
+                        persona.closeChat(lc.getOperationContext(), chat);
+                        break;
+                    case ADDUSER:
+                        String newUser = request.getAttribute(IMService.A_ADDRESS);
+                        persona.addUserToChat(chat, new IMAddr(newUser));
+                        break;
+                }
             }
         }
         

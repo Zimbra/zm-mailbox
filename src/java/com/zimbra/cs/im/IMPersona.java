@@ -30,27 +30,37 @@ import java.util.Formatter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jivesoftware.wildfire.ClientSession;
+import org.jivesoftware.wildfire.XMPPServer;
+import org.jivesoftware.wildfire.auth.AuthToken;
+import org.jivesoftware.wildfire.user.UserNotFoundException;
+import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
+import org.xmpp.packet.Packet;
 import org.xmpp.packet.Presence;
+import org.xmpp.packet.Roster;
+import org.xmpp.packet.IQ.Type;
 
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.im.IMBuddy.SubType;
 import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.cs.im.IMMessage.Lang;
+import com.zimbra.cs.im.IMMessage.TextPart;
 import com.zimbra.cs.im.IMPresence.Show;
-import com.zimbra.cs.im.IMSubscriptionEvent.Op;
-import com.zimbra.cs.im.xmpp.srv.XMPPServer;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.im.IMService;
 import com.zimbra.cs.session.Session;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author tim
@@ -67,8 +77,13 @@ public class IMPersona {
     
     private Set<Session> mListeners = new HashSet<Session>();
     
-    private FakeClientSession mXMPPSession;
+//    private FakeClientSession mXMPPSession;
+    private ClientSession mXMPPSession;
     
+    // these TWO parameters make up my presence - the first one is the presence
+    // I have saved in the DB, and the second is a flag if I am online or offline
+    private IMPresence mMyPresence = new IMPresence(Show.ONLINE, (byte)1, null);
+    private boolean mIsOnline = false;
     
     public String toString() {
         return new Formatter().format("PERSONA:%s  Presence:%s SubsLoaded:%s", 
@@ -78,28 +93,441 @@ public class IMPersona {
     IMPersona(IMAddr addr) {
         assert(addr != null);
         mAddr = addr;
-//        mXMPPSession = new FakeClientSession("timsmac.local", mAddr.getAddr(), this);
-//        mXMPPSession.addRoutes();
+    }
+    
+    void init() {
+        try {
+            if (Provisioning.getInstance().getLocalServer().getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
+                mXMPPSession = new ClientSession(Provisioning.getInstance().getLocalServer().getName(), new FakeClientConnection(this), XMPPServer.getInstance().getSessionManager().nextStreamID());
+//                mXMPPSession.addRoutes();
+                
+                mXMPPSession.setAuthToken(new AuthToken(mAddr.getAddr()));
+                try {
+                    mXMPPSession.setAuthToken(new AuthToken(mAddr.getAddr()), XMPPServer.getInstance().getUserManager(), "zcs");
+                } catch (UserNotFoundException ex) {
+                    System.out.println(ex.toString());
+                    ex.printStackTrace();
+                }
+
+                // have to request roster immediately -- as soon as we send our first presence update, we will start
+                // receiving presence notifications from our buddies -- and if we don't have the roster loaded, then we 
+                // will not know what to do with them...
+                Roster rosterRequest = new Roster();
+                xmppRoute(rosterRequest);
+                
+//                IQ bind = new IQ(IQ.Type.set);
+//                org.dom4j.Element bindElt = bind.setChildElement("bind", "urn:ietf:params:xml:ns:xmpp-bind");
+//                org.dom4j.Element resourceElt = bindElt.addElement("resource");
+//                resourceElt.addText("zcs");
+//                xmppRoute(bind);
+////                
+//                IQ session = new IQ(IQ.Type.set);
+//                org.dom4j.Element sessionElt = session.setChildElement("session", "urn:ietf:params:xml:ns:xmpp-session");
+//                xmppRoute(session);
+                
+//                Roster rosterRequest = new Roster();
+//                rosterRequest.setType(Type.get);
+//                xmppRoute(rosterRequest);
+                
+//                mIsOnline = true;
+                
+                
+//                mMyPresence = new IMPresence(Show.ONLINE, (byte)5, null);
+
+    //            updateXMPPPresence(null);
+                
+//                Roster rosterRequest = new Roster();
+//                xmppRoute(rosterRequest);
+
+            }
+        } catch (ServiceException ex) {
+            ZimbraLog.im.warn("Caught Exception checking if XMPP enabled " + ex.toString(), ex);
+        }
     }
     
     public IMAddr getAddr() { return mAddr; }
     
     void loadSubs() {
         if (!mSubsLoaded) {
-            for (IMBuddy buddy : mBuddyList.values()) {
-                if (buddy.getSubType().isOutgoing()) {
-                    IMProbeEvent event = new IMProbeEvent(mAddr, buddy.getAddress());
-                    IMRouter.getInstance().postEvent(event);
+            mSubsLoaded = true;
+        }
+    }
+    
+    /**
+     * Callback -- called from the IMRouter thread.  May ONLY lock the current persona.
+     * @param packet
+     */
+    synchronized void process(String text) {
+        ZimbraLog.im.info("IMPersona("+getAddr()+") processing text packet: "+text);
+    }
+    
+    /**
+     * Callback -- called from the IMRouter thread.  May ONLY lock the current persona.
+     * @param packet
+     */
+    synchronized void process(Packet packet) {
+        ZimbraLog.im.info("IMPersona("+getAddr()+") processing packet: "+packet.toXML());
+
+        boolean toMe = true;
+        
+        if (packet.getTo() != null && !packet.getTo().toBareJID().equals(this.getAddr().getAddr()))  {
+            if (!(packet instanceof Message))
+                return;
+            
+            toMe = false;
+        }
+        
+        if (packet instanceof Message) {
+            Message msg = (Message)packet;
+            String toAddr = msg.getTo().getNode() + '@'+  msg.getTo().getDomain();
+            String fromAddr = msg.getFrom().getNode() + '@' + msg.getFrom().getDomain();
+            String threadId = msg.getThread();
+            
+            String subject = msg.getSubject();
+            String body = msg.getBody();
+            
+            if ((subject == null || subject.length() == 0) &&
+                        (body == null || body.length() == 0))
+                return;  // ignore empty message for now (<composing> update!)
+
+            IMMessage immsg = new IMMessage(subject==null?null:new TextPart(subject),
+                        body==null?null:new TextPart(body));
+            
+            immsg.setFrom(new IMAddr(fromAddr));
+            
+//            assert(toAddr.equals(this.getAddr().getAddr()));
+            
+            List<IMAddr> toList = new ArrayList<IMAddr>(1);
+            toList.add(this.getAddr());
+            
+            String remoteAddr;
+            if (toMe)
+                remoteAddr = fromAddr;
+            else
+                remoteAddr = toAddr;
+            
+            if (threadId == null || threadId.length() == 0) {
+                for (IMChat cur : mChats.values()) {
+                    // find an existing point-to-point chat with that user in it
+                    if ((cur.participants().size() <=  2) && (cur.lookupParticipant(new IMAddr(remoteAddr)) != null)) {
+                        threadId = cur.getThreadId();
+                        break;
+                    }
                 }
+                if (threadId == null || threadId.length() == 0) {
+                    threadId = remoteAddr;
+                }
+            }
+            
+            IMChat chat = getOrCreateChat(threadId, immsg.getFrom());
+            int seqNo = chat.addMessage(immsg.getFrom(), null, null, immsg);
+            
+            IMMessageNotification notification = new IMMessageNotification(immsg.getFrom(), chat.getThreadId(), immsg, seqNo);
+            
+            try {
+                postIMNotification(notification);
+            } catch (ServiceException ex) {
+                ZimbraLog.im.warn("Caught ServiceException " + ex.toString(), null);
+            }            
+            
+            
+        } else if (packet instanceof Presence) {
+            Presence pres = (Presence)packet;
+            Presence.Type ptype = pres.getType();
+            
+            if (ptype == null) {
+                onRemotePresenceChange(pres, Show.ONLINE);
+            } else {
+                Presence reply = null;
+                switch (ptype) {
+                    case unavailable:
+                        onRemotePresenceChange(pres, Show.OFFLINE);
+                        break;
+                    case subscribe:
+                        // auto-accept for now
+                        reply = new Presence();
+                        reply.setTo(pres.getFrom());
+                        reply.setFrom(pres.getTo());
+                        reply.setType(Presence.Type.subscribed);
+                        XMPPServer.getInstance().getPresenceRouter().route(reply);
+                        break;
+                    case subscribed:
+                    {
+                        ZimbraLog.im.info("Presence.subscribed: " +pres.toString());
+                        
+                        IMAddr address = IMAddr.fromJID(pres.getFrom());
+                        
+                        // it could potentially have been deleted, so re-create it if necessary
+                        IMBuddy buddy = getOrCreateBuddy(address, address.toString());
+                        
+                        SubType st = buddy.getSubType();
+                        if (!st.isOutgoing())
+                            buddy.setSubType(st.setOutgoing());
+                        
+                        try {
+                            postIMNotification(new IMSubscribedNotification(address, buddy.getName(), null, false));
+                            postIMNotification(new IMPresenceUpdateNotification(address, buddy.getPresence()));
+                        } catch(ServiceException ex) {
+                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
+                        }
+                    }
+                    break;
+                    case unsubscribe:
+                        ZimbraLog.im.info("Presence.unsubscribe: " +pres.toString());
+                        // auto-accept for now
+                        reply = new Presence();
+                        reply.setTo(pres.getFrom());
+                        reply.setFrom(pres.getTo());
+                        reply.setType(Presence.Type.unsubscribed);
+                        XMPPServer.getInstance().getPresenceRouter().route(reply);
+                        break;
+                    case unsubscribed:
+                    {
+                        ZimbraLog.im.info("Presence.unsubscribed: " +pres.toString());
+                        
+//                        IMAddr address = IMAddr.fromJID(pres.getFrom());
+//                        IMBuddy buddy = getOrCreateBuddy(address, address.toString());
+    //
+//                        SubType st = buddy.getSubType();
+//                        if (st.isOutgoing())
+//                            buddy.setSubType(st.clearOutgoing());
+//                      
+//                        try {
+//                            postIMNotification(new SubscribedNotification(address, buddy.getName(), null, true));
+//                        } catch(ServiceException ex) {
+//                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
+//                        }
+                        
+                    }
+                    break;
+                    case probe:
+                        ZimbraLog.im.info("Presence.probe: " +pres.toString());
+                        try {
+                            pushMyPresence(pres.getFrom());
+                        } catch(ServiceException ex) {}
+                        break;
+                    case error:
+                        ZimbraLog.im.info("Presence.error: " +pres.toString());
+                        break;
+                }
+            }
+        } else if (packet instanceof Roster) {
+            Roster roster = (Roster)packet;
+
+            ZimbraLog.im.info("Got a roster: "+roster.toXML());
+            if (roster.getType() == Type.result) {
+                mBuddyList.clear();
+                
+                for (Roster.Item item : roster.getItems()) {
+                    IMAddr buddyAddr = IMAddr.fromJID(item.getJID());
+                    IMBuddy newBuddy = new IMBuddy(buddyAddr, item.getName());
+                    
+                    boolean doAdd = false;
+                    
+                    Roster.Subscription subscript = item.getSubscription();
+                    switch (subscript) {
+                        case none:
+                            newBuddy.setSubType(SubType.NONE);
+                            break;
+                        case to:
+                            doAdd = true;
+                            newBuddy.setSubType(SubType.TO);
+                            break;
+                        case from:
+                            newBuddy.setSubType(SubType.FROM);
+                            break;
+                        case both:
+                            doAdd = true;
+                            newBuddy.setSubType(SubType.BOTH);
+                            break;
+                        case remove:
+                            newBuddy.setSubType(SubType.NONE);
+                            break;
+                    }
+                    
+                    if (doAdd) {
+                        newBuddy.setPresence(new IMPresence(Show.OFFLINE, (byte) 0, "offline"));
+                        
+                        if (mBuddyList.containsKey(buddyAddr)) {
+                            System.out.println("Key: "+buddyAddr+ " already in buddy list!\n");
+                        }
+                        
+                        mBuddyList.put(buddyAddr, newBuddy);
+                        
+                        for (String group : item.getGroups()) {
+                            if (!mGroups.containsKey(group))
+                                mGroups.put(group, new IMGroup(group));
+                            newBuddy.addGroup(mGroups.get(group));
+                        }
+
+                        try {
+                            postIMNotification(IMSubscribedNotification.create(buddyAddr, newBuddy.getName(), newBuddy.groups(), false));
+                            postIMNotification(new IMPresenceUpdateNotification(buddyAddr, newBuddy.getPresence()));
+                        } catch(ServiceException ex) {
+                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
+                        }
+                        
+                        
+//                        // HACKHACK
+//                        {
+//                            Presence reply;
+//                            reply = new Presence();
+//                            reply.setTo(newBuddy.getAddress().makeJID());
+//                            reply.setFrom(mAddr.makeJID());
+//                            reply.setType(Presence.Type.probe);
+//                            xmppRoute(reply);
+//                        }
+                        
+                        
+                    } else {
+                        try {
+                            postIMNotification(IMSubscribedNotification.create(buddyAddr, newBuddy.getName(), newBuddy.groups(), true));
+                        } catch(ServiceException ex) {
+                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
+                        }
+                    }
+                }
+            } else if (roster.getType() == Type.set) {
+                for (Roster.Item item : roster.getItems()) {
+                    IMAddr buddyAddr = IMAddr.fromJID(item.getJID());
+                    
+                    boolean doAdd = false;
+                    
+                    IMBuddy newBuddy = getOrCreateBuddy(buddyAddr, item.getName());
+                    Roster.Subscription subscript = item.getSubscription();
+                    switch (subscript) {
+                        case none:
+                            newBuddy.setSubType(SubType.NONE);
+                            break;
+                        case to:
+                            doAdd = true;
+                            newBuddy.setSubType(SubType.TO);
+                            break;
+                        case from:
+                            newBuddy.setSubType(SubType.FROM);
+                            break;
+                        case both:
+                            doAdd = true;
+                            newBuddy.setSubType(SubType.BOTH);
+                            break;
+                        case remove:
+                            newBuddy.setSubType(SubType.NONE);
+                            break;
+                    }
+                    
+                    if (doAdd) {
+                    
+                        newBuddy.setPresence(new IMPresence(Show.OFFLINE, (byte) 0, "offline"));
+                        
+                        newBuddy.clearGroups();
+                        for (String group : item.getGroups()) {
+                            if (!mGroups.containsKey(group))
+                                mGroups.put(group, new IMGroup(group));
+                            newBuddy.addGroup(mGroups.get(group));
+                        }
+                        
+                        try {
+                            postIMNotification(IMSubscribedNotification.create(buddyAddr, newBuddy.getName(), newBuddy.groups(), false));
+                            postIMNotification(new IMPresenceUpdateNotification(buddyAddr, newBuddy.getPresence()));
+                        } catch(ServiceException ex) {
+                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
+                        }
+                        
+//                        // HACKHACK
+//                        {
+//                            Presence reply;
+//                            reply = new Presence();
+//                            reply.setTo(newBuddy.getAddress().makeJID());
+//                            reply.setFrom(mAddr.makeJID());
+//                            reply.setType(Presence.Type.probe);
+//                            xmppRoute(reply);
+//                        }
+                        
+                        
+                    } else {
+                        try {
+                            mBuddyList.remove(newBuddy.getAddress());
+                            postIMNotification(IMSubscribedNotification.create(buddyAddr, newBuddy.getName(), newBuddy.groups(), true));
+                        } catch(ServiceException ex) {
+                            ZimbraLog.im.warn("Caught Exception: " + ex.toString(), ex);
+                        }
+                    }                        
+                }
+                
             }
             mSubsLoaded = true;
         }
     }
     
-    // these TWO parameters make up my presence - the first one is the presence
-    // I have saved in the DB, and the second is a flag if I am online or offline
-    private IMPresence mMyPresence = new IMPresence(Show.ONLINE, (byte)1, null);
-    private boolean mIsOnline = false;
+    private void onRemotePresenceChange(Presence pres, Show imShow) {
+        // presence update
+        IMAddr fromAddr = IMAddr.fromJID(pres.getFrom());
+        
+        Presence.Show pShow = pres.getShow();
+        if (pShow != null) {
+            switch (pShow) {
+                case chat:
+                    imShow = Show.CHAT;
+                    break;
+                case away:
+                    imShow = Show.AWAY;
+                    break;
+                case xa: 
+                    imShow = Show.XA;
+                    break;
+                case dnd:
+                    imShow = Show.DND;
+                    break;
+            }
+        }
+
+        int prio = pres.getPriority();
+
+        IMPresence newPresence = new IMPresence(imShow, (byte)prio, pres.getStatus());
+        
+        IMBuddy buddy = mBuddyList.get(fromAddr);
+        if (buddy != null) {
+            buddy.setPresence(newPresence);
+            IMPresenceUpdateNotification event = new IMPresenceUpdateNotification(fromAddr, newPresence);
+
+            try { 
+                postIMNotification(event);
+            } catch (ServiceException ex) {
+                ZimbraLog.im.warn("Caught ServiceException: " + ex.toString(), ex);
+            }
+        } else {
+            ZimbraLog.im.warn("Got presence update for buddy: "+fromAddr+" but wasn't in buddy list!");
+        }
+        
+    }
+    
+    public synchronized void addOutgoingSubscription(OperationContext octxt, IMAddr address, String name, String[] groups) throws ServiceException 
+    {
+        IMBuddy buddy = getOrCreateBuddy(address, name);
+        
+        buddy.clearGroups();
+        buddy.setName(name);
+        for (String grpName : groups) {
+            IMGroup group = this.getOrCreateGroup(grpName);
+            buddy.addGroup(group);
+        }
+        
+        Presence subscribePacket = new Presence(Presence.Type.subscribe);
+        subscribePacket.setTo(address.makeJID());
+        xmppRoute(subscribePacket);
+    }
+    
+    public synchronized void removeOutgoingSubscription(OperationContext octxt, IMAddr address, String name, String[] groups) throws ServiceException
+    {
+        // FIXME: what to do if the remote guy isn't there?? 
+        mBuddyList.remove(address);
+        
+        Presence unsubscribePacket = new Presence(Presence.Type.unsubscribe);
+        unsubscribePacket.setTo(address.makeJID());
+        xmppRoute(unsubscribePacket);
+        
+        postIMNotification(new IMSubscribedNotification(address, name, groups, true));
+    }
     
     /**
      * Finds an existing group OR CREATES ONE
@@ -130,59 +558,8 @@ public class IMPersona {
         return toRet;
     }
     
-    private IMChat getOrCreateChat(String thread, IMAddr fromAddress) {
-        IMChat toRet = mChats.get(thread);
-        if (toRet == null) {
-            Participant part;
-            
-            // do we have a buddy for this chat?  If so, then use the buddy's info
-            IMBuddy buddy = mBuddyList.get(fromAddress);
-            
-            if (buddy != null)
-                part = new IMChat.Participant(buddy.getAddress(), null, buddy.getName());
-            else
-                part = new IMChat.Participant(fromAddress);
-            
-            toRet = new IMChat(thread, part);
-            mChats.put(thread, toRet);
-        }
-        return toRet;
-    }
-    
     public IMChat lookupChatOrNull(String threadId) {
         return mChats.get(threadId);
-    }
-    
-    static class SubscribedNotification implements IMNotification {
-        IMAddr mAddr;
-        String mName;
-        String[] mGroups;
-        boolean mRemove;
-        
-        SubscribedNotification(IMAddr address, String name, String[] groups, boolean remove) {
-            mAddr = address;
-            mName = name;
-            mGroups = groups;
-            mRemove = remove;
-        }
-        
-        public Element toXml(Element parent) {
-            Element e;
-            if (mRemove) { 
-                e = parent.addElement(IMService.E_UNSUBSCRIBED);
-            } else {
-                e = parent.addElement(IMService.E_SUBSCRIBED);
-                e.addAttribute(IMService.A_NAME, mName);
-            }
-            
-            if (mGroups != null) {
-                e.addAttribute(IMService.A_GROUPS, StringUtil.join(",", mGroups));
-            }
-            
-            e.addAttribute(IMService.A_TO, mAddr.getAddr());
-
-            return e;
-        }
     }
     
     public synchronized void addListener(Session session) {
@@ -214,44 +591,15 @@ public class IMPersona {
             session.notifyIM(not);
     }
     
+    private Mailbox getMailbox() throws ServiceException  {
+        return MailboxManager.getInstance().getMailboxByAccount(Provisioning.getInstance().get(AccountBy.name, getAddr().getAddr()));
+    }
+    
     synchronized void flush(OperationContext octxt) throws ServiceException {
-        IMRouter.getInstance().flush(octxt, this);
-    }
-    
-    public synchronized void addOutgoingSubscription(OperationContext octxt, IMAddr address, String name, String[] groups) throws ServiceException 
-    { 
-        IMBuddy buddy = getOrCreateBuddy(address, name);
-        
-        buddy.clearGroups();
-
-        buddy.setName(name);
-
-        for (String grpName : groups) {
-            IMGroup group = this.getOrCreateGroup(grpName);
-            buddy.addGroup(group);
-        }
-        
-        SubType st = buddy.getSubType();
-        if (!st.isOutgoing())
-            buddy.setSubType(st.setOutgoing());
-            
-        IMEvent event = new IMSubscriptionEvent(mAddr, address, Op.SUBSCRIBE);
-        IMRouter.getInstance().postEvent(event);
-        
-        postIMNotification(new SubscribedNotification(address, name, groups, false));
-        flush(octxt);
-    }
-    
-    public synchronized void removeOutgoingSubscription(OperationContext octxt, IMAddr address, String name, String[] groups) throws ServiceException
-    {
-        mBuddyList.remove(address);
-
-        IMEvent event = new IMSubscriptionEvent(mAddr, address, Op.UNSUBSCRIBE);
-        IMRouter.getInstance().postEvent(event);
-
-        postIMNotification(new SubscribedNotification(address, name, groups, true));
-        
-        flush(octxt);
+        Mailbox mbox = getMailbox();
+        assert(getAddr().getAddr().equals(mbox.getAccount().getName()));
+        Metadata md = encodeAsMetatata();
+        mbox.setConfig(octxt, "im", md);
     }
     
     public Iterable<IMGroup> groups() {
@@ -278,85 +626,110 @@ public class IMPersona {
         }; 
     }
     
-
-    synchronized void pushMyPresence() throws ServiceException
-    {
-        IMPresence presence = getEffectivePresence();
-        
-        ArrayList<IMAddr> targets = new ArrayList<IMAddr>();
-        
-        for (IMBuddy buddy : buddies()) {
-            if (buddy.getSubType().isIncoming()) 
-                targets.add(buddy.getAddress());
-        }
-        //IMRouter.getInstance().postEvent(event);
-        
-        // need to send it to myself in case there I have other sessions listening...
-        IMPresenceUpdateEvent event = new IMPresenceUpdateEvent(mAddr, presence, targets);
-        postIMNotification(event);
-        
-//        updateXMPPPresence();
-        
-    }
-    
-    private void updateXMPPPresence() {
-        IMPresence pres = getEffectivePresence();
-        
-        Presence xmppPresence;
-        
-        if (pres.getShow() == Show.OFFLINE) {
-            xmppPresence = new Presence(Presence.Type.unavailable);
-        } else {
-            xmppPresence = new Presence();
-        }
-        xmppPresence.setFrom(mXMPPSession.getAddress());
-        
-        XMPPServer.getInstance().getPacketRouter().route(xmppPresence);
-    }
-    
     public synchronized void setMyPresence(OperationContext octxt, IMPresence presence) throws ServiceException
     {
+        // TODO optimize out change-to-same eventually (leave for now, very convienent as is)
         mMyPresence = presence;
         flush(octxt);
         pushMyPresence();
     }
     
-    public IMPresence getEffectivePresence() {
+    public synchronized IMPresence getEffectivePresence() {
         if (mIsOnline) 
             return mMyPresence;
         else 
             return new IMPresence(Show.OFFLINE, mMyPresence.getPriority(), mMyPresence.getStatus());
     }
     
-    /**
-     * Creates a new chat to "address" (sending a message)
-     * 
-     * @param address
-     * @param message
-     */
-    public synchronized String newChat(OperationContext octxt, IMAddr address, IMMessage message) throws ServiceException
+    private synchronized void pushMyPresence() throws ServiceException
     {
-        String threadId = LdapUtil.generateUUID();
-
-        // add the other user as the first participant in this chat
-        IMChat.Participant part;
-        
-        // do we have a buddy for this chat?  If so, then use the buddy's info
-        IMBuddy buddy = mBuddyList.get(address);
-        
-        if (buddy != null)
-            part = new IMChat.Participant(buddy.getAddress(), null, buddy.getName());
-        else
-            part = new IMChat.Participant(address);
-        
-        IMChat toRet = new IMChat(threadId, part);
-        
-        mChats.put(threadId, toRet);
-        
-        sendMessage(octxt, toRet, message);
-
-        return threadId;
+        pushMyPresence(null);
     }
+
+    private synchronized void pushMyPresence(JID sendTo) throws ServiceException
+    {
+        IMPresence presence = getEffectivePresence();
+        
+        if (sendTo == null) {
+            // send it to my client in case there I have other sessions listening...
+            IMPresenceUpdateNotification event = new IMPresenceUpdateNotification(mAddr, presence);
+            postIMNotification(event);
+        }
+        
+        updateXMPPPresence(sendTo, presence);
+        
+    }
+    
+    
+    private void updateXMPPPresence(JID sendTo, IMPresence pres) {
+        if (mXMPPSession != null) {
+            Presence xmppPresence;
+            
+            if (pres.getShow() == Show.OFFLINE) {
+                xmppPresence = new Presence(Presence.Type.unavailable);
+            } else {
+                xmppPresence = new Presence();
+                
+                if (pres.getShow() == Show.CHAT)
+                    xmppPresence.setShow(Presence.Show.chat);
+                else if (pres.getShow() == Show.AWAY)
+                    xmppPresence.setShow(Presence.Show.away);
+                else if (pres.getShow() == Show.XA)
+                    xmppPresence.setShow(Presence.Show.xa);
+                else if (pres.getShow() == Show.DND)
+                    xmppPresence.setShow(Presence.Show.dnd);
+            }
+            
+            if (pres.getStatus() != null && pres.getStatus().length() > 0)
+                xmppPresence.setStatus(pres.getStatus());
+            
+            if (sendTo != null)
+                xmppPresence.setTo(sendTo);
+                
+            xmppRoute(xmppPresence);
+            
+        }
+    }
+    
+    private void xmppRoute(Packet packet) {
+        if (mXMPPSession != null) {
+            ZimbraLog.im.info("SENDING XMPP PACKET: "+packet.toXML());
+            packet.setFrom(mXMPPSession.getAddress());
+            
+            XMPPServer.getInstance().getPacketRouter().route(packet);
+        }
+    }
+    
+//    /**
+//     * Creates a new chat to "address" (sending a message)
+//     * 
+//     * @param octxt
+//     * @param addressOtherParty user I am chatting with
+//     * @param message
+//     */
+//    private String newChat(OperationContext octxt, IMAddr addressOtherParty, IMMessage message) throws ServiceException
+//    {
+//        String threadId = LdapUtil.generateUUID();
+//
+//        // add the other user as the first participant in this chat
+//        IMChat.Participant part;
+//        
+//        // do we have a buddy for this chat?  If so, then use the buddy's info
+//        IMBuddy buddy = mBuddyList.get(addressOtherParty);
+//        
+//        if (buddy != null)
+//            part = new IMChat.Participant(buddy.getAddress(), null, buddy.getName());
+//        else
+//            part = new IMChat.Participant(addressOtherParty);
+//        
+//        IMChat toRet = new IMChat(getMailbox(), this, threadId, part);
+//        
+//        mChats.put(threadId, toRet);
+//        
+//        sendMessage(octxt, toRet, message);
+//
+//        return threadId;
+//    }
     
     /**
      * Sends a message over an existing chat
@@ -367,22 +740,42 @@ public class IMPersona {
     public synchronized void sendMessage(OperationContext octxt, IMAddr toAddr, String threadId, IMMessage message) throws ServiceException 
     {
         IMChat chat = mChats.get(threadId);
+        
+        //
+        // Find a chat with the right threadId, or find an open 1:1 chat with the target user
+        // or create a new chat if necessary...
+        //
         if (chat == null) {
             for (IMChat cur : mChats.values()) {
                 // find an existing point-to-point chat with that user in it
-                if ((cur.participants().size() ==  2) && (cur.lookupParticipant(message.getFrom()) != null)) {
-                    sendMessage(octxt, cur, message);
-                    return;
+                if (cur.participants().size() <=  2) {
+                    if (cur.lookupParticipant(toAddr) != null) {
+                        chat = cur;
+                        break;
+                    }
                 }
             }
-            threadId = newChat(octxt, toAddr, message);
-            return;
-        }            
-        sendMessage(octxt, chat, message);
-    }
-    
-    private synchronized void sendMessage(OperationContext octxt, IMChat chat, IMMessage message) throws ServiceException
-    {
+            if (chat == null) {
+                //threadId = newChat(octxt, toAddr, message);
+                threadId = toAddr.getAddr();
+                
+                // add the other user as the first participant in this chat
+                IMChat.Participant part;
+                
+                // do we have a buddy for this chat?  If so, then use the buddy's info
+                IMBuddy buddy = mBuddyList.get(toAddr);
+                
+                if (buddy != null)
+                    part = new IMChat.Participant(buddy.getAddress(), null, buddy.getName());
+                else
+                    part = new IMChat.Participant(toAddr);
+                
+                chat = new IMChat(getMailbox(), this, threadId, part);
+                
+                mChats.put(threadId, chat);
+            }
+        }
+        
         message.setFrom(mAddr);
         
         int seqNo = chat.addMessage(message);
@@ -393,15 +786,8 @@ public class IMPersona {
                 toList.add(part.getAddress());
         }
         
-        flush(octxt);
-        
-        IMSendMessageEvent event = new IMSendMessageEvent(mAddr, chat.getThreadId(), toList, message);
-
-        postIMNotification(event.getNotificationEvent(seqNo));
-        
-        
-// Don't need to do this anymore: XMPP router does this!        
-//        IMRouter.getInstance().postEvent(event);
+        IMMessageNotification notification = new IMMessageNotification(message.getFrom(), chat.getThreadId(), message, seqNo);
+        postIMNotification(notification);
         
         for (IMAddr cur : toList) {
             Message xmppMsg = new Message();
@@ -416,49 +802,42 @@ public class IMPersona {
             
             xmppMsg.setThread(chat.getThreadId());
 
-//            XMPPServer.getInstance().getMessageRouter().route(xmppMsg);
+            XMPPServer.getInstance().getMessageRouter().route(xmppMsg);
         }
     }
     
-    public synchronized void closeChat(OperationContext octxt, IMChat chat) throws ServiceException {
-        ArrayList<IMAddr> toList = new ArrayList();
-        for (Participant part : chat.participants()) {
-            if (!part.getAddress().equals(mAddr))
-                toList.add(part.getAddress());
-        }
+    public synchronized void closeChat(OperationContext octxt, IMChat chat) {
+        chat.closeChat();
         
+        // TODO: need to update the remote chat people if they are zimbra users
         mChats.remove(chat.getThreadId());
-        
-        IMLeftChatEvent event = new IMLeftChatEvent(mAddr, chat.getThreadId(), toList);
-        IMRouter.getInstance().postEvent(event);
     }
     
     public synchronized void addUserToChat(IMChat chat, IMAddr addr) throws ServiceException {
-        ArrayList<IMAddr> toList = new ArrayList();
-        for (Participant part : chat.participants()) {
-            if (!part.getAddress().equals(mAddr))
-                toList.add(part.getAddress());
-        }
-        
-        // do we have a buddy for this new user?  If so, then use the buddy's info
-        IMBuddy buddy = mBuddyList.get(addr);
-        IMChat.Participant part;
-        
-        if (buddy != null)
-            part = new IMChat.Participant(buddy.getAddress(), null, buddy.getName());
-        else
-            part = new IMChat.Participant(addr);
-        
-        chat.addParticipant(part);
-        
-        IMEnteredChatEvent event = new IMEnteredChatEvent(mAddr, chat.getThreadId(), toList, addr);
-        IMRouter.getInstance().postEvent(event);
+        throw ServiceException.FAILURE("Unimplemented", null);
+//        ArrayList<IMAddr> toList = new ArrayList<IMAddr>();
+//        for (Participant part : chat.participants()) {
+//            if (!part.getAddress().equals(mAddr))
+//                toList.add(part.getAddress());
+//        }
+//        
+//        // do we have a buddy for this new user?  If so, then use the buddy's info
+//        IMBuddy buddy = mBuddyList.get(addr);
+//        IMChat.Participant part;
+//        
+//        if (buddy != null)
+//            part = new IMChat.Participant(buddy.getAddress(), null, buddy.getName());
+//        else
+//            part = new IMChat.Participant(addr);
+//        
+//        chat.addParticipant(part);
+//        
+//        IMEnteredChatEvent event = new IMEnteredChatEvent(mAddr, chat.getThreadId(), toList, addr);
+//        IMRouter.getInstance().postEvent(event);
     }
     
     private static final String FN_ADDRESS     = "a";
     private static final String FN_PRESENCE    = "p";
-    private static final String FN_NUM_BUDDIES = "nb";
-    private static final String FN_BUDDY       = "b";
     
     synchronized Metadata encodeAsMetatata()
     {
@@ -466,13 +845,6 @@ public class IMPersona {
         
         meta.put(FN_ADDRESS, mAddr);
         meta.put(FN_PRESENCE, mMyPresence.encodeAsMetadata());
-        meta.put(FN_NUM_BUDDIES, mBuddyList.size());
-        int offset = 0;
-        for (IMBuddy buddy : mBuddyList.values()) {
-            meta.put(FN_BUDDY+offset, buddy.encodeAsMetadata());
-            offset++;
-        }
-        
         return meta;
     }
     
@@ -485,129 +857,31 @@ public class IMPersona {
 
             IMPresence presence = IMPresence.decodeMetadata(meta.getMap(FN_PRESENCE));
             toRet.mMyPresence = presence;
-            
-            int numBuddies = (int)meta.getLong(FN_NUM_BUDDIES);
-            for (int i = 0; i < numBuddies; i++) {
-                IMBuddy buddy = IMBuddy.decodeFromMetadata(meta.getMap(FN_BUDDY+i), toRet);
-                assert(!buddy.getAddress().equals(address));
-                toRet.mBuddyList.put(buddy.getAddress(), buddy);
-            }
-            assert(toRet.getAddr().equals(address));
             return toRet;
-        } else {
-            // addresses don't match!  clear buddy list!
-            return new IMPersona(address);
         }
+        return new IMPersona(address);
     }
 
-    /**
-     * HANDLE* functions are called by IMEvent execution
-     * 
-     * @param octxt
-     * @param address
-     * @throws ServiceException
-     */
-    void handleAddIncomingSubscription(IMAddr address) throws ServiceException
-    {
-        IMBuddy buddy = this.getOrCreateBuddy(address, null);
-        SubType st = buddy.getSubType();
-        if (!st.isIncoming()) {
-            buddy.setSubType(st.setIncoming());
-        }
-        
-        // send my presence to the newly-subscribed person
-        if (mMyPresence != null) {
-            ArrayList<IMAddr> target= new ArrayList();
-            target.add(address);
+    private IMChat getOrCreateChat(String thread, IMAddr fromAddress) {
+        IMChat toRet = mChats.get(thread);
+        if (toRet == null) {
+            Participant part;
             
-            // no need to send it to myself here
-            IMPresenceUpdateEvent event = new IMPresenceUpdateEvent(mAddr, mMyPresence, target); 
-            IMRouter.getInstance().postEvent(event);
-        }
-            
-        flush(null);
-    }
-    
-    /**
-     * HANDLE* functions are called by IMEvent execution
-     * 
-     * @param address
-     * @throws ServiceException
-     */
-    void handleRemoveIncomingSubscription(IMAddr address) throws ServiceException
-    {
-        mBuddyList.remove(address);
-        flush(null);
-    }
-
-    /**
-     * HANDLE* functions are called by IMEvent execution
-     * 
-     * @param from
-     * @param threadId
-     * @throws ServiceException
-     */
-    void handleLeftChat(IMAddr from, String threadId) throws ServiceException {
-        IMChat chat = mChats.get(threadId);
-        if (chat != null) {
-            chat.removeParticipant(from);
-        }
-    }
-    
-    public void handleAddChatUser(String threadId, IMAddr addr) throws ServiceException {
-        IMChat chat = mChats.get(threadId);
-            
-        if (chat != null) {
-            // do we have a buddy for this new user?  If so, then use the buddy's info
-            IMBuddy buddy = mBuddyList.get(addr);
-            IMChat.Participant part;
+            // do we have a buddy for this chat?  If so, then use the buddy's info
+            IMBuddy buddy = mBuddyList.get(fromAddress);
             
             if (buddy != null)
                 part = new IMChat.Participant(buddy.getAddress(), null, buddy.getName());
             else
-                part = new IMChat.Participant(addr);
+                part = new IMChat.Participant(fromAddress);
             
-            chat.addParticipant(part);
-        }
-    }
-    
-    
-    /**
-     * HANDLE* functions are called by IMEvent execution
-     * 
-     * @param from
-     * @param presence
-     */
-    void handlePresenceUpdate(IMAddr from, IMPresence presence) {
-        IMBuddy buddy = mBuddyList.get(from);
-        if (buddy != null) {
-            buddy.setPresence(presence);
-        }
-    }
-    
-    /**
-     * HANDLE* functions are called by IMEvent execution
-     * 
-     * @param from
-     * @param threadId
-     * @param message
-     * @return sequence number of message in chat
-     */
-    synchronized int handleMessage(IMAddr from, String threadId, IMMessage message) {
-        if (threadId == null || threadId.length() == 0) {
-            for (IMChat cur : mChats.values()) {
-                // find an existing point-to-point chat with that user in it
-                if ((cur.participants().size() ==  2) && (cur.lookupParticipant(message.getFrom()) != null)) {
-                    threadId = cur.getThreadId();
-                    break;
-                }
-            }
-            if (threadId == null || threadId.length() == 0) {
-                threadId = LdapUtil.generateUUID();
+            try {
+                toRet = new IMChat(getMailbox(), this, thread, part);
+                mChats.put(thread, toRet);
+            } catch (ServiceException e) {
+                ZimbraLog.im.warn("Caught Service Exception: " + e.toString(), e);
             }
         }
-        
-        IMChat chat = getOrCreateChat(threadId, from);
-        return chat.addMessage(from, null, null, message);
+        return toRet;
     }
 }

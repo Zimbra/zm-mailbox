@@ -149,6 +149,10 @@ public class IMMessage {
         return mLangSubjects.get(lang);
     }
     
+    public TextPart getBody() {
+        return getBody(Lang.DEFAULT);
+    }
+    
     public TextPart getBody(Lang lang) {
         if (lang == Lang.DEFAULT
                 || (mBody != null && mBody.mLang == lang)

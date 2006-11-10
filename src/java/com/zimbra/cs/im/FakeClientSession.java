@@ -1,37 +1,71 @@
 package com.zimbra.cs.im;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.jivesoftware.wildfire.ClientSession;
+import org.jivesoftware.wildfire.Connection;
+import org.jivesoftware.wildfire.XMPPServer;
+import org.jivesoftware.wildfire.auth.AuthToken;
+import org.jivesoftware.wildfire.auth.UnauthorizedException;
+import org.jivesoftware.wildfire.net.VirtualConnection;
+import org.jivesoftware.wildfire.user.UserNotFoundException;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.Presence;
+import org.xmpp.packet.Roster;
 import org.xmpp.packet.StreamError;
+import org.xmpp.packet.IQ.Type;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.im.IMMessage.TextPart;
-import com.zimbra.cs.im.xmpp.srv.ClientSession;
-import com.zimbra.cs.im.xmpp.srv.Connection;
-import com.zimbra.cs.im.xmpp.srv.XMPPServer;
-import com.zimbra.cs.im.xmpp.srv.auth.AuthToken;
-import com.zimbra.cs.im.xmpp.srv.privacy.PrivacyList;
-import com.zimbra.cs.im.xmpp.srv.user.UserManager;
-import com.zimbra.cs.im.xmpp.srv.user.UserNotFoundException;
 import com.zimbra.cs.service.ServiceException;
 
 public class FakeClientSession extends ClientSession {
+    
+    
+    static class FakeClientConnection extends VirtualConnection {
+        
+        FakeClientSession mSession;
+
+        public void setSession(FakeClientSession session) {
+            mSession = session;
+        }
+
+        @Override
+        public void closeVirtualConnection() {
+        }
+
+        public void deliver(Packet packet) throws UnauthorizedException {
+            mSession.process(packet);
+        }
+
+        public void deliverRawText(String text) {
+        }
+
+        public InetAddress getInetAddress() {
+            return null;
+        }
+
+        public void systemShutdown() {
+        }
+        
+    }
     
     private String mAddr;
     private IMPersona mPersona;
 
     public FakeClientSession(String serverName, String addr, IMPersona persona) {
-        super(serverName, null, XMPPServer.getInstance().getSessionManager().nextStreamID());
+        super(serverName, new FakeClientConnection(), XMPPServer.getInstance().getSessionManager().nextStreamID());
         mAddr = addr;
         mPersona  = persona;
+        ((FakeClientConnection)this.getConnection()).setSession(this);
     }
     
-    public void addRoutes() {
+    void addRoutes() {
         setAuthToken(new AuthToken(mAddr));
         try {
             // if there is already a "zcs" session, kick it off
@@ -45,7 +79,7 @@ public class FakeClientSession extends ClientSession {
                     StreamError error = new StreamError(StreamError.Condition.conflict);
                     
                     try {
-                        conn.getWriter().write(error.toXML());
+                        conn.deliverRawText(error.toXML());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -74,32 +108,8 @@ public class FakeClientSession extends ClientSession {
 //        XMPPServer.getInstance().getRoutingTable().addRoute(jid2, this);
 //        
 //        
-        
     }
     
-    public boolean canFloodOfflineMessages() {
-        return false;
-    }
-
-    public PrivacyList getActiveList() {
-        return null;
-    }
-
-    public String getAvailableStreamFeatures() {
-        return null;
-    }
-
-    public int getConflictCount() {
-        return 0;
-    }
-
-    public PrivacyList getDefaultList() {
-        return null;
-    }
-
-    public void incrementConflictCount() {
-    }
-
     public boolean isInitialized() {
         return true;
     }
@@ -109,49 +119,44 @@ public class FakeClientSession extends ClientSession {
     }
 
     public void process(Packet packet) {
-        System.out.println("FakeClientSession received packet: "+ packet.toString());
         if (shouldBlockPacket(packet)) {
             // Communication is blocked. Drop packet.
             return;
         }
-
-        if (packet instanceof Message) {
-            Message msg = (Message)packet;
-            String toAddr = msg.getTo().getNode() + '@'+  msg.getTo().getDomain();
-            String fromAddr = msg.getFrom().getNode() + '@' + msg.getFrom().getDomain();
-            String threadId = msg.getThread();
-            
-            String subject = msg.getSubject();
-            String body = msg.getBody();
-
-            IMMessage immsg = new IMMessage(subject==null?null:new TextPart(subject),
-                        body==null?null:new TextPart(body));
-            
-            immsg.setFrom(new IMAddr(fromAddr));
-            
-            assert(toAddr.equals(mPersona.getAddr().getAddr()));
-            
-            List<IMAddr> toList = new ArrayList<IMAddr>(1);
-            toList.add(mPersona.getAddr());
-            
-            IMSendMessageEvent sendEvt = new IMSendMessageEvent(new IMAddr(fromAddr), threadId, toList, immsg);
-            
-            IMRouter.getInstance().postEvent(sendEvt);
-        } else if (packet instanceof Presence) {
-            Presence pres = (Presence)packet;
-            Presence reply = new Presence();
-            reply.setTo(pres.getFrom());
-            reply.setFrom(pres.getTo());
-            reply.setType(Presence.Type.subscribed);
-            XMPPServer.getInstance().getPresenceRouter().route(reply);
-        }
+        
+//        ZimbraLog.im.info("FakeClientSession processing packet: "+packet.toXML());
+        IMXmppEvent imXmppEvent = new IMXmppEvent(mPersona.getAddr(), packet);
+        IMRouter.getInstance().postEvent(imXmppEvent);
     }
 
-    public void setActiveList(PrivacyList activeList) {
-    }
-
-    public void setDefaultList(PrivacyList defaultList) {
-    }
+//    public boolean canFloodOfflineMessages() {
+//        return false;
+//    }
+//
+//    public PrivacyList getActiveList() {
+//        return null;
+//    }
+//
+//    public String getAvailableStreamFeatures() {
+//        return null;
+//    }
+//
+//    public int getConflictCount() {
+//        return 0;
+//    }
+//
+//    public PrivacyList getDefaultList() {
+//        return null;
+//    }
+//
+//    public void incrementConflictCount() {
+//    }
+//
+//    public void setActiveList(PrivacyList activeList) {
+//    }
+//
+//    public void setDefaultList(PrivacyList defaultList) {
+//    }
 
     public void setInitialized(boolean isInit) {
     }

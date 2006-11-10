@@ -57,56 +57,61 @@ public class IMGetChat extends IMDocumentHandler {
             if (chat == null)
                 throw ServiceException.FAILURE("Unknown thread: "+threadId, null);
             
-            // chat
-            Element ce = response.addElement(IMService.E_CHAT);
-            ce.addAttribute(IMService.A_THREAD_ID, chat.getThreadId());
-            
-            // participants
-            {
-                Element e = ce.addElement(IMService.E_PARTICIPANTS);
-                for (Participant part : chat.participants()) {
-                    Element pe = e.addElement(IMService.E_PARTICIPANT);
-                    pe.addAttribute(IMService.A_ADDRESS, part.getAddress().getAddr());
-                }
-            }
-            
-            // messages
-            {
-                Element messages = ce.addElement(IMService.E_MESSAGES);
-                int curOffset = 0;
-                
-                for (IMMessage msg : chat.messages()) {
-                    Element me = messages.addElement(IMService.E_MESSAGE);
-                    me.addAttribute(IMService.A_SEQ, curOffset+chat.getFirstSeqNo());
-                    me.addAttribute(IMService.A_TIMESTAMP, msg.getTimestamp());
-                    me.addAttribute(IMService.A_FROM, msg.getFrom().getAddr());
-                    
-                    // subject 
-                    {
-                        TextPart subj = msg.getSubject(Lang.DEFAULT);
-                        if (subj != null) {
-                            Element se = me.addElement(IMService.E_SUBJECT);
-                            se.setText(subj.getHtmlText());
-                        }
-                    }
-                    
-                    // body
-                    {
-                        TextPart body = msg.getBody(Lang.DEFAULT);
-                        if (body != null) {
-                            Element se = me.addElement(IMService.E_BODY);
-                            se.setText(body.getHtmlText());
-                        }
-                    }
-                    
-                    curOffset++;
-                }
-            }
+            response = chatToXml(chat, response);
         }
         
         response.addAttribute(IMService.A_THREAD_ID, threadId);
         
         return response;        
+    }
+    
+    public static Element chatToXml(IMChat chat, Element parent) {
+        // chat
+        Element ce = parent.addElement(IMService.E_CHAT);
+        ce.addAttribute(IMService.A_THREAD_ID, chat.getThreadId());
+        
+        // participants
+        {
+            Element e = ce.addElement(IMService.E_PARTICIPANTS);
+            for (Participant part : chat.participants()) {
+                Element pe = e.addElement(IMService.E_PARTICIPANT);
+                pe.addAttribute(IMService.A_ADDRESS, part.getAddress().getAddr());
+            }
+        }
+        
+        // messages
+        {
+            Element messages = ce.addElement(IMService.E_MESSAGES);
+            int curOffset = 0;
+            
+            for (IMMessage msg : chat.messages()) {
+                Element me = messages.addElement(IMService.E_MESSAGE);
+                me.addAttribute(IMService.A_SEQ, curOffset+chat.getFirstSeqNo());
+                me.addAttribute(IMService.A_TIMESTAMP, msg.getTimestamp());
+                me.addAttribute(IMService.A_FROM, msg.getFrom().getAddr());
+                
+                // subject 
+                {
+                    TextPart subj = msg.getSubject(Lang.DEFAULT);
+                    if (subj != null) {
+                        Element se = me.addElement(IMService.E_SUBJECT);
+                        se.setText(subj.getHtmlText());
+                    }
+                }
+                
+                // body
+                {
+                    TextPart body = msg.getBody(Lang.DEFAULT);
+                    if (body != null) {
+                        Element se = me.addElement(IMService.E_BODY);
+                        se.setText(body.getHtmlText());
+                    }
+                }
+                
+                curOffset++;
+            }
+            return parent;
+        }
     }
     
 }

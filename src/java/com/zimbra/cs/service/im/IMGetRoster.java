@@ -26,6 +26,7 @@ package com.zimbra.cs.service.im;
 
 import java.util.Map;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.im.IMBuddy;
 import com.zimbra.cs.im.IMChat;
 import com.zimbra.cs.im.IMGroup;
@@ -106,6 +107,9 @@ public class IMGetRoster extends IMDocumentHandler {
             }
         }
 
+        
+        ZimbraLog.im.info("GET ROSTER RESPONSE:\n"+response.toXML().asXML());
+        
         return response;        
     }
 }

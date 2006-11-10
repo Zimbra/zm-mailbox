@@ -48,10 +48,7 @@ public class IMSendMessage extends IMDocumentHandler {
         Element msgElt = request.getElement(IMService.E_MESSAGE);
         
         String threadId = msgElt.getAttribute(IMService.A_THREAD_ID, null);
-        String addr = null;
-        
-        if (threadId == null)
-            addr = msgElt.getAttribute(IMService.A_ADDRESS);
+        String addr = msgElt.getAttribute(IMService.A_ADDRESS);
         
         String subject = null;
         String body = null;
@@ -75,11 +72,7 @@ public class IMSendMessage extends IMDocumentHandler {
         synchronized(lock) {
             IMPersona persona = super.getRequestedPersona(lc, lock);
             
-            if (threadId != null) {
-                persona.sendMessage(oc, new IMAddr(addr), threadId, msg);
-            } else {
-                threadId = persona.newChat(oc, new IMAddr(addr), msg);
-            }
+            persona.sendMessage(oc, new IMAddr(addr), threadId, msg);
         }
         
         response.addAttribute(IMService.A_THREAD_ID, threadId);
