@@ -97,6 +97,31 @@ class LuceneQueryOperation extends QueryOperation
     void forceHasSpamTrashSetting() {
         mHasSpamTrashSetting = true;
     }
+    
+    boolean shouldExecuteDbFirst() {
+        BooleanClause[] clauses = mQuery.getClauses();
+        if (clauses.length > 1)
+            return false;
+        
+        Query q = clauses[0].query;
+        
+        if (q instanceof TermQuery) {
+            TermQuery tq = (TermQuery)q;
+            Term term = tq.getTerm();
+            try {
+                int freq = mSearcher.getSearcher().docFreq(term);
+                
+//                System.out.println("**************************************Term: "+term+" has frequency of " + freq);
+                if (freq > 5000) // TODO fixme, this is only temporary 
+                    return true;
+                
+            } catch (IOException e) {
+                return false;
+            }
+        }
+        
+        return false;
+    }
 
     QueryTargetSet getQueryTargets() {
         QueryTargetSet toRet = new QueryTargetSet(1);
@@ -371,6 +396,17 @@ class LuceneQueryOperation extends QueryOperation
     protected int inheritedGetExecutionCost()
     {
         return 20;
+    }
+    
+    BooleanQuery getCurrentQuery() {
+        assert(!mHaveRunSearch);
+        return mQuery; 
+    }
+    
+    void setCurrentQuery(BooleanQuery q) {
+        mHaveRunSearch = false;
+        mQuery = q; 
+        mCurHitNo = 0;
     }
 
     void addAndedClause(Query q, boolean truth) {
