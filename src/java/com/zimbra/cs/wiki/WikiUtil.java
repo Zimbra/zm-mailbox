@@ -144,7 +144,10 @@ public abstract class WikiUtil {
         }
         
         private void deleteItems(OperationContext octxt, Mailbox mbox, Folder where) throws ServiceException {
-            
+        	if (where.getDefaultView() == MailItem.TYPE_WIKI) {
+        		mbox.emptyFolder(octxt, where.getId(), true);
+        		return;
+        	}
             List<Document> items = mbox.getWikiList(octxt, where.getId());
             for (Document doc : items) {
                 mbox.delete(octxt, doc, null);
@@ -296,7 +299,7 @@ public abstract class WikiUtil {
             return true;
         }
         
-        private void deleteAllItemsInFolder(ZFolder folder, String parent) throws IOException, ServiceException {
+        private void deleteAllItemsInFolder(ZFolder folder) throws IOException, ServiceException {
             if (purgeFolder(folder))
                 return;
             StringBuilder buf = new StringBuilder();
@@ -309,6 +312,10 @@ public abstract class WikiUtil {
             	buf.append(hit.getId());
             }
             mMbox.deleteItem(buf.toString(), null);
+            for (ZFolder f : folder.getSubFolders()) {
+            	deleteAllItemsInFolder(f);
+            	mMbox.deleteFolder(f.getId());
+            }
         }
         
         private void createItem(ZFolder where, File what) throws IOException, ServiceException {
@@ -358,7 +365,7 @@ public abstract class WikiUtil {
             try {
                 ZFolder root = getRootFolder();
                 ZFolder f = findFolder(root, where);
-                deleteAllItemsInFolder(f, "/");
+                deleteAllItemsInFolder(f);
                 return;
             } catch (Exception e) {
                 throw WikiServiceException.ERROR("emptyNotebooks", e);
