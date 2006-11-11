@@ -54,6 +54,10 @@ public class ZSearchResult {
                 mHits.add(new ZMessageHit(h, cache));
             } else if (h.getName().equals(MailService.E_CONTACT)) {
                 mHits.add(new ZContactHit(h));
+            } else if (h.getName().equals(MailService.E_DOC)) {
+                mHits.add(new ZDocumentHit(h));
+            } else if (h.getName().equals(MailService.E_WIKIWORD)) {
+                mHits.add(new ZDocumentHit(h));
             }
         }
     }

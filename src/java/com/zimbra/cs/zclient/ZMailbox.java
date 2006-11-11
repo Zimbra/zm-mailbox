@@ -1921,5 +1921,22 @@ public class ZMailbox {
         return result;
     }
 
+    public String createDocument(String folderId, String name, String attachmentId) throws ServiceException {
+    	XMLElement req = new XMLElement(MailService.SAVE_DOCUMENT_REQUEST);
+    	Element doc = req.addElement(MailService.E_DOC);
+    	doc.addAttribute(MailService.A_NAME, name);
+    	doc.addAttribute(MailService.A_FOLDER, folderId);
+    	doc.addAttribute(MailService.A_ATTACHMENT_ID, attachmentId);
+    	return invoke(req).getElement(MailService.E_DOC).getAttribute(MailService.A_ID);
+    }
+
+    public String createWiki(String folderId, String name, String contents) throws ServiceException {
+    	XMLElement req = new XMLElement(MailService.SAVE_WIKI_REQUEST);
+    	Element doc = req.addElement(MailService.E_WIKIWORD);
+    	doc.addAttribute(MailService.A_NAME, name);
+    	doc.addAttribute(MailService.A_FOLDER, folderId);
+    	doc.setText(contents);
+    	return invoke(req).getElement(MailService.E_WIKIWORD).getAttribute(MailService.A_ID);
+    }
 }
 

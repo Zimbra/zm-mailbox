@@ -1301,6 +1301,14 @@ public class ZMailboxUtil implements DebugListener {
                 String from = mh.getSender() == null ? "<none>" : mh.getSender().getDisplay();
                 mIndexToId.put(i, mh.getId());
                 System.out.format(itemFormat, i++, mh.getId(), "mess", from, sub, c);
+            } else if (hit instanceof ZDocumentHit) {
+                ZDocumentHit dh = (ZDocumentHit) hit;
+                ZDocument doc = dh.getDocument();
+                c.setTimeInMillis(doc.getModifiedDate());
+                String name = doc.getName();
+                String editor = doc.getEditor();
+                mIndexToId.put(i, dh.getId());
+                System.out.format(itemFormat, i++, dh.getId(), doc.isWiki()?"wiki":"doc", editor, name, c);
             }
         }
         System.out.println();

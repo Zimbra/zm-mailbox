@@ -39,6 +39,10 @@ public class ZSearchParams {
     
     public static final String TYPE_APPOINTMENT = "appointment";
     
+    public static final String TYPE_DOCUMENT = "document";
+    
+    public static final String TYPE_WIKI = "wiki";
+    
     public static String getCanonicalTypes(String list) throws ServiceException  {
         if (list == null || list.length() == 0) return "";
 
@@ -53,6 +57,10 @@ public class ZSearchParams {
                 sb.append(TYPE_CONTACT);
             else if (s.startsWith("a") && TYPE_APPOINTMENT.startsWith(s))
                 sb.append(TYPE_APPOINTMENT);
+            else if (s.startsWith("d") && TYPE_DOCUMENT.startsWith(s))
+                sb.append(TYPE_DOCUMENT);
+            else if (s.startsWith("w") && TYPE_WIKI.startsWith(s))
+                sb.append(TYPE_WIKI);
             else
                 throw ZClientException.CLIENT_ERROR("invlaid search type: "+s, null);
         }
