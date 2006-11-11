@@ -26,10 +26,8 @@ package com.zimbra.cs.wiki;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -50,8 +48,6 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.client.*;
-import com.zimbra.cs.client.soap.*;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.ACL;
@@ -67,9 +63,14 @@ import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZSearchHit;
+import com.zimbra.cs.zclient.ZSearchParams;
+import com.zimbra.cs.zclient.ZSearchResult;
+import com.zimbra.cs.zclient.ZFolder.View;
+import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.soap.SoapFaultException;
-import com.zimbra.soap.SoapParseException;
 
 public abstract class WikiUtil {
     
@@ -218,10 +219,9 @@ public abstract class WikiUtil {
     }
     
     private static class WikiSoapUtil extends WikiUtil {
-        private LmcSession mSession;
+    	private ZMailbox mMbox;
         
         private String mUrl;
-        private String mUploadUrl;
         
         public WikiSoapUtil(Provisioning soapProv, String server, String user, String pass) throws ServiceException {
         	mProv = soapProv;
@@ -235,209 +235,102 @@ public abstract class WikiUtil {
         	else
         		s = mProv.get(ServerBy.name, server);
         	mUrl = URLUtil.getMailURL(s, ZimbraServlet.USER_SERVICE_URI, false);
-        	mUploadUrl = URLUtil.getMailURL(s, "/service/upload", false);
         }
         
         public void setVerbose() {
-            LmcSoapRequest.setDumpXML(true);
+            //LmcSoapRequest.setDumpXML(true);
         }
         
-        private void auth() throws LmcSoapClientException, IOException, 
-                SoapFaultException, ServiceException, SoapParseException {
-            if (mSession != null)
-                return;
-            
-            LmcAuthRequest auth = new LmcAuthRequest();
-            auth.setUsername(mUsername);
-            auth.setPassword(mPassword);
-            LmcAuthResponse resp = (LmcAuthResponse) auth.invoke(mUrl);
-            mSession = resp.getSession();
+        private void auth() throws IOException, ServiceException {
+			ZMailbox.Options options = new ZMailbox.Options();
+			options.setAccount(mUsername);
+			options.setAccountBy(AccountBy.name);
+			options.setPassword(mPassword);
+			options.setUri(mUrl);
+	        mMbox = ZMailbox.getMailbox(options);
         }
         
-        private LmcFolder findFolder(LmcFolder root, String dir) {
+        private ZFolder findFolder(ZFolder root, String dir) {
             if (root == null)
                 return null;
-            LmcFolder[] list = root.getSubFolders();
+            List<ZFolder> list = root.getSubFolders();
             if (list == null)
                 return null;
-            for (int i = 0; i < list.length; i++) {
-                if (list[i].getName().equals(dir)) {
-                    return list[i];
+            for (ZFolder f : list) {
+                if (f.getName().equals(dir)) {
+                    return f;
                 }
             }
             return null;
         }
 
-        private LmcFolder createFolder(LmcFolder parent, String dir) throws LmcSoapClientException, IOException, 
-                SoapFaultException, ServiceException, SoapParseException {
+        private ZFolder createFolder(ZFolder parent, String dir) throws ServiceException {
             System.out.println("Creating folder " + dir);
-            auth();
-            LmcCreateFolderRequest req = new LmcCreateFolderRequest();
-            req.setSession(mSession);
-            req.setName(dir);
-            req.setParentID(parent.getFolderID());
-            req.setView(sDEFAULTVIEW);
-            LmcCreateFolderResponse resp = (LmcCreateFolderResponse) req.invoke(mUrl);
-            return resp.getFolder();
+            return mMbox.createFolder(parent.getId(), dir, ZFolder.View.valueOf(sDEFAULTVIEW), null, null);
         }
         
-        private LmcFolder getRootFolder() throws LmcSoapClientException, IOException, 
-        SoapFaultException, ServiceException, SoapParseException {
-            auth();
-            LmcGetFolderRequest req = new LmcGetFolderRequest();
-            req.setSession(mSession);
-            LmcGetFolderResponse resp = (LmcGetFolderResponse) req.invoke(mUrl);
-            return resp.getRootFolder();
+        private ZFolder getRootFolder() throws ServiceException {
+        	return mMbox.getFolderByPath("/");
         }
 
-        private void setFolderAccess(LmcFolder f, String perm, String grantee, String d, boolean inherit)
-        throws LmcSoapClientException, IOException, SoapFaultException, ServiceException, SoapParseException {
-            auth();
-            LmcFolderActionRequest req = new LmcFolderActionRequest();
-            req.setSession(mSession);
-            req.setFolderList(f.getFolderID());
-            req.setOp("grant");
-            req.setGrant(perm, grantee, d, inherit);
-            req.invoke(mUrl);
-        }
-        
-        protected void setFolderPermission(Account account, String grantee, String name, String id) 
-        throws ServiceException {
+        protected void setFolderPermission(Account account, String grantee, String name, String id) throws ServiceException, IOException {
             System.out.println("Initializing folders ");
-            try {
-                LmcFolder root = getRootFolder();
-                LmcFolder f = findFolder(root, sDEFAULTFOLDER);
-                setFolderAccess(f, "rwid", grantee, name, true);
-                
-                f = findFolder(root, sDEFAULTTEMPLATEFOLDER);
-                if (f == null)
-                    f = createFolder(root, sDEFAULTTEMPLATEFOLDER);
-                
-                setFolderAccess(f, "r", "pub", ACL.GUID_PUBLIC, true);
-            } catch (Exception e) {
-                throw WikiServiceException.ERROR("import", e);
-            }
+            auth();
+            ZFolder root = getRootFolder();
+            ZFolder f = findFolder(root, sDEFAULTFOLDER);
+            mMbox.modifyFolderGrant(f.getId(), GranteeType.fromString(grantee), name, "rwid", null, true);
+            f = findFolder(root, sDEFAULTTEMPLATEFOLDER);
+            if (f == null)
+            	f = createFolder(root, sDEFAULTTEMPLATEFOLDER);
+            mMbox.modifyFolderGrant(f.getId(), GranteeType.pub, name, "r", null, true);
         }
 
-        private boolean purgeFolder(LmcFolder folder) throws LmcSoapClientException, IOException, 
-                SoapFaultException, ServiceException, SoapParseException {
+        private boolean purgeFolder(ZFolder folder) throws ServiceException {
             if (folder == null)
                 return true;
-            auth();
-            if (folder.getView() == null ||
-                !folder.getView().equals(sDEFAULTVIEW)) {
+            if (folder.getDefaultView() == null ||
+                !folder.getDefaultView().equals(View.valueOf(sDEFAULTVIEW))) {
                 return false;
             }
-            LmcFolderActionRequest req = new LmcFolderActionRequest();
-            req.setSession(mSession);
-            req.setFolderList(folder.getFolderID());
-            req.setOp("empty");
-            req.invoke(mUrl);
+            mMbox.emptyFolder(folder.getId());
             return true;
         }
         
-        private void deleteAllItemsInFolder(LmcFolder folder, String parent) throws LmcSoapClientException, IOException, 
-                SoapFaultException, ServiceException, SoapParseException {
-            auth();
+        private void deleteAllItemsInFolder(ZFolder folder, String parent) throws IOException, ServiceException {
             if (purgeFolder(folder))
                 return;
-            String folderName = parent;
-            if (folderName.length() == 0)
-                folderName = "/";
-            else if (folderName.equals("/"))
-                folderName += folder.getName();
-            else
-                folderName += "/" + folder.getName();
-            LmcSearchRequest req = new LmcSearchRequest();
-            req.setSession(mSession);
-            req.setQuery("in:\""+folderName+"\"");
-            req.setTypes("wiki,document");
-            LmcSearchResponse resp = (LmcSearchResponse) req.invoke(mUrl);
-            @SuppressWarnings("unchecked")
-            Iterator items = resp.getResults().listIterator();
-            if (items.hasNext()) {
-                String ids = "";
-                while (items.hasNext()) {
-                    LmcDocument doc = (LmcDocument) items.next();
-                    if (!ids.equals("")) ids += ",";
-                    ids += doc.getID();
-                }
-                LmcItemActionRequest actReq = new LmcItemActionRequest();
-                actReq.setSession(mSession);
-                actReq.setOp("delete");
-                actReq.setMsgList(ids);
-                actReq.invoke(mUrl);
+            StringBuilder buf = new StringBuilder();
+            ZSearchParams params = new ZSearchParams("in:'"+folder.getName()+"'");
+            params.setTypes("wiki,document");
+            ZSearchResult result = mMbox.search(params);
+            for (ZSearchHit hit: result.getHits()) {
+            	if (buf.length() > 0)
+            		buf.append(",");
+            	buf.append(hit.getId());
             }
-            LmcFolder[] list = folder.getSubFolders();
-            if (list == null)
-                return;
-            for (int i = 0; i < list.length; i++) {
-                LmcFolder f = list[i];
-                if (f.getView() == null || !f.getView().equals("wiki"))
-                    continue;
-                deleteAllItemsInFolder(f, folderName);
-            }
+            mMbox.deleteItem(buf.toString(), null);
         }
         
-        private void createDocument(LmcFolder where, File file) throws LmcSoapClientException, IOException, 
-        SoapFaultException, ServiceException, SoapParseException {
-            System.out.println("Creating file document " + file.getName() + " in folder " + where.getName());
-            auth();
-            LmcSaveDocumentRequest req = new LmcSaveDocumentRequest();
-            req.setSession(mSession);
-
-            URL url = new URL(mUrl);
-            String domain = url.getHost();
-            
-            LmcDocument doc = new LmcDocument();
-            doc.setFolder(where.getFolderID());
-            String attachmentId = req.postAttachment(mUploadUrl, mSession, file, domain, 10000);
-            doc.setAttachmentId(attachmentId);
-            
-            req.setDocument(doc);
-            req.invoke(mUrl);
-        }
-        
-        private void createWiki(LmcFolder where, File what) throws LmcSoapClientException, IOException, 
-        SoapFaultException, ServiceException, SoapParseException {
-            auth();
-            String name = what.getName();
-            if (name.toLowerCase().endsWith(".html") || name.toLowerCase().endsWith(".wiki"))
-                name = name.substring(0, name.length() - 5);
-            System.out.println("Creating wiki document " + name + " in folder " + where.getName());
-            LmcWiki wiki = new LmcWiki();
-            wiki.setWikiWord(name);
-            wiki.setFolder(where.getFolderID());
-            wiki.setContents(new String(ByteUtil.getContent(what), "utf-8"));
-            
-            LmcSaveWikiRequest req = new LmcSaveWikiRequest();
-            req.setSession(mSession);
-            req.setWiki(wiki);
-            req.invoke(mUrl);
-        }
-        
-        private void createItem(LmcFolder where, File what) throws LmcSoapClientException, IOException, 
-        SoapFaultException, ServiceException, SoapParseException {
+        private void createItem(ZFolder where, File what) throws IOException, ServiceException {
+        	byte[] content = ByteUtil.getContent(what);
+        	String name = what.getName();
             // XXX use .wiki extension to distinguish wiki vs documents.
-            if (what.getName().endsWith(".wiki") || what.getName().startsWith("_")) {
-                createWiki(where, what);
+            if (name.endsWith(".wiki") || name.startsWith("_")) {
+                if (name.endsWith(".wiki"))
+                	name = name.substring(0, name.length()-5);
+                System.out.println("Creating wiki page " + name + " in folder " + where.getName());
+                mMbox.createWiki(where.getId(), name, new String(content, "UTF-8"));
             } else {
-                createDocument(where, what);
+                System.out.println("Creating file document " + name + " in folder " + where.getName());
+                String contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
+                if (contentType == null) {
+                    contentType = "application/octet-stream";
+                }
+                String attachmentId = mMbox.uploadAttachment(name, content, contentType, 10*1000);
+                mMbox.createDocument(where.getId(), name, attachmentId);
             }
-            /*
-            String contentType = URLConnection.getFileNameMap().getContentTypeFor(what.getName());
-            // assume wiki when no extension.
-            if (what.getName().indexOf('.') == -1)
-                contentType = "text/html";
-            if (contentType == null || !contentType.startsWith("text"))
-                createDocument(where, what);
-            else
-                createWiki(where, what);
-                */
         }
-        private void populateFolders(LmcFolder where, File file)
-        throws LmcSoapClientException, IOException, 
-            SoapFaultException, ServiceException, SoapParseException {
+        private void populateFolders(ZFolder where, File file) throws IOException, ServiceException {
             if (where == null) {
                 throw new IllegalArgumentException("null folder");
             }
@@ -451,7 +344,7 @@ public abstract class WikiUtil {
                 if (f.getName().startsWith(".")) { continue;    }
 
                 if (f.isDirectory()) {
-                    LmcFolder sub = findFolder(where, f.getName());
+                    ZFolder sub = findFolder(where, f.getName());
                     if (sub == null)
                         sub = createFolder(where, f.getName());
                     populateFolders(sub, f);
@@ -463,8 +356,8 @@ public abstract class WikiUtil {
 
         protected void emptyNotebooks(String where) throws ServiceException {
             try {
-                LmcFolder root = getRootFolder();
-                LmcFolder f = findFolder(root, where);
+                ZFolder root = getRootFolder();
+                ZFolder f = findFolder(root, where);
                 deleteAllItemsInFolder(f, "/");
                 return;
             } catch (Exception e) {
@@ -481,8 +374,8 @@ public abstract class WikiUtil {
                     where = sDEFAULTFOLDER;
 
                 emptyNotebooks(where);
-                LmcFolder root = getRootFolder();
-                LmcFolder f;
+                ZFolder root = getRootFolder();
+                ZFolder f;
                 if (where.equals("/"))
                     f = root;
                 else {
@@ -497,13 +390,12 @@ public abstract class WikiUtil {
             } catch (Exception e) {
                 throw WikiServiceException.ERROR("import", e);
             }
-                
         }
     }
     
     public abstract void startImport(String folder, File dir) throws ServiceException, IOException;
     protected abstract void emptyNotebooks(String folder) throws ServiceException, IOException;
-    protected abstract void setFolderPermission(Account account, String grantee, String name, String id) throws ServiceException;
+    protected abstract void setFolderPermission(Account account, String grantee, String name, String id) throws ServiceException, IOException;
     public abstract void setVerbose();
     
     public Account createWikiAccount() throws ServiceException {
@@ -525,7 +417,7 @@ public abstract class WikiUtil {
         return account;
     }
     
-    private void initFolders(Account account, Entry entry) throws ServiceException {
+    private void initFolders(Account account, Entry entry) throws ServiceException, IOException {
         String grantee, name, id;
         Domain dom = null;
         if (entry instanceof Domain)
@@ -580,7 +472,11 @@ public abstract class WikiUtil {
         }
         
         Account acct = createWikiAccount();
-        initFolders(acct, entry);
+        try {
+        	initFolders(acct, entry);
+        } catch (IOException e) {
+            throw WikiServiceException.ERROR("cannot initialize folders", e);
+        }
         
         if (prevAcct == null || !prevAcct.equals(mUsername)) {
             ZimbraLog.wiki.info("updating default account from " + prevAcct + " to " + mUsername);
@@ -634,8 +530,6 @@ public abstract class WikiUtil {
         
         String server, username, password;
         String dir = cl.getOptionValue("d");
-        if (cl.hasOption("v")) 
-            LmcSoapRequest.setDumpXML(true);
         server = cl.getOptionValue("s", LC.zimbra_zmprov_default_soap_server.value());
         username = cl.getOptionValue("u", defaultUsername);
         password = cl.getOptionValue("p", defaultPassword);

@@ -1926,7 +1926,8 @@ public class ZMailbox {
     	Element doc = req.addElement(MailService.E_DOC);
     	doc.addAttribute(MailService.A_NAME, name);
     	doc.addAttribute(MailService.A_FOLDER, folderId);
-    	doc.addAttribute(MailService.A_ATTACHMENT_ID, attachmentId);
+    	Element upload = doc.addElement(MailService.E_UPLOAD);
+    	upload.addAttribute(MailService.A_ID, attachmentId);
     	return invoke(req).getElement(MailService.E_DOC).getAttribute(MailService.A_ID);
     }
 
