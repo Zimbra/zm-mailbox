@@ -320,8 +320,11 @@ public class ImapMessage implements Comparable<ImapMessage> {
     private String nATOM(String value) { return value == null ? "NIL" : '"' + value.toUpperCase() + '"'; }
 
     void serializeStructure(PrintStream ps, MimePart mp, boolean extensions) throws IOException, MessagingException {
-        ps.write('(');
         ContentType ct = new ContentType(mp.getContentType());
+        if (ct.getValue().equals(Mime.CT_TEXT_PLAIN) && (ct.getParameter(Mime.P_CHARSET) == null || ct.getParameter(Mime.P_CHARSET).trim().equals("")))
+            ct.setParameter(Mime.P_CHARSET, Mime.P_CHARSET_DEFAULT);
+
+        ps.write('(');
         String primary = nATOM(ct.getPrimaryType()), subtype = nATOM(ct.getSubType());
         if (primary.equals("\"MULTIPART\"")) {
             // 7.4.2: "Multiple parts are indicated by parenthesis nesting.  Instead of a body type
