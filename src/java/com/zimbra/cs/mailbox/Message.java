@@ -499,8 +499,7 @@ public class Message extends MailItem {
         // if the message is part of a real conversation, need to break it out
         if (subjectChanged)
             parent.removeChild(this);
-//        else if (parent != null)
-//            mMailbox.recalculateSenderList(parent.getId(), true);
+        mMailbox.uncache(parent);
     }
 
     @Override
