@@ -118,6 +118,12 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_IMAP_ID = "imap_id"; // IMAP id query param
 
     public static final String QP_PART = "part"; // part query param
+    
+    public static final String QP_BODY = "body"; // body query param
+    
+    public static final String BODY_TEXT = "text"; // return text body
+
+    public static final String BODY_HTML = "html"; // return html body if possible
 
     public static final String QP_QUERY = "query"; // query query param
 
@@ -723,6 +729,15 @@ public class UserServlet extends ZimbraServlet {
 
         public String getPart() {
             return params.get(QP_PART);
+        }
+        
+        public boolean hasBody() {
+            String p = getBody();
+            return p != null;
+        }
+
+        public String getBody() {
+            return params.get(QP_BODY);
         }
 
         public boolean hasView() {

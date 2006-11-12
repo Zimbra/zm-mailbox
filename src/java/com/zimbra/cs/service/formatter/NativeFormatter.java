@@ -26,6 +26,7 @@ package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.Part;
@@ -44,6 +45,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.operation.Operation;
@@ -95,7 +97,16 @@ public class NativeFormatter extends Formatter {
     }
     
     private void handleMessage(Context context, Message msg) throws IOException, ServiceException, MessagingException, ServletException {
-        if (context.hasPart()) {
+        if (context.hasBody()) {
+            List<MPartInfo> parts = Mime.getParts(msg.getMimeMessage());
+             MPartInfo body = Mime.getBody(parts, UserServlet.BODY_HTML.equalsIgnoreCase(context.getBody()));
+             if (body != null) {
+                 handleMessagePart(context, body.getMimePart(), msg);
+             } else {
+                 context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "body not found");
+             }
+            
+        } else if (context.hasPart()) {
             MimePart mp = getMimePart(msg, context.getPart());            
             handleMessagePart(context, mp, msg);
         } else {
