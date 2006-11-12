@@ -35,6 +35,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
@@ -46,6 +48,8 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 @SuppressWarnings("serial")
 public class DavServlet extends ZimbraServlet {
 
+	public static final String DAV_PATH = "/service/dav";
+	
 	private static Map<String, DavMethod> sMethods;
 	
 	public void init() throws ServletException {
@@ -136,5 +140,13 @@ public class DavServlet extends ZimbraServlet {
 				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			} catch (Exception ex) {}
 		}
+	}
+	
+	public static String getDavUrl(String user) throws DavException, ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.get(AccountBy.name, user);
+        if (account == null)
+			throw new DavException("unknown user "+user, HttpServletResponse.SC_NOT_FOUND, null);
+        return getServiceUrl(account, DAV_PATH);
 	}
 }

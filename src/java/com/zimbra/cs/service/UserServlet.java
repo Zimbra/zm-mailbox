@@ -48,8 +48,6 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -156,47 +154,9 @@ public class UserServlet extends ZimbraServlet {
     /** Default maximum upload size for PUT/POST write ops: 10MB. */
     private static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
 
-    private static final int PORT_HTTP = 80;
-    private static final int PORT_HTTPS = 443;
-    private static final String MODE_HTTP = "http";
-    
     /** Returns the REST URL for the account. */
     public static String getRestUrl(Account acct) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        Server server = prov.getServer(acct);
-        Domain domain = prov.getDomain(acct);
-        String hostname = domain == null ? null : domain.getAttr(Provisioning.A_zimbraPublicServiceHostname, null);
-        if (hostname == null)
-            hostname = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
-        if (hostname == null)
-            throw ServiceException.FAILURE("unable to determine the service hostname for account " + acct.getName(), null);
-
-        StringBuilder url = new StringBuilder();
-        int port = 0;
-        String mode = server.getAttr(Provisioning.A_zimbraMailMode, MODE_HTTP);
-        if (!mode.equals(MODE_HTTP))
-        	port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-        if (port > 0) {
-            url.append("https://").append(hostname);
-            if (port != PORT_HTTPS)
-                url.append(":").append(port);
-        } else {
-            port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
-            if (port <= 0)
-                throw ServiceException.FAILURE("server " + server.getName() + " has neither http nor https port enabled", null);
-            url.append("http://").append(hostname);
-            if (port != PORT_HTTP)
-                url.append(":").append(port);
-        }
-
-        url.append(UserServlet.SERVLET_PATH).append("/");
-        Config config = prov.getConfig();
-        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
-        if (defaultDomain == null || !defaultDomain.equals(acct.getDomainName()))
-            url.append(acct.getName());
-        else
-            url.append(acct.getUid());
-        return url.toString();
+    	return getServiceUrl(acct, UserServlet.SERVLET_PATH);
     }
 
     public UserServlet() {

@@ -61,16 +61,17 @@ public class Acl extends ResourceProperty {
 		if (folder == null)
 			return props;
 		
+		String owner = rs.getOwner();
 		ACL acl = folder.getPermissions();
 		props.add(getSupportedPrivilegeSet());
 		props.add(getCurrentUserPrivilegeSet(acl, folder.getAccount()));
-		props.add(getAcl(acl));
+		props.add(getAcl(acl, owner));
 		props.add(getAclRestrictions());
 		
 		ResourceProperty p = new ResourceProperty(DavElements.E_OWNER);
 		p.setProtected(true);
 		Element href = p.addChild(DavElements.E_HREF);
-		href.setText(UrlNamespace.getAclUrl(rs.getOwner(), UrlNamespace.ACL_USER));
+		href.setText(UrlNamespace.getAclUrl(owner, owner, UrlNamespace.ACL_USER));
 		props.add(p);
 		
 		// empty properties
@@ -86,8 +87,8 @@ public class Acl extends ResourceProperty {
 		return props;
 	}
 	
-	public static ResourceProperty getAcl(ACL acl) {
-		return new Acl(acl);
+	public static ResourceProperty getAcl(ACL acl, String owner) {
+		return new Acl(acl, owner);
 	}
 	public static ResourceProperty getSupportedPrivilegeSet() {
 		return new SupportedPrivilegeSet();
@@ -102,15 +103,17 @@ public class Acl extends ResourceProperty {
 	}
 	
 	protected ACL mAcl;
+	protected String mOwner;
 	
-	private Acl(ACL acl) {
-		this(DavElements.E_ACL, acl);
+	private Acl(ACL acl, String owner) {
+		this(DavElements.E_ACL, acl, owner);
 	}
 
-	private Acl(QName name, ACL acl) {
+	private Acl(QName name, ACL acl, String owner) {
 		super(name);
 		setProtected(true);
 		mAcl = acl;
+		mOwner = owner;
 	}
 	
 	public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
@@ -133,22 +136,22 @@ public class Acl extends ResourceProperty {
 				case ACL.GRANTEE_GUEST:
 					// maybe use different href for guest and internal users.
 					e = principal.addElement(DavElements.E_HREF);
-					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_USER));
+					e.setText(UrlNamespace.getAclUrl(mOwner, g.getGranteeId(), UrlNamespace.ACL_USER));
 					break;
 				case ACL.GRANTEE_AUTHUSER:
 					principal.addElement(DavElements.E_AUTHENTICATED);
 					break;
 				case ACL.GRANTEE_COS:
 					e = principal.addElement(DavElements.E_HREF);
-					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_COS));
+					e.setText(UrlNamespace.getAclUrl(mOwner, g.getGranteeId(), UrlNamespace.ACL_COS));
 					break;
 				case ACL.GRANTEE_DOMAIN:
 					e = principal.addElement(DavElements.E_HREF);
-					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_DOMAIN));
+					e.setText(UrlNamespace.getAclUrl(mOwner, g.getGranteeId(), UrlNamespace.ACL_DOMAIN));
 					break;
 				case ACL.GRANTEE_GROUP:
 					e = principal.addElement(DavElements.E_HREF);
-					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_GROUP));
+					e.setText(UrlNamespace.getAclUrl(mOwner, g.getGranteeId(), UrlNamespace.ACL_GROUP));
 					break;
 				case ACL.GRANTEE_PUBLIC:
 					principal.addElement(DavElements.E_UNAUTHENTICATED);
@@ -184,7 +187,7 @@ public class Acl extends ResourceProperty {
 	private static class SupportedPrivilegeSet extends Acl {
 
 		public SupportedPrivilegeSet() {
-			super(DavElements.E_SUPPORTED_PRIVILEGE_SET, null);
+			super(DavElements.E_SUPPORTED_PRIVILEGE_SET, null, null);
 		}
 		
 		public Element addPrivilege(Element parent, QName name, String description) {
@@ -215,10 +218,10 @@ public class Acl extends ResourceProperty {
 	}
 	
 	private static class CurrentUserPrivilegeSet extends Acl {
-		private String mOwner;
+		private String mOwnerId;
 		public CurrentUserPrivilegeSet(ACL acl, Account owner) {
-			super(DavElements.E_CURRENT_USER_PRIVILEGE_SET, acl);
-			mOwner = owner.getId();
+			super(DavElements.E_CURRENT_USER_PRIVILEGE_SET, acl, owner.getName());
+			mOwnerId = owner.getId();
 		}
 
 		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
@@ -228,7 +231,7 @@ public class Acl extends ResourceProperty {
 
 			if (mAcl == null) {
 				// the requestor still has full permission if owner.
-				if (ctxt.getAuthAccount().getId().equals(mOwner))
+				if (ctxt.getAuthAccount().getId().equals(mOwnerId))
 					addPrivileges(cups, (short)(ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_DELETE | ACL.RIGHT_INSERT));
 				return cups;
 			}
@@ -256,7 +259,7 @@ public class Acl extends ResourceProperty {
 	 */
 	private static class AclRestrictions extends Acl {
 		public AclRestrictions() {
-			super(DavElements.E_ACL_RESTRICTIONS, null);
+			super(DavElements.E_ACL_RESTRICTIONS, null, null);
 		}
 		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
 			Element ar = super.toElement(ctxt, parent, true);

@@ -39,7 +39,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
@@ -50,16 +50,14 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.ServiceException;
 
 public class UrlNamespace {
-	public static final String DAV_PATH = "/service/dav";
-	
 	public static final String ATTACHMENTS_PREFIX = "/attachments";
 	
 	public static Collection getCollectionAtUrl(DavContext ctxt, String url) throws DavException {
 		if (url.startsWith("http")) {
-			int index = url.indexOf(DAV_PATH);
-			if (index == -1 || url.endsWith(DAV_PATH))
+			int index = url.indexOf(DavServlet.DAV_PATH);
+			if (index == -1 || url.endsWith(DavServlet.DAV_PATH))
 				throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
-			index += DAV_PATH.length() + 1;
+			index += DavServlet.DAV_PATH.length() + 1;
 			url = url.substring(index);
 			
 			// skip user.
@@ -84,10 +82,10 @@ public class UrlNamespace {
 	}
 	
 	public static DavResource getResourceAtUrl(DavContext ctxt, String url) throws DavException {
-		int index = url.indexOf(DAV_PATH);
-		if (index == -1 || url.endsWith(DAV_PATH))
+		int index = url.indexOf(DavServlet.DAV_PATH);
+		if (index == -1 || url.endsWith(DavServlet.DAV_PATH))
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
-		index += DAV_PATH.length() + 1;
+		index += DavServlet.DAV_PATH.length() + 1;
 		int delim = url.indexOf("/", index);
 		if (delim == -1)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
@@ -126,10 +124,9 @@ public class UrlNamespace {
 	
 	public static String getHomeUrl(String user) throws DavException {
 		StringBuilder buf = new StringBuilder();
-		buf.append(DAV_PATH).append("/").append(user);
+		buf.append(DavServlet.DAV_PATH).append("/").append(user);
 		try {
-			Provisioning prov = Provisioning.getInstance();
-			String url = URLUtil.getMailURL(prov.getLocalServer(), buf.toString(), true);
+			String url = DavServlet.getDavUrl(user);
             if (url.startsWith("https"))
                 url = new HttpsURL(url).toString();
             else
@@ -147,12 +144,15 @@ public class UrlNamespace {
 	public static final String ACL_COS    = "/acl/cos";
 	public static final String ACL_DOMAIN = "/acl/domain";
 	
-	public static String getAclUrl(String principal, String type) throws DavException {
+	public static String getAclUrl(String owner, String principal, String type) throws DavException {
 		StringBuilder buf = new StringBuilder();
 		buf.append(type).append("/").append(principal);
 		try {
 			Provisioning prov = Provisioning.getInstance();
-			return URLUtil.getMailURL(prov.getLocalServer(), buf.toString(), true);
+			Account account = prov.get(AccountBy.name, owner);
+			if (account == null)
+				throw new DavException("unknown user "+owner, HttpServletResponse.SC_NOT_FOUND, null);
+			return DavServlet.getServiceUrl(account, buf.toString());
 		} catch (ServiceException e) {
 			throw new DavException("cannot create ACL URL for principal "+principal, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		}
