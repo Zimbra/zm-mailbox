@@ -639,7 +639,6 @@ class DBQueryOperation extends QueryOperation
     }
 
     private void noLuceneGetNextChunk(Connection conn, Mailbox mbox, byte sort) throws ServiceException {
-        mDBHits = new ArrayList<SearchResult>();
         DbMailItem.search(mDBHits, conn, mConstraints, mbox, sort, mCurHitsOffset, mHitsPerChunk, mExtra);
 
         if (mDBHits.size() < mHitsPerChunk) {
@@ -656,8 +655,6 @@ class DBQueryOperation extends QueryOperation
         if (mLog.isDebugEnabled())
             mLog.debug("Running a DB-FIRST execution");
         
-        mDBHits = new ArrayList<SearchResult>();
-
         do {
             //
             // (1) Get the next chunk of results from the DB
@@ -729,15 +726,6 @@ class DBQueryOperation extends QueryOperation
             }
                 
         } while(mDBHits.size() ==0 && !mEndOfHits);
-        
-        if (mDBHits.size() == 0) {
-            mDBHitsIter = null;
-            mDBHits = null;
-            mEndOfHits = true;
-        } else {
-            mCurHitsOffset += mDBHits.size();
-            mDBHitsIter = mDBHits.iterator();
-        }
     }
 
     private void luceneFirstGetNextChunk(Connection conn, Mailbox mbox, byte sort) throws ServiceException {
@@ -764,11 +752,7 @@ class DBQueryOperation extends QueryOperation
                 // we know we got all the index-id's from lucene.  since we don't have a
                 // LIMIT clause, we can be assured that this query will get all the remaining results.
                 mEndOfHits = true;
-
-                mDBHits = new ArrayList<SearchResult>(); 
             } else {
-                mDBHits = new ArrayList<SearchResult>();
-
                 // must not ask for offset,limit here b/c of indexId constraints!  
                 DbMailItem.search(mDBHits, conn, mConstraints, mbox, sort, -1, -1, mExtra);
 
@@ -792,15 +776,6 @@ class DBQueryOperation extends QueryOperation
 
             }
         } while (mDBHits.size() == 0 && !mEndOfHits);
-        
-        if (mDBHits.size() == 0) {
-            mDBHitsIter = null;
-            mDBHits = null;
-            mEndOfHits = true;
-        } else {
-            mCurHitsOffset += mDBHits.size();
-            mDBHitsIter = mDBHits.iterator();
-        }
         
     }
 
@@ -838,6 +813,8 @@ class DBQueryOperation extends QueryOperation
             Mailbox mbox = getMailbox();
             byte sort = getSortOrderForDb();
             Connection conn = DbPool.getConnection();
+            mDBHits = new ArrayList<SearchResult>();
+            
             try {
                 switch (mExecuteMode) {
                     case NO_RESULTS:
@@ -853,10 +830,20 @@ class DBQueryOperation extends QueryOperation
                         luceneFirstGetNextChunk(conn, mbox, sort);
                         break;
                 }
+                
             } finally {
                 DbPool.quietClose(conn);
             }
-
+            
+            if (mDBHits.size() == 0) {
+                mDBHitsIter = null;
+                mDBHits = null;
+                mEndOfHits = true;
+            } else {
+                mCurHitsOffset += mDBHits.size();
+                mDBHitsIter = mDBHits.iterator();
+            }
+            
         }
     }
 
