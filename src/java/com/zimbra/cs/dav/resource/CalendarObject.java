@@ -72,7 +72,13 @@ public class CalendarObject extends MailItemResource {
 	
 	private static String getCalendarPath(Appointment appt) throws ServiceException {
 		// escape uid
-		return appt.getPath() + "/" + appt.getUid() + CAL_EXTENSION;
+		StringBuilder path = new StringBuilder();
+		path.append(appt.getPath());
+		if (path.charAt(path.length()-1) != '/')
+			path.append("/");
+		path.append(appt.getUid());
+		path.append(CAL_EXTENSION);
+		return path.toString();
 	}
 
 	public String getVcalendar() throws IOException {

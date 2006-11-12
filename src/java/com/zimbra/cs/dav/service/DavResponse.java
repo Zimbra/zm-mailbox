@@ -158,6 +158,8 @@ public class DavResponse {
 
 	public void writeTo(OutputStream out) throws IOException {
 		OutputFormat format = OutputFormat.createPrettyPrint();
+		format.setTrimText(false);
+		format.setOmitEncoding(false);
 		XMLWriter writer = new XMLWriter(out, format);
 		writer.write(mResponse);
 	}

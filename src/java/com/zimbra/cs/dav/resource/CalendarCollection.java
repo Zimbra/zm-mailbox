@@ -102,8 +102,6 @@ public class CalendarCollection extends Collection {
 		setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBERSHIP, null, true);
 
-		//setProperty(DavElements.E_GETETAG, "", true);
-	
 		// remaining recommented attributes: calendar-timezone, max-resource-size,
 		// min-date-time, max-date-time, max-instances, max-attendees-per-instance,
 		//
@@ -180,7 +178,7 @@ public class CalendarCollection extends Collection {
 		return "calendar event";
 	}
 	
-	public void createItem(DavContext ctxt, String user, String name) throws DavException, IOException {
+	public DavResource createItem(DavContext ctxt, String user, String name) throws DavException, IOException {
 		HttpServletRequest req = ctxt.getRequest();
 		if (req.getContentLength() <= 0)
 			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
@@ -235,6 +233,8 @@ public class CalendarCollection extends Collection {
 	                i.setUid(LdapUtil.generateUUID());
 				mbox.addInvite(ctxt.getOperationContext(), i, mId, false, null);
 			}
+			appt = mbox.getAppointmentByUid(ctxt.getOperationContext(), invites.get(0).getUid());
+			return new CalendarObject(appt);
 			/*
 			Mailbox.SetAppointmentData data = new SetAppointmentData();
 			data.mPm = createParsedMessage(item);

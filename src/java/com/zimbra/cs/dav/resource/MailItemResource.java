@@ -32,7 +32,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
-import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
@@ -44,6 +43,7 @@ public abstract class MailItemResource extends DavResource {
 	protected int  mFolderId;
 	protected int  mId;
 	protected byte mType;
+	protected String mEtag;
 	
 	public MailItemResource(MailItem item) throws ServiceException {
 		this(getItemPath(item), item);
@@ -54,7 +54,7 @@ public abstract class MailItemResource extends DavResource {
 		mFolderId = item.getFolderId();
 		mId = item.getId();
 		mType = item.getType();
-		setProperty(DavElements.E_GETETAG, Long.toString(item.getChangeDate()), true);
+		mEtag = "\""+Long.toString(item.getChangeDate())+"\"";
 	}
 	
 	public MailItemResource(String path, String acct) {
@@ -68,6 +68,14 @@ public abstract class MailItemResource extends DavResource {
 		return path;
 	}
 
+	public boolean hasEtag() {
+		return true;
+	}
+	
+	public String getEtag() {
+		return mEtag;
+	}
+	
 	protected Mailbox getMailbox(DavContext ctxt) throws ServiceException, DavException {
 		String user = ctxt.getUser();
 		if (user == null)

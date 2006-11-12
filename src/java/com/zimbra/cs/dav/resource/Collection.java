@@ -160,7 +160,7 @@ public class Collection extends MailItemResource {
 	}
 	
 	// create Document at the URI
-	public void createItem(DavContext ctxt, String user, String name) throws DavException, IOException {
+	public DavResource createItem(DavContext ctxt, String user, String name) throws DavException, IOException {
 		Provisioning prov = Provisioning.getInstance();
 		Mailbox mbox = null;
 		try {
@@ -186,9 +186,8 @@ public class Collection extends MailItemResource {
 			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), ctxt.getPath(), 0, false);
 			if (item.getType() != MailItem.TYPE_DOCUMENT && item.getType() != MailItem.TYPE_WIKI)
 				throw new DavException("no DAV resource for "+MailItem.getNameForType(item.getType()), HttpServletResponse.SC_NOT_ACCEPTABLE, null);
-			mbox.addDocumentRevision(ctxt.getOperationContext(), (Document)item, data, author);
-			ctxt.setStatus(HttpServletResponse.SC_OK);
-			return;
+			Document doc = mbox.addDocumentRevision(ctxt.getOperationContext(), (Document)item, data, author);
+			return new Notebook(ctxt, doc);
 		} catch (ServiceException e) {
 			if (!(e instanceof NoSuchItemException))
 				throw new DavException("cannot get item ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
@@ -196,8 +195,8 @@ public class Collection extends MailItemResource {
 		
 		// create
 		try {
-			mbox.createDocument(ctxt.getOperationContext(), mId, name, ctype, author, data, null);
-			ctxt.setStatus(HttpServletResponse.SC_CREATED);
+			Document doc = mbox.createDocument(ctxt.getOperationContext(), mId, name, ctype, author, data, null);
+			return new Notebook(ctxt, doc);
 		} catch (ServiceException se) {
 			throw new DavException("cannot create ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
 		}

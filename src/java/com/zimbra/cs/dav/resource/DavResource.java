@@ -89,6 +89,8 @@ public abstract class DavResource {
 			ZimbraLog.dav.error("can't generate href", e);
 		}
 		addProperty(href);
+		if (hasEtag())
+			setProperty(DavElements.E_GETETAG, getEtag(), true);
 	}
 	
 	protected static String getOwner(Account acct) throws ServiceException {
@@ -210,5 +212,12 @@ public abstract class DavResource {
 	
 	public Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		return Collections.emptyList();
+	}
+	
+	public boolean hasEtag() {
+		return false;
+	}
+	public String getEtag() {
+		return null;
 	}
 }
