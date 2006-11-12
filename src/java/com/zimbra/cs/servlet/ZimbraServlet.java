@@ -453,7 +453,7 @@ public class ZimbraServlet extends HttpServlet {
         url.append(service).append("/");
         Config config = prov.getConfig();
         String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
-        if (defaultDomain == null || !defaultDomain.equals(acct.getDomainName()))
+        if (defaultDomain == null || !defaultDomain.equalsIgnoreCase(acct.getDomainName()))
             url.append(acct.getName());
         else
             url.append(acct.getUid());
