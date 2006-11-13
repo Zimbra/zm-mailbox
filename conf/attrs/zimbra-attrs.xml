@@ -1917,4 +1917,40 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Addresses that this account can as from address if arbitrary-addresses-allowed setting is not set</desc>
 </attr>
 
+<attr id="429" name="zimbraArchiveAccount" type="email" max="256" cardinality="multi" optionalIn="account">
+  <desc>
+    Mailboxes in which the current account in archived.  Multi-value
+    attr with eg values { user-2006@example.com.archive,
+    user-2007@example.com.archive } that tells us that
+    user@example.com has been archived into those two mailboxes.
+  </desc>
+</attr>
+
+<attr id="430" name="zimbraArchiveMailFrom" type="email" max="256" cardinality="single" optionalIn="globalConfig">
+  <desc>
+    Address to which archive message bounces should be sent.
+    Typically could be an admin account.  This is global across all
+    domains.
+  </desc>
+</attr>
+
+<attr id="431" name="zimbraArchiveAccountNameTemplate" type="string" max="256" cardinality="single" optionalIn="account,cos" flags="accountInherited">
+  <defaultCOSValue>${USER}-${DATE}@${DOMAIN}.archive</defaultCOSValue>
+  <desc>
+    An account or CoS setting - typically only in CoS - that tells the
+    archiving system how to derive the archive mailbox name.  ID, USER,
+    DATE, and DOMAIN are expanded.
+  </desc>
+</attr>
+
+<attr id="432" name="zimbraArchiveAccountDateTemplate" type="string" max="256" cardinality="single" optionalIn="account,cos" flags="accountInherited">
+  <defaultCOSValue>yyyyMMdd</defaultCOSValue>
+  <desc>
+    An account or CoS setting that works with the name template that
+    allows you to dictate the date format used in the name template.
+    This is a Java SimpleDateFormat specifier.  The default is an LDAP
+    generalized time format:
+  </desc>
+</attr>
+
 </attrs>

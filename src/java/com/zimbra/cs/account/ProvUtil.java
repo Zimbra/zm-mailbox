@@ -105,7 +105,6 @@ public class ProvUtil implements DebugListener {
     }
 
     private void usage() {
-        
         if (mCommand != null) {
             System.out.printf("usage:  %s(%s) %s\n", mCommand.getName(), mCommand.getAlias(), mCommand.getHelp());
         }
@@ -269,22 +268,6 @@ public class ProvUtil implements DebugListener {
             mMaxArgLength = maxArgLength;            
         }
         
-    }
-    
-    private static final int BY_ID = 1;
-    private static final int BY_EMAIL = 2;
-    private static final int BY_NAME = 3;
-    
-    private int guessType(String value) {
-        if (value.indexOf("@") != -1)
-            return BY_EMAIL;
-        else if (value.length() == 36 &&
-                value.charAt(8) == '-' &&
-                value.charAt(13) == '-' &&
-                value.charAt(18) == '-' &&
-                value.charAt(23) == '-')
-            return BY_ID;
-        else return BY_NAME;
     }
     
     private void addCommand(Command command) {
@@ -1267,18 +1250,7 @@ public class ProvUtil implements DebugListener {
     }
     
     private Account lookupAccount(String key) throws ServiceException {
-        Account a = null;
-        switch(guessType(key)) {
-        case BY_ID:
-            a = mProv.get(AccountBy.id, key);
-            break;
-        case BY_EMAIL:
-            a = mProv.get(AccountBy.name, key);
-            break;
-        case BY_NAME:
-            a = mProv.get(AccountBy.name, key);            
-            break;
-        }
+        Account a = mProv.get(guessAccountBy(key), key);
         if (a == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(key);
         else
@@ -1286,18 +1258,7 @@ public class ProvUtil implements DebugListener {
     }
 
     private CalendarResource lookupCalendarResource(String key) throws ServiceException {
-        CalendarResource res = null;
-        switch(guessType(key)) {
-        case BY_ID:
-            res = mProv.get(CalendarResourceBy.id, key);
-            break;
-        case BY_EMAIL:
-            res = mProv.get(CalendarResourceBy.name, key);
-            break;
-        case BY_NAME:
-            res = mProv.get(CalendarResourceBy.name, key);            
-            break;
-        }
+        CalendarResource res = mProv.get(guessCalendarResourceBy(key), key);
         if (res == null)
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(key);
         else
@@ -1309,17 +1270,7 @@ public class ProvUtil implements DebugListener {
     }
     
     private Domain lookupDomain(String key, Provisioning prov) throws ServiceException {
-        Domain d = null;
-        switch(guessType(key)) {
-        case BY_ID:
-            d = prov.get(DomainBy.id, key);
-            break;
-        case BY_NAME:
-        default:
-            d = prov.get(DomainBy.name, key);
-            break;
-        }
-        
+        Domain d = mProv.get(guessDomainBy(key), key);
         if (d == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(key);
         else
@@ -1327,17 +1278,7 @@ public class ProvUtil implements DebugListener {
     }
     
     private Cos lookupCos(String key) throws ServiceException {
-        Cos c = null;
-        switch(guessType(key)) {
-        case BY_ID:
-            c = mProv.get(CosBy.id, key);
-            break;
-        case BY_NAME:
-        default:            
-            c = mProv.get(CosBy.name, key);
-            break;
-        }
-        
+        Cos c = mProv.get(guessCosBy(key), key);
         if (c == null)
             throw AccountServiceException.NO_SUCH_COS(key);
         else
@@ -1345,17 +1286,7 @@ public class ProvUtil implements DebugListener {
     }
 
     private Server lookupServer(String key) throws ServiceException {
-        Server s = null;
-        switch(guessType(key)) {
-        case BY_ID:
-            s = mProv.get(ServerBy.id, key);
-            break;
-        case BY_NAME:
-        default:            
-            s = mProv.get(ServerBy.name, key);
-            break;
-        }
-        
+        Server s = mProv.get(guessServerBy(key), key);
         if (s == null)
             throw AccountServiceException.NO_SUCH_SERVER(key);
         else
@@ -1363,33 +1294,66 @@ public class ProvUtil implements DebugListener {
     }
 
     private DistributionList lookupDistributionList(String key) throws ServiceException {
-        DistributionList dl = null;
-        switch(guessType(key)) {
-        case BY_ID:
-            dl = mProv.get(DistributionListBy.id, key);
-            break;
-        case BY_EMAIL:
-        default:            
-            dl = mProv.get(DistributionListBy.name, key);
-            break;
-        }
-        
+        DistributionList dl = mProv.get(guessDistributionListBy(key), key);
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(key);
         else
             return dl;
     }
 
+    private static boolean isUUID(String value) {
+        if (value.length() == 36 &&
+            value.charAt(8) == '-' &&
+            value.charAt(13) == '-' &&
+            value.charAt(18) == '-' &&
+            value.charAt(23) == '-')
+            return true;
+        return false;
+    }
+
+    public static AccountBy guessAccountBy(String value) {
+        if (isUUID(value))
+            return AccountBy.id;
+        return AccountBy.name;
+    }
+    
+    public static CosBy guessCosBy(String value) {
+        if (isUUID(value))
+            return CosBy.id;
+        return CosBy.name;
+    }
+
+    public static DomainBy guessDomainBy(String value) {
+        if (isUUID(value))
+            return DomainBy.id;
+        return DomainBy.name;
+    }
+
+    public static ServerBy guessServerBy(String value) {
+        if (isUUID(value))
+            return ServerBy.id;
+        return ServerBy.name;
+    }
+
+    public static CalendarResourceBy guessCalendarResourceBy(String value) {
+        if (isUUID(value))
+            return CalendarResourceBy.id;
+        return CalendarResourceBy.name;
+    }
+
+    public static DistributionListBy guessDistributionListBy(String value) {
+        if (isUUID(value))
+            return DistributionListBy.id;
+        return DistributionListBy.name;
+    }
+    
+    
     private Map<String, Object> getMap(String[] args, int offset) throws ArgException {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        for (int i = offset; i < args.length; i+=2) {
-            String n = args[i];
-            if (i+1 >= args.length)
-                throw new ArgException("not enough arguments");
-            String v = args[i+1];
-            StringUtil.addToMultiMap(attrs, n, v);
+        try {
+            return StringUtil.keyValueArrayToMultiMap(args, offset);
+        } catch (IllegalArgumentException iae) {
+            throw new ArgException("not enough arguments");
         }
-        return attrs;
     }
 
     private void interactive(BufferedReader in) throws IOException {
