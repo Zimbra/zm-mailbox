@@ -29,10 +29,10 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mailbox.Conversation.TagSet;
 import com.zimbra.cs.service.ServiceException;
 
 /**
@@ -49,25 +49,30 @@ public class VirtualConversation extends Conversation {
         return -mId;
     }
 
-    SenderList recalculateMetadata(boolean forceWrite) throws ServiceException {
-        return (mSenderList = new SenderList(getMessage()));
+    @Override
+    boolean loadSenderList() throws ServiceException {
+        mSenderList = new SenderList(getMessage());
+        return false;
     }
 
+    @Override
+    SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
+        Message msg = msgs.get(0);
+        mData = wrapMessage(msg);
+        mInheritedTagSet = new TagSet().updateFlags(msg.getFlagBitmask(), true).updateTags(msg.getTagBitmask(), true);
+        return getSenderList();
+    }
 
-    private static final List<Message> NO_MESSAGES = Collections.unmodifiableList(new ArrayList<Message>());
 
     Message getMessage() throws ServiceException {
         return mMailbox.getMessageById(getMessageId());
     }
 
+    @Override
     List<Message> getMessages(byte sort) throws ServiceException {
         List<Message> msgs = new ArrayList<Message>(1);
         msgs.add(getMessage());
         return msgs;
-    }
-
-    List<Message> getUnreadMessages() throws ServiceException {
-        return isUnread() ? getMessages(SORT_ID_ASCENDING) : NO_MESSAGES;
     }
 
 
@@ -97,21 +102,27 @@ public class VirtualConversation extends Conversation {
         return data;
     }
 
+    @Override
     void open(String hash) throws ServiceException {
         DbMailItem.openConversation(hash, getMessage());
     }
+
+    @Override
     void close(String hash) throws ServiceException {
         DbMailItem.closeConversation(hash, getMessage());
     }
 
+    @Override
     void alterTag(Tag tag, boolean add) throws ServiceException {
         getMessage().alterTag(tag, add);
     }
 
+    @Override
     void addChild(MailItem child) throws ServiceException {
         throw MailServiceException.CANNOT_PARENT();
     }
 
+    @Override
     void removeChild(MailItem child) throws ServiceException {
         if (child.getId() != getMessageId())
             throw MailServiceException.IS_NOT_CHILD();

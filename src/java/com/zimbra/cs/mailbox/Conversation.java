@@ -208,7 +208,7 @@ public class Conversation extends MailItem {
      *  
      * @return <tt>true</tt> if the metadata was recalculated, <tt>false</tt>
      *         if the SenderList was generated from existing data */
-    private boolean loadSenderList() throws ServiceException {
+    boolean loadSenderList() throws ServiceException {
         if (mSenderList != null && mSenderList.size() == mData.size)
             return false;
 
@@ -232,7 +232,7 @@ public class Conversation extends MailItem {
         return true;
     }
 
-    private SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
+    SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
         Collections.sort(msgs, new Message.SortDateAscending());
         String oldSubject = mRawSubject;
         long oldSize = mData.size;
@@ -261,7 +261,7 @@ public class Conversation extends MailItem {
         return mSenderList;
     }
 
-    private void recalculateSubject(Message firstMsg) {
+    void recalculateSubject(Message firstMsg) {
         if (firstMsg == null) {
             mData.subject = null;
             mRawSubject   = "";
@@ -793,9 +793,7 @@ public class Conversation extends MailItem {
         }
 
         if (recalculate) {
-            List<Message> msgs = getMessages(SORT_ID_ASCENDING);
-            recalculateMetadata(msgs);
-            getSenderList();
+            recalculateMetadata(getMessages(SORT_ID_ASCENDING));
             return;
         }
 
