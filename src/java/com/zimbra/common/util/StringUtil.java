@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -103,6 +104,28 @@ public class StringUtil {
         }
     }
     
+    /**
+     * Convert an array of the form:
+     * 
+     *    a1 v1 a2 v2 a2 v3
+     *    
+     * to a map of the form:
+     * 
+     *    a1 -> v1
+     *    a2 -> [v2, v3]
+     */
+    public static Map<String, Object> keyValueArrayToMultiMap(String[] args, int offset) {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        for (int i = offset; i < args.length; i+=2) {
+            String n = args[i];
+            if (i+1 >= args.length)
+                throw new IllegalArgumentException("not enough arguments");
+            String v = args[i+1];
+            addToMultiMap(attrs, n, v);
+        }
+        return attrs;
+    }
+
     private static final int TERM_WHITESPACE = 1;
     private static final int TERM_SINGLEQUOTE = 2;
     private static final int TERM_DBLQUOTE = 3;    
