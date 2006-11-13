@@ -25,17 +25,17 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.soap.Element;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.soap.Element;
-
-public class ZFolder implements ZItem {
+public class ZFolder implements ZItem, Comparable {
     
     public static final String ID_USER_ROOT = "1";
     public static final String ID_INBOX = "2";
@@ -66,7 +66,14 @@ public class ZFolder implements ZItem {
     private List<ZGrant> mGrants;
     private List<ZFolder> mSubFolders;
     private ZFolder mParent;
-    
+
+    public int compareTo(Object obj) {
+        if (!(obj instanceof ZFolder))
+            return 0;
+        ZFolder other = (ZFolder) obj;
+        return getName().compareToIgnoreCase(other.getName());
+    }
+
     public enum Flag {
         checkedInUI('#'),
         excludeFreeBusyInfo('b'),
