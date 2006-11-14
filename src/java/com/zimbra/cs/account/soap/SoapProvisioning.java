@@ -152,7 +152,7 @@ public class SoapProvisioning extends Provisioning {
         }
     }
     
-    synchronized Element invoke(Element request) throws ServiceException {
+    public synchronized Element invoke(Element request) throws ServiceException {
         try {
             return mTransport.invoke(request);
         } catch (SoapFaultException e) {
@@ -204,7 +204,7 @@ public class SoapProvisioning extends Provisioning {
         return result;
     }
 
-    static void addAttrElements(Element req, Map<String, ? extends Object> attrs) throws ServiceException {
+    public static void addAttrElements(Element req, Map<String, ? extends Object> attrs) throws ServiceException {
         if (attrs == null) return;
         
         for (Entry entry : attrs.entrySet()) {
