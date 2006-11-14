@@ -231,20 +231,24 @@ public class MailService implements DocumentService {
     public static final String E_CONDITION = "c";
     public static final String E_FILTER_ARG = "arg";
 
+    // grants
     public static final String A_ZIMBRA_ID = "zid";
     public static final String A_RIGHTS = "perm";
     public static final String A_INHERIT = "inh";
     public static final String A_GRANT_TYPE = "gt";
-    public static final String A_PATH = "path";
-    public static final String A_NAME = "name";
-    public static final String A_VALUE ="value";
-    public static final String A_DATE = "d";
-    public static final String A_SENT_DATE = "sd";
+
+    // email addresses
     public static final String A_ADDRESS = "a";
     public static final String A_PERSONAL = "p";
     public static final String A_DISPLAY = "d";
     public static final String A_ADDRESS_TYPE = "t";
     public static final String A_ADD_TO_AB = "add";
+
+    public static final String A_PATH = "path";
+    public static final String A_NAME = "name";
+    public static final String A_VALUE = "value";
+    public static final String A_DATE = "d";
+    public static final String A_SENT_DATE = "sd";
     public static final String A_SIZE = "s";
     public static final String A_FLAGS = "f";
     public static final String A_ID = "id";
@@ -278,7 +282,6 @@ public class MailService implements DocumentService {
     public static final String A_CONTENT_FILENAME = "filename";
     public static final String A_OPERATION = "op";
     public static final String A_DEFAULT_VIEW = "view";
-	public static final String A_QUERY = "query";
 	public static final String A_UNREAD = "u";
 	public static final String A_COLOR = "color";
     public static final String A_CREATED_DATE = "cd";
@@ -287,16 +290,12 @@ public class MailService implements DocumentService {
 	public static final String A_BOUNDS = "pos";    
     public static final String A_STATUS = "status";
     public static final String A_EXCLUDE_FREEBUSY = "excludeFreeBusy";
-    public static final String A_SORT_FIELD = "sf";    
     public static final String A_FILE_AS_STR = "fileAsStr";
+    public static final String A_ELIDED = "elided";
 
     // mountpoints
     public static final String A_REMOTE_ID = "rid";
     public static final String A_OWNER_NAME = "owner";
-
-    // object actions
-    public static final String A_OBJECT = "obj";
-    public static final String A_OBJECT_TYPE = "ot";
 
     // browse
     public static final String A_BROWSE_BY = "browseBy";
@@ -304,8 +303,10 @@ public class MailService implements DocumentService {
 
     // search
     public static final String A_SCORE = "score";
+    public static final String A_QUERY = "query";
     public static final String A_GROUPBY = "groupBy";
     public static final String A_SEARCH_TYPES = "types";
+    public static final String A_SORT_FIELD = "sf";    
     public static final String A_SORTBY = "sortBy";
     public static final String A_SORTVAL = "sortVal";    
     public static final String A_FETCH = "fetch";

@@ -536,13 +536,10 @@ public class ToXML {
                 return c;
             }
 
-            ParsedAddress fa = sl.getFirstAddress();
-            if (fa != null) {
-                eecache.encode(c, fa, EmailType.FROM);
-                // "<e/>" indicates that some senders may be omitted...
-                if (sl.isElided())
-                    c.addElement(MailService.E_EMAIL);
-            }
+            if (sl.getFirstAddress() != null)
+                eecache.encode(c, sl.getFirstAddress(), EmailType.FROM);
+            if (sl.isElided())
+                c.addAttribute(MailService.A_ELIDED, true);
             for (ParsedAddress pa : sl.getLastAddresses())
                 eecache.encode(c, pa, EmailType.FROM);
         }

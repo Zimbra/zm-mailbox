@@ -719,7 +719,7 @@ Messages:
 
 Conversations:
  
-  <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags}" l="{folder-id}">
+  <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags}" l="{folder-id}" [elided="1"]>
     <e ...>*
     <su>{subject}</su>
     <fr>{fragment}</fr>
@@ -735,7 +735,8 @@ Conversations:
   {num-msgs}  = number of messages in conversation without IMAP \Deleted flag set
   {all-msgs}  = total number of messages in conversation
   
-  <e ...>*     = zero or more participants in the converstations
+  <e ...>*     = zero or more participants in the converstations;
+                 if elided="1", some participants are missing between the first and second returned <e> elements
   <m>...</m>+  = one or more messages in the conversation. When doing search, the <m> elements returned
                  will only have the "id" attribute, and only messages that matched the search will be included.
                  
