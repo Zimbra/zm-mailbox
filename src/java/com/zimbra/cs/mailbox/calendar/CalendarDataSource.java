@@ -48,7 +48,7 @@ import com.zimbra.cs.mime.Mime;
  * Very simple class which wraps an iCal4j Calendar object in a javamail DataSource 
  *
  */
-class CalendarDataSource implements DataSource
+public class CalendarDataSource implements DataSource
 {
     private ZCalendar.ZVCalendar mICal;
     private String mUid;

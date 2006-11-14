@@ -250,9 +250,10 @@ public class ZCalendar {
         public void addProperty(ZProperty prop) { mProperties.add(prop); }
         public void addComponent(ZComponent comp) { mComponents.add(comp); }
         
-        ZComponent getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
-        Iterator<ZComponent> getComponentIterator() { return mComponents.iterator(); }
-        ZProperty getProperty(ICalTok tok) { return findProp(mProperties, tok); }
+        public ZComponent getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
+        public Iterator<ZComponent> getComponentIterator() { return mComponents.iterator(); }
+        public Iterator<ZProperty> getPropertyIterator() { return mProperties.iterator(); }
+        public ZProperty getProperty(ICalTok tok) { return findProp(mProperties, tok); }
         public String getPropVal(ICalTok tok, String defaultValue) {
             ZProperty prop = getProperty(tok);
             if (prop != null) 
@@ -426,7 +427,7 @@ public class ZCalendar {
         
         public void addParameter(ZParameter param) { mParameters.add(param); }
         
-        ZParameter getParameter(ICalTok tok) { return findParameter(mParameters, tok); }
+        public ZParameter getParameter(ICalTok tok) { return findParameter(mParameters, tok); }
         public Iterator<ZParameter> parameterIterator() { return mParameters.iterator(); }
         public int getNumParameters() { return mParameters.size(); }
         
@@ -495,6 +496,7 @@ public class ZCalendar {
             w.write(LINE_BREAK);
         }
 
+        public ICalTok getToken() { return mTok; }  // may be null
         public String getName() { return mName; }
         public String getValue() { return mValue; }
         long getLongValue() { return Long.parseLong(mValue); };
@@ -567,6 +569,7 @@ public class ZCalendar {
             }
         }
         
+        public ICalTok getToken() { return mTok; }  // may be null
         public String getName() { return mName; }
         public String getValue() { return maValue; }
         long getLongValue() { return Long.parseLong(maValue); };

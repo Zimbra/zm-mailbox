@@ -77,6 +77,9 @@ public class SendMsg extends MailDocumentHandler {
 
         mLog.info("<SendMsg> " + lc.toString());
 
+        boolean needCalendarSentByFixup =
+            request.getAttributeBool(MailService.A_NEED_CALENDAR_SENTBY_FIXUP, false);
+
         // <M>
         Element msgElem = request.getElement(MailService.E_MSG);
 
@@ -100,7 +103,7 @@ public class SendMsg extends MailDocumentHandler {
         SendMsgOperation op = new SendMsgOperation(session, octxt, mbox, Requester.SOAP,
                     saveToSent, mm,
                     mimeData.newContacts, mimeData.uploads,
-                    origId, replyType, false);
+                    origId, replyType, false, needCalendarSentByFixup);
         op.schedule();
         int msgId = op.getMsgId();
 

@@ -385,6 +385,7 @@ public class MailService implements DocumentService {
     public static final String E_APPT_XPROP = "xprop";
     public static final String E_APPT_XPARAM = "xparam";
 
+    public static final String A_NEED_CALENDAR_SENTBY_FIXUP = "needCalendarSentByFixup";
     public static final String A_UID = "uid";
     public static final String A_DEFAULT = "default";
     public static final String A_VERB = "verb";

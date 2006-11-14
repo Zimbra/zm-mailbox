@@ -1346,7 +1346,7 @@ u attribute is present iff count > 0
 +  only allowed one top-level <mp> but can nest <mp>s within if multipart/*
 +  on reply/forward, set origid on <m> element and set rt to "r" or "w", respectively
 
-<SendMsgRequest>
+<SendMsgRequest [needCalendarSentByFixup="0|1"]>
   <m [origid="..." rt="r|w"]>
     <e t="{type}" a="{email-address}" p="{personal-name}" [add="1"]/>+
     <su>{subject}</su>*
@@ -1365,7 +1365,7 @@ u attribute is present iff count > 0
    or, if you want to compose the message remotely, upload it via
    FileUploadServlet, and submit it through our server:
 
-<SendMsgRequest>
+<SendMsgRequest [needCalendarSentByFixup="0|1"]>
   <m aid="{uploaded-MIME-body-ID}" [origid="..." rt="r|w"]/>
 </SendMsgRequest>
 
@@ -1375,6 +1375,10 @@ u attribute is present iff count > 0
   <m id="..." />
 </SendMsgResponse>
 
+needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
+                          properties in iCalendar part when sending message
+                          on behalf of another user
+                          default is 0
 
 ---------------------------- 
 
