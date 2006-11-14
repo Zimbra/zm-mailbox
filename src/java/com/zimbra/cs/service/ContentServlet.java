@@ -98,7 +98,7 @@ public class ContentServlet extends ZimbraServlet {
 
     private static Log mLog = LogFactory.getLog(ContentServlet.class);
 
-    private void getCommand(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken)
+    private void getCommand(HttpServletRequest req, HttpServletResponse resp, AuthToken token)
     throws ServletException, IOException {
         ItemId iid = null;
         try {
@@ -119,7 +119,7 @@ public class ContentServlet extends ZimbraServlet {
                 return;
             }
 
-            String authId = authToken.getAccountId();
+            String authId = token.getAccountId();
             String accountId = iid.getAccountId() != null ? iid.getAccountId() : authId;
             Account.addAccountToLogContext(accountId, ZimbraLog.C_NAME, ZimbraLog.C_ID);
             if (!accountId.equalsIgnoreCase(authId))
@@ -133,7 +133,7 @@ public class ContentServlet extends ZimbraServlet {
             }
             ZimbraLog.addMboxToContext(mbox.getId());
 
-            MailItem item = mbox.getItemById(new Mailbox.OperationContext(authId), iid.getId(), MailItem.TYPE_UNKNOWN);
+            MailItem item = mbox.getItemById(new Mailbox.OperationContext(authId, token.isAdmin() || token.isDomainAdmin()), iid.getId(), MailItem.TYPE_UNKNOWN);
             if (item == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "message not found");
                 return;				

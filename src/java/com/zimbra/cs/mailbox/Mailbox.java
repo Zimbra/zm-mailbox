@@ -211,7 +211,7 @@ public class Mailbox {
             return conn;
         }
 
-        RedoableOp getRedoPlayer()   { return (octxt == null ? null : octxt.player); }
+        RedoableOp getRedoPlayer()   { return (octxt == null ? null : octxt.getPlayer()); }
         RedoableOp getRedoRecorder() { return recorder; }
 
         void addIndexedItem(MailItem item, Object data)  { indexItems.put(item, data); }
@@ -234,41 +234,62 @@ public class Mailbox {
     public static class OperationContext {
         public static final boolean CHECK_CREATED = false, CHECK_MODIFIED = true;
 
-        Account    authuser;
-        RedoableOp player;
-        boolean    changetype = CHECK_CREATED;
-        int        change = -1;
+        private Account    authuser;
+        private boolean    isAdmin;
+        private RedoableOp player;
 
-        public OperationContext(RedoableOp redoPlayer)  { player = redoPlayer; }
-        public OperationContext(Account acct)           { authuser = acct; }
-        public OperationContext(Mailbox mbox)  throws ServiceException { authuser = mbox.getAccount(); }
+        boolean changetype = CHECK_CREATED;
+        int     change = -1;
+
+        public OperationContext(RedoableOp redoPlayer) {
+            player = redoPlayer;
+        }
+        public OperationContext(Account acct) {
+            this(acct, false);
+        }
+        public OperationContext(Mailbox mbox) throws ServiceException {
+            this(mbox.getAccount());
+        }
+        public OperationContext(Account acct, boolean admin) {
+            authuser = acct;  isAdmin = admin;
+        }
         public OperationContext(String accountId) throws ServiceException {
+            this(accountId, false);
+        }
+        public OperationContext(String accountId, boolean admin) throws ServiceException {
+            isAdmin = admin;
             authuser = Provisioning.getInstance().get(AccountBy.id, accountId);
             if (authuser == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
         }
         public OperationContext(OperationContext octxt) {
-            authuser   = octxt.authuser;    player = octxt.player;
-            changetype = octxt.changetype;  change = octxt.change;
+            player     = octxt.player;
+            authuser   = octxt.authuser;    isAdmin = octxt.isAdmin;
+            changetype = octxt.changetype;  change  = octxt.change;
         }
 
         public OperationContext setChangeConstraint(boolean checkCreated, int changeId) {
             changetype = checkCreated;  change = changeId;  return this;
         }
 
-        public RedoableOp getPlayer() { return player; }
-
-        public boolean needRedo() {
-            return player == null || !player.getUnloggedReplay();
+        public RedoableOp getPlayer() {
+            return player;
         }
-
-        public Account getAuthenticatedUser() { return authuser; }
-
         long getTimestamp() {
             return (player == null ? System.currentTimeMillis() : player.getTimestamp());
         }
         int getChangeId() {
             return (player == null ? -1 : player.getChangeId());
+        }
+        public boolean needRedo() {
+            return player == null || !player.getUnloggedReplay();
+        }
+
+        public Account getAuthenticatedUser() {
+            return authuser;
+        }
+        public boolean isUsingAdminPrivileges() {
+            return isAdmin;
         }
     }
 
@@ -579,11 +600,11 @@ public class Mailbox {
     /** Returns the {@link Account} for the authenticated user for the
      *  transaction.  Returns <code>null</code> if none was supplied in the
      *  transaction's {@link Mailbox.OperationContext} or if the authenticated
-     *  user is the same as the <code>Mailbox</code>'s owner.*/
+     *  user is the same as the <code>Mailbox</code>'s owner. */
     Account getAuthenticatedAccount() {
         Account authuser = null;
         if (mCurrentChange.active && mCurrentChange.octxt != null)
-            authuser = mCurrentChange.octxt.authuser;
+            authuser = mCurrentChange.octxt.getAuthenticatedUser();
         // XXX if the current authenticated user is the owner, it will return null.
         // later on in Folder.checkRights(), the same assumption is used to validate
         // the access.
@@ -592,18 +613,32 @@ public class Mailbox {
         return authuser;
     }
 
+    /** Returns whether the authenticated user for the transaction is using
+     *  any admin privileges they might have.  Admin users not using privileges
+     *  are exactly like any other user and cannot access any folder they have
+     *  not explicitly been granted access to.
+     * 
+     * @see #getAuthenticatedAccount() */
+    boolean isUsingAdminPrivileges() {
+        return mCurrentChange.active && mCurrentChange.octxt != null && mCurrentChange.octxt.isUsingAdminPrivileges();
+    }
+
     /** Returns whether the authenticated user has full access to this
      *  <code>Mailbox</code>.   The following users have full access:<ul>
      *    <li>the mailbox's owner
-     *    <li>all admin accounts</ul>
+     *    <li>all global admin accounts (if using admin privileges)
+     *    <li>appropriate domain admins (if using admin privileges)</ul>
      * 
-     * @see #getAuthenticatedAccount() */
+     * @see #getAuthenticatedAccount()
+     * @see #isUsingAdminPrivileges() */
     boolean hasFullAccess() throws ServiceException {
         Account authuser = getAuthenticatedAccount();
         // XXX: in Mailbox, authuser is set to null if authuser == owner.
         if (authuser == null || getAccountId().equals(authuser.getId()))
             return true;
-        return AccessManager.getInstance().canAccessAccount(authuser, getAccount());
+        if (mCurrentChange.active && mCurrentChange.octxt != null && isUsingAdminPrivileges())
+            return AccessManager.getInstance().canAccessAccount(authuser, getAccount());
+        return false;
     }
 
 
@@ -835,7 +870,7 @@ public class Mailbox {
      * @perms full access to the mailbox (see {@link #hasFullAccess()})
      * @return The {@link Metadata} representing the appropriate section's
      *         configuration information, or <code>null</code> if none is
-     *         found or if the caller does not have sufficient priviliges
+     *         found or if the caller does not have sufficient privileges
      *         to read the mailbox's config. */
     public synchronized Metadata getConfig(OperationContext octxt, String section) throws ServiceException {
         if (section == null || section.equals(""))
@@ -1397,7 +1432,7 @@ public class Mailbox {
      *    <li><code>service.FAILURE</code> - if there's a database failure,
      *        LDAP error, or other internal error</ul>
      * @see ACL
-     * @see MailItem#checkRights(short, Account) */
+     * @see MailItem#checkRights(short, Account, boolean) */
     public synchronized short getEffectivePermissions(OperationContext octxt, int itemId, byte type) throws ServiceException {
         // fetch the item outside the transaction so we get it even if the
         //   authenticated user doesn't have read permissions on it
@@ -1407,7 +1442,7 @@ public class Mailbox {
         try {
             beginTransaction("getEffectivePermissions", octxt);
             // use ~0 to query *all* rights; may need to change this when we do negative rights
-            short rights = item.checkRights((short) ~0, getAuthenticatedAccount());
+            short rights = item.checkRights((short) ~0, getAuthenticatedAccount(), isUsingAdminPrivileges());
             success = true;
             return rights;
         } finally {
@@ -1745,7 +1780,7 @@ public class Mailbox {
                 if (!hasFullAccess())
                     throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             } else {
-                if (!folder.canAccess(ACL.RIGHT_READ, getAuthenticatedAccount()))
+                if (!folder.canAccess(ACL.RIGHT_READ, getAuthenticatedAccount(), isUsingAdminPrivileges()))
                     throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             }
 
@@ -2576,7 +2611,7 @@ public class Mailbox {
     throws ServiceException {
         SetAppointment redoRecorder =
             new SetAppointment(getId(), attachmentsIndexingEnabled());
-        SetAppointment redoPlayer = (octxt == null ? null : (SetAppointment) octxt.player);
+        SetAppointment redoPlayer = (octxt == null ? null : (SetAppointment) octxt.getPlayer());
 
         boolean success = false;
         try {
@@ -2670,7 +2705,7 @@ public class Mailbox {
         }
 
         CreateInvite redoRecorder = new CreateInvite(mId, inv, folderId, data, force);
-        CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.player);
+        CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.getPlayer());
         short volumeId =
             redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
                         : redoPlayer.getVolumeId();
@@ -2792,8 +2827,10 @@ public class Mailbox {
 
     private void processICalReplies(OperationContext octxt, ZVCalendar cal)
     throws ServiceException {
-        List<Invite> components = Invite.createFromCalendar(
-                getAccount(), null, cal, false);
+        Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
+        boolean isAdminRequest = octxt == null ? null : octxt.isUsingAdminPrivileges();
+
+        List<Invite> components = Invite.createFromCalendar(getAccount(), null, cal, false);
         for (Invite inv : components) {
             if (!inv.hasOrganizer()) {
                 ZimbraLog.calendar.warn("No ORGANIZER found in REPLY");
@@ -2836,7 +2873,7 @@ public class Mailbox {
                                 sr.close();
                         }
                         Options options = new Options();
-                        options.setAuthToken(new AuthToken(getAccount()).getEncoded());
+                        options.setAuthToken(new AuthToken(authuser, isAdminRequest).getEncoded());
                         options.setTargetAccount(orgAccount.getName());
                         options.setTargetAccountBy(AccountBy.name);
                         options.setUri(uri);
@@ -2941,7 +2978,7 @@ public class Mailbox {
             conversationId = ID_AUTO_INCREMENT;
 
         boolean needRedo = octxt == null || octxt.needRedo();
-        CreateMessage redoPlayer = (octxt == null ? null : (CreateMessage) octxt.player);
+        CreateMessage redoPlayer = (octxt == null ? null : (CreateMessage) octxt.getPlayer());
         boolean isRedo = redoPlayer != null;
 
         // quick check to make sure we don't deliver 5 copies of the same message
@@ -4458,7 +4495,7 @@ public class Mailbox {
             redoRecorder.setAuthor(author);
             redoRecorder.setItemType(type);
             
-            SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.player);
+            SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.getPlayer());
             int itemId  = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
             short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
 

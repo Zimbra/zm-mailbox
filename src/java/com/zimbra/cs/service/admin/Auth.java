@@ -110,7 +110,7 @@ public class Auth extends AdminDocumentHandler {
 
         Element response = lc.createElement(AdminService.AUTH_RESPONSE);
         String token;
-        AuthToken at = new AuthToken(acct);
+        AuthToken at = new AuthToken(acct, true);
         try {
             token = at.getEncoded();
         } catch (AuthTokenException e) {

@@ -653,9 +653,9 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @throws ServiceException on errors fetching LDAP entries or
      *         retrieving the item's folder
      * @see ACL
-     * @see Folder#checkRights(short, Account) */
+     * @see Folder#checkRights(short, Account, boolean) */
     boolean canAccess(short rightsNeeded) throws ServiceException {
-        return canAccess(rightsNeeded, mMailbox.getAuthenticatedAccount());
+        return canAccess(rightsNeeded, mMailbox.getAuthenticatedAccount(), mMailbox.isUsingAdminPrivileges());
     }
     
     /** Returns whether the specified account has the requested access rights
@@ -667,14 +667,15 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @param rightsNeeded  A set of rights (e.g. {@link ACL#RIGHT_READ}
      *                      and {@link ACL#RIGHT_DELETE}).
      * @param authuser      The user whose rights we need to query.
+     * @param asAdmin       Whether to use admin priviliges (if any).
      * @throws ServiceException on errors fetching LDAP entries or
      *         retrieving the item's folder
      * @see ACL
      * @see Folder#canAccess(short) */
-    boolean canAccess(short rightsNeeded, Account authuser) throws ServiceException {
+    boolean canAccess(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
         if (rightsNeeded == 0)
             return true;
-        return checkRights(rightsNeeded, authuser) == rightsNeeded;
+        return checkRights(rightsNeeded, authuser, asAdmin) == rightsNeeded;
     }
 
     /** Returns the subset of the requested access rights that the user has
@@ -686,11 +687,12 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @param rightsNeeded  A set of rights (e.g. {@link ACL#RIGHT_READ}
      *                      and {@link ACL#RIGHT_DELETE}).
      * @param authuser      The user whose rights we need to query.
+     * @param asAdmin       Whether to use admin priviliges (if any).
      * @see ACL
-     * @see Folder#checkRights(short, Account) */
-    short checkRights(short rightsNeeded, Account authuser) throws ServiceException {
+     * @see Folder#checkRights(short, Account, boolean) */
+    short checkRights(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
         // check to see what access has been granted on the enclosing folder
-        short granted = getFolder().checkRights(rightsNeeded, authuser);
+        short granted = getFolder().checkRights(rightsNeeded, authuser, asAdmin);
         // FIXME: check to see what access has been granted on the item's tags
         //   granted |= getTags().getGrantedRights(rightsNeeded, authuser);
         // and see if the granted rights are sufficient

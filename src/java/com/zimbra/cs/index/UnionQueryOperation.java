@@ -306,7 +306,8 @@ class UnionQueryOperation extends QueryOperation
             // this actually runs the remote operation
             for (QueryOperation toSetup : mQueryOperations) {
                 if (toSetup instanceof RemoteQueryOperation) {
-                    ((RemoteQueryOperation)toSetup).setup(proto, octxt.getAuthenticatedUser(), types, searchOrder, offset, limit, mode);
+                    RemoteQueryOperation remote = (RemoteQueryOperation) toSetup;
+                    remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), types, searchOrder, offset, limit, mode);
                 }
             }
         }

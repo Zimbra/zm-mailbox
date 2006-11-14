@@ -459,7 +459,7 @@ public class MailboxManager {
                 data.accountId = account.getId();
     
                 // create the mailbox row and the mailbox database
-                CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.player);
+                CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.getPlayer());
                 int id = (redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
 
                 NewMboxId newMboxId = DbMailbox.createMailbox(conn, id, data.accountId, account.getName());

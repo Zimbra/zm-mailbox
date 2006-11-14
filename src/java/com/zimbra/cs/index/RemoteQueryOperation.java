@@ -24,8 +24,6 @@
  */
 package com.zimbra.cs.index;
 
-import java.io.IOException;
-
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -35,11 +33,9 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.SoapProtocol;
-import com.zimbra.soap.ZimbraSoapContext;
 
 class RemoteQueryOperation extends QueryOperation {
 
@@ -119,7 +115,7 @@ class RemoteQueryOperation extends QueryOperation {
         return null;
     }
 
-    protected void setup(SoapProtocol proto, Account authenticatedAccount, byte[] types, SortBy searchOrder, int offset, int limit, Mailbox.SearchResultMode mode) throws ServiceException {
+    protected void setup(SoapProtocol proto, Account authenticatedAccount, boolean isAdmin, byte[] types, SortBy searchOrder, int offset, int limit, Mailbox.SearchResultMode mode) throws ServiceException {
         Provisioning prov  = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.id, mTarget.toString());
         if (acct == null)
@@ -138,14 +134,13 @@ class RemoteQueryOperation extends QueryOperation {
 
         params.setQueryStr(mOp.toQueryString());
         try {
-            mResults = new ProxiedQueryResults(proto, new AuthToken(authenticatedAccount).getEncoded(), mTarget.toString(), remoteServer.getName(), params, mode);
+            mResults = new ProxiedQueryResults(proto, new AuthToken(authenticatedAccount, isAdmin).getEncoded(), mTarget.toString(), remoteServer.getName(), params, mode);
         } catch (AuthTokenException e) {
-            throw ServiceException.FAILURE("AuthTokenException getting auth token: "+e.toString(), e);
+            throw ServiceException.FAILURE("AuthTokenException getting auth token: " + e.toString(), e);
         }
     }
 
-    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res,
-                MailboxIndex mbidx, int chunkSize) throws IOException, ServiceException {
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) {
     }
 
     public void resetIterator() throws ServiceException {

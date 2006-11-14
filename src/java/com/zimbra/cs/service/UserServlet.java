@@ -188,8 +188,7 @@ public class UserServlet extends ZimbraServlet {
 
     private void getAccount(Context context) throws IOException, ServletException {
         try {
-            int adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
-            boolean isAdminRequest = (context.req.getLocalPort() == adminPort);
+            boolean isAdminRequest = isAdminRequest(context);
             // check cookie first
             if (context.cookieAuthAllowed()) {
                 context.authAccount = cookieAuthRequest(context.req, context.resp, true);
@@ -212,7 +211,7 @@ public class UserServlet extends ZimbraServlet {
                     // send cookie back if need be. 
                     if (!context.noSetCookie()) {
                         try {
-                            context.authTokenCookie = new AuthToken(context.authAccount).getEncoded();
+                            context.authTokenCookie = new AuthToken(context.authAccount, isAdminRequest).getEncoded();
                             context.resp.addCookie(new Cookie(isAdminRequest ? COOKIE_ZM_ADMIN_AUTH_TOKEN : COOKIE_ZM_AUTH_TOKEN, context.authTokenCookie));
                         } catch (AuthTokenException e) {
                         }
@@ -226,6 +225,11 @@ public class UserServlet extends ZimbraServlet {
         } catch (ServiceException e) {
             throw new ServletException(e);
         }
+    }
+
+    private boolean isAdminRequest(Context context) throws ServiceException {
+        int adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
+        return (context.req.getLocalPort() == adminPort);
     }
 
     private void sendError(Context ctxt, HttpServletRequest req, HttpServletResponse resp, String message) throws IOException {
@@ -291,7 +295,7 @@ public class UserServlet extends ZimbraServlet {
 
         // auth is required if we haven't yet authed and they've specified a formatter that requires auth (including write ops).
         boolean authRequired = context.authAccount == null &&
-        (context.formatter == null || context.formatter.requiresAuth() || req.getMethod().equalsIgnoreCase("POST"));
+                (context.formatter == null || context.formatter.requiresAuth() || req.getMethod().equalsIgnoreCase("POST"));
 
         // need this before proxy if we want to support sending cookie from a basic-auth
         if (authRequired) {
@@ -310,11 +314,10 @@ public class UserServlet extends ZimbraServlet {
 
         if (!Provisioning.onLocalServer(context.targetAccount)) {
             try {
-                if (context.basicAuthHappened && context.authTokenCookie == null) 
-                    context.authTokenCookie = new AuthToken(context.authAccount).getEncoded();
+                if (context.basicAuthHappened && context.authTokenCookie == null)
+                    context.authTokenCookie = new AuthToken(context.authAccount, isAdminRequest(context)).getEncoded();
                 Provisioning prov = Provisioning.getInstance();                
-                proxyServletRequest(req, resp, prov.getServer(context.targetAccount),
-                            context.basicAuthHappened ? context.authTokenCookie : null);
+                proxyServletRequest(req, resp, prov.getServer(context.targetAccount), context.basicAuthHappened ? context.authTokenCookie : null);
                 return true;
             } catch (ServletException e) {
                 throw ServiceException.FAILURE("proxy error", e);
@@ -340,7 +343,7 @@ public class UserServlet extends ZimbraServlet {
             ZimbraLog.mailbox.debug("UserServlet: " + reqURL.toString());
         }
 
-        context.opContext = new OperationContext(context.authAccount);
+        context.opContext = new OperationContext(context.authAccount, isAdminRequest(context));
 
         MailItem item = resolveItem(context);
 
@@ -394,7 +397,7 @@ public class UserServlet extends ZimbraServlet {
 
             ZimbraLog.mailbox.info("UserServlet (POST): " + context.req.getRequestURL().toString());
 
-            context.opContext = new OperationContext(context.authAccount);
+            context.opContext = new OperationContext(context.authAccount, isAdminRequest(context));
 
             GetItemOperation op;
             if (context.itemId != null)
@@ -540,7 +543,7 @@ public class UserServlet extends ZimbraServlet {
 
         try {
             if (context.basicAuthHappened && context.authTokenCookie == null) 
-                context.authTokenCookie = new AuthToken(context.authAccount).getEncoded();
+                context.authTokenCookie = new AuthToken(context.authAccount, isAdminRequest(context)).getEncoded();
         } catch (AuthTokenException e) {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "cannot generate auth token");
         }

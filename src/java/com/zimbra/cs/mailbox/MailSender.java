@@ -167,6 +167,7 @@ public class MailSender {
 
             Account acct = mbox.getAccount();
             Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
+            boolean isAdminRequest = octxt == null ? null : octxt.isUsingAdminPrivileges();
             if (authuser == null)
                 authuser = acct;
             boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
@@ -205,7 +206,7 @@ public class MailSender {
                     String uri = AccountUtil.getSoapUri(authuser);
                     if (uri != null) {
                         try {
-                            ZMailbox.Options options = new ZMailbox.Options(new AuthToken(authuser).getEncoded(), uri);
+                            ZMailbox.Options options = new ZMailbox.Options(new AuthToken(authuser, isAdminRequest).getEncoded(), uri);
                             options.setNoSession(true);
                             ZMailbox zmbox = ZMailbox.getMailbox(options);
                             String sentFolder = authuser.getAttr(Provisioning.A_zimbraPrefSentMailFolder, "" + Mailbox.ID_FOLDER_SENT);

@@ -195,11 +195,11 @@ public class Folder extends MailItem {
      * @param authuser      The user whose rights we need to query.
      * @see ACL */
     @Override
-    short checkRights(short rightsNeeded, Account authuser) throws ServiceException {
-        return checkRights(rightsNeeded, authuser, false);
+    short checkRights(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
+        return checkRights(rightsNeeded, authuser, asAdmin, false);
     }
 
-    private short checkRights(short rightsNeeded, Account authuser, boolean inheritedOnly) throws ServiceException {
+    private short checkRights(short rightsNeeded, Account authuser, boolean asAdmin, boolean inheritedOnly) throws ServiceException {
         if (rightsNeeded == 0)
             return rightsNeeded;
         // XXX: in Mailbox, authuser is set to null if authuser == owner.
@@ -207,7 +207,7 @@ public class Folder extends MailItem {
         if (authuser == null || authuser.getId().equals(mMailbox.getAccountId()))
             return rightsNeeded;
         // admin users (and the appropriate domain admins) can also do anything they want
-        if (AccessManager.getInstance().canAccessAccount(authuser, getAccount()))
+        if (asAdmin && AccessManager.getInstance().canAccessAccount(authuser, getAccount()))
             return rightsNeeded;
         // check the ACLs to see if access has been explicitly granted
         Short granted = mRights != null ? mRights.getGrantedRights(authuser, inheritedOnly) : null;
@@ -321,12 +321,12 @@ public class Folder extends MailItem {
             return Collections.emptyList();
 
         Collections.sort(mSubfolders, new SortByName());
-        if (octxt == null || octxt.authuser == null)
+        if (octxt == null || octxt.getAuthenticatedUser() == null)
             return Collections.unmodifiableList(mSubfolders);
 
         ArrayList<Folder> visible = new ArrayList<Folder>();
         for (Folder subfolder : mSubfolders)
-            if (subfolder.canAccess(ACL.RIGHT_READ, octxt.authuser))
+            if (subfolder.canAccess(ACL.RIGHT_READ, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges()))
                 visible.add(subfolder);
         return visible;
     }
