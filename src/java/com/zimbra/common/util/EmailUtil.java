@@ -63,6 +63,16 @@ public class EmailUtil
         return new String[] { localPart, domain };
     }
     
+    public static String getValidDomainPart(String address) {
+        String parts[] = getLocalPartAndDomain(address);
+        if (parts == null)
+            return null;
+        String domain = parts[1];
+        if (validDomain(domain))
+            return domain;
+        return null;
+    }
+    
     private static final String DOMAIN_PATTERN = "[-a-zA-Z0-9\\.]+";
     
     private static final Pattern DOMAIN_REGEX = Pattern.compile(DOMAIN_PATTERN);
