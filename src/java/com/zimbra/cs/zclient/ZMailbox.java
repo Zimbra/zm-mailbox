@@ -1359,7 +1359,7 @@ public class ZMailbox {
      * @return newly created folder
      * @throws ServiceException on error
      */
-    public ZFolder createFolder(String parentId, String name, ZFolder.View defaultView, ZFolder.Color color, String flags) throws ServiceException {
+    public ZFolder createFolder(String parentId, String name, ZFolder.View defaultView, ZFolder.Color color, String flags, String url) throws ServiceException {
         XMLElement req = new XMLElement(MailService.CREATE_FOLDER_REQUEST);
         Element folderEl = req.addElement(MailService.E_FOLDER);
         folderEl.addAttribute(MailService.A_NAME, name);
@@ -1367,6 +1367,7 @@ public class ZMailbox {
         if (defaultView != null) folderEl.addAttribute(MailService.A_DEFAULT_VIEW, defaultView.name());
         if (color != null) folderEl.addAttribute(MailService.A_COLOR, color.getValue());
         if (flags != null) folderEl.addAttribute(MailService.A_FLAGS, flags);
+        if (url != null) folderEl.addAttribute(MailService.A_URL, url);
         String id = invoke(req).getElement(MailService.E_FOLDER).getAttribute(MailService.A_ID);
         // this assumes notifications will create the folder
         return getFolderById(id);

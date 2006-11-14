@@ -269,7 +269,7 @@ public abstract class WikiUtil {
 
         private ZFolder createFolder(ZFolder parent, String dir) throws ServiceException {
             System.out.println("Creating folder " + dir);
-            return mMbox.createFolder(parent.getId(), dir, ZFolder.View.valueOf(sDEFAULTVIEW), null, null);
+            return mMbox.createFolder(parent.getId(), dir, ZFolder.View.valueOf(sDEFAULTVIEW), null, null, null);
         }
         
         private ZFolder getRootFolder() throws ServiceException {
