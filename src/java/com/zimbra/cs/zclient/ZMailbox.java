@@ -1367,7 +1367,7 @@ public class ZMailbox {
         if (defaultView != null) folderEl.addAttribute(MailService.A_DEFAULT_VIEW, defaultView.name());
         if (color != null) folderEl.addAttribute(MailService.A_COLOR, color.getValue());
         if (flags != null) folderEl.addAttribute(MailService.A_FLAGS, flags);
-        if (url != null) folderEl.addAttribute(MailService.A_URL, url);
+        if (url != null && url.length() > 0) folderEl.addAttribute(MailService.A_URL, url);
         String id = invoke(req).getElement(MailService.E_FOLDER).getAttribute(MailService.A_ID);
         // this assumes notifications will create the folder
         return getFolderById(id);

@@ -211,7 +211,9 @@ public class ZFolder implements ZItem, Comparable {
         mParentId = e.getAttribute(MailService.A_FOLDER, mParentId);
         if (mParentId != oldParentId) {
             //re-compute mParent!
+            mParent.removeChild(this);
             mParent = mbox.getFolderById(mParentId);
+            mParent.addChild(this);
         }
         mFlags = e.getAttribute(MailService.A_FLAGS, mFlags);
         String newColor = e.getAttribute(MailService.A_COLOR, null);

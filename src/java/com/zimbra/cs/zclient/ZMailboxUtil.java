@@ -1079,7 +1079,7 @@ public class ZMailboxUtil implements DebugListener {
                 folderViewOpt(),
                 folderColorOpt(),
                 flagsOpt(),
-                urlOpt());
+                null);
         System.out.println(cf.getId());
     }
 
