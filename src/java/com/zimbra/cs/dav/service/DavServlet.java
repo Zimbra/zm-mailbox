@@ -127,15 +127,20 @@ public class DavServlet extends ZimbraServlet {
 			if (e.getCause() instanceof MailServiceException.NoSuchItemException ||
 					e.getStatus() == HttpServletResponse.SC_NOT_FOUND)
 				ZimbraLog.dav.debug(ctxt.getUri()+" not found");
+			else if (e.getStatus() == HttpServletResponse.SC_MOVED_TEMPORARILY) 
+				ZimbraLog.dav.debug("sending redirect");
 			else
-				ZimbraLog.dav.debug("error handling method "+method.getName(), e);
+				ZimbraLog.dav.error("error handling method "+method.getName(), e);
 			
-			if (e.isStatusSet())
-				resp.sendError(e.getStatus());
-			else
-				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			try {
+				if (e.isStatusSet())
+					resp.sendError(e.getStatus());
+				else
+					resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			} catch (IllegalStateException ise) {
+			}
 		} catch (Exception e) {
-			ZimbraLog.dav.debug("error handling method "+method.getName(), e);
+			ZimbraLog.dav.error("error handling method "+method.getName(), e);
 			try {
 				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			} catch (Exception ex) {}

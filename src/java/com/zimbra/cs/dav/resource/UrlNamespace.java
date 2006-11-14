@@ -103,10 +103,10 @@ public class UrlNamespace {
 	}
 	
 	public static DavResource getResourceAt(DavContext ctxt, String user, String path) throws DavException {
-		String target = path.toLowerCase();
-		if (target == null)
+		if (path == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
 		
+		String target = path.toLowerCase();
 		DavResource resource = null;
 		
 		if (target.startsWith(ATTACHMENTS_PREFIX)) {

@@ -34,7 +34,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
-import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -52,6 +51,7 @@ import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.property.ResourceProperty;
+import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -65,7 +65,6 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.L10nUtil;
 import com.zimbra.cs.util.L10nUtil.MsgKey;
@@ -141,32 +140,6 @@ public class CalendarCollection extends Collection {
 		return mbox.getAppointmentsForRange(ctxt.getOperationContext(), range.getStart(), range.getEnd(), mId, null);
 	}
 	
-	public ParsedMessage createParsedMessage(byte[] item) throws DavException, IOException {
-		String method = "REQUEST";
-		String boundary = "--caldav-"+System.currentTimeMillis();
-		StringBuilder msgBuf = new StringBuilder();
-		msgBuf.append("Subject: calendar item from caldav\r\n");
-		msgBuf.append("Content-Type: multipart/mixed");
-		msgBuf.append("; boundary=\"").append(boundary).append("\"\r\n");
-		msgBuf.append("\r\n");
-		msgBuf.append("this is a msg in multipart format\r\n");
-		msgBuf.append("\r\n");
-		msgBuf.append("--").append(boundary).append("\r\n");
-		msgBuf.append("Content-Type: ").append(Mime.CT_TEXT_CALENDAR);
-		msgBuf.append("; method=").append(method);
-		msgBuf.append("; name=meeting.ics").append("\r\n");
-		msgBuf.append("Content-Transfer-Encoding: 8bit\r\n");
-		msgBuf.append("\r\n");
-		msgBuf.append(new String(item, "UTF-8"));
-		msgBuf.append("\r\n");
-		msgBuf.append("--").append(boundary).append("--").append("\r\n");
-		try {
-			return new ParsedMessage(msgBuf.toString().getBytes(), false);
-		} catch (MessagingException e) {
-			throw new DavException("cannot create ParsedMessage", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
-		}
-	}
-	
 	private String findSummary(ZVCalendar cal) {
 		Iterator<ZComponent> iter = cal.getComponentIterator();
 		while (iter.hasNext()) {
@@ -178,23 +151,43 @@ public class CalendarCollection extends Collection {
 		return "calendar event";
 	}
 	
+	private String findEventUid(List<Invite> invites) throws DavException {
+		String uid = null;
+		for (Invite i : invites)
+			if (i.getCompType().equals(IcalXmlStrMap.COMPTYPE_EVENT)) {
+				if (uid != null)
+					throw new DavException("too many events", HttpServletResponse.SC_BAD_REQUEST, null);
+				uid = i.getUid();
+			}
+		if (uid == null)
+			throw new DavException("no event in the request", HttpServletResponse.SC_BAD_REQUEST, null);
+		return uid;
+	}
+	
 	public DavResource createItem(DavContext ctxt, String user, String name) throws DavException, IOException {
 		HttpServletRequest req = ctxt.getRequest();
 		if (req.getContentLength() <= 0)
 			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
 		if (!req.getContentType().equalsIgnoreCase(Mime.CT_TEXT_CALENDAR))
 			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
-			
+		
+		/*
+		 * chandler doesn't set User-Agent header, doesn't understand 
+		 * If-None-Match or If-Match headers.  assume the worst, and don't expect
+		 * If-None-Match or If-Match headers unless the client is verified
+		 * to work correctly with those headers, like Evolution 2.8.
+		 */
+		String userAgent = req.getHeader(DavProtocol.HEADER_USER_AGENT);
+		boolean beLessRestrictive = (userAgent == null) || !userAgent.startsWith("Evolution");
+		
 		String etag = req.getHeader(DavProtocol.HEADER_IF_MATCH);
 
-		/*
-		 * chandler doesn't send the If-None-Match or If-Match headers yet.
 		String noneMatch = req.getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
-		if (etag != null && noneMatch != null ||
-				etag == null && noneMatch == null ||
-				name == null)
+		if (!beLessRestrictive &&
+				(etag != null && noneMatch != null ||
+				 etag == null && noneMatch == null ||
+				 name == null))
 			throw new DavException("bad request", HttpServletResponse.SC_BAD_REQUEST, null);
-			*/
 		
 		boolean isUpdate = (etag != null);
 		if (name.endsWith(CalendarObject.CAL_EXTENSION))
@@ -208,39 +201,45 @@ public class CalendarCollection extends Collection {
 					findSummary(vcalendar), 
 					vcalendar, 
 					true);
-			
 			Account account = prov.get(AccountBy.name, user);
 			if (account == null)
 				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
+			String uid = findEventUid(invites);
+			if (!uid.equals(name)) {
+				// because we are keying off the URI, we don't have
+				// much choice except to use the UID of VEVENT for Appt URI.
+				// Evolution doesn't use UID as the URI, so we'll force it
+				// by issuing redirect to the URI we want it to be at.
+				StringBuilder url = new StringBuilder();
+				url.append(DavServlet.getDavUrl(user));
+				url.append(getUri());
+				url.append(uid);
+				url.append(CalendarObject.CAL_EXTENSION);
+				ctxt.getResponse().sendRedirect(url.toString());
+				throw new DavException("wrong url", HttpServletResponse.SC_MOVED_PERMANENTLY, null);
+			}
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 			Appointment appt = mbox.getAppointmentByUid(ctxt.getOperationContext(), name);
 			if (appt == null && isUpdate)
 				throw new DavException("event not found", HttpServletResponse.SC_NOT_FOUND, null);
-			/*
-			 * chandler doesn't use If-Match
-			if (appt != null && !isUpdate)
+			
+			if (!beLessRestrictive && appt != null && !isUpdate)
 				throw new DavException("event already exists", HttpServletResponse.SC_CONFLICT, null);
+			
 			if (isUpdate) {
 				CalendarObject calObj = new CalendarObject(appt);
 				ResourceProperty etagProp = calObj.getProperty(DavElements.P_GETETAG);
 				if (!etagProp.getStringValue().equals(etag))
 					throw new DavException("event not found", HttpServletResponse.SC_BAD_REQUEST, null);
 			}
-			 */
 			for (Invite i : invites) {
 	            if (i.getUid() == null)
 	                i.setUid(LdapUtil.generateUUID());
 				mbox.addInvite(ctxt.getOperationContext(), i, mId, false, null);
 			}
-			appt = mbox.getAppointmentByUid(ctxt.getOperationContext(), invites.get(0).getUid());
+			appt = mbox.getAppointmentByUid(ctxt.getOperationContext(), uid);
 			return new CalendarObject(appt);
-			/*
-			Mailbox.SetAppointmentData data = new SetAppointmentData();
-			data.mPm = createParsedMessage(item);
-			data.mInv = invites.get(0);
-			mbox.setAppointment(ctxt.getOperationContext(), this.mId, data, null);
-			*/
 		} catch (ServiceException e) {
 			throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		}

@@ -49,8 +49,8 @@ public class Put extends DavMethod {
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_ACCEPTABLE, null);
 		
 		Collection col = UrlNamespace.getCollectionAtUrl(ctxt, ctxt.getPath());
-		ctxt.setStatus(HttpServletResponse.SC_CREATED);
 		DavResource rs = col.createItem(ctxt, user, name);
+		ctxt.setStatus(HttpServletResponse.SC_CREATED);
 		if (rs.hasEtag())
 			ctxt.getResponse().setHeader(DavProtocol.HEADER_ETAG, rs.getEtag());
 	}

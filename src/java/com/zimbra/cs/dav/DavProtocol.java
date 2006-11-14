@@ -85,6 +85,7 @@ public class DavProtocol {
 	public static final String HEADER_ALLOW = "Allow";
 	public static final String HEADER_CACHE_CONTROL = "Cache-Control";
 	public static final String HEADER_ETAG = "ETag";
+	public static final String HEADER_USER_AGENT = "User-Agent";
 	
 	public static final String NO_CACHE = "no-cache";
 	
