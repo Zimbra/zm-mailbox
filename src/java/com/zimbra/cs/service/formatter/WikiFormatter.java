@@ -125,7 +125,7 @@ public class WikiFormatter extends Formatter {
         		wt = getDefaultTOC();
         	
         	template = wt.getComposedPage(ctxt, folder, CHROME);
-    		sCache.addPage(key, template);
+    		//sCache.addPage(key, template);
     	}
 		printWikiPage(context, template, folder.getName());
     }
