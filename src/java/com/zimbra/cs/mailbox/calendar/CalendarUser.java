@@ -28,7 +28,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import javax.mail.Address;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
@@ -113,7 +112,7 @@ public abstract class CalendarUser {
         return meta;
     }
 
-    public Address getFriendlyAddress() throws MailServiceException {
+    public InternetAddress getFriendlyAddress() throws MailServiceException {
         InternetAddress addr;
         try {
             if (hasCn())
@@ -125,6 +124,26 @@ public abstract class CalendarUser {
             return addr;
         } catch (UnsupportedEncodingException e) {
             throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+        } catch (AddressException e) {
+            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+        }
+    }
+
+    /**
+     * Reply-to address is either the address of the user, or the sent-by
+     * address if it is set.
+     * @return
+     * @throws MailServiceException
+     */
+    public InternetAddress getReplyAddress() throws MailServiceException {
+        InternetAddress addr;
+        try {
+            if (hasSentBy()) {
+                addr = new InternetAddress(getSentBy());
+            } else {
+                addr = getFriendlyAddress();
+            }
+            return addr;
         } catch (AddressException e) {
             throw MailServiceException.ADDRESS_PARSE_ERROR(e);
         }
@@ -169,7 +188,7 @@ public abstract class CalendarUser {
      * @param address
      * @return
      */
-    protected String getMailToAddress(String address) {
+    protected static String getMailToAddress(String address) {
         if (address != null) {
             if (address.toLowerCase().startsWith("mailto:"))
                 address = address.substring(7);  // 7 = len("mailto:")

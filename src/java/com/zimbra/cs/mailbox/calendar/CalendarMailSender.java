@@ -45,6 +45,7 @@ import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -52,6 +53,7 @@ import javax.mail.internet.MimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -131,18 +133,15 @@ public class CalendarMailSender {
     throws ServiceException {
         try {
             Locale lc;
-            Address organizerAddress;
-            Account organizer = inv.getOrganizerAccount();
-            if (organizer != null) {
+            InternetAddress organizerAddress;
+            if (inv.hasOrganizer()) {
+                ZOrganizer org = inv.getOrganizer();
+                organizerAddress = org.getReplyAddress();  // organizer or sent-by
+                Account organizer = Provisioning.getInstance().get(AccountBy.name, organizerAddress.getAddress());
                 lc = organizer.getLocale();
-                organizerAddress =
-                    AccountUtil.getFriendlyEmailAddress(organizer);
             } else {
+                organizerAddress = null;
                 lc = authAccount.getLocale();
-                if (inv.hasOrganizer())
-                    organizerAddress = inv.getOrganizer().getFriendlyAddress();
-                else
-                    organizerAddress = null;
             }
 
             String fromDisplayName =
