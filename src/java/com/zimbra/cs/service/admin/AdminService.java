@@ -271,6 +271,16 @@ public class AdminService implements DocumentService {
     
     public static final QName SET_THROTTLE_REQUEST = QName.get("SetThrottleRequest", NAMESPACE);
     public static final QName SET_THROTTLE_RESPOSNE = QName.get("SetThrottleResponse", NAMESPACE);
+
+    // data sources
+    public static final QName CREATE_DATA_SOURCE_REQUEST = QName.get("CreateDataSourceRequest", NAMESPACE);
+    public static final QName CREATE_DATA_SOURCE_RESPONSE = QName.get("CreateDataSourceResponse", NAMESPACE);
+    public static final QName GET_DATA_SOURCES_REQUEST = QName.get("GetDataSourcesRequest", NAMESPACE);
+    public static final QName GET_DATA_SOURCES_RESPONSE = QName.get("GetDataSourcesResponse", NAMESPACE);
+    public static final QName MODIFY_DATA_SOURCE_REQUEST = QName.get("ModifyDataSourceRequest", NAMESPACE);
+    public static final QName MODIFY_DATA_SOURCE_RESPONSE = QName.get("ModifyDataSourceResponse", NAMESPACE);
+    public static final QName DELETE_DATA_SOURCE_REQUEST = QName.get("DeleteDataSourceRequest", NAMESPACE);
+    public static final QName DELETE_DATA_SOURCE_RESPONSE = QName.get("DeleteDataSourceResponse", NAMESPACE);
     
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
@@ -533,6 +543,12 @@ public class AdminService implements DocumentService {
         
         // throttling
         dispatcher.registerHandler(SET_THROTTLE_REQUEST, new SetThrottle());
+        
+        // data source
+        dispatcher.registerHandler(GET_DATA_SOURCES_REQUEST, new GetDataSources());
+        dispatcher.registerHandler(CREATE_DATA_SOURCE_REQUEST, new CreateDataSource());
+        dispatcher.registerHandler(MODIFY_DATA_SOURCE_REQUEST, new ModifyDataSource());
+        dispatcher.registerHandler(DELETE_DATA_SOURCE_REQUEST, new DeleteDataSource());
     }
 
     /**

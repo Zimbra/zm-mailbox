@@ -22,29 +22,51 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.account;
+package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.soap.DocumentHandler;
+import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class DeleteDataSource extends DocumentHandler {
-	
+public class DeleteDataSource extends AdminDocumentHandler {
+
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminService.E_ID };
+    protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
+
+    /**
+     * must be careful and only allow modifies to accounts/attrs domain admin has access to
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+    
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account account = getRequestedAccount(zsc);
-        
-        Element dsEl = request.getElement(AccountService.E_DATA_SOURCE);
-        String id = dsEl.getAttribute(AccountService.A_ID);
-        Provisioning.getInstance().deleteDataSource(account, id);
+        Provisioning prov = Provisioning.getInstance();
 
-        Element response = zsc.createElement(AccountService.DELETE_DATA_SOURCE_RESPONSE);
+        String id = request.getAttribute(AdminService.E_ID);
+        Map<String, Object> attrs = AdminService.getAttrs(request);
+
+        Account account = prov.get(AccountBy.id, id);
+        if (account == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(id);
+
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+
+        Element dsEl = request.getElement(AccountService.E_DATA_SOURCE);
+        String dsId = dsEl.getAttribute(AccountService.A_ID);
+        Provisioning.getInstance().deleteDataSource(account, dsId);
+
+        Element response = zsc.createElement(AdminService.DELETE_DATA_SOURCE_RESPONSE);
         return response;
     }
 }

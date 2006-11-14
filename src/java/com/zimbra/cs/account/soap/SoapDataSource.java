@@ -40,7 +40,7 @@ class SoapDataSource extends DataSource implements SoapEntry {
 
     SoapDataSource(Element e) throws ServiceException {
         super(DataSource.Type.fromString(e.getAttribute(AccountService.A_TYPE)),
-                e.getAttribute(AccountService.A_NAME), e.getAttribute(AccountService.A_ID), SoapProvisioning.getAttrs(e,AccountService.A_NAME));
+                e.getAttribute(AccountService.A_NAME), e.getAttribute(AccountService.A_ID), SoapProvisioning.getAttrs(e));
     }
 
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {

@@ -178,7 +178,7 @@ public class ToXML {
         e.addAttribute(AccountService.A_NAME, ds.getName());
         e.addAttribute(AccountService.A_ID, ds.getId());
         e.addAttribute(AccountService.A_TYPE, ds.getType().name());
-        addAccountAttrs(e, ds.getAttrs(), AccountService.A_NAME);
+        addAccountAttrs(e, ds.getAttrs(), AccountService.A_N);
         return e;
     }
 
