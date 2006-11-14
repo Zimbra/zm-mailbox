@@ -356,7 +356,7 @@ public class ZimbraSoapContext {
      * 
      * @return A new OperationContext object */
     public OperationContext getOperationContext() throws ServiceException {
-        OperationContext octxt = new OperationContext(mAuthTokenAccountId, mAuthToken == null && (mAuthToken.isAdmin() || mAuthToken.isDomainAdmin()));
+        OperationContext octxt = new OperationContext(mAuthTokenAccountId, mAuthToken != null && (mAuthToken.isAdmin() || mAuthToken.isDomainAdmin()));
         octxt.setChangeConstraint(mChangeConstraintType, mMaximumChangeId);
         return octxt;
     }

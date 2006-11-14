@@ -164,10 +164,10 @@ public class AuthToken {
 
     public AuthToken(Account acct, boolean isAdmin) {
         this(acct, 0, isAdmin, null);
-        mExpires = System.currentTimeMillis();
-        mExpires += mIsAdmin || mIsDomainAdmin ?
-                    acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000) :                                    
-                    acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000);
+        long lifetime = mIsAdmin || mIsDomainAdmin ?
+                    acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000) :                                    
+                    acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
+        mExpires = System.currentTimeMillis() + lifetime;
     }
 
     public AuthToken(Account acct, long expires) {
