@@ -9,7 +9,6 @@ reject_unlisted_recipient
 %%contains VAR:zimbraMtaRestriction reject_unknown_hostname%%
 %%contains VAR:zimbraMtaRestriction reject_unknown_sender_domain%%
 %%contains VAR:zimbraMtaRestriction reject_rbl_client dnsbl.njabl.org%%
-%%contains VAR:zimbraMtaRestriction reject_rbl_client opm.blitzed.org%%
 %%contains VAR:zimbraMtaRestriction reject_rbl_client relays.ordb.org%%
 %%contains VAR:zimbraMtaRestriction reject_rbl_client cbl.abuseat.org%%
 %%contains VAR:zimbraMtaRestriction reject_rbl_client bl.spamcop.net%%
