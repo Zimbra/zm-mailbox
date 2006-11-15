@@ -467,6 +467,7 @@ public class MailService implements DocumentService {
     public static final String A_APPT_TZ_MINUTE = "min";
     public static final String A_APPT_TZ_SECOND = "sec";
 
+    public static final String A_CONTACT_TYPE = "type";
     // spell checking
     public static final String A_AVAILABLE = "available";
     public static final String E_MISSPELLED = "misspelled";

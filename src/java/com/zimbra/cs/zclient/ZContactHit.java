@@ -39,6 +39,7 @@ public class ZContactHit implements ZSearchHit {
     private String mEmail, mEmail2, mEmail3;
     private String mRevision;
     private String mFolderId;
+    private String mType;
     private boolean mIsGroup;
     private float mScore;
     private long mMetaDataDate;
@@ -51,6 +52,7 @@ public class ZContactHit implements ZSearchHit {
         mFileAsStr = e.getAttribute(MailService.A_FILE_AS_STR, null);
         mRevision = e.getAttribute(MailService.A_REVISION, null);
         mFolderId = e.getAttribute(MailService.A_FOLDER);
+        mType = e.getAttribute(MailService.A_CONTACT_TYPE, null);
         mEmail = e.getAttribute(Contact.A_email, null);
         mEmail2 = e.getAttribute(Contact.A_email2, null);
         mEmail3 = e.getAttribute(Contact.A_email3, null);
@@ -64,6 +66,7 @@ public class ZContactHit implements ZSearchHit {
         sb.add("id", mId);
         sb.add("tags", mTags);
         sb.add("sortField", mSortField);
+        sb.add("type", mType);
         sb.add("score", mScore);
         sb.add("fileAsStr", mFileAsStr);
         sb.add("revision", mRevision);
@@ -76,8 +79,16 @@ public class ZContactHit implements ZSearchHit {
         return sb.toString();
     }
 
-    public boolean isgGroup() {
-        return mIsGroup;
+    public boolean isGroup() {
+        return Contact.TYPE_GROUP.equalsIgnoreCase(getType());
+    }
+
+    public boolean isContact() {
+        return !isGroup();
+    }
+
+    public String getType() {
+        return mType;
     }
     
     public String getTagIds() {

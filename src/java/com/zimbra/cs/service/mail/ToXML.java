@@ -358,10 +358,15 @@ public class ToXML {
                 if (email != null)
                     elem.addAttribute(Contact.A_email3, email);
 
-                String dlist = contact.get(Contact.A_dlist);
-                if (dlist != null)
-                    elem.addAttribute(Contact.A_dlist,  "1");
+                String type = contact.get(Contact.A_type);
+                if (type == null) {
+                    String dlist = contact.get(Contact.A_dlist);
+                    if (dlist != null) type = Contact.TYPE_GROUP;
+                }
+                if (type != null)
+                    elem.addAttribute(Contact.A_type,  type);
 
+                
                 // send back date with summary via search results
                 elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
             } catch (ServiceException e) { }
