@@ -1654,7 +1654,7 @@ public class ZMailboxUtil implements DebugListener {
         Map<String, String> result = getMap(args, offset);
         if (validate) {
             for (String name : result.keySet()) {
-                ZContact.Attr.fromString(name);
+                Contact.Attr.fromString(name);
             }
         }
         return result;

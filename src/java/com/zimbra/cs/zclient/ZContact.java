@@ -29,7 +29,6 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,71 +58,6 @@ public class ZContact  {
     private String mRevision;
     private long mMetaDataChangedDate;
     private Map<String, String> mAttrs;
-
-    public enum Attr {
-
-        assistantPhone,
-        birthday,
-        callbackPhone,
-        carPhone,
-        company,
-        companyPhone,
-        description,
-        department,
-        dlist,
-        email,
-        email2,
-        email3,
-        fileAs,
-        firstName,
-        fullName,
-        homeCity,
-        homeCountry,
-        homeFax,
-        homePhone,
-        homePhone2,
-        homePostalCode,
-        homeState,
-        homeStreet,
-        homeURL,
-        initials,
-        jobTitle,
-        lastName,
-        middleName,
-        mobilePhone,
-        namePrefix,
-        nameSuffix,
-        nickname,
-        notes,
-        office,
-        otherCity,
-        otherCountry,
-        otherFax,
-        otherPhone,
-        otherPostalCode,
-        otherState,
-        otherStreet,
-        otherURL,
-        pager,
-        workCity,
-        workCountry,
-        workFax,
-        workPhone,
-        workPhone2,
-        workPostalCode,
-        workState,
-        workStreet,
-        workURL;
-
-        public static Attr fromString(String s) throws ServiceException {
-            try {
-                return Attr.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid attr: "+s+", valid values: "+Arrays.asList(Attr.values()), e);
-            }
-        }
-
-    }
 
     public enum Flag {
         flagged('f'),

@@ -28,19 +28,20 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.common.util.StringUtil;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -69,6 +70,8 @@ public class Contact extends MailItem {
     private static final int FA_DEFAULT = FA_LAST_C_FIRST;
     private static final int FA_MAXIMUM = FA_EXPLICIT;
 
+    // these are the "well known attrs". keep in sync with Attr enum below
+    
     public static final String A_birthday = "birthday";
     public static final String A_callbackPhone = "callbackPhone";
     public static final String A_carPhone = "carPhone";
@@ -122,7 +125,74 @@ public class Contact extends MailItem {
     public static final String A_type = "type";
     
     public static final String TYPE_GROUP = "group";
-    
+ 
+    // these are the "well known attrs". keep in sync with A_* above.
+    public enum Attr {
+
+        assistantPhone,
+        birthday,
+        callbackPhone,
+        carPhone,
+        company,
+        companyPhone,
+        description,
+        department,
+        dlist,
+        email,
+        email2,
+        email3,
+        fileAs,
+        firstName,
+        fullName,
+        homeCity,
+        homeCountry,
+        homeFax,
+        homePhone,
+        homePhone2,
+        homePostalCode,
+        homeState,
+        homeStreet,
+        homeURL,
+        initials,
+        jobTitle,
+        lastName,
+        middleName,
+        mobilePhone,
+        namePrefix,
+        nameSuffix,
+        nickname,
+        notes,
+        office,
+        otherCity,
+        otherCountry,
+        otherFax,
+        otherPhone,
+        otherPostalCode,
+        otherState,
+        otherStreet,
+        otherURL,
+        pager,
+        workCity,
+        workCountry,
+        workFax,
+        workPhone,
+        workPhone2,
+        workPostalCode,
+        workState,
+        workStreet,
+        workURL,
+        type;
+
+        public static Attr fromString(String s) throws ServiceException {
+            try {
+                return Attr.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("invalid attr: "+s+", valid values: "+Arrays.asList(Attr.values()), e);
+            }
+        }
+
+    }
+
     /** Relates contact fields (<code>"firstName"</code>) to this contact's
      *  values (<code>"John"</code>). */
     private Map<String, String> mFields;
