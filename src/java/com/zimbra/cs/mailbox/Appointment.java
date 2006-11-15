@@ -619,23 +619,32 @@ public class Appointment extends MailItem {
         if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this appointment");
 
-        // If we're doing a modify rather than cancel, make sure the organizer
-        // in the new Invite is the same as the original organizer.
-        if (!isCancel) {
-            if (newInvite.hasOrganizer()) {
-                String newOrgAddr = newInvite.getOrganizer().getAddress();
-                if (originalOrganizer == null)
+        // Look for potentially malicious change in organizer.
+        if (newInvite.hasOrganizer()) {
+            String newOrgAddr = newInvite.getOrganizer().getAddress();
+            if (originalOrganizer == null) {
+                // If organizer was previously unset, it means the appointment
+                // had no attendee, i.e. a personal event.  When attendees are
+                // added to a personal event, organizer must be set and only
+                // to self.
+                if (!newInvite.thisAcctIsOrganizer(getAccount()))
                     throw ServiceException.INVALID_REQUEST(
-                            "Changing organizer of an appointment is not allowed: old=(unspecified), new=" + newOrgAddr, null);
+                            "Changing organizer of an appointment to another user is not allowed: old=(unspecified), new=" + newOrgAddr, null);
+            } else {
+                // Both old and new organizers are set.  They must be the
+                // same address.
                 String origOrgAddr = originalOrganizer.getAddress();
                 if (!newOrgAddr.equalsIgnoreCase(origOrgAddr))
                     throw ServiceException.INVALID_REQUEST(
                             "Changing organizer of an appointment is not allowed: old=" + origOrgAddr + ", new=" + newOrgAddr, null);
-            } else {
-                if (originalOrganizer != null)
-                    throw ServiceException.INVALID_REQUEST(
-                            "Removing organizer of an appointment is not allowed", null);
             }
+        } else {
+            // Allow unsetting organizer only when previously set organizer
+            // is self.
+            if (originalOrganizer != null &&
+                !AccountUtil.addressMatchesAccount(getAccount(), originalOrganizer.getAddress()))
+                throw ServiceException.INVALID_REQUEST(
+                        "Removing organizer of an appointment is not allowed", null);
         }
 
         // If modifying recurrence series (rather than an instance) and the

@@ -671,23 +671,6 @@ public class CalendarUtils {
         int seq = (int) element.getAttributeLong(MailService.A_APPT_SEQUENCE, 0);
         newInv.setSeqNo(seq);
 
-        // ORGANIZER
-        Element orgElt = element
-                .getOptionalElement(MailService.E_APPT_ORGANIZER);
-        if (orgElt == null) {
-            throw ServiceException.INVALID_REQUEST(
-                    "Event must have an Organizer", null);
-        } else {
-            String address = orgElt.getAttribute(MailService.A_ADDRESS);
-            String cn = orgElt.getAttribute(MailService.A_DISPLAY, null);
-            String sentBy = orgElt.getAttribute(MailService.A_APPT_SENTBY, null);
-            String dir = orgElt.getAttribute(MailService.A_APPT_DIR, null);
-            String lang = orgElt.getAttribute(MailService.A_APPT_LANGUAGE, null);
-
-            ZOrganizer org = new ZOrganizer(address, cn, sentBy, dir, lang);
-            newInv.setOrganizer(org);
-        }
-
         // SUMMARY (aka Name or Subject)
         newInv.setName(name);
 
@@ -860,6 +843,24 @@ public class CalendarUtils {
             newInv.setMethod(ICalTok.REQUEST.toString());
         }
 
+        // ORGANIZER
+        Element orgElt = element
+                .getOptionalElement(MailService.E_APPT_ORGANIZER);
+        if (orgElt == null) {
+            if (hasAttendees)
+                throw ServiceException.INVALID_REQUEST(
+                        "missing organizer when attendees are present", null);
+        } else {
+            String address = orgElt.getAttribute(MailService.A_ADDRESS);
+            String cn = orgElt.getAttribute(MailService.A_DISPLAY, null);
+            String sentBy = orgElt.getAttribute(MailService.A_APPT_SENTBY, null);
+            String dir = orgElt.getAttribute(MailService.A_APPT_DIR, null);
+            String lang = orgElt.getAttribute(MailService.A_APPT_LANGUAGE, null);
+
+            ZOrganizer org = new ZOrganizer(address, cn, sentBy, dir, lang);
+            newInv.setOrganizer(org);
+        }
+
         // RECUR
         Element recur = element.getOptionalElement(MailService.A_APPT_RECUR);
         if (recur != null) {
@@ -979,10 +980,12 @@ public class CalendarUtils {
                                    inv.getTimeZoneMap());
 
         // ORGANIZER
-        ZOrganizer org = new ZOrganizer(inv.getOrganizer());
-        if (onBehalfOf)
-            org.setSentBy(senderAddr);
-        cancel.setOrganizer(org);
+        if (inv.hasOrganizer()) {
+            ZOrganizer org = new ZOrganizer(inv.getOrganizer());
+            if (onBehalfOf)
+                org.setSentBy(senderAddr);
+            cancel.setOrganizer(org);
+        }
 
         // ATTENDEEs
         List<ZAttendee> attendees =

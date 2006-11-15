@@ -423,7 +423,8 @@ public class CalendarMailSender {
         reply.setLocation(oldInv.getLocation());
 
         // ORGANIZER
-        reply.setOrganizer(oldInv.getOrganizer());
+        if (oldInv.hasOrganizer())
+            reply.setOrganizer(oldInv.getOrganizer());
 
         // UID
         reply.setUid(oldInv.getUid());

@@ -1337,6 +1337,8 @@ public class Invite {
             if (address != null) {
                 account = Provisioning.getInstance().get(AccountBy.name, address);
             }
+        } else if (mAppt != null) {
+            account = mAppt.getAccount();
         }
         return account;
     }
