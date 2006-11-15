@@ -552,6 +552,12 @@ public class ZCalendar {
             w.write('=');
             if (maValue == null || maValue.length()==0) {
                 w.write("\"\""); // bug 4941: cannot put a completely blank parameter value, will confuse parsers
+            } else if (ICalTok.CN.equals(mTok)) {
+                // Outlook special:
+                // Outlook's MIME parser chokes when CN value containing
+                // characters with high bit set isn't quoted, even though it is
+                // not necessary to quote according to RFC2445.
+                w.write(sanitizeParamValue(maValue));
             } else if (maValue.startsWith("\"") && maValue.endsWith("\"")) {
                 w.write('\"');
                 w.write(escape(maValue.substring(1, maValue.length()-1)));
@@ -578,8 +584,80 @@ public class ZCalendar {
         ICalTok mTok;
         String mName;
         String maValue;
+
+        /**
+         * Sanitize a string to make it a valid param-value.  DQUOTE
+         * is changed to a single quote and CTL chars are changed to question
+         * marks ('?').  String is quoted if str is already quoted or if it
+         * contains ',', ':' or ';'.
+         * 
+         * To workaround a bug in Outlook's MIME parser (see bug 12008), string
+         * is quoted if any non-US-ASCII chars are present, e.g. non-English
+         * names.  (These characters don't require quoting according to
+         * RFC2445.)
+         * 
+         * Empty string is returned if str is null or is an empty string.
+         * 
+         * @param str
+         * @return
+         */
+        private static String sanitizeParamValue(String str) {
+            if (str == null) return "";
+            int len = str.length();
+            if (len == 0) return "";
+            boolean needToQuote;
+            int start, end;  // index of first and last char to examine
+                             // end is last char + 1
+            if (len >= 2 && str.charAt(0) == '"' && str.charAt(len - 1) == '"') {
+                needToQuote = true;
+                start = 1;
+                end = len - 1;
+            } else {
+                needToQuote = false;
+                start = 0;
+                end = len;
+            }
+            StringBuilder sb = new StringBuilder(len + 2);
+            sb.append('"');  // always start with quote
+            for (int i = start; i < end; i++) {
+                // Some chars require quoting, others require changing to a
+                // valid char.  No char requires both.
+                char ch = str.charAt(i);
+                if ((ch >= 0x3C && ch <= 0x7E)    // "<=>?@ABC ..." (English letters)
+                    || ch == 0x20                 // space
+                    || (ch >= 0x2D && ch <= 0x39) // "-./0123456789"
+                    || (ch >= 0x23 && ch <= 0x2B) // "#$%&'()*+"
+                    || ch == 0x09                 // horizontal tab
+                    || ch == 0x21) {              // '!'
+                    // Char is okay.
+                } else if (ch >= 0x80             // NON-US-ASCII and higher
+                           || ch == 0x2C          // ','
+                           || ch == 0x3A          // ':'
+                           || ch == 0x3B) {       // ';'
+                    // Chars 0x80 and above don't need to be quoted in RFC2445,
+                    // but Outlook thinks differently. (bug 12008)
+                    needToQuote = true;
+                } else if (ch == 0x22) {          // '"'
+                    // DQUOTE is not allowed.  Change to single quote.
+                    ch = '\'';
+                } else {
+                    // ch is a CTL:
+                    // 0x00 <= ch <= 0x08 or
+                    // 0x0A <= ch <= 0x1F or
+                    // ch == 0x7F
+                    // CTL is invalid in a param-value, so change to a '?'.
+                    ch = '?';
+                }
+                sb.append(ch);
+            }
+            sb.append('"');  // matches initial quote
+            if (needToQuote)
+                return sb.toString();
+            else
+                return sb.substring(1, sb.length() - 1);
+        }
     }
-    
+
     static ZProperty findProp(List <ZProperty> list, ICalTok tok)
     {
         for (ZProperty prop : list) {
