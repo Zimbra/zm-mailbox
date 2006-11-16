@@ -44,7 +44,8 @@ public class ZGetInfoResult {
     private long mExpiration;
     private long mMailboxQuotaUsed;
     private Map<String, List<String>> mAttrs;
-    private Map<String, List<String>> mPrefs;
+    private Map<String, List<String>> mPrefAttrs;
+    private ZPrefs mPrefs;
     private List<ZIdentity> mIdentities;
     private List<ZDataSource> mDataSources;
     private List<String> mMailURLs;
@@ -73,7 +74,9 @@ public class ZGetInfoResult {
         mMailboxQuotaUsed = e.getAttributeLong(AccountService.E_QUOTA_USED, -1);        
         mExpiration  = mLifetime + System.currentTimeMillis();
         mAttrs = getMap(e, AccountService.E_ATTRS, AccountService.E_ATTR);
-        mPrefs = getMap(e, AccountService.E_PREFS, AccountService.E_PREF);
+        mPrefAttrs = getMap(e, AccountService.E_PREFS, AccountService.E_PREF);
+        mPrefs = new ZPrefs(mPrefAttrs);
+        
         mMailURLs = new ArrayList<String>();
         for (Element urlEl: e.listElements(AccountService.E_SOAP_URL)) {
             mMailURLs.add(urlEl.getText());
@@ -124,6 +127,10 @@ public class ZGetInfoResult {
     }
 
     public Map<String, List<String>> getPrefAttrs() {
+        return mPrefAttrs;
+    }
+
+    public ZPrefs getPrefs() {
         return mPrefs;
     }
     
@@ -136,7 +143,7 @@ public class ZGetInfoResult {
         sb.add("lifetime", mLifetime);
         sb.add("mailboxQuotaUsed", mMailboxQuotaUsed);
         sb.add("attrs", mAttrs);
-        sb.add("prefs", mPrefs);
+        sb.add("prefs", mPrefAttrs);
         sb.add("mailURLs", mMailURLs, true, true);
         sb.endStruct();
         return sb.toString();

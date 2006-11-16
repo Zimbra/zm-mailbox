@@ -542,6 +542,17 @@ public abstract class Provisioning {
     
     public static final String A_zimbraPrefCalendarInitialCheckedCalendars = "zimbraPrefCalendarInitialCheckedCalendars";
 
+    public static final String A_zimbraPrefShowSearchString = "zimbraPrefShowSearchString";
+
+    public static final String A_zimbraPrefShowFragments = "zimbraPrefShowFragments";
+
+    public static final String A_zimbraPrefMessageViewHtmlPrefered = "zimbraPrefMessageViewHmtlPrefered";
+
+    public static final String A_zimbraPrefAutoAddAddressEnabled = "zimbraPrefAutoAddAddressEnabled";
+
+    public static final String A_zimbraPrefContactsPerPage = "zimbraPrefContactsPerPage";    
+
+
     /**
      * whether or not the signature is automatically included on outgoing email
      */
