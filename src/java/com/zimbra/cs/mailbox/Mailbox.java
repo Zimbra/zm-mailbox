@@ -2828,7 +2828,7 @@ public class Mailbox {
     private void processICalReplies(OperationContext octxt, ZVCalendar cal)
     throws ServiceException {
         Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
-        boolean isAdminRequest = octxt == null ? null : octxt.isUsingAdminPrivileges();
+        boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
 
         List<Invite> components = Invite.createFromCalendar(getAccount(), null, cal, false);
         for (Invite inv : components) {
