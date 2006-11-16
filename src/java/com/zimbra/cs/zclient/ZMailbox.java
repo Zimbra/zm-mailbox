@@ -67,6 +67,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1939,6 +1940,39 @@ public class ZMailbox {
     	doc.addAttribute(MailService.A_FOLDER, folderId);
     	doc.setText(contents);
     	return invoke(req).getElement(MailService.E_WIKIWORD).getAttribute(MailService.A_ID);
+    }
+
+    /**
+     * modify prefs. The key in the map is the pref name, and the value should be a String[],
+     * a Collection of String objects, or a single String/Object.toString.
+     * @param prefs prefs to modify
+     * @throws ServiceException on error
+     */
+    public void modifyPrefs(Map<String, ? extends Object> prefs) throws ServiceException {
+        XMLElement req = new XMLElement(AccountService.MODIFY_PREFS_REQUEST);
+        for (Map.Entry<String, ? extends Object> entry : prefs.entrySet()){
+            Object vo = entry.getValue();
+            if (vo instanceof String[]) {
+                String[] values = (String[]) vo;
+                for (String v : values) {
+                    Element pref = req.addElement(AccountService.E_PREF);
+                    pref.addAttribute(AccountService.A_NAME, entry.getKey());
+                    pref.setText(v);
+                }
+            } else if (vo instanceof Collection) {
+                Collection values = (Collection) vo;
+                for (Object v : values) {
+                    Element pref = req.addElement(AccountService.E_PREF);
+                    pref.addAttribute(AccountService.A_NAME, entry.getKey());
+                    pref.setText(v.toString());
+                }
+            } else {
+                Element pref = req.addElement(AccountService.E_PREF);
+                pref.addAttribute(AccountService.A_NAME, entry.getKey());
+                pref.setText(vo.toString());
+            }
+        }
+        invoke(req);
     }
 }
 
