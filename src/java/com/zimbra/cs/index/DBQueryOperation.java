@@ -228,6 +228,7 @@ class DBQueryOperation extends QueryOperation
      * @param op
      */
     void addLuceneOp(LuceneQueryOperation op) {
+        assert(mLuceneOp == null);
         mAllResultsQuery = false;
         mLuceneOp = op;
     }
@@ -983,7 +984,7 @@ class DBQueryOperation extends QueryOperation
                 if (dbOther.mAllResultsQuery) // (something OR ALL ) == ALL
                     return dbOther;
 
-                if (mLuceneOp != null && dbOther.mLuceneOp != null){
+                if (mLuceneOp != null || dbOther.mLuceneOp != null){
                     // can't combine
                     return null;
                 }
