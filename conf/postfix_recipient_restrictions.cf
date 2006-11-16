@@ -14,6 +14,8 @@ reject_unlisted_recipient
 %%contains VAR:zimbraMtaRestriction reject_rbl_client bl.spamcop.net%%
 %%contains VAR:zimbraMtaRestriction reject_rbl_client dnsbl.sorbs.net%%
 %%contains VAR:zimbraMtaRestriction reject_rbl_client sbl.spamhaus.org%%
+%%contains VAR:zimbraMtaRestriction reject_rbl_client xbl.spamhaus.org%%
+%%contains VAR:zimbraMtaRestriction reject_rbl_client sbl-xbl.spamhaus.org%%
 %%contains VAR:zimbraMtaRestriction reject_rbl_client relays.mail-abuse.org%%
 reject_unauth_destination
 permit
