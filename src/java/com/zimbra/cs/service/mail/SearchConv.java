@@ -132,7 +132,6 @@ public class SearchConv extends Search {
     throws ServiceException {
         int offset = params.getOffset();
         int limit  = params.getLimit();
-        EmailElementCache eecache = new EmailElementCache();
 
         if (sLog.isDebugEnabled()) {
             sLog.debug("SearchConv beginning with offset "+offset);
@@ -179,11 +178,11 @@ public class SearchConv extends Search {
             ExpandResults expand = params.getFetchFirst();
             for (int i = offset; i < offset + iterLen; i++) {
                 if (matched[i-offset] != null) {
-                    addMessageHit(zc, response, (MessageHit) matched[i-offset], eecache, expand != ExpandResults.NONE, params);
+                    addMessageHit(zc, response, (MessageHit) matched[i-offset], expand != ExpandResults.NONE, params);
                     if (expand == ExpandResults.FIRST)
                         expand = ExpandResults.NONE;
                 } else {
-                    addMessageMiss(zc, response, msgs.get(i), eecache, expand == ExpandResults.ALL, params);
+                    addMessageMiss(zc, response, msgs.get(i), expand == ExpandResults.ALL, params);
                 }
             }
         }

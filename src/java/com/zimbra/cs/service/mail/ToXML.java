@@ -56,7 +56,6 @@ import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.handler.TextEnrichedHandler;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.service.mail.EmailElementCache.EmailType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.wiki.WikiPage;
@@ -77,7 +76,6 @@ import javax.mail.internet.MimeUtility;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -456,7 +454,6 @@ public class ToXML {
     public static Element encodeConversation(Element parent, ZimbraSoapContext lc, Conversation conv, SearchParams params) throws ServiceException {
         int fields = NOTIFY_FIELDS;
         Mailbox mbox = conv.getMailbox();
-        EmailElementCache eecache = new EmailElementCache();
         Element c = encodeConversationCommon(parent, lc, conv, fields);
 
         ExpandResults expand = params.getFetchFirst();
@@ -476,7 +473,7 @@ public class ToXML {
                 m.addAttribute(MailService.A_FOLDER, lc.formatItemId(msg.getFolderId()));
                 recordItemTags(m, msg, fields);
                 m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
-                eecache.makeEmail(m, msg.getSender(), EmailType.FROM, null);
+                encodeEmail(m, msg.getSender(), EmailType.FROM);
             }
         }
         return c;
@@ -492,14 +489,14 @@ public class ToXML {
      * @param eecache
      */
     public static Element encodeConversationSummary(Element parent, ZimbraSoapContext lc, Conversation conv, int fields) {
-        return encodeConversationSummary(parent, lc, conv, null, null, OutputParticipants.PUT_SENDERS, fields);
+        return encodeConversationSummary(parent, lc, conv, null, OutputParticipants.PUT_SENDERS, fields);
     }
-    public static Element encodeConversationSummary(Element parent, ZimbraSoapContext lc, Conversation conv, Message msgHit,
-                EmailElementCache eecache, OutputParticipants output) {
-        return encodeConversationSummary(parent, lc, conv, msgHit, eecache, output, NOTIFY_FIELDS);
+
+    public static Element encodeConversationSummary(Element parent, ZimbraSoapContext lc, Conversation conv, Message msgHit, OutputParticipants output) {
+        return encodeConversationSummary(parent, lc, conv, msgHit, output, NOTIFY_FIELDS);
     }
-    private static Element encodeConversationSummary(Element parent, ZimbraSoapContext lc, Conversation conv, Message msgHit,
-                EmailElementCache eecache, OutputParticipants output, int fields) {
+
+    private static Element encodeConversationSummary(Element parent, ZimbraSoapContext lc, Conversation conv, Message msgHit, OutputParticipants output, int fields) {
         Element c = encodeConversationCommon(parent, lc, conv, fields);
         if (needToOutput(fields, Change.MODIFIED_DATE))
             c.addAttribute(MailService.A_DATE, msgHit != null ? msgHit.getDate() : conv.getDate());
@@ -514,13 +511,11 @@ public class ToXML {
         if (addRecips) {
             try {
                 InternetAddress[] addrs = InternetAddress.parseHeader(msgHit.getRecipients(), false);
-                addEmails(c, eecache, addrs, EmailType.TO);
+                addEmails(c, addrs, EmailType.TO);
             } catch (AddressException e1) { }
         }
 
         if (addSenders && needToOutput(fields, Change.MODIFIED_SENDERS)) {
-            if (eecache == null)
-                eecache = new EmailElementCache();
             Mailbox mbox = conv.getMailbox();
 
             SenderList sl;
@@ -542,11 +537,11 @@ public class ToXML {
             }
 
             if (sl.getFirstAddress() != null)
-                eecache.encode(c, sl.getFirstAddress(), EmailType.FROM);
+                encodeEmail(c, sl.getFirstAddress(), EmailType.FROM);
             if (sl.isElided())
                 c.addAttribute(MailService.A_ELIDED, true);
             for (ParsedAddress pa : sl.getLastAddresses())
-                eecache.encode(c, pa, EmailType.FROM);
+                encodeEmail(c, pa, EmailType.FROM);
         }
 
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
@@ -611,12 +606,11 @@ public class ToXML {
             } else
                 part = "";
 
-            EmailElementCache eecache = new EmailElementCache();
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "From"), EmailType.FROM);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Reply-To"), EmailType.REPLY_TO);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
+            addEmails(m, Mime.parseAddressHeader(mm, "From"), EmailType.FROM);
+            addEmails(m, Mime.parseAddressHeader(mm, "Reply-To"), EmailType.REPLY_TO);
+            addEmails(m, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
+            addEmails(m, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
+            addEmails(m, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
 
             String subject = mm.getSubject();
             if (subject != null)
@@ -792,12 +786,11 @@ public class ToXML {
             } else
                 part = "";
 
-            EmailElementCache eecache = new EmailElementCache();
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "From"), EmailType.FROM);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Reply-To"), EmailType.REPLY_TO);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
-            addEmails(m, eecache, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
+            addEmails(m, Mime.parseAddressHeader(mm, "From"), EmailType.FROM);
+            addEmails(m, Mime.parseAddressHeader(mm, "Reply-To"), EmailType.REPLY_TO);
+            addEmails(m, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
+            addEmails(m, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
+            addEmails(m, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
 
             String subject = mm.getSubject();
             if (subject != null)
@@ -901,17 +894,16 @@ public class ToXML {
         if (!needToOutput(fields, Change.MODIFIED_CONTENT))
             return e;
 
-        EmailElementCache eecache = new EmailElementCache();
         boolean addRecips  = msg.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
         boolean addSenders = output == OutputParticipants.PUT_BOTH || !addRecips;
         if (addRecips) {
             try {
-                addEmails(e, eecache, InternetAddress.parseHeader(msg.getRecipients(), false), EmailType.TO);
+                addEmails(e, InternetAddress.parseHeader(msg.getRecipients(), false), EmailType.TO);
             } catch (AddressException e1) { }
         }
 
         if (addSenders)
-            eecache.makeEmail(e, msg.getSender(), EmailType.FROM, null);
+            encodeEmail(e, msg.getSender(), EmailType.FROM);
 
         e.addAttribute(MailService.E_SUBJECT, StringUtil.stripControlCharacters(msg.getSubject()), Element.DISP_CONTENT);
 
@@ -1401,22 +1393,41 @@ public class ToXML {
         // TODO: CDATA worth the effort?
     }
 
+
+    public enum EmailType {
+        NONE(null), FROM("f"), TO("t"), CC("c"), BCC("b"), REPLY_TO("r"), SENDER("s");
+
+        private final String mRep;
+        private EmailType(String c)  { mRep = c; }
+
+        public String toString()     { return mRep; }
+    }
+
     /**
      * @param m
-     * @param eecache
      * @param recipients
      * @param email_type_to
      */
-    private static void addEmails(Element m, EmailElementCache eecache,
-                InternetAddress[] recipients, EmailType emailType) {
-        addEmails(m, eecache, recipients, emailType, null);
-    }
-    private static void addEmails(Element m, EmailElementCache eecache,
-                InternetAddress[] recipients, EmailType emailType, HashSet<String> unique) {
-        if (recipients == null || recipients.length == 0)
-            return;
+    private static void addEmails(Element m, InternetAddress[] recipients, EmailType emailType) {
         for (int i = 0; i < recipients.length; i++)
-            eecache.makeEmail(m, recipients[i], emailType, unique);
+            encodeEmail(m, recipients[i], emailType);
+    }
+
+    public static Element encodeEmail(Element parent, InternetAddress ia, EmailType type) {
+        return encodeEmail(parent, new ParsedAddress(ia), type);
+    }
+
+    public static Element encodeEmail(Element parent, String addr, EmailType type) {
+        return encodeEmail(parent, new ParsedAddress(addr), type);
+    }
+
+    public static Element encodeEmail(Element parent, ParsedAddress pa, EmailType type) {
+        Element elem = parent.addElement(MailService.E_EMAIL);
+        elem.addAttribute(MailService.A_ADDRESS, pa.emailPart);
+        elem.addAttribute(MailService.A_DISPLAY, pa.firstName);
+        elem.addAttribute(MailService.A_PERSONAL, pa.personalPart);
+        elem.addAttribute(MailService.A_ADDRESS_TYPE, type.toString());
+        return elem;
     }
 
 
@@ -1428,17 +1439,19 @@ public class ToXML {
         encodeDocumentCommon(m, lc, wiki, fields, rev);
         return m;
     }
+
     public static Element encodeDocument(Element parent, ZimbraSoapContext lc, Document doc, int rev) {
         return encodeDocument(parent, lc, doc, NOTIFY_FIELDS, rev);
     }
+
     public static Element encodeDocument(Element parent, ZimbraSoapContext lc, Document doc, int fields, int rev) {
         Element m = parent.addElement(MailService.E_DOC);
         encodeDocumentCommon(m, lc, doc, fields, rev);
         m.addAttribute(MailService.A_CONTENT_TYPE, doc.getContentType());
         return m;
     }
-    public static Element encodeDocumentCommon(Element m, ZimbraSoapContext lc, Document doc, int fields, int rev) {
 
+    public static Element encodeDocumentCommon(Element m, ZimbraSoapContext lc, Document doc, int fields, int rev) {
         m.addAttribute(MailService.A_ID, lc.formatItemId(doc));
         if (needToOutput(fields, Change.MODIFIED_NAME)) {
         	m.addAttribute(MailService.A_NAME, doc.getSubject());
@@ -1473,6 +1486,7 @@ public class ToXML {
 
         return m;
     }
+
     public static Element encodeWikiPage(Element parent, WikiPage page) {
         Element m = parent.addElement(MailService.E_WIKIWORD);
         m.addAttribute(MailService.A_NAME, page.getWikiWord());
@@ -1491,6 +1505,7 @@ public class ToXML {
             m.addAttribute(MailService.E_FRAG, frag, Element.DISP_CONTENT);
         return m;
     }
+
     public static Element encodeDataSource(Element parent, DataSource ds) {
         Element m = parent.addElement(MailService.E_DS_POP3);
         m.addAttribute(MailService.A_ID, ds.getId());

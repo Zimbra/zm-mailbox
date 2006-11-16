@@ -56,7 +56,7 @@ import com.zimbra.cs.operation.ItemActionOperation;
 import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.service.mail.EmailElementCache.EmailType;
+import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.SessionCache;
@@ -232,7 +232,6 @@ public class Search extends MailDocumentHandler  {
     throws ServiceException {
         int offset = params.getOffset();
         int limit  = params.getLimit();
-        EmailElementCache eecache = new EmailElementCache();
 
         if (mLog.isDebugEnabled())
             mLog.debug("Search results beginning with offset " + offset);
@@ -255,13 +254,13 @@ public class Search extends MailDocumentHandler  {
             Element e = null;
             if (hit instanceof ConversationHit) {
                 ConversationHit ch = (ConversationHit) hit;
-                e = addConversationHit(zsc, response, ch, eecache, params);
+                e = addConversationHit(zsc, response, ch, params);
             } else if (hit instanceof MessageHit) {
                 MessageHit mh = (MessageHit) hit;
-                e = addMessageHit(zsc, response, mh, eecache, inline, params);
+                e = addMessageHit(zsc, response, mh, inline, params);
             } else if (hit instanceof MessagePartHit) {
                 MessagePartHit mph = (MessagePartHit) hit;
-                e = addMessagePartHit(response, mph, eecache);                
+                e = addMessagePartHit(response, mph);                
             } else if (hit instanceof ContactHit) {
                 ContactHit ch = (ContactHit) hit;
                 e = ToXML.encodeContact(response, zsc, ch.getContact(), null, !inline, null);
@@ -298,11 +297,11 @@ public class Search extends MailDocumentHandler  {
     }
 
 
-    protected Element addConversationHit(ZimbraSoapContext zsc, Element response, ConversationHit ch, EmailElementCache eecache, SearchParams params)
+    protected Element addConversationHit(ZimbraSoapContext zsc, Element response, ConversationHit ch, SearchParams params)
     throws ServiceException {
         Conversation conv = ch.getConversation();
         MessageHit mh = ch.getFirstMessageHit();
-        Element c = ToXML.encodeConversationSummary(response, zsc, conv, mh == null ? null : mh.getMessage(), eecache, params.getWantRecipients());
+        Element c = ToXML.encodeConversationSummary(response, zsc, conv, mh == null ? null : mh.getMessage(), params.getWantRecipients());
         if (ch.getScore() != 0)
             c.addAttribute(MailService.A_SCORE, ch.getScore());
 
@@ -340,7 +339,7 @@ public class Search extends MailDocumentHandler  {
     }
 
 
-    protected Element addMessageHit(ZimbraSoapContext zsc, Element response, MessageHit mh, EmailElementCache eecache, boolean inline, SearchParams params)
+    protected Element addMessageHit(ZimbraSoapContext zsc, Element response, MessageHit mh, boolean inline, SearchParams params)
     throws ServiceException {
         Message msg = mh.getMessage();
 
@@ -384,7 +383,7 @@ public class Search extends MailDocumentHandler  {
         return m;
     }
 
-    protected Element addMessageMiss(ZimbraSoapContext zsc, Element response, Message msg, EmailElementCache eecache, boolean inline, SearchParams params)
+    protected Element addMessageMiss(ZimbraSoapContext zsc, Element response, Message msg, boolean inline, SearchParams params)
     throws ServiceException {
         // for bug 7568, mark-as-read must happen before the response is encoded.
         if (inline && msg.isUnread() && params.getMarkRead()) {
@@ -409,7 +408,7 @@ public class Search extends MailDocumentHandler  {
         return m;
     }
 
-    protected Element addMessagePartHit(Element response, MessagePartHit mph, EmailElementCache eecache) throws ServiceException {
+    protected Element addMessagePartHit(Element response, MessagePartHit mph) throws ServiceException {
         MessageHit mh = mph.getMessageResult();
         Message msg = mh.getMessage();
         Element mp = response.addElement(MailService.E_MIMEPART);
@@ -424,7 +423,7 @@ public class Search extends MailDocumentHandler  {
         if (mph.getScore() != 0)
             mp.addAttribute(MailService.A_SCORE, mph.getScore());
 
-        eecache.makeEmail(mp, msg.getSender(), EmailType.FROM, null);
+        ToXML.encodeEmail(mp, msg.getSender(), EmailType.FROM);
         String subject = mph.getSubject();
         if (subject != null)
             mp.addAttribute(MailService.E_SUBJECT, subject, Element.DISP_CONTENT);
@@ -432,7 +431,7 @@ public class Search extends MailDocumentHandler  {
         return mp;
     }
 
-    Element addContactHit(ZimbraSoapContext zsc, Element response, ContactHit ch, EmailElementCache eecache) throws ServiceException {
+    Element addContactHit(ZimbraSoapContext zsc, Element response, ContactHit ch) throws ServiceException {
         return ToXML.encodeContact(response, zsc, ch.getContact(), null, true, null);
     }
 
@@ -445,7 +444,7 @@ public class Search extends MailDocumentHandler  {
         throw ServiceException.UNKNOWN_DOCUMENT("invalid document type "+dh.getItemType(), null);
     }
 
-    Element addNoteHit(ZimbraSoapContext zsc, Element response, NoteHit nh, EmailElementCache eecache) throws ServiceException {
+    Element addNoteHit(ZimbraSoapContext zsc, Element response, NoteHit nh) throws ServiceException {
         // TODO - does this need to be a summary, instead of the whole note?
         return ToXML.encodeNote(response, zsc, nh.getNote());
     }

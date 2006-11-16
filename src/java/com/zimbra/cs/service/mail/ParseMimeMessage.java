@@ -48,7 +48,7 @@ import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.formatter.VCard;
-import com.zimbra.cs.service.mail.EmailElementCache.EmailType;
+import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.util.ExceptionToString;

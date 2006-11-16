@@ -639,19 +639,15 @@ be shown here in examples though
  
 Email addresses:
  
- <e [t="{type}"] [id="{email-id}"|ref="{email-id}"] p="{personal-name}" 
-    a="{email-address}" d="{display-name}">{content}</e>
-   
+ <e [t="{type}"] p="{personal-name}" a="{email-address}" d="{display-name}">{content}</e>
+
    {type} = (f)rom, t(o), c(c), (s)ender, (r)eply-to, b(cc)
    
-   			Type is only sent when an individual message message is returned. In the
+   			Type is only sent when an individual message is returned. In the
             list of conversations, all the email addresseses returned for a conversation are a subset
             of the participants. In the list of messages in a converstation, the email addressses are
             the senders. 
-   
-   {email-id} = a unique id within a given document. The first instance of an email address will
-                have an id="..." attr, while any that follow will have ref="..." instead of duplicating
-                the email address
+
    {personal-name} = the comment/name part of an address
    {email-address} = the user@domain part of an address
    {display-name} = if we have personal, first word in "word1 word2" format, or last word in "word1, word2" format.
@@ -1617,14 +1613,14 @@ EXAMPLE:
 
 <SearchResponse hits="2" offset="...">
    <c id="12344" n="2" d="10023420023" t="1,12" f="1">
-     <e id="1" p="Roland Schemers" a="schemers@example.zimbra.com"/>
-     <e id="2" p="Dan Karp" a="dan@example.zimbra.com"/>
+     <e p="Roland Schemers" a="schemers@example.zimbra.com" d="Roland"/>
+     <e p="Dan Karp" a="dan@example.zimbra.com" d="Dan"/>
      <su>Speaking of animals</su>
      <fr>I am still looking for my monkey!</fr>
    </c>
    <c id="456" n="2" d="10023420023" t="1,12" a="1">
-     <e ref="1"/>
-     <e id="3" p="Ross Dargahi" a="ross@example.zimbra.com"/>
+     <e p="Roland Schemers" a="schemers@example.zimbra.com" d="Roland"/>
+     <e p="Ross Dargahi" a="ross@example.zimbra.com" d="Ross"/>
      <su>phone numbers</su>
      <fr>(650) 123-4567</fr>
    </c>
@@ -1642,12 +1638,12 @@ EXAMPLE:
   <c id="12345" t="1,12" n="2">
    <su>Speaking of animals</su>
    <m id="123445" f="1" s="1234" d="10002323">
-     <e id="1" p="Dan Karp" a="dan@example.zimbra.com"/>
+     <e p="Dan Karp" a="dan@example.zimbra.com"/>
      <fr>This is the fragment</fr>
    </m>
    <m id="9845" a="1" s="128981" d="10002323">
-     <e t="f" id="2" p="Roland Schemers" a="schemers@example.zimbra.com"/>
-     <e t="t" ref="1"/>
+     <e t="f" p="Roland Schemers" a="schemers@example.zimbra.com"/>
+     <e t="t" p="Dan Karp" a="dan@example.zimbra.com"/>
      <fr>This is another frag</fr>
      <mp part="" ct="multipart/mixed">
        <mp part="1" ct="text/plain" body=1">
