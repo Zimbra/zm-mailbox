@@ -27,6 +27,8 @@ package com.zimbra.cs.util;
 
 import java.util.Timer;
 
+import org.jivesoftware.wildfire.XMPPServer;
+
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.Versions;
@@ -113,6 +115,8 @@ public class Zimbra {
             
             if (server.getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
                 try {
+                    System.setProperty("wildfireHome", "/opt/zimbra");
+                    XMPPServer srv = new XMPPServer();
                 } catch (Exception e) { 
                     ZimbraLog.system.warn("Could not start XMPP server: " + e.toString());
                     e.printStackTrace();
