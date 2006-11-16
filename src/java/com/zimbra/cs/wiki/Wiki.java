@@ -701,8 +701,15 @@ public abstract class Wiki {
 	public abstract void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException;
 	
 	public WikiTemplate getTemplate(WikiContext ctxt, String name) throws ServiceException {
-		// check if the request is for the chrome.
 		WikiPage page;
+
+		// check if the request is local to the same folder.
+		page = lookupWiki(ctxt, name);
+
+		if (page != null)
+			return page.getTemplate(ctxt);
+
+		// check if the request is for the chrome.
 		if (name.startsWith("_")) {
 			try {
 				page = getChrome(ctxt, name, mWikiAccount);
@@ -712,13 +719,7 @@ public abstract class Wiki {
 				return new WikiTemplate("<!-- missing template "+name+" -->");
 			}
 		}
-
-		// check if the request is local to the same folder.
-		page = lookupWiki(ctxt, name);
-
-		if (page != null)
-			return page.getTemplate(ctxt);
-
+		
 		// find the page by its full path.
 		page = findWikiPageByPath(ctxt, mWikiAccount, new WikiUrl(name, getWikiFolderId()), false);
 		if (page != null)
