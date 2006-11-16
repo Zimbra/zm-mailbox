@@ -469,10 +469,29 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         checkEOF(tag, req);
                         return doSTORE(tag, sequence, flags, operation, silent, byUID);
                     } else if (command.equals("SEARCH")) {
-                        TreeMap<Integer, Object> insertions = new TreeMap<Integer, Object>();
-                        req.skipSpace();  String search = req.readSearch(insertions);
+                        Integer options = null;  TreeMap<Integer, Object> insertions = new TreeMap<Integer, Object>();
+                        req.skipSpace();
+                        if ("RETURN".equals(req.peekAtom())) {
+                            options = 0;
+                            req.skipAtom("RETURN");  req.skipSpace();  req.skipChar('(');
+                            while (req.peekChar() != ')') {
+                                String option = req.readAtom();
+                                if (option.equals("MIN"))         options |= RETURN_MIN;
+                                else if (option.equals("MAX"))    options |= RETURN_MAX;
+                                else if (option.equals("ALL"))    options |= RETURN_ALL;
+                                else if (option.equals("COUNT"))  options |= RETURN_COUNT;
+                                else
+                                    throw new ImapParseException(tag, "unknown RETURN option \"" + option + '"');
+                                if (req.peekChar() != ')')
+                                    req.skipSpace();
+                            }
+                            req.skipChar(')');  req.skipSpace();
+                            if (options == 0)
+                                options = RETURN_ALL;
+                        }
+                        String search = req.readSearch(insertions);
                         checkEOF(tag, req);
-                        return doSEARCH(tag, search, insertions, byUID);
+                        return doSEARCH(tag, search, insertions, byUID, options);
                     } else if (command.equals("SELECT")) {
                         req.skipSpace();  String folder = req.readFolder();
                         checkEOF(tag, req);
@@ -578,6 +597,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         // [BINARY]           RFC 3516: IMAP4 Binary Content Extension
         // [CATENATE]         RFC 4469: Internet Message Access Protocol (IMAP) CATENATE Extension
         // [CHILDREN]         RFC 3348: IMAP4 Child Mailbox Extension
+        // [ESEARCH]          RFC 4731: IMAP4 Extension to SEARCH Command for Controlling What Kind of Information Is Returned
         // [ID]               RFC 2971: IMAP4 ID Extension
         // [IDLE]             RFC 2177: IMAP4 IDLE command
         // [LITERAL+]         RFC 2088: IMAP4 non-synchronizing literals
@@ -591,7 +611,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         String nologin = mServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
         String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN "; 
-        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CATENATE CHILDREN ID LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR UIDPLUS UNSELECT");
+        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CATENATE CHILDREN ESEARCH ID LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR UIDPLUS UNSELECT");
     }
 
     boolean doNOOP(String tag) throws IOException {
@@ -1448,14 +1468,19 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         }
     }
 
+    private static final int RETURN_MIN   = 1;
+    private static final int RETURN_MAX   = 2;
+    private static final int RETURN_ALL   = 4;
+    private static final int RETURN_COUNT = 8;
+
     private static final int LARGEST_FOLDER_BATCH = 600;
     static final byte[] ITEM_TYPES = new byte[] { MailItem.TYPE_MESSAGE, MailItem.TYPE_CONTACT };
 
-    boolean doSEARCH(String tag, String search, TreeMap<Integer, Object> insertions, boolean byUID) throws IOException {
+    boolean doSEARCH(String tag, String search, TreeMap<Integer, Object> insertions, boolean byUID, Integer options) throws IOException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
             return CONTINUE_PROCESSING;
 
-        ArrayList<Integer> hits = new ArrayList<Integer>();
+        List<Integer> hits = new ArrayList<Integer>();
         try {
             synchronized (mMailbox) {
                 ImapFolder i4folder = mSession.getFolder();
@@ -1502,7 +1527,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
                         ImapMessage i4msg = mSession.getFolder().getById(hit.getItemId());
                         if (i4msg != null)
-                        	hits.add(byUID ? i4msg.imapUid : i4msg.sequence);
+                            hits.add(byUID ? i4msg.imapUid : i4msg.sequence);
                     }
                 } finally {
                     zqr.doneWithSearchResults();
@@ -1522,9 +1547,22 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 		}
 
         Collections.sort(hits);
-        StringBuilder result = new StringBuilder("SEARCH");
-        for (int i = 0; i < hits.size(); i++)
-            result.append(' ').append(hits.get(i));
+        StringBuilder result = new StringBuilder();
+        if (options == null) {
+            result.append("SEARCH");
+            for (Integer id : hits)
+                result.append(' ').append(id);
+        } else {
+            result.append("ESEARCH (TAG \"").append(tag).append("\")");
+            if (!hits.isEmpty() && (options & RETURN_MIN) != 0)
+                result.append(" MIN ").append(hits.get(0));
+            if (!hits.isEmpty() && (options & RETURN_MAX) != 0)
+                result.append(" MAX ").append(hits.get(hits.size() - 1));
+            if (!hits.isEmpty() && (options & RETURN_ALL) != 0)
+                result.append(" ALL ").append(ImapFolder.encodeSubsequence(hits));
+            if ((options & RETURN_COUNT) != 0)
+                result.append(" COUNT ").append(hits.size());
+        }
 
         sendUntagged(result.toString());
         sendNotifications(false, false);

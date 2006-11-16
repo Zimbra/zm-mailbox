@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -94,11 +95,6 @@ public class ImapMessage implements Comparable<ImapMessage> {
         this(item.getId(), item.getType(), item.getImapUid(), item.getFlagBitmask(), item.getTagBitmask());
     }
 
-    public int compareTo(ImapMessage i4msg) {
-        if (imapUid == i4msg.imapUid)  return 0;
-        return (imapUid < i4msg.imapUid ? -1 : 1);
-    }
-
     byte getType() {
         return (sflags & FLAG_IS_CONTACT) == 0 ? MailItem.TYPE_MESSAGE : MailItem.TYPE_CONTACT;
     }
@@ -115,6 +111,30 @@ public class ImapMessage implements Comparable<ImapMessage> {
 
     void setExpunged(boolean expunged)  { sflags = (short) (expunged ? sflags | FLAG_EXPUNGED : sflags & ~FLAG_EXPUNGED); }
     void setAdded(boolean added)        { sflags = (short) (added ? sflags | FLAG_ADDED : sflags & ~FLAG_ADDED); }
+
+
+    public int compareTo(ImapMessage i4msg) {
+        if (imapUid == i4msg.imapUid)  return 0;
+        return (imapUid < i4msg.imapUid ? -1 : 1);
+    }
+
+    static class SequenceComparator implements Comparator<ImapMessage> {
+        public int compare(ImapMessage o1, ImapMessage o2) {
+            if (o1 == null)       return o2 == null ? 0 : -1;
+            else if (o2 == null)  return 1;
+            return (o1.sequence < o2.sequence ? -1 : (o1.sequence == o2.sequence ? 0 : 1));
+        }
+    }
+
+
+    static class UidComparator implements Comparator<ImapMessage> {
+        public int compare(ImapMessage o1, ImapMessage o2) {
+            if (o1 == null)       return o2 == null ? 0 : -1;
+            else if (o2 == null)  return 1;
+            return (o1.imapUid < o2.imapUid ? -1 : (o1.imapUid == o2.imapUid ? 0 : 1));
+        }
+    }
+
 
     private static final byte[] EMPTY_CONTENT = new byte[0];
 

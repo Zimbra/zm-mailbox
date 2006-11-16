@@ -184,6 +184,16 @@ class ImapRequest {
         else
             return (mOffset >= ((byte[]) part).length) ? -1 : ((byte[]) part)[mOffset];
     }
+    String peekAtom() {
+        int index = mIndex, offset = mOffset;
+        try {
+            return readAtom();
+        } catch (ImapParseException ipe) {
+            return null;
+        } finally {
+            mIndex = index;  mOffset = offset;
+        }
+    }
 
     void skipSpace() throws ImapParseException { skipChar(' '); }
     void skipChar(char c) throws ImapParseException {
@@ -709,21 +719,14 @@ class ImapRequest {
     String readSearch(TreeMap<Integer, Object> insertions) throws IOException, ImapException {
         String charset = null;
         StringBuffer search = new StringBuffer();
-        int c = peekChar();
-        if (c == 'c' || c == 'C') {
-            int offset = mOffset, index = mIndex;
-            String first = readAtom();
-            if (first.equals("CHARSET")) {
-                skipSpace();  charset = readAstring();  skipSpace();
-                boolean charsetOK = false;
-                try {
-                    charsetOK = Charset.isSupported(charset);
-                } catch (IllegalCharsetNameException icne) { }
-                if (!charsetOK)
-                    throw new ImapParseException(mTag, "BADCHARSET", "unknown charset: " + charset, true);
-            } else {
-                mOffset = offset;  mIndex = index;
-            }
+        if ("CHARSET".equals(peekAtom())) {
+            skipAtom("CHARSET");  skipSpace();  charset = readAstring();  skipSpace();
+            boolean charsetOK = false;
+            try {
+                charsetOK = Charset.isSupported(charset);
+            } catch (IllegalCharsetNameException icne) { }
+            if (!charsetOK)
+                throw new ImapParseException(mTag, "BADCHARSET", "unknown charset: " + charset, true);
         }
         return readSearchClause(search, insertions, charset, MULTIPLE_CLAUSES).toString();
     }

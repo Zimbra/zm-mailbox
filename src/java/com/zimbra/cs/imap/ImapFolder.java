@@ -421,18 +421,10 @@ class ImapFolder implements Iterable<ImapMessage> {
             }
     }
 
-    private static class NullableComparator implements Comparator<ImapMessage> {
-        public int compare(ImapMessage o1, ImapMessage o2) {
-            if (o1 == null)       return o2 == null ? 0 : -1;
-            else if (o2 == null)  return 1;
-            return (o1.sequence < o2.sequence ? -1 : (o1.sequence == o2.sequence ? 0 : 1));
-        }
-    }
-
     Set<ImapMessage> getFlaggedMessages(ImapSession.ImapFlag i4flag) {
         if (i4flag == null || mSequence.size() == 0)
             return Collections.emptySet();
-        TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new NullableComparator());
+        TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
         for (ImapMessage i4msg : mSequence)
             if (i4msg != null && (i4msg.sflags & i4flag.mBitmask) != 0)
                 result.add(i4msg);
@@ -449,7 +441,7 @@ class ImapFolder implements Iterable<ImapMessage> {
         ImapMessage i4msg = getLastMessage();
         int lastID = (i4msg == null ? (byUID ? Integer.MAX_VALUE : mSequence.size()) : (byUID ? i4msg.imapUid : i4msg.sequence));
 
-        TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new NullableComparator());
+        TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
         for (String subset : subseqStr.split(","))
             if (subset.indexOf(':') == -1) {
                 // single message -- get it and add it (may be null)
