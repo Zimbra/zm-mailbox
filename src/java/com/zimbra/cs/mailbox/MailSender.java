@@ -167,7 +167,7 @@ public class MailSender {
 
             Account acct = mbox.getAccount();
             Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
-            boolean isAdminRequest = octxt == null ? null : octxt.isUsingAdminPrivileges();
+            boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
             if (authuser == null)
                 authuser = acct;
             boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
