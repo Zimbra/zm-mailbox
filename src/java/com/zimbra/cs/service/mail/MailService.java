@@ -255,9 +255,6 @@ public class MailService implements DocumentService {
     public static final String A_IDS = "ids";
     public static final String A_CONV_ID = "cid";
     public static final String A_MESSAGE_ID = "mid";
-    public static final String A_ATTACHMENT_ID = "aid";
-    public static final String A_ORIG_ID = "origid";
-    public static final String A_REPLY_TYPE = "rt";
     public static final String A_REF = "ref";
     public static final String A_TARGET_CONSTRAINT = "tcon";
     public static final String A_TAG = "tag";
@@ -292,6 +289,12 @@ public class MailService implements DocumentService {
     public static final String A_EXCLUDE_FREEBUSY = "excludeFreeBusy";
     public static final String A_FILE_AS_STR = "fileAsStr";
     public static final String A_ELIDED = "elided";
+
+    // send/save draft
+    public static final String A_ATTACHMENT_ID = "aid";
+    public static final String A_ORIG_ID = "origid";
+    public static final String A_REPLY_TYPE = "rt";
+    public static final String A_SEND_UID = "suid";
 
     // mountpoints
     public static final String A_REMOTE_ID = "rid";
