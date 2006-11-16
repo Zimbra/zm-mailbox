@@ -123,7 +123,7 @@ public class ZGetInfoResult {
         return mName;
     }
 
-    public Map<String, List<String>> getPrefs() {
+    public Map<String, List<String>> getPrefAttrs() {
         return mPrefs;
     }
     
