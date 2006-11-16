@@ -34,18 +34,25 @@ public class Pair<F,S> {
         mSecond = second;
     }
 
+    public F car() {
+        return getFirst();
+    }
+    public S cdr() {
+        return getSecond();
+    }
 	public F getFirst() {
 		return mFirst;
 	}
 	public S getSecond() {
 		return mSecond;
 	}
-	public F car() {
-		return getFirst();
-	}
-	public S cdr() {
-		return getSecond();
-	}
+
+    public void setFirst(F first) {
+        mFirst = first;
+    }
+    public void setSecond(S second) {
+        mSecond = second;
+    }
 
     public boolean equals(Object obj) {
         if (obj instanceof Pair) {
