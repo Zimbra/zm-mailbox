@@ -26,6 +26,8 @@ package com.zimbra.cs.session;
 
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.wiki.Wiki;
 
@@ -80,8 +82,16 @@ public class WikiSession extends Session {
 	}
 
 	private void expireItem(Object obj) {
-		if (obj != null && obj instanceof Document) {
+		if (obj == null)
+			return;
+		if (obj instanceof Document) {
 			Wiki.expireTemplate((Document) obj);
+		}
+		if (obj instanceof Folder) {
+			Wiki.expireNotebook((Folder) obj);
+		}
+		if (obj instanceof Mailbox) {
+			Wiki.expireAll();
 		}
 	}
 }

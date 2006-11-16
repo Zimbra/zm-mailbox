@@ -741,4 +741,14 @@ public abstract class Wiki {
 		}
 		WikiFormatter.expireCacheItem(item);
 	}
+	public static void expireNotebook(Folder folder) {
+		Pair<String,String> key = new Pair<String,String>(folder.getMailbox().getAccountId(), 
+															Integer.toString(folder.getId()));
+		sWikiNotebookCache.remove(key);
+		WikiFormatter.expireCache();
+	}
+	public static void expireAll() {
+		sWikiNotebookCache.clear();
+		WikiFormatter.expireCache();
+	}
 }

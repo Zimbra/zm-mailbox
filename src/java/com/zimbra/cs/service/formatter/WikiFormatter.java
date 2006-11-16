@@ -78,6 +78,10 @@ public class WikiFormatter extends Formatter {
     	}
     }
     
+    public static void expireCache() {
+    	sCache = new PageCache();
+    }
+    
     private void handleWiki(Context context, WikiItem wiki) throws IOException, ServiceException {
     	WikiContext ctxt = createWikiContext(context);
     	// fully rendered pages are cached in <code>PageCache</code>.
