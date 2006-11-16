@@ -82,11 +82,15 @@ public class CalendarQuery extends Report {
 		}
 	}
 	
-	private void handleAppt(QueryContext ctxt, Appointment appt) throws DavException {
+	private void handleAppt(QueryContext ctxt, Appointment appt) {
 		try {
 			CalendarObject calobj = new CalendarObject(appt);
+			if (!calobj.match(ctxt.componentFilter))
+				return;
 			DavResponse resp = ctxt.davCtxt.getDavResponse();
 			resp.addResource(ctxt.davCtxt, calobj, ctxt.props, false);
+		} catch (DavException de) {
+			ZimbraLog.dav.error("can't get appointment data", de);
 		} catch (ServiceException se) {
 			ZimbraLog.dav.error("can't get appointment data", se);
 		}

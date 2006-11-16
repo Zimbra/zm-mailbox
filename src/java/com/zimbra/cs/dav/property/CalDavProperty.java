@@ -61,11 +61,17 @@ public class CalDavProperty extends ResourceProperty {
 	}
 
 	public enum CalComponent {
-		VEVENT, VTODO, VJOURNAL, VTIMEZONE, VFREEBUSY
+		VCALENDAR, VEVENT, VTODO, VJOURNAL, VTIMEZONE, VFREEBUSY
+	}
+
+	public static CalComponent getCalComponent(String comp) {
+		return CalComponent.valueOf(comp);
 	}
 	
 	private static final CalComponent[] sSUPPORTED_COMPONENTS = {
-		CalComponent.VEVENT, CalComponent.VTIMEZONE, CalComponent.VFREEBUSY
+		CalComponent.VCALENDAR,
+		CalComponent.VEVENT,    CalComponent.VTODO, 
+		CalComponent.VTIMEZONE, CalComponent.VFREEBUSY
 	};
 	
 	private static class SupportedCalendarComponentSet extends CalDavProperty {
@@ -130,7 +136,7 @@ public class CalDavProperty extends ResourceProperty {
 			if (nameOnly)
 				return caldata;
 			try {
-				caldata.setText(calobj.getVcalendar());
+				caldata.setText(calobj.getVcalendar(null));
 			} catch (IOException e) {
 				ZimbraLog.dav.warn("can't get appt data", e);
 			}

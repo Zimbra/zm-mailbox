@@ -24,6 +24,9 @@
  */
 package com.zimbra.cs.dav.caldav;
 
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
+
 import org.dom4j.Element;
 
 import com.zimbra.common.util.DateUtil;
@@ -42,19 +45,45 @@ public class TimeRange {
 	}
 	
 	public TimeRange(Element elem) {
-		mStart = sMIN_DATE;
-		mEnd = sMAX_DATE;
+		mStart = mEnd = 0;
 		if (elem != null && elem.getQName().equals(DavElements.E_TIME_RANGE)) {
 			String s = elem.attributeValue(DavElements.P_START);
 			if (s != null)
-				mStart = Long.parseLong(s);
+				mStart = parseDateWithUTCTime(s);
 			
 			s = elem.attributeValue(DavElements.P_END);
 			if (s != null)
-				mEnd = Long.parseLong(s);
+				mEnd = parseDateWithUTCTime(s);
 		}
+		if (mStart == 0)
+			mStart = sMIN_DATE;
+		if (mEnd == 0)
+			mEnd = sMAX_DATE;
 	}
 	
+    private long parseDateWithUTCTime(String time) {
+    	if (time.length() != 8 && time.length() != 14)
+    		return 0;
+    	if (!time.endsWith("Z"))
+    		return 0;
+    	TimeZone tz = TimeZone.getTimeZone("GMT");
+    	int year, month, date, hour, min, sec;
+    	int index = 0;
+    	year = Integer.parseInt(time.substring(index, index+4)); index+=4;
+    	month = Integer.parseInt(time.substring(index, index+2))-1; index+=2;
+    	date = Integer.parseInt(time.substring(index, index+2)); index+=2;
+    	hour = min = sec = 0;
+    	if (time.length() == 14) {
+    		if (time.charAt(index) == 'T') index++;
+    		hour = Integer.parseInt(time.substring(index, index+2)); index+=2;
+    		min = Integer.parseInt(time.substring(index, index+2)); index+=2;
+    		sec = Integer.parseInt(time.substring(index, index+2)); index+=2;
+    	}
+    	GregorianCalendar calendar = new GregorianCalendar(tz);
+    	calendar.set(year, month, date, hour, min, sec);
+    	return calendar.getTimeInMillis();
+    }
+    
 	public long getStart() {
 		return mStart;
 	}

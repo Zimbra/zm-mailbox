@@ -32,8 +32,33 @@ import org.dom4j.QName;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavElements;
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.dav.property.CalDavProperty;
+import com.zimbra.cs.dav.property.CalDavProperty.CalComponent;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.mailbox.calendar.Invite;
 
+/*
+ * draft-dusseault-caldav section 9.7
+ * 
+ *          <!ELEMENT filter (comp-filter)>
+ *          
+ *          <!ELEMENT comp-filter (is-not-defined | (time-range?,
+ *                                 prop-filter*, comp-filter*))>
+ *          <!ATTLIST comp-filter name CDATA #REQUIRED>
+ *          
+ *          <!ELEMENT prop-filter ((is-not-defined |
+ *                                ((time-range | text-match)?,
+ *                                 param-filter*))>
+ *          <!ATTLIST prop-filter name CDATA #REQUIRED>
+ *          
+ *          <!ELEMENT param-filter (is-not-defined | text-match)?>
+ *          <!ATTLIST param-filter name CDATA #REQUIRED>
+ *
+ *          <!ELEMENT text-match (#PCDATA)>
+ *          PCDATA value: string
+ *          <!ATTLIST text-match collation        CDATA "i;ascii-casemap"
+ *                               negate-condition (yes | no) "no">
+ */
 public abstract class Filter {
 	protected String mName;
 	protected boolean mIsNotDefinedSet;
@@ -46,7 +71,7 @@ public abstract class Filter {
 		return mName;
 	}
 	
-	public abstract boolean match(Appointment appt);
+	public abstract boolean match(Invite invite);
 	
 	public boolean mIsNotDefinedSet() {
 		return mIsNotDefinedSet;
@@ -57,7 +82,7 @@ public abstract class Filter {
 			super(elem);
 		}
 		
-		public boolean match(Appointment appt) {
+		public boolean match(Invite invite) {
 			return true;
 		}
 	}
@@ -66,7 +91,7 @@ public abstract class Filter {
 			super(elem);
 			
 		}
-		public boolean match(Appointment appt) {
+		public boolean match(Invite invite) {
 			return true;
 		}
 	}
@@ -78,7 +103,7 @@ public abstract class Filter {
 			
 		}
 		
-		public boolean match(Appointment appt) {
+		public boolean match(Invite invite) {
 			return true;
 		}
 
@@ -87,6 +112,7 @@ public abstract class Filter {
 		}
 	}
 	public static class CompFilter extends Filter {
+		private CalComponent mComponent;
 		private TimeRange mTimeRange;
 		private HashSet<PropFilter> mProps;
 		private HashSet<CompFilter> mComps;
@@ -96,6 +122,8 @@ public abstract class Filter {
 			mProps = new HashSet<PropFilter>();
 			mComps = new HashSet<CompFilter>();
 			parse(elem);
+			String name = elem.attributeValue(DavElements.P_NAME);
+			mComponent = CalDavProperty.getCalComponent(name);
 		}
 		
 		void parse(Element elem) {
@@ -117,8 +145,25 @@ public abstract class Filter {
 				mTimeRange = new TimeRange(null);
 		}
 
-		public boolean match(Appointment appt) {
-			return true;
+		public boolean match(Invite invite) {
+			boolean matched = false;
+			String comp = invite.getCompType();
+			
+			if (mComponent == CalComponent.VCALENDAR)
+				matched = true;
+			else if (IcalXmlStrMap.COMPTYPE_EVENT.equals(comp))
+				matched = (mComponent == CalComponent.VEVENT);
+			else if (IcalXmlStrMap.COMPTYPE_TODO.equals(comp))
+				matched = (mComponent == CalComponent.VTODO);
+
+			if (matched && mComps.size() > 0) {
+				matched = false;
+				// needs to match at least one subcomponent
+				for (CompFilter cf : mComps) {
+					matched |= cf.match(invite);
+				}
+			}
+			return matched;
 		}
 		
 		public TimeRange getTimeRange() {

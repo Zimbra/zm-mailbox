@@ -33,6 +33,7 @@ import java.util.Iterator;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.caldav.Filter;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -51,24 +52,18 @@ public class CalendarObject extends MailItemResource {
 		mUid = appt.getUid();
 		mInvites = appt.getInvites();
 		mTzmap = appt.getTimeZoneMap();
-		try {
-			mVcalendar = getVcalendar();
-		} catch (IOException e) {
-			ZimbraLog.dav.error("cannot convert to ICalendar", e);
-		}
-        Invite defInv = appt.getDefaultInviteOrNull();
-        if (defInv != null)
-    		setProperty(DavElements.P_DISPLAYNAME, defInv.getName());
+		Invite defInv = appt.getDefaultInviteOrNull();
+		if (defInv != null)
+			setProperty(DavElements.P_DISPLAYNAME, defInv.getName());
 		setProperty(DavElements.P_GETETAG, Long.toString(appt.getDate()));
 		setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
-		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(mVcalendar.length()));
+		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(appt.getSize()));
 		addProperty(CalDavProperty.getCalendarData(this));
 	}
 	
 	private String mUid;
 	private Invite[] mInvites;
 	private TimeZoneMap mTzmap;
-	private String mVcalendar;
 	
 	private static String getCalendarPath(Appointment appt) throws ServiceException {
 		// escape uid
@@ -81,7 +76,15 @@ public class CalendarObject extends MailItemResource {
 		return path.toString();
 	}
 
-	public String getVcalendar() throws IOException {
+	public boolean match(Filter filter) {
+		for (Invite inv : mInvites)
+			if (filter.match(inv))
+				return true;
+		
+		return false;
+	}
+	
+	public String getVcalendar(Filter filter) throws IOException {
 		StringBuilder buf = new StringBuilder();
 		
 		buf.append("BEGIN:VCALENDAR\r\n");
@@ -97,6 +100,8 @@ public class CalendarObject extends MailItemResource {
 			wr.close();
 		}
 		for (Invite inv : mInvites) {
+			if (filter != null && !filter.match(inv))
+				continue;
 			CharArrayWriter wr = new CharArrayWriter();
 			try {
 				inv.newToVComponent(false).toICalendar(wr);
@@ -113,7 +118,7 @@ public class CalendarObject extends MailItemResource {
 	
 	@Override
 	public InputStream getContent() throws IOException, DavException {
-		return new ByteArrayInputStream(getVcalendar().getBytes());
+		return new ByteArrayInputStream(getVcalendar(null).getBytes());
 	}
 
 	@Override
