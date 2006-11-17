@@ -50,19 +50,19 @@ import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.JMSession;
 
 
-public class SetAppointment extends RedoableOp implements CreateAppointmentRecorder, CreateAppointmentPlayer 
+public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRecorder, CreateCalendarItemPlayer 
 {
     private int mFolderId;
-    private int mAppointmentId;
-    private String mAppointmentPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
+    private int mCalendarItemId;
+    private String mCalendarItemPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private boolean mAttachmentIndexingEnabled;
-    private Mailbox.SetAppointmentData mDefaultInvite;
-    private Mailbox.SetAppointmentData mExceptions[];
+    private Mailbox.SetCalendarItemData mDefaultInvite;
+    private Mailbox.SetCalendarItemData mExceptions[];
     private short mVolumeId = -1;
 
-    public SetAppointment() {}
+    public SetCalendarItem() {}
     
-    static void serializeSetAppointmentData(RedoLogOutput out, Mailbox.SetAppointmentData data) throws IOException, MessagingException {
+    static void serializeSetCalendarItemData(RedoLogOutput out, Mailbox.SetCalendarItemData data) throws IOException, MessagingException {
         out.writeBoolean(data.mForce);
         
         ICalTimeZone localTz = data.mInv.getTimeZoneMap().getLocalTimeZone();
@@ -71,18 +71,18 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
         out.writeUTF(Invite.encodeMetadata(data.mInv).toString());
         
         if (data.mPm != null) {
-	        out.writeLong(data.mPm.getReceivedDate());
-	        
-	        byte[] pmData = data.mPm.getRawData();
-	        out.writeInt(pmData.length);
-	        out.write(pmData);
+            out.writeLong(data.mPm.getReceivedDate());
+            
+            byte[] pmData = data.mPm.getRawData();
+            out.writeInt(pmData.length);
+            out.write(pmData);
         }
     }
     
-    private Mailbox.SetAppointmentData deserializeSetAppointmentData(
+    private Mailbox.SetCalendarItemData deserializeSetCalendarItemData(
             RedoLogInput in, boolean attachmentIndexingEnabled)
     throws IOException, MessagingException {
-        Mailbox.SetAppointmentData toRet = new Mailbox.SetAppointmentData();
+        Mailbox.SetCalendarItemData toRet = new Mailbox.SetCalendarItemData();
 
         int mboxId = getMailboxId();
         try {
@@ -116,14 +116,14 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
         out.writeInt(mFolderId);
         if (getVersion().atLeast(1, 0))
             out.writeShort(mVolumeId);
-        out.writeInt(mAppointmentId);
+        out.writeInt(mCalendarItemId);
         if (getVersion().atLeast(1, 1))
-            out.writeUTF(mAppointmentPartStat);
+            out.writeUTF(mCalendarItemPartStat);
         if (getVersion().atLeast(1, 2))
             out.writeBoolean(mAttachmentIndexingEnabled);
         
         try {
-            serializeSetAppointmentData(out, mDefaultInvite);
+            serializeSetCalendarItemData(out, mDefaultInvite);
         } catch(MessagingException me) { 
             throw new IOException("Caught MessagingException trying to serialize Default invite: "+me);
         }
@@ -134,7 +134,7 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
             out.writeInt(mExceptions.length);
             for (int i = 0; i < mExceptions.length; i++) {
                 try {
-                    serializeSetAppointmentData(out, mExceptions[i]);
+                    serializeSetCalendarItemData(out, mExceptions[i]);
                 } catch(MessagingException me) { 
                     throw new IOException("Caught MessagingException trying to serialize Exception invite #"+i+": "+me);
                 }
@@ -146,44 +146,44 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
         mFolderId = in.readInt();
         if (getVersion().atLeast(1, 0))
             mVolumeId = in.readShort();
-        mAppointmentId = in.readInt();
+        mCalendarItemId = in.readInt();
         if (getVersion().atLeast(1, 1))
-            mAppointmentPartStat = in.readUTF();
+            mCalendarItemPartStat = in.readUTF();
         if (getVersion().atLeast(1, 2))
             mAttachmentIndexingEnabled = in.readBoolean();
         else
             mAttachmentIndexingEnabled = false;
         
         try {
-            mDefaultInvite = deserializeSetAppointmentData(in, mAttachmentIndexingEnabled);
+            mDefaultInvite = deserializeSetCalendarItemData(in, mAttachmentIndexingEnabled);
             
             int numExceptions = in.readInt();
             if (numExceptions > 0) {
-                mExceptions = new Mailbox.SetAppointmentData[numExceptions];
+                mExceptions = new Mailbox.SetCalendarItemData[numExceptions];
                 for (int i = 0; i < numExceptions; i++){
-                    mExceptions[i] = deserializeSetAppointmentData(in, mAttachmentIndexingEnabled);
+                    mExceptions[i] = deserializeSetCalendarItemData(in, mAttachmentIndexingEnabled);
                 }
             }
         
         } catch (MessagingException ex) {
             ex.printStackTrace();
-            throw new IOException("Cannot read serialized entry for SetAppointment"+ex.toString());
+            throw new IOException("Cannot read serialized entry for SetCalendarItem"+ex.toString());
         }
     }
 
-    public SetAppointment(int mailboxId, boolean attachmentIndexingEnabled) 
+    public SetCalendarItem(int mailboxId, boolean attachmentIndexingEnabled) 
     {
         super(); 
         setMailboxId(mailboxId);
         mAttachmentIndexingEnabled = attachmentIndexingEnabled;
     }
     
-    public void setData(Mailbox.SetAppointmentData defaultInvite, Mailbox.SetAppointmentData exceptions[]) {
+    public void setData(Mailbox.SetCalendarItemData defaultInvite, Mailbox.SetCalendarItemData exceptions[]) {
         mDefaultInvite = defaultInvite;
         mExceptions = exceptions;
     }
     
-    public Mailbox.SetAppointmentData getDefaultData() {
+    public Mailbox.SetCalendarItemData getDefaultData() {
         return mDefaultInvite;
     }
     
@@ -194,56 +194,56 @@ public class SetAppointment extends RedoableOp implements CreateAppointmentRecor
         return mExceptions.length;
     }
     
-    public Mailbox.SetAppointmentData getExceptionData(int exceptionNum) {
+    public Mailbox.SetCalendarItemData getExceptionData(int exceptionNum) {
         return mExceptions[exceptionNum];
     }
     
-    public void setAppointmentAttrs(int appointmentId,
-								    int folderId,
-								    short volumeId) {
-		mAppointmentId = appointmentId;
-		mFolderId = folderId;
-		mVolumeId = volumeId;
-	}
-	
-	public int getAppointmentId() {
-		return mAppointmentId;
+    public void setCalendarItemAttrs(int calItemId,
+                                     int folderId,
+                                     short volumeId) {
+        mCalendarItemId = calItemId;
+        mFolderId = folderId;
+        mVolumeId = volumeId;
+    }
+    
+    public int getCalendarItemId() {
+        return mCalendarItemId;
     }
 
-    public String getAppointmentPartStat() {
-        return mAppointmentPartStat;
+    public String getCalendarItemPartStat() {
+        return mCalendarItemPartStat;
     }
 
-    public void setAppointmentPartStat(String partStat) {
-        mAppointmentPartStat = partStat;
+    public void setCalendarItemPartStat(String partStat) {
+        mCalendarItemPartStat = partStat;
     }
 
-	public int getFolderId() {
-		return mFolderId;
-	}
-	
-	public short getVolumeId() {
-    	if (mVolumeId == -1)
-    		return Volume.getCurrentMessageVolume().getId();
-    	else
-    		return mVolumeId;
-	}
+    public int getFolderId() {
+        return mFolderId;
+    }
+    
+    public short getVolumeId() {
+        if (mVolumeId == -1)
+            return Volume.getCurrentMessageVolume().getId();
+        else
+            return mVolumeId;
+    }
 
     public int getOpCode() {
-        return OP_SET_APPOINTMENT;
+        return OP_SET_CALENDAR_ITEM;
     }
 
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         
-        mbox.setAppointment(getOperationContext(), mFolderId, mDefaultInvite, mExceptions);
+        mbox.setCalendarItem(getOperationContext(), mFolderId, mDefaultInvite, mExceptions);
     }
-    
+
     protected String getPrintableData() {
         StringBuffer toRet = new StringBuffer();
-        toRet.append("apptId=").append(mAppointmentId).append(",");
-        toRet.append("apptPartStat=").append(mAppointmentPartStat).append(".");
+        toRet.append("calItemId=").append(mCalendarItemId).append(",");
+        toRet.append("calItemPartStat=").append(mCalendarItemPartStat).append(".");
         toRet.append("folder=").append(mFolderId).append(",");
         if (getVersion().atLeast(1, 0))
             toRet.append(", vol=").append(mVolumeId);

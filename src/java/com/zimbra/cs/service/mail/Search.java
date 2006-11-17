@@ -46,7 +46,7 @@ import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
@@ -271,9 +271,9 @@ public class Search extends MailDocumentHandler  {
                 ProxiedHit ph = (ProxiedHit) hit;
                 response.addElement(ph.getElement().detach());
                 addSortField = false;
-            } else if (hit instanceof AppointmentHit) {
-                AppointmentHit ah = (AppointmentHit)hit;
-                e = addAppointmentHit(zsc, response, ah, inline, params);
+            } else if (hit instanceof CalendarItemHit) {
+                CalendarItemHit ah = (CalendarItemHit)hit;
+                e = addCalendarItemHit(zsc, response, ah, inline, params);
             } else if (hit instanceof DocumentHit) {
                 DocumentHit dh = (DocumentHit)hit;
                 e = addDocumentHit(zsc, response, dh);
@@ -317,16 +317,16 @@ public class Search extends MailDocumentHandler  {
         return c;
     }
 
-    protected Element addAppointmentHit(ZimbraSoapContext zsc, Element response, AppointmentHit ah, boolean inline, SearchParams params)
+    protected Element addCalendarItemHit(ZimbraSoapContext zsc, Element response, CalendarItemHit ah, boolean inline, SearchParams params)
     throws ServiceException {
-        Appointment appt = ah.getAppointment();
+        CalendarItem calItem = ah.getCalendarItem();
         Element m;
         if (inline) {
-            m = ToXML.encodeApptSummary(response, zsc, appt, PendingModifications.Change.ALL_FIELDS);
+            m = ToXML.encodeCalendarItemSummary(response, zsc, calItem, PendingModifications.Change.ALL_FIELDS);
 //          if (!msg.getFragment().equals(""))
 //          m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
         } else {
-            m = ToXML.encodeApptSummary(response, zsc, appt, PendingModifications.Change.ALL_FIELDS);
+            m = ToXML.encodeCalendarItemSummary(response, zsc, calItem, PendingModifications.Change.ALL_FIELDS);
         }
 
         if (ah.getScore() != 0) {

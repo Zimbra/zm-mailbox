@@ -80,7 +80,7 @@ public class GetFreeBusy extends MailDocumentHandler {
         if (days > MAX_PERIOD_SIZE_IN_DAYS)
             throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum "+MAX_PERIOD_SIZE_IN_DAYS+" days)", null);
 
-        Element response = zc.createElement(MailService.GET_FREE_BUSY_RESPONSE);
+        Element response = getResponseElement(zc);
         
         String idParam = request.getAttribute(MailService.A_UID);
         

@@ -30,7 +30,6 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -153,8 +152,9 @@ public abstract class Formatter {
 
     private Collection<? extends MailItem> getMailItemsFromFolder(Context context, Folder folder, long startTime, long endTime) throws ServiceException {
         switch (folder.getDefaultView()) {
-            case MailItem.TYPE_APPOINTMENT:            
-                return context.targetMailbox.getAppointmentsForRange(context.opContext, startTime, endTime, folder.getId(), null);
+            case MailItem.TYPE_APPOINTMENT:
+            case MailItem.TYPE_TASK:
+                return context.targetMailbox.getCalendarItemsForRange(context.opContext, startTime, endTime, folder.getId(), null);
             case MailItem.TYPE_CONTACT:
                 return context.targetMailbox.getContactList(context.opContext, folder.getId());
             case MailItem.TYPE_WIKI:

@@ -35,7 +35,7 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.caldav.Filter;
 import com.zimbra.cs.dav.property.CalDavProperty;
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
@@ -47,17 +47,17 @@ public class CalendarObject extends MailItemResource {
 
 	public static final String CAL_EXTENSION = ".ics";
 	
-	public CalendarObject(Appointment appt) throws ServiceException {
-		super(getCalendarPath(appt), appt);
-		mUid = appt.getUid();
-		mInvites = appt.getInvites();
-		mTzmap = appt.getTimeZoneMap();
-		Invite defInv = appt.getDefaultInviteOrNull();
+	public CalendarObject(CalendarItem calItem) throws ServiceException {
+		super(getCalendarPath(calItem), calItem);
+		mUid = calItem.getUid();
+		mInvites = calItem.getInvites();
+		mTzmap = calItem.getTimeZoneMap();
+		Invite defInv = calItem.getDefaultInviteOrNull();
 		if (defInv != null)
 			setProperty(DavElements.P_DISPLAYNAME, defInv.getName());
-		setProperty(DavElements.P_GETETAG, Long.toString(appt.getDate()));
+		setProperty(DavElements.P_GETETAG, Long.toString(calItem.getDate()));
 		setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
-		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(appt.getSize()));
+		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(calItem.getSize()));
 		addProperty(CalDavProperty.getCalendarData(this));
 	}
 	
@@ -65,13 +65,13 @@ public class CalendarObject extends MailItemResource {
 	private Invite[] mInvites;
 	private TimeZoneMap mTzmap;
 	
-	private static String getCalendarPath(Appointment appt) throws ServiceException {
+	private static String getCalendarPath(CalendarItem calItem) throws ServiceException {
 		// escape uid
 		StringBuilder path = new StringBuilder();
-		path.append(appt.getPath());
+		path.append(calItem.getPath());
 		if (path.charAt(path.length()-1) != '/')
 			path.append("/");
-		path.append(appt.getUid());
+		path.append(calItem.getUid());
 		path.append(CAL_EXTENSION);
 		return path.toString();
 	}

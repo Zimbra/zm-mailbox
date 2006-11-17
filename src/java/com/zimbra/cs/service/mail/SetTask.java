@@ -23,11 +23,9 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.redolog.op;
+package com.zimbra.cs.service.mail;
 
-public interface CreateAppointmentPlayer {
-    public int getAppointmentId();
-    public String getAppointmentPartStat();
-    public int getFolderId();
-    public short getVolumeId();
+public class SetTask
+extends SetCalendarItem
+implements TaskRequest {
 }

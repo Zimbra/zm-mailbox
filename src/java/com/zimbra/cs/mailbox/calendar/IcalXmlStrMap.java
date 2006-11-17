@@ -64,7 +64,6 @@ public class IcalXmlStrMap {
         return fwdMap.containsKey(str.toUpperCase());
     }
 
-    public static IcalXmlStrMap sCompTypeMap = new IcalXmlStrMap("CompType");
     public static IcalXmlStrMap sFreqMap = new IcalXmlStrMap("Freq");
     public static IcalXmlStrMap sTranspMap = new IcalXmlStrMap("Transparency");
     public static IcalXmlStrMap sFreeBusyMap = new IcalXmlStrMap("FreeBusy");
@@ -80,14 +79,6 @@ public class IcalXmlStrMap {
     
 
     
-    // component type
-    public final static String COMPTYPE_EVENT = "event";
-    public final static String COMPTYPE_TODO = "todo";
-    public final static String COMPTYPE_JOURNAL = "journal";
-    public final static String COMPTYPE_FREEBUSY = "freebusy";
-    public final static String COMPTYPE_TIMEZONE = "tz";
-    public final static String COMPTYPE_ALARM = "alarm";
-
     // frequency 
     public final static String FREQ_YEARLY = "YEA";
     public final static String FREQ_WEEKLY = "WEE";
@@ -146,13 +137,6 @@ public class IcalXmlStrMap {
     public final static String CUTYPE_UNKNOWN    = "UNK";
 
     static {
-        sCompTypeMap.add(ICalTok.VEVENT.toString(), COMPTYPE_EVENT);
-        sCompTypeMap.add(ICalTok.VTODO.toString(), COMPTYPE_TODO);
-        sCompTypeMap.add(ICalTok.VJOURNAL.toString(), COMPTYPE_JOURNAL);
-        sCompTypeMap.add(ICalTok.VFREEBUSY.toString(), COMPTYPE_FREEBUSY);
-        sCompTypeMap.add(ICalTok.VTIMEZONE.toString(), COMPTYPE_TIMEZONE);
-        sCompTypeMap.add(ICalTok.VALARM.toString(), COMPTYPE_ALARM);
-
         sCUTypeMap.add(ICalTok.INDIVIDUAL.toString(), CUTYPE_INDIVIDUAL);
     	sCUTypeMap.add(ICalTok.GROUP.toString(), CUTYPE_GROUP);
     	sCUTypeMap.add(ICalTok.RESOURCE.toString(), CUTYPE_RESOURCE);

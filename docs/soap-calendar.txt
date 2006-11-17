@@ -326,7 +326,7 @@ RECURRENCE SPECIFIERS!
  <bymonth>,<byweekno>.... --- TODO 
 ----------------------
 
-<CreateAppointmentResponse apptId="APPOINTMENT-ID" invId="invite-message-id"/>
+<CreateAppointmentResponse calItemId="APPOINTMENT-ID" invId="invite-message-id"/>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -413,7 +413,7 @@ OR
   </cancel>]*
 </SetAppointmentRequest>
 
-<SetAppointmentResponse apptId="appointment_id">
+<SetAppointmentResponse calItemId="appointment_id">
   <default id="invId_of_default_invite/>
   [<except recurId="recurrence_id_of_exception"
   id="invId_of_exception/>]*
@@ -557,7 +557,7 @@ OR
             [allDay="1|0"] [name="NAME"]
             [loc="LOCATION"]
             [rsvp="1|0"] // rsvp - 1 if response requested, 0 if no response requested
-            [apptId="mail-item-id-of-appointment"] 
+            [calItemId="mail-item-id-of-appointment"] 
             [updatedMsgId="id" updatedCompNum="compNum"] // if these are set, then this invite has been
                                                       // invalidated because a new update was received that
                                                       // takes precedence over it
@@ -624,7 +624,7 @@ OR
    rest is SAME as CreateAppointmentRequest except THE TARGET FOLDER IS IGNORED (see above)
 </ModifyAppointmentRequest>
 
-<ModifyAppointmentResponse apptId="appointment-id" invId="invite-message-id/>
+<ModifyAppointmentResponse calItemId="appointment-id" invId="invite-message-id/>
 
 
 
@@ -752,14 +752,14 @@ OR
 // a big multipart/digest containing each invite in the appointment as a sub-mimepart --
 // it can be retreived from the content servlet:
 //
-//       http://servername/service/content/get?id=<apptId>
+//       http://servername/service/content/get?id=<calItemId>
 //
 //
 // The content for a single Invite can be requested from the content servlet (or from <GetMsg>)
 // Individual  The client can ALSO request just the content for each individual invite using a
 // compound item-id request:
-//       http://servername/service/content/get?id="apptId-invite_mail_item_id"
-//       <GetMsgRequest><m id="apptId-invite_mail_item_id"
+//       http://servername/service/content/get?id="calItemId-invite_mail_item_id"
+//       <GetMsgRequest><m id="calItemId-invite_mail_item_id"
 //
 //      
 // IMPORTANT NOTE: DO NOT use the raw invite-mail-item-id to fetch the content: it might work

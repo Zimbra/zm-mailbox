@@ -15,7 +15,7 @@
  * The Original Code is: Zimbra Collaboration Suite Server.
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
- * Portions created by Zimbra are Copyright (C) 2005, 2006 Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
  * All Rights Reserved.
  * 
  * Contributor(s): 
@@ -23,9 +23,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.client.soap;
 
-public class CreateAppointmentException
-extends CreateCalendarItemException
-implements AppointmentRequest {
+public class LmcAdminAuthResponse extends LmcAuthResponse {
 }

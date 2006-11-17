@@ -73,7 +73,7 @@ public class ICalReply extends MailDocumentHandler {
             mbox.processICalReply(octxt, inv);
         }
 
-        Element response = lc.createElement(MailService.ICAL_REPLY_RESPONSE);
+        Element response = getResponseElement(lc);
         return response;
     }
 }

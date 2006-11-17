@@ -128,7 +128,7 @@ public abstract class RedoableOp {
     public static final int OP_MOVE_BLOBS               = 42;
 
     public static final int OP_CREATE_INVITE            = 43;
-    public static final int OP_SET_APPOINTMENT          = 44;    
+    public static final int OP_SET_CALENDAR_ITEM        = 44;    
     public static final int OP_TRACK_SYNC               = 45;    
     public static final int OP_SET_CONFIG               = 46;    
     public static final int OP_GRANT_ACCESS             = 47;    
@@ -198,7 +198,7 @@ public abstract class RedoableOp {
         "SetCurrentVolume",
         "MoveBlobs",
         "CreateInvite",
-        "SetAppointment",
+        "SetCalendarItem",
         "TrackSync",
         "SetConfig",
         "GrantAccess",

@@ -130,6 +130,7 @@ public class SyncOperation extends Operation {
                     initialItemSync(f, MailService.E_CONTACT, mbox.listItemIds(octxt, MailItem.TYPE_CONTACT, folder.getId()));
                     initialItemSync(f, MailService.E_NOTE, mbox.listItemIds(octxt, MailItem.TYPE_NOTE, folder.getId()));
                     initialItemSync(f, MailService.E_APPOINTMENT, mbox.listItemIds(octxt, MailItem.TYPE_APPOINTMENT, folder.getId()));
+                    initialItemSync(f, MailService.E_TASK, mbox.listItemIds(octxt, MailItem.TYPE_TASK, folder.getId()));
                 }
             } else {
                 // anything else to be done for searchfolders?
@@ -254,6 +255,7 @@ public class SyncOperation extends Operation {
             case MailItem.TYPE_MESSAGE:      return MailService.E_MSG;
             case MailItem.TYPE_CONTACT:      return MailService.E_CONTACT;
             case MailItem.TYPE_APPOINTMENT:  return MailService.E_APPOINTMENT;
+            case MailItem.TYPE_TASK:         return MailService.E_TASK;
             case MailItem.TYPE_NOTE:         return MailService.E_NOTE;
             case MailItem.TYPE_WIKI:         return MailService.E_WIKIWORD;
             case MailItem.TYPE_DOCUMENT:     return MailService.E_DOC;
@@ -269,6 +271,7 @@ public class SyncOperation extends Operation {
         else if (name.equals(MailService.E_MSG))          return MailItem.TYPE_MESSAGE;
         else if (name.equals(MailService.E_CONTACT))      return MailItem.TYPE_CONTACT;
         else if (name.equals(MailService.E_APPOINTMENT))  return MailItem.TYPE_APPOINTMENT;
+        else if (name.equals(MailService.E_TASK))         return MailItem.TYPE_TASK;
         else if (name.equals(MailService.E_NOTE))         return MailItem.TYPE_NOTE;
         else if (name.equals(MailService.E_WIKIWORD))     return MailItem.TYPE_WIKI;
         else if (name.equals(MailService.E_DOC))          return MailItem.TYPE_DOCUMENT;

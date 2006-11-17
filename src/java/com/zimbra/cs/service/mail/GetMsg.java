@@ -73,8 +73,8 @@ public class GetMsg extends MailDocumentHandler {
             boolean wantHTML = eMsg.getAttributeBool(MailService.A_WANT_HTML, false);
             if (op.getMsg() != null)
                 ToXML.encodeMessageAsMP(response, lc, op.getMsg(), part, wantHTML, neuter);
-            else if (op.getAppt() != null)
-                ToXML.encodeApptInviteAsMP(response, lc, op.getAppt(), iid, part, wantHTML, neuter);
+            else if (op.getCalendarItem() != null)
+                ToXML.encodeInviteAsMP(response, lc, op.getCalendarItem(), iid, part, wantHTML, neuter);
         }
         return response;
     }

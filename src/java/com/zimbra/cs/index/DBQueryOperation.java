@@ -563,6 +563,10 @@ class DBQueryOperation extends QueryOperation
                     tmp[numUsed] = MailItem.TYPE_APPOINTMENT;
                     numUsed++;
                     break;
+                case MailItem.TYPE_TASK:
+                    tmp[numUsed] = MailItem.TYPE_TASK;
+                    numUsed++;
+                    break;
                 case MailItem.TYPE_DOCUMENT:
                     tmp[numUsed] = MailItem.TYPE_DOCUMENT;
                     numUsed++;

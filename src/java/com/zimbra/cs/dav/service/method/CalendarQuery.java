@@ -43,7 +43,7 @@ import com.zimbra.cs.dav.resource.CalendarObject;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavResponse;
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.service.ServiceException;
 
 /*
@@ -75,24 +75,24 @@ public class CalendarQuery extends Report {
 		TimeRange tr = qctxt.componentFilter.getTimeRange();
 
 		try {
-			for (Appointment appt : cal.get(ctxt, tr))
-				handleAppt(qctxt, appt);
+			for (CalendarItem calItem : cal.get(ctxt, tr))
+				handleCalendarItem(qctxt, calItem);
 		} catch (ServiceException se) {
-			throw new DavException("error getting calendar appointments", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
+			throw new DavException("error getting calendar calendar items", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
 		}
 	}
 	
-	private void handleAppt(QueryContext ctxt, Appointment appt) {
+	private void handleCalendarItem(QueryContext ctxt, CalendarItem calItem) {
 		try {
-			CalendarObject calobj = new CalendarObject(appt);
+			CalendarObject calobj = new CalendarObject(calItem);
 			if (!calobj.match(ctxt.componentFilter))
 				return;
 			DavResponse resp = ctxt.davCtxt.getDavResponse();
 			resp.addResource(ctxt.davCtxt, calobj, ctxt.props, false);
 		} catch (DavException de) {
-			ZimbraLog.dav.error("can't get appointment data", de);
+			ZimbraLog.dav.error("can't get calendar item data", de);
 		} catch (ServiceException se) {
-			ZimbraLog.dav.error("can't get appointment data", se);
+			ZimbraLog.dav.error("can't get calendar item data", se);
 		}
 	}
 	

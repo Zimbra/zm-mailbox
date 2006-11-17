@@ -70,13 +70,11 @@ public class MailService implements DocumentService {
     public static final QName GET_MSG_METADATA_RESPONSE = QName.get("GetMsgMetadataResponse", NAMESPACE);
     public static final QName MSG_ACTION_REQUEST = QName.get("MsgActionRequest", NAMESPACE);
     public static final QName MSG_ACTION_RESPONSE = QName.get("MsgActionResponse", NAMESPACE);
-    //   SendMsg/AddMsg/SendAppt
+    //   SendMsg/AddMsg/SaveDraft
     public static final QName SEND_MSG_REQUEST = QName.get("SendMsgRequest", NAMESPACE);
     public static final QName SEND_MSG_RESPONSE = QName.get("SendMsgResponse", NAMESPACE);
     public static final QName ADD_MSG_REQUEST = QName.get("AddMsgRequest", NAMESPACE);
     public static final QName ADD_MSG_RESPONSE = QName.get("AddMsgResponse", NAMESPACE);
-    public static final QName SEND_APPT_REQUEST = QName.get("SendApptRequest", NAMESPACE);
-    public static final QName SEND_APPT_RESPONSE = QName.get("SendApptResponse", NAMESPACE);
     public static final QName SAVE_DRAFT_REQUEST = QName.get("SaveDraftRequest", NAMESPACE);
     public static final QName SAVE_DRAFT_RESPONSE = QName.get("SaveDraftResponse", NAMESPACE);
     // folders
@@ -132,31 +130,40 @@ public class MailService implements DocumentService {
     public static final QName GET_RULES_RESPONSE = QName.get("GetRulesResponse", NAMESPACE);
     public static final QName SAVE_RULES_REQUEST = QName.get("SaveRulesRequest", NAMESPACE);
     public static final QName SAVE_RULES_RESPONSE = QName.get("SaveRulesResponse", NAMESPACE);
-    // calendaring / appointment
-    public static final QName GET_APPT_SUMMARIES_REQUEST = QName.get("GetApptSummariesRequest", NAMESPACE);
-    public static final QName GET_APPT_SUMMARIES_RESPONSE = QName.get("GetApptSummariesResponse", NAMESPACE);
-    public static final QName SEND_INVITE_REPLY_REQUEST = QName.get("SendInviteReplyRequest", NAMESPACE);
-    public static final QName SEND_INVITE_REPLY_RESPONSE = QName.get("SendInviteReplyResponse", NAMESPACE);
-    public static final QName CREATE_APPOINTMENT_REQUEST = QName.get("CreateAppointmentRequest", NAMESPACE);
-    public static final QName CREATE_APPOINTMENT_RESPONSE = QName.get("CreateAppointmentResponse", NAMESPACE);
-    public static final QName CREATE_APPOINTMENT_EXCEPTION_REQUEST = QName.get("CreateAppointmentExceptionRequest", NAMESPACE);
-    public static final QName CREATE_APPOINTMENT_EXCEPTION_RESPONSE = QName.get("CreateAppointmentExceptionResponse", NAMESPACE);
-    public static final QName MODIFY_APPOINTMENT_REQUEST = QName.get("ModifyAppointmentRequest", NAMESPACE);
-    public static final QName MODIFY_APPOINTMENT_RESPONSE = QName.get("ModifyAppointmentResponse", NAMESPACE);
-    public static final QName CANCEL_APPOINTMENT_REQUEST = QName.get("CancelAppointmentRequest", NAMESPACE);
-    public static final QName CANCEL_APPOINTMENT_RESPONSE = QName.get("CancelAppointmentResponse", NAMESPACE);
-    public static final QName GET_APPOINTMENT_REQUEST = QName.get("GetAppointmentRequest", NAMESPACE);
-    public static final QName GET_APPOINTMENT_RESPONSE = QName.get("GetAppointmentResponse", NAMESPACE);
-    
-    public static final QName SET_APPOINTMENT_REQUEST = QName.get("SetAppointmentRequest", NAMESPACE);
-    public static final QName SET_APPOINTMENT_RESPONSE = QName.get("SetAppointmentResponse", NAMESPACE);
 
-    public static final QName GET_FREE_BUSY_REQUEST = QName.get("GetFreeBusyRequest", NAMESPACE);
-    public static final QName GET_FREE_BUSY_RESPONSE = QName.get("GetFreeBusyResponse", NAMESPACE);
-    public static final QName GET_ICAL_REQUEST = QName.get("GetICalRequest", NAMESPACE);
-    public static final QName GET_ICAL_RESPONSE = QName.get("GetICalResponse", NAMESPACE);
+
+    // Calendar
+
+    public static final QName GET_APPT_SUMMARIES_REQUEST = QName.get("GetApptSummariesRequest", NAMESPACE);
+    public static final QName GET_APPOINTMENT_REQUEST = QName.get("GetAppointmentRequest", NAMESPACE);
+    public static final QName SET_APPOINTMENT_REQUEST = QName.get("SetAppointmentRequest", NAMESPACE);
+    public static final QName CREATE_APPOINTMENT_REQUEST = QName.get("CreateAppointmentRequest", NAMESPACE);
+    public static final QName CREATE_APPOINTMENT_EXCEPTION_REQUEST = QName.get("CreateAppointmentExceptionRequest", NAMESPACE);
+    public static final QName MODIFY_APPOINTMENT_REQUEST = QName.get("ModifyAppointmentRequest", NAMESPACE);
+    public static final QName CANCEL_APPOINTMENT_REQUEST = QName.get("CancelAppointmentRequest", NAMESPACE);
+
+    public static final QName GET_TASK_SUMMARIES_REQUEST = QName.get("GetTaskSummariesRequest", NAMESPACE);
+    public static final QName GET_TASK_REQUEST = QName.get("GetTaskRequest", NAMESPACE);
+    public static final QName SET_TASK_REQUEST = QName.get("SetTaskRequest", NAMESPACE);
+    public static final QName CREATE_TASK_REQUEST = QName.get("CreateTaskRequest", NAMESPACE);
+    public static final QName CREATE_TASK_EXCEPTION_REQUEST = QName.get("CreateTaskExceptionRequest", NAMESPACE);
+    public static final QName MODIFY_TASK_REQUEST = QName.get("ModifyTaskRequest", NAMESPACE);
+    public static final QName CANCEL_TASK_REQUEST = QName.get("CancelTaskRequest", NAMESPACE);
+
+    public static final QName GET_CALITEM_SUMMARIES_REQUEST = QName.get("GetCalendarItemSummariesRequest", NAMESPACE);
+//    public static final QName GET_CALITEM_REQUEST = QName.get("GetCalendarItemRequest", NAMESPACE);
+//    public static final QName SET_CALITEM_REQUEST = QName.get("SetCalendarItemRequest", NAMESPACE);
+//    public static final QName CREATE_CALITEM_REQUEST = QName.get("CreateCalendarItemRequest", NAMESPACE);
+//    public static final QName CREATE_CALITEM_EXCEPTION_REQUEST = QName.get("CreateCalendarItemExceptionRequest", NAMESPACE);
+//    public static final QName MODIFY_CALITEM_REQUEST = QName.get("ModifyCalendarItemRequest", NAMESPACE);
+//    public static final QName CANCEL_CALITEM_REQUEST = QName.get("CancelCalendarItemRequest", NAMESPACE);
+
+    public static final QName SEND_INVITE_REPLY_REQUEST = QName.get("SendInviteReplyRequest", NAMESPACE);
     public static final QName ICAL_REPLY_REQUEST = QName.get("ICalReplyRequest", NAMESPACE);
-    public static final QName ICAL_REPLY_RESPONSE = QName.get("ICalReplyResponse", NAMESPACE);
+    public static final QName GET_FREE_BUSY_REQUEST = QName.get("GetFreeBusyRequest", NAMESPACE);
+    public static final QName GET_ICAL_REQUEST = QName.get("GetICalRequest", NAMESPACE);
+
+
     // spell checking
     public static final QName CHECK_SPELLING_REQUEST = QName.get("CheckSpellingRequest", NAMESPACE);
     public static final QName CHECK_SPELLING_RESPONSE = QName.get("CheckSpellingResponse", NAMESPACE);
@@ -337,9 +344,10 @@ public class MailService implements DocumentService {
     public static final String A_QUERY_OFFSET = "offset";
     public static final String A_QUERY_LIMIT = "limit";
     public static final String A_QUERY_MORE = "more";
-    
+
     // calendar / appointment
     public static final String E_APPOINTMENT = "appt";
+    public static final String E_TASK = "task";
     public static final String E_INVITE = "inv";
     public static final String E_INVITE_COMPONENT = "comp";
     public static final String E_INSTANCE = "inst";
@@ -391,6 +399,7 @@ public class MailService implements DocumentService {
 
     public static final String A_NEED_CALENDAR_SENTBY_FIXUP = "needCalendarSentByFixup";
     public static final String A_UID = "uid";
+    public static final String A_CAL_ID = "calItemId";
     public static final String A_DEFAULT = "default";
     public static final String A_VERB = "verb";
     public static final String A_APPT_COMPONENT_NUM = "compNum";
@@ -405,7 +414,7 @@ public class MailService implements DocumentService {
     public static final String A_APPT_TZ_OFFSET = "tzo";
     public static final String A_APPT_SUB_ID = "subId";
     public static final String A_APPT_INV_ID = "invId";
-    public static final String A_APPT_ID = "apptId";
+    public static final String A_APPT_ID_DEPRECATE_ME = "apptId";
     public static final String A_APPT_STATUS = "status";
     public static final String A_APPT_PARTSTAT = "ptst";
     public static final String A_APPT_FREEBUSY = "fb";
@@ -414,7 +423,6 @@ public class MailService implements DocumentService {
     public static final String A_APPT_ALLDAY = "allDay";
     public static final String A_APPT_LOCATION = "loc";
     public static final String A_APPT_NEEDS_REPLY = "needsReply";
-    public static final String A_APPT_TYPE = "type";
     public static final String A_APPT_SENDUPDATE = "sendUpd";
     public static final String A_APPT_SENTBY = "sentBy";
     public static final String A_APPT_DIR = "dir";
@@ -569,21 +577,38 @@ public class MailService implements DocumentService {
         // filter rules
         dispatcher.registerHandler(GET_RULES_REQUEST, new GetRules());
         dispatcher.registerHandler(SAVE_RULES_REQUEST, new SaveRules());
-        
-        // calendar 
+
+
+        // Calendar
+
         dispatcher.registerHandler(GET_APPT_SUMMARIES_REQUEST, new GetApptSummaries());
-        dispatcher.registerHandler(SEND_INVITE_REPLY_REQUEST, new SendInviteReply());
+        dispatcher.registerHandler(GET_APPOINTMENT_REQUEST, new GetAppointment());
+        dispatcher.registerHandler(SET_APPOINTMENT_REQUEST, new SetAppointment());
         dispatcher.registerHandler(CREATE_APPOINTMENT_REQUEST, new CreateAppointment());
         dispatcher.registerHandler(CREATE_APPOINTMENT_EXCEPTION_REQUEST, new CreateAppointmentException());
         dispatcher.registerHandler(MODIFY_APPOINTMENT_REQUEST, new ModifyAppointment());
         dispatcher.registerHandler(CANCEL_APPOINTMENT_REQUEST, new CancelAppointment());
-        dispatcher.registerHandler(GET_APPOINTMENT_REQUEST, new GetAppointment());
-
-        dispatcher.registerHandler(SET_APPOINTMENT_REQUEST, new SetAppointment());
         
+        dispatcher.registerHandler(GET_TASK_SUMMARIES_REQUEST, new GetTaskSummaries());
+        dispatcher.registerHandler(GET_TASK_REQUEST, new GetTask());
+        dispatcher.registerHandler(SET_TASK_REQUEST, new SetTask());
+        dispatcher.registerHandler(CREATE_TASK_REQUEST, new CreateTask());
+        dispatcher.registerHandler(CREATE_TASK_EXCEPTION_REQUEST, new CreateTaskException());
+        dispatcher.registerHandler(MODIFY_TASK_REQUEST, new ModifyTask());
+        dispatcher.registerHandler(CANCEL_TASK_REQUEST, new CancelTask());
+        
+        dispatcher.registerHandler(GET_CALITEM_SUMMARIES_REQUEST, new GetCalendarItemSummaries());
+//        dispatcher.registerHandler(GET_CALITEM_REQUEST, new GetCalendarItem());
+//        dispatcher.registerHandler(SET_CALITEM_REQUEST, new SetCalendarItem());
+//        dispatcher.registerHandler(CREATE_CALITEM_REQUEST, new CreateCalendarItem());
+//        dispatcher.registerHandler(CREATE_CALITEM_EXCEPTION_REQUEST, new CreateCalendarItemException());
+//        dispatcher.registerHandler(MODIFY_CALITEM_REQUEST, new ModifyCalendarItem());
+//        dispatcher.registerHandler(CANCEL_CALITEM_REQUEST, new CancelCalendarItem());
+        
+        dispatcher.registerHandler(SEND_INVITE_REPLY_REQUEST, new SendInviteReply());
+        dispatcher.registerHandler(ICAL_REPLY_REQUEST, new ICalReply());
         dispatcher.registerHandler(GET_FREE_BUSY_REQUEST, new GetFreeBusy());
         dispatcher.registerHandler(GET_ICAL_REQUEST, new GetICal());
-        dispatcher.registerHandler(ICAL_REPLY_REQUEST, new ICalReply());
 
         // spell check
         dispatcher.registerHandler(CHECK_SPELLING_REQUEST, new CheckSpelling());

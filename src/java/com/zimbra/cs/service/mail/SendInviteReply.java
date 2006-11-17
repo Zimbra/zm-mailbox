@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -66,8 +66,8 @@ public class SendInviteReply extends CalendarRequest {
 
     private static Log sLog = LogFactory.getLog(SendInviteReply.class);
     
-    private static final String[] TARGET_APPT_PATH = new String[] { MailService.A_ID };
-    protected String[] getProxiedIdPath(Element request)     { return TARGET_APPT_PATH; }
+    private static final String[] TARGET_PATH = new String[] { MailService.A_ID };
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
     public Element handle(Element request, Map<String, Object> context)
@@ -92,45 +92,43 @@ public class SendInviteReply extends CalendarRequest {
             sLog.info("<SendInviteReply id=" + lc.formatItemId(iid) + " verb=" + verb + " updateOrg=" + updateOrg + "> " + lc.toString());
         }
         
-        Element response = lc.createElement(MailService.SEND_INVITE_REPLY_RESPONSE);
+        Element response = getResponseElement(lc);
         
         synchronized (mbox) {
             
             Invite oldInv = null;
-            int apptId; 
+            int calItemId; 
             int inviteMsgId;
-            Appointment appt;
+            CalendarItem calItem;
             
             // the user could be accepting EITHER the original-mail-item (id="nnn") OR the
-            // appointment (id="aaaa-nnnn") --- work in both cases
+            // calendar item (id="aaaa-nnnn") --- work in both cases
             if (iid.hasSubpart()) {
-                // directly accepting the appointment
-                apptId = iid.getId();
+                // directly accepting the calendar item
+                calItemId = iid.getId();
                 inviteMsgId = iid.getSubpartId();
-                appt = mbox.getAppointmentById(octxt, apptId); 
-                if (appt == null)
-                	throw MailServiceException.NO_SUCH_APPT(iid.toString(), "Could not find appointment");
-                oldInv = appt.getInvite(inviteMsgId, compNum);
+                calItem = mbox.getCalendarItemById(octxt, calItemId); 
+                if (calItem == null)
+                	throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
+                oldInv = calItem.getInvite(inviteMsgId, compNum);
             } else {
-                // accepting the message: go find the appointment and then the invite
+                // accepting the message: go find the calendar item and then the invite
                 inviteMsgId = iid.getId();
                 Message msg = mbox.getMessageById(octxt, inviteMsgId);
-                Message.ApptInfo info = msg.getApptInfo(compNum);
+                Message.CalendarItemInfo info = msg.getCalendarItemInfo(compNum);
                 if (info == null)
-                	throw MailServiceException.NO_SUCH_APPT(iid.toString(), "Could not find appointment");
-                apptId = info.getAppointmentId();
-                appt = mbox.getAppointmentById(octxt, apptId);
-                if (appt == null)
-                	throw MailServiceException.NO_SUCH_APPT(iid.toString(), "Could not find appointment");
-                oldInv = appt.getInvite(inviteMsgId, compNum);  
+                	throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
+                calItemId = info.getCalendarItemId();
+                calItem = mbox.getCalendarItemById(octxt, calItemId);
+                if (calItem == null)
+                	throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
+                oldInv = calItem.getInvite(inviteMsgId, compNum);  
             }
             if (oldInv == null)
-            	throw MailServiceException.NO_SUCH_APPT(iid.toString(), "Could not find appointment");
+            	throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
             
-            if ((mbox.getEffectivePermissions(octxt, apptId, MailItem.TYPE_APPOINTMENT) & ACL.RIGHT_ACTION) == 0)
-            {
-                throw ServiceException.PERM_DENIED("You do not have ACTION rights for Appointment "+apptId);
-            }
+            if ((mbox.getEffectivePermissions(octxt, calItemId, MailItem.TYPE_UNKNOWN) & ACL.RIGHT_ACTION) == 0)
+                throw ServiceException.PERM_DENIED("You do not have ACTION rights for CalendarItem "+calItemId);
             
             
             // see if there is a specific Exception being referenced by this reply...
@@ -180,11 +178,11 @@ public class SendInviteReply extends CalendarRequest {
                 } else {
                     // build a default "Accepted" response
                     csd.mMm = CalendarMailSender.createDefaultReply(
-                            acct, authAcct, onBehalfOf, appt, oldInv, null, replySubject,
+                            acct, authAcct, onBehalfOf, calItem, oldInv, null, replySubject,
                             verb, null, iCal);
                 }
 
-                sendCalendarMessage(lc, appt.getFolderId(), acct, mbox, csd, response, false);
+                sendCalendarMessage(lc, calItem.getFolderId(), acct, mbox, csd, response, false);
             }
 
             RecurId recurId = null;
@@ -207,7 +205,7 @@ public class SendInviteReply extends CalendarRequest {
                 }
             }
             
-            mbox.modifyPartStat(octxt, apptId, recurId, cnStr, addressStr, null, role, verb.getXmlPartStat(), Boolean.FALSE, seqNo, dtStamp);
+            mbox.modifyPartStat(octxt, calItemId, recurId, cnStr, addressStr, null, role, verb.getXmlPartStat(), Boolean.FALSE, seqNo, dtStamp);
             
             // move the invite to the Trash if the user wants it
             if (acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true)) {

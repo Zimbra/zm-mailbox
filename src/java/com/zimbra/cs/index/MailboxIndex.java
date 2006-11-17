@@ -1184,6 +1184,7 @@ public final class MailboxIndex
     public static final String SEARCH_FOR_MESSAGES = "message";
     public static final String SEARCH_FOR_CONTACTS = "contact";
     public static final String SEARCH_FOR_APPOINTMENTS = "appointment";
+    public static final String SEARCH_FOR_TASKS = "task";
     public static final String SEARCH_FOR_NOTES = "note";
     public static final String SEARCH_FOR_WIKI = "wiki";
 
@@ -1247,6 +1248,8 @@ public final class MailboxIndex
                 types[i] = MailItem.TYPE_CONTACT;
             } else if (SEARCH_FOR_APPOINTMENTS.equals(strs[i])) {
                 types[i] = MailItem.TYPE_APPOINTMENT;
+            } else if (SEARCH_FOR_TASKS.equals(strs[i])) {
+                types[i] = MailItem.TYPE_TASK;
             } else if (SEARCH_FOR_NOTES.equals(strs[i])) {
                 types[i] = MailItem.TYPE_NOTE;
             } else if (SEARCH_FOR_WIKI.equals(strs[i])) {
@@ -2006,6 +2009,7 @@ public final class MailboxIndex
         }
         switch (itemType) {
             case MailItem.TYPE_APPOINTMENT:
+            case MailItem.TYPE_TASK:
                 break;
             case MailItem.TYPE_DOCUMENT:
             case MailItem.TYPE_WIKI:

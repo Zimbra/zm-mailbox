@@ -52,8 +52,9 @@ import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.service.DavServlet;
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
@@ -116,28 +117,28 @@ public class CalendarCollection extends Collection {
 		return true;
 	}
 
-	private static TimeRange sAllAppts;
+	private static TimeRange sAllCalItems;
 	
 	static {
-		sAllAppts = new TimeRange(null);
+		sAllCalItems = new TimeRange(null);
 	}
 	
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		try {
-			java.util.Collection<Appointment> appts = get(ctxt, sAllAppts);
+			java.util.Collection<CalendarItem> calItems = get(ctxt, sAllCalItems);
 			ArrayList<DavResource> children = new ArrayList<DavResource>();
-			for (Appointment appt : appts)
-				children.add(new CalendarObject(appt));
+			for (CalendarItem calItem : calItems)
+				children.add(new CalendarObject(calItem));
 			return children;
 		} catch (ServiceException se) {
-			ZimbraLog.dav.error("can't get appointments", se);
+			ZimbraLog.dav.error("can't get calendar items", se);
 		}
 		return Collections.emptyList();
 	}
 	
-	public java.util.Collection<Appointment> get(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
+	public java.util.Collection<CalendarItem> get(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
 		Mailbox mbox = getMailbox();
-		return mbox.getAppointmentsForRange(ctxt.getOperationContext(), range.getStart(), range.getEnd(), mId, null);
+		return mbox.getCalendarItemsForRange(ctxt.getOperationContext(), range.getStart(), range.getEnd(), mId, null);
 	}
 	
 	private String findSummary(ZVCalendar cal) {
@@ -154,7 +155,7 @@ public class CalendarCollection extends Collection {
 	private String findEventUid(List<Invite> invites) throws DavException {
 		String uid = null;
 		for (Invite i : invites)
-			if (i.getCompType().equals(IcalXmlStrMap.COMPTYPE_EVENT)) {
+            if (i.getItemType() == MailItem.TYPE_APPOINTMENT) {
 				if (uid != null)
 					throw new DavException("too many events", HttpServletResponse.SC_BAD_REQUEST, null);
 				uid = i.getUid();
@@ -208,7 +209,7 @@ public class CalendarCollection extends Collection {
 			String uid = findEventUid(invites);
 			if (!uid.equals(name)) {
 				// because we are keying off the URI, we don't have
-				// much choice except to use the UID of VEVENT for Appt URI.
+				// much choice except to use the UID of VEVENT for calendar item URI.
 				// Evolution doesn't use UID as the URI, so we'll force it
 				// by issuing redirect to the URI we want it to be at.
 				StringBuilder url = new StringBuilder();
@@ -220,15 +221,15 @@ public class CalendarCollection extends Collection {
 				throw new DavException("wrong url", HttpServletResponse.SC_MOVED_PERMANENTLY, null);
 			}
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			Appointment appt = mbox.getAppointmentByUid(ctxt.getOperationContext(), name);
-			if (appt == null && isUpdate)
+			CalendarItem calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), name);
+			if (calItem == null && isUpdate)
 				throw new DavException("event not found", HttpServletResponse.SC_NOT_FOUND, null);
 			
-			if (!beLessRestrictive && appt != null && !isUpdate)
+			if (!beLessRestrictive && calItem != null && !isUpdate)
 				throw new DavException("event already exists", HttpServletResponse.SC_CONFLICT, null);
 			
 			if (isUpdate) {
-				CalendarObject calObj = new CalendarObject(appt);
+				CalendarObject calObj = new CalendarObject(calItem);
 				ResourceProperty etagProp = calObj.getProperty(DavElements.P_GETETAG);
 				if (!etagProp.getStringValue().equals(etag))
 					throw new DavException("event not found", HttpServletResponse.SC_BAD_REQUEST, null);
@@ -238,8 +239,8 @@ public class CalendarCollection extends Collection {
 	                i.setUid(LdapUtil.generateUUID());
 				mbox.addInvite(ctxt.getOperationContext(), i, mId, false, null);
 			}
-			appt = mbox.getAppointmentByUid(ctxt.getOperationContext(), uid);
-			return new CalendarObject(appt);
+			calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), uid);
+			return new CalendarObject(calItem);
 		} catch (ServiceException e) {
 			throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		}

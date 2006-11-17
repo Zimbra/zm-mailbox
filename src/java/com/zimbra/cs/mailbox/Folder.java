@@ -996,10 +996,10 @@ public class Folder extends MailItem {
             case Mailbox.ID_FOLDER_SENT:
             case Mailbox.ID_FOLDER_DRAFTS:    view = MailItem.TYPE_MESSAGE;      break;
             case Mailbox.ID_FOLDER_CALENDAR:  view = MailItem.TYPE_APPOINTMENT;  break;
+            case Mailbox.ID_FOLDER_TASKS:     view = MailItem.TYPE_TASK;         break;
             case Mailbox.ID_FOLDER_AUTO_CONTACTS:
             case Mailbox.ID_FOLDER_CONTACTS:  view = MailItem.TYPE_CONTACT;      break;
-            case Mailbox.ID_FOLDER_IM_LOGS:    view = MailItem.TYPE_MESSAGE;      break;
-            
+            case Mailbox.ID_FOLDER_IM_LOGS:   view = MailItem.TYPE_MESSAGE;      break;
         }
         mDefaultView = (byte) meta.getLong(Metadata.FN_VIEW, view);
         mAttributes  = (byte) meta.getLong(Metadata.FN_ATTRS, 0);

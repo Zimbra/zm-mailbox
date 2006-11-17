@@ -47,7 +47,9 @@ public class MailServiceException extends ServiceException {
 	public static final String NO_SUCH_CONTACT = "mail.NO_SUCH_CONTACT";
 	public static final String NO_SUCH_FOLDER  = "mail.NO_SUCH_FOLDER";
 	public static final String NO_SUCH_NOTE    = "mail.NO_SUCH_NOTE";
+    public static final String NO_SUCH_CALITEM = "mail.NO_SUCH_CALITEM";
 	public static final String NO_SUCH_APPT    = "mail.NO_SUCH_APPT";
+    public static final String NO_SUCH_TASK    = "mail.NO_SUCH_TASK";
 	public static final String NO_SUCH_DOC     = "mail.NO_SUCH_DOC";
     public static final String NO_SUCH_TAG     = "mail.NO_SUCH_TAG";
     public static final String NO_SUCH_UPLOAD  = "mail.NO_SUCH_UPLOAD";
@@ -171,6 +173,18 @@ public class MailServiceException extends ServiceException {
         return new NoSuchItemException("no such note: " + id, NO_SUCH_NOTE, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
+    public static MailServiceException NO_SUCH_CALITEM(int id) {
+        return new NoSuchItemException("no such appointment or task: " + id, NO_SUCH_CALITEM, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
+    }
+
+    public static MailServiceException NO_SUCH_CALITEM(String uid) {
+        return new NoSuchItemException("no such appointment or task: " + uid, NO_SUCH_CALITEM, SENDERS_FAULT, new Argument(UID, uid, Argument.Type.STR));
+    }
+
+    public static MailServiceException NO_SUCH_CALITEM(String uid, String msg) {
+        return new MailServiceException("no such appointment or task: "+uid+" "+msg, NO_SUCH_CALITEM, SENDERS_FAULT, new Argument(UID, uid, Argument.Type.STR));
+    }
+    
     public static MailServiceException NO_SUCH_APPT(int id) {
         return new NoSuchItemException("no such appointment: " + id, NO_SUCH_APPT, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
@@ -181,6 +195,18 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException NO_SUCH_APPT(String uid, String msg) {
         return new MailServiceException("no such appointment: "+uid+" "+msg, NO_SUCH_APPT, SENDERS_FAULT, new Argument(UID, uid, Argument.Type.STR));
+    }
+    
+    public static MailServiceException NO_SUCH_TASK(int id) {
+        return new NoSuchItemException("no such task: " + id, NO_SUCH_TASK, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
+    }
+
+    public static MailServiceException NO_SUCH_TASK(String uid) {
+        return new NoSuchItemException("no such task: " + uid, NO_SUCH_TASK, SENDERS_FAULT, new Argument(UID, uid, Argument.Type.STR));
+    }
+
+    public static MailServiceException NO_SUCH_TASK(String uid, String msg) {
+        return new MailServiceException("no such task: "+uid+" "+msg, NO_SUCH_TASK, SENDERS_FAULT, new Argument(UID, uid, Argument.Type.STR));
     }
     
     public static MailServiceException NO_SUCH_DOC(int id) {

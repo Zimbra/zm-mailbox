@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
+import org.dom4j.QName;
+
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -53,6 +55,14 @@ import com.zimbra.common.util.ZimbraLog;
  * @author schemers
  */
 public abstract class DocumentHandler {
+
+    private QName mResponseQName;
+
+    void setResponseQName(QName response) { mResponseQName = response; }
+
+    protected Element getResponseElement(ZimbraSoapContext zc) {
+        return zc.createElement(mResponseQName);
+    }
 
     public static String LOCAL_HOST, LOCAL_HOST_ID;
         static {

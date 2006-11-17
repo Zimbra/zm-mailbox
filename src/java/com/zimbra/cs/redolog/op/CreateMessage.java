@@ -56,7 +56,7 @@ import com.zimbra.cs.util.JMSession;
  * @author jhahm
  */
 public class CreateMessage extends RedoableOp
-implements CreateAppointmentPlayer,CreateAppointmentRecorder {
+implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
 
     private static final long RECEIVED_DATE_UNSET = -1;
 
@@ -76,8 +76,8 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
     private int mConvFirstMsgId;    // first message of conversation, if creating new conversation
 	private int mFlags;				// flags applied to the new message
 	private String mTags;			// tags applied to the new message
-    private int mAppointmentId;     // new appointment created if this is meeting invite message
-    private String mAppointmentPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
+    private int mCalendarItemId;    // new calendar item created if this is meeting or task invite message
+    private String mCalendarItemPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private boolean mNoICal;        // true if we should NOT process the iCalendar part
 
     private byte mMsgBodyType;
@@ -198,24 +198,24 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
         mConvFirstMsgId = convFirstMsgId;
     }
 
-    public void setAppointmentAttrs(int appointmentId,
-									int folderId,
-									short volumeId) {
-		mAppointmentId = appointmentId;
+    public void setCalendarItemAttrs(int calItemId,
+                                     int folderId,
+                                     short volumeId) {
+		mCalendarItemId = calItemId;
 		mFolderId = folderId;
 		mVolumeId = volumeId;
 	}
 
-    public int getAppointmentId() {
-    	return mAppointmentId;
+    public int getCalendarItemId() {
+    	return mCalendarItemId;
     }
 
-    public String getAppointmentPartStat() {
-        return mAppointmentPartStat;
+    public String getCalendarItemPartStat() {
+        return mCalendarItemPartStat;
     }
 
-    public void setAppointmentPartStat(String partStat) {
-        mAppointmentPartStat = partStat;
+    public void setCalendarItemPartStat(String partStat) {
+        mCalendarItemPartStat = partStat;
     }
 
     public int getFolderId() {
@@ -269,9 +269,9 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
         sb.append(", folder=").append(mFolderId);
         sb.append(", conv=").append(mConvId);
         sb.append(", convFirstMsgId=").append(mConvFirstMsgId);
-        if (mAppointmentId != UNKNOWN_ID)
-            sb.append(", apptId=").append(mAppointmentId);
-        sb.append(", apptPartStat=").append(mAppointmentPartStat);
+        if (mCalendarItemId != UNKNOWN_ID)
+            sb.append(", calItemId=").append(mCalendarItemId);
+        sb.append(", calItemPartStat=").append(mCalendarItemPartStat);
         sb.append(", noICal=").append(mNoICal);
         sb.append(", flags=").append(mFlags).append(", tags=\"").append(mTags).append("\"");
         sb.append(", bodyType=").append(mMsgBodyType);
@@ -312,9 +312,9 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
 		out.writeInt(mConvId);
         if (getVersion().atLeast(1, 5))
             out.writeInt(mConvFirstMsgId);
-        out.writeInt(mAppointmentId);
+        out.writeInt(mCalendarItemId);
         if (getVersion().atLeast(1, 1))
-            out.writeUTF(mAppointmentPartStat);
+            out.writeUTF(mCalendarItemPartStat);
         out.writeInt(mFlags);
         out.writeBoolean(mNoICal);
 		out.writeUTF(mTags);
@@ -349,9 +349,9 @@ implements CreateAppointmentPlayer,CreateAppointmentRecorder {
 		mConvId = in.readInt();
         if (getVersion().atLeast(1, 5))
             mConvFirstMsgId = in.readInt();
-        mAppointmentId = in.readInt();
+        mCalendarItemId = in.readInt();
         if (getVersion().atLeast(1, 1))
-            mAppointmentPartStat = in.readUTF();
+            mCalendarItemPartStat = in.readUTF();
 		mFlags = in.readInt();
         mNoICal = in.readBoolean();
 		mTags = in.readUTF();

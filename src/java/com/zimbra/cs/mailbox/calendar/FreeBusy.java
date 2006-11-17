@@ -34,12 +34,13 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Appointment.Instance;
+import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.service.*;
 
 /**
@@ -404,11 +405,16 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
                 exFolders[i++] = f.getId();
         }
         
-        Collection<Appointment> appts = mbox.getAppointmentsForRange(null, start, end, Mailbox.ID_AUTO_INCREMENT, exFolders);
+        Collection<CalendarItem> appts = mbox.getCalendarItemsForRange(null, start, end, Mailbox.ID_AUTO_INCREMENT, exFolders);
 
         IntervalList intervals = new IntervalList(start, end);
 
-        for (Appointment cur : appts) {
+        for (Iterator<CalendarItem> iter = appts.iterator(); iter.hasNext(); ) {
+            CalendarItem calItem = iter.next();
+            if (!(calItem instanceof Appointment))
+                continue;
+
+            Appointment cur = (Appointment) calItem;
             if (cur.getId() == exApptId)
                 continue;
 
@@ -429,7 +435,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
                 assert(inst.getStart() < end && inst.getEnd() > start);
                 InviteInfo invId = inst.getInviteInfo();
                 try {
-                    Appointment appt = inst.getAppointment();
+                    Appointment appt = (Appointment) inst.getCalendarItem();
                     Invite inv = appt.getInvite(invId);
                     if (!inv.isTransparent()) {
                         String freeBusy = appt.getEffectiveFreeBusyActual(inv, inst);

@@ -73,31 +73,31 @@ public class Message extends MailItem {
         }
     }
 
-    public static class ApptInfo {
-        private int mAppointmentId;
+    public static class CalendarItemInfo {
+        private int mCalendarItemId;
         private int mComponentNo;
 
-        public ApptInfo(int apptId, int componentNo) {
-            mAppointmentId = apptId;
+        public CalendarItemInfo(int calItemId, int componentNo) {
+            mCalendarItemId = calItemId;
             mComponentNo = componentNo;
         }
-        public int getAppointmentId()  { return mAppointmentId; }
+        public int getCalendarItemId()  { return mCalendarItemId; }
         public int getComponentNo()    { return mComponentNo; }
 
-        private static final String FN_APPTID = "a";
+        private static final String FN_CALITEMID = "a";
         private static final String FN_COMPNO = "c";
 
         Metadata encodeMetadata() {
             Metadata md = new Metadata();
-            md.put(FN_APPTID, mAppointmentId);
+            md.put(FN_CALITEMID, mCalendarItemId);
             md.put(FN_COMPNO, mComponentNo);
             return md; 
         }
 
-        static ApptInfo decodeMetadata(Metadata md) throws ServiceException {
-            int apptId = (int) md.getLong(FN_APPTID);
+        static CalendarItemInfo decodeMetadata(Metadata md) throws ServiceException {
+            int calItemId = (int) md.getLong(FN_CALITEMID);
             int componentNo = (int) md.getLong(FN_COMPNO);
-            return new ApptInfo(apptId, componentNo);
+            return new CalendarItemInfo(calItemId, componentNo);
         }
     }
 
@@ -110,7 +110,7 @@ public class Message extends MailItem {
     private String mRawSubject;
 
     private DraftInfo mDraftInfo;
-    private ArrayList<ApptInfo> mApptInfos;
+    private ArrayList<CalendarItemInfo> mCalendarItemInfos;
 
 
     /**
@@ -212,17 +212,17 @@ public class Message extends MailItem {
 
     /** Returns whether the Message has a vCal attachment. */
     public boolean isInvite() {
-        return mApptInfos != null;
+        return mCalendarItemInfos != null;
     }
 
-    public Iterator<ApptInfo> getApptInfoIterator() {
-        return mApptInfos.iterator();
+    public Iterator<CalendarItemInfo> getCalendarItemInfoIterator() {
+        return mCalendarItemInfos.iterator();
     }
 
-    public ApptInfo getApptInfo(int componentId) {
-        if (mApptInfos != null &&
-            (componentId < 0 || componentId < mApptInfos.size()))
-            return mApptInfos.get(componentId);
+    public CalendarItemInfo getCalendarItemInfo(int componentId) {
+        if (mCalendarItemInfos != null &&
+            (componentId < 0 || componentId < mCalendarItemInfos.size()))
+            return mCalendarItemInfos.get(componentId);
         else
             return null;
     }
@@ -353,39 +353,39 @@ public class Message extends MailItem {
     }
 
     /** This has to be done as a separate step, after the MailItem has been
-     *  added, because of foreign key constraints on the Appointments table
+     *  added, because of foreign key constraints on the CalendarItems table
      * @param invites */
-    private void processInvitesAfterCreate(String method, int folderId, short volumeId, boolean createAppt, ParsedMessage pm, List<Invite> invites) 
+    private void processInvitesAfterCreate(String method, int folderId, short volumeId, boolean createCalItem, ParsedMessage pm, List<Invite> invites) 
     throws ServiceException {
         // since this is the first time we've seen this Invite Message, we need to process it
-        // and see if it updates an existing Appointment in the Appointments table, or whatever...
+        // and see if it updates an existing CalendarItem in the database table, or whatever...
         boolean updatedMetadata = false;
 
         for (Invite cur : invites) {
-            Appointment appt = mMailbox.getAppointmentByUid(cur.getUid());
-            if (createAppt) {
-                if (appt == null) { 
-                    // ONLY create an appointment if this is a REQUEST method...otherwise don't.
+            CalendarItem calItem = mMailbox.getCalendarItemByUid(cur.getUid());
+            if (createCalItem) {
+                if (calItem == null) { 
+                    // ONLY create a calendar item if this is a REQUEST method...otherwise don't.
                     if (method.equals(ICalTok.REQUEST.toString())) {
-                        appt = mMailbox.createAppointment(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur);
+                        calItem = mMailbox.createCalendarItem(Mailbox.ID_FOLDER_CALENDAR, volumeId, "", cur.getUid(), pm, cur);
                     } else {
-                        sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no Appointment could be found");
+                        sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no CalendarItem could be found");
                         return; // for now, just ignore this Invitation
                     }
                 } else {
-                    // When updating an existing appointment, ignore the
+                    // When updating an existing calendar item, ignore the
                     // passed-in folderId which will usually be Inbox.  Leave
-                    // the appointment in the folder it's currently in.
-                    appt.processNewInvite(pm, cur, false, appt.getFolderId(), volumeId);
+                    // the calendar item in the folder it's currently in.
+                    calItem.processNewInvite(pm, cur, false, calItem.getFolderId(), volumeId);
                 }
             }
 
-            if (appt != null) {
-                ApptInfo info = new ApptInfo(appt.getId(), cur.getComponentNum());
-                if (mApptInfos == null) {
-                    mApptInfos = new ArrayList<ApptInfo>();
+            if (calItem != null) {
+                CalendarItemInfo info = new CalendarItemInfo(calItem.getId(), cur.getComponentNum());
+                if (mCalendarItemInfos == null) {
+                    mCalendarItemInfos = new ArrayList<CalendarItemInfo>();
                 }
-                mApptInfos.add(info);
+                mCalendarItemInfos.add(info);
                 updatedMetadata = true;
             }
         }
@@ -488,7 +488,7 @@ public class Message extends MailItem {
             mMailbox.updateSize(size - mData.size, false);
             mData.size = size;
         }
-        String metadata = encodeMetadata(mColor, pm, mData.flags, mDraftInfo, mApptInfos);
+        String metadata = encodeMetadata(mColor, pm, mData.flags, mDraftInfo, mCalendarItemInfos);
 
         // rewrite the DB row to reflect our new view
         saveData(pm.getParsedSender().getSortString(), metadata);
@@ -539,12 +539,12 @@ public class Message extends MailItem {
         mRecipients = meta.get(Metadata.FN_RECIPIENTS, null);
         mFragment = meta.get(Metadata.FN_FRAGMENT, null);
 
-        if (meta.containsKey(Metadata.FN_APPT_IDS)) {
-            mApptInfos = new ArrayList<ApptInfo>();
-            MetadataList mdList = meta.getList(Metadata.FN_APPT_IDS);
+        if (meta.containsKey(Metadata.FN_CALITEM_IDS)) {
+            mCalendarItemInfos = new ArrayList<CalendarItemInfo>();
+            MetadataList mdList = meta.getList(Metadata.FN_CALITEM_IDS);
             for (int i = 0; i < mdList.size(); i++) {
                 Metadata md = mdList.getMap(i);
-                mApptInfos.add(ApptInfo.decodeMetadata(md));
+                mCalendarItemInfos.add(CalendarItemInfo.decodeMetadata(md));
             }
         }
 
@@ -562,14 +562,14 @@ public class Message extends MailItem {
     }
 
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mSender, mRecipients, mFragment, mData.subject, mRawSubject, mDraftInfo, mApptInfos);
+        return encodeMetadata(meta, mColor, mSender, mRecipients, mFragment, mData.subject, mRawSubject, mDraftInfo, mCalendarItemInfos);
     }
-    private static String encodeMetadata(byte color, ParsedMessage pm, int flags, DraftInfo dinfo, List<ApptInfo> apptInfos) {
+    private static String encodeMetadata(byte color, ParsedMessage pm, int flags, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
         // cache the "To" header only for messages sent by the user
         String recipients = ((flags & Flag.BITMASK_FROM_ME) == 0 ? null : pm.getRecipients());
-        return encodeMetadata(new Metadata(), color, pm.getSender(), recipients, pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), dinfo, apptInfos).toString();
+        return encodeMetadata(new Metadata(), color, pm.getSender(), recipients, pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), dinfo, calItemInfos).toString();
     }
-    static Metadata encodeMetadata(Metadata meta, byte color, String sender, String recipients, String fragment, String subject, String rawSubject, DraftInfo dinfo, List<ApptInfo> apptInfos) {
+    static Metadata encodeMetadata(Metadata meta, byte color, String sender, String recipients, String fragment, String subject, String rawSubject, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
         // try to figure out a simple way to make the raw subject from the normalized one
         String prefix = null;
         if (rawSubject == null || rawSubject.equals(subject))
@@ -585,11 +585,11 @@ public class Message extends MailItem {
         meta.put(Metadata.FN_PREFIX,     prefix);
         meta.put(Metadata.FN_RAW_SUBJ,   rawSubject);
         
-        if (apptInfos != null) {
+        if (calItemInfos != null) {
             MetadataList mdList = new MetadataList();
-            for (ApptInfo info : apptInfos)
+            for (CalendarItemInfo info : calItemInfos)
                 mdList.add(info.encodeMetadata());
-            meta.put(Metadata.FN_APPT_IDS, mdList); 
+            meta.put(Metadata.FN_CALITEM_IDS, mdList); 
         }
 
         if (dinfo != null) {

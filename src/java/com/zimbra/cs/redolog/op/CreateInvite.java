@@ -40,10 +40,10 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.Volume;
 
-public class CreateInvite extends RedoableOp implements CreateAppointmentRecorder, CreateAppointmentPlayer 
+public class CreateInvite extends RedoableOp implements CreateCalendarItemRecorder, CreateCalendarItemPlayer 
 {
-    private int mAppointmentId;
-    private String mAppointmentPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
+    private int mCalendarItemId;
+    private String mCalendarItemPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private Invite mInvite;
     private int mFolderId;
     private boolean mForce;
@@ -66,8 +66,8 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
     }
 
     protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("apptId=").append(mAppointmentId);
-        sb.append(", apptPartStat=").append(mAppointmentPartStat);
+        StringBuffer sb = new StringBuffer("calItemId=").append(mCalendarItemId);
+        sb.append(", calItemPartStat=").append(mCalendarItemPartStat);
         sb.append(", folder=").append(mFolderId);
     	if (getVersion().atLeast(1, 0))
 	        sb.append(", vol=").append(mVolumeId);
@@ -80,9 +80,9 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
     }
 
     protected void serializeData(RedoLogOutput out) throws IOException {
-        out.writeInt(mAppointmentId);
+        out.writeInt(mCalendarItemId);
         if (getVersion().atLeast(1, 1))
-            out.writeUTF(mAppointmentPartStat);
+            out.writeUTF(mCalendarItemPartStat);
         out.writeInt(mFolderId);
         if (getVersion().atLeast(1, 0))
             out.writeShort(mVolumeId);
@@ -100,9 +100,9 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
     }
 
     protected void deserializeData(RedoLogInput in) throws IOException {
-        mAppointmentId = in.readInt();
+        mCalendarItemId = in.readInt();
         if (getVersion().atLeast(1, 1))
-            mAppointmentPartStat = in.readUTF();
+            mCalendarItemPartStat = in.readUTF();
         mFolderId = in.readInt();
         if (getVersion().atLeast(1, 0))
             mVolumeId = in.readShort();
@@ -125,24 +125,24 @@ public class CreateInvite extends RedoableOp implements CreateAppointmentRecorde
         }
     }
     
-    public void setAppointmentAttrs(int appointmentId,
-								    int folderId,
-								    short volumeId) {
-		mAppointmentId = appointmentId;
+    public void setCalendarItemAttrs(int appointmentId,
+								     int folderId,
+								     short volumeId) {
+		mCalendarItemId = appointmentId;
 		mFolderId = folderId;
 		mVolumeId = volumeId;
 	}
 
-    public int getAppointmentId() {
-        return mAppointmentId;
+    public int getCalendarItemId() {
+        return mCalendarItemId;
     }
 
-    public String getAppointmentPartStat() {
-        return mAppointmentPartStat;
+    public String getCalendarItemPartStat() {
+        return mCalendarItemPartStat;
     }
 
-    public void setAppointmentPartStat(String partStat) {
-        mAppointmentPartStat = partStat;
+    public void setCalendarItemPartStat(String partStat) {
+        mCalendarItemPartStat = partStat;
     }
 
     public int getFolderId() {

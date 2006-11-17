@@ -145,7 +145,8 @@ public class ZFolder implements ZItem, Comparable {
         contact,
         conversation,
         message,
-        wiki;
+        wiki,
+        task;
 
         public static View fromString(String s) throws ServiceException {
             try {

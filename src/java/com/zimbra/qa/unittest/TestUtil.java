@@ -36,6 +36,8 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.client.LmcSession;
+import com.zimbra.cs.client.soap.LmcAdminAuthRequest;
+import com.zimbra.cs.client.soap.LmcAdminAuthResponse;
 import com.zimbra.cs.client.soap.LmcAuthRequest;
 import com.zimbra.cs.client.soap.LmcAuthResponse;
 import com.zimbra.cs.client.soap.LmcSoapClientException;
@@ -141,10 +143,10 @@ public class TestUtil {
     throws Exception
     {
         // Authenticate
-        LmcAuthRequest auth = new LmcAuthRequest();
+        LmcAdminAuthRequest auth = new LmcAdminAuthRequest();
         auth.setUsername(getAddress("admin"));
         auth.setPassword("test123");
-        LmcAuthResponse authResp = (LmcAuthResponse) auth.invoke(getAdminSoapUrl());
+        LmcAdminAuthResponse authResp = (LmcAdminAuthResponse) auth.invoke(getAdminSoapUrl());
         return authResp.getSession();
     }
     

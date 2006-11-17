@@ -23,9 +23,9 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.redolog.op;
 
-public class CreateAppointmentException
-extends CreateCalendarItemException
-implements AppointmentRequest {
+public interface CreateCalendarItemRecorder {
+    public void setCalendarItemAttrs(int id, int folderId, short volumeId);
+    public void setCalendarItemPartStat(String partStat);
 }

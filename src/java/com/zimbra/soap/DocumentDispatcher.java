@@ -40,14 +40,33 @@ import com.zimbra.cs.service.ServiceException;
  */
 public class DocumentDispatcher {
 
+    private static final String REQUEST_SUFFIX = "Request";
+    private static final String RESPONSE_SUFFIX = "Response";
+
 	Map<QName, DocumentHandler> mHandlers;
+    Map<QName, QName> mResponses;
 	
 	public DocumentDispatcher() {
 		mHandlers = new HashMap<QName, DocumentHandler>();
+        mResponses = new HashMap<QName, QName>();
 	}
 	
 	public void registerHandler(QName qname, DocumentHandler handler) {
 		mHandlers.put(qname, handler);
+        QName respQName = mResponses.get(qname);
+        if (respQName == null) {
+            String reqName = qname.getName();
+            String respName;
+            if (reqName.endsWith(REQUEST_SUFFIX))
+                respName =
+                    reqName.substring(0, reqName.length() - REQUEST_SUFFIX.length())
+                    + RESPONSE_SUFFIX;
+            else
+                respName = reqName + RESPONSE_SUFFIX;
+            respQName = new QName(respName, qname.getNamespace());
+            mResponses.put(qname, respQName);
+        }
+        handler.setResponseQName(respQName);
 	}
 	
 	public DocumentHandler getHandler(Element doc) {

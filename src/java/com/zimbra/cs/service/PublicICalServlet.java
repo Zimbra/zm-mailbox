@@ -221,26 +221,26 @@ public class PublicICalServlet extends ZimbraServlet
 //                return;             
 //            }
 //            
-//            int apptId;
+//            int calItemId;
 //            int inviteMsgId;
-//            Appointment appt;
+//            CalendarItem calItem;
 //            Invite oldInv;
 //            
 //            ItemId iid = new ItemId(oldInvId, null);
 //            // the user could be accepting EITHER the original-mail-item (id="nnn") OR the
-//            // appointment (id="aaaa-nnnn") --- work in both cases
+//            // calendar item (id="aaaa-nnnn") --- work in both cases
 //            if (iid.hasSubpart()) {
-//                // directly accepting the appointment
-//                apptId = iid.getId();
+//                // directly accepting the calendar item
+//                calItemId = iid.getId();
 //                inviteMsgId = iid.getSubpartId();
-//                appt = mbox.getAppointmentById(null, apptId); 
-//                oldInv = appt.getInvite(inviteMsgId, 0);
+//                calItem = mbox.getCalendarItemById(null, calItemId);
+//                oldInv = calItem.getInvite(inviteMsgId, 0);
 //            } else {
 //                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid invId: "+oldInvId);
 //                return;             
 //            }
 //            
-//            if (!appt.getUid().equals(uid)) {
+//            if (!calItem.getUid().equals(uid)) {
 //                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Wrong UID");
 //                return;             
 //            }

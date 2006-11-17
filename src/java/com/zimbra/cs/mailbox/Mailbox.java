@@ -126,8 +126,9 @@ public class Mailbox {
     public static final int ID_FOLDER_NOTEBOOK  = 12;
     public static final int ID_FOLDER_AUTO_CONTACTS = 13;
     public static final int ID_FOLDER_IM_LOGS = 14;
+    public static final int ID_FOLDER_TASKS      = 15;
 
-    public static final int HIGHEST_SYSTEM_ID = 14;
+    public static final int HIGHEST_SYSTEM_ID = 15;
     public static final int FIRST_USER_ID     = 256;
 
     static final int  ONE_MONTH_SECS   = 60 * 60 * 24 * 31;
@@ -1058,6 +1059,7 @@ public class Mailbox {
         Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR, null);
         Folder.create(ID_FOLDER_NOTEBOOK, this, userRoot, "Notebook", system, MailItem.TYPE_WIKI,    0, MailItem.DEFAULT_COLOR, null);
         Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_TASKS,    this, userRoot, "Tasks",    system, MailItem.TYPE_TASK, Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR, null);
         Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR, null);
         Folder.create(ID_FOLDER_IM_LOGS,   this, userRoot, "Chats",   system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null);
         
@@ -2332,6 +2334,19 @@ public class Mailbox {
     }
 
 
+    public synchronized CalendarItem getCalendarItemById(OperationContext octxt, int id) throws ServiceException {
+        return (CalendarItem) getItemById(octxt, id, MailItem.TYPE_UNKNOWN);
+    }
+    CalendarItem getCalendarItemById(int id) throws ServiceException {
+        return (CalendarItem) getItemById(id, MailItem.TYPE_UNKNOWN);
+    }
+    CalendarItem getCalendarItem(MailItem.UnderlyingData data) throws ServiceException {
+        return (CalendarItem) getItem(data);
+    }
+    public synchronized List getCalendarItemList(OperationContext octxt, int folderId) throws ServiceException {
+        return getItemList(octxt, MailItem.TYPE_UNKNOWN, folderId);
+    }
+
     public synchronized Appointment getAppointmentById(OperationContext octxt, int id) throws ServiceException {
         return (Appointment) getItemById(octxt, id, MailItem.TYPE_APPOINTMENT);
     }
@@ -2345,8 +2360,21 @@ public class Mailbox {
         return getItemList(octxt, MailItem.TYPE_APPOINTMENT, folderId);
     }
 
-    public synchronized ZVCalendar getZCalendarForAppointments(
-            Collection<Appointment> appts,
+    public synchronized Task getTaskById(OperationContext octxt, int id) throws ServiceException {
+        return (Task) getItemById(octxt, id, MailItem.TYPE_TASK);
+    }
+    Task getTaskById(int id) throws ServiceException {
+        return (Task) getItemById(id, MailItem.TYPE_TASK);
+    }
+    Task getTask(MailItem.UnderlyingData data) throws ServiceException { 
+        return (Task) getItem(data);
+    }
+    public synchronized List getTaskList(OperationContext octxt, int folderId) throws ServiceException {
+        return getItemList(octxt, MailItem.TYPE_TASK, folderId);
+    }
+
+    public synchronized ZVCalendar getZCalendarForCalendarItems(
+            Collection<CalendarItem> calItems,
             boolean useOutlookCompatMode)
     throws ServiceException {
         ZVCalendar cal = new ZVCalendar();
@@ -2359,8 +2387,8 @@ public class Mailbox {
             ICalTimeZone localTz = Provisioning.getInstance().getTimeZone(getAccount()); 
             TimeZoneMap tzmap = new TimeZoneMap(localTz);
 
-            for (Appointment appt : appts)
-                tzmap.add(appt.getTimeZoneMap());
+            for (CalendarItem calItem : calItems)
+                tzmap.add(calItem.getTimeZoneMap());
 
             // iterate the tzmap and add all the VTimeZone's 
             // (TODO: should this code live in TimeZoneMap???) 
@@ -2371,8 +2399,8 @@ public class Mailbox {
         }
 
         // build all the event components and add them to the Calendar
-        for (Appointment appt : appts)
-            appt.appendRawCalendarData(cal, useOutlookCompatMode);
+        for (CalendarItem calItem : calItems)
+            calItem.appendRawCalendarData(cal, useOutlookCompatMode);
         return cal;
     }
 
@@ -2384,62 +2412,76 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("getCalendarForRange", octxt);
-            Collection<Appointment> appts = getAppointmentsForRange(octxt, start, end, folderId, null);
-            return getZCalendarForAppointments(appts, useOutlookCompatMode);
+            Collection<CalendarItem> calItems = getCalendarItemsForRange(octxt, start, end, folderId, null);
+            return getZCalendarForCalendarItems(calItems, useOutlookCompatMode);
         } finally {
             endTransaction(success);
         }
     }
 
 
-    /** Returns a <code>Collection</code> of all {@link Appointment}s which
+    /** Returns a <code>Collection</code> of all {@link CalendarItem}s which
      *  overlap the specified time period.  There is no guarantee that the
-     *  returned appointments actually contain a recurrence within the range;
+     *  returned calendar items actually contain a recurrence within the range;
      *  all that is required is that there is some intersection between the
      *  (<code>start</code>, <code>end</code>) range and the period from the
-     *  start time of the appointment's first recurrence to the end time of
+     *  start time of the calendar item's first recurrence to the end time of
      *  its last recurrence.<p>
      * 
-     *  If a <code>folderId</code> is specified, only <code>Appointment</code>s
+     *  If a <code>folderId</code> is specified, only calendar items
      *  in that folder are returned.  If {@link #ID_AUTO_INCREMENT} is passed
-     *  in as the <code>folderId</code>, all <code>Appointment</code>s not in
+     *  in as the <code>folderId</code>, all calendar items not in
      *  <code>Spam</code> or <code>Trash</code> are returned.
      * 
+     * @param type      If MailItem.TYPE_APPOINTMENT, return only appointments.
+     *                  If MailItem.TYPE_TASK, return only tasks.
+     *                  If MailItem.TYPE_UNKNOWN, return both.
      * @param octxt     The {@link Mailbox.OperationContext}.
      * @param start     The start time of the range, in milliseconds.
      * @param end       The end time of the range, in milliseconds.
-     * @param folderId  The folder to search for matching appointments, or
+     * @param folderId  The folder to search for matching calendar items, or
      *                  {@link #ID_AUTO_INCREMENT} to search all non-Spam and
      *                  Trash folders in the mailbox.
-     * @perms {@link ACL#RIGHT_READ} on all returned appointments.
+     * @perms {@link ACL#RIGHT_READ} on all returned calendar items.
      * @throws ServiceException */
-    public synchronized Collection<Appointment> getAppointmentsForRange(OperationContext octxt, long start, long end, 
-                int folderId, int[] excludeFolders)
-                throws ServiceException {
+    public synchronized Collection<CalendarItem> getCalendarItemsForRange(
+            byte type,
+            OperationContext octxt, long start, long end, 
+            int folderId, int[] excludeFolders)
+            throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("getAppointmentsForRange", octxt);
+            beginTransaction("getCalendarItemsForRange", octxt);
 
             // if they specified a folder, make sure it actually exists
             if (folderId != ID_AUTO_INCREMENT)
                 getFolderById(folderId);
 
-            // get the list of all visible appointments in the specified folder
-            List<Appointment> appointments = new ArrayList<Appointment>();
-            List<UnderlyingData> invData = DbMailItem.getAppointments(this, start, end, folderId, excludeFolders);
+            // get the list of all visible calendar items in the specified folder
+            List<CalendarItem> calItems = new ArrayList<CalendarItem>();
+            List<UnderlyingData> invData = DbMailItem.getCalendarItems(this, type, start, end, folderId, excludeFolders);
             for (MailItem.UnderlyingData data : invData) {
-                Appointment appt = getAppointment(data);
-                if (folderId == appt.getFolderId() || (folderId == ID_AUTO_INCREMENT && appt.inMailbox()))
-                    if (appt.canAccess(ACL.RIGHT_READ))
-                        appointments.add(appt);
+                CalendarItem calItem;
+                calItem = getCalendarItem(data);
+                if (folderId == calItem.getFolderId() || (folderId == ID_AUTO_INCREMENT && calItem.inMailbox()))
+                    if (calItem.canAccess(ACL.RIGHT_READ))
+                        calItems.add(calItem);
             }
             success = true;
-            return appointments;
+            return calItems;
         } finally {
             endTransaction(success);
         }
     }
-    
+
+    public synchronized Collection<CalendarItem> getCalendarItemsForRange(
+            OperationContext octxt, long start, long end, 
+            int folderId, int[] excludeFolders)
+            throws ServiceException {
+        return getCalendarItemsForRange(
+                MailItem.TYPE_UNKNOWN, octxt, start, end, folderId, excludeFolders);
+    }
+
     //
     // Search return types:
     //   - Full rows
@@ -2587,7 +2629,7 @@ public class Mailbox {
         }
     }
 
-    public static class SetAppointmentData {
+    public static class SetCalendarItemData {
         public Invite mInv;
         public boolean mForce;
         public ParsedMessage mPm;
@@ -2604,28 +2646,28 @@ public class Mailbox {
     /**
      * @param octxt
      * @param exceptions can be NULL
-     * @return appointment ID 
+     * @return calendar item ID 
      * @throws ServiceException
      */
-    public synchronized int setAppointment(OperationContext octxt, int folderId, SetAppointmentData defaultInv, SetAppointmentData exceptions[])
+    public synchronized int setCalendarItem(OperationContext octxt, int folderId, SetCalendarItemData defaultInv, SetCalendarItemData exceptions[])
     throws ServiceException {
-        SetAppointment redoRecorder =
-            new SetAppointment(getId(), attachmentsIndexingEnabled());
-        SetAppointment redoPlayer = (octxt == null ? null : (SetAppointment) octxt.getPlayer());
+        SetCalendarItem redoRecorder =
+            new SetCalendarItem(getId(), attachmentsIndexingEnabled());
+        SetCalendarItem redoPlayer = (octxt == null ? null : (SetCalendarItem) octxt.getPlayer());
 
         boolean success = false;
         try {
-            beginTransaction("setAppointment", octxt, redoRecorder);
+            beginTransaction("setCalendarItem", octxt, redoRecorder);
 
-            // allocate IDs for all of the passed-in invites (and the appointment!) if necessary
-            if (redoPlayer == null || redoPlayer.getAppointmentId() == 0) {
+            // allocate IDs for all of the passed-in invites (and the calendar item!) if necessary
+            if (redoPlayer == null || redoPlayer.getCalendarItemId() == 0) {
                 assert(defaultInv.mInv.getMailItemId() == 0);
 
                 int mailItemId = getNextItemId(Mailbox.ID_AUTO_INCREMENT);
                 defaultInv.mInv.setInviteId(mailItemId);
 
                 if (exceptions != null) {
-                    for (SetAppointmentData sad : exceptions) {
+                    for (SetCalendarItemData sad : exceptions) {
                         mailItemId = getNextItemId(Mailbox.ID_AUTO_INCREMENT);
                         sad.mInv.setMailItemId(mailItemId);
                     }
@@ -2636,41 +2678,41 @@ public class Mailbox {
 
             redoRecorder.setData(defaultInv, exceptions);
 
-            // handle the DEFAULT appointment
+            // handle the DEFAULT calendar item
             short volumeId =
                 redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
                             : redoPlayer.getVolumeId();
-                Appointment appt = getAppointmentByUid(defaultInv.mInv.getUid());
-                if (appt == null) { 
-                    // ONLY create an appointment if this is a REQUEST method...otherwise don't.
+                CalendarItem calItem = getCalendarItemByUid(defaultInv.mInv.getUid());
+                if (calItem == null) { 
+                    // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
                     if (defaultInv.mInv.getMethod().equals("REQUEST") || defaultInv.mInv.getMethod().equals("PUBLISH")) {
-                        appt = createAppointment(folderId, volumeId, "",
+                        calItem = createCalendarItem(folderId, volumeId, "",
                                     defaultInv.mInv.getUid(), defaultInv.mPm, defaultInv.mInv);
                     } else {
-//                      mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
+//                      mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no CalendarItem could be found");
                         return 0; // for now, just ignore this Invitation
                     }
                 } else {
-                    appt.processNewInvite(defaultInv.mPm,
+                    calItem.processNewInvite(defaultInv.mPm,
                                 defaultInv.mInv,
                                 defaultInv.mForce, folderId, volumeId,
                                 true);
                 }
 
-                redoRecorder.setAppointmentAttrs(appt.getId(),
-                            appt.getFolderId(),
+                redoRecorder.setCalendarItemAttrs(calItem.getId(),
+                            calItem.getFolderId(),
                             volumeId);
 
                 // handle the exceptions!
                 if (exceptions != null) {
-                    for (SetAppointmentData sad : exceptions) {
-                        appt.processNewInvite(sad.mPm, sad.mInv, sad.mForce, folderId, volumeId);
+                    for (SetCalendarItemData sad : exceptions) {
+                        calItem.processNewInvite(sad.mPm, sad.mInv, sad.mForce, folderId, volumeId);
                     }
                 }
 
                 success = true;
 
-                return appt.getId();
+                return calItem.getId();
 
         } finally {
             endTransaction(success);
@@ -2683,10 +2725,10 @@ public class Mailbox {
      * message.
      * @param octxt
      * @param inv
-     * @param force if true, then force override the existing appointment, false use normal RFC2446 sequencing rules
+     * @param force if true, then force override the existing calendar item, false use normal RFC2446 sequencing rules
      * @param pm
      * 
-     * @return int[2] = { appointment-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id, that mail-item does not really exist, it can ONLY be referenced through the appointment "apptId-invMailItemId"
+     * @return int[2] = { calendar-item-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id, that mail-item does not really exist, it can ONLY be referenced through the calendar item "calItemId-invMailItemId"
      * @throws ServiceException
      */
     public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean force, ParsedMessage pm)
@@ -2714,7 +2756,7 @@ public class Mailbox {
             try {
                 beginTransaction("addInvite", octxt, redoRecorder);
 
-                if (redoPlayer == null || redoPlayer.getAppointmentId() == 0) {
+                if (redoPlayer == null || redoPlayer.getCalendarItemId() == 0) {
                     assert(inv.getMailItemId() == 0); 
                     int mailItemId = getNextItemId(Mailbox.ID_AUTO_INCREMENT);
                     inv.setInviteId(mailItemId);
@@ -2722,41 +2764,41 @@ public class Mailbox {
                     // id already set before we stored the invite in the redoRecorder!!!
                 }
 
-                Appointment appt = getAppointmentByUid(inv.getUid());
-                if (appt == null) { 
-                    // ONLY create an appointment if this is a REQUEST method...otherwise don't.
+                CalendarItem calItem = getCalendarItemByUid(inv.getUid());
+                if (calItem == null) { 
+                    // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
                     if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
-                        appt = createAppointment(folderId, volumeId, "", inv.getUid(), pm, inv);
+                        calItem = createCalendarItem(folderId, volumeId, "", inv.getUid(), pm, inv);
                     } else {
-//                      mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no Appointment could be found");
+//                      mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no CalendarItem could be found");
                         return null; // for now, just ignore this Invitation
                     }
                 } else {
-                    appt.processNewInvite(pm, inv, force, folderId, volumeId);
+                    calItem.processNewInvite(pm, inv, force, folderId, volumeId);
                 }
-                redoRecorder.setAppointmentAttrs(appt.getId(),
-                            appt.getFolderId(),
+                redoRecorder.setCalendarItemAttrs(calItem.getId(),
+                            calItem.getFolderId(),
                             volumeId);
 
                 success = true;
-                return new int[] { appt.getId(), inv.getMailItemId() };
+                return new int[] { calItem.getId(), inv.getMailItemId() };
             } finally {
                 endTransaction(success);
             }
 
     }
 
-    synchronized Appointment getAppointmentByUid(String uid) throws ServiceException {
-        return getAppointmentByUid(null, uid);
+    synchronized CalendarItem getCalendarItemByUid(String uid) throws ServiceException {
+        return getCalendarItemByUid(null, uid);
     }
-    public synchronized Appointment getAppointmentByUid(OperationContext octxt, String uid) throws ServiceException {
+    public synchronized CalendarItem getCalendarItemByUid(OperationContext octxt, String uid) throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("getAppointmentByUid", octxt);
-            MailItem.UnderlyingData data = DbMailItem.getAppointment(this, uid);
-            Appointment appt = (Appointment) getItem(data);
+            beginTransaction("getCalendarItemByUid", octxt);
+            MailItem.UnderlyingData data = DbMailItem.getCalendarItem(this, uid);
+            CalendarItem calItem = (CalendarItem) getItem(data);
             success = true;
-            return appt;
+            return calItem;
         } finally {
             endTransaction(success);
         }
@@ -2812,13 +2854,13 @@ public class Mailbox {
         try {
             beginTransaction("iCalReply", octxt, redoRecorder);
             String uid = inv.getUid();
-            Appointment appt = getAppointmentByUid(uid);
-            if (appt == null) {
+            CalendarItem calItem = getCalendarItemByUid(uid);
+            if (calItem == null) {
                 ZimbraLog.calendar.warn(
-                        "Unknown appointment UID " + uid + " in mailbox " + getId());
+                        "Unknown calendar item UID " + uid + " in mailbox " + getId());
                 return;
             }
-            appt.processNewInviteReply(inv, false);
+            calItem.processNewInviteReply(inv, false);
             success = true;
         } finally {
             endTransaction(success);
@@ -3062,7 +3104,7 @@ public class Mailbox {
             }
 
             // step 3: create the message and update the cache
-            //         and if the message is also an invite, deal with the appointment
+            //         and if the message is also an invite, deal with the calendar item
             Conversation convTarget = (conv instanceof VirtualConversation ? null : conv);
             if (convTarget != null && debug)
                 ZimbraLog.mailbox.debug("  placing message in existing conversation " + convTarget.getId());
@@ -3351,11 +3393,11 @@ public class Mailbox {
     }
 
     /**
-     * Modify the Participant-Status of your LOCAL data part of an appointment -- this is used when you Reply to
+     * Modify the Participant-Status of your LOCAL data part of an calendar item -- this is used when you Reply to
      * an Invite so that you can track the fact that you've replied to it.
      * 
      * @param octxt
-     * @param apptId
+     * @param calItemId
      * @param recurId
      * @param cnStr
      * @param addressStr
@@ -3367,22 +3409,22 @@ public class Mailbox {
      * @param dtStamp
      * @throws ServiceException
      */
-    public synchronized void modifyPartStat(OperationContext octxt, int apptId, RecurId recurId,
+    public synchronized void modifyPartStat(OperationContext octxt, int calItemId, RecurId recurId,
                 String cnStr, String addressStr, String cutypeStr, String roleStr, String partStatStr, Boolean rsvp, int seqNo, long dtStamp) 
     throws ServiceException {
 
-        ModifyInvitePartStat redoRecorder = new ModifyInvitePartStat(mId, apptId, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, rsvp, seqNo, dtStamp);
+        ModifyInvitePartStat redoRecorder = new ModifyInvitePartStat(mId, calItemId, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, rsvp, seqNo, dtStamp);
 
         boolean success = false;
         try {
             beginTransaction("updateInvitePartStat", octxt, redoRecorder);
 
-            Appointment appt = getAppointmentById(apptId);
+            CalendarItem calItem = getCalendarItemById(calItemId);
 
             Account acct = getAccount();
 
-            appt.modifyPartStat(acct, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, rsvp, seqNo, dtStamp);
-            markItemModified(appt, Change.MODIFIED_INVITE);
+            calItem.modifyPartStat(acct, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, rsvp, seqNo, dtStamp);
+            markItemModified(calItem, Change.MODIFIED_INVITE);
 
             success = true;
         } finally {
@@ -3856,22 +3898,22 @@ public class Mailbox {
         }
     }
 
-    Appointment createAppointment(int folderId, short volumeId, String tags, String uid, ParsedMessage pm, Invite invite)
+    CalendarItem createCalendarItem(int folderId, short volumeId, String tags, String uid, ParsedMessage pm, Invite invite)
     throws ServiceException {
         // FIXME: assuming that we're in the middle of a AddInvite op
-        CreateAppointmentPlayer redoPlayer   = (CreateAppointmentPlayer) mCurrentChange.getRedoPlayer();
-        CreateAppointmentRecorder redoRecorder = (CreateAppointmentRecorder) mCurrentChange.getRedoRecorder();
+        CreateCalendarItemPlayer redoPlayer   = (CreateCalendarItemPlayer) mCurrentChange.getRedoPlayer();
+        CreateCalendarItemRecorder redoRecorder = (CreateCalendarItemRecorder) mCurrentChange.getRedoRecorder();
 
-        int newApptId = redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getAppointmentId();
-        int createId = getNextItemId(newApptId);
+        int newCalItemId = redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getCalendarItemId();
+        int createId = getNextItemId(newCalItemId);
 
-        Appointment appt = Appointment.create(createId, getFolderById(folderId), volumeId, tags, uid, pm, invite);
+        CalendarItem calItem = CalendarItem.create(createId, getFolderById(folderId), volumeId, tags, uid, pm, invite);
 
         if (redoRecorder != null)
-            redoRecorder.setAppointmentAttrs(appt.getId(),
-                        appt.getFolderId(),
-                        appt.getVolumeId());
-        return appt;
+            redoRecorder.setCalendarItemAttrs(calItem.getId(),
+                        calItem.getFolderId(),
+                        calItem.getVolumeId());
+        return calItem;
     }
 
     public synchronized Contact createContact(OperationContext octxt, Map<String, String> attrs, int folderId, String tags)

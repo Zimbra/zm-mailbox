@@ -254,6 +254,7 @@ class ImapFolder implements Iterable<ImapMessage> {
         }
         return folder != null &&
                folder.getDefaultView() != MailItem.TYPE_APPOINTMENT &&
+               folder.getDefaultView() != MailItem.TYPE_TASK &&
                folder.getDefaultView() != MailItem.TYPE_WIKI &&
                folder.getDefaultView() != MailItem.TYPE_DOCUMENT &&
                folder.getId() != Mailbox.ID_FOLDER_USER_ROOT &&

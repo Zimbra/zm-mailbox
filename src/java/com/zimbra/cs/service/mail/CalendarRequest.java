@@ -36,6 +36,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -50,6 +51,16 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 
 public abstract class CalendarRequest extends MailDocumentHandler {
+
+    private byte mItemType = MailItem.TYPE_UNKNOWN;
+    protected byte getItemType() { return mItemType; }
+
+    public CalendarRequest() {
+        if (this instanceof AppointmentRequest)
+            mItemType = MailItem.TYPE_APPOINTMENT;
+        else if (this instanceof TaskRequest)
+            mItemType = MailItem.TYPE_TASK;
+    }
 
     protected static class CalSendData extends ParseMimeMessage.MimeMessageData {
         int mOrigId; // orig id if this is a reply
@@ -325,7 +336,10 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 int[] ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, false, pm);
     
                 if (response != null && ids != null) {
-                    response.addAttribute(MailService.A_APPT_ID, lc.formatItemId(ids[0]));
+                    String id = lc.formatItemId(ids[0]);
+                    response.addAttribute(MailService.A_CAL_ID, id);
+                    if (csd.mInvite != null && csd.mInvite.isEvent())
+                        response.addAttribute(MailService.A_APPT_ID_DEPRECATE_ME, id);  // for backward compat
                     response.addAttribute(MailService.A_APPT_INV_ID, lc.formatItemId(ids[0], ids[1]));
                     if (saveToSent) {
                         response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, lc.formatItemId(msgId));

@@ -34,7 +34,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.property.CalDavProperty.CalComponent;
-import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.Invite;
 
 /*
@@ -147,13 +147,13 @@ public abstract class Filter {
 
 		public boolean match(Invite invite) {
 			boolean matched = false;
-			String comp = invite.getCompType();
+            byte type = invite.getItemType();
 			
 			if (mComponent == CalComponent.VCALENDAR)
 				matched = true;
-			else if (IcalXmlStrMap.COMPTYPE_EVENT.equals(comp))
+            else if (type == MailItem.TYPE_APPOINTMENT)
 				matched = (mComponent == CalComponent.VEVENT);
-			else if (IcalXmlStrMap.COMPTYPE_TODO.equals(comp))
+            else if (type == MailItem.TYPE_TASK)
 				matched = (mComponent == CalComponent.VTODO);
 
 			if (matched && mComps.size() > 0) {

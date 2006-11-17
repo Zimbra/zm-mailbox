@@ -35,7 +35,7 @@ import java.util.List;
 
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -72,7 +72,7 @@ public class IcsFormatter extends Formatter {
 
     public void formatCallback(Context context, MailItem mailItem) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
-        List<Appointment> appts = new ArrayList<Appointment>();
+        List<CalendarItem> calItems = new ArrayList<CalendarItem>();
         //ZimbraLog.mailbox.info("start = "+new Date(context.getStartTime()));
         //ZimbraLog.mailbox.info("end = "+new Date(context.getEndTime()));
         try {
@@ -81,8 +81,8 @@ public class IcsFormatter extends Formatter {
             // this is lame
             while (iterator.hasNext()) {
                 MailItem item = iterator.next();
-                if (item instanceof Appointment)
-                    appts.add((Appointment) item);
+                if (item instanceof CalendarItem)
+                    calItems.add((CalendarItem) item);
             }
         } finally {
             if (iterator instanceof QueryResultIterator)
@@ -95,7 +95,7 @@ public class IcsFormatter extends Formatter {
         Browser browser = HttpUtil.guessBrowser(context.req);
         boolean useOutlookCompatMode = Browser.IE.equals(browser);
 //        try {
-            ZVCalendar cal = context.targetMailbox.getZCalendarForAppointments(appts, useOutlookCompatMode);
+            ZVCalendar cal = context.targetMailbox.getZCalendarForCalendarItems(calItems, useOutlookCompatMode);
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             OutputStreamWriter wout = new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
             cal.toICalendar(wout);

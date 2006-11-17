@@ -33,7 +33,7 @@ package com.zimbra.cs.index;
 
 import org.apache.lucene.document.Document;
 
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.ServiceException;
@@ -44,10 +44,11 @@ import com.zimbra.cs.service.ServiceException;
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public class AppointmentHit extends ZimbraHit {
+public class CalendarItemHit extends ZimbraHit {
     
     protected int mId;
-    protected Appointment mAppt;
+    protected CalendarItem mCalItem;
+    private byte mType = MailItem.TYPE_UNKNOWN;
 
     /**
      * @param results
@@ -55,12 +56,14 @@ public class AppointmentHit extends ZimbraHit {
      * @param d
      * @param score
      */
-    public AppointmentHit(ZimbraQueryResultsImpl results, Mailbox mbx, 
-    		int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
+    public CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx, 
+            int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
         super(results, mbx, score);
         mId = mailItemId;
-        if (ud != null)
-            mAppt = (Appointment)mbx.getItemFromUnderlyingData(ud);
+        if (ud != null) {
+            mCalItem = (CalendarItem)mbx.getItemFromUnderlyingData(ud);
+            mType = ud.type;
+        }
     }
     
     /**
@@ -69,31 +72,32 @@ public class AppointmentHit extends ZimbraHit {
      * @param id
      * @param score
      */
-    public AppointmentHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
+    public CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
             float score, MailItem.UnderlyingData ud) throws ServiceException {
         super(results, mbx, score);
 
         mId = id;
-        
-        if (ud != null)
-            mAppt = (Appointment)mbx.getItemFromUnderlyingData(ud);
+        if (ud != null) {
+            mCalItem = (CalendarItem)mbx.getItemFromUnderlyingData(ud);
+            mType = ud.type;
+        }
     }
     
-    public MailItem getMailItem() throws ServiceException { return getAppointment(); }
+    public MailItem getMailItem() throws ServiceException { return getCalendarItem(); }
     
-    public Appointment getAppointment() throws ServiceException {
-        if (mAppt == null) {
-            mAppt = this.getMailbox().getAppointmentById(null, mId);
+    public CalendarItem getCalendarItem() throws ServiceException {
+        if (mCalItem == null) {
+            mCalItem = this.getMailbox().getCalendarItemById(null, mId);
         }
-        return mAppt;
+        return mCalItem;
     }
 
     public long getDate() throws ServiceException {
-        return getAppointment().getDate();
+        return getCalendarItem().getDate();
     }
     
     public int getSize() throws ServiceException {
-        return getAppointment().getSize();
+        return getCalendarItem().getSize();
     }
     
     public int getConversationId() {
@@ -106,22 +110,26 @@ public class AppointmentHit extends ZimbraHit {
     }
     
     public byte getItemType() {
-        return MailItem.TYPE_APPOINTMENT;
+        return mType;
     }
 
     void setItem(MailItem item) {
-        mAppt = (Appointment)item;
+        mCalItem = (CalendarItem)item;
+        if (mCalItem != null)
+            mType = mCalItem.getType();
+        else
+            mType = MailItem.TYPE_UNKNOWN;
     }
     
     boolean itemIsLoaded() {
-        return (mId == 0) || (mAppt != null);
+        return (mId == 0) || (mCalItem != null);
     }
     
     public String getSubject() throws ServiceException {
-        return getAppointment().getSubject();
+        return getCalendarItem().getSubject();
     }
     
     public String getName() throws ServiceException {
-        return getAppointment().getSubject();
+        return getCalendarItem().getSubject();
     }
 }

@@ -25,7 +25,10 @@
 
 package com.zimbra.cs.service.mail;
 
-public class CreateAppointmentException
-extends CreateCalendarItemException
-implements AppointmentRequest {
+/**
+ * @author jhahm
+ */
+public class GetTaskSummaries
+extends GetCalendarItemSummaries
+implements TaskRequest {
 }

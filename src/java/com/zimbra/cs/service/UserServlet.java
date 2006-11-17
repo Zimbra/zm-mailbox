@@ -749,6 +749,7 @@ public class UserServlet extends ZimbraServlet {
 
         switch (type) {
             case MailItem.TYPE_APPOINTMENT:
+            case MailItem.TYPE_TASK:
                 return "ics";
             case MailItem.TYPE_CONTACT:
                 return item instanceof Folder? "csv" : "vcf";

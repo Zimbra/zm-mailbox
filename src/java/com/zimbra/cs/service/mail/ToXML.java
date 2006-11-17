@@ -38,7 +38,7 @@ import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.mailbox.*;
-import com.zimbra.cs.mailbox.Appointment.Instance;
+import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
@@ -111,8 +111,8 @@ public class ToXML {
             return encodeNote(parent, lc, (Note) item, fields);
         else if (item instanceof Contact)
             return encodeContact(parent, lc, (Contact) item, null, false, null, fields);
-        else if (item instanceof Appointment) 
-            return encodeApptSummary(parent, lc, (Appointment) item, fields);
+        else if (item instanceof CalendarItem) 
+            return encodeCalendarItemSummary(parent, lc, (CalendarItem) item, fields);
         else if (item instanceof Conversation)
             return encodeConversationSummary(parent, lc, (Conversation) item, fields);
         else if (item instanceof WikiItem)
@@ -224,6 +224,7 @@ public class ToXML {
             if (needToOutput(fields, Change.MODIFIED_FOLDER | Change.MODIFIED_NAME) && !folder.isHidden()) {
                 if (folder.getDefaultView() == MailItem.TYPE_WIKI ||
                         folder.getDefaultView() == MailItem.TYPE_APPOINTMENT ||
+                        folder.getDefaultView() == MailItem.TYPE_TASK ||
                         folder.getDefaultView() == MailItem.TYPE_CONTACT)
                     encodeRestUrl(elem, folder);
             }
@@ -653,75 +654,79 @@ public class ToXML {
     }
 
     /**
-     * Encode the metadata for the appointment.
+     * Encode the metadata for a calendar item.
      * 
-     * The content for the appointment is a big multipart/digest containing each
-     * invite in the appointment as a sub-mimepart -- it can be retreived from the content 
+     * The content for the calendar item is a big multipart/digest containing each
+     * invite in the calendar item as a sub-mimepart -- it can be retreived from the content 
      * servlet: 
-     *    http://servername/service/content/get?id=<apptId>
+     *    http://servername/service/content/get?id=<calItemId>
      * 
      * The client can ALSO request just the content for each individual invite using a
      * compound item-id request:
-     *    http://servername/service/content/get?id=<apptId>-<invite-mail-item-id>
+     *    http://servername/service/content/get?id=<calItemId>-<invite-mail-item-id>
      *    
      * DO NOT use the raw invite-mail-item-id to fetch the content: since the invite is a 
      * standard mail-message it can be deleted by the user at any time!
      * @param parent
      * @param lc TODO
-     * @param appt
+     * @param calItem
      * @param fields
      * 
      * @return
      */
-    public static Element encodeApptSummary(Element parent, ZimbraSoapContext lc,
-                Appointment appt, int fields)
+    public static Element encodeCalendarItemSummary(Element parent, ZimbraSoapContext lc,
+                CalendarItem calItem, int fields)
     throws ServiceException {
-        Element apptElt = parent.addElement(MailService.E_APPOINTMENT);
+        Element calItemElem;
+        if (calItem instanceof Appointment)
+            calItemElem = parent.addElement(MailService.E_APPOINTMENT);
+        else
+            calItemElem = parent.addElement(MailService.E_TASK);
 
-        apptElt.addAttribute(MailService.A_UID, appt.getUid());
-        apptElt.addAttribute(MailService.A_ID, lc.formatItemId(appt));
-        apptElt.addAttribute(MailService.A_FOLDER, lc.formatItemId(appt.getFolderId()));
+        calItemElem.addAttribute(MailService.A_UID, calItem.getUid());
+        calItemElem.addAttribute(MailService.A_ID, lc.formatItemId(calItem));
+        calItemElem.addAttribute(MailService.A_FOLDER, lc.formatItemId(calItem.getFolderId()));
 
-        if (needToOutput(fields, Change.MODIFIED_CONTENT) && appt.getSavedSequence() != 0)
-            apptElt.addAttribute(MailService.A_REVISION, appt.getSavedSequence());
+        if (needToOutput(fields, Change.MODIFIED_CONTENT) && calItem.getSavedSequence() != 0)
+            calItemElem.addAttribute(MailService.A_REVISION, calItem.getSavedSequence());
         if (needToOutput(fields, Change.MODIFIED_SIZE))
-            apptElt.addAttribute(MailService.A_SIZE, appt.getSize());
+            calItemElem.addAttribute(MailService.A_SIZE, calItem.getSize());
         if (needToOutput(fields, Change.MODIFIED_DATE))
-            apptElt.addAttribute(MailService.A_DATE, appt.getDate());
+            calItemElem.addAttribute(MailService.A_DATE, calItem.getDate());
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
-            apptElt.addAttribute(MailService.A_FOLDER, lc.formatItemId(appt.getFolderId()));
-        recordItemTags(apptElt, appt, fields);
+            calItemElem.addAttribute(MailService.A_FOLDER, lc.formatItemId(calItem.getFolderId()));
+        recordItemTags(calItemElem, calItem, fields);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
-            apptElt.addAttribute(MailService.A_CHANGE_DATE, appt.getChangeDate() / 1000);
-            apptElt.addAttribute(MailService.A_MODIFIED_SEQUENCE, appt.getModifiedSequence());
+            calItemElem.addAttribute(MailService.A_CHANGE_DATE, calItem.getChangeDate() / 1000);
+            calItemElem.addAttribute(MailService.A_MODIFIED_SEQUENCE, calItem.getModifiedSequence());
         }
 
-        for (int i = 0; i < appt.numInvites(); i++) {
-            Invite inv = appt.getInvite(i);
+        for (int i = 0; i < calItem.numInvites(); i++) {
+            Invite inv = calItem.getInvite(i);
 
-            Element ie = apptElt.addElement(MailService.E_INVITE);
-            encodeTimeZoneMap(ie, appt.getTimeZoneMap());
+            Element ie = calItemElem.addElement(MailService.E_INVITE);
+            encodeTimeZoneMap(ie, calItem.getTimeZoneMap());
 
             ie.addAttribute(MailService.A_APPT_SEQUENCE, inv.getSeqNo());
-            encodeReplies(ie, appt, inv);
+            encodeReplies(ie, calItem, inv);
 
             ie.addAttribute(MailService.A_ID, lc.formatItemId(inv.getMailItemId()));
             ie.addAttribute(MailService.A_APPT_COMPONENT_NUM, inv.getComponentNum());
             if (inv.hasRecurId())
                 ie.addAttribute(MailService.A_APPT_RECURRENCE_ID, inv.getRecurId().toString());
 
-            encodeInvite(ie, lc, appt, inv, NOTIFY_FIELDS, false);
+            encodeInvite(ie, lc, calItem, inv, NOTIFY_FIELDS, false);
         }
 
-        return apptElt;
+        return calItemElem;
     }
 
-    private static void encodeReplies(Element parent, Appointment appt, Invite inv) {
+    private static void encodeReplies(Element parent, CalendarItem calItem, Invite inv) {
         Element repliesElt = parent.addElement(MailService.E_APPT_REPLIES);
 
-        List /*Appointment.ReplyInfo */ replies = appt.getReplyInfo(inv);
+        List /*CalendarItem.ReplyInfo */ replies = calItem.getReplyInfo(inv);
         for (Iterator iter = replies.iterator(); iter.hasNext(); ) {
-            Appointment.ReplyInfo repInfo = (Appointment.ReplyInfo) iter.next();
+            CalendarItem.ReplyInfo repInfo = (CalendarItem.ReplyInfo) iter.next();
             ZAttendee attendee = repInfo.mAttendee;
 
             Element curElt = repliesElt.addElement(MailService.E_APPT_REPLY);
@@ -739,13 +744,13 @@ public class ToXML {
     }
 
 
-    /** Encodes an Invite stored within an Appointment object into <m> element
+    /** Encodes an Invite stored within a calendar item object into <m> element
      *  with <mp> elements.
      * @param parent  The Element to add the new <code>&lt;m></code> to.
      * @param lc      The SOAP request's context.
-     * @param appt    The Appointment to serialize.
+     * @param calItem The calendar item to serialize.
      * @param iid     The requested item; the contained subpart will be used to
-     *                pick the Invite out of the Appointment's blob & metadata.
+     *                pick the Invite out of the calendar item's blob & metadata.
      * @param part    If non-null, we'll serialuize this message/rfc822 subpart
      *                of the specified Message instead of the Message itself.
      * @param wantHTML  <code>true</code> to prefer HTML parts as the "body",
@@ -754,7 +759,7 @@ public class ToXML {
      * @return The newly-created <code>&lt;m></code> Element, which has already
      *         been added as a child to the passed-in <code>parent</code>.
      * @throws ServiceException */
-    public static Element encodeApptInviteAsMP(Element parent, ZimbraSoapContext lc, Appointment appt, ItemId iid, String part, boolean wantHTML, boolean neuter)
+    public static Element encodeInviteAsMP(Element parent, ZimbraSoapContext lc, CalendarItem calItem, ItemId iid, String part, boolean wantHTML, boolean neuter)
     throws ServiceException {
         int invId = iid.getSubpartId();
         boolean wholeMessage = (part == null || part.trim().equals(""));
@@ -763,16 +768,16 @@ public class ToXML {
 
         Element m;
         if (wholeMessage) {
-            m = encodeMessageCommon(parent, lc, appt, NOTIFY_FIELDS);
-            m.addAttribute(MailService.A_ID, lc.formatItemId(appt, invId));
+            m = encodeMessageCommon(parent, lc, calItem, NOTIFY_FIELDS);
+            m.addAttribute(MailService.A_ID, lc.formatItemId(calItem, invId));
         } else {
             m = parent.addElement(MailService.E_MSG);
-            m.addAttribute(MailService.A_ID, lc.formatItemId(appt, invId));
+            m.addAttribute(MailService.A_ID, lc.formatItemId(calItem, invId));
             m.addAttribute(MailService.A_PART, part);
         }
 
         try {
-            MimeMessage mm = appt.getSubpartMessage(invId);
+            MimeMessage mm = calItem.getSubpartMessage(invId);
             if (mm == null)
                 throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + lc.formatItemId(iid));
             if (!wholeMessage) {
@@ -817,9 +822,9 @@ public class ToXML {
                 m.addAttribute(MailService.A_SENT_DATE, sent.getTime());
 
             Element invElt = m.addElement(MailService.E_INVITE);
-            encodeTimeZoneMap(invElt, appt.getTimeZoneMap());
-            for (Invite inv : appt.getInvites(invId))
-                encodeInvite(invElt, lc, appt, inv, NOTIFY_FIELDS, repliesWithInvites);
+            encodeTimeZoneMap(invElt, calItem.getTimeZoneMap());
+            for (Invite inv : calItem.getInvites(invId))
+                encodeInvite(invElt, lc, calItem, inv, NOTIFY_FIELDS, repliesWithInvites);
 
             List parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
@@ -925,7 +930,7 @@ public class ToXML {
 
     private static Element encodeMessageCommon(Element parent, ZimbraSoapContext lc, MailItem item, int fields) {
         Element elem = parent.addElement(MailService.E_MSG);
-        // DO NOT encode the item-id here, as some Invite-Messages-In-Appointments have special item-id's
+        // DO NOT encode the item-id here, as some Invite-Messages-In-CalendarItems have special item-id's
         if (needToOutput(fields, Change.MODIFIED_SIZE))
             elem.addAttribute(MailService.A_SIZE, item.getSize());
         if (needToOutput(fields, Change.MODIFIED_DATE))
@@ -994,7 +999,7 @@ public class ToXML {
 
     public static Element encodeInvite(Element parent,
                 ZimbraSoapContext lc,
-                Appointment appt,
+                CalendarItem calItem,
                 Invite invite,
                 int fields,
                 boolean includeReplies)
@@ -1014,15 +1019,16 @@ public class ToXML {
 
         e.addAttribute(MailService.A_APPT_RSVP, invite.getRsvp());
 
-        Account acct = appt.getMailbox().getAccount();
+        Account acct = calItem.getMailbox().getAccount();
         if (allFields) {
-            e.addAttribute(MailService.A_APPT_TYPE, invite.getCompType());
-
             try {
                 e.addAttribute("x_uid", invite.getUid());
                 e.addAttribute(MailService.A_APPT_SEQUENCE, invite.getSeqNo());
 
-                e.addAttribute(MailService.A_APPT_ID, lc.formatItemId(appt));
+                String itemId = lc.formatItemId(calItem);
+                e.addAttribute(MailService.A_CAL_ID, itemId);
+                if (invite.isEvent())
+                    e.addAttribute(MailService.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
 
                 if (invite.thisAcctIsOrganizer(acct)) {
                     e.addAttribute(MailService.A_APPT_ISORG, true);
@@ -1046,16 +1052,19 @@ public class ToXML {
             if (invite.isEvent()) {
                 e.addAttribute(MailService.A_APPT_FREEBUSY, invite.getFreeBusy());
     
-                Instance inst = Instance.fromInvite(appt, invite);
-                e.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL,
-                            appt.getEffectiveFreeBusyActual(invite, inst));
+                Instance inst = Instance.fromInvite(calItem, invite);
+                if (calItem instanceof Appointment) {
+                    Appointment appt = (Appointment) calItem;
+                    e.addAttribute(MailService.A_APPT_FREEBUSY_ACTUAL,
+                                appt.getEffectiveFreeBusyActual(invite, inst));
+                }
     
                 e.addAttribute(MailService.A_APPT_TRANSPARENCY, invite.getTransparency());
     
             }
 
             if (includeReplies)
-                encodeReplies(e, appt, invite);
+                encodeReplies(e, calItem, invite);
 
             if (invite.getRecurId() != null) {
                 e.addAttribute(MailService.A_APPT_IS_EXCEPTION, true);
@@ -1209,23 +1218,23 @@ public class ToXML {
         boolean addedMethod = false;
         Mailbox mbox = msg.getMailbox();
 
-        for (Iterator iter = msg.getApptInfoIterator(); iter.hasNext(); ) {
-            Message.ApptInfo info = (Message.ApptInfo) iter.next();
+        for (Iterator iter = msg.getCalendarItemInfoIterator(); iter.hasNext(); ) {
+            Message.CalendarItemInfo info = (Message.CalendarItemInfo) iter.next();
 
-            Appointment appt = null;
+            CalendarItem calItem = null;
             try {
-                appt = mbox.getAppointmentById(lc.getOperationContext(), info.getAppointmentId());
+                calItem = mbox.getCalendarItemById(lc.getOperationContext(), info.getCalendarItemId());
             } catch (MailServiceException.NoSuchItemException e) {}
-            if (appt != null) {
-                Invite inv = appt.getInvite(msg.getId(), info.getComponentNo());
+            if (calItem != null) {
+                Invite inv = calItem.getInvite(msg.getId(), info.getComponentNo());
 
                 if (inv != null) {
                     if (!addedMethod) {
 //                      ie.addAttribute("method", inv.getMethod());
                         addedMethod = true;
                     }
-                    encodeTimeZoneMap(ie, appt.getTimeZoneMap());
-                    encodeInvite(ie, lc, appt, inv, fields, false);
+                    encodeTimeZoneMap(ie, calItem.getTimeZoneMap());
+                    encodeInvite(ie, lc, calItem, inv, fields, false);
                 } else {
                     // invite not in this appointment anymore
                 }

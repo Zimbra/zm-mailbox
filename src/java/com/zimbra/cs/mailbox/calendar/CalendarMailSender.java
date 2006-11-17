@@ -54,7 +54,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -123,7 +123,7 @@ public class CalendarMailSender {
     public static MimeMessage createDefaultReply(Account fromAccount,
                                                  Account authAccount,
                                                  boolean onBehalfOf,
-                                                 Appointment appt,
+                                                 CalendarItem calItem,
                                                  Invite inv,
                                                  MimeMessage mmInv,
                                                  String replySubject,
@@ -238,7 +238,7 @@ public class CalendarMailSender {
     }
 
     /**
-     * Builds the TO: list for appointment updates by iterating over
+     * Builds the TO: list for calendar item updates by iterating over
      * the list of ATTENDEEs
      * 
      * @param iter
@@ -386,7 +386,7 @@ public class CalendarMailSender {
                                        ParsedDateTime exceptDt)
     throws ServiceException {
         Invite reply =
-            new Invite(oldInv.getCompType(), ICalTok.REPLY.toString(),
+            new Invite(oldInv.getItemType(), ICalTok.REPLY.toString(),
                        new TimeZoneMap(
                                Provisioning.getInstance().getTimeZone(onBehalfOf ? authAcct : acct)));
 
@@ -479,7 +479,7 @@ public class CalendarMailSender {
                                 boolean saveToSent,
                                 Verb verb,
                                 String additionalMsgBody,
-                                Appointment appt,
+                                CalendarItem calItem,
                                 Invite inv,
                                 MimeMessage mmInv)
     throws ServiceException {
@@ -505,7 +505,7 @@ public class CalendarMailSender {
         Invite replyInv = replyToInvite(acct, authAcct, onBehalfOf, inv, verb, replySubject, null);
 
         ZVCalendar iCal = replyInv.newToICalendar();
-        MimeMessage mm = createDefaultReply(acct, authAcct, onBehalfOf, appt, inv, mmInv,
+        MimeMessage mm = createDefaultReply(acct, authAcct, onBehalfOf, calItem, inv, mmInv,
                                             replySubject, verb, additionalMsgBody, iCal);
 
         int replyMsgId = mbox.getMailSender().sendMimeMessage(octxt, mbox, saveToSent, mm, null, null,

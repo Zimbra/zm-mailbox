@@ -2387,22 +2387,30 @@ public class DbMailItem {
 
 
     //////////////////////////////////////
-    // INVITE STUFF BELOW HERE!
+    // CALENDAR STUFF BELOW HERE!
     //////////////////////////////////////
-    public static UnderlyingData getAppointment(Mailbox mbox, String uid)
+
+    private static final String CALENDAR_TYPES =
+        "(" + MailItem.TYPE_APPOINTMENT + ", " + MailItem.TYPE_TASK + ")";
+    private static final String APPOINTMENT_TYPE =
+        "(" + MailItem.TYPE_APPOINTMENT + ")";
+    private static final String TASK_TYPE =
+        "(" + MailItem.TYPE_TASK + ")";
+    
+    public static UnderlyingData getCalendarItem(Mailbox mbox, String uid)
     throws ServiceException {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             String sql = "SELECT " + DB_FIELDS +
-                    " FROM " + getAppointmentTableName(mbox, "appt") + ", " +
+                    " FROM " + getCalendarItemTableName(mbox, "ci") + ", " +
                                getMailItemTableName(mbox, "mi") +
                     " WHERE " +
-                    (!DebugConfig.disableMailboxGroup ? "appt.mailbox_id = ? AND " : "") +
-                    "appt.uid = ? AND " +
-                    (!DebugConfig.disableMailboxGroup ? "mi.mailbox_id = appt.mailbox_id AND " : "") +
-                    "mi.id = appt.item_id AND mi.type = " + MailItem.TYPE_APPOINTMENT +
+                    (!DebugConfig.disableMailboxGroup ? "ci.mailbox_id = ? AND " : "") +
+                    "ci.uid = ? AND " +
+                    (!DebugConfig.disableMailboxGroup ? "mi.mailbox_id = ci.mailbox_id AND " : "") +
+                    "mi.id = ci.item_id AND mi.type IN " + CALENDAR_TYPES +
                     " GROUP BY mi.id";
             stmt = conn.prepareStatement(sql);
             int pos = 1;
@@ -2415,7 +2423,7 @@ public class DbMailItem {
                 return constructItem(rs);
             return null;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("fetching appointments for mailbox " + mbox.getId(), e);
+            throw ServiceException.FAILURE("fetching calendar items for mailbox " + mbox.getId(), e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
@@ -2431,8 +2439,8 @@ public class DbMailItem {
      * @param folderId 
      * @return list of invites
      */
-    public static List<UnderlyingData> getAppointments(Mailbox mbox, long start, long end, 
-                                                       int folderId, int[] excludeFolderIds) 
+    public static List<UnderlyingData> getCalendarItems(Mailbox mbox, byte type, long start, long end, 
+                                                        int folderId, int[] excludeFolderIds) 
     throws ServiceException {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -2443,15 +2451,22 @@ public class DbMailItem {
             String excludeFolderPart = "";
             if (excludeFolderIds != null) 
                 excludeFolderPart = " AND folder_id NOT IN" + DbUtil.suitableNumberOfVariables(excludeFolderIds);
-            
+
+            String typeList;
+            if (type == MailItem.TYPE_APPOINTMENT)
+                typeList = APPOINTMENT_TYPE;
+            else if (type == MailItem.TYPE_TASK)
+                typeList = TASK_TYPE;
+            else
+                typeList = CALENDAR_TYPES;
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                     " FROM " + getAppointmentTableName(mbox, "appt") + ", " +
+                     " FROM " + getCalendarItemTableName(mbox, "ci") + ", " +
                                 getMailItemTableName(mbox, "mi") +
                      " WHERE " +
-                     (!DebugConfig.disableMailboxGroup ? "appt.mailbox_id = ? AND " : "") +
-                     "appt.start_time < ? AND appt.end_time > ? AND " +
-                     (!DebugConfig.disableMailboxGroup ? "mi.mailbox_id = appt.mailbox_id AND " : "") +
-                     "mi.id = appt.item_id AND mi.type = " + MailItem.TYPE_APPOINTMENT +
+                     (!DebugConfig.disableMailboxGroup ? "ci.mailbox_id = ? AND " : "") +
+                     "ci.start_time < ? AND ci.end_time > ? AND " +
+                     (!DebugConfig.disableMailboxGroup ? "mi.mailbox_id = ci.mailbox_id AND " : "") +
+                     "mi.id = ci.item_id AND mi.type IN " + typeList +
                      (folderSpecified ? " AND folder_id = ?" : "") +
                      excludeFolderPart +
                      " GROUP BY mi.id");
@@ -2475,21 +2490,21 @@ public class DbMailItem {
                 result.add(constructItem(rs));
             return result;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("fetching appointments for mailbox " + mbox.getId(), e);
+            throw ServiceException.FAILURE("fetching calendar items for mailbox " + mbox.getId(), e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
     }
     
-    public static void addToAppointmentTable(Appointment appt) throws ServiceException {
-        Mailbox mbox = appt.getMailbox();
+    public static void addToCalendarItemTable(CalendarItem calItem) throws ServiceException {
+        Mailbox mbox = calItem.getMailbox();
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            Timestamp startTs = new Timestamp(appt.getStartTime());
+            Timestamp startTs = new Timestamp(calItem.getStartTime());
             
-            long end = appt.getEndTime();
+            long end = calItem.getEndTime();
             Timestamp endTs;
             if (end <= 0) {
                 endTs = new Timestamp(MAX_DATE);
@@ -2498,7 +2513,7 @@ public class DbMailItem {
             }
             
             stmt = conn.prepareStatement("INSERT INTO " +
-                    getAppointmentTableName(mbox) +
+                    getCalendarItemTableName(mbox) +
                     " (" +
                     (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") +
                     "uid, item_id, start_time, end_time)" +
@@ -2508,13 +2523,13 @@ public class DbMailItem {
             int pos = 1;
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
-            stmt.setString(pos++, appt.getUid());
-            stmt.setInt(pos++, appt.getId());
+            stmt.setString(pos++, calItem.getUid());
+            stmt.setInt(pos++, calItem.getId());
             stmt.setTimestamp(pos++, startTs);
             stmt.setTimestamp(pos++, endTs);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("writing invite to appt table: UID=" + appt.getUid(), e);
+            throw ServiceException.FAILURE("writing invite to calendar item table: UID=" + calItem.getUid(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -2522,14 +2537,14 @@ public class DbMailItem {
 
     private static long MAX_DATE = new GregorianCalendar(9999, 1, 1).getTimeInMillis();
     
-    public static void updateInAppointmentTable(Appointment appt) throws ServiceException {
-        Mailbox mbox = appt.getMailbox();
+    public static void updateInCalendarItemTable(CalendarItem calItem) throws ServiceException {
+        Mailbox mbox = calItem.getMailbox();
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            Timestamp startTs = new Timestamp(appt.getStartTime());
+            Timestamp startTs = new Timestamp(calItem.getStartTime());
             
-            long end = appt.getEndTime();
+            long end = calItem.getEndTime();
             Timestamp endTs;
             if (end <= 0) {
                 endTs = new Timestamp(MAX_DATE);
@@ -2538,7 +2553,7 @@ public class DbMailItem {
             }
             
             stmt = conn.prepareStatement("INSERT INTO " +
-                    getAppointmentTableName(mbox) +
+                    getCalendarItemTableName(mbox) +
                     " (" +
                     (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") +
                     "uid, item_id, start_time, end_time)" +
@@ -2549,19 +2564,19 @@ public class DbMailItem {
             int pos = 1;
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
-            stmt.setString(pos++, appt.getUid());
-            stmt.setInt(pos++, appt.getId());
+            stmt.setString(pos++, calItem.getUid());
+            stmt.setInt(pos++, calItem.getId());
             stmt.setTimestamp(pos++, startTs);
             stmt.setTimestamp(pos++, endTs);
 
-            stmt.setString(pos++, appt.getUid());
-            stmt.setInt(pos++, appt.getId());
+            stmt.setString(pos++, calItem.getUid());
+            stmt.setInt(pos++, calItem.getId());
             stmt.setTimestamp(pos++, startTs);
             stmt.setTimestamp(pos++, endTs);
 
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("writing invite to appt table" + appt.getUid(), e);
+            throw ServiceException.FAILURE("writing invite to calendar item table" + calItem.getUid(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -2624,21 +2639,21 @@ public class DbMailItem {
     }
 
     /**
-     * Returns the name of the table that stores {@link Appointment} data.  The table name is qualified
+     * Returns the name of the table that stores {@link CalendarItem} data.  The table name is qualified
      * by the name of the database (e.g. <code>mailbox1.appointment</code>).
      */
-    public static String getAppointmentTableName(int mailboxId, int groupId) {
+    public static String getCalendarItemTableName(int mailboxId, int groupId) {
         return DbMailbox.getDatabaseName(mailboxId, groupId) + ".appointment";
     }
-    public static String getAppointmentTableName(Mailbox mbox) {
+    public static String getCalendarItemTableName(Mailbox mbox) {
         int id = mbox.getId();
         int gid = mbox.getSchemaGroupId();
-        return getAppointmentTableName(id, gid);
+        return getCalendarItemTableName(id, gid);
     }
-    public static String getAppointmentTableName(Mailbox mbox, String alias) {
+    public static String getCalendarItemTableName(Mailbox mbox, String alias) {
         int id = mbox.getId();
         int gid = mbox.getSchemaGroupId();
-        return getAppointmentTableName(id, gid) + " " + alias;
+        return getCalendarItemTableName(id, gid) + " " + alias;
     }
 
     /**

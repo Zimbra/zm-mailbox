@@ -27,7 +27,7 @@ package com.zimbra.cs.operation;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -43,7 +43,7 @@ public class GetMsgOperation extends Operation {
     private ItemId mIid;
     private boolean mRead;
     private List<Message> mMsgs;
-    private Appointment mAppt;
+    private CalendarItem mCalItem;
 
 	private static int LOAD = 5;
     	static {
@@ -81,7 +81,7 @@ public class GetMsgOperation extends Operation {
 			if (mRead && msg.isUnread() && !RedoLogProvider.getInstance().isSlave())
 				mMailbox.alterTag(mOpCtxt, mIid.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
 		} else {
-			mAppt = mMailbox.getAppointmentById(mOpCtxt, mIid.getId());
+			mCalItem = mMailbox.getCalendarItemById(mOpCtxt, mIid.getId());
         }
 	}
 
@@ -92,5 +92,5 @@ public class GetMsgOperation extends Operation {
 
     public Message getMsg() { return (mMsgs != null && !mMsgs.isEmpty() ? mMsgs.get(0) : null); }
     public List<Message> getMsgList() { return mMsgs; }
-	public Appointment getAppt() { return mAppt; }
+	public CalendarItem getCalendarItem() { return mCalItem; }
 }

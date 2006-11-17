@@ -40,7 +40,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.service.DavServlet;
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -171,7 +171,9 @@ public class UrlNamespace {
 			case MailItem.TYPE_FOLDER :
 			case MailItem.TYPE_MOUNTPOINT :
 				Folder f = (Folder) item;
-				if (f.getDefaultView() == MailItem.TYPE_APPOINTMENT)
+                byte viewType = f.getDefaultView();
+				if (viewType == MailItem.TYPE_APPOINTMENT ||
+                    viewType == MailItem.TYPE_TASK)
 					resource = new CalendarCollection((Folder)item);
 				else
 					resource = new Collection((Folder)item);
@@ -181,7 +183,8 @@ public class UrlNamespace {
 				resource = new Notebook(ctxt, (Document)item);
 				break;
 			case MailItem.TYPE_APPOINTMENT :
-				resource = new CalendarObject((Appointment)item);
+            case MailItem.TYPE_TASK :
+				resource = new CalendarObject((CalendarItem)item);
 				break;
 			}
 		} catch (ServiceException e) {
@@ -272,10 +275,11 @@ public class UrlNamespace {
 				}
 			}
 			if (f != null && 
-					f.getDefaultView() == MailItem.TYPE_APPOINTMENT && 
+					(f.getDefaultView() == MailItem.TYPE_APPOINTMENT ||
+                     f.getDefaultView() == MailItem.TYPE_TASK) && 
 					path.endsWith(CalendarObject.CAL_EXTENSION)) {
 				String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
-				return mbox.getAppointmentByUid(octxt, uid);
+				return mbox.getCalendarItemByUid(octxt, uid);
 			}
 			return mbox.getItemByPath(octxt, path, 0, false);
 		} catch (ServiceException e) {

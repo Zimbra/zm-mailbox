@@ -108,7 +108,7 @@ public class CalendarUtils {
      * @throws ServiceException
      */
     static ParseMimeMessage.InviteParserResult parseInviteForCreate(
-            Account account, Element inviteElem, TimeZoneMap tzMap, String uid,
+            Account account, byte itemType, Element inviteElem, TimeZoneMap tzMap, String uid,
             boolean recurrenceIdAllowed, boolean recurAllowed)
             throws ServiceException {
         if (tzMap == null) {
@@ -117,7 +117,7 @@ public class CalendarUtils {
         Invite create = new Invite(ICalTok.PUBLISH.toString(), tzMap);
 
         CalendarUtils.parseInviteElementCommon(
-                account, inviteElem, create, recurrenceIdAllowed, recurAllowed);
+                account, itemType, inviteElem, create, recurrenceIdAllowed, recurAllowed);
 
         // DTSTAMP
         create.setDtStamp(new Date().getTime());
@@ -152,14 +152,14 @@ public class CalendarUtils {
      * @throws ServiceException
      */
     static ParseMimeMessage.InviteParserResult parseInviteForModify(
-            Account account, Element inviteElem, Invite oldInv,
+            Account account, byte itemType, Element inviteElem, Invite oldInv,
             List<ZAttendee> attendeesToCancel, boolean recurAllowed)
             throws ServiceException {
         Invite mod = new Invite(ICalTok.PUBLISH.toString(), oldInv
                 .getTimeZoneMap());
 
         CalendarUtils.parseInviteElementCommon(
-                account, inviteElem, mod, oldInv.hasRecurId(), recurAllowed);
+                account, itemType, inviteElem, mod, oldInv.hasRecurId(), recurAllowed);
 
         // DTSTAMP
         mod.setDtStamp(new Date().getTime());
@@ -203,7 +203,7 @@ public class CalendarUtils {
     }
 
     static ParseMimeMessage.InviteParserResult parseInviteForCancel(
-            Account account, Element inviteElem, TimeZoneMap tzMap,
+            Account account, byte itemType, Element inviteElem, TimeZoneMap tzMap,
             boolean recurrenceIdAllowed, boolean recurAllowed)
             throws ServiceException {
         if (tzMap == null) {
@@ -212,7 +212,7 @@ public class CalendarUtils {
         Invite cancel = new Invite(ICalTok.CANCEL.toString(), tzMap);
 
         CalendarUtils.parseInviteElementCommon(
-                account, inviteElem, cancel, recurrenceIdAllowed, recurAllowed);
+                account, itemType, inviteElem, cancel, recurrenceIdAllowed, recurAllowed);
 
         String uid = cancel.getUid();
         if (uid == null || uid.length() == 0)
@@ -624,7 +624,7 @@ public class CalendarUtils {
      * @throws ServiceException
      */
     private static void parseInviteElementCommon(
-            Account account, Element element, Invite newInv,
+            Account account, byte itemType, Element element, Invite newInv,
             boolean recurrenceIdAllowed, boolean recurAllowed)
     throws ServiceException {
 
@@ -635,10 +635,7 @@ public class CalendarUtils {
     	TimeZoneMap tzMap = newInv.getTimeZoneMap();
         parseTimeZones(element.getParent(), tzMap);
 
-        // component type (event, todo, or journal)
-        String compType = element.getAttribute(MailService.A_APPT_TYPE,
-                                               IcalXmlStrMap.COMPTYPE_EVENT);
-        newInv.setCompType(compType);
+        newInv.setItemType(itemType);
 
         // UID
         String uid = element.getAttribute(MailService.A_UID, null);
@@ -976,7 +973,7 @@ public class CalendarUtils {
             List<ZAttendee> forAttendees, RecurId recurId,
             boolean incrementSeq)
     throws ServiceException {
-        Invite cancel = new Invite(inv.getCompType(), ICalTok.CANCEL.toString(),
+        Invite cancel = new Invite(inv.getItemType(), ICalTok.CANCEL.toString(),
                                    inv.getTimeZoneMap());
 
         // ORGANIZER

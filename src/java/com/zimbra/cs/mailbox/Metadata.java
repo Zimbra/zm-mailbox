@@ -56,9 +56,9 @@ public class Metadata {
     static final String FN_ATTRS           = "a";
     static final String FN_RIGHTS          = "acl";
     static final String FN_ACCOUNT_ID      = "aid";
-    static final String FN_APPT_IDS        = "ais";
-    static final String FN_APPT_END        = "ape";
-    static final String FN_APPT_START      = "aps";
+    static final String FN_CALITEM_IDS        = "ais";
+    static final String FN_CALITEM_END        = "ape";
+    static final String FN_CALITEM_START      = "aps";
     static final String FN_COLOR           = "c";
     static final String FN_COMPONENT       = "comp";
     static final String FN_CREATOR         = "cr";

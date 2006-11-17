@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Map;
 
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -68,11 +68,11 @@ public class GetICal extends MailDocumentHandler {
                 ZVCalendar cal = null;
                 if (iidStr != null) {
                 	ItemId iid = new ItemId(iidStr, lc);
-                    Appointment appt = mbx.getAppointmentById(octxt, iid.getId());
-                    if (appt == null) {
-                        throw MailServiceException.NO_SUCH_APPT(iid.toString(), "Could not find appointment");
+                    CalendarItem calItem = mbx.getCalendarItemById(octxt, iid.getId());
+                    if (calItem == null) {
+                        throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
                     }
-                    Invite inv = appt.getInvite(iid.getSubpartId(), compNum);
+                    Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
                     if (inv == null) {
                         throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
                     }
@@ -89,7 +89,7 @@ public class GetICal extends MailDocumentHandler {
                     cal.toICalendar(wout);
                     wout.flush();
                     
-                    Element response = lc.createElement(MailService.GET_ICAL_RESPONSE);
+                    Element response = getResponseElement(lc);
                     
                     Element icalElt = response.addElement(MailService.E_APPT_ICAL);
                     

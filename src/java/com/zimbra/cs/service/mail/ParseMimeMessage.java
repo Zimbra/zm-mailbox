@@ -30,7 +30,7 @@ package com.zimbra.cs.service.mail;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -298,12 +298,12 @@ public class ParseMimeMessage {
                             if (!iid.hasSubpart()) {
                                 attachPart(mmp, mbox.getMessageById(octxt, iid.getId()), part, use2231);
                             } else {
-                                Appointment appt = mbox.getAppointmentById(octxt, iid.getId());
-                                MimeMessage apptMm = appt.getSubpartMessage(iid.getSubpartId());
-                                MimePart apptMp = Mime.getMimePart(apptMm, part);
-                                if (apptMp == null)
+                                CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
+                                MimeMessage calMm = calItem.getSubpartMessage(iid.getSubpartId());
+                                MimePart calMp = Mime.getMimePart(calMm, part);
+                                if (calMp == null)
                                     throw MailServiceException.NO_SUCH_PART(part);
-                                attachPart(mmp, apptMp, use2231);
+                                attachPart(mmp, calMp, use2231);
                             }
                         } else if (eName.equals(MailService.E_MSG)) {
                             int messageId = (int) elem.getAttributeLong(MailService.A_ID);

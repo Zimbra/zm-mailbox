@@ -74,7 +74,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
     private HashMap<String, MessagePartHit> mPartHits;
     private HashMap<Integer, ContactHit> mContactHits;
     private HashMap<Integer, NoteHit>  mNoteHits;
-    private HashMap<Integer, AppointmentHit> mApptHits;
+    private HashMap<Integer, CalendarItemHit> mCalItemHits;
   
   ZimbraQueryResultsImpl(byte[] types, SortBy searchOrder, Mailbox.SearchResultMode mode) { 
       mTypes = types;
@@ -87,7 +87,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
       mPartHits = new LinkedHashMap<String, MessagePartHit>();
       mContactHits = new LinkedHashMap<Integer, ContactHit>();
       mNoteHits = new LinkedHashMap<Integer, NoteHit>();
-      mApptHits = new LinkedHashMap<Integer, AppointmentHit>();
+      mCalItemHits = new LinkedHashMap<Integer, CalendarItemHit>();
   };
   
   public ZimbraHit getFirstHit() throws ServiceException {
@@ -142,15 +142,15 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
       return hit;
   }
   
-  protected AppointmentHit getAppointmentHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
-      AppointmentHit hit = (AppointmentHit) mApptHits.get(mailItemId);
+  protected CalendarItemHit getCalendarItemHit(Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
+      CalendarItemHit hit = (CalendarItemHit) mCalItemHits.get(mailItemId);
       if (hit == null) {
           if (d != null) {
-              hit = new AppointmentHit(this, mbx, mailItemId, d, score, ud);
+              hit = new CalendarItemHit(this, mbx, mailItemId, d, score, ud);
           } else {
-              hit = new AppointmentHit(this, mbx, mailItemId, score, ud);
+              hit = new CalendarItemHit(this, mbx, mailItemId, score, ud);
           }
-          mApptHits.put(mailItemId, hit);
+          mCalItemHits.put(mailItemId, hit);
       } else {
           hit.updateScore(score);
       }
@@ -215,7 +215,8 @@ ZimbraHit getZimbraHit(Mailbox mbox, float score, SearchResult sr, Document doc)
     	  toRet = getNoteHit(mbox, sr.id, null, score, sr.data);
           break;
       case MailItem.TYPE_APPOINTMENT:
-    	  toRet = getAppointmentHit(mbox, sr.id, null, score, sr.data);
+      case MailItem.TYPE_TASK:
+    	  toRet = getCalendarItemHit(mbox, sr.id, null, score, sr.data);
     	  break;
       case MailItem.TYPE_DOCUMENT:
       case MailItem.TYPE_WIKI:

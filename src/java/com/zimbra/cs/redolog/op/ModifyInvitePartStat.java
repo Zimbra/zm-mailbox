@@ -30,7 +30,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
@@ -43,7 +43,7 @@ import com.zimbra.cs.redolog.RedoLogOutput;
  */
 public class ModifyInvitePartStat extends RedoableOp 
 {
-    private int mApptId = UNKNOWN_ID; // appointment which contains invite
+    private int mCalItemId = UNKNOWN_ID; // calendar item which contains invite
     private String mRecurIdDt = null;
     private int mRecurIdRange = RecurId.RANGE_NONE;
     private String mCnStr = null;
@@ -58,12 +58,12 @@ public class ModifyInvitePartStat extends RedoableOp
     public ModifyInvitePartStat() {
     }
 
-    public ModifyInvitePartStat(int mailboxId, int apptId, RecurId recurId, 
+    public ModifyInvitePartStat(int mailboxId, int calItemId, RecurId recurId, 
             String cnStr, String addressStr, String cutypeStr, String roleStr, String partStatStr, Boolean rsvp, 
             int seqNo, long dtStamp)
     {
         setMailboxId(mailboxId);
-        mApptId = apptId;
+        mCalItemId = calItemId;
         if (recurId != null) {
             mRecurIdDt = recurId.getDt().toString();
             mRecurIdRange = recurId.getRange();
@@ -84,15 +84,15 @@ public class ModifyInvitePartStat extends RedoableOp
 
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        Appointment appt = mbox.getAppointmentById(null, mApptId);
+        CalendarItem calItem = mbox.getCalendarItemById(null, mCalItemId);
         RecurId recurId = null;
         if (mRecurIdDt != null)
-            recurId = new RecurId(ParsedDateTime.parse(mRecurIdDt, appt.getTimeZoneMap()), mRecurIdRange);
-        mbox.modifyPartStat(getOperationContext(), mApptId, recurId, mCnStr, mAddressStr, mCUTypeStr, mRoleStr, mPartStatStr, mRsvp, mSeqNo, mDtStamp); 
+            recurId = new RecurId(ParsedDateTime.parse(mRecurIdDt, calItem.getTimeZoneMap()), mRecurIdRange);
+        mbox.modifyPartStat(getOperationContext(), mCalItemId, recurId, mCnStr, mAddressStr, mCUTypeStr, mRoleStr, mPartStatStr, mRsvp, mSeqNo, mDtStamp); 
     }
 
     protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("apptId=").append(mApptId);
+        StringBuffer sb = new StringBuffer("calItemId=").append(mCalItemId);
         if (mRecurIdDt != null) {
             sb.append(", recurIdDt=").append(mRecurIdDt);
             sb.append(", recurIdRange=").append(mRecurIdRange);
@@ -109,7 +109,7 @@ public class ModifyInvitePartStat extends RedoableOp
     }
 
     protected void serializeData(RedoLogOutput out) throws IOException {
-        out.writeInt(mApptId);
+        out.writeInt(mCalItemId);
         boolean hasRecurId = mRecurIdDt != null;
         out.writeBoolean(hasRecurId);
         if (hasRecurId) {
@@ -128,7 +128,7 @@ public class ModifyInvitePartStat extends RedoableOp
     }
 
     protected void deserializeData(RedoLogInput in) throws IOException {
-        mApptId = in.readInt();
+        mCalItemId = in.readInt();
         boolean hasRecurId = in.readBoolean();
         if (hasRecurId) {
             mRecurIdRange = in.readInt();

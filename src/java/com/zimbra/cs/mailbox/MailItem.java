@@ -75,8 +75,10 @@ public abstract class MailItem implements Comparable<MailItem> {
     public static final byte TYPE_MOUNTPOINT   = 13;
     /** Item is a {@link WikiItem} */
     public static final byte TYPE_WIKI         = 14;
+    /** Item is a {@link Task} */
+    public static final byte TYPE_TASK         = 15;
 
-    static final byte TYPE_MAX = TYPE_WIKI;
+    static final byte TYPE_MAX = TYPE_TASK;
     public static final byte TYPE_UNKNOWN = -1;
 
     private static String[] TYPE_NAMES = {
@@ -94,7 +96,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         "appointment",
         "virtual conversation",
         "remote folder",
-        "wiki"
+        "wiki",
+        "task"
     };
 
     /** Throws {@link ServiceException} <code>mail.INVALID_TYPE</code> if the
@@ -879,6 +882,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             case TYPE_DOCUMENT:     return new Document(mbox, data);
             case TYPE_NOTE:         return new Note(mbox, data);
             case TYPE_APPOINTMENT:  return new Appointment(mbox, data);
+            case TYPE_TASK:         return new Task(mbox, data);
             case TYPE_MOUNTPOINT:   return new Mountpoint(mbox, data);
             case TYPE_WIKI:         return new WikiItem(mbox, data);
             default:                return null;
@@ -905,6 +909,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             case TYPE_DOCUMENT:     return MailServiceException.NO_SUCH_DOC(id);
             case TYPE_NOTE:         return MailServiceException.NO_SUCH_NOTE(id);
             case TYPE_APPOINTMENT:  return MailServiceException.NO_SUCH_APPT(id);
+            case TYPE_TASK:         return MailServiceException.NO_SUCH_TASK(id);
             default:                return MailServiceException.NO_SUCH_ITEM(id);
         }
     }
