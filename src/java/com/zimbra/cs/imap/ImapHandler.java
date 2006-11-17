@@ -411,9 +411,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         req.skipSpace();  Map<String, String> params = req.readParameters(true);
                         checkEOF(tag, req);
                         return doID(tag, params);
-//                        } else if (command.equals("IDLE")) {
-//                            checkEOF(tag, req);
-//                            return doIDLE(tag, IDLE_START, true);
+                    } else if (command.equals("IDLE")) {
+                        checkEOF(tag, req);
+                        return doIDLE(tag, IDLE_START, true);
                     }
                     break;
                 case 'L':
@@ -612,7 +612,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         String nologin = mServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
         String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN "; 
-        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CATENATE CHILDREN ESEARCH ID LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR UIDPLUS UNSELECT");
+        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CATENATE CHILDREN ESEARCH ID IDLE LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR UIDPLUS UNSELECT");
     }
 
     boolean doNOOP(String tag) throws IOException {
@@ -2023,26 +2023,18 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         }
 
         try {
-            // Bug 6623: close the input stream first so that the lock inside the JDK
-            // is relesaed, and then close the output side. The downside to closing
-            // the input side first is that the underlying socket appears to get closed
-            // and if we tried to send a goodbye banner that is just lost into ether.
-            if (mInputStream != null) {
-                mInputStream.close();
-                mInputStream = null;
-            }
             if (mOutputStream != null) {
                 if (sendBanner) {
-                    if (!mGoodbyeSent) {
-                        // We never send out goodbye in non-NIO case because it would cause
-                        // the write to deadlock with the connection thread which might in the
-                        // middle of a read.
-                        // sendUntagged(ImapServer.getGoodbye(), true);
-                    }
+                    if (!mGoodbyeSent)
+                         sendUntagged(ImapServer.getGoodbye(), true);
                     mGoodbyeSent = true;
                 }
                 mOutputStream.close();
                 mOutputStream = null;
+            }
+            if (mInputStream != null) {
+                mInputStream.close();
+                mInputStream = null;
             }
         } catch (IOException e) {
             INFO("exception while closing connection", e);

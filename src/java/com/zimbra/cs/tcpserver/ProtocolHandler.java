@@ -115,8 +115,8 @@ public abstract class ProtocolHandler implements Runnable {
 		public void run() {
             boolean idle;
 			if (getMadeProgress() == false && getIdle() == true) {
+			    mIdleClosed = true;
 				notifyIdleConnection();
-				mIdleClosed = true;
 				hardShutdown("Closing idle connection");
 			} else {
 				setMadeProgress(false); // and we'll check again later if you did anything
