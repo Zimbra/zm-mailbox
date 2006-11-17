@@ -55,10 +55,10 @@ public class GetICal extends MailDocumentHandler {
         OperationContext octxt = lc.getOperationContext();
         
         String iidStr = request.getAttribute(MailService.A_ID, null);
-        long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME, -1);
-        long rangeEnd = request.getAttributeLong(MailService.A_APPT_END_TIME, -1);
+        long rangeStart = request.getAttributeLong(MailService.A_CAL_START_TIME, -1);
+        long rangeEnd = request.getAttributeLong(MailService.A_CAL_END_TIME, -1);
         
-//        int compNum = (int)request.getAttributeLong(MailService.A_APPT_COMPONENT_NUM);
+//        int compNum = (int)request.getAttributeLong(MailService.A_CAL_COMPONENT_NUM);
         int compNum = 0;
 
         Browser browser = HttpUtil.guessBrowser(lc.getUserAgent());
@@ -91,7 +91,7 @@ public class GetICal extends MailDocumentHandler {
                     
                     Element response = getResponseElement(lc);
                     
-                    Element icalElt = response.addElement(MailService.E_APPT_ICAL);
+                    Element icalElt = response.addElement(MailService.E_CAL_ICAL);
                     
                     icalElt.addAttribute(MailService.A_ID, iidStr);
                     

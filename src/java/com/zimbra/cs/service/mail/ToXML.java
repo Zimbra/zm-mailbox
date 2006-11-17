@@ -707,13 +707,13 @@ public class ToXML {
             Element ie = calItemElem.addElement(MailService.E_INVITE);
             encodeTimeZoneMap(ie, calItem.getTimeZoneMap());
 
-            ie.addAttribute(MailService.A_APPT_SEQUENCE, inv.getSeqNo());
+            ie.addAttribute(MailService.A_CAL_SEQUENCE, inv.getSeqNo());
             encodeReplies(ie, calItem, inv);
 
             ie.addAttribute(MailService.A_ID, lc.formatItemId(inv.getMailItemId()));
-            ie.addAttribute(MailService.A_APPT_COMPONENT_NUM, inv.getComponentNum());
+            ie.addAttribute(MailService.A_CAL_COMPONENT_NUM, inv.getComponentNum());
             if (inv.hasRecurId())
-                ie.addAttribute(MailService.A_APPT_RECURRENCE_ID, inv.getRecurId().toString());
+                ie.addAttribute(MailService.A_CAL_RECURRENCE_ID, inv.getRecurId().toString());
 
             encodeInvite(ie, lc, calItem, inv, NOTIFY_FIELDS, false);
         }
@@ -722,24 +722,24 @@ public class ToXML {
     }
 
     private static void encodeReplies(Element parent, CalendarItem calItem, Invite inv) {
-        Element repliesElt = parent.addElement(MailService.E_APPT_REPLIES);
+        Element repliesElt = parent.addElement(MailService.E_CAL_REPLIES);
 
         List /*CalendarItem.ReplyInfo */ replies = calItem.getReplyInfo(inv);
         for (Iterator iter = replies.iterator(); iter.hasNext(); ) {
             CalendarItem.ReplyInfo repInfo = (CalendarItem.ReplyInfo) iter.next();
             ZAttendee attendee = repInfo.mAttendee;
 
-            Element curElt = repliesElt.addElement(MailService.E_APPT_REPLY);
+            Element curElt = repliesElt.addElement(MailService.E_CAL_REPLY);
             if (repInfo.mRecurId != null) {
                 repInfo.mRecurId.toXml(curElt);
             }
             if (attendee.hasPartStat()) {
-                curElt.addAttribute(MailService.A_APPT_PARTSTAT, attendee.getPartStat());
+                curElt.addAttribute(MailService.A_CAL_PARTSTAT, attendee.getPartStat());
             }
             curElt.addAttribute(MailService.A_DATE, repInfo.mDtStamp);
-            curElt.addAttribute(MailService.A_APPT_ATTENDEE, attendee.getAddress());
+            curElt.addAttribute(MailService.A_CAL_ATTENDEE, attendee.getAddress());
             if (attendee.hasSentBy())
-                curElt.addAttribute(MailService.A_APPT_SENTBY, attendee.getSentBy());
+                curElt.addAttribute(MailService.A_CAL_SENTBY, attendee.getSentBy());
         }
     }
 
@@ -959,39 +959,39 @@ public class ToXML {
         assert(tzmap != null);
         for (Iterator iter = tzmap.tzIterator(); iter.hasNext(); ) {
             ICalTimeZone tz = (ICalTimeZone) iter.next();
-            Element e = parent.addElement(MailService.E_APPT_TZ);
+            Element e = parent.addElement(MailService.E_CAL_TZ);
             e.addAttribute(MailService.A_ID, tz.getID());
-            e.addAttribute(MailService.A_APPT_TZ_STDOFFSET, tz.getStandardOffset() / 60 / 1000);
+            e.addAttribute(MailService.A_CAL_TZ_STDOFFSET, tz.getStandardOffset() / 60 / 1000);
 
             if (tz.useDaylightTime()) {
                 SimpleOnset standard = tz.getStandardOnset();
                 SimpleOnset daylight = tz.getDaylightOnset();
                 if (standard != null && daylight != null) {
-                    e.addAttribute(MailService.A_APPT_TZ_DAYOFFSET, tz.getDaylightOffset() / 60 / 1000);
+                    e.addAttribute(MailService.A_CAL_TZ_DAYOFFSET, tz.getDaylightOffset() / 60 / 1000);
 
-                    Element std = e.addElement(MailService.E_APPT_TZ_STANDARD);
+                    Element std = e.addElement(MailService.E_CAL_TZ_STANDARD);
                     int standardWeek = standard.getWeek();
                     if (standardWeek != 0) {
-                        std.addAttribute(MailService.A_APPT_TZ_WEEK, standardWeek);
-                        std.addAttribute(MailService.A_APPT_TZ_DAYOFWEEK, standard.getDayOfWeek());
+                        std.addAttribute(MailService.A_CAL_TZ_WEEK, standardWeek);
+                        std.addAttribute(MailService.A_CAL_TZ_DAYOFWEEK, standard.getDayOfWeek());
                     } else
-                        std.addAttribute(MailService.A_APPT_TZ_DAYOFMONTH, standard.getDayOfMonth());
-                    std.addAttribute(MailService.A_APPT_TZ_MONTH, standard.getMonth());
-                    std.addAttribute(MailService.A_APPT_TZ_HOUR, standard.getHour());
-                    std.addAttribute(MailService.A_APPT_TZ_MINUTE, standard.getMinute());
-                    std.addAttribute(MailService.A_APPT_TZ_SECOND, standard.getSecond());
+                        std.addAttribute(MailService.A_CAL_TZ_DAYOFMONTH, standard.getDayOfMonth());
+                    std.addAttribute(MailService.A_CAL_TZ_MONTH, standard.getMonth());
+                    std.addAttribute(MailService.A_CAL_TZ_HOUR, standard.getHour());
+                    std.addAttribute(MailService.A_CAL_TZ_MINUTE, standard.getMinute());
+                    std.addAttribute(MailService.A_CAL_TZ_SECOND, standard.getSecond());
 
-                    Element day = e.addElement(MailService.E_APPT_TZ_DAYLIGHT);
+                    Element day = e.addElement(MailService.E_CAL_TZ_DAYLIGHT);
                     int daylightWeek = daylight.getWeek();
                     if (daylightWeek != 0) {
-                        day.addAttribute(MailService.A_APPT_TZ_WEEK, daylightWeek);
-                        day.addAttribute(MailService.A_APPT_TZ_DAYOFWEEK, daylight.getDayOfWeek());
+                        day.addAttribute(MailService.A_CAL_TZ_WEEK, daylightWeek);
+                        day.addAttribute(MailService.A_CAL_TZ_DAYOFWEEK, daylight.getDayOfWeek());
                     } else
-                        day.addAttribute(MailService.A_APPT_TZ_DAYOFMONTH, daylight.getDayOfMonth());
-                    day.addAttribute(MailService.A_APPT_TZ_MONTH, daylight.getMonth());
-                    day.addAttribute(MailService.A_APPT_TZ_HOUR, daylight.getHour());
-                    day.addAttribute(MailService.A_APPT_TZ_MINUTE, daylight.getMinute());
-                    day.addAttribute(MailService.A_APPT_TZ_SECOND, daylight.getSecond());
+                        day.addAttribute(MailService.A_CAL_TZ_DAYOFMONTH, daylight.getDayOfMonth());
+                    day.addAttribute(MailService.A_CAL_TZ_MONTH, daylight.getMonth());
+                    day.addAttribute(MailService.A_CAL_TZ_HOUR, daylight.getHour());
+                    day.addAttribute(MailService.A_CAL_TZ_MINUTE, daylight.getMinute());
+                    day.addAttribute(MailService.A_CAL_TZ_SECOND, daylight.getSecond());
                 }
             }
         }
@@ -1015,15 +1015,15 @@ public class ToXML {
 
         Element e = parent.addElement(MailService.E_INVITE_COMPONENT);
 
-        e.addAttribute(MailService.A_APPT_COMPONENT_NUM, invite.getComponentNum());
+        e.addAttribute(MailService.A_CAL_COMPONENT_NUM, invite.getComponentNum());
 
-        e.addAttribute(MailService.A_APPT_RSVP, invite.getRsvp());
+        e.addAttribute(MailService.A_CAL_RSVP, invite.getRsvp());
 
         Account acct = calItem.getMailbox().getAccount();
         if (allFields) {
             try {
                 e.addAttribute("x_uid", invite.getUid());
-                e.addAttribute(MailService.A_APPT_SEQUENCE, invite.getSeqNo());
+                e.addAttribute(MailService.A_CAL_SEQUENCE, invite.getSeqNo());
 
                 String itemId = lc.formatItemId(calItem);
                 e.addAttribute(MailService.A_CAL_ID, itemId);
@@ -1031,23 +1031,23 @@ public class ToXML {
                     e.addAttribute(MailService.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
 
                 if (invite.thisAcctIsOrganizer(acct)) {
-                    e.addAttribute(MailService.A_APPT_ISORG, true);
+                    e.addAttribute(MailService.A_CAL_ISORG, true);
                 }
 
                 Recurrence.IRecurrence recur = invite.getRecurrence();
                 if (recur != null) {
-                    Element recurElt = e.addElement(MailService.E_APPT_RECUR);
+                    Element recurElt = e.addElement(MailService.E_CAL_RECUR);
                     recur.toXml(recurElt);
                 }
             } catch(ServiceException ex) {
                 ex.printStackTrace();
             }
 
-            e.addAttribute(MailService.A_APPT_STATUS, invite.getStatus());
+            e.addAttribute(MailService.A_CAL_STATUS, invite.getStatus());
 
             String priority = invite.getPriority();
             if (priority != null)
-                e.addAttribute(MailService.A_APPT_PRIORITY, priority);
+                e.addAttribute(MailService.A_CAL_PRIORITY, priority);
 
             if (invite.isEvent()) {
                 e.addAttribute(MailService.A_APPT_FREEBUSY, invite.getFreeBusy());
@@ -1067,37 +1067,37 @@ public class ToXML {
                 encodeReplies(e, calItem, invite);
 
             if (invite.getRecurId() != null) {
-                e.addAttribute(MailService.A_APPT_IS_EXCEPTION, true);
+                e.addAttribute(MailService.A_CAL_IS_EXCEPTION, true);
             }
 
             boolean allDay = invite.isAllDayEvent();
             if (allDay)
-                e.addAttribute(MailService.A_APPT_ALLDAY, true);
+                e.addAttribute(MailService.A_CAL_ALLDAY, true);
 
             ParsedDateTime dtStart = invite.getStartTime();
             if (dtStart != null) {
-                Element startElt = e.addElement(MailService.E_APPT_START_TIME);
-                startElt.addAttribute(MailService.A_APPT_DATETIME, dtStart.getDateTimePartString(false));
+                Element startElt = e.addElement(MailService.E_CAL_START_TIME);
+                startElt.addAttribute(MailService.A_CAL_DATETIME, dtStart.getDateTimePartString(false));
                 if (!allDay) {
                     String tzName = dtStart.getTZName();
                     if (tzName != null)
-                        startElt.addAttribute(MailService.A_APPT_TIMEZONE, tzName);
+                        startElt.addAttribute(MailService.A_CAL_TIMEZONE, tzName);
                 }
             }
 
             ParsedDateTime dtEnd = invite.getEndTime();
             if (dtEnd != null) {
-                Element endElt = e.addElement(MailService.E_APPT_END_TIME);
+                Element endElt = e.addElement(MailService.E_CAL_END_TIME);
                 if (!allDay) {
                     String tzName = dtEnd.getTZName();
                     if (tzName != null)
-                        endElt.addAttribute(MailService.A_APPT_TIMEZONE, tzName);
+                        endElt.addAttribute(MailService.A_CAL_TIMEZONE, tzName);
                 } else {
                     // See CalendarUtils.parseInviteElementCommon, where we parse DTEND
                     // for a description of why we add -1d when sending to the client
                     dtEnd = dtEnd.add(ParsedDuration.NEGATIVE_ONE_DAY);
                 }
-                endElt.addAttribute(MailService.A_APPT_DATETIME, dtEnd.getDateTimePartString(false));
+                endElt.addAttribute(MailService.A_CAL_DATETIME, dtEnd.getDateTimePartString(false));
             }
 
             ParsedDuration dur = invite.getDuration();
@@ -1106,40 +1106,40 @@ public class ToXML {
             }
 
             e.addAttribute(MailService.A_NAME, invite.getName());
-            e.addAttribute(MailService.A_APPT_LOCATION, invite.getLocation());
+            e.addAttribute(MailService.A_CAL_LOCATION, invite.getLocation());
 
             // Percent Complete (VTODO)
             if (invite.isTodo()) {
                 String pct = invite.getPercentComplete();
                 if (pct != null)
-                    e.addAttribute(MailService.A_APPT_PERCENT_COMPLETE, pct);
+                    e.addAttribute(MailService.A_TASK_PERCENT_COMPLETE, pct);
                 long completed = invite.getCompleted();
                 if (completed != 0) {
                     ParsedDateTime c = ParsedDateTime.fromUTCTime(completed);
-                    e.addAttribute(MailService.A_APPT_COMPLETED, c.getDateTimePartString());
+                    e.addAttribute(MailService.A_TASK_COMPLETED, c.getDateTimePartString());
                 }
             }
 
             // Organizer
             if (invite.hasOrganizer()) {
                 ZOrganizer org = invite.getOrganizer();
-                Element orgElt = e.addUniqueElement(MailService.E_APPT_ORGANIZER);                
+                Element orgElt = e.addUniqueElement(MailService.E_CAL_ORGANIZER);                
                 String str = org.getAddress();
                 orgElt.addAttribute(MailService.A_URL, str);
                 if (org.hasCn())
                     orgElt.addAttribute(MailService.A_DISPLAY, org.getCn());
                 if (org.hasSentBy())
-                    orgElt.addAttribute(MailService.A_APPT_SENTBY, org.getSentBy());
+                    orgElt.addAttribute(MailService.A_CAL_SENTBY, org.getSentBy());
                 if (org.hasDir())
-                    orgElt.addAttribute(MailService.A_APPT_DIR, org.getDir());
+                    orgElt.addAttribute(MailService.A_CAL_DIR, org.getDir());
                 if (org.hasLanguage())
-                    orgElt.addAttribute(MailService.A_APPT_LANGUAGE, org.getLanguage());
+                    orgElt.addAttribute(MailService.A_CAL_LANGUAGE, org.getLanguage());
             }
 
             // Attendee(s)
             List<ZAttendee> attendees = invite.getAttendees();
             for (ZAttendee at : attendees) {
-                Element atElt = e.addElement(MailService.E_APPT_ATTENDEE);
+                Element atElt = e.addElement(MailService.E_CAL_ATTENDEE);
                 // address
                 atElt.addAttribute(MailService.A_URL, at.getAddress());
                 // CN
@@ -1147,34 +1147,34 @@ public class ToXML {
                     atElt.addAttribute(MailService.A_DISPLAY, at.getCn());
                 // SENT-BY
                 if (at.hasSentBy())
-                    atElt.addAttribute(MailService.A_APPT_SENTBY, at.getSentBy());
+                    atElt.addAttribute(MailService.A_CAL_SENTBY, at.getSentBy());
                 // DIR
                 if (at.hasDir())
-                    atElt.addAttribute(MailService.A_APPT_DIR, at.getDir());
+                    atElt.addAttribute(MailService.A_CAL_DIR, at.getDir());
                 // LANGUAGE
                 if (at.hasLanguage())
-                    atElt.addAttribute(MailService.A_APPT_LANGUAGE, at.getLanguage());
+                    atElt.addAttribute(MailService.A_CAL_LANGUAGE, at.getLanguage());
                 // CUTYPE
                 if (at.hasCUType())
-                    atElt.addAttribute(MailService.A_APPT_CUTYPE, at.getCUType());
+                    atElt.addAttribute(MailService.A_CAL_CUTYPE, at.getCUType());
                 // ROLE
                 if (at.hasRole())
-                    atElt.addAttribute(MailService.A_APPT_ROLE, at.getRole());
+                    atElt.addAttribute(MailService.A_CAL_ROLE, at.getRole());
                 // PARTSTAT
                 if (at.hasPartStat())
-                    atElt.addAttribute(MailService.A_APPT_PARTSTAT, at.getPartStat());
+                    atElt.addAttribute(MailService.A_CAL_PARTSTAT, at.getPartStat());
                 // RSVP
                 if (at.hasRsvp())
-                    atElt.addAttribute(MailService.A_APPT_RSVP, at.getRsvp().booleanValue());
+                    atElt.addAttribute(MailService.A_CAL_RSVP, at.getRsvp().booleanValue());
                 // MEMBER
                 if (at.hasMember())
-                    atElt.addAttribute(MailService.A_APPT_MEMBER, at.getMember());
+                    atElt.addAttribute(MailService.A_CAL_MEMBER, at.getMember());
                 // DELEGATED-TO
                 if (at.hasDelegatedTo())
-                    atElt.addAttribute(MailService.A_APPT_DELEGATED_TO, at.getDelegatedTo());
+                    atElt.addAttribute(MailService.A_CAL_DELEGATED_TO, at.getDelegatedTo());
                 // DELEGATED-FROM
                 if (at.hasDelegatedFrom())
-                    atElt.addAttribute(MailService.A_APPT_DELEGATED_FROM, at.getDelegatedFrom());
+                    atElt.addAttribute(MailService.A_CAL_DELEGATED_FROM, at.getDelegatedFrom());
             }
 
             // x-prop
@@ -1190,7 +1190,7 @@ public class ToXML {
             String propName = xprop.getName();
             if (propName == null) continue;
             String propValue = xprop.getValue();
-            Element propElem = parent.addElement(MailService.E_APPT_XPROP);
+            Element propElem = parent.addElement(MailService.E_CAL_XPROP);
             propElem.addAttribute(MailService.A_NAME, propName);
             if (propValue != null)
                 propElem.addAttribute(MailService.A_VALUE, propValue);
@@ -1198,7 +1198,7 @@ public class ToXML {
                 ZParameter xparam = paramIter.next();
                 String paramName = xparam.getName();
                 if (paramName == null) continue;
-                Element paramElem = propElem.addElement(MailService.E_APPT_XPARAM);
+                Element paramElem = propElem.addElement(MailService.E_CAL_XPARAM);
                 paramElem.addAttribute(MailService.A_NAME, paramName);
                 String paramValue = xparam.getValue();
                 if (paramValue != null)

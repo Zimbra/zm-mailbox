@@ -70,8 +70,8 @@ public class GetFreeBusy extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
         
-        long rangeStart = request.getAttributeLong(MailService.A_APPT_START_TIME);
-        long rangeEnd = request.getAttributeLong(MailService.A_APPT_END_TIME);
+        long rangeStart = request.getAttributeLong(MailService.A_CAL_START_TIME);
+        long rangeEnd = request.getAttributeLong(MailService.A_CAL_END_TIME);
         
         if (rangeEnd < rangeStart)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
@@ -109,8 +109,8 @@ public class GetFreeBusy extends MailDocumentHandler {
 
             try {
                 Element req = zc.getRequestProtocol().getFactory().createElement(MailService.GET_FREE_BUSY_REQUEST);
-                req.addAttribute(MailService.A_APPT_START_TIME, rangeStart);
-                req.addAttribute(MailService.A_APPT_END_TIME, rangeEnd);
+                req.addAttribute(MailService.A_CAL_START_TIME, rangeStart);
+                req.addAttribute(MailService.A_CAL_END_TIME, rangeEnd);
                 req.addAttribute(MailService.A_UID, paramStr);
 
                 // hack: use the ID of the first user 
@@ -164,8 +164,8 @@ public class GetFreeBusy extends MailDocumentHandler {
         Element usr = response.addElement(MailService.E_FREEBUSY_USER);
         usr.addAttribute(MailService.A_ID, idStr);
         usr.addElement(MailService.E_FREEBUSY_NO_DATA)
-           .addAttribute(MailService.A_APPT_START_TIME, rangeStart)
-           .addAttribute(MailService.A_APPT_END_TIME, rangeEnd);
+           .addAttribute(MailService.A_CAL_START_TIME, rangeStart)
+           .addAttribute(MailService.A_CAL_END_TIME, rangeEnd);
     }
     
     protected static void getForOneMailbox(ZimbraSoapContext zc, Element response, ParseMailboxID id, long start, long end)
@@ -195,8 +195,8 @@ public class GetFreeBusy extends MailDocumentHandler {
                     elt = null;
                 }
                 
-                elt.addAttribute(MailService.A_APPT_START_TIME, cur.getStart());
-                elt.addAttribute(MailService.A_APPT_END_TIME, cur.getEnd());
+                elt.addAttribute(MailService.A_CAL_START_TIME, cur.getStart());
+                elt.addAttribute(MailService.A_CAL_END_TIME, cur.getEnd());
             }
         } else {
             throw new IllegalArgumentException("REMOTE MAILBOXES NOT SUPPORTED YET\n");

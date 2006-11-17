@@ -454,8 +454,8 @@ public class Recurrence
         
         
         public Element toXml(Element parent) {
-            Element elt = parent.addElement(MailService.E_APPT_DATE);
-            elt.addAttribute(MailService.A_APPT_START_TIME, mDtStart != null ? mDtStart.toString() : "");
+            Element elt = parent.addElement(MailService.E_CAL_DATE);
+            elt.addAttribute(MailService.A_CAL_START_TIME, mDtStart != null ? mDtStart.toString() : "");
             return elt;
         }
         
@@ -526,105 +526,105 @@ public class Recurrence
         }
         
         public Element toXml(Element parent) {
-            Element rule = parent.addElement(MailService.E_APPT_RULE);
+            Element rule = parent.addElement(MailService.E_CAL_RULE);
 
             // FREQ
             String freq = IcalXmlStrMap.sFreqMap.toXml(mRecur.getFrequency().toString());
-            rule.addAttribute(MailService.A_APPT_RULE_FREQ, freq);
+            rule.addAttribute(MailService.A_CAL_RULE_FREQ, freq);
 
             // UNTIL or COUNT
             ParsedDateTime untilDate = mRecur.getUntil();
             if (untilDate != null) {
-                Element untilElt = rule.addElement(MailService.E_APPT_RULE_UNTIL);
-                untilElt.addAttribute(MailService.A_APPT_DATETIME,
+                Element untilElt = rule.addElement(MailService.E_CAL_RULE_UNTIL);
+                untilElt.addAttribute(MailService.A_CAL_DATETIME,
                                       untilDate.getDateTimePartString(false));
             } else {
                 int count = mRecur.getCount();
                 if (count > 0) {
-                    rule.addElement(MailService.E_APPT_RULE_COUNT).addAttribute(MailService.A_APPT_RULE_COUNT_NUM, count);
+                    rule.addElement(MailService.E_CAL_RULE_COUNT).addAttribute(MailService.A_CAL_RULE_COUNT_NUM, count);
                 }
             }
 
             // INTERVAL
             int ival = mRecur.getInterval();
             if (ival > 0) {
-                rule.addElement(MailService.E_APPT_RULE_INTERVAL).
-                    addAttribute(MailService.A_APPT_RULE_INTERVAL_IVAL, ival);
+                rule.addElement(MailService.E_CAL_RULE_INTERVAL).
+                    addAttribute(MailService.A_CAL_RULE_INTERVAL_IVAL, ival);
             }
 
             // BYSECOND
             List<Integer> bySecond = mRecur.getBySecondList();
             if (!bySecond.isEmpty()) {
-                rule.addElement(MailService.E_APPT_RULE_BYSECOND).
-                    addAttribute(MailService.A_APPT_RULE_BYSECOND_SECLIST, ZRecur.listAsStr(bySecond));
+                rule.addElement(MailService.E_CAL_RULE_BYSECOND).
+                    addAttribute(MailService.A_CAL_RULE_BYSECOND_SECLIST, ZRecur.listAsStr(bySecond));
             }
 
             // BYMINUTE
             List <Integer> byMinute = mRecur.getByMinuteList();
             if (!byMinute.isEmpty()) {
-                rule.addElement(MailService.E_APPT_RULE_BYMINUTE).
-                addAttribute(MailService.A_APPT_RULE_BYMINUTE_MINLIST, ZRecur.listAsStr(byMinute));
+                rule.addElement(MailService.E_CAL_RULE_BYMINUTE).
+                addAttribute(MailService.A_CAL_RULE_BYMINUTE_MINLIST, ZRecur.listAsStr(byMinute));
             }
 
             // BYHOUR
             List<Integer> byHour = mRecur.getByHourList();
             if (!byHour.isEmpty()) {
-                rule.addElement(MailService.E_APPT_RULE_BYHOUR).
-                    addAttribute(MailService.A_APPT_RULE_BYHOUR_HRLIST, ZRecur.listAsStr(byHour));
+                rule.addElement(MailService.E_CAL_RULE_BYHOUR).
+                    addAttribute(MailService.A_CAL_RULE_BYHOUR_HRLIST, ZRecur.listAsStr(byHour));
             }
 
             // BYDAY
             List<ZRecur.ZWeekDayNum> byDay = mRecur.getByDayList();
             if (!byDay.isEmpty()) {
-                Element bydayElt = rule.addElement(MailService.E_APPT_RULE_BYDAY);
+                Element bydayElt = rule.addElement(MailService.E_CAL_RULE_BYDAY);
                 for (ZRecur.ZWeekDayNum wdn : byDay) {
-                    Element wkdayElt = bydayElt.addElement(MailService.E_APPT_RULE_BYDAY_WKDAY);
+                    Element wkdayElt = bydayElt.addElement(MailService.E_CAL_RULE_BYDAY_WKDAY);
                     if (wdn.mOrdinal != 0) 
-                        wkdayElt.addAttribute(MailService.A_APPT_RULE_BYDAY_WKDAY_ORDWK, wdn.mOrdinal);
-                    wkdayElt.addAttribute(MailService.A_APPT_RULE_DAY, wdn.mDay.toString());
+                        wkdayElt.addAttribute(MailService.A_CAL_RULE_BYDAY_WKDAY_ORDWK, wdn.mOrdinal);
+                    wkdayElt.addAttribute(MailService.A_CAL_RULE_DAY, wdn.mDay.toString());
                 }
             }
 
             // BYMONTHDAY
             List<Integer> byMonthDay = mRecur.getByMonthDayList();
             if (!byMonthDay.isEmpty()) {
-                rule.addElement(MailService.E_APPT_RULE_BYMONTHDAY).
-                   addAttribute(MailService.A_APPT_RULE_BYMONTHDAY_MODAYLIST, ZRecur.listAsStr(byMonthDay));
+                rule.addElement(MailService.E_CAL_RULE_BYMONTHDAY).
+                   addAttribute(MailService.A_CAL_RULE_BYMONTHDAY_MODAYLIST, ZRecur.listAsStr(byMonthDay));
             }
 
             // BYYEARDAY
             List<Integer> byYearDay = mRecur.getByYearDayList();
             if (!byYearDay.isEmpty()) {
-                rule.addElement(MailService.E_APPT_RULE_BYYEARDAY).
-                    addAttribute(MailService.A_APPT_RULE_BYYEARDAY_YRDAYLIST, ZRecur.listAsStr(byYearDay));
+                rule.addElement(MailService.E_CAL_RULE_BYYEARDAY).
+                    addAttribute(MailService.A_CAL_RULE_BYYEARDAY_YRDAYLIST, ZRecur.listAsStr(byYearDay));
             }
 
             // BYWEEKNO
             List<Integer> byWeekNo = mRecur.getByWeekNoList();
             if (!byWeekNo.isEmpty()) {
-                rule.addElement(MailService.E_APPT_RULE_BYWEEKNO).
-                    addAttribute(MailService.A_APPT_RULE_BYWEEKNO_WKLIST, ZRecur.listAsStr(byWeekNo));
+                rule.addElement(MailService.E_CAL_RULE_BYWEEKNO).
+                    addAttribute(MailService.A_CAL_RULE_BYWEEKNO_WKLIST, ZRecur.listAsStr(byWeekNo));
             }
 
             // BYMONTH
             List<Integer> byMonth = mRecur.getByMonthList();
             if (!byMonth.isEmpty()) {
-                rule.addElement(MailService.E_APPT_RULE_BYMONTH).
-                    addAttribute(MailService.A_APPT_RULE_BYMONTH_MOLIST, ZRecur.listAsStr(byMonth));
+                rule.addElement(MailService.E_CAL_RULE_BYMONTH).
+                    addAttribute(MailService.A_CAL_RULE_BYMONTH_MOLIST, ZRecur.listAsStr(byMonth));
             }
 
             // BYSETPOS
             List<Integer> bySetPos = mRecur.getBySetPosList();
             if (!bySetPos.isEmpty()) {
-                rule.addElement(MailService.E_APPT_RULE_BYSETPOS).
-                   addAttribute(MailService.A_APPT_RULE_BYSETPOS_POSLIST, ZRecur.listAsStr(bySetPos));
+                rule.addElement(MailService.E_CAL_RULE_BYSETPOS).
+                   addAttribute(MailService.A_CAL_RULE_BYSETPOS_POSLIST, ZRecur.listAsStr(bySetPos));
             }
 
             // WKST
             ZRecur.ZWeekDay wkst = mRecur.getWkSt();
             if (wkst != null) {
-                rule.addElement(MailService.E_APPT_RULE_WKST).
-                    addAttribute(MailService.A_APPT_RULE_DAY, wkst.toString());
+                rule.addElement(MailService.E_CAL_RULE_WKST).
+                    addAttribute(MailService.A_CAL_RULE_DAY, wkst.toString());
             }
 
 //            // x-name
@@ -632,9 +632,9 @@ public class Recurrence
 //            for (Iterator iter = mRecur.getExperimentalValues().entrySet().iterator();
 //                 iter.hasNext(); ) {
 //                Map.Entry entry = (Map.Entry) iter.next();
-//                Element xElt = rule.addElement(MailService.E_APPT_RULE_XNAME);
-//                xElt.addAttribute(MailService.A_APPT_RULE_XNAME_NAME, (String) entry.getKey());
-//                xElt.addAttribute(MailService.A_APPT_RULE_XNAME_VALUE, (String) entry.getValue());
+//                Element xElt = rule.addElement(MailService.E_CAL_RULE_XNAME);
+//                xElt.addAttribute(MailService.A_CAL_RULE_XNAME_NAME, (String) entry.getKey());
+//                xElt.addAttribute(MailService.A_CAL_RULE_XNAME_VALUE, (String) entry.getValue());
 //            }
 
             return rule;
@@ -906,17 +906,17 @@ public class Recurrence
         public Element toXml(Element parent) {
             // subclass should have already created <recur> or <except> element
             
-//            parent.addAttribute(MailService.A_APPT_START_TIME, mDtStart.toString());
-//            parent.addAttribute(MailService.A_APPT_DURATION, mDuration.toString());
-//            parent.addAttribute(MailService.A_APPT_INV_ID, mInvId.mMsgId);
-//            parent.addAttribute(MailService.A_APPT_COMPONENT_NUM, mInvId.mComponentId);
+//            parent.addAttribute(MailService.A_CAL_START_TIME, mDtStart.toString());
+//            parent.addAttribute(MailService.A_CAL_DURATION, mDuration.toString());
+//            parent.addAttribute(MailService.A_CAL_INV_ID, mInvId.mMsgId);
+//            parent.addAttribute(MailService.A_CAL_COMPONENT_NUM, mInvId.mComponentId);
             
             if (mAddRules != null) {
-                Element addElt = parent.addElement(MailService.E_APPT_ADD);
+                Element addElt = parent.addElement(MailService.E_CAL_ADD);
                 mAddRules.toXml(addElt);
             }
             if (mSubtractRules != null) {
-                Element excludeElt = parent.addElement(MailService.E_APPT_EXCLUDE);
+                Element excludeElt = parent.addElement(MailService.E_CAL_EXCLUDE);
                 mSubtractRules.toXml(excludeElt);
             }
             return parent;
@@ -1129,7 +1129,7 @@ public class Recurrence
         }
         
         public Element toXml(Element parent) {
-            Element elt = parent.addElement(MailService.E_APPT_CANCEL);
+            Element elt = parent.addElement(MailService.E_CAL_CANCEL);
             mRecurRange.toXml(elt);
             
             return elt;
@@ -1191,7 +1191,7 @@ public class Recurrence
         
 
         public Element toXml(Element parent) {
-            Element elt = parent.addElement(MailService.E_APPT_EXCEPT);
+            Element elt = parent.addElement(MailService.E_CAL_EXCEPT);
             mRecurRange.toXml(elt);
             
             // now put the 

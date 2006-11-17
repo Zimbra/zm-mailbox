@@ -339,7 +339,7 @@ public class ParseMimeMessage {
 	            	mLog.debug("Ignoring message fragment data");
                 } else if (eName.equals(MailService.E_INVITE)) { /* <inv> */
                     // Already processed above.  Ignore it.
-                } else if (eName.equals(MailService.E_APPT_TZ)) { /* <tz> */
+                } else if (eName.equals(MailService.E_CAL_TZ)) { /* <tz> */
                     // Ignore as a special case.
 	            } else {
 	                unsupportedChildElement(elem, msgElem);

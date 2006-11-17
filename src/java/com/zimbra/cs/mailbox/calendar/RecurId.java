@@ -204,9 +204,9 @@ public class RecurId
     }
     
     public Element toXml(Element parent) {
-        parent.addAttribute(MailService.A_APPT_RECURRENCE_ID, mDateTime.getDateTimePartString());
-        parent.addAttribute(MailService.A_APPT_TIMEZONE, mDateTime.getTZName());
-        parent.addAttribute(MailService.A_APPT_RECURRENCE_RANGE_TYPE, mRange);
+        parent.addAttribute(MailService.A_CAL_RECURRENCE_ID, mDateTime.getDateTimePartString());
+        parent.addAttribute(MailService.A_CAL_TIMEZONE, mDateTime.getTZName());
+        parent.addAttribute(MailService.A_CAL_RECURRENCE_RANGE_TYPE, mRange);
         return parent;
     }
     

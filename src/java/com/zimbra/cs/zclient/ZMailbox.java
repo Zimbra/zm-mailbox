@@ -1701,7 +1701,7 @@ public class ZMailbox {
      */
     public void iCalReply(String ical) throws ServiceException {
         XMLElement req = new XMLElement(MailService.ICAL_REPLY_REQUEST);
-        Element icalElem = req.addElement(MailService.E_APPT_ICAL);        
+        Element icalElem = req.addElement(MailService.E_CAL_ICAL);        
         icalElem.setText(ical);
         invoke(req);
     }

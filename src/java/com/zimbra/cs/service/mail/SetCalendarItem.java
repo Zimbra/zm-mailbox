@@ -106,7 +106,7 @@ public class SetCalendarItem extends CalendarRequest {
             }
             
             // for each <except>
-            for (Iterator iter = request.elementIterator(MailService.E_APPT_EXCEPT);
+            for (Iterator iter = request.elementIterator(MailService.E_CAL_EXCEPT);
                  iter.hasNext(); ) {
                 Element e = (Element) iter.next();
                 SetCalendarItemData exDat = getSetCalendarItemData(
@@ -116,7 +116,7 @@ public class SetCalendarItem extends CalendarRequest {
             }
 
             // for each <cancel>
-            for (Iterator iter = request.elementIterator(MailService.E_APPT_CANCEL);
+            for (Iterator iter = request.elementIterator(MailService.E_CAL_CANCEL);
                  iter.hasNext(); ) {
                 Element e = (Element) iter.next();
                 SetCalendarItemData exDat = getSetCalendarItemData(
@@ -140,8 +140,8 @@ public class SetCalendarItem extends CalendarRequest {
             
             for (Iterator iter = exceptions.iterator(); iter.hasNext();) {
                 SetCalendarItemData cur = (SetCalendarItemData) iter.next();
-                Element e = response.addElement(MailService.E_APPT_EXCEPT);
-                e.addAttribute(MailService.A_APPT_RECURRENCE_ID, cur.mInv.getRecurId().toString());
+                Element e = response.addElement(MailService.E_CAL_EXCEPT);
+                e.addAttribute(MailService.A_CAL_RECURRENCE_ID, cur.mInv.getRecurId().toString());
                 e.addAttribute(MailService.A_ID, zc.formatItemId(cur.mInv.getMailItemId()));
             }
             String itemId = zc.formatItemId(calItemId);
@@ -157,7 +157,7 @@ public class SetCalendarItem extends CalendarRequest {
             ZimbraSoapContext zc, Account acct, Mailbox mbox,
             Element e, ParseMimeMessage.InviteParser parser)
     throws ServiceException {
-        String partStatStr = e.getAttribute(MailService.A_APPT_PARTSTAT,
+        String partStatStr = e.getAttribute(MailService.A_CAL_PARTSTAT,
                                             IcalXmlStrMap.PARTSTAT_NEEDS_ACTION);
 
         // <M>

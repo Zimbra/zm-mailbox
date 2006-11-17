@@ -81,12 +81,12 @@ public class SendInviteReply extends CalendarRequest {
         boolean onBehalfOf = lc.isDelegatedRequest();
 
         ItemId iid = new ItemId(request.getAttribute(MailService.A_ID), lc);
-        int compNum = (int) request.getAttributeLong(MailService.A_APPT_COMPONENT_NUM);
+        int compNum = (int) request.getAttributeLong(MailService.A_CAL_COMPONENT_NUM);
         
         String verbStr = request.getAttribute(MailService.A_VERB);
         Verb verb = CalendarMailSender.parseVerb(verbStr);
         
-        boolean updateOrg = request.getAttributeBool(MailService.A_APPT_UPDATE_ORGANIZER, true);
+        boolean updateOrg = request.getAttributeBool(MailService.A_CAL_UPDATE_ORGANIZER, true);
         
         if (sLog.isInfoEnabled()) {
             sLog.info("<SendInviteReply id=" + lc.formatItemId(iid) + " verb=" + verb + " updateOrg=" + updateOrg + "> " + lc.toString());
@@ -132,7 +132,7 @@ public class SendInviteReply extends CalendarRequest {
             
             
             // see if there is a specific Exception being referenced by this reply...
-            Element exc = request.getOptionalElement(MailService.E_APPT_EXCEPTION_ID);
+            Element exc = request.getOptionalElement(MailService.E_CAL_EXCEPTION_ID);
             ParsedDateTime exceptDt = null;
             if (exc != null) {
                 exceptDt = CalendarUtils.parseDateTime(exc,

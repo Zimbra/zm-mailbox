@@ -340,7 +340,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     response.addAttribute(MailService.A_CAL_ID, id);
                     if (csd.mInvite != null && csd.mInvite.isEvent())
                         response.addAttribute(MailService.A_APPT_ID_DEPRECATE_ME, id);  // for backward compat
-                    response.addAttribute(MailService.A_APPT_INV_ID, lc.formatItemId(ids[0], ids[1]));
+                    response.addAttribute(MailService.A_CAL_INV_ID, lc.formatItemId(ids[0], ids[1]));
                     if (saveToSent) {
                         response.addUniqueElement(MailService.E_MSG).addAttribute(MailService.A_ID, lc.formatItemId(msgId));
                     }

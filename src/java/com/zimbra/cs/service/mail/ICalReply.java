@@ -48,7 +48,7 @@ public class ICalReply extends MailDocumentHandler {
         Mailbox mbox = getRequestedMailbox(lc);
         OperationContext octxt = lc.getOperationContext();
 
-        Element icalElem = request.getElement(MailService.E_APPT_ICAL);
+        Element icalElem = request.getElement(MailService.E_CAL_ICAL);
         String icalStr = icalElem.getText();
         ZVCalendar cal;
         StringReader sr = null;

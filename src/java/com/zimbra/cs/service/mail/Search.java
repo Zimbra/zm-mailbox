@@ -145,9 +145,9 @@ public class Search extends MailDocumentHandler  {
 
         // custom timezone!
         
-        String test = tzElt.getAttribute(MailService.A_APPT_TZ_STDOFFSET, null);
+        String test = tzElt.getAttribute(MailService.A_CAL_TZ_STDOFFSET, null);
         if (test == null)
-            throw ServiceException.INVALID_REQUEST("Unknown TZ: \""+id+"\" and no "+MailService.A_APPT_TZ_STDOFFSET+" specified", null);
+            throw ServiceException.INVALID_REQUEST("Unknown TZ: \""+id+"\" and no "+MailService.A_CAL_TZ_STDOFFSET+" specified", null);
         
         return CalendarUtils.parseTzElement(tzElt);
     }
@@ -172,7 +172,7 @@ public class Search extends MailDocumentHandler  {
 
         //
         // <tz>
-        Element tzElt = request.getOptionalElement(MailService.E_APPT_TZ);
+        Element tzElt = request.getOptionalElement(MailService.E_CAL_TZ);
         if (tzElt != null) {
             TimeZone tz = parseTimeZonePart(tzElt, zsc);
             params.setTimeZone(tz);
