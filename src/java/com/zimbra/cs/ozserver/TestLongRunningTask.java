@@ -116,6 +116,9 @@ class TestLongRunningTask {
         mLog.info("CLIENT: writing request");
         out.write(request);
         out.flush();
+        try { Thread.sleep(2000); } catch (InterruptedException ie) { }
+        out.write(request);
+        out.flush();
         out.close();
         mLog.info("CLIENT: closing connection");
     }
@@ -123,7 +126,7 @@ class TestLongRunningTask {
     private static OzServer mServer;
 
     public static void main(String[] args) throws IOException, ServiceException {
-        Zimbra.toolSetup("INFO", null, true);
+        Zimbra.toolSetup("TRACE", null, true);
         int port = Integer.parseInt(args[0]);
         boolean secure = Boolean.parseBoolean(args[1]);
         boolean debug = Boolean.parseBoolean(args[2]);

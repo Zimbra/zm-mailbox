@@ -97,6 +97,8 @@ public class OzConnection {
         mLog = mServer.getLog();
         mDebug = mLog.isDebugEnabled();
         mTrace = mServer.debugLogging();
+
+        if (mDebug) mLog.debug("registering cid=" + mIdString);
         mSelectionKey = channel.register(server.getSelector(), 0, this); 
         
         mPlainFilter = new OzPlainFilter(); 

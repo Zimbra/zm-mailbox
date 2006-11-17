@@ -122,9 +122,12 @@ public class OzServer {
     
     void schedule(ServerTask task) {
         synchronized (mServerTaskList) {
+            boolean mustWakeup = mServerTaskList.isEmpty();
             mServerTaskList.add(task);
+            if (mustWakeup) {
+                wakeupSelector(task.getName());
+            }
         }
-        wakeupSelector(task.getName());
     }
     
     private void serverLoop() {
