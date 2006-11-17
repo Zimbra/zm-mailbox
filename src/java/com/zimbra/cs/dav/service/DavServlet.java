@@ -127,7 +127,8 @@ public class DavServlet extends ZimbraServlet {
 			if (e.getCause() instanceof MailServiceException.NoSuchItemException ||
 					e.getStatus() == HttpServletResponse.SC_NOT_FOUND)
 				ZimbraLog.dav.debug(ctxt.getUri()+" not found");
-			else if (e.getStatus() == HttpServletResponse.SC_MOVED_TEMPORARILY) 
+			else if (e.getStatus() == HttpServletResponse.SC_MOVED_TEMPORARILY ||
+					 e.getStatus() == HttpServletResponse.SC_MOVED_PERMANENTLY) 
 				ZimbraLog.dav.debug("sending redirect");
 			else
 				ZimbraLog.dav.error("error handling method "+method.getName(), e);

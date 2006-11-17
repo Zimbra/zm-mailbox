@@ -115,4 +115,8 @@ public class ResourceProperty {
 	public void setProtected(boolean pr) {
 		mProtected = pr;
 	}
+	
+	public String toString() {
+		return "ResourceProperty: " + mName + ((mValue != null) ? ": '" + mValue + "'" : "");
+	}
 }

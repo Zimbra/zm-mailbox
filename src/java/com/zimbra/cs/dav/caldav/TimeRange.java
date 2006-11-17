@@ -29,21 +29,13 @@ import java.util.TimeZone;
 
 import org.dom4j.Element;
 
-import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.dav.DavElements;
 
 public class TimeRange {
 	private long mStart;
 	private long mEnd;
-	
-	public static long sMIN_DATE;
-	public static long sMAX_DATE;
-	
-	static {
-		sMIN_DATE = DateUtil.parseGeneralizedTime("19000101000000Z").getTime();
-		sMAX_DATE = DateUtil.parseGeneralizedTime("20991231235959Z").getTime();
-	}
-	
+
 	public TimeRange(Element elem) {
 		mStart = mEnd = 0;
 		if (elem != null && elem.getQName().equals(DavElements.E_TIME_RANGE)) {
@@ -56,13 +48,21 @@ public class TimeRange {
 				mEnd = parseDateWithUTCTime(s);
 		}
 		if (mStart == 0)
-			mStart = sMIN_DATE;
+			mStart = getMinDate();
 		if (mEnd == 0)
-			mEnd = sMAX_DATE;
+			mEnd = getMaxDate();
 	}
 	
-    private long parseDateWithUTCTime(String time) {
-    	if (time.length() != 8 && time.length() != 14)
+	private static long getMinDate() {
+		return System.currentTimeMillis() - Constants.MILLIS_PER_MONTH;
+	}
+	
+	private static long getMaxDate() {
+		return System.currentTimeMillis() + Constants.MILLIS_PER_MONTH * 12;
+	}
+	
+    private static long parseDateWithUTCTime(String time) {
+    	if (time.length() != 8 && time.length() != 16)
     		return 0;
     	if (!time.endsWith("Z"))
     		return 0;
@@ -73,7 +73,7 @@ public class TimeRange {
     	month = Integer.parseInt(time.substring(index, index+2))-1; index+=2;
     	date = Integer.parseInt(time.substring(index, index+2)); index+=2;
     	hour = min = sec = 0;
-    	if (time.length() == 14) {
+    	if (time.length() == 16) {
     		if (time.charAt(index) == 'T') index++;
     		hour = Integer.parseInt(time.substring(index, index+2)); index+=2;
     		min = Integer.parseInt(time.substring(index, index+2)); index+=2;
