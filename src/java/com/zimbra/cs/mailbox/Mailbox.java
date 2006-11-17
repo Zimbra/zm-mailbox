@@ -1059,7 +1059,7 @@ public class Mailbox {
         Folder.create(ID_FOLDER_NOTEBOOK, this, userRoot, "Notebook", system, MailItem.TYPE_WIKI,    0, MailItem.DEFAULT_COLOR, null);
         Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR, null);
         Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR, null);
-        Folder.create(ID_FOLDER_IM_LOGS,   this, userRoot, "chats",   system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null);
+        Folder.create(ID_FOLDER_IM_LOGS,   this, userRoot, "Chats",   system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null);
         
 
         mCurrentChange.itemId = getInitialItemId();
