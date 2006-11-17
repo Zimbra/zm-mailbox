@@ -546,7 +546,7 @@ public abstract class Provisioning {
 
     public static final String A_zimbraPrefShowFragments = "zimbraPrefShowFragments";
 
-    public static final String A_zimbraPrefMessageViewHtmlPrefered = "zimbraPrefMessageViewHmtlPrefered";
+    public static final String A_zimbraPrefMessageViewHtmlPreferred = "zimbraPrefMessageViewHtmlPreferred";
 
     public static final String A_zimbraPrefAutoAddAddressEnabled = "zimbraPrefAutoAddAddressEnabled";
 

@@ -42,17 +42,17 @@ public class ZPrefs {
      * @param name name of pref to get
      * @return null if unset, or first value in list
      */
-    private String get(String name) {
+    public String get(String name) {
         List<String> value = mPrefs.get(name);
         return (value == null || value.isEmpty()) ? null : value.get(0);
 
     }
 
-    private boolean getBool(String name) {
+    public boolean getBool(String name) {
         return Provisioning.TRUE.equals(get(name));
     }
 
-    private long getLong(String name) {
+    public long getLong(String name) {
         String v = get(name);
         try {
             return v == null ? -1 : Long.parseLong(v);
@@ -79,7 +79,7 @@ public class ZPrefs {
 
     public boolean getMailLocalDeliveryDisabled() { return getBool(Provisioning.A_zimbraPrefMailLocalDeliveryDisabled); }
 
-    public boolean getMessageViewHtmlPreferred() { return getBool(Provisioning.A_zimbraPrefMessageViewHtmlPrefered); }
+    public boolean getMessageViewHtmlPreferred() { return getBool(Provisioning.A_zimbraPrefMessageViewHtmlPreferred); }
 
     public boolean getAutoAddAddressEnabled() { return getBool(Provisioning.A_zimbraPrefAutoAddAddressEnabled); }
 
