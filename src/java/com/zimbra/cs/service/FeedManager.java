@@ -107,7 +107,7 @@ public class FeedManager {
         GetMethod get = null;
         BufferedInputStream content = null;
         try {
-            String expectedCharset = Mime.P_CHARSET_DEFAULT;
+            String expectedCharset = Mime.P_CHARSET_UTF8;
             int redirects = 0;
             do {
                 if (url == null || url.equals(""))
