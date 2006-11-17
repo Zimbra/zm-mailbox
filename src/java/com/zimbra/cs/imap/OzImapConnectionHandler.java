@@ -284,7 +284,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                             List<Object> parts = new LinkedList<Object>();
                             req.skipAtom("CATENATE");  req.skipSpace();  req.skipChar('(');
                             while (req.peekChar() != ')') {
-                                if (!parts.isEmpty())  req.skipSpace();
+                                if (!parts.isEmpty())
+                                    req.skipSpace();
                                 String type = req.readAtom();  req.skipSpace();
                                 if (type.equals("TEXT"))      parts.add(req.readLiteral());
                                 else if (type.equals("URL"))  parts.add(new ImapURL(tag, mSession, req.readAstring()));
@@ -431,6 +432,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                             options = 0;
                             req.skipAtom("RETURN");  req.skipSpace();  req.skipChar('(');
                             while (req.peekChar() != ')') {
+                                if (options != 0)
+                                    req.skipSpace();
                                 String option = req.readAtom();
                                 if (option.equals("MIN"))         options |= RETURN_MIN;
                                 else if (option.equals("MAX"))    options |= RETURN_MAX;
@@ -438,8 +441,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                                 else if (option.equals("COUNT"))  options |= RETURN_COUNT;
                                 else
                                     throw new ImapParseException(tag, "unknown RETURN option \"" + option + '"');
-                                if (req.peekChar() != ')')
-                                    req.skipSpace();
                             }
                             req.skipChar(')');  req.skipSpace();
                             if (options == 0)
@@ -460,6 +461,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                         req.skipSpace();  String folder = req.readFolder();
                         req.skipSpace();  req.skipChar('(');
                         while (req.peekChar() != ')') {
+                            if (status != 0)
+                                req.skipSpace();
                             String flag = req.readAtom();
                             if (flag.equals("MESSAGES"))          status |= STATUS_MESSAGES;
                             else if (flag.equals("RECENT"))       status |= STATUS_RECENT;
@@ -468,8 +471,6 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                             else if (flag.equals("UNSEEN"))       status |= STATUS_UNSEEN;
                             else
                                 throw new ImapParseException(tag, "unknown STATUS attribute \"" + flag + '"');
-                            if (req.peekChar() != ')')
-                                req.skipSpace();
                         }
                         req.skipChar(')');
                         checkEOF(tag, req);
