@@ -1,5 +1,5 @@
 ------------------------------------------------------------
-What is preuath?
+What is preauth?
 ------------------------------------------------------------
 
 Preauth stands for pre-authentication, and is a mechanism to enable a trusted 
