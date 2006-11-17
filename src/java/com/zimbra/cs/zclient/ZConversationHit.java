@@ -48,7 +48,7 @@ public class ZConversationHit implements ZSearchHit {
     private List<String> mMessageIds;
     private List<ZEmailAddress> mRecipients;
         
-    public ZConversationHit(Element e, Map<String,ZEmailAddress> cache) throws ServiceException {
+    public ZConversationHit(Element e) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
         mFlags = e.getAttribute(MailService.A_FLAGS, null);
         mDate = e.getAttributeLong(MailService.A_DATE);
@@ -67,7 +67,7 @@ public class ZConversationHit implements ZSearchHit {
         
         mRecipients = new ArrayList<ZEmailAddress>();
         for (Element emailEl: e.listElements(MailService.E_EMAIL)) {
-            mRecipients.add(ZEmailAddress.getAddress(emailEl, cache));
+            mRecipients.add(new ZEmailAddress(emailEl));
         }        
     }
 

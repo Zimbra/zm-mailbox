@@ -59,24 +59,11 @@ public class ZEmailAddress {
         mType = type;
     }
 
-    static ZEmailAddress getAddress(Element e, Map<String, ZEmailAddress> cache) throws ServiceException {
-        ZEmailAddress addr;
-
-        String id = e.getAttribute(MailService.A_ID, null);
-        String ref = e.getAttribute(MailService.A_REF, null);
-        if (ref != null && cache != null) {
-            return cache.get(ref);
-        }
-        addr = new ZEmailAddress(
-                e.getAttribute(MailService.A_ADDRESS, null),
-                e.getAttribute(MailService.A_DISPLAY, null),
-                e.getAttribute(MailService.A_PERSONAL, null),
-                e.getAttribute(MailService.A_TYPE, ""));
-        
-        if (cache != null && id != null) {
-            cache.put(id, addr);
-        }
-        return addr;
+    public ZEmailAddress(Element e) throws ServiceException {
+        mAddress = e.getAttribute(MailService.A_ADDRESS, null);
+        mDisplay = e.getAttribute(MailService.A_DISPLAY, null);
+        mPersonal = e.getAttribute(MailService.A_PERSONAL, null);
+        mType = e.getAttribute(MailService.A_TYPE, "");
     }
 
     /**

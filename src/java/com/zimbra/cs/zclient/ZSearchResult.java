@@ -46,12 +46,11 @@ public class ZSearchResult {
         mHasMore = e.getAttributeBool(MailService.A_QUERY_MORE);
         mOffset = (int) e.getAttributeLong(MailService.A_QUERY_OFFSET);
         mHits = new ArrayList<ZSearchHit>();
-        Map<String,ZEmailAddress> cache = new HashMap<String, ZEmailAddress>();
         for (Element h: e.listElements()) {
             if (h.getName().equals(MailService.E_CONV)) {
-                mHits.add(new ZConversationHit(h, cache));
+                mHits.add(new ZConversationHit(h));
             } else if (h.getName().equals(MailService.E_MSG)) {
-                mHits.add(new ZMessageHit(h, cache));
+                mHits.add(new ZMessageHit(h));
             } else if (h.getName().equals(MailService.E_CONTACT)) {
                 mHits.add(new ZContactHit(h));
             } else if (h.getName().equals(MailService.E_DOC)) {

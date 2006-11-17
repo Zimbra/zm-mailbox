@@ -723,9 +723,7 @@ public class ZMailbox {
             // use "1" for "first" for backward compat until DF is updated
             convEl.addAttribute(MailService.A_FETCH, fetch == Fetch.first ? "1" : fetch.name());
         }        
-        
-        Map<String,ZEmailAddress> cache = new HashMap<String, ZEmailAddress>();
-        return new ZConversation(invoke(req).getElement(MailService.E_CONV), cache);
+        return new ZConversation(invoke(req).getElement(MailService.E_CONV));
     }
     
     /** include items in the Trash folder */
@@ -1106,8 +1104,7 @@ public class ZMailbox {
         msgEl.addAttribute(MailService.A_WANT_HTML, wantHtml);
         msgEl.addAttribute(MailService.A_NEUTER, neuterImages);
         msgEl.addAttribute(MailService.A_RAW, rawContent);
-        Map<String,ZEmailAddress> cache = new HashMap<String, ZEmailAddress>();
-        return new ZMessage(invoke(req).getElement(MailService.E_MSG), cache);
+        return new ZMessage(invoke(req).getElement(MailService.E_MSG));
     }
 
     /**

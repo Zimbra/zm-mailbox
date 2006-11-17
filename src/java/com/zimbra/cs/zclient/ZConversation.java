@@ -78,7 +78,7 @@ public class ZConversation implements ZItem {
     private int mMessageCount;
     private List<ZMessageSummary> mMessageSummaries;
         
-    public ZConversation(Element e, Map<String,ZEmailAddress> cache) throws ServiceException {
+    public ZConversation(Element e) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
         mFlags = e.getAttribute(MailService.A_FLAGS, null);
         mTags = e.getAttribute(MailService.A_TAGS, null);
@@ -88,7 +88,7 @@ public class ZConversation implements ZItem {
         
         mMessageSummaries = new ArrayList<ZMessageSummary>();
         for (Element msgEl: e.listElements(MailService.E_MSG)) {
-            mMessageSummaries.add(new ZMessageSummary(msgEl, cache));
+            mMessageSummaries.add(new ZMessageSummary(msgEl));
         }        
     }
 
@@ -139,7 +139,7 @@ public class ZConversation implements ZItem {
         private ZEmailAddress mSender;
         private long mSize;
         
-        public ZMessageSummary(Element e, Map<String,ZEmailAddress> cache) throws ServiceException {
+        public ZMessageSummary(Element e) throws ServiceException {
             mId = e.getAttribute(MailService.A_ID);
             mFlags = e.getAttribute(MailService.A_FLAGS, null);
             mDate = e.getAttributeLong(MailService.A_DATE);
@@ -148,7 +148,7 @@ public class ZConversation implements ZItem {
             if (fr != null) mFragment = fr.getText();        
             mSize = e.getAttributeLong(MailService.A_SIZE);
             Element emailEl = e.getOptionalElement(MailService.E_EMAIL);
-            if (emailEl != null) mSender = ZEmailAddress.getAddress(emailEl, cache); 
+            if (emailEl != null) mSender = new ZEmailAddress(emailEl);
         }
         
 

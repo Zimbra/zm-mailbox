@@ -51,7 +51,7 @@ public class ZMessageHit implements ZSearchHit {
     private ZEmailAddress mSender;
     private ZMessage mMessage;
 
-    public ZMessageHit(Element e, Map<String,ZEmailAddress> cache) throws ServiceException {
+    public ZMessageHit(Element e) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
         mFolderId = e.getAttribute(MailService.A_FOLDER);
         mFlags = e.getAttribute(MailService.A_FLAGS, null);
@@ -71,11 +71,11 @@ public class ZMessageHit implements ZSearchHit {
             mMimePartHits.add(hp.getAttribute(MailService.A_PART));
         }
         Element emailEl = e.getOptionalElement(MailService.E_EMAIL);
-        if (emailEl != null) mSender = ZEmailAddress.getAddress(emailEl, cache);
+        if (emailEl != null) mSender = new ZEmailAddress(emailEl);
 
         Element mp = e.getOptionalElement(MailService.E_MIMEPART);
         if (mp != null) {
-            mMessage = new ZMessage(e, cache);
+            mMessage = new ZMessage(e);
         }
     }
 

@@ -90,7 +90,7 @@ public class ZMessage implements ZItem {
     private String mContentURL;
     private long mSize;
         
-    public ZMessage(Element e, Map<String,ZEmailAddress> cache) throws ServiceException {
+    public ZMessage(Element e) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
         mFlags = e.getAttribute(MailService.A_FLAGS, null);
         mTags = e.getAttribute(MailService.A_TAGS, null);
@@ -112,7 +112,7 @@ public class ZMessage implements ZItem {
         
         mAddresses = new ArrayList<ZEmailAddress>();
         for (Element emailEl: e.listElements(MailService.E_EMAIL)) {
-            mAddresses.add(ZEmailAddress.getAddress(emailEl, cache));
+            mAddresses.add(new ZEmailAddress(emailEl));
         }
         Element mp = e.getOptionalElement(MailService.E_MIMEPART);
         if (mp != null)
