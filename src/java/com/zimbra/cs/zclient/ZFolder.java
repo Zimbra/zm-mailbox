@@ -278,6 +278,18 @@ public class ZFolder implements ZItem, Comparable {
         }
     }
 
+     /** Returns the folder's  path relative to the root
+     * @return path
+     */
+    public String getRootRelativePath() {
+        String path = getPath();
+        if (path.startsWith(ZMailbox.PATH_SEPARATOR)) {
+            return path.substring(ZMailbox.PATH_SEPARATOR.length());
+        } else {
+            return path;
+        }
+    }
+
     /** Returns the folder's absolute path, with special chars in the names
      * URL encoded.
      */
