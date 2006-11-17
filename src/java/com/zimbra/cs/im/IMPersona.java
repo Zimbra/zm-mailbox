@@ -38,7 +38,6 @@ import org.jivesoftware.wildfire.ClientSession;
 import org.jivesoftware.wildfire.XMPPServer;
 import org.jivesoftware.wildfire.auth.AuthToken;
 import org.jivesoftware.wildfire.user.UserNotFoundException;
-import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
@@ -48,7 +47,6 @@ import org.xmpp.packet.IQ.Type;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.im.IMBuddy.SubType;
 import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.cs.im.IMMessage.Lang;
@@ -99,46 +97,22 @@ public class IMPersona {
         try {
             if (Provisioning.getInstance().getLocalServer().getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
                 mXMPPSession = new ClientSession(Provisioning.getInstance().getLocalServer().getName(), new FakeClientConnection(this), XMPPServer.getInstance().getSessionManager().nextStreamID());
-//                mXMPPSession.addRoutes();
                 
-                mXMPPSession.setAuthToken(new AuthToken(mAddr.getAddr()));
+                AuthToken at = new AuthToken(mAddr.getAddr());
+                mXMPPSession.setAuthToken(at);
                 try {
-                    mXMPPSession.setAuthToken(new AuthToken(mAddr.getAddr()), XMPPServer.getInstance().getUserManager(), "zcs");
+                    mXMPPSession.setAuthToken(at, XMPPServer.getInstance().getUserManager(), "zcs");
+                    
                 } catch (UserNotFoundException ex) {
                     System.out.println(ex.toString());
                     ex.printStackTrace();
                 }
-
+                
                 // have to request roster immediately -- as soon as we send our first presence update, we will start
                 // receiving presence notifications from our buddies -- and if we don't have the roster loaded, then we 
                 // will not know what to do with them...
                 Roster rosterRequest = new Roster();
                 xmppRoute(rosterRequest);
-                
-//                IQ bind = new IQ(IQ.Type.set);
-//                org.dom4j.Element bindElt = bind.setChildElement("bind", "urn:ietf:params:xml:ns:xmpp-bind");
-//                org.dom4j.Element resourceElt = bindElt.addElement("resource");
-//                resourceElt.addText("zcs");
-//                xmppRoute(bind);
-////                
-//                IQ session = new IQ(IQ.Type.set);
-//                org.dom4j.Element sessionElt = session.setChildElement("session", "urn:ietf:params:xml:ns:xmpp-session");
-//                xmppRoute(session);
-                
-//                Roster rosterRequest = new Roster();
-//                rosterRequest.setType(Type.get);
-//                xmppRoute(rosterRequest);
-                
-//                mIsOnline = true;
-                
-                
-//                mMyPresence = new IMPresence(Show.ONLINE, (byte)5, null);
-
-    //            updateXMPPPresence(null);
-                
-//                Roster rosterRequest = new Roster();
-//                xmppRoute(rosterRequest);
-
             }
         } catch (ServiceException ex) {
             ZimbraLog.im.warn("Caught Exception checking if XMPP enabled " + ex.toString(), ex);
@@ -246,10 +220,9 @@ public class IMPersona {
                     case subscribe:
                         // auto-accept for now
                         reply = new Presence();
-                        reply.setTo(pres.getFrom());
-                        reply.setFrom(pres.getTo());
                         reply.setType(Presence.Type.subscribed);
-                        XMPPServer.getInstance().getPresenceRouter().route(reply);
+                        reply.setTo(pres.getFrom());
+                        xmppRoute(reply);
                         break;
                     case subscribed:
                     {
@@ -279,7 +252,7 @@ public class IMPersona {
                         reply.setTo(pres.getFrom());
                         reply.setFrom(pres.getTo());
                         reply.setType(Presence.Type.unsubscribed);
-                        XMPPServer.getInstance().getPresenceRouter().route(reply);
+                        xmppRoute(reply);
                         break;
                     case unsubscribed:
                     {

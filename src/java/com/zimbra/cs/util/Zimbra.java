@@ -116,6 +116,14 @@ public class Zimbra {
             if (server.getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
                 try {
                     System.setProperty("wildfireHome", "/opt/zimbra");
+                    String defaultDomain = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraDefaultDomainName, null);
+                    if (defaultDomain != null) {
+                        ZimbraLog.im.info("Setting default XMPP domain to: "+defaultDomain);
+                        System.setProperty("wildfireDomain", defaultDomain);
+                    } else {
+                        ZimbraLog.im.warn("No default domain has been set, domain must be set in JiveProperties table or IM will not work"+defaultDomain);
+                    }
+                    
                     XMPPServer srv = new XMPPServer();
                 } catch (Exception e) { 
                     ZimbraLog.system.warn("Could not start XMPP server: " + e.toString());

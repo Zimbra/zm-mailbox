@@ -142,21 +142,18 @@ public class ZimbraGroupProvider implements GroupProvider {
         try {
             Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name,  user.toBareJID().toString());
             
-            Set<String> distLists = Provisioning.getInstance().getDistributionLists(acct);
-            
             ArrayList<String> toRet = new ArrayList<String>();
-
-            String DLs = "";
             
-            for (String id: distLists) {
-                DistributionList dl = Provisioning.getInstance().get(Provisioning.DistributionListBy.id, id);
-                
-                toRet.add(dl.getName());
-                DLs = dl.getName() + " " + DLs;
+            if (acct != null) {
+                Set<String> distLists = Provisioning.getInstance().getDistributionLists(acct);
+                String DLs = "";
+                for (String id: distLists) {
+                    DistributionList dl = Provisioning.getInstance().get(Provisioning.DistributionListBy.id, id);
+                    
+                    toRet.add(dl.getName());
+                    DLs = dl.getName() + " " + DLs;
+                }
             }
-            
-            System.out.println("returning user's DLs: " + DLs);
-            
             return toRet;
         } catch (ServiceException ex) {
             ZimbraLog.im.debug("Caught ServiceException "+ex, ex);
