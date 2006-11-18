@@ -58,6 +58,7 @@ import org.apache.commons.httpclient.HttpsURL;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -104,6 +105,9 @@ public class FeedManager {
         client.setConnectionTimeout(10000);
         client.setTimeout(20000);
 
+        HttpMethodParams params = new HttpMethodParams();
+        params.setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, Mime.P_CHARSET_UTF8);
+
         GetMethod get = null;
         BufferedInputStream content = null;
         try {
@@ -131,6 +135,7 @@ public class FeedManager {
 
 
                 get = new GetMethod(url);
+                get.setParams(params);
                 get.setFollowRedirects(true);
                 get.setDoAuthentication(true);
                 get.addRequestHeader("User-Agent", HTTP_USER_AGENT);
@@ -146,9 +151,7 @@ public class FeedManager {
                     throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusLine().toString(), null);
                 } else {
                     content = new BufferedInputStream(get.getResponseBodyAsStream());
-                    String cs = get.getResponseCharSet();
-                    if (cs != null)
-                        expectedCharset = cs;
+                    expectedCharset = get.getResponseCharSet();
                     break;
                 }
             } while (++redirects <= MAX_REDIRECTS);
@@ -211,7 +214,7 @@ public class FeedManager {
         return ch;
     }
 
-    private static org.dom4j.QName QN_CONTENT_ENCODED = org.dom4j.QName.get("encoded", "content", "http://purl.org/rss/1.0/modules/content/");
+//    private static org.dom4j.QName QN_CONTENT_ENCODED = org.dom4j.QName.get("encoded", "content", "http://purl.org/rss/1.0/modules/content/");
 
     private static final class Enclosure {
         private String mUrl, mTitle, mCtype;
