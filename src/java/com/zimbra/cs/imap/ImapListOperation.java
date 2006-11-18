@@ -42,20 +42,19 @@ public class ImapListOperation extends Operation {
     			LOAD = c.mLoad;
     	}
 	
-	private IImapGetFolderAttributes mIGetFolderAttributes;
 	private String mPattern;
 	
 	private List<String> mMatches;
 
-	ImapListOperation(ImapSession session, OperationContext oc, Mailbox mbox, 
-				      IImapGetFolderAttributes getFolderAttributes, String pattern) {
+
+    ImapListOperation(ImapSession session, OperationContext oc, Mailbox mbox, String pattern) {
 		super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
 
-		mIGetFolderAttributes = getFolderAttributes;
 		mPattern = pattern;
 	}
 
-	protected void callback() throws ServiceException {
+
+    protected void callback() throws ServiceException {
 		synchronized (mMailbox) {
 			mMatches = new ArrayList<String>();
 			
@@ -66,10 +65,23 @@ public class ImapListOperation extends Operation {
 				String path = ImapFolder.exportPath(folder.getPath(), (ImapSession) mSession);
 				// FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
 				if (path.toUpperCase().matches(mPattern))
-					mMatches.add("LIST (" + mIGetFolderAttributes.doGetFolderAttributes(folder) + ") \"/\" " + ImapFolder.formatPath(folder.getPath(), (ImapSession) mSession));
+					mMatches.add("LIST (" + getFolderAttributes((ImapSession) mSession, folder) + ") \"/\" " + ImapFolder.formatPath(folder.getPath(), (ImapSession) mSession));
 			}
 		}
 	}
+
+    private static final String[] FOLDER_ATTRIBUTES = {
+        "\\HasNoChildren",            "\\HasChildren",
+        "\\HasNoChildren \\Noselect", "\\HasChildren \\Noselect",
+        "\\HasNoChildren \\Noinferiors"
+    };
+
+    static String getFolderAttributes(ImapSession session, Folder folder) {
+        int attributes = (folder.hasSubfolders() ? 0x01 : 0x00);
+        attributes    |= (!ImapFolder.isFolderSelectable(folder, session) ? 0x02 : 0x00);
+        attributes    |= (folder.getId() == Mailbox.ID_FOLDER_SPAM ? 0x04 : 0x00);
+        return FOLDER_ATTRIBUTES[attributes];
+    }
 
 	public List<String> getMatches() { return mMatches; }
 }

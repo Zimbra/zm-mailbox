@@ -43,20 +43,19 @@ public class ImapLSubOperation extends Operation {
     			LOAD = c.mLoad;
     	}
 
-	private IImapGetFolderAttributes mIGetFolderAttributes; 	
 	private String mPattern;
 	
 	private Map<String, String> mSubs;
 	
 	ImapLSubOperation(ImapSession session, OperationContext oc, Mailbox mbox, 
-				      IImapGetFolderAttributes getFolderAttributes, String pattern) {
+				      String pattern) {
 		super(session, oc, mbox, Requester.IMAP, Requester.IMAP.getPriority(), LOAD);
 
-		mIGetFolderAttributes = getFolderAttributes;
 		mPattern = pattern;
 	}
 	
-	protected void callback() throws ServiceException {
+
+    protected void callback() throws ServiceException {
 		synchronized (mMailbox) {
 			mSubs = getMatchingSubscriptions(getMailbox(), mPattern);
 			for (Map.Entry<String, String> hit : mSubs.entrySet()) {
@@ -66,7 +65,7 @@ public class ImapLSubOperation extends Operation {
 				} catch (MailServiceException.NoSuchItemException nsie) { }
 				// FIXME: need to determine "name attributes" for mailbox (\Marked, \Unmarked, \Noinferiors, \Noselect)
 				boolean visible = hit.getValue() != null && ImapFolder.isFolderVisible(folder, (ImapSession) mSession);
-				String attributes = visible ? mIGetFolderAttributes.doGetFolderAttributes(folder) : "\\Noselect";
+				String attributes = visible ? ImapListOperation.getFolderAttributes((ImapSession) mSession, folder) : "\\Noselect";
 				hit.setValue("LSUB (" + attributes + ") \"/\" " + ImapFolder.formatPath(hit.getKey(), (ImapSession) mSession));
 			}
 		}

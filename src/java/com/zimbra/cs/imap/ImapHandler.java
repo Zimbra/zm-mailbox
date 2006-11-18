@@ -1026,7 +1026,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             pattern = pattern.substring(1);
         List<String> matches = new ArrayList<String>();
         try {
-        	ImapListOperation op = new ImapListOperation(mSession, getContext(), mMailbox, new GetFolderAttributes(), pattern);
+        	ImapListOperation op = new ImapListOperation(mSession, getContext(), mMailbox, pattern);
         	op.schedule();
         	matches = op.getMatches();
         } catch (ServiceException e) {
@@ -1044,25 +1044,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private static final String[] FOLDER_ATTRIBUTES = {
-        "\\HasNoChildren",            "\\HasChildren",
-        "\\HasNoChildren \\Noselect", "\\HasChildren \\Noselect",
-        "\\HasNoChildren \\Noinferiors"
-    };
-    
-    public class GetFolderAttributes implements IImapGetFolderAttributes {
-    	public String doGetFolderAttributes(Folder folder) {
-    		return getFolderAttributes(folder);
-    	}
-    }
-
-    String getFolderAttributes(Folder folder) {
-        int attributes = (folder.hasSubfolders() ? 0x01 : 0x00);
-        attributes    |= (!ImapFolder.isFolderSelectable(folder, mSession) ? 0x02 : 0x00);
-        attributes    |= (folder.getId() == Mailbox.ID_FOLDER_SPAM ? 0x04 : 0x00);
-        return FOLDER_ATTRIBUTES[attributes];
-    }
-
     boolean doLSUB(String tag, String referenceName, String mailboxName) throws IOException {
         if (!checkState(tag, ImapSession.STATE_AUTHENTICATED))
             return CONTINUE_PROCESSING;
@@ -1076,8 +1057,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             pattern = pattern.substring(1);
 
         try {
-        	ImapLSubOperation op = new ImapLSubOperation(mSession, getContext(), mMailbox,
-        				new GetFolderAttributes(), pattern);
+        	ImapLSubOperation op = new ImapLSubOperation(mSession, getContext(), mMailbox, pattern);
         	op.schedule();
         	Map<String, String> subs = op.getSubs();
         	
@@ -1503,14 +1483,14 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                             ImapFlag i4flag = (ImapFlag) pieces[i].getValue();
                             i4set = i4folder.getFlaggedMessages(i4flag);
                         }
-                        search = search.substring(0, point) + encodeSequence(i4set, true) + search.substring(point);
+                        search = search.substring(0, point) + sequenceAsSearchTerm(i4set, true) + search.substring(point);
                     }
                 }
 
                 if (!i4folder.isVirtual())
                     search = "in:" + i4folder.getQuotedPath() + " (" + search + ')';
                 else if (i4folder.getSize() <= LARGEST_FOLDER_BATCH)
-                    search = encodeSequence(i4folder.getSubsequence("1:*", false), false) + " (" + search + ')';
+                    search = sequenceAsSearchTerm(i4folder.getSubsequence("1:*", false), false) + " (" + search + ')';
                 else
                     search = '(' + i4folder.getQuery() + ") (" + search + ')';
                 ZimbraLog.imap.info("[ search is: " + search + " ]");
@@ -1577,7 +1557,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         int size = i4set.size() - (i4set.contains(null) ? 1 : 0);
         return size == mSession.getFolder().getSize();
     }
-    private String encodeSequence(Set<ImapMessage> i4set, boolean abbreviateAll) {
+    private String sequenceAsSearchTerm(Set<ImapMessage> i4set, boolean abbreviateAll) {
         i4set.remove(null);
         if (i4set.isEmpty())
             return "item:none";
