@@ -85,6 +85,17 @@ public class ZPrefs {
 
     public String getGroupMailBy() { return get(Provisioning.A_zimbraPrefGroupMailBy); }
 
+    public boolean getGroupByConversation() {
+        String gb = getGroupMailBy();
+        return "conversation".equals(gb);
+    }
+
+    public boolean getGroupByMessage() {
+        String gb = getGroupMailBy();
+        return gb == null || "message".equals(gb);
+    }
+
+
     public String getDedupeMessagesSentToSelf() { return get(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf); }
 
     public String getMailInitialSearch() { return get(Provisioning.A_zimbraPrefMailInitialSearch); }
