@@ -93,10 +93,14 @@ public class DeployZimlet extends AdminDocumentHandler {
 			auth = au;
 		}
 		public void run() {
+			Server s = null;
 			try {
+				s = Provisioning.getInstance().getLocalServer();
 				ZimletUtil.deployZimlet(new ZimletFile(upload.getName(), upload.getInputStream()), progress, auth);
 			} catch (Exception e) {
 				ZimbraLog.zimlet.info("deploy", e);
+				if (s != null)
+					progress.markFailed(s);
 			} finally {
 				FileUploadServlet.deleteUpload(upload);
 			}
