@@ -239,7 +239,15 @@ class ImapRequest {
     }
     String readTag() throws ImapParseException     { mTag = readContent(TAG_CHARS);  return mTag; }
     String readAtom() throws ImapParseException    { return readContent(ATOM_CHARS).toUpperCase(); }
-    String readNumber() throws ImapParseException  { return readContent(NUMBER_CHARS); }
+
+    static final boolean NONZERO = false, ZERO_OK = true;
+    String readNumber() throws ImapParseException  { return readNumber(ZERO_OK); }
+    String readNumber(boolean zeroOK) throws ImapParseException {
+        String number = readContent(NUMBER_CHARS);
+        if (number.startsWith("0") && (!zeroOK || number.length() > 1))
+            throw new ImapParseException(mTag, "invalid number: " + number);
+        return number;
+    }
 
     byte[] readBase64(boolean skipEquals) throws ImapParseException {
         // in some cases, "=" means to just return null and be done with it
@@ -514,7 +522,7 @@ class ImapRequest {
                     if (!sectionPart.equals("")) {
                         sectionPart += ".";  skipChar('.');
                     }
-                    sectionPart += readNumber();
+                    sectionPart += readNumber(NONZERO);
                 }
                 skipChar(']');
                 if (sectionPart.equals(""))
@@ -531,7 +539,7 @@ class ImapRequest {
                 if (peekChar() == '<') {
                     try {
                         skipChar('<');  int partialStart = Integer.parseInt(readNumber());
-                        skipChar('.');  int partialCount = Integer.parseInt(readNumber());  skipChar('>');
+                        skipChar('.');  int partialCount = Integer.parseInt(readNumber(NONZERO));  skipChar('>');
                         pspec.setPartial(partialStart, partialCount);
                     } catch (NumberFormatException e) {
                         throw new ImapParseException(mTag, "invalid partial fetch specifier");
@@ -552,7 +560,7 @@ class ImapRequest {
         boolean done = false;
 
         while (Character.isDigit((char) peekChar())) {
-            sectionPart += (sectionPart.equals("") ? "" : ".") + readNumber();
+            sectionPart += (sectionPart.equals("") ? "" : ".") + readNumber(NONZERO);
             if (!(done = (peekChar() != '.')))
                 skipChar('.');
         }
@@ -684,6 +692,7 @@ class ImapRequest {
                                                   else  search.append(i4flag == null ? "item:none" : "tag:" + i4flag.mName); }
             else if (key.equals("LARGER"))      { skipSpace(); search.append("larger:").append(readNumber()); }
             else if (key.equals("ON"))          { skipSpace(); search.append("date:").append(readAndReformatDate()); }
+            else if (key.equals("OLDER"))       { skipSpace(); search.append("before:-").append(readNumber(NONZERO)).append('h'); }
             // FIXME: SENTBEFORE, SENTON, and SENTSINCE reference INTERNALDATE, not the Date header
             else if (key.equals("SENTBEFORE"))  { skipSpace(); search.append("before:").append(readAndReformatDate()); }
             else if (key.equals("SENTON"))      { skipSpace(); search.append("date:").append(readAndReformatDate()); }
@@ -698,6 +707,7 @@ class ImapRequest {
                                                   if (i4flag != null && i4flag.mPositive)    search.append('-');
                                                   if (i4flag != null && !i4flag.mPermanent)  insertFlag(i4flag, search, insertions);  
                                                   else  search.append(i4flag == null ? "item:all" : "tag:" + i4flag.mName); }
+            else if (key.equals("YOUNGER"))     { skipSpace(); search.append("after:-").append(readNumber(NONZERO)).append('h'); }
             else if (key.equals(SUBCLAUSE))     { skipChar('(');  readSearchClause(search, insertions, charset, MULTIPLE_CLAUSES);  skipChar(')'); }
             else if (Character.isDigit(key.charAt(0)) || key.charAt(0) == '*')
                 insertions.put(search.length(), validateSequence(key));

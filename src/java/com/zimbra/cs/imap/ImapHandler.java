@@ -608,11 +608,12 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         // [SASL-IR]          draft-siemborski-imap-sasl-initial-response-04: IMAP Extension for SASL Initial Client Response
         // [UIDPLUS]          RFC 2359: IMAP4 UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
+        // [WITHIN]           draft-ietf-lemonade-search-within-02: WITHIN Search extension to the IMAP Protocol
         boolean authenticated = mSession != null;
         String nologin = mServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
-        String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN "; 
-        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CATENATE CHILDREN ESEARCH ID IDLE LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR UIDPLUS UNSELECT");
+        String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN ";
+        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CATENATE CHILDREN ESEARCH ID IDLE LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR UIDPLUS UNSELECT WITHIN");
     }
 
     boolean doNOOP(String tag) throws IOException {
