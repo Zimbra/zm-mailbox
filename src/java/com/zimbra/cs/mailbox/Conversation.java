@@ -252,7 +252,7 @@ public class Conversation extends MailItem {
         mInheritedTagSet = new TagSet();
         for (Message msg : msgs) {
             super.addChild(msg);
-            mInheritedTagSet.updateFlags(msg.getFlagBitmask(), true).updateTags(msg.getTagBitmask(), true);
+            mInheritedTagSet.updateFlags(msg.getInternalFlagBitmask(), true).updateTags(msg.getTagBitmask(), true);
         }
 
         // need to rewrite the overview metadata
@@ -786,7 +786,8 @@ public class Conversation extends MailItem {
         if (metadata != null) {
             try {
                 meta = new Metadata(metadata, this);
-                recalculate = false;
+                if (meta.containsKey(Metadata.FN_PARTICIPANTS))
+                    recalculate = false;
             } catch (ServiceException e) {
                 ZimbraLog.mailbox.info("Unable to parse conversation metadata: id= " + mId + ", data='" + metadata + "'", e);
             }
