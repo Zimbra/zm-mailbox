@@ -56,8 +56,7 @@ public class ParsedAddress implements Comparable<ParsedAddress> {
     public String lastName;
     public String suffix;
 
-    public    boolean first  = true;
-    protected boolean parsed = false;
+    private boolean parsed = false;
     
 	public ParsedAddress(String address) {
 		try {

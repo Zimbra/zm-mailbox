@@ -1423,11 +1423,11 @@ public class ToXML {
     }
 
     public static Element encodeEmail(Element parent, InternetAddress ia, EmailType type) {
-        return encodeEmail(parent, new ParsedAddress(ia), type);
+        return encodeEmail(parent, new ParsedAddress(ia).parse(), type);
     }
 
     public static Element encodeEmail(Element parent, String addr, EmailType type) {
-        return encodeEmail(parent, new ParsedAddress(addr), type);
+        return encodeEmail(parent, new ParsedAddress(addr).parse(), type);
     }
 
     public static Element encodeEmail(Element parent, ParsedAddress pa, EmailType type) {
