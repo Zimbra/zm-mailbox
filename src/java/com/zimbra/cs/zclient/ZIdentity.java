@@ -27,6 +27,7 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.Element;
 
 import java.util.HashMap;
@@ -57,6 +58,66 @@ public class ZIdentity  {
     public Map<String, Object> getAttrs() {
         return new HashMap<String, Object>(mAttrs);
     }
+
+    public boolean getBool(String name) {
+        return Provisioning.TRUE.equals(mAttrs.get(name));
+    }
+
+    public String getBccAddress() { return mAttrs.get(Provisioning.A_zimbraPrefBccAddress); }
+
+    public String getForwardIncludeOriginalText() { return mAttrs.get(Provisioning.A_zimbraPrefForwardIncludeOriginalText); }
+
+    public boolean getForwardIncludeAsAttachment() { return "includeAsAttachment".equals(getForwardIncludeOriginalText()); }
+    public boolean getForwardIncludeBody() { return "includeBody".equals(getForwardIncludeOriginalText()); }
+    public boolean getForwardIncludeBodyWithPrefx() { return "includeBodyWithPrefix".equals(getForwardIncludeOriginalText()); }
+
+    public String getForwardReplyFormat() { return mAttrs.get(Provisioning.A_zimbraPrefForwardReplyFormat); }
+    public boolean getForwardReplyTextFormat() { return "text".equals(getForwardReplyFormat()); }
+    public boolean getForwardReplyHtmlFormat() { return "html".equals(getForwardReplyFormat()); }
+    public boolean getForwardReplySameFormat() { return "same".equals(getForwardReplyFormat()); }
+
+    public String getForwardReplyPrefixChar() { return mAttrs.get(Provisioning.A_zimbraPrefForwardReplyPrefixChar); }
+
+    public String getFromAddress() { return mAttrs.get(Provisioning.A_zimbraPrefFromAddress); }
+
+    public String getFromDisplay() { return mAttrs.get(Provisioning.A_zimbraPrefFromDisplay); }
+
+    public String getSignature() { return mAttrs.get(Provisioning.A_zimbraPrefMailSignature); }
+
+    public boolean getSignatureEnabled() { return getBool(Provisioning.A_zimbraPrefMailSignatureEnabled); }
+
+    public String getSignatureStyle() { return mAttrs.get(Provisioning.A_zimbraPrefMailSignatureStyle); }
+    public boolean getSignatureStyleTop() { return "outlook".equals(getSignatureStyle()); }
+    public boolean getSignatureStyleBottom() { return "internet".equals(getSignatureStyle()); }
+
+    public String getReplyIncludeOriginalText() { return mAttrs.get(Provisioning.A_zimbraPrefReplyIncludeOriginalText); }
+
+    public boolean getReplyIncludeAsAttachment() { return "includeAsAttachment".equals(getForwardIncludeOriginalText()); }
+    public boolean getReplyIncludeBody() { return "includeBody".equals(getReplyIncludeOriginalText()); }
+    public boolean getReplyIncludeBodyWithPrefx() { return "includeBodyWithPrefix".equals(getReplyIncludeOriginalText()); }
+    public boolean getReplyIncludeNone() { return "includeNone".equals(getReplyIncludeOriginalText()); }
+    public boolean getReplyIncludeSmart() { return "includeSmart".equals(getReplyIncludeOriginalText()); }
+
+
+    public String getReplyToAddress() { return mAttrs.get(Provisioning.A_zimbraPrefReplyToAddress); }
+
+    public String getReplyToDisplay() { return mAttrs.get(Provisioning.A_zimbraPrefReplyToDisplay); }
+
+    public boolean getReplyToEnabled() { return getBool(Provisioning.A_zimbraPrefReplyToEnabled); }
+
+    public boolean getSaveToSent() { return getBool(Provisioning.A_zimbraPrefSaveToSent); }
+
+    public String getSentMailFolder() { return mAttrs.get(Provisioning.A_zimbraPrefSentMailFolder); }
+
+    public boolean getUseDefaultIdentitySettings() { return getBool(Provisioning.A_zimbraPrefUseDefaultIdentitySettings); }
+
+    public String getWhenInFolderIds() { return mAttrs.get(Provisioning.A_zimbraPrefWhenInFolderIds); }
+
+    public boolean getWhenInFoldersEnabled() { return getBool(Provisioning.A_zimbraPrefWhenInFoldersEnabled); }
+
+    public String getWhenSentToAddresses() { return mAttrs.get(Provisioning.A_zimbraPrefWhenSentToAddresses); }
+
+    public boolean getWhenSentToEnabled() { return getBool(Provisioning.A_zimbraPrefWhenSentToEnabled); }
 
     public Element toElement(Element parent) {
         Element identity = parent.addElement(AccountService.E_IDENTITY);
