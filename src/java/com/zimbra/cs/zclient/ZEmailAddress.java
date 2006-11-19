@@ -35,7 +35,6 @@ import javax.mail.internet.InternetAddress;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class ZEmailAddress {
     
@@ -100,7 +99,10 @@ public class ZEmailAddress {
 
     public String getFullAddress() {
         try {
-            return new InternetAddress(mAddress, mPersonal == null ? "" : mPersonal).toString();
+            if (mPersonal == null)
+                return mAddress;
+            else
+                return new InternetAddress(mAddress, mPersonal).toUnicodeString();
         } catch (UnsupportedEncodingException e) {
             if (mPersonal == null)
                 return mAddress;
