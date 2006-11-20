@@ -605,7 +605,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         // [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
         // [NAMESPACE]        RFC 2342: IMAP4 Namespace
         // [QUOTA]            RFC 2087: IMAP4 QUOTA extension
-        // [SASL-IR]          draft-siemborski-imap-sasl-initial-response-04: IMAP Extension for SASL Initial Client Response
+        // [SASL-IR]          draft-siemborski-imap-sasl-initial-response-05: IMAP Extension for SASL Initial Client Response
         // [UIDPLUS]          RFC 2359: IMAP4 UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           draft-ietf-lemonade-search-within-02: WITHIN Search extension to the IMAP Protocol
