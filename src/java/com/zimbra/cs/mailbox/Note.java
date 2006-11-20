@@ -167,6 +167,11 @@ public class Note extends MailItem {
         saveSubject();
     }
 
+    protected void saveSubject() throws ServiceException {
+        mData.contentChanged(mMailbox);
+        DbMailItem.saveSubject(this);
+    }
+
     void reposition(Rectangle bounds) throws ServiceException {
         if (!isMutable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);

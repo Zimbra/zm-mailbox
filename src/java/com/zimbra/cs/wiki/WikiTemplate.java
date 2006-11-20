@@ -80,7 +80,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	}
 	
 	public static WikiTemplate findTemplate(Context ctxt, String name)
-	throws IOException,ServiceException {
+	throws ServiceException {
     	Wiki wiki = Wiki.getInstance(ctxt.wctxt, ctxt.item);
     	return wiki.getTemplate(ctxt.wctxt, name);
 	}
@@ -602,11 +602,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				StringBuffer path = new StringBuffer();
 				path.append("/");
 				for (MailItem item : list) {
-					String name;
-					if (item instanceof Folder)
-						name = ((Folder)item).getName();
-					else
-						name = item.getSubject();
+					String name = item.getName();
 					path.append(name);
 					buf.append("<span class='zmwiki-pageLink'>");
 					buf.append("[[").append(name).append("][").append(path).append("]]");
@@ -657,12 +653,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			return null;
 		}
 		public String apply(Context ctxt) {
-			if (ctxt.item instanceof Document)
-				return ((Document)ctxt.item).getName();
-			else if (ctxt.item instanceof Folder)
-				return ((Folder)ctxt.item).getName();
-			else
-				return ctxt.item.getSubject();
+            return ctxt.item.getName();
 		}
 	}
 	public static class FragmentWiklet extends Wiklet {
@@ -825,7 +816,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public String getPattern() {
 			return "CONTENT";
 		}
-		public WikiTemplate findInclusion(Context ctxt) throws ServiceException, IOException {
+		public WikiTemplate findInclusion(Context ctxt) throws ServiceException {
 			WikiItem wiki = (WikiItem) ctxt.item;
 			return WikiTemplate.findTemplate(ctxt, wiki.getWikiWord());
 		}
@@ -853,7 +844,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public String getPattern() {
 			return "INCLUDE";
 		}
-		public WikiTemplate findInclusion(Context ctxt) throws ServiceException, IOException {
+		public WikiTemplate findInclusion(Context ctxt) throws ServiceException {
 			Map<String,String> params = ctxt.token.parseParam();
 			String page = params.get(sPAGE);
 			if (page == null) {
@@ -861,7 +852,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			}
 			return WikiTemplate.findTemplate(ctxt, page);
 		}
-		public String apply(Context ctxt) throws ServiceException, IOException {
+		public String apply(Context ctxt) {
 			try {
 				WikiTemplate template = findInclusion(ctxt);
 				return template.toString(ctxt);
@@ -938,10 +929,10 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
-		public String apply(Context ctxt) throws ServiceException, IOException {
+		public String apply(Context ctxt) {
 			if (ctxt.item == null)
 				return "<!-- cannot resolve item for url wiklet -->";
-			String title = ctxt.item.getSubject();
+			String title = ctxt.item.getName();
 			WikiUrl wurl = new WikiUrl(ctxt.item);
 			try {
 				StringBuffer buf = new StringBuffer();

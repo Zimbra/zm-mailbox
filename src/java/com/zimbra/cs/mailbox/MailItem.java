@@ -155,6 +155,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         public long   tags;
         public String sender;
         public String subject;
+        public String name;
         public String metadata;
         public int    modMetadata;
         public int    dateChanged;
@@ -440,7 +441,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  If not <code>""</code>, this name should be unique across all item
      *  types within the parent folder. */
     public String getName() {
-        return "";
+        return mData.name == null ? "" : mData.name;
     }
 
     /** Returns the ID of the item's parent.  Not all items have parents;
@@ -1747,9 +1748,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         DbMailItem.saveMetadata(this, metadata);
     }
 
-    protected void saveSubject() throws ServiceException {
+    protected void saveName() throws ServiceException {
         mData.contentChanged(mMailbox);
-        DbMailItem.saveSubject(this);
+        DbMailItem.saveName(this);
     }
 
     protected void saveData(String sender) throws ServiceException {
@@ -1773,6 +1774,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     private static final String CN_FLAGS        = "flags";
     private static final String CN_TAGS         = "tags";
     private static final String CN_SUBJECT      = "subject";
+    private static final String CN_NAME         = "name";
     private static final String CN_CHILDREN     = "children";
     private static final String CN_COLOR        = "color";
     private static final String CN_IMAP_ID      = "imap_id";
@@ -1780,18 +1782,18 @@ public abstract class MailItem implements Comparable<MailItem> {
     protected StringBuffer appendCommonMembers(StringBuffer sb) {
         sb.append(CN_ID).append(": ").append(mId).append(", ");
         sb.append(CN_TYPE).append(": ").append(mData.type).append(", ");
-        if (mData.parentId > 0)
-            sb.append(CN_PARENT_ID).append(": ").append(mData.parentId).append(", ");
-        sb.append(CN_FOLDER_ID).append(": ").append(mData.folderId).append(", ");
-        sb.append(CN_DATE).append(": ").append(mData.date).append(", ");
-        sb.append(CN_SIZE).append(": ").append(mData.size).append(", ");
-        sb.append(CN_REVISION).append(": ").append(mData.modContent).append(", ");
+        if (mData.name != null)
+            sb.append(CN_NAME).append(": ").append(mData.name).append(", ");
         sb.append(CN_UNREAD_COUNT).append(": ").append(mData.unreadCount).append(", ");
-        sb.append(CN_COLOR).append(": ").append(mColor).append(", ");
         if (mData.flags != 0)
             sb.append(CN_FLAGS).append(": ").append(getFlagString()).append(", ");
         if (mData.tags != 0)
             sb.append(CN_TAGS).append(": [").append(getTagString()).append("], ");
+        sb.append(CN_FOLDER_ID).append(": ").append(mData.folderId).append(", ");
+        sb.append(CN_SIZE).append(": ").append(mData.size).append(", ");
+        if (mData.parentId > 0)
+            sb.append(CN_PARENT_ID).append(": ").append(mData.parentId).append(", ");
+        sb.append(CN_COLOR).append(": ").append(mColor).append(", ");
         if (mData.subject != null)
             sb.append(CN_SUBJECT).append(": ").append(mData.subject).append(", ");
         if (mData.children != null)
@@ -1800,6 +1802,8 @@ public abstract class MailItem implements Comparable<MailItem> {
             sb.append(CN_BLOB_DIGEST).append(": ").append(mData.blobDigest);
         if (mData.imapId > 0)
             sb.append(CN_IMAP_ID).append(": ").append(mData.imapId).append(", ");
+        sb.append(CN_DATE).append(": ").append(mData.date).append(", ");
+        sb.append(CN_REVISION).append(": ").append(mData.modContent).append(", ");
         return sb;
     }
 }

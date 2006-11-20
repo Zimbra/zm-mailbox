@@ -98,9 +98,9 @@ public class DbMailItem {
             stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mbox) +
                     "(" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") +
                     " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
-                    " unread, flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
+                    " unread, flags, tags, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
                     "VALUES (" + (!DebugConfig.disableMailboxGroup ? "?, " : "") +
-                    " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -135,6 +135,7 @@ public class DbMailItem {
             stmt.setLong(pos++, data.tags);
             stmt.setString(pos++, checkSenderLength(data.sender));
             stmt.setString(pos++, data.subject);
+            stmt.setString(pos++, data.name);
             stmt.setString(pos++, checkTextLength(data.metadata));
             stmt.setInt(pos++, data.modMetadata);
             stmt.setInt(pos++, data.dateChanged);
@@ -166,7 +167,7 @@ public class DbMailItem {
     public static void copy(MailItem item, int id, Folder folder, int indexId, int parentId, short volumeId, String metadata)
     throws ServiceException {
         Mailbox mbox = item.getMailbox();
-        if (id <= 0 || folder == null || parentId == 0)
+        if (id <= 0 || indexId <= 0 || folder == null || parentId == 0)
             throw ServiceException.FAILURE("invalid data for DB item copy", null);
 
         Connection conn = mbox.getOperationConnection();
@@ -176,10 +177,10 @@ public class DbMailItem {
             stmt = conn.prepareStatement("INSERT INTO " + table +
                     "(" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") +
                     " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
-                    " unread, flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
+                    " unread, flags, tags, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
                     "(SELECT " + (!DebugConfig.disableMailboxGroup ? "?, " : "") +
                     " ?, type, ?, ?, ?, ?, date, size, ?, blob_digest, unread," +
-                    " flags, tags, sender, subject, ?, ?, ?, ? FROM " + table +
+                    " flags, tags, sender, subject, name, ?, ?, ?, ? FROM " + table +
                     " WHERE " + IN_THIS_MAILBOX_AND + "id = ?)");
             int mboxId = mbox.getId();
             int pos = 1;
@@ -231,10 +232,10 @@ public class DbMailItem {
             stmt = conn.prepareStatement("INSERT INTO " + table +
                     "(" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") +
                     " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
-                    " unread, flags, tags, sender, subject, metadata, mod_metadata, change_date, mod_content) " +
+                    " unread, flags, tags, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
                     "(SELECT " + (!DebugConfig.disableMailboxGroup ? "?, " : "") +
                     " ?, type, NULL, ?, ?, ?, date, size, ?, blob_digest," +
-                    " unread, flags, tags, sender, subject, metadata, ?, ?, ? FROM " + table +
+                    " unread, flags, tags, sender, subject, name, metadata, ?, ?, ? FROM " + table +
                     " WHERE " + IN_THIS_MAILBOX_AND + "id = ?)");
             int mboxId = mbox.getId();
             int pos = 1;
@@ -498,24 +499,48 @@ public class DbMailItem {
         }
     }
 
-    public static void saveSubject(MailItem item) throws ServiceException {
+    // need to kill the Note class sooner rather than later
+    public static void saveSubject(Note note) throws ServiceException {
+        Mailbox mbox = note.getMailbox();
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+
+        try {
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(note) +
+                    " SET date = ?, size = ?, subject = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+            int pos = 1;
+            stmt.setInt(pos++, (int) (note.getDate() / 1000));
+            stmt.setInt(pos++, note.getSize());
+            stmt.setString(pos++, note.getSubject());
+            stmt.setInt(pos++, mbox.getOperationChangeID());
+            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setInt(pos++, mbox.getOperationChangeID());
+            if (!DebugConfig.disableMailboxGroup)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, note.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("writing subject for mailbox " + note.getMailboxId() + ", note " + note.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void saveName(MailItem item) throws ServiceException {
         Mailbox mbox = item.getMailbox();
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
 
-        String subject = item.getSubject();
-        if (item instanceof Conversation)
-            subject = ((Conversation) item).getNormalizedSubject();
-        else if (item instanceof Message)
-            subject = ((Message) item).getNormalizedSubject();
+        String name = item.getName().equals("") ? null : item.getName();
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                    " SET date = ?, size = ?, subject = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
+                    " SET date = ?, size = ?, name = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
                     " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
             stmt.setInt(pos++, item.getSize());
-            stmt.setString(pos++, subject);
+            stmt.setString(pos++, name);
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -524,7 +549,7 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("writing subject for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
+            throw ServiceException.FAILURE("writing name for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -536,15 +561,19 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
 
+        String name = item.getName().equals("") ? null : item.getName();
+
         String subject = item.getSubject();
         if (item instanceof Conversation)
             subject = ((Conversation) item).getNormalizedSubject();
         else if (item instanceof Message)
             subject = ((Message) item).getNormalizedSubject();
+
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                    " SET type = ?, parent_id = ?, date = ?, size = ?, blob_digest = ?, flags = ?, sender = ?, subject = ?," +
-                    "  metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?, volume_id = ?" +
+                    " SET type = ?, parent_id = ?, date = ?, size = ?, blob_digest = ?, flags = ?," +
+                    "  sender = ?, subject = ?, name = ?, metadata = ?," +
+                    "  mod_metadata = ?, change_date = ?, mod_content = ?, volume_id = ?" +
                     " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setByte(pos++, item.getType());
@@ -559,6 +588,7 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getInternalFlagBitmask());
             stmt.setString(pos++, checkSenderLength(sender));
             stmt.setString(pos++, subject);
+            stmt.setString(pos++, name);
             stmt.setString(pos++, checkTextLength(metadata));
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
@@ -1158,6 +1188,7 @@ public class DbMailItem {
     public static final byte SORT_BY_SUBJECT = 0x04;
     public static final byte SORT_BY_ID      = 0x08;
     public static final byte SORT_NONE       = 0x10;
+    public static final byte SORT_BY_NAME    = 0x20;
 
     public static final byte DEFAULT_SORT_ORDER = SORT_BY_DATE | SORT_DESCENDING;
 
@@ -1168,6 +1199,7 @@ public class DbMailItem {
         switch (sort & SORT_FIELD_MASK) {
             case SORT_BY_SENDER:   return "sender";
             case SORT_BY_SUBJECT:  return "subject";
+            case SORT_BY_NAME:     return "name";
             case SORT_BY_ID:       return "id";
             case SORT_NONE:        return "NULL";
             case SORT_BY_DATE:
@@ -1966,11 +1998,13 @@ public class DbMailItem {
             return createResult(rs, sort, ExtraData.NONE);
         }
         public static SearchResult createResult(ResultSet rs, byte sort, ExtraData extra) throws SQLException {
+            int sortField = (sort & SORT_FIELD_MASK);
+
             SearchResult result = new SearchResult();
             result.id      = rs.getInt(1);
             result.indexId = rs.getInt(2);
             result.type    = rs.getByte(3);
-            if ((sort & SORT_FIELD_MASK) == SORT_BY_SUBJECT || (sort & SORT_FIELD_MASK) == SORT_BY_SENDER)
+            if (sortField == SORT_BY_SUBJECT || sortField == SORT_BY_SENDER || sortField == SORT_BY_NAME)
                 result.sortkey = rs.getString(4);
             else
                 result.sortkey = new Long(rs.getInt(4) * 1000L);
@@ -2031,7 +2065,7 @@ public class DbMailItem {
             /*
              * SELECT id,date FROM mail_item mi WHERE mi.acccount_id = ? AND type = ? AND tags & ? = ? AND flags & ? = ?
              *    (AND folder_id [NOT] IN (?,?,?)) (AND date > ?) (AND date < ?) (AND mod_metadata > ?) (AND mod_metadata < ?)
-             *    ORDER BY date|subject|sender (DESC)? LIMIT ?, ?
+             *    ORDER BY date|subject|sender|name (DESC)? LIMIT ?, ?
              */
             encodeConstraint(mbox, node, statement, conn);
 
@@ -2341,15 +2375,16 @@ public class DbMailItem {
     public static final int CI_TAGS        = 13;
 //    public static final int CI_SENDER      = 14;
     public static final int CI_SUBJECT     = 14;
-    public static final int CI_METADATA    = 15;
-    public static final int CI_MODIFIED    = 16;
-    public static final int CI_MODIFY_DATE = 17;
-    public static final int CI_SAVED       = 18;
+    public static final int CI_NAME        = 15;
+    public static final int CI_METADATA    = 16;
+    public static final int CI_MODIFIED    = 17;
+    public static final int CI_MODIFY_DATE = 18;
+    public static final int CI_SAVED       = 19;
 
     private static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.index_id, " +
                                             "mi.imap_id, mi.date, mi.size, mi.volume_id, mi.blob_digest, " +
-                                            "mi.unread, mi.flags, mi.tags, mi.subject, mi.metadata, " +
-                                            "mi.mod_metadata, mi.change_date, mi.mod_content";
+                                            "mi.unread, mi.flags, mi.tags, mi.subject, mi.name, " +
+                                            "mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content";
 
     private static UnderlyingData constructItem(ResultSet rs) throws SQLException {
         return constructItem(rs, 0);
@@ -2374,6 +2409,7 @@ public class DbMailItem {
         data.flags       = rs.getInt(CI_FLAGS + offset);
         data.tags        = rs.getLong(CI_TAGS + offset);
         data.subject     = rs.getString(CI_SUBJECT + offset);
+        data.name        = rs.getString(CI_NAME + offset);
         data.metadata    = rs.getString(CI_METADATA + offset);
         data.modMetadata = rs.getInt(CI_MODIFIED + offset);
         data.modContent  = rs.getInt(CI_SAVED + offset);

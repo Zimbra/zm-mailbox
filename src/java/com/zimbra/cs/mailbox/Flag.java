@@ -195,7 +195,7 @@ public class Flag extends Tag {
 		data.id       = id;
 		data.type     = MailItem.TYPE_FLAG;
 		data.folderId = Mailbox.ID_FOLDER_TAGS;
-		data.subject  = name;
+		data.name     = name;
 
 		Flag flag = new Flag(mbox, data);
 		flag.mAttributes = attributes;

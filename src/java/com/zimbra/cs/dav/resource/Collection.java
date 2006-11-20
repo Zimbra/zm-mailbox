@@ -62,7 +62,7 @@ public class Collection extends MailItemResource {
 		super(f);
 		setCreationDate(f.getDate());
 		setLastModifiedDate(f.getChangeDate());
-		setProperty(DavElements.P_DISPLAYNAME, f.getSubject());
+		setProperty(DavElements.P_DISPLAYNAME, f.getName());
 		setProperty(DavElements.P_GETCONTENTLENGTH, "0");
 		mId = f.getId();
 		mMboxId = f.getMailboxId();

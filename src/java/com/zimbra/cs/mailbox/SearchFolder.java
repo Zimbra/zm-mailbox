@@ -137,7 +137,7 @@ public class SearchFolder extends Folder {
         data.folderId    = parent.getId();
         data.parentId    = parent.getId();
         data.date        = mbox.getOperationTimestamp();
-        data.subject     = name;
+        data.name        = name;
         data.metadata    = encodeMetadata(DEFAULT_COLOR, query, types, sort);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);

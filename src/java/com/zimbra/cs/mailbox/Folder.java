@@ -79,16 +79,6 @@ public class Folder extends MailItem {
     }
 
 
-    /** Returns the folder's name.  Note that this is the folder's
-     *  name (e.g. <code>"foo"</code>), not its absolute pathname
-     *  (e.g. <code>"/baz/bar/foo"</code>).
-     * 
-     * @see #getPath() */
-    @Override
-    public String getName() {
-        return (mData.subject == null ? "" : mData.subject);
-    }
-
     /** Returns the folder's absolute path.  Paths are UNIX-style with 
      *  <code>'/'</code> as the path delimiter.  Paths are relative to
      *  the user root folder ({@link Mailbox#ID_FOLDER_USER_ROOT}),
@@ -481,7 +471,7 @@ public class Folder extends MailItem {
         data.parentId    = data.folderId;
         data.date        = mbox.getOperationTimestamp();
         data.flags       = flags & Flag.FLAGS_FOLDER;
-        data.subject     = name;
+        data.name        = name;
         data.metadata    = encodeMetadata(color, attributes, view, null, new SyncData(url), id + 1);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
@@ -597,11 +587,11 @@ public class Folder extends MailItem {
      * @see #move(Folder) */
     void rename(String name, Folder target) throws ServiceException {
         validateFolderName(name);
-        if (name.equals(mData.subject) && target == mParent)
+        if (name.equals(mData.name) && target == mParent)
             return;
         if (!isMutable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        boolean renamed = !name.equals(mData.subject);
+        boolean renamed = !name.equals(mData.name);
         boolean moved   = target != mParent;
 
         if (moved &&!target.canAccess(ACL.RIGHT_INSERT))
@@ -617,9 +607,9 @@ public class Folder extends MailItem {
             Folder existingFolder = target.findSubfolder(name);
             if (existingFolder != null && existingFolder != this)
                 throw MailServiceException.ALREADY_EXISTS(name);
-            mData.subject = name;
+            mData.name = name;
             mData.date = mMailbox.getOperationTimestamp();
-            saveSubject();
+            saveName();
             updateRules(originalPath);
         }
 

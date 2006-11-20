@@ -83,22 +83,15 @@ public class Document extends MailItem {
 
     protected String mContentType;
     protected String mFragment;
-    protected String mName;
     protected MetadataList mRevisionList;
 
 	public Document(Mailbox mbox, UnderlyingData data) throws ServiceException {
 		super(mbox, data);
 		mFragment = getLastRevision().getFragment();
-		mName = getSubject();
 	}
 
 	public String getFragment() {
     	return mFragment;
-	}
-
-    @Override
-	public String getName() {
-		return mName;
 	}
 
     public String getContentType() {
@@ -157,7 +150,7 @@ public class Document extends MailItem {
 
     public void rename(String newName) throws ServiceException {
     	validateName(newName);
-    	mName = newName;
+    	mData.name = newName;
     }
     
     // name validation is the same as Folder
@@ -190,9 +183,9 @@ public class Document extends MailItem {
         mData.contentChanged(mMailbox);
         mMailbox.updateSize(mData.size);
         DbMailItem.saveMetadata(this, encodeMetadata(new Metadata()).toString());
-        if (!mData.subject.equals(getName())) {
-        	mData.subject = getName();
-        	DbMailItem.saveSubject(this);
+        if (!mData.name.equals(getName())) {
+        	mData.name = getName();
+        	DbMailItem.saveName(this);
         }
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_DATE | Change.MODIFIED_CONTENT);
         pd.setVersion(getVersion());
@@ -220,13 +213,13 @@ public class Document extends MailItem {
         DbMailItem.saveMetadata(this, encodeMetadata(new Metadata()).toString());
     }
     
-    protected static UnderlyingData prepareCreate(byte tp, int id, Folder folder, short volumeId, String subject, String creator, String type, ParsedDocument pd, Document parent, Metadata meta) 
+    protected static UnderlyingData prepareCreate(byte tp, int id, Folder folder, short volumeId, String name, String creator, String type, ParsedDocument pd, Document parent, Metadata meta) 
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_DOCUMENT))
             throw MailServiceException.CANNOT_CONTAIN();
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-        validateName(subject);
+        validateName(name);
         
 		Mailbox mbox = folder.getMailbox();
     	MetadataList revisions = new MetadataList();
@@ -243,7 +236,7 @@ public class Document extends MailItem {
         data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
         data.size        = pd.getSize();
-        data.subject     = subject;
+        data.name        = name;
         data.blobDigest  = pd.getDigest();
        	data.metadata    = encodeMetadata(meta, DEFAULT_COLOR, type, revisions).toString();
         
@@ -298,11 +291,11 @@ public class Document extends MailItem {
      * Search the sorted List of Documents for the one that matches
      * the subject.
      */
-    public static int binarySearch(List<Document> docList, String subject) {
+    public static int binarySearch(List<Document> docList, String name) {
     	int low = 0, high = docList.size() - 1;
     	while (low <= high) {
     		int mid = (low + high) >>> 1;
-    		int compared = docList.get(mid).getSubject().compareToIgnoreCase(subject);
+    		int compared = docList.get(mid).getName().compareToIgnoreCase(name);
     		if (compared == 0)
     			return mid;
     		else if (compared < 0)

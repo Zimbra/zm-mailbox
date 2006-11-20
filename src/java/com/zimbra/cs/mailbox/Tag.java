@@ -49,14 +49,10 @@ public class Tag extends MailItem {
             throw new IllegalArgumentException();
     }
 
-    @Override
-    public String getName() {
-        return getSubject();
-    }
-
     public byte getIndex() {
         return getIndex(mId);
     }
+
     public static byte getIndex(int id) {
         return (byte) (id - TAG_ID_OFFSET);
     }
@@ -156,7 +152,7 @@ public class Tag extends MailItem {
         data.type        = MailItem.TYPE_TAG;
         data.folderId    = tagFolder.getId();
         data.date        = mbox.getOperationTimestamp();
-        data.subject     = name;
+        data.name        = name;
         data.metadata    = encodeMetadata(color);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
@@ -172,7 +168,7 @@ public class Tag extends MailItem {
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the tag");
         name = validateTagName(name);
-        if (name.equals(mData.subject))
+        if (name.equals(mData.name))
             return;
         try {
             // if there's already a different tag with that name, we've got a naming conflict
@@ -181,9 +177,9 @@ public class Tag extends MailItem {
         } catch (MailServiceException.NoSuchItemException nsie) {}
 
         markItemModified(Change.MODIFIED_NAME);
-        mData.subject = name;
+        mData.name = name;
         mData.date = mMailbox.getOperationTimestamp();
-        saveSubject();
+        saveName();
     }
 
     private static final String INVALID_PREFIX     = "\\";

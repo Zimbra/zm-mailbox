@@ -50,7 +50,7 @@ public class Notebook extends MailItemResource {
 		mWctxt = new WikiContext(ctxt.getOperationContext(), null);
 		setCreationDate(doc.getDate());
 		setLastModifiedDate(doc.getChangeDate());
-		setProperty(DavElements.P_DISPLAYNAME, doc.getSubject());
+		setProperty(DavElements.P_DISPLAYNAME, doc.getName());
 		// content length is just an estimate.  the actual content will be larger
 		// after chrome composition.
 		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(doc.getSize()));

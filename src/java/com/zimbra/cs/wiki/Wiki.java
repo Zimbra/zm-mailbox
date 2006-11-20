@@ -132,7 +132,7 @@ public abstract class Wiki {
 	
 	static class WikiUrl {
 		public WikiUrl(MailItem item) {
-			this(item.getSubject(), item.getFolderId());
+			this(item.getName(), item.getFolderId());
 			if (item instanceof Folder)
 				mIsFolder = true;
 		}
@@ -335,7 +335,7 @@ public abstract class Wiki {
 				while (results.hasNext()) {
 					MailItem item = results.getNext().getMailItem();
 					if (item.getFolderId() == mFolderId &&
-							item.getSubject().equalsIgnoreCase(wikiWord) &&
+							item.getName().equalsIgnoreCase(wikiWord) &&
 							(item.getType() == MailItem.TYPE_DOCUMENT ||
 							 item.getType() == MailItem.TYPE_WIKI)) {
 						page = WikiPage.create((Document) item);
@@ -373,7 +373,7 @@ public abstract class Wiki {
         		contents = ByteUtil.getContent(doc.getRawDocument(), 0);
         	} catch (IOException ioe) {
         		ZimbraLog.wiki.error("cannot read the item body", ioe);
-        		throw WikiServiceException.CANNOT_READ(doc.getSubject());
+        		throw WikiServiceException.CANNOT_READ(doc.getName());
         	}
         	mbox.addDocumentRevision(ctxt.octxt, doc, contents, author);
         	Wiki.remove(mWikiAccount, Integer.toString(mFolderId));
@@ -734,7 +734,7 @@ public abstract class Wiki {
 															Integer.toString(item.getFolderId()));
 		Wiki wiki = (Wiki)sWikiNotebookCache.get(key);
 		if (wiki != null) {
-			String wikiWord = item.getSubject().toLowerCase();
+			String wikiWord = item.getName().toLowerCase();
 			synchronized (wiki.mWikiPages) {
 				wiki.mWikiPages.remove(wikiWord);
 			}

@@ -1463,7 +1463,7 @@ public class ToXML {
     public static Element encodeDocumentCommon(Element m, ZimbraSoapContext lc, Document doc, int fields, int rev) {
         m.addAttribute(MailService.A_ID, lc.formatItemId(doc));
         if (needToOutput(fields, Change.MODIFIED_NAME)) {
-        	m.addAttribute(MailService.A_NAME, doc.getSubject());
+        	m.addAttribute(MailService.A_NAME, doc.getName());
         	encodeRestUrl(m, doc);
         }
         if (needToOutput(fields, Change.MODIFIED_SIZE))

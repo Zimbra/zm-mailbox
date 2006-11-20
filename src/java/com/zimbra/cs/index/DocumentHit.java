@@ -85,11 +85,11 @@ public class DocumentHit extends ZimbraHit {
     }
 
     public String getSubject() {
-        return mDocument.getSubject();
+        return mDocument.getName();
     }
 
     public String getName() {
-        return getSubject();
+        return getName();
     }
 
     public MailItem getMailItem() throws ServiceException { return getDocument(); }

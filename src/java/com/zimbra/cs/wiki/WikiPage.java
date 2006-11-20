@@ -166,7 +166,7 @@ public abstract class WikiPage {
 		
 		private void addWikiItem(Document newItem) throws ServiceException {
 			Document.DocumentRevision rev = newItem.getLastRevision();
-			mWikiWord = newItem.getSubject();
+			mWikiWord = newItem.getName();
 			mId = newItem.getId();
 			mRevision = newItem.getVersion();
 			mModifiedDate = rev.getRevDate();

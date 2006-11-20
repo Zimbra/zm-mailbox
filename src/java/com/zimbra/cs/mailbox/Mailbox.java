@@ -4481,7 +4481,7 @@ public class Mailbox {
     			docIndex++;
     			if (doc instanceof Document)
     				ret.add((Document)doc);
-    		} else if (!doSort || doc.getSubject().compareToIgnoreCase(wiki.getSubject()) < 0) {
+    		} else if (!doSort || doc.getName().compareToIgnoreCase(wiki.getName()) < 0) {
     			docIndex++;
     			if (doc instanceof Document)
     				ret.add((Document)doc);
