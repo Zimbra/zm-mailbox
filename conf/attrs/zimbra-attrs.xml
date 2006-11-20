@@ -1823,7 +1823,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>TRUE if we should look at zimbraPrefWhenSentToAddresses</desc>
 </attr>
 
-<attr id="407" name="zimbraPrefWhenSentToAddresses" type="string" max="2048" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
+<attr id="407" name="zimbraPrefWhenSentToAddresses" type="string" max="2048" cardinality="multi" optionalIn="account,identity" flags="domainAdminModifiable">
   <desc>addresses that we will look at to see if we should use an identity</desc>
 </attr>
 
@@ -1831,7 +1831,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>TRUE if we should look at zimbraPrefWhenInFolderIds</desc>
 </attr>
 
-<attr id="409" name="zimbraPrefWhenInFolderIds" type="string" max="512" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
+<attr id="409" name="zimbraPrefWhenInFolderIds" type="string" max="512" cardinality="multi" optionalIn="account,identity" flags="domainAdminModifiable">
   <desc>if replying/forwarding a message in this folder, use this identity</desc>
 </attr>
 
