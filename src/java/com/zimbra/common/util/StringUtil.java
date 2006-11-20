@@ -461,4 +461,35 @@ public class StringUtil {
     public static String jsEncodeKey(String key) {
         return '"' + key + '"';
     }
+
+    //
+    // HTML methods
+    //
+    private static final Pattern PAT_AMP = Pattern.compile("&", Pattern.MULTILINE);
+    private static final Pattern PAT_LT = Pattern.compile("<", Pattern.MULTILINE);
+    private static final Pattern PAT_GT = Pattern.compile(">", Pattern.MULTILINE);
+    private static final Pattern PAT_DBLQT = Pattern.compile("\"", Pattern.MULTILINE);    
+
+    /**
+     * Escapes special characters with their HTML equivalents.
+     */
+    public static String escapeHtml(String text) {
+        if (text == null || text.length() == 0) return "";
+        String s = replaceAll(text, PAT_AMP, "&amp;");
+        s = replaceAll(s, PAT_LT, "&lt;");
+        s = replaceAll(s, PAT_GT, "&gt;");
+        s = replaceAll(s, PAT_DBLQT, "&quot;");
+        return s;
+    }
+
+    private static String replaceAll(String text, Pattern pattern, String replace) {
+        Matcher m = pattern.matcher(text);
+        StringBuffer sb = null;
+        while (m.find()) {
+            if (sb == null) sb = new StringBuffer();
+            m.appendReplacement(sb, replace);
+        }
+        if (sb != null) m.appendTail(sb);
+        return sb == null ? text : sb.toString();
+    }
 }
