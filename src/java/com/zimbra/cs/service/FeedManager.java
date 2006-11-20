@@ -134,6 +134,7 @@ public class FeedManager {
                                 user = URLDecoder.decode(httpurl.getUser());
                             } catch (Throwable t) { } 
                         UsernamePasswordCredentials creds = new UsernamePasswordCredentials(user, httpurl.getPassword());
+                        client.getParams().setAuthenticationPreemptive(true);
                         client.getState().setCredentials(AuthScope.ANY, creds);
                     }
                 }
