@@ -128,7 +128,12 @@ public class FeedManager {
                 if (url.indexOf('@') != -1) {
                     HttpURL httpurl = lcurl.startsWith("https:") ? new HttpsURL(url) : new HttpURL(url);
                     if (httpurl.getUser() != null) {
-                        UsernamePasswordCredentials creds = new UsernamePasswordCredentials(httpurl.getUser(), httpurl.getPassword());
+                        String user = httpurl.getUser();
+                        if (user.indexOf('%') != -1)
+                            try {
+                                user = URLDecoder.decode(httpurl.getUser());
+                            } catch (Throwable t) { } 
+                        UsernamePasswordCredentials creds = new UsernamePasswordCredentials(user, httpurl.getPassword());
                         client.getState().setCredentials(AuthScope.ANY, creds);
                     }
                 }
