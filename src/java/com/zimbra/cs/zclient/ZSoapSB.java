@@ -25,11 +25,11 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.util.StringUtil;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
-import com.zimbra.common.util.StringUtil;
 
 public class ZSoapSB {
     private StringBuilder mSb;
@@ -99,6 +99,18 @@ public class ZSoapSB {
         return this;
     }
 
+    public ZSoapSB add(String name, String[] list, boolean encode, boolean showEmpty) {
+        if (!showEmpty && (list == null || list.length == 0)) 
+            return this;
+        
+        beginArray(name);
+        for (String s : list) {
+            addArrayElement(s, encode);
+        }
+        endArray();
+        return this;
+    }
+    
     public ZSoapSB add(String name, String value) {
         checkFirst();
         mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": ").append(quote(value));

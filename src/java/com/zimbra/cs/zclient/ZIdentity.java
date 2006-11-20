@@ -25,9 +25,10 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.Element;
 
 import java.util.HashMap;
@@ -36,17 +37,17 @@ import java.util.Map;
 public class ZIdentity  {
 
     private String mName;
-    private Map<String, String> mAttrs;
+    private Map<String, Object> mAttrs;
 
     public ZIdentity(Element e) throws ServiceException {
         mName = e.getAttribute(AccountService.A_NAME);
-        mAttrs = new HashMap<String, String>();
+        mAttrs = new HashMap<String, Object>();
         for (Element a : e.listElements(AccountService.E_A)) {
-            mAttrs.put(a.getAttribute(AccountService.A_NAME), a.getText());
+            StringUtil.addToMultiMap(mAttrs, a.getAttribute(AccountService.A_NAME), a.getText()); 
         }
     }
 
-    public ZIdentity(String name, Map<String, String> attrs) {
+    public ZIdentity(String name, Map<String, Object> attrs) {
         mName = name;
         mAttrs = attrs;
     }
@@ -55,42 +56,60 @@ public class ZIdentity  {
         return mName;
     }
 
+
+    /**
+     * @param name name of pref to get
+     * @return null if unset, or first value in list
+     */
+    public String get(String name) {
+        Object value = mAttrs.get(name);
+        if (value == null) {
+            return null;
+        } else if (value instanceof String[]) {
+            return ((String[])value)[0];
+        } else { 
+            return value.toString();
+        }
+    }
+    
     public Map<String, Object> getAttrs() {
         return new HashMap<String, Object>(mAttrs);
     }
 
     public boolean getBool(String name) {
-        return Provisioning.TRUE.equals(mAttrs.get(name));
+        return Provisioning.TRUE.equals(get(name));
     }
 
-    public String getBccAddress() { return mAttrs.get(Provisioning.A_zimbraPrefBccAddress); }
+    public boolean isDefault() { return mName.equals(Provisioning.DEFAULT_IDENTITY_NAME); }
+    
+    public String getBccAddress() { return get(Provisioning.A_zimbraPrefBccAddress); }
 
-    public String getForwardIncludeOriginalText() { return mAttrs.get(Provisioning.A_zimbraPrefForwardIncludeOriginalText); }
+    public String getForwardIncludeOriginalText() { return get(Provisioning.A_zimbraPrefForwardIncludeOriginalText); }
 
     public boolean getForwardIncludeAsAttachment() { return "includeAsAttachment".equals(getForwardIncludeOriginalText()); }
     public boolean getForwardIncludeBody() { return "includeBody".equals(getForwardIncludeOriginalText()); }
     public boolean getForwardIncludeBodyWithPrefx() { return "includeBodyWithPrefix".equals(getForwardIncludeOriginalText()); }
 
-    public String getForwardReplyFormat() { return mAttrs.get(Provisioning.A_zimbraPrefForwardReplyFormat); }
+    public String getForwardReplyFormat() { return get(Provisioning.A_zimbraPrefForwardReplyFormat); }
     public boolean getForwardReplyTextFormat() { return "text".equals(getForwardReplyFormat()); }
     public boolean getForwardReplyHtmlFormat() { return "html".equals(getForwardReplyFormat()); }
     public boolean getForwardReplySameFormat() { return "same".equals(getForwardReplyFormat()); }
 
-    public String getForwardReplyPrefixChar() { return mAttrs.get(Provisioning.A_zimbraPrefForwardReplyPrefixChar); }
+    public String getForwardReplyPrefixChar() { return get(Provisioning.A_zimbraPrefForwardReplyPrefixChar); }
 
-    public String getFromAddress() { return mAttrs.get(Provisioning.A_zimbraPrefFromAddress); }
+    public String getFromAddress() { return get(Provisioning.A_zimbraPrefFromAddress); }
 
-    public String getFromDisplay() { return mAttrs.get(Provisioning.A_zimbraPrefFromDisplay); }
+    public String getFromDisplay() { return get(Provisioning.A_zimbraPrefFromDisplay); }
 
-    public String getSignature() { return mAttrs.get(Provisioning.A_zimbraPrefMailSignature); }
+    public String getSignature() { return get(Provisioning.A_zimbraPrefMailSignature); }
 
     public boolean getSignatureEnabled() { return getBool(Provisioning.A_zimbraPrefMailSignatureEnabled); }
 
-    public String getSignatureStyle() { return mAttrs.get(Provisioning.A_zimbraPrefMailSignatureStyle); }
+    public String getSignatureStyle() { return get(Provisioning.A_zimbraPrefMailSignatureStyle); }
     public boolean getSignatureStyleTop() { return "outlook".equals(getSignatureStyle()); }
     public boolean getSignatureStyleBottom() { return "internet".equals(getSignatureStyle()); }
 
-    public String getReplyIncludeOriginalText() { return mAttrs.get(Provisioning.A_zimbraPrefReplyIncludeOriginalText); }
+    public String getReplyIncludeOriginalText() { return get(Provisioning.A_zimbraPrefReplyIncludeOriginalText); }
 
     public boolean getReplyIncludeAsAttachment() { return "includeAsAttachment".equals(getForwardIncludeOriginalText()); }
     public boolean getReplyIncludeBody() { return "includeBody".equals(getReplyIncludeOriginalText()); }
@@ -99,33 +118,73 @@ public class ZIdentity  {
     public boolean getReplyIncludeSmart() { return "includeSmart".equals(getReplyIncludeOriginalText()); }
 
 
-    public String getReplyToAddress() { return mAttrs.get(Provisioning.A_zimbraPrefReplyToAddress); }
+    public String getReplyToAddress() { return get(Provisioning.A_zimbraPrefReplyToAddress); }
 
-    public String getReplyToDisplay() { return mAttrs.get(Provisioning.A_zimbraPrefReplyToDisplay); }
+    public String getReplyToDisplay() { return get(Provisioning.A_zimbraPrefReplyToDisplay); }
 
     public boolean getReplyToEnabled() { return getBool(Provisioning.A_zimbraPrefReplyToEnabled); }
 
     public boolean getSaveToSent() { return getBool(Provisioning.A_zimbraPrefSaveToSent); }
 
-    public String getSentMailFolder() { return mAttrs.get(Provisioning.A_zimbraPrefSentMailFolder); }
+    public String getSentMailFolder() { return get(Provisioning.A_zimbraPrefSentMailFolder); }
 
     public boolean getUseDefaultIdentitySettings() { return getBool(Provisioning.A_zimbraPrefUseDefaultIdentitySettings); }
 
-    public String getWhenInFolderIds() { return mAttrs.get(Provisioning.A_zimbraPrefWhenInFolderIds); }
+    public String[] getMulti(String name) {
+        Object o = mAttrs.get(name);
+        if (o instanceof String[]) {
+            return (String[]) o;
+        } else if (o instanceof String) {
+            return new String[] { o.toString() };
+        } else {
+            return new String[0];
+        }
+    }
+    
+    public String[] getWhenInFolderIds() {
+        return getMulti(Provisioning.A_zimbraPrefWhenInFolderIds);
+    }
 
     public boolean getWhenInFoldersEnabled() { return getBool(Provisioning.A_zimbraPrefWhenInFoldersEnabled); }
 
-    public String getWhenSentToAddresses() { return mAttrs.get(Provisioning.A_zimbraPrefWhenSentToAddresses); }
+    public synchronized boolean containsAddress(ZEmailAddress address) {
+        for (String addr: getWhenSentToAddresses()) {
+            if (addr.toLowerCase().contains(address.getAddress().toLowerCase())) {
+                    return true;
+            }
+        }
+        return false;      
+    }
+    
+    public boolean containsFolderId(String folderId) {
+        for (String id : getWhenInFolderIds()) {
+            if (id.equals(folderId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String[] getWhenSentToAddresses() { return getMulti(Provisioning.A_zimbraPrefWhenSentToAddresses); }
 
     public boolean getWhenSentToEnabled() { return getBool(Provisioning.A_zimbraPrefWhenSentToEnabled); }
 
     public Element toElement(Element parent) {
         Element identity = parent.addElement(AccountService.E_IDENTITY);
         identity.addAttribute(AccountService.A_NAME, mName);
-        for (Map.Entry<String,String> entry : mAttrs.entrySet()) {
-            Element a = identity.addElement(AccountService.E_A);
-            a.addAttribute(AccountService.A_NAME, entry.getKey());
-            a.setText(entry.getValue());
+        for (Map.Entry<String,Object> entry : mAttrs.entrySet()) {
+            if (entry.getValue() instanceof String[]) {
+                String[] values = (String[]) entry.getValue();
+                for (String value : values) {
+                    Element a = identity.addElement(AccountService.E_A);
+                    a.addAttribute(AccountService.A_NAME, entry.getKey());
+                    a.setText(value);
+                }
+            } else {
+                Element a = identity.addElement(AccountService.E_A);
+                a.addAttribute(AccountService.A_NAME, entry.getKey());
+                a.setText(entry.getValue().toString());
+            }
         }
         return identity;
     }
@@ -135,8 +194,13 @@ public class ZIdentity  {
         sb.beginStruct();
         sb.add("name", mName);
         sb.beginStruct("attrs");
-        for (Map.Entry<String, String> entry : mAttrs.entrySet()) {
-            sb.add(entry.getKey(), entry.getValue());
+        for (Map.Entry<String, Object> entry : mAttrs.entrySet()) {
+            if (entry.getValue() instanceof String[]) {
+                String[] values = (String[]) entry.getValue();
+                sb.add(entry.getKey(), values, false, true);
+            } else {
+                sb.add(entry.getKey(), entry.getValue().toString());
+            }
         }
         sb.endStruct();
         sb.endStruct();

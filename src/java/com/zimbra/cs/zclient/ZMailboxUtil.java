@@ -530,9 +530,6 @@ public class ZMailboxUtil implements DebugListener {
     /**
      * takes a list of ids, and trys to resolve them all to tag names
      * 
-     * @param idsOrNames
-     * @return
-     * @throws SoapFaultException
      */
     private String lookupTagNames(String ids) throws ServiceException {
         StringBuilder names = new StringBuilder();
@@ -739,7 +736,7 @@ public class ZMailboxUtil implements DebugListener {
             System.out.println(ccId);
             break;
         case CREATE_IDENTITY:
-            mMbox.createIdentity(new ZIdentity(args[0], getMap(args, 1)));
+            mMbox.createIdentity(new ZIdentity(args[0], getMultiMap(args, 1)));
             break;            
         case CREATE_FOLDER:
             doCreateFolder(args);
@@ -873,7 +870,7 @@ public class ZMailboxUtil implements DebugListener {
             mMbox.modifyFolderURL(lookupFolderId(args[0]), args[1]);
             break;
         case MODIFY_IDENTITY:
-            mMbox.modifyIdentity(new ZIdentity(args[0], getMap(args, 1)));
+            mMbox.modifyIdentity(new ZIdentity(args[0], getMultiMap(args, 1)));
             break;                        
         case MODIFY_TAG_COLOR:
             mMbox.modifyTagColor(lookupTag(args[0]).getId(), Color.fromString(args[1]));            
@@ -1658,6 +1655,14 @@ public class ZMailboxUtil implements DebugListener {
             }
         }
         return result;
+    }
+    
+    private Map<String, Object> getMultiMap(String[] args, int offset) throws ServiceException {
+        try {
+            return StringUtil.keyValueArrayToMultiMap(args, offset);
+        } catch (IllegalArgumentException iae) {
+            throw ZClientException.CLIENT_ERROR("not enough arguments", null);
+        }
     }
     
     private Map<String, String> getMap(String[] args, int offset) throws ServiceException {
