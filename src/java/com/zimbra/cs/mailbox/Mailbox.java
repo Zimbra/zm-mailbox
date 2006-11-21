@@ -1755,7 +1755,7 @@ public class Mailbox {
                 item = parent.findSubfolder(name);
                 if (item == null) {
                     checkAccess(parent);
-                    item = getItem(DbMailItem.getByName(this, folderId, name, MailItem.TYPE_DOCUMENT));
+                    item = getItem(DbMailItem.getByName(this, parent.getId(), name, MailItem.TYPE_DOCUMENT));
                 }
             }
             // make sure the item is visible to the requester
