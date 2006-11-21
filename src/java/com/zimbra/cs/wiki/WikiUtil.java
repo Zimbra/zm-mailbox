@@ -48,6 +48,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.ACL;
@@ -245,12 +246,24 @@ public abstract class WikiUtil {
         }
         
         private void auth() throws IOException, ServiceException {
+        	if (mProv instanceof SoapProvisioning) {
+        		adminAuth();
+        		return;
+        	}
 			ZMailbox.Options options = new ZMailbox.Options();
 			options.setAccount(mUsername);
 			options.setAccountBy(AccountBy.name);
 			options.setPassword(mPassword);
 			options.setUri(mUrl);
-	        mMbox = ZMailbox.getMailbox(options);
+        	mMbox = ZMailbox.getMailbox(options);
+        }
+        
+        private void adminAuth() throws IOException, ServiceException {
+        	SoapProvisioning prov = (SoapProvisioning) mProv;
+        	DelegateAuthResponse dar = prov.delegateAuth(AccountBy.name, mUsername, 60*60*24);
+        	ZMailbox.Options options = new ZMailbox.Options(dar.getAuthToken(), prov.soapGetURI());
+			options.setTargetAccount(mUsername);
+        	mMbox = ZMailbox.getMailbox(options);
         }
         
         private ZFolder findFolder(ZFolder root, String dir) {
