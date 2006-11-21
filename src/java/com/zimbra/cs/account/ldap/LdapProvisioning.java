@@ -2534,7 +2534,6 @@ public class LdapProvisioning extends Provisioning {
 
     /**
      * @param newPassword
-     * @param multiAttr
      * @throws AccountServiceException
      */
     private void checkHistory(String newPassword, String[] history) throws AccountServiceException {
@@ -3546,7 +3545,7 @@ public class LdapProvisioning extends Provisioning {
             }
         }        
     }
-    
+
     @Override
     public Identity createIdentity(Account account, String identityName, Map<String, Object> identityAttrs) throws ServiceException {
         removeAttrIgnoreCase("objectclass", identityAttrs);        
@@ -3578,6 +3577,12 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.mapToAttrs(identityAttrs, attrs);
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "zimbraIdentity");
 
+            String identityId = LdapUtil.getAttrString(attrs, A_zimbraPrefIdentityId);
+            if (identityId == null) {
+                identityId = LdapUtil.generateUUID();
+                attrs.put(A_zimbraPrefIdentityId, identityId);
+            }
+            
             createSubcontext(ctxt, dn, attrs, "createIdentity");
 
             Identity identity = getIdentityByName(ldapEntry, identityName, ctxt);
@@ -3585,6 +3590,8 @@ public class LdapProvisioning extends Provisioning {
             return identity;
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.IDENTITY_EXISTS(identityName);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to create identity", e);            
         } finally {
             LdapUtil.closeContext(ctxt);
         }
@@ -3615,8 +3622,7 @@ public class LdapProvisioning extends Provisioning {
             
         }
     }
-    
-    
+
     private void renameIdentity(LdapEntry entry, LdapIdentity identity, String newIdentityName) throws ServiceException {
         
         if (identity.getName().equalsIgnoreCase(DEFAULT_IDENTITY_NAME))
@@ -3633,7 +3639,7 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.closeContext(ctxt);
         }
     }
-    
+
     @Override
     public void deleteIdentity(Account account, String identityName) throws ServiceException {
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
@@ -3664,6 +3670,20 @@ public class LdapProvisioning extends Provisioning {
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
         List<Identity> result = getIdentitiesByQuery(ldapEntry, "(objectclass=zimbraIdentity)", null);
+        for (Identity identity: result) {
+            // gross hack for 4.5beta. should be able to remove post 4.5
+            if (identity.getId() == null) {
+                String id = LdapUtil.generateUUID();
+                identity.setId(id);
+                Map<String, Object> newAttrs = new HashMap<String, Object>();
+                newAttrs.put(Provisioning.A_zimbraPrefIdentityId, id);
+                try {
+                    modifyIdentity(account, identity.getName(), newAttrs);
+                } catch (ServiceException se) {
+                    ZimbraLog.account.warn("error updating identity: "+account.getName()+" "+identity.getName()+" "+se.getMessage(), se);
+                }
+            }
+        }
         result.add(getDefaultIdentity(account));
         return result;
     }

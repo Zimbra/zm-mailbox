@@ -37,10 +37,12 @@ import java.util.Map;
 public class ZIdentity  {
 
     private String mName;
+    private String mId;
     private Map<String, Object> mAttrs;
 
     public ZIdentity(Element e) throws ServiceException {
         mName = e.getAttribute(AccountService.A_NAME);
+        mId = e.getAttribute(AccountService.A_ID);
         mAttrs = new HashMap<String, Object>();
         for (Element a : e.listElements(AccountService.E_A)) {
             StringUtil.addToMultiMap(mAttrs, a.getAttribute(AccountService.A_NAME), a.getText()); 
@@ -56,7 +58,10 @@ public class ZIdentity  {
         return mName;
     }
 
-
+    public String getId() {
+        return mId;
+    }
+    
     /**
      * @param name name of pref to get
      * @return null if unset, or first value in list
@@ -201,6 +206,7 @@ public class ZIdentity  {
         ZSoapSB sb = new ZSoapSB();
         sb.beginStruct();
         sb.add("name", mName);
+        sb.add("id", mId);        
         sb.beginStruct("attrs");
         for (Map.Entry<String, Object> entry : mAttrs.entrySet()) {
             if (entry.getValue() instanceof String[]) {

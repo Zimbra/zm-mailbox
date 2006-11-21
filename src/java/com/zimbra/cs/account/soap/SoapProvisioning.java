@@ -1101,8 +1101,8 @@ public class SoapProvisioning extends Provisioning {
         Element identity = req.addElement(AccountService.E_IDENTITY);
         identity.addAttribute(AccountService.A_NAME, identityName);
         addAttrElementsMailService(identity, attrs);
-        invokeOnTargetAccount(req, account.getId());
-        return new Identity(identityName, attrs);
+        Element response = invokeOnTargetAccount(req, account.getId()).getElement(AccountService.E_IDENTITY);
+        return new SoapIdentity(response);
     }
 
     @Override

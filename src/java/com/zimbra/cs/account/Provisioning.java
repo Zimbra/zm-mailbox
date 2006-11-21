@@ -38,14 +38,13 @@ import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.L10nUtil;
 
+import javax.mail.internet.InternetAddress;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.mail.internet.InternetAddress;
 
 /**
  * @author schemers
@@ -793,7 +792,7 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefWhenSentToAddresses = "zimbraPrefWhenSentToAddresses";
     public static final String A_zimbraPrefWhenSentToEnabled = "zimbraPrefWhenSentToEnabled";
     
-    
+    public static final String A_zimbraPrefIdentityId = "zimbraPrefIdentityId";
     public static final String A_zimbraPrefIdentityName = "zimbraPrefIdentityName";
     
     public static final String DEFAULT_IDENTITY_NAME = "DEFAULT";
@@ -1733,7 +1732,8 @@ public abstract class Provisioning {
                 if (fromDisplay == null) attrs.put(A_zimbraPrefFromDisplay, account.getUid());
             }
         }
-        return new Identity(DEFAULT_IDENTITY_NAME, attrs);        
+        attrs.put(A_zimbraPrefIdentityId, account.getId());
+        return new Identity(DEFAULT_IDENTITY_NAME, account.getId(), attrs);        
     }
     
     public abstract Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;

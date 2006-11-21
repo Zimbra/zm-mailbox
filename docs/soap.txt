@@ -373,7 +373,7 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
    </zimlets>
    <mailURL>{mail-url}</mailURL>+
    <identities>
-     <identity name={identity-name}>
+     <identity name={identity-name} id="...">
        <a name="{name}">{value}</a>
        ...
        <a name="{name}">{value}</a>
@@ -557,7 +557,11 @@ global config.
   </identity>
 </CreateIdentityRequest>
 
-<CreateIdentityResponse/>
+<CreateIdentityResponse>
+  <identity name="{identity-name}" id="...">
+   ....
+  </identity>
+</CreateIdentityResponse>
 
 
 Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
@@ -589,7 +593,7 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 <GetIdentitiesRequest/>
 
 <GetIdentitiesResponse>
-  <identity name="{identity-name}">
+  <identity name="{identity-name}" id="...">
     <a name="{name}">{value}</a>
     ...
     <a name="{name}">{value}</a>

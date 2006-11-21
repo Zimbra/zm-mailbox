@@ -30,32 +30,20 @@ import java.util.Map;
 /**
  * @author schemers
  */
-public class Identity extends Entry implements Comparable {
+public class Identity extends NamedEntry implements Comparable {
 
-    private String mName;
-
-    public Identity(String name, Map<String, Object> attrs) {
-        super(attrs, null);
-        mName = name;
-    }
-
-    public String getName() {
-        return mName;
+    public Identity(String name, String id, Map<String, Object> attrs) {
+        super(name, id, attrs, null);
     }
     
-    public int compareTo(Object obj) {
-        if (!(obj instanceof Identity))
-            return 0;
-        Identity other = (Identity) obj;
-        return getName().compareTo(other.getName());
-    }
-
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getClass().getName()).append(": { name=").append(getName());
-        sb.append(getAttrs().toString());
-        sb.append("}");
-        return sb.toString();
+    /**
+     * this should only be used internally by the server. it doesn't modify the real id, just
+     * the cached one.
+     * @param id
+     */
+    public void setId(String id) {
+        mId = id;
+        getRawAttrs().put(Provisioning.A_zimbraPrefIdentityId, id);
     }
 }
 

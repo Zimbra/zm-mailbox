@@ -39,7 +39,9 @@ import javax.naming.directory.Attributes;
     private String mDn;
 
     LdapIdentity(String dn, Attributes attrs) throws NamingException {
-        super(LdapUtil.getAttrString(attrs, Provisioning.A_zimbraPrefIdentityName),
+        super(
+                LdapUtil.getAttrString(attrs, Provisioning.A_zimbraPrefIdentityName),
+                LdapUtil.getAttrString(attrs, Provisioning.A_zimbraPrefIdentityId),
                 LdapUtil.getAttrs(attrs));
         mDn = dn;
     }

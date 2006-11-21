@@ -25,23 +25,23 @@
 
 package com.zimbra.cs.service.account;
 
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Stack;
-import java.util.Map.Entry;
-
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.EntrySearchFilter;
-import com.zimbra.cs.account.Identity;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
+import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
+
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Stack;
 
 public class ToXML {
 
@@ -169,6 +169,7 @@ public class ToXML {
     public static Element encodeIdentity(Element parent, Identity identity) {
         Element e = parent.addElement(AccountService.E_IDENTITY);
         e.addAttribute(AccountService.A_NAME, identity.getName());
+        e.addAttribute(AccountService.A_ID, identity.getId());
         addAccountAttrs(e, identity.getAttrs(), AccountService.A_NAME);
         return e;
     }
