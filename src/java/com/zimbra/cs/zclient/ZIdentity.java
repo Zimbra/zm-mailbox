@@ -101,6 +101,10 @@ public class ZIdentity  {
 
     public String getFromDisplay() { return get(Provisioning.A_zimbraPrefFromDisplay); }
 
+    public ZEmailAddress getFromEmailAddress() {
+        return new ZEmailAddress(getFromAddress(), null, getFromDisplay(), ZEmailAddress.EMAIL_TYPE_FROM);
+    }
+
     public String getSignature() { return get(Provisioning.A_zimbraPrefMailSignature); }
 
     public boolean getSignatureEnabled() { return getBool(Provisioning.A_zimbraPrefMailSignatureEnabled); }
@@ -121,6 +125,10 @@ public class ZIdentity  {
     public String getReplyToAddress() { return get(Provisioning.A_zimbraPrefReplyToAddress); }
 
     public String getReplyToDisplay() { return get(Provisioning.A_zimbraPrefReplyToDisplay); }
+
+    public ZEmailAddress getReplyToEmailAddress() {
+        return new ZEmailAddress(getReplyToAddress(), null, getReplyToDisplay(), ZEmailAddress.EMAIL_TYPE_REPLY_TO);
+    }
 
     public boolean getReplyToEnabled() { return getBool(Provisioning.A_zimbraPrefReplyToEnabled); }
 
