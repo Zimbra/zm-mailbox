@@ -2779,44 +2779,41 @@ public class Mailbox {
 
         CreateInvite redoRecorder = new CreateInvite(mId, inv, folderId, data, force);
         CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.getPlayer());
-        short volumeId =
-            redoPlayer == null ? Volume.getCurrentMessageVolume().getId()
-                        : redoPlayer.getVolumeId();
+        short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
 
-            boolean success = false;
-            try {
-                beginTransaction("addInvite", octxt, redoRecorder);
+        boolean success = false;
+        try {
+            beginTransaction("addInvite", octxt, redoRecorder);
 
-                if (redoPlayer == null || redoPlayer.getCalendarItemId() == 0) {
-                    assert(inv.getMailItemId() == 0); 
-                    int mailItemId = getNextItemId(Mailbox.ID_AUTO_INCREMENT);
-                    inv.setInviteId(mailItemId);
-                } else {
-                    // id already set before we stored the invite in the redoRecorder!!!
-                }
-
-                CalendarItem calItem = getCalendarItemByUid(inv.getUid());
-                if (calItem == null) { 
-                    // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
-                    if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
-                        calItem = createCalendarItem(folderId, volumeId, "", inv.getUid(), pm, inv);
-                    } else {
-//                      mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no CalendarItem could be found");
-                        return null; // for now, just ignore this Invitation
-                    }
-                } else {
-                    calItem.processNewInvite(pm, inv, force, folderId, volumeId);
-                }
-                redoRecorder.setCalendarItemAttrs(calItem.getId(),
-                            calItem.getFolderId(),
-                            volumeId);
-
-                success = true;
-                return new int[] { calItem.getId(), inv.getMailItemId() };
-            } finally {
-                endTransaction(success);
+            if (redoPlayer == null || redoPlayer.getCalendarItemId() == 0) {
+                assert(inv.getMailItemId() == 0); 
+                int mailItemId = getNextItemId(Mailbox.ID_AUTO_INCREMENT);
+                inv.setInviteId(mailItemId);
+            } else {
+                // id already set before we stored the invite in the redoRecorder!!!
             }
 
+            CalendarItem calItem = getCalendarItemByUid(inv.getUid());
+            if (calItem == null) { 
+                // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
+                if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
+                    calItem = createCalendarItem(folderId, volumeId, "", inv.getUid(), pm, inv);
+                } else {
+//                  mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no CalendarItem could be found");
+                    return null; // for now, just ignore this Invitation
+                }
+            } else {
+                if (!checkItemChangeID(calItem))
+                    throw MailServiceException.MODIFY_CONFLICT();
+                calItem.processNewInvite(pm, inv, force, folderId, volumeId);
+            }
+            redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
+
+            success = true;
+            return new int[] { calItem.getId(), inv.getMailItemId() };
+        } finally {
+            endTransaction(success);
+        }
     }
 
     synchronized CalendarItem getCalendarItemByUid(String uid) throws ServiceException {
