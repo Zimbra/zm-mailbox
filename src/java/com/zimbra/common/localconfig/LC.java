@@ -218,6 +218,8 @@ public class LC {
 
     public static final KnownKey data_source_trust_self_signed_certs;
     
+    public static final KnownKey timezone_file;
+
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  Changing this setting does not immediately reflect in MySQL server.  You will have to, with abundant precaution, re-generate my.cnf and restart MySQL server for the change to take effect.";
         final String FS = File.separator;
@@ -852,5 +854,10 @@ public class LC {
         data_source_trust_self_signed_certs =
             new KnownKey("data_source_trust_self_signed_certs", "false",
                 "Allow self-signed certificates when connecting to a data source over SSL.");
+
+        timezone_file = new KnownKey("timezone_file");
+        timezone_file.setDefault("${zimbra_home}" + FS + "conf" + FS + "timezones.ics");
+        timezone_file.setDoc
+            ("iCalendar file listing well-known time zones");
     }
 }
