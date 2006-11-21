@@ -591,7 +591,7 @@ public abstract class Wiki {
 				if (key.equals("/"))
 					fid = Mailbox.ID_FOLDER_USER_ROOT;
 				else {
-					MailItem item = mbox.getItemByPath(ctxt.octxt, key, 0, true);
+					MailItem item = mbox.getItemByPath(ctxt.octxt, key);
 					if (item instanceof Folder)
 						fid = item.getId();
 					else

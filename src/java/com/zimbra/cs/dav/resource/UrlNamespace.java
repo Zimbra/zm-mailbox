@@ -281,7 +281,7 @@ public class UrlNamespace {
 				String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
 				return mbox.getCalendarItemByUid(octxt, uid);
 			}
-			return mbox.getItemByPath(octxt, path, 0, false);
+			return mbox.getItemByPath(octxt, path);
 		} catch (ServiceException e) {
 			throw new DavException("cannot get item", HttpServletResponse.SC_NOT_FOUND, e);
 		}

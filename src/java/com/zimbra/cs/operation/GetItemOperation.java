@@ -85,7 +85,7 @@ public class GetItemOperation extends Operation {
 
         mItems = new MailItem[1];
         if (mMethod == ItemBy.PATH) {
-            mItems[0] = getMailbox().getItemByPath(getOpCtxt(), mPath, Mailbox.ID_FOLDER_USER_ROOT, false);
+            mItems[0] = getMailbox().getItemByPath(getOpCtxt(), mPath);
         } else if (mMethod == ItemBy.IMAP_ID) {
             mItems[0] = getMailbox().getItemByImapId(getOpCtxt(), mIds[0], mFolderId);
         } else {

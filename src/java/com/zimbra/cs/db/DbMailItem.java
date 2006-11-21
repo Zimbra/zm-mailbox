@@ -1172,10 +1172,13 @@ public class DbMailItem {
     private static final String FOLDER_TYPES         = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ')';
     private static final String FOLDER_AND_TAG_TYPES = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ',' + MailItem.TYPE_TAG + ')';
     private static final String NON_SEARCHABLE_TYPES = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ',' + MailItem.TYPE_TAG + ',' + MailItem.TYPE_CONVERSATION + ')';
+    private static final String DOCUMENT_TYPES       = "(" + MailItem.TYPE_DOCUMENT + ',' + MailItem.TYPE_WIKI + ')';
 
     private static String typeConstraint(byte type) {
         if (type == MailItem.TYPE_FOLDER)
             return FOLDER_TYPES;
+        else if (type == MailItem.TYPE_DOCUMENT)
+            return DOCUMENT_TYPES;
         else
             return "(" + type + ')';
     }
@@ -1557,6 +1560,40 @@ public class DbMailItem {
         if (!conversations.isEmpty())
             completeConversations(mbox, conversations);
         return result;
+    }
+
+    public static UnderlyingData getByName(Mailbox mbox, int folderId, String name, byte type) throws ServiceException {
+        if (Mailbox.isCachedType(type))
+            throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
+        Connection conn = mbox.getOperationConnection();
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
+                    " FROM " + getMailItemTableName(mbox, "mi") +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND name = ? AND type IN " + typeConstraint(type));
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroup)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, folderId);
+            stmt.setString(pos++, name);
+            rs = stmt.executeQuery();
+
+            if (!rs.next())
+                throw MailItem.noSuchItem(-1, type);
+            UnderlyingData data = constructItem(rs);
+            if (!MailItem.isAcceptableType(type, data.type))
+                throw MailItem.noSuchItem(data.id, type);
+            if (data.type == MailItem.TYPE_CONVERSATION)
+                completeConversation(mbox, data);
+            return data;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching item by name ('" + name + "' in folder " + folderId + ")", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
     }
 
     public static UnderlyingData getByHash(Mailbox mbox, String hash) throws ServiceException {

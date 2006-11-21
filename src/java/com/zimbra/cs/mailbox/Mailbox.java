@@ -1710,41 +1710,52 @@ public class Mailbox {
         }
     }
 
-    /** Fetches an item by name relative to its parent.  This can return
-     *  anything with a name; at present, this is limited to {@link Folder}s,
-     *  {@link Tag}s, and {@link Document}s.
-     * 
-     *  @see #getItemByPath(OperationContext, String, int, boolean) */
-    public synchronized MailItem getItemByName(OperationContext octxt, int folderId, String name) throws ServiceException {
-        if (name == null || name.equals(""))
-            throw MailServiceException.INVALID_NAME(name);
+    /** Fetches an item by path relative to {@link #ID_FOLDER_USER_ROOT}.
+     * @see #getItemByPath(OperationContext, String, int) */
+    public synchronized MailItem getItemByPath(OperationContext octxt, String path) throws ServiceException {
+        return getItemByPath(octxt, path, ID_FOLDER_USER_ROOT);
+    }
 
+    /** Fetches an item by path.  If the path begins with <tt>/</tt>, it's
+     *  considered an absolute path relative to {@link #ID_FOLDER_USER_ROOT}.
+     *  If it doesn't, it's computed relative to the passed-in folder ID.<p>
+     *  
+     *  This can return anything with a name; at present, that is limited to
+     *  {@link Folder}s, {@link Tag}s, and {@link Document}s. */
+    public synchronized MailItem getItemByPath(OperationContext octxt, String name, int folderId) throws ServiceException {
+        if (name == null || name.equals(""))
+            return getFolderById(octxt, folderId);
+
+        if (name.startsWith("/")) {
+            folderId = ID_FOLDER_USER_ROOT;
+            name = name.substring(1);
+        }
+        if (name.endsWith("/"))
+            name = name.substring(0, name.length() - 1);
+
+        Folder parent = getFolderById(null, folderId);
         boolean success = false;
         try {
             // tag/folder caches are populated in beginTransaction...
             beginTransaction("getItemByName", octxt);
 
+            int slash = name.lastIndexOf('/');
+            if (slash != -1) {
+                for (String segment : name.substring(0, slash).split("/"))
+                    if ((parent = parent.findSubfolder(segment)) == null)
+                        throw MailServiceException.NO_SUCH_FOLDER(name);
+                name = name.substring(slash + 1);
+            }
+
             MailItem item = null;
             if (folderId == ID_FOLDER_TAGS) {
                 item = getTagByName(name);
             } else {
-                Folder parent;
-                if (name.startsWith("/")) {
-                    // resolve absolute path if necessary
-                    int slash = name.lastIndexOf('/');
-                    parent = getFolderByPath(octxt, name.substring(0, slash-1));
-                    folderId = parent.getId();
-                    name = name.substring(slash + 1);
-                } else {
-                    parent = getFolderById(folderId);
-                }
                 // check for the specified item -- folder first, then document
                 item = parent.findSubfolder(name);
                 if (item == null) {
-                    List<Document> wikis = getWikiList(octxt, folderId, (byte) (DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING));
-                    int wikiPos = Document.binarySearch(wikis, name);
-                    if (wikiPos >= 0)
-                        item = wikis.get(wikiPos);
+                    checkAccess(parent);
+                    item = getItem(DbMailItem.getByName(this, folderId, name, MailItem.TYPE_DOCUMENT));
                 }
             }
             // make sure the item is visible to the requester
@@ -1757,6 +1768,21 @@ public class Mailbox {
         }
     }
 
+//    public synchronized MailItem getItemByPath(OperationContext octxt, String path) throws ServiceException {
+//        while (path.startsWith("/"))
+//            path = path.substring(1);
+//        while (path.endsWith("/"))
+//            path = path.substring(0, path.length() - 1);
+//
+//        if (path.equals(""))
+//            return getFolderById(octxt, ID_FOLDER_USER_ROOT);
+//        int slash = path.lastIndexOf('/');
+//        if (slash == -1)
+//            return getItemByName(octxt, ID_FOLDER_USER_ROOT, path);
+//        int folderId = getFolderByPath(null, path.substring(0, slash-1)).getId();
+//        return getItemByName(octxt, folderId, path.substring(slash + 1));
+//    }
+//
     /** Returns all the MailItems of a given type, optionally in a specified folder */
     public synchronized List<MailItem> getItemList(OperationContext octxt, byte type) throws ServiceException {
         return getItemList(octxt, type, -1);
@@ -2171,7 +2197,7 @@ public class Mailbox {
      * @throws NoSuchItemException if the folder does not exist
      */
     public synchronized Folder getFolderByName(OperationContext octxt, int parentId, String name) throws ServiceException {
-        boolean success = true;
+        boolean success = false;
         try {
             beginTransaction("getFolderByName", octxt);
             Folder folder = getFolderById(parentId).findSubfolder(name);
@@ -2191,19 +2217,24 @@ public class Mailbox {
      * @throws NoSuchItemException if the folder does not exist
      */
     public synchronized Folder getFolderByPath(OperationContext octxt, String name) throws ServiceException {
-        boolean success = true;
+        if (name == null)
+            throw MailServiceException.NO_SUCH_FOLDER(name);
+        while (name.startsWith("/"))
+            name = name.substring(1);                         // strip off the optional leading "/"
+        while (name.endsWith("/"))
+            name = name.substring(0, name.length() - 1);      // strip off the optional trailing "/"
+
+        Folder folder = getFolderById(null, ID_FOLDER_USER_ROOT);
+
+        boolean success = false;
         try {
             beginTransaction("getFolderByPath", octxt);
-            if (name == null)
-                throw MailServiceException.NO_SUCH_FOLDER(name);
-            if (name.startsWith("/"))
-                name = name.substring(1);                         // strip off the optional leading "/"
-            Folder folder = getFolderById(ID_FOLDER_USER_ROOT);
             if (!name.equals("")) {
-                StringTokenizer tok = new StringTokenizer(name, "/");
-                while (folder != null && tok.hasMoreTokens())
-                    folder = folder.findSubfolder(tok.nextToken());
+                for (String segment : name.split("/"))
+                    if ((folder = folder.findSubfolder(segment)) == null)
+                        break;
             }
+
             if (folder == null)
                 throw MailServiceException.NO_SUCH_FOLDER("/" + name);
             if (!folder.canAccess(ACL.RIGHT_READ))
@@ -2586,7 +2617,7 @@ public class Mailbox {
     }
 
     public synchronized BrowseResult browse(OperationContext octxt, String browseBy) throws IOException, ServiceException {
-        boolean success = true;
+        boolean success = false;
         try {
             beginTransaction("browse", octxt);
             if (!hasFullAccess())
@@ -4371,82 +4402,6 @@ public class Mailbox {
                 }
         }
         return doc;
-    }
-
-    /**
-     * if path == /foo/bar, returns Mailitem bar in folder foo.
-     * if path == foo/bar, locates the folder identified by fid, looks for subfolder foo, then
-     *    returns MailItem in folder foo.
-     * 
-     * if getFolder is set to true, returns the innermost Folder containing
-     *    the MailItem identified by the path.
-     *    
-     * @param octxt
-     * @param path
-     * @param fid
-     * @param getFolder
-     * @return Folder or Document identified by path
-     * @throws ServiceException
-     */
-    public MailItem getItemByPath(OperationContext octxt, String path, int fid, boolean getFolder) throws ServiceException {
-        boolean success = true;
-        MailItem ret = null;
-        if (path == null)
-            throw MailServiceException.INVALID_NAME(path);
-        boolean preferFolder = getFolder || path.endsWith("/");
-        try {
-            beginTransaction("getItemByPath", octxt);
-            if (path.startsWith("/")) {
-                path = path.substring(1);
-                fid = ID_FOLDER_USER_ROOT;
-            }
-            Folder folder = getFolderById(fid);
-            if (path.equals("")) {
-            	ret = folder;
-            } else {
-                StringTokenizer tok = new StringTokenizer(path, "/");
-                String lastToken = null;
-                Folder lastFolder = null;
-
-                // tokenize the path, traverse the folders until
-                // we can't find the subfolder, or run out of tokens.
-                while (folder != null && tok.hasMoreTokens()) {
-                    lastToken = tok.nextToken();
-                    lastFolder = folder;
-                    folder = lastFolder.findSubfolder(lastToken);
-                }
-
-                boolean matchedAllButLastToken = lastFolder != null && lastToken != null && !tok.hasMoreTokens();
-
-                // if the caller prefers a folder, and a folder is found, then
-                // we are golden.  if the caller does not prefer a folder,
-                // or if there is no folder by that path, then search the
-                // last matched folder for a document or wiki item that matches
-                // the last token in the path.
-                MailItem wikiItem = null;
-                if ((!preferFolder || folder == null) && matchedAllButLastToken) {
-                	try {
-                		List<Document> wikis = getWikiList(octxt, lastFolder.getId(), (byte)(DbMailItem.SORT_BY_SUBJECT | DbMailItem.SORT_ASCENDING));
-                		int wikiPos = Document.binarySearch(wikis, lastToken);
-                		if (wikiPos >= 0)
-                			wikiItem = wikis.get(wikiPos);
-                	} catch (ServiceException se) {
-                        if (folder == null && se.getCode() == ServiceException.PERM_DENIED)
-                        	throw se;
-                		wikiItem = null;
-                	}
-                }
-
-                // either the caller prefers a document, or folder is not found.
-                ret = (wikiItem == null) ? folder : wikiItem;
-            }
-            if (ret == null)
-                throw MailServiceException.NO_SUCH_ITEM(path);
-            success = (checkAccess(ret) != null);
-            return ret;
-        } finally {
-            endTransaction(success);
-        }
     }
 
     public WikiItem getWikiById(OperationContext octxt, int id) throws ServiceException {

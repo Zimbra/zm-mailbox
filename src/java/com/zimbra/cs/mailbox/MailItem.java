@@ -931,7 +931,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (desired == actual || desired == TYPE_UNKNOWN)
             return true;
         // exceptions: ask for Tag and get Flag, ask for Folder and get SearchFolder or Mountpoint,
-        //             ask for Conversation and get VirtualConversation
+        //             ask for Conversation and get VirtualConversation, ask for Document and get Wiki
         else if (desired == TYPE_FOLDER && actual == TYPE_SEARCHFOLDER)
             return true;
         else if (desired == TYPE_FOLDER && actual == TYPE_MOUNTPOINT)
@@ -939,6 +939,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         else if (desired == TYPE_TAG && actual == TYPE_FLAG)
             return true;
         else if (desired == TYPE_CONVERSATION && actual == TYPE_VIRTUAL_CONVERSATION)
+            return true;
+        else if (desired == TYPE_DOCUMENT && actual == TYPE_WIKI)
             return true;
         // failure: found something, but it's not the type you were looking for
         else

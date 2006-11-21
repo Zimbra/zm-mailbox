@@ -183,7 +183,7 @@ public class Collection extends MailItemResource {
 			ctype = DavProtocol.DEFAULT_CONTENT_TYPE;
 		try {
 			// add a revision if the resource already exists
-			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), ctxt.getPath(), 0, false);
+			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), ctxt.getPath());
 			if (item.getType() != MailItem.TYPE_DOCUMENT && item.getType() != MailItem.TYPE_WIKI)
 				throw new DavException("no DAV resource for "+MailItem.getNameForType(item.getType()), HttpServletResponse.SC_NOT_ACCEPTABLE, null);
 			Document doc = mbox.addDocumentRevision(ctxt.getOperationContext(), (Document)item, data, author);
