@@ -39,17 +39,17 @@ import java.util.Properties;
 import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.DriverManagerConnectionFactory;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
-import org.apache.commons.dbcp.PoolingDriver;
+import org.apache.commons.dbcp.PoolingDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.service.ServiceException;
-import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ValueCounter;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.service.ServiceException;
+import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
  * @author schemers
@@ -58,7 +58,7 @@ public class DbPool {
 
     private static int sConnectionPoolSize = 100;
     private static Log sLog = LogFactory.getLog(DbPool.class);
-    private static PoolingDriver sPoolingDriver;
+    private static PoolingDataSource sPoolingDataSource;
     private static String sRootUrl = null;
     private static String sLoggerRootUrl = null;    
     private static GenericObjectPool sConnectionPool;
@@ -174,55 +174,49 @@ public class DbPool {
     /**
      * Initializes the connection pool.
      */
-    static {
-        String drivers = System.getProperty("jdbc.drivers");
-        if (drivers == null)
-            System.setProperty("jdbc.drivers", "com.mysql.jdbc.Driver");
-        
-        String myAddress = LC.mysql_bind_address.value();
-        String myPort = LC.mysql_port.value();
-        sRootUrl = "jdbc:mysql://" + myAddress + ":" + myPort + "/";     
-        String url = sRootUrl + "zimbra";
-        sLoggerRootUrl = "jdbc:mysql://" + LC.logger_mysql_bind_address.value() + ":" + LC.logger_mysql_port.value() + "/";        
+	static {
+	    String drivers = System.getProperty("jdbc.drivers");
+	    if (drivers == null)
+	        System.setProperty("jdbc.drivers", "com.mysql.jdbc.Driver");
 
-        Properties props = getZimbraDbProps();
-        // TODO: need to tune these
-        String maxActive = (String)props.get("maxActive");
-        if (maxActive != null) {
-            try {
-                sConnectionPoolSize = Integer.parseInt(maxActive);
-            } catch (NumberFormatException nfe) {
-                sLog.warn("exception parsing maxActive", nfe);
-            }
-        }
-        ZimbraLog.misc.debug("Setting mysql connection pool size to " + sConnectionPoolSize);
+	    String myAddress = LC.mysql_bind_address.value();
+	    String myPort = LC.mysql_port.value();
+	    sRootUrl = "jdbc:mysql://" + myAddress + ":" + myPort + "/";     
+	    String url = sRootUrl + "zimbra";
+	    sLoggerRootUrl = "jdbc:mysql://" + LC.logger_mysql_bind_address.value() + ":" + LC.logger_mysql_port.value() + "/";        
 
-        sConnectionPool = new GenericObjectPool(
-            null, sConnectionPoolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1, sConnectionPoolSize);
-        ConnectionFactory cfac = new DriverManagerConnectionFactory(url, props);
-        
-        boolean defAutoCommit = false;
-        boolean defReadOnly = false;
-        
-        // I don't think we need PreparedStatement pooling as it appears
-        // the lastest mysql driver does it internally. Need to investigate.
-        new PoolableConnectionFactory(cfac, sConnectionPool, null, null, defReadOnly, defAutoCommit);
-        
-        try {
-        	Class.forName("com.mysql.jdbc.Driver");
-        	Class.forName("org.apache.commons.dbcp.PoolingDriver");
-            sPoolingDriver = (PoolingDriver) DriverManager.getDriver("jdbc:apache:commons:dbcp:");
-            sPoolingDriver.registerPool("zimbra", sConnectionPool);
-        } catch (ClassNotFoundException e) {
-            sLog.fatal("can't init Pool", e);
-            System.exit(1);
-        } catch (SQLException e) {
-            sLog.fatal("can't init Pool", e);
-            System.exit(1);
-        }
-        
-        ZimbraPerf.addStatsCallback(new DbStats());
-    };
+	    Properties props = getZimbraDbProps();
+	    // TODO: need to tune these
+	    String maxActive = (String)props.get("maxActive");
+	    if (maxActive != null) {
+	        try {
+	            sConnectionPoolSize = Integer.parseInt(maxActive);
+	        } catch (NumberFormatException nfe) {
+	            sLog.warn("exception parsing maxActive", nfe);
+	        }
+	    }
+	    ZimbraLog.misc.debug("Setting mysql connection pool size to " + sConnectionPoolSize);
+
+	    sConnectionPool = new GenericObjectPool(
+	        null, sConnectionPoolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1, sConnectionPoolSize);
+	    ConnectionFactory cfac = new DriverManagerConnectionFactory(url, props);
+
+	    boolean defAutoCommit = false;
+	    boolean defReadOnly = false;
+
+	    new PoolableConnectionFactory(cfac, sConnectionPool, null, null, defReadOnly, defAutoCommit);
+
+	    try {
+	        Class.forName("com.mysql.jdbc.Driver");
+	        Class.forName("org.apache.commons.dbcp.PoolingDriver");
+	        sPoolingDataSource = new PoolingDataSource(sConnectionPool);
+	    } catch (ClassNotFoundException e) {
+	        sLog.fatal("can't init Pool", e);
+	        System.exit(1);
+	    }
+
+	    ZimbraPerf.addStatsCallback(new DbStats());
+	};
 
     private static Properties getZimbraDbProps() {
         Properties props = new Properties();
@@ -280,19 +274,18 @@ public class DbPool {
         java.sql.Connection conn = null;
 
         long start = ZimbraPerf.STOPWATCH_DB_CONN.start();
-        
+
         try {
-	        String url = "jdbc:apache:commons:dbcp:zimbra";
-	        conn = DriverManager.getConnection(url);
-	        
-	        if (conn.getAutoCommit() != false)
-	            conn.setAutoCommit(false);
-	
-	        // We want READ COMMITTED transaction isolation level for duplicate
-	        // handling code in BucketBlobStore.newBlobInfo().
-	        conn.setTransactionIsolation(java.sql.Connection.TRANSACTION_READ_COMMITTED);
+            conn = sPoolingDataSource.getConnection();
+
+            if (conn.getAutoCommit() != false)
+                conn.setAutoCommit(false);
+
+            // We want READ COMMITTED transaction isolation level for duplicate
+            // handling code in BucketBlobStore.newBlobInfo().
+            conn.setTransactionIsolation(java.sql.Connection.TRANSACTION_READ_COMMITTED);
         } catch (SQLException e) {
-        	throw ServiceException.FAILURE("getting database connection", e);
+            throw ServiceException.FAILURE("getting database connection", e);
         }
 
         // If the connection pool is overutilized, warn about potential leaks
@@ -322,22 +315,22 @@ public class DbPool {
             ZimbraLog.sqltrace.warn("Connection pool is 75% utilized.  " + numActive +
                 " connections out of a maximum of " + maxActive + " in use.  "+ stackTraceMsg);
         }
-        
+
         if (ZimbraLog.sqltrace.isDebugEnabled() || ZimbraLog.perf.isDebugEnabled()) {
             conn = new DebugConnection(conn);
         }
         Connection zimbraConn = new Connection(conn);
-        
+
         // If we're debugging, update the counter with the current stack trace
         if (ZimbraLog.sqltrace.isDebugEnabled()) {
             Throwable t = new Throwable();
             zimbraConn.setStackTrace(t);
-            
+
             synchronized (sConnectionStackCounter) {
                 sConnectionStackCounter.increment(SystemUtil.getStackTrace(t));
             }
         }
-        
+
         ZimbraPerf.STOPWATCH_DB_CONN.stop(start);
         return zimbraConn;
     }
