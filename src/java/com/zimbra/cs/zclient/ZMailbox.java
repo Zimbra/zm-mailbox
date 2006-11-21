@@ -1735,8 +1735,10 @@ public class ZMailbox {
         private String mMessageId;
         private String mPartName;
 
-        public ZSendMessagePart(String messageId) {
+
+        public ZSendMessagePart(String messageId, String partName) {
             mMessageId = messageId;
+            mPartName = partName;
         }
 
         public String getMessageId() {
@@ -1798,7 +1800,7 @@ public class ZMailbox {
             }
             if (messagePartsToAttach != null) {
                 for (ZSendMessagePart part: messagePartsToAttach) {
-                    attach.addElement(MailService.E_MIMEPART).addAttribute(MailService.A_ID, part.getMessageId()).addAttribute(MailService.A_PART, part.getPartName());    
+                    attach.addElement(MailService.E_MIMEPART).addAttribute(MailService.A_MESSAGE_ID, part.getMessageId()).addAttribute(MailService.A_PART, part.getPartName());    
                 }
             }
         }

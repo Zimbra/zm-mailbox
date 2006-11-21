@@ -42,7 +42,7 @@ public class ZIdentity  {
 
     public ZIdentity(Element e) throws ServiceException {
         mName = e.getAttribute(AccountService.A_NAME);
-        mId = e.getAttribute(AccountService.A_ID);
+        mId = e.getAttribute(AccountService.A_ID, null);
         mAttrs = new HashMap<String, Object>();
         for (Element a : e.listElements(AccountService.E_A)) {
             StringUtil.addToMultiMap(mAttrs, a.getAttribute(AccountService.A_NAME), a.getText()); 
