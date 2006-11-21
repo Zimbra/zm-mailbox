@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.account.AccountService;
@@ -32,8 +33,10 @@ import com.zimbra.soap.Element;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ZGetInfoResult {
 
@@ -49,6 +52,7 @@ public class ZGetInfoResult {
     private List<ZIdentity> mIdentities;
     private List<ZDataSource> mDataSources;
     private List<String> mMailURLs;
+    private Set<String> mEmailAddresses;
     
     private static Map<String, List<String>> getMap(Element e, String root, String child) throws ServiceException {
         Map<String, List<String>> result = new HashMap<String, List<String>>();
@@ -108,6 +112,22 @@ public class ZGetInfoResult {
 
     public Map<String, List<String>> getAttrs() {
         return mAttrs;
+    }
+
+    /***
+     * 
+     * @return Set of all lowercased email addresses for this account, including primary name and any aliases. 
+     */
+    public synchronized Set<String> getEmailAddresses() {
+        if (mEmailAddresses == null) {
+            mEmailAddresses =  new HashSet<String>();
+            mEmailAddresses.add(getName().toLowerCase());
+            List<String> aliasList = getAttrs().get(Provisioning.A_zimbraMailAlias);
+            if (aliasList != null) 
+                for (String alias: aliasList)
+                    mEmailAddresses.add(alias.toLowerCase());
+        }
+        return mEmailAddresses;
     }
 
     public long getExpiration() {
