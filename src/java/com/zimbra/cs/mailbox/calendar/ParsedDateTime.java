@@ -35,8 +35,6 @@ import java.util.GregorianCalendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
@@ -566,10 +564,7 @@ public final class ParsedDateTime {
         ICalTimeZone zone = tzMap.getTimeZone(tzId);
         if (zone == null) {
         	// Is it a system-defined TZ?
-	        WellKnownTimeZone knownTZ =
-	        	Provisioning.getInstance().getTimeZoneById(tzId);
-	        if (knownTZ != null)
-	            zone = knownTZ.toTimeZone();
+            zone = WellKnownTimeZones.getTimeZoneById(tzId);
 	        if (zone != null)
             	tzMap.add(zone);
 	        else {

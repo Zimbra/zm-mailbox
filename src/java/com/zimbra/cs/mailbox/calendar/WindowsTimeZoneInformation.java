@@ -25,11 +25,6 @@
 
 package com.zimbra.cs.mailbox.calendar;
 
-import java.util.Iterator;
-import java.util.List;
-
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 
 /**
@@ -134,34 +129,5 @@ public class WindowsTimeZoneInformation {
                 icalTz.getID(), bias / 60 / 1000,
                 standardDate, 0,
                 daylightDate, daylightBias / 60 / 1000);
-    }
-
-    public static void main(String args[]) throws Exception {
-        int badConvs = 0;
-        List tzList = Provisioning.getInstance().getAllTimeZones();
-        for (Iterator iter = tzList.iterator(); iter.hasNext(); ) {
-            WellKnownTimeZone wktz = (WellKnownTimeZone) iter.next();
-            ICalTimeZone ical1 = wktz.toTimeZone();
-            WindowsTimeZoneInformation win = WindowsTimeZoneInformation.fromICal(ical1);
-            ICalTimeZone ical2 = win.toICal();
-
-            System.out.println("TIMEZONE: " + wktz.getName());
-            System.out.println("--------------------------------------------------");
-            System.out.println("iCal original:\n" + ical1);
-            System.out.println("    " + ical1.getStandardDtStart() + ", " + ical1.getStandardRule());
-            System.out.println("    " + ical1.getDaylightDtStart() + ", " + ical1.getDaylightRule());
-            System.out.println("iCal again:\n" + ical2);
-            System.out.println("    " + ical2.getStandardDtStart() + ", " + ical2.getStandardRule());
-            System.out.println("    " + ical2.getDaylightDtStart() + ", " + ical2.getDaylightRule());
-            System.out.println("Windows:\n" + win);
-            System.out.println();
-
-            if (!ical2.hasSameRules(ical1)) {
-                badConvs++;
-                System.out.println("Conversion is BAD.");
-            }
-        }
-        System.out.println("--------------------------------------------------");
-        System.out.println("Bad Conversions = " + badConvs);
     }
 }

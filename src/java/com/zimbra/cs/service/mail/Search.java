@@ -42,7 +42,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
@@ -52,6 +51,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.operation.ItemActionOperation;
 import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.Operation.Requester;
@@ -139,9 +140,9 @@ public class Search extends MailDocumentHandler  {
         String id = tzElt.getAttribute(MailService.A_ID);
 
         // is it a well-known timezone?  if so then we're done here
-        WellKnownTimeZone knownTZ = Provisioning.getInstance().getTimeZoneById(id);
+        ICalTimeZone knownTZ = WellKnownTimeZones.getTimeZoneById(id);
         if (knownTZ != null)
-            return knownTZ.toTimeZone();
+            return knownTZ;
 
         // custom timezone!
         

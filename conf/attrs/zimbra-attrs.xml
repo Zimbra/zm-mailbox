@@ -101,14 +101,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   id: the integer OID of this attribute if it is a Zimbra defined
       attribute.
 
-  cardinality: whether this a multi-value attribute or not
+  cardinality: whether this is a multi-value attribute or not
 
   requiredIn: 
-  optionalIn: whether this a required attribute or not.  A
+  optionalIn: whether this is a required attribute or not.  A
               comma-seperated list containing some combination of:
               mailRecipient, account, alias, distributionList, cos,
               globalConfig, domain, securityGroup, server, mimeEntry,
-              objectEntry, timeZone, zimletEntry, calendarResource;
+              objectEntry, zimletEntry, calendarResource;
               attribute
 
   flags:

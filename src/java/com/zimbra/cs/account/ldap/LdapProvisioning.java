@@ -56,7 +56,6 @@ import com.zimbra.cs.account.NamedEntryCache;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -176,12 +175,6 @@ public class LdapProvisioning extends Provisioning {
         new NamedEntryCache<Server>(
                 LC.ldap_cache_server_maxsize.intValue(),
                 LC.ldap_cache_server_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-
-    private static boolean sTimeZoneInited = false;
-    private static final Object sTimeZoneGuard = new Object();
-    private static Map<String, WellKnownTimeZone> sTimeZoneMap = new HashMap<String, WellKnownTimeZone>(LC.ldap_cache_timezone_maxsize.intValue());
-    // list of time zones to preserve sort order
-    private static List<WellKnownTimeZone> sTimeZoneList = new ArrayList<WellKnownTimeZone>(LC.ldap_cache_timezone_maxsize.intValue());
 
     private static NamedEntryCache<LdapZimlet> sZimletCache = 
         new NamedEntryCache<LdapZimlet>(
@@ -1937,53 +1930,6 @@ public class LdapProvisioning extends Provisioning {
         } finally {
             LdapUtil.closeContext(ctxt);
         }
-    }
-
-    /*
-     *  Time Zones
-     */
-
-    private static void initTimeZoneCache() throws ServiceException {
-    	synchronized (sTimeZoneGuard) {
-    		if (sTimeZoneInited)
-                return;
-
-            DirContext ctxt = null;
-            try {
-                ctxt = LdapUtil.getDirContext();
-                NamingEnumeration ne = ctxt.search("cn=timezones," + CONFIG_BASE, "(objectclass=zimbraTimeZone)", sSubtreeSC);
-                sTimeZoneMap.clear();
-                while (ne.hasMore()) {
-                    SearchResult sr = (SearchResult) ne.next();
-                    LdapWellKnownTimeZone tz = new LdapWellKnownTimeZone(sr.getNameInNamespace(), sr.getAttributes());
-                    sTimeZoneMap.put(tz.getId(), tz);
-                    sTimeZoneList.add(tz);
-                }
-                ne.close();
-                sTimeZoneInited = true;
-            } catch (NamingException e) {
-                throw ServiceException.FAILURE("unable to list all time zones", e);
-            } finally {
-                LdapUtil.closeContext(ctxt);
-            }
-            Collections.sort(sTimeZoneList);
-        }
-    }
-
-    /**
-     * Returned list is read-only.
-     * @return
-     * @throws ServiceException
-     */
-    public List<WellKnownTimeZone> getAllTimeZones() throws ServiceException {
-        initTimeZoneCache();
-        return sTimeZoneList;
-    }
-
-    public WellKnownTimeZone getTimeZoneById(String tzId) throws ServiceException {
-        initTimeZoneCache();
-        WellKnownTimeZone tz = sTimeZoneMap.get(tzId);
-        return tz;
     }
 
     /*

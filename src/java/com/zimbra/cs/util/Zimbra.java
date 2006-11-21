@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.util;
 
+import java.io.File;
 import java.util.Timer;
 
 import org.jivesoftware.wildfire.XMPPServer;
@@ -39,6 +40,7 @@ import com.zimbra.cs.imap.ImapServer;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.lmtpserver.LmtpServer;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.pop3.Pop3Server;
@@ -93,6 +95,14 @@ public class Zimbra {
 
     	if (!Versions.checkVersions())
             throw new RuntimeException("Data version mismatch.  Reinitialize or upgrade the backend data store.");
+
+        String tzFilePath = LC.timezone_file.value();
+        try {
+            File tzFile = new File(tzFilePath);
+            WellKnownTimeZones.loadFromFile(new File(tzFilePath));
+        } catch (Throwable t) {
+            Zimbra.halt("Unable to load timezones from " + tzFilePath, t);
+        }
 
         MailboxManager.getInstance();
 

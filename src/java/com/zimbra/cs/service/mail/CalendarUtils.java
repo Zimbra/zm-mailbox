@@ -36,7 +36,6 @@ import com.zimbra.cs.service.ServiceException;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -46,6 +45,7 @@ import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
@@ -304,11 +304,7 @@ public class CalendarUtils {
             return null;
         }
 
-        WellKnownTimeZone knownTZ = Provisioning.getInstance().getTimeZoneById(
-                tzId);
-        if (knownTZ != null) {
-            zone = knownTZ.toTimeZone();
-        }
+        zone = WellKnownTimeZones.getTimeZoneById(tzId);
 
         if (zone == null) {
             // Could be a custom TZID during modify operation of invite from

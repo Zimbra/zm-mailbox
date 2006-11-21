@@ -30,13 +30,10 @@ import java.util.Formatter;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.SimpleTimeZone;
 import java.util.StringTokenizer;
 
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
@@ -545,20 +542,6 @@ public class ICalTimeZone extends SimpleTimeZone
             if (!verifyTZRules(mytz, 2005))
                 badCount++;
             System.out.println();
-
-            List tzList = Provisioning.getInstance().getAllTimeZones();
-            for (Iterator iter = tzList.iterator(); iter.hasNext(); ) {
-                WellKnownTimeZone wktz = (WellKnownTimeZone) iter.next();
-                ICalTimeZone tz = wktz.toTimeZone();
-                boolean good = verifyTZRules(tz, 2005);
-                if (!good)
-                    badCount++;
-                System.out.println();
-            }
-            if (badCount == 0)
-                System.out.println("All TZs are working correctly.");
-            if (badCount > 0)
-                System.out.println("There were " + badCount + " bad TZs.");
 
             return badCount == 0;
         }

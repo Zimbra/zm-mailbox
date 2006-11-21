@@ -27,8 +27,8 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -111,9 +111,7 @@ public class Account extends NamedEntry {
             // ICalTimeZone object.
         }
 
-        WellKnownTimeZone z = Provisioning.getInstance().getTimeZoneById(tzId);
-        if (z != null)
-            mTimeZone = z.toTimeZone();
+        mTimeZone = WellKnownTimeZones.getTimeZoneById(tzId);
         if (mTimeZone == null)
             mTimeZone = ICalTimeZone.getUTC();
         return mTimeZone;

@@ -1475,10 +1475,6 @@ public abstract class Provisioning {
     
     public abstract void deleteServer(String zimbraId) throws ServiceException;
 
-    public abstract List<WellKnownTimeZone> getAllTimeZones() throws ServiceException;
-
-    public abstract WellKnownTimeZone getTimeZoneById(String tzId) throws ServiceException;
-
     public abstract DistributionList createDistributionList(String listAddress, Map<String, Object> listAttrs) throws ServiceException;
 
     public static enum DistributionListBy {

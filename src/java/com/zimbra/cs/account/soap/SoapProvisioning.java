@@ -41,7 +41,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.WellKnownTimeZone;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -546,14 +545,6 @@ public class SoapProvisioning extends Provisioning {
         return result;        
     }
 
-    /**
-     * unsuported
-     */
-    @Override
-    public List<WellKnownTimeZone> getAllTimeZones() throws ServiceException {
-        throw new UnsupportedOperationException();
-    }
-
     @Override
     public CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.GET_CALENDAR_RESOURCE_REQUEST);
@@ -639,15 +630,6 @@ public class SoapProvisioning extends Provisioning {
         a.setText(key);
         a.addAttribute(AdminService.A_BY, keyType.name());
         return new SoapServer(invoke(req).getElement(AdminService.E_SERVER));
-    }
-
-    /**
-     * unsuported
-     */
-    @Override
-    public WellKnownTimeZone getTimeZoneById(String tzId)
-            throws ServiceException {
-        throw new UnsupportedOperationException();
     }
 
     /**
