@@ -342,6 +342,13 @@ public final class MailboxIndex
         return itemIds; // success
     }
 
+    synchronized void addDocument(IndexItem redoOp, Document doc,
+                                  int mailItemId, long receivedDate,
+                                  boolean checkExisting)
+    throws IOException {
+        addDocument(redoOp, new Document[] { doc }, mailItemId, receivedDate, checkExisting);
+    }
+
     /**
      * @param redoOp This API takes ownership of the redoOp and will complete it when the operation is finished.
      * @param doc
@@ -349,9 +356,10 @@ public final class MailboxIndex
      * @param receivedDate TODO
      * @throws IOException
      */
-    synchronized void addDocument(IndexItem redoOp, Document doc, int mailItemId, long receivedDate, 
-                boolean checkExisting) throws IOException 
-                {
+    synchronized void addDocument(IndexItem redoOp, Document[] docs,
+                                  int mailItemId, long receivedDate,
+                                  boolean checkExisting)
+    throws IOException {
         long start = 0;
         if (mLog.isDebugEnabled())
             start = System.currentTimeMillis();
@@ -371,28 +379,30 @@ public final class MailboxIndex
         if (doit) {
             openIndexWriter();
 
-            // doc can be shared by multiple threads if multiple mailboxes
-            // are referenced in a single email
-            synchronized (doc) {
-                doc.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
-
-                String mailboxBlobIdStr = Integer.toString(mailItemId);
-                doc.add(Field.Keyword(LuceneFields.L_MAILBOX_BLOB_ID, mailboxBlobIdStr));
-
-                // If this doc is shared by mult threads, then the date might just be wrong,
-                // so remove and re-add the date here to make sure the right one gets written!
-                doc.removeFields(LuceneFields.L_DATE);
-                String dateString = DateField.timeToString(receivedDate);
-                doc.add(Field.Text(LuceneFields.L_DATE, dateString));
-
-
-                if (null == doc.get(LuceneFields.L_ALL)) {
-                    doc.add(Field.UnStored(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE));
+            for (Document doc : docs) {
+                // doc can be shared by multiple threads if multiple mailboxes
+                // are referenced in a single email
+                synchronized (doc) {
+                    doc.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
+    
+                    String mailboxBlobIdStr = Integer.toString(mailItemId);
+                    doc.add(Field.Keyword(LuceneFields.L_MAILBOX_BLOB_ID, mailboxBlobIdStr));
+    
+                    // If this doc is shared by mult threads, then the date might just be wrong,
+                    // so remove and re-add the date here to make sure the right one gets written!
+                    doc.removeFields(LuceneFields.L_DATE);
+                    String dateString = DateField.timeToString(receivedDate);
+                    doc.add(Field.Text(LuceneFields.L_DATE, dateString));
+    
+    
+                    if (null == doc.get(LuceneFields.L_ALL)) {
+                        doc.add(Field.UnStored(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE));
+                    }
+                    mIndexWriter.addDocument(doc);
+    
+                    if (redoOp != null)
+                        mUncommittedRedoOps.add(redoOp);
                 }
-                mIndexWriter.addDocument(doc);
-
-                if (redoOp != null)
-                    mUncommittedRedoOps.add(redoOp);
             }
 
             if (mUncommittedRedoOps.size() > sMaxUncommittedOps) {
@@ -408,7 +418,7 @@ public final class MailboxIndex
             long elapsed = end - start;
             mLog.debug("MailboxIndex.addDocument took " + elapsed + " msec");
         }
-                }
+    }
 
     synchronized int numDocs() throws IOException 
     {
@@ -2071,13 +2081,11 @@ public final class MailboxIndex
     throws ServiceException {
         initAnalyzer(mbox);
         try {
-            int numDocsAdded = 0;
-            for (Iterator it = pm.getLuceneDocuments().iterator(); it.hasNext(); ) {
-                Document doc = (Document) it.next();
-                if (doc != null) {
-                    addDocument(redo, doc, messageId, pm.getReceivedDate(), false);
-                    numDocsAdded++;
-                }
+            List<Document> docList = pm.getLuceneDocuments();
+            if (docList != null) {
+                Document[] docs = new Document[docList.size()];
+                docs = docList.toArray(docs);
+                addDocument(redo, docs, messageId, pm.getReceivedDate(), false);
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE("indexMessage caught IOException", e);

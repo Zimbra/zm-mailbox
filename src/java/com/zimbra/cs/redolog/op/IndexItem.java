@@ -164,7 +164,7 @@ public class IndexItem extends RedoableOp {
     }
 
     public synchronized void attachToParent() {
-        if (!mCommitAllowed) {
+        if (!mCommitAllowed && !mAttachedToParent) {
             mAttachedToParent = true;
             if (mParentOp != null)
                 mParentOp.addChainedOp(this);
