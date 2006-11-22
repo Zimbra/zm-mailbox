@@ -1770,14 +1770,20 @@ public class ZMailbox {
      * @param messageIdsToAttach list of additional messages to attach to this message, or null.
      * @param messagePartsToAttach list of additional attachments (id/part) to attach to this message, or null.
      * @param contactIdsToAttach list of contact ids to attach to this message, or null.
+     * @param origId Zimbra message id of message being replied to, or null if new message.
+     * @param replyType Set to "r" if replying to origId, or "w" if forwarding, null if new message.
      * @return SendMessageResponse. id is set in response only if message was saved to a sent folder.
      * @throws com.zimbra.cs.service.ServiceException on error
      */
     public ZSendMessageResponse sendMessage(List<ZEmailAddress> addrs, String subject, String origMessageIdHeader, 
             String contentType, String content, String attachmentUploadId, 
-            List<String> messageIdsToAttach, List<ZSendMessagePart> messagePartsToAttach, List<String> contactIdsToAttach) throws ServiceException {
+            List<String> messageIdsToAttach, List<ZSendMessagePart> messagePartsToAttach, List<String> contactIdsToAttach, String origId, String replyType) throws ServiceException {
         XMLElement req = new XMLElement(MailService.SEND_MSG_REQUEST);
         Element m = req.addElement(MailService.E_MSG);
+        if (origId != null) 
+            m.addAttribute(MailService.A_ORIG_ID, origId);
+        if (replyType != null)
+            m.addAttribute(MailService.A_REPLY_TYPE, replyType);
         for (ZEmailAddress addr : addrs) {
             Element e = m.addElement(MailService.E_EMAIL);
             e.addAttribute(MailService.A_TYPE, addr.getType());
