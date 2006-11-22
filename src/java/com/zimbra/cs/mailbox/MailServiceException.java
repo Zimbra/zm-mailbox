@@ -309,6 +309,10 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("object with that name already exists: " + name, ALREADY_EXISTS, SENDERS_FAULT, args);
     }
 
+    public static MailServiceException ALREADY_EXISTS(String name, Throwable t, Argument... args) {
+        return new MailServiceException("object with that name already exists: " + name, ALREADY_EXISTS, SENDERS_FAULT, t, args);
+    }
+
     public static MailServiceException ALREADY_EXISTS(int id, Throwable t) {
         return new MailServiceException("object with that id already exists: " + id, ALREADY_EXISTS, SENDERS_FAULT, t, new Argument(ITEM_ID, id, Argument.Type.IID));
     }

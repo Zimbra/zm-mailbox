@@ -292,7 +292,11 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("i-moving " + MailItem.getNameForType(item.getType()) + ": " + item.getId(), e);
+            // catch item_id uniqueness constraint violation and return failure
+            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+                throw MailServiceException.ALREADY_EXISTS(item.getName(), e);
+            else
+                throw ServiceException.FAILURE("i-moving " + MailItem.getNameForType(item.getType()) + ": " + item.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -350,7 +354,11 @@ public class DbMailItem {
             stmt.setInt(attr++, folder.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("writing new folder data for item " + item.getId(), e);
+            // catch item_id uniqueness constraint violation and return failure
+            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+                throw MailServiceException.ALREADY_EXISTS(item.getName(), e);
+            else
+                throw ServiceException.FAILURE("writing new folder data for item " + item.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -378,7 +386,11 @@ public class DbMailItem {
                 stmt.setInt(arg++, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("writing new folder data for item [" + itemIDs + ']', e);
+            // catch item_id uniqueness constraint violation and return failure
+            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+                throw MailServiceException.ALREADY_EXISTS("", e);
+            else
+                throw ServiceException.FAILURE("writing new folder data for item [" + itemIDs + ']', e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -549,7 +561,11 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("writing name for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
+            // catch item_id uniqueness constraint violation and return failure
+            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+                throw MailServiceException.ALREADY_EXISTS(name, e);
+            else
+                throw ServiceException.FAILURE("writing name for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -610,7 +626,11 @@ public class DbMailItem {
                 flagsets.addTagset(item.getInternalFlagBitmask());
             }
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("rewriting row data for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
+            // catch item_id uniqueness constraint violation and return failure
+            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
+                throw MailServiceException.ALREADY_EXISTS(item.getName(), e);
+            else
+                throw ServiceException.FAILURE("rewriting row data for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
