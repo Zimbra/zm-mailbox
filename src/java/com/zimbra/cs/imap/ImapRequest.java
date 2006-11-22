@@ -73,7 +73,7 @@ class ImapRequest {
                 BASE64_CHARS[i] = true;
             for (int i = '0'; i <= '9'; i++)
                 BASE64_CHARS[i] = NUMBER_CHARS[i] = SEQUENCE_CHARS[i] = true;
-            SEQUENCE_CHARS['*'] = SEQUENCE_CHARS[':'] = SEQUENCE_CHARS[','] = true;
+            SEQUENCE_CHARS['*'] = SEQUENCE_CHARS[':'] = SEQUENCE_CHARS[','] = SEQUENCE_CHARS['$'] = true;
             BASE64_CHARS['+'] = BASE64_CHARS['/'] = true;
 
             REGEXP_ESCAPED['('] = REGEXP_ESCAPED[')'] = REGEXP_ESCAPED['.'] = true;
@@ -272,11 +272,15 @@ class ImapRequest {
     private static final int LAST_PUNCT = 0, LAST_DIGIT = 1, LAST_STAR = 2;
 
     private String validateSequence(String value) throws ImapParseException {
+        // "$" is OK per draft-melnikov-imap-search-res-03
+        if (value.equals("$"))
+            return value;
+
         int i, last = LAST_PUNCT;
         boolean colon = false;
         for (i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
-            if (c > 0x7F || !SEQUENCE_CHARS[c])
+            if (c > 0x7F || c == '$' || !SEQUENCE_CHARS[c])
                 throw new ImapParseException(mTag, "illegal character '" + c + "' in sequence");
             else if (c == '*') {
                 if (last == LAST_DIGIT)  throw new ImapParseException(mTag, "malformed sequence");
@@ -709,7 +713,7 @@ class ImapRequest {
                                                   else  search.append(i4flag == null ? "item:all" : "tag:" + i4flag.mName); }
             else if (key.equals("YOUNGER"))     { skipSpace(); search.append("after:-").append(readNumber(NONZERO)).append('h'); }
             else if (key.equals(SUBCLAUSE))     { skipChar('(');  readSearchClause(search, insertions, charset, MULTIPLE_CLAUSES);  skipChar(')'); }
-            else if (Character.isDigit(key.charAt(0)) || key.charAt(0) == '*')
+            else if (Character.isDigit(key.charAt(0)) || key.charAt(0) == '*' || key.charAt(0) == '$')
                 insertions.put(search.length(), validateSequence(key));
             else if (key.equals("OR")) {
                 search.append("((");      skipSpace();  readSearchClause(search, insertions, charset, SINGLE_CLAUSE);

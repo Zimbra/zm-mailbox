@@ -19,6 +19,7 @@ IMAP protocol and extensions suppoted:
     [UIDPLUS]          RFC 2359: IMAP4 UIDPLUS extension
     [UNSELECT]         RFC 3691: IMAP UNSELECT command
     [WITHIN]           draft-ietf-lemonade-search-within-02: WITHIN Search extension to the IMAP Protocol
+    [X-DRAFT-I03-SEARCHRES]  draft-melnikov-imap-search-res-03: IMAP extension for referencing the last SEARCH result
     [$MDNSent]         RFC 3503: Message Disposition Notification (MDN) profile for Internet Message Access Protocol (IMAP)
 
 POP protocol and extensions supported:

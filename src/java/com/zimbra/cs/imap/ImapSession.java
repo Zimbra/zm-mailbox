@@ -68,6 +68,7 @@ public class ImapSession extends Session {
     private String      mIdleTag;
     private ImapSessionHandler mHandler;
     private ImapFolder  mSelectedFolder;
+    private Set<ImapMessage> mSavedSearchResults;
     private Map<Object, ImapFlag> mFlags = new LinkedHashMap<Object, ImapFlag>();
     private Map<Object, ImapFlag> mTags = new HashMap<Object, ImapFlag>();
     private boolean     mCheckingSpam;
@@ -112,6 +113,22 @@ public class ImapSession extends Session {
     String getUsername()          { return mUsername; }
     void setUsername(String name) { mUsername = name; }
 
+    void saveSearchResults(Set<ImapMessage> i4set) {
+        i4set.remove(null);
+        mSavedSearchResults = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
+        mSavedSearchResults.addAll(i4set);
+    }
+    Set<ImapMessage> getSavedSearchResults() {
+        if (mSavedSearchResults == null)
+            return Collections.emptySet();
+        return mSavedSearchResults;
+    }
+    void markMessageExpunged(ImapMessage i4msg) {
+        if (mSavedSearchResults != null)
+            mSavedSearchResults.remove(i4msg);
+        i4msg.setExpunged(true);
+    }
+
     void enableHack(EnabledHack hack)        { mEnabledHack = hack; }
     boolean isHackEnabled(EnabledHack hack)  { return mEnabledHack == hack; }
 
@@ -129,6 +146,7 @@ public class ImapSession extends Session {
             mSelectedFolder = folder;
             mState = STATE_SELECTED;
         }
+        mSavedSearchResults = null;
     }
     ImapFolder deselectFolder() {
         ImapFolder i4folder = null;
@@ -137,6 +155,7 @@ public class ImapSession extends Session {
             i4folder = mSelectedFolder;
             mSelectedFolder = null;
         }
+        mSavedSearchResults = null;
         return i4folder;
     }
     void loggedOut()        { mState = STATE_LOGOUT; }
@@ -353,7 +372,7 @@ public class ImapSession extends Session {
             } else {
                 ImapMessage i4msg = mSelectedFolder.getById(id);
                 if (i4msg != null) {
-                    i4msg.setExpunged(true);
+                    markMessageExpunged(i4msg);
                     ZimbraLog.imap.debug("  ** deleted (ntfn): " + i4msg.msgId);
                 }
             }
@@ -420,27 +439,27 @@ public class ImapSession extends Session {
                     // RFC 2180 3.4: "The server MAY allow the RENAME of a multi-accessed mailbox
                     //                by simply changing the name attribute on the mailbox."
                 }
-            } else if (chg.what instanceof Message) {
-                Message msg = (Message) chg.what;
-                boolean inFolder = virtual || (msg.getFolderId() == mSelectedFolder.getId());
+            } else if (chg.what instanceof Message || chg.what instanceof Contact) {
+                MailItem item = (MailItem) chg.what;
+                boolean inFolder = virtual || (item.getFolderId() == mSelectedFolder.getId());
                 if (!inFolder && (chg.why & Change.MODIFIED_FOLDER) == 0)
                     continue;
-                ImapMessage i4msg = mSelectedFolder.getById(msg.getId());
+                ImapMessage i4msg = mSelectedFolder.getById(item.getId());
                 if (i4msg == null) {
                     if (inFolder && !virtual) {
-                        newItems.add(msg);
-                        if (debug)  ZimbraLog.imap.debug("  ** moved (ntfn): " + msg.getId());
+                        newItems.add(item);
+                        if (debug)  ZimbraLog.imap.debug("  ** moved (ntfn): " + item.getId());
                     }
                 } else if (!inFolder && !virtual) {
-                    i4msg.setExpunged(true);
+                    markMessageExpunged(i4msg);
                 } else if ((chg.why & (Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) != 0) {
-                    i4msg.setPermanentFlags(msg.getFlagBitmask(), msg.getTagBitmask(), mSelectedFolder);
+                    i4msg.setPermanentFlags(item.getFlagBitmask(), item.getTagBitmask(), mSelectedFolder);
                 } else if ((chg.why & Change.MODIFIED_IMAP_UID) != 0) {
                     // if the IMAP uid changed, need to bump it to the back of the sequence!
-                    i4msg.setExpunged(true);
+                    markMessageExpunged(i4msg);
                     if (!virtual)
-                        newItems.add(msg);
-                    if (debug)  ZimbraLog.imap.debug("  ** imap uid changed (ntfn): " + msg.getId());
+                        newItems.add(item);
+                    if (debug)  ZimbraLog.imap.debug("  ** imap uid changed (ntfn): " + item.getId());
                 }
             }
         }

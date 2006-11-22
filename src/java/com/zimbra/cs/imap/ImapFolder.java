@@ -39,7 +39,6 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
-
 class ImapFolder implements Iterable<ImapMessage> {
     private int     mFolderId;
     private String  mPath;
@@ -54,6 +53,7 @@ class ImapFolder implements Iterable<ImapMessage> {
     private int mFirstUnread = -1;
     private int mLastSize    = 0;
 
+    private ImapSession      mSession;
     private boolean          mNotificationsSuspended;
     private Set<ImapMessage> mDirtyMessages = new TreeSet<ImapMessage>();
 
@@ -121,6 +121,7 @@ class ImapFolder implements Iterable<ImapMessage> {
         if (debug)  ZimbraLog.imap.debug(added);
 
         mLastSize = mSequence.size();
+        mSession = session;
     }
 
     /** Fetches the messages contained within a search folder.  When a search
@@ -196,6 +197,7 @@ class ImapFolder implements Iterable<ImapMessage> {
         }
 
         mLastSize = mSequence.size();
+        mSession = session;
     }
 
 
@@ -439,11 +441,14 @@ class ImapFolder implements Iterable<ImapMessage> {
     Set<ImapMessage> getSubsequence(String subseqStr, boolean byUID) {
         if (subseqStr == null || subseqStr.trim().equals("") || mSequence.size() == 0)
             return Collections.emptySet();
+        else if (subseqStr.equals("$"))
+            return mSession.getSavedSearchResults();
+
         ImapMessage i4msg = getLastMessage();
         int lastID = (i4msg == null ? (byUID ? Integer.MAX_VALUE : mSequence.size()) : (byUID ? i4msg.imapUid : i4msg.sequence));
 
         TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
-        for (String subset : subseqStr.split(","))
+        for (String subset : subseqStr.split(",")) {
             if (subset.indexOf(':') == -1) {
                 // single message -- get it and add it (may be null)
                 int id = (subset.equals("*") ? lastID : parseId(subset));
@@ -467,6 +472,7 @@ class ImapFolder implements Iterable<ImapMessage> {
                             result.add(i4msg);
                 }
             }
+        }
 
         return result;
     }

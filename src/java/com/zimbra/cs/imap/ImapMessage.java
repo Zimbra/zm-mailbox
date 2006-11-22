@@ -127,15 +127,6 @@ public class ImapMessage implements Comparable<ImapMessage> {
     }
 
 
-    static class UidComparator implements Comparator<ImapMessage> {
-        public int compare(ImapMessage o1, ImapMessage o2) {
-            if (o1 == null)       return o2 == null ? 0 : -1;
-            else if (o2 == null)  return 1;
-            return (o1.imapUid < o2.imapUid ? -1 : (o1.imapUid == o2.imapUid ? 0 : 1));
-        }
-    }
-
-
     private static final byte[] EMPTY_CONTENT = new byte[0];
 
     static byte[] getContent(MailItem item) throws ServiceException {

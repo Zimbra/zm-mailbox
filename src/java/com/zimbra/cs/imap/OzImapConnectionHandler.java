@@ -24,7 +24,14 @@
  */
 package com.zimbra.cs.imap;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.Writer;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
@@ -439,6 +446,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                                 else if (option.equals("MAX"))    options |= RETURN_MAX;
                                 else if (option.equals("ALL"))    options |= RETURN_ALL;
                                 else if (option.equals("COUNT"))  options |= RETURN_COUNT;
+                                else if (option.equals("SAVE"))   options |= RETURN_SAVE;
                                 else
                                     throw new ImapParseException(tag, "unknown RETURN option \"" + option + '"');
                             }
@@ -569,11 +577,14 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         // [UIDPLUS]          RFC 2359: IMAP4 UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           draft-ietf-lemonade-search-within-02: WITHIN Search extension to the IMAP Protocol
+        // [X-DRAFT-I03-SEARCHRES]  draft-melnikov-imap-search-res-03: IMAP extension for referencing the last SEARCH result
+
         boolean authenticated = mSession != null;
         String nologin = allowCleartextLogin() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
         String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN ";
-        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CATENATE CHILDREN ESEARCH ID IDLE LITERAL+ LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR UIDPLUS UNSELECT WITHIN");
+        sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CATENATE CHILDREN ESEARCH ID IDLE LITERAL+ " +
+                                "LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR UIDPLUS UNSELECT WITHIN X-DRAFT-I03-SEARCHRES");
     }
 
     boolean doNOOP(String tag) throws IOException {
@@ -1412,10 +1423,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         }
     }
 
-    private static final int RETURN_MIN   = 1;
-    private static final int RETURN_MAX   = 2;
-    private static final int RETURN_ALL   = 4;
-    private static final int RETURN_COUNT = 8;
+    private static final int RETURN_MIN   = 0x01;
+    private static final int RETURN_MAX   = 0x02;
+    private static final int RETURN_ALL   = 0x04;
+    private static final int RETURN_COUNT = 0x08;
+    private static final int RETURN_SAVE  = 0x10;
 
     private static final int LARGEST_FOLDER_BATCH = 600;
     static final byte[] ITEM_TYPES = new byte[] { MailItem.TYPE_MESSAGE, MailItem.TYPE_CONTACT };
@@ -1424,7 +1436,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         if (!checkState(tag, ImapSession.STATE_SELECTED))
             return CONTINUE_PROCESSING;
 
-        List<Integer> hits = new ArrayList<Integer>();
+        boolean saveResults = (options != null && (options & RETURN_SAVE) != 0);
+        List<Integer> hits = saveResults ? null : new ArrayList<Integer>();
+        Set<ImapMessage> searchRes = saveResults ? new HashSet<ImapMessage>() : null;
+
         try {
             synchronized (mMailbox) {
                 ImapFolder i4folder = mSession.getFolder();
@@ -1470,7 +1485,9 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 try {
                     for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
                         ImapMessage i4msg = mSession.getFolder().getById(hit.getItemId());
-                        if (i4msg != null)
+                        if (saveResults)
+                            searchRes.add(i4msg);
+                        else if (i4msg != null)
                         	hits.add(byUID ? i4msg.imapUid : i4msg.sequence);
                     }
                 } finally {
@@ -1490,14 +1507,15 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             }
 		}
 
-        Collections.sort(hits);
-        StringBuilder result = new StringBuilder();
+        StringBuilder result = null;
         if (options == null) {
-            result.append("SEARCH");
+            Collections.sort(hits);
+            result = new StringBuilder("SEARCH");
             for (Integer id : hits)
                 result.append(' ').append(id);
-        } else {
-            result.append("ESEARCH (TAG \"").append(tag).append("\")");
+        } else if (!saveResults) {
+            Collections.sort(hits);
+            result = new StringBuilder("ESEARCH (TAG \"").append(tag).append("\")");
             if (!hits.isEmpty() && (options & RETURN_MIN) != 0)
                 result.append(" MIN ").append(hits.get(0));
             if (!hits.isEmpty() && (options & RETURN_MAX) != 0)
@@ -1506,9 +1524,12 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                 result.append(" ALL ").append(ImapFolder.encodeSubsequence(hits));
             if ((options & RETURN_COUNT) != 0)
                 result.append(" COUNT ").append(hits.size());
+        } else {
+            mSession.saveSearchResults(searchRes);
         }
 
-        sendUntagged(result.toString());
+        if (result != null)
+            sendUntagged(result.toString());
         sendNotifications(false, false);
         sendOK(tag, "SEARCH completed");
         return CONTINUE_PROCESSING;
