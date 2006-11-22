@@ -32,8 +32,10 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -45,9 +47,19 @@ public class ChangePassword extends AccountDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-
-        String name = request.getAttribute(AccountService.E_ACCOUNT);
         Provisioning prov = Provisioning.getInstance();
+        
+        String name = request.getAttribute(AccountService.E_ACCOUNT);
+        
+        Element virtualHostEl = request.getOptionalElement(AccountService.E_VIRTUAL_HOST);
+        String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
+        
+        if (virtualHost != null && name.indexOf('@') == -1) {
+            Domain d = prov.get(DomainBy.virtualHostname, virtualHost);
+            if (d != null)
+                name = name + "@" + d.getName();
+        }
+        
         Account acct = prov.get(AccountBy.name, name);
         if (acct == null)
             throw AccountServiceException.AUTH_FAILED(name);

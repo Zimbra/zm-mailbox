@@ -318,10 +318,16 @@ one of <password> or <preauth> must be specified. see preauth.txt for a discussi
    <account by="name">...</account>
    <oldPassword>...</oldPassword>
    <password>...</password>
+   [<virtualHost>{virtual-host}</virtualHost>]
  </ChangePasswordRequest>
  
 <ChangePasswordResponse/>
  
+   {virtual-host} = if specified virtual-host is used to determine the domain of the account name, if it
+                   does not include a domain component. For example, if the domain foo.com has a zimbraVirtualHostname of "mail.foo.com", 
+                   and an auth request comes in for "joe" with a virtualHost of "mail.foo.com", then the request will be equivalent to
+                   logging in with "joe@foo.com".
+                   
 ---------
  <GetPrefsRequest>
    <!-- get only the specified prefs -->
