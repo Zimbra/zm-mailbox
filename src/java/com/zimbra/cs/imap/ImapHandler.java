@@ -303,18 +303,18 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
     private boolean executeRequest(ImapRequest req, ImapSession session) throws IOException, ImapException {
         if (session != null && session.isIdle())
-            return doIDLE(null, IDLE_STOP, req.readAtom().equals("DONE") && req.eof());
+            return doIDLE(null, IDLE_STOP, req.readATOM().equals("DONE") && req.eof());
 
         String tag = req.readTag();
 
         boolean byUID = false;
         req.skipSpace();
-        String command = mLastCommand = req.readAtom();
+        String command = mLastCommand = req.readATOM();
         do {
             switch (command.charAt(0)) {
                 case 'A':
                     if (command.equals("AUTHENTICATE")) {
-                        req.skipSpace();  String mechanism = req.readAtom();
+                        req.skipSpace();  String mechanism = req.readATOM();
                         byte[] response = null;
                         if (req.peekChar() == ' ') {
                             req.skipSpace();  response = req.readBase64(true);
@@ -337,7 +337,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                             while (req.peekChar() != ')') {
                                 if (!parts.isEmpty())
                                     req.skipSpace();
-                                String type = req.readAtom();  req.skipSpace();
+                                String type = req.readATOM();  req.skipSpace();
                                 if (type.equals("TEXT"))      parts.add(req.readLiteral());
                                 else if (type.equals("URL"))  parts.add(new ImapURL(tag, mSession, req.readAstring()));
                                 else throw new ImapParseException(tag, "unknown CATENATE cat-part: " + type);
@@ -470,7 +470,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                             case '+':  req.skipChar('+');  operation = STORE_ADD;     break;
                             case '-':  req.skipChar('-');  operation = STORE_REMOVE;  break;
                         }
-                        String cmd = req.readAtom();
+                        String cmd = req.readATOM();
                         if (cmd.equals("FLAGS.SILENT"))  silent = true;
                         else if (!cmd.equals("FLAGS"))   throw new ImapParseException(tag, "invalid store-att-flags");
                         req.skipSpace();  List<String> flags = req.readFlags();
@@ -479,13 +479,13 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     } else if (command.equals("SEARCH")) {
                         Integer options = null;  TreeMap<Integer, Object> insertions = new TreeMap<Integer, Object>();
                         req.skipSpace();
-                        if ("RETURN".equals(req.peekAtom())) {
+                        if ("RETURN".equals(req.peekATOM())) {
                             options = 0;
                             req.skipAtom("RETURN");  req.skipSpace();  req.skipChar('(');
                             while (req.peekChar() != ')') {
                                 if (options != 0)
                                     req.skipSpace();
-                                String option = req.readAtom();
+                                String option = req.readATOM();
                                 if (option.equals("MIN"))         options |= RETURN_MIN;
                                 else if (option.equals("MAX"))    options |= RETURN_MAX;
                                 else if (option.equals("ALL"))    options |= RETURN_ALL;
@@ -515,7 +515,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         while (req.peekChar() != ')') {
                             if (status != 0)
                                 req.skipSpace();
-                            String flag = req.readAtom();
+                            String flag = req.readATOM();
                             if (flag.equals("MESSAGES"))          status |= STATUS_MESSAGES;
                             else if (flag.equals("RECENT"))       status |= STATUS_RECENT;
                             else if (flag.equals("UIDNEXT"))      status |= STATUS_UIDNEXT;
@@ -536,7 +536,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         req.skipSpace();  String qroot = req.readAstring();
                         req.skipSpace();  req.skipChar('(');
                         while (req.peekChar() != ')') {
-                            String resource = req.readAtom();  req.skipSpace();
+                            String resource = req.readATOM();  req.skipSpace();
                             limits.put(resource, req.readNumber());
                         }
                         req.skipChar(')');
@@ -546,7 +546,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     break;
                 case 'U':
                     if (command.equals("UID")) {
-                        req.skipSpace();  command = req.readAtom();
+                        req.skipSpace();  command = req.readATOM();
                         if (!command.equals("FETCH") && !command.equals("SEARCH") && !command.equals("COPY") && !command.equals("STORE") && !command.equals("EXPUNGE"))
                             throw new ImapParseException(tag, "command not permitted with UID");
                         byUID = true;
@@ -2165,11 +2165,11 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         handler.doSTORE("A011", "1", flags, STORE_ADD, false, false);
 
         ImapRequest req = new ImapRequest("X001 LOGIN user1@example.zimbra.com \"\\\\\\\"test123\\\"\\\\\"");
-        pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readAtom());  req.skipSpace();  pieces.add(req.readAstring());  req.skipSpace();  pieces.add(req.readAstring());  assert(req.eof());
+        pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readATOM());  req.skipSpace();  pieces.add(req.readAstring());  req.skipSpace();  pieces.add(req.readAstring());  assert(req.eof());
         System.out.println(pieces);
 
         req = new ImapRequest("X002 CREATE ~peter/mail/&U,BTFw-/&ZeVnLIqe-");
-        pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readAtom());  req.skipSpace();  pieces.add(req.readFolder());  assert(req.eof());
+        pieces.clear();  pieces.add(req.readTag());  req.skipSpace();  pieces.add(req.readATOM());  req.skipSpace();  pieces.add(req.readFolder());  assert(req.eof());
         System.out.println(pieces);
     }
 }

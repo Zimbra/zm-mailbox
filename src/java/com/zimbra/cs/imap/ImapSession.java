@@ -184,14 +184,14 @@ public class ImapSession extends Session {
         }
 
         ImapFlag(String name, short bitmask, boolean listed) {
-            mName = name;      mImapName  = name.toUpperCase();
+            mName = name;      mImapName  = name;
             mId   = 0;         mBitmask   = bitmask;
             mPositive = true;  mPermanent = false;
             mListed = listed;
         }
 
         private String normalize(String name, int id) {
-            String imapName = name.toUpperCase().replaceAll("[ *(){%*\\]\\\\]+", "");
+            String imapName = name.replaceAll("[ *(){%*\\]\\\\]+", "");
             if (name.startsWith("\\"))
                 imapName = '\\' + imapName;
             if (!name.equals(""))
@@ -204,7 +204,7 @@ public class ImapSession extends Session {
 
     private ImapFlag cache(ImapFlag i4flag) {
         Map<Object, ImapFlag> map = (i4flag.mId <= 0 ? mFlags : mTags);
-        map.put(i4flag.mImapName, i4flag);
+        map.put(i4flag.mImapName.toUpperCase(), i4flag);
         Long bitmask = new Long(i4flag.mBitmask);
         if (!map.containsKey(bitmask))
             map.put(bitmask, i4flag);
@@ -238,9 +238,10 @@ public class ImapSession extends Session {
         int index = Tag.getIndex(tagId);
         ImapFlag i4flag = mTags.remove(new Long(1L << index));
         if (i4flag != null)
-            mTags.remove(i4flag.mImapName);
+            mTags.remove(i4flag.mImapName.toUpperCase());
     }
     ImapFlag getFlagByName(String name) {
+        name = name.toUpperCase();
         ImapFlag i4flag = mFlags.get(name);
         return (i4flag != null ? i4flag : mTags.get(name));
     }
@@ -259,7 +260,7 @@ public class ImapSession extends Session {
                 if (entry.getKey() instanceof String) {
                     ImapFlag i4flag = (ImapFlag) entry.getValue();
                     if (i4flag.mListed && (!permanentOnly || i4flag.mPermanent))
-                        sb.append(first ? "" : " ").append(entry.getKey());
+                        sb.append(first ? "" : " ").append(i4flag.mImapName);
                 }
             }
         return sb.toString();

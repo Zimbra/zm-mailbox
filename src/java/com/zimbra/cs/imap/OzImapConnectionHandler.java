@@ -259,18 +259,18 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
     private boolean executeRequest(OzImapRequest req, ImapSession session) throws IOException, ImapParseException {
         if (session != null && session.isIdle())
-            return doIDLE(null, IDLE_STOP, req.readAtom().equals("DONE") && req.eof());
+            return doIDLE(null, IDLE_STOP, req.readATOM().equals("DONE") && req.eof());
 
         String tag = req.readTag();
 
         boolean byUID = false;
         req.skipSpace();
-        String command = req.readAtom();
+        String command = req.readATOM();
         do {
             switch (command.charAt(0)) {
                 case 'A':
                     if (command.equals("AUTHENTICATE")) {
-                        req.skipSpace();  String mechanism = req.readAtom();
+                        req.skipSpace();  String mechanism = req.readATOM();
                         byte[] response = null;
                         if (req.peekChar() == ' ') {
                             req.skipSpace();  response = req.readBase64(true);
@@ -293,7 +293,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                             while (req.peekChar() != ')') {
                                 if (!parts.isEmpty())
                                     req.skipSpace();
-                                String type = req.readAtom();  req.skipSpace();
+                                String type = req.readATOM();  req.skipSpace();
                                 if (type.equals("TEXT"))      parts.add(req.readLiteral());
                                 else if (type.equals("URL"))  parts.add(new ImapURL(tag, mSession, req.readAstring()));
                                 else throw new ImapParseException(tag, "unknown CATENATE cat-part: " + type);
@@ -426,7 +426,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                             case '+':  req.skipChar('+');  operation = STORE_ADD;     break;
                             case '-':  req.skipChar('-');  operation = STORE_REMOVE;  break;
                         }
-                        String cmd = req.readAtom();
+                        String cmd = req.readATOM();
                         if (cmd.equals("FLAGS.SILENT"))  silent = true;
                         else if (!cmd.equals("FLAGS"))   throw new ImapParseException(tag, "invalid store-att-flags");
                         req.skipSpace();  List<String> flags = req.readFlags();
@@ -435,13 +435,13 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     } else if (command.equals("SEARCH")) {
                         Integer options = null;  TreeMap<Integer, Object> insertions = new TreeMap<Integer, Object>();
                         req.skipSpace();
-                        if ("RETURN".equals(req.peekAtom())) {
+                        if ("RETURN".equals(req.peekATOM())) {
                             options = 0;
                             req.skipAtom("RETURN");  req.skipSpace();  req.skipChar('(');
                             while (req.peekChar() != ')') {
                                 if (options != 0)
                                     req.skipSpace();
-                                String option = req.readAtom();
+                                String option = req.readATOM();
                                 if (option.equals("MIN"))         options |= RETURN_MIN;
                                 else if (option.equals("MAX"))    options |= RETURN_MAX;
                                 else if (option.equals("ALL"))    options |= RETURN_ALL;
@@ -471,7 +471,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                         while (req.peekChar() != ')') {
                             if (status != 0)
                                 req.skipSpace();
-                            String flag = req.readAtom();
+                            String flag = req.readATOM();
                             if (flag.equals("MESSAGES"))          status |= STATUS_MESSAGES;
                             else if (flag.equals("RECENT"))       status |= STATUS_RECENT;
                             else if (flag.equals("UIDNEXT"))      status |= STATUS_UIDNEXT;
@@ -492,7 +492,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                         req.skipSpace();  String qroot = req.readAstring();
                         req.skipSpace();  req.skipChar('(');
                         while (req.peekChar() != ')') {
-                            String resource = req.readAtom();  req.skipSpace();
+                            String resource = req.readATOM();  req.skipSpace();
                             limits.put(resource, req.readNumber());
                         }
                         req.skipChar(')');
@@ -502,7 +502,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     break;
                 case 'U':
                     if (command.equals("UID")) {
-                        req.skipSpace();  command = req.readAtom();
+                        req.skipSpace();  command = req.readATOM();
                         if (!command.equals("FETCH") && !command.equals("SEARCH") && !command.equals("COPY") && !command.equals("STORE") && !command.equals("EXPUNGE"))
                             throw new ImapParseException(tag, "command not permitted with UID");
                         byUID = true;

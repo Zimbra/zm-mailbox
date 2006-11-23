@@ -184,10 +184,10 @@ class ImapRequest {
         else
             return (mOffset >= ((byte[]) part).length) ? -1 : ((byte[]) part)[mOffset];
     }
-    String peekAtom() {
+    String peekATOM() {
         int index = mIndex, offset = mOffset;
         try {
-            return readAtom();
+            return readATOM();
         } catch (ImapParseException ipe) {
             return null;
         } finally {
@@ -206,7 +206,7 @@ class ImapRequest {
 
     void skipNIL() throws ImapParseException { skipAtom("NIL"); }
     void skipAtom(String atom) throws ImapParseException {
-        if (!readAtom().equals(atom))
+        if (!readATOM().equals(atom))
             throw new ImapParseException(mTag, "did not find expected " + atom);
     }
 
@@ -237,8 +237,9 @@ class ImapRequest {
         mOffset = i;
         return result;
     }
-    String readTag() throws ImapParseException     { mTag = readContent(TAG_CHARS);  return mTag; }
-    String readAtom() throws ImapParseException    { return readContent(ATOM_CHARS).toUpperCase(); }
+    String readTag() throws ImapParseException   { mTag = readContent(TAG_CHARS);  return mTag; }
+    String readAtom() throws ImapParseException  { return readContent(ATOM_CHARS); }
+    String readATOM() throws ImapParseException  { return readContent(ATOM_CHARS).toUpperCase(); }
 
     static final boolean NONZERO = false, ZERO_OK = true;
     String readNumber() throws ImapParseException  { return readNumber(ZERO_OK); }
@@ -454,8 +455,9 @@ class ImapRequest {
                             throw new ImapParseException(mTag, "non-storable system tag \"" + flagName + '"');
                         tags.add(flagName);
                     }
-                } else
+                } else {
                     tags.add(readAtom());
+                }
                 if (parens && peekChar() == ')')      break;
                 else if (mOffset < content.length())  skipSpace();
             }
@@ -466,7 +468,7 @@ class ImapRequest {
     }
 
     Date readDate(DateFormat format) throws ImapParseException {
-        String dateStr = (peekChar() == '"' ? readQuoted() : readContent(ATOM_CHARS));
+        String dateStr = (peekChar() == '"' ? readQuoted() : readAtom());
         try {
             Date date = format.parse(dateStr);
             if (date.getTime() < 0)
@@ -571,7 +573,7 @@ class ImapRequest {
         if (!done && peekChar() != ']') {
             if (binary)
                 throw new ImapParseException(mTag, "section-text not permitted for BINARY");
-            sectionText = readAtom();
+            sectionText = readATOM();
             if (sectionText.equals("HEADER.FIELDS") || sectionText.equals("HEADER.FIELDS.NOT")) {
                 headers = new ArrayList<String>();
                 skipSpace();  skipChar('(');
@@ -733,7 +735,7 @@ class ImapRequest {
     String readSearch(TreeMap<Integer, Object> insertions) throws IOException, ImapException {
         String charset = null;
         StringBuffer search = new StringBuffer();
-        if ("CHARSET".equals(peekAtom())) {
+        if ("CHARSET".equals(peekATOM())) {
             skipAtom("CHARSET");  skipSpace();  charset = readAstring();  skipSpace();
             boolean charsetOK = false;
             try {
