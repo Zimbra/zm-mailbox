@@ -32,7 +32,7 @@ import java.util.Iterator;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -82,8 +82,8 @@ public class RssFormatter extends Formatter {
 //            MailDateFormat mdf = new MailDateFormat();
             while (iterator.hasNext()) {
                 MailItem itItem = iterator.next();
-                if (itItem instanceof Appointment) {
-                    addAppointment((Appointment) itItem, channel, context);                
+                if (itItem instanceof CalendarItem) {
+                    addCalendarItem((CalendarItem) itItem, channel, context);                
                 } else if (itItem instanceof Message) {
                     addMessage((Message) itItem, channel, context);
                 } else if (itItem instanceof Document) {
@@ -107,12 +107,12 @@ public class RssFormatter extends Formatter {
         return System.currentTimeMillis() + (7*Constants.MILLIS_PER_DAY);
     }
     
-    private void addAppointment(Appointment appt, Element channel, Context context) {
-        Collection instances = appt.expandInstances(context.getStartTime(), context.getEndTime());
+    private void addCalendarItem(CalendarItem calItem, Element channel, Context context) {
+        Collection instances = calItem.expandInstances(context.getStartTime(), context.getEndTime());
         for (Iterator instIt = instances.iterator(); instIt.hasNext(); ) {
-            Appointment.Instance inst = (Appointment.Instance) instIt.next();
+            CalendarItem.Instance inst = (CalendarItem.Instance) instIt.next();
             InviteInfo invId = inst.getInviteInfo();
-            Invite inv = appt.getInvite(invId.getMsgId(), invId.getComponentId());
+            Invite inv = calItem.getInvite(invId.getMsgId(), invId.getComponentId());
             Element rssItem = channel.addElement("item");
             rssItem.addElement("title").setText(inv.getName());
             rssItem.addElement("pubDate").setText(mDateFormat.format(new Date(inst.getStart())));

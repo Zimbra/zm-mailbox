@@ -39,7 +39,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -84,12 +84,12 @@ public class NativeFormatter extends Formatter {
         try {
             if (item instanceof Message) {
                 handleMessage(context, (Message) item);
-            } else if (item instanceof Appointment) {
-                handleAppt(context, (Appointment) item);
+            } else if (item instanceof CalendarItem) {
+                handleCalendarItem(context, (CalendarItem) item);
             } else if (item instanceof Document) {
                 handleDocument(context, (Document) item);
             } else {
-                throw UserServletException.notImplemented("can only handle messages/appts");
+                throw UserServletException.notImplemented("can only handle messages/appointments/tasks/documents");
             }
         } catch (MessagingException me) {
             throw ServiceException.FAILURE(me.getMessage(), me);
@@ -116,19 +116,19 @@ public class NativeFormatter extends Formatter {
         }
     }
 
-    private void handleAppt(Context context, Appointment appt) throws IOException, ServiceException, MessagingException, ServletException {
+    private void handleCalendarItem(Context context, CalendarItem calItem) throws IOException, ServiceException, MessagingException, ServletException {
         if (context.hasPart()) {
             MimePart mp = null;
             if (context.itemId.hasSubpart()) {
-                MimeMessage mbp = appt.getSubpartMessage(context.itemId.getSubpartId());
+                MimeMessage mbp = calItem.getSubpartMessage(context.itemId.getSubpartId());
                 mp = Mime.getMimePart(mbp, context.getPart());
             } else {
-                mp = getMimePart(appt, context.getPart());
+                mp = getMimePart(calItem, context.getPart());
             }
-            handleMessagePart(context, mp, appt);
+            handleMessagePart(context, mp, calItem);
         } else {
             context.resp.setContentType(Mime.CT_TEXT_PLAIN);
-            InputStream is = appt.getRawMessage();
+            InputStream is = calItem.getRawMessage();
             ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
         }
     }
@@ -162,8 +162,8 @@ public class NativeFormatter extends Formatter {
     	ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
     }
     
-    public static MimePart getMimePart(Appointment appt, String part) throws IOException, MessagingException, ServiceException {
-        return Mime.getMimePart(appt.getMimeMessage(), part);
+    public static MimePart getMimePart(CalendarItem calItem, String part) throws IOException, MessagingException, ServiceException {
+        return Mime.getMimePart(calItem.getMimeMessage(), part);
     }
 
     public static MimePart getMimePart(Message msg, String part) throws IOException, MessagingException, ServiceException {

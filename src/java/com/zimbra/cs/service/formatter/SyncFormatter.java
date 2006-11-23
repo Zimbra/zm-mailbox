@@ -117,9 +117,9 @@ public class SyncFormatter extends Formatter {
         context.resp.setContentType(Mime.CT_TEXT_PLAIN);
         if (context.itemId.hasSubpart()) {
             // unfortunately, MimeMessage won't give you the length including headers...
-            Pair<MimeMessage,Integer> apptMsgData = calItem.getSubpartMessageData(context.itemId.getSubpartId());
-            addXZimbraHeaders(context, calItem, apptMsgData.getSecond());
-            apptMsgData.getFirst().writeTo(context.resp.getOutputStream());
+            Pair<MimeMessage,Integer> calItemMsgData = calItem.getSubpartMessageData(context.itemId.getSubpartId());
+            addXZimbraHeaders(context, calItem, calItemMsgData.getSecond());
+            calItemMsgData.getFirst().writeTo(context.resp.getOutputStream());
         } else {
             InputStream is = calItem.getRawMessage();
             addXZimbraHeaders(context, calItem, calItem.getSize());

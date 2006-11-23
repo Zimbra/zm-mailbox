@@ -31,7 +31,7 @@ import java.util.Iterator;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
@@ -75,8 +75,8 @@ public class AtomFormatter extends Formatter {
                     
             while (iterator.hasNext()) {
                 MailItem itItem = iterator.next();
-                if (itItem instanceof Appointment) {
-                    addAppointment((Appointment) itItem, feed, context);                
+                if (itItem instanceof CalendarItem) {
+                    addCalendarItem((CalendarItem) itItem, feed, context);                
                 } else if (itItem instanceof Message) {
                     addMessage((Message) itItem, feed, context);
                 }
@@ -98,12 +98,12 @@ public class AtomFormatter extends Formatter {
         return System.currentTimeMillis() + (7*Constants.MILLIS_PER_DAY);
     }
     
-    private void addAppointment(Appointment appt, Element feed, Context context) {
-        Collection instances = appt.expandInstances(context.getStartTime(), context.getEndTime());
+    private void addCalendarItem(CalendarItem calItem, Element feed, Context context) {
+        Collection instances = calItem.expandInstances(context.getStartTime(), context.getEndTime());
         for (Iterator instIt = instances.iterator(); instIt.hasNext(); ) {
-            Appointment.Instance inst = (Appointment.Instance) instIt.next();
+            CalendarItem.Instance inst = (CalendarItem.Instance) instIt.next();
             InviteInfo invId = inst.getInviteInfo();
-            Invite inv = appt.getInvite(invId.getMsgId(), invId.getComponentId());
+            Invite inv = calItem.getInvite(invId.getMsgId(), invId.getComponentId());
             Element entry = feed.addElement("entry");
             entry.addElement("title").setText(inv.getName());
             entry.addElement("updated").setText(DateUtil.toISO8601(new Date(inst.getStart())));
