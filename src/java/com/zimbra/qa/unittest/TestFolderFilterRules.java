@@ -29,17 +29,11 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.db.DbResults;
-import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 
 
 public class TestFolderFilterRules
@@ -219,8 +213,7 @@ extends TestCase {
 
     private void cleanUp()
     throws Exception {
-        deleteTestData(MailItem.TYPE_MESSAGE);
-        deleteTestData(MailItem.TYPE_FOLDER);
+        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
     }
     
     protected void tearDown() throws Exception {
@@ -233,28 +226,6 @@ extends TestCase {
         super.tearDown();
     }
 
-    private void deleteTestData(byte type)
-    throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        
-        String sql =
-            "SELECT id " +
-            "FROM " + DbMailItem.getMailItemTableName(mbox) +
-            " WHERE " +
-            (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mbox.getId() + " AND " : "") +
-            "type = " + type + " AND subject LIKE '%" + NAME_PREFIX + "%' ";
-        DbResults results = DbUtil.executeQuery(sql);
-        while (results.next()) {
-            int id = results.getInt(1);
-            try {
-                mbox.getItemById(null, id, type);
-                mbox.delete(null, id, type);
-            } catch (NoSuchItemException e) {
-                ZimbraLog.test.debug("Unable to delete item " + id + ".  Must have been deleted by parent."); 
-            }
-        }
-    }
-    
     private static final String FILTER_RULES = StringUtil.join("\n", new String[] {
         "require [\"fileinto\", \"reject\", \"tag\", \"flag\"];",
         "",

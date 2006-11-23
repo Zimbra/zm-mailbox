@@ -246,13 +246,13 @@ public class TestUtil {
     private static void deleteTestData(String userName, String subjectSubstring, byte type)
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(userName);
-        
+        String nameColumn = type == MailItem.TYPE_MESSAGE ? "subject" : "name";
         String sql =
             "SELECT id " +
             "FROM " + DbMailItem.getMailItemTableName(mbox) +
             " WHERE " +
             (!DebugConfig.disableMailboxGroup ? "mailbox_id = " + mbox.getId() + " AND " : "") +
-            "type = " + type + " AND subject LIKE '%" + subjectSubstring + "%' ";
+            "type = " + type + " AND " + nameColumn + " LIKE '%" + subjectSubstring + "%' ";
         DbResults results = DbUtil.executeQuery(sql);
         while (results.next()) {
             int id = results.getInt(1);
