@@ -34,7 +34,7 @@ import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -105,24 +105,24 @@ public class SyncFormatter extends Formatter {
                 handleMessagePart(context, item);
             } else if (item instanceof Message) {
                 handleMessage(context, (Message) item);
-            } else if (item instanceof Appointment) {
-                handleAppointment(context, (Appointment) item);                
+            } else if (item instanceof CalendarItem) {
+                handleCalendarItem(context, (CalendarItem) item);
             }
         } catch (MessagingException me) {
             throw ServiceException.FAILURE(me.getMessage(), me);
         }
     }
 
-    private void handleAppointment(Context context, Appointment appt) throws IOException, ServiceException, MessagingException {
+    private void handleCalendarItem(Context context, CalendarItem calItem) throws IOException, ServiceException, MessagingException {
         context.resp.setContentType(Mime.CT_TEXT_PLAIN);
         if (context.itemId.hasSubpart()) {
             // unfortunately, MimeMessage won't give you the length including headers...
-            Pair<MimeMessage,Integer> apptMsgData = appt.getSubpartMessageData(context.itemId.getSubpartId());
-            addXZimbraHeaders(context, appt, apptMsgData.getSecond());
+            Pair<MimeMessage,Integer> apptMsgData = calItem.getSubpartMessageData(context.itemId.getSubpartId());
+            addXZimbraHeaders(context, calItem, apptMsgData.getSecond());
             apptMsgData.getFirst().writeTo(context.resp.getOutputStream());
         } else {
-            InputStream is = appt.getRawMessage();
-            addXZimbraHeaders(context, appt, appt.getSize());
+            InputStream is = calItem.getRawMessage();
+            addXZimbraHeaders(context, calItem, calItem.getSize());
             ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
         }        
     }
@@ -150,8 +150,8 @@ public class SyncFormatter extends Formatter {
         context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");
     }
 
-    public static MimePart getMimePart(Appointment appt, String part) throws IOException, MessagingException, ServiceException {
-        return Mime.getMimePart(appt.getMimeMessage(), part);
+    public static MimePart getMimePart(CalendarItem calItem, String part) throws IOException, MessagingException, ServiceException {
+        return Mime.getMimePart(calItem.getMimeMessage(), part);
     }
 
     public static MimePart getMimePart(Message msg, String part) throws IOException, MessagingException, ServiceException {
