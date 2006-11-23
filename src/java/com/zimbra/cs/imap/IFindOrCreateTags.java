@@ -26,7 +26,7 @@ package com.zimbra.cs.imap;
 
 import java.util.List;
 
-import com.zimbra.cs.imap.ImapSession.ImapFlag;
+import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.ServiceException;
 

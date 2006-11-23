@@ -33,7 +33,7 @@ import java.util.*;
 
 import org.apache.commons.codec.binary.Base64;
 
-import com.zimbra.cs.imap.ImapSession.ImapFlag;
+import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.common.util.ZimbraLog;
 
 /**

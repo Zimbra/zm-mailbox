@@ -35,6 +35,7 @@ import java.util.*;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.im.IMNotification;
+import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.ServiceException;
@@ -43,6 +44,7 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -69,8 +71,8 @@ public class ImapSession extends Session {
     private ImapSessionHandler mHandler;
     private ImapFolder  mSelectedFolder;
     private Set<ImapMessage> mSavedSearchResults;
-    private Map<Object, ImapFlag> mFlags = new LinkedHashMap<Object, ImapFlag>();
-    private Map<Object, ImapFlag> mTags = new HashMap<Object, ImapFlag>();
+    private ImapFlagCache mFlags = new ImapFlagCache();
+    private ImapFlagCache mTags = new ImapFlagCache();
     private boolean     mCheckingSpam;
     private EnabledHack mEnabledHack;
 
@@ -165,107 +167,51 @@ public class ImapSession extends Session {
     String endIdle()            { String tag = mIdleTag;  mIdleTag = null;  return tag; }
     boolean isIdle()            { return mIdleTag != null; }
 
-    static final class ImapFlag {
-        String  mName;
-        String  mImapName;
-        int     mId;
-        long    mBitmask;
-        boolean mPositive;
-        boolean mPermanent;
-        boolean mListed;
 
-        static final boolean VISIBLE = true, HIDDEN = false;
-
-        ImapFlag(String name, Tag ltag, boolean positive) {
-            mName = ltag.getName();  mImapName  = normalize(name, mId);
-            mId   = ltag.getId();    mBitmask   = ltag.getBitmask();
-            mPositive = positive;    mPermanent = true;
-            mListed = VISIBLE;
-        }
-
-        ImapFlag(String name, short bitmask, boolean listed) {
-            mName = name;      mImapName  = name;
-            mId   = 0;         mBitmask   = bitmask;
-            mPositive = true;  mPermanent = false;
-            mListed = listed;
-        }
-
-        private String normalize(String name, int id) {
-            String imapName = name.replaceAll("[ *(){%*\\]\\\\]+", "");
-            if (name.startsWith("\\"))
-                imapName = '\\' + imapName;
-            if (!name.equals(""))
-                return imapName;
-            return ":FLAG" + Tag.getIndex(id);
-        }
-
-        public String toString()  { return mImapName; }
-    }
-
-    private ImapFlag cache(ImapFlag i4flag) {
-        Map<Object, ImapFlag> map = (i4flag.mId <= 0 ? mFlags : mTags);
-        map.put(i4flag.mImapName.toUpperCase(), i4flag);
-        Long bitmask = new Long(i4flag.mBitmask);
-        if (!map.containsKey(bitmask))
-            map.put(bitmask, i4flag);
-        return i4flag;
-    }
     void cacheFlags(Mailbox mbox) {
         mFlags.clear();
-        cache(new ImapFlag("\\Answered", mbox.mReplyFlag,    true));
-        cache(new ImapFlag("\\Deleted",  mbox.mDeletedFlag,  true));
-        cache(new ImapFlag("\\Draft",    mbox.mDraftFlag,    true));
-        cache(new ImapFlag("\\Flagged",  mbox.mFlaggedFlag,  true));
-        cache(new ImapFlag("\\Seen",     mbox.mUnreadFlag,   false));
-        cache(new ImapFlag("$Forwarded", mbox.mForwardFlag,  true));
-        cache(new ImapFlag("$MDNSent",   mbox.mNotifiedFlag, true));
-        cache(new ImapFlag("Forwarded",  mbox.mForwardFlag,  true));
 
-        cache(new ImapFlag("\\Recent",     ImapMessage.FLAG_RECENT,       ImapFlag.HIDDEN));
-        cache(new ImapFlag("$Junk",        ImapMessage.FLAG_SPAM,         ImapFlag.VISIBLE));
-        cache(new ImapFlag("$NotJunk",     ImapMessage.FLAG_NONSPAM,      ImapFlag.VISIBLE));
-        cache(new ImapFlag("Junk",         ImapMessage.FLAG_SPAM,         ImapFlag.VISIBLE));
-        cache(new ImapFlag("JunkRecorded", ImapMessage.FLAG_JUNKRECORDED, ImapFlag.VISIBLE));
-        cache(new ImapFlag("NonJunk",      ImapMessage.FLAG_NONSPAM,      ImapFlag.VISIBLE));
-        cache(new ImapFlag("NotJunk",      ImapMessage.FLAG_NONSPAM,      ImapFlag.VISIBLE));
+        mFlags.cache(new ImapFlag("\\Answered", mbox.mReplyFlag,    true));
+        mFlags.cache(new ImapFlag("\\Deleted",  mbox.mDeletedFlag,  true));
+        mFlags.cache(new ImapFlag("\\Draft",    mbox.mDraftFlag,    true));
+        mFlags.cache(new ImapFlag("\\Flagged",  mbox.mFlaggedFlag,  true));
+        mFlags.cache(new ImapFlag("\\Seen",     mbox.mUnreadFlag,   false));
+        mFlags.cache(new ImapFlag("$Forwarded", mbox.mForwardFlag,  true));
+        mFlags.cache(new ImapFlag("$MDNSent",   mbox.mNotifiedFlag, true));
+        mFlags.cache(new ImapFlag("Forwarded",  mbox.mForwardFlag,  true));
+
+        mFlags.cache(new ImapFlag("\\Recent",     ImapMessage.FLAG_RECENT,       ImapFlag.HIDDEN));
+        mFlags.cache(new ImapFlag("$Junk",        ImapMessage.FLAG_SPAM,         ImapFlag.VISIBLE));
+        mFlags.cache(new ImapFlag("$NotJunk",     ImapMessage.FLAG_NONSPAM,      ImapFlag.VISIBLE));
+        mFlags.cache(new ImapFlag("Junk",         ImapMessage.FLAG_SPAM,         ImapFlag.VISIBLE));
+        mFlags.cache(new ImapFlag("JunkRecorded", ImapMessage.FLAG_JUNKRECORDED, ImapFlag.VISIBLE));
+        mFlags.cache(new ImapFlag("NonJunk",      ImapMessage.FLAG_NONSPAM,      ImapFlag.VISIBLE));
+        mFlags.cache(new ImapFlag("NotJunk",      ImapMessage.FLAG_NONSPAM,      ImapFlag.VISIBLE));
     }
+
     ImapFlag cacheTag(Tag ltag) {
-        return (ltag instanceof Flag ? null : cache(new ImapFlag(ltag.getName(), ltag, true)));
+        return (ltag instanceof Flag ? null : mTags.cache(new ImapFlag(ltag.getName(), ltag, true)));
     }
-    private void uncacheTag(int tagId) {
-        if (!Tag.validateId(tagId))
-            return;
-        int index = Tag.getIndex(tagId);
-        ImapFlag i4flag = mTags.remove(new Long(1L << index));
-        if (i4flag != null)
-            mTags.remove(i4flag.mImapName.toUpperCase());
-    }
+
     ImapFlag getFlagByName(String name) {
-        name = name.toUpperCase();
-        ImapFlag i4flag = mFlags.get(name);
-        return (i4flag != null ? i4flag : mTags.get(name));
+        ImapFlag i4flag = mFlags.getByName(name);
+        return (i4flag != null ? i4flag : mTags.getByName(name));
     }
-    ImapFlag getTagByMask(long mask)  { return mTags.get(new Long(mask)); }
-    String getRealTagName(String name) {
-        ImapFlag i4flag = getFlagByName(name);
-        return (i4flag == null ? null : i4flag.mName);
+
+    ImapFlag getTagByMask(long mask) {
+        return mTags.getByMask(mask);
     }
+
     String getFlagList(boolean permanentOnly) {
-        boolean first = true;
-        StringBuilder sb = new StringBuilder();
-        Map[] flagSets = new Map[] { mFlags, mTags };
-        for (int i = 0; i < flagSets.length; i++)
-            for (Iterator it = flagSets[i].entrySet().iterator(); it.hasNext(); first = false) {
-                Map.Entry entry = (Map.Entry) it.next();
-                if (entry.getKey() instanceof String) {
-                    ImapFlag i4flag = (ImapFlag) entry.getValue();
-                    if (i4flag.mListed && (!permanentOnly || i4flag.mPermanent))
-                        sb.append(first ? "" : " ").append(i4flag.mImapName);
-                }
-            }
-        return sb.toString();
+        List <String> names = mFlags.listNames(permanentOnly);
+        names.addAll(mTags.listNames(permanentOnly));
+        return StringUtil.join(" ", names);
     }
-    void clearTagCache()  { mTags.clear(); }
+
+    void clearTagCache() {
+        mTags.clear();
+    }
+
 
     DateFormat getDateFormat() {
         return mHandler.getDateFormat();
@@ -357,7 +303,7 @@ public class ImapSession extends Session {
         for (Object obj : deleted.values()) {
             int id = (obj instanceof MailItem ? ((MailItem) obj).getId() : ((Integer) obj).intValue());
             if (Tag.validateId(id)) {
-                uncacheTag(id);
+                mTags.uncacheTag(id);
                 if (selected)
                     mSelectedFolder.dirtyTag(id, true);
             } else if (!selected || id <= 0) {
@@ -413,7 +359,7 @@ public class ImapSession extends Session {
         for (Change chg : modified.values()) {
             if (chg.what instanceof Tag && (chg.why & Change.MODIFIED_NAME) != 0) {
                 Tag ltag = (Tag) chg.what;
-                uncacheTag(ltag.getId());
+                mTags.uncacheTag(ltag.getId());
                 cacheTag(ltag);
                 if (selected)
                     mSelectedFolder.dirtyTag(ltag.getId());

@@ -29,13 +29,28 @@
 package com.zimbra.cs.imap;
 
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
+import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -424,7 +439,7 @@ class ImapFolder implements Iterable<ImapMessage> {
             }
     }
 
-    Set<ImapMessage> getFlaggedMessages(ImapSession.ImapFlag i4flag) {
+    Set<ImapMessage> getFlaggedMessages(ImapFlag i4flag) {
         if (i4flag == null || mSequence.size() == 0)
             return Collections.emptySet();
         TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());

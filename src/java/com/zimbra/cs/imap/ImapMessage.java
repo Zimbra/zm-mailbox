@@ -48,6 +48,7 @@ import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.BCodec;
 import org.apache.commons.codec.net.QCodec;
 
+import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -58,7 +59,6 @@ import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.common.util.ZimbraLog;
-
 
 public class ImapMessage implements Comparable<ImapMessage> {
     static final short FLAG_RECENT       = 0x0001;
@@ -197,7 +197,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
         for (int i = 0; tagBuffer != 0 && i < 64; i++) {
             long mask = 1L << i;
             if ((tagBuffer & mask) != 0) {
-                ImapSession.ImapFlag i4flag = session.getTagByMask(mask);
+                ImapFlag i4flag = session.getTagByMask(mask);
                 if (i4flag != null)
                     result.append(result.length() == empty ? "" : " ").append(i4flag);
                 tagBuffer &= ~mask;
