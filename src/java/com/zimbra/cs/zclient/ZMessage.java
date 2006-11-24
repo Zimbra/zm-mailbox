@@ -89,7 +89,7 @@ public class ZMessage implements ZItem {
     private String mContentURL;
     private long mSize;
     private String mReplyType;
-    private String mInResponseTo;
+    private String mInReplyTo;
     private String mOrigId;
         
     public ZMessage(Element e) throws ServiceException {
@@ -104,7 +104,7 @@ public class ZMessage implements ZItem {
         if (mid != null) mMessageIdHeader = mid.getText();
         
         Element irt = e.getOptionalElement(MailService.E_IN_REPLY_TO);
-        if (irt != null) mInResponseTo = irt.getText();
+        if (irt != null) mInReplyTo = irt.getText();
         
         mReceivedDate = e.getAttributeLong(MailService.A_DATE, 0);
         mSentDate = e.getAttributeLong(MailService.A_SENT_DATE, 0);
@@ -140,8 +140,8 @@ public class ZMessage implements ZItem {
      * 
      * @return message-id header of message we are replying to if this is a draft
      */
-    public String getInResponseTo() {
-        return mInResponseTo;
+    public String getInReplyTo() {
+        return mInReplyTo;
     }
     
     /**
