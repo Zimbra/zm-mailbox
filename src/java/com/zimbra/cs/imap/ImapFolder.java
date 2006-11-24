@@ -245,6 +245,10 @@ class ImapFolder implements Iterable<ImapMessage> {
      *  as messages are marked read and unread. */
     int getFirstUnread()  { return mFirstUnread; }
 
+    /** Returns the active {@link ImapSession} in which this ImapFolder was
+     *  created. */
+    ImapSession getSession()  { return mSession; }
+
     /** Returns whether this folder is a "virtual" folder (i.e. a search
      *  folder).
      * @see #loadVirtualFolder(SearchFolder, Mailbox, OperationContext) */
@@ -439,12 +443,22 @@ class ImapFolder implements Iterable<ImapMessage> {
             }
     }
 
+    Set<ImapMessage> getAllMessages() {
+        if (mSequence.size() == 0)
+            return Collections.emptySet();
+        TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
+        for (ImapMessage i4msg : mSequence)
+            if (i4msg != null)
+                result.add(i4msg);
+        return result;
+    }
+
     Set<ImapMessage> getFlaggedMessages(ImapFlag i4flag) {
         if (i4flag == null || mSequence.size() == 0)
             return Collections.emptySet();
         TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
         for (ImapMessage i4msg : mSequence)
-            if (i4msg != null && (i4msg.sflags & i4flag.mBitmask) != 0)
+            if (i4msg != null && i4flag.matches(i4msg))
                 result.add(i4msg);
         return result;
     }

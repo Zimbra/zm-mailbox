@@ -34,13 +34,19 @@ import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
+import com.zimbra.cs.imap.ImapSearch.*;
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.common.util.ZimbraLog;
@@ -247,6 +253,20 @@ class ImapRequest {
         if (number.startsWith("0") && (!zeroOK || number.length() > 1))
             throw new ImapParseException(mTag, "invalid number: " + number);
         return number;
+    }
+    int parseInteger(String number) throws ImapParseException {
+        try {
+            return Integer.parseInt(number);
+        } catch (NumberFormatException nfe) {
+            throw new ImapParseException(mTag, "number out of range: " + number);
+        }
+    }
+    long parseLong(String number) throws ImapParseException {
+        try {
+            return Long.parseLong(number);
+        } catch (NumberFormatException nfe) {
+            throw new ImapParseException(mTag, "number out of range: " + number);
+        }
     }
 
     byte[] readBase64(boolean skipEquals) throws ImapParseException {
@@ -466,6 +486,9 @@ class ImapRequest {
         return tags;
     }
 
+    private Date readDate() throws ImapParseException {
+        return readDate(mSession == null ? new SimpleDateFormat("dd-MMM-yyyy", Locale.US) : mSession.getDateFormat());
+    }
     Date readDate(DateFormat format) throws ImapParseException {
         String dateStr = (peekChar() == '"' ? readQuoted() : readAtom());
         try {
@@ -612,45 +635,11 @@ class ImapRequest {
             NEGATED_SEARCH.put("UNKEYWORD",  "KEYWORD");
             NEGATED_SEARCH.put("UNSEEN",     "SEEN");
         }
-    private static final Map<String, String> INDEXED_HEADER = new HashMap<String, String>();
-        static {
-            INDEXED_HEADER.put("CC",      "cc:");
-            INDEXED_HEADER.put("FROM",    "from:");
-            INDEXED_HEADER.put("SUBJECT", "subject:");
-            INDEXED_HEADER.put("TO",      "to:");
-        }
-
-    private void readAndQuoteString(StringBuffer sb, String charset) throws IOException, ImapException {
-        String content = readAstring(charset);
-        sb.append('"');
-        for (int i = 0; i < content.length(); i++) {
-            char c = content.charAt(i);
-            if (c == '\\')      sb.append("\\\"");
-            else if (c == '"')  sb.append("\\\\");
-            else                sb.append(c);
-        }
-        sb.append('"');
-    }
-    private String readAndReformatDate() throws ImapParseException {
-        DateFormat format = (mSession == null ? new SimpleDateFormat("dd-MMM-yyyy", Locale.US) : mSession.getDateFormat());
-        Date date = readDate(format);
-        return mSession.getZimbraDateFormat().format(date);
-    }
-
-    private ImapFlag getFlag(String name) {
-        return mSession == null ? null : mSession.getFlagByName(name);
-    }
-    private void insertFlag(String name, StringBuffer sb, TreeMap<Integer, Object> insertions) {
-        insertFlag(getFlag(name), sb, insertions);
-    }
-    private void insertFlag(ImapFlag i4flag, StringBuffer sb, TreeMap<Integer, Object> insertions) {
-        insertions.put(sb.length(), i4flag);
-    }
 
     private static final boolean SINGLE_CLAUSE = true, MULTIPLE_CLAUSES = false;
     private static final String SUBCLAUSE = "";
 
-    private StringBuffer readSearchClause(StringBuffer search, TreeMap<Integer, Object> insertions, String charset, boolean single)
+    private ImapSearch readSearchClause(String charset, boolean single, LogicalOperation parent)
     throws IOException, ImapException {
         boolean first = true;
         int nots = 0;
@@ -660,80 +649,74 @@ class ImapRequest {
             // key will be "" iff we're opening a new subclause...
             String key = (c == '(' ? SUBCLAUSE : readContent(SEARCH_CHARS).toUpperCase());
 
-            if (key.equals("NOT"))  { nots++; first = false; continue; }
-            else if ((nots % 2) != 0) {
+            LogicalOperation target = parent;
+            if (key.equals("NOT")) {
+                nots++;  first = false;  continue;
+            } else if ((nots % 2) != 0) {
                 if (NEGATED_SEARCH.containsKey(key))  key = NEGATED_SEARCH.get(key);
-                else                                  search.append('-');
+                else                                  parent.addChild(target = new NotOperation());
             }
             nots = 0;
 
-            if (key.equals("ALL"))              search.append("item:all");
-            else if (key.equals("ANSWERED"))    search.append("is:replied");
-            else if (key.equals("DELETED"))     search.append("tag:\\Deleted");
-            else if (key.equals("DRAFT"))       search.append("is:draft");
-            else if (key.equals("FLAGGED"))     search.append("is:flagged");
-            else if (key.equals("RECENT"))      insertFlag("\\RECENT", search, insertions);
-            else if (key.equals("NEW"))         { search.append("(is:read "); insertFlag("\\RECENT", search, insertions);
-                                                  search.append(')'); }
-            else if (key.equals("OLD"))         { search.append('-'); insertFlag("\\RECENT", search, insertions); }
-            else if (key.equals("SEEN"))        search.append("is:read");
-            else if (key.equals("UNANSWERED"))  search.append("is:unreplied");
-            else if (key.equals("UNDELETED"))   search.append("-tag:\\Deleted");
-            else if (key.equals("UNDRAFT"))     search.append("-is:draft");
-            else if (key.equals("UNFLAGGED"))   search.append("is:unflagged");
-            else if (key.equals("UNSEEN"))      search.append("is:unread");
+            ImapSearch child = null;
+            if (key.equals("ALL"))              child = new AllSearch();
+            else if (key.equals("ANSWERED"))    child = new FlagSearch("\\Answered");
+            else if (key.equals("DELETED"))     child = new FlagSearch("\\Deleted");
+            else if (key.equals("DRAFT"))       child = new FlagSearch("\\Draft");
+            else if (key.equals("FLAGGED"))     child = new FlagSearch("\\Flagged");
+            else if (key.equals("RECENT"))      child = new FlagSearch("\\Recent");
+            else if (key.equals("NEW"))         child = new AndOperation(new FlagSearch("\\Seen"), new FlagSearch("\\Recent"));
+            else if (key.equals("OLD"))         child = new NotOperation(new FlagSearch("\\Recent"));
+            else if (key.equals("SEEN"))        child = new FlagSearch("\\Seen");
+            else if (key.equals("UNANSWERED"))  child = new NotOperation(new FlagSearch("\\Answered"));
+            else if (key.equals("UNDELETED"))   child = new NotOperation(new FlagSearch("\\Deleted"));
+            else if (key.equals("UNDRAFT"))     child = new NotOperation(new FlagSearch("\\Draft"));
+            else if (key.equals("UNFLAGGED"))   child = new NotOperation(new FlagSearch("\\Flagged"));
+            else if (key.equals("UNSEEN"))      child = new NotOperation(new FlagSearch("\\Seen"));
             // XXX: BCC always returns no results because we don't separately index that field
-            else if (key.equals("BCC"))         { skipSpace(); search.append("item:none"); readAstring(charset); }
-            else if (key.equals("BEFORE"))      { skipSpace(); search.append("before:").append(readAndReformatDate()); }
-            else if (key.equals("BODY"))        { skipSpace(); readAndQuoteString(search, charset); }
-            else if (key.equals("CC"))          { skipSpace(); search.append("cc:"); readAndQuoteString(search, charset); }
-            else if (key.equals("FROM"))        { skipSpace(); search.append("from:"); readAndQuoteString(search, charset); }
-            else if (key.equals("HEADER"))      { skipSpace(); String hdr = readAstring().toUpperCase(), prefix = INDEXED_HEADER.get(hdr);
-                                                  if (prefix == null)  throw new ImapParseException(mTag, "unindexed header: " + hdr, true);
-                                                  skipSpace(); search.append(prefix); readAndQuoteString(search, charset); }
-            else if (key.equals("KEYWORD"))     { skipSpace(); ImapFlag i4flag = getFlag(readAtom());
-                                                  if (i4flag != null && !i4flag.mPositive)   search.append('-');
-                                                  if (i4flag != null && !i4flag.mPermanent)  insertFlag(i4flag, search, insertions);
-                                                  else  search.append(i4flag == null ? "item:none" : "tag:" + i4flag.mName); }
-            else if (key.equals("LARGER"))      { skipSpace(); search.append("larger:").append(readNumber()); }
-            else if (key.equals("ON"))          { skipSpace(); search.append("date:").append(readAndReformatDate()); }
-            else if (key.equals("OLDER"))       { skipSpace(); search.append("before:-").append(readNumber(NONZERO)).append('h'); }
+            else if (key.equals("BCC"))         { skipSpace(); child = new NoneSearch(); readAstring(charset); }
+            else if (key.equals("BEFORE"))      { skipSpace(); child = new DateSearch(DateSearch.Relation.before, readDate()); }
+            else if (key.equals("BODY"))        { skipSpace(); child = new ContentSearch(ContentSearch.Relation.body, readAstring(charset)); }
+            else if (key.equals("CC"))          { skipSpace(); child = new ContentSearch(ContentSearch.Relation.cc, readAstring(charset)); }
+            else if (key.equals("FROM"))        { skipSpace(); child = new ContentSearch(ContentSearch.Relation.from, readAstring(charset)); }
+            else if (key.equals("HEADER"))      { skipSpace(); ContentSearch.Relation relation = ContentSearch.Relation.parse(mTag, readAstring());
+                                                  skipSpace(); child = new ContentSearch(relation, readAstring(charset)); }
+            else if (key.equals("KEYWORD"))     { skipSpace(); child = new FlagSearch(readAtom()); }
+            else if (key.equals("LARGER"))      { skipSpace(); child = new SizeSearch(SizeSearch.Relation.larger, parseLong(readNumber())); }
+            else if (key.equals("ON"))          { skipSpace(); child = new DateSearch(DateSearch.Relation.date, readDate()); }
+            else if (key.equals("OLDER"))       { skipSpace(); child = new RelativeDateSearch(DateSearch.Relation.before, parseInteger(readNumber())); }
             // FIXME: SENTBEFORE, SENTON, and SENTSINCE reference INTERNALDATE, not the Date header
-            else if (key.equals("SENTBEFORE"))  { skipSpace(); search.append("before:").append(readAndReformatDate()); }
-            else if (key.equals("SENTON"))      { skipSpace(); search.append("date:").append(readAndReformatDate()); }
-            else if (key.equals("SENTSINCE"))   { skipSpace(); search.append("after:").append(readAndReformatDate()); }
-            else if (key.equals("SINCE"))       { skipSpace(); search.append("after:").append(readAndReformatDate()); }
-            else if (key.equals("SMALLER"))     { skipSpace(); search.append("smaller:").append(readNumber()); }
-            else if (key.equals("SUBJECT"))     { skipSpace(); search.append("subject:"); readAndQuoteString(search, charset); }
-            else if (key.equals("TEXT"))        { skipSpace(); readAndQuoteString(search, charset); }
-            else if (key.equals("TO"))          { skipSpace(); search.append("to:"); readAndQuoteString(search, charset); }
-            else if (key.equals("UID"))         { skipSpace(); insertions.put(search.length(), '-' + readSequence()); }
-            else if (key.equals("UNKEYWORD"))   { skipSpace(); ImapFlag i4flag = getFlag(readAtom());
-                                                  if (i4flag != null && i4flag.mPositive)    search.append('-');
-                                                  if (i4flag != null && !i4flag.mPermanent)  insertFlag(i4flag, search, insertions);  
-                                                  else  search.append(i4flag == null ? "item:all" : "tag:" + i4flag.mName); }
-            else if (key.equals("YOUNGER"))     { skipSpace(); search.append("after:-").append(readNumber(NONZERO)).append('h'); }
-            else if (key.equals(SUBCLAUSE))     { skipChar('(');  readSearchClause(search, insertions, charset, MULTIPLE_CLAUSES);  skipChar(')'); }
+            else if (key.equals("SENTBEFORE"))  { skipSpace(); child = new DateSearch(DateSearch.Relation.before, readDate()); }
+            else if (key.equals("SENTON"))      { skipSpace(); child = new DateSearch(DateSearch.Relation.date, readDate()); }
+            else if (key.equals("SENTSINCE"))   { skipSpace(); child = new DateSearch(DateSearch.Relation.after, readDate()); }
+            else if (key.equals("SINCE"))       { skipSpace(); child = new DateSearch(DateSearch.Relation.after, readDate()); }
+            else if (key.equals("SMALLER"))     { skipSpace(); child = new SizeSearch(SizeSearch.Relation.smaller, parseLong(readNumber())); }
+            else if (key.equals("SUBJECT"))     { skipSpace(); child = new ContentSearch(ContentSearch.Relation.subject, readAstring(charset)); }
+            else if (key.equals("TEXT"))        { skipSpace(); child = new ContentSearch(ContentSearch.Relation.body, readAstring(charset)); }
+            else if (key.equals("TO"))          { skipSpace(); child = new ContentSearch(ContentSearch.Relation.to, readAstring(charset)); }
+            else if (key.equals("UID"))         { skipSpace(); child = new SequenceSearch(readSequence(), true); }
+            else if (key.equals("UNKEYWORD"))   { skipSpace(); child = new NotOperation(new FlagSearch(readAtom())); }
+            else if (key.equals("YOUNGER"))     { skipSpace(); child = new RelativeDateSearch(DateSearch.Relation.after, parseInteger(readNumber())); }
+            else if (key.equals(SUBCLAUSE))     { skipChar('(');  child = readSearchClause(charset, MULTIPLE_CLAUSES, new AndOperation());  skipChar(')'); }
             else if (Character.isDigit(key.charAt(0)) || key.charAt(0) == '*' || key.charAt(0) == '$')
-                insertions.put(search.length(), validateSequence(key));
+                child = new SequenceSearch(validateSequence(key), false);
             else if (key.equals("OR")) {
-                search.append("((");      skipSpace();  readSearchClause(search, insertions, charset, SINGLE_CLAUSE);
-                search.append(") or (");  skipSpace();  readSearchClause(search, insertions, charset, SINGLE_CLAUSE);
-                search.append("))");
+                skipSpace(); child = readSearchClause(charset, SINGLE_CLAUSE, new OrOperation());
+                skipSpace(); readSearchClause(charset, SINGLE_CLAUSE, (LogicalOperation) child);
             }
             else throw new ImapParseException(mTag, "unknown search tag: " + key);
 
-            search.append(' ');
+            target.addChild(child);
             first = false;
         } while (peekChar() != -1 && peekChar() != ')' && (nots > 0 || !single));
 
         if (nots > 0)
             throw new ImapParseException(mTag, "missing search-key after NOT");
-        return search;
+        return parent;
     }
-    String readSearch(TreeMap<Integer, Object> insertions) throws IOException, ImapException {
+
+    ImapSearch readSearch() throws IOException, ImapException {
         String charset = null;
-        StringBuffer search = new StringBuffer();
         if ("CHARSET".equals(peekATOM())) {
             skipAtom("CHARSET");  skipSpace();  charset = readAstring();  skipSpace();
             boolean charsetOK = false;
@@ -743,6 +726,6 @@ class ImapRequest {
             if (!charsetOK)
                 throw new ImapParseException(mTag, "BADCHARSET", "unknown charset: " + charset, true);
         }
-        return readSearchClause(search, insertions, charset, MULTIPLE_CLAUSES).toString();
+        return readSearchClause(charset, MULTIPLE_CLAUSES, new AndOperation());
     }
 }

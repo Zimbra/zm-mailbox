@@ -67,6 +67,11 @@ public class ImapFlagCache {
             return ":FLAG" + Tag.getIndex(id);
         }
 
+        boolean matches(ImapMessage i4msg) {
+            long mask = (mId == 0 ? i4msg.sflags : (mId > 0 ? i4msg.tags : i4msg.flags));
+            return (mask & mBitmask) != 0;
+        }
+
         @Override
         public String toString()  { return mImapName; }
     }

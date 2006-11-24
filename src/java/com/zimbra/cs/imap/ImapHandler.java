@@ -477,7 +477,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         checkEOF(tag, req);
                         return doSTORE(tag, sequence, flags, operation, silent, byUID);
                     } else if (command.equals("SEARCH")) {
-                        Integer options = null;  TreeMap<Integer, Object> insertions = new TreeMap<Integer, Object>();
+                        Integer options = null;
                         req.skipSpace();
                         if ("RETURN".equals(req.peekATOM())) {
                             options = 0;
@@ -498,9 +498,9 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                             if (options == 0)
                                 options = RETURN_ALL;
                         }
-                        String search = req.readSearch(insertions);
+                        ImapSearch i4search = req.readSearch();
                         checkEOF(tag, req);
-                        return doSEARCH(tag, search, insertions, byUID, options);
+                        return doSEARCH(tag, i4search, byUID, options);
                     } else if (command.equals("SELECT")) {
                         req.skipSpace();  String folder = req.readFolder();
                         checkEOF(tag, req);
@@ -536,6 +536,8 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                         req.skipSpace();  String qroot = req.readAstring();
                         req.skipSpace();  req.skipChar('(');
                         while (req.peekChar() != ')') {
+                            if (!limits.isEmpty())
+                                req.skipSpace();
                             String resource = req.readATOM();  req.skipSpace();
                             limits.put(resource, req.readNumber());
                         }
@@ -1470,7 +1472,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
     private static final int LARGEST_FOLDER_BATCH = 600;
     static final byte[] ITEM_TYPES = new byte[] { MailItem.TYPE_MESSAGE, MailItem.TYPE_CONTACT };
 
-    boolean doSEARCH(String tag, String search, TreeMap<Integer, Object> insertions, boolean byUID, Integer options) throws IOException {
+    boolean doSEARCH(String tag, ImapSearch i4search, boolean byUID, Integer options) throws IOException {
         if (!checkState(tag, ImapSession.STATE_SELECTED))
             return CONTINUE_PROCESSING;
 
@@ -1481,58 +1483,46 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         try {
             synchronized (mMailbox) {
                 ImapFolder i4folder = mSession.getFolder();
-                if (!insertions.isEmpty()) {
-                    int count = insertions.size();
-                    Map.Entry[] pieces = new Map.Entry[count];
-                    for (Map.Entry<Integer, Object> entry : insertions.entrySet())
-                        pieces[--count] = entry;
-                    for (int i = 0; i < pieces.length; i++) {
-                        int point = (Integer) pieces[i].getKey();
-                        Set<ImapMessage> i4set;
-                        if (pieces[i].getValue() instanceof String) {
-                            String key = (String) pieces[i].getValue();
-                            if (key.startsWith("-"))
-                                i4set = i4folder.getSubsequence(key.substring(1), true);
-                            else
-                                i4set = i4folder.getSubsequence(key, false);
-                        } else {
-                            ImapFlag i4flag = (ImapFlag) pieces[i].getValue();
-                            i4set = i4folder.getFlaggedMessages(i4flag);
+                if (i4search.canBeRunLocally()) {
+                    if (saveResults)
+                        searchRes = i4search.evaluate(i4folder);
+                    else
+                        for (ImapMessage i4msg : i4search.evaluate(i4folder))
+                            if (i4msg != null)
+                                hits.add(byUID ? i4msg.imapUid : i4msg.sequence);
+                } else {
+                    String search = i4search.toZimbraSearch(i4folder);
+                    if (!i4folder.isVirtual())
+                        search = "in:" + i4folder.getQuotedPath() + ' ' + search;
+                    else if (i4folder.getSize() <= LARGEST_FOLDER_BATCH)
+                        search = ImapSearch.sequenceAsSearchTerm(i4folder, i4folder.getSubsequence("1:*", false), false) + ' ' + search;
+                    else
+                        search = '(' + i4folder.getQuery() + ") " + search;
+                    ZimbraLog.imap.info("[ search is: " + search + " ]");
+    
+                    SearchParams params = new SearchParams();
+                    params.setQueryStr(search);
+                    params.setTypes(ITEM_TYPES);
+                    params.setSortBy(MailboxIndex.SortBy.DATE_ASCENDING);
+                    params.setChunkSize(2000);
+                    SearchOperation op = new SearchOperation(mSession, getContext(), mMailbox, Requester.IMAP, params, false, Mailbox.SearchResultMode.IDS);   
+                    op.schedule();
+                    ZimbraQueryResults zqr = op.getResults();
+                    
+                    try {
+                        for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
+                            ImapMessage i4msg = mSession.getFolder().getById(hit.getItemId());
+                            if (saveResults)
+                                searchRes.add(i4msg);
+                            else if (i4msg != null)
+                                hits.add(byUID ? i4msg.imapUid : i4msg.sequence);
                         }
-                        search = search.substring(0, point) + sequenceAsSearchTerm(i4set, true) + search.substring(point);
+                    } finally {
+                        zqr.doneWithSearchResults();
                     }
                 }
-
-                if (!i4folder.isVirtual())
-                    search = "in:" + i4folder.getQuotedPath() + " (" + search + ')';
-                else if (i4folder.getSize() <= LARGEST_FOLDER_BATCH)
-                    search = sequenceAsSearchTerm(i4folder.getSubsequence("1:*", false), false) + " (" + search + ')';
-                else
-                    search = '(' + i4folder.getQuery() + ") (" + search + ')';
-                ZimbraLog.imap.info("[ search is: " + search + " ]");
-
-                SearchParams params = new SearchParams();
-                params.setQueryStr(search);
-                params.setTypes(ITEM_TYPES);
-                params.setSortBy(MailboxIndex.SortBy.DATE_ASCENDING);
-                params.setChunkSize(2000);
-                SearchOperation op = new SearchOperation(mSession, getContext(), mMailbox, Requester.IMAP, params, false, Mailbox.SearchResultMode.IDS);   
-                op.schedule();
-                ZimbraQueryResults zqr = op.getResults();
-                
-                try {
-                    for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
-                        ImapMessage i4msg = mSession.getFolder().getById(hit.getItemId());
-                        if (saveResults)
-                            searchRes.add(i4msg);
-                        else if (i4msg != null)
-                            hits.add(byUID ? i4msg.imapUid : i4msg.sequence);
-                    }
-                } finally {
-                    zqr.doneWithSearchResults();
-                }
-            }
-        } catch (Exception e) {
+        	}
+        } catch (ServiceException e) {
             Throwable t = e.getCause();
             if (t != null && t instanceof ParseException) {
                 ZimbraLog.imap.warn("SEARCH failed (bad query)", e);
@@ -1543,7 +1533,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 sendNO(tag, "SEARCH failed");
                 return CONTINUE_PROCESSING;
             }
-		}
+        }
 
         StringBuilder result = null;
         if (options == null) {
@@ -1571,24 +1561,6 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         sendNotifications(false, false);
         sendOK(tag, "SEARCH completed");
         return CONTINUE_PROCESSING;
-    }
-
-    private boolean isAllMessages(Set<ImapMessage> i4set) {
-        if (mSession == null || mSession.getFolder() == null)
-            return false;
-        int size = i4set.size() - (i4set.contains(null) ? 1 : 0);
-        return size == mSession.getFolder().getSize();
-    }
-    private String sequenceAsSearchTerm(Set<ImapMessage> i4set, boolean abbreviateAll) {
-        i4set.remove(null);
-        if (i4set.isEmpty())
-            return "item:none";
-        else if (abbreviateAll && isAllMessages(i4set))
-            return "item:all";
-        StringBuilder sb = new StringBuilder("item:{");
-        for (ImapMessage i4msg : i4set)
-            sb.append(sb.length() == 6 ? "" : ",").append(i4msg.msgId);
-        return sb.append('}').toString();
     }
 
     static final int FETCH_BODY          = 0x0001;
