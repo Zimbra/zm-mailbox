@@ -79,6 +79,35 @@ public class L10nUtil {
         // caldav messages
         caldavCalendarDescription,
         
+        // ZimbraSync client invitation text
+        zsApptNew,
+        zsApptModified,
+        zsApptInstanceModified,
+
+        zsSubject,
+        zsOrganizer,
+        zsLocation,
+        zsTime,
+        zsStart,
+        zsEnd,
+        zsAllDay,
+        zsRecurrence,
+        zsInvitees,
+
+        zsRecurDailyEveryDay,
+        zsRecurDailyEveryWeekday,
+        zsRecurDailyEveryNumDays,
+        zsRecurWeeklyEveryWeekday,
+        zsRecurWeeklyEveryNumWeeksDate,
+        zsRecurMonthlyEveryNumMonthsDate,
+        zsRecurMonthlyEveryNumMonthsNumDay,
+        zsRecurYearlyEveryDate,
+        zsRecurYearlyEveryMonthNumDay,
+        zsRecurStart,
+        zsRecurEndNone,
+        zsRecurEndNumber,
+        zsRecurEndByDate,
+        zsRecurBlurb,
         
         // add other messages in the future...
     }
