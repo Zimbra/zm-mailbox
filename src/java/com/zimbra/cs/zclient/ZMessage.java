@@ -27,7 +27,6 @@ package com.zimbra.cs.zclient;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
@@ -89,21 +88,31 @@ public class ZMessage implements ZItem {
     private String mContent;
     private String mContentURL;
     private long mSize;
+    private String mReplyType;
+    private String mInResponseTo;
+    private String mOrigId;
         
     public ZMessage(Element e) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
         mFlags = e.getAttribute(MailService.A_FLAGS, null);
         mTags = e.getAttribute(MailService.A_TAGS, null);
+        mReplyType = e.getAttribute(MailService.A_REPLY_TYPE, null);
+        mOrigId = e.getAttribute(MailService.A_ORIG_ID, null);        
         Element sub = e.getOptionalElement(MailService.E_SUBJECT);
         if (sub != null) mSubject = sub.getText();
         Element mid = e.getOptionalElement(MailService.E_MSG_ID_HDR);
         if (mid != null) mMessageIdHeader = mid.getText();
+        
+        Element irt = e.getOptionalElement(MailService.E_IN_REPLY_TO);
+        if (irt != null) mInResponseTo = irt.getText();
+        
         mReceivedDate = e.getAttributeLong(MailService.A_DATE, 0);
         mSentDate = e.getAttributeLong(MailService.A_SENT_DATE, 0);
         mFolderId = e.getAttribute(MailService.A_FOLDER, null);
         mConversationId = e.getAttribute(MailService.A_CONV_ID, null);
         mPartName = e.getAttribute(MailService.A_PART, null);
         mSize = e.getAttributeLong(MailService.A_SIZE);
+        
         Element content = e.getOptionalElement(MailService.E_CONTENT);
         if (content != null) {
             mContent = content.getText();
@@ -119,6 +128,30 @@ public class ZMessage implements ZItem {
             mMimeStructure = new ZMimePart(mp);
     }
 
+    /**
+     * 
+     * @return Zimbra id of message we are replying to if this is a draft.
+     */
+    public String getOriginalId() {
+        return mOrigId;
+    }
+    
+    /**
+     * 
+     * @return message-id header of message we are replying to if this is a draft
+     */
+    public String getInResponseTo() {
+        return mInResponseTo;
+    }
+    
+    /**
+     * 
+     * @return reply type if this is a draft
+     */
+    public String getReplyType() {
+        return mReplyType;
+    }
+    
     public long getSize() {
         return mSize;
     }

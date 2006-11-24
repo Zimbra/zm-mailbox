@@ -1778,8 +1778,6 @@ public class ZMailbox {
         private List<String> mMessageIdsToAttach;
         private String mOriginalMessageId;
         private String mReplyType;
-        private String mSendUid;
-        private boolean mNeedCalendarSentByFixup;
         
         public List<ZEmailAddress> getAddresses() { return mAddresses; }
         public void setAddresses(List<ZEmailAddress> addresses) { mAddresses = addresses; }
@@ -1796,9 +1794,6 @@ public class ZMailbox {
         public List<AttachedMessagePart> getMessagePartsToAttach() { return mMessagePartsToAttach; }
         public void setMessagePartsToAttach(List<AttachedMessagePart> messagePartsToAttach) { mMessagePartsToAttach = messagePartsToAttach; }
         
-        public boolean isNeedCalendarSentByFixup() { return mNeedCalendarSentByFixup; }
-        public void setNeedCalendarSentByFixup(boolean needCalendarSentByFixup) { mNeedCalendarSentByFixup = needCalendarSentByFixup; }
-
         public String getOriginalMessageId() { return mOriginalMessageId; }
         public void setOriginalMessageId(String originalMessageId) { mOriginalMessageId = originalMessageId; }
         
@@ -1808,25 +1803,14 @@ public class ZMailbox {
         public String getReplyType() { return mReplyType; }
         public void setReplyType(String replyType) { mReplyType = replyType; }
         
-        public String getSendUid() { return mSendUid; }
-        public void setSendUid(String sendUid) { mSendUid = sendUid; }
-        
         public String getSubject() { return mSubject; }
         public void setSubject(String subject) { mSubject = subject; }
 
         public List<String> getMessageIdsToAttach() { return mMessageIdsToAttach; }
         public void setMessageIdsToAttach(List<String> messageIdsToAttach) { mMessageIdsToAttach = messageIdsToAttach; }
     }
-    
-    public ZSendMessageResponse sendMessage(ZOutgoingMessage message) throws ServiceException {
-        XMLElement req = new XMLElement(MailService.SEND_MSG_REQUEST);
-        
-        if (message.getSendUid() != null)
-            req.addAttribute(MailService.A_SEND_UID, message.getSendUid());
-        
-        if (message.isNeedCalendarSentByFixup()) 
-            req.addAttribute(MailService.A_SEND_UID, message.isNeedCalendarSentByFixup());
-        
+
+    public Element getMessageElement(Element req, ZOutgoingMessage message) {
         Element m = req.addElement(MailService.E_MSG);
 
         if (message.getOriginalMessageId() != null) 
@@ -1878,11 +1862,34 @@ public class ZMailbox {
                 attach.addElement(MailService.E_MIMEPART).addAttribute(MailService.A_MESSAGE_ID, part.getMessageId()).addAttribute(MailService.A_PART, part.getPartName());    
             }            
         }
+        return m;
+    }
+    
+    public ZSendMessageResponse sendMessage(ZOutgoingMessage message, String sendUid, boolean needCalendarSentByFixup) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.SEND_MSG_REQUEST);
+        
+        if (sendUid != null)
+            req.addAttribute(MailService.A_SEND_UID, sendUid);
+        
+        if (needCalendarSentByFixup) 
+            req.addAttribute(MailService.A_NEED_CALENDAR_SENTBY_FIXUP, needCalendarSentByFixup);
+        
+        Element m = getMessageElement(req, message);
 
         Element resp = invoke(req);
         Element msg = resp.getOptionalElement(MailService.E_MSG);
         String id = msg == null ? null : msg.getAttribute(MailService.A_ID, null);
         return new ZSendMessageResponse(id);       
+    }
+ 
+    public ZMessage saveDraft(ZOutgoingMessage message, String existingDraftId) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.SAVE_DRAFT_REQUEST);
+        
+        Element m = getMessageElement(req, message);
+        if (existingDraftId != null)
+            m.addAttribute(MailService.A_ID, existingDraftId);
+
+        return new ZMessage(invoke(req).getElement(MailService.E_MSG));
     }
     
     public void createIdentity(ZIdentity identity) throws ServiceException {
