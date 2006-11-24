@@ -29,24 +29,42 @@ import java.util.Set;
 
 public class SetUtil {
 
-	
-	/**
-	 * Out gets the intersection of elements in lhs and rhs
-	 * 
-	 * @param out
-	 * @param lhs
-	 * @param rhs
-	 * @return
-	 */
-	public static <T> Set<T> intersect(Set<T> lhs, Set<T> rhs) {
-		HashSet<T> out = new HashSet<T>();
-		
-		for (T o : lhs) {
-			if (rhs.contains(o))
-				out.add(o);
-		}
-		return out;
-	}
+    
+    /**
+     * Out gets intersection of elements in lhs and rhs
+     * 
+     * @param out
+     * @param lhs
+     * @param rhs
+     * @return
+     */
+    public static <T> Set<T> subtract(Set<T> lhs, Set<T> rhs) {
+        HashSet<T> out = new HashSet<T>();
+        
+        for (T o : lhs) {
+            if (!rhs.contains(o))
+                out.add(o);
+        }
+        return out;
+    }
+    
+    /**
+     * Out gets the intersection of elements in lhs and rhs
+     * 
+     * @param out
+     * @param lhs
+     * @param rhs
+     * @return
+     */
+    public static <T> Set<T> intersect(Set<T> lhs, Set<T> rhs) {
+        HashSet<T> out = new HashSet<T>();
+        
+        for (T o : lhs) {
+            if (rhs.contains(o))
+                out.add(o);
+        }
+        return out;
+    }
 	
 	/**
 	 * Out gets the intersection of elements in lhs and rhs
