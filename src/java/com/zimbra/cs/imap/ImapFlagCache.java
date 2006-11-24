@@ -89,11 +89,8 @@ public class ImapFlagCache {
         return i4flag;
     }
 
-    void uncacheTag(int tagId) {
-        if (!Tag.validateId(tagId))
-            return;
-        int index = Tag.getIndex(tagId);
-        ImapFlagCache.ImapFlag i4flag = mBitmasks.remove(new Long(1L << index));
+    void uncache(long bitmask) {
+        ImapFlagCache.ImapFlag i4flag = mBitmasks.remove(bitmask);
         if (i4flag != null)
             mNames.remove(i4flag.mImapName.toUpperCase());
     }
@@ -104,11 +101,11 @@ public class ImapFlagCache {
     }
 
 
-    ImapFlagCache.ImapFlag getByName(String name) {
+    ImapFlag getByName(String name) {
         return mNames.get(name.toUpperCase());
     }
 
-    ImapFlagCache.ImapFlag getByMask(long mask) {
+    ImapFlag getByMask(long mask) {
         return mBitmasks.get(mask);
     }
 

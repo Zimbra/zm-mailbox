@@ -303,7 +303,7 @@ public class ImapSession extends Session {
         for (Object obj : deleted.values()) {
             int id = (obj instanceof MailItem ? ((MailItem) obj).getId() : ((Integer) obj).intValue());
             if (Tag.validateId(id)) {
-                mTags.uncacheTag(id);
+                mTags.uncache(1L << Tag.getIndex(id));
                 if (selected)
                     mSelectedFolder.dirtyTag(id, true);
             } else if (!selected || id <= 0) {
@@ -359,7 +359,7 @@ public class ImapSession extends Session {
         for (Change chg : modified.values()) {
             if (chg.what instanceof Tag && (chg.why & Change.MODIFIED_NAME) != 0) {
                 Tag ltag = (Tag) chg.what;
-                mTags.uncacheTag(ltag.getId());
+                mTags.uncache(ltag.getBitmask());
                 cacheTag(ltag);
                 if (selected)
                     mSelectedFolder.dirtyTag(ltag.getId());
