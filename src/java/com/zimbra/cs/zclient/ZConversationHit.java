@@ -25,13 +25,12 @@
 
 package com.zimbra.cs.zclient;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class ZConversationHit implements ZSearchHit {
@@ -154,5 +153,10 @@ public class ZConversationHit implements ZSearchHit {
     public boolean isUnread() {
         return hasFlags() && mFlags.indexOf(ZConversation.Flag.unread.getFlagChar()) != -1;
     }
+
+    public boolean isDraft() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.draft.getFlagChar()) != -1;
+    }
+    
  
 }

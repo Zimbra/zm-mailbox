@@ -25,18 +25,18 @@
 
 package com.zimbra.cs.zclient;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ZConversation implements ZItem {
 
     public enum Flag {
         unread('u'),
+        draft('d'),
         flagged('f'),
         sentByMe('s'),
         replied('r'),
@@ -69,7 +69,6 @@ public class ZConversation implements ZItem {
             
         }
     }
-
 
     private String mId;
     private String mFlags;
@@ -225,5 +224,10 @@ public class ZConversation implements ZItem {
 
     public boolean isRepliedTo() {
         return hasFlags() && mFlags.indexOf(ZConversation.Flag.replied.getFlagChar()) != -1;
-    }    
+    }
+
+    public boolean isDraft() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.draft.getFlagChar()) != -1;
+    }
+
 }
