@@ -33,6 +33,8 @@ import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
@@ -1731,91 +1733,158 @@ public class ZMailbox {
         }
     }
 
-    public static class ZSendMessagePart {
-        private String mMessageId;
-        private String mPartName;
+    public static class ZOutgoingMessage {
+  
+        public static class AttachedMessagePart {
+            private String mMessageId;
+            private String mPartName;
 
+            public AttachedMessagePart(String messageId, String partName) {
+                mMessageId = messageId;
+                mPartName = partName;
+            }
 
-        public ZSendMessagePart(String messageId, String partName) {
-            mMessageId = messageId;
-            mPartName = partName;
+            public String getMessageId()  {return mMessageId; }
+            public void setMessageId(String messageId) { mMessageId = messageId; }
+
+            public String getPartName() { return mPartName; }
+            public void setPartName(String partName) { mPartName = partName; }
         }
+        
+        public static class MessagePart {
+            private String mContentType;
+            private String mContent;
 
-        public String getMessageId() {
-            return mMessageId;
-        }
+            public MessagePart(String contentType, String content) {
+                mContent = content;
+                mContentType = contentType;
+            }
 
-        public void setMessageId(String messageId) {
-            mMessageId = messageId;
-        }
+            public String getContentType() { return mContentType; }
+            public void setContentType(String contentType) { mContentType = contentType; }
 
-        public String getPartName() {
-            return mPartName;
-        }
+            public String getContent() { return mContent; }
 
-        public void setPartName(String partName) {
-            mPartName = partName;
+            public void setContent(String content) { mContentType = content; }
         }
+        
+        private List<ZEmailAddress> mAddresses;
+        private String mSubject;
+        private String mInReplyTo;
+        private List<MessagePart> mMessageParts;
+        private String mAttachmentUploadId;
+        private List<AttachedMessagePart> mMessagePartsToAttach;
+        private List<String> mContactIdsToAttach;
+        private List<String> mMessageIdsToAttach;
+        private String mOriginalMessageId;
+        private String mReplyType;
+        private String mSendUid;
+        private boolean mNeedCalendarSentByFixup;
+        
+        public List<ZEmailAddress> getAddresses() { return mAddresses; }
+        public void setAddresses(List<ZEmailAddress> addresses) { mAddresses = addresses; }
+
+        public String getAttachmentUploadId() { return mAttachmentUploadId; }
+        public void setAttachmentUploadId(String attachmentUploadId) { mAttachmentUploadId = attachmentUploadId; }
+        
+        public List<String> getContactIdsToAttach() { return mContactIdsToAttach; }
+        public void setContactIdsToAttach(List<String> contactIdsToAttach) { mContactIdsToAttach = contactIdsToAttach; }
+
+        public List<MessagePart> getMessageParts() { return mMessageParts; }
+        public void setMessageParts(List<MessagePart> messageParts) { mMessageParts = messageParts; }
+
+        public List<AttachedMessagePart> getMessagePartsToAttach() { return mMessagePartsToAttach; }
+        public void setMessagePartsToAttach(List<AttachedMessagePart> messagePartsToAttach) { mMessagePartsToAttach = messagePartsToAttach; }
+        
+        public boolean isNeedCalendarSentByFixup() { return mNeedCalendarSentByFixup; }
+        public void setNeedCalendarSentByFixup(boolean needCalendarSentByFixup) { mNeedCalendarSentByFixup = needCalendarSentByFixup; }
+
+        public String getOriginalMessageId() { return mOriginalMessageId; }
+        public void setOriginalMessageId(String originalMessageId) { mOriginalMessageId = originalMessageId; }
+        
+        public String getInReplyTo() { return mInReplyTo; }
+        public void setInReplyTo(String inReplyTo) { mInReplyTo = inReplyTo; }
+
+        public String getReplyType() { return mReplyType; }
+        public void setReplyType(String replyType) { mReplyType = replyType; }
+        
+        public String getSendUid() { return mSendUid; }
+        public void setSendUid(String sendUid) { mSendUid = sendUid; }
+        
+        public String getSubject() { return mSubject; }
+        public void setSubject(String subject) { mSubject = subject; }
+
+        public List<String> getMessageIdsToAttach() { return mMessageIdsToAttach; }
+        public void setMessageIdsToAttach(List<String> messageIdsToAttach) { mMessageIdsToAttach = messageIdsToAttach; }
     }
-
-    /**
-     * send a message.
-     * 
-     * @param addrs list of addresses message is to be sent to
-     * @param subject subject of message
-     * @param origMessageIdHeader Message-ID header for message being replied to
-     * @param contentType content type of message body (normally text/plain)
-     * @param content content of message body
-     * @param attachmentUploadId the id of attachments uploaded previously
-     * @param messageIdsToAttach list of additional messages to attach to this message, or null.
-     * @param messagePartsToAttach list of additional attachments (id/part) to attach to this message, or null.
-     * @param contactIdsToAttach list of contact ids to attach to this message, or null.
-     * @param origId Zimbra message id of message being replied to, or null if new message.
-     * @param replyType Set to "r" if replying to origId, or "w" if forwarding, null if new message.
-     * @return SendMessageResponse. id is set in response only if message was saved to a sent folder.
-     * @throws com.zimbra.cs.service.ServiceException on error
-     */
-    public ZSendMessageResponse sendMessage(List<ZEmailAddress> addrs, String subject, String origMessageIdHeader, 
-            String contentType, String content, String attachmentUploadId, 
-            List<String> messageIdsToAttach, List<ZSendMessagePart> messagePartsToAttach, List<String> contactIdsToAttach, String origId, String replyType) throws ServiceException {
+    
+    public ZSendMessageResponse sendMessage(ZOutgoingMessage message) throws ServiceException {
         XMLElement req = new XMLElement(MailService.SEND_MSG_REQUEST);
+        
+        if (message.getSendUid() != null)
+            req.addAttribute(MailService.A_SEND_UID, message.getSendUid());
+        
+        if (message.isNeedCalendarSentByFixup()) 
+            req.addAttribute(MailService.A_SEND_UID, message.isNeedCalendarSentByFixup());
+        
         Element m = req.addElement(MailService.E_MSG);
-        if (origId != null) 
-            m.addAttribute(MailService.A_ORIG_ID, origId);
-        if (replyType != null)
-            m.addAttribute(MailService.A_REPLY_TYPE, replyType);
-        for (ZEmailAddress addr : addrs) {
-            Element e = m.addElement(MailService.E_EMAIL);
-            e.addAttribute(MailService.A_TYPE, addr.getType());
-            e.addAttribute(MailService.A_ADDRESS, addr.getAddress());
-            e.addAttribute(MailService.A_PERSONAL, addr.getPersonal());
-        }
-        if (subject != null) m.addElement(MailService.E_SUBJECT).setText(subject);
-        if (origMessageIdHeader != null) m.addElement(MailService.E_IN_REPLY_TO).setText(origMessageIdHeader);
-        Element mp = m.addElement(MailService.E_MIMEPART);
-        mp.addAttribute(MailService.A_CONTENT_TYPE, contentType);
-        mp.addElement(MailService.E_CONTENT).setText(content);
-        if (attachmentUploadId != null || messageIdsToAttach != null || messagePartsToAttach != null || contactIdsToAttach != null) {
-            Element attach = m.addElement(MailService.E_ATTACH);
-            if (attachmentUploadId != null)
-                attach.addAttribute(MailService.A_ATTACHMENT_ID, attachmentUploadId);
-            if (messageIdsToAttach != null) {
-                for (String mid: messageIdsToAttach) {
-                    attach.addElement(MailService.E_MSG).addAttribute(MailService.A_ID, mid);
-                }
-            }
-            if (messagePartsToAttach != null) {
-                for (ZSendMessagePart part: messagePartsToAttach) {
-                    attach.addElement(MailService.E_MIMEPART).addAttribute(MailService.A_MESSAGE_ID, part.getMessageId()).addAttribute(MailService.A_PART, part.getPartName());    
-                }
+
+        if (message.getOriginalMessageId() != null) 
+            m.addAttribute(MailService.A_ORIG_ID, message.getOriginalMessageId());
+
+        if (message.getReplyType() != null)
+            m.addAttribute(MailService.A_REPLY_TYPE, message.getReplyType());
+
+        if (message.getAddresses() != null) {
+            for (ZEmailAddress addr : message.getAddresses()) {
+                Element e = m.addElement(MailService.E_EMAIL);
+                e.addAttribute(MailService.A_TYPE, addr.getType());
+                e.addAttribute(MailService.A_ADDRESS, addr.getAddress());
+                e.addAttribute(MailService.A_PERSONAL, addr.getPersonal());
             }
         }
+
+        if (message.getSubject() != null) 
+            m.addElement(MailService.E_SUBJECT).setText(message.getSubject());
+        
+        if (message.getInReplyTo() != null) 
+            m.addElement(MailService.E_IN_REPLY_TO).setText(message.getInReplyTo());
+
+        if (message.getMessageParts() != null) {
+            for (MessagePart part : message.getMessageParts()) {
+                Element mp = m.addElement(MailService.E_MIMEPART);
+                mp.addAttribute(MailService.A_CONTENT_TYPE, part.getContentType());
+                mp.addElement(MailService.E_CONTENT).setText(part.getContent());
+            }
+        }
+        
+        Element attach = null;
+        
+        if (message.getAttachmentUploadId() != null) {
+            if (attach == null) attach = m.addElement(MailService.E_ATTACH);
+            attach.addAttribute(MailService.A_ATTACHMENT_ID, message.getAttachmentUploadId());
+        }
+        
+        if (message.getMessageIdsToAttach() != null) {
+            if (attach == null) attach = m.addElement(MailService.E_ATTACH);
+            for (String mid: message.getMessageIdsToAttach()) {
+                attach.addElement(MailService.E_MSG).addAttribute(MailService.A_ID, mid);
+            }            
+        }
+        
+        if (message.getMessagePartsToAttach() != null) {
+            if (attach == null) attach = m.addElement(MailService.E_ATTACH);
+            for (AttachedMessagePart part: message.getMessagePartsToAttach()) {
+                attach.addElement(MailService.E_MIMEPART).addAttribute(MailService.A_MESSAGE_ID, part.getMessageId()).addAttribute(MailService.A_PART, part.getPartName());    
+            }            
+        }
+
         Element resp = invoke(req);
         Element msg = resp.getOptionalElement(MailService.E_MSG);
         String id = msg == null ? null : msg.getAttribute(MailService.A_ID, null);
-        return new ZSendMessageResponse(id);
+        return new ZSendMessageResponse(id);       
     }
-
+    
     public void createIdentity(ZIdentity identity) throws ServiceException {
         XMLElement req = new XMLElement(AccountService.CREATE_IDENTITY_REQUEST);
         identity.toElement(req);
