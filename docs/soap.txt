@@ -1086,15 +1086,18 @@ supply a "part" and the retrieved data will be on the specified message/rfc822 s
     if the part does not exist or is not a message/rfc822 part, mail.NO_SUCH_PART
 
 <GetMsgResponse>
-  <m id="{message-id}" [part="{part}"] f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" l="{folder}" (cid="{conv}")>
+  <m id="{message-id}" [origid="..." rt="r|w"] [part="{part}"] f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" l="{folder}" (cid="{conv}")>
     <e .../>*
     <su>{subject}</su>
     <fr>{fragment}</fr>
+    [<irt>{Message-ID header for message being replied to}</irt>]
     <mid>{Message-ID header}</mid>
     [<mp>...</mp>]
     [<content (url="...")>...</content>]
   </m>
 </GetMsgResponse>
+
+origid/rt/irt are present only on drafts
  
 ------------
 <GetMsgMetadataRequest>
