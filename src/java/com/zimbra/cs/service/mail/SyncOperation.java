@@ -170,6 +170,8 @@ public class SyncOperation extends Operation {
         e.addAttribute(MailService.A_IDS, sb.toString());
     }
 
+    private static final int FETCH_BATCH_SIZE = 200;
+
     private static final int MUTABLE_FIELDS = Change.MODIFIED_FLAGS  | Change.MODIFIED_TAGS |
                                               Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT |
                                               Change.MODIFIED_NAME   | Change.MODIFIED_CONFLICT |
@@ -207,15 +209,20 @@ public class SyncOperation extends Operation {
             ToXML.encodeTag(response, zsc, tag, Change.ALL_FIELDS);
 
         // finally, handle created/modified "other items"
-        Pair<List<MailItem>,MailItem.TypedIdList> changed = mbox.getModifiedItems(octxt, begin);
-        for (MailItem item : changed.getFirst()) {
-            //  For items in the system, if the content has changed since the user last sync'ed 
-            //      (because it was edited or created), just send back the folder ID and saved date --
-            //      the client will request the whole object out of band -- potentially using the 
-            //      content servlet's "include metadata in headers" hack.
-            //  If it's just the metadata that changed, send back the set of mutable attributes.
-            boolean created = item.getSavedSequence() > begin;
-            ToXML.encodeItem(response, zsc, item, created ? Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT : MUTABLE_FIELDS);
+        Pair<List<Integer>,MailItem.TypedIdList> changed = mbox.getModifiedItems(octxt, begin);
+        List<Integer> modified = changed.getFirst();
+        while (!modified.isEmpty()) {
+            List batch = modified.subList(0, Math.min(modified.size(), FETCH_BATCH_SIZE));
+            for (MailItem item : mbox.getItemById(octxt, modified, MailItem.TYPE_UNKNOWN)) {
+                //  For items in the system, if the content has changed since the user last sync'ed 
+                //      (because it was edited or created), just send back the folder ID and saved date --
+                //      the client will request the whole object out of band -- potentially using the 
+                //      content servlet's "include metadata in headers" hack.
+                //  If it's just the metadata that changed, send back the set of mutable attributes.
+                boolean created = item.getSavedSequence() > begin;
+                ToXML.encodeItem(response, zsc, item, created ? Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT : MUTABLE_FIELDS);
+            }
+            batch.clear();
         }
 
         // items that have been altered in non-visible folders will be returned as "deleted" in order to handle moves

@@ -1649,30 +1649,30 @@ public class DbMailItem {
         }
     }
 
-    private static final List<UnderlyingData> EMPTY_DATA = Collections.emptyList();
+    private static final List<Integer> EMPTY_DATA = Collections.emptyList();
     private static final MailItem.TypedIdList EMPTY_TYPED_ID_LIST = new MailItem.TypedIdList();
 
-    public static Pair<List<UnderlyingData>,MailItem.TypedIdList> getModifiedItems(Mailbox mbox, byte type, long lastSync, Set<Integer> visible)
+    public static Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(Mailbox mbox, byte type, long lastSync, Set<Integer> visible)
     throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
 
         // figure out what folders are visible and thus also if we can short-circuit this query
         if (visible != null && visible.isEmpty())
-            return new Pair<List<UnderlyingData>,MailItem.TypedIdList>(EMPTY_DATA, EMPTY_TYPED_ID_LIST);
+            return new Pair<List<Integer>,MailItem.TypedIdList>(EMPTY_DATA, EMPTY_TYPED_ID_LIST);
 
         Connection conn = mbox.getOperationConnection();
-        List<UnderlyingData> result = new ArrayList<UnderlyingData>();
+        List<Integer> modified = new ArrayList<Integer>();
         MailItem.TypedIdList missed = new MailItem.TypedIdList();
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             String typeConstraint = type == MailItem.TYPE_UNKNOWN ? "type NOT IN " + NON_SEARCHABLE_TYPES : "type IN " + typeConstraint(type);
-            stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                    " FROM " + getMailItemTableName(mbox, "mi") +
-                    " WHERE " + IN_THIS_MAILBOX_AND + "mi.mod_metadata > ? AND " + typeConstraint +
-                    " ORDER BY mi.mod_metadata");
+            stmt = conn.prepareStatement("SELECT id, type, folder_id" +
+                    " FROM " + getMailItemTableName(mbox) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? AND " + typeConstraint +
+                    " ORDER BY mod_metadata");
             int pos = 1;
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -1680,15 +1680,13 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                if (visible == null || visible.contains(rs.getInt(CI_FOLDER_ID)))
-                    result.add(constructItem(rs));
+                if (visible == null || visible.contains(rs.getInt(3)))
+                    modified.add(rs.getInt(1));
                 else
-                    missed.add(rs.getByte(CI_TYPE), rs.getInt(CI_ID));
+                    missed.add(rs.getByte(2), rs.getInt(1));
             }
 
-            if (type == MailItem.TYPE_CONVERSATION)
-                completeConversations(mbox, result);
-            return new Pair<List<UnderlyingData>,MailItem.TypedIdList>(result, missed);
+            return new Pair<List<Integer>,MailItem.TypedIdList>(modified, missed);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting items modified since " + lastSync, e);
         } finally {

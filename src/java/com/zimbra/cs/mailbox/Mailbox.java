@@ -1515,6 +1515,14 @@ public class Mailbox {
     }
 
     /** mechanism for getting an item */
+    public synchronized MailItem[] getItemById(OperationContext octxt, List<Integer> ids, byte type) throws ServiceException {
+        int idArray[] = new int[ids.size()], pos = 0;
+        for (Integer id : ids)
+            idArray[pos++] = id;
+        return getItemById(octxt, idArray, type);
+    }
+
+    /** mechanism for getting an item */
     public synchronized MailItem[] getItemById(OperationContext octxt, int[] ids, byte type) throws ServiceException {
         boolean success = false;
         try {
@@ -2014,8 +2022,8 @@ public class Mailbox {
         }
     }
 
-    /** Returns all MailItems modified since a given change number.  Will not
-     *  return modified folders or tags; for these you need to call
+    /** Returns the IDs of all items modified since a given change number.
+     *  Will not return modified folders or tags; for these you need to call
      *  {@link #getModifiedFolders(long, byte)} or
      *  {@link #getModifiedTags(OperationContext, long)}.  Modified items not
      *  visible to the caller (i.e. the caller lacks {@link ACL#RIGHT_READ})
@@ -2024,17 +2032,17 @@ public class Mailbox {
      * @param octxt     The context for this request (e.g. auth user id).
      * @param lastSync  We return items with change ID larger than this value.
      * @return A {@link Pair} containing:<ul>
-     *         <li>a List of all caller-visible MailItems modified since the
-     *             checkpoint, and
+     *         <li>a List of the IDs of all caller-visible MailItems of the
+     *             given type modified since the checkpoint, and
      *         <li>a List of the IDs of all items modified since the checkpoint
      *             but not currently visible to the caller</ul> */
-    public synchronized Pair<List<MailItem>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, long lastSync) throws ServiceException {
+    public synchronized Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, long lastSync) throws ServiceException {
         return getModifiedItems(octxt, lastSync, MailItem.TYPE_UNKNOWN, null);
     }
 
-    /** Returns the MailItems of the given type modified since a given change
-     *  number.  Will not return modified folders or tags; for these you need 
-     *  to call {@link #getModifiedFolders(long, byte)} or
+    /** Returns the IDs of all items of the given type modified since a given
+     *  change number.  Will not return modified folders or tags; for these
+     *  you need to call {@link #getModifiedFolders(long, byte)} or
      *  {@link #getModifiedTags(OperationContext, long)}.  Modified items not
      *  visible to the caller (i.e. the caller lacks {@link ACL#RIGHT_READ})
      *  are returned in a separate Integer List in the returned Pair.  When
@@ -2045,22 +2053,21 @@ public class Mailbox {
      * @param lastSync  We return items with change ID larger than this value.
      * @param type      The type of MailItems to return.
      * @return A {@link Pair} containing:<ul>
-     *         <li>a List of all caller-visible MailItems of the given type
-     *             modified since the checkpoint, and
+     *         <li>a List of the IDs of all caller-visible MailItems of the
+     *             given type modified since the checkpoint, and
      *         <li>a List of the IDs of all items of the given type modified
      *             since the checkpoint but not currently visible to the
      *             caller</ul> */
-    public synchronized Pair<List<MailItem>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, long lastSync, byte type) throws ServiceException {
+    public synchronized Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, long lastSync, byte type) throws ServiceException {
         return getModifiedItems(octxt, lastSync, type, null);
     }
 
-    private static final List<MailItem> EMPTY_ITEMS = Collections.emptyList();
+    private static final List<Integer> EMPTY_ITEMS = Collections.emptyList();
 
-    public synchronized Pair<List<MailItem>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, long lastSync, byte type, Set<Integer> folderIds) throws ServiceException {
+    public synchronized Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, long lastSync, byte type, Set<Integer> folderIds) throws ServiceException {
         if (lastSync >= getLastChangeID())
-            return new Pair<List<MailItem>,MailItem.TypedIdList>(EMPTY_ITEMS, new MailItem.TypedIdList());
+            return new Pair<List<Integer>,MailItem.TypedIdList>(EMPTY_ITEMS, new MailItem.TypedIdList());
 
-        List<MailItem> modified = new ArrayList<MailItem>();
         MailItem.TypedIdList elsewhere = null;
         boolean success = false;
         try {
@@ -2072,17 +2079,11 @@ public class Mailbox {
             else if (visible != null)
                 folderIds = SetUtil.intersect(folderIds, visible);
 
-            Pair<List<MailItem.UnderlyingData>,MailItem.TypedIdList> dataList = DbMailItem.getModifiedItems(this, type, lastSync, folderIds);
+            Pair<List<Integer>,MailItem.TypedIdList> dataList = DbMailItem.getModifiedItems(this, type, lastSync, folderIds);
             if (dataList == null)
                 return null;
-            for (MailItem.UnderlyingData data : dataList.getFirst()) {
-                if (data != null)
-                    modified.add(getItem(data));
-            }
-            elsewhere = dataList.getSecond();
-
             success = true;
-            return new Pair<List<MailItem>,MailItem.TypedIdList>(modified, elsewhere);
+            return dataList;
         } finally {
             endTransaction(success);
         }
