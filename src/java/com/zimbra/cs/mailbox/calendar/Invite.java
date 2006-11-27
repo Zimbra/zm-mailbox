@@ -591,6 +591,9 @@ public class Invite {
     }
 
 
+    private static final int CACHED_NOTES_MAXLEN = 1024;
+    private String mNotes;
+
     /**
      * Returns the meeting notes.  Meeting notes is the text/plain part in an
      * invite.  It typically includes CUA-generated meeting summary as well as
@@ -603,10 +606,14 @@ public class Invite {
      * @return null if notes is not found
      * @throws ServiceException
      */
-    public String getNotes() throws ServiceException {
+    public synchronized String getNotes() throws ServiceException {
+        if (mNotes != null) return mNotes;
         if (mCalItem == null) return null;
         MimeMessage mmInv = mCalItem.getSubpartMessage(mMailItemId);
-        return getNotes(mmInv);
+        String notes = getNotes(mmInv);
+        if (notes != null && notes.length() <= CACHED_NOTES_MAXLEN)
+            mNotes = notes;
+        return notes;
     }
 
     /**
@@ -1992,9 +1999,9 @@ public class Invite {
             component.addProperty(new ZProperty(ICalTok.SUMMARY, name));
         
         // DESCRIPTION
-        String fragment = getFragment();
-        if (fragment != null && fragment.length()>0)
-            component.addProperty(new ZProperty(ICalTok.DESCRIPTION, fragment));
+        String desc = getNotes();
+        if (desc != null && desc.length()>0)
+            component.addProperty(new ZProperty(ICalTok.DESCRIPTION, desc));
         
         // COMMENT
         String comment = getComment();
