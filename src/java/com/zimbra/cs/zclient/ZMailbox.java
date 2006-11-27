@@ -430,6 +430,14 @@ public class ZMailbox {
         return getAccountInfo(refresh).getPrefs();
     }
     
+    public ZFeatures getFeatures() throws ServiceException {
+        return getFeatures(false);
+    }
+
+    public ZFeatures getFeatures(boolean refresh) throws ServiceException {
+        return getAccountInfo(refresh).getFeatures();
+    }
+    
     public ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException {
         if (mGetInfoResult == null || refresh) {
             XMLElement req = new XMLElement(AccountService.GET_INFO_REQUEST);

@@ -603,6 +603,48 @@ public abstract class Provisioning {
 
     public static final String A_zimbraAllowFromAddress = "zimbraAllowFromAddress";
 
+    public static final String A_zimbraFeatureContactsEnabled = "zimbraFeatureContactsEnabled";
+
+    public static final String A_zimbraFeatureCalendarEnabled = "zimbraFeatureCalendarEnabled";
+
+    public static final String A_zimbraFeatureTaggingEnabled = "zimbraFeatureTaggingEnabled";
+
+    public static final String A_zimbraFeatureAdvancedSearchEnabled = "zimbraFeatureAdvancedSearchEnabled";
+
+    public static final String A_zimbraFeatureSavedSearchesEnabled = "zimbraFeatureSavedSearchesEnabled";
+
+    public static final String A_zimbraFeatureConversationsEnabled = "zimbraFeatureConversationsEnabled";
+
+    public static final String A_zimbraFeatureChangePasswordEnabled = "zimbraFeatureChangePasswordEnabled";
+
+    public static final String A_zimbraFeatureInitialSearchPreferenceEnabled = "zimbraFeatureInitialSearchPreferenceEnabled";
+
+    public static final String A_zimbraFeatureFiltersEnabled = "zimbraFeatureFiltersEnabled";
+
+    public static final String A_zimbraFeatureGalEnabled = "zimbraFeatureGalEnabled";
+
+    public static final String A_zimbraFeatureHtmlComposeEnabled = "zimbraFeatureHtmlComposeEnabled";
+
+    public static final String A_zimbraFeatureIMEnabled = "zimbraFeatureIMEnabled";
+
+    public static final String A_zimbraFeatureViewInHtmlEnabled = "zimbraFeatureViewInHtmlEnabled";
+
+    public static final String A_zimbraFeatureSharingEnabled = "zimbraFeatureSharingEnabled";
+
+    public static final String A_zimbraFeatureSkinChangeEnabled = "zimbraFeatureSkinChangeEnabled";
+
+    public static final String A_zimbraFeatureNotebookEnabled = "zimbraFeatureNotebookEnabled";
+
+    public static final String A_zimbraFeatureGalAutoCompleteEnabled = "zimbraFeatureGalAutoCompleteEnabled";
+
+    public static final String A_zimbraFeatureOutOfOfficeReplyEnabled = "zimbraFeatureOutOfOfficeReplyEnabled";
+
+    public static final String A_zimbraFeatureNewMailNotificationEnabled = "zimbraFeatureNewMailNotificationEnabled";
+
+    public static final String A_zimbraFeatureIdentitiesEnabled = "zimbraFeatureIdentitiesEnabled";
+
+    public static final String A_zimbraFeaturePop3DataSourceEnabled = "zimbraFeaturePop3DataSourceEnabled";
+
     /**
      * administrative notes for an entry.
      */

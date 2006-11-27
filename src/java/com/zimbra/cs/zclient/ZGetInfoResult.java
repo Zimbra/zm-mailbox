@@ -49,6 +49,7 @@ public class ZGetInfoResult {
     private Map<String, List<String>> mAttrs;
     private Map<String, List<String>> mPrefAttrs;
     private ZPrefs mPrefs;
+    private ZFeatures mFeatures;
     private List<ZIdentity> mIdentities;
     private List<ZDataSource> mDataSources;
     private List<String> mMailURLs;
@@ -80,6 +81,7 @@ public class ZGetInfoResult {
         mAttrs = getMap(e, AccountService.E_ATTRS, AccountService.E_ATTR);
         mPrefAttrs = getMap(e, AccountService.E_PREFS, AccountService.E_PREF);
         mPrefs = new ZPrefs(mPrefAttrs);
+        mFeatures = new ZFeatures(mAttrs);
         
         mMailURLs = new ArrayList<String>();
         for (Element urlEl: e.listElements(AccountService.E_SOAP_URL)) {
@@ -152,6 +154,10 @@ public class ZGetInfoResult {
 
     public ZPrefs getPrefs() {
         return mPrefs;
+    }
+    
+    public ZFeatures getFeatures() {
+        return mFeatures; 
     }
     
     public String toString() {
