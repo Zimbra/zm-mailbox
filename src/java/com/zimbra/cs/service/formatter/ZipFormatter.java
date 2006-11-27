@@ -87,6 +87,9 @@ public class ZipFormatter extends Formatter {
             context.resp.addHeader("Content-Disposition", cd.toString());
             context.resp.setContentType("application/x-zip-compressed");
     
+            if (!iterator.hasNext())
+            	return;
+            
             // create the ZIP file
             out = new ZipOutputStream(context.resp.getOutputStream());
             HashSet<String> usedNames = new HashSet<String>();
