@@ -159,13 +159,25 @@ public class UnitTests extends TestCase {
         // Search checks -- if you change the default data set these may start to fail!
         //                  just update the expected value list (order matters but case doesn't!)
         /////////////////////////////////
+        
+        // test A and (B or C) -- where B and C cannot be combined)
+        assertTrue(runTestQuery(mMailboxId, "in:inbox ((after:1/1/2006 and welcome) or from:ross)", false, new QueryResult[] 
+        {
+            new QueryResult("Welcome to the Zimbra Collaboration Suite source!"),
+            new QueryResult("Here are my ski pictures!"),
+            new QueryResult(""),
+            new QueryResult("Linux Desktop Info"),
+            new QueryResult("meeting")
+        }
+        ));
+        
         assertTrue(runTestQuery(mMailboxId, "contributing to xmlbeans ", false, 
                 new QueryResult[] { 
                 new QueryResult("Contributing to XMLBeans"),
                 new QueryResult("XmlBeans.jar size"),
                 new QueryResult("XmlBeans project logo"),
-        })
-        );
+        }
+        ));
         
 //      assertTrue(runTestQuery(mM, "ski and not \"voice mail\"", false, 
 //      new QueryResult[] { 

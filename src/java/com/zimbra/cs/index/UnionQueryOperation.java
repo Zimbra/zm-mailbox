@@ -217,9 +217,9 @@ class UnionQueryOperation extends QueryOperation
             } else if (op instanceof IntersectionQueryOperation) {
                 ((IntersectionQueryOperation)op).pruneIncompatibleTargets(targets);
             } else {
-                QueryTargetSet opTargets = op.getQueryTargets();
-                assert(opTargets.size() == 1);
-                if (!opTargets.isSubset(targets)) {
+                QueryTargetSet qts = op.getQueryTargets();
+                assert(qts.size() == 1);
+                if (!qts.isSubset(targets) && !qts.contains(QueryTarget.UNSPECIFIED)) {
                     mQueryOperations.remove(i);
                 }
             }
