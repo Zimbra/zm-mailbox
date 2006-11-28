@@ -134,7 +134,7 @@ public final class SearchParams {
     public void setLocale(Locale loc) { mLocale = loc; }
 
     public boolean hasCursor() { return mHasCursor; }
-    public void setCursor(ItemId prevMailItemId, String prevSort, int prevOffset) {
+    public void setCursor(ItemId prevMailItemId, String prevSort, int prevOffset, String endSort) {
         mHasCursor = true;
         mPrevMailItemId = prevMailItemId;
         mPrevSortValueStr = prevSort;
@@ -144,11 +144,24 @@ public final class SearchParams {
             mPrevSortValueLong = 0;
         }
         mPrevOffset = prevOffset;
+        mEndSortValueStr = endSort;
+        mEndSortValueLong = -1;
+        if (mEndSortValueStr != null) {
+            try {
+                mEndSortValueLong = Long.parseLong(mEndSortValueStr);
+            } catch (NumberFormatException e) {
+                mEndSortValueLong = Long.MAX_VALUE;
+            }
+        }
     }
     public ItemId getPrevMailItemId() { return mPrevMailItemId; }
     public String getPrevSortValueStr() { return mPrevSortValueStr; }
     public long getPrevSortValueLong() { return mPrevSortValueLong; }
     public int getPrevOffset() { return mPrevOffset; }
+    public boolean hasEndSortValue() { return mEndSortValueStr != null; }
+    public String getEndSortValueStr() { return mEndSortValueStr; }
+    public long getEndSortValueLong() { return mEndSortValueLong; }
+    
     public TimeZone getTimeZone() { return mTimeZone; }
     public Locale getLocale() { return mLocale; }
 
@@ -173,7 +186,9 @@ public final class SearchParams {
     private ItemId mPrevMailItemId; // the mail item ID of the last item in the previous result set
     private String mPrevSortValueStr; // the sort value of the last item in the previous result set
     private long mPrevSortValueLong; // the sort value of the last item in the previous result set
-    private int mPrevOffset; // the offset of the last item in the previous result set 
+    private int mPrevOffset; // the offset of the last item in the previous result set
+    private String mEndSortValueStr; // where to end the search. Hits >= this value are NOT included in the result set.
+    private long mEndSortValueLong; // where to end the search. Hits >= this value are NOT included in the result set.
 
 
     // unparsed -- these need to go away!

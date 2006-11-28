@@ -30,7 +30,6 @@ import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.service.util.ItemId;
 
 /**
  * @author tim
@@ -41,28 +40,22 @@ import com.zimbra.cs.service.util.ItemId;
 public class ResultsPager 
 {
     private ZimbraQueryResults mResults;
-    private MailboxIndex.SortBy mSortOrder;
-    private ItemId mPrevMailItemId;
-    
-    private String mPrevSortValueStr;
-    private long mPrevSortValueLong;
-    
-    private int mNumResultsRequested;
-
     private boolean mFixedOffset;
-    
     private List<ZimbraHit> mHits;
+    private SearchParams mParams;
     
-    public MailboxIndex.SortBy getSortOrder() { return mSortOrder; }
+    public MailboxIndex.SortBy getSortOrder() { return mParams.getSortBy(); }
     
     static public ResultsPager create(ZimbraQueryResults results, SearchParams params) throws ServiceException
     {
         ResultsPager toRet;
         
+        // must use results.getSortBy() because the results might have ignored our sortBy
+        // request and used something else...
+        params.setSortBy(results.getSortBy());
+        
         if (!params.hasCursor()) {
-            // must use results.getSortBy() because the results might have ignored our sortBy
-            // request and used something else...
-            toRet = new ResultsPager(results, results.getSortBy(), params.getLimit(), params.getOffset());
+            toRet = new ResultsPager(results, params);
         } else {
             // are we paging FORWARD or BACKWARD?  If requested starting-offset is the same or bigger then the cursor's offset, 
             // then we're going FORWARD, otherwise we're going BACKWARD
@@ -70,23 +63,15 @@ public class ResultsPager
             if (params.getOffset() < params.getPrevOffset()) {
                 forward = false;
             }
+            toRet = new ResultsPager(results, params, forward);
             
-            // must use results.getSortBy() because the results might have ignored our sortBy
-            // request and used something else...
-            toRet = new ResultsPager(results, results.getSortBy(), params.getPrevMailItemId(), params.getPrevSortValueStr(), params.getPrevSortValueLong(), params.getPrevOffset(), forward, params.getLimit());
         }
         return toRet;
     }
     
-    public ResultsPager(ZimbraQueryResults results, MailboxIndex.SortBy sortOrder, ItemId prevItemId, String prevSortValueStr, long prevSortValueLong, int prevOffset, 
-            boolean forward, int numResultsRequested) throws ServiceException {
+    private ResultsPager(ZimbraQueryResults results, SearchParams params, boolean forward) throws ServiceException {
         mResults = results;
-        mSortOrder = sortOrder;
-        mPrevMailItemId = prevItemId;
-        mPrevSortValueStr = prevSortValueStr;
-        mPrevSortValueLong = prevSortValueLong;
-        mNumResultsRequested = numResultsRequested;
-        
+        mParams = params;
         mFixedOffset = false;
         
         if (forward) {
@@ -99,19 +84,16 @@ public class ResultsPager
     /**
      * Simple offset
      * 
-     * @param results
-     * @param numResults
-     * @param offset
+     * @param params SearchParams, requires SortBy, offset, limit to be set
      * @throws ServiceException
      */
-    public ResultsPager(ZimbraQueryResults results, MailboxIndex.SortBy sortOrder, int numResults, int offset) throws ServiceException {
+    private ResultsPager(ZimbraQueryResults results, SearchParams params) throws ServiceException {
         mResults = results;
-        mSortOrder = sortOrder;
-        mNumResultsRequested = numResults;
+        mParams = params;
         mFixedOffset = true;
         
-        if (offset > 0) {
-            mResults.skipToHit(offset-1);
+        if (params.getOffset() > 0) {
+            mResults.skipToHit(params.getOffset()-1);
         } else {
             mResults.resetIterator();
         }
@@ -121,37 +103,53 @@ public class ResultsPager
     public List<ZimbraHit> getHits() { return mHits; }
     public boolean hasNext() throws ServiceException { return mResults.hasNext(); }
     
-    private ZimbraHit getDummyHit() {
+    /**
+     * @return a dummy hit which is immediately before the first hit we want to return
+     */
+    private ZimbraHit getDummyPrevHit() {
         long dateVal = 0;
         String strVal = "";
-        strVal = mPrevSortValueStr;
-        dateVal = mPrevSortValueLong;
+        strVal = mParams.getPrevSortValueStr();
+        dateVal = mParams.getPrevSortValueLong();
         
-        return new DummyHit(strVal, strVal, dateVal, mPrevMailItemId.getId());
+        return new DummyHit(strVal, strVal, dateVal, mParams.getPrevMailItemId().getId());
     }
+    
+    /**
+     * @return a dummy hit which is immediately after the last hit we want to return
+     */
+    private ZimbraHit getDummyEndHit() {
+        long dateVal = 0;
+        String strVal = "";
+        strVal = mParams.getEndSortValueStr();
+        dateVal = mParams.getEndSortValueLong();
+        
+        return new DummyHit(strVal, strVal, dateVal, 0);
+    }
+    
     
     private ZimbraHit forwardFindFirst() throws ServiceException {
         int offset = 0;
         
-        ZimbraHit prevHit = getDummyHit();
+        ZimbraHit prevHit = getDummyPrevHit();
         
         ZimbraHit hit = mResults.getFirstHit();
         while(hit != null) {
             offset++;
             
-            if (hit.getItemId() == mPrevMailItemId.getId()) {
+            if (hit.getItemId() == mParams.getPrevMailItemId().getId()) {
                 // found it!
                 return mResults.getNext();
             }
             
-            int comp = hit.compareBySortField(mSortOrder, prevHit); 
+            int comp = hit.compareBySortField(mParams.getSortBy(), prevHit); 
 
             // if (hit at the SAME TIME as prevSortValue) AND the ID is > prevHitId
             //   --> this depends on a secondary sort-order of HitID.  This doesn't
             //  currently hold up with ProxiedHits: we need to convert Hit sorting to
             //  use ItemIds (instead of int's) TODO FIXME
             if ((comp == 0) && 
-                        (hit.getItemId() > mPrevMailItemId.getId())) {
+                        (hit.getItemId() > mParams.getPrevMailItemId().getId())) {
                 return hit;
             }
             
@@ -159,11 +157,6 @@ public class ResultsPager
             if (comp > 0) {
                 return hit;
             }
-
-//            if (offset > mPrevOffset) {
-//                throw new NewResultsAtHeadException();
-//            }
-            
             hit = mResults.getNext();
         }
 
@@ -171,24 +164,38 @@ public class ResultsPager
         return null;
     }
     
+    
     private void forward() throws ServiceException {
-        mHits = new ArrayList<ZimbraHit>(mNumResultsRequested);
+        mHits = new ArrayList<ZimbraHit>(mParams.getLimit());
         
         ZimbraHit hit;
+        
+        ZimbraHit dummyEndHit = null;
+        if (mParams.hasEndSortValue())
+            dummyEndHit = getDummyEndHit();
+        
 
         if (!mFixedOffset) {
             hit = forwardFindFirst();
         } else {
             hit = mResults.getNext();
         }
-        if (hit != null) { 
-            mHits.add(0, hit);
+        if (hit != null) {
+            // if hit BEFORE dummyEndHit
+            if (mParams.hasEndSortValue() && (hit.compareBySortField(mParams.getSortBy(), dummyEndHit) > 0))
+                return;
+            else
+                mHits.add(0, hit);
         }
-
-        for (int i = 1; hit != null && i < mNumResultsRequested; i++) {
+        
+        for (int i = 1; hit != null && i < mParams.getLimit(); i++) {
             hit = mResults.getNext();
             if (hit != null) {
-                mHits.add(i, hit);
+                // if hit BEFORE dummyEndHit
+                if (mParams.hasEndSortValue() && (hit.compareBySortField(mParams.getSortBy(), dummyEndHit) > 0))
+                    break;
+                else
+                    mHits.add(i, hit);
             }
         }
     }
@@ -199,23 +206,29 @@ public class ResultsPager
 
         int offset = 0;
         ZimbraHit hit = mResults.getFirstHit();
-        ZimbraHit prevHit = getDummyHit();
+        ZimbraHit prevHit = getDummyPrevHit();
+        
+        ZimbraHit dummyEndHit = null;
+        if (mParams.hasEndSortValue())
+            dummyEndHit = getDummyEndHit();
         
         
         while(hit != null) {
             offset++;
             
-            if (hit.getItemId() == mPrevMailItemId.getId()) {
+            if (hit.getItemId() == mParams.getPrevMailItemId().getId())
                 // found old one -- DON'T include it in list
                 break;
-            }
             
             // if (hit COMES AFTER prevSortValue) {
-            if (hit.compareBySortField(mSortOrder, prevHit) > 0) {
+            if (hit.compareBySortField(mParams.getSortBy(), prevHit) > 0)
                 break;
-            }
             
-//            if (offset > mPrevOffset) {
+            // if (hit COMES BEFORE endSortValue) {
+            if (mParams.hasEndSortValue() && (hit.compareBySortField(mParams.getSortBy(), dummyEndHit) <=0)) 
+                break;
+            
+//          if (offset > mPrevOffset) {
 //                throw new NewResultsAtHeadException();
 //            }
             
@@ -223,7 +236,7 @@ public class ResultsPager
             // add this hit onto our growing list.... and also take
             // existing things off the list if the list is already 
             // as big as we need it..
-            if (offset >= mNumResultsRequested) {
+            if (offset >= mParams.getLimit()) {
                 ll.removeFirst();
             }
             ll.addLast(hit);
@@ -233,7 +246,7 @@ public class ResultsPager
 
         // possible that we backed up to the start of the results set....so
         // we do have to check and see if we got enough results...
-        while (ll.size() < mNumResultsRequested && hit != null) {
+        while (ll.size() < mParams.getLimit() && hit != null) {
             ll.addLast(hit);
             hit = mResults.getNext();
         }

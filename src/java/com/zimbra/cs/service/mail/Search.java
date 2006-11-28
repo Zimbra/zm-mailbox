@@ -207,7 +207,9 @@ public class Search extends MailDocumentHandler  {
             
             int prevOffset = 0;
             String sortVal = cursor.getAttribute(MailService.A_SORTVAL);
-            params.setCursor(prevMailItemId, sortVal, prevOffset);
+            
+            String endSortVal = cursor.getAttribute("endSortVal", null);
+            params.setCursor(prevMailItemId, sortVal, prevOffset, endSortVal);
         }
 
         return params;

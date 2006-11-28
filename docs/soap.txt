@@ -809,7 +809,7 @@ Tags:
 
 <SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"] [types="{types}"] [recip="*0|1"]
 			   [fetch="1|all"] [html="*0|1"] [read="*0|1"] [neuter="0|*1"]>
-  [<cursor id="prevId" sortVal="prevSortValue" />]
+  [<cursor id="prevId" sortVal="prevSortValue" endSortVal="endSortValue"/> ] // end val is NON-INCLUSIVE
   
   [   // OPTIONAL: client timezone identification (necessary to time-correct a user-specified date/time query)
   
@@ -901,14 +901,15 @@ if recip="1" is specified
 
   
 For the optional <cursor> element:
- -- The parameters are (prevMailItemId, prevSortValue): these
+ -- The required parameters are (prevMailItemId, prevSortValue): these
  correspond to the last hit on the previous page (assuming you're
  going forward -- if you're backing up then they should be the first
  hit on the previous page)....the server uses those parameters to find
  the spot in the new results that corresponds to your old position:
  even if some entries have been removed or added to the search results
- (e.g. if you are searching is:unread and you read some)
-
+ (e.g. if you are searching is:unread and you read some).
+ The endSortVal paramater tells the cursor where to stop returning values
+ 
  
 conversation result:
 --------------------
