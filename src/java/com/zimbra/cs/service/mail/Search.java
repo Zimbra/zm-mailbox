@@ -41,6 +41,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -56,7 +57,6 @@ import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.operation.ItemActionOperation;
 import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.Operation.Requester;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;

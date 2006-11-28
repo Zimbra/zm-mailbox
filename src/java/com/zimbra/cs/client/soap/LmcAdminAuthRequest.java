@@ -29,10 +29,10 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import com.zimbra.soap.DomUtil;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.client.*;
-import com.zimbra.cs.service.ServiceException;
 
 public class LmcAdminAuthRequest extends LmcSoapRequest {
 

@@ -33,8 +33,8 @@ import java.util.Collections;
 import java.util.List;
 
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 

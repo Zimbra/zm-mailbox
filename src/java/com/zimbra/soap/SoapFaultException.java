@@ -25,7 +25,7 @@
 
 package com.zimbra.soap;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 
 public class SoapFaultException extends ServiceException {
 

@@ -36,7 +36,7 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.util.Zimbra;

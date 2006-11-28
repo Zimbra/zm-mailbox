@@ -24,9 +24,9 @@
  */
 package com.zimbra.cs.mailbox;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.service.ServiceException;
 
 
 public interface MailItemImport {

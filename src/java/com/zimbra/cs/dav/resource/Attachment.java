@@ -32,6 +32,7 @@ import java.util.List;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -49,7 +50,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.ServiceException;
 
 public class Attachment extends PhantomResource {
 

@@ -33,6 +33,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -42,7 +43,6 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.service.method.*;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 @SuppressWarnings("serial")

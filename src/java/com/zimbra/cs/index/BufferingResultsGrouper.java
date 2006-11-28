@@ -27,8 +27,8 @@ package com.zimbra.cs.index;
 
 import java.util.*;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author tim

@@ -27,7 +27,7 @@ package com.zimbra.cs.im;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public abstract class IMEvent {

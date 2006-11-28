@@ -30,10 +30,10 @@ package com.zimbra.cs.index;
 
 import org.apache.lucene.document.Document;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author tim

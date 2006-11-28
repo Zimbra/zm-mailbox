@@ -26,6 +26,7 @@ package com.zimbra.cs.service.im;
 
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.im.IMBuddy;
 import com.zimbra.cs.im.IMChat;
@@ -33,7 +34,6 @@ import com.zimbra.cs.im.IMGroup;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMPresence;
 import com.zimbra.cs.im.IMChat.Participant;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;

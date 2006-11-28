@@ -44,6 +44,7 @@ import java.util.Map.Entry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.op.AbortTxn;
@@ -51,7 +52,6 @@ import com.zimbra.cs.redolog.op.Checkpoint;
 import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.op.StoreIncomingBlob;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author jhahm

@@ -36,9 +36,9 @@ import java.sql.Timestamp;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.ServiceException;
 
 // TODO mailbox migration between servers
 // TODO backup/restore

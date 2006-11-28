@@ -40,7 +40,7 @@ import org.apache.commons.codec.net.QuotedPrintableCodec;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 
 public class VCard {

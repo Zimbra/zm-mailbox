@@ -37,7 +37,7 @@ import java.util.HashMap;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 
 /**
  * @author schemers

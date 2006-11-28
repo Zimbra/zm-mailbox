@@ -35,9 +35,9 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.operation.CheckSpellingOperation;
 import com.zimbra.cs.operation.Operation.Requester;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;

@@ -31,8 +31,8 @@ package com.zimbra.cs.mailbox;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.redolog.op.IndexItem;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 
 

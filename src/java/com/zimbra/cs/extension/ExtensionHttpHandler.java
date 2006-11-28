@@ -35,7 +35,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 
 /**
  * HTTP handler for an extension. HTTP GET and POST requests are dispatched to the handler

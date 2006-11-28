@@ -34,8 +34,8 @@ import java.util.Map;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.admin.CreateDataSource;
 import com.zimbra.soap.DocumentDispatcher;

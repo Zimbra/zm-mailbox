@@ -27,11 +27,11 @@ package com.zimbra.cs.service.wiki;
 
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.mail.ItemAction;
 import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.soap.Element;

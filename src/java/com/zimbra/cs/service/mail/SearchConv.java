@@ -35,6 +35,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;
@@ -47,7 +48,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.Operation.Requester;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;

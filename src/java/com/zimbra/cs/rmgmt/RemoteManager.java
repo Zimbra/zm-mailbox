@@ -37,7 +37,7 @@ import ch.ethz.ssh2.StreamGobbler;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.util.ZimbraLog;

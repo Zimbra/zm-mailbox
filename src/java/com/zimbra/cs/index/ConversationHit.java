@@ -33,10 +33,10 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.service.ServiceException;
 
 
 /**

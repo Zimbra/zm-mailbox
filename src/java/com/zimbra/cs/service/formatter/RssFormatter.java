@@ -40,9 +40,9 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.operation.Operation;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.soap.Element;
 

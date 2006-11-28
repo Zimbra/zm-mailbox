@@ -28,6 +28,7 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Domain;
@@ -35,7 +36,6 @@ import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.SessionCache;

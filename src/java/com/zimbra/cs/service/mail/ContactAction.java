@@ -35,13 +35,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.ContactActionOperation;
 import com.zimbra.cs.operation.Operation.Requester;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;

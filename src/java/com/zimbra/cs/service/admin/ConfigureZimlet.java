@@ -29,9 +29,9 @@ import java.util.Map;
 
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.FileUploadServlet;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;

@@ -36,8 +36,8 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.store.VolumeServiceException;
 

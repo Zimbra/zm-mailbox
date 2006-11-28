@@ -30,10 +30,10 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.redolog.RedoLogProvider;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.SoapProtocol;
 

@@ -27,7 +27,7 @@ package com.zimbra.cs.client.soap;
 
 import org.dom4j.Element;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 
 
 public class LmcGetMsgPartRequest extends LmcSoapRequest {

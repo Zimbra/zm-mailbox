@@ -30,12 +30,12 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.operation.CreateTagOperation;
 import com.zimbra.cs.operation.Operation.Requester;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;

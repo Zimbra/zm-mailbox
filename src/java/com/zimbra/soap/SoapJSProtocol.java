@@ -31,7 +31,7 @@ package com.zimbra.soap;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ExceptionToString;
 
 /**

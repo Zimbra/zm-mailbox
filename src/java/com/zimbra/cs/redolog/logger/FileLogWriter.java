@@ -43,12 +43,12 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.redolog.RedoConfig;
 import com.zimbra.cs.redolog.RedoLogManager;
 import com.zimbra.cs.redolog.RolloverManager;
 import com.zimbra.cs.redolog.op.RedoableOp;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 
 /**

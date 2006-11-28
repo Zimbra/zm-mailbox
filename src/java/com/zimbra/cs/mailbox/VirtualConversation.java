@@ -31,9 +31,9 @@ package com.zimbra.cs.mailbox;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Conversation.TagSet;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author dkarp

@@ -30,13 +30,13 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 

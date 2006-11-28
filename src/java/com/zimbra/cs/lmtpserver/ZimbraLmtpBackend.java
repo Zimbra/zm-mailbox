@@ -52,10 +52,10 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Notification;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public class ZimbraLmtpBackend implements LmtpBackend {

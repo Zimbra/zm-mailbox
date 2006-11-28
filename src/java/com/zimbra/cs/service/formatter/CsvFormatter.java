@@ -43,10 +43,10 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.operation.CreateContactOperation;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.operation.Operation.Requester;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
 
 public class CsvFormatter extends Formatter {

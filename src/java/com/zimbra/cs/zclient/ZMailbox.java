@@ -25,10 +25,10 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -415,7 +415,7 @@ public class ZMailbox {
 
     /**
      * @return account name of mailbox
-     * @throws com.zimbra.cs.service.ServiceException on error
+     * @throws com.zimbra.common.service.ServiceException on error
      */
     public String getName() throws ServiceException {
         return getAccountInfo(false).getName();
@@ -506,7 +506,7 @@ public class ZMailbox {
      * @return newly created tag
      * @param name name of the tag
      * @param color color of the tag
-     * @throws com.zimbra.cs.service.ServiceException if an error occurs
+     * @throws com.zimbra.common.service.ServiceException if an error occurs
      *
      */
     public ZTag createTag(String name, ZTag.Color color) throws ServiceException {
@@ -524,7 +524,7 @@ public class ZMailbox {
      * @return action result
      * @param id id of tag to modify
      * @param color color of tag to modify
-     * @throws com.zimbra.cs.service.ServiceException on error
+     * @throws com.zimbra.common.service.ServiceException on error
      */
     public ZActionResult modifyTagColor(String id, ZTag.Color color) throws ServiceException {
         return doAction(tagAction("color", id).addAttribute(MailService.A_COLOR, color.getValue()));        
@@ -1069,7 +1069,7 @@ public class ZMailbox {
      * @param content message content
      * @param noICal if TRUE, then don't process iCal attachments.
      * @return ID of newly created message
-     * @throws com.zimbra.cs.service.ServiceException on error
+     * @throws com.zimbra.common.service.ServiceException on error
      */
     public String addMessage(String folderId, String flags, String tags, long receivedDate, String content, boolean noICal) throws ServiceException {
         XMLElement req = new XMLElement(MailService.ADD_MSG_REQUEST);
@@ -1165,7 +1165,7 @@ public class ZMailbox {
      * @return action result
      * @param ids of messages to flag
      * @param flag flag on /off
-     * @throws com.zimbra.cs.service.ServiceException on error
+     * @throws com.zimbra.common.service.ServiceException on error
      */
     public ZActionResult flagMessage(String ids, boolean flag) throws ServiceException {
         return doAction(messageAction(flag ? "flag" : "!flag", ids));

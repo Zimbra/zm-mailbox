@@ -36,8 +36,8 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.zimlet.ZimletConfig;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletHandler;

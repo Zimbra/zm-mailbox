@@ -28,10 +28,10 @@ package com.zimbra.cs.account.soap;
 import java.util.ArrayList;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;

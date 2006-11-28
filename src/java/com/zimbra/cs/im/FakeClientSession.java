@@ -20,9 +20,9 @@ import org.xmpp.packet.Roster;
 import org.xmpp.packet.StreamError;
 import org.xmpp.packet.IQ.Type;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.im.IMMessage.TextPart;
-import com.zimbra.cs.service.ServiceException;
 
 public class FakeClientSession extends ClientSession {
     

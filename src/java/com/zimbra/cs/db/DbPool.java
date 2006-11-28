@@ -45,10 +45,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ValueCounter;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 /**

@@ -40,6 +40,7 @@ import java.util.StringTokenizer;
 
 import javax.mail.MessagingException;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -53,7 +54,6 @@ import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mime.ParsedAddress;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers

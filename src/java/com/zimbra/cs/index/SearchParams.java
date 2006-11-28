@@ -35,9 +35,9 @@ package com.zimbra.cs.index;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.ToXML.OutputParticipants;
 import com.zimbra.cs.service.util.ItemId;
 

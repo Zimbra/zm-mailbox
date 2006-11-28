@@ -30,9 +30,9 @@ package com.zimbra.cs.mailbox.calendar;
 
 import java.util.HashMap;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
-import com.zimbra.cs.service.ServiceException;
 
 public class IcalXmlStrMap {
 

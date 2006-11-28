@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
@@ -44,7 +45,6 @@ import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavResponse;
 import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.service.ServiceException;
 
 /*
  * draft-dusseault-caldav section 9.5

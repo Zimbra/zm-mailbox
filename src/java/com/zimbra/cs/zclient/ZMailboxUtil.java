@@ -26,6 +26,7 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
@@ -35,7 +36,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;

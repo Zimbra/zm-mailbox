@@ -26,11 +26,11 @@ package com.zimbra.cs.operation;
 
 import java.io.IOException;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 
 public class SaveDraftOperation extends Operation {

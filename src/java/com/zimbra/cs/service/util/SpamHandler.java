@@ -50,8 +50,8 @@ import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.BlobDataSource;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public class SpamHandler {

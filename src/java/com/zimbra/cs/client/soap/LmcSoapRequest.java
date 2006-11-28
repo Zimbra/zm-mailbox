@@ -40,9 +40,9 @@ import com.zimbra.soap.DomUtil;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapHttpTransport;
 import com.zimbra.soap.SoapParseException;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.admin.AdminService;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 
 public abstract class LmcSoapRequest {

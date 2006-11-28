@@ -56,8 +56,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 /**

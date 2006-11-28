@@ -2,9 +2,10 @@
 package com.zimbra.cs.index.queryparser;
 import java.util.TimeZone;
 import java.util.Locale;
+
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.mailbox.MailServiceException;
 import org.apache.lucene.analysis.Analyzer;

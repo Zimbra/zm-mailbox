@@ -1,6 +1,6 @@
 package com.zimbra.cs.im;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 
 public class IMXmppTextEvent extends IMEvent {
     

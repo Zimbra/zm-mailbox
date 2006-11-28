@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BEncoding;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.BlobMetaDataEncodingException;

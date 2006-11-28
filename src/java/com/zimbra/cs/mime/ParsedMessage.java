@@ -54,7 +54,7 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.object.ObjectHandlerException;
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.util.StringUtil;

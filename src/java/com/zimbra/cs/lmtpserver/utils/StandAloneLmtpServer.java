@@ -38,9 +38,9 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.lmtpserver.LmtpBackend;
 import com.zimbra.cs.lmtpserver.LmtpServer;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 

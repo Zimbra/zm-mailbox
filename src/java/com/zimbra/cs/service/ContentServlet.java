@@ -60,6 +60,7 @@ import com.zimbra.cs.mime.MimeCompoundHeader.ContentDisposition;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.*;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;

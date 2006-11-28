@@ -5,8 +5,8 @@ import java.sql.SQLException;
 
 import org.jivesoftware.database.ConnectionProvider;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.service.ServiceException;
 
 public class ZimbraConnectionProvider implements ConnectionProvider {
 

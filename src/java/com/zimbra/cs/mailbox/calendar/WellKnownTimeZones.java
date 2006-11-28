@@ -36,10 +36,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.cs.service.ServiceException;
 
 public class WellKnownTimeZones {
 

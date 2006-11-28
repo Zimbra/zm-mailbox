@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 /**

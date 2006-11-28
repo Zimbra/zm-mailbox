@@ -34,11 +34,11 @@ import java.util.Map;
 import java.util.SimpleTimeZone;
 import java.util.StringTokenizer;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * Time zone class that combines java.util.SimpleTimeZone and iCalendar

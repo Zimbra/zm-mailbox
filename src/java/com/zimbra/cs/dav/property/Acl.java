@@ -31,6 +31,7 @@ import java.util.Set;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.dav.DavContext;
@@ -41,7 +42,6 @@ import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.ACL.Grant;
-import com.zimbra.cs.service.ServiceException;
 
 /*
  * The following are the required properties for supporting DAV access-control.

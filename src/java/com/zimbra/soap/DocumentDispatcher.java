@@ -33,7 +33,7 @@ import java.util.Map;
 
 import org.dom4j.QName;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 
 /**
  * @author schemers

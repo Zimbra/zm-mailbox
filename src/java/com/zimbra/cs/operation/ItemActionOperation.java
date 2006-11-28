@@ -28,11 +28,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.session.Session;

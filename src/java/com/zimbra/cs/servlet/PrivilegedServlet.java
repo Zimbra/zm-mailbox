@@ -36,7 +36,7 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.znative.Process;

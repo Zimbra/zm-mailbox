@@ -26,12 +26,12 @@
 package com.zimbra.cs.account.ldap;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.stats.ZimbraPerf;
 import org.apache.commons.codec.binary.Base64;
 

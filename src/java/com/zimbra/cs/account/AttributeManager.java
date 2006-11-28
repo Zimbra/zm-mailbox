@@ -26,11 +26,11 @@
 package com.zimbra.cs.account;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

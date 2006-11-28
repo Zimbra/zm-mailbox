@@ -33,7 +33,7 @@ import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpRequest;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.common.localconfig.LC;

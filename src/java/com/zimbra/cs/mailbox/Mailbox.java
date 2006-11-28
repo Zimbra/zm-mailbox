@@ -38,6 +38,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.collections.map.LRUMap;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
@@ -85,7 +86,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.FeedManager;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;

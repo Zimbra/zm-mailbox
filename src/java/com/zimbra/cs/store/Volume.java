@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbVolume;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -40,7 +41,6 @@ import com.zimbra.cs.redolog.op.DeleteVolume;
 import com.zimbra.cs.redolog.op.ModifyVolume;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.op.SetCurrentVolume;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 
 /**

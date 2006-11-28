@@ -28,9 +28,9 @@
  */
 package com.zimbra.cs.mailbox.calendar;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
-import com.zimbra.cs.service.ServiceException;
 
 public class InviteInfo implements Comparable {
     private int mMsgId; // ID of the MESSAGE which this invite was originally encoded in 

@@ -28,12 +28,12 @@ import java.io.IOException;
 
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 
 public class AddMsgOperation extends Operation {

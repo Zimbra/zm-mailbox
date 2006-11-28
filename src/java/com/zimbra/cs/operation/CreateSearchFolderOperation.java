@@ -24,10 +24,10 @@
  */
 package com.zimbra.cs.operation;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 

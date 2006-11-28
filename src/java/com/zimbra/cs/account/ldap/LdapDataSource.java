@@ -25,9 +25,9 @@
 
 package com.zimbra.cs.account.ldap;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.service.ServiceException;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;

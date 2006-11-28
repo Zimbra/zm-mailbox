@@ -29,13 +29,13 @@ import java.util.*;
 
 import java.text.ParseException;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.service.mail.MailService;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 
 

@@ -47,6 +47,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public class PreAuthServlet extends ZimbraServlet {

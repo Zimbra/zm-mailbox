@@ -28,10 +28,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.Element;

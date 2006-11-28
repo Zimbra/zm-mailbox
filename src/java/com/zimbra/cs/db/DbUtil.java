@@ -35,8 +35,8 @@ import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * <code>DbUtil</code> contains some database utility methods and

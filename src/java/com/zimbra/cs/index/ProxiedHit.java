@@ -28,7 +28,7 @@
  */
 package com.zimbra.cs.index;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.mailbox.MailItem;

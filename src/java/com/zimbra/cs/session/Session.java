@@ -47,7 +47,7 @@ import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.operation.Operation;
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 
 public abstract class Session {

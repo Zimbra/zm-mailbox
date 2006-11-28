@@ -33,9 +33,9 @@ package com.zimbra.cs.account.ldap;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers

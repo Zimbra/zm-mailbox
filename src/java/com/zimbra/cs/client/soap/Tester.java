@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.io.File;
 import java.util.*;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.client.*;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.cs.index.MailboxIndex;

@@ -27,7 +27,7 @@ package com.zimbra.cs.account.soap;
 
 import java.util.Map;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 
 interface SoapEntry {
     

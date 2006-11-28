@@ -26,7 +26,7 @@ package com.zimbra.cs.service.im;
 
 import java.util.Map;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 

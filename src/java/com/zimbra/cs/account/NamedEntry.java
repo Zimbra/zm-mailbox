@@ -32,8 +32,8 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.service.ServiceException;
 
 public abstract class NamedEntry extends Entry implements Comparable {
 

@@ -54,7 +54,7 @@ import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 /**

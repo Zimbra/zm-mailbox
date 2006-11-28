@@ -29,8 +29,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mime.ParsedAddress;
-import com.zimbra.cs.service.ServiceException;
 
 public class SenderList {
     public static class RefreshException extends Exception {

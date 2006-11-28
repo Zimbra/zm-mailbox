@@ -52,7 +52,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
 import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateTimeUtil;
 import com.zimbra.cs.util.L10nUtil;
 import com.zimbra.cs.util.L10nUtil.MsgKey;

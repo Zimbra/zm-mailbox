@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.client.*;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.cs.util.Zimbra;

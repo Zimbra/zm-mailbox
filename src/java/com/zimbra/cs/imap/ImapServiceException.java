@@ -24,7 +24,7 @@
  */
 package com.zimbra.cs.imap;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 
 public class ImapServiceException extends ServiceException {
     private static final long serialVersionUID = -8493068960356614305L;

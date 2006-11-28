@@ -37,7 +37,7 @@ import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.im.IMNotification;
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 
 /** @author dkarp */

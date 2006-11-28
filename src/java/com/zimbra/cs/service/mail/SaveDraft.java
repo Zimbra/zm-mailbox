@@ -35,6 +35,7 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailItem;
@@ -47,7 +48,6 @@ import com.zimbra.cs.operation.ItemActionOperation;
 import com.zimbra.cs.operation.SaveDraftOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;

@@ -24,11 +24,11 @@
  */
 package com.zimbra.cs.session;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.wiki.Wiki;
 
 public class WikiSession extends Session {

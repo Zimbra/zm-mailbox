@@ -47,8 +47,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapSearch.*;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 class ImapRequest {

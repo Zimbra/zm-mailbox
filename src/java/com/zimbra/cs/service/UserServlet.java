@@ -66,6 +66,7 @@ import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.formatter.*;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.HttpUtil;

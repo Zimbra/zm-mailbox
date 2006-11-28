@@ -34,13 +34,13 @@ import java.util.List;
 import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedAddress;
-import com.zimbra.cs.service.ServiceException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

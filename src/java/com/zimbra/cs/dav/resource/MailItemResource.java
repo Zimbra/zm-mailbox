@@ -28,6 +28,7 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -37,7 +38,6 @@ import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.service.ServiceException;
 
 public abstract class MailItemResource extends DavResource {
 	protected int  mFolderId;

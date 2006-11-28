@@ -31,6 +31,7 @@
 package com.zimbra.cs.account.ldap;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.EmailUtil;
@@ -60,7 +61,6 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;

@@ -28,7 +28,7 @@
  */
 package com.zimbra.cs.mailbox;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 
 
 /**

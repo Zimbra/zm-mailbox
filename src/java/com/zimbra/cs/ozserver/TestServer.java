@@ -31,7 +31,7 @@ import java.net.ServerSocket;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 

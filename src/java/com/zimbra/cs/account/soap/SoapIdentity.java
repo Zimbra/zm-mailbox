@@ -25,8 +25,8 @@
 
 package com.zimbra.cs.account.soap;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Identity;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.soap.Element;
 

@@ -43,11 +43,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.PropertyConfigurator;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ThreadLocalData;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.StatsFile;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.util.ZimbraLog;

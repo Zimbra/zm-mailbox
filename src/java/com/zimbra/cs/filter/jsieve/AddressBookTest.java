@@ -49,13 +49,13 @@ import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author kchen

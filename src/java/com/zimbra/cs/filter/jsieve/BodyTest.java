@@ -42,11 +42,11 @@ import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author kchen

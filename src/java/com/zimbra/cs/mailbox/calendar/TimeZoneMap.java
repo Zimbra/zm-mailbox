@@ -35,8 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.service.ServiceException;
 
 public class TimeZoneMap {
 

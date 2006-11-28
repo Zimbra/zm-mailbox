@@ -34,10 +34,10 @@ import com.zimbra.cs.ozserver.OzConnection;
 import com.zimbra.cs.ozserver.OzConnectionHandler;
 import com.zimbra.cs.ozserver.OzConnectionHandlerFactory;
 import com.zimbra.cs.ozserver.OzServer;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public class OzImapServer {

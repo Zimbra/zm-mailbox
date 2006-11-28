@@ -33,11 +33,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Note.Rectangle;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;

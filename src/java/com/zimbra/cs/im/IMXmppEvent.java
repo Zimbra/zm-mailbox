@@ -2,7 +2,7 @@ package com.zimbra.cs.im;
 
 import org.xmpp.packet.Packet;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 
 public class IMXmppEvent extends IMEvent {
 

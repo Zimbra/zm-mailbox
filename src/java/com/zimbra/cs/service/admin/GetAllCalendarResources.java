@@ -27,11 +27,11 @@ package com.zimbra.cs.service.admin;
 
 import org.dom4j.QName;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.Element;
 

@@ -40,8 +40,8 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailItem.LocationCount;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 /**

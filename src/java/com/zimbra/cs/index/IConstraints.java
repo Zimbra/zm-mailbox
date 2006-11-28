@@ -27,10 +27,10 @@ package com.zimbra.cs.index;
 import java.util.List;
 import java.util.Set;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbSearchConstraintsNode;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author tim

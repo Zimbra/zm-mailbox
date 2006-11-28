@@ -31,8 +31,8 @@ import java.util.Iterator;
 import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.service.ServiceException;
 
 
 public class LmcGetInfoRequest extends LmcSoapRequest {

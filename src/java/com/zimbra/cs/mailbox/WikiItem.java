@@ -26,10 +26,10 @@ package com.zimbra.cs.mailbox;
 
 import java.io.InputStream;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.ParsedDocument;
-import com.zimbra.cs.service.ServiceException;
 
 public class WikiItem extends Document {
 	

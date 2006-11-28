@@ -30,7 +30,7 @@ package com.zimbra.cs.mailbox;
 
 import javax.mail.Address;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 
 
 /**

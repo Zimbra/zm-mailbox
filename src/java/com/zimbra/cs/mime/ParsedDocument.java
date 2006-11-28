@@ -43,10 +43,10 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.object.ObjectHandlerException;
-import com.zimbra.cs.service.ServiceException;
 
 public class ParsedDocument {
 

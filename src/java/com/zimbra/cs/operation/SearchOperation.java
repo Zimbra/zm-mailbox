@@ -25,6 +25,8 @@
 package com.zimbra.cs.operation;
 
 import java.io.IOException;
+
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.queryparser.ParseException;
 
 import com.zimbra.cs.index.MailboxIndex;
@@ -33,7 +35,6 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.SoapProtocol;
 import com.zimbra.soap.ZimbraSoapContext;

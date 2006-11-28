@@ -27,7 +27,7 @@ package com.zimbra.cs.account;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 
 public class AttributeTest {

@@ -31,9 +31,9 @@
  */
 package com.zimbra.cs.index;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.ServiceException;
 
 /*
  * Created on Nov 3, 2004

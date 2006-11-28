@@ -25,7 +25,7 @@
 
 package com.zimbra.cs.account;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
 

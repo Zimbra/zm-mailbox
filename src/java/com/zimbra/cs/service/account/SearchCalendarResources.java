@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.EntrySearchFilter;
@@ -38,7 +39,6 @@ import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 

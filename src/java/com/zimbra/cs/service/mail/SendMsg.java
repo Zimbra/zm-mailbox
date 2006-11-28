@@ -40,6 +40,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
@@ -51,7 +52,6 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.operation.SendMsgOperation;
 import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.mail.ParseMimeMessage.MimeMessageData;
 import com.zimbra.cs.session.Session;

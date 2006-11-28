@@ -25,8 +25,8 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.soap.Element;

@@ -28,12 +28,12 @@ package com.zimbra.cs.mailbox.calendar;
 import java.text.ParseException;
 import java.util.Date;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
 

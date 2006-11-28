@@ -25,10 +25,10 @@ package com.zimbra.cs.operation;
 
 import java.util.Arrays;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 
 public class MoveOperation extends Operation {

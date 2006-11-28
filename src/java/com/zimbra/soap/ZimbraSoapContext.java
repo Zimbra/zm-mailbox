@@ -43,11 +43,11 @@ import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 
 

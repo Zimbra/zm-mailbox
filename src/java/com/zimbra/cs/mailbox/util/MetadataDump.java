@@ -30,12 +30,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 
 public class MetadataDump {

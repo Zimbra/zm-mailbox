@@ -47,9 +47,9 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.TnefConverter;
 import com.zimbra.cs.redolog.op.IndexItem;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 import org.apache.commons.logging.Log;

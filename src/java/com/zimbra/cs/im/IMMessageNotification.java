@@ -26,7 +26,7 @@ package com.zimbra.cs.im;
 
 import java.util.Formatter;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.im.IMService;
 import com.zimbra.soap.Element;
 

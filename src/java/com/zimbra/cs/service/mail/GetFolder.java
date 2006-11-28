@@ -31,12 +31,12 @@ package com.zimbra.cs.service.mail;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.operation.GetFolderTreeOperation;
 import com.zimbra.cs.operation.GetFolderTreeOperation.FolderNode;
 import com.zimbra.cs.operation.Operation.Requester;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.Element;

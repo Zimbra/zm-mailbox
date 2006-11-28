@@ -25,6 +25,7 @@
 
 package com.zimbra.cs.service.account;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DataSource;
@@ -34,7 +35,6 @@ import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.Element;
 
 import java.util.Iterator;

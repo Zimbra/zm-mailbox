@@ -34,6 +34,7 @@ import java.io.InputStream;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
@@ -45,7 +46,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.JMSession;
 

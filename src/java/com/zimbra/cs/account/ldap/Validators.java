@@ -32,10 +32,10 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning.ProvisioningValidator;
-import com.zimbra.cs.service.ServiceException;
 
 public class Validators {
 	

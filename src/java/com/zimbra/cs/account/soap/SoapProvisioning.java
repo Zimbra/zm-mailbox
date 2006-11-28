@@ -26,6 +26,7 @@
 package com.zimbra.cs.account.soap;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
@@ -45,7 +46,6 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.service.mail.MailService;

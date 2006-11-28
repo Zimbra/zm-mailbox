@@ -37,7 +37,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public class ZRecur {

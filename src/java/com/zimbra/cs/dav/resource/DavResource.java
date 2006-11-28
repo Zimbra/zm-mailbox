@@ -36,6 +36,7 @@ import java.util.Set;
 
 import org.dom4j.QName;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -46,7 +47,6 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.property.ResourceProperty;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * DavResource is an object identified by a URL in the hierarchy of HTTP URL

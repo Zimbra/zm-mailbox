@@ -24,10 +24,10 @@
  */
 package com.zimbra.cs.imap;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.Operation;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.Session;
 
 public class ImapRenameOperation extends Operation {

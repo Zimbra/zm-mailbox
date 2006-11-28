@@ -28,8 +28,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 
 /**

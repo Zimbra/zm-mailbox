@@ -37,7 +37,7 @@ import javax.naming.directory.Attributes;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 
 class LdapDistributionList extends DistributionList implements LdapEntry {

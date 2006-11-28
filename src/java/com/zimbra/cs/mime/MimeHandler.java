@@ -55,7 +55,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.object.MatchedObject;
 import com.zimbra.cs.object.ObjectHandler;
 import com.zimbra.cs.object.ObjectHandlerException;
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.ZimbraLog;
 

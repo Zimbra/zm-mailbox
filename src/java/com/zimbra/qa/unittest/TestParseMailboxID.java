@@ -33,9 +33,9 @@ package com.zimbra.qa.unittest;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.util.ParseMailboxID;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 
 

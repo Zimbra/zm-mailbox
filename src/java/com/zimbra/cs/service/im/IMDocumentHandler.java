@@ -24,10 +24,10 @@
  */
 package com.zimbra.cs.service.im;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 

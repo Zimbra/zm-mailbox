@@ -33,6 +33,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapSession.EnabledHack;
 import com.zimbra.cs.mailbox.Flag;
@@ -43,7 +44,6 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.operation.Operation;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 

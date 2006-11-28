@@ -27,11 +27,11 @@ package com.zimbra.cs.imap;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.Operation;
-import com.zimbra.cs.service.ServiceException;
 
 public class ImapListOperation extends Operation {
 	

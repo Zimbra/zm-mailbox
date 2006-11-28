@@ -48,9 +48,9 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 class ImapURL {

@@ -24,7 +24,7 @@
  */
 package com.zimbra.cs.extension;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 
 /**
  * Zimbra extension. An extension to the Zimbra server is packaged as a jar

@@ -30,8 +30,8 @@ package com.zimbra.cs.redolog;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 /**

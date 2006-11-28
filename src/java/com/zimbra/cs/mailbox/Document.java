@@ -37,9 +37,9 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.redolog.op.IndexItem;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 

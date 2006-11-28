@@ -56,8 +56,8 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.service.formatter.VCard;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public class ImapMessage implements Comparable<ImapMessage> {

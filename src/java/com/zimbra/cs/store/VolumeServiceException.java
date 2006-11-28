@@ -25,7 +25,7 @@
 
 package com.zimbra.cs.store;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 
 public class VolumeServiceException extends ServiceException {
 

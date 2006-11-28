@@ -41,13 +41,13 @@ import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.object.ObjectHandlerException;
-import com.zimbra.cs.service.ServiceException;
 
 
 /**

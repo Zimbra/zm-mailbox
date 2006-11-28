@@ -30,7 +30,7 @@ package com.zimbra.cs.redolog;
 
 import java.io.File;
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 
 /**
  * @author jhahm

@@ -34,8 +34,8 @@ import org.apache.jsieve.SieveException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author kchen

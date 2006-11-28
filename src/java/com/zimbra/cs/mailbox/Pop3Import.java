@@ -43,13 +43,13 @@ import org.apache.commons.logging.LogFactory;
 import com.sun.mail.pop3.POP3Folder;
 import com.sun.mail.pop3.POP3Message;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.ServiceException;
 
 
 public class Pop3Import

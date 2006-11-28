@@ -32,8 +32,8 @@ import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.account.AccountService;
-import com.zimbra.cs.service.ServiceException;
 
 
 public class LmcGetPrefsRequest extends LmcSoapRequest {

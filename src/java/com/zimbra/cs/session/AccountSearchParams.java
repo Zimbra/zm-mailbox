@@ -31,10 +31,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.service.ServiceException;
 
 class AccountSearchParams {
     String mDomainId;

@@ -25,13 +25,13 @@
 
 package com.zimbra.cs.account.ldap;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
-import com.zimbra.cs.service.ServiceException;
 
 public class LdapEntrySearchFilter {
 

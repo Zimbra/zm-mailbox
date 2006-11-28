@@ -26,7 +26,7 @@
 package com.zimbra.cs.zclient;
 
 
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 
 public class ZSearchParams {

@@ -31,10 +31,10 @@ package com.zimbra.cs.index;
 import java.util.Comparator;
 import java.util.Date;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author tim

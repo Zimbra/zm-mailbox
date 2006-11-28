@@ -39,7 +39,7 @@ import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
 import com.zimbra.soap.DomUtil;
-import com.zimbra.cs.service.ServiceException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.client.*;
 import com.zimbra.cs.service.mail.MailService;
 

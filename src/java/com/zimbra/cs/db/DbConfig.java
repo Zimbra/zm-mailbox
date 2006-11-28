@@ -35,8 +35,8 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.service.ServiceException;
 
 /**
  * @author schemers

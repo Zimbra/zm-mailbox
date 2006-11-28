@@ -25,8 +25,8 @@
 
 package com.zimbra.cs.account;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.service.ServiceException;
 
 public abstract class AccessManager {
 

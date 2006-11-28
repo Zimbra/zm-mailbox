@@ -31,9 +31,9 @@ package com.zimbra.cs.store;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.ServiceException;
 import com.zimbra.cs.util.Zimbra;
 
 /**

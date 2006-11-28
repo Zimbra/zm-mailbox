@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -40,7 +41,6 @@ import com.zimbra.cs.mailbox.BrowseResult;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
-import com.zimbra.cs.service.ServiceException;
 
 public class BrowseWrapper extends PhantomResource {
 	
