@@ -845,3 +845,19 @@ Each iCalendar object can define custom time zone names.  For our own web
 client, there is a list of well-known time zones.  These are stored in
 LDAP.  See conf/ldap/zimbra.ldif for their definition.  The time zone ID
 is the cn attribute.
+
+
+
+
+TASKS:
+----------------
+For every <DoAction>AppointmentRequest, there is <DoAction>TaskRequest, and
+corresponding responses.  For GetApptSummariesRequest, there is
+GetTaskSummariesRequest.  GetCalendarItemsSummariesRequest is there for
+retrieving both appointments and tasks in one shot.
+
+Wherever <appt> element shows up, the corresponding task request/response will
+use <task> element.
+
+<appt> element uses apptID for backward compatibility reason.  New code should
+ignore apptID and use calItemID instead.  <task> element uses calItemID only.
