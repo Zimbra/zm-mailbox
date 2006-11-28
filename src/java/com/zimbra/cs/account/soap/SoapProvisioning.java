@@ -1177,4 +1177,24 @@ public class SoapProvisioning extends Provisioning {
             
         }
     }
+
+    @Override
+    public Identity get(Account account, IdentityBy keyType, String key) throws ServiceException {
+        // TOOD: more efficient version and/or caching on account?
+        switch (keyType) {
+        case name:
+            for (Identity identity : getAllIdentities(account))
+                if (identity.getName().equalsIgnoreCase(key)) 
+                    return identity;
+            return null;
+        case id:
+            for (Identity identity : getAllIdentities(account))
+                if (identity.getId().equalsIgnoreCase(key)) 
+                    return identity;
+            return null;            
+        default: 
+            return null;
+            
+        }
+    }
 }

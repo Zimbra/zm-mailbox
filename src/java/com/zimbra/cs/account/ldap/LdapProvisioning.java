@@ -3491,6 +3491,8 @@ public class LdapProvisioning extends Provisioning {
             }
         }        
     }
+    
+    private static final String IDENTITY_LIST_CACHE_KEY = "LdapProvisioning.IDENTITY_CACHE";
 
     @Override
     public Identity createIdentity(Account account, String identityName, Map<String, Object> identityAttrs) throws ServiceException {
@@ -3509,6 +3511,7 @@ public class LdapProvisioning extends Provisioning {
         if (existing.size() >= account.getLongAttr(A_zimbraIdentityMaxNumEntries, 20))
             throw AccountServiceException.TOO_MANY_IDENTITIES();
         
+        account.setCachedData(IDENTITY_LIST_CACHE_KEY, null);
         
         HashMap attrManagerContext = new HashMap();
         AttributeManager.getInstance().preModify(identityAttrs, null, attrManagerContext, true, true);
@@ -3533,6 +3536,7 @@ public class LdapProvisioning extends Provisioning {
 
             Identity identity = getIdentityByName(ldapEntry, identityName, ctxt);
             AttributeManager.getInstance().postModify(identityAttrs, identity, attrManagerContext, true);
+
             return identity;
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.IDENTITY_EXISTS(identityName);
@@ -3546,15 +3550,21 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public void modifyIdentity(Account account, String identityName, Map<String, Object> identityAttrs) throws ServiceException {
         removeAttrIgnoreCase("objectclass", identityAttrs);
+
         validateIdentityAttrs(identityAttrs);
+
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
+
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
 
+        // clear cache 
+        account.setCachedData(IDENTITY_LIST_CACHE_KEY, null);
+        
         if (identityName.equalsIgnoreCase(DEFAULT_IDENTITY_NAME)) {
             modifyAttrs(account, identityAttrs);
         } else {
-        
+            
             LdapIdentity identity = (LdapIdentity) getIdentityByName(ldapEntry, identityName, null);
             if (identity == null)
                     throw AccountServiceException.NO_SUCH_IDENTITY(identityName);   
@@ -3562,7 +3572,7 @@ public class LdapProvisioning extends Provisioning {
             String name = (String) identityAttrs.get(A_zimbraPrefIdentityName);
             boolean newName = (name != null && !name.equals(identityName));
             if (newName) identityAttrs.remove(A_zimbraPrefIdentityName);
-            
+
             modifyAttrs(identity, identityAttrs, true);
             if (newName) renameIdentity(ldapEntry, identity, name);
             
@@ -3572,7 +3582,7 @@ public class LdapProvisioning extends Provisioning {
     private void renameIdentity(LdapEntry entry, LdapIdentity identity, String newIdentityName) throws ServiceException {
         
         if (identity.getName().equalsIgnoreCase(DEFAULT_IDENTITY_NAME))
-            throw ServiceException.INVALID_REQUEST("can't rename default identity", null);
+            throw ServiceException.INVALID_REQUEST("can't rename default identity", null);        
         
         DirContext ctxt = null;
         try {
@@ -3595,6 +3605,8 @@ public class LdapProvisioning extends Provisioning {
         if (identityName.equalsIgnoreCase(DEFAULT_IDENTITY_NAME))
             throw ServiceException.INVALID_REQUEST("can't delete default identity", null);
         
+        account.setCachedData(IDENTITY_LIST_CACHE_KEY, null);
+        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
@@ -3609,13 +3621,21 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.closeContext(ctxt);
         }
     }
-
+    
     @Override
     public List<Identity> getAllIdentities(Account account) throws ServiceException {
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
-        List<Identity> result = getIdentitiesByQuery(ldapEntry, "(objectclass=zimbraIdentity)", null);
+
+        @SuppressWarnings("unchecked")        
+        List<Identity> result = (List<Identity>) account.getCachedData(IDENTITY_LIST_CACHE_KEY);
+        
+        if (result != null) {
+            return result;
+        }
+        
+        result = getIdentitiesByQuery(ldapEntry, "(objectclass=zimbraIdentity)", null);
         for (Identity identity: result) {
             // gross hack for 4.5beta. should be able to remove post 4.5
             if (identity.getId() == null) {
@@ -3631,9 +3651,35 @@ public class LdapProvisioning extends Provisioning {
             }
         }
         result.add(getDefaultIdentity(account));
+        result = Collections.unmodifiableList(result);
+        account.setCachedData(IDENTITY_LIST_CACHE_KEY, result);
         return result;
     }
 
+    @Override
+    public Identity get(Account account, IdentityBy keyType, String key) throws ServiceException {
+        LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
+        if (ldapEntry == null) 
+            throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+
+        // this assumes getAllIdentities is cached and number of identities is reasaonble. 
+        // might want a per-identity cache (i.e., use "IDENTITY_BY_ID_"+id as a key, etc) 
+        switch(keyType) {
+            case id: 
+                for (Identity identity : getAllIdentities(account)) 
+                    if (identity.getId().equals(key)) return identity;
+                return null;
+            case name: 
+                for (Identity identity : getAllIdentities(account)) 
+                    if (identity.getName().equalsIgnoreCase(key)) return identity;
+                return null;             
+            default:
+                return null;
+        }
+    }
+    
+    private static final String DATA_SOURCE_LIST_CACHE_KEY = "LdapProvisioning.DATA_SOURCE_CACHE";
+    
     private List<DataSource> getDataSourcesByQuery(LdapEntry entry, String query, DirContext initCtxt) throws ServiceException {
         DirContext ctxt = initCtxt;
         List<DataSource> result = new ArrayList<DataSource>();
@@ -3683,6 +3729,8 @@ public class LdapProvisioning extends Provisioning {
         
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+    
+        account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
         
         List<DataSource> existing = getAllDataSources(account);
         if (existing.size() >= account.getLongAttr(A_zimbraDataSourceMaxNumEntries, 20))
@@ -3735,6 +3783,8 @@ public class LdapProvisioning extends Provisioning {
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
 
+        account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
+        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
@@ -3750,12 +3800,24 @@ public class LdapProvisioning extends Provisioning {
         }        
     }
 
+    
     @Override
     public List<DataSource> getAllDataSources(Account account) throws ServiceException {
+        
+        @SuppressWarnings("unchecked")
+        List<DataSource> result = (List<DataSource>) account.getCachedData(DATA_SOURCE_LIST_CACHE_KEY);
+        
+        if (result != null) {
+            return result;
+        }        
+        
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
-        return getDataSourcesByQuery(ldapEntry, "(objectclass=zimbraDataSource)", null);
+        result = getDataSourcesByQuery(ldapEntry, "(objectclass=zimbraDataSource)", null);
+        result = Collections.unmodifiableList(result);
+        account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, result);        
+        return result;
     }
 
     public void removeAttrIgnoreCase(String attr, Map<String, Object> attrs) {
@@ -3777,6 +3839,8 @@ public class LdapProvisioning extends Provisioning {
         LdapDataSource ds = (LdapDataSource) getDataSourceById(ldapEntry, dataSourceId, null);
         if (ds == null)
             throw AccountServiceException.NO_SUCH_DATA_SOURCE(dataSourceId);
+
+        account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
         
         attrs.remove(A_zimbraDataSourceId);
         
@@ -3809,12 +3873,23 @@ public class LdapProvisioning extends Provisioning {
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
+
+        // this assumes getAllDataSources is cached and number of data sources is reasaonble. 
+        // might want a per-data-source cache (i.e., use "DATA_SOURCE_BY_ID_"+id as a key, etc) 
         
         switch(keyType) {
-            case id: 
-                return getDataSourceById(ldapEntry, key, null);
+            case id:
+                for (DataSource source : getAllDataSources(account)) 
+                    if (source.getId().equals(key))
+                        return source;
+                return null;
+                //return getDataSourceById(ldapEntry, key, null);
             case name: 
-                return getDataSourceByName(ldapEntry, key, null);
+                for (DataSource source : getAllDataSources(account)) 
+                    if (source.getName().equalsIgnoreCase(key))
+                        return source;
+                return null;
+                //return getDataSourceByName(ldapEntry, key, null);
             default:
                 return null;
         }

@@ -1746,6 +1746,19 @@ public abstract class Provisioning {
     public abstract void removeMembers(DistributionList list, String[] member) throws ServiceException;
  
     // identities
+    public static enum IdentityBy {
+        
+        id, name;
+        
+        public static IdentityBy fromString(String s) throws ServiceException {
+            try {
+                return IdentityBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
+    
     public Identity getDefaultIdentity(Account account) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
         Set<String> identityAttrs = AttributeManager.getInstance().getAttrsInClass(AttributeClass.identity);
@@ -1781,6 +1794,8 @@ public abstract class Provisioning {
     public abstract void deleteIdentity(Account account, String identityName) throws ServiceException;
     
     public abstract List<Identity> getAllIdentities(Account account) throws ServiceException;
+    
+    public abstract Identity get(Account account, IdentityBy keyType, String key) throws ServiceException;
     
     // data sources
     public static enum DataSourceBy {
