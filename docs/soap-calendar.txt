@@ -47,7 +47,7 @@
 //  meeting Invitations to other people.
 //
 <CreateAppointmentRequest>
-  <m f="{flags}" l="{folder}">
+  <m f="{flags}" l="{folder}">  // See soap.txt for complete list of attrs on <m>
      [<e .../>*]  // users to send request to
      <su>{subject}</su>
 
