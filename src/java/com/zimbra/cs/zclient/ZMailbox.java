@@ -283,7 +283,7 @@ public class ZMailbox {
                 if (f != null)
                     f.modifyNotification(e, this);
             } else if (e.getName().equals(MailService.E_MAILBOX)) {
-                mSize = e.getAttributeLong(MailService.A_SIZE);                
+                mSize = e.getAttributeLong(MailService.A_SIZE, mSize);                
             }
         }
     }
