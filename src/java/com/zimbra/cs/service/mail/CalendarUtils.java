@@ -869,6 +869,8 @@ public class CalendarUtils {
         List<ZProperty> xprops = parseXProps(element);
         for (ZProperty prop : xprops)
             newInv.addXProp(prop);
+
+        newInv.validateDuration();
     }
 
     private static List<ZProperty> parseXProps(Element element)

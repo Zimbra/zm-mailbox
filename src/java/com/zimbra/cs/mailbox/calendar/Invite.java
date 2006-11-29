@@ -1898,6 +1898,8 @@ public class Invite {
                         }
                     }
 
+                    newInv.validateDuration();
+
                     ParsedDuration duration = newInv.getDuration();
                     
                     if (duration == null) {
@@ -2112,5 +2114,24 @@ public class Invite {
     public Iterator<ZProperty> xpropsIterator() { return mXProps.iterator(); }
     public void addXProp(ZProperty prop) {
         mXProps.add(prop);
+    }
+
+    /**
+     * RFC2445 requires end date/time to be later than start date/time but
+     * some calendar clients don't honor that.  Make sure the interval between
+     * start and end are at least 1 second (if date/time) or 1 day (if date-only).
+     * @throws ServiceException
+     */
+    public void validateDuration() throws ServiceException {
+        if (mStart == null)
+            return;
+        ParsedDuration dur =
+            mStart.hasTime() ? ParsedDuration.parse(false, 0, 0, 0, 0, 1)
+                             : ParsedDuration.parse(false, 0, 1, 0, 0, 0);
+        if (mEnd != null && mEnd.compareTo(mStart) <= 0) {
+            mEnd = mStart.add(dur);
+        } else if (mDuration != null && mDuration.getDurationAsMsecs(mStart.getDate()) <= 0) {
+            mDuration = dur;
+        }
     }
 }
