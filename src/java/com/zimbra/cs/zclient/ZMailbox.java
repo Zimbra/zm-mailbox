@@ -997,7 +997,7 @@ public class ZMailbox {
         return doUpload(new Part[] { part }, msTimeout);
     }
 
-    private String doUpload(Part[] parts, int msTimeout) throws ServiceException {
+    public String doUpload(Part[] parts, int msTimeout) throws ServiceException {
         String aid = null;
         
         URI uri = getUploadURI();
