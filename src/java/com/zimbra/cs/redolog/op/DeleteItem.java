@@ -115,7 +115,7 @@ public class DeleteItem extends RedoableOp {
     		mbox.delete(getOperationContext(), mIds, mType, tcon);
         } catch (MailServiceException.NoSuchItemException e) {
             if (mLog.isInfoEnabled())
-                mLog.info("Item " + mIds + " was already deleted from mailbox " + mboxId);
+                mLog.info("Some of the items being deleted were already deleted from mailbox " + mboxId);
         }
 	}
 }
