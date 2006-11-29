@@ -60,6 +60,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -647,19 +648,19 @@ public class ParseMimeMessage {
         InternetAddress[] addrs = maddrs.get(EmailType.TO.toString());
         if (addrs != null) {
             mm.addRecipients(Message.RecipientType.TO, addrs);
-            mLog.debug("\t\tTO: " + addrs);
+            mLog.debug("\t\tTO: " + Arrays.toString(addrs));
         }
 
         addrs = maddrs.get(EmailType.CC.toString());
         if (addrs != null) {
             mm.addRecipients(Message.RecipientType.CC, addrs);
-            mLog.debug("\t\tCC: " + addrs);
+            mLog.debug("\t\tCC: " + Arrays.toString(addrs));
         }
 
         addrs = maddrs.get(EmailType.BCC.toString());
         if (addrs != null) {
             mm.addRecipients(Message.RecipientType.BCC, addrs);
-            mLog.debug("\t\tBCC: " + addrs);
+            mLog.debug("\t\tBCC: " + Arrays.toString(addrs));
         }
 
         addrs = maddrs.get(EmailType.FROM.toString());
@@ -667,7 +668,7 @@ public class ParseMimeMessage {
             mm.setFrom(addrs[0]);
             mLog.debug("\t\tFrom: " + addrs[0]);
         }
-        
+
         addrs = maddrs.get(EmailType.REPLY_TO.toString());
         if (addrs != null && addrs.length > 0) {
             mm.setReplyTo(addrs);
