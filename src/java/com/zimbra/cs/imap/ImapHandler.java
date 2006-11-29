@@ -615,18 +615,18 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         // [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
         // [NAMESPACE]        RFC 2342: IMAP4 Namespace
         // [QUOTA]            RFC 2087: IMAP4 QUOTA extension
-        // [SASL-IR]          draft-siemborski-imap-sasl-initial-response-05: IMAP Extension for SASL Initial Client Response
+        // [SASL-IR]          draft-siemborski-imap-sasl-initial-response-06: IMAP Extension for SASL Initial Client Response
+        // [SEARCHRES]        draft-melnikov-imap-search-res-04: IMAP extension for referencing the last SEARCH result
         // [UIDPLUS]          RFC 2359: IMAP4 UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           draft-ietf-lemonade-search-within-02: WITHIN Search extension to the IMAP Protocol
-        // [X-DRAFT-I03-SEARCHRES]  draft-melnikov-imap-search-res-03: IMAP extension for referencing the last SEARCH result
 
         boolean authenticated = mSession != null;
         String nologin = mServer.allowCleartextLogins() || mStartedTLS || authenticated ? "" : "LOGINDISABLED ";
         String starttls = mStartedTLS || authenticated ? "" : "STARTTLS ";
         String plain = !mStartedTLS || authenticated ? "" : "AUTH=PLAIN ";
         sendUntagged("CAPABILITY IMAP4rev1 " + nologin + starttls + plain + "BINARY CATENATE CHILDREN ESEARCH ID IDLE LITERAL+ " +
-                                "LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR UIDPLUS UNSELECT WITHIN X-DRAFT-I03-SEARCHRES");
+                                "LOGIN-REFERRALS NAMESPACE QUOTA SASL-IR SEARCHRES UIDPLUS UNSELECT WITHIN");
     }
 
     boolean doNOOP(String tag) throws IOException {
@@ -1477,19 +1477,13 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             return CONTINUE_PROCESSING;
 
         boolean saveResults = (options != null && (options & RETURN_SAVE) != 0);
-        List<Integer> hits = saveResults ? null : new ArrayList<Integer>();
-        Set<ImapMessage> searchRes = saveResults ? new HashSet<ImapMessage>() : null;
+        TreeSet<ImapMessage> hits;
 
         try {
             synchronized (mMailbox) {
                 ImapFolder i4folder = mSession.getFolder();
                 if (i4search.canBeRunLocally()) {
-                    if (saveResults)
-                        searchRes = i4search.evaluate(i4folder);
-                    else
-                        for (ImapMessage i4msg : i4search.evaluate(i4folder))
-                            if (i4msg != null)
-                                hits.add(byUID ? i4msg.imapUid : i4msg.sequence);
+                    hits = i4search.evaluate(i4folder);
                 } else {
                     String search = i4search.toZimbraSearch(i4folder);
                     if (!i4folder.isVirtual())
@@ -1499,7 +1493,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     else
                         search = '(' + i4folder.getQuery() + ") " + search;
                     ZimbraLog.imap.info("[ search is: " + search + " ]");
-    
+
                     SearchParams params = new SearchParams();
                     params.setQueryStr(search);
                     params.setTypes(ITEM_TYPES);
@@ -1508,19 +1502,17 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                     SearchOperation op = new SearchOperation(mSession, getContext(), mMailbox, Requester.IMAP, params, false, Mailbox.SearchResultMode.IDS);   
                     op.schedule();
                     ZimbraQueryResults zqr = op.getResults();
-                    
+
+                    hits = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
                     try {
-                        for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
-                            ImapMessage i4msg = mSession.getFolder().getById(hit.getItemId());
-                            if (saveResults)
-                                searchRes.add(i4msg);
-                            else if (i4msg != null)
-                                hits.add(byUID ? i4msg.imapUid : i4msg.sequence);
-                        }
+                        for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext())
+                            hits.add(mSession.getFolder().getById(hit.getItemId()));
                     } finally {
                         zqr.doneWithSearchResults();
                     }
                 }
+
+                hits.remove(null);
         	}
         } catch (ServiceException e) {
             Throwable t = e.getCause();
@@ -1537,23 +1529,32 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
 
         StringBuilder result = null;
         if (options == null) {
-            Collections.sort(hits);
             result = new StringBuilder("SEARCH");
-            for (Integer id : hits)
-                result.append(' ').append(id);
-        } else if (!saveResults) {
-            Collections.sort(hits);
+            for (ImapMessage i4msg : hits)
+                result.append(' ').append(byUID ? i4msg.imapUid : i4msg.sequence);
+        } else {
             result = new StringBuilder("ESEARCH (TAG \"").append(tag).append("\")");
             if (!hits.isEmpty() && (options & RETURN_MIN) != 0)
-                result.append(" MIN ").append(hits.get(0));
+                result.append(" MIN ").append(byUID ? hits.first().imapUid : hits.first().sequence);
             if (!hits.isEmpty() && (options & RETURN_MAX) != 0)
-                result.append(" MAX ").append(hits.get(hits.size() - 1));
-            if (!hits.isEmpty() && (options & RETURN_ALL) != 0)
-                result.append(" ALL ").append(ImapFolder.encodeSubsequence(hits));
+                result.append(" MAX ").append(byUID ? hits.last().imapUid : hits.last().sequence);
             if ((options & RETURN_COUNT) != 0)
                 result.append(" COUNT ").append(hits.size());
-        } else {
-            mSession.saveSearchResults(searchRes);
+            if (!saveResults && !hits.isEmpty() && (options & RETURN_ALL) != 0)
+                result.append(" ALL ").append(ImapFolder.encodeSubsequence(hits, byUID));
+        }
+
+        if (saveResults) {
+            if (hits.isEmpty() || options == RETURN_SAVE || (options & RETURN_COUNT | RETURN_ALL) != 0) {
+                mSession.saveSearchResults(hits);
+            } else {
+                TreeSet<ImapMessage> saved = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
+                if ((options & RETURN_MIN) != 0)
+                    saved.add(hits.first());
+                if ((options & RETURN_MAX) != 0)
+                    saved.add(hits.last());
+                mSession.saveSearchResults(saved);
+            }
         }
 
         if (result != null)

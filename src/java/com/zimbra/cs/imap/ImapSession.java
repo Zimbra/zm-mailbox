@@ -70,7 +70,7 @@ public class ImapSession extends Session {
     private String      mIdleTag;
     private ImapSessionHandler mHandler;
     private ImapFolder  mSelectedFolder;
-    private Set<ImapMessage> mSavedSearchResults;
+    private TreeSet<ImapMessage> mSavedSearchResults;
     private ImapFlagCache mFlags = new ImapFlagCache();
     private ImapFlagCache mTags = new ImapFlagCache();
     private boolean     mCheckingSpam;
@@ -115,14 +115,15 @@ public class ImapSession extends Session {
     String getUsername()          { return mUsername; }
     void setUsername(String name) { mUsername = name; }
 
-    void saveSearchResults(Set<ImapMessage> i4set) {
+    void saveSearchResults(TreeSet<ImapMessage> i4set) {
         i4set.remove(null);
-        mSavedSearchResults = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
-        mSavedSearchResults.addAll(i4set);
+        mSavedSearchResults = i4set;
     }
-    Set<ImapMessage> getSavedSearchResults() {
-        if (mSavedSearchResults == null)
-            return Collections.emptySet();
+    TreeSet<ImapMessage> getSavedSearchResults() {
+        if (mSavedSearchResults == null) {
+            mSavedSearchResults = mSelectedFolder.getSubsequence("1:" + mSelectedFolder.getInitialMaxUID(), true);
+            mSavedSearchResults.remove(null);
+        }
         return mSavedSearchResults;
     }
     void markMessageExpunged(ImapMessage i4msg) {

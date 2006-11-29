@@ -31,6 +31,7 @@ package com.zimbra.cs.imap;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -65,7 +66,8 @@ class ImapFolder implements Iterable<ImapMessage> {
 
     private int mUIDValidityValue;
     private int mInitialUIDNEXT = -1;
-    private int mFirstUnread = -1;
+    private int mInitialMaxUID = -1;
+    private int mInitialFirstUnread = -1;
     private int mLastSize    = 0;
 
     private ImapSession      mSession;
@@ -129,13 +131,14 @@ class ImapFolder implements Iterable<ImapMessage> {
         StringBuilder added = debug ? new StringBuilder("  ** added: ") : null;
         for (ImapMessage i4msg : i4list) {
             cache(i4msg);
-            if (mFirstUnread == -1 && (i4msg.flags & Flag.BITMASK_UNREAD) != 0)
-                mFirstUnread = i4msg.sequence;
+            if (mInitialFirstUnread == -1 && (i4msg.flags & Flag.BITMASK_UNREAD) != 0)
+                mInitialFirstUnread = i4msg.sequence;
             if (debug)  added.append(' ').append(i4msg.msgId);
         }
         if (debug)  ZimbraLog.imap.debug(added);
 
         mLastSize = mSequence.size();
+        mInitialMaxUID = (mLastSize == 0 ? -1 : mSequence.get(mLastSize - 1).imapUid);
         mSession = session;
     }
 
@@ -204,14 +207,15 @@ class ImapFolder implements Iterable<ImapMessage> {
         mDirtyMessages.clear();
         collapseExpunged();
 
-        mFirstUnread = -1;
+        mInitialFirstUnread = -1;
         for (ImapMessage i4msg : mSequence) {
-            if (mFirstUnread == -1 && (i4msg.flags & Flag.BITMASK_UNREAD) != 0)
-                mFirstUnread = i4msg.sequence;
+            if (mInitialFirstUnread == -1 && (i4msg.flags & Flag.BITMASK_UNREAD) != 0)
+                mInitialFirstUnread = i4msg.sequence;
             i4msg.setAdded(false);
         }
 
         mLastSize = mSequence.size();
+        mInitialMaxUID = (mLastSize == 0 ? -1 : mSequence.get(mLastSize - 1).imapUid);
         mSession = session;
     }
 
@@ -243,7 +247,13 @@ class ImapFolder implements Iterable<ImapMessage> {
      *  folder, or -1 if none are unread.  This is <b>only</b> valid
      *  immediately after the folder is initialized and is not updated
      *  as messages are marked read and unread. */
-    int getFirstUnread()  { return mFirstUnread; }
+    int getFirstUnread()  { return mInitialFirstUnread; }
+
+    /** Returns the IMAP UID of the last message in the folder when the folder
+     *  was first selected, or -1 for an empty folder.  This is <b>only</b>
+     *  valid immediately after the folder is initialized and is not updated
+     *  as messages are marked read and unread. */
+    int getInitialMaxUID()  { return mInitialMaxUID; }
 
     /** Returns the active {@link ImapSession} in which this ImapFolder was
      *  created. */
@@ -400,39 +410,51 @@ class ImapFolder implements Iterable<ImapMessage> {
         setIndex(i4msg, mSequence.size());
         return i4msg;
     }
+
     void setIndex(ImapMessage i4msg, int position) {
         i4msg.sequence = position;
         mMessageIds.put(new Integer(i4msg.msgId), i4msg);
     }
+
     void uncache(ImapMessage i4msg) {
         mMessageIds.remove(new Integer(i4msg.msgId));
         mDirtyMessages.remove(i4msg);
     }
+
     void unghost(ImapMessage i4msg, int msgId) {
         mMessageIds.remove(new Integer(i4msg.msgId));
         i4msg.msgId = msgId;
         mMessageIds.put(new Integer(i4msg.msgId), i4msg);
     }
     
+
     boolean checkpointSize()  { int last = mLastSize;  return last != (mLastSize = getSize()); }
 
+
     void disableNotifications()  { mNotificationsSuspended = true; }
+    
     void enableNotifications()   { mNotificationsSuspended = false; }
+
 
     void dirtyMessage(ImapMessage i4msg) {
         if (!mNotificationsSuspended && i4msg == getBySequence(i4msg.sequence))
             mDirtyMessages.add(i4msg);
     }
+
     void undirtyMessage(ImapMessage i4msg) {
         if (mDirtyMessages.remove(i4msg))
             i4msg.setAdded(false);
     }
+
     Iterator<ImapMessage> dirtyIterator()  { return mDirtyMessages.iterator(); }
+
     void clearDirty()                      { mDirtyMessages.clear(); }
+
 
     void dirtyTag(int id) {
         dirtyTag(id, false);
     }
+
     void dirtyTag(int id, boolean removeTag) {
         long mask = 1L << Tag.getIndex(id);
         for (ImapMessage i4msg : mSequence)
@@ -443,40 +465,43 @@ class ImapFolder implements Iterable<ImapMessage> {
             }
     }
 
-    Set<ImapMessage> getAllMessages() {
-        if (mSequence.size() == 0)
-            return Collections.emptySet();
+
+    TreeSet<ImapMessage> getAllMessages() {
         TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
-        for (ImapMessage i4msg : mSequence)
-            if (i4msg != null)
-                result.add(i4msg);
+        if (!mSequence.isEmpty()) {
+            for (ImapMessage i4msg : mSequence)
+                if (i4msg != null)
+                    result.add(i4msg);
+        }
         return result;
     }
 
-    Set<ImapMessage> getFlaggedMessages(ImapFlag i4flag) {
-        if (i4flag == null || mSequence.size() == 0)
-            return Collections.emptySet();
+    TreeSet<ImapMessage> getFlaggedMessages(ImapFlag i4flag) {
         TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
-        for (ImapMessage i4msg : mSequence)
-            if (i4msg != null && i4flag.matches(i4msg))
-                result.add(i4msg);
+        if (i4flag != null && !mSequence.isEmpty()) {
+            for (ImapMessage i4msg : mSequence)
+                if (i4msg != null && i4flag.matches(i4msg))
+                    result.add(i4msg);
+        }
         return result;
     }
+
 
     private int parseId(String id) {
         // valid values will always be positive ints, so force it there...
         return (int) Math.max(-1, Math.min(Integer.MAX_VALUE, Long.parseLong(id)));
     }
-    Set<ImapMessage> getSubsequence(String subseqStr, boolean byUID) {
-        if (subseqStr == null || subseqStr.trim().equals("") || mSequence.size() == 0)
-            return Collections.emptySet();
+
+    TreeSet<ImapMessage> getSubsequence(String subseqStr, boolean byUID) {
+        TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
+        if (subseqStr == null || subseqStr.trim().equals("") || mSequence.isEmpty())
+            return result;
         else if (subseqStr.equals("$"))
             return mSession.getSavedSearchResults();
 
         ImapMessage i4msg = getLastMessage();
         int lastID = (i4msg == null ? (byUID ? Integer.MAX_VALUE : mSequence.size()) : (byUID ? i4msg.imapUid : i4msg.sequence));
 
-        TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
         for (String subset : subseqStr.split(",")) {
             if (subset.indexOf(':') == -1) {
                 // single message -- get it and add it (may be null)
@@ -505,8 +530,9 @@ class ImapFolder implements Iterable<ImapMessage> {
 
         return result;
     }
+
     static String encodeSubsequence(List<Integer> items) {
-        if (items == null || items.size() == 0)
+        if (items == null || items.isEmpty())
             return "";
         StringBuilder sb = new StringBuilder();
         int start = -1, last = -1;
@@ -530,6 +556,33 @@ class ImapFolder implements Iterable<ImapMessage> {
         } while (!done);
         return sb.toString();
     }
+
+    static String encodeSubsequence(Collection<ImapMessage> items, boolean byUID) {
+        if (items == null || items.isEmpty())
+            return "";
+        StringBuilder sb = new StringBuilder();
+        int start = -1, last = -1;
+        boolean done;
+        Iterator<ImapMessage> it = items.iterator();
+        do {
+            done = !it.hasNext();
+            int next = done ? -1 : (byUID ? it.next().imapUid : it.next().sequence);
+            if (last == -1) {
+                last = start = next;
+            } else if (done || next != last + 1) {
+                if (sb.length() > 0)
+                    sb.append(',');
+                sb.append(start);
+                if (start != last)
+                    sb.append(':').append(last);
+                last = start = next;
+            } else {
+                last = next;
+            }
+        } while (!done);
+        return sb.toString();
+    }
+
 
     List<Integer> collapseExpunged() {
         // FIXME: need synchronization
