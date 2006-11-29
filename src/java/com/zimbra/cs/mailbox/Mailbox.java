@@ -2370,11 +2370,21 @@ public class Mailbox {
     }
 
 
+    private void checkCalendarType(MailItem item) throws ServiceException {
+        byte type = item.getType();
+        if (type != MailItem.TYPE_APPOINTMENT && type != MailItem.TYPE_TASK)
+            throw MailServiceException.NO_SUCH_CALITEM(item.getId());
+    }
+
     public synchronized CalendarItem getCalendarItemById(OperationContext octxt, int id) throws ServiceException {
-        return (CalendarItem) getItemById(octxt, id, MailItem.TYPE_UNKNOWN);
+        MailItem item = getItemById(octxt, id, MailItem.TYPE_UNKNOWN);
+        checkCalendarType(item);
+        return (CalendarItem) item;
     }
     CalendarItem getCalendarItemById(int id) throws ServiceException {
-        return (CalendarItem) getItemById(id, MailItem.TYPE_UNKNOWN);
+        MailItem item = getItemById(id, MailItem.TYPE_UNKNOWN);
+        checkCalendarType(item);
+        return (CalendarItem) item;
     }
     CalendarItem getCalendarItem(MailItem.UnderlyingData data) throws ServiceException {
         return (CalendarItem) getItem(data);
