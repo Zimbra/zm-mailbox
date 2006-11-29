@@ -1735,6 +1735,9 @@ public class Mailbox {
         if (name == null || name.equals(""))
             return getFolderById(octxt, folderId);
 
+        if (name.equals("/"))
+        	return getFolderById(octxt, ID_FOLDER_USER_ROOT);
+        
         if (name.startsWith("/")) {
             folderId = ID_FOLDER_USER_ROOT;
             name = name.substring(1);
