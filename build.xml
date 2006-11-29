@@ -534,11 +534,11 @@
 
 	<target name="db-init" depends="choose-db-schema" >
 		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
-			 classpathref="class.path" onerror="continue" keepformat="true" src="src/db/dropdb.sql" />
+			 classpathref="class.path" onerror="continue" src="src/db/dropdb.sql" />
 		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
-			 classpathref="class.path" onerror="abort" keepformat="true" src="${db.schema.dir}/db.sql" />
+			 classpathref="class.path" onerror="abort" src="${db.schema.dir}/db.sql" />
 		<sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
-			 classpathref="class.path" onerror="abort" keepformat="false" src="${build.dir}/versions-init.sql" />
+			 classpathref="class.path" onerror="abort" src="${build.dir}/versions-init.sql" />
 	</target>
 
 	<target name="ldap-setup-preauth">
