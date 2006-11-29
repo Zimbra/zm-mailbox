@@ -56,6 +56,7 @@ import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -986,18 +987,17 @@ public class ZMailbox {
             }
         }
 
-        return doUpload(parts, msTimeout);
+        return uploadAttachments(parts, msTimeout);
     }
-
 
     public String uploadAttachment(String name, byte[] content, String contentType, int msTimeout) throws ServiceException {
         FilePart part = new FilePart(name, new ByteArrayPartSource(name, content));
         part.setContentType(contentType);
 
-        return doUpload(new Part[] { part }, msTimeout);
+        return uploadAttachments(new Part[] { part }, msTimeout);
     }
 
-    public String doUpload(Part[] parts, int msTimeout) throws ServiceException {
+    public String uploadAttachments(Part[] parts, int msTimeout) throws ServiceException {
         String aid = null;
         
         URI uri = getUploadURI();
@@ -1015,10 +1015,8 @@ public class ZMailbox {
             if (statusCode == 200) {
                 String response = post.getResponseBodyAsString();
                 aid = getAttachmentId(response);
-                if (aid == null)
-                    throw ServiceException.FAILURE("Attachment post failed, unable to parse response: " + response, null);
             } else {
-                throw ServiceException.FAILURE("Attachment post failed, status=" + statusCode, null);
+                throw ZClientException.UPLOAD_FAILED("Attachment post failed, status=" + statusCode, null);
             }
         } catch (IOException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
@@ -1039,9 +1037,14 @@ public class ZMailbox {
      
     Pattern sAttachmentId = Pattern.compile("\\d+,'.*','(.*)'");
 
-    private String getAttachmentId(String result) {
-        Matcher m = sAttachmentId.matcher(result);
-        return m.find() ? m.group(1) : null;
+    private String getAttachmentId(String result) throws ZClientException {
+        if (result.startsWith(HttpServletResponse.SC_OK+"")) {
+            Matcher m = sAttachmentId.matcher(result);
+            return m.find() ? m.group(1) : null;
+        } else if (result.startsWith(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE+"")) {
+            throw ZClientException.UPLOAD_SIZE_LIMIT_EXCEEDED("upload size limit exceeded", null);
+        }
+        throw ZClientException.UPLOAD_FAILED("upload failed, response: " + result, null);
     }
 
     private void addAuthCookoie(String name, URI uri, HttpState state) {
