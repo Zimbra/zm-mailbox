@@ -191,7 +191,7 @@ public class ListUtil {
     }
     
     static private void testListUtil() {
-        List<Integer>[] in = (ArrayList<Integer>[]) new List[5];
+        List<Integer>[] in = new List[5];
 
         int i = 0;
         
