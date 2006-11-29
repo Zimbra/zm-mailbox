@@ -192,7 +192,7 @@ public class CalendarMailSender {
             Address senderAddr = null;
             if (onBehalfOf)
                 senderAddr = AccountUtil.getFriendlyEmailAddress(authAccount);
-            return createDefaultCalendarMessage(
+            return createCalendarMessage(
                     AccountUtil.getFriendlyEmailAddress(fromAccount),
                     senderAddr,
                     toList, replySubject,
@@ -206,7 +206,7 @@ public class CalendarMailSender {
                                             MimeMessage mmInv,
                                             Locale lc)
     throws ServiceException {
-        String notes = Invite.getNotes(mmInv);
+        String notes = Invite.getDescription(mmInv);
         if (notes != null) {
             // Remove Outlook's special "*~*~*~*" delimiter from original
             // body. If we leave it in, Outlook will hide all text above
@@ -295,12 +295,21 @@ public class CalendarMailSender {
             }
         }
 
-        return createDefaultCalendarMessage(
+        return createCalendarMessage(
                 from, sender, toAddrs, sbj, sb.toString(),
                 defaultInv != null ? defaultInv.getUid() : "unknown", iCal);
     }
 
-    private static MimeMessage createDefaultCalendarMessage(
+    public static MimeMessage createCalendarMessage(Invite inv)
+    throws ServiceException {
+        String subject = inv.getName();
+        String text = inv.getDescription();
+        String uid = inv.getUid();
+        ZVCalendar cal = inv.newToICalendar();
+        return createCalendarMessage(null, null, null, subject, text, uid, cal);
+    }
+
+    private static MimeMessage createCalendarMessage(
             Address fromAddr, Address senderAddr, List<Address> toAddrs,
             String subject, String text,
             String uid, ZCalendar.ZVCalendar cal)
@@ -343,10 +352,13 @@ public class CalendarMailSender {
             // MESSAGE HEADERS
             mm.setSubject(subject, Mime.P_CHARSET_UTF8);
 
-            Address[] addrs = new Address[toAddrs.size()];
-            toAddrs.toArray(addrs);
-            mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
-            mm.setFrom(fromAddr);
+            if (toAddrs != null) {
+                Address[] addrs = new Address[toAddrs.size()];
+                toAddrs.toArray(addrs);
+                mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
+            }
+            if (fromAddr != null)
+                mm.setFrom(fromAddr);
             if (senderAddr != null) {
                 mm.setSender(senderAddr);
                 mm.setReplyTo(new Address[]{senderAddr});
@@ -357,7 +369,7 @@ public class CalendarMailSender {
             return mm;
         } catch (MessagingException e) {
             throw ServiceException.FAILURE(
-                    "Messaging Exception while building InviteReply", e);
+                    "Messaging Exception while building MimeMessage from invite", e);
         }
     }
 

@@ -72,6 +72,7 @@ import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
 import com.zimbra.cs.mailbox.Note.Rectangle;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -2768,14 +2769,20 @@ public class Mailbox {
 
         byte[] data = null;
 
-        if (pm != null) {
-            try {
-                data = pm.getRawData();
-            } catch (MessagingException me) {
-                throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-            } catch (IOException ie) {
-                throw ServiceException.FAILURE("Caught IOException", ie);
-            }
+        if (pm == null) {
+            MimeMessage mm = CalendarMailSender.createCalendarMessage(inv);
+            pm = new ParsedMessage(mm,
+                                   octxt == null ? System.currentTimeMillis()
+                                                 : octxt.getTimestamp(),
+                                   true);
+        }
+
+        try {
+            data = pm.getRawData();
+        } catch (MessagingException me) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
+        } catch (IOException ie) {
+            throw ServiceException.FAILURE("Caught IOException", ie);
         }
 
         CreateInvite redoRecorder = new CreateInvite(mId, inv, folderId, data, force);

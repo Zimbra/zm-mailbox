@@ -44,6 +44,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -114,6 +115,7 @@ public class Invite {
             int mailItemId,
             int componentNum,
             boolean sentByMe,
+            String description,
             String fragment)
             {
         setItemType(itemType);
@@ -177,7 +179,7 @@ public class Invite {
      * @param attendees list of RFC2445 Attendees: see Invite.createAttendee
      * @param name Name of this calendar item
      * @param location Location of this calendar item
-     * @param fragment Description of this calendar item
+     * @param description Description of this calendar item
      * @param dtStampOrZero RFC2445 sequencing. If 0, then will use current timestamp
      * @param sequenceNoOrZero RFC2445 sequencying.  If 0, then will use current highest sequence no, or 1
      * @param partStat IcalXMLStrMap.PARTSTAT_* RFC2445 Participant Status of this mailbox
@@ -207,7 +209,7 @@ public class Invite {
             String name,
             String comment, 
             String location,
-            String fragment,
+            String description,
             int dtStampOrZero,
             int sequenceNoOrZero,
             String partStat,
@@ -245,7 +247,8 @@ public class Invite {
                 0, // mailItemId MUST BE SET
                 0, // component num
                 sentByMe,
-                fragment
+                description,
+                Fragment.getFragment(description, true)
         );
         
     }
@@ -324,6 +327,7 @@ public class Invite {
         meta.put(FN_DURATION, inv.mDuration);
         meta.put(FN_METHOD, inv.mMethod.toString());
         meta.put(FN_FRAGMENT, inv.mFragment);
+        // Don't put mDescription in metadata because it may be too big.
         meta.put(FN_ICAL_COMMENT, inv.mComment);
         
         if (inv.mRecurrence != null) {
@@ -458,6 +462,7 @@ public class Invite {
         String transp = meta.get(FN_TRANSP, IcalXmlStrMap.TRANSP_OPAQUE);
         boolean sentByMe = meta.getBool(FN_SENTBYME);
         String fragment = meta.get(FN_FRAGMENT, "");
+        // Metadata never contains mDescription because it can be too big.
         String comment = meta.get(FN_ICAL_COMMENT, "");
         long completed = meta.getLong(FN_COMPLETED, 0);
 
@@ -545,7 +550,7 @@ public class Invite {
                 dtStart, dtEnd, duration, recurrence, org, attendees,
                 name, comment, loc, flags, partStat, rsvp,
                 recurrenceId, dtstamp, seqno,
-                mailboxId, mailItemId, componentNum, sentByMe, fragment);
+                mailboxId, mailItemId, componentNum, sentByMe, null, fragment);
 
         List<ZProperty> xprops = decodeXPropsFromMetadata(meta);
         if (xprops != null) {
@@ -591,8 +596,8 @@ public class Invite {
     }
 
 
-    private static final int CACHED_NOTES_MAXLEN = 1024;
-    private String mNotes;
+    private static final int CACHED_DESC_MAXLEN = 1024;
+    private String mDescription;
 
     /**
      * Returns the meeting notes.  Meeting notes is the text/plain part in an
@@ -606,14 +611,18 @@ public class Invite {
      * @return null if notes is not found
      * @throws ServiceException
      */
-    public synchronized String getNotes() throws ServiceException {
-        if (mNotes != null) return mNotes;
+    public synchronized String getDescription() throws ServiceException {
+        if (mDescription != null) return mDescription;
         if (mCalItem == null) return null;
         MimeMessage mmInv = mCalItem.getSubpartMessage(mMailItemId);
-        String notes = getNotes(mmInv);
-        if (notes != null && notes.length() <= CACHED_NOTES_MAXLEN)
-            mNotes = notes;
-        return notes;
+        String desc = getDescription(mmInv);
+        if (desc != null && desc.length() <= CACHED_DESC_MAXLEN)
+            mDescription = desc;
+        return desc;
+    }
+
+    public synchronized void setDescription(String desc) {
+        mDescription = desc;
     }
 
     /**
@@ -624,7 +633,7 @@ public class Invite {
      * @return null if notes is not found
      * @throws ServiceException
      */
-    public static String getNotes(MimeMessage mmInv) throws ServiceException {
+    public static String getDescription(MimeMessage mmInv) throws ServiceException {
         if (mmInv == null) return null;
         try {
             Object mmInvContent = mmInv.getContent();
@@ -645,9 +654,9 @@ public class Invite {
             }
             if (textPlain == null) return null;
 
-            byte[] notesBytes = ByteUtil.getContent(textPlain.getInputStream(),
+            byte[] descBytes = ByteUtil.getContent(textPlain.getInputStream(),
                                                     textPlain.getSize());
-            return new String(notesBytes, charset);
+            return new String(descBytes, charset);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to get calendar item notes MIME part", e);
         } catch (MessagingException e) {
@@ -1808,7 +1817,8 @@ public class Invite {
                             newInv.setName(prop.mValue);
                             break;
                         case DESCRIPTION:
-                            newInv.setFragment(prop.mValue);
+                            newInv.setDescription(prop.mValue);
+                            newInv.setFragment(Fragment.getFragment(prop.mValue, true));
                             break;
                         case COMMENT:
                             newInv.setComment(prop.getValue());
@@ -1999,7 +2009,7 @@ public class Invite {
             component.addProperty(new ZProperty(ICalTok.SUMMARY, name));
         
         // DESCRIPTION
-        String desc = getNotes();
+        String desc = getDescription();
         if (desc != null && desc.length()>0)
             component.addProperty(new ZProperty(ICalTok.DESCRIPTION, desc));
         
