@@ -25,6 +25,7 @@
 package com.zimbra.cs.operation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -588,7 +589,7 @@ public class Scheduler {
             s.setParams(targetLoad, maxOps);
 
             StringBuilder str = new StringBuilder("Scheduler(");
-            str.append(curSched++).append(") : setting maxOps=").append(maxOps);
+            str.append(curSched++).append(") : setting maxOps=").append(Arrays.toString(maxOps));
             str.append(" MaxLoads={");
             for (int i = 0; i < Priority.NUM_PRIORITIES; i++) {
                 if (i > 0)
