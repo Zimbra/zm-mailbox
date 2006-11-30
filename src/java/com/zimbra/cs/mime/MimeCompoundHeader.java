@@ -80,7 +80,7 @@ public class MimeCompoundHeader {
             if ("".equals(pname) && "".equals(pvalue))
                 return;
             if (encoded) {
-                if (charset.equals(""))
+                if (charset.length() == 0)
                     charset.append("us-ascii");
                 try {
                     pvalue = URLDecoder.decode(pvalue, charset.toString());
