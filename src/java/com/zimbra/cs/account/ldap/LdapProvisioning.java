@@ -3729,15 +3729,15 @@ public class LdapProvisioning extends Provisioning {
         
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
-    
-        account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
         
         List<DataSource> existing = getAllDataSources(account);
         if (existing.size() >= account.getLongAttr(A_zimbraDataSourceMaxNumEntries, 20))
             throw AccountServiceException.TOO_MANY_DATA_SOURCES();
         
         dataSourceAttrs.put(A_zimbraDataSourceName, dsName); // must be the same
-        
+
+        account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
+
         HashMap attrManagerContext = new HashMap();
         AttributeManager.getInstance().preModify(dataSourceAttrs, null, attrManagerContext, true, true);
 
