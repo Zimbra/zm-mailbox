@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
+import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
@@ -466,8 +467,8 @@ class ImapFolder implements Iterable<ImapMessage> {
     }
 
 
-    TreeSet<ImapMessage> getAllMessages() {
-        TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
+    ImapMessageSet getAllMessages() {
+        ImapMessageSet result = new ImapMessageSet();
         if (!mSequence.isEmpty()) {
             for (ImapMessage i4msg : mSequence)
                 if (i4msg != null)
@@ -476,8 +477,8 @@ class ImapFolder implements Iterable<ImapMessage> {
         return result;
     }
 
-    TreeSet<ImapMessage> getFlaggedMessages(ImapFlag i4flag) {
-        TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
+    ImapMessageSet getFlaggedMessages(ImapFlag i4flag) {
+        ImapMessageSet result = new ImapMessageSet();
         if (i4flag != null && !mSequence.isEmpty()) {
             for (ImapMessage i4msg : mSequence)
                 if (i4msg != null && i4flag.matches(i4msg))
@@ -492,8 +493,8 @@ class ImapFolder implements Iterable<ImapMessage> {
         return (int) Math.max(-1, Math.min(Integer.MAX_VALUE, Long.parseLong(id)));
     }
 
-    TreeSet<ImapMessage> getSubsequence(String subseqStr, boolean byUID) {
-        TreeSet<ImapMessage> result = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
+    ImapMessageSet getSubsequence(String subseqStr, boolean byUID) {
+        ImapMessageSet result = new ImapMessageSet();
         if (subseqStr == null || subseqStr.trim().equals("") || mSequence.isEmpty())
             return result;
         else if (subseqStr.equals("$"))

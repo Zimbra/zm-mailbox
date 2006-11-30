@@ -39,6 +39,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeSet;
 
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
@@ -61,6 +62,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public class ImapMessage implements Comparable<ImapMessage> {
+    static class ImapMessageSet extends TreeSet<ImapMessage> {
+        private static final long serialVersionUID = 4831178352505203361L;
+        ImapMessageSet()  { super(new SequenceComparator()); }
+    }
+
     static final short FLAG_RECENT       = 0x0001;
     static final short FLAG_SPAM         = 0x0002;
     static final short FLAG_NONSPAM      = 0x0004;

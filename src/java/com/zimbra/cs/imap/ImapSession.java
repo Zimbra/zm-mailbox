@@ -36,6 +36,7 @@ import java.util.*;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
+import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.session.PendingModifications;
@@ -70,7 +71,7 @@ public class ImapSession extends Session {
     private String      mIdleTag;
     private ImapSessionHandler mHandler;
     private ImapFolder  mSelectedFolder;
-    private TreeSet<ImapMessage> mSavedSearchResults;
+    private ImapMessageSet mSavedSearchResults;
     private ImapFlagCache mFlags = new ImapFlagCache();
     private ImapFlagCache mTags = new ImapFlagCache();
     private boolean     mCheckingSpam;
@@ -115,11 +116,11 @@ public class ImapSession extends Session {
     String getUsername()          { return mUsername; }
     void setUsername(String name) { mUsername = name; }
 
-    void saveSearchResults(TreeSet<ImapMessage> i4set) {
+    void saveSearchResults(ImapMessageSet i4set) {
         i4set.remove(null);
         mSavedSearchResults = i4set;
     }
-    TreeSet<ImapMessage> getSavedSearchResults() {
+    ImapMessageSet getSavedSearchResults() {
         if (mSavedSearchResults == null) {
             mSavedSearchResults = mSelectedFolder.getSubsequence("1:" + mSelectedFolder.getInitialMaxUID(), true);
             mSavedSearchResults.remove(null);

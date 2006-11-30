@@ -47,6 +47,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
+import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 import com.zimbra.cs.imap.ImapSession.EnabledHack;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.ZimbraHit;
@@ -1439,7 +1440,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             return CONTINUE_PROCESSING;
 
         boolean saveResults = (options != null && (options & RETURN_SAVE) != 0);
-        TreeSet<ImapMessage> hits;
+        ImapMessageSet hits;
 
         try {
             synchronized (mMailbox) {
@@ -1465,7 +1466,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
                     op.schedule();
                     ZimbraQueryResults zqr = op.getResults();
 
-                    hits = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
+                    hits = new ImapMessageSet();
                     try {
                         for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext())
                             hits.add(mSession.getFolder().getById(hit.getItemId()));
@@ -1510,7 +1511,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             if (hits.isEmpty() || options == RETURN_SAVE || (options & (RETURN_COUNT | RETURN_ALL)) != 0) {
                 mSession.saveSearchResults(hits);
             } else {
-                TreeSet<ImapMessage> saved = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
+                ImapMessageSet saved = new ImapMessageSet();
                 if ((options & RETURN_MIN) != 0)
                     saved.add(hits.first());
                 if ((options & RETURN_MAX) != 0)
