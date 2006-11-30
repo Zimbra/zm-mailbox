@@ -138,7 +138,7 @@ public class CalendarMailSender {
                 ZOrganizer org = inv.getOrganizer();
                 organizerAddress = org.getReplyAddress();  // organizer or sent-by
                 Account organizer = Provisioning.getInstance().get(AccountBy.name, organizerAddress.getAddress());
-                lc = organizer.getLocale();
+                lc = organizer != null ? organizer.getLocale() : authAccount.getLocale();
             } else {
                 organizerAddress = null;
                 lc = authAccount.getLocale();
