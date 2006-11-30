@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -252,6 +253,46 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     throws ServiceException {
         synchronized (mbox) {
             OperationContext octxt = lc.getOperationContext();
+
+            if (csd.mInvite.hasOrganizer()) {
+                boolean isOrganizer = csd.mInvite.thisAcctIsOrganizer(acct);
+                ICalTok method = ICalTok.lookup(csd.mInvite.getMethod());
+                switch (method) {
+                case REQUEST:
+                case PUBLISH:
+                case ADD:
+                case DECLINECOUNTER:
+                    // Check if organizer is set to someone other than the mailbox
+                    // owner and reject any such request.  If we didn't, attendees would
+                    // receive an invitation from user A claiming the meeting was
+                    // organized by user B.  (Saw this behavior with Consilient.)
+                    if (!isOrganizer) {
+                        String orgAddress = csd.mInvite.getOrganizer().getAddress();
+                        throw ServiceException.INVALID_REQUEST(
+                                "Cannot create/modify an appointment/task with organizer set to " +
+                                orgAddress + " when using account " + acct.getName(),
+                                null);
+                    }
+                    break;
+                case CANCEL:
+                    if (!isOrganizer) {
+                        boolean hasRcpts = false;
+                        try {
+                            hasRcpts = csd.mMm.getAllRecipients() != null;
+                        } catch (MessagingException e) {
+                            throw ServiceException.FAILURE("Error examining recipients in a calendar message", e);
+                        }
+                        if (hasRcpts)
+                            throw ServiceException.INVALID_REQUEST(
+                                    "Must be organizer to send cancellation message to attendees", null);
+                    }
+                    break;
+                case REPLY:
+                case COUNTER:
+                    // nothing to check
+                    break;
+                }
+            }
 
             boolean onBehalfOf = lc.isDelegatedRequest();
             boolean notifyOwner = onBehalfOf && acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, false);
