@@ -781,7 +781,7 @@ public class SoapProvisioning extends Provisioning {
                             boolean allowCallback)
     throws ServiceException {
         // allowCallback is ignored over SOAP interface
-        modifyAttrs(e, attrs, checkImmutable, true);
+        modifyAttrs(e, attrs, checkImmutable);
     }
 
     @Override
