@@ -37,6 +37,7 @@ import com.zimbra.common.service.ServiceException;
  * @author schemers
  */
 public class MailServiceException extends ServiceException {
+    private static final long serialVersionUID = -2047883574519400960L;
 
     public static final String MAINTENANCE     = "mail.MAINTENANCE";
     public static final String NO_SUCH_MBOX    = "mail.NO_SUCH_MBOX";
@@ -109,6 +110,8 @@ public class MailServiceException extends ServiceException {
      * codes.
      */
     public static class NoSuchItemException extends MailServiceException {
+        private static final long serialVersionUID = -3367247762350948868L;
+
         NoSuchItemException(String message, String code, boolean isReceiversFault, Throwable cause, Argument... args) {
             super(message, code, isReceiversFault, cause, args);
         }
