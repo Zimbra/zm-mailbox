@@ -1494,7 +1494,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             result = new StringBuilder("SEARCH");
             for (ImapMessage i4msg : hits)
                 result.append(' ').append(byUID ? i4msg.imapUid : i4msg.sequence);
-        } else {
+        } else if (options != RETURN_SAVE) {
             result = new StringBuilder("ESEARCH (TAG \"").append(tag).append("\")");
             if (!hits.isEmpty() && (options & RETURN_MIN) != 0)
                 result.append(" MIN ").append(byUID ? hits.first().imapUid : hits.first().sequence);

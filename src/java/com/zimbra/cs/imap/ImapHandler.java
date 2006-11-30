@@ -1532,7 +1532,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
             result = new StringBuilder("SEARCH");
             for (ImapMessage i4msg : hits)
                 result.append(' ').append(byUID ? i4msg.imapUid : i4msg.sequence);
-        } else {
+        } else if (options != RETURN_SAVE) {
             result = new StringBuilder("ESEARCH (TAG \"").append(tag).append("\")");
             if (!hits.isEmpty() && (options & RETURN_MIN) != 0)
                 result.append(" MIN ").append(byUID ? hits.first().imapUid : hits.first().sequence);
@@ -1545,7 +1545,7 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
         }
 
         if (saveResults) {
-            if (hits.isEmpty() || options == RETURN_SAVE || (options & RETURN_COUNT | RETURN_ALL) != 0) {
+            if (hits.isEmpty() || options == RETURN_SAVE || (options & (RETURN_COUNT | RETURN_ALL)) != 0) {
                 mSession.saveSearchResults(hits);
             } else {
                 TreeSet<ImapMessage> saved = new TreeSet<ImapMessage>(new ImapMessage.SequenceComparator());
