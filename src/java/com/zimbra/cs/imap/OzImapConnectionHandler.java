@@ -36,7 +36,16 @@ import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -1577,8 +1586,8 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
         List<ImapPartSpecifier> fullMessage = new ArrayList<ImapPartSpecifier>();
         if (parts != null && !parts.isEmpty())
-            for (Iterator it = parts.iterator(); it.hasNext(); ) {
-                ImapPartSpecifier pspec = (ImapPartSpecifier) it.next();
+            for (Iterator<ImapPartSpecifier> it = parts.iterator(); it.hasNext(); ) {
+                ImapPartSpecifier pspec = it.next();
                 if (pspec.isEntireMessage()) {
                     it.remove();  fullMessage.add(pspec);
                 }
