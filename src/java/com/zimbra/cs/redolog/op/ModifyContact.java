@@ -30,7 +30,6 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Mailbox;
@@ -73,10 +72,9 @@ public class ModifyContact extends RedoableOp {
         sb.append(mId).append(", replace=").append(mReplace);
         if (mAttrs != null && mAttrs.size() > 0) {
             sb.append(", attrs={");
-            for (Iterator it = mAttrs.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry entry = (Map.Entry) it.next();
-                String key = (String) entry.getKey();
-                String value = (String) entry.getValue();
+            for (Map.Entry<String, String> entry : mAttrs.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
                 sb.append("\n    ").append(key).append(": ").append(value);
             }
             sb.append("\n}");
@@ -92,11 +90,12 @@ public class ModifyContact extends RedoableOp {
         out.writeBoolean(mReplace);
         int numAttrs = mAttrs != null ? mAttrs.size() : 0;
         out.writeShort((short) numAttrs);
-        for (Iterator it = mAttrs.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
-            out.writeUTF((String) entry.getKey());
-            String value = (String) entry.getValue();
-            out.writeUTF(value != null ? value : "");
+        if (numAttrs > 0) {
+            for (Map.Entry<String, String> entry : mAttrs.entrySet()) {
+                out.writeUTF(entry.getKey());
+                String value = entry.getValue();
+                out.writeUTF(value != null ? value : "");
+            }
         }
     }
 
