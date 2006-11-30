@@ -1231,7 +1231,7 @@ public final class MailboxIndex
         }
 
         public boolean isDescending() {
-            return (mSort & DbMailItem.SORT_DESCENDING)!=0;
+            return (mSort & DbMailItem.SORT_ASCENDING) == 0;
         }
 
         public static SortBy lookup(String str) {
