@@ -1687,10 +1687,10 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
             } finally {
                 result.write(')');
                 result.write(LINE_SEPARATOR_BYTES, 0, LINE_SEPARATOR_BYTES.length);
-                baos.close();
-                if (baosDebug != null) {
+                if (baos != null)
+                    baos.close();
+                if (baosDebug != null)
                     ZimbraLog.imap.debug("  S: " + baosDebug);
-                }
             }
         }
 
