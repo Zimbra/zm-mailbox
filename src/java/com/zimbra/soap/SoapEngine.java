@@ -226,7 +226,7 @@ public class SoapEngine {
         boolean needsAuth = handler.needsAuth(context);
         boolean needsAdminAuth = handler.needsAdminAuth(context);
         if (needsAuth || needsAdminAuth) {
-            AuthToken at = zsc != null ? zsc.getAuthToken() : null;
+            AuthToken at = zsc.getAuthToken();
             if (at == null)
                 return soapProto.soapFault(ServiceException.AUTH_REQUIRED());
             if (needsAdminAuth && !at.isAdmin()) {
