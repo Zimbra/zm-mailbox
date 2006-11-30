@@ -89,10 +89,12 @@ public class DocumentHit extends ZimbraHit {
     }
 
     public String getName() {
-        return getName();
+        return mDocument.getName();
     }
 
-    public MailItem getMailItem() throws ServiceException { return getDocument(); }
+    public MailItem getMailItem() {
+        return getDocument();
+    }
 
     public com.zimbra.cs.mailbox.Document getDocument() {
         return mDocument;
