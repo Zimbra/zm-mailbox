@@ -396,15 +396,18 @@ public class DbMailItem {
         }
     }
 
-    public static void setParent(MailItem parent, MailItem child) throws ServiceException {
-        setParent(parent, new MailItem[] { child });
+    public static void setParent(MailItem child, MailItem parent) throws ServiceException {
+        setParent(new MailItem[] { child }, parent);
     }
-    public static void setParent(MailItem parent, MailItem[] children) throws ServiceException {
-        Mailbox mbox = parent.getMailbox();
+    public static void setParent(MailItem[] children, MailItem parent) throws ServiceException {
+        if (children == null || children.length == 0)
+            return;
+        Mailbox mbox = children[0].getMailbox();
+
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(parent) +
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                     " SET parent_id = ?, mod_metadata = ?, change_date = ?" +
                     " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(children));
             int arg = 1;
@@ -420,7 +423,7 @@ public class DbMailItem {
                 stmt.setInt(arg++, children[i].getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("adding children to parent " + parent.getId(), e);
+            throw ServiceException.FAILURE("adding children to parent " + (parent == null ? "NULL" : parent.getId() + ""), e);
         } finally {
             DbPool.closeStatement(stmt);
         }

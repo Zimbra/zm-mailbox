@@ -516,7 +516,7 @@ public class Message extends MailItem {
             // and place it in a new, non-"opened", virtual conversation
             VirtualConversation vconv = new VirtualConversation(mMailbox, this);
             mData.parentId = vconv.getId();
-            DbMailItem.setParent(vconv, this);
+            DbMailItem.setParent(this, vconv);
         }
     }
 
