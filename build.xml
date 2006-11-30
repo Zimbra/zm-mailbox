@@ -359,7 +359,6 @@
 		<copy todir="${dist.dir}/lib/jars" file="${common.jarfile}" overwrite="true"/>
 		<copy todir="${dist.dir}/lib/jars" file="${im.jarfile}" overwrite="true"/>
 		<copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
-		<copy todir="${dist.dir}/lib/ext" overwrite="true" ><fileset dir="${lib.dir}/ext"/></copy> <!-- CHECK -->
 		
 		<!-- tomcat -->
 		<copy todir="${dist.dir}/tomcat/webapps" file="${warfile}" overwrite="true"/>
