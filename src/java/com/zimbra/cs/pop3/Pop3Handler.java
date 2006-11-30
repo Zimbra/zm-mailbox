@@ -67,7 +67,6 @@ public class Pop3Handler extends ProtocolHandler {
     private static final byte[] TERMINATOR_BYTE = { '.' };
     
     // Connection specific data
-    private Socket mConnection;
     private SSLSocket mTlsConnection;    
     private Pop3Server mServer;
     private TcpServerInputStream mInputStream;
@@ -101,7 +100,6 @@ public class Pop3Handler extends ProtocolHandler {
      */
     protected boolean setupConnection(Socket connection) throws IOException {
         // TODO Auto-generated method stub
-        mConnection = connection;
         mRemoteAddress = connection.getInetAddress().getHostAddress();
         INFO("connected");
 
