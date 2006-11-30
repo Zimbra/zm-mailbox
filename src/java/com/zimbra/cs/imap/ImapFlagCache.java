@@ -45,15 +45,15 @@ public class ImapFlagCache {
         static final boolean VISIBLE = true, HIDDEN = false;
 
         ImapFlag(String name, Tag ltag, boolean positive) {
-            mName = ltag.getName();  mImapName  = normalize(name, mId);
             mId   = ltag.getId();    mBitmask   = ltag.getBitmask();
+            mName = ltag.getName();  mImapName  = normalize(name, mId);
             mPositive = positive;    mPermanent = true;
             mListed = VISIBLE;
         }
 
         ImapFlag(String name, short bitmask, boolean listed) {
-            mName = name;      mImapName  = name;
             mId   = 0;         mBitmask   = bitmask;
+            mName = name;      mImapName  = name;
             mPositive = true;  mPermanent = false;
             mListed = listed;
         }
