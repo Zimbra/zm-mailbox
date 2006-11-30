@@ -4053,13 +4053,14 @@ public class Mailbox {
     }
     public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView, int flags, byte color, String url)
     throws ServiceException {
-        if (path != null) {
-            path = path.trim();
-            if (!path.startsWith("/"))
-                path = '/' + path;
-            if (path.endsWith("/") && path.length() > 1)
-                path = path.substring(0, path.length() - 1);
-        }
+        if (path == null)
+            throw ServiceException.FAILURE("null path passed to Mailbox.createFolderPath", null);
+        path = path.trim();
+        if (!path.startsWith("/"))
+            path = '/' + path;
+        if (path.endsWith("/") && path.length() > 1)
+            path = path.substring(0, path.length() - 1);
+
         CreateFolderPath redoRecorder = new CreateFolderPath(mId, path, attrs, defaultView, flags, color, url);
 
         boolean success = false;
