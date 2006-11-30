@@ -1703,9 +1703,10 @@ public class ImapHandler extends ProtocolHandler implements ImapSessionHandler {
                 continue;
             } finally {
                 result.write(')');
-                baos.write(LINE_SEPARATOR_BYTES);
-                if (mOutputStream != null && baos != null)
+                if (mOutputStream != null && baos != null) {
+                    baos.write(LINE_SEPARATOR_BYTES);
                     mOutputStream.write(baos.toByteArray());
+                }
                 if (baosDebug != null)
                     ZimbraLog.imap.debug("  S: " + baosDebug);
             }
