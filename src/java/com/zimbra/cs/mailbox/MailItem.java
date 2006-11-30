@@ -783,16 +783,17 @@ public abstract class MailItem implements Comparable<MailItem> {
         return null;
     }
 
-
     /** Adds the item to the index.
      * 
      * @param redo       The redo recorder for the indexing operation.
+     * @param deleteFirst If TRUE, then the item might already be in the index, and so any existing 
+     *                   index entries must be deleted
      * @param indexData  Extra data to index.  Each subclass of MailItem
      *                   should interpret this argument differently;
      *                   currently only Message class uses this argument for
      *                   passing in a {@link com.zimbra.cs.mime.ParsedMessage}.
      * @throws ServiceException */
-    public void reindex(IndexItem redo, Object indexData) throws ServiceException {
+    public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
         // override in subclasses that support indexing
     }
 

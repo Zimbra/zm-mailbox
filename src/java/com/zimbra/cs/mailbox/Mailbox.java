@@ -158,7 +158,7 @@ public class Mailbox {
         boolean    active;
         Connection conn      = null;
         RedoableOp recorder  = null;
-        Map<MailItem, Object>  indexItems = new HashMap<MailItem, Object>();
+        Map<MailItem, IndexItemEntry>  indexItems = new HashMap<MailItem, IndexItemEntry>();
         Map<Integer, MailItem> itemCache = null;
         OperationContext octxt = null;
         TargetConstraint tcon  = null;
@@ -215,8 +215,19 @@ public class Mailbox {
 
         RedoableOp getRedoPlayer()   { return (octxt == null ? null : octxt.getPlayer()); }
         RedoableOp getRedoRecorder() { return recorder; }
-
-        void addIndexedItem(MailItem item, Object data)  { indexItems.put(item, data); }
+        
+        private static final class IndexItemEntry {
+            IndexItemEntry(boolean deleteFirst, Object data) { 
+                mDeleteFirst = deleteFirst;
+                mData = data;
+            }
+            boolean mDeleteFirst;
+            Object mData;
+        }
+        
+        void addIndexedItem(MailItem item, boolean deleteFirst, Object data)  { 
+            indexItems.put(item, new IndexItemEntry(deleteFirst, data)); 
+        }
 
         void reset() {
             if (conn != null)
@@ -757,10 +768,11 @@ public class Mailbox {
      *  committed.
      * 
      * @param item  The MailItem to be indexed.
+     * @param deleteFirst True if we need to delete this item from the index before indexing it again
      * @param data  The extra data to be used for the indexing step.
      * @see #commitCache(Mailbox.MailboxChange) */
-    void queueForIndexing(MailItem item, Object data) {
-        mCurrentChange.addIndexedItem(item, data);
+    void queueForIndexing(MailItem item, boolean deleteFirst,  Object data) {
+        mCurrentChange.addIndexedItem(item, deleteFirst, data);
     }
 
 
@@ -1345,7 +1357,7 @@ public class Mailbox {
     
                     try {
                         MailboxIndex idx = getMailboxIndex();
-                        idx.reIndexItem(this, sr.id, sr.type);
+                        idx.reIndexItem(this, sr.id, sr.type, false/*already deleted above*/);
                     } catch(ServiceException e) {
                         mReIndexStatus.mNumFailed++;
                         ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on msg "+sr.id+".  Message will not be indexed.", e);
@@ -3291,7 +3303,7 @@ public class Mailbox {
             }
             markOtherItemDirty(mboxBlob);
 
-            queueForIndexing(msg, pm);
+            queueForIndexing(msg, false, pm);
             success = true;
         } finally {
             if (storeRedoRecorder != null) {
@@ -3371,8 +3383,9 @@ public class Mailbox {
                                       ID_AUTO_INCREMENT, ":API:", dinfo, new SharedDeliveryContext());
         } else {
             Message toRet = saveDraftInternal(octxt, pm, id);
-            
-            toRet.reindex(null, pm);
+
+            // tim: why is this here?  FIXME TODO
+            // toRet.reindex(null, true, pm);
             
             return toRet;
             
@@ -3433,7 +3446,7 @@ public class Mailbox {
             redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
 
             // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
-            queueForIndexing(msg, pm);
+            queueForIndexing(msg, true, pm);
             success = true;
             return msg;
         } finally {
@@ -3655,7 +3668,7 @@ public class Mailbox {
 
             // if we're not sharing the index entry, we need to index the new item
             if (copy.getIndexId() == copy.getId())
-                queueForIndexing(copy, null);
+                queueForIndexing(copy, false, null);
 
             success = true;
             return copy;
@@ -3715,7 +3728,7 @@ public class Mailbox {
     
                 // if we're not sharing the index entry, we need to index the new item
                 if (copy.getIndexId() == copy.getId())
-                    queueForIndexing(copy, null);
+                    queueForIndexing(copy, false, null);
 
                 result.add(new Pair<MailItem,MailItem>(item, copy));
             }
@@ -3896,7 +3909,7 @@ public class Mailbox {
 
             redoRecorder.setNoteId(note.getId());
             redoRecorder.setVolumeId(note.getVolumeId());
-            queueForIndexing(note, null);
+            queueForIndexing(note, false, null);
             success = true;
             return note;
         } finally {
@@ -3919,7 +3932,7 @@ public class Mailbox {
             checkItemChangeID(note);
 
             note.setContent(content);
-            queueForIndexing(note, null);
+            queueForIndexing(note, true, null);
             success = true;
         } finally {
             endTransaction(success);
@@ -3987,7 +4000,7 @@ public class Mailbox {
 
             redoRecorder.setContactId(con.getId());
             redoRecorder.setVolumeId(con.getVolumeId());
-            queueForIndexing(con, null);
+            queueForIndexing(con, false, null);
             success = true;
             return con;
         } finally {
@@ -4008,7 +4021,7 @@ public class Mailbox {
                 throw MailServiceException.MODIFY_CONFLICT();
             con.modify(attrs, replace);
 
-            queueForIndexing(con, null);
+            queueForIndexing(con, true, null);
             success = true;
         } finally {
             endTransaction(success);
@@ -4403,7 +4416,7 @@ public class Mailbox {
 
             ParsedDocument pd = new ParsedDocument(rawData, digest, doc.getName(), doc.getContentType(), getOperationTimestampMillis());
             doc.addRevision(author, pd);
-            queueForIndexing(doc, pd);
+            queueForIndexing(doc, false, pd);
 
             sm.link(blob, this, doc.getId(), doc.getLastRevision().getRevId(), volumeId);
             doc.purgeOldRevisions(1);  // purge all but 1 revisions.
@@ -4534,7 +4547,7 @@ public class Mailbox {
                 throw MailServiceException.INVALID_TYPE(type);
 
             redoRecorder.setMessageId(doc.getId());
-            queueForIndexing(doc, pd);
+            queueForIndexing(doc, false, pd);
             sm.link(blob, this, itemId, doc.getLastRevision().getRevId(), volumeId);
             success = true;
 
@@ -4718,7 +4731,7 @@ public class Mailbox {
             needRedo = mCurrentChange.octxt.needRedo();
         RedoableOp redoRecorder = mCurrentChange.recorder;
         IndexItem indexRedo = null;
-        Map<MailItem, Object> itemsToIndex = mCurrentChange.indexItems;
+        Map<MailItem, MailboxChange.IndexItemEntry> itemsToIndex = mCurrentChange.indexItems;
         boolean indexingNeeded = !itemsToIndex.isEmpty() && !DebugConfig.disableIndexing;
 
         // 1. Log the change redo record for main transaction.
@@ -4732,11 +4745,11 @@ public class Mailbox {
         boolean allGood = false;
         try {
             if (indexingNeeded) {
-                for (Map.Entry<MailItem, Object> entry : itemsToIndex.entrySet()) {
+                for (Map.Entry<MailItem, MailboxChange.IndexItemEntry> entry : itemsToIndex.entrySet()) {
                     MailItem item = entry.getKey();
 
                     if (needRedo) {
-                        indexRedo = new IndexItem(mId, item.getId(), item.getType());
+                        indexRedo = new IndexItem(mId, item.getId(), item.getType(), entry.getValue().mDeleteFirst);
                         indexRedo.start(getOperationTimestampMillis());
                         indexRedo.setParentOp(redoRecorder);
                     }
@@ -4746,7 +4759,7 @@ public class Mailbox {
                     // transaction when indexing fails.  Write the change
                     // record for indexing only after indexing actually
                     // works.
-                    item.reindex(indexRedo, entry.getValue());
+                    item.reindex(indexRedo, entry.getValue().mDeleteFirst, entry.getValue().mData);
 
                     // 3. Write the change redo record for indexing
                     //    sub-transaction to guarantee that it appears in the

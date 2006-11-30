@@ -151,7 +151,7 @@ public final class TopLevelMessageHandler {
         //                                                                          store, index, tokenize
         mDocument.add(new Field(LuceneFields.L_H_FROM, from,                        false, true, true));
         mDocument.add(new Field(LuceneFields.L_H_SUBJECT, subject,                  false, true, true));
-        mDocument.add(new Field(LuceneFields.L_SORT_SUBJECT, subject.toUpperCase(), true, true, false));
+        mDocument.add(new Field(LuceneFields.L_SORT_SUBJECT, subject.toUpperCase(), false, true, false));
         mDocument.add(new Field(LuceneFields.L_SORT_NAME, sortFrom.toUpperCase(),   false, true, false));
 
         // calculate the fragment *before* we add non-content data

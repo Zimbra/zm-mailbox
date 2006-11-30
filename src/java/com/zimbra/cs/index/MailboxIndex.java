@@ -1565,7 +1565,7 @@ public final class MailboxIndex
 
                     try {
                         Mailbox mbox = MailboxManager.getInstance().getMailboxById(idx.mMailboxId);
-                        idx.reIndexItem(mbox, cur.id, cur.type);
+                        idx.reIndexItem(mbox, cur.id, cur.type, false);
                     } catch(ServiceException e) {
                         mLog.info("Couldn't index "+compareTo.id+" caught ServiceException", e);
                     }
@@ -1994,7 +1994,7 @@ public final class MailboxIndex
     }
 
 
-    public void indexItem(Mailbox mbox, int itemId, byte itemType, long timestamp, boolean noRedo)
+    public void indexItem(Mailbox mbox, boolean deleteFirst, int itemId, byte itemType, long timestamp, boolean noRedo)
     throws IOException, ServiceException {
         MailItem item;
         try {
@@ -2012,7 +2012,7 @@ public final class MailboxIndex
 
         IndexItem redo = null;
         if (!noRedo) {
-            redo = new IndexItem(mbox.getId(), item.getId(), itemType);
+            redo = new IndexItem(mbox.getId(), item.getId(), itemType, deleteFirst);
             redo.start(System.currentTimeMillis());
             redo.log();
             redo.allowCommit();
@@ -2029,7 +2029,7 @@ public final class MailboxIndex
                                 document.getName(), 
                                 document.getContentType(),
                                 timestamp);
-                    indexDocument(mbox, redo, itemId, pd);
+                    indexDocument(mbox, redo, deleteFirst, itemId, pd);
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("indexDocument caught Exception", e);
                 }
@@ -2040,7 +2040,7 @@ public final class MailboxIndex
                 try {
                     mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
                     ParsedMessage pm = new ParsedMessage(mm, timestamp, mbox.attachmentsIndexingEnabled());
-                    indexMessage(mbox, redo, itemId, pm);
+                    indexMessage(mbox, redo, deleteFirst, itemId, pm);
                 } catch (Throwable e) {
                     mLog.warn("Skipping indexing; Unable to parse message " + itemId + ": " + e.toString(), e);
                     // Eat up all errors during message analysis.  Throwing
@@ -2058,10 +2058,10 @@ public final class MailboxIndex
                 }
                 break;
             case MailItem.TYPE_CONTACT:
-                indexContact(mbox, redo, itemId, (Contact) item);
+                indexContact(mbox, redo, deleteFirst, itemId, (Contact) item);
                 break;
             case MailItem.TYPE_NOTE:
-                indexNote(mbox, redo, itemId, (Note) item);
+                indexNote(mbox, redo, deleteFirst, itemId, (Note) item);
                 break;
             default:
                 if (redo != null)
@@ -2077,9 +2077,18 @@ public final class MailboxIndex
      * @param pm
      * @throws ServiceException
      */
-    synchronized public void indexMessage(Mailbox mbox, IndexItem redo, int messageId, ParsedMessage pm)
+    synchronized public void indexMessage(Mailbox mbox, IndexItem redo, boolean deleteFirst, int messageId, ParsedMessage pm)
     throws ServiceException {
         initAnalyzer(mbox);
+        
+        if (deleteFirst) {
+            try {
+                deleteDocuments(new int[] { messageId });
+            } catch(IOException e) {
+                mLog.debug("indexMessage ignored IOException deleting documents (index does not exist yet?)", e);
+            }
+        }
+        
         try {
             List<Document> docList = pm.getLuceneDocuments();
             if (docList != null) {
@@ -2094,12 +2103,12 @@ public final class MailboxIndex
 
     /**
      * Index a Contact in the specified mailbox.
-     * @param mailboxId
+     * @param deleteFirst if TRUE then we must delete the existing index records before we index
      * @param mailItemId
      * @param contact
      * @throws ServiceException
      */
-    synchronized public void indexContact(Mailbox mbox, IndexItem redo, int mailItemId, Contact contact)
+    synchronized public void indexContact(Mailbox mbox, IndexItem redo, boolean deleteFirst, int mailItemId, Contact contact)
     throws ServiceException {
         initAnalyzer(mbox);
         mLog.info("indexContact("+contact+")");
@@ -2113,13 +2122,13 @@ public final class MailboxIndex
                 contentText.append(cur);
                 contentText.append(' ');
             }
-
-            // FIXME: this is very slow, and unnecessary in many instances (e.g. a contact is new).  Create some kind of a flag
-            // so we don't try to do this when a contact is known to be new -- such as when re-indexing.
-            try {
-                deleteDocuments(new int[] { mailItemId });
-            } catch (IOException e1) {
-                mLog.debug("indexContact ignored IOException deleting documents (index does not exist yet)");
+            
+            if (deleteFirst) {
+                try {
+                    deleteDocuments(new int[] { mailItemId });
+                } catch (IOException e) {
+                    mLog.debug("indexContact ignored IOException deleting documents (index does not exist yet?)", e);
+                }
             }
 
             Document doc = new Document();
@@ -2140,6 +2149,9 @@ public final class MailboxIndex
 
             /* put the email addresses in the "To" field so they can be more easily searched */
             doc.add(Field.UnStored(LuceneFields.L_H_TO, emailStr));
+            
+            /* put the name in the "From" field */
+            doc.add(new Field(LuceneFields.L_H_FROM, name, false/*store*/, true/*index*/, false/*token*/ ));
 
             doc.add(Field.UnStored(LuceneFields.L_CONTENT, contentText.toString()));
             doc.add(Field.UnStored(LuceneFields.L_H_SUBJECT, subj));
@@ -2159,12 +2171,10 @@ public final class MailboxIndex
 
     /**
      * Index a Note in the specified mailbox.
-     * @param mailboxId
-     * @param mailItemId
-     * @param note
+     * 
      * @throws ServiceException
      */
-    synchronized public void indexNote(Mailbox mbox, IndexItem redo, int mailItemId, Note note)
+    synchronized public void indexNote(Mailbox mbox, IndexItem redo, boolean deleteFirst, int mailItemId, Note note)
     throws ServiceException {
         initAnalyzer(mbox);
         mLog.info("indexNote("+note+")");
@@ -2175,10 +2185,12 @@ public final class MailboxIndex
                 mLog.debug("Note value=\""+toIndex+"\"");
             }
 
-            try {
-                deleteDocuments(new int[] { mailItemId });
-            } catch(IOException e) {
-                mLog.debug("indexNote ignored IOException deleting documents (index does not exist yet)");
+            if (deleteFirst) {
+                try {
+                    deleteDocuments(new int[] { mailItemId });
+                } catch(IOException e) {
+                    mLog.debug("indexNote ignored IOException deleting documents (index does not exist yet?)", e);
+                }
             }
 
             Document doc = new Document();
@@ -2191,7 +2203,7 @@ public final class MailboxIndex
             doc.add(Field.Keyword(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(mailItemId)));
             doc.add(Field.Text(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE));
 
-            doc.add(new Field(LuceneFields.L_SORT_SUBJECT, subj.toUpperCase(), true/*store*/, true/*index*/, false /*token*/));
+            doc.add(new Field(LuceneFields.L_SORT_SUBJECT, subj.toUpperCase(), false/*store*/, true/*index*/, false /*token*/));
             doc.add(new Field(LuceneFields.L_SORT_NAME, name.toUpperCase(), false/*store*/, true/*index*/, false /*token*/));
 
 //          String dateString = DateField.timeToString(note.getDate());
@@ -2205,14 +2217,16 @@ public final class MailboxIndex
         }
     }    
 
-    synchronized public void indexDocument(Mailbox mbox, IndexItem redo, int mailItemId, ParsedDocument pd)
+    synchronized public void indexDocument(Mailbox mbox, IndexItem redo, boolean deleteFirst, int mailItemId, ParsedDocument pd)
     throws ServiceException {
         initAnalyzer(mbox);
         try {
-            try {
-                deleteDocuments(new int[] { mailItemId });
-            } catch(IOException e) {
-                mLog.debug("indexDocument ignored IOException deleting documents (index does not exist yet)");
+            if (deleteFirst) {
+                try {
+                    deleteDocuments(new int[] { mailItemId });
+                } catch(IOException e) {
+                    mLog.debug("indexDocument ignored IOException deleting documents (index does not exist yet?)", e);
+                }
             }
             addDocument(redo, pd.getDocument(), mailItemId, pd.getCreatedDate(), false);
         } catch (IOException e) {
@@ -2227,7 +2241,7 @@ public final class MailboxIndex
      * @throws IOException
      * @throws ServiceException
      */
-    synchronized public void reIndexItem(Mailbox mbox, int msgId, byte type) throws ServiceException
+    synchronized public void reIndexItem(Mailbox mbox, int msgId, byte type, boolean deleteFirst) throws ServiceException
     {
         initAnalyzer(mbox);
         
@@ -2248,18 +2262,18 @@ public final class MailboxIndex
                     mbox.reanalyze(msg.getId(), msg.getType(),  pm);
                 }
 
-                item.reindex(null, pm);
+                item.reindex(null, deleteFirst, pm);
             } else if (item.getType() == MailItem.TYPE_DOCUMENT || item.getType() == MailItem.TYPE_WIKI) {
             	com.zimbra.cs.mailbox.Document doc = (com.zimbra.cs.mailbox.Document) item;
             	try {
                 	byte[] buf = ByteUtil.getContent(doc.getRawDocument(), 0);
             		ParsedDocument pd = new ParsedDocument(buf, doc.getDigest(), doc.getName(), doc.getContentType(), doc.getChangeDate());
-                	item.reindex(null, pd);
+                	item.reindex(null, deleteFirst, pd);
             	} catch (IOException ioe) {
             		throw ServiceException.FAILURE("reIndexItem caught IOException", ioe);
             	}
             } else {
-                item.reindex(null, null);
+                item.reindex(null, deleteFirst, null);
             }
 
         } catch (java.lang.RuntimeException e) {

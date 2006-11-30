@@ -439,14 +439,14 @@ public class Message extends MailItem {
     }
 
     @Override
-    public void reindex(IndexItem redo, Object indexData) throws ServiceException {
+    public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
         ParsedMessage pm = (ParsedMessage) indexData;
         if (pm == null)
             pm = new ParsedMessage(getMimeMessage(), getDate(), getMailbox().attachmentsIndexingEnabled());
 
         // FIXME: need to note this as dirty so we can reindex if things fail
         if (!DebugConfig.disableIndexing)
-            mMailbox.getMailboxIndex().indexMessage(mMailbox, redo, mId, pm);
+            mMailbox.getMailboxIndex().indexMessage(mMailbox, redo, deleteFirst, mId, pm);
     }
 
 

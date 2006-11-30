@@ -488,10 +488,10 @@ public class Contact extends MailItem {
         return con;
     }
 
-    public void reindex(IndexItem redo, Object indexData) throws ServiceException {
+    public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
         // FIXME: need to note this as dirty so we can reindex if things fail
         if (!DebugConfig.disableIndexing)
-            mMailbox.getMailboxIndex().indexContact(mMailbox, redo, mId, this);
+            mMailbox.getMailboxIndex().indexContact(mMailbox, redo, deleteFirst, mId, this);
     }
 
     void reanalyze(Object data) throws ServiceException {

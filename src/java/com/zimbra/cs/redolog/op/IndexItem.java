@@ -41,29 +41,31 @@ import com.zimbra.cs.redolog.RedoLogOutput;
  */
 public class IndexItem extends RedoableOp {
 
-	private int mId;
+    private int mId;
     private byte mType;
+    private boolean mDeleteFirst;
     private boolean mCommitAllowed;
     private boolean mCommitAbortDone;
 
-	public IndexItem() {
-		mId = UNKNOWN_ID;
+    public IndexItem() {
+        mId = UNKNOWN_ID;
         mType = MailItem.TYPE_UNKNOWN;
         mCommitAllowed = false;
         mCommitAbortDone = false;
-	}
+    }
 
-	public IndexItem(int mailboxId, int id, byte type) {
-		setMailboxId(mailboxId);
-		mId = id;
+    public IndexItem(int mailboxId, int id, byte type, boolean deleteFirst) {
+        setMailboxId(mailboxId);
+        mId = id;
         mType = type;
+        mDeleteFirst = deleteFirst;
         mCommitAllowed = false;
         mCommitAbortDone = false;
-	}
+    }
 
-	public int getOpCode() {
-		return OP_INDEX_ITEM;
-	}
+    public int getOpCode() {
+        return OP_INDEX_ITEM;
+    }
 
     public boolean deferCrashRecovery() {
         return true;
@@ -73,25 +75,31 @@ public class IndexItem extends RedoableOp {
         StringBuffer sb = new StringBuffer("id=");
         sb.append(mId).append(", type=").append(mType);
         return sb.toString();
-	}
+    }
 
-	protected void serializeData(RedoLogOutput out) throws IOException {
-		out.writeInt(mId);
+    protected void serializeData(RedoLogOutput out) throws IOException {
+        out.writeInt(mId);
         out.writeByte(mType);
-	}
+        if (getVersion().atLeast(1,8))
+            out.writeBoolean(mDeleteFirst);
+    }
 
-	protected void deserializeData(RedoLogInput in) throws IOException {
-		mId = in.readInt();
+    protected void deserializeData(RedoLogInput in) throws IOException {
+        mId = in.readInt();
         mType = in.readByte();
-	}
+        if (getVersion().atLeast(1,8)) 
+            mDeleteFirst = in.readBoolean();
+        else
+            mDeleteFirst = false;
+    }
 
-	public void redo() throws Exception {
-		int mboxId = getMailboxId();
-		Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+    public void redo() throws Exception {
+        int mboxId = getMailboxId();
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         synchronized (mbox) { // temp fix for bug 11890
-            mbox.getMailboxIndex().indexItem(mbox, mId, mType, getTimestamp(), getUnloggedReplay());
+            mbox.getMailboxIndex().indexItem(mbox, mDeleteFirst, mId, mType, getTimestamp(), getUnloggedReplay());
         }
-	}
+    }
 
     /**
      * An IndexItem transaction is always created as a sub-transaction
@@ -119,11 +127,11 @@ public class IndexItem extends RedoableOp {
      * @return
      */
     public synchronized boolean commitAllowed() {
-    	return mCommitAllowed;
+        return mCommitAllowed;
     }
 
     public synchronized void allowCommit() {
-    	mCommitAllowed = true;
+        mCommitAllowed = true;
         if (mAttachedToParent)
             commit();
     }
@@ -137,8 +145,8 @@ public class IndexItem extends RedoableOp {
     public synchronized void commit() {
         // Don't check mCommitAllowed here.  It's the responsibility of
         // the caller.
-    	if (!mCommitAbortDone) {
-    		super.commit();
+        if (!mCommitAbortDone) {
+            super.commit();
             mCommitAbortDone = true;
 
             // Prevent any thread calling commitAllowed() from spinning.
@@ -160,7 +168,7 @@ public class IndexItem extends RedoableOp {
     private RedoableOp mParentOp;
 
     public synchronized void setParentOp(RedoableOp op) {
-    	mParentOp = op;
+        mParentOp = op;
     }
 
     public synchronized void attachToParent() {

@@ -119,11 +119,11 @@ public class Document extends MailItem {
     @Override boolean canHaveChildren() { return false; }
 
     @Override
-    public void reindex(IndexItem redo, Object indexData) throws ServiceException {
+    public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
         if (!DebugConfig.disableIndexing &&
         		indexData != null &&
         		indexData instanceof ParsedDocument)
-            mMailbox.getMailboxIndex().indexDocument(mMailbox, redo, mId, (ParsedDocument) indexData);
+            mMailbox.getMailboxIndex().indexDocument(mMailbox, redo, deleteFirst, mId, (ParsedDocument) indexData);
     }
 
     public DocumentRevision getRevision(int rev) throws ServiceException {

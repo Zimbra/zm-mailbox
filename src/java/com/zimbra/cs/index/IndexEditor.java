@@ -157,7 +157,7 @@ public class IndexEditor {
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
             midx = mbox.getMailboxIndex();  
-            midx.reIndexItem(mbox, msg, MailItem.TYPE_MESSAGE);
+            midx.reIndexItem(mbox, msg, MailItem.TYPE_MESSAGE, true);
         } catch(Exception e) {
             outputStream.println("Re-index FAILED with " + ExceptionToString.ToString(e));
         } finally {
