@@ -393,9 +393,10 @@ public class ZimbraServlet extends HttpServlet {
             if (hostHeader != null && hostHeader.length() > 1) {
                 int i = hostHeader.indexOf(':');
                 if (i != -1) hostHeader = hostHeader.substring(0, i);
+
+                Domain d = prov.get(DomainBy.virtualHostname, hostHeader.toLowerCase());
+                if (d != null) user += "@" + d.getName();
             }
-            Domain d = prov.get(DomainBy.virtualHostname, hostHeader.toLowerCase());
-            if (d != null) user += "@" + d.getName();
         }
 
         Account acct = prov.get(AccountBy.name, user);
