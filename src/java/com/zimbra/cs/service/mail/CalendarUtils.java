@@ -174,17 +174,7 @@ public class CalendarUtils {
             mod.setRecurId(oldInv.getRecurId());
         }
 
-        // compare the new attendee list with the existing one...if attendees
-        // have been removed, then
-        // we need to send them individual cancelation messages
-        List /* ZAttendee */newAts = mod.getAttendees();
-        List /* ZAttendee */oldAts = oldInv.getAttendees();
-        for (Iterator iter = oldAts.iterator(); iter.hasNext();) {
-            ZAttendee cur = (ZAttendee) iter.next();
-            if (!attendeeListContains(newAts, cur)) {
-                attendeesToCancel.add(cur);
-            }
-        }
+        attendeesToCancel.addAll(getRemovedAttendees(oldInv, mod));
 
         ZVCalendar iCal = mod.newToICalendar();
 
@@ -247,6 +237,22 @@ public class CalendarUtils {
             }
         }
         return false;
+    }
+
+    public static List<ZAttendee> getRemovedAttendees(Invite oldInv, Invite newInv) {
+        List<ZAttendee> list = new ArrayList<ZAttendee>();
+        // compare the new attendee list with the existing one...if attendees
+        // have been removed, then
+        // we need to send them individual cancelation messages
+        List<ZAttendee> newAts = newInv.getAttendees();
+        List<ZAttendee> oldAts = oldInv.getAttendees();
+        for (Iterator iter = oldAts.iterator(); iter.hasNext();) {
+            ZAttendee cur = (ZAttendee) iter.next();
+            if (!attendeeListContains(newAts, cur)) {
+                list.add(cur);
+            }
+        }
+        return list;
     }
 
     static RecurId parseRecurId(Element e, TimeZoneMap invTzMap, Invite inv)
@@ -352,16 +358,16 @@ public class CalendarUtils {
                 
                 if (intElt.getName().equals(MailService.E_CAL_DATE)) {
                     // handle RDATE or EXDATE
-                    
-                    ParsedDateTime dt = parseDateTime(intElt, invTzMap, inv);
-                    
+
+                    parseDateTime(intElt, invTzMap, inv);
+
                     try {
-                        String dstr = intElt.getAttribute(MailService.A_CAL_DATETIME);
-                        
+                        intElt.getAttribute(MailService.A_CAL_DATETIME);
+
                         // FIXME!! Need an IRecurrence imp that takes a
                         // DateList, then instantiate it here and
                         // add it to addRules or subRules!!!
-                        
+
 // DateList dl;
 // boolean isDateTime = true;
 // try {

@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -36,7 +37,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -53,19 +54,32 @@ public class CreateCalendarItemException extends CreateCalendarItem {
     protected class CreateCalendarItemExceptionInviteParser extends ParseMimeMessage.InviteParser
     {
         private String mUid;
-        private TimeZoneMap mTzMap;
-        
-        CreateCalendarItemExceptionInviteParser(String uid, TimeZoneMap tzMap) {
+        private Invite mDefaultInvite;
+
+        CreateCalendarItemExceptionInviteParser(String uid, Invite defaultInvite) {
             mUid = uid;
-            mTzMap = tzMap;
+            mDefaultInvite = defaultInvite;
         }
-        
+
         public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, Account account, Element inviteElem)
         throws ServiceException {
-            return CalendarUtils.parseInviteForCreate(account, getItemType(), inviteElem, mTzMap, mUid, true, CalendarUtils.RECUR_NOT_ALLOWED);
+            ParseMimeMessage.InviteParserResult toRet =
+                CalendarUtils.parseInviteForCreate(
+                        account, getItemType(), inviteElem,
+                        mDefaultInvite.getTimeZoneMap(), mUid, true,
+                        CalendarUtils.RECUR_NOT_ALLOWED);
+
+            // Send cancellations to any attendees who have been removed.
+            List<ZAttendee> removedAttendees =
+                CalendarUtils.getRemovedAttendees(mDefaultInvite, toRet.mInvite);
+            if (removedAttendees.size() > 0)
+                updateRemovedInvitees(lc, account, mDefaultInvite.getCalendarItem().getMailbox(),
+                                      mDefaultInvite.getCalendarItem(), toRet.mInvite, removedAttendees);
+
+            return toRet;
         }
     };
-    
+
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Account acct = getRequestedAccount(lc);
@@ -97,7 +111,7 @@ public class CreateCalendarItemException extends CreateCalendarItem {
             else if (!calItem.isRecurring())
                 throw ServiceException.INVALID_REQUEST("CalendarItem " + calItem.getId() + " is not a recurring calendar item", null);
             
-            CreateCalendarItemExceptionInviteParser parser = new CreateCalendarItemExceptionInviteParser(calItem.getUid(), inv.getTimeZoneMap());
+            CreateCalendarItemExceptionInviteParser parser = new CreateCalendarItemExceptionInviteParser(calItem.getUid(), inv);
             CalSendData dat = handleMsgElement(lc, msgElem, acct, mbox, parser);
             
             return sendCalendarMessage(lc, calItem.getFolderId(), acct, mbox, dat, response, false);

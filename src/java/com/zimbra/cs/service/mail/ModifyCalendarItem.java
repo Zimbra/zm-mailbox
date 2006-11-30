@@ -27,7 +27,6 @@ package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import javax.mail.Address;
@@ -38,19 +37,13 @@ import org.apache.commons.logging.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.util.L10nUtil;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.util.L10nUtil.MsgKey;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -84,7 +77,8 @@ public class ModifyCalendarItem extends CalendarRequest {
                         !mInv.hasRecurId());
 
             // send cancellations to any invitees who have been removed...
-            updateRemovedInvitees(lc, account, mmbox, mInv.getCalendarItem(), mInv, atsToCancel);
+            if (atsToCancel.size() > 0)
+                updateRemovedInvitees(lc, account, mmbox, mInv.getCalendarItem(), mInv, atsToCancel);
             
             return toRet;
         }
@@ -143,55 +137,5 @@ public class ModifyCalendarItem extends CalendarRequest {
         sendCalendarMessage(lc, calItem.getFolderId(), acct, mbox, dat, response, false);
 
         return response;        
-    }
-    
-    protected static void updateRemovedInvitees(
-            ZimbraSoapContext lc, Account acct, Mailbox mbox,
-            CalendarItem calItem, Invite inv,
-            List<ZAttendee> toCancel)
-    throws ServiceException {
-        if (!inv.thisAcctIsOrganizer(acct)) {
-            // we ONLY should update the removed attendees if we are the organizer!
-            return;
-        }
-
-        boolean onBehalfOf = lc.isDelegatedRequest();
-        Account authAcct = lc.getAuthtokenAccount();
-        Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
-
-        CalSendData dat = new CalSendData(acct, authAcct, onBehalfOf);
-        dat.mOrigId = inv.getMailItemId();
-        dat.mReplyType = MailSender.MSGTYPE_REPLY;
-
-        String text = L10nUtil.getMessage(MsgKey.calendarCancelRemovedFromAttendeeList, locale);
-
-        if (sLog.isDebugEnabled()) {
-            StringBuilder sb = new StringBuilder("Sending cancellation message for \"");
-            sb.append(inv.getName()).append("\" to ");
-            sb.append(getAttendeesAddressList(toCancel));
-            sLog.debug(sb.toString());
-        }
-
-        List<Address> rcpts = CalendarMailSender.toListFromAttendees(toCancel);
-        try {
-            dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct.getName(), onBehalfOf, inv, text, toCancel);
-            ZVCalendar cal = dat.mInvite.newToICalendar();
-            dat.mMm = CalendarMailSender.createCancelMessage(acct, rcpts, onBehalfOf, authAcct, inv, null, text, cal);
-            sendCalendarCancelMessage(lc, calItem.getFolderId(),
-                                      acct, mbox, dat, false);
-        } catch (ServiceException ex) {
-            String to = getAttendeesAddressList(toCancel);
-            ZimbraLog.calendar.debug("Could not inform attendees ("+to+") that they were removed from meeting "+inv.toString()+" b/c of exception: "+ex.toString());
-        }
-    }
-
-    private static String getAttendeesAddressList(List<ZAttendee> list) {
-        StringBuilder sb = new StringBuilder();
-        int i = 0;
-        for (ZAttendee a : list) {
-            if (i > 0) sb.append(", ");
-            sb.append(a.getAddress());
-        }
-        return sb.toString();
     }
 }
