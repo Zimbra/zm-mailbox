@@ -586,7 +586,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     public boolean isTagged(Tag tag) {
-        long bitmask = (tag == null ? 0 : (tag instanceof Flag ? mData.flags : mData.tags));
+        long bitmask = (tag instanceof Flag ? mData.flags : mData.tags);
         return ((bitmask & tag.getBitmask()) != 0);
     }
     
