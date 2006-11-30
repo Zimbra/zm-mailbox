@@ -1230,7 +1230,8 @@ public class Mailbox {
 
                 // twiddle the mailbox lock [must be the last command of this function!]
                 //   (so even *we* can't access this Mailbox going forward)
-                lock.markUnavailable();
+                if (lock != null)
+                    lock.markUnavailable();
             }
         } finally {
             if (needRedo) {
