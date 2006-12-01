@@ -1358,8 +1358,9 @@ u attribute is present iff count > 0
 +  only allowed one top-level <mp> but can nest <mp>s within if multipart/*
 +  on reply/forward, set origid on <m> element and set rt to "r" or "w", respectively
 +  can optionally set identity-id to specify the identity being used to compose the message
++  if noSave="1", a copy will *not* be saved to sent regardless of account/identity settings
 
-<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"]>
+<SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"] [noSave="0|1"]>
   <m [origid="..." rt="r|w"] [idnt="{identity-id}"]>
     <e t="{type}" a="{email-address}" p="{personal-name}" [add="1"]/>+
     <su>{subject}</su>*

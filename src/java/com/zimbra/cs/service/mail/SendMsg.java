@@ -43,7 +43,6 @@ import org.apache.commons.logging.LogFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -89,6 +88,7 @@ public class SendMsg extends MailDocumentHandler {
         String attachId = msgElem.getAttribute(MailService.A_ATTACHMENT_ID, null);
 
         boolean needCalendarSentByFixup = request.getAttributeBool(MailService.A_NEED_CALENDAR_SENTBY_FIXUP, false);
+        boolean noSaveToSent = request.getAttributeBool(MailService.A_NO_SAVE_TO_SENT, false);
 
         int origId = (int) msgElem.getAttributeLong(MailService.A_ORIG_ID, 0);
         String replyType = msgElem.getAttribute(MailService.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
@@ -135,8 +135,8 @@ public class SendMsg extends MailDocumentHandler {
 
                 // send the message ...
                 SendMsgOperation op = new SendMsgOperation(session, octxt, mbox, Requester.SOAP,
-                        mm, mimeData.newContacts, mimeData.uploads,
-                        origId, replyType, identityId, false, needCalendarSentByFixup);
+                        mm, mimeData.newContacts, mimeData.uploads, origId, replyType,
+                        identityId, noSaveToSent, false, needCalendarSentByFixup);
                 op.schedule();
                 savedMsgId = op.getMsgId();
 

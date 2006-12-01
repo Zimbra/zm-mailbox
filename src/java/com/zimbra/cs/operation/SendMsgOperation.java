@@ -68,15 +68,26 @@ public class SendMsgOperation extends Operation {
     private int mOrigMsgId;
     private String mReplyType;
     private String mIdentityId;
+    private boolean mNoSaveToSent;
     private boolean mIgnoreFailedAddresses;
     private boolean mNeedCalendarSentByFixup;
 
     private int mMsgId;
 
     public SendMsgOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-                MimeMessage mm, List<InternetAddress> newContacts,
-                List<Upload> uploads, int origMsgId, String replyType, String identityId,
-                boolean ignoreFailedAddresses, boolean needCalendarSentByFixup) {
+            MimeMessage mm, List<InternetAddress> newContacts, List<Upload> uploads,
+            int origMsgId, String replyType, String identityId,
+            boolean ignoreFailedAddresses, boolean needCalendarSentByFixup)
+    {
+        this(session, oc, mbox, req, mm, newContacts, uploads,
+             origMsgId, replyType, identityId, false,
+             ignoreFailedAddresses, needCalendarSentByFixup);
+    }
+
+    public SendMsgOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
+            MimeMessage mm, List<InternetAddress> newContacts,  List<Upload> uploads,
+            int origMsgId, String replyType, String identityId, boolean noSaveToSent,
+            boolean ignoreFailedAddresses, boolean needCalendarSentByFixup) {
         super(session, oc, mbox, req, LOAD);
 
         mMm = mm;
@@ -85,6 +96,7 @@ public class SendMsgOperation extends Operation {
         mOrigMsgId = origMsgId;
         mReplyType = replyType;
         mIdentityId = identityId;
+        mNoSaveToSent = noSaveToSent;
         mIgnoreFailedAddresses = ignoreFailedAddresses;
         mNeedCalendarSentByFixup = needCalendarSentByFixup;
     }
@@ -93,9 +105,15 @@ public class SendMsgOperation extends Operation {
         Mailbox mbox = getMailbox();
         if (mNeedCalendarSentByFixup)
             fixupICalendarFromOutlook(mbox);
-        mMsgId = mbox.getMailSender().sendMimeMessage(getOpCtxt(), mbox, mMm, mNewContacts, mUploads,
-                                                      mOrigMsgId, mReplyType, mIdentityId,
-                                                      mIgnoreFailedAddresses, false);
+
+        if (mNoSaveToSent)
+            mMsgId = mbox.getMailSender().sendMimeMessage(getOpCtxt(), mbox, false, mMm, mNewContacts, mUploads,
+                                                          mOrigMsgId, mReplyType, null,
+                                                          mIgnoreFailedAddresses, false);
+        else
+            mMsgId = mbox.getMailSender().sendMimeMessage(getOpCtxt(), mbox, mMm, mNewContacts, mUploads,
+                    mOrigMsgId, mReplyType, mIdentityId,
+                    mIgnoreFailedAddresses, false);
     }
 
     public int getMsgId() { return mMsgId; }

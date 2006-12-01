@@ -302,6 +302,7 @@ public class MailService implements DocumentService {
     public static final String A_ORIG_ID = "origid";
     public static final String A_REPLY_TYPE = "rt";
     public static final String A_IDENTITY_ID = "idnt";
+    public static final String A_NO_SAVE_TO_SENT = "noSave";
     public static final String A_SEND_UID = "suid";
 
     // mountpoints
