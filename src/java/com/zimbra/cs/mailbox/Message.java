@@ -62,12 +62,16 @@ import org.apache.commons.logging.LogFactory;
 public class Message extends MailItem {
 
     static class DraftInfo {
+        String identityId;
         String replyType;
         int    origId = -1;
 
         public DraftInfo()  { }
-        public DraftInfo(String rt, int id)  { replyType = rt;  origId = id; }
+        public DraftInfo(String ident)                     { identityId = ident; }
+        public DraftInfo(String rt, int id)                { replyType = rt;  origId = id; }
+        public DraftInfo(String rt, int id, String ident)  { replyType = rt;  origId = id;  identityId = ident; }
         public DraftInfo(Metadata meta) throws ServiceException {
+            identityId = meta.get(Metadata.FN_IDENTITY_ID);
             replyType = meta.get(Metadata.FN_REPLY_TYPE);
             origId = (int) meta.getLong(Metadata.FN_REPLY_ORIG, -1);
         }
@@ -596,6 +600,7 @@ public class Message extends MailItem {
             Metadata dmeta = new Metadata();
             dmeta.put(Metadata.FN_REPLY_ORIG, dinfo.origId);
             dmeta.put(Metadata.FN_REPLY_TYPE, dinfo.replyType);
+            dmeta.put(Metadata.FN_IDENTITY_ID, dinfo.identityId);
             meta.put(Metadata.FN_DRAFT, dmeta);
         }
 

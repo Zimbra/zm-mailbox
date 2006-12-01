@@ -91,7 +91,7 @@ public class SetCalendarItem extends CalendarRequest {
         Mailbox mbox = getRequestedMailbox(zc);
         OperationContext octxt = zc.getOperationContext();
         
-        ItemId iidFolder = new ItemId(request.getAttribute(MailService.A_FOLDER, CreateAppointment.DEFAULT_FOLDER), zc);
+        ItemId iidFolder = new ItemId(request.getAttribute(MailService.A_FOLDER, CreateCalendarItem.DEFAULT_FOLDER), zc);
         
         sLog.info("<SetCalendarItem> " + zc.toString());
         
@@ -135,8 +135,7 @@ public class SetCalendarItem extends CalendarRequest {
             
             Element response = getResponseElement(zc);
             
-            response.addElement(MailService.A_DEFAULT)
-            .addAttribute(MailService.A_ID, zc.formatItemId(defaultData.mInv.getMailItemId()));
+            response.addElement(MailService.A_DEFAULT).addAttribute(MailService.A_ID, zc.formatItemId(defaultData.mInv.getMailItemId()));
             
             for (Iterator iter = exceptions.iterator(); iter.hasNext();) {
                 SetCalendarItemData cur = (SetCalendarItemData) iter.next();

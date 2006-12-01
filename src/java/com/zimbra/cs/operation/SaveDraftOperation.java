@@ -42,26 +42,28 @@ public class SaveDraftOperation extends Operation {
             LOAD = c.mLoad;
     }
 
-    ParsedMessage mPm;
-    int mId;
-    int mOrigId;
-    String mReplyType;
+    private ParsedMessage mPm;
+    private int mId;
+    private int mOrigId;
+    private String mReplyType;
+    private String mIdentityId;
 
-    Message mMsg;
+    private Message mMsg;
 
     public SaveDraftOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-                ParsedMessage pm, int id, int origId, String replyType) {
+                ParsedMessage pm, int id, int origId, String replyType, String identityId) {
         super(session, oc, mbox, req, LOAD);
         mPm = pm;
         mId = id;
         mOrigId = origId;
         mReplyType = replyType;
+        mIdentityId = identityId;
     }
 
 
     protected void callback() throws ServiceException {
         try {
-            mMsg = getMailbox().saveDraft(this.getOpCtxt(), mPm, mId, mOrigId, mReplyType);
+            mMsg = getMailbox().saveDraft(getOpCtxt(), mPm, mId, mOrigId, mReplyType, mIdentityId);
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException while saving draft", e);
         }

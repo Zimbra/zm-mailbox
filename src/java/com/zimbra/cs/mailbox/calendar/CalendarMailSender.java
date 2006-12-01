@@ -521,7 +521,7 @@ public class CalendarMailSender {
                                             replySubject, verb, additionalMsgBody, iCal);
 
         int replyMsgId = mbox.getMailSender().sendMimeMessage(octxt, mbox, saveToSent, mm, null, null,
-                                                              inv.getMailItemId(), replyType, false, true);
+                                                              inv.getMailItemId(), replyType, null, false, true);
         return replyMsgId;
     }
 

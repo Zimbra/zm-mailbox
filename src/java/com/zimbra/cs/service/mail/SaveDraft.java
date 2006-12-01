@@ -37,7 +37,6 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -50,7 +49,6 @@ import com.zimbra.cs.operation.Operation.Requester;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
-import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -72,7 +70,6 @@ public class SaveDraft extends MailDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(zsc);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = zsc.getOperationContext();
         Session session = getSession(context);
@@ -82,6 +79,7 @@ public class SaveDraft extends MailDocumentHandler {
         int id = (int) msgElem.getAttributeLong(MailService.A_ID, Mailbox.ID_AUTO_INCREMENT);
         int origId = (int) msgElem.getAttributeLong(MailService.A_ORIG_ID, 0);
         String replyType = msgElem.getAttribute(MailService.A_REPLY_TYPE, null);
+        String identity = msgElem.getAttribute(MailService.A_IDENTITY_ID, null);
 
         // allow the caller to update the draft's metadata at the same time as they save the draft
         String folderId = msgElem.getAttribute(MailService.A_FOLDER, null);
@@ -120,7 +118,7 @@ public class SaveDraft extends MailDocumentHandler {
         ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
 
         SaveDraftOperation op = new SaveDraftOperation(session, octxt, mbox, Requester.SOAP,
-                    pm, id, origId, replyType);
+                    pm, id, origId, replyType, identity);
         op.schedule();
         Message msg = op.getMsg();
 

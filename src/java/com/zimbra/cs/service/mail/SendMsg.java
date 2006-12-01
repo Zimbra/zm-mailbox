@@ -76,7 +76,6 @@ public class SendMsg extends MailDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(zsc);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = zsc.getOperationContext();
         Session session = getSession(context);
@@ -89,11 +88,11 @@ public class SendMsg extends MailDocumentHandler {
         // check to see whether the entire message has been uploaded under separate cover
         String attachId = msgElem.getAttribute(MailService.A_ATTACHMENT_ID, null);
 
-        boolean saveToSent = acct.saveToSent();
         boolean needCalendarSentByFixup = request.getAttributeBool(MailService.A_NEED_CALENDAR_SENTBY_FIXUP, false);
 
         int origId = (int) msgElem.getAttributeLong(MailService.A_ORIG_ID, 0);
         String replyType = msgElem.getAttribute(MailService.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
+        String identityId = msgElem.getAttribute(MailService.A_IDENTITY_ID, null);
 
 
         SendState state = SendState.NEW;
@@ -136,8 +135,8 @@ public class SendMsg extends MailDocumentHandler {
 
                 // send the message ...
                 SendMsgOperation op = new SendMsgOperation(session, octxt, mbox, Requester.SOAP,
-                        saveToSent, mm, mimeData.newContacts, mimeData.uploads,
-                        origId, replyType, false, needCalendarSentByFixup);
+                        mm, mimeData.newContacts, mimeData.uploads,
+                        origId, replyType, identityId, false, needCalendarSentByFixup);
                 op.schedule();
                 savedMsgId = op.getMsgId();
 

@@ -206,8 +206,7 @@ public class CalendarUtils {
 
         String uid = cancel.getUid();
         if (uid == null || uid.length() == 0)
-            throw MailServiceException.INVALID_REQUEST(
-                    "Missing uid in a cancel invite", null);
+            throw ServiceException.INVALID_REQUEST("Missing uid in a cancel invite", null);
 
         Invite sanitized =
             cancelInvite(account, null, false, cancel, cancel.getComment(),

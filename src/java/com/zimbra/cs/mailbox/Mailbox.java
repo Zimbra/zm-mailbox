@@ -3394,7 +3394,12 @@ public class Mailbox {
     }
     
 
-    public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, int origId, String replyType) throws IOException, ServiceException {
+    public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException{
+        return saveDraft(octxt, pm, id, 0, null, null);
+    }
+
+    public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, int origId, String replyType, String identityId)
+    throws IOException, ServiceException {
         // make sure the message has been analzyed before taking the Mailbox lock
         pm.analyze();
         try {
@@ -3405,8 +3410,8 @@ public class Mailbox {
         // special-case saving a new draft
         if (id == ID_AUTO_INCREMENT) {
             Message.DraftInfo dinfo = null;
-            if (replyType != null && origId > 0)
-                dinfo = new Message.DraftInfo(replyType, origId);
+            if ((replyType != null && origId > 0) || (identityId != null && !identityId.equals("")))
+                dinfo = new Message.DraftInfo(replyType, origId, identityId);
             return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME, null,
                                       ID_AUTO_INCREMENT, ":API:", dinfo, new SharedDeliveryContext());
         } else {

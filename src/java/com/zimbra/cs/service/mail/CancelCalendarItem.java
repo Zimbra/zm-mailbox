@@ -124,7 +124,7 @@ public class CancelCalendarItem extends CalendarRequest {
         }
 
         Invite cancelInvite = CalendarUtils.buildCancelInstanceCalendar(acct, authAcct.getName(), onBehalfOf, defaultInv, text, recurId);
-        CalSendData dat = new CalSendData(acct, authAcct, onBehalfOf);
+        CalSendData dat = new CalSendData();
         dat.mOrigId = defaultInv.getMailItemId();
         dat.mReplyType = MailSender.MSGTYPE_REPLY;
         dat.mInvite = cancelInvite;
@@ -180,12 +180,12 @@ public class CancelCalendarItem extends CalendarRequest {
         if (sLog.isDebugEnabled())
             sLog.debug("Sending cancellation message for \"" + inv.getName() + "\" for " + inv.toString());
         
-        CalSendData dat = new CalSendData(acct, authAcct, onBehalfOf);
-        dat.mOrigId = inv.getMailItemId();
-        dat.mReplyType = MailSender.MSGTYPE_REPLY;
-        dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct.getName(), onBehalfOf, inv, text);
+        CalSendData csd = new CalSendData();
+        csd.mOrigId = inv.getMailItemId();
+        csd.mReplyType = MailSender.MSGTYPE_REPLY;
+        csd.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct.getName(), onBehalfOf, inv, text);
         
-        ZVCalendar iCal = dat.mInvite.newToICalendar();
+        ZVCalendar iCal = csd.mInvite.newToICalendar();
         
         
         // did they specify a custom <m> message?  If so, then we don't have to build one...
@@ -201,20 +201,20 @@ public class CancelCalendarItem extends CalendarRequest {
             // the <inv> element is *NOT* allowed -- we always build it manually
             // based on the params to the <CancelCalendarItem> and stick it in the 
             // mbps (additionalParts) parameter...
-            dat.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, mbps, 
-                    ParseMimeMessage.NO_INV_ALLOWED_PARSER, dat);
+            csd.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, mbps, 
+                    ParseMimeMessage.NO_INV_ALLOWED_PARSER, csd);
             
         } else {
             List<Address> rcpts =
                 CalendarMailSender.toListFromAttendees(inv.getAttendees());
-            dat.mMm = CalendarMailSender.createCancelMessage(
+            csd.mMm = CalendarMailSender.createCancelMessage(
                     acct, rcpts, onBehalfOf, authAcct,
                     inv, null, text, iCal);
         }
         
         if (!inv.thisAcctIsOrganizer(acct)) {
             try {
-                Address[] rcpts = dat.mMm.getAllRecipients();
+                Address[] rcpts = csd.mMm.getAllRecipients();
                 if (rcpts != null && rcpts.length > 0) {
                     throw MailServiceException.MUST_BE_ORGANIZER("CancelCalendarItem");
                 }
@@ -224,6 +224,6 @@ public class CancelCalendarItem extends CalendarRequest {
         }
         
         sendCalendarCancelMessage(lc, calItem.getFolderId(),
-                                  acct, mbox, dat, true);
+                                  acct, mbox, csd, true);
     }
 }

@@ -27,7 +27,9 @@ package com.zimbra.cs.mailbox;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.MimeVisitor;
@@ -66,11 +68,9 @@ public class MailSender {
 
     MailSender()  { }
 
-    public static int getSentFolder(Mailbox mbox) throws ServiceException {
+    public static int getSentFolderId(Mailbox mbox, Identity identity) throws ServiceException {
         int folderId = Mailbox.ID_FOLDER_SENT;
-
-        Account acct = mbox.getAccount();
-        String sentFolder = acct.getAttr(Provisioning.A_zimbraPrefSentMailFolder, null);
+        String sentFolder = identity.getAttr(Provisioning.A_zimbraPrefSentMailFolder, null);
         if (sentFolder != null)
             try {
                 folderId = mbox.getFolderByPath(null, sentFolder).getId();
@@ -105,13 +105,20 @@ public class MailSender {
         FORWARD    // Forwarding another message
     }
 
-    public int sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
-                                      List<InternetAddress> newContacts, List<Upload> uploads,
-                                      int origMsgId, String replyType, boolean ignoreFailedAddresses,
-                                      boolean replyToSender)
+    public int sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm,
+                               List<InternetAddress> newContacts, List<Upload> uploads,
+                               int origMsgId, String replyType, String identityId,
+                               boolean ignoreFailedAddresses, boolean replyToSender)
     throws ServiceException {
-        int sentFolderId = saveToSent ? MailSender.getSentFolder(mbox) : 0;
-        return sendMimeMessage(octxt, mbox, sentFolderId, mm, newContacts, uploads, origMsgId, replyType, ignoreFailedAddresses, replyToSender);
+        Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
+        Identity identity = Provisioning.getInstance().get(authuser, IdentityBy.id, identityId);
+        if (identity == null)
+            identity = Provisioning.getInstance().getDefaultIdentity(authuser);
+
+        boolean saveToSent = identity.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true);
+
+        return sendMimeMessage(octxt, mbox, saveToSent, mm, newContacts, uploads, origMsgId, replyType, identity,
+                               ignoreFailedAddresses, replyToSender);
     }
 
     static class RollbackData {
@@ -138,7 +145,6 @@ public class MailSender {
     /**
      * Send MimeMessage out as an email.
      * Returns the msg-id of the copy in the first saved folder, or 0 if none
-     * 
      * @param mbox
      * @param mm the MimeMessage to send
      * @param newContacts
@@ -146,18 +152,22 @@ public class MailSender {
      * @param origMsgId if replying or forwarding, item ID of original message
      * @param replyType reply/forward type (null if original, which is neither
      *                  reply nor forward)
+     * @param identityId TODO
      * @param ignoreFailedAddresses If TRUE, then will attempt to send even if
      *                              some addresses fail (no error is returned!)
      * @param replyToSender if true and if setting Sender header, set Reply-To
      *                      header to the same address, otherwise don't set
      *                      Reply-To, letting the recipient MUA choose to whom
      *                      to send reply
+     * 
      * @return
      * @throws ServiceException
      */
-    public int sendMimeMessage(OperationContext octxt, Mailbox mbox, int saveToFolder, MimeMessage mm,
-                               List<InternetAddress> newContacts, List<Upload> uploads, int origMsgId,
-                               String replyType, boolean ignoreFailedAddresses, boolean replyToSender)
+
+    public int sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
+                               List<InternetAddress> newContacts, List<Upload> uploads,
+                               int origMsgId, String replyType, Identity identity,
+                               boolean ignoreFailedAddresses, boolean replyToSender)
     throws ServiceException {
         try {
             // slot the message in the parent's conversation if subjects match
@@ -184,22 +194,28 @@ public class MailSender {
                 throw ServiceException.FAILURE("mutator error; aborting send", e);
             }
 
+            // don't save if the message doesn't actually get *sent*
+            if (saveToSent)
+                saveToSent &= (mm.getAllRecipients() != null);
+
             // if requested, save a copy of the message to the Sent Mail folder
             RollbackData rdata = null;
-            if (saveToFolder > 0) {
+            if (saveToSent) {
+                if (identity == null)
+                    identity = Provisioning.getInstance().getDefaultIdentity(authuser);
+
                 // figure out where to save the save-to-sent copy
                 Mailbox mboxSave = isDelegatedRequest ? null : mbox;
-                if (isDelegatedRequest && Provisioning.onLocalServer(authuser)) {
+                if (isDelegatedRequest && Provisioning.onLocalServer(authuser))
                     mboxSave = MailboxManager.getInstance().getMailboxByAccount(authuser);
-                    saveToFolder = getSentFolder(mboxSave);
-                }
 
                 if (mboxSave != null) {
                     int flags = Flag.BITMASK_FROM_ME;
                     ParsedMessage pm = new ParsedMessage(mm, mm.getSentDate().getTime(),
                                                          mboxSave.attachmentsIndexingEnabled());
                     // save it to the requested folder
-                    Message msg = mboxSave.addMessage(octxt, pm, saveToFolder, true, flags, null, convId);
+                    int sentFolderId = getSentFolderId(mboxSave, identity);
+                    Message msg = mboxSave.addMessage(octxt, pm, sentFolderId, true, flags, null, convId);
                     rdata = new RollbackData(msg);
                 } else {
                     // delegated request, not local
@@ -209,10 +225,10 @@ public class MailSender {
                             ZMailbox.Options options = new ZMailbox.Options(new AuthToken(authuser, isAdminRequest).getEncoded(), uri);
                             options.setNoSession(true);
                             ZMailbox zmbox = ZMailbox.getMailbox(options);
-                            String sentFolder = authuser.getAttr(Provisioning.A_zimbraPrefSentMailFolder, "" + Mailbox.ID_FOLDER_SENT);
+                            String sentFolder = identity.getAttr(Provisioning.A_zimbraPrefSentMailFolder, "" + Mailbox.ID_FOLDER_SENT);
                             ByteArrayOutputStream baos = new ByteArrayOutputStream();
                             mm.writeTo(baos);
-    
+
                             String msgId = zmbox.addMessage(sentFolder, "s", null, mm.getSentDate().getTime(), baos.toByteArray(), true);
                             rdata = new RollbackData(zmbox, msgId);
                         } catch (Exception e) {

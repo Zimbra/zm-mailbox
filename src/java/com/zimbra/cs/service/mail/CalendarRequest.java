@@ -74,17 +74,10 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
     protected static class CalSendData extends ParseMimeMessage.MimeMessageData {
         int mOrigId; // orig id if this is a reply
-        String mReplyType; 
+        String mReplyType;
+        String mIdentityId;
         MimeMessage mMm;
-        boolean mSaveToSent;
         Invite mInvite;
-
-        public CalSendData(Account fromAcct, Account senderAcct, boolean onBehalfOf) {
-            if (onBehalfOf && senderAcct != null)
-                mSaveToSent = senderAcct.saveToSent();
-            else
-                mSaveToSent = fromAcct.saveToSent();
-        }
     }
 
     /**
@@ -102,7 +95,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     protected static CalSendData handleMsgElement(ZimbraSoapContext lc, Element msgElem, Account acct,
                                                   Mailbox mbox, ParseMimeMessage.InviteParser inviteParser)
     throws ServiceException {
-        CalSendData csd = new CalSendData(acct, lc.getAuthtokenAccount(), lc.isDelegatedRequest());
+        CalSendData csd = new CalSendData();
 
         assert(inviteParser.getResult() == null);
 
@@ -110,6 +103,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         // we can more-correctly match the conversations up
         csd.mOrigId = (int) msgElem.getAttributeLong(MailService.A_ORIG_ID, 0);
         csd.mReplyType = msgElem.getAttribute(MailService.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
+        csd.mIdentityId = msgElem.getAttribute(MailService.A_IDENTITY_ID, null);
 
         // parse the data
         csd.mMm = ParseMimeMessage.parseMimeMsgSoap(lc, mbox, msgElem, null, inviteParser, csd);
@@ -342,14 +336,6 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             if (csd.mInvite.getFragment() == null || csd.mInvite.getFragment().equals("")) {
                 csd.mInvite.setFragment(pm.getFragment());
             }
-
-            boolean hasRecipients = true;
-            try {
-                hasRecipients = csd.mMm.getAllRecipients() != null;
-            } catch (MessagingException e) { }
-
-            boolean saveToSent = csd.mSaveToSent && hasRecipients;
-            int saveFolderId = saveToSent ? MailSender.getSentFolder(mbox) : 0;
             
             int msgId = 0;
 
@@ -378,8 +364,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 //                    }
 //                } catch (MessagingException e) { }
 //            } else {
-            msgId = mbox.getMailSender().sendMimeMessage(octxt, mbox, saveFolderId, csd.mMm, csd.newContacts, csd.uploads,
-                                                         csd.mOrigId, csd.mReplyType, ignoreFailedAddresses, true);
+            msgId = mbox.getMailSender().sendMimeMessage(octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
+                                                         csd.mOrigId, csd.mReplyType, csd.mIdentityId, ignoreFailedAddresses, true);
 //            }
 
             if (updateOwnAppointment) {
@@ -424,7 +410,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         Account authAcct = lc.getAuthtokenAccount();
         Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
 
-        CalSendData dat = new CalSendData(acct, authAcct, onBehalfOf);
+        CalSendData dat = new CalSendData();
         dat.mOrigId = inv.getMailItemId();
         dat.mReplyType = MailSender.MSGTYPE_REPLY;
 
@@ -442,8 +428,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct.getName(), onBehalfOf, inv, text, toCancel);
             ZVCalendar cal = dat.mInvite.newToICalendar();
             dat.mMm = CalendarMailSender.createCancelMessage(acct, rcpts, onBehalfOf, authAcct, inv, null, text, cal);
-            sendCalendarCancelMessage(lc, calItem.getFolderId(),
-                                      acct, mbox, dat, false);
+            sendCalendarCancelMessage(lc, calItem.getFolderId(), acct, mbox, dat, false);
         } catch (ServiceException ex) {
             String to = getAttendeesAddressList(toCancel);
             ZimbraLog.calendar.debug("Could not inform attendees ("+to+") that they were removed from meeting "+inv.toString()+" b/c of exception: "+ex.toString());

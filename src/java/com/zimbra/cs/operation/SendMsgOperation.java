@@ -62,29 +62,29 @@ public class SendMsgOperation extends Operation {
             LOAD = c.mLoad;
     }
 
-    private boolean mSaveToSent;
     private MimeMessage mMm;
     private List<InternetAddress> mNewContacts;
     private List<Upload> mUploads;
     private int mOrigMsgId;
     private String mReplyType;
+    private String mIdentityId;
     private boolean mIgnoreFailedAddresses;
     private boolean mNeedCalendarSentByFixup;
 
     private int mMsgId;
 
     public SendMsgOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
-                boolean saveToSent, MimeMessage mm, List<InternetAddress> newContacts,
-                List<Upload> uploads, int origMsgId, String replyType, boolean ignoreFailedAddresses,
-                boolean needCalendarSentByFixup) {
+                MimeMessage mm, List<InternetAddress> newContacts,
+                List<Upload> uploads, int origMsgId, String replyType, String identityId,
+                boolean ignoreFailedAddresses, boolean needCalendarSentByFixup) {
         super(session, oc, mbox, req, LOAD);
 
-        mSaveToSent = saveToSent;
         mMm = mm;
         mNewContacts = newContacts;
         mUploads = uploads;
         mOrigMsgId = origMsgId;
         mReplyType = replyType;
+        mIdentityId = identityId;
         mIgnoreFailedAddresses = ignoreFailedAddresses;
         mNeedCalendarSentByFixup = needCalendarSentByFixup;
     }
@@ -93,8 +93,9 @@ public class SendMsgOperation extends Operation {
         Mailbox mbox = getMailbox();
         if (mNeedCalendarSentByFixup)
             fixupICalendarFromOutlook(mbox);
-        mMsgId = mbox.getMailSender().sendMimeMessage(getOpCtxt(), mbox, mSaveToSent, mMm, mNewContacts, mUploads,
-                                                      mOrigMsgId, mReplyType, mIgnoreFailedAddresses, false);
+        mMsgId = mbox.getMailSender().sendMimeMessage(getOpCtxt(), mbox, mMm, mNewContacts, mUploads,
+                                                      mOrigMsgId, mReplyType, mIdentityId,
+                                                      mIgnoreFailedAddresses, false);
     }
 
     public int getMsgId() { return mMsgId; }
@@ -176,7 +177,7 @@ public class SendMsgOperation extends Operation {
         }
 
         @Override
-        protected boolean visitMultipart(MimeMultipart mp, VisitPhase visitKind) throws MessagingException {
+        protected boolean visitMultipart(MimeMultipart mp, VisitPhase visitKind) {
             return false;
         }
 

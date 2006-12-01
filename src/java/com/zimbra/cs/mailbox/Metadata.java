@@ -56,9 +56,9 @@ public class Metadata {
     static final String FN_ATTRS           = "a";
     static final String FN_RIGHTS          = "acl";
     static final String FN_ACCOUNT_ID      = "aid";
-    static final String FN_CALITEM_IDS        = "ais";
-    static final String FN_CALITEM_END        = "ape";
-    static final String FN_CALITEM_START      = "aps";
+    static final String FN_CALITEM_IDS     = "ais";
+    static final String FN_CALITEM_END     = "ape";
+    static final String FN_CALITEM_START   = "aps";
     static final String FN_COLOR           = "c";
     static final String FN_COMPONENT       = "comp";
     static final String FN_CREATOR         = "cr";
@@ -72,6 +72,7 @@ public class Metadata {
     static final String FN_FIELDS          = "fld";
 //    static final String FN_IMAP_ID         = "i4";
     static final String FN_REMOTE_ID       = "id";
+    static final String FN_IDENTITY_ID     = "idnt";
     static final String FN_INV             = "inv";
     static final String FN_BOUNDS          = "l";
     static final String FN_NUM_COMPONENTS  = "nc";

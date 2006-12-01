@@ -82,6 +82,6 @@ public class SaveDraft extends CreateMessage {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         ParsedMessage pm = new ParsedMessage(getMessageBody(), getTimestamp(), mbox.attachmentsIndexingEnabled());
-        mbox.saveDraft(getOperationContext(), pm, getMessageId(), 0, null);
+        mbox.saveDraft(getOperationContext(), pm, getMessageId());
     }
 }
