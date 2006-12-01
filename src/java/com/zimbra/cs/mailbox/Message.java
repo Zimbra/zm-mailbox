@@ -71,8 +71,8 @@ public class Message extends MailItem {
         public DraftInfo(String rt, int id)                { replyType = rt;  origId = id; }
         public DraftInfo(String rt, int id, String ident)  { replyType = rt;  origId = id;  identityId = ident; }
         public DraftInfo(Metadata meta) throws ServiceException {
-            identityId = meta.get(Metadata.FN_IDENTITY_ID);
-            replyType = meta.get(Metadata.FN_REPLY_TYPE);
+            identityId = meta.get(Metadata.FN_IDENTITY_ID, null);
+            replyType = meta.get(Metadata.FN_REPLY_TYPE, null);
             origId = (int) meta.getLong(Metadata.FN_REPLY_ORIG, -1);
         }
     }
