@@ -49,31 +49,16 @@ public class SenderList {
     public SenderList()  {}
 
     public SenderList(Message msg) {
-        mFirst = new ParsedAddress(msg.getSender()).parse();
-        mLastDate = msg.getDate();
+        String sender = msg.getSender();
+        if (sender != null && !sender.trim().equals("")) {
+            mFirst = new ParsedAddress(sender).parse();
+            mLastDate = msg.getDate();
+        }
         mSize = 1;
     }
 
     public SenderList(List<Message> msgs) {
-        if (msgs == null || msgs.isEmpty())
-            return;
-        Collections.sort(msgs, new MailItem.SortDateAscending());
-
-        mFirst = new ParsedAddress(msgs.get(0).getSender()).parse();
-        mLastDate = msgs.get(msgs.size() - 1).getDate();
-        mSize = msgs.size();
-
-        for (int i = msgs.size() - 1; i >= 1 && !mIsElided; i--) {
-            ParsedAddress pa = new ParsedAddress(msgs.get(i).getSender()).parse();
-            if (pa.equals(mFirst) || (mParticipants != null && mParticipants.contains(pa)))
-                continue;
-            else if (mParticipants == null)
-                (mParticipants = new ArrayList<ParsedAddress>(MAX_PARTICIPANT_COUNT)).add(pa);
-            else if (mParticipants.size() >= MAX_PARTICIPANT_COUNT)
-                mIsElided = true;
-            else
-                mParticipants.add(pa);
-        }
+        this(msgs == null ? null : msgs.toArray(new Message[msgs.size()]));
     }
 
     public SenderList(Message[] msgs) {
@@ -81,12 +66,21 @@ public class SenderList {
             return;
         Arrays.sort(msgs, new MailItem.SortDateAscending());
 
-        mFirst = new ParsedAddress(msgs[0].getSender()).parse();
         mLastDate = msgs[msgs.length - 1].getDate();
         mSize = msgs.length;
 
-        for (int i = msgs.length - 1; i >= 1 && !mIsElided; i--) {
-            ParsedAddress pa = new ParsedAddress(msgs[i].getSender()).parse();
+        int first = 0;
+        do {
+            String sender = msgs[first].getSender();
+            if (sender != null && !sender.trim().equals(""))
+                mFirst = new ParsedAddress(sender).parse();
+        } while (mFirst == null && ++first < mSize);
+
+        for (int i = msgs.length - 1; i >= first && !mIsElided; i--) {
+            String sender = msgs[i].getSender();
+            if (sender == null || sender.trim().equals(""))
+                continue;
+            ParsedAddress pa = new ParsedAddress(sender).parse();
             if (pa.equals(mFirst) || (mParticipants != null && mParticipants.contains(pa)))
                 continue;
             else if (mParticipants == null)
@@ -100,6 +94,12 @@ public class SenderList {
 
 
     public SenderList add(Message msg) throws RefreshException {
+        String sender = msg.getSender();
+        if (sender == null || sender.trim().equals("")) {
+            mSize++;
+            return this;
+        }
+
         if (msg.getDate() < mLastDate)
             throw new RefreshException("appended message predates existing last message");
 
