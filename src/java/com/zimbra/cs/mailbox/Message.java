@@ -214,6 +214,17 @@ public class Message extends MailItem {
         return (mDraftInfo == null || mDraftInfo.replyType == null ? "" : mDraftInfo.replyType);
     }
 
+    /** Returns the ID of the {@link com.zimbra.cs.account.Identity} that was
+     *  used to compose this draft message.
+     * 
+     * @return The ID of the Identity used to compose this draft message, or ""
+     *         for Messages that are not drafts or did not specify an identity.
+     * @see #getDraftReplyType
+     * @see #getDraftOrigId() */
+    public String getDraftIdentityId() {
+        return (mDraftInfo == null || mDraftInfo.identityId == null ? "" : mDraftInfo.identityId);
+    }
+
     /** Returns whether the Message has a vCal attachment. */
     public boolean isInvite() {
         return mCalendarItemInfos != null;
