@@ -2078,5 +2078,17 @@ public class ZMailbox {
         }
         invoke(req);
     }
-}
 
+    public List<String> getAvailableSkins() throws ServiceException {
+        XMLElement req = new XMLElement(AccountService.GET_AVAILABLE_SKINS_REQUEST);
+        Element resp = invoke(req);
+        List<String> result = new ArrayList<String>();
+        for (Element skin : resp.listElements(AccountService.E_SKIN)) {
+            String name = skin.getAttribute(AccountService.A_NAME, null);
+            if (name != null)
+                result.add(name);
+        }
+        Collections.sort(result);
+        return result;
+    }
+}

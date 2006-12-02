@@ -96,6 +96,8 @@ public class ZPrefs {
     }
 
 
+    public String getSkin() { return get(Provisioning.A_zimbraPrefSkin); }
+    
     public String getDedupeMessagesSentToSelf() { return get(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf); }
 
     public String getMailInitialSearch() { return get(Provisioning.A_zimbraPrefMailInitialSearch); }
