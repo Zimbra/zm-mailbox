@@ -108,6 +108,7 @@ public class ZMailbox {
         private String mAccount;
         private AccountBy mAccountBy = AccountBy.name;
         private String mPassword;
+        private String mNewPassword;
         private String mAuthToken;
         private String mUri;
         private SoapTransport.DebugListener mDebugListener;
@@ -145,6 +146,9 @@ public class ZMailbox {
 
         public String getPassword() { return mPassword; }
         public void setPassword(String password) { mPassword = password; }
+
+        public String getNewPassword() { return mNewPassword; }
+        public void setNewPassword(String newPassword) { mNewPassword = newPassword; }
 
         public String getAuthToken() { return mAuthToken; }
         public void setAuthToken(String authToken) { mAuthToken = authToken; }
@@ -184,7 +188,14 @@ public class ZMailbox {
         if (options.getAuthToken() != null) {
             initAuthToken(options.getAuthToken());
         } else {
-            initAuthToken(auth(options.getAccount(), options.getAccountBy(), options.getPassword()).getAuthToken());
+            String password;
+            if (options.getNewPassword() != null) {
+                changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword());
+                password = options.getNewPassword();
+            } else {
+                password = options.getPassword();
+            }
+            initAuthToken(auth(options.getAccount(), options.getAccountBy(), password).getAuthToken());
         }
         if (options.getTargetAccount() != null) {
             initTargetAccount(options.getTargetAccount(), options.getTaretAccountBy());
@@ -210,6 +221,17 @@ public class ZMailbox {
             mTransport.setTargetAcctId(key);
         else if (AccountBy.name.equals(by))
             mTransport.setTargetAcctName(key);
+    }
+
+    private void changePassword(String key, AccountBy by, String oldPassword, String newPassword) throws ServiceException {
+        if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling changePassword", null);
+        XMLElement req = new XMLElement(AccountService.CHANGE_PASSWORD_REQUEST);
+        Element account = req.addElement(AccountService.E_ACCOUNT);
+        account.addAttribute(AccountService.A_BY, by.name());
+        account.setText(key);
+        req.addElement(AccountService.E_OLD_PASSWORD).setText(oldPassword);
+        req.addElement(AccountService.E_PASSWORD).setText(newPassword);
+        invoke(req);
     }
 
     private ZAuthResult auth(String key, AccountBy by, String password) throws ServiceException {
