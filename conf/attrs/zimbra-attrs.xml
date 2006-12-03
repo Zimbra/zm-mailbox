@@ -1900,7 +1900,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="425" name="zimbraDataSourceConnectionType" type="enum" value="cleartext,ssl,starttls" cardinality="single" requiredIn="pop3DataSource" flags="domainAdminModifiable">
-  <desc>local folder id to store retreived data in</desc>
+  <desc>what security layer to use for connection</desc>
 </attr>
 
 <attr id="426" name="zimbraDataSourceMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
