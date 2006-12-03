@@ -204,7 +204,7 @@ public class Folder extends MailItem {
         if (granted != null)
             return (short) (granted.shortValue() & rightsNeeded);
         // no ACLs apply; check parent folder for inherited rights
-        return mId == Mailbox.ID_FOLDER_ROOT ? 0 : mParent.checkRights(rightsNeeded, authuser, true);
+        return mId == Mailbox.ID_FOLDER_ROOT ? 0 : mParent.checkRights(rightsNeeded, authuser, asAdmin, true);
     }
 
     /** Grants the specified set of rights to the target and persists them
