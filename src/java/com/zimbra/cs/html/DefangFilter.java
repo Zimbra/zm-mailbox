@@ -468,7 +468,7 @@ public class DefangFilter extends DefaultFilter {
     /** End element. */
     public void endElement(QName element, Augmentations augs)
         throws XNIException {
-        if (element.rawname.equalsIgnoreCase("body") || element.rawname.equalsIgnoreCase("head")) {
+        if (element.rawname.equalsIgnoreCase("body")) {
             element.rawname = "div";
         }
         if (mElementDepth <= mRemovalElementDepth && elementAccepted(element.rawname)) {
@@ -545,7 +545,7 @@ public class DefangFilter extends DefaultFilter {
                 neuterImageTag(attributes);
             } else if (eName.equals("a")) {
                 fixATag(attributes);
-            } else if (eName.equals("body") || eName.equals("head")) {
+            } else if (eName.equals("body")) {
                 element.rawname = "div";
             }
 
@@ -568,7 +568,6 @@ public class DefangFilter extends DefaultFilter {
     }
 
     /**
-     * @param name
      * @param attributes
      */
     private void neuterImageTag(XMLAttributes attributes) {
@@ -587,7 +586,6 @@ public class DefangFilter extends DefaultFilter {
 
     /**
      * make sure all <a> tags have a target="_blank" attribute set.
-     * @param name
      * @param attributes
      */
     private void fixATag(XMLAttributes attributes) {
