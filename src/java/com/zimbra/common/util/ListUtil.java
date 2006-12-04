@@ -189,6 +189,28 @@ public class ListUtil {
         
         return toRet;
     }
+
+    /**
+     * Splits a <code>Collection</code> into <i>n</i> <code>List</code>s.
+     * Lists <i>1</i> through <i>n-1</i> are of size <code>listSize</code>.  List <i>n</i>
+     * contains the remaining elements.
+     */
+    public static <E> List<List<E>> split(Collection<E> c, int listSize) {
+        List<E> curList = new ArrayList<E>(listSize);
+        List<List<E>> splitLists = new ArrayList<List<E>>();
+        int i = 0;
+
+        for (E item : c) {
+            if (i == listSize) {
+                splitLists.add(curList);
+                curList = new ArrayList<E>(listSize);
+            }
+            curList.add(item);
+        }
+        splitLists.add(curList);
+
+        return splitLists;
+    }
     
     static private void testListUtil() {
         List<Integer>[] in = new List[5];
