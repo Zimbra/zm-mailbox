@@ -234,10 +234,8 @@ public class Search extends MailDocumentHandler  {
                     break;
             }
             
-            if (addedPart != null) {
+            if (addedPart != null)
                 params.setQueryStr("(" + params.getQueryStr() + ")" + addedPart);
-                System.out.println("QueryString is: \""+params.getQueryStr()+"\"");
-            }
         }
 
         return params;
