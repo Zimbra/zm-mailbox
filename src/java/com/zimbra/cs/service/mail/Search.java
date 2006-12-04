@@ -208,8 +208,36 @@ public class Search extends MailDocumentHandler  {
             int prevOffset = 0;
             String sortVal = cursor.getAttribute(MailService.A_SORTVAL);
             
-            String endSortVal = cursor.getAttribute("endSortVal", null);
+            String endSortVal = cursor.getAttribute(MailService.A_ENDSORTVAL, null);
             params.setCursor(prevMailItemId, sortVal, prevOffset, endSortVal);
+            
+            String addedPart = null;
+            
+            switch (params.getSortBy()) {
+                case DATE_ASCENDING:
+                    addedPart = "date:>="+sortVal+(endSortVal!=null ? " date:<"+endSortVal : "");
+                    break;
+                case DATE_DESCENDING:
+                    addedPart = "date:<="+sortVal+(endSortVal!=null ? " date:>"+endSortVal : "");
+                    break;
+                case SUBJ_ASCENDING:
+                    addedPart = "subject:>="+sortVal+(endSortVal!=null ? " subject:<"+endSortVal : "");
+                    break;
+                case SUBJ_DESCENDING:
+                    addedPart = "subject:<="+sortVal+(endSortVal!=null ? " subject:>"+endSortVal : "");
+                    break;
+                case NAME_ASCENDING:
+                    addedPart = "from:>="+sortVal+(endSortVal!=null ? " from:<"+endSortVal : "");
+                    break;
+                case NAME_DESCENDING:
+                    addedPart = "from:<="+sortVal+(endSortVal!=null ? " from:>"+endSortVal : "");
+                    break;
+            }
+            
+            if (addedPart != null) {
+                params.setQueryStr("(" + params.getQueryStr() + ")" + addedPart);
+                System.out.println("QueryString is: \""+params.getQueryStr()+"\"");
+            }
         }
 
         return params;
