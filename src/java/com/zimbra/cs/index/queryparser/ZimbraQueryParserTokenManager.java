@@ -2,10 +2,9 @@
 package com.zimbra.cs.index.queryparser;
 import java.util.TimeZone;
 import java.util.Locale;
-
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.mailbox.MailServiceException;
 import org.apache.lucene.analysis.Analyzer;
@@ -1318,14 +1317,12 @@ StringBuffer image;
 int jjimageLen;
 int lengthOfMatch;
 protected char curChar;
-public ZimbraQueryParserTokenManager(JavaCharStream stream)
-{
+public ZimbraQueryParserTokenManager(JavaCharStream stream){
    if (JavaCharStream.staticFlag)
       throw new Error("ERROR: Cannot use a static CharStream class with a non-static lexical analyzer.");
    input_stream = stream;
 }
-public ZimbraQueryParserTokenManager(JavaCharStream stream, int lexState)
-{
+public ZimbraQueryParserTokenManager(JavaCharStream stream, int lexState){
    this(stream);
    SwitchTo(lexState);
 }
@@ -1471,30 +1468,26 @@ void SkipLexicalActions(Token matchedToken)
    {
       case 3 :
          if (image == null)
-            image = new StringBuffer(new String(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1))));
-         else
-            image.append(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1)));
+            image = new StringBuffer();
+         image.append(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1)));
           SwitchTo(BRACES_STATE);
          break;
       case 4 :
          if (image == null)
-            image = new StringBuffer(new String(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1))));
-         else
-            image.append(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1)));
+            image = new StringBuffer();
+         image.append(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1)));
              SwitchTo(QUOTED_STATE);
          break;
       case 59 :
          if (image == null)
-            image = new StringBuffer(new String(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1))));
-         else
-            image.append(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1)));
+            image = new StringBuffer();
+         image.append(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1)));
            SwitchTo(DEFAULT);
          break;
       case 62 :
          if (image == null)
-            image = new StringBuffer(new String(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1))));
-         else
-            image.append(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1)));
+            image = new StringBuffer();
+         image.append(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1)));
             SwitchTo(DEFAULT);
          break;
       default :
@@ -1507,15 +1500,13 @@ void TokenLexicalActions(Token matchedToken)
    {
       case 60 :
         if (image == null)
-            image = new StringBuffer(new String(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1))));
-         else
+            image = new StringBuffer();
             image.append(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1)));
                                                    SwitchTo(DEFAULT);
          break;
       case 63 :
         if (image == null)
-            image = new StringBuffer(new String(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1))));
-         else
+            image = new StringBuffer();
             image.append(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1)));
                                                   SwitchTo(DEFAULT);
          break;

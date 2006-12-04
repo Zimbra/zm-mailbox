@@ -152,8 +152,7 @@ public class UnitTests extends TestCase {
         assertTrue(runTestQuery(mMailboxId, "title:foo title:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
         assertTrue(runTestQuery(mMailboxId, "keywords:foo keywords:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
         assertTrue(runTestQuery(mMailboxId, "company:foo company:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
-        assertTrue(runTestQuery(mMailboxId, "metadata:foo metadata:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
-
+        assertTrue(runTestQuery(mMailboxId, "foo sort:score and bar", false, NO_EXPECTED_CHECK));
         
         /////////////////////////////////
         // Search checks -- if you change the default data set these may start to fail!
@@ -305,6 +304,11 @@ public class UnitTests extends TestCase {
             runTestQuery(mMailboxId, "before:1/1/2004", false, NO_EXPECTED_CHECK, val);
         }
         
+        assertTrue(runTestQuery(mMailboxId, "metadata:foo metadata:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "sort:score metadata:foo metadata:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "metadata:foo sort:score and not metadata:foo sort:score and metadata:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "metadata:foo sort:score metadata:(\"foo\" \"foo bar\" gub) sort:score", false, NO_EXPECTED_CHECK));
+        assertTrue(runTestQuery(mMailboxId, "item:({1,2,3} or {4,5,6})", false, NO_EXPECTED_CHECK));
         
     }
     

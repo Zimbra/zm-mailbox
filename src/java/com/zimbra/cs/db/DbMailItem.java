@@ -2234,23 +2234,56 @@ public class DbMailItem {
 
         if (!ListUtil.isEmpty(c.sizes))
             encodeRanges(c.sizes, "size", 0, statement);
+        
+        if (!ListUtil.isEmpty(c.subjectRanges))
+            encodeStrRanges(c.subjectRanges, "subject", statement);
+        
+        if (!ListUtil.isEmpty(c.senderRanges))
+            encodeStrRanges(c.senderRanges, "sender", statement);
 
         statement.append(')');
     }
 
-    private static void encodeRanges(Collection<DbSearchConstraints.Range> ranges, String column, long lowestValue, StringBuilder statement) {
-        for (DbSearchConstraints.Range r : ranges) {
+    private static void encodeRanges(Collection<? extends DbSearchConstraints.NumericRange> ranges, String column, long lowestValue, StringBuilder statement) {
+        for (DbSearchConstraints.NumericRange r : ranges) {
             statement.append(r.negated ? " AND NOT (" : " AND (");
             if (r.lowest >= lowestValue)
-                statement.append(" " + column + " > ?");
+                if (r.lowestEqual)
+                    statement.append(" " + column + " >= ?");
+                else
+                    statement.append(" " + column + " > ?");
             if (r.highest >= lowestValue) {
                 if (r.lowest >= lowestValue)
                     statement.append(" AND");
-                statement.append(" " + column + " < ?");
+                if (r.highestEqual)
+                    statement.append(" " + column + " <= ?");
+                else
+                    statement.append(" " + column + " < ?");
             }
             statement.append(')');
         }
     }
+    
+    private static void encodeStrRanges(Collection<? extends DbSearchConstraints.StringRange> ranges, String column, StringBuilder statement) {
+        for (DbSearchConstraints.StringRange r : ranges) {
+            statement.append(r.negated ? " AND NOT (" : " AND (");
+            if (r.lowest != null)
+                if (r.lowestEqual)
+                    statement.append(" " + column + " >= ?");
+                else
+                    statement.append(" " + column + " > ?");
+            if (r.highest != null) {
+                if (r.lowest != null)
+                    statement.append(" AND");
+                if (r.highestEqual)
+                    statement.append(" " + column + " <= ?");
+                else
+                    statement.append(" " + column + " < ?");
+            }
+            statement.append(')');
+        }
+    }
+    
 
     static class TagConstraints {
         Set<Long> searchTagsets;
@@ -2362,26 +2395,43 @@ public class DbMailItem {
             for (int id : c.indexIds)
                 stmt.setInt(param++, id);
         if (!ListUtil.isEmpty(c.dates))
-            for (DbSearchConstraints.Range date : c.dates) {
+            for (DbSearchConstraints.NumericRange date : c.dates) {
                 if (date.lowest > 0)
                     stmt.setInt(param++, (int) Math.min(date.lowest / 1000, Integer.MAX_VALUE));
                 if (date.highest > 0)
                     stmt.setInt(param++, (int) Math.min(date.highest / 1000, Integer.MAX_VALUE));
             }
-        if (!ListUtil.isEmpty(c.sizes))
-            for (DbSearchConstraints.Range size : c.sizes) {
-                if (size.lowest >= 0)
-                    stmt.setInt(param++, (int) size.lowest);
-                if (size.highest >= 0)
-                    stmt.setInt(param++, (int) size.highest);
-            }
         if (!ListUtil.isEmpty(c.modified)) 
-            for (DbSearchConstraints.Range modified : c.modified) {
+            for (DbSearchConstraints.NumericRange modified : c.modified) {
                 if (modified.lowest > 0)
                     stmt.setLong(param++, modified.lowest);
                 if (modified.highest > 0)
                     stmt.setLong(param++, modified.highest);
             }
+        if (!ListUtil.isEmpty(c.sizes))
+            for (DbSearchConstraints.NumericRange size : c.sizes) {
+                if (size.lowest >= 0)
+                    stmt.setInt(param++, (int) size.lowest);
+                if (size.highest >= 0)
+                    stmt.setInt(param++, (int) size.highest);
+            }
+        if (!ListUtil.isEmpty(c.subjectRanges))
+            for (DbSearchConstraints.SubjectRange cur: c.subjectRanges) {
+                if (cur.lowest != null) 
+                    stmt.setString(param++, cur.lowest);
+                if (cur.highest != null) 
+                    stmt.setString(param++, cur.highest);
+            }
+        
+        if (!ListUtil.isEmpty(c.senderRanges))
+            for (DbSearchConstraints.SenderRange cur: c.senderRanges) {
+                if (cur.lowest != null) 
+                    stmt.setString(param++, cur.lowest);
+                if (cur.highest != null) 
+                    stmt.setString(param++, cur.highest);
+            }
+        
+        
 
         return param;
     }

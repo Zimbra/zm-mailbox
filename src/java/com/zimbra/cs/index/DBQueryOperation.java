@@ -244,9 +244,9 @@ class DBQueryOperation extends QueryOperation
      * @param truth
      * @throws ServiceException
      */
-    void addDateClause(long lowestDate, long highestDate, boolean truth)  {
+    void addDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
         mAllResultsQuery = false;
-        topLevelAndedConstraint().addDateClause(lowestDate, highestDate, truth);
+        topLevelAndedConstraint().addDateClause(lowestDate, lowestEq, highestDate, highestEq, truth);
     }
 
     /**
@@ -259,6 +259,30 @@ class DBQueryOperation extends QueryOperation
         mAllResultsQuery = false;
         topLevelAndedConstraint().addSizeClause(lowestSize, highestSize, truth);
     }
+    
+    /**
+     * @param lowest
+     * @param highest
+     * @param truth
+     * @throws ServiceException
+     */
+    void addRelativeSubject(String lowestSubj, boolean lowerEqual, String highestSubj, boolean higherEqual, boolean truth)  {
+        mAllResultsQuery = false;
+        topLevelAndedConstraint().addSubjectRelClause(lowestSubj, lowerEqual, highestSubj, higherEqual, truth);
+    }
+    
+    /**
+     * @param lowest
+     * @param highest
+     * @param truth
+     * @throws ServiceException
+     */
+    void addRelativeSender(String lowestSubj, boolean lowerEqual, String highestSubj, boolean higherEqual, boolean truth)  {
+        mAllResultsQuery = false;
+        topLevelAndedConstraint().addSenderRelClause(lowestSubj, lowerEqual, highestSubj, higherEqual, truth);
+    }
+    
+    
 
     /**
      * @param convId

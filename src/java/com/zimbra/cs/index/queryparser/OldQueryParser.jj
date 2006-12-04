@@ -231,12 +231,8 @@ public final class ZimbraQueryParser {
               q.parseDate(modifier, tok, mTimeZone, mLocale);
               return q;
           }
-          case FROM:
-			if (tok == null || tok.length() < 1) {
-                 throw new ParseException("Missing required text after a TO/FROM/CC");
-			}
-    			return ZimbraQuery.SenderQuery.create(mMailbox, mAnalyzer, modifier, target, tok);            
           case TO:
+          case FROM:
           case ENVTO:
           case ENVFROM:
           case CC:
@@ -251,8 +247,6 @@ public final class ZimbraQueryParser {
           case BIGGER:
           case SMALLER:
             return new ZimbraQuery.SizeQuery(mAnalyzer, modifier,target,tok);
-          case SUBJECT:
-            return ZimbraQuery.SubjectQuery.create(mMailbox, mAnalyzer, modifier, target, tok);
           default:
             return new ZimbraQuery.TextQuery(mMailbox, mAnalyzer, modifier,target,tok);
         }
@@ -418,9 +412,9 @@ ZimbraQuery.BaseQuery Conjunction() :
 {
 }
 {
-      <AND_TOKEN> { return new ZimbraQuery.ConjQuery(mAnalyzer, AND_TOKEN); }
-      |  <OR_TOKEN>  { return new ZimbraQuery.ConjQuery(mAnalyzer, OR_TOKEN); }
-      |  { return new ZimbraQuery.ConjQuery(mAnalyzer, AND_TOKEN); }
+    <AND_TOKEN> { return new ZimbraQuery.ConjQuery(mAnalyzer, AND_TOKEN); }
+ |  <OR_TOKEN>  { return new ZimbraQuery.ConjQuery(mAnalyzer, OR_TOKEN); }
+ |  { return new ZimbraQuery.ConjQuery(mAnalyzer, AND_TOKEN); }
 }
 
 int Modifier() :
@@ -449,17 +443,6 @@ int DateModifier() :
     }
 }
 
-void SortBy() :
-{
-    Token t = null;
-}
-{
-   (<SORTBY>|<SORT>) t=<TEXT_TOK> { mSortByStr = t.image; }
-   | {}
-}
-
-
-
 /***
  *
  * Text target but after we have a target (thing to the left of the :...)
@@ -478,19 +461,15 @@ ZimbraQuery.BaseQuery Rhs_Text(int target) throws ServiceException :
         (
             clause=Conjunction() { AddClause(clauses,clause); }
             modifier=Modifier() clause=Rhs_Text(target) { clause.setModifier(modifier); AddClause(clauses,clause); }
-         )*
-        <RPAREN> { return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses); }
-    )   
-    
-    |  (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(modifier, target, t.image); }
+            )*
+            <RPAREN> { return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses); }
+        )   
+        |  (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(modifier, target, t.image); }
 }
 
 /***
  *
  * item:  target
- *
- * Like Rhs_Text, except we allow {}'s, so these are legal:
- *   'item:{1,2,3}', 'item:({1,2,3} or {4,5,6})'
  *
  **/
 ZimbraQuery.BaseQuery Rhs_Item(int target) throws ServiceException :
@@ -502,21 +481,20 @@ ZimbraQuery.BaseQuery Rhs_Item(int target) throws ServiceException :
 }
 {
     (
-        <LPAREN> modifier=Modifier() clause=Rhs_Item(target) { clause.setModifier(modifier);  AddClause(clauses,clause); }
+        <LPAREN> modifier=Modifier() clause=Rhs_Text(target) { clause.setModifier(modifier);  AddClause(clauses,clause); }
         (
             clause=Conjunction() { AddClause(clauses,clause); }
             modifier=Modifier() clause=Rhs_Item(target) { clause.setModifier(modifier); AddClause(clauses,clause); }
-        )*
-        <RPAREN> { return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses); }
-    )   
-    
-    |  (t=<TEXT_TOK>|t=<QUOTED_TOK>|t=<BRACES_TOK>) { return GetQuery(modifier, target, t.image); }
+            )*
+            <RPAREN> { return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses); }
+        )   
+        |  (t=<TEXT_TOK>|t=<QUOTED_TOK>|t=<BRACES_TOK>) { return GetQuery(modifier, target, t.image); }
 }
 
 
 /***
  *
- * special date target (because dates allow starting - (minus) signs, and we don't want to interpret those as a NOT, like
+ * special date target (because dates allow starting - (minus) signs, and we don't want to interpret those as a not, like
  * we do in other cases
  *
  **/
@@ -533,12 +511,11 @@ ZimbraQuery.BaseQuery Rhs_Date(int target) throws ServiceException :
         (
             clause=Conjunction() { AddClause(clauses,clause); }
             modifier=DateModifier() clause=Rhs_Date(target) { if (modifier == NOT_TOKEN) { clause.setModifier(MINUS); } AddClause(clauses,clause); }
-        )*
-        <RPAREN> { return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses); }
-    )   
-        
-    |  (u=<MINUS>|u=<PLUS>)(t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0, target, u.image+t.image); }
-    |  (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0, target, t.image); }
+            )*
+            <RPAREN> { return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses); }
+        )   
+        |  (u=<MINUS>|u=<PLUS>)(t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0, target, u.image+t.image); }
+        |  (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0, target, t.image); }
 }
 
 
@@ -553,26 +530,30 @@ ZimbraQuery.BaseQuery Clause() throws ServiceException :
 
     ZimbraQuery.BaseQuery q = null;
     ArrayList subExp = null;
+    int target;
 }
 {
     <LPAREN> subExp=Query() <RPAREN> { return new ZimbraQuery.SubQuery(mAnalyzer, 0, subExp); }
-    
     | (
-          (
-  	           t=<MSGID>|t=<ENVFROM>|t=<ENVTO>|t=<FROM>|t=<TO>|t=<CC>
-  		      | t=<CONTENT>|t=<MESSAGE>|t=<SUBJECT>|t=<IN>|t=<INID>
-       		  |  t=<TYPE>|t=<ATTACHMENT>|t=<HAS>|t=<FILENAME>|t=<AUTHOR>|t=<TITLE>|t=<KEYWORDS>|t=<COMPANY>|t=<METADATA>
-	     	  | t=<MY>|t=<IS>|t=<TAG>|t=<CONV>|t=<CONV_COUNT>|t=<CONV_MINM>|t=<CONV_MAXM>
-	  	      | t=<SIZE>|t=<BIGGER>|t=<SMALLER>
-           ) q = Rhs_Text(t.kind)
-      
-      
-        | (t=<ITEM>) q = Rhs_Item(t.kind)
-        | (t=<DATE>|t=<DAY>|t=<MONTH>|t=<WEEK>|t=<YEAR>|t=<AFTER>|t=<BEFORE>|t=<CONV_START>|t=<CONV_END>) q = Rhs_Date(t.kind)
-        | (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0,CONTENT,t.image); }
-     )
-     { return q; }
+        (t=<MSGID>|t=<ENVFROM>|t=<ENVTO>|t=<FROM>|t=<TO>|t=<CC>) q=Rhs_Text(t.kind) 
+        | (t=<ITEM>) q=Rhs_Item(t.kind)
+      | (t=<CONTENT>|t=<MESSAGE>|t=<SUBJECT>|t=<IN>|t=<INID>|t=<TYPE>|t=<ATTACHMENT>|t=<HAS>|t=<FILENAME>|t=<AUTHOR>|t=<TITLE>|t=<KEYWORDS>|t=<COMPANY>|t=<METADATA>) q=Rhs_Text(t.kind) 
+      | (t=<MY>|t=<IS>|t=<TAG>|t=<CONV>|t=<CONV_COUNT>|t=<CONV_MINM>|t=<CONV_MAXM>) q=Rhs_Text(t.kind) 
+        | (t=<DATE>|t=<DAY>|t=<MONTH>|t=<WEEK>|t=<YEAR>|t=<AFTER>|t=<BEFORE>|t=<CONV_START>|t=<CONV_END>) q=Rhs_Date(t.kind)
+      | (t=<SIZE>|t=<BIGGER>|t=<SMALLER>) q=Rhs_Text(t.kind)
+        |     (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0,CONTENT,t.image); }
+      )
+      { return q; }
 
+}
+
+void SortBy() :
+{
+    Token t = null;
+}
+{
+   (<SORTBY>|<SORT>) t=<TEXT_TOK> { mSortByStr = t.image; }
+   | {}
 }
 
 ArrayList Query() throws ServiceException :
@@ -585,8 +566,8 @@ ArrayList Query() throws ServiceException :
     SortBy() modifier=Modifier() clause=Clause() SortBy() { if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); } }
     (
         clause=Conjunction() { AddClause(clauses,clause); }
-        modifier=Modifier() clause=Clause() { if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); } }
-        SortBy()
+        modifier=Modifier() clause=Clause() SortBy() { if (clause != null) { clause.setModifier(modifier); AddClause(clauses,clause); } }
+        SortBy() {}
         )* {}
     {
         return clauses;

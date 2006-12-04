@@ -1,12 +1,12 @@
 Tim's short-short summary of the query grammar as of now (updated)
 --------------------------------------------------------
    content:{TEXT}
-   from:{TEXT|EMAIL_ADDR|DOMAIN} 
+   from:[>,<,>=,<=]{TEXT} OR {EMAIL_ADDR} OR {DOMAIN} 
    to:{TEXT|EMAIL_ADDR|DOMAIN}
    cc:{TEXT|EMAIL|DOMAIN}
    envto:{TEXT|EMAIL_ADDR|DOMAIN} // x-envelope-to mime header
    envfrom:{TEXT|EMAIL|DOMAIN}    // x-envelope-from mime-header 
-   subject:{TEXT}
+   subject:[>,<,>=,<=]{TEXT}
    in:{FOLDER_LABEL}   // or whatever we call folders nowadays
    has:{"attachment"|OBJECT_TYPE}
    filename:{FILENAME}
@@ -17,7 +17,7 @@ Tim's short-short summary of the query grammar as of now (updated)
          |"{[0-9]+(,\s?[0-9]+)*}" -- ie {1,2,3} or {1} --> set of item_id's
    is:{"anywhere"|"unread"|"read"|"flagged"|"unflagged"|"sent"|"received"|"replied"|
        "unreplied"|"forwarded"|"unforwarded"|"invite"}
-   date:{DATE}
+   date:[>,<,>=,<={DATE} 
    after:{DATE}
    before:{DATE}
    size:{SIZE}

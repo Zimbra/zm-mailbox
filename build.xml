@@ -113,6 +113,9 @@
 		<pathelement location="${common.classes.dir}" />
 		<pathelement location="${im.classes.dir}" />
 		<pathelement location="${build.classes.dir}" />
+		<fileset dir="${jars.dir}">
+			<include name="**/*.jar" />
+		</fileset>
 		<fileset dir="${common.jars.dir}">
 			<include name="**/*.jar" />
 		</fileset>

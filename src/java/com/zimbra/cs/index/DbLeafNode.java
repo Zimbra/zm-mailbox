@@ -135,10 +135,12 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
      * @param truth
      * @throws ServiceException
      */
-    void addDateClause(long lowestDate, long highestDate, boolean truth)  {
-        DbSearchConstraints.Range intv = new DbSearchConstraints.Range();
-        intv.lowest = lowestDate;
-        intv.highest = highestDate;
+    void addDateClause(long lowest, boolean lowestEqual, long highest, boolean highestEqual, boolean truth)  {
+        DbSearchConstraints.DateRange intv = new DbSearchConstraints.DateRange();
+        intv.lowest = lowest;
+        intv.lowestEqual = lowestEqual;
+        intv.highest = highest;
+        intv.highestEqual = highestEqual;
         intv.negated = !truth;
 
         dates.add(intv);
@@ -151,13 +153,49 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
      * @throws ServiceException
      */
     void addSizeClause(long lowestSize, long highestSize, boolean truth)  {
-        DbSearchConstraints.Range intv = new DbSearchConstraints.Range();
+        DbSearchConstraints.SizeRange intv = new DbSearchConstraints.SizeRange();
         intv.lowest = lowestSize;
         intv.highest = highestSize;
         intv.negated = !truth;
 
         sizes.add(intv);
     }
+    
+    /**
+     * @param lowest
+     * @param highest
+     * @param truth
+     * @throws ServiceException
+     */
+    void addSubjectRelClause(String lowest, boolean lowestEqual, String highest, boolean highestEqual, boolean truth) {
+        DbSearchConstraints.SubjectRange intv = new DbSearchConstraints.SubjectRange();
+        intv.lowest = lowest;
+        intv.lowestEqual = lowestEqual;
+        intv.highest = highest;
+        intv.highestEqual = highestEqual;
+        intv.negated = !truth;
+        
+        subjectRanges.add(intv);
+    }
+    
+    /**
+     * @param lowest
+     * @param highest
+     * @param truth
+     * @throws ServiceException
+     */
+    void addSenderRelClause(String lowest, boolean lowestEqual, String highest, boolean highestEqual, boolean truth) {
+        DbSearchConstraints.SenderRange intv = new DbSearchConstraints.SenderRange();
+        intv.lowest = lowest;
+        intv.lowestEqual = lowestEqual;
+        intv.highest = highest;
+        intv.highestEqual = highestEqual;
+        intv.negated = !truth;
+        
+        senderRanges.add(intv);
+    }
+    
+    
 
     /**
      * @param convId
