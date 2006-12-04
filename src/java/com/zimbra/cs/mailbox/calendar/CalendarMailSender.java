@@ -314,6 +314,8 @@ public class CalendarMailSender {
             String subject, String text,
             String uid, ZCalendar.ZVCalendar cal)
     throws ServiceException {
+        if (text == null)
+            text = "";
         try {
             MimeMessage mm = new MimeMessage(JMSession.getSession()) {
                 protected void updateHeaders() throws MessagingException {
