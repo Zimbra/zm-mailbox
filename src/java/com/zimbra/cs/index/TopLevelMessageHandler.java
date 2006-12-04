@@ -87,20 +87,20 @@ public final class TopLevelMessageHandler {
     public void addContent(String text) {
     	addContent(text, false);
     }
-    
+
     public void addContent(String text, boolean isMainBody) {
     	if (mContent.length() > 0)
     		mContent.append(' ');
     	mContent.append(text);
-    	
+
     	if (isMainBody)
-    		mBodyContent = text;
+    		mBodyContent = (mBodyContent == null ? text : mBodyContent + ' ' + text);
     }
-    
+
     public List<MPartInfo> getMessageParts() {
     	return mMessageParts;
     }
-    
+
     public void hasCalendarPart(boolean hasCal) {
         mHasCalendar = hasCal;
     }
