@@ -141,7 +141,7 @@ public class ZMailbox {
         public String getTargetAccount() { return mTargetAccount; }
         public void setTargetAccount(String targetAccount) { mTargetAccount = targetAccount; }
 
-        public AccountBy getTaretAccountBy() { return mTargetAccountBy; }
+        public AccountBy getTargetAccountBy() { return mTargetAccountBy; }
         public void setTargetAccountBy(AccountBy targetAccountBy) { mTargetAccountBy = targetAccountBy; }
 
         public String getPassword() { return mPassword; }
@@ -198,7 +198,7 @@ public class ZMailbox {
             initAuthToken(auth(options.getAccount(), options.getAccountBy(), password).getAuthToken());
         }
         if (options.getTargetAccount() != null) {
-            initTargetAccount(options.getTargetAccount(), options.getTaretAccountBy());
+            initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
         }
     }
 
@@ -1245,7 +1245,7 @@ public class ZMailbox {
     }
 
     /**
-     * find the folder with the pecified path, starting from the user root.
+     * find the folder with the specified path, starting from the user root.
      * @param path path of folder. Must start with {@link #PATH_SEPARATOR}.
      * @return ZFolder if found, null otherwise.
      */

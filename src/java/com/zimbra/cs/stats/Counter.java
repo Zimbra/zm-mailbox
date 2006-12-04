@@ -134,7 +134,7 @@ implements Accumulator {
     }
     
     public synchronized List<Object> getData() {
-        List data = new ArrayList();
+        List<Object> data = new ArrayList<Object>();
         if (mShowTotal) {
             if (mCount > 0) {
                 data.add(mTotal);

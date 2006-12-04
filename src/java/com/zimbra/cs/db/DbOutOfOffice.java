@@ -56,7 +56,7 @@ public class DbOutOfOffice {
      * @param conn the database connection
      * @param mbox the sender's mailbox
      * @param sentTo the recipient's email address
-     * @param numDays the number of days
+     * @param cacheDurationMillis threshold for determining last sent time
      * @throws ServiceException if a database error occrurs
      */
     public static boolean alreadySent(
