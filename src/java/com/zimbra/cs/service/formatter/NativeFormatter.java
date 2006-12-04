@@ -99,13 +99,12 @@ public class NativeFormatter extends Formatter {
     private void handleMessage(Context context, Message msg) throws IOException, ServiceException, MessagingException, ServletException {
         if (context.hasBody()) {
             List<MPartInfo> parts = Mime.getParts(msg.getMimeMessage());
-             MPartInfo body = Mime.getBody(parts, UserServlet.BODY_HTML.equalsIgnoreCase(context.getBody()));
-             if (body != null) {
-                 handleMessagePart(context, body.getMimePart(), msg);
-             } else {
-                 context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "body not found");
-             }
-            
+            MPartInfo body = Mime.getTextBody(parts, false);
+            if (body != null) {
+                handleMessagePart(context, body.getMimePart(), msg);
+            } else {
+                context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "body not found");
+            }
         } else if (context.hasPart()) {
             MimePart mp = getMimePart(msg, context.getPart());            
             handleMessagePart(context, mp, msg);

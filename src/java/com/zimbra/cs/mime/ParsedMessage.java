@@ -511,7 +511,7 @@ public class ParsedMessage {
 			return;
 		}
 
-		MPartInfo mpiBody = Mime.getBody(mMessageParts, false);
+		Set<MPartInfo> mpiBodies = Mime.getBody(mMessageParts, false);
 
 		TopLevelMessageHandler allTextHandler = new TopLevelMessageHandler(mMessageParts);
 
@@ -528,7 +528,7 @@ public class ParsedMessage {
                 reportRoot = partName.endsWith("TEXT") ? partName.substring(0, partName.length() - 4) : partName + ".";
 
             try {
-                analyzePart(mpi, mpiBody, allTextHandler, reportRoot != null);
+                analyzePart(mpi, mpiBodies, allTextHandler, reportRoot != null);
             } catch (MimeHandlerException e) {
                 numParseErrors++;
                 String pn = mpi.getPartName();
@@ -575,7 +575,7 @@ public class ParsedMessage {
         }
 	}
 
-    private void analyzePart(MPartInfo mpi, MPartInfo mpiBody, TopLevelMessageHandler allTextHandler, boolean ignoreCalendar)
+    private void analyzePart(MPartInfo mpi, Set<MPartInfo> mpiBodies, TopLevelMessageHandler allTextHandler, boolean ignoreCalendar)
     throws MimeHandlerException, ObjectHandlerException, MessagingException, ServiceException {
         String ctype = mpi.getContentType();
         // ignore multipart "container" parts
@@ -603,15 +603,15 @@ public class ParsedMessage {
             if (!ignoreCalendar && miCalendar == null)
                 miCalendar = handler.getICalendar();
 
-            if (mpi == mpiBody ||
-                    (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsTogether)) {
+            boolean isMainBody = mpiBodies.contains(mpi);
+            if (isMainBody || (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsTogether)) {
                 // add ALL TEXT from EVERY PART to the toplevel body content.
                 // This is necessary for queries with multiple words -- where
                 // one word is in the body and one is in a sub-attachment.
                 //
                 // If attachment indexing is disabled, then we only add the main body and
                 // text parts...
-                allTextHandler.addContent(handler.getContent(), mpi == mpiBody);
+                allTextHandler.addContent(handler.getContent(), isMainBody);
             }
 
             if (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsSeparately) {

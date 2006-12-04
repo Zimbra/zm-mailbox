@@ -79,6 +79,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -642,10 +643,10 @@ public class ToXML {
             if (msg.isInvite())
                 encodeInvitesForMessage(m, lc, msg, NOTIFY_FIELDS);
 
-            List parts = Mime.getParts(mm);
+            List<MPartInfo> parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
-                MPartInfo body = Mime.getBody(parts, wantHTML);
-                addParts(m, (MPartInfo) parts.get(0), body, part, neuter);
+                Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
+                addParts(m, parts.get(0), bodies, part, neuter);
             }
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
@@ -828,10 +829,10 @@ public class ToXML {
             for (Invite inv : calItem.getInvites(invId))
                 encodeInvite(invElt, lc, calItem, inv, NOTIFY_FIELDS, repliesWithInvites);
 
-            List parts = Mime.getParts(mm);
+            List<MPartInfo> parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
-                MPartInfo body = Mime.getBody(parts, wantHTML);
-                addParts(m, (MPartInfo) parts.get(0), body, part, neuter);
+                Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
+                addParts(m, parts.get(0), bodies, part, neuter);
             }
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
@@ -1250,7 +1251,7 @@ public class ToXML {
     }
 
 
-    private static void addParts(Element parent, MPartInfo mpi, MPartInfo body, String prefix, boolean neuter) {
+    private static void addParts(Element parent, MPartInfo mpi, Set<MPartInfo> bodies, String prefix, boolean neuter) {
         Element elem = parent.addElement(MailService.E_MIMEPART);
         MimePart mp = mpi.getMimePart();
 
@@ -1327,7 +1328,7 @@ public class ToXML {
         } catch (MessagingException me) { }
 
         // include the part's content if this is the displayable "memo part"
-        if (mpi == body) {
+        if (bodies != null && bodies.contains(mpi)) {
             elem.addAttribute(MailService.A_BODY, true);
             try {
                 addContent(elem, mpi, neuter);
@@ -1342,7 +1343,7 @@ public class ToXML {
         if (mpi.hasChildren()) {
             for (Iterator it = mpi.getChildren().iterator(); it.hasNext();) {
                 MPartInfo cp = (MPartInfo) it.next();
-                addParts(elem, cp, body, prefix, neuter);
+                addParts(elem, cp, bodies, prefix, neuter);
             }
         }
     }

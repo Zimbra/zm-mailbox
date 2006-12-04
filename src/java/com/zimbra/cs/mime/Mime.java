@@ -37,7 +37,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -83,11 +85,13 @@ public class Mime {
     public static final String CT_APPLICATION_MSWORD = "application/msword";
     public static final String CT_APPLICATION_PDF = "application/pdf";
     public static final String CT_MULTIPART_ALTERNATIVE = "multipart/alternative";
+    public static final String CT_MULTIPART_DIGEST = "multipart/digest";
     public static final String CT_MULTIPART_MIXED = "multipart/mixed";
     public static final String CT_MULTIPART_REPORT = "multipart/report";
     public static final String CT_XML_ZIMBRA_SHARE = "xml/x-zimbra-share";
 
     public static final String CT_MULTIPART_PREFIX = "multipart/";
+    public static final String CT_TEXT_PREFIX = "text/";
 
     public static final String CT_APPPLICATION_WILD = "application/.*";
     public static final String CT_IMAGE_WILD = "image/.*";
@@ -642,36 +646,79 @@ public class Mime {
         return sb.toString();
     }
 
-    public static MPartInfo getBody(List parts, boolean preferHtml) {
-     	if (parts.isEmpty())
-     		return null;
-     	
-     	// if top-level has no children, then it is the body
-     	MPartInfo top = (MPartInfo) parts.get(0);
-     	if (!top.getContentType().startsWith(CT_MULTIPART_PREFIX))
-     		return top.getDisposition().equals(Part.ATTACHMENT) ? null : top;
 
-        return getBodySubpart(top, preferHtml);
+    public static MPartInfo getTextBody(List<MPartInfo> parts, boolean preferHtml) {
+        for (MPartInfo mpi : getBody(parts, preferHtml)) {
+            if (mpi.getContentType().startsWith(CT_TEXT_PREFIX))
+                return mpi;
+        }
+        return null;
+    }
+
+    public static Set<MPartInfo> getBody(List<MPartInfo> parts, boolean preferHtml) {
+     	if (parts.isEmpty())
+     		return Collections.emptySet();
+
+        Set<MPartInfo> bodies = null;
+
+     	// if top-level has no children, then it is the body
+     	MPartInfo top = parts.get(0);
+     	if (!top.getContentType().startsWith(CT_MULTIPART_PREFIX)) {
+            if (!top.getDisposition().equals(Part.ATTACHMENT))
+                (bodies = new HashSet<MPartInfo>(1)).add(top);
+        } else {
+            bodies = getBodySubparts(top, preferHtml);
+        }
+
+        if (bodies == null)
+            bodies = Collections.emptySet();
+        return bodies;
     }
 
     private static Set<String> TEXT_ALTERNATES = new HashSet<String>(Arrays.asList(new String[] { CT_TEXT_ENRICHED, CT_TEXT_HTML } ));
     private static Set<String> HTML_ALTERNATES = new HashSet<String>(Arrays.asList(new String[] { CT_TEXT_ENRICHED, CT_TEXT_PLAIN } ));
 
-    private static MPartInfo getBodySubpart(MPartInfo base, boolean preferHtml) {
-        // short-circuit malformed messages
-        if (!base.hasChildren())
+    private static Set<MPartInfo> getBodySubparts(MPartInfo base, boolean preferHtml) {
+        // short-circuit malformed messages and message subparts
+        String ctype = base.getContentType();
+        if (!base.hasChildren() || ctype.equals(CT_MESSAGE_RFC822))
             return null;
 
         List<MPartInfo> children;
-        if (base.getContentType().equals(CT_MULTIPART_ALTERNATIVE)) {
+        if (ctype.equals(CT_MULTIPART_ALTERNATIVE))
+            return getAlternativeBodySubpart(base.getChildren(), preferHtml);
+        else if (ctype.equals(CT_MULTIPART_DIGEST))
+            return null;
+        else if (ctype.equals(CT_MULTIPART_MIXED))
             children = base.getChildren();
-        } else {
-            // for multipart/mixed (etc.), only the first part is really "body"
-            children = new ArrayList<MPartInfo>();
-            children.add(base.getChildren().get(0));
+        else
+            (children = new ArrayList<MPartInfo>(1)).add(base.getChildren().get(0));
+
+        Set<MPartInfo> bodies = null;
+        boolean first = true;
+        for (MPartInfo mpi : children) {
+            String childType = mpi.getContentType();
+            if (childType.startsWith(CT_MULTIPART_PREFIX)) {
+                Set<MPartInfo> found = getBodySubparts(mpi, preferHtml);
+                if (found != null) {
+                    if (bodies == null)  bodies = new LinkedHashSet<MPartInfo>(found.size());
+                    bodies.addAll(found);
+                }
+            } else if (first || !mpi.getDisposition().equals(Part.ATTACHMENT)) {
+                if (!childType.equals(CT_MESSAGE_RFC822)) {
+                    if (bodies == null)  bodies = new LinkedHashSet<MPartInfo>(1);
+                    bodies.add(mpi);
+                }
+            }
+            first = false;
         }
 
+        return bodies;
+    }
+
+    private static Set<MPartInfo> getAlternativeBodySubpart(List<MPartInfo> children, boolean preferHtml) {
         // go through top-level children, stopping at first text part we are interested in
+        Set<MPartInfo> body;
         MPartInfo alternative = null;
         for (MPartInfo mpi : children) {
             boolean isAttachment = mpi.getDisposition().equals(Part.ATTACHMENT);
@@ -681,20 +728,20 @@ public class Mime {
 
             String ctype = mpi.getContentType();
             if (!isAttachment && ctype.equals(wantType)) {
-                return mpi;
+                (body = new LinkedHashSet<MPartInfo>(1)).add(mpi);
+                return body;
             } else if (!isAttachment && altTypes.contains(ctype)) {
                 alternative = mpi;
             } else if (ctype.startsWith(CT_MULTIPART_PREFIX)) {
-                MPartInfo subpart = getBodySubpart(mpi, preferHtml);
-                if (subpart == null)
-                	continue;
-                if (subpart.getContentType().equals(wantType))
-                    return subpart;
-                if (alternative == null)
-                    alternative = subpart;
+                if ((body = getBodySubparts(mpi, preferHtml)) != null)
+                    return body;
             }
         }
-        return alternative;
+
+        if (alternative == null)
+            return null;
+        (body = new LinkedHashSet<MPartInfo>(1)).add(alternative);
+        return body;
     }
 
     public static void main(String[] args) throws UnsupportedEncodingException {
