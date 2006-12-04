@@ -1799,7 +1799,8 @@ instead of the saved values.
 
 <CreateDataSourceRequest/>
   <pop3 name="My POP3 Account" isEnabled="0|1" host="pop.myisp.com" port="110"
-    connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"/>
+    connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
+    leaveOnServer="0|1"/>
 </CreateDataSourceRequest>
 
 <CreateDataSourceResponse>
@@ -1815,7 +1816,7 @@ the only protocol supported is POP3.
 
 <GetDataSourcesResponse>
   <pop3 id="{id}" name="My POP3 Account" isEnabled="0|1" host="pop3.myisp.com" port="110"
-    username="mylogin" l="{folder-id}"/>
+    username="mylogin" l="{folder-id}" leaveOnServer="0|1"/>
   ...
 </GetDataSourcesResponse>
 
@@ -1827,7 +1828,7 @@ every attribute value is returned except password.
 <ModifyDataSourceRequest>
   <pop3 id="{id}" [name="My POP3 Account"] [isEnabled="0|1"] [host="pop3.myisp.com"]
     [port="110"] [connectionType="cleartext|ssl"] [username="mylogin"]
-    [password="mypassword"] [l="{folder-id}"]/>
+    [password="mypassword"] [l="{folder-id}"] [leaveOnServer="0|1"]/>
 </ModifyDataSourceRequest>
 
 <ModifyDataSourceResponse/>
@@ -1880,35 +1881,4 @@ success:   Whether the last import completed successfully.
 error:     If the last import failed, the error message that was returned.
 
 
----------------------------------------------------------
-
-
 ---------------------------
-
-<TestDataSourceRequest>
-  <dataSource type="pop3">
-   <a name="zimbraDataSourceHost">pop.myisp.com</a>
-   <a name="zimbraDataSourcePort">110</a>
-   <a name="zimbraDataSourceUsername">mylogin</a>
-   <a name="zimbraDataSourcePassword">mypassword</a>
-  </dataSource>
-</TestDataSourceRequest>
-
-or
-
-<TestDataSourceRequest>
-  <dataSource id="{id}">
-   <a name="zimbraDataSourceHost">pop.myisp.com</a>
-   <a name="zimbraDataSourcePort">110</a>
-   <a name="zimbraDataSourceUsername">mylogin</a>
-   <a name="zimbraDataSourcePassword">mypassword</a>
-  </dataSource>
-</TestDataSourceRequest>
-
-<TestDataSourceResponse success="0|1" [error="Error message"]/>
-
-Tests the connection to the specified data source.  Does not modify
-the data source or import data.  If the id is specified, uses an existing
-data source.  Any values specified in the request are used in the test
-instead of the saved values.
-

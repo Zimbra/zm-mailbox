@@ -26,6 +26,7 @@
 package com.zimbra.qa.unittest;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,16 +61,19 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.SoapFaultException;
+import junit.framework.Test;
+import junit.framework.TestResult;
 
 /**
  * @author bburtin
  */
 public class TestUtil {
-    
+
     public static Account getAccount(String userName)
     throws ServiceException {
         String address = getAddress(userName);
@@ -87,18 +91,18 @@ public class TestUtil {
         assert(domain != null && domain.length() > 0);
         return domain;
     }
-    
+
     public static Mailbox getMailbox(String userName)
     throws ServiceException {
         Account account = getAccount(userName);
         return MailboxManager.getInstance().getMailboxByAccount(account);
     }
-    
+
     public static String getAddress(String userName)
     throws ServiceException {
         return userName + "@" + getDomain();
     }
-    
+
     public static String getSoapUrl() {
         String scheme;
         int port;
@@ -117,7 +121,7 @@ public class TestUtil {
         }
         return scheme + "://localhost:" + port + ZimbraServlet.USER_SERVICE_URI;
     }
-    
+
     public static String getAdminSoapUrl() {
         int port;
         try {
@@ -128,7 +132,7 @@ public class TestUtil {
         }
         return "https://localhost:" + port + ZimbraServlet.ADMIN_SERVICE_URI;
     }
-    
+
     public static LmcSession getSoapSession(String userName)
     throws ServiceException, LmcSoapClientException, IOException, SoapFaultException
     {
@@ -149,7 +153,7 @@ public class TestUtil {
         LmcAdminAuthResponse authResp = (LmcAdminAuthResponse) auth.invoke(getAdminSoapUrl());
         return authResp.getSession();
     }
-    
+
     private static String[] MESSAGE_TEMPLATE_LINES = {
         "From: Jeff Spiccoli <jspiccoli@${DOMAIN}>",
         "To: Test User 1 <user1@${DOMAIN}>",
@@ -166,8 +170,8 @@ public class TestUtil {
         "",
         "(${SUBJECT} ${MESSAGE_NUM})"
     };
-    
-    private static String MESSAGE_TEMPLATE = StringUtil.join("\n", MESSAGE_TEMPLATE_LINES); 
+
+    private static String MESSAGE_TEMPLATE = StringUtil.join("\n", MESSAGE_TEMPLATE_LINES);
 
     public static Message insertMessage(Mailbox mbox, int messageNum, String subject)
     throws Exception {
@@ -185,7 +189,7 @@ public class TestUtil {
         vars.put("DOMAIN", getDomain());
         return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
     }
-    
+
     public static void insertMessageLmtp(int messageNum, String subject, String recipient, String sender)
     throws Exception {
         String message = getTestMessage(messageNum, subject);
@@ -195,7 +199,7 @@ public class TestUtil {
         lmtp.sendMessage(message.getBytes(), recipients, sender, "TestUtil");
         lmtp.close();
     }
-    
+
     /**
      * Searches a mailbox and returns the id's of all matching items.
      */
@@ -212,9 +216,9 @@ public class TestUtil {
             ids.add(new Integer(hit.getItemId()));
         }
         return ids;
-        
+
     }
-    
+
     /**
      * Returns a folder with the given path, or <code>null</code> if the folder
      * doesn't exist.
@@ -242,7 +246,7 @@ public class TestUtil {
         deleteTestData(userName, subjectSubstring, MailItem.TYPE_TAG);
         deleteTestData(userName, subjectSubstring, MailItem.TYPE_FOLDER);
     }
-    
+
     private static void deleteTestData(String userName, String subjectSubstring, byte type)
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(userName);
@@ -261,9 +265,55 @@ public class TestUtil {
                 mbox.delete(null, id, type);
                 ZimbraLog.test.debug("Deleted item " + id + ", type " + type);
             } catch (NoSuchItemException e) {
-                ZimbraLog.test.debug("Unable to delete item " + id + ".  Must have been deleted by parent."); 
+                ZimbraLog.test.debug("Unable to delete item " + id + ".  Must have been deleted by parent.");
             }
         }
     }
+
+    /**
+     * Runs a test and writes the output to the logfile.
+     */
+    public static TestResult runTest(Test t) {
+        return runTest(t, null);
+    }
+
+    /**
+     * Runs a test and writes the output to the specified
+     * <code>OutputStream</code>.
+     */
+    public static TestResult runTest(Test t, OutputStream outputStream) {
+        ZimbraLog.test.debug("Starting unit test suite");
+
+        long suiteStart = System.currentTimeMillis();
+        TestResult result = new TestResult();
+        ZimbraTestListener listener = new ZimbraTestListener();
+        result.addListener(listener);
+        t.run(result);
+
+        double seconds = (double) (System.currentTimeMillis() - suiteStart) / 1000;
+        String msg = String.format(
+            "Unit test suite finished in %.2f seconds.  %d errors, %d failures.",
+            seconds, result.errorCount(), result.failureCount());
+        ZimbraLog.test.info(msg);
+
+        if (outputStream != null) {
+            try {
+                outputStream.write(msg.getBytes());
+            } catch (IOException e) {
+                ZimbraLog.test.error(e.toString());
+            }
+        }
+
+        return result;
+    }
     
+    public static ZMailbox getZMailbox(String username)
+    throws Exception {
+        ZMailbox.Options options = new ZMailbox.Options();
+        options.setAccount(getAddress(username));
+        options.setAccountBy(AccountBy.name);
+        options.setPassword("test123");
+        options.setUri(getSoapUrl());
+        return ZMailbox.getMailbox(options);
+    }
 }

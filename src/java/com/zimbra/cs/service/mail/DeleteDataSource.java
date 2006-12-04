@@ -29,6 +29,8 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbPop3Message;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -46,6 +48,10 @@ public class DeleteDataSource extends MailDocumentHandler {
         Element ePop3 = request.getElement(MailService.E_DS_POP3);
         String id = ePop3.getAttribute(MailService.A_ID);
         prov.deleteDataSource(account, id);
+        
+        // Delete UID's from the database
+        Mailbox mbox = getRequestedMailbox(zsc);
+        DbPop3Message.deleteUids(mbox, id);
         
         Element response = zsc.createElement(MailService.DELETE_DATA_SOURCE_RESPONSE);
         return response;

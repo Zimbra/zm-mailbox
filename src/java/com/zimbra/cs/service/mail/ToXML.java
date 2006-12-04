@@ -1524,6 +1524,7 @@ public class ToXML {
         m.addAttribute(MailService.A_NAME, ds.getName());
         m.addAttribute(MailService.A_FOLDER, ds.getFolderId());
         m.addAttribute(MailService.A_DS_IS_ENABLED, ds.isEnabled());
+        m.addAttribute(MailService.A_DS_LEAVE_ON_SERVER, ds.leaveOnServer());
         
         if (ds.getHost() != null) { 
             m.addAttribute(MailService.A_DS_HOST, ds.getHost());

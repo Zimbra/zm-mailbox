@@ -28,14 +28,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
+import javax.mail.FetchProfile;
+import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.NoSuchProviderException;
 import javax.mail.Session;
 import javax.mail.Store;
+import javax.mail.UIDFolder;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,6 +54,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mime.ParsedMessage;
 
 
@@ -143,27 +149,31 @@ implements MailItemImport {
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         
-        Message msgs[] = folder.getMessages();
+        Message[] msgs = folder.getMessages();
         
         sLog.debug("Retrieving " + msgs.length + " messages");
 
         if (msgs.length > 0) {
-            /*
-            if (ds.leaveMailOnServer()) {
-                // Fetch message UID's for reconciliation (UIDL)
-                FetchProfile fp = new FetchProfile();
-                fp.add(UIDFolder.FetchProfileItem.UID);
-                folder.fetch(folder.getMessages(), fp);
+            Set<String> uidsToFetch = null;
+            if (ds.leaveOnServer()) {
+                uidsToFetch = getUidsToFetch(mbox, ds, folder);
             }
-            */
             
             // Fetch message bodies (RETR)
             for (int i = 0; i < msgs.length; i++) {
-                POP3Message msg = (POP3Message) msgs[i];
+                POP3Message pop3Msg = (POP3Message) msgs[i];
+                if (ds.leaveOnServer()) {
+                    // Skip this message if we've already downloaded it
+                    String uid = folder.getUID(pop3Msg);
+                    if (!uidsToFetch.contains(uid)) {
+                        continue;
+                    }
+                }
+                
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
                 
                 // Headers
-                Enumeration e = msg.getAllHeaderLines();
+                Enumeration e = pop3Msg.getAllHeaderLines();
                 while (e.hasMoreElements()) {
                     String line = (String) e.nextElement();
                     os.write(line.getBytes());
@@ -174,23 +184,51 @@ implements MailItemImport {
                 os.write(CRLF);
                 
                 // Content
-                InputStream is = msg.getRawInputStream();
+                InputStream is = pop3Msg.getRawInputStream();
                 ByteUtil.copy(is, true, os, true);
+                
+                // Add message to mailbox
                 ParsedMessage pm = new ParsedMessage(os.toByteArray(), mbox.attachmentsIndexingEnabled());
-                mbox.addMessage(null, pm, ds.getFolderId(), false, Flag.BITMASK_UNREAD, null);
+                com.zimbra.cs.mailbox.Message zimbraMsg =
+                    mbox.addMessage(null, pm, ds.getFolderId(), false, Flag.BITMASK_UNREAD, null);
+                
+                if (ds.leaveOnServer()) {
+                    DbPop3Message.storeUid(mbox, ds, folder.getUID(pop3Msg), zimbraMsg.getId());
+                }
             }
 
-            /*
-            // Mark all messages for deletion (DELE)
-            for (Message msg : msgs) {
-                msg.setFlag(Flags.Flag.DELETED, true);
+            if (!ds.leaveOnServer()) {
+                // Mark all messages for deletion (DELE)
+                for (Message msg : msgs) {
+                    msg.setFlag(Flags.Flag.DELETED, true);
+                }
             }
-            */
         }
         
         // Expunge if necessary and disconnect (QUIT)
-        // folder.close(!ds.leaveMailOnServer());
-        folder.close(false);
+        folder.close(!ds.leaveOnServer());
         store.close();
+    }
+    
+    private Set<String> getUidsToFetch(Mailbox mbox, DataSource ds, POP3Folder folder)
+    throws MessagingException, ServiceException {
+        // Fetch message UID's for reconciliation (UIDL)
+        FetchProfile fp = new FetchProfile();
+        fp.add(UIDFolder.FetchProfileItem.UID);
+        folder.fetch(folder.getMessages(), fp);
+        
+        Set<String> uidsToFetch = new HashSet<String>();
+        for (Message msg : folder.getMessages()) {
+            String uid = folder.getUID(msg);
+            if (uid != null) {
+                uidsToFetch.add(uid);
+            }
+        }
+        
+        // Remove UID's of messages that we already downloaded
+        Set<String> existingUids =
+            DbPop3Message.getMatchingUids(mbox, ds, uidsToFetch);
+        uidsToFetch.removeAll(existingUids);
+        return uidsToFetch;
     }
 }

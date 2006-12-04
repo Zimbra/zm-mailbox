@@ -33,7 +33,6 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.mailbox.DataSourceManager;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;

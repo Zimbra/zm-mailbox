@@ -500,6 +500,7 @@ public class MailService implements DocumentService {
     public static final String A_DS_SUCCESS = "success";
     public static final String A_DS_ERROR = "error";
     public static final String A_DS_IS_RUNNING = "isRunning";
+    public static final String A_DS_LEAVE_ON_SERVER = "leaveOnServer";
     
     // TODO: move to a different service.
     // wiki

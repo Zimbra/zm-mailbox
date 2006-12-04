@@ -29,8 +29,12 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.db.DbPop3Message;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -44,9 +48,11 @@ public class ModifyDataSource extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
+        boolean wipeOutOldData = false;
         
         Element ePop3 = request.getElement(MailService.E_DS_POP3);
         String id = ePop3.getAttribute(MailService.A_ID);
+        DataSource ds = prov.get(account, DataSourceBy.id, id);
 
         Map<String, Object> dsAttrs = new HashMap<String, Object>();
         String value = ePop3.getAttribute(MailService.A_NAME, null);
@@ -59,23 +65,49 @@ public class ModifyDataSource extends MailDocumentHandler {
         value = ePop3.getAttribute(MailService.A_FOLDER, null);
         if (value != null)
         	dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, value);
+        
         value = ePop3.getAttribute(MailService.A_DS_HOST, null);
-        if (value != null)
-        	dsAttrs.put(Provisioning.A_zimbraDataSourceHost, value);
+        if (value != null && !value.equals(ds.getHost())) {
+            dsAttrs.put(Provisioning.A_zimbraDataSourceHost, value);
+            wipeOutOldData = true;
+        }
+        
         value = ePop3.getAttribute(MailService.A_DS_PORT, null);
         if (value != null)
         	dsAttrs.put(Provisioning.A_zimbraDataSourcePort, value);
         value = ePop3.getAttribute(MailService.A_DS_CONNECTION_TYPE, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, value);
+        
         value = ePop3.getAttribute(MailService.A_DS_USERNAME, null);
-        if (value != null)
+        if (value != null && !value.equals(ds.getUsername())) {
         	dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, value);
+        	wipeOutOldData = true;
+        }
+    
         value = ePop3.getAttribute(MailService.A_DS_PASSWORD, null);
         if (value != null)
         	dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, value);
+
+        value = ePop3.getAttribute(MailService.A_DS_LEAVE_ON_SERVER, null);
+        if (value != null) {
+            boolean newValue = ePop3.getAttributeBool(MailService.A_DS_LEAVE_ON_SERVER);
+            if (newValue != ds.leaveOnServer()) {
+                dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
+                    LdapUtil.getBooleanString(newValue));
+                wipeOutOldData = true;
+            }
+        }
+        
         prov.modifyDataSource(account, id, dsAttrs);
         
+        if (wipeOutOldData) {
+            // Host, username or leaveOnServer changed.  Wipe out
+            // UID's for the data source.
+            Mailbox mbox = getRequestedMailbox(zsc);
+            DbPop3Message.deleteUids(mbox, ds.getId());
+        }
+
         Element response = zsc.createElement(MailService.MODIFY_DATA_SOURCE_RESPONSE);
 
         return response;

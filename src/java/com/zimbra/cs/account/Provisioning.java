@@ -1096,7 +1096,7 @@ public abstract class Provisioning {
     public static final String A_zimbraDataSourceFolderId = "zimbraDataSourceFolderId";
     public static final String A_zimbraDataSourceConnectionType = "zimbraDataSourceConnectionType";    
     public static final String A_zimbraDataSourceMaxNumEntries = "zimbraDataSourceMaxNumEntries";    
-    
+    public static final String A_zimbraDataSourceLeaveOnServer = "zimbraDataSourceLeaveOnServer";
     /*
      * Extension Text Analyzer
      */

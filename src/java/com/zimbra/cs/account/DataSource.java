@@ -102,6 +102,15 @@ public class DataSource extends NamedEntry implements Comparable {
         return data == null ? null : decryptData(getId(), data); 
     }
 
+    /**
+     * Should POP3 messages be left on the server or deleted?  Default
+     * is <code>true</code> for data sources created before the leave on
+     * server feature was implemented. 
+     */
+    public boolean leaveOnServer() {
+        return getBooleanAttr(Provisioning.A_zimbraDataSourceLeaveOnServer, true);
+    }
+    
     private static byte[] randomSalt() {
         SecureRandom random = new SecureRandom();
         byte[] pad = new byte[SALT_SIZE_BYTES];

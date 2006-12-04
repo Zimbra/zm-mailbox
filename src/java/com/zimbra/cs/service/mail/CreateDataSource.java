@@ -59,6 +59,8 @@ public class CreateDataSource extends MailDocumentHandler {
         dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, ePop3.getAttribute(MailService.A_DS_CONNECTION_TYPE));
         dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, ePop3.getAttribute(MailService.A_DS_USERNAME));
         dsAttrs.put(Provisioning.A_zimbraDataSourcePassword, ePop3.getAttribute(MailService.A_DS_PASSWORD));
+        dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
+            LdapUtil.getBooleanString(ePop3.getAttributeBool(MailService.A_DS_LEAVE_ON_SERVER, true)));
         
         DataSource ds = prov.createDataSource(account, DataSource.Type.pop3, name, dsAttrs);
         

@@ -25,7 +25,6 @@
 
 package com.zimbra.qa.unittest;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -34,8 +33,6 @@ import java.util.List;
 import junit.framework.Test;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
-
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Complete unit test suite for the Zimbra code base.
@@ -48,7 +45,20 @@ public class ZimbraSuite extends TestSuite
     static final DecimalFormat TEST_TIME_FORMAT = new DecimalFormat("0.00");
     private static List<Test> sAdditionalTests = new ArrayList<Test>();
 
-    public static TestSuite suite() {
+    /**
+     * Used by extensions to add additional tests to the main test suite.
+     */
+    public static void addAdditionalTest(Test test) {
+        synchronized (sAdditionalTests) {
+            sAdditionalTests.add(test);
+        }
+    }
+    
+    /**
+     * Runs the entire test suite and writes the output to the specified
+     * <code>OutputStream</code>.
+     */
+    public static TestResult runTestSuite(OutputStream outputStream) {
         TestSuite suite = new TestSuite();
 
         suite.addTest(new TestSuite(TestUtilCode.class));
@@ -67,49 +77,14 @@ public class ZimbraSuite extends TestSuite
         suite.addTest(new TestSuite(TestMailItem.class));
         suite.addTest(new TestSuite(TestConcurrency.class));
         suite.addTest(new TestSuite(TestFolderFilterRules.class));
-        
+        suite.addTest(new TestSuite(TestPop3Import.class));
+
         synchronized (sAdditionalTests) {
             for (Test additional : sAdditionalTests) {
                 suite.addTest(additional);
             }
         }
-        
-        return suite;
-    }
 
-    /**
-     * Used by extensions to add additional tests to the main test suite.
-     */
-    public static void addAdditionalTest(Test test) {
-        synchronized (sAdditionalTests) {
-            sAdditionalTests.add(test);
-        }
-    }
-    
-    /**
-     * Runs the entire test suite and writes the output to the specified
-     * <code>OutputStream</code>.
-     */
-    public static TestResult runTestSuite(OutputStream outputStream) {
-        ZimbraLog.test.debug("Starting unit test suite");
-        
-        long suiteStart = System.currentTimeMillis();
-        TestResult result = new TestResult();
-        ZimbraTestListener listener = new ZimbraTestListener();
-        result.addListener(listener);
-        ZimbraSuite.suite().run(result);
-        
-        double seconds = (double) (System.currentTimeMillis() - suiteStart) / 1000;
-        String msg = "Unit test suite finished in " + TEST_TIME_FORMAT.format(seconds) +
-            " seconds.  " + result.errorCount() + " errors, " + result.failureCount() +
-            " failures.\n" + listener.getSummary();
-        ZimbraLog.test.info(msg);
-        try {
-            outputStream.write(msg.getBytes());
-        } catch (IOException e) {
-            ZimbraLog.test.error(e.toString());
-        }
-
-        return result;
+        return TestUtil.runTest(suite, outputStream);
     }
 }

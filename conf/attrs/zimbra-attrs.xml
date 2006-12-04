@@ -1872,40 +1872,40 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="418" name="zimbraDataSourceName" type="string" max="128" cardinality="single" requiredIn="dataSource" flags="domainAdminModifiable">
-  <desc>descriptive name of the data source</desc>
+  <desc>Descriptive name of the data source</desc>
 </attr>
 
 <attr id="419" name="zimbraDataSourceEnabled" type="boolean" cardinality="single" requiredIn="dataSource" flags="domainAdminModifiable">
-  <desc>whether or not the data source is enabled</desc>
+  <desc>Whether or not the data source is enabled</desc>
 </attr>
 
 <attr id="420" name="zimbraDataSourceHost" type="string" max="128" cardinality="single" requiredIn="pop3DataSource" flags="domainAdminModifiable">
-  <desc>host name of server</desc>
+  <desc>Host name of server</desc>
 </attr>
 
 <attr id="421" name="zimbraDataSourcePort" type="port" cardinality="single" requiredIn="pop3DataSource" flags="domainAdminModifiable">
-  <desc>port name of server</desc>
+  <desc>Port number of server</desc>
 </attr>
 
 <attr id="422" name="zimbraDataSourceUsername" type="string" max="128" cardinality="single" requiredIn="pop3DataSource" flags="domainAdminModifiable">
-  <desc>username on server</desc>
+  <desc>Username on server</desc>
 </attr>
 
 <attr id="423" name="zimbraDataSourcePassword" type="string" max="128" cardinality="single" requiredIn="pop3DataSource" flags="domainAdminModifiable">
-  <desc>password on server</desc>
+  <desc>Password on server</desc>
 </attr>
 
 <attr id="424" name="zimbraDataSourceFolderId" type="string" max="128" cardinality="single" requiredIn="pop3DataSource" flags="domainAdminModifiable">
-  <desc>local folder id to store retreived data in</desc>
+  <desc>Local folder id to store retreived data in</desc>
 </attr>
 
 <attr id="425" name="zimbraDataSourceConnectionType" type="enum" value="cleartext,ssl,starttls" cardinality="single" requiredIn="pop3DataSource" flags="domainAdminModifiable">
-  <desc>what security layer to use for connection</desc>
+  <desc>Which security layer to use for connection (cleartext, ssl, starttls)</desc>
 </attr>
 
 <attr id="426" name="zimbraDataSourceMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>20</defaultCOSValue>
-  <desc>maximum number of data sources allowed on an account</desc>
+  <desc>Maximum number of data sources allowed on an account</desc>
 </attr>
 
 <attr id="427" name="zimbraAllowAnyFromAddress" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
@@ -1957,5 +1957,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>Unique ID for an identity</desc>
 </attr>
 
+<attr id="434" name="zimbraDataSourceLeaveOnServer" type="boolean" cardinality="single"
+  requiredIn="pop3DataSource" flags="domainAdminModifiable">
+  <desc>Specifies whether imported POP3 messages should be left on the server or deleted.</desc>
+</attr>
 
 </attrs>
