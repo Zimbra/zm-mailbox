@@ -44,6 +44,17 @@ import java.util.regex.Pattern;
  * @author schemers
  */
 public class StringUtil {
+    
+    /**
+     * A user-friendly equal that handles one or both nulls easily
+     * 
+     * @return
+     */
+    public static boolean equal(String s1, String s2) {
+        if (s1 == null || s2 == null)
+            return s1 == s2;
+        return s1.equals(s2);
+    }
 
 	public static String stripControlCharacters(String raw) {
 		if (raw == null)
