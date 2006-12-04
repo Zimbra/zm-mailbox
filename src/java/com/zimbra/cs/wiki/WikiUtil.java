@@ -286,7 +286,7 @@ public abstract class WikiUtil {
         }
         
         private ZFolder getRootFolder() throws ServiceException {
-        	return mMbox.getFolderByPath("/");
+        	return mMbox.getUserRoot();
         }
 
         protected void setFolderPermission(Account account, String grantee, String name, String id) throws ServiceException, IOException {
