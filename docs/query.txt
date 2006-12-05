@@ -37,6 +37,7 @@ Tim's short-short summary of the query grammar as of now (updated)
    keywords: {TEXT}
    company: {TEXT}
    metadata: {TEXT}
+   contact: {TEXT}  // special-case searching for contact picker (matches type=contact documents only)
    msgid: {TEXT}   // Message-Id: field from mime header 
    
    sort:(score|dateasc|datedesc|subjasc|subjdesc|nameasc|namedesc)

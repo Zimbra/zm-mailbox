@@ -915,6 +915,9 @@ conversation result:
 --------------------
 
 <SearchResponse sortBy="sort-by" offset="..." more="{more-flag}">
+  [ <info>   
+      [ <wildcard str="foo*" expanded="1|0"/> ]
+   </info> ]
   <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags} [mbx="UID"] sf="SORT-FIELD-VALUE">
     <e ...>*
     <su>{subject}</su>
@@ -923,9 +926,21 @@ conversation result:
   </c>*
 </SearchResponse>
 
+
+Info block:
+            The <info> block is used to return general status
+       information about your search.  The <wildcard> element tells
+       you about the status of wildcard expansions within your search
+       -- if expanded=1, then the wildcard was expanded and the
+       matches are included in the search.  If expanded=0 then the
+       wildcard was not specific enough and therefore no wildcard
+       matches are included (exact-match *is* included in results).
+
+
 message result:
 ---------------
 <SearchResponse sortBy="sort-by" offset="..." more="{more-flag}">
+   [<info>...</info>]
    <m id="{message-id}" t="{tags}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" l="{location}" score="..." [mbx="UID"] sf="SORT-FIELD-VALUE" [cm="1"]>
      <e .../>*  <!- sender only -->
      <su>{subject}</su>
@@ -939,6 +954,7 @@ message result:
 contact result:
 ---------------
 <SearchResponse offset="..." more="{more-flag}">
+   [<info>...</info>]
    <cn id="id" t="tags" l="folder" sf="SORT-FIELD-VALUE" [email="Email_1 Addr"] [email2="Email_2_addr"]
        email3="Email_3_addr" [type="contact|group"] rev="REVISION" fileAsStr="..." md="{metadata-change-date}"/>
 
@@ -956,6 +972,7 @@ DOCUMENT ME
 message-part result:
 --------------------
 <SearchResponse offset="..." more="{more-flag}">
+   [<info>...</info>]
     <mp part="{mime-part-name}" s="{size-in-bytes} mid="{message-id}"
         ct="{content-type}" name="{name}" filename="{filename}" score="..."/ sf="SORT-FIELD-VALUE">
  
@@ -981,6 +998,7 @@ if fetch="all", all messages are expanded inline
 ------------
 
 <SearchConvResponse sortBy="sort-by" offset="..." more="{more-flag}">
+   [<info>...</info>]
    <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="..." sf="SORT-FIELD-VALUE">
      <e .../>  <!- sender only -->
      <su>{subject}</su>
