@@ -34,6 +34,7 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -450,5 +451,12 @@ class UnionQueryOperation extends QueryOperation
 
         internalGetNext();
     }
-
+    
+    public List<QueryInfo> getResultInfo() { 
+        List<QueryInfo> toRet = new ArrayList<QueryInfo>();
+        for (QueryOperation op : mQueryOperations) {
+            toRet.addAll(op.getResultInfo());
+        }
+        return toRet;
+    }
 }

@@ -31,6 +31,9 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 
@@ -148,4 +151,13 @@ public class MultiQueryResults implements ZimbraQueryResults
             mGroupedHits[i].doneWithSearchResults();
         }
     }
+    
+    public List<QueryInfo> getResultInfo() { 
+        List<QueryInfo> toRet = new ArrayList<QueryInfo>();
+        for (HitIdGrouper grp : mGroupedHits) {
+            toRet.addAll(grp.getResultInfo());
+        }
+        return toRet;
+    }
+
 }

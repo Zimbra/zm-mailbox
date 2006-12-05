@@ -362,5 +362,5 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
 //      }
     }
 
-
+    public List<QueryInfo> getResultInfo() { return new ArrayList<QueryInfo>(); }
 }

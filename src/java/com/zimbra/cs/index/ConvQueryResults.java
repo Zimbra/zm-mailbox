@@ -27,6 +27,7 @@ package com.zimbra.cs.index;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -178,5 +179,7 @@ class ConvQueryResults extends ZimbraQueryResultsImpl {
             return retVal;
         }
     }
+    
+    public List<QueryInfo> getResultInfo() { return mResults.getResultInfo(); }
 }
 

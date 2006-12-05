@@ -194,8 +194,8 @@ public final class MailboxIndex
         return d[n][m];
     }
 
-    private List<String> suggestSpelling(String field, String token) throws ServiceException {
-        LinkedList<String> toRet = new LinkedList<String>();
+    List<SpellSuggestQueryInfo.Suggestion> suggestSpelling(String field, String token) throws ServiceException {
+        LinkedList<SpellSuggestQueryInfo.Suggestion> toRet = null;
 
         token = token.toLowerCase();
 
@@ -209,10 +209,11 @@ public final class MailboxIndex
                 int numDocs = iReader.numDocs();
 
                 if (freq == 0 && numDocs > 0) {
+                    toRet = new LinkedList<SpellSuggestQueryInfo.Suggestion>();
 
-//                  float frequency = ((float)freq)/((float)numDocs);
+                    float frequency = ((float)freq)/((float)numDocs);
 
-//                  System.out.println("Term: "+token+" appears in "+frequency*100+"% of documents");
+//                    System.out.println("Term: "+token+" appears in "+frequency*100+"% of documents");
 
                     int suggestionDistance = Integer.MAX_VALUE;
 
@@ -222,13 +223,14 @@ public final class MailboxIndex
                             Term cur = fuzzyEnum.term();
                             if (cur != null) {
                                 String curText = cur.text();
-                                System.out.println("\tSUGGEST: "+curText+" ["+fuzzyEnum.docFreq()+" docs]");
                                 int curDiff = editDistance(curText, token, curText.length(), token.length());
-                                if (curDiff < suggestionDistance) {
-                                    suggestionDistance = curDiff;
-                                    toRet = new LinkedList<String>();
-                                    toRet.add(curText);
-                                }
+//                                System.out.println("\tSUGGEST: "+curText+" ["+fuzzyEnum.docFreq()+" docs] dist="+curDiff);
+                                
+                                SpellSuggestQueryInfo.Suggestion sug = new SpellSuggestQueryInfo.Suggestion();
+                                sug.mStr = curText;
+                                sug.mEditDist = curDiff;
+                                sug.mDocs = fuzzyEnum.docFreq();
+                                toRet.add(sug);
                             }
                         } while(fuzzyEnum.next());
                     }
@@ -243,23 +245,17 @@ public final class MailboxIndex
         return toRet;
     }
 
-    List<String> expandWildcardToken(String field, String token, int maxToReturn) throws ServiceException 
+    /**
+     * @return TRUE if all tokens were expanded or FALSE if no more tokens could be expanded
+     */
+    boolean expandWildcardToken(Collection<String> toRet, String field, String token, int maxToReturn) throws ServiceException 
     {
-        // right now, only support wildcards like foo*
-        assert(token.indexOf('*') >= 0);
-
-        // strip the '*' from the end
-        int starIdx = token.indexOf('*');
-        if (starIdx >= 0)
-            token = token.substring(0, starIdx);
-
         // all lucene text should be in lowercase...
         token = token.toLowerCase();
 
         try {
             CountedIndexReader reader = this.getCountedIndexReader();
             try {
-                List<String> toRet = new LinkedList<String>();
                 Term firstTerm = new Term(field, token);
 
                 IndexReader iReader = reader.getReader();
@@ -276,12 +272,11 @@ public final class MailboxIndex
                         String curText = cur.text();
 
                         if (curText.startsWith(token)) {
+                            if (toRet.size() >= maxToReturn) 
+                                return false;
+
                             // we don't care about deletions, they will be filtered later
                             toRet.add(cur.text());
-                            if (toRet.size()>maxToReturn) {
-                                throw MailServiceException.TOO_MANY_QUERY_TERMS_EXPANDED("Wildcard text: \""+token
-                                            +"\" expands to too many terms (maximum allowed is "+maxToReturn+")", token, maxToReturn);
-                            }
                         } else {
                             if (curText.compareTo(token) > 0)
                                 break;
@@ -289,7 +284,7 @@ public final class MailboxIndex
                     }
                 } while (terms.next());
 
-                return toRet;
+                return true;
             } finally {
                 reader.release();
             }
@@ -610,7 +605,7 @@ public final class MailboxIndex
     private Mailbox mMailbox;
     private static Log mLog = LogFactory.getLog(MailboxIndex.class);
     private ArrayList /*IndexItem*/ mUncommittedRedoOps = new ArrayList();
-    
+
     private static boolean sNewLockModel;
     static {
         sNewLockModel = true;
@@ -1096,6 +1091,8 @@ public final class MailboxIndex
      ********************************************************************************/
     private CountedIndexReader getCountedIndexReader() throws IOException
     {
+        BooleanQuery.setMaxClauseCount(10000); 
+
         synchronized(getLock()) {        
             IndexReader reader = null;
             try {
@@ -2069,6 +2066,13 @@ public final class MailboxIndex
         }
     }
 
+    private static void appendContactField(StringBuilder sb, Contact contact, String fieldName) {
+        String s = contact.get(fieldName);
+        if (s!= null) {
+            sb.append(s).append(' ');
+        }
+    }
+
     /**
      * Index a Contact in the specified mailbox.
      * @param deleteFirst if TRUE then we must delete the existing index records before we index
@@ -2107,30 +2111,37 @@ public final class MailboxIndex
                 String subj = contact.getFileAsString().toLowerCase();
                 String name = (subj.length() > DbMailItem.MAX_SENDER_LENGTH ? subj.substring(0, DbMailItem.MAX_SENDER_LENGTH) : subj);
 
-                StringBuffer emailStrBuf = new StringBuffer();
-                List emailList = contact.getEmailAddresses();
-                for (Iterator iter = emailList.iterator(); iter.hasNext();) {
-                    String cur = (String)(iter.next());
-                    emailStrBuf.append(cur);
-                    emailStrBuf.append(' ');
+                StringBuilder searchText = new StringBuilder();
+                appendContactField(searchText, contact, Contact.A_company);
+                appendContactField(searchText, contact, Contact.A_firstName);
+                appendContactField(searchText, contact, Contact.A_lastName);
+
+                StringBuilder emailStrBuf = new StringBuilder();
+                List<String> emailList = contact.getEmailAddresses();
+                for (String cur : emailList) {
+                    emailStrBuf.append(cur).append(' ');
                 }
 
                 String emailStr = emailStrBuf.toString();
 
                 contentText.append(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr));
+                searchText.append(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr));
 
                 /* put the email addresses in the "To" field so they can be more easily searched */
-                doc.add(Field.UnStored(LuceneFields.L_H_TO, emailStr));
+                doc.add(new Field(LuceneFields.L_H_TO, emailStr,                                               false/*store*/, true/*index*/, true/*token*/));
 
-                /* put the name in the "From" field */
-                doc.add(new Field(LuceneFields.L_H_FROM, name, false/*store*/, true/*index*/, false/*token*/ ));
+                /* put the name in the "From" field since the MailItem table uses 'Sender'*/
+                doc.add(new Field(LuceneFields.L_H_FROM, name,                                                  false/*store*/, true/*index*/, false/*token*/ ));
 
-                doc.add(Field.UnStored(LuceneFields.L_CONTENT, contentText.toString()));
-                doc.add(Field.UnStored(LuceneFields.L_H_SUBJECT, subj));
-                doc.add(Field.Keyword(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(mailItemId)));
-                doc.add(Field.Text(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT));
-                doc.add(new Field(LuceneFields.L_SORT_SUBJECT, subj.toUpperCase(), true/*store*/, true/*index*/, false /*token*/));
-                doc.add(new Field(LuceneFields.L_SORT_NAME, name.toUpperCase(), false/*store*/, true/*index*/, false /*token*/));
+                /* bug 11831 - put contact searchable data in its own field so wildcard search works better  */
+                doc.add(new Field(LuceneFields.L_CONTACT_DATA, searchText.toString(),                false/*store*/, true/*index*/, true/*token*/));
+
+                doc.add(new Field(LuceneFields.L_CONTENT, contentText.toString(),                      false/*store*/, true/*index*/, true/*token*/));
+                doc.add(new Field(LuceneFields.L_H_SUBJECT, subj,                                              false/*store*/, true/*index*/, true/*token*/));
+                doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(mailItemId), true/*store*/,  true/*index*/, false/*token*/));
+                doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT,       true/*store*/,  true/*index*/, true/*token*/));
+                doc.add(new Field(LuceneFields.L_SORT_SUBJECT, subj.toUpperCase(),                     true/*store*/,  true/*index*/, false /*token*/));
+                doc.add(new Field(LuceneFields.L_SORT_NAME, name.toUpperCase(),                         false/*store*/, true/*index*/, false /*token*/));
 
                 addDocument(redo, doc, mailItemId, contact.getDate(), false);
 

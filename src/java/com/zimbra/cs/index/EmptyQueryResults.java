@@ -31,6 +31,9 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -64,4 +67,6 @@ class EmptyQueryResults extends ZimbraQueryResultsImpl {
     public ZimbraHit skipToHit(int hitNo) {
         return null;
     }
+    
+    public List<QueryInfo> getResultInfo() { return new ArrayList<QueryInfo>(); }
 }

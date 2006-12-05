@@ -26,6 +26,7 @@
 package com.zimbra.cs.index;
 
 import java.util.HashMap;
+import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -145,4 +146,5 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
         return getNext();
     }
 
+    public List<QueryInfo> getResultInfo() { return mResults.getResultInfo(); }
 }

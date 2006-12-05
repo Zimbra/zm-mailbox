@@ -1080,12 +1080,17 @@ class DBQueryOperation extends QueryOperation
         }
 
     }
+    
+    List<QueryInfo> mQueryInfo = new ArrayList<QueryInfo>();
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.QueryOperation#inheritedGetExecutionCost()
-     */
-    protected int inheritedGetExecutionCost()
-    {
-        return (mLuceneOp != null ? 20 : 10);
-    }        
+    public List<QueryInfo> getResultInfo() {
+        List<QueryInfo> toRet = new ArrayList<QueryInfo>();
+        toRet.addAll(mQueryInfo);
+        
+        if (mLuceneOp != null)
+            toRet.addAll(mLuceneOp.mQueryInfo);
+        
+        return toRet;
+    }
 }
+

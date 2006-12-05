@@ -66,6 +66,10 @@ public class LuceneFields {
     public static final String L_SIZE = "l.size";
     /** version */
     public static final String L_VERSION = "l.version";
+    
+    /** Easily Searchable Contact  Data (bug 11831) */
+    public static final String L_CONTACT_DATA= "l.contactData";
+    
 
     /** dotted-number MIME part name or CONTACT for contact*/
     public static final String L_PARTNAME = "l.partname";

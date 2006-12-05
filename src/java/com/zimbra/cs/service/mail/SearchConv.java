@@ -92,6 +92,8 @@ public class SearchConv extends Search {
         try {
             Element response = zc.createElement(MailService.SEARCH_CONV_RESPONSE);
             response.addAttribute(MailService.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
+            
+            putInfo(response, results);
 
             SortBy sb = results.getSortBy();
             response.addAttribute(MailService.A_SORTBY, sb.toString());

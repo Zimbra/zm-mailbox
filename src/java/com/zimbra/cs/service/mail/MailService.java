@@ -217,6 +217,7 @@ public class MailService implements DocumentService {
     public static final String E_IN_REPLY_TO = "irt";
     public static final String E_ATTACH = "attach";
     public static final String E_QUERY = "query";
+    public static final String E_INFO = "info";
     public static final String E_LOCALE = "locale";  
     public static final String E_CONTENT = "content";
     public static final String E_PARAM = "p";

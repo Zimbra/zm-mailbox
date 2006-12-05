@@ -26,6 +26,8 @@
 package com.zimbra.cs.index;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -124,4 +126,5 @@ public class NoTermQueryOperation extends QueryOperation {
     public void doneWithSearchResults() throws ServiceException {
     }
 
+    public List<QueryInfo> getResultInfo() { return new ArrayList<QueryInfo>(); }
 }

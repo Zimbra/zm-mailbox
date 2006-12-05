@@ -797,8 +797,7 @@ class IntersectionQueryOperation extends QueryOperation {
     private HitGrouper mMessageGrouper[] = null;
 
     protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res,
-                MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException 
-                {
+                MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException {
         // scale up the chunk size since we are doing an intersection...
         chunkSize = (chunkSize+1) * 3;
 
@@ -842,5 +841,14 @@ class IntersectionQueryOperation extends QueryOperation {
                 return;
             }
         }
-                }
+    }
+    
+    public List<QueryInfo> getResultInfo() { 
+        List<QueryInfo> toRet = new ArrayList<QueryInfo>();
+        for (QueryOperation op : mQueryOperations) {
+            toRet.addAll(op.getResultInfo());
+        }
+        return toRet;
+    }
+
 }

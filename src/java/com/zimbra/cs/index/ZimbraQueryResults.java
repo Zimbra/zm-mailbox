@@ -29,6 +29,8 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.List;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 
@@ -61,4 +63,6 @@ public interface ZimbraQueryResults {
     void doneWithSearchResults() throws ServiceException;
 
     SortBy getSortBy();
+    
+    List<QueryInfo> getResultInfo();
 }

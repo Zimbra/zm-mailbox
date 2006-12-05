@@ -32,7 +32,6 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -361,6 +360,7 @@ class LuceneQueryOperation extends QueryOperation
 
         if (union) {
             if (other.hasNoResults()) {
+                mQueryInfo.addAll(other.getResultInfo());
                 // a query for (other OR nothing) == other
                 return this;
             }
@@ -369,6 +369,7 @@ class LuceneQueryOperation extends QueryOperation
                 if (other.hasSpamTrashSetting()) {
                     forceHasSpamTrashSetting();
                 }
+                mQueryInfo.addAll(other.getResultInfo());
                 // we match all results.  (other AND anything) == other
                 return this;
             }
@@ -388,16 +389,12 @@ class LuceneQueryOperation extends QueryOperation
             top.add(lhs);
             top.add(rhs);
             mQuery = top;
+            mQueryInfo.addAll(other.getResultInfo());
             return this;
         }
         return null;
     }
 
-    protected int inheritedGetExecutionCost()
-    {
-        return 20;
-    }
-    
     BooleanQuery getCurrentQuery() {
         assert(!mHaveRunSearch);
         return mQuery; 
@@ -407,6 +404,10 @@ class LuceneQueryOperation extends QueryOperation
         mHaveRunSearch = false;
         mQuery = q; 
         mCurHitNo = 0;
+    }
+    
+    void addQueryInfo(QueryInfo inf) {
+        mQueryInfo.add(inf);
     }
 
     void addAndedClause(Query q, boolean truth) {
@@ -453,5 +454,17 @@ class LuceneQueryOperation extends QueryOperation
 //          mQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), true, false));
             mQuery.add(new BooleanClause(q, false, true));
         }
+    }
+    
+    List<QueryInfo> mQueryInfo = new ArrayList<QueryInfo>();
+
+    public List<QueryInfo> getResultInfo() {
+        List<QueryInfo> toRet = new ArrayList<QueryInfo>();
+        toRet.addAll(mQueryInfo);
+        
+        if (mDBOp != null)
+            toRet.addAll(mDBOp.mQueryInfo);
+        
+        return toRet;
     }
 }

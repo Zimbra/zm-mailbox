@@ -29,7 +29,9 @@
 package com.zimbra.cs.index;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -296,5 +298,5 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
      * not be combined.
      */
     protected abstract QueryOperation combineOps(QueryOperation other, boolean union);
-
+    
 }

@@ -46,7 +46,6 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.PhraseQuery;
-import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
@@ -97,6 +96,8 @@ public final class ZimbraQuery {
         private BaseQuery mNext = null;
         private int mModifierType;
         private int mQueryType;
+        
+        private List<QueryInfo> getInfo() { return null; }
 
         protected BaseQuery(int modifierType, int queryType) {
             mModifierType = modifierType;
@@ -809,7 +810,7 @@ public final class ZimbraQuery {
 
                     for (Folder f : allFolders) {
                         if (!(f instanceof Mountpoint) && !(f instanceof SearchFolder)) {
-                            System.out.println("Adding: "+f.toString());
+//                            System.out.println("Adding: "+f.toString());
                             DBQueryOperation dbop = new DBQueryOperation();
                             outer.add(dbop);
                             dbop.addInClause(f, true);
@@ -1295,14 +1296,15 @@ public final class ZimbraQuery {
         private ArrayList<String> mTokens;
 
         // simple prefix wildcards
-        private String mWildcardPrefix;
+//        private String mWildcardPrefix;
 
         // for complicated wildcards
         private LinkedList<String> mOredTokens;
         private String mWildcardTerm;
         private String mOrigText;
+        private List<QueryInfo> mQueryInfo = new ArrayList<QueryInfo>(); 
 
-        private static final int MAX_WILDCARD_TERMS = 500;
+        private static final int MAX_WILDCARD_TERMS = 2000;
 
         /**
          * @param mbox
@@ -1321,7 +1323,7 @@ public final class ZimbraQuery {
             // The set of tokens from the user's query.  The way the parser works,  
             mTokens = new ArrayList<String>(1);
             mWildcardTerm = null;
-            mWildcardPrefix = null;
+//            mWildcardPrefix = null;
             mOrigText = text;
 
             TokenStream source = analyzer.tokenStream(QueryTypeString(qType), new StringReader(text));
@@ -1357,9 +1359,12 @@ public final class ZimbraQuery {
                 else
                     wcToken = text;
 
+                if (wcToken.charAt(wcToken.length()-1) == '*')
+                    wcToken = wcToken.substring(0, wcToken.length()-2);
+                
                 // the field may have a tokenizer which removed the *
-                if (wcToken.indexOf('*') < 0)
-                    wcToken = wcToken+'*';
+//                if (wcToken.indexOf('*') < 0)
+//                    wcToken = wcToken+'*';
 
 //              // strip the '*' from the end
 //              int starIdx = wcToken.indexOf('*');
@@ -1373,15 +1378,23 @@ public final class ZimbraQuery {
                 if (wcToken.length() >= 1) {
                     mWildcardTerm = wcToken;
                     MailboxIndex mbidx = mbox.getMailboxIndex();
-                    List<String> expandedTokens = mbidx.expandWildcardToken(QueryTypeString(qType), wcToken, MAX_WILDCARD_TERMS);
-
+                    List<String> expandedTokens = new ArrayList<String>(100);
+                    boolean expandedAllTokens = mbidx.expandWildcardToken(expandedTokens, QueryTypeString(qType), wcToken, MAX_WILDCARD_TERMS);
+                    
+//                    if (!expandedAllTokens) {
+//                        throw MailServiceException.TOO_MANY_QUERY_TERMS_EXPANDED("Wildcard text: \""+wcToken
+//                                  +"\" expands to too many terms (maximum allowed is "+MAX_WILDCARD_TERMS+")", wcToken+"*", MAX_WILDCARD_TERMS);
+//                    }
+                    
+                    
+                    mQueryInfo.add(new WildcardExpansionQueryInfo(wcToken+"*", expandedTokens.size(), expandedAllTokens));
                     // 
                     // By design, we interpret *zero* tokens to mean "ignore this search term"
                     // therefore if the wildcard expands to no terms, we need to stick something
                     // in right here, just so we don't get confused when we go to execute the 
                     // query later
                     //
-                    if (expandedTokens.size() == 0) { 
+                    if (expandedTokens.size() == 0 || !expandedAllTokens) { 
                         mTokens.add(wcToken);
                     } else {
                         for (String token : expandedTokens) {
@@ -1391,14 +1404,17 @@ public final class ZimbraQuery {
                 }
             }
 
-//          MailboxIndex mbidx = mbox.getMailboxIndex();
-//          for (String token : mTokens) {
-//          mbidx.suggestSpelling(QueryTypeString(qType), token);
-//          }
+            MailboxIndex mbidx = mbox.getMailboxIndex();
+            for (String token : mTokens) {
+                List<SpellSuggestQueryInfo.Suggestion> suggestions = mbidx.suggestSpelling(QueryTypeString(qType), token);
+                if (suggestions != null) 
+                    mQueryInfo.add(new SpellSuggestQueryInfo(token, suggestions));
+            }
+            
         }
 
         protected QueryOperation getQueryOperation(boolean truth) {
-            if (mTokens.size() <= 0 && mOredTokens.size()<=0 && mWildcardPrefix==null) {
+            if (mTokens.size() <= 0 && mOredTokens.size()<=0 /*&& mWildcardPrefix==null*/) {
                 // if we have no tokens, that is usually because the analyzer removed them
                 // -- the user probably queried for a stop word like "a" or "an" or "the"
                 //
@@ -1410,6 +1426,11 @@ public final class ZimbraQuery {
                 return new NoTermQueryOperation();
             } else {
                 LuceneQueryOperation lop = LuceneQueryOperation.Create();
+                
+                for (QueryInfo inf : mQueryInfo) {
+                    lop.addQueryInfo(inf);
+                }                    
+                    
                 String fieldName = QueryTypeString(getQueryType());
 
                 if (mTokens.size() == 1) {
@@ -1425,9 +1446,9 @@ public final class ZimbraQuery {
                     lop.addClause(this.getQueryOperatorString()+mOrigText, p,calcTruth(truth));
                 }
 
-                if (mWildcardPrefix != null) {
-                    lop.addClause("", new PrefixQuery(new Term(fieldName, mWildcardPrefix)), calcTruth(truth));
-                }
+//                if (mWildcardPrefix != null) {
+//                    lop.addClause("", new PrefixQuery(new Term(fieldName, mWildcardPrefix)), calcTruth(truth));
+//                }
 
                 if (mOredTokens.size() > 0) {
                     // probably don't need to do this here...can probably just call addClause
@@ -1938,7 +1959,7 @@ public final class ZimbraQuery {
         mbox.getMailboxIndex().initAnalyzer(mbox);
         parser.init(mbox.getMailboxIndex().getAnalyzer(), mMbox, mTimeZone, mLocale);
         mClauses = parser.Parse();
-
+        
         String sortByStr = parser.getSortByStr();
         if (sortByStr != null)
             handleSortByOverride(sortByStr);
@@ -1986,9 +2007,7 @@ public final class ZimbraQuery {
 
             // optimize the query down
             mOp = mOp.optimize(mMbox);
-            if (mOp == null) {
-                mOp = new NoTermQueryOperation();
-            }
+            assert(mOp != null);
             if (mLog.isDebugEnabled()) {
                 mLog.debug("OPTIMIZED="+mOp.toString());
             }
@@ -2102,4 +2121,5 @@ public final class ZimbraQuery {
         }
         return ret;
     }
+    
 }

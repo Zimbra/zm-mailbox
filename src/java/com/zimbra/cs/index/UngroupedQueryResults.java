@@ -31,6 +31,8 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.List;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -70,4 +72,6 @@ class UngroupedQueryResults extends ZimbraQueryResultsImpl
     public ZimbraHit skipToHit(int hitNo) throws ServiceException {
         return mResults.skipToHit(hitNo);
     }
+    
+    public List<QueryInfo> getResultInfo() { return mResults.getResultInfo(); }
 }

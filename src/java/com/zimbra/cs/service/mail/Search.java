@@ -78,10 +78,12 @@ public class Search extends MailDocumentHandler  {
         SearchOperation op = new SearchOperation(session, zsc, zsc.getOperationContext(), mbox, Requester.SOAP,  params);
         op.schedule();
         ZimbraQueryResults results = op.getResults();
-
+        
         try {
             // create the XML response Element
             Element response = zsc.createElement(MailService.SEARCH_RESPONSE);
+
+            putInfo(response, results);
 
             // must use results.getSortBy() because the results might have ignored our sortBy
             // request and used something else...
@@ -96,6 +98,16 @@ public class Search extends MailDocumentHandler  {
             return retVal;
         } finally {
             results.doneWithSearchResults();
+        }
+    }
+    
+    protected static void putInfo(Element response, ZimbraQueryResults results) {
+        List<QueryInfo> qinfo = results.getResultInfo();
+        if (qinfo.size() > 0) {
+            Element qinfoElt = response.addElement(MailService.E_INFO);
+            for (QueryInfo inf : qinfo) {
+                inf.toXml(qinfoElt);
+            }
         }
     }
     

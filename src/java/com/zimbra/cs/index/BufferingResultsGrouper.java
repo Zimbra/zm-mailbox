@@ -110,6 +110,6 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
     public void doneWithSearchResults() throws ServiceException {
         mHits.doneWithSearchResults();
     }
-
-
+    
+    public List<QueryInfo> getResultInfo() { return mHits.getResultInfo(); }
 }
