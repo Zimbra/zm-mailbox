@@ -108,7 +108,7 @@ public class IMGetRoster extends IMDocumentHandler {
         }
 
         
-        ZimbraLog.im.info("GET ROSTER RESPONSE:\n"+response.toXML().asXML());
+        ZimbraLog.im.debug("GET ROSTER RESPONSE:\n"+response.toXML().asXML());
         
         return response;        
     }
