@@ -91,7 +91,7 @@ public class ZContact  {
 
     public ZContact(Element e) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
-        mFolderId = e.getAttribute(MailService.A_FOLDER);
+        mFolderId = e.getAttribute(MailService.A_FOLDER, null);
         mFlags = e.getAttribute(MailService.A_FLAGS, null);
         mTagIds = e.getAttribute(MailService.A_TAGS, null);
         mRevision = e.getAttribute(MailService.A_REVISION, null);
