@@ -28,6 +28,7 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.mail.MailService;
@@ -2112,5 +2113,42 @@ public class ZMailbox {
         }
         Collections.sort(result);
         return result;
+    }
+
+    public enum GalType {
+        account, resource, all;
+
+        public static GalType fromString(String s) throws ServiceException {
+            try {
+                return GalType.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid GalType: "+s+", valid values: "+Arrays.asList(GalType.values()), e);
+            }
+        }
+    }
+
+    public static class SearchGalResult {
+        private boolean mMore;
+        private List<ZContact> mContacts;
+        public SearchGalResult(List<ZContact> contacts, boolean more) {
+            mMore = more;
+            mContacts = contacts;
+        }
+
+        public boolean getHasMore() { return mMore; }
+        public List<ZContact> getContacts() { return mContacts; }
+    }
+
+    public SearchGalResult searchGal(String query, GalType type) throws ServiceException {
+        XMLElement req = new XMLElement(AccountService.SEARCH_GAL_REQUEST);
+        if (type != null)
+        req.addAttribute(AccountService.A_TYPE, type.name());
+        req.addElement(AccountService.E_NAME).setText(query);
+        Element resp = invoke(req);
+        List<ZContact> contacts = new ArrayList<ZContact>();
+        for (Element contact : resp.listElements(MailService.E_CONTACT)) {
+                contacts.add(new ZContact(contact));
+        }
+        return new SearchGalResult(contacts, resp.getAttributeBool(AccountService.A_MORE, false));
     }
 }
