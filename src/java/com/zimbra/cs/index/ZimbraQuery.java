@@ -1634,6 +1634,7 @@ public final class ZimbraQuery {
 
     private static String QueryTypeString(int qType) {
         switch (qType) {
+            case ZimbraQueryParser.CONTACT:   return LuceneFields.L_CONTACT_DATA;
             case ZimbraQueryParser.CONTENT:    return LuceneFields.L_CONTENT;
             case ZimbraQueryParser.MSGID:       return LuceneFields.L_H_MESSAGE_ID;
             case ZimbraQueryParser.ENVFROM:       return LuceneFields.L_H_X_ENV_FROM;

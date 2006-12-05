@@ -56,6 +56,7 @@ import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbMailItem.SearchResult;
+import com.zimbra.cs.db.DbMailItem.SearchResult.ExtraData;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.imap.ImapMessage;
@@ -134,6 +135,9 @@ public class Mailbox {
 
     static final int  ONE_MONTH_SECS   = 60 * 60 * 24 * 31;
     static final long ONE_MONTH_MILLIS = ONE_MONTH_SECS * 1000L;
+    
+    static final String MD_CONFIG_VERSION = "ver";
+    
 
     public static final class MailboxData {
         public int     id;
@@ -324,6 +328,7 @@ public class Mailbox {
 
     private MailboxLock  mMaintenance = null;
     private MailboxIndex mMailboxIndex = null;
+    private MailboxVersion mVersion = null;
 
     /** flag: messages sent by me */
     public Flag mSentFlag;
@@ -356,12 +361,21 @@ public class Mailbox {
     final Flag[] mFlags = new Flag[31];
 
 
+    /**
+     * Constructor
+     * 
+     * @param data
+     * @throws ServiceException
+     */
     Mailbox(MailboxData data) throws ServiceException {
         mId   = data.id;
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
         initFlags();
         mMailboxIndex = new MailboxIndex(this, null);
+
+        Metadata md = getConfig(null, MD_CONFIG_VERSION);
+        mVersion = MailboxVersion.fromMetadata(md);
     }
 
     /** Returns the server-local numeric ID for this mailbox.  To get a
@@ -1079,6 +1093,12 @@ public class Mailbox {
 
         mCurrentChange.itemId = getInitialItemId();
         DbMailbox.updateMailboxStats(this);
+        
+        // set the version to CURRENT
+        Metadata md = new Metadata();
+        mVersion = new MailboxVersion(MailboxVersion.CURRENT());
+        mVersion.writeToMetadata(md);
+        DbMailbox.updateConfig(this, MD_CONFIG_VERSION, md);
     }
 
     int getInitialItemId() { return FIRST_USER_ID; }
@@ -1244,10 +1264,6 @@ public class Mailbox {
     }
 
 
-    public void reIndex() throws ServiceException {
-        reIndex(null);
-    }
-
     public static class ReIndexStatus {
         public int mNumProcessed = 0;
         public int mNumToProcess = 0;
@@ -1271,6 +1287,35 @@ public class Mailbox {
             return toRet;
         }
     }
+    
+    public synchronized MailboxVersion getVersion() { return mVersion; }
+    
+    synchronized void updateVersion(MailboxVersion vers) throws ServiceException {
+        mVersion = new MailboxVersion(vers);
+        Metadata md = getConfig(null, Mailbox.MD_CONFIG_VERSION);
+        
+        if (md == null)
+            md = new Metadata();
+        
+        mVersion.writeToMetadata(md);
+        setConfig(null, Mailbox.MD_CONFIG_VERSION, md);
+    }
+    
+    
+    /**
+     * Called once when this mailbox is first instantiated in the system
+     * 
+     * @throws ServiceException
+     */
+    synchronized void checkUpgrade() throws ServiceException {
+        
+        if (!getVersion().atLeast(1, 1)) {
+            // Version 1.0->1.1 Re-Index all contacts 
+            Set<Byte> types = new HashSet<Byte>();
+            types.add(MailItem.TYPE_CONTACT);
+            reIndex(null, types, COMPLETED_REINDEX_CONTACTS_V1_1); 
+        }
+    }
 
 
     /**
@@ -1286,12 +1331,62 @@ public class Mailbox {
     public synchronized ReIndexStatus getReIndexStatus() {
         return mReIndexStatus;
     }
+    
+    /**
+     * Re-Index all items in this mailbox.  This can be a *very* expensive operation (upwards of an hour to run
+     * on a large mailbox on slow hardware).  We are careful to unlock the mailbox periodically so that the
+     * mailbox can still be accessed while the reindex is running, albeit at a slower rate.
+     * 
+     * @throws ServiceException
+     */
+    public void reIndex() throws ServiceException {
+        reIndex(null, null, 0);
+    }
 
-    public void reIndex(OperationContext octxt) throws ServiceException {
-        ReindexMailbox redoRecorder = new ReindexMailbox(mId);
+    private static final int COMPLETED_REINDEX_CONTACTS_V1_1 = 100;
+    
+    /**
+     * Some long-running transactions (e.g. ReIndexing) might not complete while convienently in the stack
+     * of a particular caller: e.g. if the server goes down while a re-indexing is in progress, it is restarted
+     * when the server comes back up, and then completes sometime later.
+     * 
+     * This function is a general purpose completion routine for handler code.
+     * 
+     * This function should *NOT* throw ServiceException, since by definition there is nothing on the callstack
+     * that can properly handle the exception.  Error handling should happen in this function.
+     * 
+     * @param completionId
+     */
+    synchronized void Completion(int completionId) {
+        switch(completionId) {
+            case COMPLETED_REINDEX_CONTACTS_V1_1:
+                // check current version, just in case someone updated the version while
+                // we were gone
+                if (!getVersion().atLeast(1,1)) {
+                    try {
+                        updateVersion(new MailboxVersion((short)1,(short)1));
+                    } catch (ServiceException e) {
+                        ZimbraLog.mailbox.warn("Could not update version in Mailbox v1.1 schema upgrade: "+e, e);
+                    }
+                }
+                break;
+        }
+    }
+
+    /**
+     * @param octxt
+     * @param typesOrNull  If NULL then all items are re-indexed, otherwise only the specified types are reindexed.
+     * @param completionId Since this is a long-running operation (and it might conceivably be interrupted and then
+     *                              run after a server restart) the caller can pass a completionId to this function.  When the
+     *                              re-indexing has completed, the Mailbox's Completion() function is called with the passed-in
+     *                              Integer.  A value of '0' means "don't run a completion function".
+     * @throws ServiceException
+     */
+    public void reIndex(OperationContext octxt, Set<Byte> typesOrNull, int completionId) throws ServiceException {
+        ReindexMailbox redoRecorder = new ReindexMailbox(mId, typesOrNull, completionId);
         boolean needRedo = octxt == null || octxt.needRedo();
 
-        Collection msgs = null;
+        Collection<SearchResult> msgs = null;
         boolean redoInitted = false;
         boolean indexDeleted = false;
 
@@ -1302,6 +1397,9 @@ public class Mailbox {
             //     -- delete the index
             //
             synchronized(this) {
+                if (isReIndexInProgress())
+                    throw ServiceException.ALREADY_IN_PROGRESS(Integer.toString(mId), mReIndexStatus.toString());
+                
                 boolean success = false;
                 try {
                     // Don't pass redoRecorder to beginTransaction.  We have already
@@ -1318,12 +1416,27 @@ public class Mailbox {
                     DbSearchConstraints c = new DbSearchConstraints();
                     c.mailbox = this;
                     c.sort = DbMailItem.SORT_BY_DATE;
+                    if (typesOrNull != null)
+                        c.types = typesOrNull;
 
-                    msgs = DbMailItem.search(getOperationConnection(), c);
-
-                    MailboxIndex idx = getMailboxIndex();
-                    idx.deleteIndex();
-                    indexDeleted = true;
+                    msgs = new ArrayList<SearchResult>();
+                    DbMailItem.search(msgs, getOperationConnection(), c, ExtraData.NONE);
+                    
+                    if (typesOrNull == null) {
+                        // reindexing everything, just delete the index
+                        MailboxIndex idx = getMailboxIndex();
+                        idx.deleteIndex();
+                        indexDeleted = true;
+                    } else {
+                        // NOT reindexing everything: delete manually
+                        int[] itemIds = new int[msgs.size()];
+                        int i = 0;
+                        for (SearchResult s : msgs)
+                            itemIds[i++] = s.indexId;
+                        
+                        mMailboxIndex.deleteDocuments(itemIds);
+                        indexDeleted = true;
+                    }
 
                     success = true;
                 } catch (IOException e) {
@@ -1342,23 +1455,20 @@ public class Mailbox {
             //      For each message in the list from above
             //      lock mailbox, re-index msg, release lock
             //
-            for (Iterator iter = msgs.iterator(); iter.hasNext();) {
+            for (Iterator<SearchResult> iter = msgs.iterator(); iter.hasNext();) {
                 if (ZimbraLog.mailbox.isDebugEnabled() && ((mReIndexStatus.mNumProcessed % 2000) == 0)) {
                     ZimbraLog.mailbox.debug("Re-Indexing: Mailbox "+getId()+" on msg "+mReIndexStatus.mNumProcessed+" out of "+msgs.size());
                 }
-
+                
                 synchronized(this) {
                     if (mReIndexStatus.mCancel) {
                         ZimbraLog.mailbox.warn("CANCELLING re-index of Mailbox "+getId()+" before it is complete.  ("+mReIndexStatus.mNumProcessed+" processed out of "+msgs.size()+")");                            
                         throw ServiceException.INTERRUPTED("ReIndexing Canceled");
                     }
                     mReIndexStatus.mNumProcessed++;
-
-                    SearchResult sr = (SearchResult) iter.next();
-    
+                    SearchResult sr = iter.next();
                     try {
-                        MailboxIndex idx = getMailboxIndex();
-                        idx.reIndexItem(this, sr.id, sr.type, false/*already deleted above*/);
+                        mMailboxIndex.reIndexItem(this, sr.id, sr.type, false/*already deleted above*/);
                     } catch(ServiceException e) {
                         mReIndexStatus.mNumFailed++;
                         ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on msg "+sr.id+".  Message will not be indexed.", e);
@@ -1379,14 +1489,17 @@ public class Mailbox {
             ZimbraLog.mailbox.info("Re-Indexing: Mailbox " + getId() + " COMPLETED.  Re-indexed "+mReIndexStatus.mNumProcessed
                         +" msgs in " + (end-start) + "ms.  (avg "+avg+"ms/msg = "+mps+" msgs/sec)"
                         +" ("+mReIndexStatus.mNumFailed+" failed) ");
-
+            
+            if (completionId > 0)
+                Completion(completionId);
+            
         } finally {
             mReIndexStatus = null;
 
             getMailboxIndex().flush();
             if (redoInitted) {
                 if (indexDeleted) {
-                    // there's no meaningful way to roll this transaction back one the index is deleted!  
+                    // there's no meaningful way to roll this transaction back once data is deleted.
                     // Sooo, always commit it I guess....right?
                     //
                     // The failure mode is if some or all the messages don't re-index.  Right now we expect
@@ -2630,7 +2743,7 @@ public class Mailbox {
         }
 
     }
-
+    
     public synchronized FreeBusy getFreeBusy(long start, long end) throws ServiceException {
         return FreeBusy.getFreeBusyList(this, start, end);
     }

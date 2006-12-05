@@ -601,6 +601,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     case MSGID:
     case ENVTO:
     case ENVFROM:
+    case CONTACT:
     case TO:
     case CC:
     case IN:
@@ -644,6 +645,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
       case MSGID:
       case ENVTO:
       case ENVFROM:
+      case CONTACT:
       case TO:
       case CC:
       case IN:
@@ -686,6 +688,9 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           break;
         case CC:
           t = jj_consume_token(CC);
+          break;
+        case CONTACT:
+          t = jj_consume_token(CONTACT);
           break;
         case CONTENT:
           t = jj_consume_token(CONTENT);
@@ -867,6 +872,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
       case MSGID:
       case ENVTO:
       case ENVFROM:
+      case CONTACT:
       case TO:
       case CC:
       case IN:
@@ -928,10 +934,10 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     clauses = Query();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 0:
-    case 65:
+    case 66:
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 65:
-        jj_consume_token(65);
+      case 66:
+        jj_consume_token(66);
         break;
       case 0:
         jj_consume_token(0);
@@ -965,13 +971,13 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
       jj_la1_2();
    }
    private static void jj_la1_0() {
-      jj_la1_0 = new int[] {0x60,0x80,0x80,0x0,0x0,0x1e0,0x0,0x100,0x1e0,0x0,0x100,0x1e0,0x0,0x0,0x0,0x100,0x1fffc00,0xfe000000,0x0,0xfffffc00,0xfffffd00,0xfffffde0,0x1,0x1,};
+      jj_la1_0 = new int[] {0x60,0x80,0x80,0x0,0x0,0x1e0,0x0,0x100,0x1e0,0x0,0x100,0x1e0,0x0,0x0,0x0,0x100,0x3fffc00,0xfc000000,0x0,0xfffffc00,0xfffffd00,0xfffffde0,0x1,0x1,};
    }
    private static void jj_la1_1() {
-      jj_la1_1 = new int[] {0x0,0xc00000,0x0,0x300000,0x300000,0x1c00000,0x1000000,0x1000000,0x21c00000,0x21000000,0x21000000,0x1c00000,0xc00000,0x1000000,0x1000000,0x1c00000,0x7cff3,0x3000,0x1000000,0x10ffff3,0x10ffff3,0x1cffff3,0x0,0x0,};
+      jj_la1_1 = new int[] {0x0,0x1800000,0x0,0x600000,0x600000,0x3800000,0x2000000,0x2000000,0x43800000,0x42000000,0x42000000,0x3800000,0x1800000,0x2000000,0x2000000,0x3800000,0xf9fe6,0x6001,0x2000000,0x21fffe7,0x21fffe7,0x39fffe7,0x0,0x0,};
    }
    private static void jj_la1_2() {
-      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x0,0x1,0x1,0x1,0x1,0x1,0x1,0x1,0x0,0x1,0x1,0x1,0x0,0x0,0x1,0x1,0x1,0x1,0x2,0x2,};
+      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x0,0x2,0x2,0x2,0x2,0x2,0x2,0x2,0x0,0x2,0x2,0x2,0x0,0x0,0x2,0x2,0x2,0x2,0x4,0x4,};
    }
 
   public ZimbraQueryParser(java.io.InputStream stream) {
@@ -1076,8 +1082,8 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 
   public ParseException generateParseException() {
     jj_expentries.removeAllElements();
-    boolean[] la1tokens = new boolean[66];
-    for (int i = 0; i < 66; i++) {
+    boolean[] la1tokens = new boolean[67];
+    for (int i = 0; i < 67; i++) {
       la1tokens[i] = false;
     }
     if (jj_kind >= 0) {
@@ -1099,7 +1105,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         }
       }
     }
-    for (int i = 0; i < 66; i++) {
+    for (int i = 0; i < 67; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

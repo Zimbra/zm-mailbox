@@ -242,7 +242,11 @@ public class MailboxManager {
     throws ServiceException {
         if (mailboxId <= 0)
             throw MailServiceException.NO_SUCH_MBOX(mailboxId);
-    
+
+        // only used if we instantiate a new mailbox (existing mailboxes
+        // RETURN immediately
+        Mailbox toRet = null;
+        
         synchronized (this) {
             Object obj = mMailboxCache.get(mailboxId);
             if (obj instanceof Mailbox) {
@@ -281,13 +285,18 @@ public class MailboxManager {
                     ((MailboxLock) obj).cacheMailbox(mailbox);
                 else
                     mMailboxCache.put(mailboxId, mailbox);
-
-                return mailbox;
+                
+                toRet = mailbox;
             } finally {
                 if (conn != null)
                     DbPool.quietClose(conn);
             }
         }
+
+        // this is only reached if the mailbox is being initialized for the first time
+        toRet.checkUpgrade();
+        
+        return toRet;
     }
 
     Mailbox instantiateMailbox(MailboxData data) throws ServiceException {

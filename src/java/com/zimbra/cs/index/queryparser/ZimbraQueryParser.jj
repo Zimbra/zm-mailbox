@@ -337,6 +337,7 @@ PARSER_END(ZimbraQueryParser)
 |  <MSGID:      "msgid:">
 |  <ENVTO:      "envto:">                            
 |  <ENVFROM:    "envfrom:">         
+|  <CONTACT:   "contact:">
 |  <TO:         "to:">         
 |  <CC:         "cc:">         
 |  <IN:         "in:">  
@@ -559,7 +560,7 @@ ZimbraQuery.BaseQuery Clause() throws ServiceException :
     
     | (
           (
-  	           t=<MSGID>|t=<ENVFROM>|t=<ENVTO>|t=<FROM>|t=<TO>|t=<CC>
+  	           t=<MSGID>|t=<ENVFROM>|t=<ENVTO>|t=<FROM>|t=<TO>|t=<CC>|t=<CONTACT>
   		      | t=<CONTENT>|t=<MESSAGE>|t=<SUBJECT>|t=<IN>|t=<INID>
        		  |  t=<TYPE>|t=<ATTACHMENT>|t=<HAS>|t=<FILENAME>|t=<AUTHOR>|t=<TITLE>|t=<KEYWORDS>|t=<COMPANY>|t=<METADATA>
 	     	  | t=<MY>|t=<IS>|t=<TAG>|t=<CONV>|t=<CONV_COUNT>|t=<CONV_MINM>|t=<CONV_MAXM>

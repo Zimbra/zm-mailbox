@@ -18,6 +18,7 @@ public class WildcardExpansionQueryInfo implements  QueryInfo {
         Element qinfo = parent.addElement("wildcard");
         qinfo.addAttribute("str", mStr);
         qinfo.addAttribute("expanded", mExpandedAll);
+        qinfo.addAttribute("numExpanded", mNumExpanded);
         return qinfo;
     }
     

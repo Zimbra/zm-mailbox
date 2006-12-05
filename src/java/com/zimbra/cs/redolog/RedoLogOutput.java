@@ -30,6 +30,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.Collection;
 
 import com.zimbra.common.util.ByteUtil;
 
@@ -64,7 +65,7 @@ public class RedoLogOutput {
 	public void writeUTF(String v) throws IOException {
 		ByteUtil.writeUTF8(mOUT, v);
 	}
-
+    
 	// methods of DataOutput that shouldn't be used in redo logging
 	// not implemented on purpose
 
