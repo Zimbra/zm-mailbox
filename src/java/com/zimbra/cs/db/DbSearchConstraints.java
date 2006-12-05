@@ -541,7 +541,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         if (hasTags == null)
             hasTags = other.hasTags;
         else if (other.hasTags != null) {
-            if (hasTags != other.hasTags) {
+            if (!hasTags.equals(other.hasTags)) {
                 noResults = true;
                 ZimbraLog.index.debug("Adding a HAS_NO_TAGS constraint to a HAS_TAGS one, this is a NO_RESULTS result");
                 return;
@@ -677,7 +677,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         // about this and will fix it soon.
 //      assert(!(setContainsAnyId(s, excludeTags) || setContainsAnyId(s, excludeFolders)));
 
-        if (hasTags == Boolean.FALSE && tags != null && tags.size() != 0)
+        if (Boolean.FALSE.equals(hasTags) && tags != null && tags.size() != 0)
             return true;
 
         // lots more optimizing we could do here...
@@ -727,9 +727,4 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                     return true;
         return false;
     }
-
-
-
-
-
 }
