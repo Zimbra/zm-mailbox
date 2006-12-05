@@ -93,7 +93,7 @@ public class Version implements Comparable<Version> {
 
 			Integer mine = mTokens.get(d);
 			Integer yours = v.mTokens.get(d);
-			if (mine != yours) {
+			if (!mine.equals(yours)) {
 				return mine - yours;
 			}
 			d++;
