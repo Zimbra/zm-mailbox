@@ -1295,10 +1295,6 @@ public final class ZimbraQuery {
     {
         private ArrayList<String> mTokens;
 
-        // simple prefix wildcards
-//        private String mWildcardPrefix;
-
-        // for complicated wildcards
         private LinkedList<String> mOredTokens;
         private String mWildcardTerm;
         private String mOrigText;
@@ -1323,7 +1319,6 @@ public final class ZimbraQuery {
             // The set of tokens from the user's query.  The way the parser works,  
             mTokens = new ArrayList<String>(1);
             mWildcardTerm = null;
-//            mWildcardPrefix = null;
             mOrigText = text;
 
             TokenStream source = analyzer.tokenStream(QueryTypeString(qType), new StringReader(text));
@@ -1332,20 +1327,16 @@ public final class ZimbraQuery {
             while(true) {
                 try {
                     t = source.next();
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     t = null;
                 }
                 if (t == null)
                     break;
                 mTokens.add(t.termText());
-            }
+            } 
             try {
                 source.close();
-            }
-            catch (IOException e) {
-                // ignore
-            }
+            } catch (IOException e) { /* ignore */ }
 
             // must look at original text here b/c analyzer strips *'s
             if (text.length() > 0 && text.charAt(text.length()-1) == '*')
@@ -1360,21 +1351,8 @@ public final class ZimbraQuery {
                     wcToken = text;
 
                 if (wcToken.charAt(wcToken.length()-1) == '*')
-                    wcToken = wcToken.substring(0, wcToken.length()-2);
+                    wcToken = wcToken.substring(0, wcToken.length()-1);
                 
-                // the field may have a tokenizer which removed the *
-//                if (wcToken.indexOf('*') < 0)
-//                    wcToken = wcToken+'*';
-
-//              // strip the '*' from the end
-//              int starIdx = wcToken.indexOf('*');
-//              if (starIdx >= 0)
-//              wcToken = wcToken.substring(0, starIdx);
-
-//              if (wcToken.length() > 0) 
-//              mWildcardPrefix = wcToken;
-
-
                 if (wcToken.length() >= 1) {
                     mWildcardTerm = wcToken;
                     MailboxIndex mbidx = mbox.getMailboxIndex();
@@ -1385,7 +1363,6 @@ public final class ZimbraQuery {
 //                        throw MailServiceException.TOO_MANY_QUERY_TERMS_EXPANDED("Wildcard text: \""+wcToken
 //                                  +"\" expands to too many terms (maximum allowed is "+MAX_WILDCARD_TERMS+")", wcToken+"*", MAX_WILDCARD_TERMS);
 //                    }
-                    
                     
                     mQueryInfo.add(new WildcardExpansionQueryInfo(wcToken+"*", expandedTokens.size(), expandedAllTokens));
                     // 
@@ -1414,7 +1391,7 @@ public final class ZimbraQuery {
         }
 
         protected QueryOperation getQueryOperation(boolean truth) {
-            if (mTokens.size() <= 0 && mOredTokens.size()<=0 /*&& mWildcardPrefix==null*/) {
+            if (mTokens.size() <= 0 && mOredTokens.size()<=0) {
                 // if we have no tokens, that is usually because the analyzer removed them
                 // -- the user probably queried for a stop word like "a" or "an" or "the"
                 //
@@ -1445,10 +1422,6 @@ public final class ZimbraQuery {
                         p.add(new Term(fieldName, mTokens.get(i)));
                     lop.addClause(this.getQueryOperatorString()+mOrigText, p,calcTruth(truth));
                 }
-
-//                if (mWildcardPrefix != null) {
-//                    lop.addClause("", new PrefixQuery(new Term(fieldName, mWildcardPrefix)), calcTruth(truth));
-//                }
 
                 if (mOredTokens.size() > 0) {
                     // probably don't need to do this here...can probably just call addClause
