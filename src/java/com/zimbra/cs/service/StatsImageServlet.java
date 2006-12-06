@@ -137,7 +137,7 @@ public class StatsImageServlet extends ZimbraServlet {
         }       
         try { 
 	        
-	        if(reqPath == null && reqPath.length()==0) {
+	        if(reqPath == null || reqPath.length()==0) {
 	        	resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
 	    		return;
 	        } 
