@@ -16,7 +16,7 @@ URL for posting to SOAP is:
 /service/soap/
  
 -------------------------------
- 
+
 urn:zimbra  -- top-level namespace for global attributes/elements
 
 
@@ -725,7 +725,7 @@ Messages:
 
 Conversations:
  
-  <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags}" l="{folder-id}" [elided="1"]>
+  <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags}" [elided="1"]>
     <e ...>*
     <su>{subject}</su>
     <fr>{fragment}</fr>
@@ -737,7 +737,6 @@ Conversations:
   {flags}     = (u)nread, (f)lagged, has (a)ttachment (set if any msg in conv has that flag set), (s)ent by me (if any msg has that flag set)
   {subject}   = subject of conversation
   {fragment}  = fragment of most recent msg in converstation
-  {folder-id} = location of converstation (numeric folder id)
   {num-msgs}  = number of messages in conversation without IMAP \Deleted flag set
   {all-msgs}  = total number of messages in conversation
   
@@ -982,7 +981,7 @@ message-part result:
 
 -----------
 
-<SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"]
+<SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"] [nest="0|1"]
 				   [fetch="1|hits|all"] [html="1"] [read="1"] [neuter="0"]>
   <query>{query-string}</query>
 </SearchConvRequest>
@@ -995,7 +994,8 @@ if fetch="all", all messages are expanded inline
 
    SEE SearchRequest for more info
 
-------------
+
+if nest="0" on the request, response looks like this:
 
 <SearchConvResponse sortBy="sort-by" offset="..." more="{more-flag}">
    [<info>...</info>]
@@ -1006,6 +1006,21 @@ if fetch="all", all messages are expanded inline
      [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only) 
      <hp part="{mime-part-name}"/> // Hit Part -- indicator that the named part matched the search string
    </m>*
+</SearchConvResponse>
+
+if nest="1" on the request, response looks like this:
+
+<SearchConvResponse sortBy="sort-by" offset="..." more="{more-flag}">
+   [<info>...</info>]
+   <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] f="{flags}">
+     <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="..." sf="SORT-FIELD-VALUE">
+       <e .../>  <!- sender only -->
+       <su>{subject}</su>
+       <fr>{fragment}</fr>
+       [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only) 
+       <hp part="{mime-part-name}"/> // Hit Part -- indicator that the named part matched the search string
+     </m>*
+   </c>
 </SearchConvResponse>
 
    {cm} = 1 if the message matched the specified query string

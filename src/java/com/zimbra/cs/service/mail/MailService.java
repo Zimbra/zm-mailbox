@@ -324,6 +324,7 @@ public class MailService implements DocumentService {
     public static final String A_SORTVAL = "sortVal";    
     public static final String A_ENDSORTVAL = "endSortVal";    
     public static final String A_FETCH = "fetch";
+    public static final String A_NEST_MESSAGES = "nest";
     public static final String A_RECIPIENTS = "recip";
     public static final String A_CONTENTMATCHED = "cm";
     public static final String A_ITEM_TYPE = "t";
