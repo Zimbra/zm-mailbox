@@ -112,8 +112,8 @@ public class FileBlobStore extends StoreManager {
         fos.getFD().sync();
         fos.close();
 
-        if (mLog.isInfoEnabled()) {
-            mLog.info("Stored size=" + data.length +
+        if (mLog.isDebugEnabled()) {
+            mLog.debug("Stored size=" + data.length +
                       " wrote=" + writeData.length +
                       " path=" + path +
                       " vol=" + volumeId +
@@ -136,8 +136,8 @@ public class FileBlobStore extends StoreManager {
 
         FileUtil.copy(src.getFile(), dest);
 
-        if (mLog.isInfoEnabled()) {
-            mLog.info("Copied id=" + destMsgId +
+        if (mLog.isDebugEnabled()) {
+            mLog.debug("Copied id=" + destMsgId +
                       " mbox=" + destMbox.getId() +
                       " oldpath=" + srcPath + 
                       " newpath=" + destPath);
@@ -195,8 +195,8 @@ public class FileBlobStore extends StoreManager {
             FileUtil.copy(src.getFile(), dest);
         }
 
-        if (mLog.isInfoEnabled()) {
-            mLog.info("Linked id=" + destMsgId +
+        if (mLog.isDebugEnabled()) {
+            mLog.debug("Linked id=" + destMsgId +
                       " mbox=" + destMbox.getId() +
                       " oldpath=" + srcPath + 
                       " newpath=" + destPath);
@@ -237,8 +237,8 @@ public class FileBlobStore extends StoreManager {
             srcFile.delete();
         }
 
-        if (mLog.isInfoEnabled()) {
-            mLog.info("Renamed id=" + destMsgId +
+        if (mLog.isDebugEnabled()) {
+            mLog.debug("Renamed id=" + destMsgId +
                       " mbox=" + destMbox.getId() +
                       " oldpath=" + srcPath + 
                       " newpath=" + destPath);
@@ -253,8 +253,8 @@ public class FileBlobStore extends StoreManager {
     public boolean delete(MailboxBlob mboxBlob) throws IOException {
         if (mboxBlob == null)
             return false;
-        if (mLog.isInfoEnabled())
-            mLog.info("deleting blob " + mboxBlob.getMessageId() +
+        if (mLog.isDebugEnabled())
+            mLog.debug("deleting blob " + mboxBlob.getMessageId() +
                       " in mailbox " + mboxBlob.getMailbox().getId());
         return deleteFile(mboxBlob.getBlob().getFile());
     }
@@ -262,8 +262,8 @@ public class FileBlobStore extends StoreManager {
     public boolean delete(Blob blob) throws IOException {
         if (blob == null)
             return false;
-        if (mLog.isInfoEnabled())
-            mLog.info("deleting blob file (" + blob.toString() + ")");
+        if (mLog.isDebugEnabled())
+            mLog.debug("deleting blob file (" + blob.toString() + ")");
         return deleteFile(blob.getFile());
     }
 
