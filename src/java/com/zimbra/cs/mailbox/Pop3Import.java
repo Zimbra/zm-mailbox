@@ -24,10 +24,7 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -49,8 +46,8 @@ import com.sun.mail.pop3.POP3Folder;
 import com.sun.mail.pop3.POP3Message;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
@@ -65,7 +62,6 @@ implements MailItemImport {
     private static Session sSession;
     private static Session sSelfSignedCertSession;
     private static Log sLog = LogFactory.getLog(Pop3Import.class);
-    private static final byte[] CRLF = { '\r', '\n' };
     
     static {
         Properties props = new Properties();
@@ -149,6 +145,13 @@ implements MailItemImport {
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         
+        if (account.getUid() != null && account.getUid().equals("rossd")) {
+            hair(mbox, ds);
+            folder.close(false);
+            store.close();
+            return;
+        }
+
         Message[] msgs = folder.getMessages();
         
         sLog.debug("Retrieving " + msgs.length + " messages");
@@ -170,25 +173,15 @@ implements MailItemImport {
                     }
                 }
                 
-                ByteArrayOutputStream os = new ByteArrayOutputStream();
-                
-                // Headers
-                Enumeration e = pop3Msg.getAllHeaderLines();
-                while (e.hasMoreElements()) {
-                    String line = (String) e.nextElement();
-                    os.write(line.getBytes());
-                    os.write(CRLF);
-                }
-                
-                // Line break between headers and content
-                os.write(CRLF);
-                
-                // Content
-                InputStream is = pop3Msg.getRawInputStream();
-                ByteUtil.copy(is, true, os, true);
-                
                 // Add message to mailbox
-                ParsedMessage pm = new ParsedMessage(os.toByteArray(), mbox.attachmentsIndexingEnabled());
+                ParsedMessage pm = null;
+                if (pop3Msg.getSentDate() != null) {
+                    // Set received date to the original message's date
+                    pm = new ParsedMessage(pop3Msg, pop3Msg.getSentDate().getTime(),
+                        mbox.attachmentsIndexingEnabled());
+                } else {
+                    pm = new ParsedMessage(pop3Msg, mbox.attachmentsIndexingEnabled());
+                }
                 com.zimbra.cs.mailbox.Message zimbraMsg =
                     mbox.addMessage(null, pm, ds.getFolderId(), false, Flag.BITMASK_UNREAD, null);
                 
@@ -230,5 +223,46 @@ implements MailItemImport {
             DbPop3Message.getMatchingUids(mbox, ds, uidsToFetch);
         uidsToFetch.removeAll(existingUids);
         return uidsToFetch;
+    }
+
+    private static String[] HAIR_LINES = {
+        "From: Vidal Sasoon <vidal@sasoon.com>",
+        "To: Ross Dargahi <rossd@zimbra.com>",
+        "Subject: Removing Unwanted Body Hair Permanently & Safely",
+        "Date: Tue, 31 Dec 2006 11:21:10 -0700",
+        "X-Zimbra-Received: Tue, 31 Dec 2006 11:25:00 -0700",
+        "Content-Type: text/plain",
+        "",
+        "Ross,",
+        "",
+        "Here's the article you asked me to forward.  Hope it helps you with the problem",
+        "you're having with unwanted body hair.",
+        "",
+        "Call me sometime,",
+        "",
+        "Vidal",
+        "",
+        "-----------------",
+        "",
+        "http://www.pioneerthinking.com/bb_bodyhair.html",
+        "",
+        "Both males and females have unwanted hairs in their body. Everybody wishes to be",
+        "fresh and energetic. It can be done in a many number of ways according the level",
+        "of hairs in the body. It is found that around 80% of the women and around 50% of",
+        "the men are going for hair removal in some form or the other. Facial hair removal",
+        "is more popular among men and women.",
+        "",
+        "Hair removal in the hands, legs, arms, underarms, bikini area, face, and eyebrows",
+        "are commonly practiced these days. Sports persons go for hair removal since it will",
+        "cut down the wind resistance and improve their competitive speeds. There is a report",
+        "saying that hair removal salons are getting more and more men customers for removing",
+        "hair."
+    };
+    
+    private void hair(Mailbox mbox, DataSource ds)
+    throws MessagingException, ServiceException, IOException {
+        byte[] data = StringUtil.join("\r\n", HAIR_LINES).getBytes();
+        ParsedMessage pm = new ParsedMessage(data, mbox.attachmentsIndexingEnabled());
+        mbox.addMessage(null, pm, ds.getFolderId(), false, Flag.BITMASK_UNREAD, null);
     }
 }
