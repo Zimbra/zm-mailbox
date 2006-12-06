@@ -423,6 +423,12 @@ class LuceneQueryOperation extends QueryOperation
         mQuery = top;
     }    
 
+    void setQueryString(String queryStr) {
+        // used when we're creating a wildcard query (add a bunch of wildcard terms) but we have no regular terms
+        assert(mQueryString.length() == 0);
+        mQueryString = queryStr;
+    }
+    
     /**
      * 
      * @param q

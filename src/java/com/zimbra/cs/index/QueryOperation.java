@@ -79,25 +79,25 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
      * @author tim
      *
      */
-    protected static class QueryOpSortComparator implements Comparator {
-        public int compare(Object o1, Object o2) {
-            QueryOperation lhs = (QueryOperation)o1;
-            QueryOperation rhs = (QueryOperation)o2;
-
-            return lhs.getOpType() - rhs.getOpType();
-        }
-        public boolean equals(Object obj) {
-            if (obj instanceof QueryOpSortComparator) return true;
-            return false;
-        }
-    }
+//    protected static class QueryOpSortComparator implements Comparator {
+//        public int compare(Object o1, Object o2) {
+//            QueryOperation lhs = (QueryOperation)o1;
+//            QueryOperation rhs = (QueryOperation)o2;
+//
+//            return lhs.getOpType() - rhs.getOpType();
+//        }
+//        public boolean equals(Object obj) {
+//            if (obj instanceof QueryOpSortComparator) return true;
+//            return false;
+//        }
+//    }
 
     /**
      * @return A representation of this operation as a parsable query string
      */
     abstract String toQueryString(); 
 
-    final static QueryOpSortComparator sQueryOpSortComparator = new QueryOpSortComparator();
+//    final static QueryOpSortComparator sQueryOpSortComparator = new QueryOpSortComparator();
 
     private SortBy mSortOrder = null;
     public SortBy getSortBy() { return mSortOrder; }

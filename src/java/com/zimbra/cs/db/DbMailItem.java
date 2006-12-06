@@ -2416,7 +2416,7 @@ public class DbMailItem {
                     stmt.setInt(param++, (int) size.highest);
             }
         if (!ListUtil.isEmpty(c.subjectRanges))
-            for (DbSearchConstraints.SubjectRange cur: c.subjectRanges) {
+            for (DbSearchConstraints.StringRange cur: c.subjectRanges) {
                 if (cur.lowest != null) 
                     stmt.setString(param++, cur.lowest);
                 if (cur.highest != null) 
@@ -2424,7 +2424,7 @@ public class DbMailItem {
             }
         
         if (!ListUtil.isEmpty(c.senderRanges))
-            for (DbSearchConstraints.SenderRange cur: c.senderRanges) {
+            for (DbSearchConstraints.StringRange cur: c.senderRanges) {
                 if (cur.lowest != null) 
                     stmt.setString(param++, cur.lowest);
                 if (cur.highest != null) 

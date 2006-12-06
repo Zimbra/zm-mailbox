@@ -24,6 +24,7 @@
  */
 package com.zimbra.cs.db;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -55,13 +56,11 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Iterable<DbSearchConstraintsNode> getSubNodes() { return null; }
     public DbSearchConstraints getSearchConstraints() { return this; }
 
-    public static abstract class StringRange {
+    public static class StringRange {
         public boolean negated = false;
         public String lowest = null;  public boolean lowestEqual = false;
         public String highest = null;  public boolean highestEqual = false;
         
-        public abstract String toString();
-
         public boolean equals(Object o) {
             DbSearchConstraints.StringRange other = (DbSearchConstraints.StringRange) o;
             return (
@@ -70,80 +69,44 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                         other.negated == negated
             );
         }
+        
+        public String toString() {
+            StringBuilder retVal = new StringBuilder();
+
+            if (negated) {
+                retVal.append("NOT (");
+            }
+
+            if (lowest != null) {
+                retVal.append("\">");
+                if (lowestEqual)
+                    retVal.append('=');
+                retVal.append(lowest);
+                retVal.append("\" ");
+            }
+
+            if (highest != null) {
+                retVal.append("\"<");
+                if (highestEqual) 
+                    retVal.append('=');
+                retVal.append(highest);
+                retVal.append("\" ");
+            }
+            if (negated) {
+                retVal.append(")");
+            }
+
+            return retVal.toString();
+        }
 
         boolean isValid()  { return true; }
     }
     
-    public static class SubjectRange extends StringRange {
-        public String toString() {
-            StringBuilder retVal = new StringBuilder();
-
-            if (negated) {
-                retVal.append("NOT (");
-            }
-
-            if (lowest != null) {
-                retVal.append("SUBJECT:>");
-                if (lowestEqual)
-                    retVal.append('=');
-                retVal.append(lowest);
-                retVal.append(' ');
-            }
-
-            if (highest != null) {
-                retVal.append("SUBJECT:<");
-                if (highestEqual) 
-                    retVal.append('=');
-                retVal.append(highest);
-                retVal.append(' ');
-            }
-            if (negated) {
-                retVal.append(")");
-            }
-
-            return retVal.toString();
-        }
-    }
-    
-    public static class SenderRange extends StringRange {
-        public String toString() {
-            StringBuilder retVal = new StringBuilder();
-
-            if (negated) {
-                retVal.append("NOT (");
-            }
-
-            if (lowest != null) {
-                retVal.append("FROM:>");
-                if (lowestEqual)
-                    retVal.append('=');
-                retVal.append(lowest);
-                retVal.append(' ');
-            }
-
-            if (highest != null) {
-                retVal.append("FROM:<");
-                if (highestEqual) 
-                    retVal.append('=');
-                retVal.append(highest);
-                retVal.append(' ');
-            }
-            if (negated) {
-                retVal.append(")");
-            }
-
-            return retVal.toString();
-        }
-    }
-    
-    
-    public static abstract class NumericRange {
+    public static class NumericRange {
         public boolean negated = false;
         public long lowest = -1;  public boolean lowestEqual = false;
         public long highest = -1;  public boolean highestEqual = false;
         
-        public abstract String toString();
-
         public boolean equals(Object o) {
             DbSearchConstraints.NumericRange other = (DbSearchConstraints.NumericRange) o;
             return (
@@ -153,16 +116,6 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         }
 
         boolean isValid()  { return lowest > 0 || highest > 0; }
-    }
-    
-    public static class DateRange extends NumericRange {
-
-        public boolean equals(Object o) {
-            if (o instanceof DateRange)
-                return super.equals(o);
-            else
-                return false;
-        }
         
         public String toString() {
             StringBuilder retVal = new StringBuilder();
@@ -172,47 +125,17 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             }
 
             if (lowest > -1) {
-                retVal.append("AFTER:");
-                retVal.append((new java.util.Date(lowest)).toString());
-                retVal.append(' ');
-            }
-
-            if (highest > -1) {
-                retVal.append("BEFORE:");
-                retVal.append((new java.util.Date(highest)).toString());
-                retVal.append(' ');
-            }
-            if (negated) {
-                retVal.append(")");
-            }
-
-            return retVal.toString();
-        }
-    }
-    
-    public static class SizeRange extends NumericRange {
-        public boolean equals(Object o) {
-            if (o instanceof SizeRange)
-                return super.equals(o);
-            else
-                return false;
-        }
-        
-        public String toString() {
-            StringBuilder retVal = new StringBuilder();
-
-            if (negated) {
-                retVal.append("NOT (");
-            }
-
-            if (lowest > -1) {
-                retVal.append("LARGER:");
+                retVal.append(">");
+                if (lowestEqual)
+                    retVal.append('=');
                 retVal.append(lowest);
                 retVal.append(' ');
             }
 
             if (highest > -1) {
-                retVal.append("SMALLER:");
+                retVal.append("<");
+                if (highestEqual)
+                    retVal.append('=');
                 retVal.append(highest);
                 retVal.append(' ');
             }
@@ -223,7 +146,6 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             return retVal.toString();
         }
     }
-    
     
     //
     // these should all be moved OUT of DbSearchConstraints and passed as parameters 
@@ -265,11 +187,11 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Set<Byte> types = new HashSet<Byte>();                         /* optional - ANY of these types are OK.  */
     public Set<Byte> excludeTypes = new HashSet<Byte>();                  /* optional - ALL of these types are excluded */
 
-    public Collection<DateRange> dates = new ArrayList<DateRange>();    /* optional */
+    public Collection<NumericRange> dates = new ArrayList<NumericRange>();    /* optional */
     public Collection<NumericRange> modified = new ArrayList<NumericRange>(); /* optional */
-    public Collection<SizeRange> sizes = new ArrayList<SizeRange>();    /* optional */
-    public Collection<SubjectRange> subjectRanges = new ArrayList<SubjectRange>(); /* optional */
-    public Collection<SenderRange> senderRanges = new ArrayList<SenderRange>(); /* optional */
+    public Collection<NumericRange> sizes = new ArrayList<NumericRange>();    /* optional */
+    public Collection<StringRange> subjectRanges = new ArrayList<StringRange>(); /* optional */
+    public Collection<StringRange> senderRanges = new ArrayList<StringRange>(); /* optional */
     
 
 
@@ -300,11 +222,11 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         toRet.types = new HashSet<Byte>(); toRet.types.addAll(types);
         toRet.excludeTypes = new HashSet<Byte>(); toRet.excludeTypes.addAll(excludeTypes);
 
-        toRet.dates = new HashSet<DateRange>(); toRet.dates.addAll(dates);
+        toRet.dates = new HashSet<NumericRange>(); toRet.dates.addAll(dates);
         toRet.modified = new HashSet<NumericRange>(); toRet.modified.addAll(modified);
-        toRet.sizes = new HashSet<SizeRange>(); toRet.sizes.addAll(sizes);
-        toRet.subjectRanges = new HashSet<SubjectRange>(); toRet.subjectRanges.addAll(subjectRanges);
-        toRet.senderRanges = new HashSet<SenderRange>(); toRet.senderRanges.addAll(senderRanges);
+        toRet.sizes = new HashSet<NumericRange>(); toRet.sizes.addAll(sizes);
+        toRet.subjectRanges = new HashSet<StringRange>(); toRet.subjectRanges.addAll(subjectRanges);
+        toRet.senderRanges = new HashSet<StringRange>(); toRet.senderRanges.addAll(senderRanges);
 
         return toRet;
     }
@@ -324,7 +246,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                     printOne(str, elt);
                     atFirst = false;
                 }
-                str.append(") ");
+                str.append(")");
             }
         }
 
@@ -352,7 +274,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                     }
                     atFirst = false;
                 }
-                str.append(") ");
+                str.append(")");
             }
         }
     }
@@ -437,19 +359,19 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         bp.run(retVal, excludeTypes, "-TYPE"); 
 
         if (!dates.isEmpty())
-            new ObjectPrinter<DateRange>().run(retVal, dates, "DATES"); 
+            new ObjectPrinter<NumericRange>().run(retVal, dates, "DATE"); 
 
         if (!modified.isEmpty())
             new ObjectPrinter<NumericRange>().run(retVal, modified, "MOD") ;
 
         if (!sizes.isEmpty()) 
-            new ObjectPrinter<SizeRange>().run(retVal, sizes, "SIZE");
+            new ObjectPrinter<NumericRange>().run(retVal, sizes, "SIZE");
         
         if (!subjectRanges.isEmpty())
-            new ObjectPrinter<SubjectRange>().run(retVal, subjectRanges, "SUBJECT");
+            new ObjectPrinter<StringRange>().run(retVal, subjectRanges, "SUBJECT");
         
         if (!senderRanges.isEmpty())
-            new ObjectPrinter<SenderRange>().run(retVal, senderRanges, "FROM");
+            new ObjectPrinter<StringRange>().run(retVal, senderRanges, "FROM");
 
         return retVal.toString();
     }
@@ -632,7 +554,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         // dates
         if (other.dates != null) {
             if (dates == null) 
-                dates = new ArrayList<DateRange>();
+                dates = new ArrayList<NumericRange>();
             dates.addAll(other.dates);
         }
 
@@ -646,21 +568,21 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         // sizes
         if (other.sizes!= null) {
             if (sizes == null) 
-                sizes = new ArrayList<SizeRange>();
+                sizes = new ArrayList<NumericRange>();
             sizes.addAll(other.sizes);
         }
         
         // sizes
         if (other.subjectRanges!= null) {
             if (subjectRanges== null) 
-                subjectRanges = new ArrayList<SubjectRange>();
+                subjectRanges = new ArrayList<StringRange>();
             subjectRanges.addAll(other.subjectRanges);
         }
         
         // senderRanges
         if (other.senderRanges!= null) {
             if (senderRanges== null) 
-                senderRanges = new ArrayList<SenderRange>();
+                senderRanges = new ArrayList<StringRange>();
             senderRanges.addAll(other.senderRanges);
         }
     }

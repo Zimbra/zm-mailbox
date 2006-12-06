@@ -402,13 +402,19 @@ class UnionQueryOperation extends QueryOperation
     }
 
     public String toString() {
-        StringBuilder retval = new StringBuilder("(");
+        StringBuilder retval = new StringBuilder("UNION{");
+        
+        boolean atFirst = true;
 
         for (int i = 0; i < mQueryOperations.size(); i++) {
-            retval.append(" OR ");
+            if (atFirst)
+                atFirst = false;
+            else
+                retval.append(" OR ");
+            
             retval.append(mQueryOperations.get(i).toString());
         }
-        retval.append(")");
+        retval.append("}");
         return retval.toString();
     }
 

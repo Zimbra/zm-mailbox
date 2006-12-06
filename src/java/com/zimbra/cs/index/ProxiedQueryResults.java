@@ -316,6 +316,8 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
                 mBufferEndOffset = mIterOffset;
                 return false;
             }
+            
+            
 
 
             int hitOffset = (int) searchResp.getAttributeLong(MailService.A_QUERY_OFFSET);
@@ -328,7 +330,12 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             int stop = mBufferEndOffset - mBufferStartOffset;
             for (Iterator iter = searchResp.elementIterator(); iter.hasNext() && bufferIdx < stop;) {
                 Element e = (Element)iter.next();
-                mHitBuffer.add(bufferIdx++, new ProxiedHit(this, e));
+                if (e.getName() == MailService.E_INFO) {
+                    for (Iterator<Element> infoIter = e.elementIterator(); infoIter.hasNext();)  
+                        mInfo.add(new ProxiedQueryInfo(infoIter.next()));
+                } else {
+                    mHitBuffer.add(bufferIdx++, new ProxiedHit(this, e));
+                }
             }
 
             //
@@ -362,5 +369,6 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
 //      }
     }
 
-    public List<QueryInfo> getResultInfo() { return new ArrayList<QueryInfo>(); }
+    List<QueryInfo> mInfo = new ArrayList<QueryInfo>();
+    public List<QueryInfo> getResultInfo() { return mInfo; }
 }

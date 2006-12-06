@@ -161,6 +161,6 @@ class RemoteQueryOperation extends QueryOperation {
     public void doneWithSearchResults() throws ServiceException {
         mResults.doneWithSearchResults();
     }
-    public List<QueryInfo> getResultInfo() { return new ArrayList<QueryInfo>(); }
+    public List<QueryInfo> getResultInfo() { return mResults.getResultInfo(); }
 
 }

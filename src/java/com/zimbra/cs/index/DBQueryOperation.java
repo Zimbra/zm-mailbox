@@ -919,22 +919,26 @@ class DBQueryOperation extends QueryOperation
 
     public String toString()
     {
-        StringBuilder retVal = new StringBuilder("");
+        boolean atFirst = true;
+        StringBuilder retVal = new StringBuilder("<");
         if (mLuceneOp != null) {
-            retVal.append(" (").append(mLuceneOp.toString()).append(" AND ");
+            retVal.append(mLuceneOp.toString());
+            atFirst = false;
         }
+        if (!atFirst)
+            retVal.append(" AND ");
+        
         retVal.append("DB(");
         if (mAllResultsQuery) {
-            retVal.append("ANYWHERE ");
+            retVal.append("ANYWHERE");
         } else if (hasNoResults()) {
             retVal.append("--- NO RESULT ---");
         } else {
             retVal.append(mConstraints.toString());
         }
         retVal.append(")");
-        if (mLuceneOp != null) {
-            retVal.append(") ");
-        }
+        
+        retVal.append('>');
 
         return retVal.toString();
     }

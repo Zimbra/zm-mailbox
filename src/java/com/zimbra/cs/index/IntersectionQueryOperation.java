@@ -554,12 +554,10 @@ class IntersectionQueryOperation extends QueryOperation {
             mQueryOperations = new ArrayList<QueryOperation>();
         }
         mQueryOperations.add(op);
-        Collections.sort(mQueryOperations, sQueryOpSortComparator);
     }
 
     void addQueryOps(List<QueryOperation>ops) {
         mQueryOperations.addAll(ops);
-        Collections.sort(mQueryOperations, sQueryOpSortComparator);
     }
 
     void pruneIncompatibleTargets(QueryTargetSet targets) {
@@ -622,8 +620,7 @@ class IntersectionQueryOperation extends QueryOperation {
             }
 
             for (int j = i + 1; j < mQueryOperations.size(); j++) {
-                QueryOperation rhs = (QueryOperation) mQueryOperations
-                .get(j);
+                QueryOperation rhs = (QueryOperation) mQueryOperations.get(j);
                 QueryOperation joined = lhs.combineOps(rhs, false);
                 if (joined != null) {
                     mQueryOperations.remove(j);
@@ -761,14 +758,20 @@ class IntersectionQueryOperation extends QueryOperation {
     }
 
     public String toString() {
-        StringBuilder retval = new StringBuilder("(");
+        StringBuilder retval = new StringBuilder("INTERSECTION[");
+        
+        boolean atFirst = true;
 
         for (Iterator iter = mQueryOperations.iterator(); iter.hasNext();) {
             QueryOperation op = (QueryOperation) iter.next();
-            retval.append(" AND ");
+            if (atFirst)
+                atFirst = false;
+            else
+                retval.append(" AND ");
+            
             retval.append(op.toString());
         }
-        retval.append(")");
+        retval.append("]");
         return retval.toString();
     }
 

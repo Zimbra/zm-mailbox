@@ -51,9 +51,9 @@ public class ProxiedHit extends ZimbraHit
     protected String mProxiedSubject = null;
     protected String mProxiedName = null;
     protected ItemId itemID = null;
-    
+
     protected Element mElement;
-    
+
     public ItemId getParsedItemID() throws ServiceException {
         if (itemID == null)
             itemID = new ItemId(mElement.getAttribute(MailService.A_ID), null);
@@ -64,16 +64,16 @@ public class ProxiedHit extends ZimbraHit
         super(results, null, 0.0f);
         mElement = elt;
     }
-    
+
     int getSize() throws ServiceException {
         return (int) mElement.getAttributeLong(MailService.A_SIZE, 0);
     }
-    
+
     long getDate() throws ServiceException {
         if (mProxiedDate < 0) {
             mProxiedDate = mElement.getAttributeLong(MailService.A_DATE, 0);
             if (mProxiedDate == 0) {
-            	mProxiedDate = mElement.getAttributeLong(MailService.A_SORT_FIELD, 0);
+                mProxiedDate = mElement.getAttributeLong(MailService.A_SORT_FIELD, 0);
             }
         }
         return mProxiedDate;
@@ -81,13 +81,13 @@ public class ProxiedHit extends ZimbraHit
 
     int getConversationId() throws ServiceException {
         if (mProxiedConvId <= 0) {
-        	mProxiedConvId = (int) mElement.getAttributeLong(MailService.A_CONV_ID, 0);
+            mProxiedConvId = (int) mElement.getAttributeLong(MailService.A_CONV_ID, 0);
         }
         return mProxiedConvId;
     }
-    
+
     public MailItem getMailItem() throws ServiceException { return null; }
-    
+
     public int getItemId() throws ServiceException {
         if (mProxiedMsgId <= 0) {
             ItemId id = getParsedItemID();
@@ -95,14 +95,14 @@ public class ProxiedHit extends ZimbraHit
         }
         return mProxiedMsgId;
     }
-    
+
     byte getItemType() throws ServiceException {
         if (mProxiedItemType <= 0) {
             mProxiedItemType = (byte) mElement.getAttributeLong(MailService.A_ITEM_TYPE);
         }
         return mProxiedItemType;
     }
-    
+
     void setItem(MailItem item) {
         assert(false); // can't preload a proxied hit!
     }
@@ -110,18 +110,18 @@ public class ProxiedHit extends ZimbraHit
     boolean itemIsLoaded() {
         return true;
     }
-    
+
 
     String getSubject() throws ServiceException {
         if (mProxiedSubject == null) {
             mProxiedSubject = mElement.getAttribute(MailService.E_SUBJECT, null);
             if (mProxiedSubject == null) {
-            	mProxiedSubject = mElement.getAttribute(MailService.A_SORT_FIELD);
+                mProxiedSubject = mElement.getAttribute(MailService.A_SORT_FIELD);
             }
         }
         return mProxiedSubject;
     }
-    
+
     String getFragment() throws ServiceException {
         Element frag = mElement.getOptionalElement(MailService.E_FRAG);
         if (frag != null) {
@@ -132,75 +132,20 @@ public class ProxiedHit extends ZimbraHit
 
     String getName() throws ServiceException {
         if (mProxiedName == null) {
-        	mProxiedName = mElement.getAttribute(MailService.A_SORT_FIELD);
+            mProxiedName = mElement.getAttribute(MailService.A_SORT_FIELD);
         }
         return mProxiedName;
-    	
-//        StringBuffer toRet = new StringBuffer();
-//        for (Iterator iter = mElement.elementIterator(MailService.E_EMAIL); iter.hasNext(); ) 
-//        {
-//            Element cur = (Element)(iter.next());
-//            
-//            String type = cur.getAttribute(MailService.A_ADDRESS_TYPE);
-//            String typeStr = "";
-//            if (type.equals("f")) {
-//                typeStr = "from";
-//            } else if (type.equals("s")) {
-//                typeStr = "sender";
-//            } else if (type.equals("t")) {
-//                typeStr = "to";
-//            } else if (type.equals("r")) {
-//                typeStr = "reply-to";
-//            } else if (type.equals("c")) {
-//                typeStr = "cc";
-//            } else if (type.equals("b")) {
-//                typeStr = "bcc";
-//            }
-//   
-//            toRet.append(typeStr);
-//            toRet.append(":\"");
-//            
-//            boolean needSpace = false;
-//
-//            String str = cur.getAttribute(MailService.A_PERSONAL, null);
-//            if (str != null) {
-//                toRet.append(str);
-//                needSpace = true;
-//            } else {
-//                str = cur.getAttribute(MailService.A_DISPLAY, null);
-//                if (str != null) {
-//                    if (needSpace) {
-//                        toRet.append(" ");
-//                    }
-//                    toRet.append(str);
-//                    needSpace = true;
-//                }
-//            }
-//            
-//            str = cur.getAttribute(MailService.A_ADDRESS, null);
-//            if (str != null) {
-//                if (needSpace) {
-//                    toRet.append(" ");
-//                }
-//                toRet.append(str);
-//            }
-//            
-//            toRet.append("\" ");
-//            
-//        }
-//        
-//        return toRet.toString();
     }
-    
+
     public String toString() {
         return mElement.toString();
     }
-    
+
     public String getServer() {
         ProxiedQueryResults res = (ProxiedQueryResults) getResults();
         return res.getServer();
     }
-    
+
     public Element getElement() { 
         return mElement;
     }

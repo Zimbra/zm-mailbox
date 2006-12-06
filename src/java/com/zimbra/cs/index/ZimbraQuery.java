@@ -96,7 +96,7 @@ public final class ZimbraQuery {
         private BaseQuery mNext = null;
         private int mModifierType;
         private int mQueryType;
-        
+
         private List<QueryInfo> getInfo() { return null; }
 
         protected BaseQuery(int modifierType, int queryType) {
@@ -302,6 +302,9 @@ public final class ZimbraQuery {
             return op;
         }
 
+        protected static final String NUMERICDATE_PATTERN = "^([0-9]+)$";
+        protected static final Pattern sNumericDatePattern = Pattern.compile(NUMERICDATE_PATTERN);
+
         protected static final String RELDATE_PATTERN = "([+-])([0-9]+)([mhdwy][a-z]*)?";
         protected static final Pattern sRelDatePattern = Pattern.compile(RELDATE_PATTERN);
 
@@ -333,7 +336,7 @@ public final class ZimbraQuery {
                 if (s.length() <= 1)
                     throw new ParseException("Invalid string in date query: \""+s+"\"");
 
-                 char ch2 = s.charAt(1);
+                char ch2 = s.charAt(1);
                 if (ch2 == '=' && s.length() <= 2)
                     throw new ParseException("Invalid string in date query: \""+s+"\"");
 
@@ -387,126 +390,134 @@ public final class ZimbraQuery {
             {
                 Matcher m;
                 String mod = null;
-                m = sRelDatePattern.matcher(s);
-                if (m.lookingAt()) 
-                {
-                    //
-                    // RELATIVE DATE!
-                    //
-                    String reltime;
-                    String what;
-
-                    mod = s.substring(m.start(1), m.end(1));
-                    reltime = s.substring(m.start(2), m.end(2));
-
-
-                    if (m.start(3) == -1) {
-                        // no period specified -- use the defualt for the current operator
-                    } else {
-                        what = s.substring(m.start(3), m.end(3));
-
-
-                        switch (what.charAt(0)) {
-                            case 'm':
-                                field = Calendar.MONTH;
-                                if (what.length() > 1 && what.charAt(1) == 'i') {
-                                    field = Calendar.MINUTE;
-                                }
-                                break;
-                            case 'h':
-                                field = Calendar.HOUR;
-                                break;
-                            case 'd':
-                                field = Calendar.DATE;
-                                break;
-                            case 'w':
-                                field = Calendar.WEEK_OF_YEAR;
-                                break;
-                            case 'y':
-                                field = Calendar.YEAR;
-                                break;
-                        }
-                    } // (else m.start(3) == -1
+                m = sNumericDatePattern.matcher(s);
+                if (m.lookingAt()) {
+                    long dateLong = Long.parseLong(s);
+                    mDate = new Date(dateLong);
+                    mEndDate = new Date(dateLong);
                     
-
-                    //                System.out.println("RELDATE: MOD=\""+mod+"\" AMT=\""+reltime+"\" TYPE="+type);
-
-                    GregorianCalendar cal = new GregorianCalendar();
-                    if (tz != null)
-                        cal.setTimeZone(tz);
-
-                    cal.setTime(new Date());
-
-                    //
-                    // special case 'day' clear all the fields that are lower than the one we're currently operating on...
-                    //
-                    //  E.G. "date:-1d"  people really expect that to mean 'midnight to midnight yesterday'
-                     switch (field) {
-                        case Calendar.YEAR:
-                            cal.set(Calendar.MONTH, 0);
-                        case Calendar.MONTH:
-                            cal.set(Calendar.WEEK_OF_MONTH, 0);
-                        case Calendar.WEEK_OF_YEAR:
-                            cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
-                        case Calendar.DATE:
-                            cal.set(Calendar.HOUR_OF_DAY, 0);
-                        case Calendar.HOUR:
-                            cal.set(Calendar.MINUTE, 0);
-                        case Calendar.MINUTE:
-                            cal.set(Calendar.SECOND, 0);
-                    }
-
-                    int num = Integer.parseInt(reltime);
-                    if (mod.equals("-")) {
-                        num = num * -1;
-                    }
-
-                    cal.add(field,num);
-                    mDate = cal.getTime();
-
-                    cal.add(field,1);
-                    mEndDate = cal.getTime();
                 } else {
-                    //
-                    // ABSOLUTE dates:
-                    //       use Locale information to parse date correctly
-                    //
+                    m = sRelDatePattern.matcher(s);
+                    if (m.lookingAt()) 
+                    {
+                        //
+                        // RELATIVE DATE!
+                        //
+                        String reltime;
+                        String what;
 
-                    char first = s.charAt(0);
-                    if (first == '-' || first == '+') {
-                        s = s.substring(1);
-                    }
+                        mod = s.substring(m.start(1), m.end(1));
+                        reltime = s.substring(m.start(2), m.end(2));
 
-                    DateFormat df;
-                    if (locale != null)
-                        df = DateFormat.getDateInstance(DateFormat.SHORT, locale); 
-                    else
-                        df = DateFormat.getDateInstance(DateFormat.SHORT);
 
-                    df.setLenient(false);
-                    if (tz != null) {
-                        df.setTimeZone(tz);
-                    }
+                        if (m.start(3) == -1) {
+                            // no period specified -- use the defualt for the current operator
+                        } else {
+                            what = s.substring(m.start(3), m.end(3));
 
-                    try {
-                        mDate = df.parse(s);
-                    } catch (java.text.ParseException ex) {
-                        Token fake = new Token();
-                        fake.image = s;
-                        ParseException pe = new ParseException(ex.getLocalizedMessage());
-                        pe.currentToken = fake;
-                        throw pe;
-                    }
 
-                    Calendar cal = Calendar.getInstance();
-                    if (tz != null)
-                        cal.setTimeZone(tz);
+                            switch (what.charAt(0)) {
+                                case 'm':
+                                    field = Calendar.MONTH;
+                                    if (what.length() > 1 && what.charAt(1) == 'i') {
+                                        field = Calendar.MINUTE;
+                                    }
+                                    break;
+                                case 'h':
+                                    field = Calendar.HOUR;
+                                    break;
+                                case 'd':
+                                    field = Calendar.DATE;
+                                    break;
+                                case 'w':
+                                    field = Calendar.WEEK_OF_YEAR;
+                                    break;
+                                case 'y':
+                                    field = Calendar.YEAR;
+                                    break;
+                            }
+                        } // (else m.start(3) == -1
 
-                    cal.setTime(mDate);
 
-                    cal.add(field,1);
-                    mEndDate = cal.getTime();
-                } // else (relative/absolute check)
+                        //                System.out.println("RELDATE: MOD=\""+mod+"\" AMT=\""+reltime+"\" TYPE="+type);
+
+                        GregorianCalendar cal = new GregorianCalendar();
+                        if (tz != null)
+                            cal.setTimeZone(tz);
+
+                        cal.setTime(new Date());
+
+                        //
+                        // special case 'day' clear all the fields that are lower than the one we're currently operating on...
+                        //
+                        //  E.G. "date:-1d"  people really expect that to mean 'midnight to midnight yesterday'
+                        switch (field) {
+                            case Calendar.YEAR:
+                                cal.set(Calendar.MONTH, 0);
+                            case Calendar.MONTH:
+                                cal.set(Calendar.WEEK_OF_MONTH, 0);
+                            case Calendar.WEEK_OF_YEAR:
+                                cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+                            case Calendar.DATE:
+                                cal.set(Calendar.HOUR_OF_DAY, 0);
+                            case Calendar.HOUR:
+                                cal.set(Calendar.MINUTE, 0);
+                            case Calendar.MINUTE:
+                                cal.set(Calendar.SECOND, 0);
+                        }
+
+                        int num = Integer.parseInt(reltime);
+                        if (mod.equals("-")) {
+                            num = num * -1;
+                        }
+
+                        cal.add(field,num);
+                        mDate = cal.getTime();
+
+                        cal.add(field,1);
+                        mEndDate = cal.getTime();
+                    } else {
+                        //
+                        // ABSOLUTE dates:
+                        //       use Locale information to parse date correctly
+                        //
+
+                        char first = s.charAt(0);
+                        if (first == '-' || first == '+') {
+                            s = s.substring(1);
+                        }
+
+                        DateFormat df;
+                        if (locale != null)
+                            df = DateFormat.getDateInstance(DateFormat.SHORT, locale); 
+                        else
+                            df = DateFormat.getDateInstance(DateFormat.SHORT);
+
+                        df.setLenient(false);
+                        if (tz != null) {
+                            df.setTimeZone(tz);
+                        }
+
+                        try {
+                            mDate = df.parse(s);
+                        } catch (java.text.ParseException ex) {
+                            Token fake = new Token();
+                            fake.image = s;
+                            ParseException pe = new ParseException(ex.getLocalizedMessage());
+                            pe.currentToken = fake;
+                            throw pe;
+                        }
+
+                        Calendar cal = Calendar.getInstance();
+                        if (tz != null)
+                            cal.setTimeZone(tz);
+
+                        cal.setTime(mDate);
+
+                        cal.add(field,1);
+                        mEndDate = cal.getTime();
+                    } // else (relative/absolute check)
+                } // else (numeric check)
 
                 if (mLog.isDebugEnabled()) {
                     mLog.debug("Parsed date range to: ("+mDate.toString()+"-"+mEndDate.toString()+")");
@@ -584,43 +595,6 @@ public final class ZimbraQuery {
                 mHighestTime = mEndDate.getTime();
                 mHigherEq = false;
             }
-
-
-
-//          if (hasExplicitComparasins) {
-//          if (explicitLt) {
-//          mLowestTime = -1;
-//          mLowerEq = false;
-//          mHighestTime = mDate.getTime();
-//          mHigherEq = explicitEq;
-//          } else {
-//          mLowestTime = mDate.getTime();
-//          mLowerEq = explicitEq;
-//          mHighestTime = -1;
-//          mHigherEq = false;
-//          }
-//          } else {
-//          switch(getQueryType()) {
-//          case ZimbraQueryParser.BEFORE:
-//          mLowestTime = -1;
-//          mLowerEq = false;
-//          mHighestTime = mDate.getTime();
-//          mHigherEq = false;
-//          break;
-//          case ZimbraQueryParser.AFTER:
-//          mLowestTime = mEndDate.getTime();
-//          mLowerEq = false;
-//          mHighestTime = -1;
-//          mHigherEq = false;
-//          break;
-//          case ZimbraQueryParser.DATE:
-//          mLowestTime = mDate.getTime();
-//          mLowerEq = true;
-//          mHighestTime = mEndDate.getTime();
-//          mHigherEq = true;
-//          break;
-//          }
-//          }
 
         }
 
@@ -810,7 +784,7 @@ public final class ZimbraQuery {
 
                     for (Folder f : allFolders) {
                         if (!(f instanceof Mountpoint) && !(f instanceof SearchFolder)) {
-//                            System.out.println("Adding: "+f.toString());
+//                          System.out.println("Adding: "+f.toString());
                             DBQueryOperation dbop = new DBQueryOperation();
                             outer.add(dbop);
                             dbop.addInClause(f, true);
@@ -848,7 +822,7 @@ public final class ZimbraQuery {
                     else {
                         Mountpoint mpt = (Mountpoint)f;
 //                      if (mpt. .getAccount() == mbox.getAccount()) {
-//  iter.remove();
+//                      iter.remove();
 //                      }
                     }
                 }
@@ -1352,18 +1326,18 @@ public final class ZimbraQuery {
 
                 if (wcToken.charAt(wcToken.length()-1) == '*')
                     wcToken = wcToken.substring(0, wcToken.length()-1);
-                
-                if (wcToken.length() >= 1) {
+
+                if (wcToken.length() > 0) {
                     mWildcardTerm = wcToken;
                     MailboxIndex mbidx = mbox.getMailboxIndex();
                     List<String> expandedTokens = new ArrayList<String>(100);
                     boolean expandedAllTokens = mbidx.expandWildcardToken(expandedTokens, QueryTypeString(qType), wcToken, MAX_WILDCARD_TERMS);
-                    
-//                    if (!expandedAllTokens) {
-//                        throw MailServiceException.TOO_MANY_QUERY_TERMS_EXPANDED("Wildcard text: \""+wcToken
-//                                  +"\" expands to too many terms (maximum allowed is "+MAX_WILDCARD_TERMS+")", wcToken+"*", MAX_WILDCARD_TERMS);
-//                    }
-                    
+
+//                  if (!expandedAllTokens) {
+//                  throw MailServiceException.TOO_MANY_QUERY_TERMS_EXPANDED("Wildcard text: \""+wcToken
+//                  +"\" expands to too many terms (maximum allowed is "+MAX_WILDCARD_TERMS+")", wcToken+"*", MAX_WILDCARD_TERMS);
+//                  }
+
                     mQueryInfo.add(new WildcardExpansionQueryInfo(wcToken+"*", expandedTokens.size(), expandedAllTokens));
                     // 
                     // By design, we interpret *zero* tokens to mean "ignore this search term"
@@ -1387,7 +1361,7 @@ public final class ZimbraQuery {
                 if (suggestions != null) 
                     mQueryInfo.add(new SpellSuggestQueryInfo(token, suggestions));
             }
-            
+
         }
 
         protected QueryOperation getQueryOperation(boolean truth) {
@@ -1403,14 +1377,16 @@ public final class ZimbraQuery {
                 return new NoTermQueryOperation();
             } else {
                 LuceneQueryOperation lop = LuceneQueryOperation.Create();
-                
+
                 for (QueryInfo inf : mQueryInfo) {
                     lop.addQueryInfo(inf);
                 }                    
-                    
+
                 String fieldName = QueryTypeString(getQueryType());
 
-                if (mTokens.size() == 1) {
+                if (mTokens.size() == 0) {
+                    lop.setQueryString(this.getQueryOperatorString()+mOrigText);
+                } else if (mTokens.size() == 1) {
                     TermQuery q = null;
                     String queryTerm = mTokens.get(0);
                     q = new TermQuery(new Term(fieldName, queryTerm));
@@ -1933,7 +1909,7 @@ public final class ZimbraQuery {
         mbox.getMailboxIndex().initAnalyzer(mbox);
         parser.init(mbox.getMailboxIndex().getAnalyzer(), mMbox, mTimeZone, mLocale);
         mClauses = parser.Parse();
-        
+
         String sortByStr = parser.getSortByStr();
         if (sortByStr != null)
             handleSortByOverride(sortByStr);
@@ -2095,5 +2071,5 @@ public final class ZimbraQuery {
         }
         return ret;
     }
-    
+
 }
