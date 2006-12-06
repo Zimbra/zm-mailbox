@@ -265,14 +265,9 @@ public class UnitTests extends TestCase {
                              ));
         
         {
-            Mailbox mbx = MailboxManager.getInstance().getMailboxById(1);
-            String folderName = new String("/inbox");
-            final Folder compFolder = mbx.getFolderByPath(null, folderName);
-            //System.out.println("compTag is "+compTag);
-            
             ResultValidator val = new ResultValidator() 
             {
-                int cmpId = compFolder.getId();
+                int cmpId = Mailbox.ID_FOLDER_INBOX;
                 public void validate(ZimbraHit hit) throws ServiceException 
                 {
                     MessageHit mh = (MessageHit)hit;
@@ -282,7 +277,7 @@ public class UnitTests extends TestCase {
                     int msgFolderId = mh.getFolderId();
 //                    System.out.println("\tCompFolder = "+compFolder.toString()+" id="+cmpId);
 //                    System.out.println("\tMessageFolder id="+msgFolderId);
-                    assertTrue("Folder-Checking "+mh.toString()+" for "+compFolder.toString(), 
+                    assertTrue("Folder-Checking "+mh.toString()+" for INBOX",
                             cmpId == msgFolderId);
                 } 
             };
