@@ -43,8 +43,6 @@ public class SearchOperation extends Operation {
     private SearchParams mParams;
     private ZimbraQueryResults mResults;
     private SoapProtocol mProto = SoapProtocol.Soap12;
-    private Mailbox.SearchResultMode mMode = Mailbox.SearchResultMode.NORMAL;
-    private boolean mPrefetch = true;
 
     private static int LOAD = 5;
     static {
@@ -57,7 +55,8 @@ public class SearchOperation extends Operation {
     public SearchOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, SearchParams params, boolean prefetch, Mailbox.SearchResultMode mode) {
         super(session, oc, mbox, req, req.getPriority(), LOAD);
         mParams = params;
-        mMode = mode;
+        mParams.setPrefetch(prefetch);
+        mParams.setMode(mode);
     }
 
     public SearchOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, SearchParams params) {
@@ -79,9 +78,10 @@ public class SearchOperation extends Operation {
             query = "(" + query + ") -tag:\\Deleted";
 
         try {
-            byte[] types = MailboxIndex.parseGroupByString(mParams.getTypesStr());
-            mResults = getMailbox().search(mProto, getOpCtxt(), query, mParams.getTimeZone(), mParams.getLocale(), types, mParams.getSortBy(), mParams.getLimit() + mParams.getOffset(), mPrefetch, mMode);
-
+//            mResults = getMailbox().search(mProto, getOpCtxt(), query, mParams.getTimeZone(), mParams.getLocale(), types, mParams.getSortBy(), mParams.getLimit() + mParams.getOffset(), mPrefetch, mMode);
+            
+            mResults = getMailbox().search(mProto, getOpCtxt(), mParams);
+            
         } catch (IOException e) {
             throw ServiceException.FAILURE("IO error", e);
         } catch (ParseException e) {

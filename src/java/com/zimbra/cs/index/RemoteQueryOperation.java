@@ -143,7 +143,8 @@ class RemoteQueryOperation extends QueryOperation {
         }
     }
 
-    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) {
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, SearchParams params, int chunkSize) {
+        mParams = params;
     }
 
     public void resetIterator() throws ServiceException {
@@ -162,5 +163,10 @@ class RemoteQueryOperation extends QueryOperation {
         mResults.doneWithSearchResults();
     }
     public List<QueryInfo> getResultInfo() { return mResults.getResultInfo(); }
+    
+    public int estimateResultSize() throws ServiceException {
+        return 0;
+    }
+    
 
 }

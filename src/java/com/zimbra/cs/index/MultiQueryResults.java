@@ -159,5 +159,17 @@ public class MultiQueryResults implements ZimbraQueryResults
         }
         return toRet;
     }
+    
+    public int estimateResultSize() throws ServiceException {
+        long total = 0;
+        for (HitIdGrouper grp : mGroupedHits) {
+            total += grp.estimateResultSize();
+        }
+        if (total > Integer.MAX_VALUE)
+            return Integer.MAX_VALUE;
+        else
+            return (int)total;
+    }
 
+    
 }

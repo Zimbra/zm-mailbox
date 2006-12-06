@@ -371,4 +371,6 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
 
     List<QueryInfo> mInfo = new ArrayList<QueryInfo>();
     public List<QueryInfo> getResultInfo() { return mInfo; }
+    
+    public int estimateResultSize() throws ServiceException { return 0; }
 }

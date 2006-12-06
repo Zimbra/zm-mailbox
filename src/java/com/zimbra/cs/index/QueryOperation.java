@@ -98,16 +98,18 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
     abstract String toQueryString(); 
 
 //    final static QueryOpSortComparator sQueryOpSortComparator = new QueryOpSortComparator();
+//  private SortBy mSortOrder = null;
 
-    private SortBy mSortOrder = null;
-    public SortBy getSortBy() { return mSortOrder; }
+    protected SearchParams mParams;
+    public SortBy getSortBy() { return mParams.getSortBy(); }
 
     ////////////////////
     // Top-Level Execution  
-    final ZimbraQueryResults run(Mailbox mbox, MailboxIndex mbidx, byte[] types, SortBy searchOrder, int chunkSize, boolean prefetch, Mailbox.SearchResultMode mode) throws IOException, ServiceException
+    final ZimbraQueryResults run(Mailbox mbox, MailboxIndex mbidx, SearchParams params, int chunkSize) throws IOException, ServiceException
     {
+        mParams = params;
         mIsToplevelQueryOp = true;
-        mSortOrder = searchOrder;
+        //mSortOrder = searchOrder;
 
         chunkSize++; // one extra for checking the "more" flag at the end of the results
 
@@ -118,6 +120,7 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
         }
 
         int retType = MailboxIndex.SEARCH_RETURN_DOCUMENTS;
+        byte[] types = mParams.getTypes();
         for (int i = 0; i < types.length; i++) {
             if (types[i] == MailItem.TYPE_CONVERSATION) {
                 retType = MailboxIndex.SEARCH_RETURN_CONVERSATIONS;
@@ -136,39 +139,39 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
 
         switch (retType) {
             case MailboxIndex.SEARCH_RETURN_CONVERSATIONS:
-                if (prefetch && USE_PRELOADING_GROUPER) {
+                if (mParams.getPrefetch() && USE_PRELOADING_GROUPER) {
                     chunkSize+= 2; // one for the ConvQueryResults, one for the Grouper  
-                    setupResults(mbox, new ConvQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder, mode));
+                    setupResults(mbox, new ConvQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, mParams.getSortBy(), mParams.getMode()));
                     chunkSize*=2; // guess 2 msgs per conv
                 } else {
                     chunkSize++; // one for the ConvQueryResults
-                    setupResults(mbox, new ConvQueryResults(this, types, searchOrder, mode));
+                    setupResults(mbox, new ConvQueryResults(this, types, mParams.getSortBy(), mParams.getMode()));
                     chunkSize*=2;
                 }
                 preloadOuterResults = true;
                 break;
             case MailboxIndex.SEARCH_RETURN_MESSAGES:
-                if (prefetch && USE_PRELOADING_GROUPER) {
+                if (mParams.getPrefetch()  && USE_PRELOADING_GROUPER) {
                     chunkSize+= 2; // one for the MsgQueryResults, one for the Grouper 
-                    setupResults(mbox, new MsgQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder, mode));
+                    setupResults(mbox, new MsgQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, mParams.getSortBy(), mParams.getMode()));
                 } else {
                     chunkSize++; // one for the MsgQueryResults
-                    setupResults(mbox, new MsgQueryResults(this, types, searchOrder, mode));
+                    setupResults(mbox, new MsgQueryResults(this, types, mParams.getSortBy(), mParams.getMode()));
                 }
                 break;
             case MailboxIndex.SEARCH_RETURN_DOCUMENTS:
-                if (prefetch && USE_PRELOADING_GROUPER) {
+                if (mParams.getPrefetch() && USE_PRELOADING_GROUPER) {
                     chunkSize++; // one for the grouper
-                    setupResults(mbox, new UngroupedQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, searchOrder, mode));
+                    setupResults(mbox, new UngroupedQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox), types, mParams.getSortBy(), mParams.getMode()));
                 } else {
-                    setupResults(mbox, new UngroupedQueryResults(this, types, searchOrder, mode));
+                    setupResults(mbox, new UngroupedQueryResults(this, types, mParams.getSortBy(), mParams.getMode()));
                 }
                 break;
         }
 
-        prepare(mMailbox, mResults, mbidx, chunkSize);
+        prepare(mMailbox, mResults, mbidx, mParams, chunkSize);
 
-        if (USE_PRELOADING_GROUPER && preloadOuterResults && prefetch) {
+        if (USE_PRELOADING_GROUPER && preloadOuterResults && mParams.getPrefetch()) {
             return new ItemPreloadingGrouper(mResults, outerChunkSize, mbox);
         } else {
             return mResults;
@@ -203,7 +206,7 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
      * @throws IOException
      * @throws ServiceException
      */
-    protected abstract void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) throws IOException, ServiceException;
+    protected abstract void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, SearchParams params, int chunkSize) throws IOException, ServiceException;
 
     public ZimbraHit getFirstHit() throws ServiceException {
         resetIterator();

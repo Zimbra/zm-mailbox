@@ -443,8 +443,9 @@ class UnionQueryOperation extends QueryOperation
     }
 
 
-    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, SearchParams params, int chunkSize) throws ServiceException, IOException
     {
+        mParams = params;
         this.setupResults(mbx, res);
 
         for (int i = 0; i < mQueryOperations.size(); i++) {
@@ -452,7 +453,7 @@ class UnionQueryOperation extends QueryOperation
             if (mLog.isDebugEnabled()) {
                 mLog.debug("Executing: "+qop.toString());
             }
-            qop.prepare(mbx, res, mbidx, chunkSize+1); // add 1 to chunksize b/c we buffer
+            qop.prepare(mbx, res, mbidx, mParams, chunkSize+1); // add 1 to chunksize b/c we buffer
         }
 
         internalGetNext();
@@ -465,4 +466,15 @@ class UnionQueryOperation extends QueryOperation
         }
         return toRet;
     }
+    
+    public int estimateResultSize() throws ServiceException {
+        int total = 0;
+        for (QueryOperation qop : mQueryOperations) {
+            // assume ORed terms are independent for now
+            total += qop.estimateResultSize();
+        }
+        
+        return total;
+    }
+    
 }

@@ -38,6 +38,7 @@ import java.util.TimeZone;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.mail.ToXML.OutputParticipants;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -164,6 +165,13 @@ public final class SearchParams {
     
     public TimeZone getTimeZone() { return mTimeZone; }
     public Locale getLocale() { return mLocale; }
+    
+    public boolean getPrefetch() { return mPrefetch; }
+    public void setPrefetch(boolean truthiness) { mPrefetch = truthiness; }
+    public Mailbox.SearchResultMode getMode() { return mMode; }
+    public void setMode(Mailbox.SearchResultMode mode) { mMode = mode; }
+    public boolean getEstimateSize() { return mEstimateSize; }
+    public void setEstimateSize(boolean estimateSize) { mEstimateSize = estimateSize; }
 
     private String mQueryStr;
     private int mOffset;
@@ -198,4 +206,9 @@ public final class SearchParams {
     // parsed:
     private MailboxIndex.SortBy mSortBy;
     private byte[] types; // types to seach for
+    
+    private boolean mPrefetch = true;
+    private Mailbox.SearchResultMode mMode = Mailbox.SearchResultMode.NORMAL;
+    
+    private boolean mEstimateSize = false; // ask or a size estimate.  Note that this might have a nontrivial performance impact
 }

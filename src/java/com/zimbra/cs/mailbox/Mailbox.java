@@ -62,6 +62,7 @@ import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -2691,32 +2692,26 @@ public class Mailbox {
     throws IOException, ParseException, ServiceException {
         return search(SoapProtocol.Soap12, octxt, queryString, null, null, types, sortBy, chunkSize, true, SearchResultMode.NORMAL);
     }
-
+    
     /**
-     * You **MUST** call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results, otherwise
-     * resources will be leaked.
-     * 
-     * @param octxt
-     * @param queryString
-     * @param types
-     * @param sortBy
-     * @param chunkSize A hint to the search engine telling it the size of the result set you are expecting
+     * @param proto  The soap protocol the request is coming from.  Determines the type of Element we create for proxied results.
+     * @param octxt  Operation Context
+     * @param params Search Parameters
      * @return
      * @throws IOException
      * @throws ParseException
      * @throws ServiceException
      */
-    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, String queryString, java.util.TimeZone tz, Locale locale, byte[] types, SortBy sortBy, int chunkSize, boolean prefetch, SearchResultMode mode) 
-    throws IOException, ParseException, ServiceException {
-        
+    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, SearchParams params) throws IOException, ParseException, ServiceException {
         if (octxt == null)
             throw ServiceException.INVALID_REQUEST("The OperationContext must not be null", null);
         
         Account acct = getAccount();
         boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
         boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
-        
-        ZimbraQuery zq = new ZimbraQuery(queryString, tz, locale, this, types, sortBy, includeTrash, includeSpam, chunkSize, prefetch, mode);
+
+        //queryString, tz, locale, this, types, sortBy, includeTrash, includeSpam, chunkSize, prefetch, mode);
+        ZimbraQuery zq = new ZimbraQuery(this, params, includeTrash, includeSpam);
         try {
             zq.executeRemoteOps(proto, octxt);
             
@@ -2741,7 +2736,34 @@ public class Mailbox {
             zq.doneWithQuery();
             throw ServiceException.FAILURE("Caught "+t.getMessage(), t);
         }
-
+    }                    
+    
+    /**
+     * You **MUST** call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results, otherwise
+     * resources will be leaked.
+     * 
+     * @param octxt
+     * @param queryString
+     * @param types
+     * @param sortBy
+     * @param chunkSize A hint to the search engine telling it the size of the result set you are expecting
+     * @return
+     * @throws IOException
+     * @throws ParseException
+     * @throws ServiceException
+     */
+    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, String queryString, java.util.TimeZone tz, Locale locale, byte[] types, SortBy sortBy, int chunkSize, boolean prefetch, SearchResultMode mode) 
+    throws IOException, ParseException, ServiceException {
+        SearchParams params = new SearchParams();
+        params.setQueryStr(queryString);
+        params.setTimeZone(tz);
+        params.setLocale(locale);
+        params.setTypes(types);
+        params.setSortBy(sortBy);
+        params.setChunkSize(chunkSize);
+        params.setPrefetch(prefetch);
+        params.setMode(mode);
+        return search(proto, octxt, params);
     }
     
     public synchronized FreeBusy getFreeBusy(long start, long end) throws ServiceException {

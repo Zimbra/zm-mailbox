@@ -50,6 +50,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -500,12 +501,23 @@ public class UnitTests extends TestCase {
     	}
 
     	Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
+        
+        SearchParams params = new SearchParams();
+        params.setQueryStr(qstr);
+        params.setTypes(types);
+        params.setSortBy(SortBy.DATE_DESCENDING);
+        params.setOffset(0);
+        params.setLimit(100);
+        params.setPrefetch(true);
+        params.setMode(SearchResultMode.NORMAL);
+        ZimbraQuery zq = new ZimbraQuery(mbox, params, false, false);
+        
 
-    	ZimbraQuery zq = new ZimbraQuery(qstr, null, null, mbox, 
-    			types, SortBy.DATE_DESCENDING,
-    			false, false, 100, true, Mailbox.SearchResultMode.NORMAL);
+//    	ZimbraQuery zq = new ZimbraQuery(qstr, null, null, mbox, 
+//    			types, SortBy.DATE_DESCENDING,
+//    			false, false, 100, true, Mailbox.SearchResultMode.NORMAL);
 
-    	ZimbraQueryResults res = zq.execute();
+        ZimbraQueryResults res = zq.execute();
 
     	try {
 

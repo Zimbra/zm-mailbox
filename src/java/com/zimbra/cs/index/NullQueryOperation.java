@@ -117,8 +117,9 @@ class NullQueryOperation extends QueryOperation {
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#prepare(com.zimbra.cs.mailbox.Mailbox, com.zimbra.cs.index.ZimbraQueryResultsImpl, com.zimbra.cs.index.MailboxIndex, int, int)
      */
-    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize)
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, SearchParams params, int chunkSize)
             throws IOException, ServiceException {
+        mParams = params;
         // empty
     }
 
@@ -151,5 +152,8 @@ class NullQueryOperation extends QueryOperation {
     }
     
     public List<QueryInfo> getResultInfo() { return new ArrayList<QueryInfo>(); }
+    
+    public int estimateResultSize() throws ServiceException { return 0; }
+    
 
 }

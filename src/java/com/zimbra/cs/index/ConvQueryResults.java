@@ -181,5 +181,10 @@ class ConvQueryResults extends ZimbraQueryResultsImpl {
     }
     
     public List<QueryInfo> getResultInfo() { return mResults.getResultInfo(); }
+    
+    public int estimateResultSize() throws ServiceException {
+        // guess 1.5 msgs/conv
+        return (int)((double)mResults.estimateResultSize() / 1.5);
+    }
 }
 

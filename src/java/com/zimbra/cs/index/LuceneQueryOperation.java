@@ -252,14 +252,15 @@ class LuceneQueryOperation extends QueryOperation
     {
     }
 
-    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, SearchParams params, int chunkSize) throws ServiceException, IOException
     {
+        mParams = params;
         assert(!mHaveRunSearch);
         if (mDBOp == null) {
             // wrap ourselves in a DBQueryOperation, since we're eventually going to need to go to the DB
             mDBOp = DBQueryOperation.Create();
             mDBOp.addLuceneOp(this);
-            mDBOp.prepare(mbx, res, mbidx, chunkSize); // will call back into this function again!
+            mDBOp.prepare(mbx, res, mbidx, params, chunkSize); // will call back into this function again!
         } else {
             this.setupResults(mbx, res);
 
@@ -472,5 +473,20 @@ class LuceneQueryOperation extends QueryOperation
             toRet.addAll(mDBOp.mQueryInfo);
         
         return toRet;
+    }
+    
+    public int estimateResultSize() throws ServiceException {
+        if (mDBOp == null)
+            return 0; // you need to run the query before this number is known
+        else
+            return mDBOp.estimateResultSize();
+    }
+    
+    int countHits() {
+        if (mLuceneHits != null) {
+            return mLuceneHits.length();
+        } else {
+            return 0;
+        }
     }
 }

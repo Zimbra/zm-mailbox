@@ -800,16 +800,17 @@ class IntersectionQueryOperation extends QueryOperation {
     private HitGrouper mMessageGrouper[] = null;
 
     protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res,
-                MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException {
+                MailboxIndex mbidx, SearchParams params, int chunkSize) throws ServiceException, IOException {
         // scale up the chunk size since we are doing an intersection...
         chunkSize = (chunkSize+1) * 3;
+        mParams = params;
 
         mMessageGrouper = new HitGrouper[mQueryOperations.size()];
         this.setupResults(mbx, res);
 
         for (int i = 0; i < mQueryOperations.size(); i++) {
             QueryOperation op = (QueryOperation) mQueryOperations.get(i);
-            op.prepare(mbx, res, mbidx, chunkSize);
+            op.prepare(mbx, res, mbidx, params, chunkSize);
             mMessageGrouper[i] = new HitGrouper(op, res.getSortBy());
 
             if (!op.hasNext()) {
@@ -853,5 +854,19 @@ class IntersectionQueryOperation extends QueryOperation {
         }
         return toRet;
     }
+    
+    public int estimateResultSize() throws ServiceException {
+        if (mQueryOperations.size() == 0)
+            return 0;
+        
+        int maxValue = Integer.MAX_VALUE;
+        for (QueryOperation qop : mQueryOperations) {
+            // assume half of the entries match?
+            maxValue = Math.min(maxValue, qop.estimateResultSize())/2;
+        }
+        
+        return maxValue;
+    }
+    
 
 }

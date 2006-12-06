@@ -1561,15 +1561,17 @@ public final class ZimbraQuery {
     private AbstractList mClauses;
     private ParseTree.Node mParseTree = null;
     private QueryOperation mOp;
-    private byte[] mTypes;
-    private SortBy mSearchOrder;
-    private int mChunkSize;
+    //private byte[] mTypes;
+//    private SortBy mSearchOrder;
+//    private int mChunkSize;
     private Mailbox mMbox;
     private ZimbraQueryResults mResults;
-    private boolean mPrefetch;
-    private Mailbox.SearchResultMode mMode;
-    private java.util.TimeZone mTimeZone;
-    private Locale mLocale;
+//    private boolean mPrefetch;
+//    private Mailbox.SearchResultMode mMode;
+//    private java.util.TimeZone mTimeZone;
+//    private Locale mLocale;
+    private SearchParams mParams;
+    private int mChunkSize;
 
     private static String[] unquotedTokenImage;
 
@@ -1880,34 +1882,22 @@ public final class ZimbraQuery {
 
         mSortByOverride = sortBy;
     }
-
-    /**
-     * Parse a query string and build a query plan from it.
-     * 
-     * @param queryString
-     * @param mbox
-     * @param types
-     * @param searchOrder
-     * @param includeTrash
-     * @param includeSpam
-     * @param chunkSize
-     * @throws ParseException
-     * @throws ServiceException
-     */
-    public ZimbraQuery(String queryString, java.util.TimeZone tz, Locale locale, Mailbox mbox, byte[] types, SortBy searchOrder, boolean includeTrash, boolean includeSpam, int chunkSize, boolean prefetch, Mailbox.SearchResultMode mode) 
-    throws ParseException, ServiceException
-    {
+    
+    public ZimbraQuery(Mailbox mbox, SearchParams params, boolean includeTrash, boolean includeSpam) throws ParseException, ServiceException {
+        mParams = params;
         mMbox = mbox;
-        mPrefetch = prefetch;
-        mMode = mode;
-        mTimeZone = tz;
-        mLocale = locale;
+        mChunkSize = mParams.getOffset() + mParams.getLimit();
+        
+//        mPrefetch = prefetch;
+//        mMode = mode;
+//        mTimeZone = tz;
+//        mLocale = locale;
 
         //
         // Step 1: parse the text using the JavaCC parser
-        ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(queryString));
+        ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(mParams.getQueryStr()));
         mbox.getMailboxIndex().initAnalyzer(mbox);
-        parser.init(mbox.getMailboxIndex().getAnalyzer(), mMbox, mTimeZone, mLocale);
+        parser.init(mbox.getMailboxIndex().getAnalyzer(), mMbox, params.getTimeZone(), params.getLocale());
         mClauses = parser.Parse();
 
         String sortByStr = parser.getSortByStr();
@@ -1917,7 +1907,7 @@ public final class ZimbraQuery {
         //
         // Step 2: build a parse tree and push all the "NOT's" down to the
         // bottom level -- this is because we cannot invert result sets 
-        if (ParseTree.SPEW) System.out.println("QueryString: "+queryString);
+        if (ParseTree.SPEW) System.out.println("QueryString: "+mParams.getQueryStr());
         ParseTree.Node pt = ParseTree.build(mClauses);
         if (ParseTree.SPEW) System.out.println("PT: "+pt.toString());
         if (ParseTree.SPEW)System.out.println("Simplified:");
@@ -1930,18 +1920,18 @@ public final class ZimbraQuery {
         // 
         // Store some variables that we'll need later
         mParseTree = pt;
-        mSearchOrder = searchOrder;
-        mTypes = types;
-        mChunkSize = chunkSize;
+//        mSearchOrder = searchOrder;
+//        mTypes = types;
+//        mChunkSize = chunkSize;
         mOp = null;
 
         //
         // handle the special "sort:" tag in the search string
         if (mSortByOverride != null) {
             if (mLog.isDebugEnabled())
-                mLog.debug("Overriding SortBy parameter to execute ("+searchOrder.toString()+") w/ specification from QueryString: "+mSortByOverride.toString());
+                mLog.debug("Overriding SortBy parameter to execute ("+params.getSortBy().toString()+") w/ specification from QueryString: "+mSortByOverride.toString());
 
-            mSearchOrder = mSortByOverride;
+            params.setSortBy(mSortByOverride);
         }
 
         //
@@ -1973,8 +1963,25 @@ public final class ZimbraQuery {
                 }
             }
         }
-
     }
+
+//    /**
+//     * Parse a query string and build a query plan from it.
+//     * 
+//     * @param queryString
+//     * @param mbox
+//     * @param types
+//     * @param searchOrder
+//     * @param includeTrash
+//     * @param includeSpam
+//     * @param chunkSize
+//     * @throws ParseException
+//     * @throws ServiceException
+//     */
+//    public ZimbraQuery(String queryString, java.util.TimeZone tz, Locale locale, Mailbox mbox, byte[] types, SortBy searchOrder, boolean includeTrash, boolean includeSpam, int chunkSize, boolean prefetch, Mailbox.SearchResultMode mode) 
+//    throws ParseException, ServiceException
+//    {
+//    }
 
     public void doneWithQuery() throws ServiceException {
         if (mResults != null)
@@ -1993,12 +2000,12 @@ public final class ZimbraQuery {
 
             if (targets.size() > 1) {
                 UnionQueryOperation union = (UnionQueryOperation)mOp;
-                mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mTypes, mSearchOrder, 0, mChunkSize, mMode);
+                mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mParams.getTypes(), mParams.getSortBy(), 0, mChunkSize, mParams.getMode());
             } else {
                 if (targets.hasExternalTargets()) {
                     RemoteQueryOperation remote = new RemoteQueryOperation();
                     remote.tryAddOredOperation(mOp);
-                    remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), mTypes, mSearchOrder, 0, mChunkSize, mMode);
+                    remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), mParams.getTypes(), mParams.getSortBy(), 0, mChunkSize, mParams.getMode());
                     mOp = remote;
                 } else {
                     // 1 local target...HACK: for now we'll temporarily wrap it in a UnionQueryOperation,
@@ -2006,7 +2013,7 @@ public final class ZimbraQuery {
                     // important code there (permissions checks).  FIXME!
                     UnionQueryOperation union = new UnionQueryOperation();
                     union.add(mOp);
-                    mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mTypes, mSearchOrder, 0, mChunkSize, mMode);
+                    mOp = union.runRemoteSearches(proto, mMbox, octxt, mbidx, mParams.getTypes(), mParams.getSortBy(), 0, mChunkSize, mParams.getMode());
                     mOp = mOp.optimize(mMbox);
                 }
             }
@@ -2029,13 +2036,13 @@ public final class ZimbraQuery {
 
         if (ZimbraLog.index.isDebugEnabled()) {
             String str = this.toString() +" search([";
-            for (int i = 0; i < mTypes.length; i++) {
+            for (int i = 0; i < mParams.getTypes().length; i++) {
                 if (i > 0) {
                     str += ",";
                 }
-                str+=mTypes[i];
+                str+=mParams.getTypes()[i];
             }
-            str += "]," + mSearchOrder + ")";
+            str += "]," + mParams.getSortBy()+ ")";
             ZimbraLog.index.debug(str);
         }
 
@@ -2050,14 +2057,14 @@ public final class ZimbraQuery {
             // if we've only got one target, and it is external, then mOp must be a RemoteQueryOp
             assert(targets.size() >1 || !targets.hasExternalTargets() || mOp instanceof RemoteQueryOperation);
 
-            mResults = mOp.run(mMbox, mbidx, mTypes, mSearchOrder, mChunkSize, mPrefetch, mMode);
-            mResults = new HitIdGrouper(mResults, mSearchOrder);
+            mResults = mOp.run(mMbox, mbidx, mParams, mChunkSize);
+            mResults = new HitIdGrouper(mResults, mParams.getSortBy());
             return mResults;
         } else {
             mLog.debug("Operation optimized to nothing.  Returning no results");
         }
 
-        return new EmptyQueryResults(mTypes, mSearchOrder, mMode);
+        return new EmptyQueryResults(mParams.getTypes(), mParams.getSortBy(), mParams.getMode());
     }
 
     public String toString() {

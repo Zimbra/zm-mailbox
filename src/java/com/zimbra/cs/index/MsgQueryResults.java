@@ -147,4 +147,7 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
     }
 
     public List<QueryInfo> getResultInfo() { return mResults.getResultInfo(); }
+    
+    public int estimateResultSize() throws ServiceException { return mResults.estimateResultSize(); }
+
 }

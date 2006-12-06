@@ -34,14 +34,13 @@ package com.zimbra.cs.index;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * @author tim
  *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
  */
 class EmptyQueryResults extends ZimbraQueryResultsImpl {
 
@@ -69,4 +68,7 @@ class EmptyQueryResults extends ZimbraQueryResultsImpl {
     }
     
     public List<QueryInfo> getResultInfo() { return new ArrayList<QueryInfo>(); }
+    
+    public int estimateResultSize() throws ServiceException { return 0; }
+    
 }

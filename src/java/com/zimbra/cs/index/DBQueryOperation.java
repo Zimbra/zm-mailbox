@@ -70,6 +70,8 @@ import com.zimbra.cs.service.util.ItemId;
 class DBQueryOperation extends QueryOperation
 {
     protected static Log mLog = LogFactory.getLog(DBQueryOperation.class);
+    
+    private int mSizeEstimate = -1;
 
     protected IConstraints mConstraints = new DbLeafNode();
     protected int mCurHitsOffset = 0; // this is the logical offset of the end of the mDBHits buffer 
@@ -160,7 +162,7 @@ class DBQueryOperation extends QueryOperation
                 Folder spam = mbox.getFolderById(null, Mailbox.ID_FOLDER_SPAM);            
                 exclude.add(spam);
             }
-
+            
             if (!includeTrash) {
                 List trashFolders = getTrashFolders(mbox);
                 for (Iterator iter  = trashFolders.iterator(); iter.hasNext();) {
@@ -668,6 +670,9 @@ class DBQueryOperation extends QueryOperation
     }
 
     private void noLuceneGetNextChunk(Connection conn, Mailbox mbox, byte sort) throws ServiceException {
+        if (mParams.getEstimateSize() && mSizeEstimate == -1)
+            mSizeEstimate = DbMailItem.countResults(conn, mConstraints, mbox);
+        
         DbMailItem.search(mDBHits, conn, mConstraints, mbox, sort, mCurHitsOffset, mHitsPerChunk, mExtra);
 
         if (mDBHits.size() < mHitsPerChunk) {
@@ -689,6 +694,12 @@ class DBQueryOperation extends QueryOperation
             // (1) Get the next chunk of results from the DB
             //
             Collection<SearchResult> dbRes = new ArrayList<SearchResult>();
+            
+            // FIXME TODO could do a better job here
+            if (mParams.getEstimateSize() && mSizeEstimate == -1) {
+                mSizeEstimate = DbMailItem.countResults(conn, mConstraints, mbox);
+            }
+            
             DbMailItem.search(dbRes, conn, mConstraints, mbox, sort, mOffset, MAX_DBFIRST_RESULTS, mExtra);
             
             if (dbRes.size() < MAX_DBFIRST_RESULTS) {
@@ -769,6 +780,14 @@ class DBQueryOperation extends QueryOperation
 
             // we need to set our index-id's here!
             DbLeafNode sc = topLevelAndedConstraint();
+            
+            if (mParams.getEstimateSize() && mSizeEstimate==-1) {
+                // FIXME TODO should probably be a %age, this is worst-case
+                sc.indexIds = new HashSet<Integer>(); 
+                System.out.println("LUCENE="+mLuceneOp.countHits()+"  DB="+DbMailItem.countResults(conn, mConstraints, mbox));
+                mSizeEstimate = Math.min(DbMailItem.countResults(conn, mConstraints, mbox), mLuceneOp.countHits());
+            }
+            
             sc.indexIds = mLuceneChunk.getIndexIds();
 
             // exponentially expand the chunk size in case we have to go back to the DB
@@ -782,7 +801,7 @@ class DBQueryOperation extends QueryOperation
                 // LIMIT clause, we can be assured that this query will get all the remaining results.
                 mEndOfHits = true;
             } else {
-                // must not ask for offset,limit here b/c of indexId constraints!  
+                // must not ask for offset,limit here b/c of indexId constraints!,  
                 DbMailItem.search(mDBHits, conn, mConstraints, mbox, sort, -1, -1, mExtra);
 
                 if (getSortBy() == SortBy.SCORE_DESCENDING) {
@@ -879,8 +898,9 @@ class DBQueryOperation extends QueryOperation
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#prepare(com.zimbra.cs.mailbox.Mailbox, com.zimbra.cs.index.ZimbraQueryResultsImpl, com.zimbra.cs.index.MailboxIndex)
      */
-    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, int chunkSize) throws ServiceException, IOException
+    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, SearchParams params, int chunkSize) throws ServiceException, IOException
     {
+        mParams = params;
         if (chunkSize > MAX_HITS_PER_CHUNK) {
             chunkSize = MAX_HITS_PER_CHUNK;
         }
@@ -892,7 +912,7 @@ class DBQueryOperation extends QueryOperation
         if (mLuceneOp != null) {
             mHitsPerChunk *= 2; // enlarge chunk size b/c of join
             mLuceneOp.setDBOperation(this);
-            mLuceneOp.prepare(mbx, res, mbidx, mHitsPerChunk);
+            mLuceneOp.prepare(mbx, res, mbidx, mParams, mHitsPerChunk);
         }
     }
 
@@ -1096,5 +1116,10 @@ class DBQueryOperation extends QueryOperation
         
         return toRet;
     }
+    
+    public int estimateResultSize() throws ServiceException {
+        return mSizeEstimate;
+    }
+    
 }
 

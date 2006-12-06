@@ -112,4 +112,7 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
     }
     
     public List<QueryInfo> getResultInfo() { return mHits.getResultInfo(); }
+    
+    public int estimateResultSize() throws ServiceException { return mHits.estimateResultSize(); }
+    
 }
