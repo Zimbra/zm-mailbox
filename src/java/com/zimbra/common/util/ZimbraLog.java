@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Map.Entry;
 
-import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.NDC;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -88,147 +87,147 @@ public class ZimbraLog {
     /**
      * the "zimbra.misc" logger. For all events that don't have a specific-catagory.
      */
-    public static final org.apache.commons.logging.Log misc = LogFactory.getLog("zimbra.misc");
+    public static final Log misc = LogFactory.getLog("zimbra.misc");
     
     /**
      * the "zimbra.index" logger. For indexing-related events.
      */
-    public static final org.apache.commons.logging.Log index = LogFactory.getLog("zimbra.index");
+    public static final Log index = LogFactory.getLog("zimbra.index");
     
     /**
      * the "zimbra.journal" logger. For journal-releated events.
      */
-    public static final org.apache.commons.logging.Log journal = LogFactory.getLog("zimbra.journal");
+    public static final Log journal = LogFactory.getLog("zimbra.journal");
     
     /**
      * the "zimbra.lmtp" logger. For LMTP-related events.
      */
-    public static final org.apache.commons.logging.Log lmtp = LogFactory.getLog("zimbra.lmtp");
+    public static final Log lmtp = LogFactory.getLog("zimbra.lmtp");
     
     /**
      * the "zimbra.imap" logger. For IMAP-related events.
      */
-    public static final org.apache.commons.logging.Log imap = LogFactory.getLog("zimbra.imap");
+    public static final Log imap = LogFactory.getLog("zimbra.imap");
     
     /**
      * the "zimbra.imap" logger. For POP-related events.
      */
-    public static final org.apache.commons.logging.Log pop = LogFactory.getLog("zimbra.pop");
+    public static final Log pop = LogFactory.getLog("zimbra.pop");
     
     /**
      * the "zimbra.mailbox" logger. For mailbox-related events.
      */
-    public static final org.apache.commons.logging.Log mailbox = LogFactory.getLog("zimbra.mailbox");
+    public static final Log mailbox = LogFactory.getLog("zimbra.mailbox");
     
     /**
      * the "zimbra.calendar" logger. For calendar-related events.
      */
-    public static final org.apache.commons.logging.Log calendar = LogFactory.getLog("zimbra.calendar");
+    public static final Log calendar = LogFactory.getLog("zimbra.calendar");
     
     /**
      * the "zimbra.calendar" logger. For calendar-related events.
      */
-    public static final org.apache.commons.logging.Log im = LogFactory.getLog("zimbra.im");
+    public static final Log im = LogFactory.getLog("zimbra.im");
     
     /**
      * the "zimbra.account" logger. For account-related events.
      */
-    public static final org.apache.commons.logging.Log account = LogFactory.getLog("zimbra.account");
+    public static final Log account = LogFactory.getLog("zimbra.account");
     
     /**
      * the "zimbra.security" logger. For security-related events
      */
-    public static final org.apache.commons.logging.Log security = LogFactory.getLog("zimbra.security");    
+    public static final Log security = LogFactory.getLog("zimbra.security");    
 
     /**
      * the "zimbra.soap" logger. For soap-related events
      */
-    public static final org.apache.commons.logging.Log soap = LogFactory.getLog("zimbra.soap");
+    public static final Log soap = LogFactory.getLog("zimbra.soap");
 
     /**
      * the "zimbra.test" logger. For testing-related events
      */
-    public static final org.apache.commons.logging.Log test = LogFactory.getLog("zimbra.test");
+    public static final Log test = LogFactory.getLog("zimbra.test");
 
     /**
      * the "zimbra.sqltrace" logger. For tracing SQL statements sent to the database
      */
-    public static final org.apache.commons.logging.Log sqltrace = LogFactory.getLog("zimbra.sqltrace");
+    public static final Log sqltrace = LogFactory.getLog("zimbra.sqltrace");
 
     /**
      * the "zimbra.perf" logger. For logging performance statistics
      */
-    public static final org.apache.commons.logging.Log perf = LogFactory.getLog("zimbra.perf");
+    public static final Log perf = LogFactory.getLog("zimbra.perf");
 
     /**
      * the "zimbra.cache" logger. For tracing object cache activity
      */
-    public static final org.apache.commons.logging.Log cache = LogFactory.getLog("zimbra.cache");
+    public static final Log cache = LogFactory.getLog("zimbra.cache");
     
     /**
      * the "zimbra.filter" logger. For filter-related logs.
      */
-    public static final org.apache.commons.logging.Log filter = LogFactory.getLog("zimbra.filter");
+    public static final Log filter = LogFactory.getLog("zimbra.filter");
     
     /**
      * the "zimbra.session" logger. For session- and notification-related logs.
      */
-    public static final org.apache.commons.logging.Log session = LogFactory.getLog("zimbra.session");
+    public static final Log session = LogFactory.getLog("zimbra.session");
     
     /**
      * the "zimbra.backup" logger. For backup/restore-related logs.
      */
-    public static final org.apache.commons.logging.Log backup = LogFactory.getLog("zimbra.backup");
+    public static final Log backup = LogFactory.getLog("zimbra.backup");
     
     /**
      * the "zimbra.system" logger. For startup/shutdown and other related logs.
      */
-    public static final org.apache.commons.logging.Log system = LogFactory.getLog("zimbra.system");
+    public static final Log system = LogFactory.getLog("zimbra.system");
     
     /**
      * the "zimbra.sync" logger. For sync client interface logs.
      */
-    public static final org.apache.commons.logging.Log sync = LogFactory.getLog("zimbra.sync");
+    public static final Log sync = LogFactory.getLog("zimbra.sync");
     
     /**
      * the "zimbra.synctrace" logger. For sync client interface logs.
      */
-    public static final org.apache.commons.logging.Log synctrace = LogFactory.getLog("zimbra.synctrace");
+    public static final Log synctrace = LogFactory.getLog("zimbra.synctrace");
     
     /**
      * the "zimbra.syncstate" logger. For sync client interface logs.
      */
-    public static final org.apache.commons.logging.Log syncstate = LogFactory.getLog("zimbra.syncstate");
+    public static final Log syncstate = LogFactory.getLog("zimbra.syncstate");
     
     /**
      * the "zimbra.wbxml" logger. For wbxml client interface logs.
      */
-    public static final org.apache.commons.logging.Log wbxml = LogFactory.getLog("zimbra.wbxml");
+    public static final Log wbxml = LogFactory.getLog("zimbra.wbxml");
     
     /**
      * the "zimbra.extensions" logger. For logging extension loading related info. 
      */
-    public static final org.apache.commons.logging.Log extensions = LogFactory.getLog("zimbra.extensions");
+    public static final Log extensions = LogFactory.getLog("zimbra.extensions");
 
     /**
      * the "zimbra.zimlet" logger. For logging zimlet related info. 
      */
-    public static final org.apache.commons.logging.Log zimlet = LogFactory.getLog("zimbra.zimlet");
+    public static final Log zimlet = LogFactory.getLog("zimbra.zimlet");
     
     /**
      * the "zimbra.wiki" logger. For wiki and document sharing. 
      */
-    public static final org.apache.commons.logging.Log wiki = LogFactory.getLog("zimbra.wiki");
+    public static final Log wiki = LogFactory.getLog("zimbra.wiki");
     
     /**
      * the "zimbra.op" logger. Logs server operations
      */
-    public static final org.apache.commons.logging.Log op = LogFactory.getLog("zimbra.op");
+    public static final Log op = LogFactory.getLog("zimbra.op");
     
     /**
      * the "zimbra.dav" logger. Logs dav operations
      */
-    public static final org.apache.commons.logging.Log dav = LogFactory.getLog("zimbra.dav");
+    public static final Log dav = LogFactory.getLog("zimbra.dav");
     
     
     public static String getContext() {
@@ -238,7 +237,7 @@ public class ZimbraLog {
     /**
      * remote management.
      */
-    public static final org.apache.commons.logging.Log rmgmt = LogFactory.getLog("zimbra.rmgmt");
+    public static final Log rmgmt = LogFactory.getLog("zimbra.rmgmt");
 
     /**
      * adds key/value to context. Doesn't check to see if already in context.
