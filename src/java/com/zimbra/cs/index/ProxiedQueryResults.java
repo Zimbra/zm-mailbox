@@ -83,9 +83,9 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     SearchParams mSearchParams;
 
     // mailbox specifier
-    boolean isMultipleMailboxes = false;
-    boolean isAllMailboxes = false;
-    List /*ParseMailboxID*/ mMailboxes;
+    private boolean isMultipleMailboxes = false;
+    private boolean isAllMailboxes = false;
+    private List /*ParseMailboxID*/ mMailboxes;
 
 
     /**
@@ -302,7 +302,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             transp.setSoapProtocol(searchElt instanceof Element.JavaScriptElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12);
             Element searchResp  = null;            
             try {
-                if (ZimbraLog.index.isInfoEnabled()) ZimbraLog.index.info("Fetching remote search results from "+transp.toString());
+                if (ZimbraLog.index.isDebugEnabled()) ZimbraLog.index.debug("Fetching remote search results from "+transp.toString());
                 
                 searchResp = transp.invokeWithoutSession(searchElt);
             } catch (SoapFaultException ex) {
@@ -330,7 +330,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             int stop = mBufferEndOffset - mBufferStartOffset;
             for (Iterator iter = searchResp.elementIterator(); iter.hasNext() && bufferIdx < stop;) {
                 Element e = (Element)iter.next();
-                if (e.getName() == MailService.E_INFO) {
+                if (e.getName().equalsIgnoreCase(MailService.E_INFO)) {
                     for (Iterator<Element> infoIter = e.elementIterator(); infoIter.hasNext();)  
                         mInfo.add(new ProxiedQueryInfo(infoIter.next()));
                 } else {
@@ -369,7 +369,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
 //      }
     }
 
-    List<QueryInfo> mInfo = new ArrayList<QueryInfo>();
+    private List<QueryInfo> mInfo = new ArrayList<QueryInfo>();
     public List<QueryInfo> getResultInfo() { return mInfo; }
     
     public int estimateResultSize() throws ServiceException { return 0; }

@@ -41,11 +41,12 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.SoapProtocol;
 
 class RemoteQueryOperation extends QueryOperation {
+    
+    RemoteQueryOperation() {}
 
-    UnionQueryOperation mOp = null;
-    ProxiedQueryResults mResults = null;
-    String mTargetAccount = "";
-    QueryTarget mTarget = null;
+    private UnionQueryOperation mOp = null;
+    private ProxiedQueryResults mResults = null;
+    private QueryTarget mTarget = null;
 
     int getOpType() {
         return OP_TYPE_REMOTE;
@@ -132,8 +133,8 @@ class RemoteQueryOperation extends QueryOperation {
         params.setOffset(offset);
         params.setLimit(limit);
 
-        if (ZimbraLog.index.isInfoEnabled()) 
-            ZimbraLog.index.info("RemoteQuery of \""+mOp.toQueryString()+"\" sent to "+mTarget.toString()+" on server "+remoteServer.getName());
+        if (ZimbraLog.index.isDebugEnabled()) 
+            ZimbraLog.index.debug("RemoteQuery of \""+mOp.toQueryString()+"\" sent to "+mTarget.toString()+" on server "+remoteServer.getName());
 
         params.setQueryStr(mOp.toQueryString());
         try {

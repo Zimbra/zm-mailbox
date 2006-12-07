@@ -166,7 +166,6 @@ class UnionQueryOperation extends QueryOperation
     }
 
     void forceHasSpamTrashSetting() {
-        assert(false); // not called, but if it were it would go:
         for (Iterator iter = mQueryOperations.iterator(); iter.hasNext(); )
         {
             QueryOperation op = (QueryOperation)iter.next();
@@ -219,8 +218,8 @@ class UnionQueryOperation extends QueryOperation
                 ((IntersectionQueryOperation)op).pruneIncompatibleTargets(targets);
             } else {
                 QueryTargetSet qts = op.getQueryTargets();
-                assert(qts.size() == 1);
-                if (!qts.isSubset(targets) && !qts.contains(QueryTarget.UNSPECIFIED)) {
+                assert(qts.size() <= 1);
+                if ((qts.size() == 0) || (!qts.isSubset(targets) && !qts.contains(QueryTarget.UNSPECIFIED))) {
                     mQueryOperations.remove(i);
                 }
             }
