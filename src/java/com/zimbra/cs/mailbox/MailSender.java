@@ -170,17 +170,17 @@ public class MailSender {
                                boolean ignoreFailedAddresses, boolean replyToSender)
     throws ServiceException {
         try {
-            // slot the message in the parent's conversation if subjects match
-            int convId = Mailbox.ID_AUTO_INCREMENT;
-            if (origMsgId > 0)
-                convId = mbox.getConversationIdFromReferent(mm, origMsgId);
-
             Account acct = mbox.getAccount();
             Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
             boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
             if (authuser == null)
                 authuser = acct;
             boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
+
+            // slot the message in the parent's conversation if subjects match
+            int convId = Mailbox.ID_AUTO_INCREMENT;
+            if (origMsgId > 0 && !isDelegatedRequest)
+                convId = mbox.getConversationIdFromReferent(mm, origMsgId);
 
             // set the From, Sender, Date, Reply-To, etc. headers
             updateHeaders(mm, acct, authuser, replyToSender);
