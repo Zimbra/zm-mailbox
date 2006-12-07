@@ -237,6 +237,7 @@ public class Document extends MailItem {
         data.date        = mbox.getOperationTimestamp();
         data.size        = pd.getSize();
         data.name        = name;
+        data.subject     = name;
         data.blobDigest  = pd.getDigest();
        	data.metadata    = encodeMetadata(meta, DEFAULT_COLOR, type, revisions).toString();
         
