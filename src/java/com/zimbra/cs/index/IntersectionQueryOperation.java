@@ -576,6 +576,28 @@ class IntersectionQueryOperation extends QueryOperation {
         }
     }
 
+    
+    /**
+     * If this is set, then we always transform
+     *       a AND (b OR c)
+     * into
+     *       (a AND b) OR (a AND c)
+     *
+     * If b or c have different targets (servers they execute on) then we *must* distribute
+     * but otherwise we have a choice.
+     * 
+     * Tim: setting this to ALWAYS for now.  I think in most cases it will be a win, even
+     * though it appears to create 4 executable terms instead of 3.  It will be a win
+     * because (from the example above) in the 2nd case, it is almost certain that one both 
+     * terms will combine thereby reducing the number of operations to 3 with no ANDs, 
+     * which is always faster.
+     * 
+     * The ideal solution would be to try both ways and compare the final # of executable 
+     * ops.  TODO, maybe. 
+     *       
+     */
+    private static final boolean ALWAYS_DISTRIBUTE_AND_OVER_OR = true;
+    
 
     QueryOperation optimize(Mailbox mbox) throws ServiceException 
     {
@@ -656,13 +678,14 @@ class IntersectionQueryOperation extends QueryOperation {
     // We only have to distribute if there is more than one explicit target,
     // otherwise we know we can be executed on one server so we're golden.
     //
-    if (targets.size() > 1) {
+    if (ALWAYS_DISTRIBUTE_AND_OVER_OR ||  targets.size() > 1) {
         int distributeLhs = -1;
 
         for (int i = 0; i < mQueryOperations.size(); i++) {
             QueryOperation lhs = (QueryOperation) mQueryOperations.get(i);
 
-            if (lhs.getQueryTargets().size() > 1) {
+            if ((ALWAYS_DISTRIBUTE_AND_OVER_OR  && lhs instanceof UnionQueryOperation) 
+                        || (lhs.getQueryTargets().size() > 1)) {
                 // need to distribute!
                 distributeLhs = i;
                 break;

@@ -76,6 +76,8 @@ public class SearchOperation extends Operation {
         String query = mParams.getQueryStr();
         if (getRequester() != Requester.IMAP)
             query = "(" + query + ") -tag:\\Deleted";
+        
+        mParams.setQueryStr(query);
 
         try {
 //            mResults = getMailbox().search(mProto, getOpCtxt(), query, mParams.getTimeZone(), mParams.getLocale(), types, mParams.getSortBy(), mParams.getLimit() + mParams.getOffset(), mPrefetch, mMode);
