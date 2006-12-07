@@ -165,7 +165,7 @@ class TestConnectionHandler implements OzConnectionHandler {
         	gotoReadingCommandState();
         } else if (cmd.equalsIgnoreCase("starttls")) {
             mConnection.writeAsciiWithCRLF("250 go ahead, start tls negotiation now");
-            mConnection.addFilter(new OzTLSFilter(mConnection, TestServer.mLog.isTraceEnabled(), TestServer.mLog));
+            mConnection.addFilter(new OzTLSFilter(mConnection, TestServer.mLog.isDebugEnabled(), TestServer.mLog));
             gotoReadingCommandState();
         } else {
             mConnection.writeAsciiWithCRLF("500 command " + cmd + " not understood");

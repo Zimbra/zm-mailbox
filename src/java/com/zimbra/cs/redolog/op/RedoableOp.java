@@ -38,8 +38,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoLogInput;

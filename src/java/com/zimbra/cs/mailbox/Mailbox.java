@@ -3462,9 +3462,9 @@ public class Mailbox {
         if (isSent && checkDuplicates)
             mSentMessageIDs.put(msgidHeader, new Integer(msg.getId()));
 
-        if (msg != null && ZimbraLog.mailbox.isInfoEnabled())
-            ZimbraLog.mailbox.info("Added message id=" + msg.getId() + " digest=" + digest +
-                        " mailbox=" + getId() + " rcpt=" + rcptEmail);
+        if (msg != null)
+            ZimbraLog.mailbox.info("Added message id=%d digest=%s mailbox=%d rcpt=%s",
+                msg.getId(), digest, getId(), rcptEmail);
         return msg;
     }
 

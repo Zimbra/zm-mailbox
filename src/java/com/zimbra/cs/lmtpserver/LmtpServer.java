@@ -27,8 +27,8 @@ package com.zimbra.cs.lmtpserver;
 
 import java.net.ServerSocket;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;

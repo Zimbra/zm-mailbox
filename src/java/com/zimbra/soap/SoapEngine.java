@@ -41,8 +41,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import org.dom4j.DocumentException;
 
 /**

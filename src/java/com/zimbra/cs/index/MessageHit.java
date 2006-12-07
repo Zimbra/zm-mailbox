@@ -42,8 +42,8 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedAddress;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 
 

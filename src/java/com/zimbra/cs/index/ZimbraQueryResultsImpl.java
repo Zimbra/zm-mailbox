@@ -38,8 +38,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import java.util.*;
 //import java.io.IOException;
 //
-//import org.apache.commons.logging.Log;
-//import org.apache.commons.logging.LogFactory;
+//import com.zimbra.common.util.Log;
+//import com.zimbra.common.util.LogFactory;
 //
 //import org.apache.lucene.search.*;
 import org.apache.lucene.document.*;

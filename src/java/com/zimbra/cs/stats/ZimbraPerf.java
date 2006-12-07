@@ -39,8 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbUtil;
@@ -57,7 +57,7 @@ import com.zimbra.common.util.ZimbraLog;
 public class ZimbraPerf {
 
     static Log sLog = LogFactory.getLog(ZimbraPerf.class);
-    private static final org.apache.commons.logging.Log sZimbraStats = LogFactory.getLog("zimbra.stats");
+    private static final com.zimbra.common.util.Log sZimbraStats = LogFactory.getLog("zimbra.stats");
 
     // Name constants for real-time statistics
     public static final String RTS_JAVA_HEAP_MB = "java_heap_MB"; 

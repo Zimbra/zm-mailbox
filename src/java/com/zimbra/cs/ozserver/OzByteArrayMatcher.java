@@ -27,7 +27,7 @@ package com.zimbra.cs.ozserver;
 
 import java.nio.ByteBuffer;
 
-import org.apache.commons.logging.Log;
+import com.zimbra.common.util.Log;
 
 public class OzByteArrayMatcher implements OzMatcher {
    
@@ -75,12 +75,12 @@ public class OzByteArrayMatcher implements OzMatcher {
         if (mLog == null) {
         	mTrace = false;
         } else {
-        	mTrace = log.isTraceEnabled();
+        	mTrace = log.isDebugEnabled();
         }
     }
     
-    private void trace(String msg, Throwable t) { if (mTrace) mLog.trace(msg, t); }
-    private void trace(String msg) { if (mTrace) mLog.trace(msg); }
+    private void trace(String msg, Throwable t) { if (mTrace) mLog.debug(msg, t); }
+    private void trace(String msg) { if (mTrace) mLog.debug(msg); }
 
     public boolean match(ByteBuffer buf) {
         assert(mMatched < mMatchSequenceLength);

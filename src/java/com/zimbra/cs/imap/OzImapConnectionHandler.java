@@ -854,7 +854,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
         folderName = ImapFolder.importPath(folderName, mSession);
         if (!ImapFolder.isPathCreatable(folderName)) {
-            ZimbraLog.imap.info("CREATE failed: hidden folder or parent: " + folderName, null);
+            ZimbraLog.imap.info("CREATE failed: hidden folder or parent: %s", folderName);
             sendNO(tag, "CREATE failed");
             return CONTINUE_PROCESSING;
         }
@@ -1258,7 +1258,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         try {
             long quota = mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraMailQuota, 0);
             if (qroot == null || !qroot.equals("") || quota <= 0) {
-                ZimbraLog.imap.info("GETQUOTA failed: unknown quota root: " + qroot, null);
+                ZimbraLog.imap.info("GETQUOTA failed: unknown quota root: %s", qroot);
                 sendNO(tag, "GETQUOTA failed: unknown quota root");
                 return CONTINUE_PROCESSING;
             }

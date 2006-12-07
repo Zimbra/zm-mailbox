@@ -63,8 +63,8 @@ import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.httpclient.HttpsURL;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;

@@ -38,8 +38,8 @@ import javax.crypto.SecretKey;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections.map.LRUMap;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.common.localconfig.LC;

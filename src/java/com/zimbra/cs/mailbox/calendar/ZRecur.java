@@ -1295,7 +1295,7 @@ public class ZRecur {
                         break;
                     }
                 } catch(IllegalArgumentException e) {
-                    ZimbraLog.calendar.warn(new Formatter().format("Skipping RECUR token: \"%s\" in Recur \"%s\" due to parse error", s[0], str), e);
+                    ZimbraLog.calendar.warn("Skipping RECUR token: \"%s\" in Recur \"%s\" due to parse error", s[0], str, e);
                 }
             }
         } catch (ParseException e) {

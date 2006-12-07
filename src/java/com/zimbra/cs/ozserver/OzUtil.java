@@ -27,7 +27,7 @@ package com.zimbra.cs.ozserver;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 
-import org.apache.commons.logging.Log;
+import com.zimbra.common.util.Log;
 
 public class OzUtil {
 

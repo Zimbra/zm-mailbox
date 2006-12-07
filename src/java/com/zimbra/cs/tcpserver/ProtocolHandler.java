@@ -36,8 +36,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.nio.channels.AsynchronousCloseException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.util.Zimbra;
 

@@ -32,8 +32,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.HashMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import org.dom4j.Element;
 
 import com.zimbra.soap.DomUtil;

@@ -201,7 +201,7 @@ public class IMPersona {
             try {
                 postIMNotification(notification);
             } catch (ServiceException ex) {
-                ZimbraLog.im.warn("Caught ServiceException " + ex.toString(), null);
+                ZimbraLog.im.warn("Caught ServiceException %s", ex);
             }            
             
             

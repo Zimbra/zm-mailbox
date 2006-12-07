@@ -32,8 +32,8 @@ import java.util.Map;
 import javax.mail.Address;
 import javax.mail.MessagingException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;

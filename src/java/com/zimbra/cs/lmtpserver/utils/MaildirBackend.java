@@ -34,8 +34,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.lmtpserver.LmtpStatus;
 import com.zimbra.cs.lmtpserver.LmtpAddress;

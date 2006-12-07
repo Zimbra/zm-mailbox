@@ -36,8 +36,8 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.Mailbox;

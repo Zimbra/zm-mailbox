@@ -42,8 +42,8 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.zclient.ZMailbox;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import javax.mail.Address;
 import javax.mail.Message.RecipientType;

@@ -40,7 +40,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
+import com.zimbra.common.util.Log;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.util.Zimbra;
@@ -453,7 +453,7 @@ public class OzConnection {
             String before = null;
             if (mDebug) before = OzUtil.toString(mReadBuffer);
             bytesRead = mChannel.read(mReadBuffer);
-            if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel read buffer", mReadBuffer, true));
+            if (mTrace) mLog.debug(OzUtil.byteBufferDebugDump("channel read buffer", mReadBuffer, true));
             if (mDebug) mLog.debug("channel read=" + bytesRead + " buffer: " + before + "->" + OzUtil.toString(mReadBuffer));
 
             if (bytesRead == -1) {
@@ -687,7 +687,7 @@ public class OzConnection {
                 int req = 0;
                 if (mDebug) before = OzUtil.toString(data); 
                 if (mDebug) req = data.remaining();
-                if (mTrace) mLog.trace(OzUtil.byteBufferDebugDump("channel write buffer", data, false));
+                if (mTrace) mLog.debug(OzUtil.byteBufferDebugDump("channel write buffer", data, false));
 
                 int wrote = 0;
                 try {
@@ -704,7 +704,7 @@ public class OzConnection {
                 }
 
                 totalWritten += wrote;
-                if (mTrace) mLog.trace("channel wrote=" + wrote + " req=" + req + " partial=" + data.hasRemaining() + " total=" + totalWritten + " buffer: " + before + "->" + OzUtil.toString(data));
+                if (mTrace) mLog.debug("channel wrote=" + wrote + " req=" + req + " partial=" + data.hasRemaining() + " total=" + totalWritten + " buffer: " + before + "->" + OzUtil.toString(data));
 
                 if (data.hasRemaining()) {
                     // Not all data was written. Note that write interest is

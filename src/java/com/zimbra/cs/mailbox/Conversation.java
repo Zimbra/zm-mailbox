@@ -34,8 +34,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailItem.LocationCount;

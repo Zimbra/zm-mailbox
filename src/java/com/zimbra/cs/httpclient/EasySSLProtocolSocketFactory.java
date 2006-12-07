@@ -36,8 +36,8 @@ import org.apache.commons.httpclient.params.HttpConnectionParams;
 import org.apache.commons.httpclient.protocol.ControllerThreadSocketFactory;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.SecureProtocolSocketFactory;
-import org.apache.commons.logging.Log; 
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log; 
+import com.zimbra.common.util.LogFactory;
 
 import com.sun.net.ssl.SSLContext;
 import com.sun.net.ssl.TrustManager;

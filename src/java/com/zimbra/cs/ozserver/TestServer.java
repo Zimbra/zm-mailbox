@@ -28,8 +28,8 @@ package com.zimbra.cs.ozserver;
 import java.io.IOException;
 import java.net.ServerSocket;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.util.NetUtil;

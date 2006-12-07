@@ -43,7 +43,7 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import javax.net.ssl.SSLEngineResult.Status;
 
-import org.apache.commons.logging.Log;
+import com.zimbra.common.util.Log;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.util.Zimbra;
@@ -105,13 +105,13 @@ public class OzTLSFilter extends OzFilter {
         
         mUnwrapped = ByteBuffer.allocate(mApplicationBufferSize);
         
-        if (mTrace) trace("appsize=" + mApplicationBufferSize + " pktsize=" + mPacketBufferSize);
+        if (mTrace) debug("appsize=" + mApplicationBufferSize + " pktsize=" + mPacketBufferSize);
 
         if (false) {
-            trace("EnabledCipherSuites=" + Arrays.deepToString(mSSLEngine.getEnabledCipherSuites()));
-            trace("SupportedCipherSuites=" + Arrays.deepToString(mSSLEngine.getSupportedCipherSuites()));
-            trace("EnabledProtocols=" + Arrays.deepToString(mSSLEngine.getEnabledProtocols()));
-            trace("SupportedProtocols=" + Arrays.deepToString(mSSLEngine.getSupportedProtocols()));
+            debug("EnabledCipherSuites=" + Arrays.deepToString(mSSLEngine.getEnabledCipherSuites()));
+            debug("SupportedCipherSuites=" + Arrays.deepToString(mSSLEngine.getSupportedCipherSuites()));
+            debug("EnabledProtocols=" + Arrays.deepToString(mSSLEngine.getEnabledProtocols()));
+            debug("SupportedProtocols=" + Arrays.deepToString(mSSLEngine.getSupportedProtocols()));
         }
 
     }
@@ -125,7 +125,7 @@ public class OzTLSFilter extends OzFilter {
     
     private boolean handshake(ByteBuffer rbb) throws IOException {
         if (mHandshakeComplete) {
-            if (mTrace) trace("handshake deferred: already complete");
+            if (mTrace) debug("handshake deferred: already complete");
             return mHandshakeComplete;
         }
         
@@ -258,7 +258,7 @@ public class OzTLSFilter extends OzFilter {
             result = mSSLEngine.unwrap(rbb, mUnwrapped);
             
             if (mDebug) debug("read unwrap " + toString(result) + " in:"+ ibefore + "->" + OzUtil.toString(rbb) + " out:" + obefore + "->" + OzUtil.toString(mUnwrapped));
-            if (mTrace) trace(OzUtil.byteBufferDebugDump("read unwrapped", mUnwrapped, true));
+            if (mTrace) debug(OzUtil.byteBufferDebugDump("read unwrapped", mUnwrapped, true));
             
             rbb.compact();
             
@@ -310,7 +310,7 @@ public class OzTLSFilter extends OzFilter {
                         mWrappedBB.clear();
                     }
                     
-                    if (mTrace) trace(OzUtil.byteBufferDebugDump("write wrapping ", srcbb, false));
+                    if (mTrace) debug(OzUtil.byteBufferDebugDump("write wrapping ", srcbb, false));
                     String ibefore = null, obefore = null;
                     if (mDebug) ibefore = OzUtil.toString(srcbb);
                     if (mDebug) obefore = OzUtil.toString(mWrappedBB); 
@@ -338,7 +338,7 @@ public class OzTLSFilter extends OzFilter {
     }
     
     public void write(ByteBuffer src) throws IOException {
-        if (mTrace) trace("write: called");
+        if (mTrace) debug("write: called");
         synchronized (mPendingWriteBuffers) {
             if (!mHandshakeComplete) {
                 mPendingWriteBuffers.add(src);
@@ -346,7 +346,7 @@ public class OzTLSFilter extends OzFilter {
                 return;
             }
             mPendingWriteBuffers.add(src);
-            if (mTrace) trace("write: processing pending writes");
+            if (mTrace) debug("write: processing pending writes");
             flush();
         }
     }
@@ -387,10 +387,6 @@ public class OzTLSFilter extends OzFilter {
 
     private void debug(String msg) {
         mLog.debug("TLS: " + msg);
-    }
-
-    private void trace(String msg) {
-        mLog.trace("TLS: " + msg);
     }
 
 	public void waitForWriteCompletion() throws IOException {

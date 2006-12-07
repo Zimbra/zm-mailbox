@@ -39,7 +39,7 @@ import java.util.Set;
 
 import javax.net.ssl.SSLContext;
 
-import org.apache.commons.logging.Log;
+import com.zimbra.common.util.Log;
 
 import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;

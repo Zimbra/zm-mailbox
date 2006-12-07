@@ -38,8 +38,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.Factory;
 import org.apache.commons.collections.map.LazyMap;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import org.apache.log4j.PropertyConfigurator;
 
 import com.zimbra.common.localconfig.LC;

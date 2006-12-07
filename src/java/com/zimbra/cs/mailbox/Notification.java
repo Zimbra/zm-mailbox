@@ -405,7 +405,7 @@ public class Notification {
         if (destAddr != null) {
             sb.append(" dest='").append(destAddr).append("'");
         }
-        ZimbraLog.mailbox.info(sb, e);
+        ZimbraLog.mailbox.info(sb.toString(), e);
     }
 
     private static void nfailed(String why, String destAddr, String rcptAddr, Message msg, Exception e) {

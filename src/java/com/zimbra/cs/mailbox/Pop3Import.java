@@ -39,8 +39,8 @@ import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import com.sun.mail.pop3.POP3Folder;
 import com.sun.mail.pop3.POP3Message;

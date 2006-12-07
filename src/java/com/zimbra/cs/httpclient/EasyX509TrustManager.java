@@ -35,8 +35,8 @@ import com.sun.net.ssl.TrustManagerFactory;
 import com.sun.net.ssl.TrustManager;
 import com.sun.net.ssl.X509TrustManager;
 
-import org.apache.commons.logging.Log; 
-import org.apache.commons.logging.LogFactory;
+import com.zimbra.common.util.Log; 
+import com.zimbra.common.util.LogFactory;
 
 /**
  * <p>
