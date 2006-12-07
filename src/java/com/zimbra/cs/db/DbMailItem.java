@@ -550,11 +550,12 @@ public class DbMailItem {
         String name = item.getName().equals("") ? null : item.getName();
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET date = ?, size = ?, name = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
+                        " SET date = ?, size = ?, name = ?, subject = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
             stmt.setInt(pos++, item.getSize());
+            stmt.setString(pos++, name);
             stmt.setString(pos++, name);
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());

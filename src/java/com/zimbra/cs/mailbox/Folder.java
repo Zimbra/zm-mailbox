@@ -472,6 +472,7 @@ public class Folder extends MailItem {
         data.date        = mbox.getOperationTimestamp();
         data.flags       = flags & Flag.FLAGS_FOLDER;
         data.name        = name;
+        data.subject     = name;
         data.metadata    = encodeMetadata(color, attributes, view, null, new SyncData(url), id + 1);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);

@@ -153,6 +153,7 @@ public class Tag extends MailItem {
         data.folderId    = tagFolder.getId();
         data.date        = mbox.getOperationTimestamp();
         data.name        = name;
+        data.subject     = name;
         data.metadata    = encodeMetadata(color);
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
