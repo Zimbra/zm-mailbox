@@ -26,26 +26,19 @@ package com.zimbra.cs.wiki;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.client.LmcDocument;
-import com.zimbra.cs.client.LmcSession;
-import com.zimbra.cs.client.soap.LmcSearchRequest;
-import com.zimbra.cs.client.soap.LmcSearchResponse;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
-import com.zimbra.cs.index.queryparser.ParseException;
-import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -58,13 +51,14 @@ import com.zimbra.cs.service.formatter.WikiFormatter;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.session.WikiSession;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.soap.Element;
+import com.zimbra.soap.SoapHttpTransport;
 
 /**
  * This class represents a Wiki notebook.  A notebook corresponds to a folder
@@ -306,55 +300,23 @@ public abstract class Wiki {
 			}
 		}
 		
-		private String createQueryString(String wikiWord) {
-			StringBuilder buf = new StringBuilder();
-			buf.append("inid:");
-			buf.append(mFolderId);
-			buf.append(" subject:'");
-			StringTokenizer tok = new StringTokenizer(wikiWord, " ");
-			while (tok.hasMoreTokens()) {
-				String str = tok.nextToken();
-				if (!str.equals("-"))
-					buf.append(str).append(" ");
-			}
-			buf.append("'");
-			return buf.toString();
-		}
-		
-		private static byte[] sQueryTypes = { MailItem.TYPE_WIKI, MailItem.TYPE_DOCUMENT };
-		
 		public WikiPage lookupWiki(WikiContext ctxt, String wikiWord) throws ServiceException {
 			wikiWord = wikiWord.toLowerCase();
 			WikiPage page = (WikiPage)mWikiPages.get(wikiWord);
 			if (page != null)
 				return page;
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mWikiAccount);
-			ZimbraQueryResults results = null;
 			try {
-				results = mbox.search(ctxt.octxt, createQueryString(wikiWord), sQueryTypes, SortBy.SUBJ_ASCENDING, 10);
-				while (results.hasNext()) {
-					MailItem item = results.getNext().getMailItem();
-					if (item.getFolderId() == mFolderId &&
-							item.getName().equalsIgnoreCase(wikiWord) &&
-							(item.getType() == MailItem.TYPE_DOCUMENT ||
-							 item.getType() == MailItem.TYPE_WIKI)) {
-						page = WikiPage.create((Document) item);
-						synchronized (mWikiPages) {
-							if (!mWikiPages.containsKey(wikiWord))
-								mWikiPages.put(wikiWord, page);
-						}
-						return page;
-					}
+				MailItem item = mbox.getItemByPath(ctxt.octxt, wikiWord, mFolderId);
+				page = WikiPage.create((Document) item);
+				synchronized (mWikiPages) {
+					if (!mWikiPages.containsKey(wikiWord))
+						mWikiPages.put(wikiWord, page);
 				}
+			} catch (MailServiceException.NoSuchItemException se) {
 				return null;
-			} catch (ParseException pe) {
-				throw WikiServiceException.ERROR("error searching for "+wikiWord, pe);
-			} catch (IOException ioe) {
-				throw WikiServiceException.ERROR("error searching for "+wikiWord, ioe);
-			} finally {
-				if (results != null)
-					results.doneWithSearchResults();
 			}
+			return page;
 		}
 		
 		public synchronized void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException {
@@ -398,61 +360,36 @@ public abstract class Wiki {
 			mWikiAccount = acct.getId();
 			mPath = path;
 		}
-
-		private String createQueryString(String wikiWord) {
-			StringBuilder buf = new StringBuilder();
-			buf.append("in:");
-			buf.append(mPath);
-			buf.append(" subject:'");
-			StringTokenizer tok = new StringTokenizer(wikiWord, " ");
-			while (tok.hasMoreTokens()) {
-				String str = tok.nextToken();
-				if (!str.equals("-"))
-					buf.append(str).append(" ");
-			}
-			buf.append(wikiWord);
-			buf.append("'");
-			return buf.toString();
-		}
 		
-		private synchronized WikiPage loadRemotePage(String page) throws ServiceException {
+		private WikiPage load(WikiContext ctxt, String page) throws ServiceException {
+			Provisioning prov = Provisioning.getInstance();
+			Account acct = prov.get(AccountBy.id, mWikiAccount);
+			Server remoteServer = prov.getServer(acct);
+			String url = URLUtil.getSoapURL(remoteServer, true);
+			SoapHttpTransport transport = new SoapHttpTransport(url);
+			transport.setAuthToken(ctxt.auth);
+			transport.setTargetAcctId(mWikiAccount);
 			try {
-				Provisioning prov = Provisioning.getInstance();
-				Account acct = prov.get(AccountBy.id, mWikiAccount);
-				Server remoteServer = prov.getServer(acct);
-				String auth = AuthToken.getZimbraAdminAuthToken().getEncoded();
-
-				String url = URLUtil.getMailURL(remoteServer, ZimbraServlet.USER_SERVICE_URI, false);
-
-				LmcSession session = new LmcSession(auth, null);
-
-				LmcSearchRequest sreq = new LmcSearchRequest();
-				sreq.setRequestedAccountId(acct.getId());
-				sreq.setSession(session);
-				sreq.setTypes("wiki,document");
-				sreq.setLimit("10");
-				sreq.setOffset("0");
-				sreq.setQuery(createQueryString(page));
-
-				LmcSearchResponse sresp = (LmcSearchResponse)sreq.invoke(url);
-
-				@SuppressWarnings("unchecked")
-				List<Object> ls = (List<Object>)sresp.getResults();
-				for (Object obj : ls) {
-					if (obj instanceof LmcDocument && ((LmcDocument)obj).getName().equalsIgnoreCase(page)) {
-						WikiPage wp = WikiPage.create(mWikiAccount, mPath, (LmcDocument)obj);
-						return wp;
-					} else {
-						// unhandled item
-					}
+				Element req = new Element.XMLElement(MailService.GET_WIKI_REQUEST);
+				Element w = req.addElement(MailService.E_WIKIWORD);
+				w.addAttribute(MailService.A_NAME, mPath + "/" + page);
+				Element resp = transport.invoke(req);
+				Iterator<Element> iter = resp.elementIterator();
+				while (iter.hasNext()) {
+					Element e = iter.next();
+					if (e.getName().equals(MailService.E_WIKIWORD))
+						return WikiPage.create(mWikiAccount, mPath, e);
 				}
-			} catch (Exception e) {
-				throw WikiServiceException.ERROR("can't load remote wiki", e);
+			} catch (IOException ioe) {
+        		ZimbraLog.wiki.error("cannot load remote page: "+page, ioe);
+			} finally {
+				if (transport != null)
+					transport.shutdown();
 			}
 			return null;
 		}
 		
-		public synchronized WikiPage lookupWiki(WikiContext ctxt, String wikiWord) throws ServiceException{
+		public WikiPage lookupWiki(WikiContext ctxt, String wikiWord) throws ServiceException{
 			wikiWord = wikiWord.toLowerCase();
 			WikiPage page = (WikiPage)mWikiPages.get(wikiWord);
 			if (page != null)
@@ -460,7 +397,7 @@ public abstract class Wiki {
 			synchronized (mWikiPages) {
 				page = (WikiPage)mWikiPages.get(wikiWord);
 				if (page == null) {
-					page = loadRemotePage(wikiWord);
+					page = load(ctxt, wikiWord);
 					if (page != null)
 						mWikiPages.put(wikiWord, page);
 				}

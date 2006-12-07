@@ -26,23 +26,25 @@ package com.zimbra.cs.wiki;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Iterator;
 
 import org.apache.commons.httpclient.Header;
 
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.client.LmcDocument;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
+import com.zimbra.soap.Element;
 
 public abstract class WikiPage {
 
@@ -58,8 +60,8 @@ public abstract class WikiPage {
 		return new LocalWikiPage(wikiWord, ctype, author, data, MailItem.TYPE_DOCUMENT);
 	}
 
-	public static WikiPage create(String accountId, String path, LmcDocument doc) throws ServiceException {
-		return new RemoteWikiPage(accountId, path, doc);
+	public static WikiPage create(String accountId, String path, Element elem) throws ServiceException {
+		return new RemoteWikiPage(accountId, path, elem);
 	}
 	
 	protected String mAccountId;
@@ -211,25 +213,35 @@ public abstract class WikiPage {
 	public static class RemoteWikiPage extends WikiPage {
 		private String mPath;
 		private String mRestUrl;
+		private String mContent;
 		
-		RemoteWikiPage(String accountId, String path, LmcDocument wiki) throws ServiceException {
-			ItemId iid = new ItemId(wiki.getID(), null);
-			ItemId fid = new ItemId(wiki.getFolder(), null);
+		RemoteWikiPage(String accountId, String path, Element elem) throws ServiceException {
 			mAccountId = accountId;
-			mWikiWord = wiki.getName();
+			ItemId iid = new ItemId(elem.getAttribute(MailService.A_ID), null);
+			ItemId fid = new ItemId(elem.getAttribute(MailService.A_FOLDER), null);
 			mId = iid.getId();
-			mRevision = Integer.parseInt(wiki.getRev());
-			mModifiedDate = Long.parseLong(wiki.getLastModifiedDate());
-			mModifiedBy = wiki.getLastEditor();
 			mFolderId = fid.getId();
-			mRestUrl = wiki.getRestUrl();
-			mCreatedDate = Long.parseLong(wiki.getCreateDate());
-			mCreator = wiki.getCreator();
-			mFragment = wiki.getFragment();
-			mPath = path;
+			mWikiWord = elem.getAttribute(MailService.A_NAME);
+			mRevision = (int)elem.getAttributeLong(MailService.A_VERSION);
+			mModifiedDate = elem.getAttributeLong(MailService.A_MODIFIED_DATE);
+			mModifiedBy = elem.getAttribute(MailService.A_LAST_EDITED_BY);
+			mRestUrl = elem.getAttribute(MailService.A_REST_URL);
+			mCreatedDate = elem.getAttributeLong(MailService.A_DATE);
+			mCreator = elem.getAttribute(MailService.A_CREATOR);
+			Iterator<Element> iter = elem.elementIterator();
+			while (iter.hasNext()) {
+				Element e = iter.next();
+				if (e.getName().equals(MailService.E_FRAG))
+					mFragment = e.getText();
+				else if (e.getName().equals(MailService.A_BODY))
+					mContent = e.getText();
+			}
 		}
 		
 		public String getContents(WikiContext ctxt) throws ServiceException {
+			if (mContent != null)
+				return mContent;
+			
 			String auth;
 			if (ctxt != null && ctxt.auth != null)
 				auth = ctxt.auth;
