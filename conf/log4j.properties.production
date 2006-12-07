@@ -94,4 +94,4 @@ log4j.logger.zimbra.wbxml=DEBUG,WBXML
 log4j.logger.zimbra=INFO
 log4j.logger.zimbra.op=WARN
 log4j.logger.com.zimbra=INFO
-log4j.logger.com.zimbra.cs.util.StopWatch=INFO
+
