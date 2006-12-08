@@ -3471,7 +3471,7 @@ public class Mailbox {
         return msg;
     }
 
-    static String getHash(String subject) {
+    public static String getHash(String subject) {
         return ByteUtil.getSHA1Digest(subject.getBytes(), true);
     }
 
@@ -3821,7 +3821,7 @@ public class Mailbox {
         }
     }
 
-    public synchronized List<Pair<MailItem,MailItem>> imapCopy(OperationContext octxt, int[] itemIds, byte type, int folderId) throws IOException, ServiceException {
+    public synchronized List<MailItem> imapCopy(OperationContext octxt, int[] itemIds, byte type, int folderId) throws IOException, ServiceException {
         // this is an IMAP command, so we'd better be tracking IMAP changes by now...
         beginTrackingImap(octxt);
 
@@ -3844,37 +3844,20 @@ public class Mailbox {
             for (MailItem item : items)
                 checkItemChangeID(item);
 
-            // for IMAP's sake, let's try to keep the IDs vaguely contiguous
-            LinkedList<Integer> newIds = null, newImapIds = null;
-            if (redoPlayer == null) {
-                newIds = new LinkedList<Integer>();
-                for (int i = 0; i < itemIds.length; i++)
-                    newIds.add(getNextItemId(ID_AUTO_INCREMENT));
-                newImapIds = new LinkedList<Integer>();
-                for (int i = 0; i < itemIds.length; i++)
-                    newImapIds.add(getNextItemId(ID_AUTO_INCREMENT));
-            }
-
-            List<Pair<MailItem,MailItem>> result = new ArrayList<Pair<MailItem,MailItem>>();
+            List<MailItem> result = new ArrayList<MailItem>();
 
             for (MailItem item : items) {
-                int srcId = item.getId(), newId, newImapId;
-                if (redoPlayer == null) {
-                    newId = newIds.removeFirst();
-                    newImapId = newImapIds.removeFirst();
-                } else {
-                    newId = getNextItemId(redoPlayer.getDestId(srcId));
-                    newImapId = redoPlayer.getSrcImapId(srcId);
-                }
-                MailItem copy = item.icopy(target, newId, item.getVolumeId() == -1 ? -1 : volumeId, newImapId);
+                int srcId = item.getId();
+                int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(srcId));
+
+                MailItem copy = item.icopy(target, newId, item.getVolumeId() == -1 ? -1 : volumeId);
                 redoRecorder.setDestId(srcId, newId);
-                redoRecorder.setSrcImapId(srcId, newImapId);
     
                 // if we're not sharing the index entry, we need to index the new item
                 if (copy.getIndexId() == copy.getId())
                     queueForIndexing(copy, false, null);
 
-                result.add(new Pair<MailItem,MailItem>(item, copy));
+                result.add(copy);
             }
 
             success = true;

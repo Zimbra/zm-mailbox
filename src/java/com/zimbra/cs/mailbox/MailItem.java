@@ -1348,27 +1348,23 @@ public abstract class MailItem implements Comparable<MailItem> {
         return copy;
     }
 
-    /** Moves the item to the target folder and creates a copy of the item in
-     *  the original item's folder.  Persists the new item to the database and
-     *  the in-memory cache.  Copies to the same folder as the original item
-     *  will succeed, but it is strongly suggested that {@link copy()} be used
-     *  in that case.<p>
+    /** Copies the item to the target folder.  Persists the new item to the
+     *  database and the in-memory cache.  Copies to the same folder as the
+     *  original item will succeed, but it is strongly suggested that
+     *  {@link #copy(Folder, int, short)} be used in that case.<p>
      * 
      *  Immutable copied items (both the original and the target) share the
      *  same entry in the index and get the {@link Flag#BITMASK_COPIED} flag to
      *  facilitate garbage collection of index entries.  (Mutable copied items
      *  are indexed separately.)  They do not share the same blob on disk,
      *  although the system will use a hard link where possible.  Copied
-     *  {@link Message}s are placed in their own {@link VirtualConversation}
-     *  rather than being grouped with the original (moved) Message.<p>
-     * 
-     *  The copy is assigned the same IMAP UID as the original item.  The
-     *  moved item is then explicitly assigned a new IMAP UID.  
+     *  {@link Message}s are remain in the same {@link Conversation}, but the
+     *  <b>original</b> Message is placed in a new {@link VirtualConversation}
+     *  rather than being grouped with the copied Message.
      * 
      * @param target        The folder to copy the item to.
-     * @param id            The item id for the newly-created copy.
+     * @param copyId        The item id for the newly-created copy.
      * @param destVolumeId  The id of the Volume to put the copied blob in.
-     * @param imapId        The IMAP UID to assign to the <u>moved</u> item.
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_READ} on the original item
      * @throws ServiceException  The following error codes are possible:<ul>
@@ -1379,11 +1375,9 @@ public abstract class MailItem implements Comparable<MailItem> {
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul>
      * @see com.zimbra.cs.store.Volume#getCurrentMessageVolume() */
-    MailItem icopy(Folder target, int id, short destVolumeId, int imapId) throws IOException, ServiceException {
+    MailItem icopy(Folder target, int copyId, short destVolumeId) throws IOException, ServiceException {
         if (!isCopyable())
             throw MailServiceException.CANNOT_COPY(mId);
-        if (!isMovable())
-            throw MailServiceException.IMMUTABLE_OBJECT(mId);
         if (!target.canContain(this))
             throw MailServiceException.CANNOT_CONTAIN();
 
@@ -1395,40 +1389,50 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         // we'll share the index entry if this item can't change out from under us
         boolean shared = isIndexed() && !isMutable();
-        boolean moved = getFolderId() != target.getId();
+        // fetch the parent *before* changing the DB
+        MailItem parent = getParent();
 
-        int copyImapId = moved ? getImapUid() : imapId;
-        Folder oldFolder = getFolder();
+        // first, copy the item to the target folder while setting:
+        //   - FLAGS -> FLAGS | Flag.BITMASK_COPIED
+        //   - INDEX_ID -> old index id
+        //   - FOLDER_ID -> new folder
+        //   - IMAP_ID -> new IMAP uid
+        //   - VOLUME_ID -> target volume ID
+        // then, update the original item
+        //   - PARENT_ID -> NULL
+        //   - FLAGS -> FLAGS | Flag.BITMASK_COPIED
+        // finally, update OPEN_CONVERSATION if PARENT_ID was NULL
+        //   - ITEM_ID = copy's id for hash
 
-        // first, move the item to the target folder if necessary
-        if (moved) {
-            oldFolder.updateSize(-1);
-            target.updateSize(1);
-            oldFolder.updateUnread(-getUnreadCount());
-            target.updateUnread(getUnreadCount());
-            folderChanged(target, imapId);
-            DbMailItem.imove(this, shared, target, imapId);
-        } else if (shared && !isTagged(mMailbox.mCopiedFlag)) {
-            DbMailItem.alterTag(this, mMailbox.mCopiedFlag, true);
-        }
-
-        if (shared)
-            mData.flags |= Flag.BITMASK_COPIED;
-
-        // then copy it back to the original folder, leaving the copy out of the conversation
-        //   also, when moving make sure that the new item's imap ID is the same as the old item's old imap ID
-        UnderlyingData data = mData.duplicate(id, oldFolder.getId(), destVolumeId);
-        data.parentId = -1;
+        UnderlyingData data = mData.duplicate(copyId, target.getId(), destVolumeId);
         data.metadata = encodeMetadata();
-        if (moved)
-            data.imapId = copyImapId;
+        data.imapId = copyId;
         if (isIndexed() && !shared)
-            data.indexId = id;
+            data.indexId = copyId;
         data.contentChanged(mMailbox);
-        DbMailItem.icopy(this, data);
+        DbMailItem.icopy(this, data, shared);
 
         MailItem copy = constructItem(mMailbox, data);
         copy.finishCreation(null);
+
+        if (shared && !isTagged(mMailbox.mCopiedFlag)) {
+            tagChanged(mMailbox.mCopiedFlag, true);
+            copy.tagChanged(mMailbox.mCopiedFlag, true);
+            if (parent != null)
+                parent.inheritedTagChanged(mMailbox.mCopiedFlag, true);
+        }
+
+        if (parent != null && parent.getId() > 0) {
+            markItemModified(Change.MODIFIED_PARENT);
+            parent.markItemModified(Change.MODIFIED_CHILDREN);
+            if (parent.mData.children == null) {
+                (parent.mData.children = new ArrayList<Integer>(1)).add(new Integer(copyId));
+            } else {
+                parent.mData.children.remove(new Integer(mId));
+                parent.mData.children.add(new Integer(copyId));
+            }
+            mData.parentId = mData.type == TYPE_MESSAGE ? -mId : -1;
+        }
 
         MailboxBlob srcBlob = getBlob();
         if (srcBlob != null) {

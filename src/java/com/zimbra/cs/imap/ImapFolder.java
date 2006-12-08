@@ -421,12 +421,6 @@ class ImapFolder implements Iterable<ImapMessage> {
         mMessageIds.remove(new Integer(i4msg.msgId));
         mDirtyMessages.remove(i4msg);
     }
-
-    void unghost(ImapMessage i4msg, int msgId) {
-        mMessageIds.remove(new Integer(i4msg.msgId));
-        i4msg.msgId = msgId;
-        mMessageIds.put(new Integer(i4msg.msgId), i4msg);
-    }
     
 
     boolean checkpointSize()  { int last = mLastSize;  return last != (mLastSize = getSize()); }

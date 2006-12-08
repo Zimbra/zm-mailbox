@@ -344,9 +344,7 @@ public class ImapSession extends Session {
                 if (mSelectedFolder.getById(msgId) != null)
                     continue;
                 ImapMessage i4msg = mSelectedFolder.getByImapId(item.getImapUid());
-                if (i4msg != null && i4msg.msgId != item.getId())
-                    mSelectedFolder.unghost(i4msg, item.getId());
-                else
+                if (i4msg == null)
                     newItems.add(item);
                 ZimbraLog.imap.debug("  ** created (ntfn): " + msgId);
             }

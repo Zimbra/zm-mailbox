@@ -219,8 +219,7 @@ public class DbMailItem {
         }
     }
 
-    public static void icopy(MailItem source, UnderlyingData data)
-    throws ServiceException {
+    public static void icopy(MailItem source, UnderlyingData data, boolean shared) throws ServiceException {
         Mailbox mbox = source.getMailbox();
         if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0 || data.indexId == 0)
             throw ServiceException.FAILURE("invalid data for DB item i-copy", null);
@@ -229,18 +228,18 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             String table = getMailItemTableName(mbox);
+            String flags = shared ? "flags | " + Flag.BITMASK_COPIED : "flags";
             stmt = conn.prepareStatement("INSERT INTO " + table +
                         "(" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") +
                         " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
                         " unread, flags, tags, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
                         "(SELECT " + (!DebugConfig.disableMailboxGroup ? "?, " : "") +
-                        " ?, type, NULL, ?, ?, ?, date, size, ?, blob_digest," +
-                        " unread, flags, tags, sender, subject, name, metadata, ?, ?, ? FROM " + table +
+                        " ?, type, parent_id, ?, ?, ?, date, size, ?, blob_digest," +
+                        " unread, " + flags + ", tags, sender, subject, name, metadata, ?, ?, ? FROM " + table +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?)");
-            int mboxId = mbox.getId();
             int pos = 1;
             if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mboxId);
+                stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, data.id);                       // ID
             stmt.setInt(pos++, data.folderId);                 // FOLDER_ID
             stmt.setInt(pos++, data.indexId);                  // INDEX_ID
@@ -253,50 +252,40 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
             if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mboxId);
+                stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, source.getId());
             int num = stmt.executeUpdate();
             if (num != 1)
                 throw ServiceException.FAILURE("failed to create object", null);
+            stmt.close();
+
+            boolean needsTag = !source.isTagged(mbox.mCopiedFlag);
+
+            if (needsTag)
+                getFlagsetCache(conn, mbox).addTagset(source.getInternalFlagBitmask() | Flag.BITMASK_COPIED);
+
+            if (needsTag || source.getParentId() > 0) {
+                stmt = conn.prepareStatement("UPDATE " + table +
+                            " SET parent_id = NULL, flags = " + flags + ", mod_metadata = ?, change_date = ?" +
+                            " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+                pos = 1;
+                stmt.setInt(pos++, mbox.getOperationChangeID());
+                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                if (!DebugConfig.disableMailboxGroup)
+                    stmt.setInt(pos++, mbox.getId());
+                stmt.setInt(pos++, source.getId());
+                stmt.executeUpdate();
+                stmt.close();
+            }
+
+            if (source instanceof Message && source.getParentId() <= 0)
+                changeOpenTarget(Mailbox.getHash(((Message) source).getNormalizedSubject()), source, data.id);
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
                 throw MailServiceException.ALREADY_EXISTS(data.id, e);
             else
                 throw ServiceException.FAILURE("i-copying " + MailItem.getNameForType(source.getType()) + ": " + source.getId(), e);
-        } finally {
-            DbPool.closeStatement(stmt);
-        }
-    }
-
-    public static void imove(MailItem item, boolean shared, Folder folder, int imapId) throws ServiceException {
-        Mailbox mbox = item.getMailbox();
-        if (folder == null || imapId == 0)
-            throw ServiceException.FAILURE("invalid data for DB item copy", null);
-
-        Connection conn = mbox.getOperationConnection();
-        PreparedStatement stmt = null;
-        try {
-            String table = getMailItemTableName(item);
-            String flags = shared ? "flags = flags | " + Flag.BITMASK_COPIED + ", " : "";
-            stmt = conn.prepareStatement("UPDATE " + table +
-                        " SET folder_id = ?, " + flags + "imap_id = ?, mod_metadata = ?, change_date = ?" +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
-            int pos = 1;
-            stmt.setInt(pos++, folder.getId());
-            stmt.setInt(pos++, imapId);
-            stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(pos++, mbox.getId());
-            stmt.setInt(pos++, item.getId());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            // catch item_id uniqueness constraint violation and return failure
-            if (e.getErrorCode() == Db.Error.DUPLICATE_ROW)
-                throw MailServiceException.ALREADY_EXISTS(item.getName(), e);
-            else
-                throw ServiceException.FAILURE("i-moving " + MailItem.getNameForType(item.getType()) + ": " + item.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -645,11 +634,9 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO " + getConversationTableName(item) +
-                        "(" +
-                        (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") +
-                        "hash, conv_id) VALUES (" +
-                        (!DebugConfig.disableMailboxGroup ? "?, " : "") +
-            "?, ?) ON DUPLICATE KEY UPDATE conv_id = ?");
+                        "(" + (!DebugConfig.disableMailboxGroup ? "mailbox_id, " : "") + "hash, conv_id)" +
+                        " VALUES (" + (!DebugConfig.disableMailboxGroup ? "?, " : "") + "?, ?)" +
+                        " ON DUPLICATE KEY UPDATE conv_id = ?");
             int mboxId = item.getMailboxId();
             int pos = 1;
             if (!DebugConfig.disableMailboxGroup)
@@ -686,16 +673,17 @@ public class DbMailItem {
         }
     }
 
-    public static void changeOpenTarget(MailItem oldTarget, MailItem newTarget) throws ServiceException {
+    public static void changeOpenTarget(String hash, MailItem oldTarget, int newTargetId) throws ServiceException {
         Connection conn = oldTarget.getMailbox().getOperationConnection();
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getConversationTableName(oldTarget) +
-                        " SET conv_id = ? WHERE " + IN_THIS_MAILBOX_AND + "conv_id = ?");
+                        " SET conv_id = ? WHERE " + IN_THIS_MAILBOX_AND + "hash = ? AND conv_id = ?");
             int pos = 1;
-            stmt.setInt(pos++, newTarget.getId());
+            stmt.setInt(pos++, newTargetId);
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(pos++, oldTarget.getMailboxId());
+            stmt.setString(pos++, hash);
             stmt.setInt(pos++, oldTarget.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {

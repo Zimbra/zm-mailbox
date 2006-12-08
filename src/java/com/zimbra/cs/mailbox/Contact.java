@@ -222,6 +222,7 @@ public class Contact extends MailItem {
     public String getFileAsString() throws ServiceException {
         return getFileAsString(mFields);
     }
+
     public static String getFileAsString(Map<String, String> fields) throws ServiceException {
         String fileAs = fields.get(A_fileAs);
         String[] fileParts = (fileAs == null ? null : fileAs.split(":", 2));
@@ -488,12 +489,14 @@ public class Contact extends MailItem {
         return con;
     }
 
+    @Override
     public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
         // FIXME: need to note this as dirty so we can reindex if things fail
         if (!DebugConfig.disableIndexing)
             mMailbox.getMailboxIndex().indexContact(mMailbox, redo, deleteFirst, this);
     }
 
+    @Override
     void reanalyze(Object data) throws ServiceException {
         saveData(getFileAsString(mFields));
     }
@@ -567,6 +570,7 @@ public class Contact extends MailItem {
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
+    @Override
     MailItem copy(Folder folder, int id, short destVolumeId) throws IOException, ServiceException {
         mMailbox.updateContactCount(1);
         return super.copy(folder, id, destVolumeId);
@@ -574,12 +578,14 @@ public class Contact extends MailItem {
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
-    MailItem icopy(Folder folder, int id, short destVolumeId, int imapId) throws IOException, ServiceException {
+    @Override
+    MailItem icopy(Folder folder, int copyId, short destVolumeId) throws IOException, ServiceException {
         mMailbox.updateContactCount(1);
-        return super.icopy(folder, id, destVolumeId, imapId);
+        return super.icopy(folder, copyId, destVolumeId);
     }
 
     /** @perms {@link ACL#RIGHT_DELETE} on the item */
+    @Override
     PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = super.getDeletionInfo();
         info.contacts = 1;
@@ -587,6 +593,7 @@ public class Contact extends MailItem {
     }
 
 
+    @Override
     void decodeMetadata(Metadata meta) throws ServiceException {
         Metadata metaAttrs;
         if (meta.getVersion() <= 8) {
@@ -605,9 +612,11 @@ public class Contact extends MailItem {
         }
     }
 
+    @Override
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mColor, mFields);
     }
+
     private static String encodeMetadata(byte color, Map<String, String> fields) {
         return encodeMetadata(new Metadata(), color, fields).toString();
     }
@@ -617,6 +626,7 @@ public class Contact extends MailItem {
     }
 
 
+    @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("contact: {");

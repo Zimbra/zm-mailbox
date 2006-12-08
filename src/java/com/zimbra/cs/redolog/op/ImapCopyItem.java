@@ -38,7 +38,6 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 public class ImapCopyItem extends RedoableOp {
 
     private Map<Integer, Integer> mDestIds = new HashMap<Integer, Integer>();
-    private Map<Integer, Integer> mSrcImapIds = new HashMap<Integer, Integer>();
     private byte mType;
     private int mDestFolderId;
     private short mDestVolumeId;
@@ -81,19 +80,6 @@ public class ImapCopyItem extends RedoableOp {
         return mDestVolumeId;
     }
 
-    /**
-     * Sets the IMAP UID for the moved item.
-     * @param volId
-     */
-    public void setSrcImapId(int srcId, int srcImapId) {
-        mSrcImapIds.put(srcId, srcImapId);
-    }
-
-    public int getSrcImapId(int srcId) {
-        Integer srcImapId = mSrcImapIds.get(srcId);
-        return srcImapId == null ? -1 : srcImapId;
-    }
-
     public int getOpCode() {
         return OP_IMAP_COPY_ITEM;
     }
@@ -103,10 +89,8 @@ public class ImapCopyItem extends RedoableOp {
         sb.append(", destFolder=").append(mDestFolderId);
         sb.append(", destVolumeId=").append(mDestVolumeId);
         sb.append(", [srcId, destId, srcImap]=");
-        for (Map.Entry<Integer, Integer> entry : mDestIds.entrySet()) {
-            Integer srcId = entry.getKey();
-            sb.append('[').append(srcId).append(',').append(entry.getValue()).append(',').append(mSrcImapIds.get(srcId)).append(']');
-        }
+        for (Map.Entry<Integer, Integer> entry : mDestIds.entrySet())
+            sb.append('[').append(entry.getKey()).append(',').append(entry.getValue()).append(']');
         return sb.toString();
     }
 
@@ -119,7 +103,7 @@ public class ImapCopyItem extends RedoableOp {
             Integer srcId = entry.getKey();
             out.writeInt(srcId);
             out.writeInt(entry.getValue());
-            out.writeInt(getSrcImapId(srcId));
+            out.writeInt(-1);                    // now unused; don't break the old format...
         }
     }
 
@@ -131,7 +115,7 @@ public class ImapCopyItem extends RedoableOp {
         for (int i = 0; i < count; i++) {
             Integer srcId = in.readInt();
             mDestIds.put(srcId, in.readInt());
-            mSrcImapIds.put(srcId, in.readInt());
+            in.readInt();                        // now unused; don't break the old format...
         }
     }
 

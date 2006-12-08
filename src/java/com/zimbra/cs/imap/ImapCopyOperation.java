@@ -12,7 +12,6 @@ import com.zimbra.cs.operation.CopyOperation;
 import com.zimbra.cs.operation.Operation;
 import com.zimbra.cs.session.Session;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Pair;
 
 public class ImapCopyOperation extends Operation {
 
@@ -25,11 +24,11 @@ public class ImapCopyOperation extends Operation {
 
     static final int SUGGESTED_BATCH_SIZE = 50;
 
-    int[] mItemIds;
-    byte mType;
-    int mFolderId;
+    private int[] mItemIds;
+    private byte mType;
+    private int mFolderId;
 
-    List<Pair<MailItem,MailItem>> mSources;
+    private List<MailItem> mCopies;
 
 
     public ImapCopyOperation(Session session, OperationContext oc, Mailbox mbox, Requester req,
@@ -64,13 +63,13 @@ public class ImapCopyOperation extends Operation {
 
     protected void callback() throws ServiceException {
         try {
-            mSources = getMailbox().imapCopy(this.getOpCtxt(), mItemIds, mType, mFolderId);
+            mCopies = getMailbox().imapCopy(this.getOpCtxt(), mItemIds, mType, mFolderId);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Caught IOException execiting " + this, e);
         }
     }
 
-    public List<Pair<MailItem,MailItem>> getMessages() { return mSources; }
+    public List<MailItem> getMessages()  { return mCopies; }
 
     public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());

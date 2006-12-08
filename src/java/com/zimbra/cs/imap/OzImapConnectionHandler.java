@@ -64,8 +64,14 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.operation.AlterTagOperation;
 import com.zimbra.cs.operation.CreateFolderOperation;
@@ -92,7 +98,6 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.Config;
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -1837,7 +1842,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
         String command = (byUID ? "UID COPY" : "COPY");
         String copyuid = "";
-        List<Pair<MailItem,MailItem>> movedMessages = new ArrayList<Pair<MailItem,MailItem>>();
+        List<MailItem> copies = new ArrayList<MailItem>();
 
         try {
             GetFolderOperation gfOp = new GetFolderOperation(mSession, getContext(), mMailbox, Requester.IMAP, folderName);
@@ -1879,11 +1884,14 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
                 ImapCopyOperation op = new ImapCopyOperation(mSession, getContext(), mMailbox, Requester.IMAP, i4list, folder.getId());
                 op.schedule();
-                for (Pair<MailItem,MailItem> target : op.getMessages()) {
-                    movedMessages.add(target);
-                    int id1 = target.getFirst().getImapUid(), id2 = target.getSecond().getImapUid();
-                    srcUIDs.add(Math.min(id1, id2));  copyUIDs.add(Math.max(id1, id2));
-                }
+
+                copies.addAll(op.getMessages());
+                if (op.getMessages().size() != i4list.size())
+                    throw ServiceException.FAILURE("mismatch between original and target count during IMAP COPY", null);
+                for (ImapMessage source : i4list)
+                    srcUIDs.add(source.imapUid);
+                for (MailItem target : op.getMessages())
+                    copyUIDs.add(target.getImapUid());
 
                 // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                 long now = System.currentTimeMillis();
@@ -1901,7 +1909,7 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         } catch (IOException e) {
             // 6.4.7: "If the COPY command is unsuccessful for any reason, server implementations
             //         MUST restore the destination mailbox to its state before the COPY attempt."
-//            deleteMessages(movedMessages);
+//            deleteMessages(copies);
 
             ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
@@ -1909,15 +1917,16 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         } catch (ServiceException e) {
             // 6.4.7: "If the COPY command is unsuccessful for any reason, server implementations
             //         MUST restore the destination mailbox to its state before the COPY attempt."
-//            deleteMessages(movedMessages);
+//            deleteMessages(copies);
 
             String rcode = "";
             if (e.getCode() == MailServiceException.NO_SUCH_FOLDER) {
                 ZimbraLog.imap.info(command + " failed: no such folder: " + folderName);
                 if (ImapFolder.isPathCreatable('/' + folderName))
                     rcode = "[TRYCREATE] ";
-            } else
+            } else {
                 ZimbraLog.imap.warn(command + " failed", e);
+            }
             sendNO(tag, rcode + command + " failed");
             return canContinue(e);
         }
@@ -1926,19 +1935,21 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
         //                an EXPUNGE response on.  This is because a client is not permitted
         //                to cascade several COPY commands together."
         sendNotifications(true, false);
-    	sendOK(tag, copyuid + command + " completed");
+        sendOK(tag, copyuid + command + " completed");
         return CONTINUE_PROCESSING;
     }
 
     private void deleteMessages(List<MailItem> messages) {
-        if (messages != null && !messages.isEmpty())
-            for (MailItem item : messages)
+        if (messages != null && !messages.isEmpty()) {
+            for (MailItem item : messages) {
                 try {
                     DeleteOperation op = new DeleteOperation(mSession, getContext(), mMailbox, Requester.IMAP,  item.getId(), item.getType());
                     op.schedule();
                 } catch (ServiceException e) {
                     ZimbraLog.imap.warn("could not roll back creation of message", e);
                 }
+            }
+        }
     }
 
 
@@ -1952,10 +1963,11 @@ public class OzImapConnectionHandler implements OzConnectionHandler, ImapSession
 
             ImapFolder i4folder = mSession.getFolder();
             boolean removed = false, received = i4folder.checkpointSize();
-            if (notifyExpunges)
+            if (notifyExpunges) {
                 for (Integer index : i4folder.collapseExpunged()) {
                     sendUntagged(index + " EXPUNGE");  removed = true;
                 }
+            }
             i4folder.checkpointSize();
 
             // notify of any message flag changes
