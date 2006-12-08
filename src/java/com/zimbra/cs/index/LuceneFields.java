@@ -39,58 +39,108 @@ package com.zimbra.cs.index;
  * 
  */
 public class LuceneFields {
+    
+
+    /*******************************
+     * 
+     * SORTING FIELDS
+     * 
+     * These fields are used for the sorting of lucene results.  They MUST be stored
+     * with all documents, and their values MUST match the values in the corresponding
+     * MailItem row entry.  They MUST be Indexed and Untokenized.  
+     * 
+     ************/
+    /** Subject for sorting purposes (untokenized)  */
+    public static final String L_SORT_SUBJECT = "subjSort";
+    /** name for sorting purposes */
+    public static final String L_SORT_NAME = "nameSort";
+    /** 
+     * date for sorting purposes
+     * ALSO searchable date-  "date:"  "after:" and "before:"
+     **/ 
+    public static final String L_DATE = "l.date";
+
+    
+    /*********************************
+     *  
+     * "ALL" field, workaround for lucene's inability to do naked not queries
+     * 
+     * This field will automatically be populated with one term, "all" for all
+     * documents. 
+     *  
+     ************/
+    public static final String L_ALL = "ALL";
+    public static final String L_ALL_VALUE = "yes";
+    
+    /**
+     * The "index id" this document -- maps to one or more rows in the DB's mail_item
+     * table (index_id column)
+     * 
+     * This field will automatically be populated with the index ID
+     */
+    public static final String L_MAILBOX_BLOB_ID = "l.mbox_blob_id";
+    
+    
     /** 
      * unique set of all attachment content types, or "none" if no
      * attachments.
+     * 
+     * "attachment:"  searches
      */
     public static final String L_ATTACHMENTS = "attachment";
 
     public static final String L_ATTACHMENT_NONE = "none";
     public static final String L_ATTACHMENT_ANY = "any";
     
-    /**
-     * The "index id" this document -- maps to one or more rows in the DB's mail_item
-     * table (index_id column)
+    /** 
+     * the "content" of the message/attachment/etc  
+     * 
+     * searches with no operator will search this field
      */
-    public static final String L_MAILBOX_BLOB_ID = "l.mbox_blob_id";
-    
-    /** the "content" of the message/attachment/etc  */
     public static final String L_CONTENT = "l.content";
-    /** searchable date */ 
-    public static final String L_DATE = "l.date";
-    /** list of objects */
+    
+    /** 
+     * list of objects  "has:" searches 
+     */
     public static final String L_OBJECTS = "has";
-    /** MIME-type of blob */
-    public static final String L_MIMETYPE = "type"; 
-    /** size of blob */
+    
+    
+    /**
+     * MIME-type of blob  "type:" searches
+     **/
+    public static final String L_MIMETYPE = "type";
+    
+    /** size of document "size:" searches, "larger:" and "smaller:"*/
     public static final String L_SIZE = "l.size";
+    
     /** version */
     public static final String L_VERSION = "l.version";
     
-    /** Easily Searchable Contact  Data (bug 11831) */
+    /** Easily Searchable Contact  Data (bug 11831)   "contact:" searches*/
     public static final String L_CONTACT_DATA= "l.contactData";
     
-
-    /** dotted-number MIME part name or CONTACT for contact*/
+    /** 
+     * Partname identifier for multipart/mime messages
+     * 
+     *       For RFC/822 messages, should be dotted-number MIME part name or "top"
+     *       For all other mail_item types, should be "top"
+     */
     public static final String L_PARTNAME = "l.partname";
     public static final String L_PARTNAME_CONTACT = "CONTACT";
     public static final String L_PARTNAME_NOTE= "NOTE";
     public static final String L_PARTNAME_NONE= "none";
     public static final String L_PARTNAME_TOP= "top";
 
-    /** MIME name/filename */
+    /** "filename:" searches */
     public static final String L_FILENAME = "filename";
 
-    /** thread ID */
-//    public static final String L_THREADID = "l.thread_id";
-    
-    /** "From" RFC2822 header */
+    /** "from:" searches */
     public static final String L_H_FROM = "from";
-    /** "To" RFC2822 header */
+    /** "to:" searches */
     public static final String L_H_TO = "to";
-    /** "CC" RFC2822 header */
+    /** "cc:" searches */
     public static final String L_H_CC = "cc";
-    /** "Subject" RFC2822 header */
+    /** "subject:" searches*/
     public static final String L_H_SUBJECT = "subject";
     
     /** x-envelope-from / to, see bug 8703 */
@@ -100,16 +150,4 @@ public class LuceneFields {
     /** Message-Id: */
     public static final String L_H_MESSAGE_ID = "msg_id";
     
-    /** Subject for sorting purposes (untokenized)  */
-    public static final String L_SORT_SUBJECT = "subjSort";
-    /** name for sorting purposes */
-    public static final String L_SORT_NAME = "nameSort";
-    
-    
-//    /** "Date" RFC2822 header */
-//    public static final String L_H_DATE = "date";
-
-    /** "ALL" field, workaround for lucene's inability to do naked not queries */
-    public static final String L_ALL = "ALL";
-    public static final String L_ALL_VALUE = "yes";
 }
