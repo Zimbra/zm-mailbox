@@ -384,15 +384,15 @@ public final class MailboxIndex
                     if (redoOp != null)
                         mUncommittedRedoOps.add(redoOp);
                 }
-
-                if (mUncommittedRedoOps.size() > sMaxUncommittedOps) {
-                    if (mLog.isDebugEnabled()) {
-                        mLog.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
-                    }
-                    flush();
-                }
             }
-
+            
+            if (mUncommittedRedoOps.size() > sMaxUncommittedOps) {
+                if (mLog.isDebugEnabled()) {
+                    mLog.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
+                }
+                flush();
+            }
+            
             if (mLog.isDebugEnabled()) {
                 long end = System.currentTimeMillis();
                 long elapsed = end - start;
