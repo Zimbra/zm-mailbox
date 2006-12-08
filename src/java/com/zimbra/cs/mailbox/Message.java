@@ -455,13 +455,24 @@ public class Message extends MailItem {
 
     @Override
     public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
+        if (DebugConfig.disableIndexing)
+            return;
+        
         ParsedMessage pm = (ParsedMessage) indexData;
-        if (pm == null)
+        if (pm == null) {
+            // force the pm's received-date to be the correct one
+            pm = new ParsedMessage(getMimeMessage(), getDate(),getMailbox().attachmentsIndexingEnabled());
+            
+            // because of bug 8263, we sometimes have fragments that are incorrect:
+            // check them here and correct them if necessary
+            if (pm.getFragment().compareTo(getFragment()) != 0) {
+                getMailbox().reanalyze(getId(), getType(),  pm);
+            }
+            
             pm = new ParsedMessage(getMimeMessage(), getDate(), getMailbox().attachmentsIndexingEnabled());
+        }
 
-        // FIXME: need to note this as dirty so we can reindex if things fail
-        if (!DebugConfig.disableIndexing)
-            mMailbox.getMailboxIndex().indexMessage(mMailbox, redo, deleteFirst, mId, pm);
+        mMailbox.getMailboxIndex().indexMessage(mMailbox, redo, deleteFirst, pm, this);
     }
 
 

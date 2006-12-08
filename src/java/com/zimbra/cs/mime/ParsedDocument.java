@@ -137,11 +137,11 @@ public class ParsedDocument {
         public int getSize() { return mRawData.length; }
     }
 
-    String mContentType;
-    String mFilename;
+    private String mContentType;
+    private String mFilename;
     private int mSize;
     private String mDigest;
-    private Document mDocument;
+    private Document mDocument = null;
     private String mFragment;
     private long mCreatedDate;
 
@@ -193,7 +193,12 @@ public class ParsedDocument {
     public String getContentType()  { return mContentType; }
     public int getSize()            { return mSize; }
     public String getDigest()       { return mDigest; }
-    public Document getDocument()   { return mDocument; }
+    
+    public Document getDocument()   {
+        return mDocument; 
+    }
+    
+    
     public String getFragment()     { return mFragment; }
     public long getCreatedDate()    { return mCreatedDate; }
 

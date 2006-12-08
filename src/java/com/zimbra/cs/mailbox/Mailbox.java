@@ -1458,7 +1458,7 @@ public class Mailbox {
             //
             for (Iterator<SearchResult> iter = msgs.iterator(); iter.hasNext();) {
                 if (ZimbraLog.mailbox.isDebugEnabled() && ((mReIndexStatus.mNumProcessed % 2000) == 0)) {
-                    ZimbraLog.mailbox.debug("Re-Indexing: Mailbox "+getId()+" on msg "+mReIndexStatus.mNumProcessed+" out of "+msgs.size());
+                    ZimbraLog.mailbox.debug("Re-Indexing: Mailbox "+getId()+" on item "+mReIndexStatus.mNumProcessed+" out of "+msgs.size());
                 }
                 
                 synchronized(this) {
@@ -1469,10 +1469,14 @@ public class Mailbox {
                     mReIndexStatus.mNumProcessed++;
                     SearchResult sr = iter.next();
                     try {
-                        mMailboxIndex.reIndexItem(this, sr.id, sr.type, false/*already deleted above*/);
-                    } catch(ServiceException e) {
+                        MailItem item = getItemById(null, sr.id, sr.type);
+                        item.reindex(null, false /* already deleted above */, null);
+                    } catch(ServiceException  e) {
                         mReIndexStatus.mNumFailed++;
-                        ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on msg "+sr.id+".  Message will not be indexed.", e);
+                        ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on item "+sr.id+".  Item will not be indexed.", e);
+                    } catch(java.lang.RuntimeException e) {
+                        mReIndexStatus.mNumFailed++;
+                        ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on item "+sr.id+".  Item will not be indexed.", e);
                     }
                 }
             }
@@ -1486,9 +1490,9 @@ public class Mailbox {
             if (mReIndexStatus.mNumProcessed> 0) {
                 avg = (end - start) / mReIndexStatus.mNumProcessed;
                 mps = avg > 0 ? 1000 / avg : 0;
-            }
+            } 
             ZimbraLog.mailbox.info("Re-Indexing: Mailbox " + getId() + " COMPLETED.  Re-indexed "+mReIndexStatus.mNumProcessed
-                        +" msgs in " + (end-start) + "ms.  (avg "+avg+"ms/msg = "+mps+" msgs/sec)"
+                        +" items in " + (end-start) + "ms.  (avg "+avg+"ms/item= "+mps+" items/sec)"
                         +" ("+mReIndexStatus.mNumFailed+" failed) ");
             
             if (completionId > 0)

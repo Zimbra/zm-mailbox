@@ -48,36 +48,36 @@ public class Flag extends Tag {
     public static final int BITMASK_FROM_ME = 1 << getIndex(ID_FLAG_FROM_ME);
         static { FLAG_REP[getIndex(ID_FLAG_FROM_ME)] = 's'; }
 
-    public static final int ID_FLAG_ATTACHED = -2;
-    public static final int BITMASK_ATTACHED = 1 << getIndex(ID_FLAG_ATTACHED);
+    public static final int ID_FLAG_ATTACHED = -2; 
+    public static final int BITMASK_ATTACHED = 1 << getIndex(ID_FLAG_ATTACHED);  // 2
         static { FLAG_REP[getIndex(ID_FLAG_ATTACHED)] = 'a'; }
 
     public static final int ID_FLAG_REPLIED = -3;
-    public static final int BITMASK_REPLIED = 1 << getIndex(ID_FLAG_REPLIED);
+    public static final int BITMASK_REPLIED = 1 << getIndex(ID_FLAG_REPLIED);  // 4
         static { FLAG_REP[getIndex(ID_FLAG_REPLIED)] = 'r'; }
 
     public static final int ID_FLAG_FORWARDED = -4;
-    public static final int BITMASK_FORWARDED = 1 << getIndex(ID_FLAG_FORWARDED);
+    public static final int BITMASK_FORWARDED = 1 << getIndex(ID_FLAG_FORWARDED); // 8
         static { FLAG_REP[getIndex(ID_FLAG_FORWARDED)] = 'w'; }
 
     public static final int ID_FLAG_COPIED = -5;
-    public static final int BITMASK_COPIED = 1 << getIndex(ID_FLAG_COPIED);
+    public static final int BITMASK_COPIED = 1 << getIndex(ID_FLAG_COPIED);  // 16
         static { FLAG_REP[getIndex(ID_FLAG_COPIED)] = '2'; }
 
     public static final int ID_FLAG_FLAGGED = -6;
-    public static final int BITMASK_FLAGGED = 1 << getIndex(ID_FLAG_FLAGGED);
+    public static final int BITMASK_FLAGGED = 1 << getIndex(ID_FLAG_FLAGGED); // 32
         static { FLAG_REP[getIndex(ID_FLAG_FLAGGED)] = 'f'; }
 
     public static final int ID_FLAG_DRAFT = -7;
-    public static final int BITMASK_DRAFT = 1 << getIndex(ID_FLAG_DRAFT);
+    public static final int BITMASK_DRAFT = 1 << getIndex(ID_FLAG_DRAFT); // 64
         static { FLAG_REP[getIndex(ID_FLAG_DRAFT)] = 'd'; }
 
     public static final int ID_FLAG_DELETED = -8;
-    public static final int BITMASK_DELETED = 1 << getIndex(ID_FLAG_DELETED);
+    public static final int BITMASK_DELETED = 1 << getIndex(ID_FLAG_DELETED); // 128
         static { FLAG_REP[getIndex(ID_FLAG_DELETED)] = 'x'; }
 
     public static final int ID_FLAG_NOTIFIED = -9;
-    public static final int BITMASK_NOTIFIED = 1 << getIndex(ID_FLAG_NOTIFIED);
+    public static final int BITMASK_NOTIFIED = 1 << getIndex(ID_FLAG_NOTIFIED); // 256
         static { FLAG_REP[getIndex(ID_FLAG_NOTIFIED)] = 'n'; }
 
     /**
@@ -88,19 +88,19 @@ public class Flag extends Tag {
      * lookups of unread <code>MailItem</code>s.
      */
     public static final int ID_FLAG_UNREAD = -10;
-    public static final int BITMASK_UNREAD = 1 << getIndex(ID_FLAG_UNREAD);
+    public static final int BITMASK_UNREAD = 1 << getIndex(ID_FLAG_UNREAD); // 512
         static { FLAG_REP[getIndex(ID_FLAG_UNREAD)] = 'u'; }
 
     public static final int ID_FLAG_SUBSCRIBED = -20;
-    public static final int BITMASK_SUBSCRIBED = 1 << getIndex(ID_FLAG_SUBSCRIBED);
+    public static final int BITMASK_SUBSCRIBED = 1 << getIndex(ID_FLAG_SUBSCRIBED); // 524288
         static { FLAG_REP[getIndex(ID_FLAG_SUBSCRIBED)] = '*'; }
 
     public static final int ID_FLAG_EXCLUDE_FREEBUSY = -21;
-    public static final int BITMASK_EXCLUDE_FREEBUSY = 1 << getIndex(ID_FLAG_EXCLUDE_FREEBUSY);
+    public static final int BITMASK_EXCLUDE_FREEBUSY = 1 << getIndex(ID_FLAG_EXCLUDE_FREEBUSY); // 1048576
          static { FLAG_REP[getIndex(ID_FLAG_EXCLUDE_FREEBUSY)] = 'b'; }
 
      public static final int ID_FLAG_CHECKED = -22;
-     public static final int BITMASK_CHECKED = 1 << getIndex(ID_FLAG_CHECKED);
+     public static final int BITMASK_CHECKED = 1 << getIndex(ID_FLAG_CHECKED); // 2097152
          static { FLAG_REP[getIndex(ID_FLAG_CHECKED)] = '#'; }
 
 

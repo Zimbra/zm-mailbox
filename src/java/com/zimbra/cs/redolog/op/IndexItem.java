@@ -97,7 +97,7 @@ public class IndexItem extends RedoableOp {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         synchronized (mbox) { // temp fix for bug 11890
-            mbox.getMailboxIndex().indexItem(mbox, mDeleteFirst, mId, mType, getTimestamp(), getUnloggedReplay());
+            mbox.getMailboxIndex().redoIndexItem(mbox, mDeleteFirst, mId, mType, getTimestamp(), getUnloggedReplay());
         }
     }
 

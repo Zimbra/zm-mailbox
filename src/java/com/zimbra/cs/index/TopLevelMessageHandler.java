@@ -118,6 +118,7 @@ public final class TopLevelMessageHandler {
         
         mDocument.add(Field.Text(LuceneFields.L_MIMETYPE, "message/rfc822"));
         mDocument.add(Field.Keyword(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP));
+        mDocument.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP,   true/*store*/, true/*index*/, false/*tokenize*/));
         
         String toValue = setHeaderAsField("to", pm, LuceneFields.L_H_TO, DONT_STORE, INDEX, TOKENIZE);
         String ccValue = setHeaderAsField("cc", pm, LuceneFields.L_H_CC, DONT_STORE, INDEX, TOKENIZE);
@@ -148,11 +149,11 @@ public final class TopLevelMessageHandler {
             sortFrom = sortFrom.substring(0, DbMailItem.MAX_SENDER_LENGTH);
         String from = pm.getSender();
         
-        //                                                                          store, index, tokenize
-        mDocument.add(new Field(LuceneFields.L_H_FROM, from,                        false, true, true));
-        mDocument.add(new Field(LuceneFields.L_H_SUBJECT, subject,                  false, true, true));
+        //                                                                                                             store, index, tokenize
+        mDocument.add(new Field(LuceneFields.L_H_FROM, from,                                    false, true, true));
+        mDocument.add(new Field(LuceneFields.L_H_SUBJECT, subject,                           false, true, true));
         mDocument.add(new Field(LuceneFields.L_SORT_SUBJECT, subject.toUpperCase(), false, true, false));
-        mDocument.add(new Field(LuceneFields.L_SORT_NAME, sortFrom.toUpperCase(),   false, true, false));
+        mDocument.add(new Field(LuceneFields.L_SORT_NAME, sortFrom.toUpperCase(),    false, true, false));
 
         // calculate the fragment *before* we add non-content data
         mFragment = getFragment();

@@ -342,68 +342,47 @@ public final class MailboxIndex
         }
     }
 
-    void addDocument(IndexItem redoOp, Document doc, int mailItemId, long receivedDate,
-                boolean checkExisting) throws IOException {
-        synchronized(getLock()) {
-            addDocument(redoOp, new Document[] { doc }, mailItemId, receivedDate, checkExisting);
-        }
+    private void addDocument(IndexItem redoOp, Document doc, int indexId, long receivedDate, boolean deleteFirst) throws IOException {
+        addDocument(redoOp, new Document[] { doc }, indexId, receivedDate, deleteFirst);
     }
 
-    /**
-     * @param redoOp This API takes ownership of the redoOp and will complete it when the operation is finished.
-     * @param doc
-     * @param mailboxBlobIdStr
-     * @param receivedDate TODO
-     * @throws IOException
-     */
-    void addDocument(IndexItem redoOp, Document[] docs,
-                int mailItemId, long receivedDate,
-                boolean checkExisting)
-    throws IOException {
+    private void addDocument(IndexItem redoOp, Document[] docs, int indexId, long receivedDate, boolean deleteFirst) throws IOException {
         synchronized(getLock()) {        
             long start = 0;
             if (mLog.isDebugEnabled())
                 start = System.currentTimeMillis();
-
-            boolean doit = true;
-            if (checkExisting) {
-                boolean exists = checkMailItemExists(mailItemId);
-
-                if (exists) {
-                    doit = false;
-                    if (mLog.isDebugEnabled()) {
-                        mLog.debug("Already indexed: mailbox=" + this + ", mailboxBlob=" + mailItemId);
-                    }
+            
+            if (deleteFirst) {
+                try {
+                    deleteDocuments(new int[] { indexId });
+                } catch(IOException e) {
+                    mLog.debug("MailboxIndex.addDocument ignored IOException deleting documents (index does not exist yet?)", e);
                 }
             }
+            
+            openIndexWriter();
+            assert(mIndexWriter != null);
 
-            if (doit) {
-                openIndexWriter();
+            for (Document doc : docs) {
+                // doc can be shared by multiple threads if multiple mailboxes
+                // are referenced in a single email
+                synchronized (doc) {
+                    doc.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
+                    doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(indexId),      true/*store*/,  true/*index*/, false/*token*/));
 
-                for (Document doc : docs) {
-                    // doc can be shared by multiple threads if multiple mailboxes
-                    // are referenced in a single email
-                    synchronized (doc) {
-                        doc.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
+                    // If this doc is shared by mult threads, then the date might just be wrong,
+                    // so remove and re-add the date here to make sure the right one gets written!
+                    doc.removeFields(LuceneFields.L_DATE);
+                    String dateString = DateField.timeToString(receivedDate);
+                    doc.add(Field.Text(LuceneFields.L_DATE, dateString));
 
-                        String mailboxBlobIdStr = Integer.toString(mailItemId);
-                        doc.add(Field.Keyword(LuceneFields.L_MAILBOX_BLOB_ID, mailboxBlobIdStr));
-
-                        // If this doc is shared by mult threads, then the date might just be wrong,
-                        // so remove and re-add the date here to make sure the right one gets written!
-                        doc.removeFields(LuceneFields.L_DATE);
-                        String dateString = DateField.timeToString(receivedDate);
-                        doc.add(Field.Text(LuceneFields.L_DATE, dateString));
-
-
-                        if (null == doc.get(LuceneFields.L_ALL)) {
-                            doc.add(Field.UnStored(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE));
-                        }
-                        mIndexWriter.addDocument(doc);
-
-                        if (redoOp != null)
-                            mUncommittedRedoOps.add(redoOp);
+                    if (null == doc.get(LuceneFields.L_ALL)) {
+                        doc.add(Field.UnStored(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE));
                     }
+                    mIndexWriter.addDocument(doc);
+
+                    if (redoOp != null)
+                        mUncommittedRedoOps.add(redoOp);
                 }
 
                 if (mUncommittedRedoOps.size() > sMaxUncommittedOps) {
@@ -527,16 +506,16 @@ public final class MailboxIndex
         return ret.toString();
     }
 
-    public MailboxIndex(Mailbox mailbox, String root) throws ServiceException {
-        int mailboxId = mailbox.getId();
+    public MailboxIndex(Mailbox mbox, String root) throws ServiceException {
+        int mailboxId = mbox.getId();
         if (mLog.isDebugEnabled())
             mLog.debug("Opening Index for mailbox " + mailboxId);
 
         mIndexWriter = null;
         mMailboxId = mailboxId;
-        mMailbox = mailbox;
+        mMailbox = mbox;
 
-        Volume indexVol = Volume.getById(mailbox.getIndexVolume());
+        Volume indexVol = Volume.getById(mbox.getIndexVolume());
         String idxParentDir = indexVol.getMailboxDir(mailboxId, Volume.TYPE_INDEX);
 
         // this must be different from the idxParentDir (see the IMPORTANT comment below)
@@ -556,10 +535,10 @@ public final class MailboxIndex
                 parentDirFile.mkdirs();
 
             if (!parentDirFile.canRead()) {
-                throw ServiceException.FAILURE("Cannot READ index directory (mailbox="+mailbox.getId()+ " idxPath="+mIdxPath+")", null);
+                throw ServiceException.FAILURE("Cannot READ index directory (mailbox="+mbox.getId()+ " idxPath="+mIdxPath+")", null);
             }
             if (!parentDirFile.canWrite()) {
-                throw ServiceException.FAILURE("Cannot WRITE index directory (mailbox="+mailbox.getId()+ " idxPath="+mIdxPath+")", null);
+                throw ServiceException.FAILURE("Cannot WRITE index directory (mailbox="+mbox.getId()+ " idxPath="+mIdxPath+")", null);
             }
 
             // the Lucene code does not atomically swap the "segments" and "segments.new"
@@ -583,6 +562,13 @@ public final class MailboxIndex
         mLuceneSortSubjectAsc = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, false));
         mLuceneSortNameDesc = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, true));
         mLuceneSortNameAsc = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, false));
+        
+        String analyzerName = mbox.getAccount().getAttr(Provisioning.A_zimbraTextAnalyzer, null);
+
+        if (analyzerName != null)
+            mAnalyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
+        else
+            mAnalyzer = ZimbraAnalyzer.getDefaultAnalyzer();
     }
 
     boolean checkMailItemExists(int mailItemId) {
@@ -1493,7 +1479,7 @@ public final class MailboxIndex
     {
         HashSet msgsInMailbox = new HashSet(); // hash of all messages in my mailbox
         private MailboxIndex idx = null;
-        private ArrayList toDelete = new ArrayList(); // to be deleted from index
+        private ArrayList<Integer> toDelete = new ArrayList<Integer>(); // to be deleted from index
         DbMailItem.SearchResult compareTo = new DbMailItem.SearchResult();  
 
         ChkIndexStage1Callback(MailboxIndex idx) {
@@ -1502,6 +1488,15 @@ public final class MailboxIndex
 
         void doIndexRepair() throws IOException 
         {
+            
+            Mailbox mbox = null;
+            try {
+                mbox = MailboxManager.getInstance().getMailboxById(idx.mMailboxId);
+            } catch (ServiceException e) {
+                mLog.error("Could not get mailbox: "+idx.mMailboxId+" aborting index repair");
+                return;
+            }
+                
             // delete first -- that way if there were any re-indexes along the way we know we're OK
             if (toDelete.size() > 0) {
                 mLog.info("There are "+toDelete.size()+" items to delete");
@@ -1511,7 +1506,8 @@ public final class MailboxIndex
                 }
                 idx.deleteDocuments(ids);
             }
-
+            
+            
             // if there any messages left in this list, then they are missing from the index and 
             // we should try to reindex them
             if (msgsInMailbox.size() > 0)
@@ -1521,9 +1517,11 @@ public final class MailboxIndex
                     DbMailItem.SearchResult cur = (DbMailItem.SearchResult)iter.next();
 
                     try {
-                        Mailbox mbox = MailboxManager.getInstance().getMailboxById(idx.mMailboxId);
-                        idx.reIndexItem(mbox, cur.id, cur.type, false);
-                    } catch(ServiceException e) {
+                        MailItem item = mbox.getItemById(null, cur.id, cur.type);
+                        item.reindex(null, false /* already deleted above */, null);
+                    } catch(ServiceException  e) {
+                        mLog.info("Couldn't index "+compareTo.id+" caught ServiceException", e);
+                    } catch(java.lang.RuntimeException e) {
                         mLog.info("Couldn't index "+compareTo.id+" caught ServiceException", e);
                     }
                 }
@@ -1818,9 +1816,7 @@ public final class MailboxIndex
                 }
 
                 mLog.info("Stage 3 Verification complete for Mailbox "+this.mMailboxId);
-
             }
-
         }
     }
 
@@ -1855,7 +1851,6 @@ public final class MailboxIndex
         } finally {
             reader.release();
         }
-
     }
 
     void hackIndex() throws IOException
@@ -1957,7 +1952,13 @@ public final class MailboxIndex
     }
 
 
-    public void indexItem(Mailbox mbox, boolean deleteFirst, int itemId, byte itemType, long timestamp, boolean noRedo)
+   
+    /**
+     * Entry point for Redo-logging system only.  Everybody else should use MailItem.reindex()
+     * 
+     * @throws ServiceException
+     */
+    public void redoIndexItem(Mailbox mbox, boolean deleteFirst, int itemId, byte itemType, long timestamp, boolean noRedo)
     throws IOException, ServiceException {
         MailItem item;
         try {
@@ -1992,18 +1993,19 @@ public final class MailboxIndex
                                 document.getName(), 
                                 document.getContentType(),
                                 timestamp);
-                    indexDocument(mbox, redo, deleteFirst, itemId, pd);
+                    indexDocument(mbox, redo, deleteFirst, pd, document);
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("indexDocument caught Exception", e);
                 }
                 break;
             case MailItem.TYPE_MESSAGE:
-                InputStream is = mbox.getMessageById(null, itemId).getRawMessage();
+                Message msg =  mbox.getMessageById(null, itemId);
+                InputStream is =msg.getRawMessage();
                 MimeMessage mm;
                 try {
                     mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
                     ParsedMessage pm = new ParsedMessage(mm, timestamp, mbox.attachmentsIndexingEnabled());
-                    indexMessage(mbox, redo, deleteFirst, itemId, pm);
+                    indexMessage(mbox, redo, deleteFirst, pm, msg);
                 } catch (Throwable e) {
                     mLog.warn("Skipping indexing; Unable to parse message " + itemId + ": " + e.toString(), e);
                     // Eat up all errors during message analysis.  Throwing
@@ -2021,10 +2023,10 @@ public final class MailboxIndex
                 }
                 break;
             case MailItem.TYPE_CONTACT:
-                indexContact(mbox, redo, deleteFirst, itemId, (Contact) item);
+                indexContact(mbox, redo, deleteFirst, (Contact) item);
                 break;
             case MailItem.TYPE_NOTE:
-                indexNote(mbox, redo, deleteFirst, itemId, (Note) item);
+                indexNote(mbox, redo, deleteFirst, (Note) item);
                 break;
             default:
                 if (redo != null)
@@ -2040,25 +2042,18 @@ public final class MailboxIndex
      * @param pm
      * @throws ServiceException
      */
-    public void indexMessage(Mailbox mbox, IndexItem redo, boolean deleteFirst, int messageId, ParsedMessage pm)
+    public void indexMessage(Mailbox mbox, IndexItem redo, boolean deleteFirst, ParsedMessage pm, Message msg)
     throws ServiceException {
         initAnalyzer(mbox);
-        synchronized(getLock()) {        
-
-            if (deleteFirst) {
-                try {
-                    deleteDocuments(new int[] { messageId });
-                } catch(IOException e) {
-                    mLog.debug("indexMessage ignored IOException deleting documents (index does not exist yet?)", e);
-                }
-            }
+        synchronized(getLock()) {
+            int indexId = msg.getIndexId();
 
             try {
                 List<Document> docList = pm.getLuceneDocuments();
                 if (docList != null) {
                     Document[] docs = new Document[docList.size()];
                     docs = docList.toArray(docs);
-                    addDocument(redo, docs, messageId, pm.getReceivedDate(), false);
+                    addDocument(redo, docs, indexId, pm.getReceivedDate(), deleteFirst);
                 }
             } catch (IOException e) {
                 throw ServiceException.FAILURE("indexMessage caught IOException", e);
@@ -2080,15 +2075,15 @@ public final class MailboxIndex
      * @param contact
      * @throws ServiceException
      */
-    public void indexContact(Mailbox mbox, IndexItem redo, boolean deleteFirst, int mailItemId, Contact contact)
-    throws ServiceException {
+    public void indexContact(Mailbox mbox, IndexItem redo, boolean deleteFirst, Contact contact) throws ServiceException {
         initAnalyzer(mbox);
         synchronized(getLock()) {        
-
             if (mLog.isDebugEnabled()) {
                 mLog.debug("indexContact("+contact+")");
             }
             try {
+                int indexId = contact.getIndexId();
+                
                 StringBuffer contentText = new StringBuffer();
                 Map m = contact.getFields();
                 for (Iterator it = m.values().iterator(); it.hasNext(); )
@@ -2097,14 +2092,6 @@ public final class MailboxIndex
 
                     contentText.append(cur);
                     contentText.append(' ');
-                }
-
-                if (deleteFirst) {
-                    try {
-                        deleteDocuments(new int[] { mailItemId });
-                    } catch (IOException e) {
-                        mLog.debug("indexContact ignored IOException deleting documents (index does not exist yet?)", e);
-                    }
                 }
 
                 Document doc = new Document();
@@ -2131,19 +2118,18 @@ public final class MailboxIndex
                 doc.add(new Field(LuceneFields.L_H_TO, emailStr,                                               false/*store*/, true/*index*/, true/*token*/));
 
                 /* put the name in the "From" field since the MailItem table uses 'Sender'*/
-                doc.add(new Field(LuceneFields.L_H_FROM, name,                                                  false/*store*/, true/*index*/, false/*token*/ ));
+                doc.add(new Field(LuceneFields.L_H_FROM, name,                                                  false/*store*/, true/*index*/, true/*token*/ ));
 
                 /* bug 11831 - put contact searchable data in its own field so wildcard search works better  */
                 doc.add(new Field(LuceneFields.L_CONTACT_DATA, searchText.toString(),                false/*store*/, true/*index*/, true/*token*/));
 
                 doc.add(new Field(LuceneFields.L_CONTENT, contentText.toString(),                      false/*store*/, true/*index*/, true/*token*/));
                 doc.add(new Field(LuceneFields.L_H_SUBJECT, subj,                                              false/*store*/, true/*index*/, true/*token*/));
-                doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(mailItemId), true/*store*/,  true/*index*/, false/*token*/));
                 doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT,       true/*store*/,  true/*index*/, true/*token*/));
                 doc.add(new Field(LuceneFields.L_SORT_SUBJECT, subj.toUpperCase(),                     true/*store*/,  true/*index*/, false /*token*/));
                 doc.add(new Field(LuceneFields.L_SORT_NAME, name.toUpperCase(),                         false/*store*/, true/*index*/, false /*token*/));
 
-                addDocument(redo, doc, mailItemId, contact.getDate(), false);
+                addDocument(redo, doc, indexId, contact.getDate(), deleteFirst);
 
             } catch (IOException ioe) {
                 throw ServiceException.FAILURE("indexContact caught IOException", ioe);
@@ -2152,13 +2138,12 @@ public final class MailboxIndex
     }    
 
 
-
     /**
      * Index a Note in the specified mailbox.
      * 
      * @throws ServiceException
      */
-    public void indexNote(Mailbox mbox, IndexItem redo, boolean deleteFirst, int mailItemId, Note note)
+    public void indexNote(Mailbox mbox, IndexItem redo, boolean deleteFirst, Note note)
     throws ServiceException {
         initAnalyzer(mbox);
         synchronized(getLock()) {        
@@ -2167,17 +2152,10 @@ public final class MailboxIndex
             }
             try {
                 String toIndex = note.getContent();
+                int indexId = note.getIndexId(); 
 
                 if (mLog.isDebugEnabled()) {
                     mLog.debug("Note value=\""+toIndex+"\"");
-                }
-
-                if (deleteFirst) {
-                    try {
-                        deleteDocuments(new int[] { mailItemId });
-                    } catch(IOException e) {
-                        mLog.debug("indexNote ignored IOException deleting documents (index does not exist yet?)", e);
-                    }
                 }
 
                 Document doc = new Document();
@@ -2186,9 +2164,8 @@ public final class MailboxIndex
                 String subj = toIndex.toLowerCase();
                 String name = (subj != null && subj.length() > DbMailItem.MAX_SENDER_LENGTH ? subj.substring(0, DbMailItem.MAX_SENDER_LENGTH) : subj);
 
-                doc.add(Field.UnStored(LuceneFields.L_H_SUBJECT, subj));
-                doc.add(Field.Keyword(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(mailItemId)));
-                doc.add(Field.Text(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE));
+                doc.add(new Field(LuceneFields.L_H_SUBJECT, subj,                                              false/*store*/, true/*index*/, true/*token*/));
+                doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE,            true/*store*/, true/*index*/, false/*tokenize*/));
 
                 doc.add(new Field(LuceneFields.L_SORT_SUBJECT, subj.toUpperCase(), false/*store*/, true/*index*/, false /*token*/));
                 doc.add(new Field(LuceneFields.L_SORT_NAME, name.toUpperCase(), false/*store*/, true/*index*/, false /*token*/));
@@ -2197,7 +2174,7 @@ public final class MailboxIndex
 //              mLog.debug("Note date is: "+dateString);
 //              doc.add(Field.Text(LuceneFields.L_DATE, dateString));
 
-                addDocument(redo, doc, mailItemId, note.getDate(), false);
+                addDocument(redo, doc, indexId, note.getDate(), deleteFirst);
 
             } catch (IOException e) {
                 throw ServiceException.FAILURE("indexNote caught IOException", e);
@@ -2205,77 +2182,19 @@ public final class MailboxIndex
         }
     }    
 
-    public void indexDocument(Mailbox mbox, IndexItem redo, boolean deleteFirst, int mailItemId, ParsedDocument pd)
-    throws ServiceException {
-
+    public void indexDocument(Mailbox mbox, IndexItem redo, boolean deleteFirst, 
+                ParsedDocument pd, com.zimbra.cs.mailbox.Document doc)  throws ServiceException {
         initAnalyzer(mbox);
         synchronized(getLock()) {        
-
-
             try {
-                if (deleteFirst) {
-                    try {
-                        deleteDocuments(new int[] { mailItemId });
-                    } catch(IOException e) {
-                        mLog.debug("indexDocument ignored IOException deleting documents (index does not exist yet?)", e);
-                    }
-                }
-                addDocument(redo, pd.getDocument(), mailItemId, pd.getCreatedDate(), false);
+                int indexId = doc.getIndexId();
+                addDocument(redo, pd.getDocument(), indexId, pd.getCreatedDate(), deleteFirst);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("indexDocument caught Exception", e);
             }
         }
     }
-
-    /**
-     * @param msgId
-     * @param type 
-     * 
-     * @throws IOException
-     * @throws ServiceException
-     */
-    public void reIndexItem(Mailbox mbox, int msgId, byte type, boolean deleteFirst) throws ServiceException
-    {
-        initAnalyzer(mbox);
-        synchronized(getLock()) {        
-
-            MailItem item = null;
-            try {
-                item = mbox.getItemById(null, msgId, type);
-                ParsedMessage pm = null;
-                if (item instanceof Message) {
-                    Message msg = (Message)item;
-
-                    // force the pm's received-date to be the correct one
-                    long msgDate = item.getDate();
-                    pm = new ParsedMessage(msg.getMimeMessage(), msgDate, mbox.attachmentsIndexingEnabled());
-
-                    // because of bug 8263, we sometimes have fragments that are incorrect:
-                    // check them here and correct them if necessary
-                    if (pm.getFragment().compareTo(msg.getFragment()) != 0) {
-                        mbox.reanalyze(msg.getId(), msg.getType(),  pm);
-                    }
-
-                    item.reindex(null, deleteFirst, pm);
-                } else if (item.getType() == MailItem.TYPE_DOCUMENT || item.getType() == MailItem.TYPE_WIKI) {
-                    com.zimbra.cs.mailbox.Document doc = (com.zimbra.cs.mailbox.Document) item;
-                    try {
-                        byte[] buf = ByteUtil.getContent(doc.getRawDocument(), 0);
-                        ParsedDocument pd = new ParsedDocument(buf, doc.getDigest(), doc.getName(), doc.getContentType(), doc.getChangeDate());
-                        item.reindex(null, deleteFirst, pd);
-                    } catch (IOException ioe) {
-                        throw ServiceException.FAILURE("reIndexItem caught IOException", ioe);
-                    }
-                } else {
-                    item.reindex(null, deleteFirst, null);
-                }
-
-            } catch (java.lang.RuntimeException e) {
-                throw ServiceException.FAILURE("Error re-indexing message "+msgId, e);
-            }
-        }
-    }
-
+    
     final Object getLock() {
         if (sNewLockModel)
             return mMailbox;

@@ -78,17 +78,17 @@ public class ParsedMessage {
     private List<MPartInfo> mMessageParts;
     private String mRecipients;
     private String mSender;
-    
+
     private ParsedAddress mParsedSender;
-	private boolean mHasAttachments = false;
-	private String mFragment = "";
-	private long mDateHeader = -1;
+    private boolean mHasAttachments = false;
+    private String mFragment = "";
+    private long mDateHeader = -1;
     private long mReceivedDate = -1;
     private String mSubject;
     private String mNormalizedSubject;
-	private boolean mSubjectPrefixed;
-	private List<Document> mLuceneDocuments;
-	private ZVCalendar miCalendar;
+    private boolean mSubjectPrefixed;
+    private List<Document> mLuceneDocuments;
+    private ZVCalendar miCalendar;
 
     // m*Raw* should only be assigned by setRawData so these fields can kept in sync
     private byte[] mRawData;
@@ -98,13 +98,13 @@ public class ParsedMessage {
 
     public ParsedMessage(MimeMessage msg, boolean indexAttachments) {
         this(msg, getZimbraDateHeader(msg), indexAttachments);
-	}
+    }
 
     public ParsedMessage(MimeMessage msg, long receivedDate, boolean indexAttachments) {
         mIndexAttachments = indexAttachments;
         mMimeMessage = mExpandedMessage = msg;
         // FIXME: not running mutators yet because of exception throwing!
-//        runMimeMutators();
+//      runMimeMutators();
         // must set received-date before Lucene document is initialized
         setReceivedDate(receivedDate);
     }
@@ -163,7 +163,7 @@ public class ParsedMessage {
      * @return the ParsedMessage itself
      * @throws ServiceException 
      * @see #runMimeConverters() */
-	private ParsedMessage parse() throws ServiceException {
+    private ParsedMessage parse() throws ServiceException {
         if (mParsed)
             return this;
         mParsed = true;
@@ -176,7 +176,7 @@ public class ParsedMessage {
         }
         // do an on-the-fly temporary expansion of the raw message (uudecode, tnef-decode, etc.)
         runMimeConverters();
-		try {
+        try {
             mMessageParts = Mime.getParts(mExpandedMessage);
             mHasAttachments = Mime.hasAttachment(mMessageParts);
         } catch (Exception e) {
@@ -207,8 +207,8 @@ public class ParsedMessage {
             } catch (Exception e) {
                 ZimbraLog.misc.warn("exception ignored running mutator; skipping", e);
             }
-        mMutatorsRun = true;
-        return !rawInvalid;
+            mMutatorsRun = true;
+            return !rawInvalid;
     }
 
     /** Applies all registered on-the-fly MIME converters to a copy of the
@@ -228,39 +228,39 @@ public class ParsedMessage {
                 try { forkMimeMessage(); } catch (Exception e) { }  return false;
             } };
 
-        try {
-            // first, find out if *any* of the converters would be triggered (but don't change the message)
-            for (Class vclass : MimeVisitor.getConverters()) {
-                if (mExpandedMessage == mMimeMessage)
-                    ((MimeVisitor) vclass.newInstance()).setCallback(forkCallback).accept(mMimeMessage);
-                // if there are attachments to be expanded, expand them in the MimeMessage *copy*
-                if (mExpandedMessage != mMimeMessage)
-                    ((MimeVisitor) vclass.newInstance()).accept(mExpandedMessage);
+            try {
+                // first, find out if *any* of the converters would be triggered (but don't change the message)
+                for (Class vclass : MimeVisitor.getConverters()) {
+                    if (mExpandedMessage == mMimeMessage)
+                        ((MimeVisitor) vclass.newInstance()).setCallback(forkCallback).accept(mMimeMessage);
+                    // if there are attachments to be expanded, expand them in the MimeMessage *copy*
+                    if (mExpandedMessage != mMimeMessage)
+                        ((MimeVisitor) vclass.newInstance()).accept(mExpandedMessage);
+                }
+            } catch (Exception e) {
+                // roll back if necessary
+                mExpandedMessage = mMimeMessage;
+                sLog.warn("exception while converting message; message will be analyzed unconverted", e);
             }
-        } catch (Exception e) {
-            // roll back if necessary
-            mExpandedMessage = mMimeMessage;
-            sLog.warn("exception while converting message; message will be analyzed unconverted", e);
-        }
 
-        return mExpandedMessage == mMimeMessage;
+            return mExpandedMessage == mMimeMessage;
     }
 
     public ParsedMessage analyze() throws ServiceException {
         parse();
-		try {
-    		analyzeMessage();   // figure out everything about this message
+        try {
+            analyzeMessage();   // figure out everything about this message
         } catch (ServiceException e) {
             throw e;
-		} catch (Exception e) {
+        } catch (Exception e) {
             sLog.warn("exception while analyzing message; message will be partially indexed", e);
-		}
+        }
         return this;
-	}
+    }
 
-	public MimeMessage getMimeMessage() {
-		return mMimeMessage;
-	}
+    public MimeMessage getMimeMessage() {
+        return mMimeMessage;
+    }
 
     void forkMimeMessage() throws MessagingException {
         mExpandedMessage = new Mime.FixedMimeMessage(mMimeMessage);
@@ -294,7 +294,7 @@ public class ParsedMessage {
         mimeToRaw();
         return mRawData.length;
     }
-    
+
     public byte[] getRawData() throws MessagingException, IOException {
         mimeToRaw();
         return mRawData;
@@ -307,18 +307,18 @@ public class ParsedMessage {
 
     public List<MPartInfo> getMessageParts() throws ServiceException {
         parse();
-    	return mMessageParts;
+        return mMessageParts;
     }
 
-	public boolean hasAttachments() throws ServiceException {
+    public boolean hasAttachments() throws ServiceException {
         parse();
-		return mHasAttachments;
-	}
+        return mHasAttachments;
+    }
 
-	public boolean isReply() {
+    public boolean isReply() {
         normalizeSubject();
-		return mSubjectPrefixed;
-	}
+        return mSubjectPrefixed;
+    }
 
     public String getSubject() {
         normalizeSubject();
@@ -330,14 +330,14 @@ public class ParsedMessage {
         return mNormalizedSubject;
     }
 
-	public String getFragment() {
+    public String getFragment() {
         try {
             analyze();
         } catch (ServiceException e) {
             sLog.warn("Message analysis failed when getting fragment; fragment is: " + mFragment);
         }
-		return mFragment;
-	}
+        return mFragment;
+    }
 
     public String getMessageID() {
         try {
@@ -347,7 +347,7 @@ public class ParsedMessage {
             return null;
         }
     }
-    
+
     public String getHeader(String headerName) {
         try {
             String value = getMimeMessage().getHeader(headerName, null);
@@ -356,7 +356,7 @@ public class ParsedMessage {
             try {
                 value = MimeUtility.decodeText(value);
             } catch (UnsupportedEncodingException e) { }
-            
+
             return value;
         } catch (MessagingException e) {
             return "";
@@ -390,13 +390,13 @@ public class ParsedMessage {
                 try {
                     sender = mMimeMessage.getHeader("Sender", null);
                 } catch (MessagingException e2) { }
-            if (sender == null)
-                sender = "";
-            try {
-                mSender = MimeUtility.decodeText(sender);
-            } catch (UnsupportedEncodingException e1) {
-                mSender = sender;
-            }
+                if (sender == null)
+                    sender = "";
+                try {
+                    mSender = MimeUtility.decodeText(sender);
+                } catch (UnsupportedEncodingException e1) {
+                    mSender = sender;
+                }
         }
         return mSender;
     }
@@ -422,19 +422,19 @@ public class ParsedMessage {
     }
 
     public long getDateHeader() {
-		if (mDateHeader != -1)
-			return mDateHeader;
-		mDateHeader = getReceivedDate();
-		try {
-		    Date dateHeader = mMimeMessage.getSentDate();
-		    if (dateHeader != null) {
+        if (mDateHeader != -1)
+            return mDateHeader;
+        mDateHeader = getReceivedDate();
+        try {
+            Date dateHeader = mMimeMessage.getSentDate();
+            if (dateHeader != null) {
                 // prevent negative dates, which Lucene can't deal with
-		        mDateHeader = Math.max(dateHeader.getTime(), 0);
+                mDateHeader = Math.max(dateHeader.getTime(), 0);
             }
-		} catch (MessagingException e) { }
+        } catch (MessagingException e) { }
 
         return mDateHeader;
-	}
+    }
 
     private void setReceivedDate(long date) {
         if (date == -1)
@@ -477,8 +477,8 @@ public class ParsedMessage {
         } catch (ServiceException e) {
             sLog.warn("message analysis failed when getting lucene documents");
         }
-		return mLuceneDocuments;
-	}
+        return mLuceneDocuments;
+    }
 
     /**
      * Returns the iCalendar object that is parsed from the
@@ -497,8 +497,8 @@ public class ParsedMessage {
         }
         return miCalendar;
     }
-    
-	private void analyzeMessage() throws MessagingException, ServiceException {
+
+    private void analyzeMessage() throws MessagingException, ServiceException {
         if (mAnalyzed)
             return;
         mAnalyzed = true;
@@ -506,14 +506,14 @@ public class ParsedMessage {
         mLuceneDocuments = new ArrayList<Document>();
 
         if (DebugConfig.disableMessageAnalysis) {
-			// Note this also suppresses fragment support in conversation
-			// feature.  (see getFragment() call at end of this method)
-			return;
-		}
+            // Note this also suppresses fragment support in conversation
+            // feature.  (see getFragment() call at end of this method)
+            return;
+        }
 
-		Set<MPartInfo> mpiBodies = Mime.getBody(mMessageParts, false);
+        Set<MPartInfo> mpiBodies = Mime.getBody(mMessageParts, false);
 
-		TopLevelMessageHandler allTextHandler = new TopLevelMessageHandler(mMessageParts);
+        TopLevelMessageHandler allTextHandler = new TopLevelMessageHandler(mMessageParts);
 
         int numParseErrors = 0;
         ServiceException conversionError = null;
@@ -527,53 +527,53 @@ public class ParsedMessage {
             if (reportRoot == null && mpi.getContentType().equals(Mime.CT_MULTIPART_REPORT))
                 reportRoot = partName.endsWith("TEXT") ? partName.substring(0, partName.length() - 4) : partName + ".";
 
-            try {
-                analyzePart(mpi, mpiBodies, allTextHandler, reportRoot != null);
-            } catch (MimeHandlerException e) {
-                numParseErrors++;
-                String pn = mpi.getPartName();
-                String ctype = mpi.getContentType();
-                String msgid = getMessageID();
-                sLog.warn("Parse error on MIME part " + pn +
-                          " (" + ctype + ", Message-ID: " + msgid + ")", e);
-                if (ConversionException.isTemporaryCauseOf(e) && conversionError == null) {
-                    conversionError = ServiceException.FAILURE("failed to analyze part", e.getCause());
+                try {
+                    analyzePart(mpi, mpiBodies, allTextHandler, reportRoot != null);
+                } catch (MimeHandlerException e) {
+                    numParseErrors++;
+                    String pn = mpi.getPartName();
+                    String ctype = mpi.getContentType();
+                    String msgid = getMessageID();
+                    sLog.warn("Parse error on MIME part " + pn +
+                                " (" + ctype + ", Message-ID: " + msgid + ")", e);
+                    if (ConversionException.isTemporaryCauseOf(e) && conversionError == null) {
+                        conversionError = ServiceException.FAILURE("failed to analyze part", e.getCause());
+                    }
+                } catch (ObjectHandlerException e) {
+                    numParseErrors++;
+                    String pn = mpi.getPartName();
+                    String ct = mpi.getContentType();
+                    String msgid = getMessageID();
+                    sLog.warn("Parse error on MIME part " + pn +
+                                " (" + ct + ", Message-ID: " + msgid + ")", e);
                 }
-            } catch (ObjectHandlerException e) {
-                numParseErrors++;
-                String pn = mpi.getPartName();
-                String ct = mpi.getContentType();
-                String msgid = getMessageID();
-                sLog.warn("Parse error on MIME part " + pn +
-                          " (" + ct + ", Message-ID: " + msgid + ")", e);
-            }
-		}
+        }
         if (miCalendar != null)
             allTextHandler.hasCalendarPart(true);
         if (numParseErrors > 0) {
             String msgid = getMessageID();
             String sbj = getSubject();
             sLog.warn("Message had parse errors in " + numParseErrors +
-                      " parts (Message-Id: " + msgid + ", Subject: " + sbj + ")");
+                        " parts (Message-Id: " + msgid + ", Subject: " + sbj + ")");
         }
         mLuceneDocuments.add(allTextHandler.getDocument(this));
 
         for (Document doc : mLuceneDocuments) {
-    		if (doc != null) {
-    			// foreach doc we are adding, add domains of message
-    			//msgHandler.setEmailDomainsField(doc);
-    			allTextHandler.setLuceneHeadersFromContainer(doc, this);
-    		}
-    	}
+            if (doc != null) {
+                // foreach doc we are adding, add domains of message
+                //msgHandler.setEmailDomainsField(doc);
+                allTextHandler.setLuceneHeadersFromContainer(doc, this);
+            }
+        }
 
-		mFragment = allTextHandler.getFragment();
-        
+        mFragment = allTextHandler.getFragment();
+
         // this is the first conversion error we encountered when analyzing all the parts
         // raise it at the end so that we have any calendar info parsed 
         if (conversionError != null) {
             throw conversionError;
         }
-	}
+    }
 
     private void analyzePart(MPartInfo mpi, Set<MPartInfo> mpiBodies, TopLevelMessageHandler allTextHandler, boolean ignoreCalendar)
     throws MimeHandlerException, ObjectHandlerException, MessagingException, ServiceException {
@@ -646,15 +646,15 @@ public class ParsedMessage {
 
     // these *should* be taken from a properties file
     private static final Set<String> CALENDAR_PREFIXES = new HashSet<String>(Arrays.asList(new String[] {
-            "Accept:", "Accepted:", "Decline:", "Declined:", "Tentative:", "Cancelled:", "CANCELLED:", "New Time Proposed:"
+                "Accept:", "Accepted:", "Decline:", "Declined:", "Tentative:", "Cancelled:", "CANCELLED:", "New Time Proposed:"
     }));
     private static final String FWD_TRAILER = "(fwd)";
 
     private static final int MAX_PREFIX_LENGTH = 3;
 
-	private static String trimPrefixes(String subject) {
-		while (true) {
-			int length = subject.length();
+    private static String trimPrefixes(String subject) {
+        while (true) {
+            int length = subject.length();
             // first, strip off any "(fwd)" at the end
             while (subject.endsWith(FWD_TRAILER)) {
                 subject = subject.substring(0, length - FWD_TRAILER.length()).trim();
@@ -664,7 +664,7 @@ public class ParsedMessage {
                 return subject;
 
             // find the first ':' in the subject
-    		boolean braced = subject.charAt(0) == '[';
+            boolean braced = subject.charAt(0) == '[';
             int colon = subject.indexOf(':');
             if (colon <= (braced ? 1 : 0))
                 return subject;
@@ -677,27 +677,27 @@ public class ParsedMessage {
             else {
                 // make sure to catch "re(2):" and "fwd[5]:" as well...
                 int paren = -1;
-            	for (int i = 0; matched && i < prefix.length() - 1; i++) {
+                for (int i = 0; matched && i < prefix.length() - 1; i++) {
                     char c = prefix.charAt(i);
                     if ((c == '(' || c == '[') && i > 0 && paren == -1)
                         paren = i;
                     else if ((c == ')' || c == ']') && paren != -1)
                         matched &= i > paren + 1 && i == prefix.length() - 2;
-                    else if (!Character.isLetter(c))
-                    	matched &= c >= '0' && c <= '9' && paren != -1;
-                    else if (i >= MAX_PREFIX_LENGTH || paren != -1)
-                        matched = false;
-            	}
+                        else if (!Character.isLetter(c))
+                            matched &= c >= '0' && c <= '9' && paren != -1;
+                            else if (i >= MAX_PREFIX_LENGTH || paren != -1)
+                                matched = false;
+                }
             }
 
-			if (!matched)
-				return subject;
-			if (braced && subject.endsWith("]"))
-				subject = subject.substring(colon + 1, length - 1).trim();
-			else
-				subject = subject.substring(colon + 1).trim();
-		}
-	}
+            if (!matched)
+                return subject;
+            if (braced && subject.endsWith("]"))
+                subject = subject.substring(colon + 1, length - 1).trim();
+            else
+                subject = subject.substring(colon + 1).trim();
+        }
+    }
 
     private static String compressWhitespace(String value) {
         if (value == null || value.equals(""))
@@ -715,36 +715,36 @@ public class ParsedMessage {
         return sb.toString();
     }
 
-	private void normalizeSubject() {
+    private void normalizeSubject() {
         if (mNormalizedSubject != null)
             return;
-		mSubjectPrefixed = false;
-		try {
-			mNormalizedSubject = mSubject = mMimeMessage.getSubject();
-		} catch (MessagingException e) { }
-		if (mSubject == null)
-			mNormalizedSubject = mSubject = "";
-		else {
-			String originalSubject = mNormalizedSubject = StringUtil.stripControlCharacters(mNormalizedSubject).trim();
-			mNormalizedSubject = trimPrefixes(mNormalizedSubject);
-			if (mNormalizedSubject != originalSubject)
-				mSubjectPrefixed = true;
+        mSubjectPrefixed = false;
+        try {
+            mNormalizedSubject = mSubject = mMimeMessage.getSubject();
+        } catch (MessagingException e) { }
+        if (mSubject == null)
+            mNormalizedSubject = mSubject = "";
+        else {
+            String originalSubject = mNormalizedSubject = StringUtil.stripControlCharacters(mNormalizedSubject).trim();
+            mNormalizedSubject = trimPrefixes(mNormalizedSubject);
+            if (mNormalizedSubject != originalSubject)
+                mSubjectPrefixed = true;
 
-			// handle mailing list prefixes like "[xmlbeans-dev] Re: foo"
-			if (mNormalizedSubject.startsWith("[")) {
-				int endBracket = mNormalizedSubject.indexOf(']');
-				if (endBracket != -1 && mNormalizedSubject.length() > endBracket + 1) {
-					String realSubject = originalSubject = mNormalizedSubject.substring(endBracket + 1).trim();
-					realSubject = trimPrefixes(realSubject);
-					if (realSubject != originalSubject)
-						mSubjectPrefixed = true;
-					mNormalizedSubject = mNormalizedSubject.substring(0, endBracket + 1) + ' ' + realSubject;
-				}
-			}
+            // handle mailing list prefixes like "[xmlbeans-dev] Re: foo"
+            if (mNormalizedSubject.startsWith("[")) {
+                int endBracket = mNormalizedSubject.indexOf(']');
+                if (endBracket != -1 && mNormalizedSubject.length() > endBracket + 1) {
+                    String realSubject = originalSubject = mNormalizedSubject.substring(endBracket + 1).trim();
+                    realSubject = trimPrefixes(realSubject);
+                    if (realSubject != originalSubject)
+                        mSubjectPrefixed = true;
+                    mNormalizedSubject = mNormalizedSubject.substring(0, endBracket + 1) + ' ' + realSubject;
+                }
+            }
 
             mNormalizedSubject = compressWhitespace(mNormalizedSubject);
-		}
-	}
+        }
+    }
 
     public static String normalize(String subject) {
         if (subject != null) {
