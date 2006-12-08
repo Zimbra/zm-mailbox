@@ -98,7 +98,7 @@ public final class SearchParams {
 
     public void setTypesStr(String groupByStr) throws ServiceException {
         mGroupByStr = groupByStr;
-        types = MailboxIndex.parseGroupByString(getTypesStr());
+        types = MailboxIndex.parseTypesString(getTypesStr());
     }
     public void setTypes(byte[] _types) { 
         types = _types;

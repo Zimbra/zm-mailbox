@@ -131,7 +131,7 @@ public abstract class Formatter {
                 String searchTypes = context.getTypesString();
                 if (searchTypes == null)
                     searchTypes = getDefaultSearchTypes();
-                byte[] types = MailboxIndex.parseGroupByString(searchTypes);
+                byte[] types = MailboxIndex.parseTypesString(searchTypes);
                 ZimbraQueryResults results = context.targetMailbox.search(context.opContext, query, types, MailboxIndex.SortBy.DATE_DESCENDING, 500);
                 return new QueryResultIterator(results);                
             } catch (IOException e) {

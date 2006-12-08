@@ -1264,7 +1264,7 @@ public final class MailboxIndex
         }
     }
 
-    public static byte[] parseGroupByString(String groupBy) throws ServiceException
+    public static byte[] parseTypesString(String groupBy) throws ServiceException
     {
         String[] strs = groupBy.split("\\s*,\\s*");
 

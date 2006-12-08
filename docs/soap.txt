@@ -886,7 +886,7 @@ if recip="1" is specified
 
    {group-by} = DEPRECATED.  Use TYPES instead.	
    {types} 	= comma-separated list.  Legal values are:
-               conversation|message|contact|appointment|note
+               conversation|message|contact|appointment|task|note|wiki|document
                (default is "conversation")
 
         **NOTE: only ONE of message, conversation may be set. If

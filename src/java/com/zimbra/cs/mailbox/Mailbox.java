@@ -1314,7 +1314,7 @@ public class Mailbox {
             // Version 1.0->1.1 Re-Index all contacts 
             Set<Byte> types = new HashSet<Byte>();
             types.add(MailItem.TYPE_CONTACT);
-            reIndex(null, types, COMPLETED_REINDEX_CONTACTS_V1_1); 
+            reIndex(null, types, null, COMPLETED_REINDEX_CONTACTS_V1_1); 
         }
     }
 
@@ -1333,17 +1333,6 @@ public class Mailbox {
         return mReIndexStatus;
     }
     
-    /**
-     * Re-Index all items in this mailbox.  This can be a *very* expensive operation (upwards of an hour to run
-     * on a large mailbox on slow hardware).  We are careful to unlock the mailbox periodically so that the
-     * mailbox can still be accessed while the reindex is running, albeit at a slower rate.
-     * 
-     * @throws ServiceException
-     */
-    public void reIndex() throws ServiceException {
-        reIndex(null, null, 0);
-    }
-
     private static final int COMPLETED_REINDEX_CONTACTS_V1_1 = 100;
     
     /**
@@ -1375,16 +1364,24 @@ public class Mailbox {
     }
 
     /**
-     * @param octxt
+     * Re-Index all items in this mailbox.  This can be a *very* expensive operation (upwards of an hour to run
+     * on a large mailbox on slow hardware).  We are careful to unlock the mailbox periodically so that the
+     * mailbox can still be accessed while the reindex is running, albeit at a slower rate.
+     * 
      * @param typesOrNull  If NULL then all items are re-indexed, otherwise only the specified types are reindexed.
+     * @param itemIdsOrNull List of ItemIDs to reindex.  If this is specified, typesOrNull MUST be null
      * @param completionId Since this is a long-running operation (and it might conceivably be interrupted and then
      *                              run after a server restart) the caller can pass a completionId to this function.  When the
      *                              re-indexing has completed, the Mailbox's Completion() function is called with the passed-in
      *                              Integer.  A value of '0' means "don't run a completion function".
      * @throws ServiceException
      */
-    public void reIndex(OperationContext octxt, Set<Byte> typesOrNull, int completionId) throws ServiceException {
-        ReindexMailbox redoRecorder = new ReindexMailbox(mId, typesOrNull, completionId);
+    public void reIndex(OperationContext octxt, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, int completionId) throws ServiceException {
+        ReindexMailbox redoRecorder = new ReindexMailbox(mId, typesOrNull, itemIdsOrNull, completionId);
+        
+        if (typesOrNull != null && itemIdsOrNull != null)
+            throw ServiceException.INVALID_REQUEST("Must only specify one of Types, ItemIds to Mailbox.reIndex", null);
+            
         boolean needRedo = octxt == null || octxt.needRedo();
 
         Collection<SearchResult> msgs = null;
@@ -1417,18 +1414,15 @@ public class Mailbox {
                     DbSearchConstraints c = new DbSearchConstraints();
                     c.mailbox = this;
                     c.sort = DbMailItem.SORT_BY_DATE;
-                    if (typesOrNull != null)
+                    if (itemIdsOrNull != null)
+                        c.itemIds = itemIdsOrNull; 
+                    else if (typesOrNull != null)
                         c.types = typesOrNull;
 
                     msgs = new ArrayList<SearchResult>();
                     DbMailItem.search(msgs, getOperationConnection(), c, ExtraData.NONE);
                     
-                    if (typesOrNull == null) {
-                        // reindexing everything, just delete the index
-                        MailboxIndex idx = getMailboxIndex();
-                        idx.deleteIndex();
-                        indexDeleted = true;
-                    } else {
+                    if (itemIdsOrNull != null || typesOrNull != null) {
                         // NOT reindexing everything: delete manually
                         int[] itemIds = new int[msgs.size()];
                         int i = 0;
@@ -1436,6 +1430,11 @@ public class Mailbox {
                             itemIds[i++] = s.indexId;
                         
                         mMailboxIndex.deleteDocuments(itemIds);
+                        indexDeleted = true;
+                    } else {
+                        // reindexing everything, just delete the index
+                        MailboxIndex idx = getMailboxIndex();
+                        idx.deleteIndex();
                         indexDeleted = true;
                     }
 
@@ -1490,7 +1489,7 @@ public class Mailbox {
             if (mReIndexStatus.mNumProcessed> 0) {
                 avg = (end - start) / mReIndexStatus.mNumProcessed;
                 mps = avg > 0 ? 1000 / avg : 0;
-            } 
+            }
             ZimbraLog.mailbox.info("Re-Indexing: Mailbox " + getId() + " COMPLETED.  Re-indexed "+mReIndexStatus.mNumProcessed
                         +" items in " + (end-start) + "ms.  (avg "+avg+"ms/item= "+mps+" items/sec)"
                         +" ("+mReIndexStatus.mNumFailed+" failed) ");

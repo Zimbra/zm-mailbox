@@ -684,14 +684,19 @@ purges aged messages out of trash, spam, and entire mailbox
 -----------------------------
 
 <ReIndexRequest action="start|status|cancel">
-  <mbox id="{account-id}"/>
+  <mbox id="{account-id}" [types={types} | ids={ids}]/>
 </ReIndexRequest>  
 
 <ReIndexResponse status="started" | "running" | "cancelled">
   [<progress numSucceeded="SUCCEEDED" numFailed="FAILED" numRemaining="REMAINING">]
 </ReIndexResponse>
-   -- Progress data is currently ONLY returned by the "status" and "cancelled" calls 
+   -- Progress data is currently ONLY returned by the "status" and "cancelled" calls
 
+   -types -ids are optional, however at most ONE may be specified:
+      {ids] = comma-separated list of IDs to re-index.  
+      {types} 	= comma-separated list.  Legal values are:
+                  conversation|message|contact|appointment|task|note|wiki|document
+               
 Access: domain admin sufficient
 
 ---------------------------

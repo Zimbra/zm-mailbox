@@ -45,13 +45,16 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 public class ReindexMailbox extends RedoableOp {
     
     private Set<Byte> mTypes = null;
+    private Set<Integer> mItemIds = null;
     private int mCompletionId = 0;
 
     public ReindexMailbox() { }
 
-    public ReindexMailbox(int mailboxId, Set<Byte> types, int completionId) {
+    public ReindexMailbox(int mailboxId, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, int completionId) {
         setMailboxId(mailboxId);
-        mTypes = types;
+        assert(typesOrNull == null || itemIdsOrNull == null);
+        mTypes = typesOrNull;
+        mItemIds = itemIdsOrNull;
         mCompletionId = completionId;
     }
     
@@ -72,7 +75,7 @@ public class ReindexMailbox extends RedoableOp {
      */
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.reIndex(new OperationContext(this), mTypes, mCompletionId);
+        mbox.reIndex(new OperationContext(this), mTypes, mItemIds, mCompletionId);
     }
 
     /* (non-Javadoc)
@@ -80,7 +83,20 @@ public class ReindexMailbox extends RedoableOp {
      */
     protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("Completion="+mCompletionId);
-        if (mTypes != null) {
+        if (mItemIds != null) {
+            sb.append(" ITEMIDS[");
+            boolean atStart = true;
+            for (Integer i : mItemIds) {
+                if (!atStart) 
+                    sb.append(',');
+                else
+                    atStart = false;
+                sb.append(i);
+            }
+            sb.append(']');
+                        
+            return sb.toString();
+        } else if (mTypes != null) {
             sb.append(" TYPES[");
             boolean atStart = true;
             for (Byte b : mTypes) {
@@ -103,7 +119,10 @@ public class ReindexMailbox extends RedoableOp {
      */
     protected void serializeData(RedoLogOutput out) throws IOException {
         if (getVersion().atLeast(1,9)) {
+            // completion ID
             out.writeInt(mCompletionId);
+            
+            // types
             if (mTypes != null) {
                 out.writeBoolean(true);
                 int count = mTypes.size();
@@ -116,7 +135,23 @@ public class ReindexMailbox extends RedoableOp {
             } else {
                 out.writeBoolean(false);
             }
-        }
+
+            // itemIds
+            if (getVersion().atLeast(1,10)) {
+                if (mItemIds != null) {
+                    out.writeBoolean(true);
+                    int count = mItemIds.size();
+                    out.writeInt(count);
+                    for (Integer i : mItemIds) {
+                        out.writeInt(i);
+                        count--;
+                    }
+                    assert(count == 0);
+                } else {
+                    out.writeBoolean(false);
+                }
+            } // v10
+        } // v9
     }
 
     /* (non-Javadoc)
@@ -124,13 +159,29 @@ public class ReindexMailbox extends RedoableOp {
      */
     protected void deserializeData(RedoLogInput in) throws IOException {
         if (getVersion().atLeast(1,9)) {
+            // completionId
             mCompletionId = in.readInt();
+            
+            // types
             if (in.readBoolean()) {
                 mTypes = new HashSet<Byte>();
                 for (int count = in.readInt(); count > 0; count--) {
                     mTypes.add(in.readByte());
                 }
+            } else {
+                mTypes = null;
             }
-        }
+            
+            // itemIds
+            if (getVersion().atLeast(1,10)) {
+                mItemIds = new HashSet<Integer>();
+                for (int count = in.readInt(); count > 0; count--) {
+                    mItemIds.add(in.readInt());
+                }
+            } else {
+                mItemIds = null;
+            } // v10
+            
+        } // v9
     }
 }
