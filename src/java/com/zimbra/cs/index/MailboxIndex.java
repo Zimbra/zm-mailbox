@@ -476,25 +476,47 @@ public final class MailboxIndex
     }
 
     Sort getSort(SortBy searchOrder) {
-        synchronized(getLock()) {        
-            switch (searchOrder) {
-                case DATE_DESCENDING:
-                    return mLuceneSortDateDesc;
-                case DATE_ASCENDING:
-                    return mLuceneSortDateAsc;
-                case SUBJ_DESCENDING:
-                    return mLuceneSortSubjectDesc;
-                case SUBJ_ASCENDING:
-                    return mLuceneSortSubjectAsc;
-                case NAME_DESCENDING:
-                    return mLuceneSortNameDesc;
-                case NAME_ASCENDING:
-                    return mLuceneSortNameAsc;
-                case SCORE_DESCENDING:
-                    return null;
-                default:
-                    return mLuceneSortDateDesc;
+//      mLuceneSortDateDesc = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, true));
+//      mLuceneSortDateAsc = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, false));
+//      mLuceneSortSubjectDesc = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, true));
+//      mLuceneSortSubjectAsc = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, false));
+//      mLuceneSortNameDesc = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, true));
+//      mLuceneSortNameAsc = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, false));
+        synchronized(getLock()) {
+            if (searchOrder != mLatestSortBy) { 
+                switch (searchOrder) {
+                    case DATE_DESCENDING:
+                        mLatestSort = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, true));
+                        mLatestSortBy = searchOrder;
+                        break;
+                    case DATE_ASCENDING:
+                        mLatestSort = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, false));
+                        mLatestSortBy = searchOrder;
+                        break;
+                    case SUBJ_DESCENDING:
+                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, true));
+                        mLatestSortBy = searchOrder;
+                        break;
+                    case SUBJ_ASCENDING:
+                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, false));
+                        mLatestSortBy = searchOrder;
+                        break;
+                    case NAME_DESCENDING:
+                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, true));
+                        mLatestSortBy = searchOrder;
+                        break;
+                    case NAME_ASCENDING:
+                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, false));
+                        mLatestSortBy = searchOrder;
+                        break;
+                    case SCORE_DESCENDING:
+                        return null;
+                    default:
+                        mLatestSort = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, true));
+                       mLatestSortBy = SortBy.DATE_ASCENDING;
+                }
             }
+            return mLatestSort;
         }
     }
 
@@ -554,14 +576,10 @@ public final class MailboxIndex
             }
 //          } catch(IOException e) {
 //          throw ServiceException.FAILURE("Error validating index path (mailbox="+mailbox.getId()+ " root="+root+")", e);
-        }	
-
-        mLuceneSortDateDesc = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, true));
-        mLuceneSortDateAsc = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, false));
-        mLuceneSortSubjectDesc = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, true));
-        mLuceneSortSubjectAsc = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, false));
-        mLuceneSortNameDesc = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, true));
-        mLuceneSortNameAsc = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, false));
+        }
+        
+        mLatestSort = new Sort(new SortField(LuceneFields.L_DATE, SortField.STRING, true));
+        mLatestSortBy = SortBy.DATE_DESCENDING;
         
         String analyzerName = mbox.getAccount().getAttr(Provisioning.A_zimbraTextAnalyzer, null);
 
@@ -579,13 +597,8 @@ public final class MailboxIndex
 
 
     private String mIdxPath;
-    private Sort mLuceneSortDateDesc = null; /* sort by date descending */
-    private Sort mLuceneSortDateAsc = null; /* sort by date ascending */
-    private Sort mLuceneSortSubjectAsc = null; /* sort by subject ascending */
-    private Sort mLuceneSortSubjectDesc = null; /* sort by subject descending */
-    private Sort mLuceneSortNameAsc = null; /* sort by subject ascending */
-    private Sort mLuceneSortNameDesc = null; /* sort by subject descending */
-
+    private Sort mLatestSort = null;
+    private SortBy mLatestSortBy = null;
 
     private int mMailboxId;
     private Mailbox mMailbox;
@@ -1755,7 +1768,7 @@ public final class MailboxIndex
                     searcher = getCountedIndexSearcher();
 
                     TermQuery q = new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE));
-                    Hits luceneHits = searcher.getSearcher().search(q, mLuceneSortDateAsc);
+                    Hits luceneHits = searcher.getSearcher().search(q, getSort(SortBy.DATE_ASCENDING));
 
                     for (int i = 0; i < luceneHits.length(); i++) {
                         callback.onDocument(luceneHits.doc(i));
@@ -1779,7 +1792,7 @@ public final class MailboxIndex
             {
                 mLog.info("Stage 3 Verify SORT_DATE_DESCENDING for Mailbox "+this.mMailboxId);
 
-                // SORT_BY__DATE_ASC
+                // SORT_BY__DATE_DESC
                 DbSearchConstraints c = new DbSearchConstraints();
 
                 c.mailbox = mbox;
@@ -1802,7 +1815,7 @@ public final class MailboxIndex
                     searcher = getCountedIndexSearcher();
 
                     TermQuery q = new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE));
-                    Hits luceneHits = searcher.getSearcher().search(q, mLuceneSortDateDesc);
+                    Hits luceneHits = searcher.getSearcher().search(q, getSort(SortBy.DATE_DESCENDING));
 
                     for (int i = 0; i < luceneHits.length(); i++) {
                         callback.onDocument(luceneHits.doc(i));
