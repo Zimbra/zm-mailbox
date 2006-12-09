@@ -2005,7 +2005,8 @@ public final class MailboxIndex
                     ParsedDocument pd = new ParsedDocument(document.getBlob().getBlob().getFile(),
                                 document.getName(), 
                                 document.getContentType(),
-                                timestamp);
+                                timestamp,
+                                document.getCreator());
                     indexDocument(mbox, redo, deleteFirst, pd, document);
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("indexDocument caught Exception", e);

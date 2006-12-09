@@ -40,6 +40,7 @@ import javax.activation.DataSource;
 import javax.activation.FileDataSource;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
@@ -145,19 +146,19 @@ public class ParsedDocument {
     private String mFragment;
     private long mCreatedDate;
 
-    public ParsedDocument(File file, String filename, String ctype, long createdDate)
+    public ParsedDocument(File file, String filename, String ctype, long createdDate, String creator)
     throws ServiceException, IOException {
         DocumentDataSource ds = new FileDocumentDataSource(file);
-        init(ds, filename, ctype, createdDate);
+        init(ds, filename, ctype, createdDate, creator);
     }
 
-    public ParsedDocument(byte[] rawData, String digest, String filename, String ctype, long createdDate)
+    public ParsedDocument(byte[] rawData, String digest, String filename, String ctype, long createdDate, String creator)
     throws ServiceException, IOException {
         DocumentDataSource ds = new ByteArrayDataSource(rawData, digest);
-        init(ds, filename, ctype, createdDate);
+        init(ds, filename, ctype, createdDate, creator);
     }
 
-    private void init(DocumentDataSource ds, String filename, String ctype, long createdDate)
+    private void init(DocumentDataSource ds, String filename, String ctype, long createdDate, String creator)
     throws ServiceException, IOException {
         mFilename = filename;
         mContentType = ctype;
@@ -177,7 +178,17 @@ public class ParsedDocument {
             mDocument.add(Field.Text(LuceneFields.L_SIZE, Integer.toString(mSize = ds.getSize())));
             mDocument.add(new Field(LuceneFields.L_H_SUBJECT, filename, false/*store*/, true/*index*/, true/*tokenize*/));
             mDocument.add(new Field(LuceneFields.L_CONTENT, filename,  false/*store*/, true/*index*/, true/*tokenize*/));
+            mDocument.add(new Field(LuceneFields.L_SORT_SUBJECT, filename.toUpperCase(), false/*store*/, true/*index*/, false/*tokenize*/));
+            mDocument.add(new Field(LuceneFields.L_SORT_NAME, creator.toUpperCase(), false/*store*/, true/*index*/, false/*tokenize*/));
+            mDocument.add(new Field(LuceneFields.L_H_FROM, creator, false/*store*/, true/*index*/, true/*tokenize*/));
             mDocument.add(Field.Text(LuceneFields.L_FILENAME, filename));
+            String dateString = DateField.timeToString(createdDate);
+            if (dateString == null)
+            	throw ServiceException.FAILURE("cannot get a valid date", null);
+            try {
+            	mDocument.add(Field.Text(LuceneFields.L_DATE, dateString));
+            } catch (Exception e) {
+            }
         } catch (MimeHandlerException mhe) {
         	throw ServiceException.FAILURE("cannot create ParsedDocument", mhe);
         } catch (ObjectHandlerException ohe) {
@@ -214,19 +225,20 @@ public class ParsedDocument {
     public static void main(String[] args) throws Throwable {
         ParsedDocument pd;
         long timer, time;
+        String creator = "test@zimbra.com";
         for (int i = 0; i < 5; i++) {
             timer = System.currentTimeMillis();
-            pd = new ParsedDocument(new File("C:\\tmp\\todo.txt"), "todo.txt", "text/plain", timer);
+            pd = new ParsedDocument(new File("C:\\tmp\\todo.txt"), "todo.txt", "text/plain", timer, creator);
             time = (System.currentTimeMillis() - timer);
             System.out.println(pd.getFilename() + " (" + pd.getSize() + "b) {" + time + "us} [" + pd.getDigest() + "]: " + pd.getFragment());
 
             timer = System.currentTimeMillis();
-            pd = new ParsedDocument(new File("C:\\tmp\\SOLTYREI.html"), "SOLTYREI.html", "text/html", timer);
+            pd = new ParsedDocument(new File("C:\\tmp\\SOLTYREI.html"), "SOLTYREI.html", "text/html", timer, creator);
             time = (System.currentTimeMillis() - timer);
             System.out.println(pd.getFilename() + " (" + pd.getSize() + "b) {" + time + "us} [" + pd.getDigest() + "]: " + pd.getFragment());
 
             timer = System.currentTimeMillis();
-            pd = new ParsedDocument(new File("C:\\tmp\\postgresql-8.0-US.pdf"), "postgresql-8.0-US.pdf", "application/pdf", timer);
+            pd = new ParsedDocument(new File("C:\\tmp\\postgresql-8.0-US.pdf"), "postgresql-8.0-US.pdf", "application/pdf", timer, creator);
             time = (System.currentTimeMillis() - timer);
             System.out.println(pd.getFilename() + " (" + pd.getSize() + "b) {" + time + "us} [" + pd.getDigest() + "]: " + pd.getFragment());
         }

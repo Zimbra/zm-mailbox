@@ -4555,7 +4555,7 @@ public class Mailbox {
             redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
             markOtherItemDirty(blob);
 
-            ParsedDocument pd = new ParsedDocument(rawData, digest, doc.getName(), doc.getContentType(), getOperationTimestampMillis());
+            ParsedDocument pd = new ParsedDocument(rawData, digest, doc.getName(), doc.getContentType(), getOperationTimestampMillis(), author);
             doc.addRevision(author, pd);
             queueForIndexing(doc, false, pd);
 
@@ -4672,7 +4672,7 @@ public class Mailbox {
             redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
             markOtherItemDirty(blob);
 
-            ParsedDocument pd = new ParsedDocument(rawData, digest, filename, mimeType, getOperationTimestampMillis());
+            ParsedDocument pd = new ParsedDocument(rawData, digest, filename, mimeType, getOperationTimestampMillis(), author);
 
             if (type == MailItem.TYPE_DOCUMENT)
                 doc = Document.create(
