@@ -154,10 +154,10 @@ public class ResultsPager
             }
             
             // if (hit COMES AFTER prevSortValue) {
-            if (comp > 0) {
+//            if (comp > 0) {
                 return hit;
-            }
-            hit = mResults.getNext();
+//            }
+//            hit = mResults.getNext();
         }
 
         // end of line
@@ -182,9 +182,9 @@ public class ResultsPager
         }
         if (hit != null) {
             // if hit BEFORE dummyEndHit
-            if (mParams.hasEndSortValue() && (hit.compareBySortField(mParams.getSortBy(), dummyEndHit) > 0))
-                return;
-            else
+//            if (mParams.hasEndSortValue() && (hit.compareBySortField(mParams.getSortBy(), dummyEndHit) > 0))
+//                return;
+//            else
                 mHits.add(0, hit);
         }
         
@@ -192,9 +192,9 @@ public class ResultsPager
             hit = mResults.getNext();
             if (hit != null) {
                 // if hit BEFORE dummyEndHit
-                if (mParams.hasEndSortValue() && (hit.compareBySortField(mParams.getSortBy(), dummyEndHit) > 0))
-                    break;
-                else
+//                if (mParams.hasEndSortValue() && (hit.compareBySortField(mParams.getSortBy(), dummyEndHit) > 0))
+//                    break;
+//                else
                     mHits.add(i, hit);
             }
         }
