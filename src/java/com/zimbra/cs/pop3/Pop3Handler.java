@@ -459,7 +459,7 @@ public class Pop3Handler extends ProtocolHandler {
         sendOK(numUndeleted+ " message(s) undeleted");
     }    
     
-    private void doUSER(String user) throws Pop3CmdException, IOException {
+    private void doUSER(String user) throws Pop3CmdException, IOException, ServiceException {
         if ((mTlsConnection == null) && !mServer.allowCleartextLogins())
             throw new Pop3CmdException("only valid after entering TLS mode");
         

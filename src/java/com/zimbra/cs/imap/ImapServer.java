@@ -61,13 +61,11 @@ implements RealtimeStatsCallback {
     private static Object sImapServer;
     private static Object sImapSSLServer;
 
-    private boolean mAllowCleartextLogins;
     private boolean mConnectionSSL;
 
 
-	public ImapServer(int numThreads, ServerSocket serverSocket, boolean loginOK, boolean ssl) {
+	public ImapServer(int numThreads, ServerSocket serverSocket, boolean ssl) {
         super(ssl ? "ImapSSLServer" : "ImapServer", numThreads, serverSocket);
-        mAllowCleartextLogins = loginOK;
         mConnectionSSL = ssl;
         ZimbraPerf.addStatsCallback(this);
     }
@@ -76,7 +74,16 @@ implements RealtimeStatsCallback {
         return new ImapHandler(this);
 	}
 
-    boolean allowCleartextLogins()  { return mAllowCleartextLogins; }
+    boolean allowCleartextLogins() {
+        try {
+            Server server = Provisioning.getInstance().getLocalServer();
+            return server.getBooleanAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, false);
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("Unable to determine state of %s", Provisioning.A_zimbraImapCleartextLoginEnabled, e);
+        }
+        return false;
+    }
+    
     boolean isConnectionSSL()       { return mConnectionSSL; }
 
 	public int getConfigMaxIdleMilliSeconds() {
@@ -129,7 +136,7 @@ implements RealtimeStatsCallback {
             }
         } else {
             ServerSocket serverSocket = NetUtil.getTcpServerSocket(address, port);
-            ImapServer imapServer = new ImapServer(threads, serverSocket, loginOK, false);
+            ImapServer imapServer = new ImapServer(threads, serverSocket, false);
             imapServer.setSSL(false);
             sImapServer = imapServer;
             Thread imap = new Thread(imapServer);
@@ -171,7 +178,7 @@ implements RealtimeStatsCallback {
         } else {
             ServerSocket serverSocket = NetUtil.getSslTcpServerSocket(address, port);
             
-            ImapServer imapsServer = new ImapServer(threads, serverSocket, true, true);
+            ImapServer imapsServer = new ImapServer(threads, serverSocket, true);
             imapsServer.setSSL(true);
             sImapSSLServer = imapsServer;
             Thread imaps = new Thread(imapsServer);

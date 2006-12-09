@@ -51,15 +51,18 @@ implements RealtimeStatsCallback {
     private static Pop3Server sPopServer;
     private static Pop3Server sPopSSLServer;
     
-    private boolean mAllowCleartextLogins;
     private boolean mConnectionSSL;
 
-    boolean allowCleartextLogins()  { return mAllowCleartextLogins; }
+    boolean allowCleartextLogins()
+    throws ServiceException {
+        Server server = Provisioning.getInstance().getLocalServer();
+        return server.getBooleanAttr(Provisioning.A_zimbraPop3CleartextLoginEnabled, false);
+    }
+    
     boolean isConnectionSSL()       { return mConnectionSSL; }
     
-	public Pop3Server(int numThreads, ServerSocket serverSocket, boolean loginOK, boolean ssl) {
+	public Pop3Server(int numThreads, ServerSocket serverSocket, boolean ssl) {
 		super("Pop3Server", numThreads, serverSocket);
-        mAllowCleartextLogins = loginOK;
         mConnectionSSL = ssl;
         ZimbraPerf.addStatsCallback(this);
 	}
@@ -135,14 +138,13 @@ implements RealtimeStatsCallback {
 			return;
         
         Server server = Provisioning.getInstance().getLocalServer();
-        boolean loginOK = server.getBooleanAttr(Provisioning.A_zimbraPop3CleartextLoginEnabled, false);
         String address = server.getAttr(Provisioning.A_zimbraPop3BindAddress, D_POP3_BIND_ADDRESS);
         int port = server.getIntAttr(Provisioning.A_zimbraPop3BindPort, Config.D_POP3_BIND_PORT);
         int numThreads = server.getIntAttr(Provisioning.A_zimbraPop3NumThreads, D_POP3_THREADS);
 
         ServerSocket serverSocket = NetUtil.getTcpServerSocket(address, port); 
 
-        sPopServer = new Pop3Server(numThreads, serverSocket, loginOK, false);
+        sPopServer = new Pop3Server(numThreads, serverSocket, false);
 
         String advName = server.getAttr(Provisioning.A_zimbraPop3AdvertisedName, D_POP3_ANNOUNCE_NAME);
         if (advName == null) {
@@ -167,7 +169,7 @@ implements RealtimeStatsCallback {
 
         ServerSocket serverSocket = NetUtil.getSslTcpServerSocket(address, port);
 
-        sPopSSLServer = new Pop3Server(numThreads, serverSocket, true, true);
+        sPopSSLServer = new Pop3Server(numThreads, serverSocket, true);
 
         sPopSSLServer.setSSL(true);
         
