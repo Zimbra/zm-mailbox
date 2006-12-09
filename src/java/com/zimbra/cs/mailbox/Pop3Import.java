@@ -219,7 +219,7 @@ implements MailItemImport {
             }
         }
         
-        if (account.getUid() != null && account.getUid().equals("user3")) {
+        if (account.getUid() != null && account.getUid().equals("rossd")) {
             hair(mbox, ds);
         }
 
