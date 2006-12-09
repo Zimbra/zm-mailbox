@@ -1603,7 +1603,10 @@ public class Mailbox {
         throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
     }
 
-    /** mechanism for getting an item */
+    /**
+     * Returns the <code>MailItem</code> with the specified id. 
+     * @throws NoSuchItemException if the item does not exist
+     */
     public synchronized MailItem getItemById(OperationContext octxt, int id, byte type) throws ServiceException {
         boolean success = false;
         try {
@@ -1645,7 +1648,10 @@ public class Mailbox {
         return item;
     }
 
-    /** mechanism for getting an item */
+    /**
+     * Returns <code>MailItem</code>s with the specified ids. 
+     * @throws NoSuchItemException any item does not exist
+     */
     public synchronized MailItem[] getItemById(OperationContext octxt, List<Integer> ids, byte type) throws ServiceException {
         int idArray[] = new int[ids.size()], pos = 0;
         for (Integer id : ids)
@@ -1653,7 +1659,10 @@ public class Mailbox {
         return getItemById(octxt, idArray, type);
     }
 
-    /** mechanism for getting an item */
+    /**
+     * Returns <code>MailItem</code>s with the specified ids. 
+     * @throws NoSuchItemException any item does not exist
+     */
     public synchronized MailItem[] getItemById(OperationContext octxt, int[] ids, byte type) throws ServiceException {
         boolean success = false;
         try {
@@ -2202,7 +2211,6 @@ public class Mailbox {
         if (lastSync >= getLastChangeID())
             return new Pair<List<Integer>,MailItem.TypedIdList>(EMPTY_ITEMS, new MailItem.TypedIdList());
 
-        MailItem.TypedIdList elsewhere = null;
         boolean success = false;
         try {
             beginTransaction("getModifiedItems", octxt);
@@ -2428,13 +2436,18 @@ public class Mailbox {
         return contacts;
     }
 
-
+    /**
+     * Returns the <code>Message</code> with the specified id. 
+     * @throws NoSuchItemException if the item does not exist
+     */
     public synchronized Message getMessageById(OperationContext octxt, int id) throws ServiceException {
         return (Message) getItemById(octxt, id, MailItem.TYPE_MESSAGE);
     }
+
     Message getMessageById(int id) throws ServiceException {
         return (Message) getItemById(id, MailItem.TYPE_MESSAGE);
     }
+    
     Message getMessage(MailItem.UnderlyingData data) throws ServiceException { 
         return (Message) getItem(data);
     }
