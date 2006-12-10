@@ -60,7 +60,7 @@ public class ZMessageHit implements ZSearchHit {
         Element fr = e.getOptionalElement(MailService.E_FRAG);
         if (fr != null) mFragment = fr.getText();
         Element sub = e.getOptionalElement(MailService.E_SUBJECT);
-        mSubject =sub.getText();
+        if (sub != null) mSubject = sub.getText();
         mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);
         mSize = (int) e.getAttributeLong(MailService.A_SIZE);
         mConvId = e.getAttribute(MailService.A_CONV_ID);
