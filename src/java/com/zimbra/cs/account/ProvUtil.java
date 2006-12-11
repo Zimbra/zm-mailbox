@@ -785,12 +785,13 @@ public class ProvUtil implements DebugListener {
 
         String domainStr = (String)attrs.get("domain");
         List accounts;
+        Provisioning prov = Provisioning.getInstance();
         if (domainStr != null) {
-            Domain d = lookupDomain(domainStr);
-            accounts = Provisioning.getInstance().searchAccounts(d, query, attrsToGet, sortBy, isSortAscending, flags);
+            Domain d = lookupDomain(domainStr, prov);
+            accounts = prov.searchAccounts(d, query, attrsToGet, sortBy, isSortAscending, flags);
         } else {
             //accounts = mProvisioning.searchAccounts(query, attrsToGet, sortBy, isSortAscending, Provisioning.SA_ACCOUNT_FLAG);
-            accounts = Provisioning.getInstance().searchAccounts(query, attrsToGet, sortBy, isSortAscending, flags);
+            accounts = prov.searchAccounts(query, attrsToGet, sortBy, isSortAscending, flags);
         }
 
         //ArrayList accounts = (ArrayList) mProvisioning.searchAccounts(query);
@@ -1270,7 +1271,7 @@ public class ProvUtil implements DebugListener {
     }
     
     private Domain lookupDomain(String key, Provisioning prov) throws ServiceException {
-        Domain d = mProv.get(guessDomainBy(key), key);
+        Domain d = prov.get(guessDomainBy(key), key);
         if (d == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(key);
         else
