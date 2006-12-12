@@ -1090,6 +1090,16 @@ public abstract class CalendarItem extends MailItem {
             
             return toRet;
         }
+
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("seq=").append(mSeqNo);
+            sb.append(", dtstamp=").append(mDtStamp);
+            if (mRecurId != null)
+                sb.append(", recurId=\"").append(mRecurId).append("\"");
+            sb.append(", attendee=").append(mAttendee);
+            return sb.toString();
+        }
     }
 
     /**
@@ -1100,7 +1110,19 @@ public abstract class CalendarItem extends MailItem {
      */
     protected static class ReplyList {
         List<ReplyInfo> mReplies;
-        
+
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("[ReplyList]\n");
+            if (mReplies != null) {
+                for (ReplyInfo ri : mReplies) {
+                    sb.append(ri.toString()).append("\n");
+                }
+            }
+            sb.append("[end]\n");
+            return sb.toString();
+        }
+
         public ReplyList() {
             mReplies = new ArrayList<ReplyInfo>();
         }
@@ -1298,11 +1320,25 @@ public abstract class CalendarItem extends MailItem {
         }
         
         List<ReplyInfo> getReplyInfo(Invite inv) {
+            int mboxId = -1;
+            int calItemId = -1;
+            int invId = -1;
+            if (inv != null) {
+                mboxId = inv.getMailboxId();
+                invId = inv.getMailItemId();
+                try {
+                    CalendarItem citem = inv.getCalendarItem();
+                    if (citem != null)
+                        calItemId = citem.getId();
+                } catch (ServiceException e) {}
+            }
+
             List<ReplyInfo> toRet = new ArrayList<ReplyInfo>();
-            
+
+            int outdated = 0;
             for (Iterator iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = (ReplyInfo)iter.next();
-                
+
                 if (inv == null || 
                         ((inv.getSeqNo() <= cur.mSeqNo) 
                                 && (inv.getDTStamp() <= cur.mDtStamp) 
@@ -1311,12 +1347,25 @@ public abstract class CalendarItem extends MailItem {
                                         || ((inv.getRecurId() != null) && (inv.getRecurId().equals(cur.mRecurId)))))) {
                     toRet.add(cur);
                 } else {
-                    sLog.info("ReplyList "+this.toString()+" has outdated entries in its Replies list");
+                    outdated++;
+                    if (ZimbraLog.calendar.isDebugEnabled())
+                        ZimbraLog.calendar.debug(
+                                "ReplyList of appt/task " + calItemId +
+                                ", inv " + invId +
+                                " in mailbox " + mboxId +
+                                " has outdated entries:\n" + toString());
                 }
             }
+            if (ZimbraLog.calendar.isDebugEnabled())
+                ZimbraLog.calendar.debug(
+                        "Found " + toRet.size() + " ReplyInfo entries for appt/task " +
+                        calItemId + ", inv " + invId + " in mailbox " + mboxId);
+            if (outdated > 0)
+                ZimbraLog.calendar.warn(
+                        "Found " + outdated + " outdated ReplyList entries for appt/task " +
+                        calItemId + ", inv " + invId + " in mailbox " + mboxId);
             return toRet;
         }
-        
 
     } // class ReplyList
             
