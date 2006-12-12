@@ -500,7 +500,10 @@ public class UserServlet extends ZimbraServlet {
                 GetItemOperation op = new GetItemOperation(null, context.opContext, context.targetMailbox, Requester.REST, context.itemPath, MailItem.TYPE_UNKNOWN);
                 op.schedule();
                 item = op.getItem();
-            } catch (NoSuchItemException nse) {
+            } catch (ServiceException e) {
+                if (!(e instanceof NoSuchItemException) && e.getCode() != ServiceException.PERM_DENIED)
+                    throw e;
+
                 // no joy.  Perhaps they asked for something like "calendar.csv" -- where calendar was the folder name
                 // Try again, minus the extension
 
@@ -512,9 +515,8 @@ public class UserServlet extends ZimbraServlet {
                  */
                 int dot = context.itemPath.lastIndexOf('.');
                 if (dot != -1) {
-                    if (context.format == null) {
+                    if (context.format == null)
                         context.format = context.itemPath.substring(dot + 1);
-                    }
                     context.itemPath = context.itemPath.substring(0, dot);
                 }
 
