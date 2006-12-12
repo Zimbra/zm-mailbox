@@ -1310,11 +1310,11 @@ public class Mailbox {
      */
     synchronized void checkUpgrade() throws ServiceException {
         
-        if (!getVersion().atLeast(1, 1)) {
-            // Version 1.0->1.1 Re-Index all contacts 
+        if (!getVersion().atLeast(1, 2)) {
+            // Version (1.0,1.1)->1.2 Re-Index all contacts 
             Set<Byte> types = new HashSet<Byte>();
             types.add(MailItem.TYPE_CONTACT);
-            reIndex(null, types, null, COMPLETED_REINDEX_CONTACTS_V1_1); 
+            reIndex(null, types, null, COMPLETED_REINDEX_CONTACTS_V1_2); 
         }
     }
 
@@ -1333,7 +1333,7 @@ public class Mailbox {
         return mReIndexStatus;
     }
     
-    private static final int COMPLETED_REINDEX_CONTACTS_V1_1 = 100;
+    private static final int COMPLETED_REINDEX_CONTACTS_V1_2 = 100;
     
     /**
      * Some long-running transactions (e.g. ReIndexing) might not complete while convienently in the stack
@@ -1349,14 +1349,14 @@ public class Mailbox {
      */
     synchronized void Completion(int completionId) {
         switch(completionId) {
-            case COMPLETED_REINDEX_CONTACTS_V1_1:
+            case COMPLETED_REINDEX_CONTACTS_V1_2:
                 // check current version, just in case someone updated the version while
                 // we were gone
-                if (!getVersion().atLeast(1,1)) {
+                if (!getVersion().atLeast(1,2)) {
                     try {
-                        updateVersion(new MailboxVersion((short)1,(short)1));
+                        updateVersion(new MailboxVersion((short)1,(short)2));
                     } catch (ServiceException e) {
-                        ZimbraLog.mailbox.warn("Could not update version in Mailbox v1.1 schema upgrade: "+e, e);
+                        ZimbraLog.mailbox.warn("Could not update version in Mailbox v1.2 schema upgrade: "+e, e);
                     }
                 }
                 break;
