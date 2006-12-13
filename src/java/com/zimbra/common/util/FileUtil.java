@@ -148,6 +148,8 @@ public class FileUtil {
     public static int copyDirectory(File srcDir, File destDir) throws IOException {
         int filesCopied = 0;
         File[] files = srcDir.listFiles();
+        if (files == null)
+            return 0;
         ensureDirExists(destDir);
         // Process files.
         for (File file : files) {
