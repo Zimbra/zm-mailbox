@@ -1604,6 +1604,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     void delete() throws ServiceException {
         delete(DELETE_ITEM, true);
     }
+
     void delete(boolean childrenOnly, boolean writeTombstones) throws ServiceException {
         if (!childrenOnly && !isDeletable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
@@ -1693,7 +1694,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             else
                 (info.sharedIndex = new HashSet<Integer>()).add(mData.indexId);
         }
-        if (mData.blobDigest != null && mData.blobDigest.length() > 0)
+        if (mData.blobDigest != null && mData.blobDigest.length() > 0) {
             try {
                 MailboxBlob mblob = StoreManager.getInstance().getMailboxBlob(mMailbox, mId, mData.modContent, mData.volumeId);
                 if (mblob == null)
@@ -1701,10 +1702,13 @@ public abstract class MailItem implements Comparable<MailItem> {
                 else
                     info.blobs.add(mblob);
             } catch (Exception e) { }
+        }
         int isMessage = (this instanceof Message ? 1 : 0);
         info.messages.put(new Integer(getFolderId()), new DbMailItem.LocationCount(isMessage, getSize()));
         return info;
     }
+
+    private static final int UNREAD_ITEM_BATCH_SIZE = 500;
 
     void propagateDeletion(PendingDelete info) throws ServiceException {
         for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.messages.entrySet()) {
@@ -1715,9 +1719,16 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         if (info.unreadIds.isEmpty())
             return;
-        // FIXME: try to get these from cache (use mMailbox.getItemById[])
-        for (UnderlyingData data : DbMailItem.getById(mMailbox, info.unreadIds, TYPE_MESSAGE))
-            mMailbox.getItem(data).updateUnread(-1);
+
+        for (int i = 0, count = info.unreadIds.size(); i < count; i += UNREAD_ITEM_BATCH_SIZE) {
+            List<Integer> batch = info.unreadIds.subList(i, Math.min(i + UNREAD_ITEM_BATCH_SIZE, count));
+            for (UnderlyingData data : DbMailItem.getById(mMailbox, batch, TYPE_MESSAGE)) {
+                Message msg = (Message) mMailbox.getItem(data);
+                if (msg.isUnread())
+                    msg.updateUnread(-1);
+                mMailbox.uncache(msg);
+            }
+        }
     }
 
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
@@ -1730,7 +1741,9 @@ public abstract class MailItem implements Comparable<MailItem> {
     String encodeMetadata() {
         return encodeMetadata(new Metadata()).toString();
     }
+
     abstract Metadata encodeMetadata(Metadata meta);
+
     static Metadata encodeMetadata(Metadata meta, byte color) {
         if (color != DEFAULT_COLOR)
             meta.put(Metadata.FN_COLOR, color);
@@ -1740,6 +1753,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     void decodeMetadata(String metadata) throws ServiceException {
         decodeMetadata(new Metadata(metadata, this));
     }
+
     void decodeMetadata(Metadata meta) throws ServiceException {
         if (meta == null)
             return;
@@ -1750,6 +1764,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     protected void saveMetadata() throws ServiceException {
         saveMetadata(encodeMetadata());
     }
+
     protected void saveMetadata(String metadata) throws ServiceException {
         mData.metadataChanged(mMailbox);
         DbMailItem.saveMetadata(this, metadata);
@@ -1763,6 +1778,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     protected void saveData(String sender) throws ServiceException {
         saveData(sender, encodeMetadata());
     }
+
     protected void saveData(String sender, String metadata) throws ServiceException {
         mData.metadataChanged(mMailbox);
         DbMailItem.saveData(this, sender, metadata);
