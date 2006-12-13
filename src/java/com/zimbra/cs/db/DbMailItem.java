@@ -1664,7 +1664,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT id, type, folder_id" +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? AND " + typeConstraint +
-            " ORDER BY mod_metadata");
+                        " ORDER BY mod_metadata, id");
             int pos = 1;
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());

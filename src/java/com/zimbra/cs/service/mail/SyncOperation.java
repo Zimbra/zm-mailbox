@@ -61,19 +61,32 @@ public class SyncOperation extends Operation {
     private static final int DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_ROOT;
     private static enum SyncPhase { INITIAL, DELTA };
 
-    ZimbraSoapContext mZsc;
-    Element mRequest;
-    Element mResponse;
-    long mBegin;
+    private final ZimbraSoapContext mSoapContext;
+    private final Element mRequest;
+    private final Element mResponse;
+    private final int mToken;
+    private final int mItemCutoff;
 
     public SyncOperation(Session session, OperationContext oc, Mailbox mbox, 
-                ZimbraSoapContext zsc, Element request, Element response, long begin) {
+                         ZimbraSoapContext zsc, Element request, Element response, String token)
+    throws ServiceException {
         super(session, oc, mbox, Requester.SOAP, Scheduler.Priority.BATCH, LOAD);
 
-        mZsc = zsc;
+        mSoapContext = zsc;
         mRequest = request;
         mResponse = response;
-        mBegin = begin;
+        try {
+            int delimiter = token.indexOf('-');
+            if (delimiter < 1) {
+                mToken = Integer.parseInt(token);
+                mItemCutoff = -1;
+            } else {
+                mToken = Integer.parseInt(token.substring(0, delimiter));
+                mItemCutoff = Integer.parseInt(token.substring(delimiter + 1));
+            }
+        } catch (NumberFormatException nfe) {
+            throw ServiceException.INVALID_REQUEST("malformed sync token: " + token, nfe);
+        }
     }
 
     protected void callback() throws ServiceException {
@@ -81,8 +94,8 @@ public class SyncOperation extends Operation {
         synchronized (mbox) {
             mbox.beginTrackingSync(null);
 
-            mResponse.addAttribute(MailService.A_TOKEN, mbox.getLastChangeID());
-            if (mBegin <= 0) {
+            if (mToken <= 0) {
+                mResponse.addAttribute(MailService.A_TOKEN, mbox.getLastChangeID());
                 mResponse.addAttribute(MailService.A_SIZE, mbox.getSize());
                 Folder root = null;
                 try {
@@ -92,12 +105,14 @@ public class SyncOperation extends Operation {
                 } catch (MailServiceException.NoSuchItemException nsie) { }
 
                 Set<Folder> visible = mbox.getVisibleFolders(getOpCtxt());
-                boolean anyFolders = folderSync(mZsc, mResponse, mbox, root, visible, SyncPhase.INITIAL);
+                boolean anyFolders = folderSync(mSoapContext, mResponse, mbox, root, visible, SyncPhase.INITIAL);
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     mResponse.addElement(MailService.E_FOLDER);
             } else {
-                deltaSync(mZsc, mResponse, mbox, mBegin, mRequest.getAttributeBool(MailService.A_TYPED_DELETES, false));
+                boolean typedDeletes = mRequest.getAttributeBool(MailService.A_TYPED_DELETES, false);
+                String token = deltaSync(mSoapContext, mResponse, mbox, mToken, typedDeletes);
+                mResponse.addAttribute(MailService.A_TOKEN, token);
             }
         }
     }
@@ -171,6 +186,7 @@ public class SyncOperation extends Operation {
     }
 
     private static final int FETCH_BATCH_SIZE = 200;
+    private static final int MAXIMUM_CHANGE_COUNT = 3990;
 
     private static final int MUTABLE_FIELDS = Change.MODIFIED_FLAGS  | Change.MODIFIED_TAGS |
                                               Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT |
@@ -178,10 +194,12 @@ public class SyncOperation extends Operation {
                                               Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION |
                                               Change.MODIFIED_DATE;
 
-    private void deltaSync(ZimbraSoapContext zsc, Element response, Mailbox mbox, long begin, boolean typedDeletes)
+    private String deltaSync(final ZimbraSoapContext zsc, final Element response, final Mailbox mbox, final int begin, final boolean typedDeletes)
     throws ServiceException {
+        String newToken = mbox.getLastChangeID() + "";
         if (begin >= mbox.getLastChangeID())
-            return;
+            return newToken;
+
         OperationContext octxt = zsc.getOperationContext();
 
         // first, fetch deleted items
@@ -209,11 +227,23 @@ public class SyncOperation extends Operation {
             ToXML.encodeTag(response, zsc, tag, Change.ALL_FIELDS);
 
         // finally, handle created/modified "other items"
+        int itemCount = 0;
         Pair<List<Integer>,MailItem.TypedIdList> changed = mbox.getModifiedItems(octxt, begin);
         List<Integer> modified = changed.getFirst();
-        while (!modified.isEmpty()) {
+        delta: while (!modified.isEmpty()) {
             List batch = modified.subList(0, Math.min(modified.size(), FETCH_BATCH_SIZE));
             for (MailItem item : mbox.getItemById(octxt, modified, MailItem.TYPE_UNKNOWN)) {
+                // detect interrupted sync and resume from the appropriate place
+                if (item.getModifiedSequence() == begin + 1 && item.getId() < mItemCutoff)
+                    continue;
+
+                // if we've overflowed this sync response, set things up so that a subsequent sync starts from where we're cutting off
+                if (itemCount >= MAXIMUM_CHANGE_COUNT) {
+                    response.addAttribute(MailService.A_QUERY_MORE, true);
+                    newToken = (item.getModifiedSequence() - 1) + "-" + item.getId();
+                    break delta;
+                }
+
                 //  For items in the system, if the content has changed since the user last sync'ed 
                 //      (because it was edited or created), just send back the folder ID and saved date --
                 //      the client will request the whole object out of band -- potentially using the 
@@ -221,6 +251,7 @@ public class SyncOperation extends Operation {
                 //  If it's just the metadata that changed, send back the set of mutable attributes.
                 boolean created = item.getSavedSequence() > begin;
                 ToXML.encodeItem(response, zsc, item, created ? Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT : MUTABLE_FIELDS);
+                itemCount++;
             }
             batch.clear();
         }
@@ -250,6 +281,8 @@ public class SyncOperation extends Operation {
             }
             eDeleted.addAttribute(MailService.A_IDS, deleted.toString());
         }
+
+        return newToken;
     }
 
     public static String elementNameForType(byte type) {

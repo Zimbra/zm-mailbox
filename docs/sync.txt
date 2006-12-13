@@ -33,7 +33,7 @@
 
 <-- subsequent sync request -->
 
-<SyncRequest token="403" typed="1"/>
+<SyncRequest token="403"/>
 
 <SyncResponse token="500" md="1078054283">
   <-- handle deletes first -->
@@ -82,7 +82,7 @@
 
 <SyncRequest token="500" typed="1"/>
 
-<SyncResponse token="521" md="1078054298">
+<SyncResponse token="521" md="1078054298" more="1">
   <-- handle deletes first -->
   <deleted ids="903">
     <folder ids="903"/>
@@ -95,3 +95,6 @@
   <m id="5522" l="2" cid="5521" f="" t="" md="1078054297" ms="519"/>
   <cn id="5531" l="7" md="1078054296" ms="520"/>
 </SyncResponse>
+
+<-- if more="1" is specified on the sync response, the response does *not* bring the client completely up to date.
+    more changes are still queued, and another SyncRequest (using the new returned token) is necessary. -->

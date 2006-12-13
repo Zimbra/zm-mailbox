@@ -128,8 +128,8 @@ public class Mailbox {
     public static final int ID_FOLDER_ROOT      = 11;
     public static final int ID_FOLDER_NOTEBOOK  = 12;
     public static final int ID_FOLDER_AUTO_CONTACTS = 13;
-    public static final int ID_FOLDER_IM_LOGS = 14;
-    public static final int ID_FOLDER_TASKS      = 15;
+    public static final int ID_FOLDER_IM_LOGS   = 14;
+    public static final int ID_FOLDER_TASKS     = 15;
 
     public static final int HIGHEST_SYSTEM_ID = 15;
     public static final int FIRST_USER_ID     = 256;
@@ -2089,7 +2089,7 @@ public class Mailbox {
         }
     }
 
-    public synchronized List<Integer> getTombstones(long lastSync) throws ServiceException {
+    public synchronized List<Integer> getTombstones(int lastSync) throws ServiceException {
         if (!isTrackingSync())
             throw ServiceException.FAILURE("not tracking sync", null);
 
@@ -2104,7 +2104,7 @@ public class Mailbox {
         }
     }
 
-    public synchronized MailItem.TypedIdList getTombstoneSet(long lastSync) throws ServiceException {
+    public synchronized MailItem.TypedIdList getTombstoneSet(int lastSync) throws ServiceException {
         if (!isTrackingSync())
             throw ServiceException.FAILURE("not tracking sync", null);
 
@@ -2119,10 +2119,11 @@ public class Mailbox {
         }
     }
 
-    public synchronized List<Folder> getModifiedFolders(final long lastSync) throws ServiceException {
+    public synchronized List<Folder> getModifiedFolders(final int lastSync) throws ServiceException {
         return getModifiedFolders(lastSync, MailItem.TYPE_UNKNOWN);
     }
-    public synchronized List<Folder> getModifiedFolders(final long lastSync, final byte type) throws ServiceException {
+
+    public synchronized List<Folder> getModifiedFolders(final int lastSync, final byte type) throws ServiceException {
         if (lastSync >= getLastChangeID())
             return Collections.emptyList();
 
@@ -2142,7 +2143,7 @@ public class Mailbox {
         }
     }
 
-    public synchronized List<Tag> getModifiedTags(OperationContext octxt, long lastSync) throws ServiceException {
+    public synchronized List<Tag> getModifiedTags(OperationContext octxt, int lastSync) throws ServiceException {
         if (lastSync >= getLastChangeID())
             return Collections.emptyList();
 
@@ -2179,7 +2180,7 @@ public class Mailbox {
      *             given type modified since the checkpoint, and
      *         <li>a List of the IDs of all items modified since the checkpoint
      *             but not currently visible to the caller</ul> */
-    public synchronized Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, long lastSync) throws ServiceException {
+    public synchronized Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, int lastSync) throws ServiceException {
         return getModifiedItems(octxt, lastSync, MailItem.TYPE_UNKNOWN, null);
     }
 
@@ -2201,13 +2202,13 @@ public class Mailbox {
      *         <li>a List of the IDs of all items of the given type modified
      *             since the checkpoint but not currently visible to the
      *             caller</ul> */
-    public synchronized Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, long lastSync, byte type) throws ServiceException {
+    public synchronized Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, byte type) throws ServiceException {
         return getModifiedItems(octxt, lastSync, type, null);
     }
 
     private static final List<Integer> EMPTY_ITEMS = Collections.emptyList();
 
-    public synchronized Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, long lastSync, byte type, Set<Integer> folderIds) throws ServiceException {
+    public synchronized Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, byte type, Set<Integer> folderIds) throws ServiceException {
         if (lastSync >= getLastChangeID())
             return new Pair<List<Integer>,MailItem.TypedIdList>(EMPTY_ITEMS, new MailItem.TypedIdList());
 
