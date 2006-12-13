@@ -1358,11 +1358,11 @@ public abstract class CalendarItem extends MailItem {
             }
             if (ZimbraLog.calendar.isDebugEnabled())
                 ZimbraLog.calendar.debug(
-                        "Found " + toRet.size() + " ReplyInfo entries for appt/task " +
+                        "Found " + toRet.size() + " ReplyList entries for appt/task " +
                         calItemId + ", inv " + invId + " in mailbox " + mboxId);
             if (outdated > 0)
                 ZimbraLog.calendar.warn(
-                        "Found " + outdated + " outdated ReplyList entries for appt/task " +
+                        "Found " + outdated + " outdated ReplyInfo entries for appt/task " +
                         calItemId + ", inv " + invId + " in mailbox " + mboxId);
             return toRet;
         }
