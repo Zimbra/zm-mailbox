@@ -228,8 +228,12 @@ public class ZimbraLog {
      * the "zimbra.dav" logger. Logs dav operations
      */
     public static final Log dav = LogFactory.getLog("zimbra.dav");
-    
-    
+
+    /**
+     * the "zimbra.io" logger.  Logs file IO operations.
+     */
+    public static final Log io = LogFactory.getLog("zimbra.io");
+
     public static String getContext() {
         return NDC.peek();
     }

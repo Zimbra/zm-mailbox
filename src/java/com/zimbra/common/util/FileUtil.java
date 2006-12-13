@@ -85,6 +85,35 @@ public class FileUtil {
     	}
     }
 
+    public static void copyOIO(File src, File dest) throws IOException {
+        byte[] buf = new byte[COPYBUFLEN];
+        copyOIO(src, dest, buf);
+    }
+
+    public static void copyOIO(File src, File dest, byte[] buf) throws IOException {
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+        try {
+            fis = new FileInputStream(src);
+            fos = new FileOutputStream(dest);
+            int byteRead;
+            while ((byteRead = fis.read(buf)) != -1) {
+                fos.write(buf, 0, byteRead);
+            }
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {}
+            }
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (IOException e) {}
+            }
+        }
+    }
+
     /**
      * Copy an input stream to file.
      * @param in
@@ -114,6 +143,31 @@ public class FileUtil {
                 }
             }
         }
+    }
+
+    public static int copyDirectory(File srcDir, File destDir) throws IOException {
+        int filesCopied = 0;
+        File[] files = srcDir.listFiles();
+        ensureDirExists(destDir);
+        // Process files.
+        for (File file : files) {
+            if (file.isFile()) {
+                File dest = new File(destDir, file.getName());
+                copyOIO(file, dest);
+                filesCopied++;
+            }
+        }
+        // Process directories.
+        for (File file : files) {
+            if (file.isDirectory()) {
+                String name = file.getName();
+                if (name != "." && name != "..") {
+                    File subDestDir = new File(destDir, file.getName());
+                    filesCopied += copyDirectory(file, subDestDir);
+                }
+            }
+        }
+        return filesCopied;
     }
 
     public static void ensureDirExists(File dir) throws IOException {
