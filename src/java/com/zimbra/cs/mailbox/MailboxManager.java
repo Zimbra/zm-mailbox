@@ -24,8 +24,10 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,21 +50,38 @@ public class MailboxManager {
     public static final class MailboxLock {
         private final String accountId;
         private final int    mailboxId;
-        private Thread  owner;
         private Mailbox mailbox;
+        private List<Thread> allowedThreads;
 
         MailboxLock(String acct, int id)  { this(acct, id, null); }
         MailboxLock(String acct, int id, Mailbox mbox) {
             accountId = acct.toLowerCase();  mailboxId = id;
-            owner = Thread.currentThread();  mailbox = mbox;
+            mailbox = mbox;
+            allowedThreads = new ArrayList<Thread>();
+            allowedThreads.add(Thread.currentThread());
         }
 
         String getAccountId()  { return accountId; }
         int getMailboxId()     { return mailboxId; }
         Mailbox getMailbox()   { return mailbox; }
 
-        boolean canAccess()     { return owner == Thread.currentThread(); }
-        void markUnavailable()  { owner = null;  mailbox = null; }
+        public synchronized void registerAllowedThread(Thread t) {
+            allowedThreads.add(t);
+        }
+
+        synchronized boolean canAccess() {
+            Thread curr = Thread.currentThread();
+            for (Thread t : allowedThreads) {
+                if (curr == t)
+                    return true;
+            }
+            return false;
+        }
+
+        synchronized void markUnavailable()  {
+            mailbox = null;
+            allowedThreads.clear();
+        }
         void cacheMailbox(Mailbox mbox) {
             if (mbox.getId() == mailboxId && mbox.getAccountId().equalsIgnoreCase(accountId))
                 mailbox = mbox;
