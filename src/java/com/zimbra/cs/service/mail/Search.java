@@ -310,7 +310,7 @@ public class Search extends MailDocumentHandler  {
                 e = addMessagePartHit(response, mph);                
             } else if (hit instanceof ContactHit) {
                 ContactHit ch = (ContactHit) hit;
-                e = ToXML.encodeContact(response, zsc, ch.getContact(), null, !inline, null);
+                e = ToXML.encodeContact(response, zsc, ch.getContact(), null, true, null);
             } else if (hit instanceof NoteHit) {
                 NoteHit nh = (NoteHit) hit;
                 e = ToXML.encodeNote(response,zsc, nh.getNote());

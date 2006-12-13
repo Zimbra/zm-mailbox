@@ -326,6 +326,7 @@ public class ToXML {
                 ContactAttrCache cacache, boolean summary, List<String> attrFilter) {
         return encodeContact(parent, lc, contact, cacache, summary, attrFilter, NOTIFY_FIELDS);
     }
+
     public static Element encodeContact(Element parent, ZimbraSoapContext lc, Contact contact,
                 ContactAttrCache cacache, boolean summary, List<String> attrFilter, int fields) {
         Element elem = parent.addElement(MailService.E_CONTACT);
@@ -342,37 +343,28 @@ public class ToXML {
             elem.addAttribute(MailService.A_REVISION, contact.getSavedSequence());
         }
 
-        if (summary || !needToOutput(fields, Change.MODIFIED_CONTENT)) {
-            try {
-                elem.addAttribute(MailService.A_FILE_AS_STR, contact.getFileAsString());
-
-                String email = contact.get(Contact.A_email);
-                if (email != null)
-                    elem.addAttribute(Contact.A_email, email);
-
-                email = contact.get(Contact.A_email2);
-                if (email != null)
-                    elem.addAttribute(Contact.A_email2, email);
-
-                email = contact.get(Contact.A_email3);
-                if (email != null)
-                    elem.addAttribute(Contact.A_email3, email);
+        if (!needToOutput(fields, Change.MODIFIED_CONTENT)) {
+            if (summary) {
+                try {
+                    elem.addAttribute(MailService.A_FILE_AS_STR, contact.getFileAsString());
+                } catch (ServiceException e) { }
+    
+                elem.addAttribute(Contact.A_email, contact.get(Contact.A_email));
+                elem.addAttribute(Contact.A_email2, contact.get(Contact.A_email2));
+                elem.addAttribute(Contact.A_email3, contact.get(Contact.A_email3));
 
                 String type = contact.get(Contact.A_type);
-                if (type == null) {
-                    String dlist = contact.get(Contact.A_dlist);
-                    if (dlist != null) type = Contact.TYPE_GROUP;
-                }
-                if (type != null)
-                    elem.addAttribute(Contact.A_type,  type);
-
+                if (type == null && contact.get(Contact.A_dlist) != null)
+                    type = Contact.TYPE_GROUP;
+                elem.addAttribute(Contact.A_type, type);
                 
                 // send back date with summary via search results
                 elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
-            } catch (ServiceException e) { }
+            }
+
+            // stop here if we're not returning the actual contact content
             return elem;
         }
-
 
         Map<String, String> attrs = contact.getFields();
         if (attrFilter != null) {
