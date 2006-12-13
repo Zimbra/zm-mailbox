@@ -187,17 +187,18 @@ public class ZimbraSoapContext {
 		    String key = eAccount.getAttribute(A_BY, null);
 		    String value = eAccount.getText();
 
-            if (key == null)
+            if (key == null) {
                 mRequestedAccountId = null;
-	        else if (key.equals(BY_NAME)) {
+            } else if (key.equals(BY_NAME)) {
 	            account = prov.get(AccountBy.name, value);
 	            if (account == null)
                     throw AccountServiceException.NO_SUCH_ACCOUNT(value);
 	            mRequestedAccountId = account.getId();
-	        } else if (key.equals(BY_ID))
+	        } else if (key.equals(BY_ID)) {
 	            mRequestedAccountId = value;
-	        else
+            } else {
 	            throw ServiceException.INVALID_REQUEST("unknown value for by: " + key, null);
+            }
 
             // while we're here, check the hop count to detect loops
             mHopCount = (int) Math.max(eAccount.getAttributeLong(A_HOPCOUNT, 0), 0);
@@ -236,14 +237,18 @@ public class ZimbraSoapContext {
 
         // constrain operations if we know the max change number the client knows about
         Element change = (ctxt == null ? null : ctxt.getOptionalElement(E_CHANGE));
-        if (change != null)
+        if (change != null) {
             try {
-                mMaximumChangeId = (int) change.getAttributeLong(A_CHANGE_ID, -1);
-                if (CHANGE_MODIFIED.equals(change.getAttribute(A_TYPE, CHANGE_MODIFIED)))
+                String token = change.getAttribute(A_CHANGE_ID, "-1");
+                int delimiter = token.indexOf('-');
+
+                mMaximumChangeId = Integer.parseInt(delimiter < 1 ? token : token.substring(0, delimiter));
+                if (change.getAttribute(A_TYPE, CHANGE_MODIFIED).equals(CHANGE_MODIFIED))
                     mChangeConstraintType = OperationContext.CHECK_MODIFIED;
                 else
                     mChangeConstraintType = OperationContext.CHECK_CREATED;
-            } catch (ServiceException e) { }
+            } catch (NumberFormatException nfe) { }
+        }
 
         // if the caller specifies an execution host or if we're on the wrong host, proxy
         mIsProxyRequest = false;
@@ -280,9 +285,8 @@ public class ZimbraSoapContext {
             String version = userAgent.getAttribute(A_VERSION, null);
             if (!StringUtil.isNullOrEmpty(name)) {
                 mUserAgent = name;
-                if (!StringUtil.isNullOrEmpty(version)) {
+                if (!StringUtil.isNullOrEmpty(version))
                     mUserAgent = mUserAgent + "/" + version;
-                }
             }
         }
     }
