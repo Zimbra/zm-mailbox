@@ -2651,11 +2651,17 @@ public class Mailbox {
             List<CalendarItem> calItems = new ArrayList<CalendarItem>();
             List<UnderlyingData> invData = DbMailItem.getCalendarItems(this, type, start, end, folderId, excludeFolders);
             for (MailItem.UnderlyingData data : invData) {
-                CalendarItem calItem;
-                calItem = getCalendarItem(data);
-                if (folderId == calItem.getFolderId() || (folderId == ID_AUTO_INCREMENT && calItem.inMailbox()))
-                    if (calItem.canAccess(ACL.RIGHT_READ))
-                        calItems.add(calItem);
+                try {
+                    CalendarItem calItem = getCalendarItem(data);
+                    if (folderId == calItem.getFolderId() || (folderId == ID_AUTO_INCREMENT && calItem.inMailbox()))
+                        if (calItem.canAccess(ACL.RIGHT_READ))
+                            calItems.add(calItem);
+                } catch (ServiceException e) {
+                    ZimbraLog.calendar.warn(
+                            "Error while retrieving calendar item " +
+                            data.id + " in mailbox " + mId +
+                            "; skipping item", e);
+                }
             }
             success = true;
             return calItems;
