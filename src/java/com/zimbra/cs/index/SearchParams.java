@@ -55,6 +55,10 @@ import com.zimbra.cs.service.util.ItemId;
  *
  */
 public final class SearchParams {
+    
+    private static final int MAX_OFFSET = 10000000; // 10M
+    private static final int MAX_LIMIT = 10000000; // 10M
+    
 
     public enum ExpandResults {
         NONE, FIRST, HITS, ALL;
@@ -87,14 +91,20 @@ public final class SearchParams {
     public OutputParticipants getWantRecipients() { return mRecipients ? OutputParticipants.PUT_RECIPIENTS : OutputParticipants.PUT_SENDERS; }
 
     public void setQueryStr(String queryStr) { mQueryStr = queryStr; }
-    public void setOffset(int offset) { mOffset = offset; }
+    public void setOffset(int offset) { mOffset = offset; if (mOffset > MAX_OFFSET) mOffset = MAX_OFFSET; }
+    public void setLimit(int limit) { mLimit = limit; if (mLimit > MAX_LIMIT) mLimit = MAX_LIMIT; }
 
-    public void setLimit(int limit) { mLimit = limit; }
-
-    // since the results are iterator-based, the "limit" is really the same as the chunk size at this point
-    // ie, the limit is used to tell the system approximately how many results you want and it tries to get them
-    // in a single chunk --- but it isn't until you do the results iteration that the limit is enforced.
-    public void setChunkSize(int chunkSize) { setLimit(chunkSize); } 
+    /**
+     * 
+     * since the results are iterator-based, the "limit" is really the same as the chunk size + offset
+     * ie, the limit is used to tell the system approximately how many results you want and it tries to get them
+     * in a single chunk --- but it isn't until you do the results iteration that the limit is enforced. 
+     * 
+     * @param chunkSize
+     */
+    public void setChunkSize(int chunkSize) {
+        setLimit(chunkSize + mOffset); 
+    } 
 
     public void setTypesStr(String groupByStr) throws ServiceException {
         mGroupByStr = groupByStr;
@@ -171,6 +181,11 @@ public final class SearchParams {
     public Mailbox.SearchResultMode getMode() { return mMode; }
     public void setMode(Mailbox.SearchResultMode mode) { mMode = mode; }
     public boolean getEstimateSize() { return mEstimateSize; }
+    
+    
+    /**
+     * @param estimateSize
+     */
     public void setEstimateSize(boolean estimateSize) { mEstimateSize = estimateSize; }
 
     private String mQueryStr;

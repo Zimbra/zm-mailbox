@@ -74,7 +74,7 @@ public class CsvFormatter extends Formatter {
         Iterator<? extends MailItem> iterator = null;
         StringBuffer sb = new StringBuffer();
         try {
-            iterator = getMailItems(context, item, -1, -1);
+            iterator = getMailItems(context, item, -1, -1, Integer.MAX_VALUE);
             ContactCSV.toCSV(iterator, sb);
         } finally {
             if (iterator instanceof QueryResultIterator)

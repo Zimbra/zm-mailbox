@@ -2710,6 +2710,11 @@ public class Mailbox {
     }
     
     /**
+     * This is the preferred form of the API call.
+     * 
+     * You **MUST** call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results, otherwise
+     * resources will be leaked.
+     * 
      * @param proto  The soap protocol the request is coming from.  Determines the type of Element we create for proxied results.
      * @param octxt  Operation Context
      * @param params Search Parameters
@@ -2769,7 +2774,7 @@ public class Mailbox {
      * @throws ServiceException
      */
     public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, String queryString, java.util.TimeZone tz, Locale locale, byte[] types, SortBy sortBy, int chunkSize, boolean prefetch, SearchResultMode mode) 
-    throws IOException, ParseException, ServiceException {
+    throws IOException, ParseException, ServiceException { 
         SearchParams params = new SearchParams();
         params.setQueryStr(queryString);
         params.setTimeZone(tz);

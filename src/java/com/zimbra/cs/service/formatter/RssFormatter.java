@@ -63,8 +63,11 @@ public class RssFormatter extends Formatter {
         Iterator<? extends MailItem> iterator = null;
         StringBuffer sb = new StringBuffer();
         Element.XMLElement rss = new Element.XMLElement("rss");
+        int offset = context.getOffset();
+        int limit = context.getLimit();
+        
         try {
-            iterator = getMailItems(context, item, context.getStartTime(), context.getEndTime());
+            iterator = getMailItems(context, item, context.getStartTime(), context.getEndTime(), limit-offset);
         
             context.resp.setCharacterEncoding("UTF-8");
             context.resp.setContentType("application/rss+xml");
@@ -80,14 +83,22 @@ public class RssFormatter extends Formatter {
             //channel.addElement("description").setText(query);
             
 //            MailDateFormat mdf = new MailDateFormat();
+            
+            int curHit = 0;
+            
             while (iterator.hasNext()) {
                 MailItem itItem = iterator.next();
-                if (itItem instanceof CalendarItem) {
-                    addCalendarItem((CalendarItem) itItem, channel, context);                
-                } else if (itItem instanceof Message) {
-                    addMessage((Message) itItem, channel, context);
-                } else if (itItem instanceof Document) {
-                    addDocument((Document) itItem, channel, context);
+                curHit++;
+                if (curHit > limit)
+                    break;
+                if (curHit >= offset) {
+                    if (itItem instanceof CalendarItem) {
+                        addCalendarItem((CalendarItem) itItem, channel, context);                
+                    } else if (itItem instanceof Message) {
+                        addMessage((Message) itItem, channel, context);
+                    } else if (itItem instanceof Document) {
+                        addDocument((Document) itItem, channel, context);
+                    }
                 }
             }
         } finally {

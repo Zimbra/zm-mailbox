@@ -76,7 +76,7 @@ public class IcsFormatter extends Formatter {
         //ZimbraLog.mailbox.info("start = "+new Date(context.getStartTime()));
         //ZimbraLog.mailbox.info("end = "+new Date(context.getEndTime()));
         try {
-            iterator = getMailItems(context, mailItem, context.getStartTime(), context.getEndTime());
+            iterator = getMailItems(context, mailItem, context.getStartTime(), context.getEndTime(), Integer.MAX_VALUE);
 
             // this is lame
             while (iterator.hasNext()) {

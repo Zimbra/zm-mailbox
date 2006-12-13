@@ -133,6 +133,10 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_START = "start"; // start time
 
     public static final String QP_END = "end"; // end time
+    
+    public static final String QP_OFFSET = "offset"; // offset into results
+    
+    public static final String QP_LIMIT = "limit"; // offset into results
 
     public static final String QP_AUTH = "auth"; // auth types
 
@@ -715,9 +719,31 @@ public class UserServlet extends ZimbraServlet {
             return params.get(QP_VIEW);
         }
 
+        public int getOffset() {
+            String s = params.get(QP_OFFSET);
+            if (s != null) { 
+                int offset = Integer.parseInt(s);
+                if (offset > 0)
+                    return offset;
+            }
+            return 0;
+        }
+        
+        public int getLimit() {
+            String s = params.get(QP_LIMIT);
+            if (s != null) {
+                int limit = Integer.parseInt(s);
+                if (limit > 0)
+                    return limit;
+            }
+            return 50;
+        }
+        
+
         public String getTypesString() {
             return params.get(QP_TYPES);
         }
+        
 
         public void setAnonymousRequest() {
             authAccount = ACL.ANONYMOUS_ACCT;

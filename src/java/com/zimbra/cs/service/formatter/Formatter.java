@@ -117,7 +117,7 @@ public abstract class Formatter {
 
     public abstract void saveCallback(byte[] body, UserServlet.Context context, Folder folder) throws UserServletException, ServiceException, IOException, ServletException;
 
-    public Iterator<? extends MailItem> getMailItems(Context context, MailItem item, long startTime, long endTime) throws ServiceException {
+    public Iterator<? extends MailItem> getMailItems(Context context, MailItem item, long startTime, long endTime, long chunkSize) throws ServiceException {
         String query = context.getQueryString();
         if (query != null) {
             try {
@@ -132,7 +132,7 @@ public abstract class Formatter {
                 if (searchTypes == null)
                     searchTypes = getDefaultSearchTypes();
                 byte[] types = MailboxIndex.parseTypesString(searchTypes);
-                ZimbraQueryResults results = context.targetMailbox.search(context.opContext, query, types, MailboxIndex.SortBy.DATE_DESCENDING, 500);
+                ZimbraQueryResults results = context.targetMailbox.search(context.opContext, query, types, MailboxIndex.SortBy.DATE_DESCENDING, context.getOffset() + context.getLimit());
                 return new QueryResultIterator(results);                
             } catch (IOException e) {
                 // TODO Auto-generated catch block
@@ -141,7 +141,7 @@ public abstract class Formatter {
                 throw ServiceException.FAILURE("search error", e);
             }
         } else if (item instanceof Folder) {
-            Collection<? extends MailItem> items = getMailItemsFromFolder(context, (Folder) item, startTime, endTime);
+            Collection<? extends MailItem> items = getMailItemsFromFolder(context, (Folder) item, startTime, endTime, chunkSize);
             return items != null ? items.iterator() : null;
         } else {
             ArrayList<MailItem> result = new ArrayList<MailItem>();
@@ -150,7 +150,7 @@ public abstract class Formatter {
         }
     }
 
-    private Collection<? extends MailItem> getMailItemsFromFolder(Context context, Folder folder, long startTime, long endTime) throws ServiceException {
+    private Collection<? extends MailItem> getMailItemsFromFolder(Context context, Folder folder, long startTime, long endTime, long chunkSize) throws ServiceException {
         switch (folder.getDefaultView()) {
             case MailItem.TYPE_APPOINTMENT:
             case MailItem.TYPE_TASK:

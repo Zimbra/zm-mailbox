@@ -166,7 +166,7 @@ public class ResultsPager
     
     
     private void forward() throws ServiceException {
-        mHits = new ArrayList<ZimbraHit>(mParams.getLimit());
+        mHits = new ArrayList<ZimbraHit>(Math.max(mParams.getLimit(), 1000));
         
         ZimbraHit hit;
         

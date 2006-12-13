@@ -1886,7 +1886,11 @@ public final class ZimbraQuery {
     public ZimbraQuery(Mailbox mbox, SearchParams params, boolean includeTrash, boolean includeSpam) throws ParseException, ServiceException {
         mParams = params;
         mMbox = mbox;
-        mChunkSize = mParams.getOffset() + mParams.getLimit();
+        long chunkSize = (long)mParams.getOffset() + (long)mParams.getLimit();
+        if (chunkSize > 1000)
+            mChunkSize = 1000;
+        else 
+            mChunkSize = (int)chunkSize;
         
 //        mPrefetch = prefetch;
 //        mMode = mode;

@@ -79,7 +79,7 @@ public class ZipFormatter extends Formatter {
         Iterator<? extends MailItem> iterator = null;
         ZipOutputStream out = null;
         try {
-            iterator = getMailItems(context, target, getDefaultStartTime(), getDefaultEndTime());
+            iterator = getMailItems(context, target, getDefaultStartTime(), getDefaultEndTime(), 500);
 
             // TODO: get name from folder/search/query/etc
             String filename = "items.zip";

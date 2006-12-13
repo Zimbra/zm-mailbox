@@ -58,8 +58,10 @@ public class AtomFormatter extends Formatter {
         Iterator<? extends MailItem> iterator = null;
         StringBuffer sb = new StringBuffer();
         Element.XMLElement feed = new Element.XMLElement("feed");
+        int offset = context.getOffset();
+        int limit = context.getLimit();
         try {
-            iterator = getMailItems(context, item, context.getStartTime(), context.getEndTime());
+            iterator = getMailItems(context, item, context.getStartTime(), context.getEndTime(), limit-offset);
             
             context.resp.setCharacterEncoding("UTF-8");
             context.resp.setContentType("application/atom+xml");
@@ -72,13 +74,20 @@ public class AtomFormatter extends Formatter {
             feed.addElement("generator").setText("Zimbra Atom Feed Servlet");
             feed.addElement("id").setText(context.req.getRequestURL().toString());
             feed.addElement("updated").setText(DateUtil.toISO8601(new Date(context.targetMailbox.getLastChangeDate())));
+            
+            int curHit = 0;
                     
             while (iterator.hasNext()) {
                 MailItem itItem = iterator.next();
-                if (itItem instanceof CalendarItem) {
-                    addCalendarItem((CalendarItem) itItem, feed, context);                
-                } else if (itItem instanceof Message) {
-                    addMessage((Message) itItem, feed, context);
+                curHit++;
+                if (curHit > limit)
+                    break;
+                if (curHit >= offset) {
+                    if (itItem instanceof CalendarItem) {
+                        addCalendarItem((CalendarItem) itItem, feed, context);                
+                    } else if (itItem instanceof Message) {
+                        addMessage((Message) itItem, feed, context);
+                    }
                 }
             }
         } finally {

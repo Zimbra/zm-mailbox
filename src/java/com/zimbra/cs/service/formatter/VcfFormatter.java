@@ -70,7 +70,7 @@ public class VcfFormatter extends Formatter {
     public void formatCallback(Context context, MailItem target) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         try {
-            iterator = getMailItems(context, target, getDefaultStartTime(), getDefaultEndTime());
+            iterator = getMailItems(context, target, getDefaultStartTime(), getDefaultEndTime(), Integer.MAX_VALUE);
 
             String filename = target instanceof Contact ? ((Contact) target).getFileAsString() : "contacts";
             String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".vcf");
