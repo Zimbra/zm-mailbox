@@ -36,7 +36,9 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -92,8 +94,10 @@ public class SetCalendarItem extends CalendarRequest {
         OperationContext octxt = zc.getOperationContext();
         
         ItemId iidFolder = new ItemId(request.getAttribute(MailService.A_FOLDER, CreateCalendarItem.DEFAULT_FOLDER), zc);
-        
-        sLog.info("<SetCalendarItem> " + zc.toString());
+        String flagsStr = request.getAttribute(MailService.A_FLAGS, null);
+        int flags = flagsStr != null ? Flag.flagsToBitmask(flagsStr) : 0;
+        String tagsStr = request.getAttribute(MailService.A_TAGS, null);
+        long tags = tagsStr != null ? Tag.tagsToBitmask(tagsStr) : 0;
         
         SetCalendarItemData defaultData;
         ArrayList<SetCalendarItemData> exceptions = new ArrayList<SetCalendarItemData>();
@@ -131,7 +135,7 @@ public class SetCalendarItem extends CalendarRequest {
                 exceptions.toArray(exceptArray);
             }
             
-            int calItemId = mbox.setCalendarItem(octxt, iidFolder.getId(), defaultData, exceptArray);
+            int calItemId = mbox.setCalendarItem(octxt, iidFolder.getId(), flags, tags, defaultData, exceptArray);
             
             Element response = getResponseElement(zc);
             

@@ -56,6 +56,8 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     private int mCalendarItemId;
     private String mCalendarItemPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private boolean mAttachmentIndexingEnabled;
+    private int mFlags;
+    private long mTags;
     private Mailbox.SetCalendarItemData mDefaultInvite;
     private Mailbox.SetCalendarItemData mExceptions[];
     private short mVolumeId = -1;
@@ -121,6 +123,10 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
             out.writeUTF(mCalendarItemPartStat);
         if (getVersion().atLeast(1, 2))
             out.writeBoolean(mAttachmentIndexingEnabled);
+        if (getVersion().atLeast(1, 11)) {
+            out.writeInt(mFlags);
+            out.writeLong(mTags);
+        }
         
         try {
             serializeSetCalendarItemData(out, mDefaultInvite);
@@ -153,6 +159,10 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
             mAttachmentIndexingEnabled = in.readBoolean();
         else
             mAttachmentIndexingEnabled = false;
+        if (getVersion().atLeast(1, 11)) {
+            mFlags = in.readInt();
+            mTags = in.readLong();
+        }
         
         try {
             mDefaultInvite = deserializeSetCalendarItemData(in, mAttachmentIndexingEnabled);
@@ -171,11 +181,13 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         }
     }
 
-    public SetCalendarItem(int mailboxId, boolean attachmentIndexingEnabled) 
-    {
+    public SetCalendarItem(int mailboxId, boolean attachmentIndexingEnabled,
+                           int flags, long tags) {
         super(); 
         setMailboxId(mailboxId);
         mAttachmentIndexingEnabled = attachmentIndexingEnabled;
+        mFlags = flags;
+        mTags = tags;
     }
     
     public void setData(Mailbox.SetCalendarItemData defaultInvite, Mailbox.SetCalendarItemData exceptions[]) {
@@ -198,14 +210,12 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         return mExceptions[exceptionNum];
     }
     
-    public void setCalendarItemAttrs(int calItemId,
-                                     int folderId,
-                                     short volumeId) {
+    public void setCalendarItemAttrs(int calItemId, int folderId, short volumeId) {
         mCalendarItemId = calItemId;
         mFolderId = folderId;
         mVolumeId = volumeId;
     }
-    
+
     public int getCalendarItemId() {
         return mCalendarItemId;
     }
@@ -221,7 +231,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     public int getFolderId() {
         return mFolderId;
     }
-    
+
     public short getVolumeId() {
         if (mVolumeId == -1)
             return Volume.getCurrentMessageVolume().getId();
@@ -237,17 +247,22 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         
-        mbox.setCalendarItem(getOperationContext(), mFolderId, mDefaultInvite, mExceptions);
+        mbox.setCalendarItem(getOperationContext(), mFolderId, mFlags, mTags,
+                             mDefaultInvite, mExceptions);
     }
 
     protected String getPrintableData() {
         StringBuffer toRet = new StringBuffer();
-        toRet.append("calItemId=").append(mCalendarItemId).append(",");
-        toRet.append("calItemPartStat=").append(mCalendarItemPartStat).append(".");
-        toRet.append("folder=").append(mFolderId).append(",");
+        toRet.append("calItemId=").append(mCalendarItemId);
+        toRet.append(", calItemPartStat=").append(mCalendarItemPartStat);
+        toRet.append(", folder=").append(mFolderId);
         if (getVersion().atLeast(1, 0))
             toRet.append(", vol=").append(mVolumeId);
-        toRet.append("default=").append(mDefaultInvite.toString()).append("\n");
+        if (getVersion().atLeast(1, 11)) {
+            toRet.append(", flags=").append(mFlags);
+            toRet.append(", tags=").append(mTags);
+        }
+        toRet.append(", default=").append(mDefaultInvite.toString()).append("\n");
         if (mExceptions != null) {
             for (int i = 0; i < mExceptions.length; i++) {
                 toRet.append("Exception").append(i).append("=").append(mExceptions[i].toString()).append("\n");

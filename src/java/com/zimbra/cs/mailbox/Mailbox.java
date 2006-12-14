@@ -2865,16 +2865,26 @@ public class Mailbox {
         }
     }
 
+    public synchronized int setCalendarItem(OperationContext octxt, int folderId,
+                                            SetCalendarItemData defaultInv,
+                                            SetCalendarItemData exceptions[])
+    throws ServiceException {
+        return setCalendarItem(octxt, folderId, 0, 0, defaultInv, exceptions);
+    }
+
     /**
      * @param octxt
      * @param exceptions can be NULL
      * @return calendar item ID 
      * @throws ServiceException
      */
-    public synchronized int setCalendarItem(OperationContext octxt, int folderId, SetCalendarItemData defaultInv, SetCalendarItemData exceptions[])
+    public synchronized int setCalendarItem(OperationContext octxt, int folderId,
+                                            int flags, long tags,
+                                            SetCalendarItemData defaultInv,
+                                            SetCalendarItemData exceptions[])
     throws ServiceException {
         SetCalendarItem redoRecorder =
-            new SetCalendarItem(getId(), attachmentsIndexingEnabled());
+            new SetCalendarItem(getId(), attachmentsIndexingEnabled(), flags, tags);
         SetCalendarItem redoPlayer = (octxt == null ? null : (SetCalendarItem) octxt.getPlayer());
 
         boolean success = false;
@@ -2932,6 +2942,7 @@ public class Mailbox {
                     }
                 }
 
+                calItem.setTags(flags, tags);
                 success = true;
 
                 return calItem.getId();
