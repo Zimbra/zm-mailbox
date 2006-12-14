@@ -43,7 +43,12 @@ import java.util.TreeSet;
 
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
-import javax.mail.internet.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MailDateFormat;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimePart;
 
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.BCodec;
@@ -55,8 +60,9 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.MimeCompoundHeader;
+import com.zimbra.cs.mime.MimeCompoundHeader.*;
 import com.zimbra.cs.mime.MimeVisitor;
-import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -284,7 +290,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
         }
     }
 
-    private void naddresses(PrintStream ps, InternetAddress[] addrs) {
+    private static void naddresses(PrintStream ps, InternetAddress[] addrs) {
         int count = 0;
         if (addrs != null && addrs.length > 0) {
             for (int i = 0; i < addrs.length; i++) {
@@ -314,6 +320,39 @@ public class ImapMessage implements Comparable<ImapMessage> {
         else             ps.write(')');
     }
 
+    private static void nlist(PrintStream ps, String[] list) {
+        if (list == null || list.length == 0) {
+            ps.print("NIL");
+        } else if (list.length == 1) {
+            astring(ps, list[0]);
+        } else {
+            ps.write('(');
+            for (int i = 0; i < list.length; i++) {
+                if (i != 0)  ps.write(' ');
+                astring(ps, list[i]);
+            }
+            ps.write(')');
+        }
+    }
+
+    private static void nparams(PrintStream ps, MimeCompoundHeader header) {
+        boolean first = true;
+        for (Iterator<Map.Entry<String, String>> it = header.getParameterIterator(); it.hasNext(); first = false) {
+            Map.Entry<String, String> param = it.next();
+            ps.print(first ? '(' : ' ');  aSTRING(ps, param.getKey());  ps.write(' ');  nstring2047(ps, param.getValue());
+        }
+        ps.print(first ? "NIL" : ")");
+    }
+
+    private static void ndisposition(PrintStream ps, String disposition) {
+        if (disposition == null) {
+            ps.print("NIL");
+        } else {
+            ContentDisposition cdisp = new ContentDisposition(disposition);
+            astring(ps, cdisp.getValue());  ps.write(' ');  nparams(ps, cdisp);
+        }
+    }
+
     void serializeEnvelope(PrintStream ps, MimeMessage mm) throws MessagingException {
         // 7.4.2: "The fields of the envelope structure are in the following order: date, subject,
         //         from, sender, reply-to, to, cc, bcc, in-reply-to, and message-id.  The date,
@@ -337,12 +376,12 @@ public class ImapMessage implements Comparable<ImapMessage> {
     private String nATOM(String value) { return value == null ? "NIL" : '"' + value.toUpperCase() + '"'; }
 
     void serializeStructure(PrintStream ps, MimePart mp, boolean extensions) throws IOException, MessagingException {
-        ContentType ct = new ContentType(mp.getContentType());
-        if (ct.getValue().equals(Mime.CT_TEXT_PLAIN) && (ct.getParameter(Mime.P_CHARSET) == null || ct.getParameter(Mime.P_CHARSET).trim().equals("")))
-            ct.setParameter(Mime.P_CHARSET, Mime.P_CHARSET_DEFAULT);
+        ContentType ctype = new ContentType(mp.getContentType());
+        if (ctype.getValue().equals(Mime.CT_TEXT_PLAIN) && (ctype.getParameter(Mime.P_CHARSET) == null || ctype.getParameter(Mime.P_CHARSET).trim().equals("")))
+            ctype.setParameter(Mime.P_CHARSET, Mime.P_CHARSET_DEFAULT);
 
         ps.write('(');
-        String primary = nATOM(ct.getPrimaryType()), subtype = nATOM(ct.getSubType());
+        String primary = nATOM(ctype.getPrimaryType()), subtype = nATOM(ctype.getSubType());
         if (primary.equals("\"MULTIPART\"")) {
             // 7.4.2: "Multiple parts are indicated by parenthesis nesting.  Instead of a body type
             //         as the first element of the parenthesized list, there is a sequence of one
@@ -354,8 +393,12 @@ public class ImapMessage implements Comparable<ImapMessage> {
             if (multi.getCount() <= 0)
                 ps.print("NIL");
             ps.write(' ');  ps.print(subtype);
-            if (extensions)
-                ;   // FIXME: not implementing BODYSTRUCTURE extensions yet
+            if (extensions) {
+                ps.write(' ');  nparams(ps, ctype);
+                ps.write(' ');  ndisposition(ps, mp.getDisposition());
+                ps.write(' ');  nlist(ps, mp.getContentLanguage());
+                ps.write(' ');  nstring(ps, mp.getHeader("Content-Location", null));
+            }
         } else {
             // 7.4.2: "The basic fields of a non-multipart body part are in the following order:
             //         body type, body subtype, body parameter parenthesized list, body id, body
@@ -363,13 +406,8 @@ public class ImapMessage implements Comparable<ImapMessage> {
             String cte = mp.getEncoding();
             cte = (cte == null || cte.trim().equals("") ? "7bit" : cte);
             boolean rfc822 = primary.equals("\"MESSAGE\"") && subtype.equals("\"RFC822\"");
-            aSTRING(ps, ct.getPrimaryType());  ps.write(' ');  aSTRING(ps, ct.getSubType());  ps.write(' ');
-            boolean first = true;
-            for (Iterator<Map.Entry<String, String>> it = ct.getParameterIterator(); it.hasNext(); first = false) {
-                Map.Entry<String, String> param = it.next();
-                ps.print(first ? '(' : ' ');  aSTRING(ps, param.getKey());  ps.write(' ');  astring(ps, param.getValue());
-            }
-            ps.print(first ? "NIL" : ")");
+            aSTRING(ps, ctype.getPrimaryType());  ps.write(' ');  aSTRING(ps, ctype.getSubType());
+            ps.write(' ');  nparams(ps, ctype);
             ps.write(' ');  nstring(ps, mp.getContentID());
             ps.write(' ');  nstring2047(ps, mp.getDescription());
             ps.write(' ');  aSTRING(ps, cte);
@@ -388,8 +426,12 @@ public class ImapMessage implements Comparable<ImapMessage> {
                 //         content transfer encoding and not the resulting size after any decoding."
                 ps.write(' ');  ps.print(getLineCount(mp));
             }
-            if (extensions && !rfc822)
-                ;   // FIXME: not implementing BODYSTRUCTURE extensions yet
+            if (extensions && !rfc822) {
+                ps.write(' ');  nstring(ps, mp.getContentMD5());
+                ps.write(' ');  ndisposition(ps, mp.getDisposition());
+                ps.write(' ');  nlist(ps, mp.getContentLanguage());
+                ps.write(' ');  nstring(ps, mp.getHeader("Content-Location", null));
+            }
         }
         ps.write(')');
     }
