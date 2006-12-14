@@ -133,8 +133,8 @@ public class AtomFormatter extends Formatter {
         entry.addElement("summary").setText(m.getFragment());
         Element author = entry.addElement("author");
         // TODO: only personal part in name
-        author.addElement("name").setText(m.getSender());
-        author.addElement("email").setText(m.getSender());
+        author.addElement("name").setText(m.getOriginator());
+        author.addElement("email").setText(m.getOriginator());
         entry.addElement("modified").setText(DateUtil.toISO8601(new Date(m.getDate())));
     }
 

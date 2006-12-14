@@ -941,7 +941,7 @@ message result:
 <SearchResponse sortBy="sort-by" offset="..." more="{more-flag}">
    [<info>...</info>]
    <m id="{message-id}" t="{tags}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" l="{location}" score="..." [mbx="UID"] sf="SORT-FIELD-VALUE" [cm="1"]>
-     <e .../>*  <!- sender only -->
+     <e .../>*  <!- from only -->
      <su>{subject}</su>
      <fr>{fragment}</fr>
      [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only) 
@@ -1000,7 +1000,7 @@ if nest="0" on the request, response looks like this:
 <SearchConvResponse sortBy="sort-by" offset="..." more="{more-flag}">
    [<info>...</info>]
    <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="..." sf="SORT-FIELD-VALUE">
-     <e .../>  <!- sender only -->
+     <e .../>  <!- from only -->
      <su>{subject}</su>
      <fr>{fragment}</fr>
      [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only) 
@@ -1014,7 +1014,7 @@ if nest="1" on the request, response looks like this:
    [<info>...</info>]
    <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] f="{flags}">
      <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" score="..." sf="SORT-FIELD-VALUE">
-       <e .../>  <!- sender only -->
+       <e .../>  <!- from only -->
        <su>{subject}</su>
        <fr>{fragment}</fr>
        [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only) 

@@ -351,7 +351,7 @@ public class Notification {
         String recipientDomain = EmailUtil.getLocalPartAndDomain(rcpt)[1];
 
         HashMap vars = new HashMap();
-        vars.put("SENDER_ADDRESS", pm.getSender());
+        vars.put("SENDER_ADDRESS", pm.getOriginator());
         vars.put("RECIPIENT_ADDRESS", rcpt);
         vars.put("RECIPIENT_DOMAIN", recipientDomain);
         vars.put("NOTIFICATION_ADDRESS", destination);

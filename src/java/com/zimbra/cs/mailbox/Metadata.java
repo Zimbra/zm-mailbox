@@ -70,6 +70,7 @@ public class Metadata {
     static final String FN_FRAGMENT        = "f";
     static final String FN_FIRST           = "f";
     static final String FN_FIELDS          = "fld";
+    static final String FN_FROM            = "fr";
 //    static final String FN_IMAP_ID         = "i4";
     static final String FN_REMOTE_ID       = "id";
     static final String FN_IDENTITY_ID     = "idnt";
