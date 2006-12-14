@@ -494,9 +494,15 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     public void initMailbox() throws ServiceException, IOException {
-        if (mMailboxName == null || mPassword == null) return;
+        if (mPassword == null) return;
+
         if (mAdminAccountName != null) {
             adminAuth(mAdminAccountName, mPassword, mUrl);
+        }
+
+        if (mMailboxName == null) return;
+
+        if (mAdminAccountName != null) {
             selectMailbox(mMailboxName);
         } else {
             auth(mMailboxName, mPassword, mUrl);            
