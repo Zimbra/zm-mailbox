@@ -147,7 +147,7 @@ public final class TopLevelMessageHandler {
         String sortFrom = pm.getParsedSender().getSortString();
         if (sortFrom != null && sortFrom.length() > DbMailItem.MAX_SENDER_LENGTH)
             sortFrom = sortFrom.substring(0, DbMailItem.MAX_SENDER_LENGTH);
-        String from = pm.getOriginator();
+        String from = pm.getSender();
         
         //                                                                                                             store, index, tokenize
         mDocument.add(new Field(LuceneFields.L_H_FROM, from,                                    false, true, true));
@@ -257,7 +257,7 @@ public final class TopLevelMessageHandler {
         String sortFrom = pm.getParsedSender().getSortString();
         if (sortFrom != null && sortFrom.length() > DbMailItem.MAX_SENDER_LENGTH)
             sortFrom = sortFrom.substring(0, DbMailItem.MAX_SENDER_LENGTH);
-        String from = pm.getOriginator();
+        String from = pm.getSender();
 
         if (from != null)
             d.add(new Field(LuceneFields.L_H_FROM, from, false, true, true));

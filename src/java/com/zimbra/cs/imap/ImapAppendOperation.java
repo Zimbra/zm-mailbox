@@ -116,8 +116,8 @@ public class ImapAppendOperation extends Operation  {
                 ParsedMessage pm = mDate != null ? new ParsedMessage(mContent, mDate.getTime(), idxAttach) :
                                                    new ParsedMessage(mContent, idxAttach);
                 try {
-                    if (!pm.getOriginator().equals("")) {
-                        InternetAddress ia = new InternetAddress(pm.getOriginator());
+                    if (!pm.getSender().equals("")) {
+                        InternetAddress ia = new InternetAddress(pm.getSender());
                         if (AccountUtil.addressMatchesAccount(mMailbox.getAccount(), ia.getAddress()))
                             flagMask |= Flag.BITMASK_FROM_ME;
                     }

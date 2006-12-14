@@ -467,7 +467,7 @@ public class ToXML {
                 m.addAttribute(MailService.A_FOLDER, lc.formatItemId(msg.getFolderId()));
                 recordItemTags(m, msg, fields);
                 m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
-                encodeOriginatorEmails(m, msg);
+                encodeEmail(m, msg.getSender(), EmailType.FROM);
             }
         }
         return c;
@@ -906,7 +906,7 @@ public class ToXML {
         }
 
         if (addSenders)
-            encodeOriginatorEmails(e, msg);
+            encodeEmail(e, msg.getSender(), EmailType.FROM);
 
         e.addAttribute(MailService.E_SUBJECT, StringUtil.stripControlCharacters(msg.getSubject()), Element.DISP_CONTENT);
 
@@ -1435,18 +1435,6 @@ public class ToXML {
         elem.addAttribute(MailService.A_PERSONAL, pa.personalPart);
         elem.addAttribute(MailService.A_ADDRESS_TYPE, type.toString());
         return elem;
-    }
-
-    public static void encodeOriginatorEmails(Element parent, Message msg) {
-        // For "From", use getOriginator() instead of getFrom() for backward
-        // compatibility with clients that expect From-then-fallback-to-Sender
-        // behavior.
-        String from = msg.getOriginator();
-        if (from.length() > 0)
-            encodeEmail(parent, from, EmailType.FROM);
-        String sender = msg.getSender();
-        if (sender.length() > 0)
-            encodeEmail(parent, sender, EmailType.SENDER);
     }
 
     public static Element encodeWiki(Element parent, ZimbraSoapContext lc, WikiItem wiki, int rev) {

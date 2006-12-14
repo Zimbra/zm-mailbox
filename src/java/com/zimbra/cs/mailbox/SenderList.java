@@ -49,7 +49,7 @@ public class SenderList {
     public SenderList()  {}
 
     public SenderList(Message msg) {
-        String sender = msg.getOriginator();
+        String sender = msg.getSender();
         if (sender != null && !sender.trim().equals("")) {
             mFirst = new ParsedAddress(sender).parse();
             mLastDate = msg.getDate();
@@ -71,13 +71,13 @@ public class SenderList {
 
         int first = 0;
         do {
-            String sender = msgs[first].getOriginator();
+            String sender = msgs[first].getSender();
             if (sender != null && !sender.trim().equals(""))
                 mFirst = new ParsedAddress(sender).parse();
         } while (mFirst == null && ++first < mSize);
 
         for (int i = msgs.length - 1; i >= first && !mIsElided; i--) {
-            String sender = msgs[i].getOriginator();
+            String sender = msgs[i].getSender();
             if (sender == null || sender.trim().equals(""))
                 continue;
             ParsedAddress pa = new ParsedAddress(sender).parse();
@@ -94,7 +94,7 @@ public class SenderList {
 
 
     public SenderList add(Message msg) throws RefreshException {
-        String sender = msg.getOriginator();
+        String sender = msg.getSender();
         if (sender == null || sender.trim().equals("")) {
             mSize++;
             return this;
@@ -105,7 +105,7 @@ public class SenderList {
 
         mLastDate = msg.getDate();
         mSize++;
-        ParsedAddress pa = new ParsedAddress(msg.getOriginator()).parse();
+        ParsedAddress pa = new ParsedAddress(msg.getSender()).parse();
         
         if (mFirst == null) {
             mFirst = pa;
