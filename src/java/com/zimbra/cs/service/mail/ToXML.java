@@ -467,7 +467,7 @@ public class ToXML {
                 m.addAttribute(MailService.A_FOLDER, lc.formatItemId(msg.getFolderId()));
                 recordItemTags(m, msg, fields);
                 m.addAttribute(MailService.E_FRAG, msg.getFragment(), Element.DISP_CONTENT);
-                encodeEmail(m, msg.getSender(), EmailType.FROM);
+                encodeOriginatorEmails(m, msg);
             }
         }
         return c;
@@ -601,6 +601,7 @@ public class ToXML {
                 part = "";
 
             addEmails(m, Mime.parseAddressHeader(mm, "From"), EmailType.FROM);
+            addEmails(m, Mime.parseAddressHeader(mm, "Sender"), EmailType.SENDER);
             addEmails(m, Mime.parseAddressHeader(mm, "Reply-To"), EmailType.REPLY_TO);
             addEmails(m, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
             addEmails(m, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
@@ -788,6 +789,7 @@ public class ToXML {
                 part = "";
 
             addEmails(m, Mime.parseAddressHeader(mm, "From"), EmailType.FROM);
+            addEmails(m, Mime.parseAddressHeader(mm, "Sender"), EmailType.SENDER);
             addEmails(m, Mime.parseAddressHeader(mm, "Reply-To"), EmailType.REPLY_TO);
             addEmails(m, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
             addEmails(m, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
@@ -904,7 +906,7 @@ public class ToXML {
         }
 
         if (addSenders)
-            encodeEmail(e, msg.getSender(), EmailType.FROM);
+            encodeOriginatorEmails(e, msg);
 
         e.addAttribute(MailService.E_SUBJECT, StringUtil.stripControlCharacters(msg.getSubject()), Element.DISP_CONTENT);
 
@@ -1435,6 +1437,17 @@ public class ToXML {
         return elem;
     }
 
+    public static void encodeOriginatorEmails(Element parent, Message msg) {
+        // For "From", use getOriginator() instead of getFrom() for backward
+        // compatibility with clients that expect From-then-fallback-to-Sender
+        // behavior.
+        String from = msg.getOriginator();
+        if (from.length() > 0)
+            encodeEmail(parent, from, EmailType.FROM);
+        String sender = msg.getSender();
+        if (sender.length() > 0)
+            encodeEmail(parent, sender, EmailType.SENDER);
+    }
 
     public static Element encodeWiki(Element parent, ZimbraSoapContext lc, WikiItem wiki, int rev) {
         return encodeWiki(parent, lc, wiki, NOTIFY_FIELDS, rev);

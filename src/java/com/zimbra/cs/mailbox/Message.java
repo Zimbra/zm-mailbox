@@ -108,6 +108,7 @@ public class Message extends MailItem {
     /** Class logger for Message class */
     static Log sLog = LogFactory.getLog(Message.class);
 
+    private String mFrom;
     private String mSender;
     private String mRecipients;
     private String mFragment;
@@ -139,11 +140,37 @@ public class Message extends MailItem {
         return isTagged(mMailbox.mDraftFlag);
     }
 
-    /** Returns the message's originator.  This is the <code>From:</code>
-     *  header from the message or, if none exists, the <code>Sender:</code>
-     *  header. */
+    /**
+     * Returns the <code>From:</code> header of the MIME message.
+     * @return
+     */
+    public String getFrom() {
+        return (mFrom == null ? "" : mFrom);
+    }
+
+    /**
+     * Returns the <code>Sender:</code> header of the MIME message.  If this
+     * header is present and has a different value than the <code>From:</code>
+     * header, the message was sent by the <code>Sender:</code> user on behalf
+     * of the <code>From:</code> user.
+     * @return
+     */
     public String getSender() {
         return (mSender == null ? "" : mSender);
+    }
+
+    /**
+     * Returns the message originator.  It is the <code>From:</code> header
+     * if it is specified.  If not, the <code>Sender:</code> header is the
+     * originator.
+     * @return
+     */
+    public String getOriginator() {
+        String from = getFrom();
+        if (from.length() > 0)
+            return from;
+        else
+            return getOriginator();
     }
 
     /** Returns the <code>To:</code> header of the message, if the message
@@ -315,13 +342,13 @@ public class Message extends MailItem {
             //   boolean sentByMe = (flags & Flag.FLAG_FROM_ME) != 0;
             boolean sentByMe = false;
             try {
-                String pmSender = pm.getSender();
+                String pmSender = pm.getOriginator();
                 if (pmSender != null && pmSender.length() > 0) {
                     String sender = new InternetAddress(pmSender).getAddress();
                     sentByMe = AccountUtil.addressMatchesAccount(acct, sender);
                 }
             } catch (AddressException e) {
-                throw ServiceException.INVALID_REQUEST("unable to parse invite sender: " + pm.getSender(), e);
+                throw ServiceException.INVALID_REQUEST("unable to parse invite sender: " + pm.getOriginator(), e);
             }
 
             try {
@@ -561,6 +588,7 @@ public class Message extends MailItem {
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
 
+        mFrom = meta.get(Metadata.FN_FROM, null);
         mSender = meta.get(Metadata.FN_SENDER, null);
         mRecipients = meta.get(Metadata.FN_RECIPIENTS, null);
         mFragment = meta.get(Metadata.FN_FRAGMENT, null);
@@ -588,14 +616,14 @@ public class Message extends MailItem {
     }
 
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mSender, mRecipients, mFragment, mData.subject, mRawSubject, mDraftInfo, mCalendarItemInfos);
+        return encodeMetadata(meta, mColor, mFrom, mSender, mRecipients, mFragment, mData.subject, mRawSubject, mDraftInfo, mCalendarItemInfos);
     }
     private static String encodeMetadata(byte color, ParsedMessage pm, int flags, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
         // cache the "To" header only for messages sent by the user
         String recipients = ((flags & Flag.BITMASK_FROM_ME) == 0 ? null : pm.getRecipients());
-        return encodeMetadata(new Metadata(), color, pm.getSender(), recipients, pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), dinfo, calItemInfos).toString();
+        return encodeMetadata(new Metadata(), color, pm.getFromHeader(), pm.getSenderHeader(), recipients, pm.getFragment(), pm.getNormalizedSubject(), pm.getSubject(), dinfo, calItemInfos).toString();
     }
-    static Metadata encodeMetadata(Metadata meta, byte color, String sender, String recipients, String fragment, String subject, String rawSubject, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
+    static Metadata encodeMetadata(Metadata meta, byte color, String fromHdr, String senderHdr, String recipients, String fragment, String subject, String rawSubject, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos) {
         // try to figure out a simple way to make the raw subject from the normalized one
         String prefix = null;
         if (rawSubject == null || rawSubject.equals(subject))
@@ -605,7 +633,8 @@ public class Message extends MailItem {
             rawSubject = null;
         }
 
-        meta.put(Metadata.FN_SENDER,     sender);
+        meta.put(Metadata.FN_FROM,       fromHdr);
+        meta.put(Metadata.FN_SENDER,     senderHdr);
         meta.put(Metadata.FN_RECIPIENTS, recipients);
         meta.put(Metadata.FN_FRAGMENT,   fragment);
         meta.put(Metadata.FN_PREFIX,     prefix);
@@ -630,6 +659,7 @@ public class Message extends MailItem {
     }
 
 
+    private static final String CN_FROM       = "from";
     private static final String CN_SENDER     = "sender";
     private static final String CN_RECIPIENTS = "to";
     private static final String CN_FRAGMENT   = "fragment";
@@ -637,7 +667,8 @@ public class Message extends MailItem {
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("message: {");
-        appendCommonMembers(sb).append(", ");
+        appendCommonMembers(sb);
+        sb.append(CN_FROM).append(": ").append(mFrom).append(", ");
         sb.append(CN_SENDER).append(": ").append(mSender).append(", ");
         if (mRecipients != null)
             sb.append(CN_RECIPIENTS).append(": ").append(mRecipients).append(", ");

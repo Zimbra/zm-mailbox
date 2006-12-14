@@ -57,7 +57,6 @@ import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.operation.ItemActionOperation;
 import com.zimbra.cs.operation.SearchOperation;
 import com.zimbra.cs.operation.Operation.Requester;
-import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.SessionCache;
@@ -471,7 +470,7 @@ public class Search extends MailDocumentHandler  {
         if (mph.getScore() != 0)
             mp.addAttribute(MailService.A_SCORE, mph.getScore());
 
-        ToXML.encodeEmail(mp, msg.getSender(), EmailType.FROM);
+        ToXML.encodeOriginatorEmails(mp, msg);
         String subject = mph.getSubject();
         if (subject != null)
             mp.addAttribute(MailService.E_SUBJECT, subject, Element.DISP_CONTENT);

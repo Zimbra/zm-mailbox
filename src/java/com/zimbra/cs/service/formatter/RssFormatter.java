@@ -146,7 +146,7 @@ public class RssFormatter extends Formatter {
         Element item = channel.addElement("item");
         item.addElement("title").setText(m.getSubject());
         item.addElement("description").setText(m.getFragment());
-        item.addElement("author").setText(m.getSender());
+        item.addElement("author").setText(m.getOriginator());
         item.addElement("pubDate").setText(mDateFormat.format(new Date(m.getDate())));
         /* TODO: guid, links, etc */
         // Element guid = item.addElement("guid");

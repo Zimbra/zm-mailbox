@@ -77,7 +77,9 @@ public class ParsedMessage {
 
     private List<MPartInfo> mMessageParts;
     private String mRecipients;
-    private String mSender;
+    private String mOriginator;
+    private String mFromHeader;
+    private String mSenderHeader;
 
     private ParsedAddress mParsedSender;
     private boolean mHasAttachments = false;
@@ -380,35 +382,62 @@ public class ParsedMessage {
         return mRecipients;
     }
 
-    public String getSender() {
-        if (mSender == null) {
+    public String getFromHeader() {
+        if (mFromHeader == null) {
+            String from = null;
+            try {
+                from = mMimeMessage.getHeader("From", null);
+            } catch (MessagingException e) { }
+            if (from != null) {
+                try {
+                    String decoded = MimeUtility.decodeText(from);
+                    from = decoded;
+                } catch (UnsupportedEncodingException e) {}
+            } else {
+                from = "";
+            }
+            mFromHeader = from;
+        }
+        return mFromHeader;
+    }
+
+    public String getSenderHeader() {
+        if (mSenderHeader == null) {
             String sender = null;
             try {
-                sender = mMimeMessage.getHeader("From", null);
+                sender = mMimeMessage.getHeader("Sender", null);
             } catch (MessagingException e) { }
-            if (sender == null)
+            if (sender != null) {
                 try {
-                    sender = mMimeMessage.getHeader("Sender", null);
-                } catch (MessagingException e2) { }
-                if (sender == null)
-                    sender = "";
-                try {
-                    mSender = MimeUtility.decodeText(sender);
-                } catch (UnsupportedEncodingException e1) {
-                    mSender = sender;
-                }
+                    String decoded = MimeUtility.decodeText(sender);
+                    sender = decoded;
+                } catch (UnsupportedEncodingException e) {}
+            } else {
+                sender = "";
+            }
+            mSenderHeader = sender;
         }
-        return mSender;
+        return mSenderHeader;
+    }
+
+    public String getOriginator() {
+        if (mOriginator == null) {
+            String val = getFromHeader();
+            if (val.length() == 0)
+                val = getSenderHeader();
+            mOriginator = val;
+        }
+        return mOriginator;
     }
 
     public ParsedAddress getParsedSender() {
         if (mParsedSender == null)
-            mParsedSender = new ParsedAddress(getSender()).parse();
+            mParsedSender = new ParsedAddress(getOriginator()).parse();
         return mParsedSender;
     }
 
     public String getReplyTo() {
-        String sender = getSender();
+        String sender = getOriginator();
         String replyTo = null;
         try {
             replyTo = mMimeMessage.getHeader("Reply-To", null);

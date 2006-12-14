@@ -155,7 +155,7 @@ public class DbTest {
 		System.out.print(msg.isUnread()      ? 'U' : ' ');
 		System.out.print(msg.hasAttachment() ? '@' : ' ');
 		System.out.print(' ');
-		System.out.print(padRight(msg.isFromMe() ? "me" : shortenAddress(new ParsedAddress(msg.getSender())), 25, true));
+		System.out.print(padRight(msg.isFromMe() ? "me" : shortenAddress(new ParsedAddress(msg.getOriginator())), 25, true));
 		System.out.print(' ');
 		System.out.print(padRight(msg.getFragment().replace('\n', ' ').replace('\t', ' '), 40, true));
 		System.out.print(' ');
