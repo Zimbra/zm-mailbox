@@ -677,6 +677,7 @@ public class ToXML {
             calItemElem = parent.addElement(MailService.E_APPOINTMENT);
         else
             calItemElem = parent.addElement(MailService.E_TASK);
+        recordItemTags(calItemElem, calItem, fields);
 
         calItemElem.addAttribute(MailService.A_UID, calItem.getUid());
         calItemElem.addAttribute(MailService.A_ID, lc.formatItemId(calItem));

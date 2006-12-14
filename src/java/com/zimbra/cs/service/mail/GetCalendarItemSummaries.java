@@ -102,7 +102,15 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                     isAppointment ? lc.createElement(MailService.E_APPOINTMENT)
                                   : lc.createElement(MailService.E_TASK);
                 calItemElem.addAttribute("x_uid", calItem.getUid());
-                
+
+                // flags and tags
+                String flags = calItem.getFlagString();
+                if (flags != null && !flags.equals(""))
+                    calItemElem.addAttribute(MailService.A_FLAGS, flags);
+                String tags = calItem.getTagString();
+                if (tags != null && !tags.equals(""))
+                    calItemElem.addAttribute(MailService.A_TAGS, tags);
+
                 Invite defaultInvite = calItem.getDefaultInviteOrNull();
                 
                 if (defaultInvite == null) {
