@@ -4217,7 +4217,6 @@ public class Mailbox {
     throws ServiceException {
         if (path == null)
             throw ServiceException.FAILURE("null path passed to Mailbox.createFolderPath", null);
-        path = path.trim();
         if (!path.startsWith("/"))
             path = '/' + path;
         if (path.endsWith("/") && path.length() > 1)
