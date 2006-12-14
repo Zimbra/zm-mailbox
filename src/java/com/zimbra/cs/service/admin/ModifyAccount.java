@@ -115,7 +115,7 @@ public class ModifyAccount extends AdminDocumentHandler {
             try {
                 quota = Long.parseLong(quotaAttr);
             } catch (NumberFormatException e) {
-                throw ServiceException.INVALID_REQUEST("can not modify mail quota (invalid format): "+object, e);
+                throw AccountServiceException.INVALID_ATTR_VALUE("can not modify mail quota (invalid format): "+object, e);
             }
         }
         
