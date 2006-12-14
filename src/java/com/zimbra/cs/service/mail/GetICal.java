@@ -46,6 +46,9 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetICal extends MailDocumentHandler {
 
+    private static final String[] TARGET_OBJ_PATH = new String[] { MailService.A_ID };
+    protected String[] getProxiedIdPath(Element request)     { return TARGET_OBJ_PATH; }
+
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
      */
