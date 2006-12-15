@@ -43,10 +43,12 @@ import com.zimbra.cs.mailbox.Mailbox;
 
 public class DbPop3Message {
 
+    public static final String TABLE_POP3_MESSAGE = "pop3_message";
+    
     /**
      * Persists <code>uid</code> so we remember not to import the message again.
      */
-    public static void storeUid(Mailbox mbox, DataSource ds, String uid, int itemId)
+    public static void storeUid(Mailbox mbox, String dataSourceId, String uid, int itemId)
     throws ServiceException
     {
         if (StringUtil.isNullOrEmpty(uid)) {
@@ -63,7 +65,7 @@ public class DbPop3Message {
                 " (mailbox_id, data_source_id, uid, item_id) " +
                 "VALUES (?, ?, ?, ?)");
             stmt.setInt(1, mbox.getId());
-            stmt.setString(2, ds.getId());
+            stmt.setString(2, dataSourceId);
             stmt.setString(3, uid);
             stmt.setInt(4, itemId);
             stmt.executeUpdate();
@@ -154,6 +156,6 @@ public class DbPop3Message {
     }
 
     private static String getTableName(Mailbox mbox) {
-        return DbMailbox.getDatabaseName(mbox) + "." + "pop3_message";
+        return DbMailbox.getDatabaseName(mbox) + "." + TABLE_POP3_MESSAGE;
     }
 }

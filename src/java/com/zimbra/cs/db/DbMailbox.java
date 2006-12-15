@@ -204,11 +204,15 @@ public class DbMailbox {
     private static String[] sTables;
 
     static {
-        sTables = new String[4];
-        sTables[0] = "mail_item";
-        sTables[1] = "open_conversation";
-        sTables[2] = "appointment";
-        sTables[3] = "tombstone";
+        // Tables are listed in order of creation.  dropMailboxFromGroup() drops them
+        // in reverse order.
+        sTables = new String[] {
+            DbMailItem.TABLE_MAIL_ITEM,
+            DbMailItem.TABLE_OPEN_CONVERSATION,
+            DbMailItem.TABLE_APPOINTMENT,
+            DbMailItem.TABLE_TOMBSTONE,
+            DbPop3Message.TABLE_POP3_MESSAGE
+        };
     }
 
     private static boolean databaseExists(Connection conn, int mailboxId, int groupId)
