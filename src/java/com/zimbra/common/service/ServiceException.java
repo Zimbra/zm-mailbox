@@ -33,6 +33,7 @@ package com.zimbra.common.service;
  * @author schemers
  *
  */
+@SuppressWarnings("serial")
 public class ServiceException extends Exception {
 
     public static final String FAILURE = "service.FAILURE";
@@ -52,6 +53,7 @@ public class ServiceException extends Exception {
     public static final String NOT_IN_PROGRESS = "service.NOT_IN_PROGRESS";
     public static final String INTERRUPTED = "service.INTERRUPTED";
     public static final String NO_SPELL_CHECK_URL = "service.NO_SPELL_CHECK_URL"; 
+    public static final String TOO_MANY_ACCOUNTS = "service.TOO_MANY_ACCOUNTS";
     
     protected String mCode;
     protected Argument[] mArgs = null;
@@ -248,5 +250,8 @@ public class ServiceException extends Exception {
     public static ServiceException NO_SPELL_CHECK_URL(String str) {
     	   return new ServiceException("Spell Checking Not Available "+str!=null?str:"", NO_SPELL_CHECK_URL, RECEIVERS_FAULT);
     }
-    
+
+    public static ServiceException TOO_MANY_ACCOUNTS(String str) {
+    	return new ServiceException("number of accounts reached the limit: "+str, TOO_MANY_ACCOUNTS, RECEIVERS_FAULT);
+    }
 }
