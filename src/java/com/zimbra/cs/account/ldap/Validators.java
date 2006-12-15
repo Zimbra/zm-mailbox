@@ -82,7 +82,7 @@ public class Validators {
     		}
     		
 			if (maxAccount <= mLastUserCount)
-				throw ServiceException.FAILURE("limit reached for domain "+domain+" ("+maxAccount+")", null);
+				throw ServiceException.TOO_MANY_ACCOUNTS("domain="+domain+" ("+maxAccount+")");
     	}
         public static long countAccounts(String domain) throws ServiceException {
         	StringBuilder buf = new StringBuilder();
