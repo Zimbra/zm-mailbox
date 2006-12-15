@@ -36,6 +36,7 @@ import com.zimbra.common.service.ServiceException;
  * @author schemers
  * 
  */
+@SuppressWarnings("serial")
 public class AccountServiceException extends ServiceException {
 
     public static final String AUTH_FAILED        = "account.AUTH_FAILED";
@@ -71,6 +72,7 @@ public class AccountServiceException extends ServiceException {
     public static final String TOO_MANY_IDENTITIES = "account.TOO_MANY_IDENTITIES";
     public static final String DATA_SOURCE_EXISTS = "account.DATA_SOURCE_EXISTS";        
     public static final String TOO_MANY_DATA_SOURCES = "account.TOO_MANY_DATA_SOURCES";
+    public static final String TOO_MANY_ACCOUNTS = "account.TOO_MANY_ACCOUNTS";
 
     private AccountServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -214,4 +216,7 @@ public class AccountServiceException extends ServiceException {
         return new AccountServiceException("password was recently used", PASSWORD_RECENTLY_USED, SENDERS_FAULT, null);        
     }
 
+    public static AccountServiceException TOO_MANY_ACCOUNTS(String str) {
+    	return new AccountServiceException("number of accounts reached the limit: "+str, TOO_MANY_ACCOUNTS, RECEIVERS_FAULT);
+    }
 }
