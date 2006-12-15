@@ -35,6 +35,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.util.AccountUtil;
@@ -49,6 +50,7 @@ import javax.mail.Address;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
+import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -58,6 +60,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 public class MailSender {
 
@@ -320,6 +323,7 @@ public class MailSender {
         if (overrideFromHeader)
             mm.setFrom(AccountUtil.getFriendlyEmailAddress(acct));
         mm.setSentDate(new Date());
+        mm.setSender(sender);
         if (sender == null) {
             Address[] existingReplyTos = mm.getReplyTo();
             if (existingReplyTos == null || existingReplyTos.length == 0) {
@@ -328,9 +332,14 @@ public class MailSender {
                     mm.setHeader("Reply-To", replyTo);
             }
         } else {
-            mm.setSender(sender);
             if (replyToSender)
                 mm.setReplyTo(new Address[] {sender});
+            // set MAIL FROM to authenticated user for bounce purposes
+            if (mm instanceof FixedMimeMessage) {
+                Properties props = new Properties(JMSession.getSession().getProperties());
+                props.setProperty("mail.smtp.from", sender.getAddress());
+                ((FixedMimeMessage) mm).setSession(Session.getInstance(props));
+            }
         }
         mm.saveChanges();
     }
