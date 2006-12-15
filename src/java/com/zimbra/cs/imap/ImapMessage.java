@@ -36,12 +36,10 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeSet;
 
-import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MailDateFormat;
@@ -62,10 +60,8 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeCompoundHeader;
 import com.zimbra.cs.mime.MimeCompoundHeader.*;
-import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 
 public class ImapMessage implements Comparable<ImapMessage> {
     static class ImapMessageSet extends TreeSet<ImapMessage> {
@@ -396,6 +392,12 @@ public class ImapMessage implements Comparable<ImapMessage> {
                 ps.print("NIL");
             ps.write(' ');  ps.print(subtype);
             if (extensions) {
+                // 7.4.2: "Extension data follows the multipart subtype.  Extension data is never
+                //         returned with the BODY fetch, but can be returned with a BODYSTRUCTURE
+                //         fetch.  Extension data, if present, MUST be in the defined order.  The
+                //         extension data of a multipart body part are in the following order:
+                //         body parameter parenthesized list, body disposition, body language,
+                //         body location"
                 ps.write(' ');  nparams(ps, ctype);
                 ps.write(' ');  ndisposition(ps, mp.getHeader("Content-Disposition", null));
                 ps.write(' ');  nlist(ps, mp.getContentLanguage());
@@ -421,14 +423,20 @@ public class ImapMessage implements Comparable<ImapMessage> {
                 Object content = Mime.getMessageContent(mp);
                 ps.write(' ');  serializeEnvelope(ps, (MimeMessage) content);
                 ps.write(' ');  serializeStructure(ps, (MimePart) content, extensions);
-            }
-            if (rfc822 || primary.equals("\"TEXT\"")) {
+                ps.write(' ');  ps.print(getLineCount(mp));
+            } else if (primary.equals("\"TEXT\"")) {
                 // 7.4.2: "A body type of type TEXT contains, immediately after the basic fields, the
                 //         size of the body in text lines.  Note that this size is the size in its
                 //         content transfer encoding and not the resulting size after any decoding."
                 ps.write(' ');  ps.print(getLineCount(mp));
             }
             if (extensions) {
+                // 7.4.2: "Extension data follows the basic fields and the type-specific fields
+                //         listed above.  Extension data is never returned with the BODY fetch,
+                //         but can be returned with a BODYSTRUCTURE fetch.  Extension data, if
+                //         present, MUST be in the defined order.  The extension data of a
+                //         non-multipart body part are in the following order: body MD5, body
+                //         disposition, body language, body location"
                 ps.write(' ');  nstring(ps, mp.getContentMD5());
                 ps.write(' ');  ndisposition(ps, mp.getHeader("Content-Disposition", null));
                 ps.write(' ');  nlist(ps, mp.getContentLanguage());
