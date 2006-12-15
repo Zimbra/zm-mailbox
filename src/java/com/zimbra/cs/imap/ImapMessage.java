@@ -349,7 +349,9 @@ public class ImapMessage implements Comparable<ImapMessage> {
             ps.print("NIL");
         } else {
             ContentDisposition cdisp = new ContentDisposition(disposition);
-            astring(ps, cdisp.getValue());  ps.write(' ');  nparams(ps, cdisp);
+            ps.write('(');  astring(ps, cdisp.getValue());
+            ps.write(' ');  nparams(ps, cdisp);
+            ps.write(')');
         }
     }
 
@@ -395,7 +397,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
             ps.write(' ');  ps.print(subtype);
             if (extensions) {
                 ps.write(' ');  nparams(ps, ctype);
-                ps.write(' ');  ndisposition(ps, mp.getDisposition());
+                ps.write(' ');  ndisposition(ps, mp.getHeader("Content-Disposition", null));
                 ps.write(' ');  nlist(ps, mp.getContentLanguage());
                 ps.write(' ');  nstring(ps, mp.getHeader("Content-Location", null));
             }
@@ -428,7 +430,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
             }
             if (extensions && !rfc822) {
                 ps.write(' ');  nstring(ps, mp.getContentMD5());
-                ps.write(' ');  ndisposition(ps, mp.getDisposition());
+                ps.write(' ');  ndisposition(ps, mp.getHeader("Content-Disposition", null));
                 ps.write(' ');  nlist(ps, mp.getContentLanguage());
                 ps.write(' ');  nstring(ps, mp.getHeader("Content-Location", null));
             }
