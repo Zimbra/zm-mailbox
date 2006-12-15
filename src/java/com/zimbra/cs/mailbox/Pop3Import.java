@@ -208,7 +208,7 @@ implements MailItemImport {
                 mbox.addMessage(null, pm, ds.getFolderId(), false, Flag.BITMASK_UNREAD, null);
 
             if (ds.leaveOnServer()) {
-                DbPop3Message.storeUid(mbox, ds, folder.getUID(pop3Msg), zimbraMsg.getId());
+                DbPop3Message.storeUid(mbox, ds.getId(), folder.getUID(pop3Msg), zimbraMsg.getId());
             }
         }
 
@@ -219,10 +219,6 @@ implements MailItemImport {
             }
         }
         
-        if (account.getUid() != null && account.getUid().equals("rossd")) {
-            hair(mbox, ds);
-        }
-
         // Expunge if necessary and disconnect (QUIT)
         folder.close(!ds.leaveOnServer());
         store.close();
@@ -270,46 +266,5 @@ implements MailItemImport {
         }
         
         return true;
-    }
-    
-    private static String[] HAIR_LINES = {
-        "From: Vidal Sasoon <vidal@sasoon.com>",
-        "To: Ross Dargahi <rossd@zimbra.com>",
-        "Subject: Removing Unwanted Body Hair Permanently & Safely",
-        "Date: Tue, 31 Dec 2006 11:21:10 -0700",
-        "X-Zimbra-Received: Tue, 31 Dec 2006 11:25:00 -0700",
-        "Content-Type: text/plain",
-        "",
-        "Ross,",
-        "",
-        "Here's the article you asked me to forward.  Hope it helps you with the problem",
-        "you're having with unwanted body hair.",
-        "",
-        "Call me sometime,",
-        "",
-        "Vidal",
-        "",
-        "-----------------",
-        "",
-        "http://www.pioneerthinking.com/bb_bodyhair.html",
-        "",
-        "Both males and females have unwanted hairs in their body. Everybody wishes to be",
-        "fresh and energetic. It can be done in a many number of ways according the level",
-        "of hairs in the body. It is found that around 80% of the women and around 50% of",
-        "the men are going for hair removal in some form or the other. Facial hair removal",
-        "is more popular among men and women.",
-        "",
-        "Hair removal in the hands, legs, arms, underarms, bikini area, face, and eyebrows",
-        "are commonly practiced these days. Sports persons go for hair removal since it will",
-        "cut down the wind resistance and improve their competitive speeds. There is a report",
-        "saying that hair removal salons are getting more and more men customers for removing",
-        "hair."
-    };
-    
-    private void hair(Mailbox mbox, DataSource ds)
-    throws MessagingException, ServiceException, IOException {
-        byte[] data = StringUtil.join("\r\n", HAIR_LINES).getBytes();
-        ParsedMessage pm = new ParsedMessage(data, mbox.attachmentsIndexingEnabled());
-        mbox.addMessage(null, pm, ds.getFolderId(), false, Flag.BITMASK_UNREAD, null);
     }
 }
