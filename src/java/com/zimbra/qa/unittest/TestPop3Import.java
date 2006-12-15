@@ -34,9 +34,11 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.zclient.ZDataSource;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZPop3DataSource;
@@ -48,6 +50,7 @@ public class TestPop3Import extends TestCase {
 
     private static final String USER_NAME = "user1";
     private static final String DATA_SOURCE_NAME = "TestPop3Import";
+    private static final String TEMP_USER_NAME = "temppop3";
 
     @Override
     public void setUp()
@@ -74,7 +77,7 @@ public class TestPop3Import extends TestCase {
         assertEquals("Test 1: set size", 0, matchingUids.size());
         
         // Store UID 1 and make sure it matches
-        DbPop3Message.storeUid(mbox, ds, "1", 1);
+        DbPop3Message.storeUid(mbox, ds.getId(), "1", 1);
         matchingUids = DbPop3Message.getMatchingUids(mbox, ds, uids);
         assertEquals("Test 2: set size", 1, matchingUids.size());
         assertTrue("Test 2: did not find UID 1", matchingUids.contains("1"));
@@ -107,6 +110,22 @@ public class TestPop3Import extends TestCase {
         modifyAndCheck(zds);
     }
     
+    /**
+     * Confirms that POP3 data is deleted when the mailbox is deleted.  Any leftover POP3
+     * data will cause a foreign key violation.
+     */
+    public void testDeleteMailbox()
+    throws Exception {
+        // Create temp account and mailbox
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.createAccount(TestUtil.getAddress(TEMP_USER_NAME), "test123", null);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        
+        // Store bogus POP3 message row and delete mailbox
+        DbPop3Message.storeUid(mbox, "TestPop3Import", "uid1", Mailbox.ID_FOLDER_INBOX);
+        mbox.deleteMailbox();
+    }
+    
     private void modifyAndCheck(ZPop3DataSource zds)
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
@@ -115,7 +134,7 @@ public class TestPop3Import extends TestCase {
 
         // Reinitialize persisted UID's
         DbPop3Message.deleteUids(mbox, ds.getId());
-        DbPop3Message.storeUid(mbox, ds, "1", 1);
+        DbPop3Message.storeUid(mbox, ds.getId(), "1", 1);
 
         // Modify data source and make sure the existing
         // UID's were deleted
@@ -171,11 +190,18 @@ public class TestPop3Import extends TestCase {
     
     private void cleanUp()
     throws Exception {
+        // Delete data source
         Provisioning prov = Provisioning.getInstance();
         DataSource ds = getDataSource();
         if (ds != null) {
             Account account = TestUtil.getAccount(USER_NAME);
             prov.deleteDataSource(account, ds.getId());
+        }
+        
+        // Delete temporary account
+        Account account = prov.get(AccountBy.name, TestUtil.getAddress(TEMP_USER_NAME));
+        if (account != null) {
+            prov.deleteAccount(account.getId());
         }
     }
 }

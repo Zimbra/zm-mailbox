@@ -70,6 +70,11 @@ import com.zimbra.common.util.ZimbraLog;
  */
 public class DbMailItem {
 
+    public static final String TABLE_MAIL_ITEM = "mail_item";
+    public static final String TABLE_APPOINTMENT = "appointment";
+    public static final String TABLE_OPEN_CONVERSATION = "open_conversation";
+    public static final String TABLE_TOMBSTONE = "tombstone";
+    
     private static Log sLog = LogFactory.getLog(DbMailItem.class);
 
     /** Maps the mailbox id to the set of all tag combinations stored for all
@@ -2804,7 +2809,7 @@ public class DbMailItem {
      * by the name of the database (e.g. <code>mailbox1.mail_item</code>).
      */
     public static String getMailItemTableName(int mailboxId, int groupId) {
-        return DbMailbox.getDatabaseName(mailboxId, groupId) + ".mail_item";
+        return String.format("%s.%s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_MAIL_ITEM);
     }
     public static String getMailItemTableName(Mailbox mbox) {
         int id = mbox.getId();
@@ -2825,7 +2830,7 @@ public class DbMailItem {
      * by the name of the database (e.g. <code>mailbox1.appointment</code>).
      */
     public static String getCalendarItemTableName(int mailboxId, int groupId) {
-        return DbMailbox.getDatabaseName(mailboxId, groupId) + ".appointment";
+        return String.format("%s.%s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_APPOINTMENT);
     }
     public static String getCalendarItemTableName(Mailbox mbox) {
         int id = mbox.getId();
@@ -2843,10 +2848,10 @@ public class DbMailItem {
      * name is qualified by the name of the database (e.g. <code>mailbox1.open_conversation</code>).
      */
     public static String getConversationTableName(int mailboxId, int groupId) {
-        return DbMailbox.getDatabaseName(mailboxId, groupId) + ".open_conversation";
+        return String.format("%s.%s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_OPEN_CONVERSATION);
     }
     public static String getConversationTableName(int mailboxId, int groupId, String alias) {
-        return DbMailbox.getDatabaseName(mailboxId, groupId) + ".open_conversation " + alias;
+        return String.format("%s.%s AS %s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_OPEN_CONVERSATION, alias);
     }
     public static String getConversationTableName(Mailbox mbox) {
         int id = mbox.getId();
@@ -2856,7 +2861,7 @@ public class DbMailItem {
     public static String getConversationTableName(Mailbox mbox, String alias) {
         int id = mbox.getId();
         int gid = mbox.getSchemaGroupId();
-        return getConversationTableName(id, gid) + " " + alias;
+        return getConversationTableName(id, gid, alias);
     }
     public static String getConversationTableName(MailItem item) {
         return getConversationTableName(item.getMailbox());
@@ -2867,7 +2872,7 @@ public class DbMailItem {
      * The table name is qualified by the name of the database (e.g. <code>mailbox1.tombstone</code>).
      */
     public static String getTombstoneTableName(int mailboxId, int groupId) {
-        return DbMailbox.getDatabaseName(mailboxId, groupId) + ".tombstone";
+        return String.format("%s.%s", DbMailbox.getDatabaseName(mailboxId, groupId), TABLE_TOMBSTONE);
     }
     public static String getTombstoneTableName(Mailbox mbox) {
         int id = mbox.getId();
