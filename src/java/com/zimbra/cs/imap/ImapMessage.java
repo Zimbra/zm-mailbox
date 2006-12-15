@@ -428,7 +428,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
                 //         content transfer encoding and not the resulting size after any decoding."
                 ps.write(' ');  ps.print(getLineCount(mp));
             }
-            if (extensions && !rfc822) {
+            if (extensions) {
                 ps.write(' ');  nstring(ps, mp.getContentMD5());
                 ps.write(' ');  ndisposition(ps, mp.getHeader("Content-Disposition", null));
                 ps.write(' ');  nlist(ps, mp.getContentLanguage());
