@@ -33,6 +33,7 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning.ProvisioningValidator;
@@ -82,7 +83,7 @@ public class Validators {
     		}
     		
 			if (maxAccount <= mLastUserCount)
-				throw ServiceException.TOO_MANY_ACCOUNTS("domain="+domain+" ("+maxAccount+")");
+				throw AccountServiceException.TOO_MANY_ACCOUNTS("domain="+domain+" ("+maxAccount+")");
     	}
         public static long countAccounts(String domain) throws ServiceException {
         	StringBuilder buf = new StringBuilder();
