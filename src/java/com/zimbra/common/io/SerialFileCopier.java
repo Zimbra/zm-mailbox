@@ -39,6 +39,11 @@ class SerialFileCopier implements FileCopier {
     private int mCopyBufSizeOIO;
 
     SerialFileCopier(boolean useNIO, int copyBufSizeOIO) {
+        ZimbraLog.io.debug(
+                "Creating SerialFileCopier: " +
+                "useNIO = " + useNIO +
+                ", copyBufSizeOIO = " + copyBufSizeOIO);
+
         mUseNIO = useNIO;
         mCopyBufSizeOIO = copyBufSizeOIO > 0
             ? copyBufSizeOIO : FileCopierOptions.DEFAULT_OIO_COPY_BUFFER_SIZE;

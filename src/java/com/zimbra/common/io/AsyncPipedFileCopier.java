@@ -54,10 +54,20 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
 
     AsyncPipedFileCopier(
             boolean useNIO, int copyBufSizeOIO,
-            int queueSize, int numPipes,
+            int queueCapacity, int numPipes,
             int numReadersPerPipe, int numWritersPerPipe,
             int pipeBufSize) {
-        super(queueSize);
+        super(queueCapacity);
+
+        ZimbraLog.io.debug(
+                "Creating AsyncPipedFileCopier: " +
+                "useNIO = " + useNIO +
+                ", copyBufSizeOIO = " + copyBufSizeOIO +
+                ", queueCapacity = " + queueCapacity +
+                ", numPipes = " + numPipes +
+                ", numReadersPerPipe = " + numReadersPerPipe +
+                ", numWritersPerPipe = " + numWritersPerPipe +
+                ", pipeBufSize = " + pipeBufSize);
 
         mUseNIO = useNIO;
 

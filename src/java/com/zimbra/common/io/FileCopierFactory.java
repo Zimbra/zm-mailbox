@@ -35,6 +35,7 @@ public class FileCopierFactory {
                             opts.getIOType(),
                             opts.getOIOCopyBufferSize(),
                             opts.getAsyncQueueCapacity(),
+                            opts.getNumParallelWorkers(),
                             opts.getNumPipes(),
                             opts.getNumReadersPerPipe(),
                             opts.getNumWritersPerPipe(),
@@ -43,13 +44,15 @@ public class FileCopierFactory {
 
     public static FileCopier createCopier(
             Method method, IOType ioType, int oioCopyBufSize,
-            int queueSize,
+            int queueSize, int parallelWorkers,
             int numPipes, int readConcurrency, int writeConcurrency,
             int pipeBufSize) {
         FileCopier copier;
         switch (method) {
         case PARALLEL:
-            copier = new AsyncFileCopier(ioType.equals(IOType.NIO), oioCopyBufSize, queueSize, readConcurrency);
+            copier = new AsyncFileCopier(
+                    ioType.equals(IOType.NIO), oioCopyBufSize, 
+                    queueSize, parallelWorkers);
             break;
         case PIPE:
             copier = new AsyncPipedFileCopier(

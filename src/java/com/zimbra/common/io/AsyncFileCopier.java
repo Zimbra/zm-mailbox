@@ -43,6 +43,14 @@ class AsyncFileCopier extends AbstractAsyncFileCopier implements FileCopier {
     AsyncFileCopier(boolean useNIO, int copyBufSizeOIO,
                     int queueCapacity, int numWorkers) {
         super(queueCapacity);
+
+        ZimbraLog.io.debug(
+                "Creating AsyncFileCopier: " +
+                "useNIO = " + useNIO +
+                ", copyBufSizeOIO = " + copyBufSizeOIO +
+                ", queueCapacity = " + queueCapacity +
+                ", numWorkers = " + numWorkers);
+
         mUseNIO = useNIO;
 
         mCopyBufSizeOIO = copyBufSizeOIO > 0
