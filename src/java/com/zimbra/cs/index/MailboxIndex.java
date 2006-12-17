@@ -31,11 +31,7 @@ package com.zimbra.cs.index;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.util.*;
-import java.util.zip.CRC32;
 
 import javax.mail.internet.MimeMessage;
 
@@ -52,7 +48,6 @@ import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.Spans;
-import org.apache.lucene.store.FSDirectory;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -74,7 +69,6 @@ import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 
@@ -1329,165 +1323,6 @@ public final class MailboxIndex
         abstract boolean onDocument(Document doc, boolean isDeleted);
     }
 
-    private static final int INDEX_BACKUP_START_MAGIC = 0x305;
-    private static final int INDEX_BACKUP_SEPARATOR_MAGIC = 0x35353535;
-    private static final int BUFFER_LEN = 65536;
-
-
-    /**
-     * 
-     * Writes a binary backup of the current index to the given output stream. 
-     * 
-     * @param out OutputStream to write binary encoded index data out
-     * @throws IOException
-     */
-    public void backupIndex(OutputStream out) throws IOException
-    {
-        synchronized(getLock()) {        
-            flush(); // make sure all writes are complete.
-
-            // TODO - steal Lucene's much more efficient primitive-types-to-binary-file code and use that, instead of the ObjectOutputStream...
-            ObjectOutputStream outStr = new ObjectOutputStream(out);
-
-            //
-            // simple output format:
-            //
-            //  - Start Magic Number
-            //
-            //  - Repeat:  
-            //     Long length  : length of file or -1 end of files
-            //     String name : file name
-            //     byte[length]: file data
-            //     separator magic #
-            //
-            outStr.writeInt(INDEX_BACKUP_START_MAGIC);
-
-            FSDirectory indexDir = null;
-            File idxPathFile = new File(mIdxPath);
-            if (idxPathFile.exists() && idxPathFile.isDirectory()) {
-                indexDir = FSDirectory.getDirectory(idxPathFile, false);
-            }
-            if (null != indexDir) {
-                String[] files = indexDir.list();
-
-                byte buffer[] = new byte[BUFFER_LEN];
-
-                for (int i = 0; i < files.length; i++) {
-                    long fileLen = indexDir.fileLength(files[i]);
-                    org.apache.lucene.store.InputStream in = indexDir.openFile(files[i]);
-
-                    if (mLog.isDebugEnabled()) {
-                        mLog.debug("\tWriting file: \""+files[i]+"\" len="+fileLen);
-                    }
-
-                    //
-                    // need to write file header here....
-                    //
-                    outStr.writeLong(fileLen);
-                    outStr.writeUTF(files[i]);
-
-                    //
-                    // write the file data now
-                    //
-                    long pos = 0;
-                    while (pos < fileLen) {
-                        long toRead = Math.min(fileLen-pos, BUFFER_LEN);
-                        in.readBytes(buffer, 0, (int)toRead);
-                        outStr.write(buffer, 0, (int)toRead);
-                        CRC32 check = new CRC32();
-                        check.update(buffer, 0, (int)toRead);
-
-                        if (mLog.isDebugEnabled()) {
-                            mLog.debug("\t\tWrote "+(int)toRead+" bytes with checksum "+check.getValue());
-                        }
-                        pos+=toRead;
-                    }
-
-                    outStr.writeInt(INDEX_BACKUP_SEPARATOR_MAGIC);
-
-                    in.close();
-                }
-            } else {
-                mLog.info("No index file for mailbox "+this.mMailboxId);
-            }
-            outStr.writeLong(-1); // end of files
-            outStr.flush();
-        }
-    }
-
-    /**
-     * 
-     * WARNING: this function deletes the current index.  Only call this if you're sure that's what you want.
-     * 
-     * @param in InputStream to read data from
-     * @throws IOException
-     */
-    public void restoreIndex(java.io.InputStream in) throws IOException
-    {
-        synchronized(getLock()) {        
-            // TODO - steal Lucene's much more efficient primitive-types-to-binary-file code and use that, instead of the ObjectInputStream...
-            ObjectInputStream inStr = new ObjectInputStream(in);
-
-            if (mLog.isDebugEnabled()) {
-                mLog.debug("");
-                mLog.debug("");
-                mLog.debug("Restoring index for "+mMailboxId+" to path "+mIdxPath);
-            }
-
-            int magic = inStr.readInt();
-            if (magic != INDEX_BACKUP_START_MAGIC) {
-                throw new IOException("Invalid magic # at start (read: "+magic+" expected: "+INDEX_BACKUP_START_MAGIC+")");
-            }
-
-            flush();
-
-            FSDirectory indexDir = FSDirectory.getDirectory(mIdxPath, true);
-
-            byte buffer[] = new byte[BUFFER_LEN];
-
-            for (long length = inStr.readLong(); length >= 0; length = inStr.readLong())
-            {
-                // length read above
-
-                // read filename:
-                String name = inStr.readUTF();
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("\tRestoring file: \""+name+"\" length:"+length);
-                }
-                org.apache.lucene.store.OutputStream out = indexDir.createFile(name);
-
-                // read data:
-                while (length > 0) {
-                    long toRead = Math.min(length, BUFFER_LEN);
-                    /*int read = */inStr.readFully(buffer, 0, (int)toRead);
-                    int read = (int)toRead;
-                    CRC32 check = new CRC32();
-                    check.update(buffer, 0, read);
-
-                    if (mLog.isDebugEnabled()) {
-                        mLog.debug("\t\tRead "+read+" (out of "+(int)toRead+") bytes with checksum "+check.getValue());
-                    }
-                    out.writeBytes(buffer, read);
-                    if (read <= 0) {
-                        throw new IOException("Read returned "+read+" reading file "+name);
-                    }
-                    length-=read;
-                }
-
-                out.close();
-
-                // read MAGIC
-                magic = inStr.readInt();
-                if (magic != INDEX_BACKUP_SEPARATOR_MAGIC) {
-                    throw new IOException("Invalid magic # separator (read: "+magic+" expect:"+INDEX_BACKUP_SEPARATOR_MAGIC+")");
-                }
-
-            }
-
-            indexDir.close();
-        }
-    }
-
     private static class ChkIndexStage1Callback implements TermEnumInterface 
     {
         HashSet msgsInMailbox = new HashSet(); // hash of all messages in my mailbox
@@ -1901,15 +1736,6 @@ public final class MailboxIndex
             } catch(IOException e) {
                 e.printStackTrace();
             }
-        }
-
-        public void backupIndex(java.io.OutputStream out) throws IOException
-        {
-            mIdx.backupIndex(out);
-        }
-        public void restoreIndex(java.io.InputStream in) throws IOException
-        {
-            mIdx.restoreIndex(in);
         }
 
         public static class TermInfo {

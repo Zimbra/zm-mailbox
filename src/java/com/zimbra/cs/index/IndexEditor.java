@@ -801,23 +801,6 @@ public class IndexEditor {
         return ret;
     }
 
-    public void backupIndex(int mailboxId) throws IOException
-    {
-        MailboxIndex.AdminInterface admin = null;		
-        try {
-            Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-            admin = mbox.getMailboxIndex().getAdminInterface();
-
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            admin.backupIndex(out);
-
-            admin.restoreIndex(new ByteArrayInputStream(out.toByteArray()));
-
-        } catch(Exception e) {
-            outputStream.println("Caught "+ExceptionToString.ToString(e));
-        }
-    }
-
     public static class TwoTerms implements Comparable {
         /* (non-Javadoc)
          * @see java.lang.Comparable#compareTo(java.lang.Object)
@@ -1324,13 +1307,11 @@ public class IndexEditor {
                     dumpTerms(mailboxId);
                 } else if (command.equals("s")) {
                     spanTest(mailboxId);
-                } else if (command.equals("backup")) {
-                    backupIndex(mailboxId);
                 } else if (command.equals("delete_index")) {
                     if (confirm("Are you sure you want to delete the index for mailbox "+ mailboxId+"?")) 
                     {
                         deleteIndex(mailboxId);
-                    }
+                    } 
                 } else if (command.equals("dumpmi")) {
                     outputStream.print("Enter Mail-Item-ID:");
                     String midStr = inputReader.readLine();
@@ -1479,7 +1460,6 @@ public class IndexEditor {
         outputStream.println("fields -- dump all known fields");
         outputStream.println("terms -- dump all known terms for a field");
 //      outputStream.println("spans -- spantest");
-        outputStream.println("backup -- backup index");
         outputStream.println("delete_index -- deletes the index");
         outputStream.println("dumpmi -- dump document by mail_item");
         outputStream.println("dumpall -- dump all documents");
