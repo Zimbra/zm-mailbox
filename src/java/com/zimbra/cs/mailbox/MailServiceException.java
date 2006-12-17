@@ -180,12 +180,16 @@ public class MailServiceException extends ServiceException {
         return new NoSuchItemException("no such appointment or task: " + id, NO_SUCH_CALITEM, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
+    public static MailServiceException NO_SUCH_CALITEM(int id, String msg) {
+        return new NoSuchItemException("no such appointment or task: " + id + "; " + msg, NO_SUCH_CALITEM, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
+    }
+
     public static MailServiceException NO_SUCH_CALITEM(String uid) {
         return new NoSuchItemException("no such appointment or task: " + uid, NO_SUCH_CALITEM, SENDERS_FAULT, new Argument(UID, uid, Argument.Type.STR));
     }
 
     public static MailServiceException NO_SUCH_CALITEM(String uid, String msg) {
-        return new MailServiceException("no such appointment or task: "+uid+" "+msg, NO_SUCH_CALITEM, SENDERS_FAULT, new Argument(UID, uid, Argument.Type.STR));
+        return new MailServiceException("no such appointment or task: " + uid + "; " + msg, NO_SUCH_CALITEM, SENDERS_FAULT, new Argument(UID, uid, Argument.Type.STR));
     }
     
     public static MailServiceException NO_SUCH_APPT(int id) {

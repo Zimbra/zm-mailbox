@@ -100,15 +100,13 @@ public class CreateCalendarItemException extends CreateCalendarItem {
         Element response = getResponseElement(lc);
         synchronized(mbox) {
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId()); 
-            Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
-            
-            if (inv.hasRecurId()) {
-                throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + lc.formatItemId(iid) + " comp=" + compNum + " is not the a default invite");
-            }
-            
             if (calItem == null)
-                throw MailServiceException.NO_SUCH_CALITEM(inv.getUid(), " for CreateCalendarItemExceptionRequest(" + iid + "," + compNum + ")");
-            else if (!calItem.isRecurring())
+                throw MailServiceException.NO_SUCH_CALITEM(iid.getId(), " for CreateCalendarItemExceptionRequest(" + iid + "," + compNum + ")");
+
+            Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
+            if (inv.hasRecurId())
+                throw MailServiceException.INVITE_OUT_OF_DATE("Invite id=" + lc.formatItemId(iid) + " comp=" + compNum + " is not the default invite");
+            if (!calItem.isRecurring())
                 throw ServiceException.INVALID_REQUEST("CalendarItem " + calItem.getId() + " is not a recurring calendar item", null);
             
             CreateCalendarItemExceptionInviteParser parser = new CreateCalendarItemExceptionInviteParser(calItem.getUid(), inv);

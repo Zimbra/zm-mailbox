@@ -74,12 +74,10 @@ public class CancelCalendarItem extends CalendarRequest {
         
         synchronized (mbox) {
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId()); 
+            if (calItem == null)
+                throw MailServiceException.NO_SUCH_CALITEM(iid.getId(), " for CancelCalendarItemRequest(" + iid + "," + compNum + ")");
             Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
-            
-            if (calItem == null) {
-                throw MailServiceException.NO_SUCH_CALITEM(inv.getUid(), " for CancelCalendarItemRequest(" + iid + "," + compNum + ")");
-            }
-            
+
             Element recurElt = request.getOptionalElement(MailService.E_INSTANCE);
             if (recurElt != null) {
                 RecurId recurId = CalendarUtils.parseRecurId(recurElt, inv.getTimeZoneMap(), inv);
