@@ -1814,6 +1814,7 @@ public abstract class Provisioning {
     }
     
     public abstract DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs) throws ServiceException;
+    public abstract DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException;
     
     public abstract void modifyDataSource(Account account, String dataSourceId, Map<String, Object> attrs) throws ServiceException;
     
