@@ -3724,6 +3724,11 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> dataSourceAttrs) throws ServiceException {
+        return createDataSource(account, dsType, dsName, dataSourceAttrs, false);
+    }
+
+    @Override
+    public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> dataSourceAttrs, boolean passwdAlreadyEncrypted) throws ServiceException {
         removeAttrIgnoreCase("objectclass", dataSourceAttrs);    
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         
@@ -3760,7 +3765,8 @@ public class LdapProvisioning extends Provisioning {
             
             String password = LdapUtil.getAttrString(attrs, A_zimbraDataSourcePassword);
             if (password != null) {
-                attrs.put(A_zimbraDataSourcePassword, DataSource.encryptData(dsId, password));
+                String encrypted = passwdAlreadyEncrypted ? password : DataSource.encryptData(dsId, password);
+                attrs.put(A_zimbraDataSourcePassword, encrypted);
             }
 
             createSubcontext(ctxt, dn, attrs, "createDataSource");

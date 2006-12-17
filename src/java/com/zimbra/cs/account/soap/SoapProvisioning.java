@@ -1128,6 +1128,11 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
+    public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void deleteDataSource(Account account, String dataSourceId) throws ServiceException {
         XMLElement req = new XMLElement(AdminService.DELETE_DATA_SOURCE_REQUEST);
         req.addElement(AdminService.E_ID).setText(account.getId());        
