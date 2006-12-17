@@ -807,7 +807,8 @@ public class Mailbox {
     }
 
     /** Puts the Mailbox into maintenance mode.  As a side effect, disconnects
-     *  any {@link Session}s listening on this Mailbox.
+     *  any {@link Session}s listening on this Mailbox and flushes all changes
+     *  to the search index of this Mailbox.
      * 
      * @return A new MailboxLock token for use in a subsequent call to
      *         {@link MailboxManager#endMaintenance(Mailbox.MailboxLock, boolean, boolean)}.
@@ -818,6 +819,8 @@ public class Mailbox {
             throw MailServiceException.MAINTENANCE(mId);
         mMaintenance = new MailboxLock(mData.accountId, mId, this);
         purgeListeners();
+        if (mMailboxIndex != null)
+            mMailboxIndex.flush();
         return mMaintenance;
     }
 
