@@ -29,7 +29,7 @@ package com.zimbra.cs.zclient;
 public interface ZSearchHit {
     public String getId();
     
-    public String getSortFied();
+    public String getSortField();
     
     public float getScore();
 }
