@@ -27,6 +27,7 @@ package com.zimbra.cs.mailbox;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
@@ -186,7 +187,7 @@ public class MailSender {
                 convId = mbox.getConversationIdFromReferent(mm, origMsgId);
 
             // set the From, Sender, Date, Reply-To, etc. headers
-            updateHeaders(mm, acct, authuser, replyToSender);
+            updateHeaders(mm, acct, authuser, octxt.getRequestIP(), replyToSender);
 
             // run any pre-send/pre-save MIME mutators
             try {
@@ -305,7 +306,18 @@ public class MailSender {
         }
     }
 
-    void updateHeaders(MimeMessage mm, Account acct, Account authuser, boolean replyToSender) throws UnsupportedEncodingException, MessagingException {
+    private static final String X_ORIGINATING_IP = "X-Originating-IP";
+        
+    void updateHeaders(MimeMessage mm, Account acct, Account authuser, String originIP, boolean replyToSender) throws UnsupportedEncodingException, MessagingException, ServiceException {
+        if (originIP != null) {
+            Provisioning prov = Provisioning.getInstance();
+            Config gcf = prov.getConfig();
+            boolean addOriginatingIP = gcf.getBooleanAttr(Provisioning.A_zimbraSmtpSendAddOriginatingIP, true);
+            if (addOriginatingIP) {
+                mm.addHeader(X_ORIGINATING_IP, "[" + originIP + "]");
+            }
+        }
+        
         boolean overrideFromHeader = true;
         try {
             String fromHdr = mm.getHeader("From", null);

@@ -137,8 +137,9 @@ public class ZimbraSoapContext {
     private int         mHopCount;
     private boolean     mMountpointTraversed;
 
-    private String mUserAgent;
-
+    private String      mUserAgent;
+    private String      mRequestIP;
+    
     public ZimbraSoapContext(ZimbraSoapContext lc, String targetAccountId) throws ServiceException {
         mRawAuthToken = lc.mRawAuthToken;
         mAuthToken = lc.mAuthToken;
@@ -289,6 +290,8 @@ public class ZimbraSoapContext {
                     mUserAgent = mUserAgent + "/" + version;
             }
         }
+        
+        mRequestIP = (String)context.get(SoapEngine.REQUEST_IP);
     }
 
     /** Parses a <code>&lt;sessionId></code> {@link Element} from the SOAP Header.<p>
@@ -362,6 +365,7 @@ public class ZimbraSoapContext {
     public OperationContext getOperationContext() throws ServiceException {
         OperationContext octxt = new OperationContext(mAuthTokenAccountId, mAuthToken != null && (mAuthToken.isAdmin() || mAuthToken.isDomainAdmin()));
         octxt.setChangeConstraint(mChangeConstraintType, mMaximumChangeId);
+        octxt.setRequestIP(mRequestIP);
         return octxt;
     }
 
