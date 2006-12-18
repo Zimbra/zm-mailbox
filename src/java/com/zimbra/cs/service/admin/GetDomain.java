@@ -28,10 +28,6 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
@@ -40,12 +36,23 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+
 /**
  * @author schemers
  */
 public class GetDomain extends AdminDocumentHandler {
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    /**
+     * must be careful and only return accounts a domain admin can see
+     */
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
@@ -60,7 +67,10 @@ public class GetDomain extends AdminDocumentHandler {
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(value);
 
-	    Element response = lc.createElement(AdminService.GET_DOMAIN_RESPONSE);
+        if (!canAccessDomain(lc, domain))
+            throw ServiceException.PERM_DENIED("can not access domain");
+
+        Element response = lc.createElement(AdminService.GET_DOMAIN_RESPONSE);
         doDomain(response, domain, applyConfig);
 
 	    return response;
