@@ -54,7 +54,7 @@ public class ZDocumentHit implements ZSearchHit {
 		return mScore;
 	}
 
-	public String getSortFied() {
+	public String getSortField() {
 		return mSortField;
 	}
 

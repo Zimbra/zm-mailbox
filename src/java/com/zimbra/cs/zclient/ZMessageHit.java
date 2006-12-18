@@ -25,13 +25,12 @@
 
 package com.zimbra.cs.zclient;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.soap.Element;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ZMessageHit implements ZSearchHit {
 
@@ -118,7 +117,7 @@ public class ZMessageHit implements ZSearchHit {
         return mFragment;
     }
 
-    public String getSortFied() {
+    public String getSortField() {
         return mSortField;
     }
 

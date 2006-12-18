@@ -106,7 +106,7 @@ public class ZConversationHit implements ZSearchHit {
         return mFragment;
     }
 
-    public String getSortFied() {
+    public String getSortField() {
         return mSortField;
     }
 

@@ -1159,7 +1159,7 @@ public class ZMailboxUtil implements DebugListener {
         List<ZSearchHit> hits = sr.getHits();
         if (hits.size() == 0) return;
         ZSearchHit lastHit = hits.get(hits.size()-1);
-        Cursor cursor = new Cursor(lastHit.getId(), lastHit.getSortFied());
+        Cursor cursor = new Cursor(lastHit.getId(), lastHit.getSortField());
         mSearchCursors.push(cursor);
         mSearchOffsets.push(mSearchOffsets.peek() + hits.size());
         sp.setCursor(cursor);
