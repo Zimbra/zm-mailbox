@@ -86,6 +86,10 @@ public abstract class DavMethod {
 		return sEmptyProp;
 	}
 	
+	protected RequestProp getRequestProp(Collection<Element> set, Collection<QName> remove) {
+		return new RequestProp(set, remove);
+	}
+	
 	protected static RequestProp sEmptyProp;
 	
 	static {
@@ -123,6 +127,15 @@ public abstract class DavMethod {
 						props.add(prop.getQName());
 				}
 			}
+		}
+		
+		public RequestProp(Collection<Element> set, Collection<QName> remove) {
+			this();
+			allProp = false;
+			nameOnly = true;
+			for (Element e : set)
+				props.add(e.getQName());
+			props.addAll(remove);
 		}
 		
 		public boolean isNameOnly() {

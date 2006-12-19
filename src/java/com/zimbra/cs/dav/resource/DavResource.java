@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.dom4j.Element;
 import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
@@ -45,6 +46,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.property.ResourceProperty;
 
@@ -219,5 +221,9 @@ public abstract class DavResource {
 	}
 	public String getEtag() {
 		return null;
+	}
+	
+	public void patchProperties(DavContext ctxt, Collection<Element> set, Collection<QName> remove) throws DavException {
+		throw new DavException("PROPPATCH not supported on "+getUri(), DavProtocol.STATUS_FAILED_DEPENDENCY, null);
 	}
 }

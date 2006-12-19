@@ -123,7 +123,7 @@ public class DavResponse {
 		if (top == null)
 			top = mResponse.addElement(DavElements.E_MULTISTATUS);
 		Element resp = top.addElement(DavElements.E_RESPONSE);
-		rs.getProperty(DavElements.E_HREF).toElement(ctxt, resp, props.nameOnly);
+		rs.getProperty(DavElements.E_HREF).toElement(ctxt, resp, false);
 		
 		Map<Integer,Element> propstatMap = new HashMap<Integer,Element>();
 		Collection<QName> propNames;

@@ -35,9 +35,6 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -50,24 +47,21 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 
 public class Collection extends MailItemResource {
 
 	protected int mId;
-	protected int mMboxId;
 	protected byte mView;
 	protected byte mType;
 	
-	public Collection(Folder f) throws DavException, ServiceException {
-		super(f);
+	public Collection(DavContext ctxt, Folder f) throws DavException, ServiceException {
+		super(ctxt, f);
 		setCreationDate(f.getDate());
 		setLastModifiedDate(f.getChangeDate());
 		setProperty(DavElements.P_DISPLAYNAME, f.getName());
 		setProperty(DavElements.P_GETCONTENTLENGTH, "0");
 		mId = f.getId();
-		mMboxId = f.getMailboxId();
 		mView = f.getDefaultView();
 		mType = f.getType();
 		addProperties(Acl.getAclProperties(this, f));
@@ -129,15 +123,15 @@ public class Collection extends MailItemResource {
 		return children;
 	}
 	
-	private List<MailItem> getChildrenMailItem(DavContext ctxt) throws ServiceException {
-		Mailbox mbox = getMailbox();
+	private List<MailItem> getChildrenMailItem(DavContext ctxt) throws DavException,ServiceException {
+		Mailbox mbox = getMailbox(ctxt);
 
 		List<MailItem> ret = new ArrayList<MailItem>();
 		
 		// XXX aggregate into single call
 		for (MailItem f : mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_FOLDER, mId)) {
 			byte view = ((Folder)f).getDefaultView();
-			if (view == MailItem.TYPE_DOCUMENT || view == MailItem.TYPE_WIKI)
+			if (view == MailItem.TYPE_APPOINTMENT || view == MailItem.TYPE_DOCUMENT || view == MailItem.TYPE_WIKI)
 				ret.add(f);
 		}
 		//ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_MOUNTPOINT, mId));
@@ -146,22 +140,13 @@ public class Collection extends MailItemResource {
 		return ret;
 	}
 	
-	protected Mailbox getMailbox() throws ServiceException {
-		return MailboxManager.getInstance().getMailboxById(mMboxId);
-	}
-	
 	public void mkCol(DavContext ctxt, String name) throws DavException {
 		mkCol(ctxt, name, mView);
 	}
 	
 	public void mkCol(DavContext ctxt, String name, byte view) throws DavException {
 		try {
-			Provisioning prov = Provisioning.getInstance();
-			Account account = prov.get(AccountBy.name, ctxt.getUser());
-			if (account == null)
-				throw new DavException("no such account "+ctxt.getUser(), HttpServletResponse.SC_NOT_FOUND, null);
-
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+			Mailbox mbox = getMailbox(ctxt);
 			mbox.createFolder(ctxt.getOperationContext(), name, mId, view, 0, (byte)0, null);
 		} catch (ServiceException e) {
 			if (e.getCode().equals(MailServiceException.ALREADY_EXISTS))
@@ -174,15 +159,10 @@ public class Collection extends MailItemResource {
 	}
 	
 	// create Document at the URI
-	public DavResource createItem(DavContext ctxt, String user, String name) throws DavException, IOException {
-		Provisioning prov = Provisioning.getInstance();
+	public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
 		Mailbox mbox = null;
 		try {
-			Account account = prov.get(AccountBy.name, user);
-			if (account == null)
-				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
-
-			mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+			mbox = getMailbox(ctxt);
 		} catch (ServiceException e) {
 			throw new DavException("cannot get mailbox", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
 		}
@@ -222,12 +202,7 @@ public class Collection extends MailItemResource {
 		if (user == null || path == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
 		try {
-			Provisioning prov = Provisioning.getInstance();
-			Account account = prov.get(AccountBy.name, user);
-			if (account == null)
-				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
-
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+			Mailbox mbox = getMailbox(ctxt);
 			mbox.delete(ctxt.getOperationContext(), mId, mType);
 		} catch (ServiceException e) {
 			throw new DavException("cannot get item", HttpServletResponse.SC_NOT_FOUND, e);

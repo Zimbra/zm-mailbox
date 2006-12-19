@@ -84,7 +84,7 @@ public class CalendarQuery extends Report {
 	
 	private void handleCalendarItem(QueryContext ctxt, CalendarItem calItem) {
 		try {
-			CalendarObject calobj = new CalendarObject(calItem);
+			CalendarObject calobj = new CalendarObject(ctxt.davCtxt, calItem);
 			if (!calobj.match(ctxt.componentFilter))
 				return;
 			DavResponse resp = ctxt.davCtxt.getDavResponse();

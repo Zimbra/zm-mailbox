@@ -137,6 +137,7 @@ public class DavElements {
 	public static final String P_PROP_FILTER = "prop-filter";
 	public static final String P_PROPFIND = "propfind";
 	public static final String P_PROPERTY = "property";
+	public static final String P_PROPERTYUPDATE = "propertyupdate";
 	public static final String P_PROPNAME = "propname";
 	public static final String P_PROPSTAT = "propstat";
 	public static final String P_PROTECTED = "protected";
@@ -145,6 +146,7 @@ public class DavElements {
 	public static final String P_READ_ACL = "read-acl";
 	public static final String P_READ_CURRENT_USER_PRIVILEGE_SET = "read-current-user-privilege-set";
 	public static final String P_READ_FREE_BUSY = "read-free-busy";
+	public static final String P_REMOVE = "remove";
 	public static final String P_REPORT = "report";
 	public static final String P_REQUIRED_PRINCIPAL = "required-principal";
 	public static final String P_RESOURCE = "resource";
@@ -152,6 +154,7 @@ public class DavElements {
 	public static final String P_RESPONSE = "response";
 	
 	public static final String P_SELF = "self";
+	public static final String P_SET = "set";
 	public static final String P_SHARED = "shared";
 	public static final String P_SOURCE = "source";
 	public static final String P_SUPPORTED_CALENDAR_COMPONENT_SET = "supported-calendar-component-set";
