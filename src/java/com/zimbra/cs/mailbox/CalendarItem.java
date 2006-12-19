@@ -599,11 +599,10 @@ public abstract class CalendarItem extends MailItem {
                                                  int folderId,
                                                  short volumeId)
     throws ServiceException {
-        String method = newInvite.getMethod();
 
         // Remove everyone that is made obselete by this request
         boolean addNewOne = true;
-        boolean isCancel = method.equals(ICalTok.CANCEL.toString());
+        boolean isCancel = newInvite.isCancel();
 
         if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this appointment/task");
@@ -750,7 +749,7 @@ public abstract class CalendarItem extends MailItem {
 
                     // For CANCELLED instances, set DTSTART to the same time
                     // used in RECURRENCE-ID.
-                    if (ICalTok.CANCEL.toString().equals(inv.getMethod()))
+                    if (inv.isCancel())
                         inv.setDtStart(dt);
                 }
             }

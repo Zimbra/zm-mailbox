@@ -799,6 +799,11 @@ public class Invite {
     public String getPercentComplete() { return mPercentComplete; }
     public void setPercentComplete(String pct) { mPercentComplete = pct; }
     
+    public boolean isCancel() {
+        return ICalTok.CANCEL.toString().equals(mMethod) ||
+               IcalXmlStrMap.STATUS_CANCELLED.equals(mStatus);
+    }
+
     public String getFreeBusyActual() {
         assert(mFreeBusy != null);
         

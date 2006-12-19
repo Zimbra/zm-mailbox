@@ -862,7 +862,7 @@ public class Recurrence
                 // trivial, just DtStart!
                 List<Instance> toRet = new ArrayList<Instance>(1);
                 long instStart = mDtStart.getUtcTime();
-                long instEnd = mDtStart.add(mDuration).getUtcTime();
+                long instEnd = mDuration != null ? mDtStart.add(mDuration).getUtcTime() : instStart;
                 if (instStart < end && instEnd > start) {
                     toRet.add(new Instance(calItem, mInvId, false, instStart, instEnd, false));
                 }
@@ -886,14 +886,15 @@ public class Recurrence
             
             // ALWAYS include DTSTART -- by spec
             long firstStart = mDtStart.getUtcTime();
-            long firstEnd = mDtStart.add(mDuration).getUtcTime();
+            long firstEnd = mDuration != null ? mDtStart.add(mDuration).getUtcTime() : firstStart;
             if (firstStart < end && firstEnd > start) {
                 CalendarItem.Instance first = null;
                 if (toRet.size() >0) {
                     first = (CalendarItem.Instance)toRet.get(0);
                 }
                 
-                CalendarItem.Instance dtstartInst = new CalendarItem.Instance(calItem, mInvId, false, mDtStart.getUtcTime(), mDtStart.add(mDuration).getUtcTime(), false); 
+                CalendarItem.Instance dtstartInst = new CalendarItem.Instance(
+                        calItem, mInvId, false, firstStart, firstEnd, false);
                 if (first == null || first.compareTo(dtstartInst) != 0) {
                     assert(first == null || first.compareTo(dtstartInst) > 0); // first MUST be after dtstart!
                     toRet.add(0,dtstartInst);
