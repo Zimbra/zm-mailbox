@@ -255,7 +255,8 @@ public class Mailbox {
         private Account    authuser;
         private boolean    isAdmin;
         private RedoableOp player;
-
+        private String     requestIP;
+        
         boolean changetype = CHECK_CREATED;
         int     change = -1;
 
@@ -309,6 +310,9 @@ public class Mailbox {
         public boolean isUsingAdminPrivileges() {
             return isAdmin;
         }
+        
+        public void setRequestIP(String addr) { requestIP = addr; }
+        public String getRequestIP() { return requestIP; }
     }
 
     // TODO: figure out correct caching strategy
