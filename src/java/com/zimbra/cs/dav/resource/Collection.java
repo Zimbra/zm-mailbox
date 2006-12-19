@@ -42,7 +42,9 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.property.Acl;
+import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -69,6 +71,18 @@ public class Collection extends MailItemResource {
 		mView = f.getDefaultView();
 		mType = f.getType();
 		addProperties(Acl.getAclProperties(this, f));
+		List<String> urlList = new java.util.ArrayList<String>();
+		for (Folder sub : f.getSubfolderHierarchy())
+			if (sub.getDefaultView() == MailItem.TYPE_APPOINTMENT)
+				urlList.add(UrlNamespace.getHomeUrl(this.getOwner()) + sub.getPath() + "/");
+		if (urlList.size() > 0) {
+			mDavCompliance.add(Compliance.one);
+			mDavCompliance.add(Compliance.two);
+			mDavCompliance.add(Compliance.three);
+			mDavCompliance.add(Compliance.access_control);
+			mDavCompliance.add(Compliance.calendar_access);
+			this.addProperty(CalDavProperty.getCalendarHomeSet(urlList));
+		}
 	}
 	
 	private Collection(String name, String acct) throws DavException {
