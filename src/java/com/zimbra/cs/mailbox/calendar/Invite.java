@@ -481,6 +481,8 @@ public class Invite {
         }
         
         String methodStr = meta.get(FN_METHOD, ICalTok.PUBLISH.toString());
+        if (ICalTok.CANCEL.toString().equals(methodStr))
+            status = IcalXmlStrMap.STATUS_CANCELLED;
         
         int flags = (int) meta.getLong(FN_APPT_FLAGS, 0);
         try {
