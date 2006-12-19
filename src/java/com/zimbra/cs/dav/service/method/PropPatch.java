@@ -25,12 +25,21 @@
 package com.zimbra.cs.dav.service.method;
 
 import java.io.IOException;
+import java.util.HashSet;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.QName;
+
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.resource.DavResource;
+import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
+import com.zimbra.cs.dav.service.DavResponse;
 
 public class PropPatch extends DavMethod {
 	public static final String PROPPATCH  = "PROPPATCH";
@@ -38,6 +47,37 @@ public class PropPatch extends DavMethod {
 		return PROPPATCH;
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException {
-		throw new DavException("not implemented", HttpServletResponse.SC_FORBIDDEN, null);
+		HashSet<Element> set = new HashSet<Element>();
+		HashSet<QName> remove = new HashSet<QName>();
+		
+		if (ctxt.hasRequestMessage()) {
+			Document req = ctxt.getRequestMessage();
+			Element top = req.getRootElement();
+			if (!top.getName().equals(DavElements.P_PROPERTYUPDATE))
+				throw new DavException("msg "+top.getName()+" not allowed in PROPPATCH", HttpServletResponse.SC_BAD_REQUEST, null);
+			for (Object obj : top.elements()) {
+				if (!(obj instanceof Element))
+					continue;
+				Element e = (Element)obj;
+				if (e.getName().equals(DavElements.P_SET)) {
+					e = e.element(DavElements.E_PROP);
+					for (Object s : e.elements())
+						if (s instanceof Element)
+							set.add((Element)s);
+				} else if (e.getName().equals(DavElements.P_REMOVE)) {
+					e = e.element(DavElements.E_PROP);
+					for (Object r : e.elements())
+						if (r instanceof Element)
+							remove.add(((Element)r).getQName());
+				}
+			}
+		}
+		
+		DavResource resource = UrlNamespace.getResource(ctxt);
+		resource.patchProperties(ctxt, set, remove);
+		DavResponse resp = ctxt.getDavResponse();
+		
+		resp.addResource(ctxt, resource, getRequestProp(set, remove), false);
+		sendResponse(ctxt);
 	}
 }

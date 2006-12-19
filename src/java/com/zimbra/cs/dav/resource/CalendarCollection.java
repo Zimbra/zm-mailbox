@@ -72,8 +72,8 @@ import com.zimbra.cs.util.L10nUtil.MsgKey;
 
 public class CalendarCollection extends Collection {
 
-	public CalendarCollection(Folder f) throws DavException, ServiceException {
-		super(f);
+	public CalendarCollection(DavContext ctxt, Folder f) throws DavException, ServiceException {
+		super(ctxt, f);
 		Account acct = f.getAccount();
 		mDavCompliance.add(Compliance.one);
 		mDavCompliance.add(Compliance.two);
@@ -128,7 +128,7 @@ public class CalendarCollection extends Collection {
 			java.util.Collection<CalendarItem> calItems = get(ctxt, sAllCalItems);
 			ArrayList<DavResource> children = new ArrayList<DavResource>();
 			for (CalendarItem calItem : calItems)
-				children.add(new CalendarObject(calItem));
+				children.add(new CalendarObject(ctxt, calItem));
 			return children;
 		} catch (ServiceException se) {
 			ZimbraLog.dav.error("can't get calendar items", se);
@@ -137,7 +137,7 @@ public class CalendarCollection extends Collection {
 	}
 	
 	public java.util.Collection<CalendarItem> get(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
-		Mailbox mbox = getMailbox();
+		Mailbox mbox = getMailbox(ctxt);
 		return mbox.getCalendarItemsForRange(ctxt.getOperationContext(), range.getStart(), range.getEnd(), mId, null);
 	}
 	
@@ -165,7 +165,7 @@ public class CalendarCollection extends Collection {
 		return uid;
 	}
 	
-	public DavResource createItem(DavContext ctxt, String user, String name) throws DavException, IOException {
+	public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
 		HttpServletRequest req = ctxt.getRequest();
 		if (req.getContentLength() <= 0)
 			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
@@ -202,6 +202,7 @@ public class CalendarCollection extends Collection {
 					findSummary(vcalendar), 
 					vcalendar, 
 					true);
+			String user = ctxt.getUser();
 			Account account = prov.get(AccountBy.name, user);
 			if (account == null)
 				throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
@@ -229,10 +230,12 @@ public class CalendarCollection extends Collection {
 				throw new DavException("event already exists", HttpServletResponse.SC_CONFLICT, null);
 			
 			if (isUpdate) {
-				CalendarObject calObj = new CalendarObject(calItem);
+				if (etag.charAt(0) == '"' && etag.charAt(0) == '"')
+					etag = etag.substring(1, etag.length()-1);
+				CalendarObject calObj = new CalendarObject(ctxt, calItem);
 				ResourceProperty etagProp = calObj.getProperty(DavElements.P_GETETAG);
 				if (!etagProp.getStringValue().equals(etag))
-					throw new DavException("event not found", HttpServletResponse.SC_BAD_REQUEST, null);
+					throw new DavException("event has different etag ("+etagProp.getStringValue()+") vs "+etag, HttpServletResponse.SC_CONFLICT, null);
 			}
 			for (Invite i : invites) {
 	            if (i.getUid() == null)
@@ -240,14 +243,14 @@ public class CalendarCollection extends Collection {
 				mbox.addInvite(ctxt.getOperationContext(), i, mId, false, null);
 			}
 			calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), uid);
-			return new CalendarObject(calItem);
+			return new CalendarObject(ctxt, calItem);
 		} catch (ServiceException e) {
 			throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		}
 	}
 	
 	public String getFreeBusyReport(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
-		Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMboxId);
+		Mailbox mbox = getMailbox(ctxt);
 		FreeBusy fb = mbox.getFreeBusy(range.getStart(), range.getEnd());
 		ParsedDateTime now = ParsedDateTime.fromUTCTime(System.currentTimeMillis());
 		ParsedDateTime startTime = ParsedDateTime.fromUTCTime(range.getStart());

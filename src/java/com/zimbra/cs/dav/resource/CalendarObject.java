@@ -32,6 +32,7 @@ import java.util.Iterator;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.caldav.Filter;
@@ -47,8 +48,8 @@ public class CalendarObject extends MailItemResource {
 
 	public static final String CAL_EXTENSION = ".ics";
 	
-	public CalendarObject(CalendarItem calItem) throws ServiceException {
-		super(getCalendarPath(calItem), calItem);
+	public CalendarObject(DavContext ctxt, CalendarItem calItem) throws ServiceException {
+		super(ctxt, getCalendarPath(calItem), calItem);
 		mUid = calItem.getUid();
 		mInvites = calItem.getInvites();
 		mTzmap = calItem.getTimeZoneMap();

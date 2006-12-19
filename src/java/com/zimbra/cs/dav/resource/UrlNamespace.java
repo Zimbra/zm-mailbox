@@ -164,6 +164,8 @@ public class UrlNamespace {
 	
 	public static MailItemResource getResourceFromMailItem(DavContext ctxt, MailItem item) throws DavException {
 		MailItemResource resource = null;
+		if (item == null)
+			return resource;
 		byte itemType = item.getType();
 		
 		try {
@@ -174,9 +176,9 @@ public class UrlNamespace {
                 byte viewType = f.getDefaultView();
 				if (viewType == MailItem.TYPE_APPOINTMENT ||
                     viewType == MailItem.TYPE_TASK)
-					resource = new CalendarCollection((Folder)item);
+					resource = new CalendarCollection(ctxt, (Folder)item);
 				else
-					resource = new Collection((Folder)item);
+					resource = new Collection(ctxt, (Folder)item);
 				break;
 			case MailItem.TYPE_WIKI :
 			case MailItem.TYPE_DOCUMENT :
@@ -184,7 +186,7 @@ public class UrlNamespace {
 				break;
 			case MailItem.TYPE_APPOINTMENT :
             case MailItem.TYPE_TASK :
-				resource = new CalendarObject((CalendarItem)item);
+				resource = new CalendarObject(ctxt, (CalendarItem)item);
 				break;
 			}
 		} catch (ServiceException e) {

@@ -54,13 +54,11 @@ public class ResourceProperty {
 	}
 
 	public ResourceProperty(Element elem) {
-		mName = elem.getQName();
-		if (elem.isTextOnly())
-			mValue = elem.getText();
-		else
-			for (Object o : elem.elements())
-				if (o instanceof Element)
-					mChildren.add((Element) o);
+		this(elem.getQName());
+		mValue = elem.getText();
+		for (Object o : elem.elements())
+			if (o instanceof Element)
+				mChildren.add((Element) o);
 	}
 	
 	public QName getName() {

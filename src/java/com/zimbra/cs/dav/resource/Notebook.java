@@ -45,7 +45,7 @@ public class Notebook extends MailItemResource {
 	private WikiContext mWctxt;
 
 	public Notebook(DavContext ctxt, Document doc) throws ServiceException {
-		super(doc);
+		super(ctxt, doc);
 		mDoc = doc;
 		mWctxt = new WikiContext(ctxt.getOperationContext(), null);
 		setCreationDate(doc.getDate());
