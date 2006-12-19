@@ -1967,4 +1967,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether X-Originating-IP will be added to messages sent via SendMsgRequest.</desc>
 </attr>
 
+<attr id="436" name="zimbraFeatureTasksEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether to allow use of tasks feature</desc>
+</attr>
+
 </attrs>
