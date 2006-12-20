@@ -257,26 +257,31 @@ public class CalendarMailSender {
                                                   List<Address> toAddrs,
                                                   boolean onBehalfOf,
                                                   Account senderAccount,
-                                                  Invite defaultInv,
-                                                  Invite cancelInstanceInv,
+                                                  CalendarItem calItem,
+                                                  Invite inv,
                                                   String text,
                                                   ZVCalendar iCal)
     throws ServiceException {
         Locale locale = !onBehalfOf ? fromAccount.getLocale() : senderAccount.getLocale();
+        Invite defaultInv = calItem.getDefaultInviteOrNull();
+
         String sbj = defaultInv != null ? getCancelSubject(defaultInv, locale) : "";
         StringBuilder sb = new StringBuilder(text);
         sb.append("\r\n\r\n");
-        if (cancelInstanceInv != null && cancelInstanceInv.getStartTime() != null) {
+
+        if (!inv.equals(defaultInv) && inv.getStartTime() != null) {
             sb.append(L10nUtil.getMessage(MsgKey.calendarCancelAppointmentInstanceWhich, locale));
             sb.append(" ");
-            ParsedDateTime start = cancelInstanceInv.getStartTime();
+            ParsedDateTime start = inv.getStartTime();
             TimeZone tz = start.getTimeZone();
             Date startDate = new Date(start.getUtcTime());
             sb.append(CalendarMailSender.formatDateTime(startDate, tz, locale));
             sb.append("\r\n\r\n");
         }
 
-        MimeMessage mmInv = defaultInv != null ? defaultInv.getMimeMessage() : null;
+        MimeMessage mmInv = inv.getMimeMessage();
+        if (mmInv == null && defaultInv != null)
+            mmInv = defaultInv.getMimeMessage();
         if (mmInv != null)
             attachInviteSummary(sb, mmInv, locale);
         
