@@ -50,6 +50,10 @@ import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
 import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
 import com.zimbra.cs.zclient.event.ZModifyTagEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
+import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
+import com.zimbra.cs.zclient.event.ZCreateConversationEvent;
+import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
+import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 import com.zimbra.soap.SoapFaultException;
@@ -348,7 +352,11 @@ public class ZMailbox {
         if (modified == null) return;
         for (Element e : modified.listElements()) {
         	ZModifyEvent event = null;
-            if (e.getName().equals(MailService.E_TAG)) {
+            if (e.getName().equals(MailService.E_CONV)) {
+                event = new ZModifyConversationEvent(e);
+            } else if (e.getName().equals(MailService.E_MSG)) {
+                event = new ZModifyMessageEvent(e);
+            } else if (e.getName().equals(MailService.E_TAG)) {
                 event = new ZModifyTagEvent(e);
             } else if (e.getName().equals(MailService.E_SEARCH)) {
             	event = new ZModifySearchFolderEvent(e);
@@ -369,7 +377,11 @@ public class ZMailbox {
         if (created == null) return;
         for (Element e : created.listElements()) {
         	ZCreateEvent event = null;
-            if (e.getName().equals(MailService.E_FOLDER)) {
+            if (e.getName().equals(MailService.E_CONV)) {
+                event = new ZCreateConversationEvent(e);
+            } else if (e.getName().equals(MailService.E_MSG)) {
+                event = new ZCreateMessageEvent(e);
+            } else if (e.getName().equals(MailService.E_FOLDER)) {
                 String parentId = e.getAttribute(MailService.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
                 ZFolder child = new ZFolder(e, parent);

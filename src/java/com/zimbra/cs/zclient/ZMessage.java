@@ -25,12 +25,13 @@
 
 package com.zimbra.cs.zclient;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
 import com.zimbra.soap.Element;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ZMessage implements ZItem {
 
@@ -126,6 +127,13 @@ public class ZMessage implements ZItem {
         Element mp = e.getOptionalElement(MailService.E_MIMEPART);
         if (mp != null)
             mMimeStructure = new ZMimePart(mp);
+    }
+
+    public void modifyNotification(ZModifyMessageEvent event) throws ServiceException {
+        mFlags = event.getFlags(mFlags);
+        mTags = event.getFlags(mTags);
+        mFolderId = event.getFolderId(mFolderId);
+        mConversationId = event.getConversationId(mConversationId);
     }
 
     /**
