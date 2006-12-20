@@ -554,7 +554,7 @@ public class ZimbraSoapContext {
 
 		if (targetAccountId != null || targetAccountName != null) {
 			Element acctElt = ctxt.addUniqueElement(E_ACCOUNT);
-			acctElt.addAttribute(A_BY, targetAccountId != null ? "id" : "name");
+			acctElt.addAttribute(A_BY, targetAccountId != null ? BY_ID : BY_NAME);
 			acctElt.setText(targetAccountId != null ? targetAccountId : targetAccountName);
 		}
 		
