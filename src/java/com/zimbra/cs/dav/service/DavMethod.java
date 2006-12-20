@@ -41,11 +41,16 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.resource.DavResource;
 
+/**
+ * Base class for DAV methods.
+ * 
+ * @author jylee
+ *
+ */
 public abstract class DavMethod {
 	public abstract String getName();
 	public abstract void handle(DavContext ctxt) throws DavException, IOException;
 	
-	// needs to throw either 403 Forbidden, or 409 Conflict in case of an error.
 	public void checkPrecondition(DavContext ctxt) throws DavException {
 	}
 	
@@ -96,6 +101,7 @@ public abstract class DavMethod {
 		sEmptyProp = new RequestProp();
 	}
 	
+	/* List of properties in the PROPFIND or PROPPATCH request. */
 	public static class RequestProp {
 		boolean nameOnly;
 		boolean allProp;

@@ -49,6 +49,14 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 
+/**
+ * RFC 2518bis section 5.
+ * 
+ * Collections map to mailbox folders.
+ * 
+ * @author jylee
+ *
+ */
 public class Collection extends MailItemResource {
 
 	protected int mId;

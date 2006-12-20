@@ -48,6 +48,13 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 
+/**
+ * SearchWrapper is a phantom resource that resembles a Collection (folder)
+ * with the contents dynamically generated from email contents in the mailbox.
+ * 
+ * @author jylee
+ *
+ */
 public class SearchWrapper extends PhantomResource {
 
 	protected static final long DAY_IN_MS = 24 * 60 * 60 * 1000;

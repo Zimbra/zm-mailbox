@@ -39,6 +39,12 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.wiki.Wiki;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 
+/**
+ * Represents Notebook / Wiki item.
+ * 
+ * @author jylee
+ *
+ */
 public class Notebook extends MailItemResource {
 
 	private Document mDoc;

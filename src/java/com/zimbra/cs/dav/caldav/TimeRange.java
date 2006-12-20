@@ -32,6 +32,12 @@ import org.dom4j.Element;
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.dav.DavElements;
 
+/**
+ * draft-dusseault-caldav section 9.9.
+ * 
+ * @author jylee
+ *
+ */
 public class TimeRange {
 	private long mStart;
 	private long mEnd;

@@ -33,6 +33,12 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.LockMgr;
 import com.zimbra.cs.dav.LockMgr.Lock;
 
+/**
+ * RFC 2518bis section 15.8
+ * 
+ * @author jylee
+ *
+ */
 public class LockDiscovery extends ResourceProperty {
 
 	private HashSet<LockMgr.Lock> mLocks;

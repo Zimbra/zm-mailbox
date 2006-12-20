@@ -70,6 +70,12 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.L10nUtil;
 import com.zimbra.cs.util.L10nUtil.MsgKey;
 
+/**
+ * draft-dusseault-caldav-15 section 4.2
+ * 
+ * @author jylee
+ *
+ */
 public class CalendarCollection extends Collection {
 
 	public CalendarCollection(DavContext ctxt, Folder f) throws DavException, ServiceException {
@@ -123,6 +129,7 @@ public class CalendarCollection extends Collection {
 		sAllCalItems = new TimeRange(null);
 	}
 	
+	/* Returns all the appoinments stored in the calendar as DavResource. */
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		try {
 			java.util.Collection<CalendarItem> calItems = get(ctxt, sAllCalItems);
@@ -135,7 +142,8 @@ public class CalendarCollection extends Collection {
 		}
 		return Collections.emptyList();
 	}
-	
+
+	/* Returns the appoinments in the specified time range. */
 	public java.util.Collection<CalendarItem> get(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
 		Mailbox mbox = getMailbox(ctxt);
 		return mbox.getCalendarItemsForRange(ctxt.getOperationContext(), range.getStart(), range.getEnd(), mId, null);
@@ -164,7 +172,8 @@ public class CalendarCollection extends Collection {
 			throw new DavException("no event in the request", HttpServletResponse.SC_BAD_REQUEST, null);
 		return uid;
 	}
-	
+
+	/* creates an appointment sent in PUT request in this calendar. */
 	public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
 		HttpServletRequest req = ctxt.getRequest();
 		if (req.getContentLength() <= 0)
@@ -248,7 +257,8 @@ public class CalendarCollection extends Collection {
 			throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		}
 	}
-	
+
+	/* Returns iCalalendar (RFC 2445) representation of freebusy report for specified time range. */
 	public String getFreeBusyReport(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
 		Mailbox mbox = getMailbox(ctxt);
 		FreeBusy fb = mbox.getFreeBusy(range.getStart(), range.getEnd());
