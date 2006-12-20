@@ -93,7 +93,8 @@ public class ParsedAddress implements Comparable<ParsedAddress> {
 
     public String getSortString() {
         parse();
-        return (personalPart != null ? personalPart : emailPart);
+        String sort = (personalPart != null ? personalPart : emailPart);
+        return (sort != null ? sort : "");
     }
 
     public Map<String, String> getAttributes() {
