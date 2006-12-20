@@ -28,7 +28,9 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.Element;
@@ -44,14 +46,26 @@ public class DeleteDataSource extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
-        
-        Element ePop3 = request.getElement(MailService.E_DS_POP3);
-        String id = ePop3.getAttribute(MailService.A_ID);
-        prov.deleteDataSource(account, id);
-        
-        // Delete UID's from the database
         Mailbox mbox = getRequestedMailbox(zsc);
-        DbPop3Message.deleteUids(mbox, id);
+
+        for (Element eDsrc : request.listElements()) {
+            DataSource dsrc = null;
+            String name = eDsrc.getAttribute(MailService.A_NAME, null);
+            if (name != null)
+                dsrc = prov.get(account, DataSourceBy.name, name);
+            else
+                dsrc = prov.get(account, DataSourceBy.id, eDsrc.getAttribute(MailService.A_ID));
+
+            // note that we're not checking the element name against the actual data source's type
+            if (dsrc == null)
+                continue;
+            String dataSourceId = dsrc.getId();
+            DataSource.Type dstype = dsrc.getType();
+
+            prov.deleteDataSource(account, dataSourceId);
+            if (dstype == DataSource.Type.pop3)
+                DbPop3Message.deleteUids(mbox, dataSourceId);
+        }
         
         Element response = zsc.createElement(MailService.DELETE_DATA_SOURCE_RESPONSE);
         return response;

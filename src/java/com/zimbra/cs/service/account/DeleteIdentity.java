@@ -28,7 +28,9 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
@@ -41,8 +43,20 @@ public class DeleteIdentity extends DocumentHandler {
         Account account = getRequestedAccount(zsc);
         
         Element identityEl = request.getElement(AccountService.E_IDENTITY);
-        String name = identityEl.getAttribute(AccountService.A_NAME);
-        Provisioning.getInstance().deleteIdentity(account, name);
+
+        // identity can be specified by name or by ID
+        String name = identityEl.getAttribute(AccountService.A_NAME, null);
+        if (name == null) {
+            String id = identityEl.getAttribute(AccountService.A_ID, null);
+            if (id == null)
+                throw ServiceException.INVALID_REQUEST("must specify either 'name' or 'id'", null);
+            Identity ident = Provisioning.getInstance().get(account, IdentityBy.id, id);
+            if (ident != null)
+                name = ident.getName();
+        }
+
+        if (name != null)
+            Provisioning.getInstance().deleteIdentity(account, name);
 
         Element response = zsc.createElement(AccountService.DELETE_IDENTITY_RESPONSE);
         return response;

@@ -28,6 +28,8 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.cs.service.mail.MailService;
@@ -2073,8 +2075,15 @@ public class ZMailbox {
     }
 
     public void deleteIdentity(String name) throws ServiceException {
+        deleteIdentity(IdentityBy.name, name);
+    }
+
+    public void deleteIdentity(IdentityBy by, String key) throws ServiceException {
         XMLElement req = new XMLElement(AccountService.DELETE_IDENTITY_REQUEST);
-        req.addElement(AccountService.E_IDENTITY).addAttribute(AccountService.A_NAME, name);
+        if (by == IdentityBy.name)
+            req.addElement(AccountService.E_IDENTITY).addAttribute(AccountService.A_NAME, key);
+        else if (by == IdentityBy.id)
+            req.addElement(AccountService.E_IDENTITY).addAttribute(AccountService.A_ID, key);
         invoke(req);
     }
 
@@ -2136,6 +2145,17 @@ public class ZMailbox {
     public void deleteDataSource(ZDataSource source) throws ServiceException {
         XMLElement req = new XMLElement(MailService.DELETE_DATA_SOURCE_REQUEST);
         source.toIdElement(req);
+        invoke(req);
+    }
+
+    public void deleteDataSource(DataSourceBy by, String key) throws ServiceException {
+        XMLElement req = new XMLElement(MailService.DELETE_DATA_SOURCE_REQUEST);
+        if (by == DataSourceBy.name)
+            req.addElement(MailService.E_DS).addAttribute(MailService.A_NAME, key);
+        else if (by == DataSourceBy.name)
+            req.addElement(MailService.E_DS).addAttribute(MailService.A_ID, key);
+        else
+            throw ServiceException.INVALID_REQUEST("must specify data source by id or name", null);
         invoke(req);
     }
 

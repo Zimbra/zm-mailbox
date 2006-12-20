@@ -491,6 +491,7 @@ public class MailService implements DocumentService {
     public static final String A_SUGGESTIONS = "suggestions";
 
     // data sources
+    public static final String E_DS = "dsrc";
     public static final String E_DS_POP3 = "pop3";
     public static final String A_DS_IS_ENABLED = "isEnabled";
     public static final String A_DS_HOST = "host";
