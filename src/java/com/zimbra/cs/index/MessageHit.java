@@ -224,8 +224,8 @@ public class MessageHit extends ZimbraHit {
     }
 
     public String getSender() throws ServiceException {
-        ParsedAddress cn = new ParsedAddress(getMessage().getSender());
-        return cn.getSortString();
+        String senderSort = new ParsedAddress(getMessage().getSender()).getSortString();
+        return (senderSort == null ? "" : senderSort);
     }
 
     ////////////////////////////////////////////////////
