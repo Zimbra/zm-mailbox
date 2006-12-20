@@ -24,11 +24,12 @@
  */
 package com.zimbra.cs.zclient;
 
-import java.util.Arrays;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.event.ZModifyTagEvent;
 import com.zimbra.soap.Element;
+
+import java.util.Arrays;
 
 public class ZTag implements Comparable, ZItem {
 
@@ -75,14 +76,12 @@ public class ZTag implements Comparable, ZItem {
         mUnreadCount = (int) e.getAttributeLong(MailService.A_UNREAD, 0);
     }
 
-    public void modifyNotification(Element e) throws ServiceException {
-        int newColor = (int) e.getAttributeLong(MailService.A_COLOR, mColor.getValue());
-        if (newColor != mColor.getValue())
-            mColor = Color.fromString(e.getAttribute(MailService.A_COLOR, "0"));
-        mName = e.getAttribute(MailService.A_NAME, mName);
-        mUnreadCount = (int) e.getAttributeLong(MailService.A_UNREAD, mUnreadCount);
+    public void modifyNotification(ZModifyTagEvent e) throws ServiceException {
+        mColor = e.getColor(mColor);
+        mName = e.getName(mName);
+        mUnreadCount = e.getUnreadCount(mUnreadCount);
     }
-    
+
     public String getId() {
         return mId;
     }
@@ -91,7 +90,6 @@ public class ZTag implements Comparable, ZItem {
      *  name (e.g. <code>"foo"</code>), not its absolute pathname
      *  (e.g. <code>"/baz/bar/foo"</code>).
      * 
-     * @see #getPath() 
      * 
      */
     public String getName() {
