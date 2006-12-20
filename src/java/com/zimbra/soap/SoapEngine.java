@@ -51,6 +51,9 @@ import org.dom4j.DocumentException;
 
 public class SoapEngine {
 
+    // attribute used to correlate requests and responses
+    public static final String A_REQUEST_CORRELATOR = "requestId";
+
     public static final String ZIMBRA_CONTEXT = "zimbra.context";
     public static final String ZIMBRA_ENGINE = "zimbra.engine";
 
@@ -149,19 +152,19 @@ public class SoapEngine {
         	            if (mLog.isDebugEnabled())
         	                mLog.debug("dispatch: multi " + req.getQualifiedName());
 
-        	            String id = req.getAttribute("id", null);
+        	            String id = req.getAttribute(A_REQUEST_CORRELATOR, null);
         	            Element br = dispatchRequest(req, context, zsc);
         	            if (id != null)
-        	                br.addAttribute("id", id);
+        	                br.addAttribute(A_REQUEST_CORRELATOR, id);
         	            responseBody.addElement(br);
         	            if (!contOnError && responseProto.isFault(br))
         	                break;
         	        }
                 } else {
-                    String id = doc.getAttribute("id", null);
+                    String id = doc.getAttribute(A_REQUEST_CORRELATOR, null);
                     responseBody = dispatchRequest(doc, context, zsc);
                     if (id != null)
-                        responseBody.addAttribute("id", id);
+                        responseBody.addAttribute(A_REQUEST_CORRELATOR, id);
                 }
             } else {
                 // Proxy the request to target server.  Proxy dispatcher

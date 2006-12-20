@@ -35,7 +35,7 @@ urn:zimbra  -- top-level namespace for global attributes/elements
     </context>
   </soap:Header>
   <soap:Body>
-   <FooRequest ... [id="{client-generated-id}"]>
+   <FooRequest ... [requestId="{client-generated-id}"]>
    </FooRequest>
   </soap:Body>
 </soap:Envelope>
@@ -135,14 +135,14 @@ element involving the session.)  If there is a session, there will be a
      </context>
    <soap:/Header>] 
   <soap:Body>
-   <FooResponse ... [id="{client-generated-id}"]>
+   <FooResponse ... [requestId="{client-generated-id}"]>
    </FooResponse>  
   </soap:Body>
 </soap:Envelope>
 
 
 
-NOTES: The id="..." attribute is optional in the request body. If present, the server will 
+NOTES: The requestId="..." attribute is optional in the request body. If present, the server will 
        include it in the response body element.
        
 batch requests:
@@ -158,9 +158,9 @@ batch requests:
   </soap:Header>
  <soap:Body>
   <BatchRequest xmlns="urn:zimbra" onerror="continue*|stop">
-    <FooRequest id="1">
+    <FooRequest requestId="1">
     </FooRequest>
-    <BarRequest id="2">
+    <BarRequest requestId="2">
     </BarRequest>
   </BatchRequest>
  </soap:Body>
@@ -203,9 +203,9 @@ response:
    <soap:/Header>] 
  <soap:Body>
   <BatchResponse xmlns="urn:zimbra">
-    <soap:Fault id="1">
+    <soap:Fault requestId="1">
     </soap:Fault>
-    <BarResponse ... id="2">
+    <BarResponse ... requestId="2">
     </BarResponse>
   </BatchResponse>
  </soap:Body>
