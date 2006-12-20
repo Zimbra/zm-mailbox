@@ -47,6 +47,11 @@ import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 import com.zimbra.cs.zclient.ZTag.Color;
+import com.zimbra.cs.zclient.event.ZCreateEvent;
+import com.zimbra.cs.zclient.event.ZDeleteEvent;
+import com.zimbra.cs.zclient.event.ZEventHandler;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
+import com.zimbra.cs.zclient.event.ZRefreshEvent;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.SoapTransport;
@@ -286,7 +291,7 @@ public class ZMailboxUtil implements DebugListener {
         MOVE_CONVERSATION("moveConversation", "mc", "{conv-ids} {dest-folder-path}", "move conversation(s) to a new folder", Category.CONVERSATION, 2, 2),
         MOVE_ITEM("moveItem", "mi", "{item-ids} {dest-folder-path}", "move item(s) to a new folder", Category.ITEM, 2, 2),
         MOVE_MESSAGE("moveMessage", "mm", "{msg-ids} {dest-folder-path}", "move message(s) to a new folder", Category.MESSAGE, 2, 2),
-        NOOP("noOp", "no", "", "do a NoOp SOAP call to the server", Category.MISC, 0, 0),
+        NOOP("noOp", "no", "", "do a NoOp SOAP call to the server", Category.MISC, 0, 1),
         POST_REST_URL("postRestURL", "pru", "{relative-path} {file-name}", "do a POST on a REST URL relative to the mailbox", Category.MISC, 2, 2, O_CONTENT_TYPE),        
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
@@ -894,7 +899,7 @@ public class ZMailboxUtil implements DebugListener {
             mMbox.moveContact(id(args[0]), lookupFolderId(param(args, 1)));
             break;
         case NOOP:
-            mMbox.noOp();
+            doNoop(args);
             break;
         case POST_REST_URL:
             doPostRestURL(args);
@@ -935,6 +940,49 @@ public class ZMailboxUtil implements DebugListener {
         return ExecuteStatus.OK;        
     }
 
+    private ZEventHandler mTraceHandler = new TraceHandler();
+    
+    private static class TraceHandler extends ZEventHandler {
+
+    	@Override
+    	public void handleRefresh(ZRefreshEvent refreshEvent, ZMailbox mailbox) throws ServiceException {
+    		System.out.println("ZRefreshEvent: "+refreshEvent);
+    	}
+
+    	@Override
+    	public void handleModify(ZModifyEvent event, ZMailbox mailbox) throws ServiceException {
+    		System.out.println(event.getClass().getSimpleName()+": "+event);
+    	}
+    	
+       	@Override
+    	public void handleCreate(ZCreateEvent event, ZMailbox mailbox) throws ServiceException {
+    		System.out.println(event.getClass().getSimpleName()+": "+ event);
+    	}
+       	
+       	@Override
+       	public void handleDelete(ZDeleteEvent event, ZMailbox mailbox) throws ServiceException {
+       		System.out.println("ZDeleteEvent: "+event);
+       	}
+    }
+    
+    private void doNoop(String[] args) throws ServiceException {
+    	if (args.length == 0 || !args[0].equals("-t"))
+    		mMbox.noOp();
+    	else {
+    		mMbox.addEventHandler(mTraceHandler);
+    		while(true) {
+    			System.out.println("NoOp: "+DateUtil.toGeneralizedTime(new Date())); 
+				mMbox.noOp();
+    			try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+    		}
+    	}
+    }
+    
     private String getGranteeDisplay(GranteeType type) {
         switch (type) {
         case usr: return "account";

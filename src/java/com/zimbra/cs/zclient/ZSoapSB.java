@@ -35,40 +35,46 @@ public class ZSoapSB {
     private StringBuilder mSb;
     private boolean mFirst;
     private boolean mInArray;
+    private String mEol = "\n";
     
     public ZSoapSB() {
         mSb = new StringBuilder();
     }
     
+    public ZSoapSB(String eol) {
+        mSb = new StringBuilder();
+        mEol = eol;
+    }
+    
     public ZSoapSB beginStruct() {
-        mSb.append("{\n");        
+        mSb.append("{").append(mEol);        
         mFirst = true;
         return this;
     }
     
     public ZSoapSB beginStruct(String name) {
         checkFirst();
-        mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": {\n");        
+        mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": {").append(mEol);        
         mFirst = true;
         return this;
     }
 
     public ZSoapSB endStruct() {
-        mSb.append("\n}");
+        mSb.append(mEol).append("}");
         mFirst = false;
         return this;
     }
     
     private ZSoapSB beginArray(String name) {
         checkFirst();        
-        mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": [\n");
+        mSb.append(" ").append(StringUtil.jsEncodeKey(name)).append(": [").append(mEol);
         mFirst = true;
         mInArray = true;
         return this;
     }
 
     private ZSoapSB endArray() {
-        mSb.append("\n]");
+        mSb.append(mEol).append("]");
         mFirst = false;
         mInArray = false;
         return this;
@@ -78,7 +84,7 @@ public class ZSoapSB {
         if (mFirst) {
             mFirst = false;
         } else {
-            mSb.append(",\n");
+            mSb.append(",").append(mEol);
         }
     }
     

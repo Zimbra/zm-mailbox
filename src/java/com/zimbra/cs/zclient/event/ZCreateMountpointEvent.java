@@ -52,4 +52,8 @@ public class ZCreateMountpointEvent implements ZCreateItemEvent {
     public ZMountpoint getMountpoint() {
         return mMountpoint;
     }
+    
+    public String toString() {
+    	return mMountpoint.toString();
+    }
 }

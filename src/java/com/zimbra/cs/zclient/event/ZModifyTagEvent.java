@@ -28,6 +28,7 @@ package com.zimbra.cs.zclient.event;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.ZTag.Color;
+import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.soap.Element;
 
 public class ZModifyTagEvent implements ZModifyItemEvent {
@@ -77,5 +78,21 @@ public class ZModifyTagEvent implements ZModifyItemEvent {
      */
     public int getUnreadCount(int defaultValue) throws ServiceException {
         return (int) mTagEl.getAttributeLong(MailService.A_UNREAD, defaultValue);
+    }
+
+    public String toString() {
+        try {
+            ZSoapSB sb = new ZSoapSB();
+            sb.beginStruct();
+            sb.add("id", getId());
+            String name = getName(null);
+            if (name != null) sb.add("name", name);
+            if (getColor(null) != null) sb.add("color", getColor(null).name());
+            if (getUnreadCount(-1) != -1) sb.add("unreadCount", getUnreadCount(-1));
+            sb.endStruct();
+            return sb.toString();
+        } catch (ServiceException se) {
+            return "";
+        }
     }
 }

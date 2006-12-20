@@ -130,6 +130,7 @@ public class ZMailbox {
         private AccountBy mTargetAccountBy = AccountBy.name;
         private boolean mNoSession;
         private boolean mNoNotify;
+        private ZEventHandler mHandler;
 
         public Options() {
         }
@@ -178,6 +179,9 @@ public class ZMailbox {
 
         public boolean getNoNotify() { return mNoNotify; }
         public void setNoNotify(boolean noNotify) { mNoNotify = noNotify; }
+        
+        public ZEventHandler getEventHandler() { return mHandler; }
+        public void setEventHandler(ZEventHandler handler) { mHandler = handler; }
 
     }
 
@@ -195,11 +199,13 @@ public class ZMailbox {
     private List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
     public static ZMailbox getMailbox(Options options) throws ServiceException {
-        return new ZMailbox(options);
+    	return new ZMailbox(options);
     }
     
     public ZMailbox(Options options) throws ServiceException {
     	mHandlers.add(new InternalEventHandler());
+    	if (options.getEventHandler() != null)
+    		mHandlers.add(options.getEventHandler());
         initPreAuth(options.getUri(), options.getDebugListener());
         if (options.getAuthToken() != null) {
             initAuthToken(options.getAuthToken());
@@ -216,6 +222,19 @@ public class ZMailbox {
         if (options.getTargetAccount() != null) {
             initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
         }
+    }
+
+    public boolean addEventHandler(ZEventHandler handler) {
+    	if (!mHandlers.contains(handler)) {
+    		mHandlers.add(handler);
+    		return true;
+    	} else {
+    		return false;
+    	}
+    }
+
+    public boolean removeEventHandler(ZEventHandler handler) {
+        return mHandlers.remove(handler);
     }
 
     public void initAuthToken(String authToken) throws ServiceException {
@@ -340,8 +359,9 @@ public class ZMailbox {
             } else if (e.getName().equals(MailService.E_MAILBOX)) {
                 event = new ZModifyMailboxEvent(e);
             }
-            for (ZEventHandler handler : mHandlers)
-            	handler.handleModify(event, this);
+            if (event != null)
+            	for (ZEventHandler handler : mHandlers)
+            		handler.handleModify(event, this);
         }
     }
 
@@ -370,8 +390,9 @@ public class ZMailbox {
             } else if (e.getName().equals(MailService.E_TAG)) {
                 event = new ZCreateTagEvent(new ZTag(e));
             }
-            for (ZEventHandler handler : mHandlers)
-            	handler.handleCreate(event, this);            
+            if (event != null)
+            	for (ZEventHandler handler : mHandlers)
+            		handler.handleCreate(event, this);            
         }
     }
 

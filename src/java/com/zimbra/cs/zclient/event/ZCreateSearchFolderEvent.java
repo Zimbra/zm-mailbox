@@ -52,4 +52,8 @@ public class ZCreateSearchFolderEvent implements ZCreateItemEvent {
     public ZSearchFolder getSearchFolder() {
         return mSearchFolder;
     }
+    
+    public String toString() {
+    	return mSearchFolder.toString();
+    }
 }

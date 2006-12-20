@@ -52,4 +52,8 @@ public class ZCreateFolderEvent implements ZCreateItemEvent {
     public ZFolder getFolder() {
         return mFolder;
     }
+    
+    public String toString() {
+    	return mFolder.toString();
+    }
 }

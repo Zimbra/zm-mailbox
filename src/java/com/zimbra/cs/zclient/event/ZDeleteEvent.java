@@ -25,8 +25,10 @@
 
 package com.zimbra.cs.zclient.event;
 
-import java.util.List;
+import com.zimbra.cs.zclient.ZSoapSB;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class ZDeleteEvent {
 
@@ -49,5 +51,13 @@ public class ZDeleteEvent {
             		mList.add(id);
         }
         return mList;
+    }
+    
+    public String toString() {
+    	ZSoapSB sb = new ZSoapSB();
+    	sb.beginStruct();
+    	sb.add("ids", getIds());
+    	sb.endStruct();
+    	return sb.toString();
     }
 }
