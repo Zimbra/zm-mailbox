@@ -564,7 +564,7 @@ global config.
 </CreateIdentityRequest>
 
 <CreateIdentityResponse>
-  <identity name="{identity-name}" id="...">
+  <identity name="{identity-name}" id="{identity-id}">
    ....
   </identity>
 </CreateIdentityResponse>
@@ -599,7 +599,7 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 <GetIdentitiesRequest/>
 
 <GetIdentitiesResponse>
-  <identity name="{identity-name}" id="...">
+  <identity name="{identity-name}" id="{identity-id}">
     <a name="{name}">{value}</a>
     ...
     <a name="{name}">{value}</a>
@@ -609,7 +609,7 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 ---------
 
 <ModifyIdentityRequest>
-  <identity name="{identity-name}">
+  <identity [name="{identity-name}" | id="{identity-id}"]>
     <a name="{name}">{value}</a>
     ...
     <a name="{name}">{value}</a>
@@ -618,13 +618,17 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 
 <ModifyIdentityResponse/>
 
+<-- must specify either 'name' or 'id' -->
+
 ---------
 
 <DeleteIdentityRequest>
-  <identity name="{identity-name}"/>
+  <identity [name="{identity-name}" | id="{identity-id}"]/>
 </DeleteIdentityRequest>
 
 <DeleteIdentityResponse/>
+
+<-- must specify either 'name' or 'id' -->
 
 ---------
 
@@ -1872,13 +1876,14 @@ are modified.
 ---------------------------
 
 <DeleteDataSourceRequest>
-  <pop3 id="{id}"/>
+  *[<dsrc [id="{data-source-id}" | name="{data-source-name}"]/>]
+  *[<pop3 [id="{data-source-id}" | name="{data-source-name}"]/>]
 </DeleteDataSourceRequest>
 
 <DeleteDataSourceResponse/>
 
-Changes attributes of the given data source.  Only the attributes specified in the request
-are modified.
+<-- must specify eith -->
+<-- must specify either 'name' or 'id' -->
 
 ---------------------------
 

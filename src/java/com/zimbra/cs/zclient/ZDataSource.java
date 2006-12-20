@@ -37,5 +37,6 @@ public interface ZDataSource  {
 
     public DataSource.Type getType();
     public String getName();
+    public String getId();
     public Map<String,Object> getAttrs();
 }

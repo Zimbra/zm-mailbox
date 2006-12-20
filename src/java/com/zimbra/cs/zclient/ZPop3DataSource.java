@@ -74,6 +74,21 @@ public class ZPop3DataSource implements ZDataSource {
         mLeaveOnServer = leaveOnServer;
     }
 
+    public ZPop3DataSource(DataSource dsrc) throws ServiceException {
+        if (dsrc.getType() != DataSource.Type.pop3)
+            throw ServiceException.INVALID_REQUEST("can't instantiate ZPop3DataSource for " + dsrc.getType(), null);
+
+        mName = dsrc.getName();
+        mEnabled = dsrc.isEnabled();
+        mHost = dsrc.getHost();
+        mPort = dsrc.getPort();
+        mUsername = dsrc.getUsername();
+        mPassword = dsrc.getDecryptedPassword();
+        mFolderId = "" + dsrc.getFolderId();
+        mConnectionType = dsrc.getConnectionType();
+        mLeaveOnServer = dsrc.leaveOnServer();
+    }
+
     public Element toElement(Element parent) {
         Element src = parent.addElement(MailService.E_DS_POP3);
         if (mId != null) src.addAttribute(MailService.A_ID, mId);
@@ -135,8 +150,7 @@ public class ZPop3DataSource implements ZDataSource {
             attrs.put(Provisioning.A_zimbraDataSourcePort, "" + mPort);
         if (mFolderId != null)
             attrs.put(Provisioning.A_zimbraDataSourceFolderId, mFolderId);
-        attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
-            LdapUtil.getBooleanString(mLeaveOnServer));
+        attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, LdapUtil.getBooleanString(mLeaveOnServer));
         return attrs;
     }
 
