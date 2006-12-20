@@ -53,6 +53,13 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 
+/**
+ * Abstraction of DavResource that maps to MailItem in the mailbox.
+ * Supports the dead properties that can be saved for DavResource.
+ * 
+ * @author jylee
+ *
+ */
 public abstract class MailItemResource extends DavResource {
 	protected int  mFolderId;
 	protected int  mId;
@@ -110,6 +117,7 @@ public abstract class MailItemResource extends DavResource {
 		return MailboxManager.getInstance().getMailboxByAccount(account);
 	}
 	
+	/* Deletes this resource. */
 	public void delete(DavContext ctxt) throws DavException {
 		if (mId == 0) 
 			throw new DavException("cannot delete resource", HttpServletResponse.SC_FORBIDDEN, null);
@@ -120,7 +128,8 @@ public abstract class MailItemResource extends DavResource {
 			throw new DavException("cannot delete item", HttpServletResponse.SC_FORBIDDEN, se);
 		}
 	}
-	
+
+	/* Moves this resource to another Collection. */
 	public void move(DavContext ctxt, Collection dest) throws DavException {
 		if (mFolderId == dest.getId())
 			return;
@@ -131,7 +140,8 @@ public abstract class MailItemResource extends DavResource {
 			throw new DavException("cannot move item", HttpServletResponse.SC_FORBIDDEN, se);
 		}
 	}
-	
+
+	/* Copies this resource to another Collection. */
 	public MailItemResource copy(DavContext ctxt, Collection dest) throws DavException {
 		try {
 			Mailbox mbox = getMailbox(ctxt);
@@ -143,7 +153,8 @@ public abstract class MailItemResource extends DavResource {
 			throw new DavException("cannot copy item", HttpServletResponse.SC_FORBIDDEN, se);
 		}
 	}
-	
+
+	/* Renames this resource. */
 	public void rename(DavContext ctxt, String newName) throws DavException {
 		try {
 			Mailbox mbox = getMailbox(ctxt);
@@ -187,7 +198,11 @@ public abstract class MailItemResource extends DavResource {
 			}
 		return props;
 	}
-	
+
+	/* Modifies the set of dead properties saved for this resource. 
+	 * Properties in the parameter 'set' are added to the existing properties.
+	 * Properties in 'remove' are removed.
+	 */
 	public void patchProperties(DavContext ctxt, java.util.Collection<Element> set, java.util.Collection<QName> remove) throws DavException {
 		for (QName n : remove)
 				mDeadProps.remove(n);

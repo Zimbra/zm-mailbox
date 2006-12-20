@@ -42,6 +42,12 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 
+/**
+ * BrowseWrapper is used to generate the phantom folder hierarchy.
+ * 
+ * @author jylee
+ *
+ */
 public class BrowseWrapper extends PhantomResource {
 	
 	private enum BrowseBy {

@@ -33,6 +33,16 @@ import java.util.UUID;
 
 import com.zimbra.cs.dav.resource.DavResource;
 
+/**
+ * RFC 2518bis section 6.
+ * 
+ * We don't support locking with depth infinity.  All the locks are
+ * implemented as advisory, with relatively short timeout of 10 mins.
+ * The server keeps track of the most recent 100 locks only.
+ * 
+ * @author jylee
+ *
+ */
 public class LockMgr {
 	private static LockMgr sInstance;
 	public static LockMgr getInstance() {

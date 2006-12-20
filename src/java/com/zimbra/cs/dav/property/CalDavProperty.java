@@ -38,6 +38,16 @@ import com.zimbra.cs.dav.resource.CalendarObject;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.Mime;
 
+/**
+ * CALDAV:supported-calendar-component-set - draft-dusseault-caldav section 5.2.3
+ * CALDAV:supported-calendar-data - draft-dusseault-caldav section 5.2.4
+ * CALDAV:supported-collation-set - draft-dusseault-caldav section 7.5.1
+ * CALDAV:calendar-data - draft-dusseault-caldav section 9.6
+ * CALDAV:calendar-home-set - draft-dusseault-caldav section 6.2.1
+ * 
+ * @author jylee
+ *
+ */
 public class CalDavProperty extends ResourceProperty {
 
 	public static ResourceProperty getSupportedCalendarComponentSet() {

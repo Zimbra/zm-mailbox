@@ -49,9 +49,16 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 
+/**
+ * UrlNamespace provides a mapping from a URL to a DavResource.
+ * 
+ * @author jylee
+ *
+ */
 public class UrlNamespace {
 	public static final String ATTACHMENTS_PREFIX = "/attachments";
 	
+	/* Returns Collection at the specified URL. */
 	public static Collection getCollectionAtUrl(DavContext ctxt, String url) throws DavException {
 		if (url.startsWith("http")) {
 			int index = url.indexOf(DavServlet.DAV_PATH);
@@ -80,7 +87,8 @@ public class UrlNamespace {
 			return (Collection)rsc;
 		throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
 	}
-	
+
+	/* Returns DavResource at the specified URL. */
 	public static DavResource getResourceAtUrl(DavContext ctxt, String url) throws DavException {
 		int index = url.indexOf(DavServlet.DAV_PATH);
 		if (index == -1 || url.endsWith(DavServlet.DAV_PATH))
@@ -93,15 +101,18 @@ public class UrlNamespace {
 		String path = url.substring(delim);
 		return getResourceAt(ctxt, user, path);
 	}
-	
+
+	/* Returns DavResource pointed by the request URL. */
 	public static DavResource getResource(DavContext ctxt) throws DavException {
 		return getResourceAt(ctxt, ctxt.getPath());
 	}
-	
+
+	/* Returns DavResource pointed by the path. */
 	public static DavResource getResourceAt(DavContext ctxt, String path) throws DavException {
 		return getResourceAt(ctxt, ctxt.getUser(), path);
 	}
 	
+	/* Returns DavResource in the user's mailbox at the specified path. */
 	public static DavResource getResourceAt(DavContext ctxt, String user, String path) throws DavException {
 		if (path == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
@@ -121,7 +132,8 @@ public class UrlNamespace {
 		
 		return resource;
 	}
-	
+
+	/* Returns the root URL of the user. */
 	public static String getHomeUrl(String user) throws DavException {
 		StringBuilder buf = new StringBuilder();
 		buf.append(DavServlet.DAV_PATH).append("/").append(user);
@@ -144,6 +156,7 @@ public class UrlNamespace {
 	public static final String ACL_COS    = "/acl/cos";
 	public static final String ACL_DOMAIN = "/acl/domain";
 	
+	/* RFC 3744 */
 	public static String getAclUrl(String owner, String principal, String type) throws DavException {
 		StringBuilder buf = new StringBuilder();
 		buf.append(type).append("/").append(principal);
@@ -157,11 +170,13 @@ public class UrlNamespace {
 			throw new DavException("cannot create ACL URL for principal "+principal, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		}
 	}
-	
+
+	/* Returns URL to the resource. */
 	public static String getResourceUrl(DavResource rs) throws DavException {
 		return getHomeUrl(rs.getOwner()) + rs.getUri();
 	}
-	
+
+	/* Returns DavResource for the MailItem. */
 	public static MailItemResource getResourceFromMailItem(DavContext ctxt, MailItem item) throws DavException {
 		MailItemResource resource = null;
 		if (item == null)

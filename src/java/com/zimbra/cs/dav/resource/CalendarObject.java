@@ -44,6 +44,13 @@ import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.Mime;
 
+/**
+ * CalendarObject is a single instance of iCalendar (RFC 2445) object, such as
+ * VEVENT or VTODO.
+ * 
+ * @author jylee
+ *
+ */
 public class CalendarObject extends MailItemResource {
 
 	public static final String CAL_EXTENSION = ".ics";
@@ -77,6 +84,7 @@ public class CalendarObject extends MailItemResource {
 		return path.toString();
 	}
 
+	/* Returns true if the supplied Filter matches this calendar object. */
 	public boolean match(Filter filter) {
 		for (Invite inv : mInvites)
 			if (filter.match(inv))
@@ -84,7 +92,10 @@ public class CalendarObject extends MailItemResource {
 		
 		return false;
 	}
-	
+
+	/* Returns iCalendar representation of events that matches
+	 * the supplied filter.
+	 */
 	public String getVcalendar(Filter filter) throws IOException {
 		StringBuilder buf = new StringBuilder();
 		

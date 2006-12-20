@@ -51,6 +51,18 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 
+/**
+ * Attachment is a DAV resource that represents email attachments.
+ * 
+ * Using WebDAV client, email attachments in the mailbox can be browsed in
+ * file manager like interface.  There are predefined phantom folders like
+ * /attachment/by-type/image/today whose contents are dynamically updated
+ * just like smart folders.  In those phantom folders the email attachments
+ * are listed as individual files.
+ * 
+ * @author jylee
+ *
+ */
 public class Attachment extends PhantomResource {
 
 	private byte[] mContent;
@@ -72,6 +84,7 @@ public class Attachment extends PhantomResource {
 		boolean needQuotes = (name.indexOf(' ') > 0);
 		
 		// XXX filename: query won't match the attachments in winmail.dat
+		// bug 11406
 		query.append("filename:");
 		if (needQuotes)
 			query.append("'");

@@ -93,13 +93,13 @@ public class DavServlet extends ZimbraServlet {
 			resp.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
 			return;
 		}
-		
-		DavContext ctxt = new DavContext(req, resp);
+
+		DavContext ctxt;
 		try {
 			Account authUser = basicAuthRequest(req, resp, true);
 			if (authUser == null)
 				return;
-			ctxt.setOperationContext(authUser);
+			ctxt = new DavContext(req, resp, authUser);
 		} catch (ServiceException e) {
 			ZimbraLog.dav.error("error getting authenticated user", e);
 			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

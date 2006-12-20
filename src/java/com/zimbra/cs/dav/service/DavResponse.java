@@ -45,6 +45,12 @@ import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.resource.DavResource;
 
+/**
+ * Abstraction for DAV response message.
+ * 
+ * @author jylee
+ *
+ */
 public class DavResponse {
 	
 	private static Map<Integer, String> sStatusTextMap;
@@ -117,6 +123,9 @@ public class DavResponse {
 		prop.toElement(ctxt, top, false);
 	}
 	
+	/* Convenience method to gather requested properties from the resource and
+	 * append them to the response.
+	 */
 	public void addResource(DavContext ctxt, DavResource rs, DavMethod.RequestProp props, boolean includeChildren) throws DavException {
 		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
 		Element top = mResponse.getRootElement();
@@ -157,6 +166,7 @@ public class DavResponse {
 		return prop;
 	}
 
+	/* Writes response XML Document to OutputStream. */
 	public void writeTo(OutputStream out) throws IOException {
 		OutputFormat format = OutputFormat.createPrettyPrint();
 		format.setTrimText(false);

@@ -77,6 +77,7 @@ public abstract class Filter {
 		return mIsNotDefinedSet;
 	}
 
+	/* TODO: implement */
 	public static class TextMatch extends Filter {
 		public TextMatch(Element elem) {
 			super(elem);
@@ -86,6 +87,7 @@ public abstract class Filter {
 			return true;
 		}
 	}
+	/* TODO: implement */
 	public static class ParamFilter extends Filter {
 		public ParamFilter(Element elem) {
 			super(elem);
@@ -95,6 +97,7 @@ public abstract class Filter {
 			return true;
 		}
 	}
+	/* TODO: implement */
 	public static class PropFilter extends Filter {
 		private HashSet<ParamFilter> mParams;
 		
