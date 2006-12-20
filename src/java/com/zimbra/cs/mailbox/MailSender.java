@@ -187,7 +187,9 @@ public class MailSender {
                 convId = mbox.getConversationIdFromReferent(mm, origMsgId);
 
             // set the From, Sender, Date, Reply-To, etc. headers
-            updateHeaders(mm, acct, authuser, octxt.getRequestIP(), replyToSender);
+            updateHeaders(mm, acct, authuser,
+                    octxt != null ? octxt.getRequestIP() : null,
+                    replyToSender);
 
             // run any pre-send/pre-save MIME mutators
             try {
