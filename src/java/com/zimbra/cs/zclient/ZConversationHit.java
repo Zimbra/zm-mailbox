@@ -27,6 +27,7 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
 import com.zimbra.soap.Element;
 
 import java.util.ArrayList;
@@ -70,6 +71,15 @@ public class ZConversationHit implements ZSearchHit {
         }        
     }
 
+    public void modifyNotification(ZModifyConversationEvent event) throws ServiceException {
+        mFlags = event.getFlags(mFlags);
+        mTags = event.getFlags(mTags);
+        mSubject = event.getSubject(mSubject);
+        mFragment = event.getFragment(mFragment);
+        mMessageCount = event.getMessageCount(mMessageCount);
+        mRecipients = event.getRecipients(mRecipients);
+    }
+
     public String getId() {
         return mId;
     }
@@ -82,6 +92,7 @@ public class ZConversationHit implements ZSearchHit {
         ZSoapSB sb = new ZSoapSB();
         sb.beginStruct();
         sb.add("id", mId);
+        sb.add("flags", mFlags);
         sb.add("tags", mTags);
         sb.add("fragment", mFragment);
         sb.add("subject", mSubject);

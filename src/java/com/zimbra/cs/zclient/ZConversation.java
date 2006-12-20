@@ -27,6 +27,8 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
+import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
 import com.zimbra.soap.Element;
 
 import java.util.ArrayList;
@@ -91,6 +93,15 @@ public class ZConversation implements ZItem {
         }        
     }
 
+    public void modifyNotification(ZModifyConversationEvent event) throws ServiceException {
+        mFlags = event.getFlags(mFlags);
+        mTags = event.getFlags(mTags);
+        mSubject = event.getSubject(mSubject);
+        //mFragment = event.getFragment(mFragment);
+        mMessageCount = event.getMessageCount(mMessageCount);
+        //mRecipients = event.getRecipients(mRecipients);
+    }
+
     public String getId() {
         return mId;
     }
@@ -150,6 +161,10 @@ public class ZConversation implements ZItem {
             if (emailEl != null) mSender = new ZEmailAddress(emailEl);
         }
         
+        public void modifyNotification(ZModifyMessageEvent event) throws ServiceException {
+            mFlags = event.getFlags(mFlags);
+            mTags = event.getFlags(mTags);
+        }
 
         public String toString() {
             ZSoapSB sb = new ZSoapSB();
