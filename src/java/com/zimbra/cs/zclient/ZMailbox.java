@@ -36,6 +36,20 @@ import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
+import com.zimbra.cs.zclient.event.ZCreateEvent;
+import com.zimbra.cs.zclient.event.ZCreateFolderEvent;
+import com.zimbra.cs.zclient.event.ZCreateMountpointEvent;
+import com.zimbra.cs.zclient.event.ZCreateSearchFolderEvent;
+import com.zimbra.cs.zclient.event.ZCreateTagEvent;
+import com.zimbra.cs.zclient.event.ZDeleteEvent;
+import com.zimbra.cs.zclient.event.ZEventHandler;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
+import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
+import com.zimbra.cs.zclient.event.ZModifyMailboxEvent;
+import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
+import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
+import com.zimbra.cs.zclient.event.ZModifyTagEvent;
+import com.zimbra.cs.zclient.event.ZRefreshEvent;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 import com.zimbra.soap.SoapFaultException;
@@ -179,11 +193,14 @@ public class ZMailbox {
     
     private long mSize;
 
+    private List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
+
     public static ZMailbox getMailbox(Options options) throws ServiceException {
         return new ZMailbox(options);
     }
     
     public ZMailbox(Options options) throws ServiceException {
+    	mHandlers.add(new InternalEventHandler());
         initPreAuth(options.getUri(), options.getDebugListener());
         if (options.getAuthToken() != null) {
             initAuthToken(options.getAuthToken());
@@ -276,109 +293,163 @@ public class ZMailbox {
         if (context == null) return;
         // handle refresh blocks
         Element refresh = context.getOptionalElement(ZimbraNamespace.E_REFRESH);
-        if (refresh != null) refreshHandler(refresh);
+        if (refresh != null) {
+            mProcessedRefresh = true;
+            mNameToTag.clear();
+            mIdToItem.clear();
+            mTransport.setMaxNoitfySeq(0);
+            Element mbx = refresh.getOptionalElement(MailService.E_MAILBOX);
+            if (mbx != null) mSize = mbx.getAttributeLong(MailService.A_SIZE);
+            
+            Element tags = refresh.getOptionalElement(ZimbraNamespace.E_TAGS);
+            List<ZTag> tagList = new ArrayList<ZTag>();
+            if (tags != null) {
+                for (Element t : tags.listElements(MailService.E_TAG)) {
+                	ZTag tag = new ZTag(t);
+                	tagList.add(tag);
+                    addTag(tag);
+                }
+            }
+            Element folderEl = refresh.getOptionalElement(MailService.E_FOLDER);
+            mUserRoot = new ZFolder(folderEl, null, this);
+
+            ZRefreshEvent event = new ZRefreshEvent(mSize, mUserRoot, tagList); 
+            for (ZEventHandler handler : mHandlers)
+            	handler.handleRefresh(event, this);
+        }
         for (Element notify : context.listElements(ZimbraNamespace.E_NOTIFY)) {
             mTransport.setMaxNoitfySeq(
                     Math.max(mTransport.getMaxNotifySeq(),
                              notify.getAttributeLong(ZimbraSoapContext.A_SEQNO, 0)));
-            // MUST DO IN THIS ORDER?
+            // MUST DO IN THIS ORDER!
             handleDeleted(notify.getOptionalElement(ZimbraNamespace.E_DELETED));
             handleCreated(notify.getOptionalElement(ZimbraNamespace.E_CREATED));
             handleModified(notify.getOptionalElement(ZimbraNamespace.E_MODIFIED));
         }
     }
-
+    
     private void handleModified(Element modified) throws ServiceException {
         if (modified == null) return;
         for (Element e : modified.listElements()) {
+        	ZModifyEvent event = null;
             if (e.getName().equals(MailService.E_TAG)) {
-                ZTag tag = getTagById(e.getAttribute(MailService.A_ID));
-                if (tag != null) {
-                    String oldName = tag.getName();
-                    tag.modifyNotification(e);
-                    if (!tag.getName().equalsIgnoreCase(oldName)) {
-                        mNameToTag.remove(oldName);
-                        mNameToTag.put(tag.getName(), tag);
-                    }
-                }
-            } else if (e.getName().equals(MailService.E_SEARCH) || e.getName().equals(MailService.E_FOLDER) || e.getName().equals(MailService.E_MOUNT)) {
-                ZFolder f = getFolderById(e.getAttribute(MailService.A_ID));
-                if (f != null)
-                    f.modifyNotification(e, this);
+                event = new ZModifyTagEvent(e);
+            } else if (e.getName().equals(MailService.E_SEARCH)) {
+            	event = new ZModifySearchFolderEvent(e);
+            } else if (e.getName().equals(MailService.E_FOLDER)) {
+            	event = new ZModifyFolderEvent(e);
+            } else if (e.getName().equals(MailService.E_MOUNT)) {
+            	event = new ZModifyMountpointEvent(e);
             } else if (e.getName().equals(MailService.E_MAILBOX)) {
-                mSize = e.getAttributeLong(MailService.A_SIZE, mSize);                
+                event = new ZModifyMailboxEvent(e);
             }
+            for (ZEventHandler handler : mHandlers)
+            	handler.handleModify(event, this);
         }
     }
 
     private void handleCreated(Element created) throws ServiceException {
         if (created == null) return;
         for (Element e : created.listElements()) {
+        	ZCreateEvent event = null;
             if (e.getName().equals(MailService.E_FOLDER)) {
                 String parentId = e.getAttribute(MailService.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
-                new ZFolder(e, parent, this);
+                event = new ZCreateFolderEvent(new ZFolder(e, parent, this));
             } else if (e.getName().equals(MailService.E_MOUNT)) {
                 String parentId = e.getAttribute(MailService.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
-                new ZMountpoint(e, parent, this);
+                event = new ZCreateMountpointEvent(new ZMountpoint(e, parent, this));
             } else if (e.getName().equals(MailService.E_SEARCH)) {
                 String parentId = e.getAttribute(MailService.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
-                new ZSearchFolder(e, parent, this);
+                event = new ZCreateSearchFolderEvent(new ZSearchFolder(e, parent, this));
             } else if (e.getName().equals(MailService.E_TAG)) {
-                addTag(new ZTag(e));
+                event = new ZCreateTagEvent(new ZTag(e));
             }
+            for (ZEventHandler handler : mHandlers)
+            	handler.handleCreate(event, this);            
         }
     }
 
-    private void handleDeleted(Element deleted) {
+    private void handleDeleted(Element deleted) throws ServiceException {
         if (deleted == null) return;
         String ids = deleted.getAttribute(MailService.A_ID, null);
         if (ids == null) return;
-        for (String id : ids.split(",")) {
-            ZItem item = mIdToItem.get(id);
-            if (item instanceof ZMountpoint) {
-                ZMountpoint sl = (ZMountpoint) item;
-                if (sl.getParent() != null)
-                    sl.getParent().removeChild(sl);
-                mIdToItem.remove(sl.getCanonicalRemoteId());
-            } else if (item instanceof ZFolder) {
-                ZFolder sf = (ZFolder) item;
-                if (sf.getParent() != null) 
-                    sf.getParent().removeChild(sf);
+        ZDeleteEvent de = new ZDeleteEvent(ids);
+        for (ZEventHandler handler : mHandlers)
+        	handler.handleDelete(de, this);
+    }
+    
+    class InternalEventHandler extends ZEventHandler {
 
-            } else if (item instanceof ZTag) {
-                mNameToTag.remove(((ZTag) item).getName());
+        public void handleRefresh(ZRefreshEvent event, ZMailbox mailbox) {
+        	// do nothing for now
+        }
+
+        public void handleCreate(ZCreateEvent event, ZMailbox mailbox) {
+            if (event instanceof ZCreateTagEvent) {
+                addTag(((ZCreateTagEvent)event).getTag());
             }
-            if (item != null) mIdToItem.remove(item.getId());
+            // other cases already taken care of when event is created
+        }
+
+        public void handleModify(ZModifyEvent event, ZMailbox mailbox) throws ServiceException {
+            if (event instanceof ZModifyTagEvent) {
+                ZModifyTagEvent tagEvent = (ZModifyTagEvent) event;
+                ZTag tag = getTagById(tagEvent.getId());
+                if (tag != null) {
+                    String oldName = tag.getName();
+                    tag.modifyNotification(tagEvent);
+                    if (!tag.getName().equalsIgnoreCase(oldName)) {
+                        mNameToTag.remove(oldName);
+                        mNameToTag.put(tag.getName(), tag);
+                    }
+                }
+            } else if (event instanceof ZModifySearchFolderEvent) { // must come before ZModifyFolderEvent
+            	ZModifySearchFolderEvent msfe = (ZModifySearchFolderEvent) event;
+                ZSearchFolder f = getSearchFolderById(msfe.getId());
+                if (f != null)
+                    f.modifyNotification(msfe, mailbox);
+            } else if (event instanceof ZModifyMountpointEvent) { // must come before ZModifyFolderEvent
+            	ZModifyMountpointEvent mme = (ZModifyMountpointEvent) event;
+                ZMountpoint mp = getMountpointById(mme.getId());
+                if (mp != null)
+                    mp.modifyNotification(mme, mailbox);
+            } else if (event instanceof ZModifyFolderEvent) {
+            	ZModifyFolderEvent mfe = (ZModifyFolderEvent) event;
+                ZFolder f = getFolderById(mfe.getId());
+                if (f != null)
+                    f.modifyNotification(mfe, mailbox);
+            } else if (event instanceof ZModifyMailboxEvent) {
+            	mSize = ((ZModifyMailboxEvent)event).getSize(mSize);
+            }
+        }
+        
+        public void handleDelete(ZDeleteEvent event, ZMailbox mailbox) throws ServiceException {
+            for (String id : event.toList()) {
+                ZItem item = mIdToItem.get(id);
+                if (item instanceof ZMountpoint) {
+                    ZMountpoint sl = (ZMountpoint) item;
+                    if (sl.getParent() != null)
+                        sl.getParent().removeChild(sl);
+                    mIdToItem.remove(sl.getCanonicalRemoteId());
+                } else if (item instanceof ZFolder) {
+                    ZFolder sf = (ZFolder) item;
+                    if (sf.getParent() != null) 
+                        sf.getParent().removeChild(sf);
+
+                } else if (item instanceof ZTag) {
+                    mNameToTag.remove(((ZTag) item).getName());
+                }
+                if (item != null) mIdToItem.remove(item.getId());
+            }
         }
     }
 
     private void addTag(ZTag tag) {
         mNameToTag.put(tag.getName(), tag);
         addItemIdMapping(tag);
-    }
-
-    /**
-     * handle a &lt;refresh&gt; block
-     * @param refresh refresh block element
-     * @throws ServiceException on error
-     */
-    private void refreshHandler(Element refresh) throws ServiceException {
-        mProcessedRefresh = true;
-        mNameToTag.clear();
-        mIdToItem.clear();
-        mTransport.setMaxNoitfySeq(0);
-        Element mbx = refresh.getOptionalElement(MailService.E_MAILBOX);
-        if (mbx != null) mSize = mbx.getAttributeLong(MailService.A_SIZE);
-        Element tags = refresh.getOptionalElement(ZimbraNamespace.E_TAGS);
-        if (tags != null) {
-            for (Element t : tags.listElements(MailService.E_TAG))
-                addTag(new ZTag(t));
-        }
-        Element folder = refresh.getOptionalElement(MailService.E_FOLDER);
-        refreshFolders(folder);
     }
 
     void addItemIdMapping(ZItem item) {
@@ -389,10 +460,6 @@ public class ZMailbox {
         mIdToItem.put(remoteId, item);
     }
 
-    private void refreshFolders(Element folderEl) throws ServiceException {
-        mUserRoot = new ZFolder(folderEl, null, this);
-    }    
-        
     /**
      * returns the parent folder path. First removes a trailing {@link #PATH_SEPARATOR} if one is present, then
      * returns the value of the path preceeding the last {@link #PATH_SEPARATOR} in the path.

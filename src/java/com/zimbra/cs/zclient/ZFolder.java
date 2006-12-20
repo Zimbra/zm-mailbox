@@ -27,6 +27,7 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
 import com.zimbra.soap.Element;
 
 import java.io.UnsupportedEncodingException;
@@ -206,41 +207,25 @@ public class ZFolder implements ZItem, Comparable {
     
     void removeChild(ZFolder folder)       { mSubFolders.remove(folder); }
 
-    public void modifyNotification(Element e, ZMailbox mbox) throws ServiceException {
-        mName = e.getAttribute(MailService.A_NAME, mName);
+    public void modifyNotification(ZModifyFolderEvent event, ZMailbox mbox) throws ServiceException {
+        mName = event.getName(mName);
         String oldParentId = mParentId;
-        mParentId = e.getAttribute(MailService.A_FOLDER, mParentId);
+        mParentId = event.getParentId(mParentId);
         if (mParentId != oldParentId) {
             //re-compute mParent!
             mParent.removeChild(this);
             mParent = mbox.getFolderById(mParentId);
             mParent.addChild(this);
         }
-        mFlags = e.getAttribute(MailService.A_FLAGS, mFlags);
-        String newColor = e.getAttribute(MailService.A_COLOR, null);
-        if (newColor != null) {
-            try {
-                mColor = ZFolder.Color.fromString(newColor);
-            } catch (ServiceException se) {
-            }
-        }
-        mUnreadCount = (int) e.getAttributeLong(MailService.A_UNREAD, mUnreadCount);
-        mMessageCount = (int) e.getAttributeLong(MailService.A_NUM, mMessageCount);
-        String newView = e.getAttribute(MailService.A_DEFAULT_VIEW, null);
-        if (newView != null) mDefaultView = View.fromString(newView);
-        mRestURL = e.getAttribute(MailService.A_REST_URL, mRestURL);
-        mRemoteURL = e.getAttribute(MailService.A_URL, mRemoteURL);
-        mEffectivePerms = e.getAttribute(MailService.A_RIGHTS, mEffectivePerms);
-        
-        Element aclEl = e.getOptionalElement(MailService.E_ACL);
-        if (aclEl != null) {
-            mGrants.clear();
-            for (Element grant : aclEl.listElements(MailService.E_GRANT)) {
-                mGrants.add(new ZGrant(grant));
-            }
-        }
-        // TODO: sub/search/link?
-        
+        mFlags = event.getFlags(mFlags);
+        mColor = event.getColor(mColor);
+        mUnreadCount = event.getUnreadCount(mUnreadCount);
+        mMessageCount = event.getMessageCount(mMessageCount);
+        mDefaultView = event.getDefaultView(mDefaultView);
+        mRestURL = event.getRestURL(mRestURL);
+        mRemoteURL = event.getRemoteURL(mRemoteURL);
+        mEffectivePerms = event.getEffectivePerm(mEffectivePerms);
+        mGrants = event.getGrants(mGrants);
     }
         
     public ZFolder getParent() {
