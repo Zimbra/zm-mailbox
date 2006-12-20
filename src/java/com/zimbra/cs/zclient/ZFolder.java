@@ -158,7 +158,7 @@ public class ZFolder implements ZItem, Comparable {
         }
     }
     
-    public ZFolder(Element e, ZFolder parent, ZMailbox mailbox) throws ServiceException {
+    public ZFolder(Element e, ZFolder parent) throws ServiceException {
         mParent = parent;
         mId = e.getAttribute(MailService.A_ID);
         mName = e.getAttribute(MailService.A_NAME);
@@ -189,18 +189,15 @@ public class ZFolder implements ZItem, Comparable {
 
         // sub folders
         for (Element child : e.listElements(MailService.E_FOLDER))
-            new ZFolder(child, this, mailbox);
+            addChild(new ZFolder(child, this));
         
         // search
         for (Element s : e.listElements(MailService.E_SEARCH))
-            new ZSearchFolder(s, this, mailbox);
+            addChild(new ZSearchFolder(s, this));
         
         // link
         for (Element l : e.listElements(MailService.E_MOUNT))
-            new ZMountpoint(l, this, mailbox);
-
-        mailbox.addItemIdMapping(this);
-        if (parent != null) parent.addChild(this);
+            addChild(new ZMountpoint(l, this));
     }
 
     void addChild(ZFolder folder)        { mSubFolders.add(folder); }

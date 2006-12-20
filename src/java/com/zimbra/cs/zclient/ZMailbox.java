@@ -186,7 +186,6 @@ public class ZMailbox {
 
     private Map<String, ZTag> mNameToTag;
     private Map<String, ZItem> mIdToItem;
-    private boolean mProcessedRefresh;
     private ZGetInfoResult mGetInfoResult;
     private ZFolder mUserRoot;
     private SoapTransport.DebugListener mListener;
@@ -293,30 +292,9 @@ public class ZMailbox {
         if (context == null) return;
         // handle refresh blocks
         Element refresh = context.getOptionalElement(ZimbraNamespace.E_REFRESH);
-        if (refresh != null) {
-            mProcessedRefresh = true;
-            mNameToTag.clear();
-            mIdToItem.clear();
-            mTransport.setMaxNoitfySeq(0);
-            Element mbx = refresh.getOptionalElement(MailService.E_MAILBOX);
-            if (mbx != null) mSize = mbx.getAttributeLong(MailService.A_SIZE);
-            
-            Element tags = refresh.getOptionalElement(ZimbraNamespace.E_TAGS);
-            List<ZTag> tagList = new ArrayList<ZTag>();
-            if (tags != null) {
-                for (Element t : tags.listElements(MailService.E_TAG)) {
-                	ZTag tag = new ZTag(t);
-                	tagList.add(tag);
-                    addTag(tag);
-                }
-            }
-            Element folderEl = refresh.getOptionalElement(MailService.E_FOLDER);
-            mUserRoot = new ZFolder(folderEl, null, this);
+        if (refresh != null) 
+        	handleRefresh(refresh);
 
-            ZRefreshEvent event = new ZRefreshEvent(mSize, mUserRoot, tagList); 
-            for (ZEventHandler handler : mHandlers)
-            	handler.handleRefresh(event, this);
-        }
         for (Element notify : context.listElements(ZimbraNamespace.E_NOTIFY)) {
             mTransport.setMaxNoitfySeq(
                     Math.max(mTransport.getMaxNotifySeq(),
@@ -326,6 +304,25 @@ public class ZMailbox {
             handleCreated(notify.getOptionalElement(ZimbraNamespace.E_CREATED));
             handleModified(notify.getOptionalElement(ZimbraNamespace.E_MODIFIED));
         }
+    }
+    
+    private void handleRefresh(Element refresh) throws ServiceException {
+        Element mbx = refresh.getOptionalElement(MailService.E_MAILBOX);
+        if (mbx != null) mSize = mbx.getAttributeLong(MailService.A_SIZE);
+        
+        Element tags = refresh.getOptionalElement(ZimbraNamespace.E_TAGS);
+        List<ZTag> tagList = new ArrayList<ZTag>();
+        if (tags != null) {
+            for (Element t : tags.listElements(MailService.E_TAG)) {
+            	ZTag tag = new ZTag(t);
+            	tagList.add(tag);
+            }
+        }
+        Element folderEl = refresh.getOptionalElement(MailService.E_FOLDER);
+        ZFolder userRoot = new ZFolder(folderEl, null);
+        ZRefreshEvent event = new ZRefreshEvent(mSize, userRoot, tagList); 
+        for (ZEventHandler handler : mHandlers)
+        	handler.handleRefresh(event, this);
     }
     
     private void handleModified(Element modified) throws ServiceException {
@@ -355,15 +352,21 @@ public class ZMailbox {
             if (e.getName().equals(MailService.E_FOLDER)) {
                 String parentId = e.getAttribute(MailService.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
-                event = new ZCreateFolderEvent(new ZFolder(e, parent, this));
+                ZFolder child = new ZFolder(e, parent);
+                event = new ZCreateFolderEvent(child);
+                parent.addChild(child);
             } else if (e.getName().equals(MailService.E_MOUNT)) {
                 String parentId = e.getAttribute(MailService.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
-                event = new ZCreateMountpointEvent(new ZMountpoint(e, parent, this));
+                ZMountpoint child = new ZMountpoint(e, parent);
+                event = new ZCreateMountpointEvent(child);
+                parent.addChild(child);
             } else if (e.getName().equals(MailService.E_SEARCH)) {
                 String parentId = e.getAttribute(MailService.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
-                event = new ZCreateSearchFolderEvent(new ZSearchFolder(e, parent, this));
+                ZSearchFolder child = new ZSearchFolder(e, parent);
+                event = new ZCreateSearchFolderEvent(child);
+                parent.addChild(child);                
             } else if (e.getName().equals(MailService.E_TAG)) {
                 event = new ZCreateTagEvent(new ZTag(e));
             }
@@ -381,17 +384,41 @@ public class ZMailbox {
         	handler.handleDelete(de, this);
     }
     
+    private void addIdMappings(ZFolder folder) {
+    	addItemIdMapping(folder);
+    	if (folder instanceof ZMountpoint) {
+        	ZMountpoint mp =  (ZMountpoint) folder;
+        	addRemoteItemIdMapping(mp.getCanonicalRemoteId(), mp);    		
+    	}
+    	for (ZFolder child: folder.getSubFolders()) {
+    		addIdMappings(child);
+    	}
+    }
     class InternalEventHandler extends ZEventHandler {
 
         public void handleRefresh(ZRefreshEvent event, ZMailbox mailbox) {
-        	// do nothing for now
+            mNameToTag.clear();
+            mIdToItem.clear();
+            mTransport.setMaxNoitfySeq(0);
+            mSize = event.getSize();
+            mUserRoot = event.getUserRoot();
+            addIdMappings(mUserRoot);
+            for (ZTag tag: event.getTags())
+            	addTag(tag);
         }
 
         public void handleCreate(ZCreateEvent event, ZMailbox mailbox) {
             if (event instanceof ZCreateTagEvent) {
                 addTag(((ZCreateTagEvent)event).getTag());
+            } else if (event instanceof ZCreateSearchFolderEvent) {
+            	mailbox.addItemIdMapping(((ZCreateSearchFolderEvent)event).getSearchFolder());
+            } else if (event instanceof ZCreateMountpointEvent) {
+            	ZMountpoint mp =  ((ZCreateMountpointEvent)event).getMountpoint();
+            	mailbox.addItemIdMapping(mp);
+            	mailbox.addRemoteItemIdMapping(mp.getCanonicalRemoteId(), mp);
+            } else if (event instanceof ZCreateFolderEvent) {            	
+            	mailbox.addItemIdMapping(((ZCreateFolderEvent)event).getFolder());
             }
-            // other cases already taken care of when event is created
         }
 
         public void handleModify(ZModifyEvent event, ZMailbox mailbox) throws ServiceException {
