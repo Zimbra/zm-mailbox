@@ -29,6 +29,7 @@ import java.io.File;
 import java.util.Timer;
 
 import org.jivesoftware.wildfire.XMPPServer;
+import org.jivesoftware.wildfire.interceptor.InterceptorManager;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -135,6 +136,7 @@ public class Zimbra {
                     }
                     
                     XMPPServer srv = new XMPPServer();
+                    InterceptorManager.getInstance().addInterceptor(new com.zimbra.cs.im.PacketInterceptor());
                 } catch (Exception e) { 
                     ZimbraLog.system.warn("Could not start XMPP server: " + e.toString());
                     e.printStackTrace();

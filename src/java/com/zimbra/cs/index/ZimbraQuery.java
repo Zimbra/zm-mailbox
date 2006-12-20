@@ -97,8 +97,6 @@ public final class ZimbraQuery {
         private int mModifierType;
         private int mQueryType;
 
-        private List<QueryInfo> getInfo() { return null; }
-
         protected BaseQuery(int modifierType, int queryType) {
             mModifierType = modifierType;
             mQueryType = queryType;
@@ -424,7 +422,7 @@ public final class ZimbraQuery {
                                     }
                                     break;
                                 case 'h':
-                                    field = Calendar.HOUR;
+                                    field = Calendar.HOUR_OF_DAY;
                                     break;
                                 case 'd':
                                     field = Calendar.DATE;
@@ -461,6 +459,7 @@ public final class ZimbraQuery {
                             case Calendar.DATE:
                                 cal.set(Calendar.HOUR_OF_DAY, 0);
                             case Calendar.HOUR:
+                            case Calendar.HOUR_OF_DAY:
                                 cal.set(Calendar.MINUTE, 0);
                             case Calendar.MINUTE:
                                 cal.set(Calendar.SECOND, 0);
@@ -471,11 +470,15 @@ public final class ZimbraQuery {
                             num = num * -1;
                         }
 
+                        System.out.println("Before the add: "+cal.getTime().toString());
                         cal.add(field,num);
+                        System.out.println("After the add: "+cal.getTime().toString());
                         mDate = cal.getTime();
 
                         cal.add(field,1);
                         mEndDate = cal.getTime();
+                        System.out.println("After the 2nd add: "+cal.getTime().toString());
+                                                
                     } else {
                         //
                         // ABSOLUTE dates:
@@ -535,6 +538,8 @@ public final class ZimbraQuery {
                         explicitGT= true;
                         explicitEq = false;
                         break;
+                    case ZimbraQueryParser.YEAR:
+                    case ZimbraQueryParser.MONTH:
                     case ZimbraQueryParser.DATE:
                         explicitEq = true;
                         break;
@@ -588,7 +593,7 @@ public final class ZimbraQuery {
                     mHigherEq = false;
                 }
             } else { 
-                assert(explicitEq == true);
+  //                assert(explicitEq == true);
                 // =  lowest=mDate,lowestEq=true,highest=mEndDate,highestEq=false 
                 mLowestTime = mDate.getTime();
                 mLowerEq = true;
@@ -1968,24 +1973,6 @@ public final class ZimbraQuery {
             }
         }
     }
-
-//    /**
-//     * Parse a query string and build a query plan from it.
-//     * 
-//     * @param queryString
-//     * @param mbox
-//     * @param types
-//     * @param searchOrder
-//     * @param includeTrash
-//     * @param includeSpam
-//     * @param chunkSize
-//     * @throws ParseException
-//     * @throws ServiceException
-//     */
-//    public ZimbraQuery(String queryString, java.util.TimeZone tz, Locale locale, Mailbox mbox, byte[] types, SortBy searchOrder, boolean includeTrash, boolean includeSpam, int chunkSize, boolean prefetch, Mailbox.SearchResultMode mode) 
-//    throws ParseException, ServiceException
-//    {
-//    }
 
     public void doneWithQuery() throws ServiceException {
         if (mResults != null)
