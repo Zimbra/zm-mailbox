@@ -31,6 +31,7 @@ import com.zimbra.cs.zclient.ZFolder.Color;
 import com.zimbra.cs.zclient.ZFolder.View;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
+import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.soap.Element;
 
 import java.util.List;
@@ -160,14 +161,33 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
         }
         return defaultValue;
     }
+
+    protected void toStringCommon(ZSoapSB sb) throws ServiceException {
+        sb.add("id", getId());
+        if (getName(null) != null) sb.add("name", getName(null));
+        if (getParentId(null) != null) sb.add("parentId", getParentId(null));
+        if (getFlags(null) != null) sb.add("flags", getFlags(null));
+        if (getColor(null) != null) sb.add("color", getColor(null).name());
+        if (getUnreadCount(-1) != -1) sb.add("unreadCount", getUnreadCount(-1));
+        if (getMessageCount(-1) != -1) sb.add("messageCount", getMessageCount(-1));
+        if (getDefaultView(null) != null) sb.add("view", getDefaultView(null).name());
+        if (getRestURL(null) != null) sb.add("restURL", getRestURL(null));
+        if (getRemoteURL(null) != null) sb.add("url", getRemoteURL(null));
+        if (getEffectivePerm(null) != null) sb.add("effectivePermissions", getEffectivePerm(null));
+        List<ZGrant> grants = getGrants(null);
+        if (grants != null) sb.add("grants", grants, false, false);
+    }
+    
+    public String toString() {
+        try {
+            ZSoapSB sb = new ZSoapSB();
+            sb.beginStruct();
+            toStringCommon(sb);
+            sb.endStruct();
+            return sb.toString();
+        } catch (ServiceException se) {
+            return "";
+        }
+    }
 }
 
-
-/*
-
-
-
-
-
-
- */

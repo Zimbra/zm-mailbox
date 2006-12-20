@@ -26,6 +26,7 @@
 package com.zimbra.cs.zclient.event;
 
 import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.cs.zclient.ZTag;
 import com.zimbra.common.service.ServiceException;
 
@@ -61,5 +62,15 @@ public class ZRefreshEvent {
 
     public List<ZTag> getTags() {
         return mTags;
+    }
+    
+    public String toString() {
+    	ZSoapSB sb = new ZSoapSB();
+    	sb.beginStruct();
+    	sb.add("size", getSize());
+    	sb.add("userRoot", mUserRoot.toString());
+    	sb.add("tags", mTags, false, false);
+    	sb.endStruct();
+    	return sb.toString();
     }
 }

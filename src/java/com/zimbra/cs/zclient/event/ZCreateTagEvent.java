@@ -52,4 +52,8 @@ public class ZCreateTagEvent implements ZCreateItemEvent {
     public ZTag getTag() {
         return mTag;
     }
+    
+    public String toString() {
+    	return mTag.toString();
+    }
 }

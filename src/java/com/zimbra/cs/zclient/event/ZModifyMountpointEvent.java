@@ -27,6 +27,7 @@ package com.zimbra.cs.zclient.event;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.soap.Element;
 
 public class ZModifyMountpointEvent extends ZModifyFolderEvent {
@@ -58,5 +59,20 @@ public class ZModifyMountpointEvent extends ZModifyFolderEvent {
      */
     public String getOwnerId(String defaultValue) {
         return mFolderEl.getAttribute(MailService.A_ZIMBRA_ID, defaultValue);
+    }
+    
+    public String toString() {
+        try {
+            ZSoapSB sb = new ZSoapSB();
+            sb.beginStruct();
+            toStringCommon(sb);
+            if (getOwnerId(null) != null) sb.add("ownerId", getOwnerId(null));
+            if (getOwnerDisplayName(null) != null) sb.add("ownerDisplayName", getOwnerDisplayName(null));
+            if (getRemoteId(null) != null) sb.add("remoteId", getRemoteId(null));
+            sb.endStruct();
+            return sb.toString();
+        } catch (ServiceException se) {
+            return "";
+        }
     }
 }

@@ -28,6 +28,7 @@ package com.zimbra.cs.zclient.event;
 import com.zimbra.soap.Element;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 
 public class ZModifySearchFolderEvent extends ZModifyFolderEvent {
@@ -63,6 +64,21 @@ public class ZModifySearchFolderEvent extends ZModifyFolderEvent {
             return newSort == null ? defaultValue : SearchSortBy.fromString(newSort);
         } catch (ServiceException se) {
             return defaultValue;
+        }
+    }
+    
+    public String toString() {
+        try {
+            ZSoapSB sb = new ZSoapSB();
+            sb.beginStruct();
+            toStringCommon(sb);
+            if (getQuery(null) != null) sb.add("query", getQuery(null));
+            if (getTypes(null) != null) sb.add("types", getTypes(null));
+            if (getSortBy(null) != null) sb.add("sortBy", getSortBy(null).name());
+            sb.endStruct();
+            return sb.toString();
+        } catch (ServiceException se) {
+            return "";
         }
     }
 }
