@@ -69,8 +69,8 @@ public class GetICal extends MailDocumentHandler {
         try {
             try {
                 ZVCalendar cal = null;
-                if (iidStr != null) {
-                	ItemId iid = new ItemId(iidStr, lc);
+                ItemId iid = iidStr != null ? new ItemId(iidStr, lc) : null;
+                if (iid != null) {
                     CalendarItem calItem = mbx.getCalendarItemById(octxt, iid.getId());
                     if (calItem == null) {
                         throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
@@ -85,8 +85,6 @@ public class GetICal extends MailDocumentHandler {
                 }
                 
                 ByteArrayOutputStream buf = new ByteArrayOutputStream();
-//                CalendarOutputter calOut = new CalendarOutputter();
-                
                 try {
                     OutputStreamWriter wout = new OutputStreamWriter(buf);
                     cal.toICalendar(wout);
@@ -95,8 +93,9 @@ public class GetICal extends MailDocumentHandler {
                     Element response = getResponseElement(lc);
                     
                     Element icalElt = response.addElement(MailService.E_CAL_ICAL);
-                    
-                    icalElt.addAttribute(MailService.A_ID, iidStr);
+
+                    if (iid != null)
+                        icalElt.addAttribute(MailService.A_ID, lc.formatItemId(iid));
                     
                     icalElt.addText(buf.toString());
                     
