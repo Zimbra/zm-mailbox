@@ -36,12 +36,11 @@ public class ZMountpoint extends ZFolder {
     private String mOwnerDisplayName;
     private String mRemoteId;
     
-    public ZMountpoint(Element e, ZFolder parent, ZMailbox mailbox) throws ServiceException {
-        super(e, parent, mailbox);
+    public ZMountpoint(Element e, ZFolder parent) throws ServiceException {
+        super(e, parent);
         mOwnerDisplayName = e.getAttribute(MailService.A_OWNER_NAME, null); // TODO: change back to required when DF is on main
         mRemoteId = e.getAttribute(MailService.A_REMOTE_ID);
         mOwnerId = e.getAttribute(MailService.A_ZIMBRA_ID);
-        mailbox.addRemoteItemIdMapping(getCanonicalRemoteId(), this);
     }
 
     public void modifyNotification(ZModifyMountpointEvent e, ZMailbox mbox) throws ServiceException {

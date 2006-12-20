@@ -38,8 +38,8 @@ public class ZSearchFolder extends ZFolder {
     private String mTypes;
     private SearchSortBy mSortBy;
     
-    public ZSearchFolder(Element e, ZFolder parent, ZMailbox mailbox) throws ServiceException {
-        super(e, parent, mailbox);
+    public ZSearchFolder(Element e, ZFolder parent) throws ServiceException {
+        super(e, parent);
         mQuery = e.getAttribute(MailService.A_QUERY);
         mTypes = e.getAttribute(MailService.A_SEARCH_TYPES, null);
         try {
