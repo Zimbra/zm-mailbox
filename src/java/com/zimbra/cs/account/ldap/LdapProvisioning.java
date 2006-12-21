@@ -3215,15 +3215,8 @@ public class LdapProvisioning extends Provisioning {
         } else if (mode.equals(Provisioning.GM_LDAP)) {
             results = searchLdapGal(d, n, maxResults, token, false);
         } else if (mode.equals(Provisioning.GM_BOTH)) {
-            String tokens[] = null;
-            if (token != null) {
-                tokens = token.split(":");
-                if (tokens.length != 2) tokens = null;
-            }
-            if (tokens == null) tokens = new String[] {null, null}; 
-                
-            results = searchZimbraGal(d, n, maxResults/2, tokens[0], false);
-            SearchGalResult ldapResults = searchLdapGal(d, n, maxResults/2, tokens[1], false);
+            results = searchZimbraGal(d, n, maxResults/2, token, false);
+            SearchGalResult ldapResults = searchLdapGal(d, n, maxResults/2, token, false);
             if (ldapResults != null) {
                 results.matches.addAll(ldapResults.matches);
                 results.token = LdapUtil.getLaterTimestamp(results.token, ldapResults.token);
@@ -3378,7 +3371,7 @@ public class LdapProvisioning extends Provisioning {
 
         SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, rules.getLdapAttrs(), false, false);
 
-        result.token = token != null ? token : LdapUtil.EARLIEST_SYNC_TOKEN;
+        result.token = token != null && !token.equals("")? token : LdapUtil.EARLIEST_SYNC_TOKEN;        
         DirContext ctxt = null;
         NamingEnumeration ne = null;
         try {
