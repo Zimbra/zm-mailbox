@@ -1791,6 +1791,7 @@ public class ZMailbox {
         if (params.isPreferHtml()) req.addAttribute(MailService.A_WANT_HTML, params.isPreferHtml());
         if (params.isMarkAsRead()) req.addAttribute(MailService.A_MARK_READ, params.isMarkAsRead());
         if (params.isRecipientMode()) req.addAttribute(MailService.A_RECIPIENTS, params.isRecipientMode());
+        if (params.getField() != null) req.addAttribute(MailService.A_FIELD, params.getField());
         
         req.addElement(MailService.E_QUERY).setText(params.getQuery());
         
