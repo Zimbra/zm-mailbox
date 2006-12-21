@@ -35,54 +35,55 @@ import com.zimbra.cs.service.util.RemoteServerRequest;
 import com.zimbra.cs.session.Session;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 public class CheckSpellingOperation extends Operation {
-	
-	private static int LOAD = 10;
-	static {
-		Operation.Config c = loadConfig(CheckSpellingOperation.class);
-		if (c != null)
-			LOAD = c.mLoad;
-	}
-	
-	
-	private String[] mUrls;
-	private String mText;
-	private Map mResult;
-	
-	public CheckSpellingOperation(Session session, OperationContext oc,
-				Mailbox mbox, Requester req, String text) throws ServiceException {
-		super(session, oc, mbox, req, LOAD);
-		
-		// Make sure that the spell server URL is specified
-		Provisioning prov = Provisioning.getInstance();
-		Server localServer = prov.getLocalServer();
-		mUrls = localServer.getMultiAttr(Provisioning.A_zimbraSpellCheckURL);
-		if (ArrayUtil.isEmpty(mUrls)) {
-			String errorStr = Provisioning.A_zimbraSpellCheckURL + " is not specified";
-			getLog().info(toString()+": "+ errorStr);
-			throw ServiceException.NO_SPELL_CHECK_URL(errorStr);
-		}
-		
-		mText = text;
-	}
 
-	protected void callback() throws ServiceException {
-		for (int i = 0; i < mUrls.length; i++) {
-			RemoteServerRequest req = new RemoteServerRequest();
-			req.addParameter("text", mText);
-			String url = mUrls[i];
-			try {
-				if (getLog().isDebugEnabled())
-					getLog().debug("CheckSpellingOperation: Attempting to check spelling at " + url);
-				req.invoke(url);
-				mResult = req.getResponseParameters();
-				break; // Successful request.  No need to check the other servers.
-			} catch (IOException ex) {
-				getLog().warn(toString()+": An error occurred while contacting " + url, ex);
-			}
-		}
-	}
-	
-	public Map getResult() { return mResult; } 
+    private static int LOAD = 10;
+    private static Log sLog = LogFactory.getLog(CheckSpellingOperation.class);
+
+    static {
+        Operation.Config c = loadConfig(CheckSpellingOperation.class);
+        if (c != null)
+            LOAD = c.mLoad;
+    }
+
+    private String[] mUrls;
+    private String mText;
+    private Map<String, String> mResult;
+
+    public CheckSpellingOperation(Session session, OperationContext oc,
+                                  Mailbox mbox, Requester req, String text)
+    throws ServiceException {
+        super(session, oc, mbox, req, LOAD);
+
+        // Make sure that the spell server URL is specified
+        Provisioning prov = Provisioning.getInstance();
+        Server localServer = prov.getLocalServer();
+        mUrls = localServer.getMultiAttr(Provisioning.A_zimbraSpellCheckURL);
+        if (ArrayUtil.isEmpty(mUrls)) {
+            throw ServiceException.NO_SPELL_CHECK_URL(Provisioning.A_zimbraSpellCheckURL + " is not specified");
+        }
+
+        mText = text;
+    }
+
+    protected void callback() {
+        for (int i = 0; i < mUrls.length; i++) {
+            RemoteServerRequest req = new RemoteServerRequest();
+            req.addParameter("text", mText);
+            String url = mUrls[i];
+            try {
+                sLog.debug("Checking spelling: url=%s, text=%s", url, mText);
+                req.invoke(url);
+                mResult = req.getResponseParameters();
+                break; // Successful request.  No need to check the other servers.
+            } catch (IOException ex) {
+                getLog().warn("An error occurred while contacting " + url, ex);
+            }
+        }
+    }
+
+    public Map<String, String> getResult() { return mResult; } 
 }
