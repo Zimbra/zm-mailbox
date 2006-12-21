@@ -27,8 +27,6 @@ package com.zimbra.cs.im;
 import org.jivesoftware.wildfire.Session;
 import org.xmpp.packet.Packet;
 
-import com.zimbra.common.util.ZimbraLog;
-
 public class PacketInterceptor implements org.jivesoftware.wildfire.interceptor.PacketInterceptor {
 
     public void interceptPacket(Packet packet, Session session, boolean incoming, boolean processed) /* throws PacketRejectedException */ {

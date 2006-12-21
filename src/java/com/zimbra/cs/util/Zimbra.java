@@ -28,15 +28,13 @@ package com.zimbra.cs.util;
 import java.io.File;
 import java.util.Timer;
 
-import org.jivesoftware.wildfire.XMPPServer;
-import org.jivesoftware.wildfire.interceptor.InterceptorManager;
-
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.im.IMRouter;
+import com.zimbra.cs.im.ZimbraIM;
 import com.zimbra.cs.imap.ImapServer;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.lmtpserver.LmtpServer;
@@ -125,22 +123,7 @@ public class Zimbra {
             Server server = Provisioning.getInstance().getLocalServer();
             
             if (server.getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
-                try {
-                    System.setProperty("wildfireHome", "/opt/zimbra");
-                    String defaultDomain = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraDefaultDomainName, null);
-                    if (defaultDomain != null) {
-                        ZimbraLog.im.info("Setting default XMPP domain to: "+defaultDomain);
-                        System.setProperty("wildfireDomain", defaultDomain);
-                    } else {
-                        ZimbraLog.im.warn("No default domain has been set, domain must be set in JiveProperties table or IM will not work"+defaultDomain);
-                    }
-                    
-                    XMPPServer srv = new XMPPServer();
-                    InterceptorManager.getInstance().addInterceptor(new com.zimbra.cs.im.PacketInterceptor());
-                } catch (Exception e) { 
-                    ZimbraLog.system.warn("Could not start XMPP server: " + e.toString());
-                    e.printStackTrace();
-                }
+                ZimbraIM.startup();
             }
             
             LmtpServer.startupLmtpServer();
@@ -171,6 +154,8 @@ public class Zimbra {
             ImapServer.shutdownImapServers();
             OzNotificationServer.shutdown();
         }
+        
+        ZimbraIM.shutdown();
 
         SessionCache.shutdown();
         
