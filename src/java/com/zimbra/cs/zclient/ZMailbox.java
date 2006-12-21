@@ -27,6 +27,7 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
@@ -56,6 +57,7 @@ import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
 import com.zimbra.cs.zclient.event.ZCreateConversationEvent;
 import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
 import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
+import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
 import com.zimbra.soap.SoapFaultException;
@@ -96,6 +98,10 @@ import java.util.regex.Pattern;
 
 public class ZMailbox {
 
+    static {
+        if (LC.ssl_allow_untrusted_certs.booleanValue())
+            EasySSLProtocolSocketFactory.init();
+    }
     public final static String PATH_SEPARATOR = "/";
     
     public final static char PATH_SEPARATOR_CHAR = '/';
