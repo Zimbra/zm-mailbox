@@ -82,6 +82,7 @@ public class Mime {
     public static final String CT_TEXT_VCARD = "text/x-vcard";
     public static final String CT_MESSAGE_RFC822 = "message/rfc822";
     public static final String CT_APPLICATION_OCTET_STREAM = "application/octet-stream";
+    public static final String CT_APPLICATION_BINARY = "application/binary";
     public static final String CT_APPLICATION_MSWORD = "application/msword";
     public static final String CT_APPLICATION_PDF = "application/pdf";
     public static final String CT_MULTIPART_ALTERNATIVE = "multipart/alternative";
@@ -93,7 +94,7 @@ public class Mime {
     public static final String CT_MULTIPART_PREFIX = "multipart/";
     public static final String CT_TEXT_PREFIX = "text/";
 
-    public static final String CT_APPPLICATION_WILD = "application/.*";
+    public static final String CT_APPLICATION_WILD = "application/.*";
     public static final String CT_IMAGE_WILD = "image/.*";
     public static final String CT_AUDIO_WILD = "audio/.*";
     public static final String CT_VIDEO_WILD = "video/.*";
