@@ -38,6 +38,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -1019,6 +1020,7 @@ public class ToXML {
 
         Account acct = calItem.getMailbox().getAccount();
         if (allFields) {
+            boolean isRecurring = false;
             try {
                 e.addAttribute("x_uid", invite.getUid());
                 e.addAttribute(MailService.A_CAL_SEQUENCE, invite.getSeqNo());
@@ -1034,6 +1036,7 @@ public class ToXML {
 
                 Recurrence.IRecurrence recur = invite.getRecurrence();
                 if (recur != null) {
+                    isRecurring = true;
                     Element recurElt = e.addElement(MailService.E_CAL_RECUR);
                     recur.toXml(recurElt);
                 }
@@ -1064,16 +1067,20 @@ public class ToXML {
             if (includeReplies)
                 encodeReplies(e, calItem, invite);
 
-            if (invite.getRecurId() != null) {
+            boolean isException = invite.hasRecurId();
+            if (isException)
                 e.addAttribute(MailService.A_CAL_IS_EXCEPTION, true);
-            }
 
             boolean allDay = invite.isAllDayEvent();
             if (allDay)
                 e.addAttribute(MailService.A_CAL_ALLDAY, true);
 
+            boolean forceUTC =
+                DebugConfig.calendarForceUTC && !isRecurring && !isException && !allDay;
             ParsedDateTime dtStart = invite.getStartTime();
             if (dtStart != null) {
+                if (forceUTC)
+                    dtStart.toUTC();
                 Element startElt = e.addElement(MailService.E_CAL_START_TIME);
                 startElt.addAttribute(MailService.A_CAL_DATETIME, dtStart.getDateTimePartString(false));
                 if (!allDay) {
@@ -1085,6 +1092,8 @@ public class ToXML {
 
             ParsedDateTime dtEnd = invite.getEndTime();
             if (dtEnd != null) {
+                if (forceUTC)
+                    dtEnd.toUTC();
                 Element endElt = e.addElement(MailService.E_CAL_END_TIME);
                 if (!allDay) {
                     String tzName = dtEnd.getTZName();

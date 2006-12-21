@@ -83,10 +83,16 @@ public class DebugConfig {
     // If true, turns off object detection feature.
     public static boolean disableObjects;
 
+    // If true, convert TZ-relative times to UTC time in SOAP responses for
+    // non-recurring appointments/tasks.  Recurring series or instances are
+    // unaffected by this switch.
+    public static boolean calendarForceUTC;
+
     public static final boolean disableMailboxGroup;
     public static final int numMailboxGroups;
 
     static {
+        calendarForceUTC = booleanValue("debug_calendar_force_utc", false);
         validateOutgoingICalendar = booleanValue("debug_validate_outgoing_icalendar", false);        
         disableConversation = booleanValue("debug_disable_conversation", false);
         disableFilter = booleanValue("debug_disable_filter", false);
