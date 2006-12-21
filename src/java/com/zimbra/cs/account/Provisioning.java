@@ -1118,6 +1118,8 @@ public abstract class Provisioning {
     
     public static final String A_zimbraDomainMaxAccounts = "zimbraDomainMaxAccounts";
     
+    public static final String A_zimbraSyncWindowSize = "zimbraSyncWindowSize";
+    
     private static Provisioning sProvisioning;
 
     public synchronized static Provisioning getInstance() {

@@ -1972,4 +1972,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to allow use of tasks feature</desc>
 </attr>
 
+<attr id="437" name="zimbraSyncWindowSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>
+    The maximum batch size for each ZimbraSync transaction.  Default value of 0 means to follow client requested size.  If set to any positive integer, the value
+    will be the maximum number of items to sync even if client requests more.  This setting affects all sync categories including email, contacts, calendar and tasks.
+  </desc>
+</attr>
+
 </attrs>
