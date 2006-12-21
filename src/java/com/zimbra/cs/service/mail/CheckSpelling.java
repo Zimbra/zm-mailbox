@@ -62,11 +62,14 @@ public class CheckSpelling extends MailDocumentHandler {
             return response;
         }
         
-        Map params = null;        
+        Map<String, String> params = null;        
         try {
         	CheckSpellingOperation op = new CheckSpellingOperation(session, zc.getOperationContext(), null, Requester.SOAP, text);
         	op.schedule();
         	params = op.getResult();
+            if (params.containsKey("error")) {
+                throw ServiceException.FAILURE("Spell check failed: " + params.get("error"), null);
+            }
         } catch (ServiceException e) {
         	if (e.getCode().equals(ServiceException.NO_SPELL_CHECK_URL)) {
         		return unavailable(response);
@@ -74,13 +77,13 @@ public class CheckSpelling extends MailDocumentHandler {
         }
 
         if (params == null) {
-            sLog.warn("Unable to check spelling.");
+            sLog.warn("Unable to check spelling.  No params returned.");
             return unavailable(response);
         }
         
-        String misspelled = (String) params.get("misspelled");
+        String misspelled = params.get("misspelled");
         if (misspelled == null) {
-            sLog.warn("misspelled data not found in spell server response");
+            sLog.warn("Misspelled data not found in spell server response.");
             return unavailable(response);
         }
         
@@ -113,7 +116,7 @@ public class CheckSpelling extends MailDocumentHandler {
         
         response.addAttribute(MailService.A_AVAILABLE, true);
         sLog.debug(
-            "CheckSpelling: found " + numMisspelled + " misspelled words in " + numLines + " lines");
+            "CheckSpelling: found %d misspelled words in %d lines", numMisspelled, numLines);
         
         return response;
     }

@@ -40,7 +40,11 @@ import java.util.regex.Pattern;
 import org.apache.commons.fileupload.MultipartStream;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.methods.MultipartPostMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.commons.httpclient.methods.multipart.StringPart;
 
 import com.zimbra.common.util.StringUtil;
 
@@ -55,8 +59,8 @@ public class RemoteServerRequest {
     private static byte[] BOUNDARY = "----------------314159265358979323846".getBytes();
     private static Pattern NAME_PATTERN = Pattern.compile("name=\"([^\"]+)\"");
     
-    private Map mParams = new HashMap();
-    private Map mFiles = new HashMap();
+    private Map<String, String> mParams = new HashMap<String, String>();
+    private Map<String, File> mFiles = new HashMap<String, File>();
     private boolean mHasMoreParts = true;
     private MultipartStream mMulti = null;
 
@@ -90,24 +94,29 @@ public class RemoteServerRequest {
     public void invoke(String url)
     throws IOException {
         // Assemble the request
-        HttpClient http = new HttpClient();
-        MultipartPostMethod post = new MultipartPostMethod(url);
+        PostMethod post = new PostMethod(url);
+        Part[] parts = new Part[mParams.size() + mFiles.size()];
+        int iPart = 0;
+        
         Iterator i = mParams.keySet().iterator();
         while (i.hasNext()) {
             String name = (String) i.next();
-            String value = (String) mParams.get(name);
-            post.addParameter(name, value);
+            String value = mParams.get(name);
+            StringPart part = new StringPart(name, value);
+            part.setCharSet("UTF-8");
+            parts[iPart++] = part;
         }
         i = mFiles.keySet().iterator();
         while (i.hasNext()) {
             String name = (String) i.next();
-            File file = (File) mFiles.get(name);
-            post.addParameter(name, file);
+            File file = mFiles.get(name);
+            parts[iPart++] = new FilePart(name, file); 
         }
+        post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
         
         // Post data and handle errors
-        int code = 0;
-        code = http.executeMethod(post);
+        HttpClient http = new HttpClient();
+        int code = http.executeMethod(post);
         if (code != 200) {
             throw new HttpException(
                 "Remote server at '" + url + "' returned response " + code);
@@ -146,7 +155,7 @@ public class RemoteServerRequest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         mMulti.readBodyData(out);
         mHasMoreParts = mMulti.readBoundary();
-        return new String(out.toString());
+        return new String(out.toByteArray(), "UTF-8");
     }
     
     /**
@@ -161,13 +170,13 @@ public class RemoteServerRequest {
     
     /**
      * Returns a <code>Map</code> that contains all the response parameters
-     * and values returned as <code>String</code>s.
+     * and values.
      * @throws IOException if an error occurs while processing the response stream
      */
-    public Map getResponseParameters()
+    public Map<String, String> getResponseParameters()
     throws IOException {
         String name = null;
-        Map params = new HashMap();
+        Map<String, String> params = new HashMap<String, String>();
         while ((name = getNextResponseParameter()) != null) {
             String value = getNextResponseValue();
             params.put(name, value);
