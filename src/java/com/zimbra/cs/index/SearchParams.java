@@ -37,6 +37,7 @@ import java.util.TimeZone;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
+import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.mail.ToXML.OutputParticipants;
@@ -93,7 +94,13 @@ public final class SearchParams {
     public void setQueryStr(String queryStr) { mQueryStr = queryStr; }
     public void setOffset(int offset) { mOffset = offset; if (mOffset > MAX_OFFSET) mOffset = MAX_OFFSET; }
     public void setLimit(int limit) { mLimit = limit; if (mLimit > MAX_LIMIT) mLimit = MAX_LIMIT; }
-
+    public void setDefaultField(String field) {
+        // yes, it MUST end with the ':'
+        if (field.charAt(field.length()-1) != ':')
+            field = field + ':';
+        mDefaultField = field; 
+    }
+    
     /**
      * 
      * since the results are iterator-based, the "limit" is really the same as the chunk size + offset
@@ -181,6 +188,7 @@ public final class SearchParams {
     public Mailbox.SearchResultMode getMode() { return mMode; }
     public void setMode(Mailbox.SearchResultMode mode) { mMode = mode; }
     public boolean getEstimateSize() { return mEstimateSize; }
+    public String getDefaultField() { return mDefaultField; }
     
     
     /**
@@ -188,6 +196,7 @@ public final class SearchParams {
      */
     public void setEstimateSize(boolean estimateSize) { mEstimateSize = estimateSize; }
 
+    private String mDefaultField = "content:";
     private String mQueryStr;
     private int mOffset;
     private int mLimit;

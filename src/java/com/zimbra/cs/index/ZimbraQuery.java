@@ -1295,10 +1295,9 @@ public final class ZimbraQuery {
 
             mOredTokens = new LinkedList<String>();
 
-            // The set of tokens from the user's query.  The way the parser works,  
+            // The set of tokens from the user's query.  The way the parser works, the token set should generally only be one element  
             mTokens = new ArrayList<String>(1);
             mWildcardTerm = null;
-            mOrigText = text;
 
             TokenStream source = analyzer.tokenStream(QueryTypeString(qType), new StringReader(text));
             org.apache.lucene.analysis.Token t;
@@ -1316,6 +1315,16 @@ public final class ZimbraQuery {
             try {
                 source.close();
             } catch (IOException e) { /* ignore */ }
+            
+            
+            // okay, quite a bit of hackery here....basically, if they're doing a contact:
+            // search AND they haven't manually specified a phrase query (expands to more than one term)
+            // then lets hack their search and make it a * search.  
+            if (qType == ZimbraQueryParser.CONTACT && mTokens.size() == 1 && text.charAt(text.length()-1)!='*') {
+                text = text+'*';
+            }
+            
+            mOrigText = text;
 
             // must look at original text here b/c analyzer strips *'s
             if (text.length() > 0 && text.charAt(text.length()-1) == '*')
@@ -1366,7 +1375,6 @@ public final class ZimbraQuery {
                 if (suggestions != null) 
                     mQueryInfo.add(new SpellSuggestQueryInfo(token, suggestions));
             }
-
         }
 
         protected QueryOperation getQueryOperation(boolean truth) {
@@ -1579,15 +1587,26 @@ public final class ZimbraQuery {
     private int mChunkSize;
 
     private static String[] unquotedTokenImage;
+    private static HashMap<String, Integer> sTokenImageMap;
 
     static {
+        sTokenImageMap = new HashMap<String,Integer>();
+        
         unquotedTokenImage = new String[ZimbraQueryParserConstants.tokenImage.length];
         for (int i = 0; i < ZimbraQueryParserConstants.tokenImage.length; i++) {
-            unquotedTokenImage[i] = ZimbraQueryParserConstants.tokenImage[i].substring(1, ZimbraQueryParserConstants.tokenImage[i].length()-1);
+            String str = ZimbraQueryParserConstants.tokenImage[i].substring(1, ZimbraQueryParserConstants.tokenImage[i].length()-1);
+            unquotedTokenImage[i] = str;
+            sTokenImageMap.put(str, i);
         }
-
     }
-
+    
+    private static int lookupQueryTypeFromString(String str) throws ServiceException {
+        Integer toRet = sTokenImageMap.get(str);
+        if (toRet == null)
+            throw MailServiceException.QUERY_PARSE_ERROR(str, null, str, -1, -1);
+        return toRet.intValue();
+    }
+    
     private static String QueryTypeString(int qType) {
         switch (qType) {
             case ZimbraQueryParser.CONTACT:   return LuceneFields.L_CONTACT_DATA;
@@ -1906,7 +1925,7 @@ public final class ZimbraQuery {
         // Step 1: parse the text using the JavaCC parser
         ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(mParams.getQueryStr()));
         mbox.getMailboxIndex().initAnalyzer(mbox);
-        parser.init(mbox.getMailboxIndex().getAnalyzer(), mMbox, params.getTimeZone(), params.getLocale());
+        parser.init(mbox.getMailboxIndex().getAnalyzer(), mMbox, params.getTimeZone(), params.getLocale(), lookupQueryTypeFromString(params.getDefaultField()));
         mClauses = parser.Parse();
 
         String sortByStr = parser.getSortByStr();
