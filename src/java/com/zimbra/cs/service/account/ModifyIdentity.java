@@ -62,7 +62,7 @@ public class ModifyIdentity extends DocumentHandler {
         if (ident == null)
             throw AccountServiceException.NO_SUCH_IDENTITY(key);
 
-        prov.modifyIdentity(account, ident.getId(), attrs);
+        prov.modifyIdentity(account, ident.getName(), attrs);
         
         Element response = zsc.createElement(AccountService.MODIFY_IDENTITY_RESPONSE);
         return response;
