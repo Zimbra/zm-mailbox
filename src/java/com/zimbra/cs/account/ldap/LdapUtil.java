@@ -820,9 +820,16 @@ public class LdapUtil {
                 query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+")(whenModified>="+arg+")(whenCreated>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";                
             }                
         }
-        ZimbraLog.misc.debug("searchLdapGal query:"+query);
+
+        if (ZimbraLog.misc.isDebugEnabled()) {
+            ZimbraLog.misc.debug("searchLdapGal query:"+query);
+            String attrs[] = rules.getLdapAttrs();
+            for (String a: attrs) {
+                ZimbraLog.misc.debug("searchLdapGal attr:"+a);
+            }
+        }
         SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, rules.getLdapAttrs(), false, false);
-        result.token = token != null ? token : EARLIEST_SYNC_TOKEN;
+        result.token = token != null && !token.equals("")? token : EARLIEST_SYNC_TOKEN;
         DirContext ctxt = null;
         NamingEnumeration ne = null;
         try {
@@ -834,6 +841,8 @@ public class LdapUtil {
                 GalContact lgc = new GalContact(dn, rules.apply(sr.getAttributes()));
                 String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
                 result.token = getLaterTimestamp(result.token, mts);
+                String cts = (String) lgc.getAttrs().get("createTimeStamp");
+                result.token = LdapUtil.getLaterTimestamp(result.token, cts);
                 result.matches.add(lgc);
             }
             ne.close();
