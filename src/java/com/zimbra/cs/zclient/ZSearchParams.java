@@ -114,7 +114,11 @@ public class ZSearchParams {
 
      */
     private boolean mRecipientMode;
-    
+
+    /**
+     * the field to use for text content without an operator.
+     */
+    private String mField;
     /**
      * the search query to run
      */
@@ -133,6 +137,7 @@ public class ZSearchParams {
         this.mRecipientMode = that.mRecipientMode;
         this.mSortBy = that.mSortBy;
         this.mTypes = that.mTypes;
+        this.mField = that.mField;
     }
 
     public ZSearchParams(String query) {
@@ -141,7 +146,7 @@ public class ZSearchParams {
 
     /**
      * init search params (query, types, sortBy) from a search folder.
-     * @param folder
+     * @param folder init from a search folder.
      */
     public ZSearchParams(ZSearchFolder folder) {
         mQuery = folder.getQuery();
@@ -227,6 +232,23 @@ public class ZSearchParams {
 
     public void setTypes(String types) {
         mTypes = types;
+    }
+
+    public String getField() {
+        return mField;
+    }
+
+    /**
+     *  by default, text without an operator searches the CONTENT field.  By setting the
+     * {field} value, you can control the default operator. Specify any of the text operators that are
+     * available in query.txt, e.g. 'content:' [the default] or 'subject:', etc.  The date operators
+     * (date, after, before) and the "item:" operator should not be specified as default fields
+     * because of quirks in the search grammar.
+     *
+     * @param field
+     */
+    public void setField(String field) {
+        mField = field;
     }
     
     public static class Cursor {
