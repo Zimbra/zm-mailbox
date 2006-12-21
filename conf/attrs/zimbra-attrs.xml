@@ -1962,7 +1962,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Specifies whether imported POP3 messages should be left on the server or deleted.</desc>
 </attr>
 
-<attr id="435" name="zimbraSmtpSendAddOriginatingIP" type="boolean" cardinality="single"  requiredIn="globalConfig">
+<attr id="435" name="zimbraSmtpSendAddOriginatingIP" type="boolean" cardinality="single"  optionalIn="globalConfig">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether X-Originating-IP will be added to messages sent via SendMsgRequest.</desc>
 </attr>
