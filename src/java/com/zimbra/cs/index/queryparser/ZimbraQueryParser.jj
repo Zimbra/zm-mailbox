@@ -60,18 +60,19 @@ public final class ZimbraQueryParser {
 
     private static Log mLog = LogFactory.getLog(ZimbraQueryParser.class);
 
-    private static HashMap sFolderStrMap;
+    private static HashMap<String, Integer>  sFolderStrMap;
     
     private static abstract class GetQueryCallback {
         public abstract ZimbraQuery.BaseQuery execute(Mailbox mailbox, Analyzer analyzer, int modifier) throws ServiceException;
     } 
+
+	private int mDefaultField;
     
-    private static HashMap sIsStrMap;
+    private static HashMap<String, GetQueryCallback> sIsStrMap;
 
     static {
         /* Well-known folder name string map */
-        sFolderStrMap = new HashMap();
-        
+        sFolderStrMap = new HashMap<String, Integer>();
         sFolderStrMap.put("inbox",    new Integer(Mailbox.ID_FOLDER_INBOX));
         sFolderStrMap.put("trash",    new Integer(Mailbox.ID_FOLDER_TRASH));
         sFolderStrMap.put("junk",     new Integer(Mailbox.ID_FOLDER_SPAM));
@@ -80,7 +81,7 @@ public final class ZimbraQueryParser {
         sFolderStrMap.put("contacts", new Integer(Mailbox.ID_FOLDER_CONTACTS));
 
         /* is: string map */
-        sIsStrMap = new HashMap();
+        sIsStrMap = new HashMap<String, GetQueryCallback>();
 
         // expressing this in java is soooo ugly.... <sigh>
         sIsStrMap.put("read",
@@ -269,11 +270,12 @@ public final class ZimbraQueryParser {
     private String mSortByStr = null;
     public String getSortByStr() { return mSortByStr; }
     
-    public void init(Analyzer analyzer, Mailbox mbx, TimeZone tz, Locale locale) {
+    public void init(Analyzer analyzer, Mailbox mbx, TimeZone tz, Locale locale, int defaultField) {
        mAnalyzer = analyzer;
 	   mMailbox = mbx;
 	   mTimeZone = tz;
 	   mLocale = locale;
+	   mDefaultField = defaultField;
     }
     
     public ArrayList Parse() throws ServiceException, ParseException {
@@ -570,7 +572,7 @@ ZimbraQuery.BaseQuery Clause() throws ServiceException :
       
         | (t=<ITEM>) q = Rhs_Item(t.kind)
         | (t=<DATE>|t=<DAY>|t=<MONTH>|t=<WEEK>|t=<YEAR>|t=<AFTER>|t=<BEFORE>|t=<CONV_START>|t=<CONV_END>) q = Rhs_Date(t.kind)
-        | (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0,CONTENT,t.image); }
+        | (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0,mDefaultField,t.image); }
      )
      { return q; }
 

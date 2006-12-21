@@ -811,7 +811,7 @@ Tags:
 ----------
 
 <SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"] [types="{types}"] [recip="*0|1"]
-			   [fetch="1|all"] [html="*0|1"] [read="*0|1"] [neuter="0|*1"]>
+			   [fetch="1|all"] [html="*0|1"] [read="*0|1"] [neuter="0|*1"] [field={default_field}]>
   [<cursor id="prevId" sortVal="prevSortValue" endSortVal="endSortValue"/> ] // end val is NON-INCLUSIVE
   
   [   // OPTIONAL: client timezone identification (necessary to time-correct a user-specified date/time query)
@@ -902,12 +902,18 @@ if recip="1" is specified
   <mp> elements will be set for the first response if fetch=1
   <hp> elements may be present if any attachments matched
 
+  {field} = by default, text without an operator searches the CONTENT field.  By setting the
+            {field} value, you can control the default operator. Specify any of the text operators that are
+            available in query.txt, e.g. 'content:' [the default] or 'subject:', etc.  The date operators
+            (date, after, before) and the "item:" operator should not be specified as default fields
+            because of quirks in the search grammar.
+            
   
 For the optional <cursor> element:
  -- The required parameters are (prevMailItemId, prevSortValue): these
- correspond to the last hit on the previous page (assuming you're
+ correspond to the last hit on the current page (assuming you're
  going forward -- if you're backing up then they should be the first
- hit on the previous page)....the server uses those parameters to find
+ hit on the current page)....the server uses those parameters to find
  the spot in the new results that corresponds to your old position:
  even if some entries have been removed or added to the search results
  (e.g. if you are searching is:unread and you read some).

@@ -23,18 +23,19 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
 
     private static Log mLog = LogFactory.getLog(ZimbraQueryParser.class);
 
-    private static HashMap sFolderStrMap;
+    private static HashMap<String, Integer>  sFolderStrMap;
 
     private static abstract class GetQueryCallback {
         public abstract ZimbraQuery.BaseQuery execute(Mailbox mailbox, Analyzer analyzer, int modifier) throws ServiceException;
     }
 
-    private static HashMap sIsStrMap;
+        private int mDefaultField;
+
+    private static HashMap<String, GetQueryCallback> sIsStrMap;
 
     static {
         /* Well-known folder name string map */
-        sFolderStrMap = new HashMap();
-
+        sFolderStrMap = new HashMap<String, Integer>();
         sFolderStrMap.put("inbox",    new Integer(Mailbox.ID_FOLDER_INBOX));
         sFolderStrMap.put("trash",    new Integer(Mailbox.ID_FOLDER_TRASH));
         sFolderStrMap.put("junk",     new Integer(Mailbox.ID_FOLDER_SPAM));
@@ -43,7 +44,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         sFolderStrMap.put("contacts", new Integer(Mailbox.ID_FOLDER_CONTACTS));
 
         /* is: string map */
-        sIsStrMap = new HashMap();
+        sIsStrMap = new HashMap<String, GetQueryCallback>();
 
         // expressing this in java is soooo ugly.... <sigh>
         sIsStrMap.put("read",
@@ -232,11 +233,12 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
     private String mSortByStr = null;
     public String getSortByStr() { return mSortByStr; }
 
-    public void init(Analyzer analyzer, Mailbox mbx, TimeZone tz, Locale locale) {
+    public void init(Analyzer analyzer, Mailbox mbx, TimeZone tz, Locale locale, int defaultField) {
        mAnalyzer = analyzer;
            mMailbox = mbx;
            mTimeZone = tz;
            mLocale = locale;
+           mDefaultField = defaultField;
     }
 
     public ArrayList Parse() throws ServiceException, ParseException {
@@ -833,7 +835,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           jj_consume_token(-1);
           throw new ParseException();
         }
-                                          {if (true) return GetQuery(0,CONTENT,t.image);}
+                                          {if (true) return GetQuery(0,mDefaultField,t.image);}
         break;
       default:
         jj_la1[19] = jj_gen;

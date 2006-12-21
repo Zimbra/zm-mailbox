@@ -328,6 +328,7 @@ public class MailService implements DocumentService {
     public static final String A_RECIPIENTS = "recip";
     public static final String A_CONTENTMATCHED = "cm";
     public static final String A_ITEM_TYPE = "t";
+    public static final String A_FIELD = "field";
 
     // sync
     public static final String A_TOKEN = "token";

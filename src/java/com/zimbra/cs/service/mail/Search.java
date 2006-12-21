@@ -181,6 +181,13 @@ public class Search extends MailDocumentHandler  {
 
         SearchParams params = new SearchParams();
         
+        
+        // field
+        String field = request.getAttribute(MailService.A_FIELD, null);
+        if (field != null) {
+            params.setDefaultField(field);
+        }
+        
         //
         // <loc>
         Element locElt = request.getOptionalElement(MailService.E_LOCALE);
