@@ -134,6 +134,10 @@ The resulting URL would be:
 Hitting that URL on the ZCS server will cause the preauth value to be verified,
 followed by a redirect to /zimbra/mail with the auth token in a cookie.
 
+If a URL other then /zimbra/mail is desired, then you can also pass in a redirectURL:
+
+ ...&redirectURL=/zimbra/h/
+
 ------------------------------------------------------------
 SOAP Interface
 ------------------------------------------------------------
@@ -162,7 +166,10 @@ The auth token will be return in the AuthResponse. At which point, you can
 
 https://server/service/preauth?isredirect=1&authtoken={...}
 
-Going to this URL will set the cookie and redirect to /zimbra/mail.
+Going to this URL will set the cookie and redirect to /zimbra/mail. If a URL other
+then /zimbra/mail is desired, then you can also pass in a redirectURL:
+
+ ...&redirectURL=/zimbra/h/
 
 ------------------------------------------------------------
 Sample Java code for computing the preauth value
