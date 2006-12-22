@@ -50,11 +50,13 @@ public class DeleteDataSource extends MailDocumentHandler {
 
         for (Element eDsrc : request.listElements()) {
             DataSource dsrc = null;
-            String name = eDsrc.getAttribute(MailService.A_NAME, null);
-            if (name != null)
+            String name, id = eDsrc.getAttribute(MailService.A_ID, null);
+            if (id != null)
+                dsrc = prov.get(account, DataSourceBy.id, id);
+            else if ((name = eDsrc.getAttribute(MailService.A_NAME, null)) != null)
                 dsrc = prov.get(account, DataSourceBy.name, name);
             else
-                dsrc = prov.get(account, DataSourceBy.id, eDsrc.getAttribute(MailService.A_ID));
+                throw ServiceException.INVALID_REQUEST("must specify either 'id' or 'name'", null);
 
             // note that we're not checking the element name against the actual data source's type
             if (dsrc == null)

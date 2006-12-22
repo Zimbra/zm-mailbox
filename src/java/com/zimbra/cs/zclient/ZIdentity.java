@@ -32,6 +32,7 @@ import com.zimbra.cs.service.account.AccountService;
 import com.zimbra.soap.Element;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ZIdentity  {
@@ -52,6 +53,7 @@ public class ZIdentity  {
     public ZIdentity(String name, Map<String, Object> attrs) {
         mName = name;
         mAttrs = attrs;
+        mId = get(Provisioning.A_zimbraPrefIdentityId);
     }
 
     public String getName() {
@@ -72,7 +74,9 @@ public class ZIdentity  {
             return null;
         } else if (value instanceof String[]) {
             return ((String[])value)[0];
-        } else { 
+        } else if (value instanceof List) {
+            return (String) ((List)value).get(0);
+        } else {
             return value.toString();
         }
     }
@@ -184,7 +188,7 @@ public class ZIdentity  {
 
     public Element toElement(Element parent) {
         Element identity = parent.addElement(AccountService.E_IDENTITY);
-        identity.addAttribute(AccountService.A_NAME, mName);
+        identity.addAttribute(AccountService.A_NAME, mName).addAttribute(AccountService.A_ID, mId);
         for (Map.Entry<String,Object> entry : mAttrs.entrySet()) {
             if (entry.getValue() instanceof String[]) {
                 String[] values = (String[]) entry.getValue();
