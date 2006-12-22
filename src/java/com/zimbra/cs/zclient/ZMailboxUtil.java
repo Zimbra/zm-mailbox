@@ -101,10 +101,10 @@ public class ZMailboxUtil implements DebugListener {
     private String mAdminAccountName = null;
     private String mMailboxName = null;    
     private String mPassword = null;
-    private ZGetInfoResult mGetInfoResult;
 
-    private static final String DEFAULT_ADMIN_URL = "https://localhost:7071/";    
-    private static final String DEFAULT_URL = "http://localhost/";        
+    private static final String DEFAULT_ADMIN_URL = "https://"+LC.zimbra_zmprov_default_soap_server.value()+":" + LC.zimbra_admin_service_port.intValue()+"/";
+    private static final String DEFAULT_URL = "http://"+LC.zimbra_zmprov_default_soap_server.value()+"/";
+    private static final int ADMIN_PORT = LC.zimbra_admin_service_port.intValue();
     
     private String mUrl = DEFAULT_URL;
     
@@ -142,10 +142,16 @@ public class ZMailboxUtil implements DebugListener {
 
     public void setPassword(String password) { mPassword = password; }
     
-    public String resolveUrl(String url) throws ZClientException { 
+    public String resolveUrl(String url, boolean isAdmin) throws ZClientException {
         try {
             URI uri = new URI(url);
-            String service = (uri.getPort() == 7071) ? ZimbraServlet.ADMIN_SERVICE_URI : ZimbraServlet.USER_SERVICE_URI;
+
+            if (isAdmin && uri.getPort() == -1) {
+                uri = new URI("https", uri.getUserInfo(), uri.getHost(), ADMIN_PORT, uri.getPath(), uri.getQuery(), uri.getFragment());
+                url = uri.toString();
+            }
+
+            String service = (uri.getPort() == ADMIN_PORT) ? ZimbraServlet.ADMIN_SERVICE_URI : ZimbraServlet.USER_SERVICE_URI;
             if (uri.getPath() == null || uri.getPath().length() <= 1) {
                 if (url.charAt(url.length()-1) == '/') 
                     url = url.substring(0, url.length()-1) + service;
@@ -158,8 +164,8 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
     
-    public void setUrl(String url) throws ServiceException { 
-        mUrl = resolveUrl(url);
+    public void setUrl(String url, boolean admin) throws ServiceException {
+        mUrl = resolveUrl(url, admin);
     }
 
     private void usage() {
@@ -455,7 +461,7 @@ public class ZMailboxUtil implements DebugListener {
         mPassword = password;
         SoapTransport.DebugListener listener = mDebug ? this : null;
         mProv = new SoapProvisioning();
-        mProv.soapSetURI(resolveUrl(uri));
+        mProv.soapSetURI(resolveUrl(uri, true));
         if (listener != null) mProv.soapSetTransportDebugListener(listener);
         mProv.soapAdminAuthenticate(name, password);
     }
@@ -467,7 +473,7 @@ public class ZMailboxUtil implements DebugListener {
         options.setAccount(mMailboxName);
         options.setAccountBy(AccountBy.name);
         options.setPassword(mPassword);
-        options.setUri(resolveUrl(uri));
+        options.setUri(resolveUrl(uri, false));
         options.setDebugListener(mDebug ? this : null);
         mMbox = ZMailbox.getMailbox(options);
         mPrompt = String.format("mbox %s> ", mMbox.getName());
@@ -1796,18 +1802,21 @@ public class ZMailboxUtil implements DebugListener {
         if (err || cl.hasOption('h')) {
             pu.usage();
         }
-        
+
+        boolean isAdmin = false;
         pu.setVerbose(cl.hasOption('v'));
         if (cl.hasOption('a')) {
             pu.setAdminAccountName(cl.getOptionValue('a'));
-            pu.setUrl(DEFAULT_ADMIN_URL);            
+            pu.setUrl(DEFAULT_ADMIN_URL, true);
+            isAdmin = true;
         }
         if (cl.hasOption('z')) {
             pu.setAdminAccountName(LC.zimbra_ldap_user.value());
             pu.setPassword(LC.zimbra_ldap_password.value());
-            pu.setUrl(DEFAULT_ADMIN_URL);
+            pu.setUrl(DEFAULT_ADMIN_URL, true);
+            isAdmin = true;
         }
-        if (cl.hasOption('u')) pu.setUrl(cl.getOptionValue('u'));
+        if (cl.hasOption('u')) pu.setUrl(cl.getOptionValue('u'), isAdmin);
         if (cl.hasOption('m')) pu.setMailboxName(cl.getOptionValue('m'));        
         if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
         if (cl.hasOption('P')) {
