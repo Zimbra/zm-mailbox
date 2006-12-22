@@ -1894,25 +1894,21 @@ public class DbMailItem {
             info.size += size;
             if (rs.getBoolean(LEAF_CI_IS_UNREAD))
                 info.unreadIds.add(item);
-            int isMessage = 0;
+            boolean isMessage = false;
             switch (type) {
-                case MailItem.TYPE_CONTACT:  info.contacts++;  break;
-                case MailItem.TYPE_MESSAGE:  isMessage = 1;    break;
+                case MailItem.TYPE_CONTACT:  info.contacts++;   break;
+                case MailItem.TYPE_MESSAGE:  isMessage = true;  break;
             }
             // detect deleted virtual conversations
-            if (isMessage > 0 && rs.getBoolean(LEAF_CI_IS_NOT_CHILD))
+            if (isMessage && rs.getBoolean(LEAF_CI_IS_NOT_CHILD))
                 info.itemIds.add(MailItem.TYPE_VIRTUAL_CONVERSATION, -id);
 
-            if (isMessage > 0 || size > 0) {
-                if (info.messages == null)
-                    info.messages = new HashMap<Integer, DbMailItem.LocationCount>();
-                Integer folderId = rs.getInt(LEAF_CI_FOLDER_ID);
-                LocationCount count = info.messages.get(folderId);
-                if (count == null)
-                    info.messages.put(folderId, new LocationCount(isMessage, size));
-                else
-                    count.increment(isMessage, size);
-            }
+            Integer folderId = rs.getInt(LEAF_CI_FOLDER_ID);
+            LocationCount count = info.messages.get(folderId);
+            if (count == null)
+                info.messages.put(folderId, new LocationCount(1, size));
+            else
+                count.increment(1, size);
 
             boolean hasBlob = rs.getBoolean(LEAF_CI_HAS_BLOB);
             if (hasBlob) {

@@ -1703,8 +1703,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                     info.blobs.add(mblob);
             } catch (Exception e) { }
         }
-        int isMessage = (this instanceof Message ? 1 : 0);
-        info.messages.put(new Integer(getFolderId()), new DbMailItem.LocationCount(isMessage, getSize()));
+        info.messages.put(new Integer(getFolderId()), new DbMailItem.LocationCount(1, getSize()));
         return info;
     }
 
