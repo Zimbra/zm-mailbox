@@ -134,8 +134,6 @@ public class MailboxManager {
         sInstance = mmgr;
     }
 
-    public void shutdown() { }
-
 
     /** Returns the mailbox for the given account.  Creates a new mailbox
      *  if one doesn't already exist.

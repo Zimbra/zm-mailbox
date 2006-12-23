@@ -98,7 +98,7 @@ public class Zimbra {
         String tzFilePath = LC.timezone_file.value();
         try {
             File tzFile = new File(tzFilePath);
-            WellKnownTimeZones.loadFromFile(new File(tzFilePath));
+            WellKnownTimeZones.loadFromFile(tzFile);
         } catch (Throwable t) {
             Zimbra.halt("Unable to load timezones from " + tzFilePath, t);
         }
@@ -167,8 +167,6 @@ public class Zimbra {
         StoreManager.getInstance().shutdown();
 
         ExtensionUtil.destroyAll();
-        
-        MailboxManager.getInstance().shutdown();
 
         sTimer.cancel();
     }
