@@ -338,8 +338,9 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailService.A_CHANGE_DATE, contact.getChangeDate() / 1000);
             elem.addAttribute(MailService.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
-        }
-        if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
+            elem.addAttribute(MailService.A_DATE, contact.getDate());
+            elem.addAttribute(MailService.A_REVISION, contact.getSavedSequence());
+        } else if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
             elem.addAttribute(MailService.A_DATE, contact.getDate());
             elem.addAttribute(MailService.A_REVISION, contact.getSavedSequence());
         }
