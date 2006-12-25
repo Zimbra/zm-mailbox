@@ -56,6 +56,8 @@ public class MailService implements DocumentService {
     public static final QName BROWSE_RESPONSE = QName.get("BrowseResponse", NAMESPACE);
 
     // generic items
+    public static final QName GET_ITEM_REQUEST = QName.get("GetItemRequest", NAMESPACE);
+    public static final QName GET_ITEM_RESPONSE = QName.get("GetItemResponse", NAMESPACE);
     public static final QName ITEM_ACTION_REQUEST = QName.get("ItemActionRequest", NAMESPACE);
     public static final QName ITEM_ACTION_RESPONSE = QName.get("ItemActionResponse", NAMESPACE);
     // conversations
@@ -163,11 +165,11 @@ public class MailService implements DocumentService {
     public static final QName GET_FREE_BUSY_REQUEST = QName.get("GetFreeBusyRequest", NAMESPACE);
     public static final QName GET_ICAL_REQUEST = QName.get("GetICalRequest", NAMESPACE);
 
-
     // spell checking
     public static final QName CHECK_SPELLING_REQUEST = QName.get("CheckSpellingRequest", NAMESPACE);
     public static final QName CHECK_SPELLING_RESPONSE = QName.get("CheckSpellingResponse", NAMESPACE);
 
+    // documents and wiki
     public static final QName SAVE_DOCUMENT_REQUEST = QName.get("SaveDocumentRequest", NAMESPACE);
     public static final QName SAVE_DOCUMENT_RESPONSE = QName.get("SaveDocumentResponse", NAMESPACE);
     public static final QName SAVE_WIKI_REQUEST = QName.get("SaveWikiRequest", NAMESPACE);
@@ -195,28 +197,23 @@ public class MailService implements DocumentService {
     public static final QName GET_IMPORT_STATUS_REQUEST = QName.get("GetImportStatusRequest", NAMESPACE);
     public static final QName GET_IMPORT_STATUS_RESPONSE = QName.get("GetImportStatusResponse", NAMESPACE);
 
+
     public static final String E_MAILBOX = "mbx";
+    public static final String E_ITEM = "item";
+    public static final String E_MSG = "m";
     public static final String E_CONV = "c";
-    public static final String E_CURSOR = "cursor";
-	public static final String E_MSG = "m";
 	public static final String E_NOTE = "note";
 	public static final String E_TAG = "tag";
     public static final String E_CONTACT = "cn";
 	public static final String E_FOLDER = "folder";
     public static final String E_SEARCH = "search";
     public static final String E_MOUNT = "link";
-    public static final String E_MIMEPART = "mp";
-    public static final String E_HIT_MIMEPART = "hp";
-    public static final String E_ACL = "acl";
-    public static final String E_GRANT = "grant";
 
-	public static final String E_EMAIL = "e";
+    public static final String E_MIMEPART = "mp";
 	public static final String E_SUBJECT = "su";
     public static final String E_FRAG = "fr";
     public static final String E_MSG_ID_HDR = "mid";
     public static final String E_IN_REPLY_TO = "irt";
-    public static final String E_ATTACH = "attach";
-    public static final String E_QUERY = "query";
     public static final String E_INFO = "info";
     public static final String E_LOCALE = "locale";  
     public static final String E_CONTENT = "content";
@@ -229,8 +226,6 @@ public class MailService implements DocumentService {
     public static final String E_DESCRIPTION = "desc";    
     public static final String E_VCARD = "vcard";    
     public static final String E_SIGNATURE = "signature";
-
-    public static final String E_DELETED = "deleted";    
     
     // filter rules
     public static final String E_RULE = "r";
@@ -240,12 +235,15 @@ public class MailService implements DocumentService {
     public static final String E_FILTER_ARG = "arg";
 
     // grants
+    public static final String E_ACL = "acl";
+    public static final String E_GRANT = "grant";
     public static final String A_ZIMBRA_ID = "zid";
     public static final String A_RIGHTS = "perm";
     public static final String A_INHERIT = "inh";
     public static final String A_GRANT_TYPE = "gt";
 
     // email addresses
+    public static final String E_EMAIL = "e";
     public static final String A_ADDRESS = "a";
     public static final String A_PERSONAL = "p";
     public static final String A_DISPLAY = "d";
@@ -296,9 +294,11 @@ public class MailService implements DocumentService {
     public static final String A_STATUS = "status";
     public static final String A_EXCLUDE_FREEBUSY = "excludeFreeBusy";
     public static final String A_FILE_AS_STR = "fileAsStr";
+    public static final String A_CONTACT_TYPE = "type";
     public static final String A_ELIDED = "elided";
 
     // send/save draft
+    public static final String E_ATTACH = "attach";
     public static final String A_ATTACHMENT_ID = "aid";
     public static final String A_ORIG_ID = "origid";
     public static final String A_REPLY_TYPE = "rt";
@@ -315,6 +315,8 @@ public class MailService implements DocumentService {
     public static final String A_BROWSE_DOMAIN_HEADER = "h";
 
     // search
+    public static final String E_QUERY = "query";
+    public static final String E_HIT_MIMEPART = "hp";
     public static final String A_SCORE = "score";
     public static final String A_QUERY = "query";
     public static final String A_GROUPBY = "groupBy";
@@ -330,7 +332,15 @@ public class MailService implements DocumentService {
     public static final String A_ITEM_TYPE = "t";
     public static final String A_FIELD = "field";
 
+    // search-result paging
+    public static final String E_CURSOR = "cursor";
+    public static final String A_QUERY_CONTEXT = "context";
+    public static final String A_QUERY_OFFSET = "offset";
+    public static final String A_QUERY_LIMIT = "limit";
+    public static final String A_QUERY_MORE = "more";
+
     // sync
+    public static final String E_DELETED = "deleted";    
     public static final String A_TOKEN = "token";
     public static final String A_REVISION = "rev";
     public static final String A_FETCH_IF_EXISTS = "fie";
@@ -344,12 +354,6 @@ public class MailService implements DocumentService {
     public static final String A_RHS = "k1";
     public static final String A_MODIFIER = "mod";
     public static final String A_ACTIVE = "active";
-
-    // search-result paging
-    public static final String A_QUERY_CONTEXT = "context";
-    public static final String A_QUERY_OFFSET = "offset";
-    public static final String A_QUERY_LIMIT = "limit";
-    public static final String A_QUERY_MORE = "more";
 
     // calendar / appointment
     public static final String E_APPOINTMENT = "appt";
@@ -484,7 +488,6 @@ public class MailService implements DocumentService {
     public static final String A_CAL_TZ_MINUTE = "min";
     public static final String A_CAL_TZ_SECOND = "sec";
 
-    public static final String A_CONTACT_TYPE = "type";
     // spell checking
     public static final String A_AVAILABLE = "available";
     public static final String E_MISSPELLED = "misspelled";
@@ -534,6 +537,7 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(SEARCH_CONV_REQUEST, new SearchConv());
 
         // items
+        dispatcher.registerHandler(GET_ITEM_REQUEST, new GetItem());
         dispatcher.registerHandler(ITEM_ACTION_REQUEST, new ItemAction());
 
         // conversations
