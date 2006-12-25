@@ -474,21 +474,15 @@ public class ZMailbox {
                         mNameToTag.put(tag.getName(), tag);
                     }
                 }
-            } else if (event instanceof ZModifySearchFolderEvent) { // must come before ZModifyFolderEvent
-            	ZModifySearchFolderEvent msfe = (ZModifySearchFolderEvent) event;
-                ZSearchFolder f = getSearchFolderById(msfe.getId());
-                if (f != null)
-                    f.modifyNotification(msfe, mailbox);
-            } else if (event instanceof ZModifyMountpointEvent) { // must come before ZModifyFolderEvent
-            	ZModifyMountpointEvent mme = (ZModifyMountpointEvent) event;
-                ZMountpoint mp = getMountpointById(mme.getId());
-                if (mp != null)
-                    mp.modifyNotification(mme, mailbox);
             } else if (event instanceof ZModifyFolderEvent) {
-            	ZModifyFolderEvent mfe = (ZModifyFolderEvent) event;
+                ZModifyFolderEvent mfe = (ZModifyFolderEvent) event;
                 ZFolder f = getFolderById(mfe.getId());
-                if (f != null)
-                    f.modifyNotification(mfe, mailbox);
+                if (f != null) {
+                    String newParentId = mfe.getParentId(null);
+                    if (newParentId != null && !newParentId.equals(f.getParentId()))
+                        reparent(f, newParentId);
+                    f.modifyNotification(event);
+                }
             } else if (event instanceof ZModifyMailboxEvent) {
             	mSize = ((ZModifyMailboxEvent)event).getSize(mSize);
             }
@@ -526,6 +520,15 @@ public class ZMailbox {
 
     void addRemoteItemIdMapping(String remoteId, ZItem item) {
         mIdToItem.put(remoteId, item);
+    }
+
+    private void reparent(ZFolder f, String newParentId) {
+        ZFolder parent = f.getParent();
+        if (parent != null)
+            parent.removeChild(f);
+        ZFolder newParent = getFolderById(newParentId);
+        if (newParent != null)
+            newParent.addChild(f);
     }
 
     /**

@@ -28,6 +28,7 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
 
 public class ZMountpoint extends ZFolder {
@@ -43,11 +44,14 @@ public class ZMountpoint extends ZFolder {
         mOwnerId = e.getAttribute(MailService.A_ZIMBRA_ID);
     }
 
-    public void modifyNotification(ZModifyMountpointEvent e, ZMailbox mbox) throws ServiceException {
-        mOwnerDisplayName = e.getOwnerDisplayName(mOwnerDisplayName);
-        mRemoteId = e.getRemoteId(mRemoteId);
-        mOwnerId = e.getOwnerId(mOwnerId);
-        super.modifyNotification(e, mbox);
+    public void modifyNotification(ZModifyEvent e) throws ServiceException {
+        if (e instanceof ZModifyMountpointEvent) {
+            ZModifyMountpointEvent mpe = (ZModifyMountpointEvent) e;
+            mOwnerDisplayName = mpe.getOwnerDisplayName(mOwnerDisplayName);
+            mRemoteId = mpe.getRemoteId(mRemoteId);
+            mOwnerId = mpe.getOwnerId(mOwnerId);
+            super.modifyNotification(e);
+        }
     }
 
     public String toString() {
