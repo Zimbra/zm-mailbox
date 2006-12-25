@@ -1061,7 +1061,25 @@ if nest="1" on the request, response looks like this:
       
       which indicates whether or not the domain was from the "From", "To", or "Cc" header. 
       Valid flags are always one of: "f", "t", "ft", "c", "fc", "tc", "ftc"
-                  
+
+----------
+
+<GetItemRequest>
+  [<item [id="{item-id}"] [path="{fully-qualified-path}"] [l="{folder-id}" name="{item-name}]/>]
+</GetFolderRequest>
+
+  the caller must specify one of:
+    - an {item-id},
+    - a {fully-qualified-path}, or
+    - both a {folder-id} and an {item-name}
+
+<GetItemResponse>
+  <folder|m|c|cn|wiki|etc. ...>
+</GetItemResponse>
+
+  a successful GetItemResponse will contain a single element appropriate for the type of the requested item
+  if there is no matching item, a fault containing the code mail.NO_SUCH_ITEM is returned
+
 ----------
 
 <GetFolderRequest>
@@ -1084,7 +1102,7 @@ if nest="1" on the request, response looks like this:
 
 GetFolderResponse always has exactly 1 folder element within it.  Without a base
 folder ID that folder element will represent the virtual root folder.
-                  
+
 ----------
 
 <GetConvRequest>

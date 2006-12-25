@@ -38,15 +38,16 @@ public class GetItemOperation extends Operation {
                 LOAD = c.mLoad;
         }
 
-    enum ItemBy { ID, PATH, IMAP_ID };
+    private enum ItemBy { ID, PATH, IMAP_ID };
 
-    ItemBy mMethod;
-    String mPath;
-    byte mType;
-    int[] mIds;
-    int mFolderId;
+    private ItemBy mMethod;
+    private int[] mIds;
+    private int mFolderId;
+    private String mPath;
+    private byte mType;
 
-    MailItem[] mItems;
+    private MailItem[] mItems;
+
 
     public GetItemOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, int id, byte type) {
         super(session, oc, mbox, req, LOAD);
@@ -63,9 +64,14 @@ public class GetItemOperation extends Operation {
     }
 
     public GetItemOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, String path, byte type) {
+        this(session, oc, mbox, req, path, Mailbox.ID_FOLDER_USER_ROOT, type);
+    }
+
+    public GetItemOperation(Session session, OperationContext oc, Mailbox mbox, Requester req, String path, int folderId, byte type) {
         super(session, oc, mbox, req, LOAD);
         mType = type;
         mPath = path;
+        mFolderId = folderId;
         mMethod = ItemBy.PATH;
     }
 
@@ -85,7 +91,7 @@ public class GetItemOperation extends Operation {
 
         mItems = new MailItem[1];
         if (mMethod == ItemBy.PATH) {
-            mItems[0] = getMailbox().getItemByPath(getOpCtxt(), mPath);
+            mItems[0] = getMailbox().getItemByPath(getOpCtxt(), mPath, mFolderId);
         } else if (mMethod == ItemBy.IMAP_ID) {
             mItems[0] = getMailbox().getItemByImapId(getOpCtxt(), mIds[0], mFolderId);
         } else {
@@ -95,12 +101,13 @@ public class GetItemOperation extends Operation {
     
     public MailItem getItem() { return mItems[0]; }
     public MailItem[] getItems() { return mItems; }
-    public Folder getFolder() { return (Folder)mItems[0]; }
+    public Folder getFolder() { return (Folder) mItems[0]; }
     
     public String toString() {
         StringBuilder sb = new StringBuilder(super.toString());
         if (mPath != null) {
             sb.append(" path=").append(mPath);
+            sb.append(" folder=").append(mFolderId);
         } else {
             sb.append(" id=(");
             boolean first = true;
@@ -111,8 +118,9 @@ public class GetItemOperation extends Operation {
                 }
                 sb.append(id);
             }
+            sb.append(')');
         }
-        sb.append(") type=").append(mType);
+        sb.append(" type=").append(mType);
         return sb.toString();
     }
     
