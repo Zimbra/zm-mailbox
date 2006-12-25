@@ -28,6 +28,7 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
 
 import java.io.UnsupportedEncodingException;
@@ -204,25 +205,22 @@ public class ZFolder implements ZItem, Comparable {
     
     void removeChild(ZFolder folder)       { mSubFolders.remove(folder); }
 
-    public void modifyNotification(ZModifyFolderEvent event, ZMailbox mbox) throws ServiceException {
-        mName = event.getName(mName);
-        String oldParentId = mParentId;
-        mParentId = event.getParentId(mParentId);
-        if (mParentId != oldParentId) {
-            //re-compute mParent!
-            mParent.removeChild(this);
-            mParent = mbox.getFolderById(mParentId);
-            mParent.addChild(this);
+    public void modifyNotification(ZModifyEvent event) throws ServiceException {
+        if (event instanceof ZModifyFolderEvent) {
+            ZModifyFolderEvent fevent = (ZModifyFolderEvent) event;
+            mName = fevent.getName(mName);
+            String oldParentId = mParentId;
+            mParentId = fevent.getParentId(mParentId);
+            mFlags = fevent.getFlags(mFlags);
+            mColor = fevent.getColor(mColor);
+            mUnreadCount = fevent.getUnreadCount(mUnreadCount);
+            mMessageCount = fevent.getMessageCount(mMessageCount);
+            mDefaultView = fevent.getDefaultView(mDefaultView);
+            mRestURL = fevent.getRestURL(mRestURL);
+            mRemoteURL = fevent.getRemoteURL(mRemoteURL);
+            mEffectivePerms = fevent.getEffectivePerm(mEffectivePerms);
+            mGrants = fevent.getGrants(mGrants);
         }
-        mFlags = event.getFlags(mFlags);
-        mColor = event.getColor(mColor);
-        mUnreadCount = event.getUnreadCount(mUnreadCount);
-        mMessageCount = event.getMessageCount(mMessageCount);
-        mDefaultView = event.getDefaultView(mDefaultView);
-        mRestURL = event.getRestURL(mRestURL);
-        mRemoteURL = event.getRemoteURL(mRemoteURL);
-        mEffectivePerms = event.getEffectivePerm(mEffectivePerms);
-        mGrants = event.getGrants(mGrants);
     }
         
     public ZFolder getParent() {
