@@ -58,6 +58,7 @@ import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
 import com.zimbra.cs.zclient.event.ZCreateConversationEvent;
 import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
 import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
+import com.zimbra.cs.zclient.event.ZCreateContactEvent;
 import com.zimbra.cs.httpclient.EasySSLProtocolSocketFactory;
 import com.zimbra.soap.Element;
 import com.zimbra.soap.Element.XMLElement;
@@ -392,6 +393,8 @@ public class ZMailbox {
                 event = new ZCreateConversationEvent(e);
             } else if (e.getName().equals(MailService.E_MSG)) {
                 event = new ZCreateMessageEvent(e);
+            } else if (e.getName().equals(MailService.E_CONTACT)) {
+                event = new ZCreateContactEvent(e);
             } else if (e.getName().equals(MailService.E_FOLDER)) {
                 String parentId = e.getAttribute(MailService.A_FOLDER);
                 ZFolder parent = getFolderById(parentId);
