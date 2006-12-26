@@ -675,9 +675,9 @@ public class ZMailbox {
         Element tagEl = req.addElement(MailService.E_TAG);
         tagEl.addAttribute(MailService.A_NAME, name);
         if (color != null) tagEl.addAttribute(MailService.A_COLOR, color.getValue());
-        String id = invoke(req).getElement(MailService.E_TAG).getAttribute(MailService.A_ID);
-        // this assumes notifications will create the tag
-        return getTagById(id);      
+        Element createdTagEl = invoke(req).getElement(MailService.E_TAG);
+        ZTag tag = getTagById(createdTagEl.getAttribute(MailService.A_ID));
+        return tag != null ? tag : new ZTag(createdTagEl);
     }
 
     /**
@@ -1537,6 +1537,7 @@ public class ZMailbox {
      *                
      * @return newly created folder
      * @throws ServiceException on error
+     * @param url remote url for rss/atom/ics feeds
      */
     public ZFolder createFolder(String parentId, String name, ZFolder.View defaultView, ZFolder.Color color, String flags, String url) throws ServiceException {
         XMLElement req = new XMLElement(MailService.CREATE_FOLDER_REQUEST);
@@ -1547,9 +1548,9 @@ public class ZMailbox {
         if (color != null) folderEl.addAttribute(MailService.A_COLOR, color.getValue());
         if (flags != null) folderEl.addAttribute(MailService.A_FLAGS, flags);
         if (url != null && url.length() > 0) folderEl.addAttribute(MailService.A_URL, url);
-        String id = invoke(req).getElement(MailService.E_FOLDER).getAttribute(MailService.A_ID);
-        // this assumes notifications will create the folder
-        return getFolderById(id);
+        Element newFolderEl = invoke(req).getElement(MailService.E_FOLDER);
+        ZFolder newFolder = getFolderById(newFolderEl.getAttribute(MailService.A_ID));
+        return newFolder != null ? newFolder : new ZFolder(newFolderEl, null); 
     }
 
     /**
@@ -1575,9 +1576,9 @@ public class ZMailbox {
         if (color != null) folderEl.addAttribute(MailService.A_COLOR, color.getValue());
         if (types != null) folderEl.addAttribute(MailService.A_SEARCH_TYPES, types);
         if (sortBy != null) folderEl.addAttribute(MailService.A_SORTBY, sortBy.name());
-        String id = invoke(req).getElement(MailService.E_SEARCH).getAttribute(MailService.A_ID);
-        // this assumes notifications will create the folder
-        return getSearchFolderById(id);
+        Element newSearchEl = invoke(req).getElement(MailService.E_SEARCH);
+        ZSearchFolder newSearch = getSearchFolderById(newSearchEl.getAttribute(MailService.A_ID));
+        return newSearch != null ? newSearch : new ZSearchFolder(newSearchEl, null);
     }
 
     /**
@@ -1872,8 +1873,9 @@ public class ZMailbox {
         if (flags != null) linkEl.addAttribute(MailService.A_FLAGS, flags);
         linkEl.addAttribute(ownerBy == OwnerBy.BY_ID ? MailService.A_ZIMBRA_ID : MailService.A_OWNER_NAME, owner);
         linkEl.addAttribute(itemBy == SharedItemBy.BY_ID ? MailService.A_REMOTE_ID: MailService.A_PATH, sharedItem);
-        String id = invoke(req).getElement(MailService.E_MOUNT).getAttribute(MailService.A_ID);
-        return getMountpointById(id);
+        Element newMountEl = invoke(req).getElement(MailService.E_MOUNT);
+        ZMountpoint newMount = getMountpointById(newMountEl.getAttribute(MailService.A_ID));
+        return newMount != null ? newMount : new ZMountpoint(newMountEl, null);
     }
     
     /**
