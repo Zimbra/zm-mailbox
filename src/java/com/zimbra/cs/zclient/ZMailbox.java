@@ -205,6 +205,7 @@ public class ZMailbox {
     private ZGetInfoResult mGetInfoResult;
     private ZFolder mUserRoot;
     private SoapTransport.DebugListener mListener;
+    private boolean mNeedsRefresh = true;
     
     private long mSize;
 
@@ -249,10 +250,9 @@ public class ZMailbox {
         return mHandlers.remove(handler);
     }
 
-    public void initAuthToken(String authToken) throws ServiceException {
+    public void initAuthToken(String authToken){
         mAuthToken = authToken;
         mTransport.setAuthToken(mAuthToken);
-        getAccountInfo(true);
     }
 
     public void initPreAuth(String uri, SoapTransport.DebugListener listener) {
@@ -351,7 +351,7 @@ public class ZMailbox {
         }
         Element folderEl = refresh.getOptionalElement(MailService.E_FOLDER);
         ZFolder userRoot = new ZFolder(folderEl, null);
-        ZRefreshEvent event = new ZRefreshEvent(mSize, userRoot, tagList); 
+        ZRefreshEvent event = new ZRefreshEvent(mSize, userRoot, tagList);
         for (ZEventHandler handler : mHandlers)
         	handler.handleRefresh(event, this);
     }
@@ -443,6 +443,7 @@ public class ZMailbox {
             mTransport.setMaxNoitfySeq(0);
             mSize = event.getSize();
             mUserRoot = event.getUserRoot();
+            mNeedsRefresh = false;
             addIdMappings(mUserRoot);
             for (ZTag tag: event.getTags())
             	addTag(tag);
@@ -522,7 +523,7 @@ public class ZMailbox {
         mIdToItem.put(remoteId, item);
     }
 
-    private void reparent(ZFolder f, String newParentId) {
+    private void reparent(ZFolder f, String newParentId) throws ServiceException {
         ZFolder parent = f.getParent();
         if (parent != null)
             parent.removeChild(f);
@@ -569,8 +570,10 @@ public class ZMailbox {
     
     /**
      * @return current size of mailbox in bytes
+     * @throws com.zimbra.common.service.ServiceException on error
      */
-    public long getSize() {
+    public long getSize() throws ServiceException {
+        if (mNeedsRefresh) noOp();
         return mSize;
     }
 
@@ -611,9 +614,11 @@ public class ZMailbox {
     
     /**
      * @return current List of all tags in the mailbox
+     * @throws com.zimbra.common.service.ServiceException on error
      */
     @SuppressWarnings("unchecked")    
-    public List<ZTag> getAllTags() {
+    public List<ZTag> getAllTags() throws ServiceException {
+        if (mNeedsRefresh) noOp(); 
         List result = new ArrayList<ZTag>(mNameToTag.values());
         Collections.sort(result);
         return result;      
@@ -621,31 +626,24 @@ public class ZMailbox {
     
     /**
      * @return current list of all tags names in the mailbox, sorted
+     * @throws com.zimbra.common.service.ServiceException on error
      */
-    public List<String> getAllTagNames() {
+    public List<String> getAllTagNames() throws ServiceException {
+        if (mNeedsRefresh) noOp();
         ArrayList<String> names = new ArrayList<String>(mNameToTag.keySet());
         Collections.sort(names);
         return names;   
     }
-    
-    /**
-     * @return current list of all tags ids in the mailbox
-     */
-    public List<String> getAllTagIds() {
-        ArrayList<String> ids = new ArrayList<String>(mNameToTag.size());
-        for (ZTag tag: mNameToTag.values()) {
-            ids.add(tag.getId());
-        }
-        return ids;
-    }
-    
+
     /**
      * returns the tag the specified name, or null if no such tag exists.
      * 
      * @param name tag name
      * @return the tag, or null if tag not found
+     * @throws com.zimbra.common.service.ServiceException on error
      */
-    public ZTag getTagByName(String name) {
+    public ZTag getTagByName(String name) throws ServiceException {
+        if (mNeedsRefresh) noOp();
         return mNameToTag.get(name);
     }
 
@@ -654,8 +652,10 @@ public class ZMailbox {
      * 
      * @param id the tag id
      * @return tag with given id, or null
+     * @throws com.zimbra.common.service.ServiceException on error
      */
-    public ZTag getTagById(String id) {
+    public ZTag getTagById(String id) throws ServiceException {
+        if (mNeedsRefresh) noOp();         
         ZItem item = mIdToItem.get(id);
         if (item instanceof ZTag) return (ZTag) item;
         else return null;       
@@ -1377,8 +1377,10 @@ public class ZMailbox {
     /**
      * return the root user folder
      * @return user root folder
+     * @throws com.zimbra.common.service.ServiceException on error
      */
-    public ZFolder getUserRoot() {
+    public ZFolder getUserRoot() throws ServiceException {
+        if (mNeedsRefresh) noOp();
         return mUserRoot; 
     }
 
@@ -1386,8 +1388,10 @@ public class ZMailbox {
      * find the folder with the specified path, starting from the user root.
      * @param path path of folder. Must start with {@link #PATH_SEPARATOR}.
      * @return ZFolder if found, null otherwise.
+     * @throws com.zimbra.common.service.ServiceException on error
      */
-    public ZFolder getFolderByPath(String path) {
+    public ZFolder getFolderByPath(String path) throws ServiceException {
+        if (mNeedsRefresh) noOp();
         if (!path.startsWith(ZMailbox.PATH_SEPARATOR)) 
             path = ZMailbox.PATH_SEPARATOR + path;
         return getUserRoot().getSubFolderByPath(path.substring(1));
@@ -1397,8 +1401,10 @@ public class ZMailbox {
      * find the folder with the specified id.
      * @param id id of  folder
      * @return ZFolder if found, null otherwise.
+     * @throws com.zimbra.common.service.ServiceException on error
      */
-    public ZFolder getFolderById(String id) {
+    public ZFolder getFolderById(String id) throws ServiceException {
+        if (mNeedsRefresh) noOp();
         ZItem item = mIdToItem.get(id);
         if (item instanceof ZFolder) return (ZFolder) item;
         else return null;
@@ -1508,8 +1514,10 @@ public class ZMailbox {
      * find the search folder with the specified id.
      * @param id id of  folder
      * @return ZSearchFolder if found, null otherwise.
+     * @throws com.zimbra.common.service.ServiceException on error
      */
-    public ZSearchFolder getSearchFolderById(String id) {
+    public ZSearchFolder getSearchFolderById(String id) throws ServiceException {
+        if (mNeedsRefresh) noOp();
         ZItem item = mIdToItem.get(id);
         if (item instanceof ZSearchFolder) return (ZSearchFolder) item;
         else return null;
@@ -1519,8 +1527,10 @@ public class ZMailbox {
      * find the mountpoint with the specified id.
      * @param id id of mountpoint
      * @return ZMountpoint if found, null otherwise.
+     * @throws com.zimbra.common.service.ServiceException on error
      */
-    public ZMountpoint getMountpointById(String id) {
+    public ZMountpoint getMountpointById(String id) throws ServiceException {
+        if (mNeedsRefresh) noOp();        
         ZItem item = mIdToItem.get(id);
         if (item instanceof ZMountpoint) return (ZMountpoint) item;
         else return null;
