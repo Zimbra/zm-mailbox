@@ -36,12 +36,13 @@ import com.zimbra.common.service.ServiceException;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
+import com.zimbra.cs.mailbox.calendar.Period;
+import com.zimbra.cs.mailbox.calendar.RdateExdate;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
@@ -355,56 +356,60 @@ public class CalendarUtils {
             {
                 Element intElt = (Element)intIter.next();
                 
-                if (intElt.getName().equals(MailService.E_CAL_DATE)) {
+                if (intElt.getName().equals(MailService.E_CAL_DATES)) {
                     // handle RDATE or EXDATE
+                    String tzid = intElt.getAttribute(MailService.A_CAL_TIMEZONE);
+                    ICalTimeZone tz = invTzMap.lookupAndAdd(tzid);
+                    RdateExdate rexdate = new RdateExdate(exclude ? ICalTok.EXDATE : ICalTok.RDATE, tz);
 
-                    parseDateTime(intElt, invTzMap, inv);
+                    ICalTok valueType = null;
+                    for (Iterator<Element> dtvalIter = intElt.elementIterator(MailService.E_CAL_DATE_VAL);
+                         dtvalIter.hasNext(); ) {
+                        ICalTok dtvalValueType = null;
+                        Element dtvalElem = dtvalIter.next();
+                        Element dtvalStart = dtvalElem.getElement(MailService.E_CAL_START_TIME);
+                        String dtvalStartDateStr = dtvalStart.getAttribute(MailService.A_CAL_DATETIME);
+                        ParsedDateTime dtStart =
+                            parseDateTime(dtvalElem.getName(), dtvalStartDateStr, tzid, invTzMap, inv);
 
-                    try {
-                        intElt.getAttribute(MailService.A_CAL_DATETIME);
-
-                        // FIXME!! Need an IRecurrence imp that takes a
-                        // DateList, then instantiate it here and
-                        // add it to addRules or subRules!!!
-
-// DateList dl;
-// boolean isDateTime = true;
-// try {
-// dl = new DateList(dstr, Value.DATE_TIME);
-// } catch (ParseException ex) {
-// dl = new DateList(dstr, Value.DATE);
-// isDateTime = false;
-// }
-//
-// // if (cal.getTimeZone() == ICalTimeZone.getUTC()) {
-// // dl.setUtc(true);
-// // }
-//                        
-// Property prop;
-// if (exclude) {
-// prop = new ExDate(dl);
-// } else {
-// prop = new RDate(dl);
-// }
-//                        
-// if (isDateTime) {
-// if (dt.getTimeZone() != ICalTimeZone.getUTC()) {
-// prop.getParameters().add(new TzId(dt.getTZName()));
-// }
-// }
-                        
-                        if (exclude) {
-                            // FIXME fix EXDATE
-// subRules.add(new Recurrence.SingleInstanceRule())
+                        Element dtvalEnd = dtvalElem.getOptionalElement(MailService.E_CAL_END_TIME);
+                        Element dtvalDur = dtvalElem.getOptionalElement(MailService.E_CAL_DURATION);
+                        if (dtvalEnd == null && dtvalDur == null) {
+                            if (dtStart.hasTime())
+                                dtvalValueType = ICalTok.DATE_TIME;
+                            else
+                                dtvalValueType = ICalTok.DATE;
+                            rexdate.addValue(dtStart);
                         } else {
-                            // FIXME fix RDATE
-// addRules.add(new Recurrence.SingleInstanceRule());
+                            dtvalValueType = ICalTok.PERIOD;
+                            if (dtvalEnd != null) {
+                                String dtvalEndDateStr = dtvalEnd.getAttribute(MailService.A_CAL_DATETIME);
+                                ParsedDateTime dtEnd =
+                                    parseDateTime(dtvalElem.getName(), dtvalEndDateStr, tzid, invTzMap, inv);
+                                Period p = new Period(dtStart, dtEnd);
+                                rexdate.addValue(p);
+                            } else {
+                                ParsedDuration d = ParsedDuration.parse(dtvalDur);
+                                Period p = new Period(dtStart, d);
+                                rexdate.addValue(p);
+                            }
                         }
-                        
-                    } catch (Exception ex) {
-                        throw ServiceException.INVALID_REQUEST("Exception parsing <recur><date> d="+
-                                intElt.getAttribute(MailService.A_CAL_DATETIME), ex);
+
+                        if (valueType == null) {
+                            valueType = dtvalValueType;
+                            rexdate.setValueType(valueType);
+                        } else
+                            throw ServiceException.INVALID_REQUEST(
+                                    "Cannot mix different value types in a single <" +
+                                    intElt.getName() + "> element", null);
                     }
+
+                    Recurrence.SingleDates sd = new Recurrence.SingleDates(rexdate, dur);
+                    if (exclude)
+                        subRules.add(sd);
+                    else
+                        addRules.add(sd);
+
                 } else if (intElt.getName().equals(MailService.E_CAL_RULE)) {
                     // handle RRULE or EXRULE
 

@@ -164,7 +164,6 @@
            [
              <recur>  // see below
                 [ <add|exclude>
-                    [ <date DATETIME>
                     [ <rule freq="FREQ"
                          // FREQ: SEC,MIN,HOU,DAI,WEE,MON,YEA
 
@@ -215,6 +214,38 @@
                         <x-name name="NAME" value="VALUE"/>  // custom fields
                       ]*
                     </rule>]*
+
+					// RDATE/EXDATE
+                    [ <dates [tz="TZID"]>
+                        // Start DATE-TIME only.  Instance has same duration as
+                        // the default duration.
+                        // RDATE[;VALUE=DATE-TIME][;TZID=...]:val,val,val,...
+                        <dtval>
+                          <s d="YYYYMMDDThhmmss[Z]"/>
+                        </dtval>*
+                      </dates>
+                    ]*
+                    [ <dates [tz="TZID"]>
+                        // Start DATE only. (all-day)  Instance has same
+                        // duration as the default duration.
+                        // RDATE;VALUE=DATE[;TZID=...]:val,val,val,...
+                        <dtval>
+                          <s d="YYYYMMDD"/>
+                        </dtval>*
+                      </dates>
+                    ]*
+                    [ <dates [tz="TZID"]>
+                        // Start date/time and either end date/time or duration.
+                        // Only DATE-TIME format is allowed for start/end.
+                        // This format is allowed in <add> only, but not in
+                        // <exclude>.
+                        // RDATE;VALUE=PERIOD[;TZID=...]:val,val,val,...
+                        <dtval>
+                          <s d="YYYYMMDDThhmmss[Z]"/>
+                          <e d="YYYYMMDDThhmmss[Z]"/> OR <dur ...>
+                        </dtval>*
+                      </dates>
+                    ]*
                   </add|/exclude>
 
                   ////////////

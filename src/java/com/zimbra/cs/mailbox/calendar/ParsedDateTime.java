@@ -40,7 +40,6 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 
 public final class ParsedDateTime {
     
@@ -182,7 +181,7 @@ public final class ParsedDateTime {
         
         ICalTimeZone tz = null;
         if (tzname != null) 
-        	tz = lookupAndAddToTzMap(tzname, tzmap);
+        	tz = tzmap.lookupAndAdd(tzname);
 
         if (tz == null) 
             tz = tzmap.getLocalTimeZone();
@@ -214,7 +213,7 @@ public final class ParsedDateTime {
                 	&& !datetime.endsWith("Z")) {
                 	datetime += "Z";
                 } else {
-                	tz = lookupAndAddToTzMap(tzid, tzmap);
+                	tz = tzmap.lookupAndAdd(tzid);
                 }
             }
         } else {
@@ -224,7 +223,7 @@ public final class ParsedDateTime {
 
         return parse(datetime, tzmap, tz, tzmap.getLocalTimeZone());
     }
-    
+
     public static ParsedDateTime MAX_DATETIME;
     static {
         GregorianCalendar cal = new GregorianCalendar();
@@ -549,31 +548,6 @@ public final class ParsedDateTime {
             } 
         }
         return toRet;
-    }
-
-    private static ICalTimeZone lookupAndAddToTzMap(String tzId,
-            										TimeZoneMap tzMap)
-    throws ServiceException {
-        int len = tzId.length();
-        if (len >= 2 && tzId.charAt(0) == '"' && tzId.charAt(len - 1) == '"') {
-            tzId = tzId.substring(1, len - 1);
-        }
-        if (tzId.equals(""))
-            return null;
-
-        ICalTimeZone zone = tzMap.getTimeZone(tzId);
-        if (zone == null) {
-        	// Is it a system-defined TZ?
-            zone = WellKnownTimeZones.getTimeZoneById(tzId);
-	        if (zone != null)
-            	tzMap.add(zone);
-	        else {
-	        	ZimbraLog.calendar.warn(
-	        			"Encountered time zone with no definition: TZID=" +
-	        			tzId);
-	        }
-        }
-        return zone;
     }
 
     void forceDateOnly() {

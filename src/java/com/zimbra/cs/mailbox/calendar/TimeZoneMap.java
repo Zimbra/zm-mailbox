@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Metadata;
 
 public class TimeZoneMap {
@@ -181,5 +182,31 @@ public class TimeZoneMap {
 
     public void add(ICalTimeZone tz) {
     	mTzMap.put(tz.getID(), tz);
+    }
+
+    public ICalTimeZone lookupAndAdd(String tzId)
+    throws ServiceException {
+        // Workaround for bug in Outlook, which double-quotes TZID parameter
+        // value in properties like DTSTART, DTEND, etc. Use unquoted tzId.
+        int len = tzId.length();
+        if (len >= 2 && tzId.charAt(0) == '"' && tzId.charAt(len - 1) == '"') {
+            tzId = tzId.substring(1, len - 1);
+        }
+        if (tzId.equals(""))
+            return null;
+
+        ICalTimeZone zone = getTimeZone(tzId);
+        if (zone == null) {
+            // Is it a system-defined TZ?
+            zone = WellKnownTimeZones.getTimeZoneById(tzId);
+            if (zone != null)
+                add(zone);
+            else {
+                ZimbraLog.calendar.warn(
+                        "Encountered time zone with no definition: TZID=" +
+                        tzId);
+            }
+        }
+        return zone;
     }
 }

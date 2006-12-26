@@ -80,15 +80,11 @@ public class Recurrence
      */
     public static final int TYPE_CANCELLATION = 3; 
 
-    
     /**
-     * Always stored as part of a Recurrence, Exception, or Cancellation -- a list of one or 
-     * more dates (ie not a rule)
-     * 
-     * Use the datesIterator() api to access all of the stored dates
+     * Always stored as part of SingleDates
      */
-    public static final int TYPE_SINGLE_INSTANCE = 4;
-    
+    public static final int TYPE_SINGLE_INSTANCE_DEPRECATED = 4;
+
     /**
      * Always stored as part of a Recurrence, Exception, or Cancellation -- a rule for generating dates
      * 
@@ -96,14 +92,20 @@ public class Recurrence
      */
     public static final int TYPE_REPEATING = 5; 
     
-    
+    /**
+     * Always stored as part of a Recurrence, Exception, or Cancellation --
+     * a list of one or more SingleDates.DateValue objects
+     */
+    public static final int TYPE_SINGLE_DATES = 6;
+
+
     /**
      * @author tim
      *
      * Represents a full iCal recurrence ruleset -- including exceptions, etc.
      * 
      * The concrete subclasses are:
-     *    SingleInstanceRule: a 1-time event
+     *    SingleDates: a list of 1-time events
      *    
      *    SimpleRepeatingRule: anything that can be expressed in a single rule...RECUR in the iCal RFC
      *    
@@ -125,7 +127,7 @@ public class Recurrence
         public Object clone();
         
         /**
-         * @return TYPE_RECURRENCE, TYPE_EXCEPTION, TYPE_CANCELLATION, TYPE_SINGLE_INSTANCE, or TYPE_REPEATING
+         * @return TYPE_RECURRENCE, TYPE_EXCEPTION, TYPE_CANCELLATION, TYPE_SINGLE_DATES, or TYPE_REPEATING
          */
         public int getType();
         
@@ -177,37 +179,21 @@ public class Recurrence
     /**
      * @author tim
      * 
-     * A subnode which generates instances -- ie right now either a SingleInstanceRule 
+     * A subnode which generates instances -- ie right now either a SingleDates 
      * or SimpleRepeatingRule
      *
      */
-    public static interface IInstanceGeneratingRule extends IRecurrence 
-    {
-        public ZRecur getRecur();
-        
-        public ParsedDateTime getDtStart();
-        
+    public static interface IInstanceGeneratingRule extends IRecurrence {
         public InviteInfo getInviteInfo();
-
-        /**
-         * @return DtEnd if set, or NULL if not set (Duration will be set in that case)
-         */
-        public ParsedDateTime getDtEndOrNull();
-        
-        
-        /**
-         * @return Duration if set, or NULL if not set (DtEnd will be set in that case)
-         */
-        public ParsedDuration getDurationOrNull();
     }
-    
-    
+
+
     //////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////
     
     
-    public static IRecurrence decodeRule(Metadata meta, TimeZoneMap tzmap) 
+    public static IRecurrence decodeMetadata(Metadata meta, TimeZoneMap tzmap)
     throws ServiceException {
         try {
             int ruleType = (int) meta.getLong(FN_RULE_TYPE);
@@ -219,8 +205,8 @@ public class Recurrence
                 return new ExceptionRule(meta, tzmap);
             case RULE_RECURRENCE_RULE:
                 return new RecurrenceRule(meta, tzmap);
-            case RULE_SINGLE_INSTANCE:
-                return new SingleInstanceRule(meta, tzmap);
+            case RULE_SINGLE_DATES:
+                return new SingleDates(meta, tzmap);
             }
         } catch (ParseException e) {
             throw ServiceException.FAILURE("Parse excetion on metadata: " + meta, e);
@@ -232,7 +218,8 @@ public class Recurrence
     static final int RULE_SIMPLE_REPEATING_RULE = 2;
     static final int RULE_EXCEPTION_RULE = 3;
     static final int RULE_RECURRENCE_RULE = 4;
-    static final int RULE_SINGLE_INSTANCE = 5;
+    static final int RULE_SINGLE_INSTANCE_DEPRECATED = 5;
+    static final int RULE_SINGLE_DATES = 6;
     
     /**
      * @author tim
@@ -273,11 +260,11 @@ public class Recurrence
             mRules = new ArrayList<IRecurrence>(numRules);
             for (int i = 0; i < numRules; i++) {
                 try {
-                    mRules.add(Recurrence.decodeRule(meta.getMap(FN_RULE + i), tzmap));
+                    mRules.add(Recurrence.decodeMetadata(meta.getMap(FN_RULE + i), tzmap));
                 } catch(Exception e) {}
             }
         }
-        
+
         public MultiRuleSorter(List<IRecurrence> rules) {
             assert((rules == null) || (rules.size() == 0) || (rules.get(0) instanceof IInstanceGeneratingRule));
             mRules = rules;
@@ -350,145 +337,163 @@ public class Recurrence
         private List<IRecurrence> mRules;
         
     }
-    
-    public static class SingleInstanceRule implements IInstanceGeneratingRule {
-        private static final String FN_DTSTART = "dts";
-        private static final String FN_DURATION = "dur";
-        private static final String FN_DTEND = "dte";
+
+    public static class SingleDates implements IInstanceGeneratingRule {
+        private static final String FN_RDATE_EXDATE = "rexd";
+        private static final String FN_DEFAULT_DURATION = "defdur";
         private static final String FN_INVID = "inv";
-        
-        public int getType() { return TYPE_SINGLE_INSTANCE; }
-        
-        private ParsedDateTime getEnd()
-        {
-            if (mDtEnd == null && mDtStart != null && mDuration != null) {
-                return mDtStart.add(mDuration);
-            }
-            return mDtEnd;
-        }
-        
-        public ZRecur getRecur() { return null; }
-        public ParsedDateTime getDtStart() { return mDtStart; }
-        
-        public ParsedDateTime getDtEndOrNull() { return mDtEnd; }
-        public ParsedDuration getDurationOrNull() { return mDuration; }
-        
+
+        public int getType() { return TYPE_SINGLE_DATES; }
+
+        public RdateExdate getRdateExdate() { return mRdateExdate; }
+
         public Iterator addRulesIterator() { return null; }
         public Iterator subRulesIterator() { return null; }
-        
+
         public void setInviteId(InviteInfo invId) {
             mInvId = invId;
         }
-        
+
         public InviteInfo getInviteInfo() {
             return mInvId;
         }
 
         public String toString() {
-            StringBuilder toRet = new StringBuilder("[DtStart=").append(mDtStart != null ? mDtStart.toString() : "<none>");
-            if (mDuration != null) {
-                toRet.append(" Dur=").append(mDuration != null ? mDuration.toString() : "<none>");
+            StringBuilder toRet = new StringBuilder("[");
+            if (mRdateExdate != null) {
+                if (mRdateExdate.isRDATE())
+                    toRet.append("rdate=[");
+                else
+                    toRet.append("exdate=[");
+                toRet.append(mRdateExdate.toString()).append("]");
+            } else {
+                toRet.append("rdate/exdate=<none>");
             }
-            if (mDtEnd != null) {
-                toRet.append(" DtEnd=").append(mDtEnd != null ? mDtEnd.toString() : "<none>");
-            }
-            toRet.append(" InvId=").append(mInvId.toString()).append("]");
+            toRet.append(", defaultDuration=").append(mDefaultDuration.toString());
+            if (mInvId != null)
+                toRet.append(", InvId=").append(mInvId.toString()).append("]");
             
             return toRet.toString();
         }
         
-        public List<Instance> expandInstances(CalendarItem calItem, long start, long end) {
-            List<Instance> toRet = new ArrayList<Instance>();
-            ParsedDateTime dtEnd = getEnd();
-            toRet.add(new Instance(calItem, mInvId,
-                                   mDtStart == null,
-                                   mDtStart != null ? mDtStart.getUtcTime() : 0,
-                                   dtEnd != null ? dtEnd.getUtcTime() : 0,
-                                   false));
-            return toRet;
+        public ParsedDateTime getStartTime() {
+            ParsedDateTime start = null;
+            for (DateValue val : mDates) {
+                ParsedDateTime valStart = val.getStartTime();
+                if (start == null || start.compareTo(valStart) > 0)
+                    start = valStart;
+            }
+            return start;
         }
-        
+
+        public ParsedDateTime getEndTime() {
+            ParsedDateTime end = null;
+            for (DateValue val : mDates) {
+                ParsedDateTime valEnd = val.getEndTime();
+                if (end == null || end.compareTo(valEnd) < 0)
+                    end = valEnd;
+            }
+            return end;
+        }
+
+        public List<Instance> expandInstances(CalendarItem calItem, long start, long end) {
+            List<Instance> list = new ArrayList<Instance>();
+            for (DateValue val : mDates) {
+                ParsedDateTime valStart = val.getStartTime();
+                ParsedDateTime valEnd = val.getEndTime();
+                list.add(new Instance(calItem, mInvId, false,
+                                      valStart.getUtcTime(), valEnd.getUtcTime(),
+                                      true));
+            }
+            Collections.sort(list);
+            return list;
+        }
+
         public Metadata encodeMetadata() {
             Metadata meta = new Metadata();
-         
-            meta.put(FN_RULE_TYPE, RULE_SINGLE_INSTANCE);
-//            meta.addAttribute(FN_DTSTART, mDtStart); 
-//            meta.addAttribute(FN_DURATION, mDuration);
-            meta.put(FN_DTSTART, mDtStart);
-            meta.put(FN_DURATION, mDuration);
-            meta.put(FN_DTEND, mDtEnd);
+            meta.put(FN_RULE_TYPE, RULE_SINGLE_DATES);
+            meta.put(FN_RDATE_EXDATE, mRdateExdate.encodeMetadata());
+            meta.put(FN_DEFAULT_DURATION, mDefaultDuration);
             meta.put(FN_INVID, mInvId.encodeMetadata());
-
             return meta;
         }
         
-        SingleInstanceRule(Metadata meta, TimeZoneMap tzmap) 
+        SingleDates(Metadata meta, TimeZoneMap tzmap) 
         throws ServiceException, ParseException {
-            mDtStart = ParsedDateTime.parse(meta.get(FN_DTSTART, null), tzmap);
-            mDuration = ParsedDuration.parse(meta.get(FN_DURATION, null));
-            mDtEnd = ParsedDateTime.parse(meta.get(FN_DTEND, null), tzmap);
+            Metadata rexdate = meta.getMap(FN_RDATE_EXDATE);
+            mRdateExdate = RdateExdate.decodeMetadata(rexdate, tzmap);
+            mDefaultDuration = ParsedDuration.parse(meta.get(FN_DEFAULT_DURATION));
             mInvId = InviteInfo.fromMetadata(meta.getMap(FN_INVID), tzmap);
+            setDates();
         }
-        
-        public SingleInstanceRule(ParsedDateTime start, ParsedDuration duration, InviteInfo invId) {
-            mDtStart = start;
-            mDuration = duration;
-            mInvId = invId;
-            assert(mDtStart != null);
-        }
-        
-        public SingleInstanceRule(ParsedDateTime start, ParsedDateTime end, InviteInfo invId) {
-            mDtStart = start;
-            mDtEnd = end;
-            mInvId = invId;
-            assert(mDtStart != null);
-        }
-        
-        SingleInstanceRule(ParsedDateTime start, ParsedDateTime end, ParsedDuration duration, InviteInfo invId) {
-            mDtStart = start;
-            mDtEnd = end;
-            mDuration = duration;
-            mInvId = invId;
-            assert(mDtStart != null);
-        }
-        
-        
-        public Element toXml(Element parent) {
-            Element elt = parent.addElement(MailService.E_CAL_DATE);
-            elt.addAttribute(MailService.A_CAL_START_TIME, mDtStart != null ? mDtStart.toString() : "");
-            return elt;
-        }
-        
-        public ParsedDateTime getStartTime() {
-            return mDtStart;
-        }
-        public ParsedDateTime getEndTime() {
-            return mDtEnd;
-        }
-        
-        public Object clone() {
-            assert(mDtStart != null);
-            return new SingleInstanceRule(mDtStart, mDtEnd, mDuration, mInvId);
-        }
-        
-        /**
-         * @return an Iterator over the start-times of each instance
-         */
-        public Iterator<ParsedDateTime> datesIterator() {
-            // HACK: until this class is fixed, create a temp array
-            List<ParsedDateTime> toRet = new ArrayList<ParsedDateTime>();
-            if (mDtStart != null)
-                toRet.add(mDtStart);
-            return toRet.iterator();
-        }
-        
-        private ParsedDateTime mDtStart;
-        private ParsedDateTime mDtEnd;
-        private ParsedDuration mDuration;
-        private InviteInfo mInvId;
 
+        public SingleDates(RdateExdate rexdate, ParsedDuration defaultDuration) {
+            this(rexdate, defaultDuration, null);
+        }
+
+        SingleDates(RdateExdate rexdate, ParsedDuration defaultDuration, InviteInfo invId) {
+            mRdateExdate = rexdate;
+            mDefaultDuration = defaultDuration;
+            mInvId = invId;
+            setDates();
+        }
+
+        private void setDates() {
+            List<DateValue> list =
+                new ArrayList<DateValue>(mRdateExdate.numValues());
+            for (Iterator<Object> iter = mRdateExdate.valueIterator(); iter.hasNext(); ) {
+                Object val = iter.next();
+                if (val instanceof ParsedDateTime) {
+                    ParsedDateTime start = (ParsedDateTime) val;
+                    ParsedDateTime end = start.add(mDefaultDuration);
+                    DateValue dtval = new DateValue(start, end);
+                    list.add(dtval);
+                } else if (val instanceof Period) {
+                    Period p = (Period) val;
+                    DateValue dtval = new DateValue(p.getStart(), p.getEnd());
+                    list.add(dtval);
+                }
+            }
+            mDates = list;
+        }
+
+        public Element toXml(Element parent) {
+            return mRdateExdate.toXml(parent);
+        }
+
+        public Object clone() {
+            return new SingleDates(mRdateExdate, mDefaultDuration, mInvId);
+        }
+
+        private RdateExdate mRdateExdate;
+        private ParsedDuration mDefaultDuration;
+        private InviteInfo mInvId;
+        private List<DateValue> mDates;
+
+        private static class DateValue {
+
+            private ParsedDateTime mStart;
+            private ParsedDateTime mEnd;
+
+            public DateValue(ParsedDateTime start, ParsedDateTime end) {
+                assert(mStart != null && mEnd != null);
+                mStart = start;
+                mEnd = end;
+            }
+
+            public ParsedDateTime getStartTime() { return mStart; }
+            public ParsedDateTime getEndTime()   { return mEnd; }
+
+            public String toString() {
+                StringBuilder sb = new StringBuilder();
+                sb.append("[start=").append(mStart.toString());
+                sb.append(", end=").append(mEnd.toString());
+                sb.append("]");
+                return sb.toString();
+            }
+        }
     }
-    
+
     /**
      * @author tim
      *
@@ -508,15 +513,7 @@ public class Recurrence
         public int getType() { return TYPE_REPEATING; }
         public Iterator addRulesIterator() { return null; }
         public Iterator subRulesIterator() { return null; }
-        
-        
-        public ParsedDateTime getDtStart() {
-            return mDtStart;
-        }
-        
-        public ParsedDateTime getDtEndOrNull() { return null; }
-        public ParsedDuration getDurationOrNull() { return mDuration; }
-        
+
         public void setInviteId(InviteInfo invId) {
             mInvId = invId;
         }
@@ -682,7 +679,7 @@ public class Recurrence
             return toRet;
         }
         
-        public ZRecur getRecur() { return mRecur; }
+        public ZRecur getRule() { return mRecur; }
 
 
         public ParsedDateTime getStartTime() {
@@ -856,62 +853,44 @@ public class Recurrence
         {
             if (mDtStart == null) {
                 ZimbraLog.calendar.warn("Unable to expand a recurrence with no DTSTART");
-                return new ArrayList<Instance>();
+                return new ArrayList<Instance>(0);
             }
-            if (mAddRules == null) {
-                // trivial, just DtStart!
-                List<Instance> toRet = new ArrayList<Instance>(1);
-                long instStart = mDtStart.getUtcTime();
-                long instEnd = mDuration != null ? mDtStart.add(mDuration).getUtcTime() : instStart;
-                if (instStart < end && instEnd > start) {
-                    toRet.add(new Instance(calItem, mInvId, false, instStart, instEnd, false));
-                }
-                return toRet;
-            }
-            
-            // start with the addrules
-            List<Instance> addRules = mAddRules.expandInstances(calItem, start, end);
-            
-            // subtract the SubRules
-            List<Instance> subRules;
-            if (mSubtractRules != null) {
-                subRules = mSubtractRules.expandInstances(calItem, start, end);
-            } else {
-                subRules = new ArrayList<Instance>();
-            }
-            
-            
-            List<Instance> toRet = (List<Instance>) ListUtil.subtractSortedLists(addRules, subRules);
-            
-            
-            // ALWAYS include DTSTART -- by spec
+
+            // expansion = DTSTART + RRULEs + RDATEs - (EXRULEs + EXDATEs)
+
+            // RRULEs + RDATEs
+            List<Instance> toAdd;
+            if (mAddRules != null)
+                toAdd = mAddRules.expandInstances(calItem, start, end);
+            else
+                toAdd = new ArrayList<Instance>(1);
+
+            // DTSTART
             long firstStart = mDtStart.getUtcTime();
             long firstEnd = mDuration != null ? mDtStart.add(mDuration).getUtcTime() : firstStart;
             if (firstStart < end && firstEnd > start) {
                 CalendarItem.Instance first = null;
-                if (toRet.size() >0) {
-                    first = (CalendarItem.Instance)toRet.get(0);
+                if (toAdd.size() > 0) {
+                    first = (CalendarItem.Instance)toAdd.get(0);
                 }
-                
+
                 CalendarItem.Instance dtstartInst = new CalendarItem.Instance(
                         calItem, mInvId, false, firstStart, firstEnd, false);
                 if (first == null || first.compareTo(dtstartInst) != 0) {
                     assert(first == null || first.compareTo(dtstartInst) > 0); // first MUST be after dtstart!
-                    toRet.add(0,dtstartInst);
+                    toAdd.add(0,dtstartInst);
                 }
             }
-                
-            return toRet;
+
+            // -(EXRULEs + EXDATEs)
+            if (mSubtractRules == null)
+                return toAdd;
+            List<Instance> toExclude = mSubtractRules.expandInstances(calItem, start, end);
+            return ListUtil.subtractSortedLists(
+                    toAdd, toExclude, new Instance.StartTimeComparator());
         }
         
         public Element toXml(Element parent) {
-            // subclass should have already created <recur> or <except> element
-            
-//            parent.addAttribute(MailService.A_CAL_START_TIME, mDtStart.toString());
-//            parent.addAttribute(MailService.A_CAL_DURATION, mDuration.toString());
-//            parent.addAttribute(MailService.A_CAL_INV_ID, mInvId.mMsgId);
-//            parent.addAttribute(MailService.A_CAL_COMPONENT_NUM, mInvId.mComponentId);
-            
             if (mAddRules != null) {
                 Element addElt = parent.addElement(MailService.E_CAL_ADD);
                 mAddRules.toXml(addElt);

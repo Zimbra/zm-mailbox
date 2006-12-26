@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -308,7 +309,7 @@ public abstract class CalendarItem extends MailItem {
 
             Metadata metaRecur = meta.getMap(FN_CALITEM_RECURRENCE, true);
             if (metaRecur != null) {
-                mRecurrence = Recurrence.decodeRule(metaRecur, mTzMap);
+                mRecurrence = Recurrence.decodeMetadata(metaRecur, mTzMap);
             }
             
             if (meta.containsKey(Metadata.FN_REPLY_LIST)) {
@@ -382,7 +383,7 @@ public abstract class CalendarItem extends MailItem {
         return instances;
     }
 
-    public static class Instance implements Comparable {
+    public static class Instance implements Comparable<Instance> {
         private boolean mTimeless;  // if true, this instance has no start/end time (e.g. VTODO with no DTSTART)
         private long mStart;        // calculated start time of this instance
         private long mEnd;          // calculated end time of this instance
@@ -425,9 +426,7 @@ public abstract class CalendarItem extends MailItem {
             mIsException = _exception;
         }
 
-        public int compareTo(Object o) {
-            Instance other = (Instance) o;
-
+        public int compareTo(Instance other) {
             long toRet = mCalItem.getId() - other.mCalItem.getId();
             if (toRet == 0) {
                 if (mTimeless == other.mTimeless) {
@@ -485,6 +484,19 @@ public abstract class CalendarItem extends MailItem {
         public boolean isException() { return mIsException; }
         public void setIsException(boolean isException) { mIsException = isException; } 
         public InviteInfo getInviteInfo() { return mInvId; } 
+
+        public static class StartTimeComparator implements Comparator<Instance> {
+            public int compare(Instance a, Instance b) {
+                long as = a.getStart();
+                long bs = b.getStart();
+                if (as < bs)
+                    return -1;
+                else if (as == bs)
+                    return 0;
+                else
+                    return 1;
+            }
+        }
     }
 
     void setUid(String uid) {

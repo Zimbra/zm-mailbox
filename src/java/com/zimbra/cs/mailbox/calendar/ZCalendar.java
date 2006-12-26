@@ -474,8 +474,18 @@ public class ZCalendar {
 
             sw.write(':');
             if (mValue != null) {
-                if (mName.equals(ICalTok.RRULE.toString()) ||
-                    mName.equals(ICalTok.EXRULE.toString()))
+                boolean noEscape = false;
+                if (mTok != null) {
+                    switch (mTok) {
+                    case RRULE:
+                    case EXRULE:
+                    case RDATE:
+                    case EXDATE:
+                        noEscape = true;
+                        break;
+                    }
+                }
+                if (noEscape)
                 	sw.write(mValue);
                 else
     	            sw.write(escape(mValue));

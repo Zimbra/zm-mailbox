@@ -407,13 +407,6 @@ public class Invite {
             meta.put(FN_NUM_XPROPS_OR_XPARAMS, xpropCount);
     }
 
-    //    public static final Map METHOD_MAP = new HashMap();
-//    static {
-//        METHOD_MAP.put(Method.REQUEST.getValue(), Method.REQUEST);
-//        METHOD_MAP.put(Method.CANCEL.getValue(), Method.CANCEL);
-//        METHOD_MAP.put(Method.REPLY.getValue(), Method.REPLY);
-//        METHOD_MAP.put(Method.PUBLISH.getValue(), Method.PUBLISH);
-//    }
     public static ICalTok lookupMethod(String methodName) {
         ICalTok toRet;
         try {
@@ -477,9 +470,9 @@ public class Invite {
         Metadata metaRecur = meta.getMap(FN_RECURRENCE, true);
         Recurrence.IRecurrence recurrence = null; 
         if (metaRecur != null) {
-            recurrence = Recurrence.decodeRule(metaRecur, tzMap);
+            recurrence = Recurrence.decodeMetadata(metaRecur, tzMap);
         }
-        
+
         String methodStr = meta.get(FN_METHOD, ICalTok.PUBLISH.toString());
         if (ICalTok.CANCEL.toString().equals(methodStr))
             status = IcalXmlStrMap.STATUS_CANCELLED;
@@ -761,7 +754,6 @@ public class Invite {
     void setComponentNum(int num) { mComponentNum = num; }
     void setMailboxId(int id) { mMailboxId = id; }
     public void setMailItemId(int id) { mMailItemId = id; }
-//    void setCalendar(Calendar cal) { miCal = cal; }
     public int getFlags() { return mFlags; }
     public String getPartStat() { return mPartStat; }
     public boolean getRsvp() { return mRsvp; }
@@ -1175,156 +1167,6 @@ public class Invite {
         }
     }
 
-//    void parseVEvent(VEvent vevent) throws ServiceException 
-//    {
-//        assert(mTzMap != null);
-//        try {
-//            // Allowed Sub-Components: VALARM
-//            ComponentList comps = vevent.getAlarms();
-//            
-//            for (Iterator iter = comps.iterator(); iter.hasNext();) {
-//                Component comp = (Component)iter.next();
-//                
-//                if (comp.getName().equals(Component.VALARM)) {
-//                    VAlarm alarm = (VAlarm) comp;
-//                    mAlarms.add(alarm);
-//                }
-//            }
-//            
-//            if (mAlarms.size() > 0) {
-//                setHasAlarm(true);
-//            }
-//            
-//            // DEFAULT values:
-//            setStatus(IcalXmlStrMap.STATUS_CONFIRMED);
-//            setTransparency(IcalXmlStrMap.TRANSP_OPAQUE);
-//            mName = "";
-//            mLocation = "";
-//            
-//            ArrayList /* Recur */ addRecurs = new ArrayList();
-//            ArrayList /* Recur */ subRecurs = new ArrayList();
-//            
-//            // Calendar Properties
-//            PropertyList props = vevent.getProperties();
-//            for (Iterator it = props.iterator(); it.hasNext(); ) {
-//                Property prop = (Property) it.next();
-//                String propName = prop.getName();
-//                if (propName.equals(Property.ORGANIZER)) {
-//                    net.fortuna.ical4j.model.property.Organizer org = (net.fortuna.ical4j.model.property.Organizer) prop;
-//                    mOrganizer = org;
-//                } else if (propName.equals(Property.ATTENDEE)) {
-//                    net.fortuna.ical4j.model.property.Attendee attendee = (net.fortuna.ical4j.model.property.Attendee)prop;
-//                    mAttendees.add(new ZAttendee(attendee));
-//                } else if (propName.equals(Property.DTSTAMP)) {
-//                    mDTStamp = ((DtStamp) prop).getDateTime().getTime();
-//                } else if (propName.equals(Property.RECURRENCE_ID)) {
-//                    mRecurrenceId = RecurId.parse((RecurrenceId)prop, mTzMap);
-//                } else if (propName.equals(Property.SEQUENCE)) {
-//                    mSeqNo = ((Sequence) prop).getSequenceNo();
-//                } else if (propName.equals(Property.DTSTART)) {
-//                    mStart = ParsedDateTime.parse(prop, mTzMap);
-//                    if (!mStart.hasTime()) {
-//                        setIsAllDayEvent(true);
-//                    }
-//                } else if (propName.equals(Property.DTEND)) {
-//                    mEnd = ParsedDateTime.parse(prop, mTzMap);
-//                } else if (propName.equals(Property.DURATION)) {
-//                    mDuration = ParsedDuration.parse(prop);
-//                } else if (propName.equals(Property.LOCATION)) {
-//                    mLocation = prop.getValue();
-//                } else if (propName.equals(Property.SUMMARY)) {
-//                    mName = prop.getValue();
-//                } else if (propName.equals(Property.DESCRIPTION)) {
-//                    mFragment = prop.getValue();
-//                } else if (propName.equals(Property.COMMENT)) {
-//                    mComment = prop.getValue();
-//                } else if (propName.equals(Property.UID)) {
-//                    mUid = prop.getValue();
-//                } else if (propName.equals(Property.RRULE)) {
-//                    setIsRecurrence(true);
-//                    addRecurs.add(((RRule)prop).getRecur());
-//                } else if (propName.equals(Property.RDATE)) {
-//                    setIsRecurrence(true);
-//                    addRecurs.add(prop);
-//                } else if (propName.equals(Property.EXRULE)) {
-//                    setIsRecurrence(true);
-//                    subRecurs.add(((ExRule)prop).getRecur());
-//                } else if (propName.equals(Property.EXDATE)) {
-//                    setIsRecurrence(true);
-//                    subRecurs.add(prop);
-//                } else if (propName.equals(Property.STATUS)) {
-//                    String status = IcalXmlStrMap.sStatusMap.toXml(prop.getValue());
-//                    if (status != null)
-//                        setStatus(status);
-//                } else if (propName.equals(Property.TRANSP)) {
-//                    String transp = IcalXmlStrMap.sTranspMap.toXml(prop.getValue());
-//                    if (transp!=null) {
-//                        setTransparency(transp);
-//                    }
-//                } else if (propName.equals(MICROSOFT_ALL_DAY_EVENT)) {
-//                    if ("TRUE".equals(prop.getValue()))
-//                        setIsAllDayEvent(true);
-//                } else if (propName.equals(MICROSOFT_BUSYSTATUS)) {
-//                    String fb = IcalXmlStrMap.sOutlookFreeBusyMap.toXml(prop.getValue());
-//                    if (fb != null)
-//                        setFreeBusy(fb);
-//                }
-//            }
-//            
-//            ParsedDuration duration = mDuration;
-//            
-//            if (duration == null) {
-//                if (mEnd != null) {
-//                    duration = mEnd.difference(mStart);
-//                }
-//            }
-//            
-//            ArrayList /* IInstanceGeneratingRule */ addRules = new ArrayList();
-//            if (addRecurs.size() > 0) {
-//                for (Iterator iter = addRecurs.iterator(); iter.hasNext();) {
-//                    Object next = iter.next();
-//                    if (next instanceof Recur) {
-//                        ZRecur cur = new ZRecur(((Recur)next).toString(), mTzMap);
-//                        addRules.add(new Recurrence.SimpleRepeatingRule(mStart, duration, cur, new InviteInfo(this)));
-//                    } else {
-//                        RDate cur = (RDate)next;
-//                        // TODO add the dates here!
-//                    }
-//                }
-//            }
-//            ArrayList /* IInstanceGeneratingRule */  subRules = new ArrayList();
-//            if (subRules.size() > 0) {
-//                for (Iterator iter = subRules.iterator(); iter.hasNext();) {
-//                    Object next = iter.next();
-//                    if (next instanceof Recur) {
-//                        ZRecur cur = new ZRecur(((Recur)next).toString(), mTzMap);
-//                        subRules.add(new Recurrence.SimpleRepeatingRule(mStart, duration, cur, new InviteInfo(this)));
-//                    } else {
-//                        ExDate cur = (ExDate)next;
-//                        // TODO add the dates here!
-//                    }
-//                }
-//            }
-//            
-//            if (hasRecurId()) {
-//                if (addRules.size() > 0) { 
-//                    mRecurrence = new Recurrence.ExceptionRule(getRecurId(),  
-//                            mStart, duration, new InviteInfo(this), addRules, subRules);
-//                }
-//            } else {
-//                if (addRules.size() > 0) { // since exclusions can't affect DtStart, just ignore them if there are no add rules
-//                    mRecurrence = new Recurrence.RecurrenceRule(mStart, duration, new InviteInfo(this), addRules, subRules);
-//                }
-//            }
-//            
-//            if (mAttendees.size() > 1) {
-//                setHasOtherAttendees(true);
-//            }
-//        } catch(ParseException e) {
-//            throw MailServiceException.ICALENDAR_PARSE_ERROR(vevent.toString(), e);
-//        }
-//    }
-    
     public List<ZAttendee> getAttendees() {
         return mAttendees;
     }
@@ -1332,11 +1174,7 @@ public class Invite {
     public void addAttendee(ZAttendee at) {
         mAttendees.add(at);
     }
-    
-//    public void setOrganizer(Organizer org) {
-//        mOrganizer = org;
-//    }
-//    
+
     public void setOrganizer(ZOrganizer org) throws ServiceException {
         mOrganizer = org;
     }
@@ -1395,239 +1233,6 @@ public class Invite {
     TimeZoneMap mTzMap;
     
     public TimeZoneMap getTimeZoneMap() { return mTzMap; }
-    
-    
-//
-//    static public List /* Invite */  createFromICalendar(Account acct, String fragment, Calendar cal, boolean sentByMe) throws ServiceException
-//    {
-//        // vevent, vtodo: ALARM, props
-//        // vjournal: props
-//        // vfreebusy: props
-//
-//        List /* Invite */ toRet = new ArrayList();
-//        
-//        ICalTok method = ICalTok.PUBLISH;
-//        
-//        PropertyList props = cal.getProperties();
-//        for (Iterator iter = props.iterator(); iter.hasNext();) {
-//            Property prop = (Property)iter.next();
-//            if (prop.getName().equals(Property.METHOD)) {
-//                method = lookupMethod(prop.getValue());
-//            }
-//        }
-//        
-//        TimeZoneMap tzmap = new TimeZoneMap(acct.getTimeZone());
-//        ComponentList comps = cal.getComponents();
-//        
-//        for (Iterator iter = comps.iterator(); iter.hasNext();) {
-//            Component comp = (Component)iter.next();
-//            
-//            if (comp.getName().equals(Component.VTIMEZONE)) {
-//                tzmap.add((VTimeZone) comp);
-//            } else if (comp.getName().equals(Component.VEVENT)) {
-//                Invite inv = new Invite(method.toString(), fragment, tzmap);
-//                
-//                inv.setSentByMe(sentByMe);
-//
-//                // must do this AFTER component-num, mailbox-id and mailitem-id are set! (because the IRecurrence object needs them)
-//                inv.parseVEvent((VEvent) comp);
-//                
-//                toRet.add(inv);
-//            }
-//        }
-//        
-//        if (toRet.size() == 0) {
-//            Invite inv = new Invite(method.toString(), fragment, tzmap);
-//            toRet.add(inv);
-//        }
-//
-//        return toRet;
-//    }
-//
-////    private static Calendar makeCalendar(String method) {
-////        Calendar iCal = new Calendar();
-////        // PRODID, VERSION always required
-////        iCal.getProperties().add(new ProdId("Zimbra-Calendar-Provider"));
-////        iCal.getProperties().add(new Method(method));
-////        iCal.getProperties().add(Version.VERSION_2_0);
-////
-////        return iCal;
-////    }
-//    
-//    public VEvent toVEvent() throws ServiceException {
-//        VEvent event = new VEvent();
-//        
-//        // UID
-//        event.getProperties().add(new Uid(getUid()));
-//        
-//        // RECUR
-//        if (mRecurrence != null) {
-//            for (Iterator iter = mRecurrence.addRulesIterator(); iter!=null && iter.hasNext();) {
-//                IRecurrence cur = (IRecurrence)iter.next();
-//
-//                switch (cur.getType()) { 
-//                case Recurrence.TYPE_SINGLE_INSTANCE:
-//                    Recurrence.SingleInstanceRule sir = (Recurrence.SingleInstanceRule)cur;
-//                    // FIXME
-//                    break;
-//                case Recurrence.TYPE_REPEATING:
-//                    Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
-//                    try {
-//                        event.getProperties().add(new RRule(new Recur(srr.getRecur().toString())));
-//                    } catch(ParseException e) {
-//                        throw ServiceException.FAILURE("Parsing Recur Rule: "+srr.getRecur().toString(), e);
-//                    }
-//                    break;
-//                }
-//                
-//            }
-//            for (Iterator iter = mRecurrence.subRulesIterator(); iter!=null && iter.hasNext();) {
-//                IRecurrence cur = (IRecurrence)iter.next();
-//
-//                switch (cur.getType()) { 
-//                case Recurrence.TYPE_SINGLE_INSTANCE:
-//                    Recurrence.SingleInstanceRule sir = (Recurrence.SingleInstanceRule)cur;
-//                    // FIXME
-//                    break;
-//                case Recurrence.TYPE_REPEATING:
-//                    Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
-//                    try {
-//                        event.getProperties().add(new ExRule(new Recur(srr.getRecur().toString())));
-//                    } catch(ParseException e) {
-//                        throw ServiceException.FAILURE("Parsing ExRule: "+srr.getRecur().toString(), e);
-//                    }
-//                        
-//                    break;
-//                }
-//            }
-//        }
-//        
-//        // ORGANIZER
-//        if (mOrganizer != null) {
-//            event.getProperties().add(mOrganizer);
-//        }
-//        
-//        // allDay
-//        if (this.isAllDayEvent()) {
-//            XProperty msAllDay = new XProperty("X-MICROSOFT-CDO-ALLDAYEVENT", "TRUE");
-//            event.getProperties().add(msAllDay);
-//        }
-//        
-//        // SUMMARY (aka Name or Subject)
-//        if (mName != null && !mName.equals("")) {
-//            event.getProperties().add(new Summary(mName));
-//        }
-//        
-//        // DESCRIPTION
-//        if (mFragment != null && !mFragment.equals("")) {
-//            event.getProperties().add(new Description(mFragment));
-//        }
-//        
-//        // COMMENT
-//        if (mComment != null && !mComment.equals("")) {
-//            event.getProperties().add(new Comment(mComment));
-//        }
-//        
-//        // DTSTART
-//        {
-//            DtStart dtstart = new DtStart(mStart.iCal4jDate());
-//            if (mStart.isUTC()) {
-//                dtstart.setUtc(true);
-//            } else if (mStart.getTZName() != null) {
-//                dtstart.getParameters().add(new TzId(mStart.getTZName()));
-//            }
-//            event.getProperties().add(dtstart);
-//        }
-//        
-//        // DTEND
-//        if (mEnd != null) {
-//            DtEnd dtend = new DtEnd(mEnd.iCal4jDate());
-//            if (mEnd.isUTC()) {
-//                dtend.setUtc(true);
-//            } else if (mEnd.getTZName() != null) {
-//                dtend.getParameters().add(new TzId(mEnd.getTZName()));
-//            }
-//            event.getProperties().add(dtend);
-//        }
-//        
-//        // DURATION
-//        if (mDuration != null) {
-//            Duration dur = new Duration();
-//            dur.setValue(mDuration.toString());
-//            
-//            event.getProperties().add(dur);
-//        }
-//            
-//        
-//        // LOCATION
-//        if (mLocation != null && !mLocation.equals("")) {
-//            event.getProperties().add(new Location(mLocation));
-//        }
-//        
-//        // STATUS
-//        event.getProperties().add(new Status(IcalXmlStrMap.sStatusMap.toIcal(mStatus)));
-//        
-//        // Microsoft Outlook compatibility for free-busy status
-//        {
-//            String outlookFreeBusy = IcalXmlStrMap.sOutlookFreeBusyMap.toIcal(mFreeBusy);
-//            event.getProperties().add(new XProperty(Invite.MICROSOFT_BUSYSTATUS,
-//                                                    outlookFreeBusy));
-//            event.getProperties().add(new XProperty(Invite.MICROSOFT_INTENDEDSTATUS,
-//                                                    outlookFreeBusy));
-//        }
-//        
-//        // TRANSPARENCY
-//        event.getProperties().add(new Transp(IcalXmlStrMap.sTranspMap.toIcal(mTransparency)));
-//        
-//        // ATTENDEEs
-//        for (Iterator iter = mAttendees.iterator(); iter.hasNext(); ) {
-//            ZAttendee at = (ZAttendee)iter.next();
-//            event.getProperties().add(at.iCal4jAttendee());
-//        }
-//        
-//        // RECURRENCE-ID
-//        if (mRecurrenceId != null) {
-//            RecurrenceId recurId = mRecurrenceId.getRecurrenceId(mTzMap.getLocalTimeZone());
-//            event.getProperties().add(recurId);
-//        }
-//        
-//        // DTSTAMP
-//        event.getProperties().add(new DtStamp(new DateTime(mDTStamp)));
-//        
-//        // SEQUENCE
-//        event.getProperties().add(new Sequence(mSeqNo));
-//        
-//        return event;
-//    }
-    
-//    
-//    public Calendar toICalendar() throws ServiceException {
-//        Calendar toRet = makeCalendar(mMethod.toString());
-//        
-//        // timezones
-//        for (Iterator iter = mTzMap.tzIterator(); iter.hasNext();) {
-//            ICalTimeZone cur = (ICalTimeZone) iter.next();
-//            VTimeZone vtz = cur.toVTimeZone();
-//            toRet.getComponents().add(vtz);
-//        }
-//        
-//        toRet.getComponents().add(toVEvent());
-//        
-//        if (DebugConfig.validateOutgoingICalendar) {
-//            try {
-//                toRet.validate(true);
-//            } catch (ValidationException e) { 
-//                sLog.info("iCal Validation Exception in CreateCalendarItemInviteParser", e);
-//                if (e.getCause() != null) {
-//                    sLog.info("\tcaused by "+e.getCause(), e.getCause());
-//                }
-//            }
-//        }
-//
-//        sLog.debug("Invite.toICalendar=\n"+toRet.toString());
-//        
-//        return toRet;
-//    }
 
     public ZVCalendar newToICalendar() throws ServiceException {
         return newToICalendar(OUTLOOK_COMPAT_ALLDAY);
@@ -1655,68 +1260,12 @@ public class Invite {
         vcal.addComponent(newToVComponent(useOutlookCompatMode));
         return vcal;
     }
-    
-    
-//  /** This version parses the invites BEFORE the InviteMessage object itself is created -- this is
-//   *  necessary because of the way the MailItem creation path works.  
-//   * @param mbx - Mailbox
-//   * @param cal - iCal4j Calendar object
-//   * @param mailItemId
-//   * 
-//   * @return list of Invites (ie the mComponents list of the to-be-created InviteMessage)
-//   */
-//  public static List /* Invite */ parseCalendarComponentsForNewMessage(boolean sentByMe, Mailbox mbx, Calendar cal, 
-//          int mailItemId, String fragment, TimeZoneMap tzmap) throws ServiceException {
-//      
-//      List /* Invite */ toRet = new ArrayList();
-//      
-//      //
-//      // vevent, vtodo: ALARM, props
-//      // vjournal: props
-//      // vfreebusy: props
-//      
-//      ICalTok method = ICalTok.PUBLISH;
-//      
-//      PropertyList props = cal.getProperties();
-//      for (Iterator iter = props.iterator(); iter.hasNext();) {
-//          Property prop = (Property)iter.next();
-//          if (prop.getName().equals(Property.METHOD)) {
-//              method = lookupMethod(prop.getValue());
-//          }
-//      }
-//      
-//      ComponentList comps = cal.getComponents();
-//      int compNum = 0;
-//      
-//      for (Iterator iter = comps.iterator(); iter.hasNext();) {
-//          Component comp = (Component)iter.next();
-//          
-//          if (comp.getName().equals(Component.VTIMEZONE)) {
-//                  tzmap.add((VTimeZone) comp);
-//          } else if (comp.getName().equals(Component.VEVENT)) {
-//              Invite invComp = null;
-//              invComp = new Invite(method.toString(), fragment, tzmap);
-//              toRet.add(invComp);
-//              
-//              invComp.setComponentNum(compNum);
-//              invComp.setMailboxId(mbx.getId());
-//              invComp.setMailItemId(mailItemId);
-//              invComp.setSentByMe(sentByMe);
-//
-//              // must do this AFTER component-num, mailbox-id and mailitem-id are set! (because the IRecurrence object needs them)
-//              invComp.parseVEvent((VEvent) comp);
-//              compNum++;
-//          }
-//      }
-//      return toRet;
-//  }
-    
+
     public static List<Invite> createFromCalendar(Account account, String fragment, ZVCalendar cal, boolean sentByMe)
     throws ServiceException {
         return createFromCalendar(account, fragment, cal, sentByMe, null, 0);
     }
     
-    //     static public List /* Invite */  createFromICalendar(Account acct, String fragment, Calendar cal, boolean sentByMe) throws ServiceException
     public static List<Invite> createFromCalendar(Account account, String fragment, ZVCalendar cal, boolean sentByMe, Mailbox mbx, int mailItemId)
     throws ServiceException {
         List<Invite> toRet = new ArrayList<Invite>();
@@ -1754,12 +1303,12 @@ public class Invite {
                 boolean isTodo = ICalTok.VTODO.equals(compTypeTok);
                 try {
                     Invite newInv = new Invite(type, methodStr, tzmap);
-                    
+
                     toRet.add(newInv);
-                    
-                    List<ZRecur> addRecurs = new ArrayList<ZRecur>();
-                    List<ZRecur> subRecurs = new ArrayList<ZRecur>();
-                    
+
+                    List<Object> addRecurs = new ArrayList<Object>();
+                    List<Object> subRecurs = new ArrayList<Object>();
+
                     newInv.setComponentNum(compNum);
                     if (mbx != null)
                         newInv.setMailboxId(mbx.getId());
@@ -1839,6 +1388,9 @@ public class Invite {
                             newInv.setIsRecurrence(true);
                             break;
                         case RDATE:
+                            RdateExdate rdate = RdateExdate.parse(prop, tzmap);
+                            addRecurs.add(rdate);
+                            newInv.setIsRecurrence(true);
                             break;
                         case EXRULE:
                             ZRecur exrecur = new ZRecur(prop.getValue(), tzmap);
@@ -1846,6 +1398,9 @@ public class Invite {
                             newInv.setIsRecurrence(true);                            
                             break;
                         case EXDATE:
+                            RdateExdate exdate = RdateExdate.parse(prop, tzmap);
+                            subRecurs.add(exdate);
+                            newInv.setIsRecurrence(true);
                             break;
                         case STATUS:
                             String status = IcalXmlStrMap.sStatusMap.toXml(prop.getValue());
@@ -1915,17 +1470,18 @@ public class Invite {
                             duration = end.difference(newInv.getStartTime());
                         }
                     }
-                    
+
+                    InviteInfo inviteInfo = new InviteInfo(newInv);
                     List<IRecurrence> addRules = new ArrayList<IRecurrence>();
                     if (addRecurs.size() > 0) {
                         for (Iterator iter = addRecurs.iterator(); iter.hasNext();) {
                             Object next = iter.next();
                             if (next instanceof ZRecur) {
-                                ZRecur cur = (ZRecur)next;
-                                addRules.add(new Recurrence.SimpleRepeatingRule(newInv.getStartTime(), duration, cur, new InviteInfo(newInv)));
-                            } else {
-//                                RDate cur = (RDate)next;
-                                // TODO add the dates here!
+                                ZRecur cur = (ZRecur) next;
+                                addRules.add(new Recurrence.SimpleRepeatingRule(newInv.getStartTime(), duration, cur, inviteInfo));
+                            } else if (next instanceof RdateExdate) {
+                                RdateExdate rdate = (RdateExdate) next;
+                                addRules.add(new Recurrence.SingleDates(rdate, duration, inviteInfo));
                             }
                         }
                     }
@@ -1934,11 +1490,11 @@ public class Invite {
                         for (Iterator iter = subRecurs.iterator(); iter.hasNext();) {
                             Object next = iter.next();
                             if (next instanceof ZRecur) {
-                                ZRecur cur = (ZRecur)iter.next();
-                                subRules.add(new Recurrence.SimpleRepeatingRule(newInv.getStartTime(), duration, cur, new InviteInfo(newInv)));
-                            } else {
-//                                ExDate cur = (ExDate)next;
-                                // TODO add the dates here!
+                                ZRecur cur = (ZRecur) iter.next();
+                                subRules.add(new Recurrence.SimpleRepeatingRule(newInv.getStartTime(), duration, cur, inviteInfo));
+                            } else if (next instanceof RdateExdate) {
+                                RdateExdate exdate = (RdateExdate) next;
+                                subRules.add(new Recurrence.SingleDates(exdate, duration, inviteInfo));
                             }
                         }
                     }
@@ -1980,13 +1536,14 @@ public class Invite {
                 IRecurrence cur = (IRecurrence)iter.next();
 
                 switch (cur.getType()) { 
-                case Recurrence.TYPE_SINGLE_INSTANCE:
-                    //Recurrence.SingleInstanceRule sir = (Recurrence.SingleInstanceRule)cur;
-                    // FIXME
+                case Recurrence.TYPE_SINGLE_DATES:
+                    Recurrence.SingleDates sd = (Recurrence.SingleDates) cur;
+                    RdateExdate rdate = sd.getRdateExdate();
+                    component.addProperty(rdate.toZProperty());
                     break;
                 case Recurrence.TYPE_REPEATING:
                     Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
-                    component.addProperty(new ZProperty(ICalTok.RRULE, srr.getRecur().toString()));
+                    component.addProperty(new ZProperty(ICalTok.RRULE, srr.getRule().toString()));
                     break;
                 }
                 
@@ -1995,13 +1552,14 @@ public class Invite {
                 IRecurrence cur = (IRecurrence)iter.next();
 
                 switch (cur.getType()) { 
-                case Recurrence.TYPE_SINGLE_INSTANCE:
-                    //Recurrence.SingleInstanceRule sir = (Recurrence.SingleInstanceRule)cur;
-                    // FIXME
+                case Recurrence.TYPE_SINGLE_DATES:
+                    Recurrence.SingleDates sd = (Recurrence.SingleDates) cur;
+                    RdateExdate exdate = sd.getRdateExdate();
+                    component.addProperty(exdate.toZProperty());
                     break;
                 case Recurrence.TYPE_REPEATING:
                     Recurrence.SimpleRepeatingRule srr = (Recurrence.SimpleRepeatingRule)cur;
-                    component.addProperty(new ZProperty(ICalTok.EXRULE, srr.getRecur().toString()));
+                    component.addProperty(new ZProperty(ICalTok.EXRULE, srr.getRule().toString()));
                     break;
                 }
             }
