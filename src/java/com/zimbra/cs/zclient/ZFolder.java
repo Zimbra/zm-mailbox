@@ -209,7 +209,6 @@ public class ZFolder implements ZItem, Comparable {
         if (event instanceof ZModifyFolderEvent) {
             ZModifyFolderEvent fevent = (ZModifyFolderEvent) event;
             mName = fevent.getName(mName);
-            String oldParentId = mParentId;
             mParentId = fevent.getParentId(mParentId);
             mFlags = fevent.getFlags(mFlags);
             mColor = fevent.getColor(mColor);

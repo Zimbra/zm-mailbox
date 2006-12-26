@@ -1,0 +1,133 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ *
+ * The Original Code is: Zimbra Collaboration Suite Server.
+ *
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
+ * All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK *****
+ */
+
+package com.zimbra.cs.zclient.event;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.ZSoapSB;
+import com.zimbra.soap.Element;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class ZModifyContactEvent implements ZModifyItemEvent {
+
+    protected Element mContactEl;
+
+    public ZModifyContactEvent(Element e) throws ServiceException {
+        mContactEl = e;
+    }
+
+    /**
+     * @return id
+     * @throws com.zimbra.common.service.ServiceException on error
+     */
+    public String getId() throws ServiceException {
+        return mContactEl.getAttribute(MailService.A_ID);
+    }
+
+    /**
+     * @param defaultValue value to return if unchanged
+     * @return new flags or default value if flags didn't change
+     */
+    public String getFlags(String defaultValue) {
+        return mContactEl.getAttribute(MailService.A_FLAGS, defaultValue);
+    }
+
+    /**
+     * @param defaultValue value to return if unchanged
+     * @return new tags or default value if tags didn't change
+     */
+    public String getTagIds(String defaultValue) {
+        return mContactEl.getAttribute(MailService.A_TAGS, defaultValue);
+    }
+
+    public String getFolderId(String defaultValue) {
+        return mContactEl.getAttribute(MailService.A_FOLDER, defaultValue);
+    }
+
+    public long getMetaDataChangedDate(long defaultValue) throws ServiceException {
+        return mContactEl.getAttributeLong(MailService.A_MODIFIED_DATE, defaultValue);
+    }
+
+    public String getFileAsStr(String defaultValue) {
+        return mContactEl.getAttribute(MailService.A_FILE_AS_STR, defaultValue);
+    }
+
+    public String getRevision(String defaultValue) {
+        return mContactEl.getAttribute(MailService.A_REVISION, defaultValue);
+    }
+    
+    public String getEmail(String defaultValue) {
+        return mContactEl.getAttribute(Contact.A_email, defaultValue);
+    }
+  
+    public String getEmail2(String defaultValue) {
+        return mContactEl.getAttribute(Contact.A_email2, defaultValue);
+    }
+    
+    public String getEmail3(String defaultValue) {
+        return mContactEl.getAttribute(Contact.A_email3, defaultValue);
+    }
+
+    public Map<String, String> getAttrs(Map<String, String> defaultValue) throws ServiceException {
+    	Map<String, String> attrs = null;
+        for (Element a : mContactEl.listElements(MailService.E_ATTRIBUTE)) {
+        	if (attrs == null) attrs = new HashMap<String, String>();
+            attrs.put(a.getAttribute(MailService.A_ATTRIBUTE_NAME), a.getText());
+        }	
+        return attrs != null ? attrs : defaultValue;
+    }
+    
+    public String toString() {
+        try {
+            ZSoapSB sb = new ZSoapSB();
+            sb.beginStruct();
+            sb.add("id", getId());
+            if (getFlags(null) != null) sb.add("flags", getFlags(null));
+            if (getTagIds(null) != null) sb.add("tags", getTagIds(null));
+            if (getFolderId(null) != null) sb.add("folderId", getFolderId(null));
+            if (getRevision(null) != null) sb.add("revision", getRevision(null));
+            if (getFileAsStr(null) != null) sb.add("fileAsStr", getFileAsStr(null));
+            if (getEmail(null) != null) sb.add("email", getEmail(null));
+            if (getEmail2(null) != null) sb.add("email2", getEmail2(null));
+            if (getEmail3(null) != null) sb.add("email3", getEmail3(null));
+            Map<String, String> attrs = getAttrs(null);
+            if (attrs != null) {
+                sb.beginStruct("attrs");
+                for (Map.Entry<String, String> entry : attrs.entrySet()) {
+                    sb.add(entry.getKey(), entry.getValue());
+                }
+                sb.endStruct();
+            }
+            sb.endStruct();
+            return sb.toString();
+        } catch (ServiceException se) {
+            return "";
+        }
+    }
+}

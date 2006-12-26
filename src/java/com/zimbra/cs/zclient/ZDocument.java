@@ -26,6 +26,7 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
 
 public class ZDocument implements ZItem {
@@ -89,5 +90,9 @@ public class ZDocument implements ZItem {
 	}
 	public boolean isWiki() {
 		return mIsWiki;
+	}
+
+	public void modifyNotification(ZModifyEvent event) throws ServiceException {
+		// TODO Auto-generated method stub
 	}
 }

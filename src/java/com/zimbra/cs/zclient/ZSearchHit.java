@@ -25,6 +25,9 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
+
 
 public interface ZSearchHit {
     public String getId();
@@ -32,4 +35,6 @@ public interface ZSearchHit {
     public String getSortField();
     
     public float getScore();
+    
+    public void modifyNotification(ZModifyEvent event) throws ServiceException;
 }

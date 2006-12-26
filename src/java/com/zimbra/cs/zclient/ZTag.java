@@ -26,6 +26,7 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyTagEvent;
 import com.zimbra.soap.Element;
 
@@ -76,10 +77,13 @@ public class ZTag implements Comparable, ZItem {
         mUnreadCount = (int) e.getAttributeLong(MailService.A_UNREAD, 0);
     }
 
-    public void modifyNotification(ZModifyTagEvent e) throws ServiceException {
-        mColor = e.getColor(mColor);
-        mName = e.getName(mName);
-        mUnreadCount = e.getUnreadCount(mUnreadCount);
+    public void modifyNotification(ZModifyEvent event) throws ServiceException {
+    	if (event instanceof ZModifyTagEvent) {
+    		ZModifyTagEvent tevent = (ZModifyTagEvent) event;
+    		mColor = tevent.getColor(mColor);
+    		mName = tevent.getName(mName);
+    		mUnreadCount = tevent.getUnreadCount(mUnreadCount);
+    	}
     }
 
     public String getId() {

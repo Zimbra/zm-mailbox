@@ -28,6 +28,7 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
 
 import java.util.ArrayList;
@@ -71,13 +72,16 @@ public class ZConversationHit implements ZSearchHit {
         }        
     }
 
-    public void modifyNotification(ZModifyConversationEvent event) throws ServiceException {
-        mFlags = event.getFlags(mFlags);
-        mTags = event.getFlags(mTags);
-        mSubject = event.getSubject(mSubject);
-        mFragment = event.getFragment(mFragment);
-        mMessageCount = event.getMessageCount(mMessageCount);
-        mRecipients = event.getRecipients(mRecipients);
+    public void modifyNotification(ZModifyEvent event) throws ServiceException {
+    	if (event instanceof ZModifyConversationEvent) {
+    		ZModifyConversationEvent cevent = (ZModifyConversationEvent) event;
+    		mFlags = cevent.getFlags(mFlags);
+    		mTags = cevent.getFlags(mTags);
+    		mSubject = cevent.getSubject(mSubject);
+    		mFragment = cevent.getFragment(mFragment);
+    		mMessageCount = cevent.getMessageCount(mMessageCount);
+    		mRecipients = cevent.getRecipients(mRecipients);
+    	}
     }
 
     public String getId() {

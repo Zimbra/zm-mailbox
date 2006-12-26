@@ -27,6 +27,7 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
 import com.zimbra.soap.Element;
 
@@ -129,11 +130,14 @@ public class ZMessage implements ZItem {
             mMimeStructure = new ZMimePart(mp);
     }
 
-    public void modifyNotification(ZModifyMessageEvent event) throws ServiceException {
-        mFlags = event.getFlags(mFlags);
-        mTags = event.getFlags(mTags);
-        mFolderId = event.getFolderId(mFolderId);
-        mConversationId = event.getConversationId(mConversationId);
+    public void modifyNotification(ZModifyEvent event) throws ServiceException {
+    	if (event instanceof ZModifyMessageEvent) {
+    		ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
+    		mFlags = mevent.getFlags(mFlags);
+    		mTags = mevent.getTagIds(mTags);
+    		mFolderId = mevent.getFolderId(mFolderId);
+    		mConversationId = mevent.getConversationId(mConversationId);
+    	}
     }
 
     /**

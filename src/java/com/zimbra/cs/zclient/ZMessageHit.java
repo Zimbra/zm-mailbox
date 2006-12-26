@@ -27,6 +27,8 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
+import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
 import com.zimbra.soap.Element;
 
 import java.util.ArrayList;
@@ -199,4 +201,12 @@ public class ZMessageHit implements ZSearchHit {
     public String getFolderId() {
         return mFolderId;
     }
+
+	public void modifyNotification(ZModifyEvent event) throws ServiceException {
+		if (event instanceof ZModifyMessageEvent) {
+			ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
+            mFlags = mevent.getFlags(mFlags);
+            mTags = mevent.getTagIds(mTags);			
+		}
+	}
 }
