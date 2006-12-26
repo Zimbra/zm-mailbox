@@ -27,12 +27,14 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.event.ZModifyContactEvent;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class ZContact  {
+public class ZContact implements ZItem {
 
     /** "File as" setting: &nbsp;<code>Last, First</code> */
     public static final String FA_LAST_C_FIRST = "1";
@@ -164,6 +166,15 @@ public class ZContact  {
         return hasFlags() && mFlags.indexOf(Flag.flagged.getFlagChar()) != -1;
     }
 
-
-
+	public void modifyNotification(ZModifyEvent event) throws ServiceException {
+		if (event instanceof ZModifyContactEvent) {
+			ZModifyContactEvent cevent = (ZModifyContactEvent) event;
+			mTagIds = cevent.getTagIds(mTagIds);
+			mFolderId = cevent.getFolderId(mFolderId);
+			mFlags = cevent.getFlags(mFlags);
+			mRevision = cevent.getRevision(mRevision);
+			mMetaDataChangedDate = cevent.getMetaDataChangedDate(mMetaDataChangedDate);
+			mAttrs = cevent.getAttrs(mAttrs);
+		}
+	}
 }

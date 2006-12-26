@@ -28,12 +28,15 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.event.ZModifyContactEvent;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
 
 public class ZContactHit implements ZSearchHit {
 
     private String mId;
-    private String mTags;
+    private String mFlags;
+    private String mTagIds;
     private String mSortField;
     private String mFileAsStr;
     private String mEmail, mEmail2, mEmail3;
@@ -46,7 +49,8 @@ public class ZContactHit implements ZSearchHit {
         
     public ZContactHit(Element e) throws ServiceException {
         mId = e.getAttribute(MailService.A_ID);
-        mTags = e.getAttribute(MailService.A_TAGS, null);        
+        mFlags = e.getAttribute(MailService.A_FLAGS, null);        
+        mTagIds = e.getAttribute(MailService.A_TAGS, null);        
         mSortField = e.getAttribute(MailService.A_SORT_FIELD, null);
         mScore = (float) e.getAttributeDouble(MailService.A_SCORE, 0);
         mFileAsStr = e.getAttribute(MailService.A_FILE_AS_STR, null);
@@ -64,7 +68,8 @@ public class ZContactHit implements ZSearchHit {
         ZSoapSB sb = new ZSoapSB();
         sb.beginStruct();
         sb.add("id", mId);
-        sb.add("tags", mTags);
+        sb.add("tags", mTagIds);
+        sb.add("flags", mFlags);
         sb.add("sortField", mSortField);
         sb.add("type", mType);
         sb.add("score", mScore);
@@ -92,7 +97,7 @@ public class ZContactHit implements ZSearchHit {
     }
     
     public String getTagIds() {
-        return mTags;
+        return mTagIds;
     }
 
     public String getEmail() {
@@ -134,4 +139,20 @@ public class ZContactHit implements ZSearchHit {
     public long getMetaDataChangedDate() {
         return mMetaDataDate;
     }
+
+	public void modifyNotification(ZModifyEvent event) throws ServiceException {
+		if (event instanceof ZModifyContactEvent) {
+			ZModifyContactEvent cevent = (ZModifyContactEvent) event;
+			mTagIds = cevent.getTagIds(mTagIds);
+			mFolderId = cevent.getFolderId(mFolderId);
+			mFlags = cevent.getFlags(mFlags);
+			mRevision = cevent.getRevision(mRevision);
+			mFileAsStr = cevent.getFileAsStr(mFileAsStr);
+			mEmail = cevent.getEmail(mEmail);
+			mEmail2 = cevent.getEmail(mEmail2);
+			mEmail3 = cevent.getEmail(mEmail3);
+			//mMetaDataChangedDate = cevent.getMetaDataChangedDate(mMetaDataChangedDate);
+			//mAttrs = cevent.getAttrs(mAttrs);
+		}
+	}
 }

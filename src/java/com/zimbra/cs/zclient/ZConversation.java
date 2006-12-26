@@ -28,6 +28,7 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
 import com.zimbra.soap.Element;
 
@@ -93,13 +94,16 @@ public class ZConversation implements ZItem {
         }        
     }
 
-    public void modifyNotification(ZModifyConversationEvent event) throws ServiceException {
-        mFlags = event.getFlags(mFlags);
-        mTags = event.getFlags(mTags);
-        mSubject = event.getSubject(mSubject);
-        //mFragment = event.getFragment(mFragment);
-        mMessageCount = event.getMessageCount(mMessageCount);
-        //mRecipients = event.getRecipients(mRecipients);
+    public void modifyNotification(ZModifyEvent event) throws ServiceException {
+    	if (event instanceof ZModifyConversationEvent) {
+    		ZModifyConversationEvent cevent = (ZModifyConversationEvent) event;
+    		mFlags = cevent.getFlags(mFlags);
+    		mTags = cevent.getFlags(mTags);
+    		mSubject = cevent.getSubject(mSubject);
+    		//mFragment = cevent.getFragment(mFragment);
+    		mMessageCount = cevent.getMessageCount(mMessageCount);
+    		//mRecipients = cevent.getRecipients(mRecipients);
+    	}
     }
 
     public String getId() {
@@ -139,7 +143,7 @@ public class ZConversation implements ZItem {
         return mMessageSummaries;
     }
     
-    public class ZMessageSummary {
+    public class ZMessageSummary implements ZItem {
 
         private long mDate;
         private String mFlags;
@@ -161,9 +165,12 @@ public class ZConversation implements ZItem {
             if (emailEl != null) mSender = new ZEmailAddress(emailEl);
         }
         
-        public void modifyNotification(ZModifyMessageEvent event) throws ServiceException {
-            mFlags = event.getFlags(mFlags);
-            mTags = event.getFlags(mTags);
+        public void modifyNotification(ZModifyEvent event) throws ServiceException {
+        	if (event instanceof ZModifyMessageEvent) {
+        		ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
+        		mFlags = mevent.getFlags(mFlags);
+        		mTags = mevent.getTagIds(mTags);
+        	}
         }
 
         public String toString() {

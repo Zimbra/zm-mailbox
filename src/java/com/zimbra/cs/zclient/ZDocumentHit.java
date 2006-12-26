@@ -26,6 +26,7 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.soap.Element;
 
 public class ZDocumentHit implements ZSearchHit {
@@ -56,6 +57,10 @@ public class ZDocumentHit implements ZSearchHit {
 
 	public String getSortField() {
 		return mSortField;
+	}
+
+	public void modifyNotification(ZModifyEvent event) throws ServiceException {
+		// TODO Auto-generated method stub
 	}
 
 }

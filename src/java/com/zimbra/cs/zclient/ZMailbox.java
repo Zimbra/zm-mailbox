@@ -46,6 +46,7 @@ import com.zimbra.cs.zclient.event.ZCreateSearchFolderEvent;
 import com.zimbra.cs.zclient.event.ZCreateTagEvent;
 import com.zimbra.cs.zclient.event.ZDeleteEvent;
 import com.zimbra.cs.zclient.event.ZEventHandler;
+import com.zimbra.cs.zclient.event.ZModifyContactEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
 import com.zimbra.cs.zclient.event.ZModifyMailboxEvent;
@@ -365,7 +366,9 @@ public class ZMailbox {
             } else if (e.getName().equals(MailService.E_MSG)) {
                 event = new ZModifyMessageEvent(e);
             } else if (e.getName().equals(MailService.E_TAG)) {
-                event = new ZModifyTagEvent(e);
+            	event = new ZModifyTagEvent(e);
+            } else if (e.getName().equals(MailService.E_CONTACT)) {
+            	event = new ZModifyContactEvent(e);
             } else if (e.getName().equals(MailService.E_SEARCH)) {
             	event = new ZModifySearchFolderEvent(e);
             } else if (e.getName().equals(MailService.E_FOLDER)) {
