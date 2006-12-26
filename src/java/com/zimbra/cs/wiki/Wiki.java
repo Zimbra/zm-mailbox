@@ -322,14 +322,12 @@ public abstract class Wiki {
 		public synchronized void renameDocument(WikiContext ctxt, int id, String newName, String author) throws ServiceException {
 			WikiPage p = lookupWiki(ctxt, newName);
 			if (p != null)
-				throw MailServiceException.MODIFY_CONFLICT(
-						new Argument(MailService.A_NAME, newName, Argument.Type.STR));
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mWikiAccount);
-			MailItem item = mbox.getItemById(ctxt.octxt, id, MailItem.TYPE_UNKNOWN);
-			if (item.getType() != MailItem.TYPE_DOCUMENT && item.getType() != MailItem.TYPE_WIKI)
-				throw WikiServiceException.NOT_WIKI_ITEM("MailItem id " +id+ " is not a wiki item or a document");
-			Document doc = (Document) item;
-			doc.rename(newName);
+				throw MailServiceException.MODIFY_CONFLICT(new Argument(MailService.A_NAME, newName, Argument.Type.STR));
+
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mWikiAccount);
+            mbox.rename(ctxt.octxt, id, MailItem.TYPE_DOCUMENT, newName);
+
+            Document doc = (Document) mbox.getItemById(ctxt.octxt, id, MailItem.TYPE_DOCUMENT);
 			byte[] contents;
         	try {
         		contents = ByteUtil.getContent(doc.getRawDocument(), 0);

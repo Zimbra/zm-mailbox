@@ -39,22 +39,6 @@ import com.zimbra.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class WikiAction extends ItemAction {
-
-	public static final String OP_RENAME = "rename";
-	
-    protected String[] getProxiedIdPath(Element request) {
-		String operation = getXPath(request, OPERATION_PATH);
-		if (operation == null)
-			return null;
-		if (!operation.equals(OP_RENAME))
-			return super.getProxiedIdPath(request);
-		
-    	String id = getXPath(request, TARGET_ITEM_PATH);
-    	if (id == null)
-    		return TARGET_FOLDER_PATH;
-    	return TARGET_ITEM_PATH; 
-    }
-    protected boolean checkMountpointProxy(Element request)  { return true; }
     
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext lc = getZimbraSoapContext(context);

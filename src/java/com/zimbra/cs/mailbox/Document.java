@@ -159,11 +159,6 @@ public class Document extends MailItem {
         return getVersion() + 1;
     }
 
-    public void rename(String newName) throws ServiceException {
-        validateItemName(newName);
-        mData.name = newName;
-    }
-
     private static Metadata getRevisionMetadata(int changeID, String author, ParsedDocument pd) {
         Metadata rev = new Metadata();
         rev.put(Metadata.FN_REV_ID, changeID);

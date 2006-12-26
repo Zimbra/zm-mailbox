@@ -161,11 +161,7 @@ public abstract class MailItemResource extends DavResource {
 			if (isCollection()) {
 				mbox.rename(ctxt.getOperationContext(), mId, MailItem.TYPE_FOLDER, newName);
 			} else {
-				MailItem item = mbox.getItemById(ctxt.getOperationContext(), mId, mType);
-				if (item instanceof Document) {
-					Document doc = (Document) item;
-					doc.rename(newName);
-				}
+                mbox.rename(ctxt.getOperationContext(), mId, mType, newName);
 			}
 		} catch (ServiceException se) {
 			throw new DavException("cannot rename item", HttpServletResponse.SC_FORBIDDEN, se);

@@ -160,7 +160,7 @@ public abstract class WikiPage {
 			LocalWikiPage newRev = (LocalWikiPage) p;
 			Document doc = getWikiItem(ctxt);
 			if (newRev.mWikiWord != null && !newRev.mWikiWord.equals(mWikiWord))
-				doc.rename(newRev.mWikiWord);
+                mbox.rename(ctxt.octxt, doc.getId(), MailItem.TYPE_DOCUMENT, newRev.mWikiWord);
 			doc = mbox.addDocumentRevision(ctxt.octxt, doc, newRev.mData, newRev.mCreator);
 			addWikiItem(doc);
 			newRev.addWikiItem(doc);
