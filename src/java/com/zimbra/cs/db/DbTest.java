@@ -536,7 +536,7 @@ public class DbTest {
 			System.out.println(usage);
 			return;
 		}
-		mailbox.renameTag(null, tagId, tok.nextToken());
+		mailbox.rename(null, tagId, MailItem.TYPE_TAG, tok.nextToken());
 		displayTagSummary(mailbox.getTagById(null, tagId));
 	}
 	

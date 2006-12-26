@@ -30,52 +30,37 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author jhahm
  */
-public class RenameTag extends RedoableOp {
-
-	private int mTagId;
-	private String mName;
+public class RenameTag extends RenameItem {
 
 	public RenameTag() {
-		mTagId = UNKNOWN_ID;
+		super();
+        mType = MailItem.TYPE_TAG;
+        mFolderId = Mailbox.ID_FOLDER_TAGS;
 	}
 
 	public RenameTag(int mailboxId, int tagId, String name) {
-		setMailboxId(mailboxId);
-		mTagId = tagId;
-		mName = name != null ? name : "";
+        super(mailboxId, tagId, MailItem.TYPE_TAG, name, Mailbox.ID_FOLDER_TAGS);
 	}
 
 	public int getOpCode() {
 		return OP_RENAME_TAG;
 	}
 
-	protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("id=");
-        sb.append(mTagId).append(", name=").append(mName);
-        return sb.toString();
-	}
-
 	protected void serializeData(RedoLogOutput out) throws IOException {
-		out.writeInt(mTagId);
+		out.writeInt(mId);
 		out.writeUTF(mName);
 	}
 
 	protected void deserializeData(RedoLogInput in) throws IOException {
-		mTagId = in.readInt();
+		mId = in.readInt();
 		mName = in.readUTF();
-	}
-
-	public void redo() throws Exception {
-		int mboxId = getMailboxId();
-		Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-		mbox.renameTag(getOperationContext(), mTagId, mName);
 	}
 }

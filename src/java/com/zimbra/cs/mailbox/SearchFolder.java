@@ -112,7 +112,7 @@ public class SearchFolder extends Folder {
      *    <li><code>service.FAILURE</code> - if there's a database failure
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul>
-     * @see #validateFolderName(String)
+     * @see #validateItemName(String)
      * @see #validateQuery(String)
      * @see #canContain(byte) */
     static SearchFolder create(int id, Folder parent, String name, String query, String types, String sort, byte color)
@@ -121,7 +121,7 @@ public class SearchFolder extends Folder {
             throw MailServiceException.CANNOT_CONTAIN();
         if (!parent.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
-        validateFolderName(name);
+        validateItemName(name);
         query = validateQuery(query);
         if (parent.findSubfolder(name) != null)
             throw MailServiceException.ALREADY_EXISTS(name);

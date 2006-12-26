@@ -39,6 +39,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -783,6 +784,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         return null;
     }
 
+
     /** Adds the item to the index.
      * 
      * @param redo       The redo recorder for the indexing operation.
@@ -797,6 +799,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         // override in subclasses that support indexing
     }
 
+
     /** Returns the item's parent from the {@link Mailbox}'s cache.  If
      *  the item has no parent or the parent is not currently cached,
      *  returns <code>null</code>.
@@ -808,6 +811,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             return null;
         return mMailbox.getCachedItem(mData.parentId);
     }
+
     /** Returns the item's parent.  Returns <code>null</code> if the item
      *  does not have a parent.
      * 
@@ -829,10 +833,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         return mMailbox.getFolderById(mData.folderId);
     }
 
-    boolean checkChangeID() throws ServiceException {
-        return mMailbox.checkItemChangeID(this);
-    }
-
 
     abstract boolean isTaggable();
     abstract boolean isCopyable();
@@ -845,12 +845,15 @@ public abstract class MailItem implements Comparable<MailItem> {
     boolean trackUnread()             { return true; }
     boolean canParent(MailItem child) { return canHaveChildren(); }
 
+
     static MailItem getById(Mailbox mbox, int id) throws ServiceException {
         return getById(mbox, id, TYPE_UNKNOWN);
     }
+
     static MailItem getById(Mailbox mbox, int id, byte type) throws ServiceException {
         return mbox.getItem(DbMailItem.getById(mbox, id, type));
     }
+
     static List<MailItem> getById(Mailbox mbox, Collection<Integer> ids, byte type) throws ServiceException {
         if (ids == null || ids.isEmpty())
             return Collections.emptyList();
@@ -890,6 +893,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             default:                return null;
         }
     }
+
     /** Returns {@link MailServiceException.NoSuchItemException} tailored
      *  for the given type.  Does not actually <u>throw</u> the exception;
      *  that's the caller's job.
@@ -949,16 +953,22 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
 
+    boolean checkChangeID() throws ServiceException {
+        return mMailbox.checkItemChangeID(this);
+    }
+
     /** Adds this item to the {@link Mailbox}'s list of items created during
      *  the transaction. */
     void markItemCreated() {
         mMailbox.markItemCreated(this);
     }
+
     /** Adds this item to the {@link Mailbox}'s list of items deleted during
      *  the transaction. */
     void markItemDeleted() {
         mMailbox.markItemDeleted(this);
     }
+
     /** Adds this item to the {@link Mailbox}'s list of items modified during
      *  the transaction.
      * 
@@ -977,6 +987,12 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
 
+    /** Updates various lists and counts as the result of item creation.  This
+     *  method should always be called immediately after a new item is created
+     *  and persisted to the database.
+     * 
+     * @param parent  The created item's parent.  The parent's addChild()
+     *                method will be called during the function. */
     protected void finishCreation(MailItem parent) throws ServiceException {
         markItemCreated();
 
@@ -1019,6 +1035,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         saveMetadata();
     }
 
+    /** Sets the IMAP UID for the item and persists it to the database.  Does
+     *  not update the containing folder's IMAP UID highwater mark; that is
+     *  done implicitly whenever the folder size increases. */
     void setImapUid(int imapId) throws ServiceException {
         if (mData.imapId == imapId)
             return;
@@ -1443,6 +1462,115 @@ public abstract class MailItem implements Comparable<MailItem> {
         return copy;
     }
 
+    /** Renames the item in place.  Altering an item's name's case (e.g.
+     *  from <code>foo</code> to <code>FOO</code>) is allowed.
+     * 
+     * @param name  The new name for this item.
+     * @perms {@link ACL#RIGHT_WRITE} on the item
+     * @throws ServiceException   The following error codes are possible:<ul>
+     *    <li><code>mail.IMMUTABLE_OBJECT</code> - if the item can't be
+     *        renamed
+     *    <li><code>mail.ALREADY_EXISTS</code> - if a different item by that
+     *        name already exists in the current folder
+     *    <li><code>mail.INVALID_NAME</code> - if the new item's name is
+     *        invalid
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul>
+     * @see #validateItemName(String) */
+    void rename(String name) throws ServiceException {
+        rename(name, getFolder());
+    }
+
+    /** Renames the item and optionally moves it.  Altering an item's
+     *  case (e.g. from <code>foo</code> to <code>FOO</code>) is allowed.
+     *  If you don't want the item to be moved, you must pass 
+     *  <code>folder.getFolder()</code> as the second parameter.
+     * 
+     * @param name    The new name for this item.
+     * @param target  The new parent folder to move this item to.
+     * @perms {@link ACL#RIGHT_WRITE} on the item to rename it,
+     *        {@link ACL#RIGHT_DELETE} on the parent folder and
+     *        {@link ACL#RIGHT_INSERT} on the target folder to move it
+     * @throws ServiceException   The following error codes are possible:<ul>
+     *    <li><code>mail.IMMUTABLE_OBJECT</code> - if the item can't be
+     *        renamed
+     *    <li><code>mail.ALREADY_EXISTS</code> - if a different item by that
+     *        name already exists in the target folder
+     *    <li><code>mail.INVALID_NAME</code> - if the new item's name is
+     *        invalid
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.PERM_DENIED</code> - if you don't have
+     *        sufficient permissions</ul>
+     * @see #validateItemName(String)
+     * @see #move(Folder) */
+    void rename(String name, Folder target) throws ServiceException {
+        validateItemName(name);
+
+        Folder folder = getFolder();
+        boolean renamed = !name.equals(mData.name);
+        boolean moved   = target != folder;
+
+        if (!renamed && !moved)
+            return;
+
+        if (moved &&!target.canAccess(ACL.RIGHT_INSERT))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the target item");
+        if (moved && !folder.canAccess(ACL.RIGHT_DELETE))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the parent item");
+        if (renamed && !canAccess(ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
+
+        if (renamed) {
+            if (mData.name == null)
+                throw MailServiceException.CANNOT_RENAME(getType());
+            if (!isMutable())
+                throw MailServiceException.IMMUTABLE_OBJECT(mId);
+
+            try {
+                MailItem conflict = mMailbox.getItemByPath(null, name, target.getId());
+                if (conflict != null && conflict != this)
+                    throw MailServiceException.ALREADY_EXISTS(name);
+            } catch (MailServiceException.NoSuchItemException nsie) { }
+
+            markItemModified(Change.MODIFIED_NAME);
+            mData.name = name;
+            mData.date = mMailbox.getOperationTimestamp();
+            saveName(target.getId());
+        }
+
+        if (moved)
+            move(target);
+    }
+
+    /** The regexp defining printable characters not permitted in item
+     *  names.  These are: ':', '/', '"', '\t', '\r', and '\n'. */
+    private static final String INVALID_NAME_CHARACTERS = ".*[:/\"\t\r\n].*";
+
+    /** The maximum length for an item name.  This is not the maximum length
+     *  of a <u>path</u>, just the maximum length of a single item or folder's
+     *  name. */
+    public static final int MAX_NAME_LENGTH = 128;
+
+    /** Returns whether a proposed name is valid.  Names must be less than
+     *  {@link #MAX_NAME_LENGTH} characters long, must contain non-whitespace
+     *  characters, and may not contain any characters banned in XML or
+     *  contained in {@link #INVALID_NAME_CHARACTERS} (':', '/', '"', '\t',
+     *  '\r', '\n').
+     * 
+     * @param name  The proposed item name.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>mail.INVALID_NAME</code> - if the name is not acceptable
+     *    </ul>
+     * @see StringUtil#stripControlCharacters(String) */
+    static String validateItemName(String name) throws ServiceException {
+        if (name == null || name != StringUtil.stripControlCharacters(name))
+            throw MailServiceException.INVALID_NAME(name);
+        if (name.trim().equals("") || name.length() > MAX_NAME_LENGTH || name.matches(INVALID_NAME_CHARACTERS))
+            throw MailServiceException.INVALID_NAME(name);
+        return name;
+    }
+
     /** Moves an item to a different {@link Folder}.  Persists the change
      *  to the database and the in-memory cache.  Updates all relevant
      *  unread counts, folder sizes, etc.<p>
@@ -1452,7 +1580,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  {@link Conversation} (if any).  Conversations moved to the Junk
      *  folder will not receive newly-delivered messages.
      * 
-     * @param folder  The folder to move the item to.
+     * @param target  The folder to move the item to.
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_DELETE} on the source folder
      * @throws ServiceException  The following error codes are possible:<ul>
@@ -1463,40 +1591,40 @@ public abstract class MailItem implements Comparable<MailItem> {
      *    <li><code>service.FAILURE</code> - if there's a database failure
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul> */
-    void move(Folder folder) throws ServiceException {
-        if (mData.folderId == folder.getId())
+    void move(Folder target) throws ServiceException {
+        if (mData.folderId == target.getId())
             return;
         markItemModified(Change.MODIFIED_FOLDER);
         if (!isMovable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        if (!folder.canContain(this))
+        if (!target.canContain(this))
             throw MailServiceException.CANNOT_CONTAIN();
 
         Folder oldFolder = getFolder();
         if (!oldFolder.canAccess(ACL.RIGHT_DELETE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the source folder");
-        if (!folder.canAccess(ACL.RIGHT_INSERT))
+        if (!target.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
 
         if (isLeafNode()) {
             oldFolder.updateSize(-1);
-            folder.updateSize(1);
+            target.updateSize(1);
         }
 
-        if (!inTrash() && folder.inTrash()) {
+        if (!inTrash() && target.inTrash()) {
             // moving something to Trash also marks it as read
             if (mData.unreadCount > 0)
                 alterUnread(false);
         } else {
             oldFolder.updateUnread(-mData.unreadCount);
-            folder.updateUnread(mData.unreadCount);
+            target.updateUnread(mData.unreadCount);
         }
         // moving a message (etc.) to Spam removes it from its conversation
-        if (!inSpam() && folder.inSpam())
+        if (!inSpam() && target.inSpam())
             detach();
 
-        DbMailItem.setFolder(this, folder);
-        folderChanged(folder, 0);
+        DbMailItem.setFolder(this, target);
+        folderChanged(target, 0);
     }
 
     /** Records all relevant changes to the in-memory object for when an item
@@ -1770,8 +1898,12 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     protected void saveName() throws ServiceException {
+        saveName(getFolderId());
+    }
+
+    protected void saveName(int folderId) throws ServiceException {
         mData.contentChanged(mMailbox);
-        DbMailItem.saveName(this);
+        DbMailItem.saveName(this, folderId);
     }
 
     protected void saveData(String sender) throws ServiceException {

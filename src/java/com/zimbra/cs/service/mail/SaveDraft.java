@@ -131,7 +131,7 @@ public class SaveDraft extends MailDocumentHandler {
             try {
                 // best not to fail if there's an error here...
                 ItemActionOperation.UPDATE(zsc, session, octxt, mbox, Requester.SOAP, Arrays.asList(msg.getId()),
-                                           MailItem.TYPE_MESSAGE, null, iidFolder, flags, tags, color);
+                                           MailItem.TYPE_MESSAGE, null, null, iidFolder, flags, tags, color);
                 // and make sure the Message object reflects post-update reality
                 msg = mbox.getMessageById(octxt, msg.getId());
             } catch (ServiceException e) {

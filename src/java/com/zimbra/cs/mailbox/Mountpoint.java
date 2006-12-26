@@ -107,7 +107,7 @@ public class Mountpoint extends Folder {
      *    <li><code>service.FAILURE</code> - if there's a database failure
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul>
-     * @see #validateFolderName(String)
+     * @see #validateItemName(String)
      * @see #canContain(byte) */
     static Mountpoint create(int id, Folder parent, String name, String ownerId, int remoteId, byte view, int flags, byte color)
     throws ServiceException {
@@ -117,7 +117,7 @@ public class Mountpoint extends Folder {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
         if (parent == null || !parent.canContain(TYPE_MOUNTPOINT))
             throw MailServiceException.CANNOT_CONTAIN();
-        validateFolderName(name);
+        validateItemName(name);
         if (view != TYPE_UNKNOWN)
             validateType(view);
         if (parent.findSubfolder(name) != null)

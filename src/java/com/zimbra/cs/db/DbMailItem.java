@@ -536,7 +536,7 @@ public class DbMailItem {
         }
     }
 
-    public static void saveName(MailItem item) throws ServiceException {
+    public static void saveName(MailItem item, int folderId) throws ServiceException {
         Mailbox mbox = item.getMailbox();
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -544,13 +544,14 @@ public class DbMailItem {
         String name = item.getName().equals("") ? null : item.getName();
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET date = ?, size = ?, name = ?, subject = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
+                        " SET date = ?, size = ?, name = ?, subject = ?, folder_id = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
             stmt.setInt(pos++, item.getSize());
             stmt.setString(pos++, name);
             stmt.setString(pos++, name);
+            stmt.setInt(pos++, folderId);
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, mbox.getOperationChangeID());

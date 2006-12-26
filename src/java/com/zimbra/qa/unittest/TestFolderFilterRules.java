@@ -173,7 +173,7 @@ extends TestCase {
         Folder folder = mbox.getFolderById(null, folderId);
         String oldPath = folder.getPath();
         
-        mbox.renameFolder(null, folderId, newName);
+        mbox.rename(null, folderId, MailItem.TYPE_FOLDER, newName);
         folder = mbox.getFolderById(null, folder.getId());
         String newPath = folder.getPath();
         assertEquals(newName, folder.getName());

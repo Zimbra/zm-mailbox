@@ -40,7 +40,6 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -274,6 +273,16 @@ public class Folder extends MailItem {
         return mRights == null ? null : mRights.duplicate();
     }
 
+    
+    @Override
+    MailItem getParent() throws ServiceException {
+        return mParent != null ? mParent : super.getFolder();
+    }
+
+    @Override
+    Folder getFolder() throws ServiceException {
+        return mParent != null ? mParent : super.getFolder();
+    }
 
     /** Returns whether the folder contains any subfolders. */
     public boolean hasSubfolders() {
@@ -328,6 +337,7 @@ public class Folder extends MailItem {
     public List<Folder> getSubfolderHierarchy() {
         return accumulateHierarchy(new ArrayList<Folder>());
     }
+
     private List<Folder> accumulateHierarchy(List<Folder> list) {
         list.add(this);
         if (mSubfolders != null)
@@ -416,7 +426,7 @@ public class Folder extends MailItem {
      *    <li><code>service.FAILURE</code> - if there's a database failure
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul>
-     * @see #validateFolderName(String)
+     * @see #validateItemName(String)
      * @see #canContain(byte) */
     static Folder create(int id, Mailbox mbox, Folder parent, String name) throws ServiceException {
         return create(id, mbox, parent, name, (byte) 0, TYPE_UNKNOWN, 0, DEFAULT_COLOR, null);
@@ -446,7 +456,7 @@ public class Folder extends MailItem {
      *    <li><code>service.FAILURE</code> - if there's a database failure
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul>
-     * @see #validateFolderName(String)
+     * @see #validateItemName(String)
      * @see #canContain(byte)
      * @see #FOLDER_IS_IMMUTABLE
      * @see #FOLDER_DONT_TRACK_COUNTS */
@@ -455,7 +465,7 @@ public class Folder extends MailItem {
         if (id != Mailbox.ID_FOLDER_ROOT) {
             if (parent == null || !parent.canContain(TYPE_FOLDER))
                 throw MailServiceException.CANNOT_CONTAIN();
-            validateFolderName(name);
+            validateItemName(name);
             if (parent.findSubfolder(name) != null)
                 throw MailServiceException.ALREADY_EXISTS(name);
             if (!parent.canAccess(ACL.RIGHT_SUBFOLDER))
@@ -544,128 +554,6 @@ public class Folder extends MailItem {
         saveMetadata();
     }
 
-    /** Renames the folder in place.  Altering a folder's case (e.g.
-     *  from <code>foo</code> to <code>FOO</code>) is allowed.
-     * 
-     * @param name  The new name for this folder.
-     * @perms {@link ACL#RIGHT_WRITE} on the folder
-     * @throws ServiceException   The following error codes are possible:<ul>
-     *    <li><code>mail.IMMUTABLE_OBJECT</code> - if the folder can't be
-     *        renamed
-     *    <li><code>mail.ALREADY_EXISTS</code> - if a folder by that name
-     *        already exists in the new parent folder
-     *    <li><code>mail.INVALID_NAME</code> - if the new folder's name is
-     *        invalid
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul>
-     * @see #validateFolderName(String) */
-    void rename(String name) throws ServiceException {
-        rename(name, mParent);
-    }
-
-    /** Renames the folder and optionally moves it.  Altering a folder's
-     *  case (e.g. from <code>foo</code> to <code>FOO</code>) is allowed.
-     *  If you don't want the folder to be moved, you must pass 
-     *  <code>folder.getParent()</code> as the second parameter.
-     * 
-     * @param name    The new name for this folder.
-     * @param target  The new parent folder to move this folder to.
-     * @perms {@link ACL#RIGHT_WRITE} on the folder to rename it,
-     *        {@link ACL#RIGHT_DELETE} on the parent folder and
-     *        {@link ACL#RIGHT_INSERT} on the target folder to move it
-     * @throws ServiceException   The following error codes are possible:<ul>
-     *    <li><code>mail.IMMUTABLE_OBJECT</code> - if the folder can't be
-     *        renamed
-     *    <li><code>mail.ALREADY_EXISTS</code> - if a folder by that name
-     *        already exists in the new parent folder
-     *    <li><code>mail.INVALID_NAME</code> - if the new folder's name is
-     *        invalid
-     *    <li><code>service.FAILURE</code> - if there's a database failure
-     *    <li><code>service.PERM_DENIED</code> - if you don't have
-     *        sufficient permissions</ul>
-     * @see #validateFolderName(String)
-     * @see #move(Folder) */
-    void rename(String name, Folder target) throws ServiceException {
-        validateFolderName(name);
-        if (name.equals(mData.name) && target == mParent)
-            return;
-        if (!isMutable())
-            throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        boolean renamed = !name.equals(mData.name);
-        boolean moved   = target != mParent;
-
-        if (moved &&!target.canAccess(ACL.RIGHT_INSERT))
-            throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
-        if (moved && !mParent.canAccess(ACL.RIGHT_DELETE))
-            throw ServiceException.PERM_DENIED("you do not have the required rights on the parent folder");
-        if (renamed && !canAccess(ACL.RIGHT_WRITE))
-            throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-
-        if (renamed) {
-            String originalPath = getPath();
-            markItemModified(Change.MODIFIED_NAME);
-            Folder existingFolder = target.findSubfolder(name);
-            if (existingFolder != null && existingFolder != this)
-                throw MailServiceException.ALREADY_EXISTS(name);
-            mData.name = name;
-            mData.date = mMailbox.getOperationTimestamp();
-            saveName();
-            updateRules(originalPath);
-        }
-
-        if (moved)
-            move(target);
-    }
-
-    /**
-     * Updates filter rules after a folder's path changes (move or rename).
-     */
-    private void updateRules(String originalPath)
-    throws ServiceException {
-        Account account = getAccount();
-        RuleManager rm = RuleManager.getInstance();
-        String rules = rm.getRules(account);
-        if (rules != null) {
-            // Assume that we always put quotes around folder paths.  Replace
-            // any paths that start with this folder's original path.  This will
-            // take care of rules for children affected by a parent's move or rename.
-            String newPath = getPath();
-            String newRules = rules.replace("\"" + originalPath, "\"" + newPath);
-            if (!newRules.equals(rules)) {
-                rm.setRules(account, newRules);
-                ZimbraLog.mailbox.debug(
-                    "Updated filter rules due to folder move or rename.  Old rules:\n" +
-                    rules + ", new rules:\n" + newRules);
-            }
-        }
-    }
-
-    /** The regexp defining printable characters not permitted in folder
-     *  names.  These are: ':', '/', '"', '\t', '\r', and '\n'. */
-    private static final String INVALID_CHARACTERS = ".*[:/\"\t\r\n].*";
-    /** The maximum length for a folder name.  This is not the maximum length
-     *  of a <u>path</u>, just the maximum length of a single folder's name. */
-    public static final int MAX_FOLDER_LENGTH = 128;
-
-    /** Returns whether a proposed folder name is valid.  Folder names must
-     *  be less than {@link #MAX_FOLDER_LENGTH} characters long, must contain
-     *  non-whitespace characters, and may not contain any characters in
-     *  {@link #INVALID_CHARACTERS} (':', '/', '"', '\t', '\r', '\n') or
-     *  banned in XML.
-     * 
-     * @param name  The proposed folder name.
-     * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><code>mail.INVALID_NAME</code> - if the name is not acceptable
-     *    </ul>
-     * @see StringUtil#stripControlCharacters */
-    protected static void validateFolderName(String name) throws ServiceException {
-        if (name == null || name != StringUtil.stripControlCharacters(name))
-            throw MailServiceException.INVALID_NAME(name);
-        if (name.trim().equals("") || name.length() > MAX_FOLDER_LENGTH || name.matches(INVALID_CHARACTERS))
-            throw MailServiceException.INVALID_NAME(name);
-    }
-
     private void recursiveAlterUnread(boolean unread) throws ServiceException {
         alterUnread(unread);
         if (mSubfolders != null)
@@ -746,36 +634,75 @@ public class Folder extends MailItem {
         DbMailItem.alterTag(tag, ids, add);
     }
 
-    /** Moves this folder so that it is a subfolder of <code>folder</code>.
+    /** Renames the item and optionally moves it.  Altering an item's
+     *  case (e.g. from <code>foo</code> to <code>FOO</code>) is allowed.
+     *  If you don't want the item to be moved, you must pass 
+     *  <code>folder.getFolder()</code> as the second parameter.
+     * 
+     * @perms {@link ACL#RIGHT_WRITE} on the folder to rename it,
+     *        {@link ACL#RIGHT_DELETE} on the parent folder and
+     *        {@link ACL#RIGHT_INSERT} on the target folder to move it */
+    void rename(String name, Folder target) throws ServiceException {
+        validateItemName(name);
+        boolean renamed = !name.equals(mData.name);
+        if (!renamed && target == mParent)
+            return;
+
+        String originalPath = getPath();
+        super.rename(name, target);
+        if (renamed && !isHidden())
+            updateRules(originalPath);
+    }
+
+    /** Updates filter rules after a folder's path changes (move or rename). */
+    private void updateRules(String originalPath) throws ServiceException {
+        Account account = getAccount();
+        RuleManager rm = RuleManager.getInstance();
+        String rules = rm.getRules(account);
+        if (rules != null) {
+            // Assume that we always put quotes around folder paths.  Replace
+            // any paths that start with this folder's original path.  This will
+            // take care of rules for children affected by a parent's move or rename.
+            String newPath = getPath();
+            String newRules = rules.replace("\"" + originalPath, "\"" + newPath);
+            if (!newRules.equals(rules)) {
+                rm.setRules(account, newRules);
+                ZimbraLog.mailbox.debug("Updated filter rules due to folder move or rename; " +
+                                        "old rules:\n" + rules + ", new rules:\n" + newRules);
+            }
+        }
+    }
+
+    /** Moves this folder so that it is a subfolder of <code>target</code>.
      * 
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_DELETE} on the source folder */
     @Override
-    protected void move(Folder folder) throws ServiceException {
+    protected void move(Folder target) throws ServiceException {
         markItemModified(Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT);
-        if (mData.folderId == folder.getId())
+        if (mData.folderId == target.getId())
             return;
         if (!isMovable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        if (!mParent.canAccess(ACL.RIGHT_DELETE) || !folder.canAccess(ACL.RIGHT_INSERT))
+        if (!mParent.canAccess(ACL.RIGHT_DELETE) || !target.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required permissions");
-        if (!folder.canContain(this))
+        if (!target.canContain(this))
             throw MailServiceException.CANNOT_CONTAIN();
 
         String originalPath = getPath();
         
         // moving a folder to the Trash marks its contents as read
-        if (!inTrash() && folder.inTrash())
+        if (!inTrash() && target.inTrash())
             recursiveAlterUnread(false);
 
         // tell the folder's old and new parents
         mParent.removeChild(this);
-        folder.addChild(this);
+        target.addChild(this);
 
         // and update the folder's data (in memory and DB)
-        DbMailItem.setFolder(this, folder);
-        mData.folderId = folder.getId();
-        mData.parentId = folder.getId();
+        DbMailItem.setFolder(this, target);
+        mData.folderId = target.getId();
+        mData.parentId = target.getId();
         mData.metadataChanged(mMailbox);
         
         updateRules(originalPath);

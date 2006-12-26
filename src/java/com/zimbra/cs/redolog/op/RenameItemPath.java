@@ -31,25 +31,57 @@ package com.zimbra.cs.redolog.op;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author jhahm
  */
-public class RenameFolderPath extends RenameItemPath {
+public class RenameItemPath extends RedoableOp {
 
-    public RenameFolderPath() {
+    int mId;
+    byte mType;
+    String mPath;
+    int mParentIds[];
+
+    public RenameItemPath() {
         mId = UNKNOWN_ID;
-        mType = MailItem.TYPE_FOLDER;
+        mType = MailItem.TYPE_UNKNOWN;
     }
 
-    public RenameFolderPath(int mailboxId, int id, String path) {
-        super(mailboxId, id, MailItem.TYPE_FOLDER, path);
+    public RenameItemPath(int mailboxId, int id, byte type, String path) {
+        setMailboxId(mailboxId);
+        mId = id;
+        mPath = path != null ? path : "";
+    }
+
+    public int[] getParentIds() {
+        return mParentIds;
+    }
+
+    public void setParentIds(int parentIds[]) {
+        mParentIds = parentIds;
     }
 
     public int getOpCode() {
-        return OP_RENAME_FOLDER_PATH;
+        return OP_RENAME_ITEM_PATH;
+    }
+
+    protected String getPrintableData() {
+        StringBuffer sb = new StringBuffer("id=");
+        sb.append(mId).append(", type=").append(mType).append(", path=").append(mPath);
+        if (mParentIds != null) {
+            sb.append(", destParentIds=[");
+            for (int i = 0; i < mParentIds.length; i++) {
+                sb.append(mParentIds[i]);
+                if (i < mParentIds.length - 1)
+                    sb.append(", ");
+            }
+            sb.append("]");
+        }
+        return sb.toString();
     }
 
     protected void serializeData(RedoLogOutput out) throws IOException {
@@ -62,6 +94,7 @@ public class RenameFolderPath extends RenameItemPath {
         } else {
             out.writeInt(0);
         }
+        out.writeByte(mType);
     }
 
     protected void deserializeData(RedoLogInput in) throws IOException {
@@ -69,9 +102,16 @@ public class RenameFolderPath extends RenameItemPath {
         mPath = in.readUTF();
         int numParentIds = in.readInt();
         if (numParentIds > 0) {
-        	mParentIds = new int[numParentIds];
+            mParentIds = new int[numParentIds];
             for (int i = 0; i < numParentIds; i++)
-            	mParentIds[i] = in.readInt();
+                mParentIds[i] = in.readInt();
         }
+        mType = in.readByte();
+    }
+
+    public void redo() throws Exception {
+        int mboxId = getMailboxId();
+        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        mailbox.rename(getOperationContext(), mId, mType, mPath);
     }
 }

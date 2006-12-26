@@ -73,7 +73,6 @@ public class FolderAction extends ItemAction {
 		return super.checkMountpointProxy(request);
 	}
 
-    public static final String OP_RENAME   = "rename";
     public static final String OP_EMPTY    = "empty";
     public static final String OP_REFRESH  = "sync";
     public static final String OP_FREEBUSY = "fb";
@@ -87,7 +86,7 @@ public class FolderAction extends ItemAction {
     public static final String OP_UNTAG    = '!' + OP_TAG;
 
     private static final Set<String> FOLDER_OPS = new HashSet<String>(Arrays.asList(new String[] {
-        OP_RENAME, OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_CHECK, OP_UNCHECK, OP_GRANT, OP_REVOKE, OP_UPDATE
+        OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_CHECK, OP_UNCHECK, OP_GRANT, OP_REVOKE, OP_UPDATE
     }));
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
@@ -145,9 +144,6 @@ public class FolderAction extends ItemAction {
                 boolean fb = action.getAttributeBool(MailService.A_EXCLUDE_FREEBUSY, false);
                 mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, fb);
             }
-        } else if (operation.equals(OP_RENAME)) {
-            String name = action.getAttribute(MailService.A_NAME);
-            mbox.renameFolder(octxt, iid.getId(), name);
         } else if (operation.equals(OP_REVOKE)) {
         	String zid = action.getAttribute(MailService.A_ZIMBRA_ID);
             mbox.revokeAccess(octxt, iid.getId(), zid);
@@ -212,10 +208,10 @@ public class FolderAction extends ItemAction {
                 mbox.setColor(octxt, iid.getId(), MailItem.TYPE_FOLDER, color);
             if (acl != null)
                 mbox.setPermissions(octxt, iid.getId(), acl);
-            if (iidFolder.getId() > 0)
-                mbox.move(octxt, iid.getId(), MailItem.TYPE_FOLDER, iidFolder.getId(), null);
             if (newName != null)
-                mbox.renameFolder(octxt, iid.getId(), newName);
+                mbox.rename(octxt, iid.getId(), MailItem.TYPE_FOLDER, newName, iidFolder.getId());
+            else if (iidFolder.getId() > 0)
+                mbox.move(octxt, iid.getId(), MailItem.TYPE_FOLDER, iidFolder.getId(), null);
         } else {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
         }

@@ -159,7 +159,7 @@ public abstract class MailItemResource extends DavResource {
 		try {
 			Mailbox mbox = getMailbox(ctxt);
 			if (isCollection()) {
-				mbox.renameFolder(ctxt.getOperationContext(), mId, newName);
+				mbox.rename(ctxt.getOperationContext(), mId, MailItem.TYPE_FOLDER, newName);
 			} else {
 				MailItem item = mbox.getItemById(ctxt.getOperationContext(), mId, mType);
 				if (item instanceof Document) {

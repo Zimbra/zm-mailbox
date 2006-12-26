@@ -41,7 +41,6 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 
@@ -124,7 +123,7 @@ public class Document extends MailItem {
         if (DebugConfig.disableIndexing)
             return;
 
-        ParsedDocument pd = (ParsedDocument)indexData;
+        ParsedDocument pd = (ParsedDocument) indexData;
         if (pd == null) {
             try {
                 byte[] buf = ByteUtil.getContent(getRawDocument(), 0);
@@ -161,19 +160,8 @@ public class Document extends MailItem {
     }
 
     public void rename(String newName) throws ServiceException {
-        validateName(newName);
+        validateItemName(newName);
         mData.name = newName;
-    }
-
-    // name validation is the same as Folder
-    private static final String INVALID_CHARACTERS = ".*[:/\"\t\r\n].*";
-    private static final int MAX_NAME_LENGTH  = 128;
-
-    private static void validateName(String name) throws ServiceException {
-        if (name == null || name != StringUtil.stripControlCharacters(name))
-            throw MailServiceException.INVALID_NAME(name);
-        if (name.trim().equals("") || name.length() > MAX_NAME_LENGTH || name.matches(INVALID_CHARACTERS))
-            throw MailServiceException.INVALID_NAME(name);
     }
 
     private static Metadata getRevisionMetadata(int changeID, String author, ParsedDocument pd) {
@@ -197,7 +185,7 @@ public class Document extends MailItem {
         DbMailItem.saveMetadata(this, encodeMetadata(new Metadata()).toString());
         if (!mData.name.equals(getName())) {
             mData.name = getName();
-            DbMailItem.saveName(this);
+            DbMailItem.saveName(this, getFolderId());
         }
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_DATE | Change.MODIFIED_CONTENT);
         pd.setVersion(getVersion());
@@ -231,7 +219,7 @@ public class Document extends MailItem {
             throw MailServiceException.CANNOT_CONTAIN();
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-        validateName(name);
+        validateItemName(name);
 
         Mailbox mbox = folder.getMailbox();
         MetadataList revisions = new MetadataList();

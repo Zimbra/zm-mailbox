@@ -25,6 +25,7 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.Operation;
@@ -52,7 +53,7 @@ public class ImapRenameOperation extends Operation {
         synchronized (mMailbox) {
             int folderId = mMailbox.getFolderByPath(getOpCtxt(), mOldName).getId();
             if (folderId != Mailbox.ID_FOLDER_INBOX) {
-                mMailbox.renameFolder(getOpCtxt(), folderId, mNewName);
+                mMailbox.rename(getOpCtxt(), folderId, MailItem.TYPE_FOLDER, mNewName);
             } else {
                 throw ImapServiceException.CANT_RENAME_INBOX();
             }

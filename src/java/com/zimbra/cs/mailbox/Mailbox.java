@@ -1882,7 +1882,7 @@ public class Mailbox {
             return getFolderById(octxt, folderId);
 
         if (name.equals("/"))
-        	return getFolderById(octxt, ID_FOLDER_USER_ROOT);
+            return getFolderById(octxt, ID_FOLDER_USER_ROOT);
         
         if (name.startsWith("/")) {
             folderId = ID_FOLDER_USER_ROOT;
@@ -3938,15 +3938,103 @@ public class Mailbox {
         }
     }
 
+    public synchronized void rename(OperationContext octxt, int id, byte type, String name, int folderId) throws ServiceException {
+        if (name != null && name.startsWith("/")) {
+            rename(octxt, id, type, name);
+            return;
+        }
+
+        name = StringUtil.stripControlCharacters(name);
+        if (name == null || name.equals(""))
+            throw ServiceException.INVALID_REQUEST("cannot set name to empty string", null);
+
+        RenameItem redoRecorder = new RenameItem(mId, id, type, name, folderId);
+
+        boolean success = false;
+        try {
+            beginTransaction("rename", octxt, redoRecorder);
+
+            MailItem item = getItemById(id, type);
+            if (!checkItemChangeID(item))
+                throw MailServiceException.MODIFY_CONFLICT();
+            if (folderId <= 0)
+                folderId = item.getFolderId();
+
+            String oldName = item.getName();
+            item.rename(name, getFolderById(folderId));
+
+            if (item instanceof Tag) {
+                mTagCache.remove(oldName.toLowerCase());
+                mTagCache.put(name.toLowerCase(), (Tag) item);
+            }
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public synchronized void rename(OperationContext octxt, int id, byte type, String path) throws ServiceException {
+        if (path == null || !path.startsWith("/")) {
+            rename(octxt, id, type, path, ID_AUTO_INCREMENT);
+            return;
+        }
+
+        RenameItemPath redoRecorder = new RenameItemPath(mId, id, type, path);
+
+        boolean success = false;
+        try {
+            beginTransaction("renameFolderPath", octxt, redoRecorder);
+            RenameItemPath redoPlayer = (RenameItemPath) mCurrentChange.getRedoPlayer();
+
+            MailItem item = getItemById(id, type);
+            Folder parent;
+            checkItemChangeID(item);
+
+            String[] parts = path.substring(1).split("/");
+            if (parts.length == 0)
+                throw MailServiceException.ALREADY_EXISTS(path);
+            int[] recorderParentIds = new int[parts.length - 1];
+            int[] playerParentIds = redoPlayer == null ? null : redoPlayer.getParentIds();
+            if (playerParentIds != null && playerParentIds.length != recorderParentIds.length)
+                throw ServiceException.FAILURE("incorrect number of path segments in redo player", null);
+
+            parent = getFolderById(ID_FOLDER_USER_ROOT);
+            for (int i = 0; i < parts.length - 1; i++) {
+                MailItem.validateItemName(parts[i]);
+                int subfolderId = playerParentIds == null ? ID_AUTO_INCREMENT : playerParentIds[i];
+                Folder subfolder = parent.findSubfolder(parts[i]);
+                if (subfolder == null)
+                    subfolder = Folder.create(getNextItemId(subfolderId), this, parent, parts[i]);
+                else if (subfolderId != ID_AUTO_INCREMENT && subfolderId != subfolder.getId())
+                    throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
+                else if (!subfolder.getName().equals(parts[i]) && subfolder.isMutable())
+                    subfolder.rename(parts[i], parent);
+                recorderParentIds[i] = subfolder.getId();
+                parent = subfolder;
+            }
+            redoRecorder.setParentIds(recorderParentIds);
+
+            String name = parts[parts.length - 1];
+            item.rename(name, parent);
+
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     public synchronized void delete(OperationContext octxt, int itemId, byte type) throws ServiceException {
         delete(octxt, new int[] { itemId }, type, null);
     }
+
     public synchronized void delete(OperationContext octxt, MailItem item, TargetConstraint tcon) throws ServiceException {
         delete(octxt, new int[] { item.getId() }, item.getType(), tcon);
     }
+
     public synchronized void delete(OperationContext octxt, int itemId, byte type, TargetConstraint tcon) throws ServiceException {
         delete(octxt, new int[] { itemId }, type, tcon);
     }
+
     public synchronized void delete(OperationContext octxt, int[] itemIds, byte type, TargetConstraint tcon) throws ServiceException {
         DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
 
@@ -4022,32 +4110,6 @@ public class Mailbox {
             redoRecorder.setTagId(tagId);
             success = true;
             return tag;
-        } finally {
-            endTransaction(success);
-        }
-    }
-
-    public synchronized void renameTag(OperationContext octxt, int id, String name) throws ServiceException {
-        name = StringUtil.stripControlCharacters(name);
-        if (name == null || name.equals(""))
-            throw ServiceException.INVALID_REQUEST("tag must have a name", null);
-
-        RenameTag redoRecorder = new RenameTag(mId, id, name);
-
-        boolean success = false;
-        try {
-            beginTransaction("renameTag", octxt, redoRecorder);
-
-            Tag tag = getTagById(id);
-            if (!checkItemChangeID(tag))
-                throw MailServiceException.MODIFY_CONFLICT();
-
-            String oldName = tag.getName();
-            tag.rename(name);
-
-            mTagCache.remove(oldName.toLowerCase());
-            mTagCache.put(name.toLowerCase(), tag);
-            success = true;
         } finally {
             endTransaction(success);
         }
@@ -4220,6 +4282,7 @@ public class Mailbox {
     public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView) throws ServiceException {
         return createFolder(octxt, path, attrs, defaultView, 0, MailItem.DEFAULT_COLOR, null);
     }
+
     public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView, int flags, byte color, String url)
     throws ServiceException {
         if (path == null)
@@ -4384,80 +4447,6 @@ public class Mailbox {
         }
     }
 
-    public synchronized void renameFolder(OperationContext octxt, int folderId, int parentId, String name) throws ServiceException {
-        if (name.startsWith("/")) {
-            renameFolder(octxt, folderId, name);
-            return;
-        }
-
-        RenameFolder redoRecorder = new RenameFolder(mId, folderId, parentId, name);
-
-        boolean success = false;
-        try {
-            beginTransaction("renameFolder", octxt, redoRecorder);
-
-            Folder folder = getFolderById(folderId);
-            if (parentId == ID_AUTO_INCREMENT)
-                parentId = folder.getParentId();
-            Folder parent = getFolderById(parentId);
-
-            folder.rename(name, parent);
-
-            success = true;
-        } finally {
-            endTransaction(success);
-        }
-    }
-
-    public synchronized void renameFolder(OperationContext octxt, int folderId, String name) throws ServiceException {
-        if (!name.startsWith("/")) {
-            renameFolder(octxt, folderId, ID_AUTO_INCREMENT, name);
-            return;
-        }
-
-        RenameFolderPath redoRecorder = new RenameFolderPath(mId, folderId, name);
-
-        boolean success = false;
-        try {
-            beginTransaction("renameFolderPath", octxt, redoRecorder);
-            RenameFolderPath redoPlayer = (RenameFolderPath) mCurrentChange.getRedoPlayer();
-
-            Folder folder = getFolderById(folderId), parent;
-            checkItemChangeID(folder);
-
-            String[] parts = name.substring(1).split("/");
-            if (parts.length == 0)
-                throw MailServiceException.ALREADY_EXISTS(name);
-            int[] recorderParentIds = new int[parts.length - 1];
-            int[] playerParentIds = redoPlayer == null ? null : redoPlayer.getParentIds();
-            if (playerParentIds != null && playerParentIds.length != recorderParentIds.length)
-                throw ServiceException.FAILURE("incorrect number of path segments in redo player", null);
-
-            parent = getFolderById(ID_FOLDER_USER_ROOT);
-            for (int i = 0; i < parts.length - 1; i++) {
-                Folder.validateFolderName(parts[i]);
-                int subfolderId = playerParentIds == null ? ID_AUTO_INCREMENT : playerParentIds[i];
-                Folder subfolder = parent.findSubfolder(parts[i]);
-                if (subfolder == null)
-                    subfolder = Folder.create(getNextItemId(subfolderId), this, parent, parts[i]);
-                else if (subfolderId != ID_AUTO_INCREMENT && subfolderId != subfolder.getId())
-                    throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
-                else if (!subfolder.getName().equals(parts[i]) && subfolder.isMutable())
-                    subfolder.rename(parts[i], parent);
-                recorderParentIds[i] = subfolder.getId();
-                parent = subfolder;
-            }
-            name = parts[parts.length - 1];
-            redoRecorder.setParentIds(recorderParentIds);
-
-            folder.rename(name, parent);
-
-            success = true;
-        } finally {
-            endTransaction(success);
-        }
-    }
-
     public synchronized void emptyFolder(OperationContext octxt, int folderId, boolean removeSubfolders)
     throws ServiceException {
         EmptyFolder redoRecorder = new EmptyFolder(mId, folderId, removeSubfolders);
@@ -4612,42 +4601,43 @@ public class Mailbox {
     public synchronized List<Document> getWikiList(OperationContext octxt, int folderId) throws ServiceException {
         return getWikiList(octxt, folderId, DbMailItem.SORT_NONE);
     }
-    public synchronized List<Document> getWikiList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
-    	List<MailItem> docs = getItemList(octxt, MailItem.TYPE_DOCUMENT, folderId, sort);
-    	List<MailItem> wikis = getItemList(octxt, MailItem.TYPE_WIKI, folderId, sort);
-    	List<Document> ret = new ArrayList<Document>();
-    	
-    	boolean doSort = (sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_BY_SUBJECT;
-    	
-    	// merge sort
-    	int docIndex = 0, wikiIndex = 0;
-    	while (docIndex < docs.size() || wikiIndex < wikis.size()) {
-    		MailItem doc = null;
-    		MailItem wiki = null;
-    		if (docIndex < docs.size())
-    			doc = docs.get(docIndex);
-    		if (wikiIndex < wikis.size())
-    			wiki = wikis.get(wikiIndex);
 
-    		if (doc == null) {
-    			wikiIndex++;
-    			if (wiki instanceof Document)
-    				ret.add((Document)wiki);
-    		} else if (wiki == null) {
-    			docIndex++;
-    			if (doc instanceof Document)
-    				ret.add((Document)doc);
-    		} else if (!doSort || doc.getName().compareToIgnoreCase(wiki.getName()) < 0) {
-    			docIndex++;
-    			if (doc instanceof Document)
-    				ret.add((Document)doc);
-    		} else {
-    			wikiIndex++;
-    			if (wiki instanceof Document)
-    				ret.add((Document)wiki);
-    		}
-    	}
-    	return ret;
+    public synchronized List<Document> getWikiList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
+        List<MailItem> docs = getItemList(octxt, MailItem.TYPE_DOCUMENT, folderId, sort);
+        List<MailItem> wikis = getItemList(octxt, MailItem.TYPE_WIKI, folderId, sort);
+        List<Document> ret = new ArrayList<Document>();
+        
+        boolean doSort = (sort & DbMailItem.SORT_FIELD_MASK) == DbMailItem.SORT_BY_SUBJECT;
+        
+        // merge sort
+        int docIndex = 0, wikiIndex = 0;
+        while (docIndex < docs.size() || wikiIndex < wikis.size()) {
+            MailItem doc = null;
+            MailItem wiki = null;
+            if (docIndex < docs.size())
+                doc = docs.get(docIndex);
+            if (wikiIndex < wikis.size())
+                wiki = wikis.get(wikiIndex);
+
+            if (doc == null) {
+                wikiIndex++;
+                if (wiki instanceof Document)
+                    ret.add((Document)wiki);
+            } else if (wiki == null) {
+                docIndex++;
+                if (doc instanceof Document)
+                    ret.add((Document)doc);
+            } else if (!doSort || doc.getName().compareToIgnoreCase(wiki.getName()) < 0) {
+                docIndex++;
+                if (doc instanceof Document)
+                    ret.add((Document)doc);
+            } else {
+                wikiIndex++;
+                if (wiki instanceof Document)
+                    ret.add((Document)wiki);
+            }
+        }
+        return ret;
     }
 
     public synchronized WikiItem createWiki(OperationContext octxt, 

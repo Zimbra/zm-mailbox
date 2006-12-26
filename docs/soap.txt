@@ -1217,11 +1217,12 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 
 <ItemActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|update" [tag="..."] [l="{folder}"] [tcon="[-]{constraint}" [f="{flags}"] [t="{tag-list}"]/>
+  <action id="{list}" op="delete|read|flag|tag|move|rename|update" [tag="..."] [l="{folder}"] [name="{item-name}"] [color="{color}"]
+                                                                   [tcon="[-]{constraint}"] [f="{flags}"] [t="{tag-list}"]/>
 </ItemActionRequest>
 
 <ItemActionResponse>
-  <action id="{list}" op="delete|read|flag|tag|move|update"/>
+  <action id="{list}" op="delete|read|flag|tag|move|rename|update"/>
 </ItemActionResponse>
 
   {list} = on input, list of items to act on, on output, list of
@@ -1233,7 +1234,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
         o - include items in any other folder
     a leading '-' means to negate the constraint (e.g. "-t" means all messages not in Trash)
 
-  for op="update", caller can specify any or all of: l="{folder}", t="{tag-list}", f="{flags}"
+  for op="update", caller can specify any or all of: l="{folder}", name="{name}", color="{color}", t="{tag-list}", f="{flags}"
 
 ---------
 
@@ -1292,7 +1293,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
     op="read" - mark all items in the folder as read
     op="delete" - hard-delete the folder, all items in the folder, and all the folder's subfolders
     op="empty" - hard-delete all items in the folder and all the folder's subfolders
-    op="rename" - change the folder's name; if {new-name} begins with '/', the folder is moved to the new path and any missing path elements are created
+    op="rename" - change the folder's name (and optionally location); if {new-name} begins with '/', the folder is moved to the new path and any missing path elements are created
     op="move" - move the folder to be a child of {target-folder}
     op="color" - change the folder's color to {new-color}
     op="grant" - add the <grant> object to the folder
@@ -1317,7 +1318,7 @@ if fie="1" is set, the server will fetch the folder if it already exists rather 
 
 output of "grant" action includes the zimbra id the rights were granted on
 
-note that "delete", "empty", "rename", "move", "color" can be used on search folders as well as standard folders
+note that "delete", "empty", "rename", "move", "color", "update" can be used on search folders as well as standard folders
 
 ---------
 
@@ -1334,6 +1335,18 @@ note that "delete", "empty", "rename", "move", "color" can be used on search fol
            list may only have 1 element for actions "edit", "repos", "color"
 
   for op="update", caller can specify any or all of: l="{folder}", t="{tag-list}", f="{flags}", color="{color}", pos="{x,y,width,height}"
+
+---------
+
+<TagActionRequest>
+  <action op="read|rename|color|delete|update" id="..." [name="..."] [color="..."]/>
+</TagActionRequest>
+
+  - if op="update", the caller can specify "name" and/or "color"
+
+<TagActionResponse>
+  <action op="read|rename|color|delete|update" id="..."/> <!-- iff op was successful -->
+</TagActionResponse>
 
 --------------
 
@@ -1353,18 +1366,6 @@ u attribute is present iff count > 0
 <CreateTagResponse>
   <tag (same as GetTagResponse)/>
 </CreateTagResponse>
-
----------
-
-<TagActionRequest>
-  <action op="read|rename|color|delete|update" id="..." [name="..."] [color="..."]/>
-</TagActionRequest>
-
-  - if op="update", the caller can specify "name" and/or "color"
-
-<TagActionResponse>
-  <action op="read|rename|color|delete|update" id="..."/> <!-- iff op was successful -->
-</TagActionResponse>
 
 ---------
 

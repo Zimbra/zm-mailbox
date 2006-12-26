@@ -76,7 +76,8 @@ public class ItemAction extends MailDocumentHandler {
 	public static final String OP_HARD_DELETE = "delete";
 	public static final String OP_MOVE        = "move";
 	public static final String OP_SPAM        = "spam";
-	public static final String OP_UPDATE      = "update";
+    public static final String OP_RENAME      = "rename";
+    public static final String OP_UPDATE      = "update";
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -152,6 +153,11 @@ public class ItemAction extends MailDocumentHandler {
         		int folderId = (int) action.getAttributeLong(MailService.A_FOLDER, defaultFolder);
         		localResults = ItemActionOperation.SPAM(zsc, session, octxt, mbox,
         					Requester.SOAP, local, type, flagValue, tcon, folderId).getResult();
+            } else if (opStr.equals(OP_RENAME)) {
+                String name = action.getAttribute(MailService.A_NAME);
+                ItemId iidFolder = new ItemId(action.getAttribute(MailService.A_FOLDER, "-1"), zsc);
+                localResults = ItemActionOperation.RENAME(zsc, session, octxt, mbox,
+                            Requester.SOAP, local, type, flagValue, tcon, name, iidFolder).getResult();
         	} else if (opStr.equals(OP_UPDATE)) {
                 String folderId = action.getAttribute(MailService.A_FOLDER, null);
                 ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
@@ -159,11 +165,12 @@ public class ItemAction extends MailDocumentHandler {
         			throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
                 else if (folderId != null && iidFolder.getId() <= 0)
                     throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
+                String name  = action.getAttribute(MailService.A_NAME);
         		String flags = action.getAttribute(MailService.A_FLAGS, null);
         		String tags  = action.getAttribute(MailService.A_TAGS, null);
-        		byte color = (byte) action.getAttributeLong(MailService.A_COLOR, -1);
+        		byte color   = (byte) action.getAttributeLong(MailService.A_COLOR, -1);
         		localResults = ItemActionOperation.UPDATE(zsc, session, octxt, mbox,
-        					Requester.SOAP, local, type, tcon, iidFolder, 
+        					Requester.SOAP, local, type, tcon, name, iidFolder, 
         					flags, tags, color).getResult();
         	} else {
         		throw ServiceException.INVALID_REQUEST("unknown operation: " + opStr, null);

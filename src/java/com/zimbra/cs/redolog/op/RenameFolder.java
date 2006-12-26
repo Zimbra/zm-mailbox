@@ -30,54 +30,37 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
  * @author jhahm
  */
-public class RenameFolder extends RedoableOp {
-
-    private int mId;
-    private int mParentId;
-    private String mName;
+public class RenameFolder extends RenameItem {
 
     public RenameFolder() {
-        mId = mParentId = UNKNOWN_ID;
+        super();
+        mType = MailItem.TYPE_FOLDER;
     }
 
-    public RenameFolder(int mailboxId, int id, int parentId, String name) {
-        setMailboxId(mailboxId);
-        mId = id;
-        mParentId = parentId;
-        mName = name != null ? name : "";
+    public RenameFolder(int mailboxId, int id, String name, int parentId) {
+        super(mailboxId, id, MailItem.TYPE_FOLDER, name, parentId);
     }
 
     public int getOpCode() {
         return OP_RENAME_FOLDER;
     }
 
-    protected String getPrintableData() {
-        return "id=" + mId + ", name=" + mName + ",parent=" + mParentId;
-    }
-
     protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
-        out.writeInt(mParentId);
+        out.writeInt(mFolderId);
         out.writeUTF(mName);
     }
 
     protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
-        mParentId = in.readInt();
+        mFolderId = in.readInt();
         mName = in.readUTF();
-    }
-
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
-        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        mailbox.renameFolder(getOperationContext(), mId, mParentId, mName);
     }
 }
