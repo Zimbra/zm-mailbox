@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 
@@ -214,7 +215,7 @@ abstract class ImapSearch {
         RelativeDateSearch(DateSearch.Relation relation, int offset)  { mOffset = offset;  mRelation = relation; }
 
         boolean canBeRunLocally()                   { return false; }
-        String toZimbraSearch(ImapFolder i4folder)  { return mRelation + ":-" + mOffset + 'h'; }
+        String toZimbraSearch(ImapFolder i4folder)  { return mRelation + ":" + (System.currentTimeMillis() - mOffset * Constants.MILLIS_PER_SECOND); }
         ImapMessageSet evaluate(ImapFolder i4folder) {
             throw new UnsupportedOperationException("evaluate of " + toZimbraSearch(i4folder));
         }
