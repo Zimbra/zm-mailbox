@@ -3955,8 +3955,7 @@ public class Mailbox {
             beginTransaction("rename", octxt, redoRecorder);
 
             MailItem item = getItemById(id, type);
-            if (!checkItemChangeID(item))
-                throw MailServiceException.MODIFY_CONFLICT();
+            checkItemChangeID(item);
             if (folderId <= 0)
                 folderId = item.getFolderId();
 
