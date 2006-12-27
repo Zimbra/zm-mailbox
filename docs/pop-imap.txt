@@ -18,7 +18,7 @@ IMAP protocol and extensions suppoted:
     [SASL-IR]          draft-siemborski-imap-sasl-initial-response-06: IMAP Extension for SASL Initial Client Response
     [UIDPLUS]          RFC 2359: IMAP4 UIDPLUS extension
     [UNSELECT]         RFC 3691: IMAP UNSELECT command
-    [WITHIN]           draft-ietf-lemonade-search-within-02: WITHIN Search extension to the IMAP Protocol
+    [WITHIN]           draft-ietf-lemonade-search-within-03: WITHIN Search extension to the IMAP Protocol
     [X-DRAFT-I04-SEARCHRES]  draft-melnikov-imap-search-res-04: IMAP extension for referencing the last SEARCH result
     [$MDNSent]         RFC 3503: Message Disposition Notification (MDN) profile for Internet Message Access Protocol (IMAP)
 
