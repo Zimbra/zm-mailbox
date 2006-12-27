@@ -168,7 +168,11 @@ public final class ParsedDuration
     }
     
     public Element toXml(Element parent) {
-        Element elt = parent.addElement(MailService.E_CAL_DURATION);
+        return toXml(parent, MailService.E_CAL_DURATION);
+    }
+
+    public Element toXml(Element parent, String name) {
+        Element elt = parent.addElement(name);
         if (mNegative) {
             elt.addAttribute(MailService.A_CAL_DURATION_NEGATIVE, true);
         }

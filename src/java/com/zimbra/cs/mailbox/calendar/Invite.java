@@ -39,6 +39,7 @@ import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -299,6 +300,8 @@ public class Invite {
     private static final String FN_PRIORITY        = "prio";
     private static final String FN_PCT_COMPLETE    = "pctcompl";
     private static final String FN_VALUE           = "v";
+    private static final String FN_NUM_ALARMS      = "numAl";
+    private static final String FN_ALARM           = "al";
     private static final String FN_XPROP_OR_XPARAM = "x";
 
     
@@ -363,6 +366,15 @@ public class Invite {
 
         meta.put(FN_PRIORITY, inv.getPriority());
         meta.put(FN_PCT_COMPLETE, inv.getPercentComplete());
+
+        if (inv.mAlarms.size() > 0) {
+            meta.put(FN_NUM_ALARMS, inv.mAlarms.size());
+            i = 0;
+            for (Iterator<Alarm> iter = inv.mAlarms.iterator(); iter.hasNext(); i++) {
+                Alarm alarm = iter.next();
+                meta.put(FN_ALARM + i, alarm.encodeMetadata());
+            }
+        }
 
         if (inv.mXProps.size() > 0)
             encodeXPropsAsMetadata(meta, inv.xpropsIterator());
@@ -531,7 +543,7 @@ public class Invite {
                 if (metaAttendee != null)
                     attendees.add(new ZAttendee(metaAttendee));
             } catch (ServiceException e) {
-                sLog.warn("Problem decoding attendee " + i + " for calendar item " 
+                ZimbraLog.calendar.warn("Problem decoding attendee " + i + " for calendar item " 
                         + calItem!=null ? Integer.toString(calItem.getId()) : "(null)"
                         + " invite "+mailItemId+"-" + componentNum);
             }
@@ -546,6 +558,26 @@ public class Invite {
                 name, comment, loc, flags, partStat, rsvp,
                 recurrenceId, dtstamp, seqno,
                 mailboxId, mailItemId, componentNum, sentByMe, null, fragment);
+
+        long numAlarms = meta.getLong(FN_NUM_ALARMS, 0);
+        for (int i = 0; i < numAlarms; i++) {
+            try {
+                Metadata metaAlarm = meta.getMap(FN_ALARM + i, true);
+                if (metaAlarm != null) {
+                    Alarm alarm = Alarm.decodeMetadata(metaAlarm);
+                    if (alarm != null)
+                        invite.addAlarm(alarm);
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.calendar.warn("Problem decoding alarm " + i + " for calendar item " 
+                        + calItem!=null ? Integer.toString(calItem.getId()) : "(null)"
+                        + " invite "+mailItemId+"-" + componentNum, e);
+            } catch (ParseException e) {
+                ZimbraLog.calendar.warn("Problem decoding alarm " + i + " for calendar item " 
+                        + calItem!=null ? Integer.toString(calItem.getId()) : "(null)"
+                        + " invite "+mailItemId+"-" + componentNum, e);
+            }
+        }
 
         List<ZProperty> xprops = decodeXPropsFromMetadata(meta);
         if (xprops != null) {
@@ -946,6 +978,10 @@ public class Invite {
         sb.append(", DTStamp: ").append(mDTStamp);
         sb.append(", mSeqNo ").append(mSeqNo);
 
+        for (Alarm alarm : mAlarms) {
+            sb.append(", alarm: ").append(alarm.toString());
+        }
+
         for (ZProperty xprop : mXProps) {
             sb.append(", ").append(xprop.toString());
         }
@@ -1010,6 +1046,8 @@ public class Invite {
     private byte mItemType = MailItem.TYPE_APPOINTMENT;
 
     private ICalTok mMethod;
+
+    private List<Alarm> mAlarms = new ArrayList<Alarm>();
 
     private List<ZProperty> mXProps = new ArrayList<ZProperty>();
 
@@ -1315,6 +1353,19 @@ public class Invite {
                     newInv.setMailItemId(mailItemId);
                     newInv.setSentByMe(sentByMe);
                     compNum++;
+
+                    for (ZComponent subcomp : comp.mComponents) {
+                        ICalTok subCompTypeTok = subcomp.getTok();
+                        switch (subCompTypeTok) {
+                        case VALARM:
+                            Alarm alarm = Alarm.parse(subcomp);
+                            if (alarm != null)
+                                newInv.addAlarm(alarm);
+                            break;
+                        default:
+                            // ignore all other sub components
+                        }
+                    }
 
                     for (ZProperty prop : comp.mProperties) {
                         if (prop.mTok == null) {
@@ -1668,12 +1719,23 @@ public class Invite {
             component.addProperty(completed.toProperty(ICalTok.COMPLETED, false));
         }
 
+        // VALARMs
+        for (Alarm alarm : mAlarms) {
+            ZComponent alarmComp = alarm.toZComponent();
+            component.addComponent(alarmComp);
+        }
+
         // x-prop
         for (ZProperty xprop : mXProps) {
             component.addProperty(xprop);
         }
 
         return component;
+    }
+
+    public Iterator<Alarm> alarmsIterator() { return mAlarms.iterator(); }
+    public void addAlarm(Alarm alarm) {
+        mAlarms.add(alarm);
     }
 
     public Iterator<ZProperty> xpropsIterator() { return mXProps.iterator(); }

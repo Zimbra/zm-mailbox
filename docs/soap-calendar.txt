@@ -266,6 +266,53 @@
                 ]*
              </recur>
            ]
+
+           // VALARMs (RFC2445 Section 4.6.6)
+           [
+             <alarm action="DISPLAY">
+               <trigger>
+                 // <rel> has the same attributes as <dur> and an optional
+                 // "related" attribute.  Default value of "related" is "START".
+                 <rel [related="START|END"] .../> OR <abs d="YYYYMMDDThhmmssZ"/>
+               </trigger>
+               <desc>{reminder text to display}</desc>
+               // <repeat> has the same attributes as <dur> and an additional
+               // required count attribute.  The duration is how often to repeat
+               // the alarm, and the count is how many times to trigger the
+               // alarm IN ADDITION TO the initial alarm.
+               [<repeat count="N" .../>]
+             </alarm>
+           ]*
+           [
+             <alarm action="AUDIO">
+               <trigger/>      // same as in DISPLAY alarm
+               [<repeat/>]     // same as in DISPLAY alarm
+               [
+                 <attach ct="{content type}" uri="{uri}"/>
+                 OR
+                 <attach>{base64-encoded binary data}</attach>
+               ]
+             </alarm>
+           ]*
+           [
+             <alarm action="EMAIL">
+               <trigger/>      // same as in DISPLAY alarm
+               [<repeat/>]     // same as in DISPLAY alarm
+               <desc>{email body}</desc>
+               <summary>{email subject}</summary>
+               <at .../>+      // attendees (one or more email recipients)
+               [<attach ... />]  // sam as in AUDIO alarm
+             </alarm>
+           ]*
+           [
+             <alarm action="PROCEDURE">
+               <trigger/>      // same as in DISPLAY alarm
+               [<repeat/>]     // same as in DISPLAY alarm
+               [<desc>{description test}</desc>]
+               <attach ... />  // same as in AUDIO alarm
+             </alarm>
+           ]*
+
            [
              // non-standard properties (see RFC2445 section 4.8.8.1)
              // e.g.

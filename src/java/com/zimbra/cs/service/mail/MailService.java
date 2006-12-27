@@ -383,6 +383,14 @@ public class MailService implements DocumentService {
     public static final String E_CAL_END_TIME = "e";
     public static final String E_CAL_REPLIES = "replies";
     public static final String E_CAL_REPLY = "reply";
+    public static final String E_CAL_ATTACH = "attach";
+    public static final String E_CAL_ALARM = "alarm";
+    public static final String E_CAL_ALARM_TRIGGER = "trigger";
+    public static final String E_CAL_ALARM_REPEAT = "repeat";
+    public static final String E_CAL_ALARM_RELATIVE = "rel";
+    public static final String E_CAL_ALARM_ABSOLUTE = "abs";
+    public static final String E_CAL_ALARM_DESCRIPTION = "desc";
+    public static final String E_CAL_ALARM_SUMMARY = "summary";
 
     public static final String E_CAL_RULE = "rule";
     public static final String E_CAL_RULE_UNTIL = "until";
@@ -488,6 +496,12 @@ public class MailService implements DocumentService {
     public static final String A_CAL_TZ_HOUR = "hour";
     public static final String A_CAL_TZ_MINUTE = "min";
     public static final String A_CAL_TZ_SECOND = "sec";
+
+    public static final String A_CAL_ALARM_ACTION = "action";
+    public static final String A_CAL_ALARM_RELATED = "related";
+    public static final String A_CAL_ALARM_COUNT = "count";
+    public static final String A_CAL_ATTACH_URI = "uri";
+    public static final String A_CAL_ATTACH_CONTENT_TYPE = "ct";
 
     // spell checking
     public static final String A_AVAILABLE = "available";

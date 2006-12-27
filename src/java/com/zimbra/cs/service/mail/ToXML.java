@@ -45,6 +45,7 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
+import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
@@ -1147,42 +1148,14 @@ public class ToXML {
             // Attendee(s)
             List<ZAttendee> attendees = invite.getAttendees();
             for (ZAttendee at : attendees) {
-                Element atElt = e.addElement(MailService.E_CAL_ATTENDEE);
-                // address
-                atElt.addAttribute(MailService.A_URL, at.getAddress());
-                // CN
-                if (at.hasCn())
-                    atElt.addAttribute(MailService.A_DISPLAY, at.getCn());
-                // SENT-BY
-                if (at.hasSentBy())
-                    atElt.addAttribute(MailService.A_CAL_SENTBY, at.getSentBy());
-                // DIR
-                if (at.hasDir())
-                    atElt.addAttribute(MailService.A_CAL_DIR, at.getDir());
-                // LANGUAGE
-                if (at.hasLanguage())
-                    atElt.addAttribute(MailService.A_CAL_LANGUAGE, at.getLanguage());
-                // CUTYPE
-                if (at.hasCUType())
-                    atElt.addAttribute(MailService.A_CAL_CUTYPE, at.getCUType());
-                // ROLE
-                if (at.hasRole())
-                    atElt.addAttribute(MailService.A_CAL_ROLE, at.getRole());
-                // PARTSTAT
-                if (at.hasPartStat())
-                    atElt.addAttribute(MailService.A_CAL_PARTSTAT, at.getPartStat());
-                // RSVP
-                if (at.hasRsvp())
-                    atElt.addAttribute(MailService.A_CAL_RSVP, at.getRsvp().booleanValue());
-                // MEMBER
-                if (at.hasMember())
-                    atElt.addAttribute(MailService.A_CAL_MEMBER, at.getMember());
-                // DELEGATED-TO
-                if (at.hasDelegatedTo())
-                    atElt.addAttribute(MailService.A_CAL_DELEGATED_TO, at.getDelegatedTo());
-                // DELEGATED-FROM
-                if (at.hasDelegatedFrom())
-                    atElt.addAttribute(MailService.A_CAL_DELEGATED_FROM, at.getDelegatedFrom());
+                at.toXml(e);
+            }
+
+            // Alarms
+            Iterator<Alarm> alarmsIter = invite.alarmsIterator();
+            while (alarmsIter.hasNext()) {
+                Alarm alarm = alarmsIter.next();
+                alarm.toXml(e);
             }
 
             // x-prop

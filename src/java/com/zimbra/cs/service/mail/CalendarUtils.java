@@ -36,6 +36,7 @@ import com.zimbra.common.service.ServiceException;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -804,40 +805,9 @@ public class CalendarUtils {
 
         // ATTENDEEs
         boolean hasAttendees = false;
-        for (Iterator iter = element
+        for (Iterator<Element> iter = element
                 .elementIterator(MailService.E_CAL_ATTENDEE); iter.hasNext();) {
-            Element cur = (Element) (iter.next());
-
-            String address = cur.getAttribute(MailService.A_ADDRESS);
-            String cn = cur.getAttribute(MailService.A_DISPLAY, null);
-            String sentBy = cur.getAttribute(MailService.A_CAL_SENTBY, null);
-            String dir = cur.getAttribute(MailService.A_CAL_DIR, null);
-            String lang = cur.getAttribute(MailService.A_CAL_LANGUAGE, null);
-
-            String cutype = cur.getAttribute(MailService.A_CAL_CUTYPE, null);
-            if (cutype != null)
-            	validateAttr(IcalXmlStrMap.sCUTypeMap, MailService.A_CAL_CUTYPE, cutype);
-
-            String role = cur.getAttribute(MailService.A_CAL_ROLE);
-            validateAttr(IcalXmlStrMap.sRoleMap, MailService.A_CAL_ROLE, role);
-
-            String partStat = cur.getAttribute(MailService.A_CAL_PARTSTAT);
-            validateAttr(IcalXmlStrMap.sPartStatMap,
-                    MailService.A_CAL_PARTSTAT, partStat);
-
-            String member = cur.getAttribute(MailService.A_CAL_MEMBER, null);
-            String delTo = cur.getAttribute(MailService.A_CAL_DELEGATED_TO, null);
-            String delFrom = cur.getAttribute(MailService.A_CAL_DELEGATED_FROM, null);
-
-            boolean rsvp = cur.getAttributeBool(MailService.A_CAL_RSVP, false);
-//            if (partStat.equals(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION))
-//                rsvp = true;
-
-            ZAttendee at =
-                new ZAttendee(address, cn, sentBy, dir, lang,
-                              cutype, role, partStat,
-                              rsvp ? Boolean.TRUE : Boolean.FALSE,
-                              member, delTo, delFrom);
+            ZAttendee at = ZAttendee.parse(iter.next());
             newInv.addAttendee(at);
             hasAttendees = true;
         }
@@ -874,6 +844,14 @@ public class CalendarUtils {
             Recurrence.IRecurrence recurrence = parseRecur(recur, tzMap,
                     newInv);
             newInv.setRecurrence(recurrence);
+        }
+
+        // VALARMs
+        Iterator<Element> alarmsIter = element.elementIterator(MailService.E_CAL_ALARM);
+        while (alarmsIter.hasNext()) {
+            Alarm alarm = Alarm.parse(alarmsIter.next());
+            if (alarm != null)
+                newInv.addAlarm(alarm);
         }
 
         List<ZProperty> xprops = parseXProps(element);

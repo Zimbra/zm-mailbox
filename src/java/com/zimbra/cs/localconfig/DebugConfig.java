@@ -83,6 +83,11 @@ public class DebugConfig {
     // If true, turns off object detection feature.
     public static boolean disableObjects;
 
+    // If true, allow VALARMs whose ACTION is not DISPLAY, namely AUDIO, EMAIL,
+    // and PROCEDURE.  False by default, which means only DISPLAY alarms are
+    // supported and others are ignored.
+    public static boolean calendarAllowNonDisplayAlarms;
+
     // If true, convert TZ-relative times to UTC time in SOAP responses for
     // non-recurring appointments/tasks.  Recurring series or instances are
     // unaffected by this switch.
@@ -92,6 +97,7 @@ public class DebugConfig {
     public static final int numMailboxGroups;
 
     static {
+        calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
         calendarForceUTC = booleanValue("debug_calendar_force_utc", false);
         validateOutgoingICalendar = booleanValue("debug_validate_outgoing_icalendar", false);        
         disableConversation = booleanValue("debug_disable_conversation", false);
