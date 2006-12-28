@@ -1701,6 +1701,11 @@ public abstract class MailItem implements Comparable<MailItem> {
          *  {@link Folder} delete.) */
         public List<Integer> cascadeIds;
 
+        /** The ids of all items that have been <u>modified</u> but not deleted
+         *  during the delete.  (E.g. {@link Conversation}s whose messages are
+         *  <b>not</b> all deleted during a {@link Folder} delete.)  */
+        public Set<Integer> modifiedIds = new HashSet<Integer>();
+
         /** The document ids that need to be removed from the index. */
         public List<Integer> indexIds = new ArrayList<Integer>();
 

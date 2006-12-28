@@ -283,7 +283,7 @@ public class DbUtil {
         return executeUpdate(sql, null);
     }
 
-    public static final int IN_CLAUSE_BATCH_SIZE = 100;
+    public static final int IN_CLAUSE_BATCH_SIZE = 400;
 
     /**
      * Returns a string with the form <code>(?, ?, ?, ...)</code>, which

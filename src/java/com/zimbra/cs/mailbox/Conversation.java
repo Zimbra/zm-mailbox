@@ -232,10 +232,12 @@ public class Conversation extends MailItem {
         return true;
     }
 
+    private static final int RECALCULATE_CHANGE_MASK = Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD |
+                                                       Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS;
+
     SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
         Collections.sort(msgs, new Message.SortDateAscending());
         String oldSubject = mRawSubject;
-        long oldSize = mData.size;
 
         mEncodedSenders = null;
         mSenderList = new SenderList(msgs);
@@ -244,7 +246,7 @@ public class Conversation extends MailItem {
         mData.size = msgs.size();
         mData.unreadCount = 0;
 
-        markItemModified(mData.size != oldSize ? Change.MODIFIED_SIZE : Change.INTERNAL_ONLY);
+        markItemModified(RECALCULATE_CHANGE_MASK);
         if (!mRawSubject.equals(oldSubject))
         	markItemModified(Change.MODIFIED_SUBJECT);
 

@@ -39,6 +39,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
@@ -1042,15 +1043,15 @@ public class Mailbox {
      *  non-folder types will drop the entire item cache.
      * 
      * @param type  The type of item to completely uncache. */
-    void purge(byte type) {
+    void purge(byte type) throws ServiceException {
         switch (type) {
             case MailItem.TYPE_FOLDER:
             case MailItem.TYPE_MOUNTPOINT:
-            case MailItem.TYPE_SEARCHFOLDER:  mFolderCache = null;  break;
+            case MailItem.TYPE_SEARCHFOLDER:  mFolderCache = null;     break;
             case MailItem.TYPE_FLAG:
-            case MailItem.TYPE_TAG:           mTagCache = null;     break;
-            default:                          mItemCache.clear();   break;
-            case MailItem.TYPE_UNKNOWN:       mFolderCache = null;  mTagCache = null;  mItemCache.clear();  break;
+            case MailItem.TYPE_TAG:           mTagCache = null;        break;
+            default:                          getItemCache().clear();  break;
+            case MailItem.TYPE_UNKNOWN:       mFolderCache = null;  mTagCache = null;  getItemCache().clear();  break;
         }
 
         if (ZimbraLog.cache.isDebugEnabled())
@@ -1659,11 +1660,8 @@ public class Mailbox {
      * Returns <code>MailItem</code>s with the specified ids. 
      * @throws NoSuchItemException any item does not exist
      */
-    public synchronized MailItem[] getItemById(OperationContext octxt, List<Integer> ids, byte type) throws ServiceException {
-        int idArray[] = new int[ids.size()], pos = 0;
-        for (Integer id : ids)
-            idArray[pos++] = id;
-        return getItemById(octxt, idArray, type);
+    public synchronized MailItem[] getItemById(OperationContext octxt, Collection<Integer> ids, byte type) throws ServiceException {
+        return getItemById(octxt, ArrayUtil.toIntArray(ids), type);
     }
 
     /**
@@ -1684,6 +1682,10 @@ public class Mailbox {
         } finally {
             endTransaction(success);
         }
+    }
+
+    MailItem[] getItemById(Collection<Integer> ids, byte type) throws ServiceException {
+        return getItemById(ArrayUtil.toIntArray(ids), type);
     }
 
     MailItem[] getItemById(int[] ids, byte type) throws ServiceException {
@@ -5135,14 +5137,18 @@ public class Mailbox {
                         if (obj instanceof Change)
                             obj = ((Change) obj).what;
 
-                        if (obj instanceof Tag)
-                            purge(MailItem.TYPE_TAG);
-                        else if (obj instanceof Folder)
-                            purge(MailItem.TYPE_FOLDER);
-                        else if (obj instanceof MailItem && cache != null)
-                            cache.remove(new Integer(((MailItem) obj).getId()));
-                        else if (obj instanceof Integer && cache != null)
-                            cache.remove(obj);
+                        try {
+                            if (obj instanceof Tag)
+                                purge(MailItem.TYPE_TAG);
+                            else if (obj instanceof Folder)
+                                purge(MailItem.TYPE_FOLDER);
+                            else if (obj instanceof MailItem && cache != null)
+                                cache.remove(new Integer(((MailItem) obj).getId()));
+                            else if (obj instanceof Integer && cache != null)
+                                cache.remove(obj);
+                        } catch (ServiceException e) {
+                            // should never be thrown, as purge() doesn't throw on tags/folders
+                        }
                     }
 
             // roll back any changes to external items

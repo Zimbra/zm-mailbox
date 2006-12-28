@@ -40,6 +40,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -813,9 +814,10 @@ public class Folder extends MailItem {
     @Override
     void propagateDeletion(PendingDelete info) throws ServiceException {
         if (info.incomplete)
-            info.cascadeIds = DbMailItem.markDeletionTargets(mMailbox, info.itemIds.getIds(TYPE_MESSAGE));
+            info.cascadeIds = DbMailItem.markDeletionTargets(mMailbox, info.itemIds.getIds(TYPE_MESSAGE), info.modifiedIds);
         else
-            info.cascadeIds = DbMailItem.markDeletionTargets(this);
+            info.cascadeIds = DbMailItem.markDeletionTargets(this, info.modifiedIds);
+        info.modifiedIds.removeAll(info.cascadeIds);
         super.propagateDeletion(info);
     }
 
@@ -823,6 +825,9 @@ public class Folder extends MailItem {
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
         // when deleting a folder, need to purge conv cache!
         mMailbox.purge(TYPE_CONVERSATION);
+        // fault modified conversations back in, thereby marking them dirty
+        mMailbox.getItemById(ArrayUtil.toIntArray(info.modifiedIds), MailItem.TYPE_CONVERSATION);
+        // remove this folder from the cache if needed
         super.purgeCache(info, purgeItem);
     }
 
@@ -864,8 +869,11 @@ public class Folder extends MailItem {
 
         // remove the deleted item(s) from the mailbox's cache
         if (!info.itemIds.isEmpty()) {
-            info.cascadeIds = DbMailItem.markDeletionTargets(mbox, info.itemIds.getIds(TYPE_MESSAGE));
+            info.cascadeIds = DbMailItem.markDeletionTargets(mbox, info.itemIds.getIds(TYPE_MESSAGE), info.modifiedIds);
+            info.modifiedIds.removeAll(info.cascadeIds);
             mbox.purge(TYPE_CONVERSATION);
+            for (int convId : info.modifiedIds)
+                mbox.getConversationById(convId);
         }
 
         // actually delete the items from the DB

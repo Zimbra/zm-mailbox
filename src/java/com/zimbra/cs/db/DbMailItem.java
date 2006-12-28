@@ -896,7 +896,8 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                         " SET unread = ?, mod_metadata = ?, change_date = ?" +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "unread = ? AND id IN " + DbUtil.suitableNumberOfVariables(itemIDs) + " AND type = " + MailItem.TYPE_MESSAGE);
+                        " WHERE " + IN_THIS_MAILBOX_AND + "unread = ? AND id IN " + DbUtil.suitableNumberOfVariables(itemIDs) +
+                        " AND type = " + MailItem.TYPE_MESSAGE);
             int pos = 1;
             stmt.setInt(pos++, unread ? 1 : 0);
             stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -908,7 +909,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("updating tag data for items [" + itemIDs + "]", e);
+            throw ServiceException.FAILURE("updating unread state for items " + itemIDs, e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -923,7 +924,7 @@ public class DbMailItem {
      * @param folder the folder that is being deleted
      * @return the ids of any conversation that were purged as a result of this operation
      */
-    public static List<Integer> markDeletionTargets(Folder folder) throws ServiceException {
+    public static List<Integer> markDeletionTargets(Folder folder, Set<Integer> candidates) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
         Connection conn = mbox.getOperationConnection();
 
@@ -946,7 +947,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, mbox.getId());
             stmt.executeUpdate();
 
-            return getPurgedConversations(mbox);
+            return getPurgedConversations(mbox, candidates);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("marking deletions for conversations crossing folder " + folder.getId(), e);
         } finally {
@@ -965,7 +966,7 @@ public class DbMailItem {
      * @param ids of the items being deleted
      * @return the ids of any conversation that were purged as a result of this operation
      */
-    public static List<Integer> markDeletionTargets(Mailbox mbox, List<Integer> ids) throws ServiceException {
+    public static List<Integer> markDeletionTargets(Mailbox mbox, List<Integer> ids, Set<Integer> candidates) throws ServiceException {
         if (ids == null)
             return null;
         Connection conn = mbox.getOperationConnection();
@@ -973,7 +974,7 @@ public class DbMailItem {
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        for (int i = 0; i < ids.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE)
+        for (int i = 0; i < ids.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE) {
             try {
                 int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, ids.size() - i);
                 stmt = conn.prepareStatement("UPDATE " + table + ", " +
@@ -997,11 +998,12 @@ public class DbMailItem {
                 DbPool.closeResults(rs);
                 DbPool.closeStatement(stmt);
             }
+        }
 
-            return getPurgedConversations(mbox);
+        return getPurgedConversations(mbox, candidates);
     }
 
-    private static List<Integer> getPurgedConversations(Mailbox mbox) throws ServiceException {
+    private static List<Integer> getPurgedConversations(Mailbox mbox, Set<Integer> candidates) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
         List<Integer> purgedConvs = new ArrayList<Integer>();
 
@@ -1009,9 +1011,12 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "type = " + MailItem.TYPE_CONVERSATION + " AND size <= 0");
+                        " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(candidates) + "AND size <= 0");
+            int pos = 1;
             if (!DebugConfig.disableMailboxGroup)
-                stmt.setInt(1, mbox.getId());
+                stmt.setInt(pos++, mbox.getId());
+            for (int candidate : candidates)
+                stmt.setInt(pos++, candidate);
             rs = stmt.executeQuery();
             while (rs.next())
                 purgedConvs.add(rs.getInt(1));
@@ -1056,7 +1061,7 @@ public class DbMailItem {
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
-        for (int i = 0; i < targets.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE)
+        for (int i = 0; i < targets.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE) {
             try {
                 int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, targets.size() - i);
                 stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(mbox) +
@@ -1072,6 +1077,7 @@ public class DbMailItem {
             } finally {
                 DbPool.closeStatement(stmt);
             }
+        }
     }
 
     public static void deleteContents(MailItem item) throws ServiceException {
@@ -1158,7 +1164,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT type, ids FROM " + getTombstoneTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "sequence > ? AND ids IS NOT NULL" +
-            " ORDER BY sequence");
+                        " ORDER BY sequence");
             int pos = 1;
             if (!DebugConfig.disableMailboxGroup)
                 stmt.setInt(pos++, mbox.getId());
@@ -1231,6 +1237,7 @@ public class DbMailItem {
     private static String sortQuery(byte sort) {
         return sortQuery(sort, "");
     }
+
     private static String sortQuery(byte sort, String prefix) {
         String field = sortField(sort);
         if ("NULL".equalsIgnoreCase(field))
@@ -1363,6 +1370,7 @@ public class DbMailItem {
     public static List<UnderlyingData> getByParent(MailItem parent) throws ServiceException {
         return getByParent(parent, DEFAULT_SORT_ORDER);
     }
+
     public static List<UnderlyingData> getByParent(MailItem parent, byte sort) throws ServiceException {
         Mailbox mbox = parent.getMailbox();
         Connection conn = mbox.getOperationConnection();
@@ -1545,7 +1553,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         Iterator<Integer> it = ids.iterator();
-        for (int i = 0; i < ids.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE)
+        for (int i = 0; i < ids.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE) {
             try {
                 int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, ids.size() - i);
                 stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
@@ -1574,10 +1582,11 @@ public class DbMailItem {
                 DbPool.closeResults(rs);
                 DbPool.closeStatement(stmt);
             }
+        }
 
-            if (!conversations.isEmpty())
-                completeConversations(mbox, conversations);
-            return result;
+        if (!conversations.isEmpty())
+            completeConversations(mbox, conversations);
+        return result;
     }
 
     public static UnderlyingData getByName(Mailbox mbox, int folderId, String name, byte type) throws ServiceException {
@@ -1698,6 +1707,7 @@ public class DbMailItem {
         list.add(data);
         completeConversations(mbox, list);
     }
+
     private static void completeConversations(Mailbox mbox, List<UnderlyingData> convData) throws ServiceException {
         if (convData == null || convData.isEmpty())
             return;
@@ -1707,13 +1717,13 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
 
-        for (int i = 0; i < convData.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE)
+        for (int i = 0; i < convData.size(); i += DbUtil.IN_CLAUSE_BATCH_SIZE) {
             try {
                 int count = Math.min(DbUtil.IN_CLAUSE_BATCH_SIZE, convData.size() - i);
                 String sql = "SELECT parent_id, id, unread, flags, tags" +
-                " FROM " + getMailItemTableName(mbox) +
-                " WHERE " + IN_THIS_MAILBOX_AND + "parent_id IN " + DbUtil.suitableNumberOfVariables(count) +
-                " ORDER BY parent_id";
+                             " FROM " + getMailItemTableName(mbox) +
+                             " WHERE " + IN_THIS_MAILBOX_AND + "parent_id IN " + DbUtil.suitableNumberOfVariables(count) +
+                             " ORDER BY parent_id";
                 stmt = conn.prepareStatement(sql);
                 int pos = 1;
                 if (!DebugConfig.disableMailboxGroup)
@@ -1777,19 +1787,20 @@ public class DbMailItem {
                 DbPool.closeResults(rs);
                 DbPool.closeStatement(stmt);
             }
+        }
     }
 
     private static final String LEAF_NODE_FIELDS = "id, size, type, unread, folder_id," +
-    " parent_id IS NULL, blob_digest IS NOT NULL," +
-    " mod_content, mod_metadata," +
-    " flags & " + Flag.BITMASK_COPIED + ", index_id, volume_id";
+                                                   " parent_id, blob_digest IS NOT NULL," +
+                                                   " mod_content, mod_metadata," +
+                                                   " flags & " + Flag.BITMASK_COPIED + ", index_id, volume_id";
 
     private static final int LEAF_CI_ID           = 1;
     private static final int LEAF_CI_SIZE         = 2;
     private static final int LEAF_CI_TYPE         = 3;
     private static final int LEAF_CI_IS_UNREAD    = 4;
     private static final int LEAF_CI_FOLDER_ID    = 5;
-    private static final int LEAF_CI_IS_NOT_CHILD = 6;
+    private static final int LEAF_CI_PARENT_ID    = 6;
     private static final int LEAF_CI_HAS_BLOB     = 7;
     private static final int LEAF_CI_MOD_CONTENT  = 8;
     private static final int LEAF_CI_MOD_METADATA = 9;
@@ -1842,7 +1853,7 @@ public class DbMailItem {
                 constraint = "date < ? AND type = " + MailItem.TYPE_MESSAGE;
             else
                 constraint = "date < ? AND type NOT IN " + NON_SEARCHABLE_TYPES +
-                " AND folder_id IN" + DbUtil.suitableNumberOfVariables(folders);
+                             " AND folder_id IN" + DbUtil.suitableNumberOfVariables(folders);
 
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
@@ -1889,20 +1900,27 @@ public class DbMailItem {
             int id = rs.getInt(LEAF_CI_ID);
             int size = rs.getInt(LEAF_CI_SIZE);
             byte type = rs.getByte(LEAF_CI_TYPE);
+
             Integer item = new Integer(id);
             info.itemIds.add(type, item);
-
             info.size += size;
             if (rs.getBoolean(LEAF_CI_IS_UNREAD))
                 info.unreadIds.add(item);
+
             boolean isMessage = false;
             switch (type) {
                 case MailItem.TYPE_CONTACT:  info.contacts++;   break;
                 case MailItem.TYPE_MESSAGE:  isMessage = true;  break;
             }
-            // detect deleted virtual conversations
-            if (isMessage && rs.getBoolean(LEAF_CI_IS_NOT_CHILD))
-                info.itemIds.add(MailItem.TYPE_VIRTUAL_CONVERSATION, -id);
+
+            // record deleted virtual conversations and modified-or-deleted real conversations
+            if (isMessage) {
+                int parentId = rs.getInt(LEAF_CI_PARENT_ID);
+                if (rs.wasNull() || parentId <= 0)
+                    info.itemIds.add(MailItem.TYPE_VIRTUAL_CONVERSATION, -id);
+                else
+                    info.modifiedIds.add(parentId);
+            }
 
             Integer folderId = rs.getInt(LEAF_CI_FOLDER_ID);
             LocationCount count = info.messages.get(folderId);
