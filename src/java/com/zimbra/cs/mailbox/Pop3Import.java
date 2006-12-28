@@ -60,7 +60,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 public class Pop3Import
 implements MailItemImport {
 
-    private static final int TIMEOUT = 10 * (int) Constants.MILLIS_PER_SECOND;
+    private static final int TIMEOUT = 20 * (int) Constants.MILLIS_PER_SECOND;
     
     // (item id).(blob digest)
     private static final Pattern PAT_ZIMBRA_UIDL = Pattern.compile("(\\d+)\\.([^\\.]+)");
@@ -72,7 +72,8 @@ implements MailItemImport {
     
     static {
         Properties props = new Properties();
-        props.put("mail.pop3.connectiontimeout", TIMEOUT);
+        props.setProperty("mail.pop3.connectiontimeout", Integer.toString(TIMEOUT));
+        props.setProperty("mail.pop3.timeout", Integer.toString(TIMEOUT));
         sSession = Session.getInstance(props);
         
         props.put("mail.pop3.socketFactory.class", "com.zimbra.common.util.DummySSLSocketFactory");
