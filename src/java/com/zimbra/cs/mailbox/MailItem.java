@@ -1680,36 +1680,47 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  in the process of deleting via a call to {@link MailItem#delete}. */
     public static class PendingDelete {
         /** The id of the item that {@link MailItem#delete} was called on. */
-        public int  rootId;
+        public int rootId;
+
         /** Whether some of the item's children are not being deleted. */
         public boolean incomplete;
+
         /** The total size of all the items being deleted. */
         public long size;
+
         /** The ids of all items being deleted. */
         public TypedIdList itemIds = new TypedIdList();
+
         /** The ids of all unread items being deleted.  This is a subset of
          *  {@link #itemIds}. */
         public List<Integer> unreadIds = new ArrayList<Integer>();
+
         /** The ids of all items that must be deleted but whose deletion
          *  must be deferred because of foreign key constraints. (E.g.
          *  {@link Conversation}s whose messages are all deleted during a
          *  {@link Folder} delete.) */
         public List<Integer> cascadeIds;
+
         /** The document ids that need to be removed from the index. */
-        public List<Integer> indexIds  = new ArrayList<Integer>();
+        public List<Integer> indexIds = new ArrayList<Integer>();
+
         /** The ids of all items with the {@link Flag#BITMASK_COPIED} flag being
          *  deleted.  Items in <code>sharedIndex</code> whose last copies are
          *  being removed are added to {@link #indexIds} via a call to
          *  {@link DbMailItem#resolveSharedIndex}. */
         public Set<Integer> sharedIndex;
+
         /** The {@link com.zimbra.cs.store.Blob}s for all items being deleted that have content
          *  persisted in the store. */
         public List<MailboxBlob> blobs = new ArrayList<MailboxBlob>();
+
         /** The number of {@link Contact}s being deleted. */
-        public int  contacts  = 0;
+        public int contacts = 0;
+
         /** Maps {@link Folder} ids to {@link DbMailItem.LocationCount}s
          *  tracking various per-folder counts for items being deleted. */
         public Map<Integer, DbMailItem.LocationCount> messages = new HashMap<Integer, DbMailItem.LocationCount>();
+
 
         /** Combines the data from another <code>PendingDelete</code> into
          *  this object.  The other <code>PendingDelete</code> is unmodified.
@@ -1727,20 +1738,20 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
     }
 
-    static final boolean DELETE_ITEM = false, DELETE_CONTENTS = true;
+    enum DeleteScope { ENTIRE_ITEM, CONTENTS_ONLY };
 
     void delete() throws ServiceException {
-        delete(DELETE_ITEM, true);
+        delete(DeleteScope.ENTIRE_ITEM, true);
     }
 
-    void delete(boolean childrenOnly, boolean writeTombstones) throws ServiceException {
-        if (!childrenOnly && !isDeletable())
+    void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
+        if (scope == DeleteScope.ENTIRE_ITEM && !isDeletable())
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
 
         // get the full list of things that are being removed
         PendingDelete info = getDeletionInfo();
         assert(info != null && info.itemIds != null);
-        if (childrenOnly || info.incomplete) {
+        if (scope == DeleteScope.CONTENTS_ONLY || info.incomplete) {
             // make sure to take the container's ID out of the list of deleted items
             info.itemIds.remove(getType(), mId);
         } else {
@@ -1756,7 +1767,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         mMailbox.markItemDeleted(info.itemIds.getAll());
         // when applicable, record the deleted MailItem (rather than just its id)
-        if (!childrenOnly && !info.incomplete)
+        if (scope == DeleteScope.ENTIRE_ITEM && !info.incomplete)
             markItemDeleted();
 
         // update the mailbox's size
@@ -1769,13 +1780,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         // actually delete the item from the DB
         if (info.incomplete)
             DbMailItem.delete(mMailbox, info.itemIds.getAll());
-        else if (childrenOnly)
+        else if (scope == DeleteScope.CONTENTS_ONLY)
             DbMailItem.deleteContents(this);
         else
             DbMailItem.delete(this);
 
         // remove the deleted item(s) from the mailbox's cache
-        purgeCache(info, !childrenOnly && !info.incomplete);
+        purgeCache(info, scope == DeleteScope.ENTIRE_ITEM && !info.incomplete);
 
         // cascade any other deletes
         if (info.cascadeIds != null && !info.cascadeIds.isEmpty()) {

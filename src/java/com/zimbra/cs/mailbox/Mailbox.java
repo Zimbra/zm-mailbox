@@ -4061,7 +4061,7 @@ public class Mailbox {
                     throw MailServiceException.MODIFY_CONFLICT();
 
                 // delete the item, but don't write the tombstone until we're finished...
-                item.delete(MailItem.DELETE_ITEM, false);
+                item.delete(MailItem.DeleteScope.ENTIRE_ITEM, false);
             }
 
             // collect all the tombstones and write once

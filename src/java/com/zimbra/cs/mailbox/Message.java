@@ -550,12 +550,12 @@ public class Message extends MailItem {
 
 
     @Override
-    void delete(boolean childrenOnly, boolean writeTombstones) throws ServiceException {
+    void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
         MailItem parent = getParent();
         if (parent instanceof Conversation && ((Conversation) parent).getMessageCount() == 1)
-            parent.delete(DELETE_ITEM, writeTombstones);
+            parent.delete(DeleteScope.ENTIRE_ITEM, writeTombstones);
         else
-            super.delete(childrenOnly, writeTombstones);
+            super.delete(scope, writeTombstones);
     }
 
 

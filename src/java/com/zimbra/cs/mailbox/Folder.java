@@ -755,8 +755,8 @@ public class Folder extends MailItem {
 
     /** Deletes this folder and all its subfolders. */
     @Override
-    void delete(boolean childrenOnly, boolean writeTombstones) throws ServiceException {
-        if (childrenOnly) {
+    void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
+        if (scope == DeleteScope.CONTENTS_ONLY) {
             deleteSingleFolder(writeTombstones);
         } else {
             List<Folder> subfolders = getSubfolderHierarchy();
@@ -779,12 +779,12 @@ public class Folder extends MailItem {
         }
 
         // now we can empty *this* folder
-        super.delete(DELETE_CONTENTS, true);
+        super.delete(DeleteScope.CONTENTS_ONLY, true);
     }
 
     /** Deletes just this folder without affecting its subfolders. */
     void deleteSingleFolder(boolean writeTombstones) throws ServiceException {
-        super.delete(hasSubfolders() ? DELETE_CONTENTS : DELETE_ITEM, writeTombstones);
+        super.delete(hasSubfolders() ? DeleteScope.CONTENTS_ONLY : DeleteScope.ENTIRE_ITEM, writeTombstones);
     }
 
     /** Determines the set of items to be deleted.  Assembles a new

@@ -754,7 +754,7 @@ public class Conversation extends MailItem {
                 throw MailServiceException.MODIFY_CONFLICT();
         }
         if (totalDeleted != msgs.size() + 1)
-            info.incomplete = MailItem.DELETE_CONTENTS;
+            info.incomplete = true;
         return info;
     }
 
