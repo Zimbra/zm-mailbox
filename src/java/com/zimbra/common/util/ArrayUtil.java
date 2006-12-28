@@ -24,6 +24,8 @@
  */
 package com.zimbra.common.util;
 
+import java.util.Collection;
+
 
 public class ArrayUtil {
 
@@ -75,9 +77,15 @@ public class ArrayUtil {
         return array;
     }
 
-    /**
-     * Returns <code>true</code> if the given array is <code>null</code> or empty.
-     */
+    /** Converts a {@link Collection} of Integers into an int[] array. */
+    public static int[] toIntArray(Collection<Integer> c) {
+        int intArray[] = new int[c.size()], pos = 0;
+        for (Integer id : c)
+            intArray[pos++] = id;
+        return intArray;
+    }
+
+    /** Returns <code>true</code> if the given array is <tt>null</tt> or empty. */
     public static boolean isEmpty(Object[] array) {
         return (array == null || array.length == 0);
     }
