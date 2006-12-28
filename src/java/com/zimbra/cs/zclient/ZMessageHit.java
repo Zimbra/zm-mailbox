@@ -206,7 +206,9 @@ public class ZMessageHit implements ZSearchHit {
 		if (event instanceof ZModifyMessageEvent) {
 			ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
             mFlags = mevent.getFlags(mFlags);
-            mTags = mevent.getTagIds(mTags);			
-		}
+            mTags = mevent.getTagIds(mTags);
+            mFolderId = mevent.getFolderId(mFolderId);
+            mConvId = mevent.getConversationId(mConvId);
+        }
 	}
 }

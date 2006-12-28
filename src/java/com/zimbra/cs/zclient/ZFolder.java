@@ -208,17 +208,19 @@ public class ZFolder implements ZItem, Comparable {
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
         if (event instanceof ZModifyFolderEvent) {
             ZModifyFolderEvent fevent = (ZModifyFolderEvent) event;
-            mName = fevent.getName(mName);
-            mParentId = fevent.getParentId(mParentId);
-            mFlags = fevent.getFlags(mFlags);
-            mColor = fevent.getColor(mColor);
-            mUnreadCount = fevent.getUnreadCount(mUnreadCount);
-            mMessageCount = fevent.getMessageCount(mMessageCount);
-            mDefaultView = fevent.getDefaultView(mDefaultView);
-            mRestURL = fevent.getRestURL(mRestURL);
-            mRemoteURL = fevent.getRemoteURL(mRemoteURL);
-            mEffectivePerms = fevent.getEffectivePerm(mEffectivePerms);
-            mGrants = fevent.getGrants(mGrants);
+            if (fevent.getId().equals(mId)) {
+                mName = fevent.getName(mName);
+                mParentId = fevent.getParentId(mParentId);
+                mFlags = fevent.getFlags(mFlags);
+                mColor = fevent.getColor(mColor);
+                mUnreadCount = fevent.getUnreadCount(mUnreadCount);
+                mMessageCount = fevent.getMessageCount(mMessageCount);
+                mDefaultView = fevent.getDefaultView(mDefaultView);
+                mRestURL = fevent.getRestURL(mRestURL);
+                mRemoteURL = fevent.getRemoteURL(mRemoteURL);
+                mEffectivePerms = fevent.getEffectivePerm(mEffectivePerms);
+                mGrants = fevent.getGrants(mGrants);
+            }
         }
     }
         

@@ -47,10 +47,12 @@ public class ZMountpoint extends ZFolder {
     public void modifyNotification(ZModifyEvent e) throws ServiceException {
         if (e instanceof ZModifyMountpointEvent) {
             ZModifyMountpointEvent mpe = (ZModifyMountpointEvent) e;
-            mOwnerDisplayName = mpe.getOwnerDisplayName(mOwnerDisplayName);
-            mRemoteId = mpe.getRemoteId(mRemoteId);
-            mOwnerId = mpe.getOwnerId(mOwnerId);
-            super.modifyNotification(e);
+            if (mpe.getId().equals(getId())) {
+                mOwnerDisplayName = mpe.getOwnerDisplayName(mOwnerDisplayName);
+                mRemoteId = mpe.getRemoteId(mRemoteId);
+                mOwnerId = mpe.getOwnerId(mOwnerId);
+                super.modifyNotification(e);
+            }
         }
     }
 

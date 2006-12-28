@@ -76,7 +76,7 @@ public class ZConversationHit implements ZSearchHit {
     	if (event instanceof ZModifyConversationEvent) {
     		ZModifyConversationEvent cevent = (ZModifyConversationEvent) event;
     		mFlags = cevent.getFlags(mFlags);
-    		mTags = cevent.getFlags(mTags);
+    		mTags = cevent.getTagIds(mTags);
     		mSubject = cevent.getSubject(mSubject);
     		mFragment = cevent.getFragment(mFragment);
     		mMessageCount = cevent.getMessageCount(mMessageCount);

@@ -53,10 +53,12 @@ public class ZSearchFolder extends ZFolder {
     public void modifyNotification(ZModifyEvent e) throws ServiceException {
         if (e instanceof ZModifySearchFolderEvent) {
             ZModifySearchFolderEvent sfe = (ZModifySearchFolderEvent) e;
-            mQuery = sfe.getQuery(mQuery);
-            mTypes = sfe.getTypes(mTypes);
-            mSortBy = sfe.getSortBy(mSortBy);
-            super.modifyNotification(e);
+            if (sfe.getId().equals(getId())) {
+                mQuery = sfe.getQuery(mQuery);
+                mTypes = sfe.getTypes(mTypes);
+                mSortBy = sfe.getSortBy(mSortBy);
+                super.modifyNotification(e);
+            }
         }
     }
 

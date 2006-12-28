@@ -104,6 +104,9 @@ public class ZMailbox {
         if (LC.ssl_allow_untrusted_certs.booleanValue())
             EasySSLProtocolSocketFactory.init();
     }
+
+    public final static int MAX_NUM_CACHED_SEARCH_PAGERS = 5;
+    
     public final static String PATH_SEPARATOR = "/";
     
     public final static char PATH_SEPARATOR_CHAR = '/';
@@ -201,13 +204,12 @@ public class ZMailbox {
 
     private String mAuthToken;
     private SoapHttpTransport mTransport;
-
     private Map<String, ZTag> mNameToTag;
     private Map<String, ZItem> mIdToItem;
     private ZGetInfoResult mGetInfoResult;
     private ZFolder mUserRoot;
-    private SoapTransport.DebugListener mListener;
     private boolean mNeedsRefresh = true;
+    private ZSearchPagerCache mSearchPagerCache;
     
     private long mSize;
 
@@ -219,6 +221,8 @@ public class ZMailbox {
     
     public ZMailbox(Options options) throws ServiceException {
     	mHandlers.add(new InternalEventHandler());
+    	mSearchPagerCache = new ZSearchPagerCache(MAX_NUM_CACHED_SEARCH_PAGERS);
+    	mHandlers.add(mSearchPagerCache);
     	if (options.getEventHandler() != null)
     		mHandlers.add(options.getEventHandler());
         initPreAuth(options.getUri(), options.getDebugListener());
@@ -260,7 +264,6 @@ public class ZMailbox {
     public void initPreAuth(String uri, SoapTransport.DebugListener listener) {
         mNameToTag = new HashMap<String, ZTag>();
         mIdToItem = new HashMap<String, ZItem>();                
-        mListener = listener;
         setSoapURI(uri);
         if (listener != null) mTransport.setDebugListener(listener);
     }
@@ -1834,7 +1837,21 @@ public class ZMailbox {
     public ZSearchResult search(ZSearchParams params) throws ServiceException {
         return internalSearch(null, params);
     }
-    
+
+    /**
+     * do a search, using potentially cached results for efficient paging forward/backward.
+     * Search hits are kept up to date via notifications.
+     *
+     * @param params search prams. Should not change from call to call.
+     * @return search result
+     * @throws ServiceException on error
+     * @param page page of results to return. page size is determined by limit in params.
+     * @param ignoreCached ignore the cache and refresh the search.
+     */
+    public ZSearchPagerResult search(ZSearchParams params, int page, boolean ignoreCached) throws ServiceException {
+        return mSearchPagerCache.search(this, params, page, ignoreCached);
+    }
+
     /**
      *  do a search conv
      * @param convId id of conversation to search 

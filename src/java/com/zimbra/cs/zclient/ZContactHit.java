@@ -143,16 +143,18 @@ public class ZContactHit implements ZSearchHit {
 	public void modifyNotification(ZModifyEvent event) throws ServiceException {
 		if (event instanceof ZModifyContactEvent) {
 			ZModifyContactEvent cevent = (ZModifyContactEvent) event;
-			mTagIds = cevent.getTagIds(mTagIds);
-			mFolderId = cevent.getFolderId(mFolderId);
-			mFlags = cevent.getFlags(mFlags);
-			mRevision = cevent.getRevision(mRevision);
-			mFileAsStr = cevent.getFileAsStr(mFileAsStr);
-			mEmail = cevent.getEmail(mEmail);
-			mEmail2 = cevent.getEmail(mEmail2);
-			mEmail3 = cevent.getEmail(mEmail3);
-			//mMetaDataChangedDate = cevent.getMetaDataChangedDate(mMetaDataChangedDate);
-			//mAttrs = cevent.getAttrs(mAttrs);
-		}
+            if (cevent.getId().equals(mId)) {
+                mTagIds = cevent.getTagIds(mTagIds);
+                mFolderId = cevent.getFolderId(mFolderId);
+                mFlags = cevent.getFlags(mFlags);
+                mRevision = cevent.getRevision(mRevision);
+                mFileAsStr = cevent.getFileAsStr(mFileAsStr);
+                mEmail = cevent.getEmail(mEmail);
+                mEmail2 = cevent.getEmail(mEmail2);
+                mEmail3 = cevent.getEmail(mEmail3);
+                //mMetaDataChangedDate = cevent.getMetaDataChangedDate(mMetaDataChangedDate);
+                //mAttrs = cevent.getAttrs(mAttrs);
+            }
+        }
 	}
 }

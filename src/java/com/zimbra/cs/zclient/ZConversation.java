@@ -97,13 +97,15 @@ public class ZConversation implements ZItem {
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
     	if (event instanceof ZModifyConversationEvent) {
     		ZModifyConversationEvent cevent = (ZModifyConversationEvent) event;
-    		mFlags = cevent.getFlags(mFlags);
-    		mTags = cevent.getFlags(mTags);
-    		mSubject = cevent.getSubject(mSubject);
-    		//mFragment = cevent.getFragment(mFragment);
-    		mMessageCount = cevent.getMessageCount(mMessageCount);
-    		//mRecipients = cevent.getRecipients(mRecipients);
-    	}
+            if (cevent.getId().equals(mId)) {
+                mFlags = cevent.getFlags(mFlags);
+                mTags = cevent.getTagIds(mTags);
+                mSubject = cevent.getSubject(mSubject);
+                //mFragment = cevent.getFragment(mFragment);
+                mMessageCount = cevent.getMessageCount(mMessageCount);
+                //mRecipients = cevent.getRecipients(mRecipients);
+            }
+        }
     }
 
     public String getId() {
@@ -150,6 +152,7 @@ public class ZConversation implements ZItem {
         private String mTags;        
         private String mFragment;
         private String mId;
+        private String mFolderId;
         private ZEmailAddress mSender;
         private long mSize;
         
@@ -158,6 +161,7 @@ public class ZConversation implements ZItem {
             mFlags = e.getAttribute(MailService.A_FLAGS, null);
             mDate = e.getAttributeLong(MailService.A_DATE);
             mTags = e.getAttribute(MailService.A_TAGS, null);
+            mFolderId = e.getAttribute(MailService.A_FOLDER, null);
             Element fr = e.getOptionalElement(MailService.E_FRAG);
             if (fr != null) mFragment = fr.getText();        
             mSize = e.getAttributeLong(MailService.A_SIZE);
@@ -168,15 +172,19 @@ public class ZConversation implements ZItem {
         public void modifyNotification(ZModifyEvent event) throws ServiceException {
         	if (event instanceof ZModifyMessageEvent) {
         		ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
-        		mFlags = mevent.getFlags(mFlags);
-        		mTags = mevent.getTagIds(mTags);
-        	}
+                if (mevent.getId().equals(mId)) {
+                    mFlags = mevent.getFlags(mFlags);
+                    mTags = mevent.getTagIds(mTags);
+                    mFolderId = mevent.getFolderId(mFolderId);
+                }
+            }
         }
 
         public String toString() {
             ZSoapSB sb = new ZSoapSB();
             sb.beginStruct();
             sb.add("id", mId);
+            sb.add("folderId", mFolderId);
             sb.add("flags", mFlags);
             sb.add("fragment", mFragment);
             sb.add("tags", mTags);
@@ -209,6 +217,10 @@ public class ZConversation implements ZItem {
 
         public long getSize() {
             return mSize;
+        }
+
+        public String getFolderId() {
+            return mFolderId;
         }
 
         public String getTagIds() {
