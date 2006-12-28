@@ -45,7 +45,6 @@ import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
-import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 import com.zimbra.cs.zclient.ZTag.Color;
 import com.zimbra.cs.zclient.event.ZCreateEvent;
 import com.zimbra.cs.zclient.event.ZDeleteEvent;
@@ -85,7 +84,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -112,13 +110,11 @@ public class ZMailboxUtil implements DebugListener {
     private ZMailbox mMbox;
     private String mPrompt = "mbox> ";
     ZSearchParams mSearchParams;
-    ZSearchResult mSearchResult;
-    ZSearchParams mConvSearchParams;    
+    int mSearchPage;
+    ZSearchParams mConvSearchParams;
     ZSearchResult mConvSearchResult;
     SoapProvisioning mProv;
     
-    private Stack<Cursor> mSearchCursors = new Stack<Cursor>();
-    private Stack<Integer> mSearchOffsets = new Stack<Integer>();
     private Map<Integer, String> mIndexToId = new HashMap<Integer, String>();
     
     /** current command */
@@ -445,7 +441,6 @@ public class ZMailboxUtil implements DebugListener {
         dumpMailboxConnect();
         mPrompt = String.format("mbox %s> ", mMbox.getName());
         mSearchParams = null;
-        mSearchResult = null;
         mConvSearchParams = null;    
         mConvSearchResult = null;
         mIndexToId.clear();
@@ -1190,45 +1185,36 @@ public class ZMailboxUtil implements DebugListener {
         String types = typesOpt();
         mSearchParams.setTypes(types != null ? types : ZSearchParams.TYPE_CONVERSATION);        
         
-        mSearchCursors.clear();
-        mSearchOffsets.clear();
-        mSearchOffsets.push(0);
         mIndexToId.clear();
+        mSearchPage = 0;
+        ZSearchPagerResult pager = mMbox.search(mSearchParams, mSearchPage, false);
         //System.out.println(result);
-        dumpSearch(mMbox.search(mSearchParams), verboseOpt());                
+        dumpSearch(pager.getResult(), verboseOpt());                
     }
     
     private void doSearchRedisplay(String[] args) throws ServiceException {
-        ZSearchResult sr = mSearchResult;
-        if (sr == null) return;
-        dumpSearch(mSearchResult, verboseOpt());
+        if (mSearchParams == null) return;
+        ZSearchPagerResult pager = mMbox.search(mSearchParams, mSearchPage, false);
+        mSearchPage = pager.getActualPage();
+        if (pager.getResult().getHits().size() == 0) return;        
+        dumpSearch(pager.getResult(), verboseOpt());
     }
 
     private void doSearchNext(String[] args) throws ServiceException {
-        ZSearchParams sp = mSearchParams;
-        ZSearchResult sr = mSearchResult;
-        if (sp == null || sr == null || !sr.hasMore())
-            return;
-
-        List<ZSearchHit> hits = sr.getHits();
-        if (hits.size() == 0) return;
-        ZSearchHit lastHit = hits.get(hits.size()-1);
-        Cursor cursor = new Cursor(lastHit.getId(), lastHit.getSortField());
-        mSearchCursors.push(cursor);
-        mSearchOffsets.push(mSearchOffsets.peek() + hits.size());
-        sp.setCursor(cursor);
-        dumpSearch(mMbox.search(sp), verboseOpt());
+        if (mSearchParams == null) return;
+        ZSearchPagerResult pager = mMbox.search(mSearchParams, ++mSearchPage, false);
+        mSearchPage = pager.getActualPage();
+        if (pager.getResult().getHits().size() == 0) return;
+        dumpSearch(pager.getResult(), verboseOpt());
     }
 
     private void doSearchPrevious(String[] args) throws ServiceException {
-        ZSearchParams sp = mSearchParams;
-        ZSearchResult sr = mSearchResult;
-        if (sp == null || sr == null || mSearchCursors.size() == 0)
+        if (mSearchParams == null || mSearchPage == 0)
             return;
-        mSearchCursors.pop();
-        mSearchOffsets.pop();
-        sp.setCursor(mSearchCursors.size() > 0 ? mSearchCursors.peek() : null);
-        dumpSearch(mMbox.search(sp), verboseOpt());
+        ZSearchPagerResult pager = mMbox.search(mSearchParams, --mSearchPage, false);
+        mSearchPage = pager.getActualPage();
+        if (pager.getResult().getHits().size() == 0) return;
+        dumpSearch(pager.getResult(), verboseOpt());
     }
 
     String mConvSearchConvId;
@@ -1296,13 +1282,12 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void dumpSearch(ZSearchResult sr, boolean verbose) throws ServiceException {
-        mSearchResult =  sr;
         if (verbose) {
             System.out.println(sr);
             return;
         }
         
-        int offset = mSearchOffsets.peek();
+        int offset = mSearchPage * mSearchParams.getLimit();
         int first = offset+1;
         int last = offset+sr.getHits().size();
 

@@ -133,11 +133,13 @@ public class ZMessage implements ZItem {
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
     	if (event instanceof ZModifyMessageEvent) {
     		ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
-    		mFlags = mevent.getFlags(mFlags);
-    		mTags = mevent.getTagIds(mTags);
-    		mFolderId = mevent.getFolderId(mFolderId);
-    		mConversationId = mevent.getConversationId(mConversationId);
-    	}
+            if (mevent.getId().equals(mId)) {
+                mFlags = mevent.getFlags(mFlags);
+                mTags = mevent.getTagIds(mTags);
+                mFolderId = mevent.getFolderId(mFolderId);
+                mConversationId = mevent.getConversationId(mConversationId);
+            }
+        }
     }
 
     /**
