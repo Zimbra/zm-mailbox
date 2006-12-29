@@ -1187,14 +1187,14 @@ public class ZMailboxUtil implements DebugListener {
         
         mIndexToId.clear();
         mSearchPage = 0;
-        ZSearchPagerResult pager = mMbox.search(mSearchParams, mSearchPage, false);
+        ZSearchPagerResult pager = mMbox.search(mSearchParams, mSearchPage, true, false);
         //System.out.println(result);
         dumpSearch(pager.getResult(), verboseOpt());                
     }
     
     private void doSearchRedisplay(String[] args) throws ServiceException {
         if (mSearchParams == null) return;
-        ZSearchPagerResult pager = mMbox.search(mSearchParams, mSearchPage, false);
+        ZSearchPagerResult pager = mMbox.search(mSearchParams, mSearchPage, true, false);
         mSearchPage = pager.getActualPage();
         if (pager.getResult().getHits().size() == 0) return;        
         dumpSearch(pager.getResult(), verboseOpt());
@@ -1202,7 +1202,7 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doSearchNext(String[] args) throws ServiceException {
         if (mSearchParams == null) return;
-        ZSearchPagerResult pager = mMbox.search(mSearchParams, ++mSearchPage, false);
+        ZSearchPagerResult pager = mMbox.search(mSearchParams, ++mSearchPage, true, false);
         mSearchPage = pager.getActualPage();
         if (pager.getResult().getHits().size() == 0) return;
         dumpSearch(pager.getResult(), verboseOpt());
@@ -1211,7 +1211,7 @@ public class ZMailboxUtil implements DebugListener {
     private void doSearchPrevious(String[] args) throws ServiceException {
         if (mSearchParams == null || mSearchPage == 0)
             return;
-        ZSearchPagerResult pager = mMbox.search(mSearchParams, --mSearchPage, false);
+        ZSearchPagerResult pager = mMbox.search(mSearchParams, --mSearchPage, true, false);
         mSearchPage = pager.getActualPage();
         if (pager.getResult().getHits().size() == 0) return;
         dumpSearch(pager.getResult(), verboseOpt());

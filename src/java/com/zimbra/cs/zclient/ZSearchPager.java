@@ -29,10 +29,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.zclient.event.ZModifyItemEvent;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ZSearchPager {
 
@@ -46,16 +46,22 @@ public class ZSearchPager {
         mHitMap = new HashMap<String, ZSearchHit>();
     }
     
-    ZSearchResult search(ZMailbox mailbox, int page) throws ServiceException {
+    ZSearchResult search(ZMailbox mailbox, int page, boolean useCursor) throws ServiceException {
         while(mResults.size() <= page) {
             if (mResults.size() == 0){
                 mParams.setCursor(null);
+                mParams.setOffset(0);
             } else {
                 ZSearchResult lastResult = mResults.get(mResults.size()-1);
                 if (!lastResult.hasMore()) break;
-                List<ZSearchHit> lastHits = lastResult.getHits();
-                ZSearchHit lastHit = lastHits.get(lastHits.size()-1);
-                mParams.setCursor(new Cursor(lastHit.getId(), lastHit.getSortField()));
+                if (useCursor) {
+                    List<ZSearchHit> lastHits = lastResult.getHits();
+                    ZSearchHit lastHit = lastHits.get(lastHits.size()-1);
+                    mParams.setCursor(new Cursor(lastHit.getId(), lastHit.getSortField()));
+                } else {
+                    mParams.setCursor(null);
+                    mParams.setOffset(page*mParams.getLimit());
+                }
             }
             ZSearchResult result = mailbox.search(mParams);
             mResults.add(result);

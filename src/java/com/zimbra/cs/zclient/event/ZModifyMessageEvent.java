@@ -30,7 +30,7 @@ import com.zimbra.cs.service.mail.MailService;
 import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.soap.Element;
 
-public class ZModifyMessageEvent implements ZModifyItemEvent {
+public class ZModifyMessageEvent implements ZModifyItemEvent, ZModifyItemFolderEvent {
 
     protected Element mMessageEl;
 

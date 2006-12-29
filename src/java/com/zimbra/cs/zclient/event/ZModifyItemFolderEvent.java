@@ -26,11 +26,9 @@
 package com.zimbra.cs.zclient.event;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.soap.Element;
 
-public class ZModifyContactEvent extends ZContactEvent implements ZModifyItemEvent, ZModifyItemFolderEvent {
+public interface ZModifyItemFolderEvent extends ZModifyEvent {
 
-    public ZModifyContactEvent(Element e) throws ServiceException {
-        super(e);
-    }
+    public String getFolderId(String defaultValue) throws ServiceException;
+
 }

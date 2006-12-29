@@ -30,12 +30,11 @@ import com.zimbra.cs.zclient.event.ZCreateEvent;
 import com.zimbra.cs.zclient.event.ZDeleteEvent;
 import com.zimbra.cs.zclient.event.ZEventHandler;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
-import com.zimbra.cs.zclient.event.ZRefreshEvent;
 import com.zimbra.cs.zclient.event.ZModifyItemEvent;
-import org.apache.commons.collections.MapIterator;
+import com.zimbra.cs.zclient.event.ZRefreshEvent;
+import com.zimbra.cs.zclient.event.ZModifyItemFolderEvent;
 import org.apache.commons.collections.map.LRUMap;
-
-import java.util.List;
+import org.apache.commons.collections.MapIterator;
 
 class ZSearchPagerCache extends ZEventHandler {
 
@@ -45,35 +44,55 @@ class ZSearchPagerCache extends ZEventHandler {
         mSearchPagerCache = new LRUMap(maxItems);
     }
 
-    public synchronized ZSearchPagerResult search(ZMailbox mailbox, ZSearchParams params, int page, boolean ignoreCached) throws ServiceException {
+    public synchronized ZSearchPagerResult search(ZMailbox mailbox, ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
         ZSearchPager pager = (ZSearchPager) mSearchPagerCache.get(params);
-        if (pager != null && ignoreCached)
+        if (pager != null && !useCache) {
             mSearchPagerCache.remove(params);
+            pager = null;
+        }
         if (pager == null) {
             pager = new ZSearchPager(params);
             mSearchPagerCache.put(params, pager);
         }
-        ZSearchResult result = pager.search(mailbox, page);
+        ZSearchResult result = pager.search(mailbox, page, useCursor);
         return new ZSearchPagerResult(result,
                 page,
                 page >= pager.getNumberOfPages() ?  pager.getNumberOfPages()-1 : page,
                 params.getLimit());
     }
 
+    public synchronized void clear(String type) {
+        if (type == null) {
+            mSearchPagerCache.clear();
+        } else {
+            MapIterator mi = mSearchPagerCache.mapIterator();
+            while(mi.hasNext()) {
+                mi.next();
+                ZSearchParams params = (ZSearchParams) mi.getKey();
+                if (params.getTypes() != null && params.getTypes().contains(type))
+                    mi.remove();
+            }
+        }
+    }
+    
     public synchronized void handleRefresh(ZRefreshEvent refreshEvent, ZMailbox mailbox) throws ServiceException {
         // clear cache on a refresh
         mSearchPagerCache.clear();
     }
 
     public synchronized void handleCreate(ZCreateEvent event, ZMailbox mailbox) throws ServiceException {
-        // clear cache on any creates, since they could logically belong to a cached result
-        // TODO: maybe not? Just continue to use cache as long as possible?
+        // TODO: continue to use cache as long as possible?
         //mSearchPagerCache.clear();
     }
 
 
     public synchronized void handleModify(ZModifyEvent event, ZMailbox mailbox) throws ServiceException {
         if (event instanceof ZModifyItemEvent) {
+            if (event instanceof ZModifyItemFolderEvent) {
+                ZModifyItemFolderEvent mif = (ZModifyItemFolderEvent) event;
+                if (mif.getFolderId(null) != null)
+                    mSearchPagerCache.clear();
+            }
             for (Object obj : mSearchPagerCache.values()) {
                 ((ZSearchPager)obj).modifyNotification((ZModifyItemEvent)event);
             }
@@ -81,8 +100,11 @@ class ZSearchPagerCache extends ZEventHandler {
     }
 
     public synchronized void handleDelete(ZDeleteEvent event, ZMailbox mailbox) throws ServiceException {
+        mSearchPagerCache.clear();
+        /*
         // only delete cached pagers that contain an item.
         // easier to just clear the whole cache?
+
         List<String> ids = event.toList();
         MapIterator mi = mSearchPagerCache.mapIterator();
         while(mi.hasNext()) {
@@ -91,6 +113,7 @@ class ZSearchPagerCache extends ZEventHandler {
             if (pager.hasAnyItem(ids))
                 mi.remove();
         }
+        */
     }
     
 }
