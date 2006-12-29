@@ -120,6 +120,14 @@ public class ICalTimeZone extends SimpleTimeZone
     private SimpleOnset mStandardOnset;
     private SimpleOnset mDaylightOnset;
 
+    public ICalTimeZone cloneWithNewTZID(String tzid) {
+        ICalTimeZone cloneTZ = new ICalTimeZone(
+                tzid,
+                mStandardOffset, mDayToStdDtStart, mDayToStdRule,
+                mDaylightOffset, mStdToDayDtStart, mStdToDayRule);
+        return cloneTZ;
+    }
+
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("TZID=").append(getID());
@@ -207,6 +215,13 @@ public class ICalTimeZone extends SimpleTimeZone
     }
     
     private void initFromICalData() {
+        if (mDaylightOffset - mStandardOffset < 0) {
+            // Must be an error in the TZ definition.  Swap the offsets.
+            // (Saw this with Windows TZ for Windhoek, Namibia)
+            int tmp = mStandardOffset;
+            mStandardOffset = mDaylightOffset;
+            mDaylightOffset = tmp;
+        }
         setRawOffset(mStandardOffset);
         if (mHasDaylight) {
             mStandardOnset = parseOnset(mDayToStdRule, mDayToStdDtStart);
