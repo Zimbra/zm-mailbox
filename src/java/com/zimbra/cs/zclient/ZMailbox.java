@@ -1846,10 +1846,18 @@ public class ZMailbox {
      * @return search result
      * @throws ServiceException on error
      * @param page page of results to return. page size is determined by limit in params.
-     * @param ignoreCached ignore the cache and refresh the search.
+     * @param useCache use the cache if possible
      */
-    public ZSearchPagerResult search(ZSearchParams params, int page, boolean ignoreCached) throws ServiceException {
-        return mSearchPagerCache.search(this, params, page, ignoreCached);
+    public ZSearchPagerResult search(ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
+        return mSearchPagerCache.search(this, params, page, useCache, useCursor);
+    }
+
+    /**
+     *
+     * @param type if non-null, clear only cached searches of the specified tape
+     */
+    public void clearSearchCache(String type) {
+        mSearchPagerCache.clear(type);
     }
 
     /**
