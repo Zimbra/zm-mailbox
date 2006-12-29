@@ -2360,8 +2360,8 @@ public class DbMailItem {
             int setFlagMask = 0;
             long setTagMask = 0;
 
-            if (!ListUtil.isEmpty(c.tags))
-                for (Tag curTag : c.tags)
+            if (!ListUtil.isEmpty(c.tags)) {
+                for (Tag curTag : c.tags) {
                     if (curTag.getId() == Flag.ID_FLAG_UNREAD) {
                         tc.unread = Boolean.TRUE; 
                     } else if (curTag instanceof Flag) {
@@ -2369,12 +2369,14 @@ public class DbMailItem {
                     } else {
                         setTagMask |= curTag.getBitmask();
                     }
+                }
+            }
 
             int flagMask = setFlagMask;
             long tagMask = setTagMask;
 
-            if (!ListUtil.isEmpty(c.excludeTags))                 
-                for (Tag t : c.excludeTags) 
+            if (!ListUtil.isEmpty(c.excludeTags)) {
+                for (Tag t : c.excludeTags) {
                     if (t.getId() == Flag.ID_FLAG_UNREAD) {
                         tc.unread = Boolean.FALSE;
                     } else if (t instanceof Flag) {
@@ -2382,22 +2384,26 @@ public class DbMailItem {
                     } else {
                         tagMask |= t.getBitmask();
                     }
+                }
+            }
 
             TagsetCache tcFlags = getFlagsetCache(conn, mbox);
             TagsetCache tcTags  = getTagsetCache(conn, mbox);
             if (setTagMask != 0 || tagMask != 0) {
+                // note that tcTags.getMatchingTagsets() returns null when *all* tagsets match
                 tc.searchTagsets = tcTags.getMatchingTagsets(tagMask, setTagMask);
                 // if no items match the specified tags...
-                if (tc.searchTagsets.size() == 0) {
+                if (tc.searchTagsets != null && tc.searchTagsets.isEmpty()) {
                     tc.noMatches = true;
                     tc.searchTagsets = null; // otherwise we encode "tags IN()" which MySQL doesn't like
                 }
-
             }
+
             if (setFlagMask != 0 || flagMask != 0) {
+                // note that tcFlags.getMatchingTagsets() returns null when *all* flagsets match
                 tc.searchFlagsets = tcFlags.getMatchingTagsets(flagMask, setFlagMask);
                 // if no items match the specified flags...
-                if (tc.searchFlagsets.size() == 0) {
+                if (tc.searchFlagsets != null && tc.searchFlagsets.isEmpty()) {
                     tc.noMatches = true;
                     tc.searchFlagsets = null;  // otherwise we encode "flags IN()" which MySQL doesn't like
                 }
@@ -2423,76 +2429,97 @@ public class DbMailItem {
         if (c.automaticEmptySet())
             return param;
 
-        if (!ListUtil.isEmpty(c.types))
+        if (!ListUtil.isEmpty(c.types)) {
             for (byte type : c.types)
                 stmt.setByte(param++, type);
-        if (!ListUtil.isEmpty(c.excludeTypes))
+        }
+        if (!ListUtil.isEmpty(c.excludeTypes)) {
             for (byte type : c.excludeTypes)
                 stmt.setByte(param++, type); 
-        if (c.tagConstraints.searchTagsets != null)
+        }
+
+        if (c.tagConstraints.searchTagsets != null) {
             for (long tagset : c.tagConstraints.searchTagsets)
                 stmt.setLong(param++, tagset);
-        if (c.tagConstraints.searchFlagsets != null)
+        }
+        if (c.tagConstraints.searchFlagsets != null) {
             for (long flagset : c.tagConstraints.searchFlagsets)
                 stmt.setLong(param++, flagset);
+        }
         if (c.tagConstraints.unread != null)
             stmt.setInt(param++, c.tagConstraints.unread ? 1 : 0);
+
         Collection<Folder> targetFolders = (!ListUtil.isEmpty(c.folders)) ? c.folders : c.excludeFolders;
-        if (targetFolders != null)
+        if (targetFolders != null) {
             for (Folder folder : targetFolders)
                 stmt.setInt(param++, folder.getId());
-        if (c.convId > 0)
+        }
+
+        if (c.convId > 0) {
             stmt.setInt(param++, c.convId);
-        else if (!ListUtil.isEmpty(c.prohibitedConvIds))
+        } else if (!ListUtil.isEmpty(c.prohibitedConvIds)) {
             for (int id : c.prohibitedConvIds)
                 stmt.setInt(param++, id);
-        if (!ListUtil.isEmpty(c.itemIds))
+        }
+
+        if (!ListUtil.isEmpty(c.itemIds)) {
             for (int id : c.itemIds)
                 stmt.setInt(param++, id);
-        if (!ListUtil.isEmpty(c.prohibitedItemIds))
+        }
+        if (!ListUtil.isEmpty(c.prohibitedItemIds)) {
             for (int id : c.prohibitedItemIds)
                 stmt.setInt(param++, id);
-        if (!ListUtil.isEmpty(c.indexIds))
+        }
+
+        if (!ListUtil.isEmpty(c.indexIds)) {
             for (int id : c.indexIds)
                 stmt.setInt(param++, id);
-        if (!ListUtil.isEmpty(c.dates))
+        }
+
+        if (!ListUtil.isEmpty(c.dates)) {
             for (DbSearchConstraints.NumericRange date : c.dates) {
                 if (date.lowest > 0)
                     stmt.setInt(param++, (int) Math.min(date.lowest / 1000, Integer.MAX_VALUE));
                 if (date.highest > 0)
                     stmt.setInt(param++, (int) Math.min(date.highest / 1000, Integer.MAX_VALUE));
             }
-        if (!ListUtil.isEmpty(c.modified)) 
+        }
+
+        if (!ListUtil.isEmpty(c.modified)) {
             for (DbSearchConstraints.NumericRange modified : c.modified) {
                 if (modified.lowest > 0)
                     stmt.setLong(param++, modified.lowest);
                 if (modified.highest > 0)
                     stmt.setLong(param++, modified.highest);
             }
-        if (!ListUtil.isEmpty(c.sizes))
+        }
+
+        if (!ListUtil.isEmpty(c.sizes)) {
             for (DbSearchConstraints.NumericRange size : c.sizes) {
                 if (size.lowest >= 0)
                     stmt.setInt(param++, (int) size.lowest);
                 if (size.highest >= 0)
                     stmt.setInt(param++, (int) size.highest);
             }
-        if (!ListUtil.isEmpty(c.subjectRanges))
+        }
+
+        if (!ListUtil.isEmpty(c.subjectRanges)) {
             for (DbSearchConstraints.StringRange cur: c.subjectRanges) {
                 if (cur.lowest != null) 
                     stmt.setString(param++, cur.lowest);
                 if (cur.highest != null) 
                     stmt.setString(param++, cur.highest);
             }
+        }
 
-        if (!ListUtil.isEmpty(c.senderRanges))
+        if (!ListUtil.isEmpty(c.senderRanges)) {
             for (DbSearchConstraints.StringRange cur: c.senderRanges) {
                 if (cur.lowest != null) 
                     stmt.setString(param++, cur.lowest);
                 if (cur.highest != null) 
                     stmt.setString(param++, cur.highest);
             }
-
-
+        }
 
         return param;
     }
