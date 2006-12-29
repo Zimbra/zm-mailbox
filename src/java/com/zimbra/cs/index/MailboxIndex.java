@@ -964,11 +964,11 @@ public final class MailboxIndex
                     sOpenWaitList.add(this);
                 }
                 sIndexWritersSweeper.wakeup();
-                //synchronized (this) {  // already done in method entry
                 try {
-                    wait(5000);
+                    // object.wait() must be synchronized() on -- so use getLock() which is
+                    // synchronized above
+                    getLock().wait(5000);
                 } catch (InterruptedException e) {}
-                //}
             }
             if (mLog.isDebugEnabled())
                 mLog.debug("openIndexWriter: map size after open = " + sizeAfter);
@@ -1069,8 +1069,8 @@ public final class MailboxIndex
                 waiter = (MailboxIndex) sOpenWaitList.removeFirst();
         }
         if (waiter != null) {
-            synchronized (waiter) {
-                waiter.notifyAll();
+            synchronized (waiter.getLock()) {
+                waiter.getLock().notifyAll();
             }
         }
     }
@@ -1838,6 +1838,7 @@ public final class MailboxIndex
                     throw ServiceException.FAILURE("indexDocument caught Exception", e);
                 }
                 break;
+//            case MailItem.TYPE_CHAT:
             case MailItem.TYPE_MESSAGE:
                 Message msg =  mbox.getMessageById(null, itemId);
                 InputStream is =msg.getRawMessage();
