@@ -614,7 +614,7 @@
 			zimbraMailHost ${zimbra.server.hostname} \
 			cn 'Administrator' displayName 'Administrator' \
 			zimbraIsAdminAccount TRUE \
-			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
 			telephoneNumber '+1 650 555 0000'
 		ca user1@${zimbra.server.hostname} test123 \
@@ -622,14 +622,14 @@
 			cn 'Demo User One' \
 			displayName 'Demo User One' \
 			zimbraMailQuota 62914560 \
-			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
 			telephoneNumber '+1 650 555 1111'
 		ca user2@${zimbra.server.hostname} test123 \
 			zimbraMailHost ${zimbra.server.hostname} \
 			cn 'Demo User Two' \
 			displayName 'Demo User Two' \
-			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+			zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 			zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
 			telephoneNumber '+1 650 555 2222'
 		ca user3@${zimbra.server.hostname} test123 \
@@ -682,7 +682,7 @@
 						   st 'California' \
 						   postalCode 94404 \
 						   co USA \
-					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
 		ccr room-amazon@${zimbra.server.hostname} test123 \
 					       displayName 'Amazon Conference Room' \
@@ -701,7 +701,7 @@
 						   zimbraCalResContactName 'Administrator' \
 						   zimbraCalResContactEmail admin@${zimbra.server.hostname} \
 						   zimbraCalResContactPhone '(650)555-1212' \
-					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
 		ccr room-nile@${zimbra.server.hostname} test123 \
 					       displayName 'Nile Conference Room' \
@@ -720,7 +720,7 @@
 						   zimbraCalResContactName 'Administrator' \
 						   zimbraCalResContactEmail admin@${zimbra.server.hostname} \
 						   zimbraCalResContactPhone '(650)555-1212' \
-					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
 		ccr projector1@${zimbra.server.hostname} test123 \
 					       displayName 'Projector' \
@@ -738,7 +738,7 @@
 						   zimbraCalResContactName 'Administrator' \
 						   zimbraCalResContactEmail admin@${zimbra.server.hostname} \
 						   zimbraCalResContactPhone '(650)555-1212' \
-					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
 		ccr pencil1@${zimbra.server.hostname} test123 \
 					       displayName '#2 pencil' \
@@ -756,7 +756,7 @@
 						   zimbraCalResContactName 'Administrator' \
 						   zimbraCalResContactEmail admin@${zimbra.server.hostname} \
 						   zimbraCalResContactPhone '(650)555-1212' \
-					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada) / Tijuana' \
+					       zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
 					       zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
 		</echo>
 	</target>
