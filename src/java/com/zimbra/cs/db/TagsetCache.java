@@ -51,12 +51,14 @@ class TagsetCache {
         mTagsets.addAll(tagsets);
     }
 
+    /** Returns the set of all bitmasks for which <code>(tagset & mask) == value</code>,
+     *  or <tt>null</tt> if <b>all</b> cached bitmasks match the given criteria. */
     Set<Long> getMatchingTagsets(long mask, long value) {
         Set<Long> matches = new HashSet<Long>();
         for (long tagset : mTagsets)
             if ((tagset & mask) == value)
                 matches.add(tagset);
-        return matches;
+        return matches.size() == mTagsets.size() ? null : matches;
     }
 
     Set<Long> getAllTagsets() {
