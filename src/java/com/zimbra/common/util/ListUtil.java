@@ -37,6 +37,7 @@ public class ListUtil {
 		return (c == null || c.size() == 0);
 	}
 	
+    
     /**
      * Merge two sorted Lists
      * 
@@ -47,9 +48,7 @@ public class ListUtil {
      * @param dest
      * @param src
      */
-    @SuppressWarnings("unchecked")
-    public static <T extends Comparable<? super T>> void mergeSortedLists(
-            List<T> dest, List<T>[] src, boolean removeDuplicates)
+    public static void mergeSortedLists(List dest, List[] /* Comparable */ src, boolean removeDuplicates)
     {
         int numSrc = 0;
         for (int i = 0; i < src.length; i++) {
@@ -66,8 +65,8 @@ public class ListUtil {
                 }
             }
         }
-
-        Iterator<T> iter[] = new Iterator[numSrc];
+        
+        Iterator iter[] = new Iterator[numSrc];
         int iterOffset = 0;
         for (int i = 0; i < src.length; i++) {
             if (src[i] != null) {
@@ -80,17 +79,17 @@ public class ListUtil {
         int numItersActive = src.length;
         
         // holds the next values of each iterator
-        T nextValue[] = (T[]) new Comparable[src.length];
+        Comparable nextValue[] = new Comparable[src.length];
         
-        T lowestValue = null;
+        Comparable lowestValue = null;
         int lowestValueOffset = -1;
         
-        T lastAdded = null;
+        Comparable lastAdded = null;
 
         // prime the pump
         for (int i = 0; i < iter.length; i++) {
             if (iter[i].hasNext()) {
-                nextValue[i] = iter[i].next();
+                nextValue[i] = (Comparable)(iter[i].next());
                 
                 if (lowestValue == null || (lowestValue.compareTo(nextValue[i]) > 0)) {
                     lowestValue = nextValue[i];
@@ -118,7 +117,7 @@ public class ListUtil {
             
             // iterate the proper src list
             if (iter[lowestValueOffset].hasNext()) {
-                nextValue[lowestValueOffset] = iter[lowestValueOffset].next();
+                nextValue[lowestValueOffset] = (Comparable)(iter[lowestValueOffset].next());
             } else {
                 iter[lowestValueOffset] = null;
                 numItersActive--;
@@ -145,34 +144,33 @@ public class ListUtil {
      * 
      * returns (a-b);
      */
-    public static <T> List<T> subtractSortedLists(
-            List<T> a, List<T> b, Comparator<T> comparator) {
-        List<T> result = new ArrayList<T>(a.size());
-
-        Iterator<T> aIter = a.iterator();
-        Iterator<T> bIter = b.iterator();
+    public static List subtractSortedLists(List /* Comparable */ a, List /* Comparable */ b) {
+        List toRet = new ArrayList();
         
-        T aVal = null;
+        Iterator aIter = a.iterator();
+        Iterator bIter = b.iterator();
+        
+        Comparable aVal=null;
         if (aIter.hasNext()) {
-            aVal = aIter.next();
+            aVal = (Comparable)aIter.next();
         }
-        T bVal = null;
+        Comparable bVal=null;
         if (bIter.hasNext()) {
-            bVal = bIter.next();
+            bVal = (Comparable)bIter.next();
         }
         
         while (aVal != null) {
             if (bVal == null) {
-                result.add(aVal);
+                toRet.add(aVal);
             } else {
-                int comp = comparator.compare(aVal, bVal);
+                int comp = aVal.compareTo(bVal);
                 if (comp < 0) {
                     // a < b
-                    result.add(aVal);
+                    toRet.add(aVal);
                 } else if (comp > 0) {
                     // a > b
                     if (bIter.hasNext()) {
-                        bVal = bIter.next();
+                        bVal = (Comparable)bIter.next();
                     } else {
                         bVal = null;
                     }
@@ -183,13 +181,13 @@ public class ListUtil {
             }
             
             if (aIter.hasNext()) {
-                aVal = aIter.next();
+                aVal = (Comparable)aIter.next();
             } else {
                 aVal = null;
             }
         }
         
-        return result;
+        return toRet;
     }
 
     /**
@@ -213,99 +211,103 @@ public class ListUtil {
 
         return splitLists;
     }
+    
+    static private void testListUtil() {
+        List<Integer>[] in = new List[5];
 
-    private static class Test {
+        int i = 0;
+        
+        in[i] = new ArrayList<Integer>();
+        in[i].add(new Integer(1));
+        in[i].add(new Integer(3));
+        in[i].add(new Integer(5));
+        in[i].add(new Integer(7));
+        in[i].add(new Integer(9));
+        
+        i = 1;
+        in[i] = new ArrayList<Integer>();
+        in[i].add(new Integer(1));
+        in[i].add(new Integer(7));
+        in[i].add(new Integer(12));
+        in[i].add(new Integer(13));
+        in[i].add(new Integer(13));
 
-        @SuppressWarnings("unchecked")
-        static private void doit() {
-            List<Integer>[] in = new List[5];
+        i = 2;
+        in[i] = new ArrayList<Integer>();
+        in[i].add(new Integer(1));
+        in[i].add(new Integer(2));
+        in[i].add(new Integer(3));
+        in[i].add(new Integer(4));
+        in[i].add(new Integer(5));
+        
 
-            int i = 0;
+        i = 3;
+        in[i] = new ArrayList<Integer>();
+        in[i].add(new Integer(5));
+        in[i].add(new Integer(6));
+        in[i].add(new Integer(7));
+        in[i].add(new Integer(8));
+        in[i].add(new Integer(9));
 
-            in[i] = new ArrayList<Integer>();
-            in[i].add(new Integer(1));
-            in[i].add(new Integer(3));
-            in[i].add(new Integer(5));
-            in[i].add(new Integer(7));
-            in[i].add(new Integer(9));
-
-            i = 1;
-            in[i] = new ArrayList<Integer>();
-            in[i].add(new Integer(1));
-            in[i].add(new Integer(7));
-            in[i].add(new Integer(12));
-            in[i].add(new Integer(13));
-            in[i].add(new Integer(13));
-
-            i = 2;
-            in[i] = new ArrayList<Integer>();
-            in[i].add(new Integer(1));
-            in[i].add(new Integer(2));
-            in[i].add(new Integer(3));
-            in[i].add(new Integer(4));
-            in[i].add(new Integer(5));
-
-            i = 3;
-            in[i] = new ArrayList<Integer>();
-            in[i].add(new Integer(5));
-            in[i].add(new Integer(6));
-            in[i].add(new Integer(7));
-            in[i].add(new Integer(8));
-            in[i].add(new Integer(9));
-
-            i = 4;
-            in[i] = new ArrayList<Integer>();
-            in[i].add(new Integer(100));
-            in[i].add(new Integer(101));
-            in[i].add(new Integer(102));
-            in[i].add(new Integer(103));
-            in[i].add(new Integer(104));
-
-            List<Integer> test;
-
-            test = new ArrayList<Integer>();
-            mergeSortedLists(test, in, false);
-            System.out.print("DUPES_NOT_REMOVED: ");
-            for (Integer cur : test) {
-                System.out.print(cur+", ");
-            }
-            System.out.println();
-
-            test = new ArrayList<Integer>();
-            mergeSortedLists(test, in, true);
-            System.out.print("DUPES_REMOVED: ");
-            for (Integer cur : test) {
-                System.out.print(cur+", ");
-            }
-            System.out.println();
-
-            test = subtractSortedLists(in[2], in[0], new IntegerComparator());
-            System.out.print("(1,2,3,4,5) - (1,3,5,7,9): ");
-            for (Iterator iter = test.iterator(); iter.hasNext();) {
-                Integer cur = (Integer)iter.next();
-                System.out.print(cur+", ");
-            }
-            System.out.println();
-
-            test = subtractSortedLists(in[0], in[1], new IntegerComparator());
-            System.out.print("(1,3,5,7,9) - (1,7,12,13,13): ");
-            for (Iterator iter = test.iterator(); iter.hasNext();) {
-                Integer cur = (Integer)iter.next();
-                System.out.print(cur+", ");
-            }
-            System.out.println();
-            
+        
+        i = 4;
+        in[i] = new ArrayList<Integer>();
+        in[i].add(new Integer(100));
+        in[i].add(new Integer(101));
+        in[i].add(new Integer(102));
+        in[i].add(new Integer(103));
+        in[i].add(new Integer(104));
+        
+        
+        List test;
+        
+        
+        test = new ArrayList();
+        mergeSortedLists(test, in, false);
+        System.out.print("DUPES_NOT_REMOVED: ");
+        for (Iterator iter = test.iterator(); iter.hasNext();) {
+            Integer cur = (Integer)iter.next();
+            System.out.print(cur+", ");
         }
+        System.out.println();
 
-        private static class IntegerComparator
-        implements Comparator<Integer> {
-            public int compare(Integer o1, Integer o2) {
-                return o1.compareTo(o2);
-            }
+        
+        test = new ArrayList();
+        mergeSortedLists(test, in, true);
+        System.out.print("DUPES_REMOVED: ");
+        for (Iterator iter = test.iterator(); iter.hasNext();) {
+            Integer cur = (Integer)iter.next();
+            System.out.print(cur+", ");
         }
+        System.out.println();
+        
+        test = subtractSortedLists(in[2], in[0]);
+        System.out.print("(1,2,3,4,5) - (1,3,5,7,9): ");
+        for (Iterator iter = test.iterator(); iter.hasNext();) {
+            Integer cur = (Integer)iter.next();
+            System.out.print(cur+", ");
+        }
+        System.out.println();
+
+        test = subtractSortedLists(in[0], in[1]);
+        System.out.print("(1,3,5,7,9) - (1,7,12,13,13): ");
+        for (Iterator iter = test.iterator(); iter.hasNext();) {
+            Integer cur = (Integer)iter.next();
+            System.out.print(cur+", ");
+        }
+        System.out.println();
+        
     }
     
+    
+    
+
+    /**
+     * @param args
+     */
     public static void main(String[] args) {
-        Test.doit();
+        // TODO Auto-generated method stub
+        testListUtil();
     }
+
 }
