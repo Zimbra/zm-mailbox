@@ -1004,6 +1004,9 @@ public class DbMailItem {
     }
 
     private static List<Integer> getPurgedConversations(Mailbox mbox, Set<Integer> candidates) throws ServiceException {
+        if (candidates == null || candidates.isEmpty())
+            return Collections.emptyList();
+
         Connection conn = mbox.getOperationConnection();
         List<Integer> purgedConvs = new ArrayList<Integer>();
 
