@@ -209,6 +209,9 @@ public class ZMessageHit implements ZSearchHit {
             mTags = mevent.getTagIds(mTags);
             mFolderId = mevent.getFolderId(mFolderId);
             mConvId = mevent.getConversationId(mConvId);
+            /* updated fetched message if we have one */
+            if (getMessage() != null)
+                getMessage().modifyNotification(event);
         }
 	}
 }
