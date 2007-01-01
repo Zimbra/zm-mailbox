@@ -31,22 +31,26 @@ import com.zimbra.cs.zclient.event.ZDeleteEvent;
 import com.zimbra.cs.zclient.event.ZEventHandler;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyItemEvent;
-import com.zimbra.cs.zclient.event.ZRefreshEvent;
 import com.zimbra.cs.zclient.event.ZModifyItemFolderEvent;
-import org.apache.commons.collections.map.LRUMap;
+import com.zimbra.cs.zclient.event.ZRefreshEvent;
+import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
+import com.zimbra.cs.zclient.event.ZCreateItemEvent;
 import org.apache.commons.collections.MapIterator;
+import org.apache.commons.collections.map.LRUMap;
 
 class ZSearchPagerCache extends ZEventHandler {
 
     LRUMap mSearchPagerCache;
+    private boolean mClearOnModifyItemFolder;
 
-    ZSearchPagerCache(int maxItems) {
+    ZSearchPagerCache(int maxItems, boolean clearOnModifyItemFolder) {
         mSearchPagerCache = new LRUMap(maxItems);
+        mClearOnModifyItemFolder = clearOnModifyItemFolder;
     }
-
+    
     public synchronized ZSearchPagerResult search(ZMailbox mailbox, ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
         ZSearchPager pager = (ZSearchPager) mSearchPagerCache.get(params);
-        if (pager != null && !useCache) {
+        if (pager != null && (!useCache || pager.isDirty())) {
             mSearchPagerCache.remove(params);
             pager = null;
         }
@@ -82,13 +86,20 @@ class ZSearchPagerCache extends ZEventHandler {
 
     public synchronized void handleCreate(ZCreateEvent event, ZMailbox mailbox) throws ServiceException {
         // TODO: continue to use cache as long as possible?
+        // For now, just mark conv searches dirty when
+        // a new message gets created in a cached search conv.
         //mSearchPagerCache.clear();
+        if (event instanceof ZCreateMessageEvent) {
+            for (Object obj : mSearchPagerCache.values()) {
+                ((ZSearchPager)obj).createNotification((ZCreateItemEvent)event);
+            }
+        }
     }
 
 
     public synchronized void handleModify(ZModifyEvent event, ZMailbox mailbox) throws ServiceException {
         if (event instanceof ZModifyItemEvent) {
-            if (event instanceof ZModifyItemFolderEvent) {
+            if (mClearOnModifyItemFolder && event instanceof ZModifyItemFolderEvent) {
                 ZModifyItemFolderEvent mif = (ZModifyItemFolderEvent) event;
                 if (mif.getFolderId(null) != null)
                     mSearchPagerCache.clear();
@@ -100,20 +111,9 @@ class ZSearchPagerCache extends ZEventHandler {
     }
 
     public synchronized void handleDelete(ZDeleteEvent event, ZMailbox mailbox) throws ServiceException {
-        mSearchPagerCache.clear();
-        /*
-        // only delete cached pagers that contain an item.
+        // only delete cached pagers that contain an item?
         // easier to just clear the whole cache?
-
-        List<String> ids = event.toList();
-        MapIterator mi = mSearchPagerCache.mapIterator();
-        while(mi.hasNext()) {
-        	mi.next();
-            ZSearchPager pager = (ZSearchPager) mi.getValue();
-            if (pager.hasAnyItem(ids))
-                mi.remove();
-        }
-        */
+        mSearchPagerCache.clear();
     }
     
 }

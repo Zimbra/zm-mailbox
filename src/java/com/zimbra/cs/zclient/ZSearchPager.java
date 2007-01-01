@@ -27,6 +27,9 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.zclient.event.ZModifyItemEvent;
+import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
+import com.zimbra.cs.zclient.event.ZCreateItemEvent;
+import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 
 import java.util.ArrayList;
@@ -39,6 +42,8 @@ public class ZSearchPager {
     private List<ZSearchResult> mResults;
     private ZSearchParams mParams;
     private Map<String, ZSearchHit> mHitMap;
+    private String mConvId;
+    private boolean mDirty;
 
     ZSearchPager(ZSearchParams params) {
         mParams = new ZSearchParams(params);
@@ -63,8 +68,12 @@ public class ZSearchPager {
                     mParams.setOffset(page*mParams.getLimit());
                 }
             }
-            ZSearchResult result = mailbox.search(mParams);
+            ZSearchResult result = mParams.getConvId() == null ? mailbox.search(mParams) : mailbox.searchConversation(mParams.getConvId(), mParams);
+            
             mResults.add(result);
+            if (result.getConversationSummary() != null) {
+                mConvId = result.getConversationSummary().getId();
+            }
             for (ZSearchHit hit : result.getHits())
                 mHitMap.put(hit.getId(), hit);
             if (!result.hasMore()) break;
@@ -86,24 +95,17 @@ public class ZSearchPager {
     public ZSearchResult get(int page) {
         return mResults.get(page);
     }
-    
-    /**
-     * @param id item id
-     * @return true if this search result contains the given item
-     */
-    boolean hasItem(String id) {
-        return mHitMap.get(id) != null;
+
+    public boolean isDirty() {
+        return mDirty;
     }
-    
+
     /**
-     * @param ids item ids
-     * @return true if this search result contains any of the given items
+     *
+     * @return conversation id if this pager holds result of a SearchConv
      */
-    boolean hasAnyItem(List<String> ids) {
-        for (String id: ids) {
-            if (mHitMap.get(id) != null) return true;
-        }
-        return false;
+    public String getConversationId() {
+        return mConvId;
     }
 
     /**
@@ -111,8 +113,31 @@ public class ZSearchPager {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     void modifyNotification(ZModifyItemEvent event) throws ServiceException {
+        if (mConvId != null && event instanceof ZModifyConversationEvent) {
+            ZModifyConversationEvent mce = (ZModifyConversationEvent) event;
+            if (mce.getMessageCount(-1) != -1) {
+                mDirty = true;
+            }
+            if (mce.getId().equals(mConvId)) {
+                for (ZSearchResult result : mResults) {
+                    result.getConversationSummary().modifyNotification(event);
+                }
+            }
+        }
         ZSearchHit hit = mHitMap.get(event.getId());
         if (hit != null)
             hit.modifyNotification(event);
+    }
+
+    /**
+     * @param event create item event
+     * @throws com.zimbra.common.service.ServiceException on error
+     */
+    void createNotification(ZCreateItemEvent event) throws ServiceException {
+        if (mConvId != null && event instanceof ZCreateMessageEvent) {
+            ZCreateMessageEvent cme = (ZCreateMessageEvent) event;
+            if (mConvId.equals(cme.getConversationId(null)))
+                mDirty = true;
+        }
     }
 }

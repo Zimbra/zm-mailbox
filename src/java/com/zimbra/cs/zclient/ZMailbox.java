@@ -106,6 +106,7 @@ public class ZMailbox {
     }
 
     public final static int MAX_NUM_CACHED_SEARCH_PAGERS = 5;
+    public final static int MAX_NUM_CACHED_SEARCH_CONV_PAGERS = 5;
     
     public final static String PATH_SEPARATOR = "/";
     
@@ -210,6 +211,7 @@ public class ZMailbox {
     private ZFolder mUserRoot;
     private boolean mNeedsRefresh = true;
     private ZSearchPagerCache mSearchPagerCache;
+    private ZSearchPagerCache mSearchConvPagerCache;
     
     private long mSize;
 
@@ -221,8 +223,10 @@ public class ZMailbox {
     
     public ZMailbox(Options options) throws ServiceException {
     	mHandlers.add(new InternalEventHandler());
-    	mSearchPagerCache = new ZSearchPagerCache(MAX_NUM_CACHED_SEARCH_PAGERS);
-    	mHandlers.add(mSearchPagerCache);
+    	mSearchPagerCache = new ZSearchPagerCache(MAX_NUM_CACHED_SEARCH_PAGERS, true);
+        mHandlers.add(mSearchPagerCache);
+        mSearchConvPagerCache = new ZSearchPagerCache(MAX_NUM_CACHED_SEARCH_CONV_PAGERS, false);
+        mHandlers.add(mSearchConvPagerCache);
     	if (options.getEventHandler() != null)
     		mHandlers.add(options.getEventHandler());
         initPreAuth(options.getUri(), options.getDebugListener());
@@ -1860,7 +1864,7 @@ public class ZMailbox {
     public void clearSearchCache(String type) {
         mSearchPagerCache.clear(type);
     }
-
+ 
     /**
      *  do a search conv
      * @param convId id of conversation to search 
@@ -1872,7 +1876,13 @@ public class ZMailbox {
         if (convId == null) throw ZClientException.CLIENT_ERROR("conversation id must not be null", null);
         return internalSearch(convId, params, true);
     }
-    
+
+    public ZSearchPagerResult searchConversation(String convId, ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
+        if (params.getConvId() == null)
+            params.setConvId(convId);
+        return mSearchConvPagerCache.search(this, params, page, useCache, useCursor);
+    }
+
     /**
      * A request that does nothing and always returns nothing. Used to keep a session alive, and return
      * any pending notifications.
