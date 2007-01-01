@@ -613,6 +613,11 @@ public class ToXML {
             String subject = mm.getSubject();
             if (subject != null)
                 m.addAttribute(MailService.E_SUBJECT, StringUtil.stripControlCharacters(subject), Element.DISP_CONTENT);
+
+            String fragment = msg.getFragment();
+            if (fragment != null && !fragment.equals(""))
+                m.addAttribute(MailService.E_FRAG, fragment, Element.DISP_CONTENT);
+
             String messageID = mm.getMessageID();
             if (messageID != null && !messageID.trim().equals(""))
                 m.addAttribute(MailService.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.DISP_CONTENT);

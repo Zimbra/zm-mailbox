@@ -78,6 +78,7 @@ public class ZMessage implements ZItem {
     private String mId;
     private String mFlags;
     private String mSubject;
+    private String mFragment;
     private String mTags;
     private String mFolderId;
     private String mConversationId;
@@ -102,6 +103,8 @@ public class ZMessage implements ZItem {
         mOrigId = e.getAttribute(MailService.A_ORIG_ID, null);        
         Element sub = e.getOptionalElement(MailService.E_SUBJECT);
         if (sub != null) mSubject = sub.getText();
+        Element fr = e.getOptionalElement(MailService.E_FRAG);
+        if (fr != null) mFragment = fr.getText();
         Element mid = e.getOptionalElement(MailService.E_MSG_ID_HDR);
         if (mid != null) mMessageIdHeader = mid.getText();
         
@@ -188,7 +191,8 @@ public class ZMessage implements ZItem {
         sb.add("flags", mFlags);
         sb.add("tags", mTags);
         sb.add("subject", mSubject);
-        sb.add("partName", mPartName);        
+        sb.add("fragment", mFragment);
+        sb.add("partName", mPartName);
         sb.add("messageIdHeader", mMessageIdHeader);
         sb.addDate("receivedDate", mReceivedDate);
         sb.addDate("sentDate", mSentDate);
@@ -221,6 +225,10 @@ public class ZMessage implements ZItem {
 
     public String getSubject() {
         return mSubject;
+    }
+
+    public String getFragment() {
+        return mFragment;
     }
 
     public String getTagIds() {
