@@ -25,28 +25,43 @@
 
 package com.zimbra.cs.zclient;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.MailService;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
+import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
 import com.zimbra.soap.Element;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ZSearchResult {
 
     private List<ZSearchHit> mHits;
+    private ZConversationSummary mConvSummary;
     private boolean mHasMore;
     private String mSortBy;
     private int mOffset;
 
     public ZSearchResult(Element e) throws ServiceException {
-        mSortBy = e.getAttribute(MailService.A_SORTBY);
-        mHasMore = e.getAttributeBool(MailService.A_QUERY_MORE);
-        mOffset = (int) e.getAttributeLong(MailService.A_QUERY_OFFSET);
+        init(e, e);
+    }
+
+    public ZSearchResult(Element e, boolean convNest) throws ServiceException {
+        if (!convNest) {
+            init(e, e);
+        } else {
+            Element c = e.getElement(MailService.E_CONV);
+            mConvSummary = new ZConversationSummary(c);
+            init(e, c);
+        }
+    }
+
+    private void init(Element resp, Element hits) throws ServiceException {
+        mSortBy = resp.getAttribute(MailService.A_SORTBY);
+        mHasMore = resp.getAttributeBool(MailService.A_QUERY_MORE);
+        mOffset = (int) resp.getAttributeLong(MailService.A_QUERY_OFFSET);
         mHits = new ArrayList<ZSearchHit>();
-        for (Element h: e.listElements()) {
+        for (Element h: hits.listElements()) {
             if (h.getName().equals(MailService.E_CONV)) {
                 mHits.add(new ZConversationHit(h));
             } else if (h.getName().equals(MailService.E_MSG)) {
@@ -68,6 +83,10 @@ public class ZSearchResult {
         return mHits;
     }
 
+    public ZConversationSummary getConversationSummary() {
+        return mConvSummary;
+    }
+    
     /**
      * @return true if there are more search results on the server
      */
@@ -100,4 +119,93 @@ public class ZSearchResult {
         return sb.toString();
     }
 
+    /*
+     * TODO: this class is really not a ZSearchHit, but for now that works best do to ZSEarchPagerCache. modifyNotication handling
+     */
+    public class ZConversationSummary implements ZSearchHit {
+
+        private String mId;
+        private String mFlags;
+        private String mTags;
+        private int mMessageCount;
+
+        public ZConversationSummary(Element e) throws ServiceException {
+            mId = e.getAttribute(MailService.A_ID);
+            mFlags = e.getAttribute(MailService.A_FLAGS, null);
+            mTags = e.getAttribute(MailService.A_TAGS, null);
+            mMessageCount = (int) e.getAttributeLong(MailService.A_NUM);
+        }
+
+        public void modifyNotification(ZModifyEvent event) throws ServiceException {
+            if (event instanceof ZModifyConversationEvent) {
+                ZModifyConversationEvent cevent = (ZModifyConversationEvent) event;
+                mFlags = cevent.getFlags(mFlags);
+                mTags = cevent.getTagIds(mTags);
+                mMessageCount = cevent.getMessageCount(mMessageCount);
+            }
+        }
+
+        public String getId() {
+            return mId;
+        }
+
+        public String getSortField() {
+            return null;
+        }
+
+        public float getScore() {
+            return 0;
+        }
+
+        public String toString() {
+            ZSoapSB sb = new ZSoapSB();
+            sb.beginStruct();
+            sb.add("id", mId);
+            sb.add("flags", mFlags);
+            sb.add("tags", mTags);
+            sb.add("messageCount", mMessageCount);
+            sb.endStruct();
+            return sb.toString();
+        }
+
+        public String getFlags() {
+            return mFlags;
+        }
+        
+        public String getTagIds() {
+            return mTags;
+        }
+
+        public int getMessageCount() {
+            return mMessageCount;
+        }
+
+        public boolean hasFlags() {
+            return mFlags != null && mFlags.length() > 0;
+        }
+
+        public boolean hasTags() {
+            return mTags != null && mTags.length() > 0;
+        }
+
+        public boolean hasAttachment() {
+            return hasFlags() && mFlags.indexOf(ZConversation.Flag.attachment.getFlagChar()) != -1;
+        }
+
+        public boolean isFlagged() {
+            return hasFlags() && mFlags.indexOf(ZConversation.Flag.flagged.getFlagChar()) != -1;
+        }
+
+        public boolean isSentByMe() {
+            return hasFlags() && mFlags.indexOf(ZConversation.Flag.sentByMe.getFlagChar()) != -1;
+        }
+
+        public boolean isUnread() {
+            return hasFlags() && mFlags.indexOf(ZConversation.Flag.unread.getFlagChar()) != -1;
+        }
+
+        public boolean isDraft() {
+            return hasFlags() && mFlags.indexOf(ZConversation.Flag.draft.getFlagChar()) != -1;
+        }
+    }
 }

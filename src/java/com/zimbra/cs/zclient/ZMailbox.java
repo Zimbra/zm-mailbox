@@ -1799,10 +1799,11 @@ public class ZMailbox {
 
     // ------------------------
     
-    private ZSearchResult internalSearch(String convId, ZSearchParams params) throws ServiceException {
+    private ZSearchResult internalSearch(String convId, ZSearchParams params, boolean nest) throws ServiceException {
         XMLElement req = new XMLElement(convId == null ? MailService.SEARCH_REQUEST : MailService.SEARCH_CONV_REQUEST);
 
         req.addAttribute(MailService.A_CONV_ID, convId);
+        if (nest) req.addAttribute(MailService.A_NEST_MESSAGES, true);
         if (params.getLimit() != 0) req.addAttribute(MailService.A_QUERY_LIMIT, params.getLimit());
         if (params.getOffset() != 0) req.addAttribute(MailService.A_QUERY_OFFSET, params.getOffset());
         if (params.getSortBy() != null) req.addAttribute(MailService.A_SORTBY, params.getSortBy().name());
@@ -1825,7 +1826,7 @@ public class ZMailbox {
             if (cursor.getPreviousSortValue() != null) cursorEl.addAttribute(MailService.A_SORTVAL, cursor.getPreviousSortValue());
         }
         
-        return new ZSearchResult(invoke(req));
+        return new ZSearchResult(invoke(req), nest);
     }
  
     /**
@@ -1835,7 +1836,7 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public ZSearchResult search(ZSearchParams params) throws ServiceException {
-        return internalSearch(null, params);
+        return internalSearch(null, params, false);
     }
 
     /**
@@ -1869,7 +1870,7 @@ public class ZMailbox {
      */
     public ZSearchResult searchConversation(String convId, ZSearchParams params) throws ServiceException {
         if (convId == null) throw ZClientException.CLIENT_ERROR("conversation id must not be null", null);
-        return internalSearch(convId, params);
+        return internalSearch(convId, params, true);
     }
     
     /**
