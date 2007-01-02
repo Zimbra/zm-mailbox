@@ -37,7 +37,6 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.redolog.op.IndexItem;
-import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -87,11 +86,14 @@ public class Document extends MailItem {
 
     public Document(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
-        mFragment = getLastRevision().getFragment();
     }
 
     public String getFragment() {
-        return mFragment;
+    	if (mFragment == null && mRevisionList.size() > 0)
+    		try {
+    			mFragment = getLastRevision().getFragment();
+    		} catch (ServiceException se) {}
+    	return mFragment;
     }
 
     public String getContentType() {
@@ -159,33 +161,36 @@ public class Document extends MailItem {
         return getVersion() + 1;
     }
 
-    private static Metadata getRevisionMetadata(int changeID, String author, ParsedDocument pd) {
+    private static Metadata getRevisionMetadata(int changeID, ParsedDocument pd) {
         Metadata rev = new Metadata();
         rev.put(Metadata.FN_REV_ID, changeID);
-        rev.put(Metadata.FN_CREATOR, author);
+        rev.put(Metadata.FN_CREATOR, pd.getCreator());
         rev.put(Metadata.FN_REV_DATE, pd.getCreatedDate());
         rev.put(Metadata.FN_REV_SIZE, pd.getSize());
         rev.put(Metadata.FN_FRAGMENT, pd.getFragment());
         return rev;
     }
 
-    public synchronized void addRevision(String author, ParsedDocument pd) throws ServiceException {
-        Metadata rev = getRevisionMetadata(mMailbox.getOperationChangeID(), author, pd);
+    public synchronized void reanalyze(Object obj) throws ServiceException {
+    	if (!(obj instanceof ParsedDocument))
+            throw ServiceException.FAILURE("cannot reanalyze non-ParsedDocument object", null);
+
+    	ParsedDocument pd = (ParsedDocument) obj;
+        Metadata rev = getRevisionMetadata(mMailbox.getOperationChangeID(), pd);
         rev.put(Metadata.FN_VERSION, getNextVersion());
         mRevisionList.add(rev);
         mFragment = pd.getFragment();
         mData.size = pd.getSize();
-        mData.contentChanged(mMailbox);
-        mMailbox.updateSize(mData.size);
-        DbMailItem.saveMetadata(this, encodeMetadata(new Metadata()).toString());
-        if (!mData.name.equals(getName())) {
-            mData.name = getName();
             DbMailItem.saveName(this, getFolderId());
-        }
-        markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_DATE | Change.MODIFIED_CONTENT);
         pd.setVersion(getVersion());
-        MessageCache.purge(this);
-        mBlob = null;
+
+        String encodedMetadata = encodeMetadata();
+        saveMetadata(encodedMetadata);
+        saveData(pd.getCreator(), encodedMetadata);
+        if (!pd.getFilename().equals(getName())) {
+        	rename(pd.getFilename());
+        	saveName();
+        }
     }
 
     public synchronized void purgeOldRevisions(int revToKeep) throws ServiceException, IOException {
@@ -218,9 +223,6 @@ public class Document extends MailItem {
 
         Mailbox mbox = folder.getMailbox();
         MetadataList revisions = new MetadataList();
-        Metadata rev = getRevisionMetadata(mbox.getOperationChangeID(), creator, pd);
-        rev.put(Metadata.FN_VERSION, 1);
-        revisions.add(rev);
 
         UnderlyingData data = new UnderlyingData();
         data.id          = id;

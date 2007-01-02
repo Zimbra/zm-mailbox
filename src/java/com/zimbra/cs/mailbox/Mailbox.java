@@ -4542,8 +4542,6 @@ public class Mailbox {
 
     public synchronized Document addDocumentRevision(OperationContext octxt, Document doc, byte[] rawData, String author) throws ServiceException {
         String digest = ByteUtil.getDigest(rawData);
-        StoreManager sm = StoreManager.getInstance();
-        Blob blob = null;
         boolean success = false;
         try {
             AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, digest, rawData.length, 0);
@@ -4552,27 +4550,19 @@ public class Mailbox {
             redoRecorder.setAuthor(author);
             redoRecorder.setDocument(doc);
             short volumeId = Volume.getCurrentMessageVolume().getId();
-            blob = sm.storeIncoming(rawData, digest, null, volumeId);
-            redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
-            markOtherItemDirty(blob);
+            // TODO: simplify the redoRecorder by not subclassing from CreateMessage
+            redoRecorder.setMessageBodyInfo(rawData, "", volumeId);
 
             ParsedDocument pd = new ParsedDocument(rawData, digest, doc.getName(), doc.getContentType(), getOperationTimestampMillis(), author);
-            doc.addRevision(author, pd);
+            doc.setContent(rawData, digest, volumeId, pd);
             queueForIndexing(doc, false, pd);
 
-            sm.link(blob, this, doc.getId(), doc.getLastRevision().getRevId(), volumeId);
             doc.purgeOldRevisions(1);  // purge all but 1 revisions.
             success = true;
         } catch (IOException ioe) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
         } finally {
             endTransaction(success);
-            if (blob != null)
-                try {
-                    sm.delete(blob);
-                } catch (IOException ioe) {
-//                  no harm done
-                }
         }
         return doc;
     }
@@ -4654,8 +4644,6 @@ public class Mailbox {
         String digest = ByteUtil.getDigest(rawData);
         Document doc;
         boolean success = false;
-        StoreManager sm = StoreManager.getInstance();
-        Blob blob = null;
         try {
             SaveDocument redoRecorder =
                 new SaveDocument(mId, digest, rawData.length, folderId);
@@ -4670,9 +4658,7 @@ public class Mailbox {
             int itemId  = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
             short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
 
-            blob = sm.storeIncoming(rawData, digest, null, volumeId);
-            redoRecorder.setMessageBodyInfo(rawData, blob.getPath(), blob.getVolumeId());
-            markOtherItemDirty(blob);
+            redoRecorder.setMessageBodyInfo(rawData, "", volumeId);
 
             ParsedDocument pd = new ParsedDocument(rawData, digest, filename, mimeType, getOperationTimestampMillis(), author);
 
@@ -4689,21 +4675,15 @@ public class Mailbox {
             else
                 throw MailServiceException.INVALID_TYPE(type);
 
+            doc.setContent(rawData, digest, volumeId, pd);
             redoRecorder.setMessageId(doc.getId());
             queueForIndexing(doc, false, pd);
-            sm.link(blob, this, itemId, doc.getLastRevision().getRevId(), volumeId);
             success = true;
 
         } catch (IOException ioe) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
         } finally {
             endTransaction(success);
-            if (blob != null)
-                try {
-                    sm.delete(blob);
-                } catch (IOException ioe) {
-                    // no harm done
-                }
         }
         return doc;
     }

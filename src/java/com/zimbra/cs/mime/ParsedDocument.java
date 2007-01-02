@@ -138,6 +138,7 @@ public class ParsedDocument {
         public int getSize() { return mRawData.length; }
     }
 
+    private String mCreator;
     private String mContentType;
     private String mFilename;
     private int mSize;
@@ -163,6 +164,7 @@ public class ParsedDocument {
         mFilename = filename;
         mContentType = ctype;
         mCreatedDate = createdDate;
+        mCreator = creator;
 
         try {
             MimeHandler handler = MimeHandler.getMimeHandler(ctype);
@@ -204,6 +206,7 @@ public class ParsedDocument {
     public String getContentType()  { return mContentType; }
     public int getSize()            { return mSize; }
     public String getDigest()       { return mDigest; }
+    public String getCreator()      { return mCreator; }
     
     public Document getDocument()   {
         return mDocument; 
