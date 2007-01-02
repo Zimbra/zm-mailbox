@@ -148,16 +148,19 @@ public class ResultsPager
             //   --> this depends on a secondary sort-order of HitID.  This doesn't
             //  currently hold up with ProxiedHits: we need to convert Hit sorting to
             //  use ItemIds (instead of int's) TODO FIXME
-            if ((comp == 0) && 
-                        (hit.getItemId() > mParams.getPrevMailItemId().getId())) {
+            if (comp == 0) {
+                if (mParams.getSortBy().isDescending()) {
+                    if (hit.getItemId() < mParams.getPrevMailItemId().getId())
+                        return hit;
+                } else {
+                    if (hit.getItemId() > mParams.getPrevMailItemId().getId())
+                        return hit;
+                }
+                // keep looking...
+                hit = mResults.getNext();
+            } else {
                 return hit;
             }
-            
-            // if (hit COMES AFTER prevSortValue) {
-//            if (comp > 0) {
-                return hit;
-//            }
-//            hit = mResults.getNext();
         }
 
         // end of line
@@ -170,32 +173,19 @@ public class ResultsPager
         
         ZimbraHit hit;
         
-        ZimbraHit dummyEndHit = null;
-        if (mParams.hasEndSortValue())
-            dummyEndHit = getDummyEndHit();
-        
-
         if (!mFixedOffset) {
             hit = forwardFindFirst();
         } else {
             hit = mResults.getNext();
         }
         if (hit != null) {
-            // if hit BEFORE dummyEndHit
-//            if (mParams.hasEndSortValue() && (hit.compareBySortField(mParams.getSortBy(), dummyEndHit) > 0))
-//                return;
-//            else
-                mHits.add(0, hit);
+            mHits.add(0, hit);
         }
         
         for (int i = 1; hit != null && i < mParams.getLimit(); i++) {
             hit = mResults.getNext();
             if (hit != null) {
-                // if hit BEFORE dummyEndHit
-//                if (mParams.hasEndSortValue() && (hit.compareBySortField(mParams.getSortBy(), dummyEndHit) > 0))
-//                    break;
-//                else
-                    mHits.add(i, hit);
+                mHits.add(i, hit);
             }
         }
     }
@@ -227,10 +217,6 @@ public class ResultsPager
             // if (hit COMES BEFORE endSortValue) {
             if (mParams.hasEndSortValue() && (hit.compareBySortField(mParams.getSortBy(), dummyEndHit) <=0)) 
                 break;
-            
-//          if (offset > mPrevOffset) {
-//                throw new NewResultsAtHeadException();
-//            }
             
             // okay, so it isn't time to stop yet.
             // add this hit onto our growing list.... and also take
