@@ -168,16 +168,14 @@ public class DbMailbox {
      * 
      * @throws ServiceException if the database creation fails
      */
-    public static void createMailboxDatabase(int mailboxId, int groupId)
+    public static void createMailboxDatabase(Connection conn, int mailboxId, int groupId)
     throws ServiceException {
         ZimbraLog.mailbox.debug("createMailboxDatabase(" + mailboxId + ")");
 
         File file = Config.getPathRelativeToZimbraHome("db/create_database.sql");
 
-        Connection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection();
             if (!DebugConfig.disableMailboxGroup && databaseExists(conn, mailboxId, groupId))
                 return;
 
@@ -197,7 +195,6 @@ public class DbMailbox {
             throw ServiceException.FAILURE("createMailboxDatabase(" + mailboxId + ")", e);
         } finally {
             DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
         }
     }
 
