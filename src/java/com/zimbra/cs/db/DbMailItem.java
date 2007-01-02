@@ -90,7 +90,7 @@ public class DbMailItem {
     public static final int MAX_SENDER_LENGTH = 128;
     public static final int MAX_TEXT_LENGTH   = 65534;
 
-    static final String IN_THIS_MAILBOX_AND = (!DebugConfig.disableMailboxGroup ? "mailbox_id = ? AND " : "");
+    public static final String IN_THIS_MAILBOX_AND = (!DebugConfig.disableMailboxGroup ? "mailbox_id = ? AND " : "");
 
 
     public static void create(Mailbox mbox, UnderlyingData data) throws ServiceException {
