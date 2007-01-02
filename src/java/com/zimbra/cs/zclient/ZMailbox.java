@@ -79,6 +79,7 @@ import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.commons.collections.map.LRUMap;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -107,6 +108,7 @@ public class ZMailbox {
 
     public final static int MAX_NUM_CACHED_SEARCH_PAGERS = 5;
     public final static int MAX_NUM_CACHED_SEARCH_CONV_PAGERS = 5;
+    public final static int MAX_NUM_CACHED_MESSAGES = 5;    
     
     public final static String PATH_SEPARATOR = "/";
     
@@ -212,7 +214,8 @@ public class ZMailbox {
     private boolean mNeedsRefresh = true;
     private ZSearchPagerCache mSearchPagerCache;
     private ZSearchPagerCache mSearchConvPagerCache;
-    
+    private LRUMap mMessageCache;
+
     private long mSize;
 
     private List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
@@ -227,7 +230,9 @@ public class ZMailbox {
         mHandlers.add(mSearchPagerCache);
         mSearchConvPagerCache = new ZSearchPagerCache(MAX_NUM_CACHED_SEARCH_CONV_PAGERS, false);
         mHandlers.add(mSearchConvPagerCache);
-    	if (options.getEventHandler() != null)
+        mMessageCache = new LRUMap(MAX_NUM_CACHED_MESSAGES);
+        
+        if (options.getEventHandler() != null)
     		mHandlers.add(options.getEventHandler());
         initPreAuth(options.getUri(), options.getDebugListener());
         if (options.getAuthToken() != null) {
@@ -450,7 +455,7 @@ public class ZMailbox {
     }
     class InternalEventHandler extends ZEventHandler {
 
-        public void handleRefresh(ZRefreshEvent event, ZMailbox mailbox) {
+        public synchronized void handleRefresh(ZRefreshEvent event, ZMailbox mailbox) {
             mNameToTag.clear();
             mIdToItem.clear();
             mTransport.setMaxNoitfySeq(0);
@@ -462,7 +467,7 @@ public class ZMailbox {
             	addTag(tag);
         }
 
-        public void handleCreate(ZCreateEvent event, ZMailbox mailbox) {
+        public synchronized void handleCreate(ZCreateEvent event, ZMailbox mailbox) {
             if (event instanceof ZCreateTagEvent) {
                 addTag(((ZCreateTagEvent)event).getTag());
             } else if (event instanceof ZCreateSearchFolderEvent) {
@@ -476,7 +481,7 @@ public class ZMailbox {
             }
         }
 
-        public void handleModify(ZModifyEvent event, ZMailbox mailbox) throws ServiceException {
+        public synchronized void handleModify(ZModifyEvent event, ZMailbox mailbox) throws ServiceException {
             if (event instanceof ZModifyTagEvent) {
                 ZModifyTagEvent tagEvent = (ZModifyTagEvent) event;
                 ZTag tag = getTagById(tagEvent.getId());
@@ -499,11 +504,17 @@ public class ZMailbox {
                 }
             } else if (event instanceof ZModifyMailboxEvent) {
             	mSize = ((ZModifyMailboxEvent)event).getSize(mSize);
+            } else if (event instanceof ZModifyMessageEvent) {
+                ZModifyMessageEvent mme = (ZModifyMessageEvent) event;
+                CachedMessage cm = (CachedMessage) mMessageCache.get(mme.getId());
+                if (cm != null)
+                    cm.zm.modifyNotification(event);
             }
         }
         
-        public void handleDelete(ZDeleteEvent event, ZMailbox mailbox) throws ServiceException {
+        public synchronized void handleDelete(ZDeleteEvent event, ZMailbox mailbox) throws ServiceException {
             for (String id : event.toList()) {
+                mMessageCache.remove(id);
                 ZItem item = mIdToItem.get(id);
                 if (item instanceof ZMountpoint) {
                     ZMountpoint sl = (ZMountpoint) item;
@@ -1288,17 +1299,30 @@ public class ZMailbox {
         m.addAttribute(MailService.A_ATTACHMENT_ID, aid);
         return invoke(req).getElement(MailService.E_MSG).getAttribute(MailService.A_ID);
     }
-     
-    public ZMessage getMessage(String id, boolean markRead, boolean wantHtml, boolean neuterImages, boolean rawContent, String part) throws ServiceException {
-        XMLElement req = new XMLElement(MailService.GET_MSG_REQUEST);
-        Element msgEl = req.addElement(MailService.E_MSG);
-        msgEl.addAttribute(MailService.A_ID, id);
-        if (part != null) msgEl.addAttribute(MailService.A_PART, part);
-        msgEl.addAttribute(MailService.A_MARK_READ, markRead);
-        msgEl.addAttribute(MailService.A_WANT_HTML, wantHtml);
-        msgEl.addAttribute(MailService.A_NEUTER, neuterImages);
-        msgEl.addAttribute(MailService.A_RAW, rawContent);
-        return new ZMessage(invoke(req).getElement(MailService.E_MSG));
+
+    static class CachedMessage {
+        ZGetMessageParams params;
+        ZMessage zm;
+    }
+
+    public synchronized ZMessage getMessage(ZGetMessageParams params) throws ServiceException {
+        CachedMessage cm = (CachedMessage) mMessageCache.get(params.getId());
+        if (cm == null || !cm.params.equals(params)) {
+            XMLElement req = new XMLElement(MailService.GET_MSG_REQUEST);
+            Element msgEl = req.addElement(MailService.E_MSG);
+            msgEl.addAttribute(MailService.A_ID, params.getId());
+            if (params.getPart() != null) msgEl.addAttribute(MailService.A_PART, params.getPart());
+            msgEl.addAttribute(MailService.A_MARK_READ, params.isMarkRead());
+            msgEl.addAttribute(MailService.A_WANT_HTML, params.isWantHtml());
+            msgEl.addAttribute(MailService.A_NEUTER, params.isNeuterImages());
+            msgEl.addAttribute(MailService.A_RAW, params.isRawContent());
+            ZMessage zm = new ZMessage(invoke(req).getElement(MailService.E_MSG));
+            cm = new CachedMessage();
+            cm.zm = zm;
+            cm.params = params;
+            mMessageCache.put(params.getId(), cm);
+        }
+        return cm.zm;
     }
 
     /**
@@ -1852,6 +1876,7 @@ public class ZMailbox {
      * @throws ServiceException on error
      * @param page page of results to return. page size is determined by limit in params.
      * @param useCache use the cache if possible
+     * @param useCursor true to use search cursors, false to use offsets
      */
     public ZSearchPagerResult search(ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
         return mSearchPagerCache.search(this, params, page, useCache, useCursor);
@@ -2071,7 +2096,7 @@ public class ZMailbox {
         Element attach = null;
         
         if (message.getAttachmentUploadId() != null) {
-            if (attach == null) attach = m.addElement(MailService.E_ATTACH);
+            attach = m.addElement(MailService.E_ATTACH);
             attach.addAttribute(MailService.A_ATTACHMENT_ID, message.getAttachmentUploadId());
         }
         
@@ -2099,7 +2124,8 @@ public class ZMailbox {
         
         if (needCalendarSentByFixup) 
             req.addAttribute(MailService.A_NEED_CALENDAR_SENTBY_FIXUP, needCalendarSentByFixup);
-        
+
+        //noinspection UnusedDeclaration
         Element m = getMessageElement(req, message);
 
         Element resp = invoke(req);
@@ -2216,7 +2242,7 @@ public class ZMailbox {
         XMLElement req = new XMLElement(MailService.DELETE_DATA_SOURCE_REQUEST);
         if (by == DataSourceBy.name)
             req.addElement(MailService.E_DS).addAttribute(MailService.A_NAME, key);
-        else if (by == DataSourceBy.name)
+        else if (by == DataSourceBy.id)
             req.addElement(MailService.E_DS).addAttribute(MailService.A_ID, key);
         else
             throw ServiceException.INVALID_REQUEST("must specify data source by id or name", null);
