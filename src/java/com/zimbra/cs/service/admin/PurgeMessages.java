@@ -31,6 +31,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -58,10 +59,14 @@ public class PurgeMessages extends AdminDocumentHandler {
             try {
                 mbox = MailboxManager.getInstance().getMailboxByAccountId(accounts[i]);
                 mbox.purgeMessages(null);
-            } catch (AccountServiceException ase) {
-                // ignore NO_SUCH_ACCOUNT errors (logged by the mailbox)
-                if (ase.getCode() != AccountServiceException.NO_SUCH_ACCOUNT)
-                    throw ase;
+            } catch (ServiceException e) {
+                // ignore NO_SUCH_ACCOUNT and WRONG_HOST errors
+                if (e.getCode() == ServiceException.WRONG_HOST) {
+                    ZimbraLog.mailbox.warn("ignoring mailbox found on wrong host (not cleaned up after migrate?): " + accounts[i], e);
+                    // fall through to the "continue" statement
+                } else if (e.getCode() != AccountServiceException.NO_SUCH_ACCOUNT) {
+                    throw e;
+                }
             }
             if (mbox == null)
                 continue;
