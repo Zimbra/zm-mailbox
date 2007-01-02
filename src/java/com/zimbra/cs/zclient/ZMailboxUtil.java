@@ -1632,7 +1632,10 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doGetMessage(String[] args) throws ServiceException {
-        ZMessage msg = mMbox.getMessage(id(args[0]), true, false, false, false, null); // TODO: optionally pass in these args
+        ZGetMessageParams params = new ZGetMessageParams();
+        params.setMarkRead(true);
+        params.setId(id(args[0]));
+        ZMessage msg = mMbox.getMessage(params);
         if (verboseOpt()) {
             System.out.println(msg);
         } else {
