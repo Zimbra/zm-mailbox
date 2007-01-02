@@ -74,7 +74,10 @@ public class UnitTests extends TestCase {
     
     public void testSearch() throws ServiceException 
     { 
-        
+        {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
+            assertTrue(ZimbraQuery.unitTests(mbox));
+        }
 
         runTestQuery(mMailboxId, "in:inbox", false, NO_EXPECTED_CHECK);
         

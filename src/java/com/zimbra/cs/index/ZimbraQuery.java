@@ -305,7 +305,7 @@ public final class ZimbraQuery {
 
         protected static final String RELDATE_PATTERN = "([+-])([0-9]+)([mhdwy][a-z]*)?";
         protected static final Pattern sRelDatePattern = Pattern.compile(RELDATE_PATTERN);
-
+        
         public void parseDate(int modifier, String s, TimeZone tz, Locale locale) throws com.zimbra.cs.index.queryparser.ParseException
         {
             //          * DATE:  absolute-date = mm/dd/yyyy | yyyy/dd/mm  OR
@@ -313,8 +313,8 @@ public final class ZimbraQuery {
             //          *        (need to figure out how to represent "this week", "last
             //          *        week", "this month", etc)
 
-            mDate = null;
-            mEndDate = null;
+            mDate = null; // the beginning of the user-specified range (inclusive)
+            mEndDate = null; // the end of the user-specified range (NOT-included in the range)
             mLowestTime = -1;
             mHighestTime = -1;
             boolean hasExplicitComparasins = false;
@@ -392,7 +392,7 @@ public final class ZimbraQuery {
                 if (m.lookingAt()) {
                     long dateLong = Long.parseLong(s);
                     mDate = new Date(dateLong);
-                    mEndDate = new Date(dateLong);
+                    mEndDate = new Date(dateLong+1000); // +1000 since SQL time is sec, java in msec
                     
                 } else {
                     m = sRelDatePattern.matcher(s);
@@ -1905,6 +1905,75 @@ public final class ZimbraQuery {
             throw ServiceException.FAILURE("Unkown sortBy: specified in search string: "+str, null);
 
         mSortByOverride = sortBy;
+    }
+    
+    public static boolean unitTests(Mailbox mbox) throws ServiceException {
+
+        try {
+            final long GRAN = 1000L; // time granularity in SQL (1000ms = 1sec)
+            final String JAN1Str = "01/01/2007";
+            final long JAN1 = 1167638400000L;
+            final long JAN2 = 1167724800000L;
+            ///////////////////////////////////////////////////////////////
+            //
+            // Validate that date queries parse to the proper ranges.  The only caveat 
+            // here is that a query like "date:>foo" turns into the range
+            // (foo+1, true, -1, false) instead of the more obvious one
+            // (foo, false, -1, false) -- this is a quirk of the query parsing code.  Both
+            // are correct.
+            //                       query                     lower                 higher
+            // string dates
+            testDate(mbox, "date:"+JAN1Str,        JAN1, true,       JAN2, false);
+            testDate(mbox, "date:<"+JAN1Str,       -1L,  false,      JAN1, false);
+            testDate(mbox, "before:"+JAN1Str,      -1L,  false,      JAN1, false);
+            testDate(mbox, "date:<="+JAN1Str,     -1L,  false,      JAN2, false);
+            testDate(mbox, "date:>"+JAN1Str,      JAN2,  true,      -1L, false); 
+            testDate(mbox, "after:"+JAN1Str,      JAN2,  true,      -1L, false);
+            testDate(mbox, "date:>="+JAN1Str,     JAN1,  true,      -1L, false); 
+            
+            // numeric dates
+            testDate(mbox, "date:"+JAN1,             JAN1, true,     JAN1+GRAN, false);
+            testDate(mbox, "date:<"+JAN1,           -1L, false,      JAN1, false);
+            testDate(mbox, "before:"+JAN1,          -1L, false,      JAN1, false);
+            testDate(mbox, "date:<="+JAN1,          -1L, false,     JAN1+GRAN, false);
+            testDate(mbox, "date:>"+JAN1,           JAN1+GRAN, true,  -1L, false);
+            testDate(mbox, "after:"+JAN1,           JAN1+GRAN, true,  -1L, false);
+            testDate(mbox, "date:>="+JAN1,          JAN1, true,     -1L, false);
+            
+            return true;
+        } catch (ServiceException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    private static void testDate(Mailbox mbox, String qs, long lowest, boolean lowestEq, 
+                long highest, boolean highestEq)  throws ServiceException, ParseException {
+        
+        AbstractList<ZimbraQuery.BaseQuery>  c; // clauses
+        c = unitTestParse(mbox,  qs);
+        for (BaseQuery t : c) {
+            if (t instanceof DateQuery) {
+                DateQuery dq = (DateQuery)t;
+                if (dq.mLowestTime != lowest)
+                    throw ServiceException.FAILURE("Invalid lowest time (found "+ dq.mLowestTime + " expected "+lowest+"), query is \""+qs+"\"", null);
+                if (dq.mLowerEq != lowestEq)
+                    throw ServiceException.FAILURE("Invalid lower EQ (expected "+lowestEq+"), query is \""+qs+"\"", null);
+                if (dq.mHighestTime != highest)
+                    throw ServiceException.FAILURE("Invalid highest time (found "+ dq.mHighestTime + " expected "+highest+"), query is \""+qs+"\"", null);
+                if (dq.mHigherEq != highestEq)
+                    throw ServiceException.FAILURE("Invalid higher EQ (expected "+highestEq+"), query is \""+qs+"\"", null);
+            }
+        }
+    }
+    
+    private static AbstractList<BaseQuery>  unitTestParse(Mailbox mbox, String qs) throws ServiceException, ParseException {
+        ZimbraQueryParser parser = new ZimbraQueryParser(new StringReader(qs));
+        mbox.getMailboxIndex().initAnalyzer(mbox);
+        parser.init(mbox.getMailboxIndex().getAnalyzer(), mbox, null, null, lookupQueryTypeFromString("content:"));
+        return parser.Parse();
     }
     
     public ZimbraQuery(Mailbox mbox, SearchParams params, boolean includeTrash, boolean includeSpam) throws ParseException, ServiceException {
