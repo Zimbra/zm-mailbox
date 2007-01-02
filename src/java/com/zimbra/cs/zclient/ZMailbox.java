@@ -1321,6 +1321,9 @@ public class ZMailbox {
             cm.zm = zm;
             cm.params = params;
             mMessageCache.put(params.getId(), cm);
+        } else {
+            if (params.isMarkRead() && cm.zm.isUnread())
+                markMessageRead(cm.zm.getId(), true);
         }
         return cm.zm;
     }
