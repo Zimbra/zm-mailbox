@@ -126,7 +126,7 @@ public class Message extends MailItem {
      */
     Message(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
-        if (mData.type != TYPE_MESSAGE)
+        if (mData.type != TYPE_MESSAGE  && mData.type != TYPE_CHAT)
             throw new IllegalArgumentException();
         if (mData.parentId < 0)
             mData.parentId = -mId;
@@ -296,11 +296,28 @@ public class Message extends MailItem {
 
     boolean canParent(MailItem item)  { return false; }
 
-
+    static class MessageCreateFactory {
+        Message create(Mailbox mbox, UnderlyingData data) throws ServiceException {
+            return new Message(mbox, data);
+        }
+        
+        byte getType() {
+            return TYPE_MESSAGE;
+        }
+    }
+    
     static Message create(int id, Folder folder, Conversation conv, ParsedMessage pm,
                           int msgSize, String digest, short volumeId, boolean unread,
                           int flags, long tags, DraftInfo dinfo, boolean noICal, ZVCalendar cal)  
     throws ServiceException {
+        return createInternal(id, folder, conv, pm, msgSize, digest, volumeId, unread, 
+                    flags, tags, dinfo, noICal, cal,new MessageCreateFactory());
+    }
+    
+    protected static Message createInternal(int id, Folder folder, Conversation conv, ParsedMessage pm,
+                int msgSize, String digest, short volumeId, boolean unread,
+                int flags, long tags, DraftInfo dinfo, boolean noICal, ZVCalendar cal, 
+                MessageCreateFactory fact) throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_MESSAGE))
             throw MailServiceException.CANNOT_CONTAIN();
         if (!folder.canAccess(ACL.RIGHT_INSERT))
@@ -336,7 +353,7 @@ public class Message extends MailItem {
 
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
-        data.type        = TYPE_MESSAGE;
+        data.type        = fact.getType();
         if (conv != null)
             data.parentId = conv.getId();
         data.folderId    = folder.getId();
@@ -354,7 +371,7 @@ public class Message extends MailItem {
         data.unreadCount = unread ? 1 : 0; 
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data);
-        Message msg = new Message(mbox, data);
+        Message msg = fact.create(mbox, data);
 
         // process the components in this invite (must do this last so blob is created, etc)
         if (components != null) {

@@ -301,6 +301,7 @@ public class SyncOperation extends Operation {
             case MailItem.TYPE_NOTE:         return MailService.E_NOTE;
             case MailItem.TYPE_WIKI:         return MailService.E_WIKIWORD;
             case MailItem.TYPE_DOCUMENT:     return MailService.E_DOC;
+            case MailItem.TYPE_CHAT:      return MailService.E_MSG;
             default:                         return null;
         }
     }

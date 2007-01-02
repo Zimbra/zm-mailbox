@@ -41,6 +41,7 @@ import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -274,7 +275,7 @@ public class Folder extends MailItem {
         return mRights == null ? null : mRights.duplicate();
     }
 
-    
+
     @Override
     MailItem getParent() throws ServiceException {
         return mParent != null ? mParent : super.getFolder();
@@ -814,7 +815,7 @@ public class Folder extends MailItem {
     @Override
     void propagateDeletion(PendingDelete info) throws ServiceException {
         if (info.incomplete)
-            info.cascadeIds = DbMailItem.markDeletionTargets(mMailbox, info.itemIds.getIds(TYPE_MESSAGE), info.modifiedIds);
+            info.cascadeIds = DbMailItem.markDeletionTargets(mMailbox, info.itemIds.getIds(TYPE_MESSAGE, TYPE_CHAT), info.modifiedIds);
         else
             info.cascadeIds = DbMailItem.markDeletionTargets(this, info.modifiedIds);
         info.modifiedIds.removeAll(info.cascadeIds);

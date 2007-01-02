@@ -433,10 +433,10 @@ public class IMChat {
             Message msg;
             
             try {
-                msg = mMailbox.saveIM(null, pm, mDraftId, 0, null);
+                msg = mMailbox.updateOrCreateChat(null, pm, mDraftId);
             } catch(NoSuchItemException e) {
                 // they deleted the chat from their mailbox.  Bad user.
-                msg = mMailbox.saveIM(null, pm, -1, 0, null);
+                msg = mMailbox.updateOrCreateChat(null, pm, -1);
             }
             mDraftId = msg.getId();
         } catch (ServiceException e) {

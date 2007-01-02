@@ -60,7 +60,6 @@ public final class SearchParams {
     private static final int MAX_OFFSET = 10000000; // 10M
     private static final int MAX_LIMIT = 10000000; // 10M
     
-
     public enum ExpandResults {
         NONE, FIRST, HITS, ALL;
 
@@ -117,6 +116,7 @@ public final class SearchParams {
         mGroupByStr = groupByStr;
         types = MailboxIndex.parseTypesString(getTypesStr());
     }
+    
     public void setTypes(byte[] _types) { 
         types = _types;
         boolean atFirst = true;
@@ -129,7 +129,6 @@ public final class SearchParams {
         }
         mGroupByStr = s.toString();
     }
-
 
     public void setSortBy(SortBy sortBy) {
         mSortBy = sortBy;

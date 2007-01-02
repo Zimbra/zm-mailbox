@@ -570,44 +570,36 @@ class DBQueryOperation extends QueryOperation
                 case MailItem.TYPE_FOLDER:
                 case MailItem.TYPE_SEARCHFOLDER:
                 case MailItem.TYPE_TAG:
-                    tmp[numUsed] = MailItem.TYPE_UNKNOWN;
-                    numUsed++;
+                    tmp[numUsed++] = MailItem.TYPE_UNKNOWN;
                     break;
                 case MailItem.TYPE_CONVERSATION:
-                    tmp[numUsed] = MailItem.TYPE_MESSAGE;
-                    numUsed++;
+                    tmp[numUsed++] = MailItem.TYPE_MESSAGE;
+                    tmp[numUsed++] = MailItem.TYPE_CHAT;
                     break;
                 case MailItem.TYPE_MESSAGE:
-                    tmp[numUsed] = MailItem.TYPE_MESSAGE;
-                    numUsed++;
+                    tmp[numUsed++] = MailItem.TYPE_MESSAGE;
+                    tmp[numUsed++] = MailItem.TYPE_CHAT;
                     break;
                 case MailItem.TYPE_CONTACT:
-                    tmp[numUsed] = MailItem.TYPE_CONTACT;
-                    numUsed++;
+                    tmp[numUsed++] = MailItem.TYPE_CONTACT;
                     break;
                 case MailItem.TYPE_APPOINTMENT:
-                    tmp[numUsed] = MailItem.TYPE_APPOINTMENT;
-                    numUsed++;
+                    tmp[numUsed++] = MailItem.TYPE_APPOINTMENT;
                     break;
                 case MailItem.TYPE_TASK:
-                    tmp[numUsed] = MailItem.TYPE_TASK;
-                    numUsed++;
+                    tmp[numUsed++] = MailItem.TYPE_TASK;
                     break;
                 case MailItem.TYPE_DOCUMENT:
-                    tmp[numUsed] = MailItem.TYPE_DOCUMENT;
-                    numUsed++;
+                    tmp[numUsed++] = MailItem.TYPE_DOCUMENT;
                     break;
                 case MailItem.TYPE_NOTE:
-                    tmp[numUsed] = MailItem.TYPE_NOTE;
-                    numUsed++;
+                    tmp[numUsed++] = MailItem.TYPE_NOTE;
                     break;
                 case MailItem.TYPE_FLAG:
-                    tmp[numUsed] = MailItem.TYPE_FLAG;
-                    numUsed++;
+                    tmp[numUsed++] = MailItem.TYPE_FLAG;
                     break;
                 case MailItem.TYPE_WIKI:
-                    tmp[numUsed] = MailItem.TYPE_WIKI;
-                    numUsed++;
+                    tmp[numUsed++] = MailItem.TYPE_WIKI;
                     break;
             }
         }

@@ -65,17 +65,17 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
 
     private long mReceivedDate;     // email received date; not necessarily equal to operation time
     private String mRcptEmail;      // email address the message was delivered to
-                                    // tracked for logging purpose only; useful because the same
-                                    // mailbox may be addressed using any of the defined aliases
+    // tracked for logging purpose only; useful because the same
+    // mailbox may be addressed using any of the defined aliases
     private boolean mShared;        // whether message is shared with other mailboxes
     private String mDigest;			// Message blob is referenced by digest rather than blob ID.
-	private int mMsgSize;			// original, uncompressed message size in bytes
-	private int mMsgId;				// ID assigned to newly created message
-	private int mFolderId;			// folder to which the message belongs
-	private int mConvId;			// conversation to which the message belongs; may be newly created
+    private int mMsgSize;			// original, uncompressed message size in bytes
+    private int mMsgId;				// ID assigned to newly created message
+    private int mFolderId;			// folder to which the message belongs
+    private int mConvId;			// conversation to which the message belongs; may be newly created
     private int mConvFirstMsgId;    // first message of conversation, if creating new conversation
-	private int mFlags;				// flags applied to the new message
-	private String mTags;			// tags applied to the new message
+    private int mFlags;				// flags applied to the new message
+    private String mTags;			// tags applied to the new message
     private int mCalendarItemId;    // new calendar item created if this is meeting or task invite message
     private String mCalendarItemPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private boolean mNoICal;        // true if we should NOT process the iCalendar part
@@ -83,60 +83,60 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
     private byte mMsgBodyType;
     private byte[] mData;           // used if mMsgBodyType == MSGBODY_INLINE
     private String mPath;           // if mMsgBodyType == MSGBODY_LINK, source file to link to
-                                    // if mMsgBodyType == MSGBODY_INLINE, path of saved blob file 
+    // if mMsgBodyType == MSGBODY_INLINE, path of saved blob file 
     private short mVolumeId = -1;   // volume on which this message file is saved
     private short mLinkSrcVolumeId = -1;  // volume on which the link source file is saved;
-                                          // used only when mMsgBodyType == MSGBODY_LINK
+    // used only when mMsgBodyType == MSGBODY_LINK
 
-	public CreateMessage() {
+    public CreateMessage() {
         mShared = false;
-		mMsgId = UNKNOWN_ID;
-		mFolderId = UNKNOWN_ID;
-		mConvId = UNKNOWN_ID;
+        mMsgId = UNKNOWN_ID;
+        mFolderId = UNKNOWN_ID;
+        mConvId = UNKNOWN_ID;
         mConvFirstMsgId = UNKNOWN_ID;
-		mFlags = 0;
+        mFlags = 0;
         mMsgBodyType = MSGBODY_INLINE;
         mNoICal = false;
-	}
+    }
 
     protected CreateMessage(int mailboxId,
-                            String rcptEmail,
-                            boolean shared,
-                            String digest,
-                            int msgSize,
-                            int folderId,
-                            boolean noICal,
-                            int flags,
-                            String tags) {
+                String rcptEmail,
+                boolean shared,
+                String digest,
+                int msgSize,
+                int folderId,
+                boolean noICal,
+                int flags,
+                String tags) {
         this(mailboxId, rcptEmail, RECEIVED_DATE_UNSET, shared, digest,
-             msgSize, folderId, noICal, flags, tags);
+                    msgSize, folderId, noICal, flags, tags);
     }
 
     public CreateMessage(int mailboxId,
-                         String rcptEmail,
-                         long receivedDate,
-                         boolean shared,
-						 String digest,
-						 int msgSize,
-						 int folderId,
-                         boolean noICal,
-						 int flags,
-						 String tags) {
-		setMailboxId(mailboxId);
+                String rcptEmail,
+                long receivedDate,
+                boolean shared,
+                String digest,
+                int msgSize,
+                int folderId,
+                boolean noICal,
+                int flags,
+                String tags) {
+        setMailboxId(mailboxId);
         mRcptEmail = rcptEmail;
         mReceivedDate = receivedDate;
         mShared = shared;
-		mDigest = digest != null ? digest : "";
-		mMsgSize = msgSize;
-		mMsgId = UNKNOWN_ID;
-		mFolderId = folderId;
-		mConvId = UNKNOWN_ID;
+        mDigest = digest != null ? digest : "";
+        mMsgSize = msgSize;
+        mMsgId = UNKNOWN_ID;
+        mFolderId = folderId;
+        mConvId = UNKNOWN_ID;
         mConvFirstMsgId = UNKNOWN_ID;
-		mFlags = flags;
-		mTags = tags != null ? tags : "";
+        mFlags = flags;
+        mTags = tags != null ? tags : "";
         mMsgBodyType = MSGBODY_INLINE;
         mNoICal = noICal;
-	}
+    }
 
     public void start(long timestamp) {
         super.start(timestamp);
@@ -174,21 +174,21 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         }
     }
 
-	public int getMessageId() {
-		return mMsgId;
-	}
+    public int getMessageId() {
+        return mMsgId;
+    }
 
-	public void setMessageId(int msgId) {
-		mMsgId = msgId;
-	}
+    public void setMessageId(int msgId) {
+        mMsgId = msgId;
+    }
 
-	public int getConvId() {
-		return mConvId;
-	}
+    public int getConvId() {
+        return mConvId;
+    }
 
-	public void setConvId(int convId) {
-		mConvId = convId;
-	}
+    public void setConvId(int convId) {
+        mConvId = convId;
+    }
 
     public int getConvFirstMsgId() {
         return mConvFirstMsgId;
@@ -199,15 +199,15 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
     }
 
     public void setCalendarItemAttrs(int calItemId,
-                                     int folderId,
-                                     short volumeId) {
-		mCalendarItemId = calItemId;
-		mFolderId = folderId;
-		mVolumeId = volumeId;
-	}
+                int folderId,
+                short volumeId) {
+        mCalendarItemId = calItemId;
+        mFolderId = folderId;
+        mVolumeId = volumeId;
+    }
 
     public int getCalendarItemId() {
-    	return mCalendarItemId;
+        return mCalendarItemId;
     }
 
     public String getCalendarItemPartStat() {
@@ -219,26 +219,34 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
     }
 
     public int getFolderId() {
-    	return mFolderId;
+        return mFolderId;
     }
+    
+    protected int getFlags() { 
+        return mFlags;
+    }
+    
+    protected String getTags() {
+        return mTags;
+    }        
 
     public short getVolumeId() {
-    	if (mVolumeId == -1)
-    		return Volume.getCurrentMessageVolume().getId();
-    	else
-    		return mVolumeId;
+        if (mVolumeId == -1)
+            return Volume.getCurrentMessageVolume().getId();
+        else
+            return mVolumeId;
     }
 
-	public int getOpCode() {
-		return OP_CREATE_MESSAGE;
-	}
+    public int getOpCode() {
+        return OP_CREATE_MESSAGE;
+    }
 
     public byte[] getMessageBody() {
-    	return mData;
+        return mData;
     }
 
     public String getPath() {
-    	return mPath;
+        return mPath;
     }
 
     public void setMessageBodyInfo(byte[] data, String path, short volumeId) {
@@ -257,7 +265,7 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
     }
 
     public String getRcptEmail() {
-    	return mRcptEmail;
+        return mRcptEmail;
     }
 
     protected String getPrintableData() {
@@ -282,13 +290,13 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         } else
             sb.append(", path=").append(mPath);
         return sb.toString();
-	}
+    }
 
     public byte[][] getSerializedByteArrayVector() throws IOException {
         synchronized (mSBAVGuard) {
             if (mSerializedByteArrayVector != null)
                 return mSerializedByteArrayVector;
-    
+
             if (mMsgBodyType == MSGBODY_INLINE) {
                 mSerializedByteArrayVector = new byte[2][];
                 mSerializedByteArrayVector[1] = mData;
@@ -305,11 +313,11 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         if (getVersion().atLeast(1, 4))
             out.writeLong(mReceivedDate);
         out.writeBoolean(mShared);
-		out.writeUTF(mDigest);
-		out.writeInt(mMsgSize);
-		out.writeInt(mMsgId);
-		out.writeInt(mFolderId);
-		out.writeInt(mConvId);
+        out.writeUTF(mDigest);
+        out.writeInt(mMsgSize);
+        out.writeInt(mMsgId);
+        out.writeInt(mFolderId);
+        out.writeInt(mConvId);
         if (getVersion().atLeast(1, 5))
             out.writeInt(mConvFirstMsgId);
         out.writeInt(mCalendarItemId);
@@ -317,7 +325,7 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
             out.writeUTF(mCalendarItemPartStat);
         out.writeInt(mFlags);
         out.writeBoolean(mNoICal);
-		out.writeUTF(mTags);
+        out.writeUTF(mTags);
         out.writeUTF(mPath);
         out.writeShort(mVolumeId);
 
@@ -331,30 +339,30 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
             // deserializeData() should take this into account.
             //out.write(mData);  // Don't do this here!
         } else {
-        	out.writeShort(mLinkSrcVolumeId);
+            out.writeShort(mLinkSrcVolumeId);
         }
     }
 
-	protected void deserializeData(RedoLogInput in) throws IOException {
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mRcptEmail = in.readUTF();
         if (getVersion().atLeast(1, 4))
             mReceivedDate = in.readLong();
         else
             mReceivedDate = getTimestamp();
         mShared = in.readBoolean();
-		mDigest = in.readUTF();
-		mMsgSize = in.readInt();
-		mMsgId = in.readInt();
-		mFolderId = in.readInt();
-		mConvId = in.readInt();
+        mDigest = in.readUTF();
+        mMsgSize = in.readInt();
+        mMsgId = in.readInt();
+        mFolderId = in.readInt();
+        mConvId = in.readInt();
         if (getVersion().atLeast(1, 5))
             mConvFirstMsgId = in.readInt();
         mCalendarItemId = in.readInt();
         if (getVersion().atLeast(1, 1))
             mCalendarItemPartStat = in.readUTF();
-		mFlags = in.readInt();
+        mFlags = in.readInt();
         mNoICal = in.readBoolean();
-		mTags = in.readUTF();
+        mTags = in.readUTF();
         mPath = in.readUTF();
         mVolumeId = in.readShort();
 
@@ -362,14 +370,14 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         if (mMsgBodyType == MSGBODY_INLINE) {
             int dataLen = in.readInt();
             if (dataLen > StoreIncomingBlob.MAX_BLOB_SIZE) {
-            	throw new IOException("Deserialized message size too large (" + dataLen + " bytes)");
+                throw new IOException("Deserialized message size too large (" + dataLen + " bytes)");
             }
             mData = new byte[dataLen];
             in.readFully(mData, 0, dataLen);
             // mData must be the last thing deserialized.  See comments in
             // serializeData().
         } else {
-        	mLinkSrcVolumeId = in.readShort();
+            mLinkSrcVolumeId = in.readShort();
         }
     }
 
@@ -385,8 +393,8 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
             File file = new File(mPath);
             if (!file.exists())
                 throw new RedoException("Missing link source blob " + mPath +
-                                        " (digest=" + mDigest + ")",
-                                        this);
+                            " (digest=" + mDigest + ")",
+                            this);
             Blob src = new Blob(file, mLinkSrcVolumeId);
             sharedDeliveryCtxt.setBlob(src);
 

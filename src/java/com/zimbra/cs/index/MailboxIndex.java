@@ -1838,7 +1838,7 @@ public final class MailboxIndex
                     throw ServiceException.FAILURE("indexDocument caught Exception", e);
                 }
                 break;
-//            case MailItem.TYPE_CHAT:
+            case MailItem.TYPE_CHAT:
             case MailItem.TYPE_MESSAGE:
                 Message msg =  mbox.getMessageById(null, itemId);
                 InputStream is =msg.getRawMessage();

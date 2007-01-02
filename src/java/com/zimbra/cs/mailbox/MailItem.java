@@ -78,8 +78,10 @@ public abstract class MailItem implements Comparable<MailItem> {
     public static final byte TYPE_WIKI         = 14;
     /** Item is a {@link Task} */
     public static final byte TYPE_TASK         = 15;
+    /** Item is a {@link Chat} */
+    public static final byte TYPE_CHAT         = 16;
 
-    static final byte TYPE_MAX = TYPE_TASK;
+    static final byte TYPE_MAX = TYPE_CHAT;
     public static final byte TYPE_UNKNOWN = -1;
 
     private static String[] TYPE_NAMES = {
@@ -98,7 +100,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         "virtual conversation",
         "remote folder",
         "wiki",
-        "task"
+        "task",
+        "chat",
     };
 
     /** Throws {@link ServiceException} <code>mail.INVALID_TYPE</code> if the
@@ -244,6 +247,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
         public Set<Byte> types() {
             return mIds.keySet();
+        }
+        public List<Integer> getIds(byte... types) {
+            List<Integer> toRet = new ArrayList<Integer>();
+            for (byte b : types) {
+                toRet.addAll(getIds(b));
+            }
+            return toRet;
         }
         public List<Integer> getIds(byte type) {
             return mIds.get(type);
@@ -890,6 +900,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             case TYPE_TASK:         return new Task(mbox, data);
             case TYPE_MOUNTPOINT:   return new Mountpoint(mbox, data);
             case TYPE_WIKI:         return new WikiItem(mbox, data);
+            case TYPE_CHAT:        return new Chat(mbox, data);
             default:                return null;
         }
     }
@@ -910,6 +921,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             case TYPE_VIRTUAL_CONVERSATION:
             case TYPE_CONVERSATION: return MailServiceException.NO_SUCH_CONV(id);
 //          case TYPE_INVITE:
+            case TYPE_CHAT:      return MailServiceException.NO_SUCH_MSG(id);
             case TYPE_MESSAGE:      return MailServiceException.NO_SUCH_MSG(id);
             case TYPE_CONTACT:      return MailServiceException.NO_SUCH_CONTACT(id);
             case TYPE_DOCUMENT:     return MailServiceException.NO_SUCH_DOC(id);
@@ -947,12 +959,13 @@ public abstract class MailItem implements Comparable<MailItem> {
             return true;
         else if (desired == TYPE_DOCUMENT && actual == TYPE_WIKI)
             return true;
+        else if (desired == TYPE_MESSAGE && actual == TYPE_CHAT)
+            return true;
         // failure: found something, but it's not the type you were looking for
         else
             return false;
     }
-
-
+    
     boolean checkChangeID() throws ServiceException {
         return mMailbox.checkItemChangeID(this);
     }

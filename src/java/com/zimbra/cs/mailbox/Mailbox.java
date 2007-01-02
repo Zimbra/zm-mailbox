@@ -3550,33 +3550,6 @@ public class Mailbox {
         return conv;
     }
     
-    public Message saveIM(OperationContext octxt, ParsedMessage pm, int id, int origId, String replyType) throws IOException, ServiceException {
-        // make sure the message has been analzyed before taking the Mailbox lock
-        pm.analyze();
-        try {
-            pm.getRawData();
-        } catch (MessagingException me) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-        }
-        // special-case saving a new draft
-        if (id == ID_AUTO_INCREMENT) {
-            Message.DraftInfo dinfo = null;
-            if (replyType != null && origId > 0)
-                dinfo = new Message.DraftInfo(replyType, origId);
-            return addMessageInternal(octxt, pm, ID_FOLDER_IM_LOGS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME, null,
-                                      ID_AUTO_INCREMENT, ":API:", dinfo, new SharedDeliveryContext());
-        } else {
-            Message toRet = saveDraftInternal(octxt, pm, id);
-
-            // tim: why is this here?  FIXME TODO
-            // toRet.reindex(null, true, pm);
-            
-            return toRet;
-            
-        }
-    }
-    
-
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException{
         return saveDraft(octxt, pm, id, 0, null, null);
     }
@@ -4520,6 +4493,15 @@ public class Mailbox {
         }
     }
 
+    /**
+     * This is the nightly "delete old messages based on some criteria" thing that gets spawned
+     * by a cron job.  It can hopefully be moved into a zmmailbox script at some point
+     * 
+     * Purge means 'delete forever' in this case.
+     * 
+     * @param octxt
+     * @throws ServiceException
+     */
     public synchronized void purgeMessages(OperationContext octxt) throws ServiceException {
         Account acct = getAccount();
         int globalTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / 1000);
@@ -4725,6 +4707,112 @@ public class Mailbox {
         }
         return doc;
     }
+    
+    public Message updateOrCreateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
+        // make sure the message has been analzyed before taking the Mailbox lock
+        pm.analyze();
+        try {
+            pm.getRawData();
+        } catch (MessagingException me) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
+        }
+        // special-case saving a new Chat
+        if (id == ID_AUTO_INCREMENT) {
+            return createChat(octxt, pm, ID_FOLDER_IM_LOGS, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME, null);
+        } else {
+            Message toRet = updateChat(octxt, pm, id);
+            return toRet;
+        }
+    }
+    
+    public synchronized Chat createChat(OperationContext octxt, ParsedMessage pm, 
+                int folderId, int flags, String tagsStr) throws IOException, ServiceException {
+        if (pm == null)
+            throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding chat to mailbox " + mId, null);
+        
+        byte[] data;
+        String digest;
+        int msgSize;
+        Chat chat = null;
+        try {
+            data = pm.getRawData();  
+            digest = pm.getRawDigest();  
+            msgSize = pm.getRawSize();
+        } catch (MessagingException me) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
+        }
+        
+        CreateChat redoRecorder = new CreateChat(mId, digest, msgSize, folderId, flags, tagsStr);
+        StoreManager sm = StoreManager.getInstance();
+        boolean success = false;
+        Blob blob = null;
+        
+        try {
+            beginTransaction("createDoc", octxt, redoRecorder);
+
+            long   tags    = Tag.tagsToBitmask(tagsStr);
+            CreateChat redoPlayer = (octxt == null ? null : (CreateChat) octxt.getPlayer());
+            int itemId  = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
+            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
+            blob = sm.storeIncoming(data, digest, null, volumeId);
+            redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
+            markOtherItemDirty(blob);
+            chat = Chat.create(itemId, getFolderById(folderId), pm, msgSize, digest, volumeId, true, flags, tags);
+            redoRecorder.setMessageId(chat.getId());
+            sm.link(blob, this, itemId, chat.getSavedSequence(), chat.getVolumeId());
+            queueForIndexing(chat, false, pm);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+        return chat;
+    }
+    
+    public synchronized Chat updateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
+        byte[] data;
+        String digest;
+        int size;
+        try {
+            data = pm.getRawData();  
+            digest = pm.getRawDigest();  
+            size = pm.getRawSize();
+        } catch (MessagingException me) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
+        }
+        
+        SaveChat redoRecorder = new SaveChat(mId, id, digest, size, -1, 0, null);
+        boolean success = false;
+        try {
+            beginTransaction("saveChat", octxt, redoRecorder);
+            SaveChat redoPlayer = (SaveChat) mCurrentChange.getRedoPlayer();
+            Chat chat = (Chat)getItemById(id, MailItem.TYPE_CHAT);
+            
+            if (!chat.isMutable()) 
+                throw MailServiceException.IMMUTABLE_OBJECT(id);
+            if (!checkItemChangeID(chat))
+                throw MailServiceException.MODIFY_CONFLICT();
+
+            // content changed, so we're obliged to change the IMAP uid
+            int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
+            redoRecorder.setImapId(imapID);
+
+            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
+
+            // update the content and increment the revision number
+            Blob blob = chat.setContent(data, digest, volumeId, pm);
+            redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
+
+            // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
+            queueForIndexing(chat, true, pm);
+            success = true;
+            return chat;
+        } finally {
+            endTransaction(success);
+        }
+        
+        
+    }
+                
 
     // Coordinate other conflicting operations (such as backup) and shared delivery, delivery of a message to
     // multiple recipients.  Such operation on a mailbox and shared delivery
